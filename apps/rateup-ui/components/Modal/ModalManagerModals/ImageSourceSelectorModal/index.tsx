@@ -1,11 +1,11 @@
-import { useCallback } from "react";
-import styles from "./ImageSourceSelectorModal.module.css";
-import { Box, Button, FileButton, Group, Image } from "@mantine/core";
-import { IconUpload } from "@tabler/icons-react";
-import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
+import { Button, FileButton, Group, Image } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import commonStyles from "../mmCommonStyles.module.css";
+import { IconUpload } from "@tabler/icons-react";
+import { useCallback } from "react";
+import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
+import commonStyles from "../mmCommonStyles.module.css";
+import styles from "./ImageSourceSelectorModal.module.css";
 
 function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;

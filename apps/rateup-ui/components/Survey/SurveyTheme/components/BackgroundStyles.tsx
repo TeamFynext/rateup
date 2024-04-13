@@ -166,7 +166,7 @@ function BackgroundStyles({
   );
 
   return (
-    <Stack align="start" w={"100%"} gap={"1.5rem"}>
+    <Stack align="start" w={"100%"} gap={"1rem"}>
       <UnsplashModal
         handleUnsplashImageSave={handleUnsplashImageSave}
         opened={openedUnsplashDialog}
@@ -186,25 +186,6 @@ function BackgroundStyles({
         handleUploadMethod={handleUploadMethod}
       />
       {/* //-------------BG COLOR----------------- */}
-      {/* <Divider label="Background Color" w={"100%"} variant="dashed" /> */}
-      {/* <CustomColorPicker
-        value={currentStyles?.styles?.backgroundColor}
-        onChange={(value) =>
-          setCurrentstyles("bg", {
-            ...currentStyles,
-            styles: { ...currentStyles.styles, backgroundColor: value },
-          })
-        }
-      /> */}
-      {/* <CustomColorInput
-        value={currentStyles?.styles?.backgroundColor}
-        onChange={(value) =>
-          setCurrentstyles("bg", {
-            ...currentStyles,
-            styles: { ...currentStyles.styles, backgroundColor: value },
-          })
-        }
-      /> */}
       <Box className={"custom-color-picker-and-heading-container"}>
         <h2>Background Color</h2>
         <CustomColorPicker

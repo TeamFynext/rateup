@@ -35,6 +35,7 @@ const button = {
     color: "rgb(255, 255, 255)",
     textAlign: "center",
   },
+  position: { x: "CENTER", y: "DEFAULT" },
 };
 
 export const defaultTheme = {
@@ -44,26 +45,25 @@ export const defaultTheme = {
   surveyId: undefined,
   welcomeTheme: {
     bg: background,
-    logo: logo,
     title: { ...title, title: "Welcome" },
     subtitle: { ...subtitle, subtitle: "Welcome to the survey" },
     button: { ...button, label: "Start Survey" },
   },
   surveyTheme: {
     bg: background,
-    title: { ...title, styles: { ...title.styles, textAlign: "left" } },
-    subtitle: {
-      ...subtitle,
-      styles: { ...subtitle.styles, textAlign: "left" },
+    title: {
+      ...title,
+      styles: { ...title.styles, textAlign: "left", fontSize: 20 },
+      subtitleFontSize: 16,
     },
     button: button,
     input: {
-      primaryColor: "rateup-blue",
+      primaryColor: "#1C518E",
     },
+    logo: logo,
   },
   thankyouTheme: {
     bg: background,
-    logo: logo,
     title: { ...title, title: "Thank you" },
     subtitle: { ...subtitle, subtitle: "Thank you for taking the survey" },
     confettiEnabled: false,

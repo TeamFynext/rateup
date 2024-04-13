@@ -29,6 +29,7 @@ import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyThe
 import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import { surveyUploadsPath } from "../../../../utils/constants";
 import { imagesPath } from "../../../../utils/constants";
 import { motion } from "framer-motion";
 import styles from "./end.module.css";
@@ -160,6 +161,18 @@ export default function ThankYou({
   };
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
+
+  let orgLogo = null;
+  let orgLogoStyles = null;
+  let orgLogoSrc = null;
+  if (surveyThemeData) {
+    orgLogo = surveyThemeData.surveyTheme.logo.logo;
+    orgLogoStyles = surveyThemeData.surveyTheme.logo.styles;
+    if (orgLogo && orgLogo.length) {
+      orgLogoSrc = `${surveyUploadsPath}${orgLogo}`;
+    }
+  }
+
   const imageLoaded = () => {
     setImageLoading(false);
     setTimeout(() => setPulsing(false), 600);
@@ -262,14 +275,12 @@ export default function ThankYou({
               {gift.error && (
                 <>
                   <Center mt={"lg"}>
-                    {surveyThemeData?.thankyouTheme?.logo?.logo && (
+                    {orgLogoSrc && (
                       <Image
-                        src={getImageUrl(
-                          surveyThemeData?.thankyouTheme?.logo?.logo,
-                        )}
+                        src={orgLogoSrc}
                         alt="Rateup"
                         height={"auto"}
-                        style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                        style={orgLogoStyles}
                       />
                     )}
                   </Center>
@@ -299,14 +310,12 @@ export default function ThankYou({
               {!gift.error && gift?.image && gift?.name && (
                 <Stack>
                   <Center mt={"lg"}>
-                    {surveyThemeData?.thankyouTheme?.logo?.logo && (
+                    {orgLogoSrc && (
                       <Image
-                        src={getImageUrl(
-                          surveyThemeData?.thankyouTheme?.logo?.logo,
-                        )}
+                        src={orgLogoSrc}
                         alt="Rateup"
                         height={"auto"}
-                        style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                        style={orgLogoStyles}
                       />
                     )}
                   </Center>
@@ -363,19 +372,17 @@ export default function ThankYou({
                     flex: 0,
                   }}
                 >
-                  {surveyThemeData?.thankyouTheme?.logo?.logo ? (
+                  {orgLogoSrc ? (
                     <Image
-                      src={getImageUrl(
-                        surveyThemeData?.thankyouTheme?.logo?.logo,
-                      )}
+                      src={orgLogoSrc}
                       alt="Rateup"
                       height={"auto"}
-                      style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                      style={orgLogoStyles}
                     />
                   ) : (
                     <IconCircleCheck
                       size={"3rem"}
-                      style={surveyThemeData?.thankyouTheme?.logo?.styles}
+                      style={orgLogoStyles}
                       color={
                         surveyThemeData?.thankyouTheme?.title?.styles?.color ??
                         "#fff"
@@ -421,7 +428,7 @@ export default function ThankYou({
                     <GoogleReview
                       googleLink={googleLink}
                       reviewSuggestions={reviews}
-                      orgLogoUrl={surveyThemeData?.thankyouTheme?.logo?.logo}
+                      orgLogoUrl={orgLogoSrc}
                       surveyTeamMapId={surveyId}
                     />
                   )}

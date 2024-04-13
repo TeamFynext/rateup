@@ -6,11 +6,11 @@ export enum ThemeTabEnum {
 
 export enum SelectedItemEnum {
   BACKGROUND = "Background",
-  LOGO = "Logo",
   TITLE = "Title",
   SUBTITLE = "Subtitle",
   BUTTON = "Button",
   INPUT = "Input",
+  LOGO = "Logo",
 }
 
 export enum defaultThemeName {

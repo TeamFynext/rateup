@@ -11,6 +11,7 @@ enum Size {
 }
 
 type CustomColorPickerProps = {
+  className?: string;
   value: string;
   onChange: any;
   optionalDataObj?: any;
@@ -18,6 +19,7 @@ type CustomColorPickerProps = {
 };
 
 function CustomColorPicker({
+  className = "",
   value,
   onChange,
   optionalDataObj,
@@ -70,7 +72,7 @@ function CustomColorPicker({
     <Popover opened={isColorPickerOpen} onChange={setIsColorPickerOpen}>
       <Popover.Target>
         <Flex
-          className={`${styles["custom-color-picker-container"]} custom-color-picker-container ${size === Size.md ? styles["size-md"] : ""}`}
+          className={`${styles["custom-color-picker-container"]} custom-color-picker-container ${size === Size.md ? styles["size-md"] : ""} ${className}`}
         >
           <Button
             className={`${styles["color-indicator"]} color-indicator`}

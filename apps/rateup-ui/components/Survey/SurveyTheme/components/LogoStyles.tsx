@@ -24,6 +24,16 @@ function LogoStyles({
   currentStyles: Logo;
   setCurrentstyles: (key: string, value: any) => void;
 }) {
+  const currentStylesObj = currentStyles
+    ? currentStyles
+    : {
+        logo: "",
+        styles: {
+          width: 50,
+          height: 50,
+        },
+      };
+
   const [isFileLoading, setisFileLoading] = useState(false);
   const [logoFileName, setLogoFileName] = useState(null);
   const resetLogoRef = useRef<() => void>(null);
@@ -47,14 +57,14 @@ function LogoStyles({
 
   const removeImage = () => {
     setLogoFileName("");
-    setCurrentstyles("logo", { ...currentStyles, logo: "" });
+    setCurrentstyles("logo", { ...currentStylesObj, logo: "" });
     resetLogoRef.current?.();
   };
 
-  const handleCropImageSave = (cropedImage) => {
+  const handleCropImageSave = (croppedImage) => {
     setisFileLoading(true);
-    setLogoFileName(cropedImage?.name);
-    setCurrentstyles("logo", { ...currentStyles, logo: cropedImage });
+    setLogoFileName(croppedImage?.name);
+    setCurrentstyles("logo", { ...currentStylesObj, logo: croppedImage });
     setisFileLoading(false);
   };
   return (
@@ -68,7 +78,6 @@ function LogoStyles({
         aspect={4 / 3}
       />
       <Stack align="center" w={"100%"} gap={"1.5rem"}>
-        {/* <Divider label="Styles" variant="dashed" w={"100%"} /> */}
         <Group wrap="nowrap" gap="xs" w={"100%"}>
           <NumberInput
             min={10}
@@ -78,11 +87,11 @@ function LogoStyles({
             name="height"
             style={{ flex: 1 }}
             classNames={{ label: styles["label"] }}
-            value={currentStyles?.styles?.height}
+            value={currentStylesObj?.styles?.height}
             onChange={(e) => {
               setCurrentstyles("logo", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, height: e },
+                ...currentStylesObj,
+                styles: { ...currentStylesObj.styles, height: e },
               });
             }}
           />
@@ -94,11 +103,11 @@ function LogoStyles({
             name="Width"
             style={{ flex: 1 }}
             classNames={{ label: styles["label"] }}
-            value={currentStyles?.styles?.width}
+            value={currentStylesObj?.styles?.width}
             onChange={(e) => {
               setCurrentstyles("logo", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, width: e },
+                ...currentStylesObj,
+                styles: { ...currentStylesObj.styles, width: e },
               });
             }}
           />
@@ -137,7 +146,7 @@ function LogoStyles({
                 color="red"
                 size={"md"}
                 radius={"xl"}
-                disabled={!currentStyles?.logo && !logoFileName}
+                disabled={!currentStylesObj?.logo && !logoFileName}
                 onClick={removeImage}
               >
                 <IconTrash size={15} />

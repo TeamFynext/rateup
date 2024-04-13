@@ -34,6 +34,25 @@ export const updateSurveyTheme = async ({
   return response.data;
 };
 
+export const renameSurveyTheme = async ({
+  surveyThemeId,
+  body,
+}: {
+  surveyThemeId: string;
+  body: { name: string };
+}) => {
+  console.log(
+    "from rename survey theme mutation api function",
+    surveyThemeId,
+    body,
+  );
+  const response = await axiosClient.patch(
+    `${THEME_API_PATH}/${surveyThemeId}`,
+    body,
+  );
+  return response.data;
+};
+
 export const deleteTheme = async (surveyThemeId) => {
   const response = await axiosClient.delete(
     `${THEME_API_PATH}/${surveyThemeId}`,

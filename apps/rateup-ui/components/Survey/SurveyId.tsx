@@ -19,7 +19,7 @@ import { useRouteParams } from "../../context/RouteParamsContext";
 import SurveySettings from "./Settings";
 import Result from "./Result/Result";
 import { useUser } from "../../context/UserContext";
-import SurveyTheme from "./SurveyTheme/SurveyTheme";
+import SurveyTheme from "./SurveyTheme";
 import SurveyContext from "../../context/SurveyContext";
 import { UserRole } from "../../utils/enums";
 import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";

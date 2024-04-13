@@ -25,13 +25,18 @@
   padding: 5px;
 }
 
-.theme-preview-container {
+.theme-preview-container,
+.styles-component-container,
+.theme-selector-div {
   position: relative;
-  flex: 0.73 0 0;
   box-shadow:
     rgba(0, 0, 0, 0.05) 0px 1px 0px,
     rgba(0, 0, 0, 0.11) 0px 0px 8px;
   border-radius: 1rem;
+}
+
+.theme-preview-container {
+  flex: 0.72 0 0;
 }
 
 .theme-preview-container :global(.mantine-Overlay-root) {
@@ -86,13 +91,26 @@
   border-radius: 1rem;
 }
 
+.theme-selector-org-logo-styles-component-container {
+  flex: 0.28 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  overflow: hidden;
+  padding: 0.3125rem;
+}
+
+.theme-selector-div {
+  padding: 0.625rem 1rem;
+}
+
 .styles-component-container {
-  position: relative;
-  flex: 0.27 0 0;
-  box-shadow:
-    rgba(0, 0, 0, 0.05) 0px 1px 0px,
-    rgba(0, 0, 0, 0.11) 0px 0px 8px;
-  border-radius: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.styles-component-container :global(.custom-color-picker-container) {
+  max-width: 18.75rem;
 }
 
 .styles-component-container :global(.mantine-Overlay-root) {
@@ -120,6 +138,10 @@
   right: 3px;
   color: var(--grey-color-4);
   z-index: 1;
+}
+
+.bgActionIcon {
+  right: 100px;
 }
 
 .welcomePageBgDtEditActionIcon {

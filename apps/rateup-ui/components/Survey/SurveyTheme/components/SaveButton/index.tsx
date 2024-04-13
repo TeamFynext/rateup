@@ -13,13 +13,13 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
     (obj) => obj.id === themeSelectorState,
   );
 
-  const { surveyTheme: themeObj } = useContext(SurveyThemeContext);
-  let originalThemeObj = themeObj;
+  const { surveyTheme: themeObjState } = useContext(SurveyThemeContext);
+  let themeObjFromApi = themeObjState;
   if (themeObjBeingEdited) {
-    originalThemeObj = themeObjBeingEdited.theme;
+    themeObjFromApi = themeObjBeingEdited.theme;
   }
 
-  const hasUnsavedChanges = !_.isEqual(originalThemeObj, themeObj);
+  const hasUnsavedChanges = !_.isEqual(themeObjFromApi, themeObjState);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -30,7 +30,24 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
 
   const handleSaveTheme = useCallback(async () => {
     setIsSaving(true);
-    const newSurveyTheme = await destructureThemeAndUploadImagesIfAny(themeObj);
+    const themeObjStateCopy = _.cloneDeep(themeObjState);
+    const {
+      surveyTheme: { logo: orgLogoStylesObj },
+    } = themeObjStateCopy;
+    let orgLogoStylesObject = orgLogoStylesObj;
+    if (!orgLogoStylesObject) {
+      orgLogoStylesObject = {
+        logo: "",
+        styles: {
+          width: 50,
+          height: 50,
+        },
+      };
+      themeObjStateCopy.surveyTheme.logo = orgLogoStylesObject;
+    }
+    const newSurveyTheme =
+      await destructureThemeAndUploadImagesIfAny(themeObjStateCopy);
+
     await updateSurveyTheme.mutateAsync({
       surveyThemeId: themeObjBeingEdited?.id,
       body: {
@@ -39,7 +56,7 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
       },
     });
     setIsSaving(false);
-  }, [themeObjBeingEdited, themeObj]);
+  }, [themeObjBeingEdited, themeObjState]);
 
   useHotkeys([[SAVE_HOTKEY, handleSaveTheme]]);
 

@@ -3,6 +3,7 @@ import React from "react";
 import { lexend } from "../../../utils/fonts";
 import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 import { cordinateStyle } from "../../../utils";
+import { surveyUploadsPath } from "../../../utils/constants";
 
 const _buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -16,10 +17,14 @@ function WelcomePage({
   surveyThemeData,
   onStart,
   largeScreen,
+  orgLogoSrc,
+  orgLogoStyles,
 }: {
   surveyThemeData: WelcomeTheme;
   onStart: any;
   largeScreen: any;
+  orgLogoSrc: string | null;
+  orgLogoStyles: any;
 }) {
   const position = surveyThemeData.button?.position;
   return (
@@ -33,12 +38,12 @@ function WelcomePage({
       className={lexend.className}
       gap={largeScreen ? "xl" : "sm"}
     >
-      {surveyThemeData?.logo?.logo && (
+      {orgLogoSrc && (
         <Image
           fit="contain"
-          src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${surveyThemeData?.logo?.logo}`}
-          alt=" Logoss "
-          style={surveyThemeData?.logo?.styles}
+          src={orgLogoSrc}
+          alt="Logo"
+          style={{ ...orgLogoStyles }}
         />
       )}
       <Text style={surveyThemeData?.title?.styles}>

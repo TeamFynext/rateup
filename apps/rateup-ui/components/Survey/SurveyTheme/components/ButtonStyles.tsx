@@ -30,10 +30,11 @@ function ButtonStyles({
 
   return (
     <>
-      <Stack align="start" w={"100%"} gap={"1.5rem"}>
+      <Stack align="start" w={"100%"} gap={"1rem"}>
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Background Color</h2>
           <CustomColorPicker
+            // we can get this optionalDataObj in onChange handler
             optionalDataObj={{
               themeObjKey: "button",
               propertyChanged: "backgroundColor",

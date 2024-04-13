@@ -28,7 +28,7 @@ function DescStyles({
 
   return (
     <>
-      <Stack align="start" w={"100%"} gap={"1.5rem"}>
+      <Stack align="start" w={"100%"} gap={"1rem"}>
         <Group wrap="nowrap" gap={"xs"}>
           <Select
             label="Font weight"

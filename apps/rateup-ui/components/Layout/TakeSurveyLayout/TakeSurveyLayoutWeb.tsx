@@ -34,6 +34,8 @@ import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/Se
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import RateupLoader from "../../Loaders/RateupLoader";
+import { surveyUploadsPath } from "../../../utils/constants";
+
 export const TakeSurveyLayoutWeb = ({
   survey,
   children,
@@ -47,6 +49,17 @@ export const TakeSurveyLayoutWeb = ({
     data: SurveyTheme;
     isLoading: boolean;
   };
+
+  let orgLogo = null;
+  let orgLogoStyles = null;
+  let orgLogoSrc = null;
+  if (surveyThemeData) {
+    orgLogo = surveyThemeData.surveyTheme.logo.logo;
+    orgLogoStyles = surveyThemeData.surveyTheme.logo.styles;
+    if (orgLogo && orgLogo.length) {
+      orgLogoSrc = `${surveyUploadsPath}${orgLogo}`;
+    }
+  }
 
   const surveyTeamMapId = survey?.surveyTeamMapId;
   const { start } = useRouter().query as { start?: boolean };
@@ -104,11 +117,6 @@ export const TakeSurveyLayoutWeb = ({
 
   const surveyThemeDataPrimaryColor =
     surveyThemeData?.surveyTheme?.input?.primaryColor;
-
-  const orgLogoEnabled =
-    surveyThemeData?.surveyTheme?.orgLogoEnabled === false && startClicked
-      ? false
-      : true;
 
   return (
     <MantineProvider
@@ -235,18 +243,16 @@ export const TakeSurveyLayoutWeb = ({
                     style={{
                       maxHeight: isMobile ? "65px" : "100px",
                       maxWidth: "30%",
-                      visibility: orgLogoEnabled ? "visible" : "hidden",
                     }}
                   >
-                    <Image
-                      src={
-                        survey?.orgLogo && survey?.orgLogo !== "REMOVED_PHOTO"
-                          ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey?.orgLogo}`
-                          : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`
-                      }
-                      alt="Logo"
-                      h={isMobile ? 60 : 80}
-                    />
+                    {orgLogoSrc && (
+                      <Image
+                        src={orgLogoSrc}
+                        alt="Logo"
+                        h={isMobile ? 60 : 80}
+                        style={{ ...orgLogoStyles }}
+                      />
+                    )}
                   </Stack>
                 </Group>
               )}
@@ -287,6 +293,8 @@ export const TakeSurveyLayoutWeb = ({
                           surveyThemeData={surveyThemeData?.welcomeTheme}
                           onStart={handleStartClick}
                           largeScreen={largeScreen}
+                          orgLogoSrc={orgLogoSrc}
+                          orgLogoStyles={orgLogoStyles}
                         />
                       )}
                     </Paper>

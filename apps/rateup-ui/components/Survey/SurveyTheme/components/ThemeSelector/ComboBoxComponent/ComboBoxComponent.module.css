@@ -1,7 +1,31 @@
+.combobox-input-base-root {
+  overflow: hidden;
+}
+
 .combobox-input-base-root :global(.mantine-Input-input) {
+  overflow: hidden;
   border-radius: 0.875rem;
+  text-overflow: ellipsis;
 }
 
 .label-span {
   text-overflow: ellipsis;
+}
+
+.dropdown {
+  overflow: hidden;
+  z-index: 200 !important;
+}
+
+.options-scroll-area-viewport > div {
+  display: block !important;
+}
+
+.scroll-area-div {
+  max-height: 45vh;
+}
+
+.scroll-area-div > div,
+.scroll-area-div > div > div {
+  width: 100%;
 }

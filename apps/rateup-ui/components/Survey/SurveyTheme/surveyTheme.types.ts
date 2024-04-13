@@ -17,6 +17,7 @@ export interface Logo {
 export interface Title {
   title: string;
   styles?: any;
+  subtitleFontSize: number;
 }
 export interface Subtitle {
   subtitle: string;
@@ -47,6 +48,7 @@ export interface _SurveyTheme {
   button: Button;
   input: Input;
   orgLogoEnabled: boolean;
+  logo: Logo;
 }
 export interface ThankyouTheme {
   bg: Bg;

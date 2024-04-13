@@ -1,11 +1,17 @@
 import { ActionIcon, Badge, Group, Loader, Tooltip } from "@mantine/core";
-import { IconTrash, IconTrashX } from "@tabler/icons-react";
-import styles from "./ThemeSelector.module.css";
-import { useDeleteThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import { IconPencil, IconTrash, IconTrashX } from "@tabler/icons-react";
 import { useState } from "react";
+import { useDeleteThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import styles from "./ThemeSelector.module.css";
+import RenameThemeModal from "./RenameThemeModal";
+import { useDisclosure } from "@mantine/hooks";
 
-function RenderOption({ option, surveyActiveThemeId, comboboxHandleChange }) {
-  console.log(surveyActiveThemeId, option, "From renderoption");
+function RenderOption({
+  option,
+  surveyActiveThemeId,
+  comboboxHandleChange,
+  handleOpenRenameThemeModal,
+}) {
   const isDefaultOption = option.label === "Default Theme";
 
   const { value, activeInAnotherSurvey } = option;
@@ -14,6 +20,7 @@ function RenderOption({ option, surveyActiveThemeId, comboboxHandleChange }) {
   const [isDeletingTheme, setIsDeletingTheme] = useState(false);
 
   const deleteThemeMutation = useDeleteThemeMutation();
+
   const handleDeleteBtnClick = async (e) => {
     e.stopPropagation();
     setIsDeletingTheme(true);
@@ -22,28 +29,49 @@ function RenderOption({ option, surveyActiveThemeId, comboboxHandleChange }) {
     comboboxHandleChange(surveyActiveThemeId);
   };
 
+  const handleEditBtnClick = async (e) => {
+    e.stopPropagation();
+    handleOpenRenameThemeModal(option.value);
+  };
+
   return (
-    <Group justify="space-between">
+    <Group justify="space-between" wrap="nowrap">
       <span className={styles["label-span"]}>{option.label}</span>
-      {!isDefaultOption && !isSurveyThemeActive && !isDeletingTheme && (
-        <ActionIcon
-          className={styles["render-option-delete-btn"]}
-          onClick={handleDeleteBtnClick}
-          disabled={activeInAnotherSurvey}
-        >
-          {!activeInAnotherSurvey ? (
-            <IconTrash size={"1rem"} />
-          ) : (
-            <Tooltip label={"Active in another survey"} position="right">
-              <IconTrashX size={"1rem"} />
-            </Tooltip>
-          )}
-        </ActionIcon>
-      )}
-      {!isSurveyThemeActive && isDeletingTheme && <Loader size={"0.875rem"} />}
-      {isSurveyThemeActive && (
-        <Badge className={styles["active-badge"]}>Active</Badge>
-      )}
+      <Group wrap="nowrap" className={styles["action-btns-group-div"]}>
+        {!isDefaultOption && (
+          <ActionIcon
+            onClick={handleEditBtnClick}
+            className={`${styles["render-option-btn"]} ${styles["edit-action-btn"]}`}
+          >
+            <IconPencil size={"1rem"} />
+          </ActionIcon>
+        )}
+        {!isDefaultOption && !isSurveyThemeActive && !isDeletingTheme && (
+          <ActionIcon
+            className={`${styles["render-option-delete-btn"]} ${styles["render-option-btn"]}`}
+            onClick={handleDeleteBtnClick}
+            disabled={activeInAnotherSurvey}
+          >
+            {!activeInAnotherSurvey ? (
+              <IconTrash size={"1rem"} />
+            ) : (
+              <Tooltip label={"Active in another survey"} position="right">
+                <IconTrashX size={"1rem"} />
+              </Tooltip>
+            )}
+          </ActionIcon>
+        )}
+        {!isSurveyThemeActive && isDeletingTheme && (
+          <ActionIcon
+            className={`${styles["render-option-btn"]} ${styles["loader-btn"]}`}
+          >
+            <Loader size={"1rem"} className={styles["delete-loader"]} />
+          </ActionIcon>
+        )}
+        {isSurveyThemeActive && (
+          <Badge className={styles["active-badge"]}>Active</Badge>
+        )}
+      </Group>
     </Group>
   );
 }

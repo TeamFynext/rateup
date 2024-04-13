@@ -4,6 +4,7 @@ import {
   deleteTheme,
   getAllThemes,
   getSurveyTheme,
+  renameSurveyTheme,
   updateSurveyTheme,
 } from "./surveyTheme.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
@@ -46,6 +47,22 @@ export const useUpdateSurveyTheme = (
     },
     onError: () => {
       showErrorToast("Something went wrong, Error updating survey theme");
+    },
+  });
+};
+
+export const useRenameSurveyThemeMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: renameSurveyTheme,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["allThemes"],
+      });
+      showSuccessToast("Renamed theme successfully");
+    },
+    onError: () => {
+      showErrorToast("Something went wrong, Error renaming survey theme");
     },
   });
 };

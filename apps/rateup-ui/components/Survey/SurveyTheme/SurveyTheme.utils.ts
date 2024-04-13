@@ -51,27 +51,25 @@ export async function destructureThemeAndUploadImagesIfAny(
 ) {
   const {
     welcomeTheme: {
-      logo: { logo: welcomeLogo },
       bg: { desktopbg: welcomeDesktopBg, mobilebg: welcomeMobileBg },
     },
     surveyTheme: {
       bg: { desktopbg: surveyDesktopBg, mobilebg: surveyMobileBg },
+      logo: { logo: orgLogo },
     },
     thankyouTheme: {
-      logo: { logo: thankyouLogo },
       bg: { desktopbg: thankyouDesktopBg, mobilebg: thankyouMobileBg },
     },
   } = surveyTheme;
 
   const images = [
-    welcomeLogo ?? "",
     welcomeDesktopBg ?? "",
     welcomeMobileBg ?? "",
     surveyDesktopBg ?? "",
     surveyMobileBg ?? "",
-    thankyouLogo ?? "",
     thankyouDesktopBg ?? "",
     thankyouMobileBg ?? "",
+    orgLogo ?? "",
   ];
 
   const urls = await Promise.all(
@@ -84,14 +82,13 @@ export async function destructureThemeAndUploadImagesIfAny(
 
   const newSurveyTheme: SurveyTheme = produce(surveyTheme, (draft) => {
     [
-      draft.welcomeTheme.logo.logo,
       draft.welcomeTheme.bg.desktopbg,
       draft.welcomeTheme.bg.mobilebg,
       draft.surveyTheme.bg.desktopbg,
       draft.surveyTheme.bg.mobilebg,
-      draft.thankyouTheme.logo.logo,
       draft.thankyouTheme.bg.desktopbg,
       draft.thankyouTheme.bg.mobilebg,
+      draft.surveyTheme.logo.logo,
     ] = urls;
   });
   return newSurveyTheme;

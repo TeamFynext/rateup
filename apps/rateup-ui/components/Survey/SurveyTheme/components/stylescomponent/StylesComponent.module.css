@@ -1,21 +1,12 @@
 .styles-component-div {
-  height: 100%;
-}
-
-.tabs-common-div :global(.mantine-Tabs-panel) {
-  flex: 1 1 auto;
-}
-
-.tabs-common-div :global(.mantine-Tabs-panel) > div {
-  height: 100%;
-}
-
-.tabs-common-div :global(.mantine-Tabs-panel) form {
+  display: flex;
+  flex-direction: column;
+  padding: 0.875rem;
   height: 100%;
 }
 
 .editor-select-dropdown {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .editor-select-dropdown :global(.mantine-Select-section) svg {

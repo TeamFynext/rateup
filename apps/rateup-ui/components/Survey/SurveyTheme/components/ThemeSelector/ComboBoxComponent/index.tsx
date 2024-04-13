@@ -6,6 +6,7 @@ import {
   Input,
   InputBase,
   Loader,
+  ScrollArea,
   useCombobox,
 } from "@mantine/core";
 import RenderOption from "../RenderOption";
@@ -50,7 +51,12 @@ function ComboBoxComponent({
 
   return (
     <Combobox
-      classNames={classNames}
+      classNames={{
+        ...{
+          dropdown: `${styles["dropdown"]}`,
+        },
+        ...classNames,
+      }}
       store={combobox}
       resetSelectionOnOptionHover
       withinPortal={false}
@@ -61,6 +67,7 @@ function ComboBoxComponent({
     >
       <Combobox.Target targetType="button">
         <InputBase
+          label={"Select Theme"}
           component="button"
           type="button"
           pointer
@@ -80,7 +87,19 @@ function ComboBoxComponent({
       </Combobox.Target>
 
       <Combobox.Dropdown>
-        <Combobox.Options>{options}</Combobox.Options>
+        <Combobox.Options className={styles["combobox-options-div"]}>
+          <ScrollArea.Autosize
+            scrollbarSize={"0.4375rem"}
+            className={styles["scroll-area-div"]}
+            type="hover"
+            classNames={{
+              viewport: styles["options-scroll-area-viewport"],
+            }}
+            scrollbars={"y"}
+          >
+            {options}
+          </ScrollArea.Autosize>
+        </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
   );

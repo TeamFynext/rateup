@@ -55,16 +55,16 @@ function SurveyTheme({ survey }) {
     const common = [SelectedItemEnum.BACKGROUND, SelectedItemEnum.TITLE];
     switch (selectedPageTab) {
       case ThemeTabEnum.WELCOME:
+        return [...common, SelectedItemEnum.SUBTITLE, SelectedItemEnum.BUTTON];
+      case ThemeTabEnum.SURVEY:
         return [
           ...common,
-          SelectedItemEnum.SUBTITLE,
-          SelectedItemEnum.LOGO,
           SelectedItemEnum.BUTTON,
+          SelectedItemEnum.INPUT,
+          SelectedItemEnum.LOGO,
         ];
-      case ThemeTabEnum.SURVEY:
-        return [...common, SelectedItemEnum.BUTTON, SelectedItemEnum.INPUT];
       case ThemeTabEnum.THANKYOU:
-        return [...common, SelectedItemEnum.SUBTITLE, SelectedItemEnum.LOGO];
+        return [...common, SelectedItemEnum.SUBTITLE];
       default:
         return [];
     }
@@ -80,13 +80,7 @@ function SurveyTheme({ survey }) {
     >
       <Box className={styles["survey-theme-root-div"]}>
         <Group className={styles["tabs-and-other-options-container"]}>
-          <ThemeSelector
-            allThemesArr={allThemesArr}
-            themeSelectorState={themeSelectorState}
-            setThemeSelectorState={setThemeSelectorState}
-            isAllThemesFetchPending={isAllThemesFetchPending}
-            survey={survey}
-          />
+          <Box></Box>
           <PageSelector onChange={setSelectedPageTab} value={selectedPageTab} />
           <Box
             className={styles["save-btn-container"]}
@@ -105,7 +99,7 @@ function SurveyTheme({ survey }) {
             styles["selected-page-tab-panels-and-styles-div-container"]
           }
         >
-          <Box className={styles["theme-preview-container"]}>
+          <Box className={`${styles["theme-preview-container"]}`}>
             <PreviewDeviceSelector
               className={`preview-device-selector ${selectedPageTab === ThemeTabEnum.WELCOME ? "welcome-tab-preview-device-selector" : ""}`}
               value={selectedPreview}
@@ -162,18 +156,30 @@ function SurveyTheme({ survey }) {
             )}
           </Box>
 
-          <Box className={styles["styles-component-container"]}>
-            {selectedPageTab === ThemeTabEnum.WELCOME &&
-              !isWelcomePageEnabled && <Overlay color="#FFFFFF" />}
-            <StylesComponent
-              selectedType={
-                selectedType ? selectedType : SelectedItemEnum.BACKGROUND
-              }
-              availableStyleComponents={availableThemeStyleComponents()}
-              setSelectedTab={setSelectedPageTab}
-              selectedTab={selectedPageTab}
+          <Box
+            className={`${styles["theme-selector-org-logo-styles-component-container"]}`}
+          >
+            <ThemeSelector
+              className={styles["theme-selector-div"]}
+              allThemesArr={allThemesArr}
+              themeSelectorState={themeSelectorState}
+              setThemeSelectorState={setThemeSelectorState}
+              isAllThemesFetchPending={isAllThemesFetchPending}
               survey={survey}
             />
+            <Box className={styles["styles-component-container"]}>
+              {selectedPageTab === ThemeTabEnum.WELCOME &&
+                !isWelcomePageEnabled && <Overlay color="#FFFFFF" />}
+              <StylesComponent
+                selectedType={
+                  selectedType ? selectedType : SelectedItemEnum.BACKGROUND
+                }
+                availableStyleComponents={availableThemeStyleComponents()}
+                setSelectedTab={setSelectedPageTab}
+                selectedTab={selectedPageTab}
+                survey={survey}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>

@@ -1,6 +1,3 @@
-import { useContext } from "react";
-import { SurveyThemeContext } from "../../../SurveyThemeContext";
-import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
 import {
   ActionIcon,
   BackgroundImage,
@@ -11,26 +8,31 @@ import {
   Textarea,
   Tooltip,
 } from "@mantine/core";
-import { lexend, lexend300 } from "../../../../../../utils/fonts";
+import { useElementSize } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
+import { produce } from "immer";
+import { useContext, useEffect, useState } from "react";
+import Confetti from "react-confetti";
+import { lexend, lexend300 } from "../../../../../../utils/fonts";
+import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import { getImageUrl } from "../../../SurveyTheme.utils";
-import Confetti from "react-confetti";
-import { useElementSize } from "@mantine/hooks";
-import { produce } from "immer";
-import { dummyImage } from "../../../SurveyTheme.constants";
-import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { SurveyThemeContext } from "../../../SurveyThemeContext";
+import { surveyUploadsPath } from "../../../../../../utils/constants";
 export default function ThankyouPageThemeView({
   selectedType,
   setSelectedType,
 }) {
   const { surveyTheme, setSurveyTheme, mobileOrDesktop } =
     useContext(SurveyThemeContext);
-  const { thankyouTheme } = surveyTheme;
+  const {
+    thankyouTheme,
+    surveyTheme: { logo: orgLogoStylesObj },
+  } = surveyTheme;
   const { ref, width, height } = useElementSize();
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
-    logo: { styles: logoStyles, logo },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
     confettiEnabled,
@@ -42,6 +44,32 @@ export default function ThankyouPageThemeView({
       }),
     );
   }
+
+  let orgLogoStylesObject = orgLogoStylesObj;
+  if (!orgLogoStylesObject) {
+    orgLogoStylesObject = {
+      logo: "",
+      styles: {
+        width: 50,
+        height: 50,
+      },
+    };
+  }
+  const { logo: orgLogo, styles: orgLogoStyles } = orgLogoStylesObject;
+  const [orgLogoSrc, setOrgLogoSrc] = useState("");
+  useEffect(() => {
+    let src = null;
+    if ((orgLogo as any) instanceof File) {
+      src = URL.createObjectURL(orgLogo as any);
+    } else if (typeof orgLogo === "string" && orgLogo.length) {
+      src = `${surveyUploadsPath}${orgLogo}`;
+    }
+    setOrgLogoSrc(src);
+    () => {
+      URL.revokeObjectURL(orgLogoSrc);
+    };
+  }, [orgLogo]);
+
   return (
     <Flex
       align={"center"}
@@ -77,7 +105,7 @@ export default function ThankyouPageThemeView({
             onClick={(e) => {
               e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
             }}
-            className={classes.actionIcon}
+            className={`${classes.actionIcon} ${classes.bgActionIcon}`}
           >
             <IconEdit style={{ width: "70%", height: "70%" }} />
           </ActionIcon>
@@ -88,39 +116,13 @@ export default function ThankyouPageThemeView({
               h={"100%"}
               direction={"column"}
             >
-              <Flex
-                onClick={(e) => {
-                  e.stopPropagation(), setSelectedType(SelectedItemEnum.LOGO);
-                }}
-                p={5}
-              >
-                <Tooltip label="Edit Logo">
-                  <Box className={classes.parentContainer}>
-                    <ActionIcon
-                      variant="default"
-                      radius="lg"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation(),
-                          setSelectedType(SelectedItemEnum.LOGO);
-                      }}
-                      className={classes.actionIcon}
-                    >
-                      <IconEdit style={{ width: "70%", height: "70%" }} />
-                    </ActionIcon>
-
-                    <Image
-                      fit="contain"
-                      src={getImageUrl(logo) ?? dummyImage}
-                      alt="Logo"
-                      fallbackSrc="https://www.freeiconspng.com/uploads/no-image-icon-4.png"
-                      style={logoStyles}
-                    />
-                  </Box>
-                </Tooltip>
-              </Flex>
-
-              {/* //---------------------------- */}
+              {orgLogoSrc && (
+                <Image
+                  src={orgLogoSrc}
+                  style={{ ...orgLogoStyles, alignSelf: "center" }}
+                  alt="logo"
+                />
+              )}
 
               <Tooltip label="Edit title">
                 <Box className={classes.titleBox} mt={20}>

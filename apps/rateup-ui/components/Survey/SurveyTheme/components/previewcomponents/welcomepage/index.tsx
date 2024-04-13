@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { SurveyThemeContext } from "../../../SurveyThemeContext";
 import { produce } from "immer";
 import {
@@ -19,6 +19,7 @@ import { dummyImage } from "../../../SurveyTheme.constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { cordinateStyle } from "../../../../../../utils";
+import { surveyUploadsPath } from "../../../../../../utils/constants";
 
 export default function WelcomePageThemeView({
   selectedType,
@@ -26,7 +27,10 @@ export default function WelcomePageThemeView({
 }) {
   const { surveyTheme, setSurveyTheme, mobileOrDesktop } =
     useContext(SurveyThemeContext);
-  const { welcomeTheme } = surveyTheme;
+  const {
+    welcomeTheme,
+    surveyTheme: { logo: orgLogoStylesObj },
+  } = surveyTheme;
   function updateThemeText(key: string, value: any) {
     setSurveyTheme(
       produce((draft) => {
@@ -37,10 +41,35 @@ export default function WelcomePageThemeView({
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
     button: { styles: buttonStyles, label, position },
-    logo: { styles: logoStyles, logo },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
   } = welcomeTheme;
+
+  let orgLogoStylesObject = orgLogoStylesObj;
+  if (!orgLogoStylesObject) {
+    orgLogoStylesObject = {
+      logo: "",
+      styles: {
+        width: 50,
+        height: 50,
+      },
+    };
+  }
+  const { logo: orgLogo, styles: orgLogoStyles } = orgLogoStylesObject;
+  const [orgLogoSrc, setOrgLogoSrc] = useState("");
+  useEffect(() => {
+    let src = null;
+    if ((orgLogo as any) instanceof File) {
+      src = URL.createObjectURL(orgLogo as any);
+    } else if (typeof orgLogo === "string" && orgLogo.length) {
+      src = `${surveyUploadsPath}${orgLogo}`;
+    }
+    setOrgLogoSrc(src);
+    () => {
+      URL.revokeObjectURL(orgLogoSrc);
+    };
+  }, [orgLogo]);
+
   return (
     <Flex
       align={"center"}
@@ -89,39 +118,15 @@ export default function WelcomePageThemeView({
             direction={"column"}
             pos={"relative"}
           >
-            <Flex
-              onClick={(e) => {
-                e.stopPropagation(), setSelectedType(SelectedItemEnum.LOGO);
-              }}
-              p={5}
-            >
-              <Tooltip label="Edit Logo">
-                <Box className={classes.parentContainer}>
-                  <ActionIcon
-                    variant="default"
-                    radius="lg"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation(),
-                        setSelectedType(SelectedItemEnum.LOGO);
-                    }}
-                    className={classes.actionIcon}
-                  >
-                    <IconEdit style={{ width: "70%", height: "70%" }} />
-                  </ActionIcon>
-
-                  <Image
-                    fit="contain"
-                    src={getImageUrl(logo) ?? dummyImage}
-                    alt="Logo"
-                    fallbackSrc="https://www.freeiconspng.com/uploads/no-image-icon-4.png"
-                    style={logoStyles}
-                  />
-                </Box>
-              </Tooltip>
-            </Flex>
-
             {/* //---------------------------- */}
+
+            {orgLogoSrc && (
+              <Image
+                src={orgLogoSrc}
+                style={{ ...orgLogoStyles, alignSelf: "center" }}
+                alt="logo"
+              />
+            )}
 
             <Tooltip label="Edit title">
               <Box className={classes.titleBox} mt={20}>

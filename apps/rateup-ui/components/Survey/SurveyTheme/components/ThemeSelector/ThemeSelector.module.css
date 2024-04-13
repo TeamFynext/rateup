@@ -1,3 +1,18 @@
+.new-theme-btn {
+  height: auto;
+  border: 1px solid var(--mantine-color-gray-3);
+  color: white;
+  font-weight: 300;
+  align-self: flex-end;
+  margin-bottom: 0.3125rem;
+}
+
+.label-span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .choose-theme-dropdown {
   flex: 1;
 }
@@ -27,14 +42,42 @@
   background-color: var(--mantine-primary-color-5);
 }
 
-.render-option-delete-btn {
+.action-btns-group-div {
+  gap: 0.625rem;
+}
+
+.render-option-btn {
   background-color: transparent;
+  border: 1px solid var(--mantine-color-gray-3);
+}
+.render-option-btn:hover {
+  background-color: var(--tertiary-color);
+}
+.choose-theme-dropdown-option[data-combobox-active="true"]
+  .render-option-btn:hover {
+  background-color: white;
+}
+
+.choose-theme-dropdown-option[data-combobox-active="true"] .render-option-btn {
+  color: white;
+}
+
+.choose-theme-dropdown-option[data-combobox-active="true"]
+  .edit-action-btn:hover {
+  color: var(--tertiary-color);
+}
+
+.edit-action-btn {
+  color: var(--tertiary-color);
+}
+
+.render-option-delete-btn {
   color: red;
 }
 
 .render-option-delete-btn:hover {
   color: red;
-  background-color: white;
+  background-color: var(--mantine-color-red-1);
   border: 1px solid var(--mantine-color-gray-3);
 }
 
@@ -49,17 +92,25 @@
   color: red;
 }
 
+.choose-theme-dropdown-option[data-combobox-active="true"]
+  .loader-btn
+  .delete-loader::after,
+.choose-theme-dropdown-option[data-combobox-active="true"]
+  .loader-btn:hover
+  .delete-loader::after,
+.loader-btn:hover .delete-loader::after {
+  border-color: white white white transparent;
+}
+
+.choose-theme-dropdown-option[data-combobox-active="true"]
+  .loader-btn:hover
+  .delete-loader::after {
+  border-color: var(--tertiary-color) var(--tertiary-color)
+    var(--tertiary-color) transparent;
+}
+
 .active-badge {
   background-color: white;
   color: green;
   border: 1px solid var(--mantine-color-gray-3);
-}
-
-.new-theme-btn {
-  height: auto;
-  padding: 10px 16px;
-  border-radius: 0.875rem;
-  border: 1px solid var(--mantine-color-gray-3);
-  color: white;
-  font-weight: 300;
 }

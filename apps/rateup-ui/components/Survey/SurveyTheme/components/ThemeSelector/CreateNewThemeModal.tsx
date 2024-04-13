@@ -1,10 +1,18 @@
-import { Box, Button, Modal, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Modal,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import styles from "./ThemeSelector.module.css";
 import { useDisclosure } from "@mantine/hooks";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "@mantine/form";
 import modalStyles from "../../../../LandingPageDashboardPage/CreateLandingPageModal/CreateLandingPageModal.module.css";
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import { IconPlus } from "@tabler/icons-react";
 
 function CreateNewThemeModal() {
   const [opened, { open, close }] = useDisclosure();
@@ -46,9 +54,12 @@ function CreateNewThemeModal() {
 
   return (
     <>
-      <Button className={styles["new-theme-btn"]} onClick={open}>
-        New Theme
-      </Button>
+      <Tooltip label="Create New Theme">
+        <ActionIcon className={styles["new-theme-btn"]} onClick={open}>
+          <IconPlus size={"1.25rem"} color="white" />
+        </ActionIcon>
+      </Tooltip>
+
       <Modal
         title={"Create New Theme"}
         opened={opened}

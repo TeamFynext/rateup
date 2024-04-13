@@ -7,6 +7,7 @@ import {
   Center,
   Flex,
   Group,
+  Image,
   MantineProvider,
   RingProgress,
   ScrollArea,
@@ -18,7 +19,7 @@ import {
   IconChevronRight,
   IconEdit,
 } from "@tabler/icons-react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../../context/SelectedLanguage";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
@@ -32,6 +33,7 @@ import {
   getImageUrl,
 } from "../../../SurveyTheme.utils";
 import { SurveyThemeContext } from "../../../SurveyThemeContext";
+import { surveyUploadsPath } from "../../../../../../utils/constants";
 
 export default function SurveyThemeView({ selectedType, setSelectedType }) {
   const { surveyTheme, mobileOrDesktop } = useContext(SurveyThemeContext);
@@ -42,10 +44,36 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
   //here subtitle, title and label are not customisable, its only added to preserve the consistency of the schema and ease of implementation.
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
-    title: { styles: titleStyles, title },
+    title: { styles: titleStyles, title, subtitleFontSize },
     button: { styles: buttonStyles, label },
     input: { primaryColor },
+    logo: orgLogoStylesObj,
   } = _surveyTheme;
+
+  let orgLogoStylesObject = orgLogoStylesObj;
+  if (!orgLogoStylesObject) {
+    orgLogoStylesObject = {
+      logo: "",
+      styles: {
+        width: 50,
+        height: 50,
+      },
+    };
+  }
+  const { logo: orgLogo, styles: orgLogoStyles } = orgLogoStylesObject;
+  const [orgLogoSrc, setOrgLogoSrc] = useState("");
+  useEffect(() => {
+    let src = null;
+    if ((orgLogo as any) instanceof File) {
+      src = URL.createObjectURL(orgLogo as any);
+    } else if (typeof orgLogo === "string" && orgLogo.length) {
+      src = `${surveyUploadsPath}${orgLogo}`;
+    }
+    setOrgLogoSrc(src);
+    () => {
+      URL.revokeObjectURL(orgLogoSrc);
+    };
+  }, [orgLogo]);
 
   return (
     <Flex
@@ -80,7 +108,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
             onClick={(e) => {
               e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
             }}
-            className={classes.actionIcon}
+            className={`${classes.actionIcon} ${classes.bgActionIcon}`}
           >
             <IconEdit style={{ width: "70%", height: "70%" }} />
           </ActionIcon>
@@ -89,7 +117,16 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
             direction={"column"}
             ff={lexend.style.fontFamily}
             justify={"center"}
+            gap={"2rem"}
           >
+            {orgLogoSrc && (
+              <Image
+                src={orgLogoSrc}
+                style={{ ...orgLogoStyles, alignSelf: "center" }}
+                alt="logo"
+              />
+            )}
+
             <Box className={classes.titleBox} w={"fit-content"}>
               <ActionIcon
                 variant="default"
@@ -103,7 +140,10 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                 <IconEdit style={{ width: "70%", height: "70%" }} />
               </ActionIcon>
               <Text style={titleStyles}>Why is the sky blue?</Text>
-              <Text c={titleStyles?.color}>
+              <Text
+                c={titleStyles?.color}
+                style={{ fontSize: subtitleFontSize ?? 16 }}
+              >
                 This classic question is often asked by curious minds.
               </Text>
             </Box>
