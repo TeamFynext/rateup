@@ -57,7 +57,7 @@ const GiftModal = ({
     invoiceList?.filter(
       (invoice) =>
         invoice.giftRedeemed ||
-        invoice.invoiceDiscount > 10 ||
+        invoice.invoiceDiscount > 50 ||
         invoice.invoiceValue < MIN_GIFT_AMOUNT,
     )?.length !== invoiceList.length
       ? false
@@ -120,7 +120,7 @@ const GiftModal = ({
                 let checkDisable = !invoice.giftRedeemed;
                 if (invoice.invoiceValue < MIN_GIFT_AMOUNT) {
                   checkDisable = false;
-                } else if (invoice?.invoiceDiscount > 10) {
+                } else if (invoice?.invoiceDiscount > 50) {
                   checkDisable = false;
                 }
                 return (
@@ -219,7 +219,7 @@ const GiftModal = ({
                         ff={lexend500.style.fontFamily}
                         py={4}
                       >
-                        {invoice.invoiceDiscount > 10
+                        {invoice.invoiceDiscount > 50
                           ? DISCOUNT_ERROR
                           : invoice.invoiceValue < MIN_GIFT_AMOUNT
                             ? MIN_AMOUNT_ERROR
