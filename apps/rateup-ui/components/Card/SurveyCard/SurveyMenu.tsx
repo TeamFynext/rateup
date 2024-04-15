@@ -122,6 +122,7 @@ export function SurveyMenu({
         autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      window.location.reload();
     },
     onError: (error: any) => {
       //console.error("Error deleting Survey:", error.message);
