@@ -29,6 +29,9 @@ const waTemplateInput = {
         phone_number: z.string().max(25).optional(),
         url: z.string().max(2000).optional(),
         example: z.string().max(15).optional(),
+        flow_id: z.string().optional(),
+        flow_action: z.string().optional(),
+        navigate_screen: z.string().optional(),
       }),
     )
     .optional(),
@@ -108,6 +111,7 @@ const registerTemplatesInDbBodySchema = z.array(
 const waUserSendTemplateBodySchema = z.object({
   phone: z.string(),
   parameterData: z.any(),
+  teamId: z.string().optional(),
 });
 
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(

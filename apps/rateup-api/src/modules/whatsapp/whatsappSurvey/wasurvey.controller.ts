@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   WaParsedMessage,
   createListMessage,
+  createTemplateMessage,
   getEventType,
   getMessageObject,
   getQuestionByIdFromSession,
@@ -470,6 +471,7 @@ export async function sendSurveyToParticipants(campaignId: string) {
       },
     });
 
+    const orgId = campaign.surveyTeamMap.survey.WaFlow.orgId;
     for (const { contact, id } of campaign.campaignParticipants) {
       if (!contact.phone) {
         log.warn("Contact %o does not have a phone number", contact);
@@ -478,35 +480,58 @@ export async function sendSurveyToParticipants(campaignId: string) {
       }
       // TODO: add rate limiting
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      let success = false;
-      if (campaign.surveyTeamMap.survey.type === SurveyType.WaFlow) {
-        success = await sendFlow({
-          orgId: campaign.surveyTeamMap.survey.WaFlow.orgId,
-          dbFlowId: campaign.surveyTeamMap.survey.WaFlow.dbFlowId,
-          phone: contact.phone,
-        });
-      } else {
-        const dbTemplate = await getDbTemplate(campaign.waTemplateId);
-        if (!dbTemplate) {
-          throw new Error(
-            `Template with id ${campaign.waTemplateId} not found`,
-          );
-        }
-        success = await sendSurveyToParticipant({
-          campaignParticipantId: id,
-          phone: contact.phone,
-          surveyTeamMapId: campaign.surveyTeamMap.id,
-          dbTemplate,
-        });
+      const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+      if (!dbTemplate) {
+        throw new Error(`Template with id ${campaign.waTemplateId} not found`);
       }
-      if (!success) {
-        log.error("Error sending survey to participant %o", contact);
-      } else {
-        log.trace("Survey sent to participant %o", contact);
-        await updateCampaignParticipant(id, {
-          status: CampaignParticipantStatus.SENT,
-        });
+      const existingSession = await getSession(
+        campaign.surveyTeamMap.survey.WaFlow.orgId,
+        contact.phone,
+      );
+      if (existingSession) {
+        log.warn("Session already exists for %o. Skipping...", contact);
+        continue;
       }
+      await createSession({
+        phone: contact.phone,
+        surveyTeamMapId: campaign.surveyTeamMapId,
+        orgId: orgId,
+        language: campaign.surveyTeamMap.survey.languages[0],
+      });
+
+      const components = [
+        {
+          type: "button",
+          sub_type: "flow",
+          index: 0,
+          parameters: [
+            {
+              type: "action",
+              action: {
+                flow_token: contact.phone,
+              },
+            },
+          ],
+        },
+      ];
+      const templateQuery = {
+        name: dbTemplate.data.name,
+        language: {
+          code: dbTemplate.data?.language,
+        },
+        components: components,
+      };
+      const templateMessage = createTemplateMessage(
+        contact.phone,
+        templateQuery,
+      );
+
+      await sendMessage(orgId, templateMessage);
+
+      log.trace("Survey sent to participant %o", contact);
+      await updateCampaignParticipant(id, {
+        status: CampaignParticipantStatus.SENT,
+      });
     }
     log.trace("Survey sent to all participants");
     return true;

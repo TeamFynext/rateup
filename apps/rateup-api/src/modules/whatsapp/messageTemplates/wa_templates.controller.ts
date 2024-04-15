@@ -3,7 +3,11 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { WaTemplateStatus } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { getOrgIdAndRole } from "../../user/user.service";
-import { sendMessage } from "../whatsappSurvey/wasurvey.service";
+import {
+  createSession,
+  deleteSession,
+  sendMessage,
+} from "../whatsappSurvey/wasurvey.service";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import {
   ByTemplateIdParamsSchema,
@@ -29,6 +33,8 @@ import {
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
 import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
+import prisma from "../../../utils/prisma";
+import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -264,12 +270,72 @@ export async function sendTemplateToUserHandler(
     const orgId = request.user.orgId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     const { data } = dbTemplate;
+    const components = parameterData;
+
+    const containsFlowButton = data.components.some((c) => {
+      if (c.type === "BUTTONS") {
+        return c.buttons.some((b) => b.type === "FLOW");
+      }
+    });
+
+    if (containsFlowButton) {
+      const teamId = request.body.teamId;
+      components.push({
+        type: "button",
+        sub_type: "flow",
+        index: 0,
+        parameters: [
+          {
+            type: "action",
+            action: {
+              flow_token: phone,
+            },
+          },
+        ],
+      });
+
+      const flowId = data.components
+        .find((c) => c.type === "BUTTONS")
+        ?.buttons.find((b) => b.type === "FLOW")
+        ?.["flow_id"].toString();
+      if (!flowId) {
+        log.error("Flow id not found in template\n Template => %o", data);
+        reply.code(500).send("Flow id not found in template");
+        return;
+      }
+      // getting flow with surveyTeamMapId
+      const dbFlow = await getFlowWithSurveyTeamMapIds(flowId);
+      if (!dbFlow) {
+        log.error("Flow not found in db with id %s", flowId);
+        reply.code(500).send("Flow not found in db");
+        return;
+      }
+
+      const surveyTeamMap = dbFlow?.survey?.teams.find(
+        (t) => t.teamId === teamId,
+      )?.id;
+      if (!surveyTeamMap) {
+        log.error("Team not found in survey;\nteam => %s", teamId);
+        reply.code(500).send("Team not found in survey");
+        return;
+      }
+
+      await deleteSession(orgId, phone);
+      await createSession({
+        phone,
+        orgId,
+        surveyTeamMapId: surveyTeamMap,
+        language: dbFlow?.survey?.languages[0],
+      });
+      log.trace("Session created successfully");
+    }
+
     const templateQuery = {
       name: data?.name,
       language: {
         code: dbTemplate.data?.language,
       },
-      components: parameterData,
+      components: components,
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
 

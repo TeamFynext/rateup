@@ -76,7 +76,7 @@ export async function getCampaignsByOrgId(orgId: string) {
   return campaigns;
 }
 
-export async function createCampaign(data: CreateCampaignInput) {
+export async function createCampaign(data: any) {
   const campaign = await prisma.campaign.create({
     data: {
       name: data.name,
