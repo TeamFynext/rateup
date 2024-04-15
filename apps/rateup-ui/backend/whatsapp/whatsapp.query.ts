@@ -160,10 +160,12 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
     mutationFn: ({
       templateId,
       parameterData,
+      teamId,
     }: {
       templateId: string;
       parameterData: any;
-    }) => sendWaTemplateToUser(templateId, phone, parameterData),
+      teamId: string;
+    }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
       queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });

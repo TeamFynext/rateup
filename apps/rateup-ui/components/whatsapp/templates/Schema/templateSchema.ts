@@ -68,6 +68,9 @@ export const templateSchema = z
             .refine(isValidPhoneNumber)
             .optional(),
           url: z.string().trim().url().max(2000).optional(),
+          flow_id: z.string().optional(),
+          flow_action: z.string().optional(),
+          navigate_screen: z.string().optional(),
         }),
       )
       .max(10),

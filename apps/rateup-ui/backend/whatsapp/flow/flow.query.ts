@@ -20,10 +20,11 @@ import {
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
-export const useWaFlowsFromDb = () =>
+export const useWaFlowsFromDb = (enabled = true) =>
   useQuery({
     queryKey: ["flow", "db"],
     queryFn: getWaFlowsFromDb,
+    enabled,
   });
 
 export const useWaFlowsFromWa = () =>

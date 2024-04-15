@@ -7,14 +7,12 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import { CampaignStatus, CampaignType, SurveyType } from "../../types/enums";
 import { useWaTemplates } from "../../backend/whatsapp/whatsapp.query";
-import { useSurveysByTeam } from "../../backend/surveys/surveys.query";
 import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "../../backend/campaign/campaign.query";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../utils/constants";
-import { useEffect, useState } from "react";
 
 interface CreateCampaignProps {
   close: () => void;
@@ -27,7 +25,6 @@ const CreateCampaignModal = ({
   isEdit,
   campaign,
 }: CreateCampaignProps) => {
-  const [isTemplate, setIsTemplate] = useState(false);
   const form = useForm({
     initialValues: {
       name: campaign?.name || "",
@@ -39,26 +36,16 @@ const CreateCampaignModal = ({
     validate: {
       name: isNotEmpty("Name cannot be empty"),
       teamId: isNotEmpty("Must select a team"),
-      surveyTeamMapId: isNotEmpty("Must select a survey"),
-      waTemplateId: isTemplate && isNotEmpty("Must select a template"),
+      waTemplateId: isNotEmpty("Must select a template"),
     },
   });
 
+  // TODO: show only flow-templates that are part of selected team
   const { data: templates } = useWaTemplates();
   const templatesData = templates?.map((t) => {
     return {
       value: t?.id,
       label: t?.data?.name,
-    };
-  });
-  const { data: surveys } = useSurveysByTeam(form.values.teamId, true);
-  const waSurveys = surveys?.filter((s) =>
-    [SurveyType.WaFlow, SurveyType.WhatsApp].includes(s?.type),
-  );
-  const surveyData = waSurveys?.map((s) => {
-    return {
-      value: s?.surveyTeamMapId,
-      label: s?.title,
     };
   });
   const createCampaignMutation = useCreateCampaignMutation(form.values.teamId);
@@ -70,7 +57,7 @@ const CreateCampaignModal = ({
   const handleSubmit = (values) => {
     const validation = form.validate();
     if (validation.hasErrors) return;
-    values.waTemplateId = isTemplate ? values.waTemplateId : undefined;
+    values.waTemplateId = values.waTemplateId;
     if (isEdit) {
       updateCampaignMutation.mutate(
         { data: values, campaignId: campaign?.id },
@@ -97,13 +84,6 @@ const CreateCampaignModal = ({
     }
   };
 
-  useEffect(() => {
-    const survey = surveys?.find(
-      (s) => s.surveyTeamMapId === form.values.surveyTeamMapId,
-    );
-    if (survey?.type === SurveyType.WhatsApp) setIsTemplate(true);
-    else setIsTemplate(false);
-  }, [form.values.surveyTeamMapId]);
   return (
     <>
       <form
@@ -142,26 +122,14 @@ const CreateCampaignModal = ({
           {isEdit && campaign?.status === CampaignStatus.ACTIVE ? (
             <></>
           ) : (
-            <>
-              <ContainedSelection
-                label="Select Survey"
-                withAsterisk
-                placeholder="Select Whatsapp survey to send"
-                styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
-                {...form.getInputProps("surveyTeamMapId")}
-                data={surveyData}
-              />
-              {isTemplate ? (
-                <ContainedSelection
-                  label="Choose Template"
-                  withAsterisk
-                  placeholder="Select Template"
-                  styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
-                  {...form.getInputProps("waTemplateId")}
-                  data={templatesData}
-                />
-              ) : null}
-            </>
+            <ContainedSelection
+              label="Choose Template"
+              withAsterisk
+              placeholder="Select Template"
+              styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
+              {...form.getInputProps("waTemplateId")}
+              data={templatesData}
+            />
           )}
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
