@@ -7,10 +7,12 @@ const coreCampaignSchema = z.object({
   type: z.nativeEnum(CampaignType),
   teamId: z.string(),
   surveyTeamMapId: z.string(),
-  waTemplateId: z.string().optional(),
+  waTemplateId: z.string(),
 });
 
-const createCampaignInputSchema = coreCampaignSchema;
+const createCampaignInputSchema = coreCampaignSchema.omit({
+  surveyTeamMapId: true,
+});
 
 const updateCampaignInputSchema = z.object({
   name: z.string().optional(),
