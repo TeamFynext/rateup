@@ -86,7 +86,8 @@ export async function createTemplateHandler(
     reply.code(200).send("template created");
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);
-    reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
+    let errorMessage = e?.message?.split("error_message:")?.[1];
+    reply.code(500).send(errorMessage ?? e);
   }
 }
 
@@ -105,6 +106,7 @@ export async function saveTemplateAsDraftHandler(
       template.data.name = request.body.name ?? template.data.name;
       template.data.components = formattedTemplate.components ?? [];
       template.data.status = WaTemplateStatus.DRAFT;
+      template.data.language = formattedTemplate.language ?? "en";
       await updateTemplateInDb(request.body.id, template.data);
     } else {
       await saveTemplate(formattedTemplate, orgId);
@@ -112,7 +114,8 @@ export async function saveTemplateAsDraftHandler(
     reply.code(200);
   } catch (e) {
     log.error("Error saving template as Draft\n%o", e?.response?.data);
-    reply.code(500).send(e?.response?.data ?? e);
+    let errorMessage = e?.message?.split("error_message:")?.[1];
+    reply.code(500).send(errorMessage ?? e);
   }
 }
 
@@ -154,7 +157,8 @@ export async function updateTemplateHandler(
     }
   } catch (e) {
     log.error("Error updating template \n%o", e?.response?.data);
-    reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
+    let errorMessage = e?.message?.split("error_message:")?.[1];
+    reply.code(500).send(errorMessage ?? e);
   }
 }
 

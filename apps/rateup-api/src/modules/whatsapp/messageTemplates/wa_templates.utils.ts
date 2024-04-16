@@ -75,7 +75,7 @@ export function generateTemplate(
   return {
     name: input.name,
     components,
-    language: "en",
+    language: input.language,
     category:
       (input.category as WaTemplateCategory) ?? WaTemplateCategory.MARKETING,
   };
