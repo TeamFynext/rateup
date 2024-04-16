@@ -69,14 +69,19 @@ export async function createTemplateHandler(
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
     // TODO: restrict access to super admin and admin?
 
-    const formattedTemplate = generateTemplate(request.body);
+    const { defaultValues, ...templateData } = request.body;
+    const formattedTemplate = generateTemplate(templateData);
     const template = await createTemplate(orgId, formattedTemplate);
     //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
     const fetchedTemplate = await fetchTemplate(template?.name, orgId);
-    if (request.body?.id) {
-      await updateTemplateInDb(request.body.id, fetchedTemplate);
+    if (templateData?.id) {
+      await updateTemplateInDb(templateData.id, fetchedTemplate);
     } else {
-      await saveTemplate(fetchedTemplate, orgId);
+      await saveTemplate(
+        fetchedTemplate,
+        orgId,
+        defaultValues as WaTemplateDefaultValues,
+      );
     }
     reply.code(200).send("template created");
   } catch (e) {
@@ -245,9 +250,14 @@ export async function uploadHandler(
         .send({ message: "This file type is not permitted." });
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
     const size: any = data.fields.size;
-    const id = await uploadFileToWaTemplate(data, size?.value, orgId);
-    if (id === "error") return reply.code(400).send("image upload failed");
-    return reply.code(200).send({ id: id });
+    const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
+      data,
+      size?.value,
+      orgId,
+    );
+    if (fileHandle === "error")
+      return reply.code(400).send("image upload failed");
+    return reply.code(200).send({ id: fileHandle, uploadSessionId });
   } catch (e) {
     const error =
       typeof e?.message === "string" ? e?.message : e?.response?.data;

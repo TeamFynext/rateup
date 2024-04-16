@@ -159,6 +159,7 @@ declare global {
     };
     acceptButton: string;
     orgId: string;
+    defaultValues: WaTemplateDefaultValues;
   };
   type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
 
@@ -274,6 +275,12 @@ declare global {
     send?: WaSendMessageBody;
     receive?: WaReceiveMessageBody;
   };
+  type WaTemplateDefaultValues = {
+    image?: {
+      link: string;
+    };
+  };
+
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
@@ -287,6 +294,7 @@ declare global {
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
     type PWaTemplateComponentParams = WaTemplateComponent;
+    type PWaTemplateDefaultValues = WaTemplateDefaultValues;
   }
 }
 export interface FlowLogicCondition {

@@ -36,6 +36,15 @@ const waTemplateInput = {
     )
     .optional(),
   example: z.array(z.string()).optional(),
+  defaultValues: z
+    .object({
+      image: z
+        .object({
+          link: z.string(),
+        })
+        .optional(),
+    })
+    .optional(),
 };
 
 const waTemplateFormattedInput = {
