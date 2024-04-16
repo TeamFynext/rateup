@@ -1,55 +1,72 @@
-import { Flex, Title, Text } from "@mantine/core";
-import styles from "./HeroSection.module.css";
-import BookDemoContactForm from "../../../components/BookDemoContactForm";
-import Header from "../../../components/Header";
+import { Box, Group, Stack } from "@mantine/core";
+import { IconPlayerPlay } from "@tabler/icons-react";
+import classNames from "classnames/bind";
 import Image from "next/image";
+import BookDemoContactForm from "../../../components/BookDemoContactForm";
+import Button from "../../../components/Button";
+import LightBlueGradientBg from "../../../components/LightBlueGradientBg";
 import { imagePath } from "../../constants";
+import styles from "./HeroSection.module.css";
+import TrustedByCompaniesCarousel from "./TrustedByCompaniesCarousel";
+
+const cx = classNames.bind(styles);
 
 function HeroSection() {
   return (
-    <div className={`${styles["hero-section-wrapper"]}`}>
-      <Flex
-        direction={"column"}
-        justify={"center"}
-        align={"center"}
-        className={styles["hero-section-container"]}
-      >
-        <h1 className={styles["hero-section-heading"]}>
-          <span>
-            Let's Start This Transformational Journey Today With RateUp,
-          </span>
-          <span>The Customer Experience Platform!</span>
+    <Stack className={`${styles["hero-section-wrapper"]}`}>
+      <Group className={cx("heading-and-illustration-container")}>
+        <Stack className={cx("heading-and-btns-container")}>
+          <Stack className={cx("heading-and-text-container")}>
+            <h1 className={cx("blue-bg-heading")}>
+              The Customer Experience Platform!
+            </h1>
+            <p className={cx("text-p")}>
+              <span>Engage effortlessly.</span>
+              <span>Amplify your impact.</span>
+              <LightBlueGradientBg className={cx("elevate-brand-gradient-div")}>
+                <span>Elevate your brand</span>
+              </LightBlueGradientBg>
+            </p>
+          </Stack>
+
+          <Group className={cx("btns-container")}>
+            <Button
+              className={cx("play-video-btn")}
+              leftSection={<IconPlayerPlay size={"1em"} />}
+            >
+              Play Video
+            </Button>
+            <BookDemoContactForm
+              buttonProps={{
+                whiteBackgroundGradientText: true,
+              }}
+            />
+          </Group>
+        </Stack>
+
+        <Box className={cx("illustration-img-container")}>
+          <Image
+            className={cx("illustration-img")}
+            src={`${imagePath}/homepage/home-hero-section-illustration.png`}
+            width={1314}
+            height={1304}
+            alt="Google Reviews Illustration"
+            priority={true}
+          />
+        </Box>
+      </Group>
+
+      <Stack className={cx("trusted-companies-container")}>
+        <h1 className={cx("blue-bg-heading", "trusted-companies-h1")}>
+          Our Trusted Companies
         </h1>
-        <p className={styles["hero-section-para"]}>
-          <span>
-            It's about creating a lasting impact on your customers and making
-          </span>
-          <span>
-            them feel valued. Let's start this transformational journey today!
-          </span>
-        </p>
-        <BookDemoContactForm
-          buttonProps={{
-            whiteBackgroundGradientText: true,
-          }}
-        />
-      </Flex>
+        <TrustedByCompaniesCarousel />
+      </Stack>
 
-      <div className={styles["image-container"]}>
-        <Image
-          priority
-          className={styles["dashboard-screens-UI-img"]}
-          alt="Dashboard screens UI"
-          src={`${imagePath}/homepage/hero-section-dashboard-screens-ui.png`}
-          width={2619}
-          height={774}
-        />
-      </div>
-
-      <div
+      {/* <div
         className={styles["blue-background-for-screens-bigger-than-1920px"]}
-      ></div>
-    </div>
+      ></div> */}
+    </Stack>
   );
 }
 

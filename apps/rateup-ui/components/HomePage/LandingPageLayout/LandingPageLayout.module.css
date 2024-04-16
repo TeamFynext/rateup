@@ -1,13 +1,6 @@
 .home-page-container {
   overflow-x: hidden;
-  padding-top: 95px;
-  /* font-family: var(--font-lexend);
-  font-weight: 300; */
 }
-
-/* .home-page-container * {
-  font-weight: 300;
-} */
 
 .home-page-container.home-page-root {
   padding: 0;
@@ -15,6 +8,7 @@
 
 .home-page-mantine-container {
   padding: 0 10%;
+  width: 100%;
 }
 
 .home-page-root .home-page-mantine-container {

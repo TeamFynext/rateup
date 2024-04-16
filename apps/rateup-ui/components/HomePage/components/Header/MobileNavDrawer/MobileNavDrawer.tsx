@@ -8,6 +8,11 @@ import Link from "next/link";
 import { getMobileNavLinkMenuItems, rateupLogoUrl } from "../../../constants";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import classNames from "classnames/bind";
+import { rubik } from "../../../../../utils/fonts";
+
+const cx = classNames.bind(styles);
+const heCx = classNames.bind(headerStyles);
 
 function MobileNavDrawer() {
   const [
@@ -30,13 +35,13 @@ function MobileNavDrawer() {
   }, [isViewportLEQ1024px]);
 
   return (
-    <Flex className={styles["mobile-nav-drawer-container"]}>
+    <Flex className={cx("mobile-nav-drawer-container")}>
       <Burger
         className="mobile-nav-burger-icon"
         onClick={() => toggle()}
         aria-label="Toggle navigation"
         size={"lg"}
-        color="#2564ae"
+        color="#013553"
       />
 
       <Drawer
@@ -51,34 +56,19 @@ function MobileNavDrawer() {
         zIndex={500}
         classNames={drawerStyles}
         size={"400px"}
+        className={rubik.variable}
       >
         <Menu classNames={menuStyles}>
           {getMobileNavLinkMenuItems(
-            `${headerStyles["header-link"]} ${styles["mobile-nav-drawer-link"]}`,
+            `${headerStyles["header-link"]} ${cx("mobile-nav-drawer-link")}`,
           )}
 
-          <Menu.Item
-            component="div"
-            className={styles["login-signup-menu-item"]}
-          >
-            <Link href="/login" className={`${headerStyles["login-link"]}`}>
-              Login
-              <Text
-                inherit
-                span
-                className={headerStyles["login-link-text-span-container"]}
-              >
-                <Text
-                  inherit
-                  span
-                  className={headerStyles["login-link-text-span"]}
-                >
-                  Login
-                </Text>
-              </Text>
+          <Menu.Item component="div" className={cx("login-signup-menu-item")}>
+            <Link href="/login" className={`${heCx("login-link")} login-link`}>
+              <span className={heCx("login-link-text-span")}>Login</span>
             </Link>
 
-            <Link href="/signup" className={`${headerStyles["signup-link"]}`}>
+            <Link href="/signup" className={heCx("signup-link")}>
               Sign Up
             </Link>
           </Menu.Item>

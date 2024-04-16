@@ -19,7 +19,7 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
       opened={opened}
       zIndex={400}
       width={350}
-      offset={0}
+      offset={-3}
       position="bottom"
       withArrow
     >

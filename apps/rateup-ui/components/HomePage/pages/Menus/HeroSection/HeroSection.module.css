@@ -76,6 +76,12 @@
   }
 }
 
+@media screen and (max-width: 768px) {
+  .hero-section {
+    margin-bottom: 4.375rem;
+  }
+}
+
 @media screen and (max-width: 425px) {
   .heading {
     font-size: 1.5rem;

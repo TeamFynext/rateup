@@ -1,5 +1,4 @@
 import { Flex, Image, Group } from "@mantine/core";
-import styles from "./Header.module.css";
 import {
   getNavLinksArray,
   rateupLogoBlueTextUrl,
@@ -10,40 +9,30 @@ import Link from "next/link";
 import Button from "../Button";
 import { useRouter } from "next/router";
 import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
-import { useHeadroom, useWindowScroll } from "@mantine/hooks";
+import classNames from "classnames/bind";
+import styles from "./Header.module.css";
+
+const cx = classNames.bind(styles);
 
 function Header({ className = "" }) {
   const router = useRouter();
   const currentRoutePath = router.pathname;
-  const pinned = useHeadroom({ fixedAt: 100 });
-  const [scroll, scrollTo] = useWindowScroll();
-
-  const applyTransaparentBackground =
-    currentRoutePath === "/" && scroll.y < 100;
 
   return (
-    <Flex
-      justify="space-between"
-      className={`${styles["header-container"]} ${className} ${
-        applyTransaparentBackground ? `${styles["blue-background"]}` : ""
-      } ${pinned ? `${styles["pinned"]}` : `${styles["unpinned"]}`}`}
-    >
-      <Group gap={"sm"} className={styles["logo-nav-container"]} wrap="nowrap">
+    <Flex justify="space-between" className={cx(className, "header-container")}>
+      <Group gap={"sm"} className={cx("logo-nav-container")} wrap="nowrap">
         <Link href="/">
           <Image
-            src={
-              applyTransaparentBackground
-                ? rateupLogoWhiteTextUrl
-                : rateupLogoBlueTextUrl
-            }
+            src={rateupLogoBlueTextUrl}
             alt="logo"
-            w={85}
+            w={"4.0625rem"}
+            h={"3.125rem"}
             fit="contain"
           />
         </Link>
         <nav>
-          <Flex className={styles["header-links-container"]}>
-            {getNavLinksArray(`${styles["header-link"]} header-link`)}
+          <Flex className={cx("header-links-container")}>
+            {getNavLinksArray(`${cx("header-link")} header-link`)}
           </Flex>
           <MobileNavDrawer />
         </nav>
@@ -51,7 +40,7 @@ function Header({ className = "" }) {
       {!(currentRoutePath === "/menus") ? (
         <LoginSignupLinks />
       ) : (
-        <Flex className={styles["join-now-btn-container"]}>
+        <Flex className={cx("join-now-btn-container")}>
           <Button>Join Now</Button>
         </Flex>
       )}
