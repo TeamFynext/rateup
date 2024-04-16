@@ -111,3 +111,9 @@ export const templateSchema = z
         message: errorMessage,
       });
   });
+
+export type WaTemplateDefaultValues = {
+  image?: {
+    link: string;
+  };
+};

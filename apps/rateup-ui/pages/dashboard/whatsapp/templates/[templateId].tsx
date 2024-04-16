@@ -42,7 +42,10 @@ import { ButtonSelection } from "../../../../components/whatsapp/templates/Detai
 import { HeaderWithFormatting } from "../../../../components/whatsapp/templates/Details/HeaderWithFormating";
 import { TextFormateToolBar } from "../../../../components/whatsapp/templates/Details/TextFormateToolBar";
 import TextWithFormatting from "../../../../components/whatsapp/templates/Details/TextWithFormating";
-import { templateSchema } from "../../../../components/whatsapp/templates/Schema/templateSchema";
+import {
+  WaTemplateDefaultValues,
+  templateSchema,
+} from "../../../../components/whatsapp/templates/Schema/templateSchema";
 import WaChatPreview from "../../../../components/whatsapp/templates/WaChatPreview";
 import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
 import { whatsappTheme } from "../../../../config/mantineTheme";
@@ -58,6 +61,7 @@ import { showErrorToast, showWarnToast } from "../../../../utils/notifications";
 import { parseTemplate } from "../../../../utils/whatsapp/templates";
 import ButtonInput from "../../../../components/whatsapp/templates/Details/ButtonInput";
 import styles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
+import { uploadFile } from "../../../../utils/file-upload/upload";
 
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,13 +161,23 @@ export default function WhatsappTemplateById() {
     try {
       if (saveAsDraft) setIsSubmittingDraft(true);
       else setIsSubmitting(true);
+      const defaultValues: WaTemplateDefaultValues = {};
       if (
         values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE &&
         values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.LOCATION &&
         values.header instanceof File
       ) {
         const file = await uploadTemplateMedia(values.header);
+        const publicImageLink = await uploadFile(values.header);
         values.header = file?.id ?? "";
+        // saving upload session id for image type
+        if (values.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE) {
+          defaultValues.image = {
+            link: publicImageLink,
+          };
+        }
+        //@ts-ignore
+        values.defaultValues = defaultValues;
       }
       if (editingItem?.data?.id) {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
