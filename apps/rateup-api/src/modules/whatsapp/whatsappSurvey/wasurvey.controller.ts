@@ -29,6 +29,7 @@ import {
   WaEvent,
   WaTemplateStatus,
   QuestionType,
+  WaTemplateComponentType,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import {
@@ -54,6 +55,7 @@ import {
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { getWaSettingsHandler } from "../settings/wa_settings.controller";
 import { WhatsappSettings } from "@prisma/client";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -472,6 +474,35 @@ export async function sendSurveyToParticipants(campaignId: string) {
     });
 
     const orgId = campaign.surveyTeamMap.survey.WaFlow.orgId;
+    const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+    if (!dbTemplate) {
+      throw new Error(`Template with id ${campaign.waTemplateId} not found`);
+    }
+    const components: any = [];
+    const containsImage =
+      dbTemplate.data.components.find(
+        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+      )?.format === `IMAGE`;
+    if (containsImage) {
+      if (!dbTemplate.defaultValues?.image?.link) {
+        log.error("Image not found in template %o", dbTemplate);
+        throw new Error(
+          "Image not found in template. Please delete & create a new template.",
+        );
+      }
+      components.push({
+        type: "header",
+        parameters: [
+          {
+            type: "image",
+            image: {
+              link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+            },
+          },
+        ],
+      });
+    }
+
     for (const { contact, id, status } of campaign.campaignParticipants) {
       if (status === CampaignParticipantStatus.SENT) {
         log.warn(
@@ -487,10 +518,6 @@ export async function sendSurveyToParticipants(campaignId: string) {
       }
       // TODO: add rate limiting
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      const dbTemplate = await getDbTemplate(campaign.waTemplateId);
-      if (!dbTemplate) {
-        throw new Error(`Template with id ${campaign.waTemplateId} not found`);
-      }
       const existingSession = await getSession(
         campaign.surveyTeamMap.survey.WaFlow.orgId,
         contact.phone,
@@ -510,7 +537,8 @@ export async function sendSurveyToParticipants(campaignId: string) {
         language: campaign.surveyTeamMap.survey.languages[0],
       });
 
-      const components = [
+      const templateComponents = [
+        ...components,
         {
           type: "button",
           sub_type: "flow",
@@ -530,7 +558,7 @@ export async function sendSurveyToParticipants(campaignId: string) {
         language: {
           code: dbTemplate.data?.language,
         },
-        components: components,
+        components: templateComponents,
       };
       const templateMessage = createTemplateMessage(
         contact.phone,

@@ -521,7 +521,9 @@ model WaTemplate {
   createdAt    DateTime @default(now())
   /// [PWaTemplateWithTypesData]
   data         Json
-  acceptButton String // QuickReplyButton text which on clicking will send the survey to the user
+  acceptButton String? // QuickReplyButton text which on clicking will send the survey to the user
+  /// [PWaTemplateDefaultValues]
+  defaultValues Json? // default values for images and other fields
 
   org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String      @db.Uuid
