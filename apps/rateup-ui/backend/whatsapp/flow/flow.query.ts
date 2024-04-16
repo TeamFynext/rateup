@@ -17,13 +17,15 @@ import {
   cloneAndDeprecateFlows,
   cloneFlowsProps,
   sendFlow,
+  updateFlowMetaData,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
-export const useWaFlowsFromDb = () =>
+export const useWaFlowsFromDb = (enabled = true) =>
   useQuery({
     queryKey: ["flow", "db"],
     queryFn: getWaFlowsFromDb,
+    enabled,
   });
 
 export const useWaFlowsFromWa = () =>
@@ -204,6 +206,22 @@ export const useSendFlowToUser = (phone: string) => {
     },
     onError: () => {
       showErrorToast("Error sending flow");
+    },
+  });
+};
+
+export const useUpdateFlowMetaDataMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { dbFlowId: string; data: { name: string } }) =>
+      updateFlowMetaData(data.dbFlowId, data.data),
+    onSuccess: () => {
+      showSuccessToast("Saved Changes..", "flow-meta-data-update", "", true);
+      qc.invalidateQueries({ queryKey: ["flow"] });
+      qc.invalidateQueries({ queryKey: ["surveys"] });
+    },
+    onError: (e) => {
+      showErrorToast("Error saving flows");
     },
   });
 };

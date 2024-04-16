@@ -164,6 +164,7 @@ export enum WHATSAPP_BUTTON_TYPE {
   COPY_OFFER_CODE = "COPY_CODE",
   CALL_PHONE_NUMBER = "PHONE_NUMBER",
   VISIT_WEBSITE = "URL",
+  FLOW = "FLOW",
 }
 
 export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";

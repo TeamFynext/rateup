@@ -21,12 +21,14 @@ interface Props {
     {
       templateId: string;
       parameterData: any;
+      teamId: string;
     },
     unknown
   >;
   selectedTemplateId: string;
   setSelectedTemplateId: (id: string) => void;
   onClose: () => void;
+  teamId: string;
 }
 export default function WaInboxTemplatePreview(props: Props) {
   const [parameterData, setParameterData] = useImmer<any>([]);
@@ -68,6 +70,7 @@ export default function WaInboxTemplatePreview(props: Props) {
     props?.sendTemplate?.mutate({
       templateId: props?.selectedTemplateId,
       parameterData: modifiedParamData,
+      teamId: props?.teamId,
     });
     setLoading(false);
     props?.onClose();

@@ -58,12 +58,6 @@ export default function WaInboxFooterMenu(props: Props) {
         >
           <WaInboxTemplateDisplayModal {...props} />
         </Menu.Item>
-        <Menu.Item
-          disabled={props.sessionExpired}
-          leftSection={<IconWaveSine color="var(--mantine-primary-color-6)" />}
-        >
-          <WaInboxFlowDisplayModal {...props} />
-        </Menu.Item>
       </Menu.Dropdown>
     </Menu>
   );
