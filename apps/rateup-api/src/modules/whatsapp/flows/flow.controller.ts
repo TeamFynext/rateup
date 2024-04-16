@@ -29,6 +29,7 @@ import {
   ImportFlowsBody,
   SendFlowBody,
   UpdateFlowInput,
+  UpdateFlowMetaInput,
   WaFlowSourceQuery,
 } from "./flow.schema";
 import {
@@ -39,6 +40,8 @@ import { log } from "../../../utils/logger";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
 import { Survey } from "@prisma/client";
+import { callWhatsappApi } from "../wa_axios";
+import { getWaSettings } from "../settings/wa_settings.service";
 
 /**
  * Get flows from whatsapp api or our database.
@@ -221,6 +224,36 @@ export async function updateFlowHandler(
   res.status(201).send();
 }
 
+export async function updateFlowMetaDataHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+    Body: UpdateFlowMetaInput;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const { dbFlowId } = req.params;
+    const previousFlow = await getFlowFromDb(dbFlowId);
+    await updateFlowInDb(orgId, dbFlowId, req.body);
+    const { accessToken } = await getWaSettings(orgId);
+    const { data } = await callWhatsappApi(
+      `/${previousFlow?.flowId}`,
+      "POST",
+      accessToken,
+      req.body,
+    );
+    console.log(data, "wa re");
+
+    if (!data?.success) {
+      throw new Error("Flow Not updated in whatsapp");
+    }
+    res.status(204).send();
+  } catch (error) {
+    log.error("Error Updating flow meta data", error);
+    res.status(500).send(error);
+  }
+}
 export async function cloneAndDeprecateFlowHandler(
   req: FastifyRequest<{
     Params: ByDbFlowIdParams;

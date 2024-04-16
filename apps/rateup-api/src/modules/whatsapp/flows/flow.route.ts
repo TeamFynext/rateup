@@ -17,6 +17,7 @@ import {
   publishFlowHandler,
   sendFlowHandler,
   updateFlowHandler,
+  updateFlowMetaDataHandler,
 } from "./flow.controller";
 import { log } from "../../../utils/logger";
 
@@ -86,6 +87,16 @@ export async function flowRoutes(server: FastifyInstance) {
       },
     },
     updateFlowHandler,
+  );
+  server.put(
+    "/update-flow-metadata/:dbFlowId",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+        body: $waFlow("updateFlowMetaInput"),
+      },
+    },
+    updateFlowMetaDataHandler,
   );
   //this clone and deprecate the old one
   server.put(

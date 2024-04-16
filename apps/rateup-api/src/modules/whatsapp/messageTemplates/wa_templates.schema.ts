@@ -11,11 +11,11 @@ const waTemplateInput = {
   name: z
     .string()
     .trim()
+    .regex(/^[a-z_]+$/, {
+      message: "Name can only have lower-case letters and underscores",
+    })
     .min(1)
-    .max(512)
-    .refine((text) => !text.includes(" "), {
-      message: "Name cannot contain spaces. Replace it with underscore(_)",
-    }),
+    .max(512),
   header: z.string(),
   body: z.string().max(1024).min(1),
   footer: z.string().max(60),

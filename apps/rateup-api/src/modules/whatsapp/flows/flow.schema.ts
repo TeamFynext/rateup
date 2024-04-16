@@ -31,6 +31,10 @@ const updateFlowInput = z.object({
   logicJumps: z.any().optional(),
   templateMessage: z.custom<WaFlowTemplateMessage>().optional(),
 });
+const updateFlowMetaInput = z.object({
+  name: z.string().optional(),
+  // categories: z.array(z.string()).optional(),
+});
 
 const cloneFlowSchema = z.object({
   teamId: z.string().uuid(),
@@ -49,6 +53,7 @@ export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
     updateFlowInput,
     cloneFlowSchema,
     sendFlowBodySchema,
+    updateFlowMetaInput,
   },
   {
     $id: "waFlow",
@@ -63,3 +68,4 @@ export type ByDbFlowIdParams = z.infer<typeof byDbFlowIdParams>;
 export type UpdateFlowInput = z.infer<typeof updateFlowInput>;
 export type CloneFlowBody = z.infer<typeof cloneFlowSchema>;
 export type SendFlowBody = z.infer<typeof sendFlowBodySchema>;
+export type UpdateFlowMetaInput = z.infer<typeof updateFlowMetaInput>;
