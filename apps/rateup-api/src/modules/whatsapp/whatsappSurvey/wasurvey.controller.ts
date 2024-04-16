@@ -472,7 +472,14 @@ export async function sendSurveyToParticipants(campaignId: string) {
     });
 
     const orgId = campaign.surveyTeamMap.survey.WaFlow.orgId;
-    for (const { contact, id } of campaign.campaignParticipants) {
+    for (const { contact, id, status } of campaign.campaignParticipants) {
+      if (status === CampaignParticipantStatus.SENT) {
+        log.warn(
+          "Campaign already sent to participant %o. Skipping...",
+          contact,
+        );
+        continue;
+      }
       if (!contact.phone) {
         log.warn("Contact %o does not have a phone number", contact);
         // TODO: handle this case. maybe send email?
@@ -489,8 +496,12 @@ export async function sendSurveyToParticipants(campaignId: string) {
         contact.phone,
       );
       if (existingSession) {
-        log.warn("Session already exists for %o. Skipping...", contact);
-        continue;
+        if (validateSession(existingSession)) {
+          await deleteSession(orgId, contact.phone);
+        } else {
+          log.warn("Session already exists for %o. Skipping...", contact);
+          continue;
+        }
       }
       await createSession({
         phone: contact.phone,
@@ -528,12 +539,12 @@ export async function sendSurveyToParticipants(campaignId: string) {
 
       await sendMessage(orgId, templateMessage);
 
-      log.trace("Survey sent to participant %o", contact);
+      log.trace("Template sent to participant %o", contact);
       await updateCampaignParticipant(id, {
         status: CampaignParticipantStatus.SENT,
       });
     }
-    log.trace("Survey sent to all participants");
+    log.trace("Template sent to all participants");
     return true;
   } catch (e) {
     log.error(e);

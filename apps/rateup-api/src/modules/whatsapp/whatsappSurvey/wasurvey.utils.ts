@@ -590,6 +590,7 @@ export function getQuestionByIdFromSession(
   return question;
 }
 
+// Returns false if session is older than 1 day
 export function validateSession(session: WaSession) {
   if (!session) return false;
   return !(dayjs(session.createdAt).diff(dayjs(), "day") >= 1);

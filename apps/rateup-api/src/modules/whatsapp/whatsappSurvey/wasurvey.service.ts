@@ -156,8 +156,7 @@ export async function createSession({
     include: toBeIncludedWaSessionRelations,
   });
 
-  log.info("Session created");
-  log.trace("Session created \n%o\n", session);
+  log.trace("Session created");
   return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 
