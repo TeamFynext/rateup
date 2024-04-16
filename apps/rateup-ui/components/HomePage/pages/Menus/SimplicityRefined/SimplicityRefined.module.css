@@ -36,3 +36,9 @@
     gap: 2.5rem;
   }
 }
+
+@media screen and (max-width: 768px) {
+  .menus-feature-steps-container {
+    margin-bottom: 4.375rem;
+  }
+}

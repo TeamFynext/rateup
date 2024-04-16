@@ -3,20 +3,25 @@ import Header from "../components/Header";
 import BookADemoSection from "../components/BookADemoSection";
 import Footer from "../components/Footer";
 import styles from "./LandingPageLayout.module.css";
-import { lexend } from "../../../utils/fonts";
-import { useRouter } from "next/router";
+import { lexend, rubik } from "../../../utils/fonts";
+import classNames from "classnames/bind";
+const cx = classNames.bind(styles);
 
 function LandingPageLayout({ children, className = "" }) {
-  const router = useRouter();
-  const { pathname } = router;
-  const requiredClassName = `${styles["home-page-container"]} ${className} ${lexend.variable}`;
+  const requiredClassName = cx(
+    className,
+    "home-page-container",
+    lexend.variable,
+    rubik.variable,
+  );
+
   return (
     <div className={requiredClassName}>
       {/* The header will be rendered in Herosection of /components/Hompage/Home.tsx component for "/" path */}
       <Header />
 
       <Container
-        className={`${styles["home-page-mantine-container"]} home-page-mantine-container`}
+        className={`${cx("home-page-mantine-container")} home-page-mantine-container`}
         size={"120rem"}
       >
         {children}

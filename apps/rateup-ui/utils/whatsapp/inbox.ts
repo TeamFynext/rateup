@@ -6,6 +6,7 @@ import {
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "../../types/global";
+import { WaTemplateDefaultValues } from "../../components/whatsapp/templates/Schema/templateSchema";
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;
@@ -119,6 +120,7 @@ export function isInboxSessionExpired(timeStamp: string) {
 export function validateInboxTemplateSending(
   createTemplateComponents: WaTemplateFetchBodyComponent[],
   sendTemplateComponents: WaTemplateComponent[],
+  defaultValues: WaTemplateDefaultValues,
 ) {
   return createTemplateComponents.map((componentC) => {
     switch (componentC.type) {
@@ -128,6 +130,12 @@ export function validateInboxTemplateSending(
         );
         switch (componentC.format) {
           case "IMAGE":
+            return (
+              !!defaultValues?.image?.link ||
+              sendHeaderComponent?.parameters[0]?.[
+                componentC?.format.toLowerCase()
+              ]?.link
+            );
           case "VIDEO":
           case "DOCUMENT":
             if (!sendHeaderComponent) return false;

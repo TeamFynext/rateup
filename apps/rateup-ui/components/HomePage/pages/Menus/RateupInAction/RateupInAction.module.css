@@ -28,6 +28,7 @@
 
 @media screen and (max-width: 768px) {
   .rateup-in-action-section {
+    margin-bottom: 4.375remj;
     padding: 2.5rem;
   }
 }

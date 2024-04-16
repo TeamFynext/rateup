@@ -16,13 +16,14 @@ export const templateSchema = z
     name: z
       .string()
       .trim()
-      .regex(/^[a-z_]+$/, {
+      .regex(/^[a-z_0-9]+$/, {
         message: "Name can only have lower-case letters and underscores",
       })
       .min(1)
       .max(512),
     body: z.string().trim().min(1).max(1024),
     footer: z.string().trim().max(60),
+    language: z.string(),
     header: z.union([
       z.null(),
       z.string().trim().min(1),
@@ -111,3 +112,9 @@ export const templateSchema = z
         message: errorMessage,
       });
   });
+
+export type WaTemplateDefaultValues = {
+  image?: {
+    link: string;
+  };
+};

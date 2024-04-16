@@ -11,6 +11,7 @@ type ButtonProps = {
   style?: React.CSSProperties;
   onClick?: () => void;
   className?: string;
+  leftSection?: React.ReactNode;
 };
 
 function Button({
@@ -20,6 +21,7 @@ function Button({
   style,
   onClick,
   className,
+  leftSection,
 }: ButtonProps) {
   return (
     <MotionButtonGesture>
@@ -32,6 +34,7 @@ function Button({
         type={type ? type : "button"}
         style={style}
         onClick={onClick}
+        leftSection={leftSection}
       >
         <Text
           inherit

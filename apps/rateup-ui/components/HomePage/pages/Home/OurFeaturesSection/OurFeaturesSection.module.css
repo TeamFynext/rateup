@@ -14,5 +14,8 @@
   display: block;
 }
 
-@media screen and (max-width: 425px) {
+@media screen and (max-width: 768px) {
+  .our-features-container {
+    margin-bottom: 4.375rem;
+  }
 }

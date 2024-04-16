@@ -1,21 +1,14 @@
 .header-container {
-  margin-bottom: 4.375rem;
   border-bottom: 1px solid rgb(215, 215, 215);
   box-shadow:
     0 4px 8px 0 rgba(0, 0, 0, 0.1),
     0 6px 20px 0 rgba(0, 0, 0, 0.1);
-  position: fixed;
-  top: -109px;
-  z-index: 400;
   background-color: white;
   align-items: center;
   padding: 1rem 10%;
   width: 100%;
   max-width: 120rem;
   transition: top 0.4s linear;
-}
-
-.header-container.pinned {
   top: 0;
 }
 
@@ -29,9 +22,11 @@
 }
 
 .header-link {
+  font-family: var(--font-rubik);
   composes: header-footer-link from "../../index.module.css";
-  color: var(--grey-color-2);
+  color: var(--grey-color);
   margin-right: 0;
+  font-weight: 500;
 }
 
 .header-link:active {
@@ -44,31 +39,22 @@
 
 .login-signup-link {
   composes: header-footer-link from "../../index.module.css";
-  padding: 0.625rem 1.5rem;
+  height: auto;
+  padding: 0.4375rem 1.25rem;
   composes: gradient-image-1 from "../../index.module.css";
-  border-radius: 2rem;
+  border-radius: 0.3125rem;
   display: block;
-  font-family: var(--font-lexend);
-  font-weight: 400;
+  font-family: var(--font-rubik);
+  font-weight: 500;
+  border: 2px solid var(--homepage-blue);
 }
 
 .login-link {
   composes: login-signup-link;
   position: relative;
   margin-right: 0;
-}
-
-.login-link-text-span-container {
-  position: absolute;
+  background-image: none;
   background-color: white;
-  border-radius: 2rem;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .login-link-text-span {
@@ -133,7 +119,6 @@
 
 .blue-background :global(.header-link) {
   color: white;
-  font-weight: 300;
 }
 
 .blue-background :global(.header-link:hover) {

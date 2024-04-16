@@ -22,7 +22,9 @@ export default function TextWithFormatting(text, examples) {
       });
   };
   const parsedValue = parseText(text);
-  return <div>{replacePlaceholdersWithValues(parsedValue?.[0], examples)}</div>;
+  return (
+    <span>{replacePlaceholdersWithValues(parsedValue?.[0], examples)}</span>
+  );
 }
 
 function replacePlaceholdersWithValues(inputString: string, values: string[]) {

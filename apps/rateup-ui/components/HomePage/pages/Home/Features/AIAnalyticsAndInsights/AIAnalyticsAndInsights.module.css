@@ -1,0 +1,25 @@
+.root-div {
+  padding: 0 10%;
+}
+
+.root-div :global(.ti-root-div) {
+  padding: 3rem;
+  background-color: #0478ff;
+  background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/curves-pattern.svg"),
+    linear-gradient(130deg, #006ae6, #3693fc, #006ae6);
+  border-radius: 1rem;
+}
+
+.root-div :global(.ti-heading-h1) {
+  color: white;
+}
+
+.root-div :global(.ti-gradient-bg-span) {
+  color: #004f98;
+  background-image: none;
+  background-color: white;
+}
+
+.root-div :global(.ti-desc-p) {
+  color: white;
+}

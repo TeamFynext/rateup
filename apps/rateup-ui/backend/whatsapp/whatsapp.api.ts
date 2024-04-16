@@ -62,6 +62,7 @@ export async function tokenizeIp() {
 
 type imageResponse = {
   id: string;
+  uploadSessionId: string;
 };
 export async function uploadTemplateMedia(file: File) {
   const formData = new FormData();

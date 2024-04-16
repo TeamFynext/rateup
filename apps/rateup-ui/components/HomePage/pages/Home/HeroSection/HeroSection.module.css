@@ -1,115 +1,87 @@
 .hero-section-wrapper {
   position: relative;
   background-color: var(--tertiary-color);
+  background-color: var(--homepage-blue);
   margin-bottom: 6.25rem;
-  font-family: var(--font-lexend);
-  background: radial-gradient(
-      ellipse 25% 60% at -12%,
-      #52a2ff,
-      rgba(0, 0, 0, 0)
-    ),
-    radial-gradient(circle 200px at center 70%, #1a6cca, rgba(0, 0, 0, 0)),
-    radial-gradient(ellipse 25% 60% at 112%, #52a2ff, var(--tertiary-color));
-  padding-top: 180px;
+  font-family: var(--font-rubik);
 }
 
-.hero-section-wrapper .home-hero-section-header {
-  position: static;
-  margin-bottom: 4.375rem;
-  background-color: initial;
-  border: none;
-  box-shadow: none;
+.heading-and-illustration-container {
+  margin: 3.5rem 10%;
+  gap: 2rem;
 }
 
-.hero-section-wrapper .home-hero-section-header :global(.go-to-dashboard-link) {
-  font-weight: 400;
-  text-decoration: none;
-  background-color: white;
-  color: var(--tertiary-color);
-  padding: 0.625rem 1rem;
-  border-radius: 2rem;
-  background-image: none;
+.heading-and-btns-container {
+  flex: 1;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-.home-hero-section-header
-  :global(.mobile-nav-burger-icon .mantine-Burger-burger),
-.home-hero-section-header
-  :global(.mobile-nav-burger-icon .mantine-Burger-burger::after),
-.home-hero-section-header
-  :global(.mobile-nav-burger-icon .mantine-Burger-burger::before) {
-  background-color: white;
-}
-
-.home-hero-section-header :global(.header-link) {
+.blue-bg-heading {
   color: white;
-  font-weight: 300;
-}
-
-.home-hero-section-header :global(.login-link) {
-  font-weight: 400;
-}
-
-.home-hero-section-header :global(.sublinks-chevron-btn) {
-  color: white;
-}
-
-.hero-section-container {
-  border-radius: 25px;
-  color: white;
-  padding: 0 10%;
-  margin-bottom: 1.875rem;
-  background-repeat: no-repeat, no-repeat;
-}
-
-.hero-section-heading {
-  margin: 0;
-  margin-bottom: 1.5rem;
-  line-height: 1.4;
-}
-
-.hero-section-heading :global(span) {
-  display: block;
-  text-align: center;
-}
-
-.hero-section-heading :global(span:nth-child(1)) {
-  font-size: 1.75rem;
+  font-size: 1rem;
   font-weight: 500;
+  text-align: center;
+  text-transform: uppercase;
+  background-color: rgb(80 196 237 / 22%);
+  padding: 0.3125rem 1rem;
+  border-radius: 0.625rem;
 }
 
-.hero-section-heading :global(span:nth-child(2)) {
+.heading-and-text-container {
+  align-items: center;
+}
+
+.heading-and-text-container p {
+  color: white;
   font-size: 3rem;
   font-weight: 700;
 }
 
-.line {
+.heading-and-text-container span {
   display: block;
   text-align: center;
 }
 
-.hero-section-para {
-  font-size: 1.5rem;
-  font-weight: 300;
-  margin: 0;
-  margin-bottom: 1.875rem;
-  text-align: center;
+.elevate-brand-gradient-div {
+  margin: 0.5rem 0;
 }
 
-.hero-section-para :global(span) {
-  display: block;
-}
-
-.image-container {
-  display: flex;
+.btns-container {
+  gap: 1.5rem;
   justify-content: center;
-  padding: 0 10%;
 }
 
-.dashboard-screens-UI-img {
-  object-fit: contain;
+.play-video-btn {
+  background-color: transparent;
+  border: 1px solid white;
+  background-image: none;
+  line-height: initial;
+}
+
+.play-video-btn:hover {
+  background-color: transparent;
+}
+
+.illustration-img-container {
+  flex: 1;
+}
+
+.illustration-img {
+  max-height: 500px;
   width: 100%;
-  height: 22vw;
-  max-height: 400px;
+  height: auto;
+  object-fit: contain;
+}
+
+.trusted-companies-container {
+  position: relative;
+  margin-bottom: 3rem;
+}
+
+.trusted-companies-h1 {
+  font-size: 1.25rem;
+  align-self: center;
 }
 
 .blue-background-for-screens-bigger-than-1920px {
@@ -120,88 +92,36 @@
   z-index: -1;
   top: 0;
   left: calc((1920px - 100vw) / 2);
-  background: radial-gradient(
-      ellipse 25% 60% at -12%,
-      #52a2ff,
-      rgba(0, 0, 0, 0)
-    ),
-    radial-gradient(circle 200px at center 70%, #1a6cca, rgba(0, 0, 0, 0)),
-    radial-gradient(ellipse 25% 60% at 112%, #52a2ff, var(--tertiary-color));
+  background-color: var(--homepage-blue);
 }
 
 /* Media Queries */
 
-@media screen and (max-width: 1024px) {
-  .home-hero-section-header {
-    margin-bottom: 4.587vw;
-  }
-
-  .hero-section-heading :global(span:nth-child(1)) {
-    font-size: 1.125rem;
-  }
-
-  .hero-section-heading :global(span:nth-child(2)) {
-    font-size: 2rem;
-  }
-
-  .hero-section-para {
-    font-size: 1rem;
+@media screen and (max-width: 1100px) {
+  .illustration-img-container {
+    display: none;
   }
 }
 
 @media screen and (max-width: 768px) {
   .hero-section-wrapper {
-    background: radial-gradient(
-        ellipse 25% 60% at -15%,
-        #52a2ff,
-        rgba(0, 0, 0, 0)
-      ),
-      radial-gradient(circle 100px at center 70%, #1a6cca, rgba(0, 0, 0, 0)),
-      radial-gradient(ellipse 25% 60% at 115%, #52a2ff, var(--tertiary-color));
+    margin-bottom: 4.375rem;
   }
-
-  .hero-section-container {
-    background-size:
-      250px 250px,
-      auto;
-  }
-
-  .hero-section-heading :global(span:nth-child(1)) {
-    margin-bottom: 0.3125rem;
-  }
-
-  .hero-section-heading :global(span:nth-child(2)) {
+  .heading-and-text-container p {
     font-size: 1.5rem;
   }
-
-  .hero-section-heading {
-    font-size: 1.875rem;
+  .trusted-companies-h1 {
+    font-size: 1rem;
   }
 }
 
 @media screen and (max-width: 425px) {
-  .hero-section-wrapper {
-    background: radial-gradient(
-        ellipse 25% 60% at -15%,
-        #52a2ff,
-        rgba(0, 0, 0, 0)
-      ),
-      radial-gradient(circle 100px at center 80%, #1a6cca, rgba(0, 0, 0, 0)),
-      radial-gradient(ellipse 25% 60% at 115%, #52a2ff, var(--tertiary-color));
+  .heading-and-text-container p {
+    font-size: 1.125rem;
   }
 
-  .hero-section-container {
-    background-size:
-      200px 200px,
-      auto;
-  }
-
-  .hero-section-heading {
-    font-size: 1.5rem;
-  }
-
-  .hero-section-para {
-    font-size: 0.875rem;
+  .trusted-companies-h1 {
+    font-size: 1rem;
   }
 }
 

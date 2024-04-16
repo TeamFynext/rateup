@@ -31,6 +31,7 @@ function BookADemoSection() {
             buttonProps={{ whiteBackgroundGradientText: true }}
           />
           <Button
+            className={styles["get-pricing-btn"]}
             onClick={() => router.push("/pricing")}
             whiteBackgroundGradientText
           >

@@ -151,6 +151,7 @@ export const getMobileNavLinkMenuItems = (className: string = "") =>
                 href={link}
                 component={Link}
                 classNames={navLinkStyles}
+                className={className}
               />
             );
           })}
