@@ -219,7 +219,9 @@ function FlowPage() {
                     <SurveySettings
                       surveyId={survey.id}
                       survey={survey}
-                      enabledModules={["teams"]}
+                      enabledModules={["teams", "name-change"]}
+                      flowName={flow.name}
+                      flowDbId={flow.dbFlowId}
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Result}>

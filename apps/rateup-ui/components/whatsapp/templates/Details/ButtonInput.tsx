@@ -11,23 +11,15 @@ import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 
 const ButtonInput = ({ form, index, deleteButton, data }) => {
-  const isFlow =
-    form.values?.buttons?.[index]?.type === WHATSAPP_BUTTON_TYPE.FLOW;
-  const { data: flows } = useWaFlowsFromDb(isFlow);
-  if (isFlow && flows) {
-    const flowId = form.values?.buttons?.[index]?.["flow_id"];
-    if (flowId && flows) {
-      const flow = flows.find((flow) => flow.flowId === flowId);
-      if (flow) {
-        const firstScreenId = flow.json.screens[0].id;
-
-        const currentScreenId =
-          form.values?.buttons?.[index]?.["navigate_screen"];
-        if (currentScreenId !== firstScreenId) {
-          form.setFieldValue(`buttons.${index}.navigate_screen`, firstScreenId);
-          form.setFieldValue(`buttons.${index}.flow_action`, "navigate");
-        }
-      }
+  let { data: flows } = useWaFlowsFromDb(
+    data.type === WHATSAPP_BUTTON_TYPE.FLOW,
+  );
+  if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
+    const screeenId = flows?.find(
+      (data) => data.flowId === form?.values?.buttons?.[index]?.flow_id,
+    )?.json?.screens?.[0]?.id;
+    if (screeenId) {
+      data["navigate_screen"] = screeenId;
     }
   }
 
@@ -152,7 +144,6 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
                 {...form.getInputProps(`buttons.${index}.phone_number`)}
                 className={styles.inputPhone}
               />
-              {/* {form} */}
             </Box>
             <ActionIcon
               mt={24}

@@ -16,11 +16,11 @@ export const templateSchema = z
     name: z
       .string()
       .trim()
+      .regex(/^[a-z_]+$/, {
+        message: "Name can only have lower-case letters and underscores",
+      })
       .min(1)
-      .max(512)
-      .refine((text) => !text.includes(" "), {
-        message: "Name cannot contain spaces. Replace it with underscore(_)",
-      }),
+      .max(512),
     body: z.string().trim().min(1).max(1024),
     footer: z.string().trim().max(60),
     header: z.union([

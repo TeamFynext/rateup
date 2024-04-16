@@ -6,6 +6,8 @@ import {
   rem,
   Group,
   Text,
+  Tooltip,
+  Box,
 } from "@mantine/core";
 import {
   IconPlus,
@@ -22,10 +24,14 @@ import { lexend500 } from "../../../../utils/fonts";
 
 interface ButtonSelectionProps extends MenuProps {
   handleMenuSelection: (value: string) => void;
+  flowBtn: boolean;
+  btnLen: number;
   disabled?: boolean;
 }
 export const ButtonSelection = ({
   handleMenuSelection,
+  flowBtn,
+  btnLen,
   disabled,
   ...restProps
 }: ButtonSelectionProps) => {
@@ -55,58 +61,103 @@ export const ButtonSelection = ({
 
         <Menu.Dropdown>
           <Menu.Label>Quick Reply Buttons</Menu.Label>
-          <Menu.Item
-            leftSection={
-              <IconWaveSine style={{ width: rem(14), height: rem(14) }} />
-            }
-            onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
+          <Tooltip
+            label={flowBtn && "Remove flow button to add other buttons"}
+            display={!flowBtn ? "none" : "block"}
           >
-            Flow
-          </Menu.Item>
-
-          <Menu.Item
-            leftSection={
-              <IconAdjustments style={{ width: rem(14), height: rem(14) }} />
-            }
-            onClick={() =>
-              handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)
-            }
-          >
-            Custom
-          </Menu.Item>
+            <Box>
+              <Menu.Item
+                disabled={flowBtn}
+                leftSection={
+                  <IconAdjustments
+                    style={{ width: rem(14), height: rem(14) }}
+                  />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)
+                }
+              >
+                Custom
+              </Menu.Item>
+            </Box>
+          </Tooltip>
           <Menu.Divider />
 
           <Menu.Label>Call-to-action buttons</Menu.Label>
-          <Menu.Item
-            leftSection={
-              <IconPhone style={{ width: rem(14), height: rem(14) }} />
-            }
-            onClick={() =>
-              handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)
-            }
+
+          <Tooltip
+            label={flowBtn && "Remove flow button to add other buttons"}
+            display={!flowBtn ? "none" : "block"}
           >
-            Call phone number
-          </Menu.Item>
-          <Menu.Item
-            leftSection={
-              <IconCopy style={{ width: rem(14), height: rem(14) }} />
-            }
-            onClick={() =>
-              handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)
-            }
+            <Box>
+              <Menu.Item
+                disabled={flowBtn}
+                leftSection={
+                  <IconPhone style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)
+                }
+              >
+                Call phone number
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={flowBtn && "Remove flow button to add other buttons"}
+            display={!flowBtn ? "none" : "block"}
           >
-            Copy offer code
-          </Menu.Item>
-          <Menu.Item
-            leftSection={
-              <IconLink style={{ width: rem(14), height: rem(14) }} />
-            }
-            onClick={() =>
-              handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
-            }
+            <Box>
+              <Menu.Item
+                disabled={flowBtn}
+                leftSection={
+                  <IconCopy style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)
+                }
+              >
+                Copy offer code
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={flowBtn && "Remove flow button to add other buttons"}
+            display={!flowBtn ? "none" : "block"}
           >
-            Visit website
-          </Menu.Item>
+            <Box>
+              <Menu.Item
+                disabled={flowBtn}
+                leftSection={
+                  <IconLink style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
+                }
+              >
+                Visit website
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={
+              (btnLen > 0 || flowBtn) &&
+              "Remove all button to add a flow button"
+            }
+            display={!flowBtn || btnLen === 0 ? "none" : "block"}
+          >
+            <Box>
+              <Menu.Item
+                disabled={btnLen > 0 || flowBtn}
+                leftSection={
+                  <IconWaveSine style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
+              >
+                Add a flow
+              </Menu.Item>
+            </Box>
+          </Tooltip>
         </Menu.Dropdown>
       </Menu>
       <Group fz={14} gap={"xs"}>

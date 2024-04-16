@@ -105,3 +105,25 @@ export async function publishFlow(dbFlowId: string) {
 export async function sendFlow(dbFlowId: string, phone: string) {
   await axiosClient.post(`${BASE}/${dbFlowId}/send`, { phone });
 }
+
+export async function updateFlowMetaData(
+  dbFlowId: string,
+  data: { name: string },
+) {
+  try {
+    notifications.show({
+      id: "flow-meta-data-update",
+      loading: true,
+      title: "Updating Flow",
+      message: `Hold on, flow is getting Updated...`,
+      autoClose: false,
+      withCloseButton: false,
+    });
+    return (
+      await axiosClient.put(`${BASE}/update-flow-metadata/${dbFlowId}`, data)
+    )?.data;
+  } catch (error) {
+    console.log(error, "error");
+    return error?.response?.data;
+  }
+}

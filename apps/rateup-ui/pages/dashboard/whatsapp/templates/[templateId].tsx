@@ -453,7 +453,16 @@ export default function WhatsappTemplateById() {
                       />
                     }
                   />
-                  <ButtonSelection handleMenuSelection={handleMenuSelection} />
+
+                  <ButtonSelection
+                    handleMenuSelection={handleMenuSelection}
+                    flowBtn={
+                      !!form?.values?.buttons?.find(
+                        (data) => data.type === "FLOW",
+                      )
+                    }
+                    btnLen={form?.values?.buttons?.length}
+                  />
                   {form.values?.buttons?.length > 0 && (
                     <>
                       {form.values?.buttons?.map((data, index) => (

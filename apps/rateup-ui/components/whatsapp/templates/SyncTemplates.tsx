@@ -337,7 +337,7 @@ export function SyncTemplatesButton() {
         onClick={open}
         radius={"lg"}
       >
-        Sync
+        Import
       </Button>
       <SyncTemplatesModal
         opened={openModal && !isLoading && !isError}
