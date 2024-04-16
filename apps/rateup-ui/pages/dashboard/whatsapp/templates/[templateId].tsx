@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
+  Alert,
   Box,
   Card,
   Flex,
   Grid,
   Group,
   MantineProvider,
+  SimpleGrid,
   Stack,
   Text,
   Textarea,
@@ -55,6 +57,7 @@ import {
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
   WHATSAPP_TEMPLATE_CATEGORY,
+  WHATSAPP_TEMPLATE_LANGUAGE,
 } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
 import { showErrorToast, showWarnToast } from "../../../../utils/notifications";
@@ -62,6 +65,8 @@ import { parseTemplate } from "../../../../utils/whatsapp/templates";
 import ButtonInput from "../../../../components/whatsapp/templates/Details/ButtonInput";
 import styles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
 import { uploadFile } from "../../../../utils/file-upload/upload";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { getErrorMessage } from "../../../../utils";
 
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +84,7 @@ export default function WhatsappTemplateById() {
     initialValues: {
       name: "",
       header: null,
+      language: "en",
       body: "Would you like to start survey?",
       footer: "",
       category: "MARKETING",
@@ -91,7 +97,8 @@ export default function WhatsappTemplateById() {
   });
   useEffect(() => {
     if (editingItem) {
-      form.setValues(parseTemplate(editingItem));
+      form.resetDirty();
+      form.initialize(parseTemplate(editingItem));
     }
   }, [editingItem]);
 
@@ -322,11 +329,13 @@ export default function WhatsappTemplateById() {
                 loading={isSubmittingDraft}
                 variant="outline"
                 onClick={() => handleSubmit(true)}
+                disabled={!form.isDirty()}
               />
               <RateupButtonPrimary
                 title="Save & Submit"
                 loading={isSubmitting}
                 onClick={() => handleSubmit(false)}
+                disabled={!form.isDirty()}
               />
             </Flex>
           </Flex>
@@ -334,6 +343,25 @@ export default function WhatsappTemplateById() {
             <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }}>
               <PaperLayout p={"xl"} h={"80dvh"}>
                 <Stack gap={"xs"}>
+                  <Alert
+                    variant="filled"
+                    color="red"
+                    icon={<IconInfoCircle />}
+                    display={
+                      createTemplateMutation.isError ||
+                      saveTemplateAsDraftMutation.isError ||
+                      updateTemplateMutation.isError
+                        ? "block"
+                        : "none"
+                    }
+                  >
+                    {getErrorMessage(
+                      updateTemplateMutation.error?.response ||
+                        saveTemplateAsDraftMutation?.error?.response ||
+                        createTemplateMutation?.error?.response,
+                      "Error Saving Changes",
+                    )}
+                  </Alert>
                   <WaTemplateStatusBadge status={form.values.status} />
                   <ContainedTextField
                     label={
@@ -345,24 +373,38 @@ export default function WhatsappTemplateById() {
                     {...form.getInputProps("name")}
                     rightSection={
                       <LengthTracker
-                        length={form.values.name.length}
+                        length={form?.values?.name?.length}
                         maxValue={512}
                         atStart
                       />
                     }
                     disabled={!!editingItem?.data?.id}
                   />
-                  <ContainedSelection
-                    label={
-                      <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Category
-                      </Text>
-                    }
-                    placeholder="Category"
-                    {...form.getInputProps("category")}
-                    data={WHATSAPP_TEMPLATE_CATEGORY}
-                    allowDeselect={false}
-                  />
+                  <SimpleGrid cols={2}>
+                    <ContainedSelection
+                      label={
+                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                          Category
+                        </Text>
+                      }
+                      placeholder="Category"
+                      {...form.getInputProps("category")}
+                      data={WHATSAPP_TEMPLATE_CATEGORY}
+                      allowDeselect={false}
+                    />
+                    <ContainedSelection
+                      label={
+                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                          Language
+                        </Text>
+                      }
+                      placeholder="Language"
+                      {...form.getInputProps("language")}
+                      searchable
+                      data={WHATSAPP_TEMPLATE_LANGUAGE}
+                      allowDeselect={false}
+                    />
+                  </SimpleGrid>
                   <Grid>
                     <Grid.Col span={5}>
                       <ContainedSelection
@@ -405,39 +447,35 @@ export default function WhatsappTemplateById() {
                       </Stack>
                     </Grid.Col>
                   </Grid>
-                  <Textarea
-                    ref={inputRef}
-                    label={
-                      <>
-                        <Text fz={14} ff={lexend500.style.fontFamily}>
-                          Body
-                        </Text>
-                        <Text fz={13}>
-                          Make your messages personal using variables and get
-                          more replies!
-                        </Text>
-                      </>
-                    }
-                    description={
-                      <TextFormateToolBar
-                        applyFormatting={applyFormatting}
-                        insertValue={insertValue}
-                        undo={undo}
-                        dynamicVariables={dynamicVariables}
-                      />
-                    }
-                    styles={{
-                      input: {
-                        borderRadius: "0px 0px 12px 12px",
-                      },
-                    }}
-                    placeholder={`Enter the text`}
-                    autosize
-                    minRows={3}
-                    maxRows={3}
-                    onSelect={handleSelect}
-                    {...form.getInputProps("body")}
-                  />
+                  <Stack gap={0}>
+                    <Text fz={14} ff={lexend500.style.fontFamily}>
+                      Body
+                    </Text>
+                    <Text fz={13}>
+                      Make your messages personal using variables and get more
+                      replies!
+                    </Text>
+                    <TextFormateToolBar
+                      applyFormatting={applyFormatting}
+                      insertValue={insertValue}
+                      undo={undo}
+                      dynamicVariables={dynamicVariables}
+                    />
+                    <Textarea
+                      ref={inputRef}
+                      styles={{
+                        input: {
+                          borderRadius: "0px 0px 12px 12px",
+                        },
+                      }}
+                      placeholder={`Enter the text`}
+                      autosize
+                      minRows={3}
+                      maxRows={3}
+                      onSelect={handleSelect}
+                      {...form.getInputProps("body")}
+                    />
+                  </Stack>
                   {dynamicVariables?.map((data, index) => (
                     <ContainedTextField
                       key={data}
@@ -461,7 +499,7 @@ export default function WhatsappTemplateById() {
                     {...form.getInputProps("footer")}
                     rightSection={
                       <LengthTracker
-                        length={form.values.footer.length}
+                        length={form?.values?.footer?.length}
                         maxValue={60}
                         atStart
                       />

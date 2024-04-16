@@ -12,6 +12,7 @@ import {
   updateWaTemplate,
 } from "./whatsapp.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import { getErrorMessage } from "../../utils";
 
 export const useWaTemplates = () =>
   useQuery({
@@ -37,9 +38,7 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        typeof error?.response?.data === "string"
-          ? error?.response?.data
-          : "Error creating template!",
+        getErrorMessage(error?.response, "Error creating template!"),
       );
       onError();
     },
@@ -60,9 +59,7 @@ export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        typeof error?.response?.data === "string"
-          ? error?.response?.data
-          : "Error saving as draft template!",
+        getErrorMessage(error?.response, "Error saving as draft template!"),
       );
       onError();
     },
@@ -83,9 +80,7 @@ export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
     },
     onError: (error: any) => {
       showErrorToast(
-        typeof error?.response?.data === "string"
-          ? error?.response?.data
-          : "Error updating template!",
+        getErrorMessage(error?.response, "Error updating template!"),
       );
       onError?.();
     },

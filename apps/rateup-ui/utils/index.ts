@@ -102,3 +102,15 @@ export const getContent = (title: string) => {
   if (isHtml(title)) return extractText(title);
   else return title;
 };
+
+export const getErrorMessage = (error: any, defaultMessage: string) => {
+  if (typeof error?.message === "string") {
+    return error?.message;
+  } else if (typeof error?.data === "string") {
+    return error?.data;
+  } else if (typeof error?.data?.message === "string") {
+    return error?.data?.message;
+  } else {
+    return defaultMessage;
+  }
+};
