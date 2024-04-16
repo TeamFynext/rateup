@@ -13,6 +13,7 @@ import { useImmer } from "use-immer";
 import { uploadFile } from "../../../../../../../utils/file-upload/upload";
 import { validateInboxTemplateSending } from "../../../../../../../utils/whatsapp/inbox";
 import { useEffect, useState } from "react";
+import { useWaTemplateById } from "../../../../../../../backend/whatsapp/whatsapp.query";
 interface Props {
   template: WaTemplateFetchBody;
   sendTemplate: UseMutationResult<
@@ -33,6 +34,9 @@ interface Props {
 export default function WaInboxTemplatePreview(props: Props) {
   const [parameterData, setParameterData] = useImmer<any>([]);
   const [loading, setLoading] = useState(false);
+
+  const { data: dbTemplate } = useWaTemplateById(props?.selectedTemplateId);
+
   async function handleFilesIfAny(data: Array<any>) {
     const newData = await Promise.all(
       data.map(async (item, index) => {
@@ -78,6 +82,7 @@ export default function WaInboxTemplatePreview(props: Props) {
   useEffect(() => {
     setParameterData(() => []);
   }, [props?.selectedTemplateId]);
+
   return (
     <Stack className={classes.wrapper}>
       <Group className={classes.name_sendbutton_wrapper}>
@@ -94,6 +99,7 @@ export default function WaInboxTemplatePreview(props: Props) {
           disabled={validateInboxTemplateSending(
             props?.template?.components,
             parameterData,
+            dbTemplate.defaultValues,
           ).includes(false)}
           ml="auto"
           onClick={handleSendTemplate}
