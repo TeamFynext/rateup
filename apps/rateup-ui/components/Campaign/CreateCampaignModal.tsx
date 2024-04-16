@@ -13,6 +13,7 @@ import {
 } from "../../backend/campaign/campaign.query";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../utils/constants";
+import useTemplatesAvailableForTeam from "../../hooks/team";
 
 interface CreateCampaignProps {
   close: () => void;
@@ -40,8 +41,13 @@ const CreateCampaignModal = ({
     },
   });
 
-  // TODO: show only flow-templates that are part of selected team
-  const { data: templates } = useWaTemplates();
+  const templates = useTemplatesAvailableForTeam(form.values.teamId);
+  if (
+    form.values.waTemplateId &&
+    !templates.map((t) => t.id).includes(form.values.waTemplateId)
+  ) {
+    form.setFieldValue("waTemplateId", "");
+  }
   const templatesData = templates?.map((t) => {
     return {
       value: t?.id,

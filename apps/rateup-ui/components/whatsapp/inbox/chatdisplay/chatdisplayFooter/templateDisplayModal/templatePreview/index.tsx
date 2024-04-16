@@ -99,7 +99,7 @@ export default function WaInboxTemplatePreview(props: Props) {
           disabled={validateInboxTemplateSending(
             props?.template?.components,
             parameterData,
-            dbTemplate.defaultValues,
+            dbTemplate?.defaultValues,
           ).includes(false)}
           ml="auto"
           onClick={handleSendTemplate}
