@@ -340,10 +340,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 
-  const contact = await getOrCreateContactByPhone(
-    session.phone,
-    session.surveyTeamMap.teamId,
-  );
+  const contact = await getOrCreateContactByPhone(session.phone, session.orgId);
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
