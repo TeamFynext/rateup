@@ -1,6 +1,9 @@
 import { Role } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { WaTemplateStatus } from "../../../types/enums";
+import {
+  WaTemplateComponentType,
+  WaTemplateStatus,
+} from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { getOrgIdAndRole } from "../../user/user.service";
 import {
@@ -35,6 +38,7 @@ import {
 import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
 import prisma from "../../../utils/prisma";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -283,7 +287,7 @@ export async function sendTemplateToUserHandler(
     const { phone, parameterData } = request.body;
     const orgId = request.user.orgId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    const { data } = dbTemplate;
+    const { data, defaultValues } = dbTemplate;
     const components = parameterData;
 
     const containsFlowButton = data.components.some((c) => {
@@ -344,6 +348,31 @@ export async function sendTemplateToUserHandler(
       log.trace("Session created successfully");
     }
 
+    const containsImage =
+      dbTemplate.data.components.find(
+        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+      )?.format === `IMAGE`;
+    if (containsImage) {
+      if (!components.some((c) => c.type === "header")) {
+        if (defaultValues?.image?.link) {
+          components.push({
+            type: "header",
+            parameters: [
+              {
+                type: "image",
+                image: {
+                  link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+                },
+              },
+            ],
+          });
+        } else {
+          throw new Error(
+            "Image not found in template. Please upload an image and try again",
+          );
+        }
+      }
+    }
     const templateQuery = {
       name: data?.name,
       language: {
