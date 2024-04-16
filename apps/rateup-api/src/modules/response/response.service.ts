@@ -82,6 +82,12 @@ export async function getAllResponses(
               teamId: true,
             },
           },
+          Contact: {
+            select: {
+              phone: true,
+            },
+          },
+          platform: true,
           Ticket: {
             select: {
               id: true,
@@ -121,6 +127,8 @@ export async function downloadExcelResponse(
   tz = "Asia/Calcutta",
 ) {
   const responses = allResponses && allResponses[0].responses;
+  const platform = responses?.[0]?.platform;
+
   const filteredSecondArray = questions.filter((item) =>
     visibleColumn.includes(item.title[defaultLanguage]),
   );
@@ -139,6 +147,10 @@ export async function downloadExcelResponse(
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
+    }
+    if (platform === "WHATSAPP") {
+      headerArray.push("Respondent's Mobile Number");
+      filteredSecondArray.push("Respondent's Mobile Number");
     }
     //TODO REMOVE LATER: MYG GIFT VISHU
     if (process.env.VISHU_SURVEY === surveyId) {
@@ -217,6 +229,8 @@ export async function downloadExcelResponse(
             .tz(tz)
             .format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
+        } else if (question === "Respondent's Mobile Number") {
+          responseValue = response?.Contact?.phone;
         } else {
           responseValue = "";
         }
@@ -478,6 +492,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       title: true,
       languages: true,
       questions: true,
+      type: true,
     },
   });
   const authClient = await initializeAuthClient();
