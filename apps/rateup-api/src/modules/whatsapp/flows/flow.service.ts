@@ -165,6 +165,36 @@ export async function getFlowFromDb(dbFlowId: string) {
   return flow;
 }
 
+export async function getFlowFromDbByFlowId(flowId: string) {
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      flowId,
+    },
+  });
+  return flow;
+}
+
+export async function getFlowWithSurveyTeamMapIds(flowId: string) {
+  return await prisma.waFlow.findFirst({
+    where: {
+      flowId: flowId,
+    },
+    select: {
+      survey: {
+        select: {
+          languages: true,
+          teams: {
+            select: {
+              id: true, // surveyTeamMapId
+              teamId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 export async function getUnsyncedFlows(orgId: string) {
   const waFlows = await getFlowsFromWa(orgId);
   const dbFlows = await getFlowsFromDb(orgId);
@@ -754,6 +784,10 @@ export async function handleStaticFlowReply(
   }
 
   let session = await getSession(orgId, from);
+  if (!session) {
+    log.error("Session not found for %s", from);
+    return;
+  }
   const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
   const flow = await getFlowFromDb(dbFlowId);
 

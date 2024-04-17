@@ -156,8 +156,7 @@ export async function createSession({
     include: toBeIncludedWaSessionRelations,
   });
 
-  log.info("Session created");
-  log.trace("Session created \n%o\n", session);
+  log.trace("Session created");
   return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 
@@ -341,10 +340,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 
-  const contact = await getOrCreateContactByPhone(
-    session.phone,
-    session.surveyTeamMap.teamId,
-  );
+  const contact = await getOrCreateContactByPhone(session.phone, session.orgId);
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,

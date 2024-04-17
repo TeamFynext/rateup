@@ -17,12 +17,43 @@ import {
 import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
 import { CampaignStatus } from "../../types/enums";
+import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
+import { getFlowWithSurveyTeamMapIds } from "../whatsapp/flows/flow.service";
+import { log } from "../../utils/logger";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
   reply: FastifyReply,
 ) {
-  const campaign = await createCampaign(request.body);
+  const { teamId, waTemplateId } = request.body;
+  const dbTemplate = await getDbTemplate(waTemplateId);
+  if (!dbTemplate) {
+    return reply.status(400).send({ message: "Template not found" });
+  }
+
+  const flowId = dbTemplate.data.components
+    .find((c) => c.type === "BUTTONS")
+    ?.buttons.find((b) => b.type === "FLOW")
+    ?.["flow_id"].toString();
+
+  const dbFlow = await getFlowWithSurveyTeamMapIds(flowId);
+  if (!dbFlow) {
+    log.error("Flow not found in db with id %s", flowId);
+    reply.code(500).send("Flow not found in db");
+    return;
+  }
+
+  const surveyTeamMap = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)
+    ?.id;
+  if (!surveyTeamMap) {
+    log.error("Team not found in survey;\nteam => %s", teamId);
+    reply.code(500).send("Team not found in survey");
+    return;
+  }
+  const campaign = await createCampaign({
+    ...request.body,
+    surveyTeamMapId: surveyTeamMap,
+  });
   return reply.status(201).send(campaign);
 }
 

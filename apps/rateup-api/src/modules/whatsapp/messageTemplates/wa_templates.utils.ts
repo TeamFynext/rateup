@@ -9,6 +9,7 @@ import {
   WaTemplateFetchBody,
   WaTemplateFetchComponents,
 } from "../../../types/whatsapp.types";
+import prisma from "../../../utils/prisma";
 import { parseStringWithVariables } from "../../../utils/template";
 import {
   CreateWaTemplateFormattedInput,
@@ -74,7 +75,7 @@ export function generateTemplate(
   return {
     name: input.name,
     components,
-    language: "en",
+    language: input.language,
     category:
       (input.category as WaTemplateCategory) ?? WaTemplateCategory.MARKETING,
   };

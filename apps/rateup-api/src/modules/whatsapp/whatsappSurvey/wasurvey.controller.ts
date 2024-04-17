@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   WaParsedMessage,
   createListMessage,
+  createTemplateMessage,
   getEventType,
   getMessageObject,
   getQuestionByIdFromSession,
@@ -28,6 +29,7 @@ import {
   WaEvent,
   WaTemplateStatus,
   QuestionType,
+  WaTemplateComponentType,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import {
@@ -53,6 +55,7 @@ import {
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { getWaSettingsHandler } from "../settings/wa_settings.controller";
 import { WhatsappSettings } from "@prisma/client";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -470,7 +473,44 @@ export async function sendSurveyToParticipants(campaignId: string) {
       },
     });
 
-    for (const { contact, id } of campaign.campaignParticipants) {
+    const orgId = campaign.surveyTeamMap.survey.WaFlow.orgId;
+    const dbTemplate = await getDbTemplate(campaign.waTemplateId);
+    if (!dbTemplate) {
+      throw new Error(`Template with id ${campaign.waTemplateId} not found`);
+    }
+    const components: any = [];
+    const containsImage =
+      dbTemplate.data.components.find(
+        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+      )?.format === `IMAGE`;
+    if (containsImage) {
+      if (!dbTemplate.defaultValues?.image?.link) {
+        log.error("Image not found in template %o", dbTemplate);
+        throw new Error(
+          "Image not found in template. Please delete & create a new template.",
+        );
+      }
+      components.push({
+        type: "header",
+        parameters: [
+          {
+            type: "image",
+            image: {
+              link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+            },
+          },
+        ],
+      });
+    }
+
+    for (const { contact, id, status } of campaign.campaignParticipants) {
+      if (status === CampaignParticipantStatus.SENT) {
+        log.warn(
+          "Campaign already sent to participant %o. Skipping...",
+          contact,
+        );
+        continue;
+      }
       if (!contact.phone) {
         log.warn("Contact %o does not have a phone number", contact);
         // TODO: handle this case. maybe send email?
@@ -478,37 +518,61 @@ export async function sendSurveyToParticipants(campaignId: string) {
       }
       // TODO: add rate limiting
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      let success = false;
-      if (campaign.surveyTeamMap.survey.type === SurveyType.WaFlow) {
-        success = await sendFlow({
-          orgId: campaign.surveyTeamMap.survey.WaFlow.orgId,
-          dbFlowId: campaign.surveyTeamMap.survey.WaFlow.dbFlowId,
-          phone: contact.phone,
-        });
-      } else {
-        const dbTemplate = await getDbTemplate(campaign.waTemplateId);
-        if (!dbTemplate) {
-          throw new Error(
-            `Template with id ${campaign.waTemplateId} not found`,
-          );
+      const existingSession = await getSession(
+        campaign.surveyTeamMap.survey.WaFlow.orgId,
+        contact.phone,
+      );
+      if (existingSession) {
+        if (validateSession(existingSession)) {
+          await deleteSession(orgId, contact.phone);
+        } else {
+          log.warn("Session already exists for %o. Skipping...", contact);
+          continue;
         }
-        success = await sendSurveyToParticipant({
-          campaignParticipantId: id,
-          phone: contact.phone,
-          surveyTeamMapId: campaign.surveyTeamMap.id,
-          dbTemplate,
-        });
       }
-      if (!success) {
-        log.error("Error sending survey to participant %o", contact);
-      } else {
-        log.trace("Survey sent to participant %o", contact);
-        await updateCampaignParticipant(id, {
-          status: CampaignParticipantStatus.SENT,
-        });
-      }
+      await createSession({
+        phone: contact.phone,
+        surveyTeamMapId: campaign.surveyTeamMapId,
+        orgId: orgId,
+        language: campaign.surveyTeamMap.survey.languages[0],
+      });
+
+      const templateComponents = [
+        ...components,
+        {
+          type: "button",
+          sub_type: "flow",
+          index: 0,
+          parameters: [
+            {
+              type: "action",
+              action: {
+                flow_token: contact.phone,
+              },
+            },
+          ],
+        },
+      ];
+      const templateQuery = {
+        name: dbTemplate.data.name,
+        language: {
+          code: dbTemplate.data?.language,
+        },
+        components: templateComponents,
+      };
+      const templateMessage = createTemplateMessage(
+        contact.phone,
+        templateQuery,
+      );
+
+      await sendMessage(orgId, templateMessage);
+
+      log.trace("Template sent to participant %o", contact);
+      await updateCampaignParticipant(id, {
+        status: CampaignParticipantStatus.SENT,
+      });
     }
-    log.trace("Survey sent to all participants");
+    log.trace("Template sent to all participants");
     return true;
   } catch (e) {
     log.error(e);
