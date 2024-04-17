@@ -33,6 +33,9 @@ function HeroSection() {
             <Button
               className={cx("play-video-btn")}
               leftSection={<IconPlayerPlay size={"1em"} />}
+              onClick={() =>
+                window?.open("https://youtu.be/knlzbNSHTRM", "_blank")
+              }
             >
               Play Video
             </Button>

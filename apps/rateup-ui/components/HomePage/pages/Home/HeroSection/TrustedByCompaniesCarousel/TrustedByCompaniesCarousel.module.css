@@ -56,6 +56,9 @@
 .logo-img {
   width: 125px;
   height: 125px;
+  /* width: 60%;
+  height: 60%; */
+  object-fit: contain;
 }
 
 @media screen and (max-width: 768px) {
