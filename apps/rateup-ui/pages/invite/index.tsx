@@ -1,27 +1,27 @@
 import {
-  Container,
-  Paper,
-  Image,
-  Stack,
-  Title,
-  Flex,
-  Space,
-  Loader,
   Center,
-  Text,
+  Container,
+  Flex,
+  Image,
+  Loader,
   NavLink,
+  Paper,
+  Space,
+  Stack,
+  Text,
 } from "@mantine/core";
-import { useRouter } from "next/router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { completeInvite } from "../../backend/team/team.api";
 import { notifications } from "@mantine/notifications";
 import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
-import { useEffect } from "react";
-import { RateupButtonPrimary } from "../../components/Button/RateupButtons";
-import styles from "./styles.module.css";
-import { signOut } from "supertokens-web-js/recipe/session";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+import { signOut } from "supertokens-web-js/recipe/session";
+import { completeInvite } from "../../backend/team/team.api";
+import { RateupButtonPrimary } from "../../components/Button/RateupButtons";
 import { rateupLogoUrl } from "../../components/HomePage/constants";
+import { lexend600 } from "../../utils/fonts";
+import styles from "./styles.module.css";
 
 const Invite = () => {
   const router = useRouter();
@@ -87,137 +87,153 @@ const Invite = () => {
   useEffect(() => {}, [updateInviteMutation.error]);
 
   return (
-    <>
-      <Container size={420} my={40}>
-        <Paper
-          withBorder
-          shadow="md"
-          p={30}
-          mt={30}
-          radius="md"
-          style={{ background: "#F7F7F7", minHeight: "600px" }}
+    <Stack align="center">
+      <Image
+        src="/images/bg-shape.svg"
+        w={"100%"}
+        pos={"fixed"}
+        bottom={0}
+        alt="bg of a shape"
+      />
+      <Paper
+        shadow="md"
+        p={30}
+        mt={70}
+        radius="md"
+        w={350}
+        mih={600}
+        pos={"relative"}
+        style={{
+          boxShadow: "0px -4px 12px 0px #0000001F",
+          zIndex: 999,
+        }}
+      >
+        <Center>
+          <Link href="/">
+            <Image src={rateupLogoUrl} alt="RateUp Logo" w={140} />
+          </Link>
+        </Center>
+        <Flex
+          gap="md"
+          justify="center"
+          align="center"
+          direction="column"
+          wrap="wrap"
         >
-          <Center>
-            <Link href="/">
-              <Image src={rateupLogoUrl} alt="RateUp Logo" w={140} />
-            </Link>
-          </Center>
-          <Flex
-            gap="md"
-            justify="center"
-            align="center"
-            direction="column"
-            wrap="wrap"
+          <Space h="lg" />
+          <Text
+            mb="lg"
+            fz={24}
+            style={{ color: "var(--tertiary-color)" }}
+            ff={lexend600.style.fontFamily}
           >
-            <Space h="lg" />
-            <Title mb="lg" order={2} style={{ color: "#000" }}>
-              {title} Invitation
-            </Title>
+            {title} Invitation
+          </Text>
 
-            {!type || !token ? (
-              <Container>Invite is not valid.</Container>
-            ) : (
-              <Container>
-                {updateInviteMutation?.isPending ||
-                !updateInviteMutation.data ? (
-                  type === "team" && token ? (
-                    <Loader type="bars" />
-                  ) : (
-                    "Error"
-                  )
+          {!type || !token ? (
+            <Container>Invite is not valid.</Container>
+          ) : (
+            <Container>
+              {updateInviteMutation?.isPending || !updateInviteMutation.data ? (
+                type === "team" && token ? (
+                  <Loader type="bars" />
                 ) : (
-                  <Flex
-                    gap="md"
-                    justify="center"
-                    align="center"
-                    direction="column"
-                    wrap="wrap"
-                  >
-                    <Text color="green">
-                      {" "}
-                      {updateInviteMutation.data?.data.message}
-                    </Text>
-                    <div className="wrapper">
-                      <svg
-                        className={styles.checkmark}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 52 52"
-                      >
-                        <circle
-                          className={styles.checkmark__circle}
-                          cx="26"
-                          cy="26"
-                          r="25"
-                          fill="none"
-                        />
-                        <path
-                          className={styles.checkmark__check}
-                          fill="none"
-                          d="M14.1 27.2l7.1 7.2 16.7-16.8"
-                        />
-                      </svg>
-                    </div>
-                    <Space h="xl" />
+                  "Error"
+                )
+              ) : (
+                <Flex
+                  gap="md"
+                  justify="center"
+                  align="center"
+                  direction="column"
+                  wrap="wrap"
+                >
+                  <Text color="green">
+                    {" "}
+                    {updateInviteMutation.data?.data.message}
+                  </Text>
+                  <div className="wrapper">
+                    <svg
+                      className={styles.checkmark}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 52 52"
+                    >
+                      <circle
+                        className={styles.checkmark__circle}
+                        cx="26"
+                        cy="26"
+                        r="25"
+                        fill="none"
+                      />
+                      <path
+                        className={styles.checkmark__check}
+                        fill="none"
+                        d="M14.1 27.2l7.1 7.2 16.7-16.8"
+                      />
+                    </svg>
+                  </div>
+                  <Space h="xl" />
 
+                  <Text ta={"center"}>
                     {updateInviteMutation.data?.data.data.isUser
                       ? "Login to your existing account in this email and continue using the app."
                       : "Your account is ready, Create a new password and login to start using the app."}
-
-                    {updateInviteMutation.data?.data.data.isUser ? (
-                      <RateupButtonPrimary
-                        onClick={() => {
-                          router.push("/login");
-                        }}
-                        title={"Continue"}
-                      />
-                    ) : (
-                      <RateupButtonPrimary
-                        onClick={() => {
-                          router.push(
-                            updateInviteMutation.data?.data.data.redirectLink,
-                          );
-                        }}
-                        title={"Continue"}
-                      />
-                    )}
-                  </Flex>
-                )}
-              </Container>
-            )}
-
-            {updateInviteMutation.error && (
-              <Stack>
-                <Text>Failed..! Error.... Try another invitation.</Text>
-
-                <Space h="xl" />
-                <Space h="xl" />
-                <Space h="xl" />
-                <Space h="xl" />
-
-                <Center>
-                  <Text
-                    inline
-                    c="blue.6"
-                    style={{ textDecoration: "none" }}
-                    className={styles.txt}
-                  >
-                    <Link href="/login" style={{ textDecoration: "none" }}>
-                      <NavLink
-                        label="Go to Login"
-                        leftSection={
-                          <IconArrowAutofitLeft size="1rem" stroke={1.5} />
-                        }
-                        variant="subtle"
-                      />
-                    </Link>
                   </Text>
-                </Center>
-              </Stack>
-            )}
-          </Flex>
-        </Paper>
-      </Container>
-    </>
+
+                  {updateInviteMutation.data?.data.data.isUser ? (
+                    <RateupButtonPrimary
+                      onClick={() => {
+                        router.push("/login");
+                      }}
+                      title={"Continue"}
+                    />
+                  ) : (
+                    <RateupButtonPrimary
+                      onClick={() => {
+                        router.push(
+                          updateInviteMutation.data?.data.data.redirectLink,
+                        );
+                      }}
+                      title={"Continue"}
+                    />
+                  )}
+                </Flex>
+              )}
+            </Container>
+          )}
+
+          {updateInviteMutation.error && (
+            <Stack>
+              <Text>Failed..! Try another invitation.</Text>
+
+              <Space h="xl" />
+              <Space h="xl" />
+              <Space h="xl" />
+              <Space h="xl" />
+
+              <Center>
+                <Text
+                  inline
+                  c="blue.6"
+                  style={{ textDecoration: "none" }}
+                  className={styles.txt}
+                >
+                  <Link href="/login" style={{ textDecoration: "none" }}>
+                    <NavLink
+                      label="Go to Login"
+                      leftSection={
+                        <IconArrowAutofitLeft size="1rem" stroke={1.5} />
+                      }
+                      variant="subtle"
+                    />
+                  </Link>
+                </Text>
+              </Center>
+            </Stack>
+          )}
+        </Flex>
+      </Paper>
+    </Stack>
   );
 };
 
