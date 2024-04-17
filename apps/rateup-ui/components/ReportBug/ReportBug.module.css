@@ -1,13 +1,13 @@
 .report-bug-container-wrapper {
   position: fixed;
   bottom: 0;
-  left: 3rem;
+  right: 5rem;
   z-index: 150;
 }
 
 .report-bug-container {
   position: absolute;
-  margin-left: -3rem;
+  margin-right: 5rem;
   bottom: 6px;
 }
 
