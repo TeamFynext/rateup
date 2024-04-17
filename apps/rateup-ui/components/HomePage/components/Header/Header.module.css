@@ -9,7 +9,9 @@
   width: 100%;
   max-width: 120rem;
   transition: top 0.4s linear;
+  position: sticky;
   top: 0;
+  z-index: 350;
 }
 
 .header-links-container {

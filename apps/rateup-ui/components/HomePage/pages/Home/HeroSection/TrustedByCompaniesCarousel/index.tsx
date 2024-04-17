@@ -13,7 +13,7 @@ function TrustedByCompaniesCarousel() {
     <Box className={cx("carousel-container")}>
       <Carousel
         height={isVPLeq768px ? 100 : 175}
-        slideSize={{ base: "33.333333%", xs: "33.333333%", sm: "23%" }}
+        slideSize={{ base: "30%", xs: "25%", sm: "23%", lg: "20%", xl: "16%" }}
         slideGap={"md"}
         loop
         classNames={{
@@ -21,7 +21,7 @@ function TrustedByCompaniesCarousel() {
           controls: cx("controls"),
           control: cx("control"),
         }}
-        initialSlide={3}
+        initialSlide={2}
         withControls
       >
         {companiesLogosList.map(({ id, logoUrl, alt }) => {
