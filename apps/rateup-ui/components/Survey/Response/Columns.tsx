@@ -40,6 +40,7 @@ export const useSurveyResponseColumns = ({
   setResponseTeamId,
   enableTicket,
   surveyId,
+  typeWa = false,
 }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   //TODO REMOVE LATER: MYG GIFT VISHU
@@ -110,6 +111,33 @@ export const useSurveyResponseColumns = ({
           };
         })
       : []),
+    ...(typeWa
+      ? [
+          {
+            header: () => (
+              <Text
+                c="dark.3"
+                truncate="end"
+                miw={200}
+                maw={200}
+                fw={600}
+                fz={"lg"}
+              >
+                Respondent&apos;s Mobile Number
+              </Text>
+            ),
+            filterFn: fuzzyFilter,
+            accessorFn: (row) => row?.Contact?.phone,
+            id: "respondentsMobileNumber",
+            cell: (info) => (
+              <Text c="dark.3" p={10} miw={200}>
+                {info.getValue()?.toString()}
+              </Text>
+            ),
+          },
+        ]
+      : []),
+    ,
     ...(enableTicket
       ? [
           {

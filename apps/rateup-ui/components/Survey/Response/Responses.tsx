@@ -35,6 +35,7 @@ import { useUser } from "../../../context/UserContext";
 import {
   QuestionType,
   SubscriptionFeaturePathName,
+  SurveyType,
 } from "../../../types/enums";
 import { ContactQuestions } from "../../../utils/constants";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
@@ -226,6 +227,9 @@ const Responses = ({
       survey?.enableTickets &&
       hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     surveyId: survey?.id,
+    typeWa:
+      survey?.type === SurveyType.WhatsApp ||
+      survey?.type === SurveyType.WaFlow,
   });
 
   const handleSyncGoogleSheet = () => {
