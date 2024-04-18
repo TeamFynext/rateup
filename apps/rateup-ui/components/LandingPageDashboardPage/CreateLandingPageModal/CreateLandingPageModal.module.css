@@ -1,3 +1,7 @@
+.modal-content {
+  border-radius: 1rem;
+}
+
 .modal-header {
   position: relative;
 }
@@ -25,10 +29,18 @@
   margin-bottom: 0.3125rem;
 }
 
+.name-text-input input {
+  border-radius: 0.625rem;
+}
+
 .cancel-save-btns-container {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+}
+
+.cancel-save-btns-container button {
+  border-radius: 0.625rem;
 }
 
 .cancel-save-btns-container .cancel-btn {

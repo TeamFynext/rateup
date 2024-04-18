@@ -26,7 +26,7 @@ function LandingPageDashboard() {
   if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>Unable to get, Please try again later</p>
+        <p>Unable to get data, Please try again later</p>
       </Center>
     );
   }
@@ -57,8 +57,8 @@ function LandingPageDashboard() {
           opened={isCreateLandingPageModalOpen}
           onClose={createLandingPageModalHandlers.close}
           mode="create"
-          shortUrlId={" "}
-          initialName={" "}
+          shortUrlId={""}
+          initialName={""}
         />
       )}
     </Stack>

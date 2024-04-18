@@ -4,16 +4,19 @@ import {
   MenuDropdown,
   MenuItem,
   MenuTarget,
+  Text,
 } from "@mantine/core";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import styles from "./LandingPageCard.module.css";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/router";
 import { useDeleteLandingPageMutation } from "../../../backend/landingPage/landingPage.query";
 import { useDisclosure } from "@mantine/hooks";
 import CreateLandingPageModal from "../CreateLandingPageModal";
+import { modals } from "@mantine/modals";
+import modalStyles from "../CreateLandingPageModal/CreateLandingPageModal.module.css";
 
-function MoreOptionsMenu({ shortUrlId, id, initialName }) {
+function MoreOptionsMenu({ shortUrlId, id, name }) {
   const router = useRouter();
 
   const [isEditLandingPageModalOpen, editLandingPageModalHandlers] =
@@ -29,12 +32,29 @@ function MoreOptionsMenu({ shortUrlId, id, initialName }) {
   }, [shortUrlId]);
 
   const handleDeleteClick = useCallback(async () => {
-    deleteLandingPageMutation.mutateAsync();
+    // deleteLandingPageMutation.mutateAsync();
+    modals.openConfirmModal({
+      title: "Delete Landing Page?",
+      children: (
+        <Text className={styles["are-you-sure-text"]}>
+          Are you sure to delete this Landing Page?
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      className: styles["delete-confirmation-modal"],
+      centered: true,
+      classNames: {
+        header: modalStyles["modal-header"],
+        body: modalStyles["modal-body"],
+        content: modalStyles["modal-content"],
+      },
+      onConfirm: () => deleteLandingPageMutation.mutateAsync(),
+    });
   }, [deleteLandingPageMutation]);
 
-  const handleRenameClick = () => {
+  const handleRenameClick = useCallback((e) => {
     editLandingPageModalHandlers.open();
-  };
+  }, []);
 
   return (
     <>
@@ -66,7 +86,7 @@ function MoreOptionsMenu({ shortUrlId, id, initialName }) {
           onClose={editLandingPageModalHandlers.close}
           mode="Rename"
           shortUrlId={shortUrlId}
-          initialName={initialName}
+          initialName={name}
         />
       )}
     </>

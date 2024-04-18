@@ -65,7 +65,9 @@ function CreateLandingPageModal({
       classNames={{
         header: styles["modal-header"],
         body: styles["modal-body"],
+        content: styles["modal-content"],
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <Box className={styles["modal-content-container"]}>
         <form
@@ -77,8 +79,9 @@ function CreateLandingPageModal({
           }
         >
           <TextInput
+            className={styles["name-text-input"]}
             label="Name"
-            placeholder="Name of Landing Page"
+            placeholder="Enter name of Landing Page"
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
           />
