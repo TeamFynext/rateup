@@ -9,7 +9,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import { IconScaleOutline } from "@tabler/icons";
+import { IconScaleOutline } from "@tabler/icons-react";
 import {
   Icon123,
   IconAddressBook,

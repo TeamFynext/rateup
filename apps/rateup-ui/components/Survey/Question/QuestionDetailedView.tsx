@@ -13,7 +13,7 @@ import {
   Text,
 } from "@mantine/core";
 import { UseFormReturnType, useForm } from "@mantine/form";
-import { IconBrandGoogle, IconTicket } from "@tabler/icons";
+import { IconBrandGoogle, IconTicket } from "@tabler/icons-react";
 import { IconDeviceSdCard, IconEdit, IconEye } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
