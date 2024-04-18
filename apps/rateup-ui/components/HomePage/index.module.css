@@ -1,12 +1,16 @@
 .gradient-image-1 {
-  background-image: linear-gradient(90deg, #2564ae, #00397b);
+  background-image: linear-gradient(90deg, #013047, #004f98);
+}
+
+.light-blue-grdient {
+  background-image: linear-gradient(90deg, #387adf, #50c4ed);
 }
 
 .header-footer-link {
   text-decoration: none;
   font-weight: 600;
   margin-right: 2.1875rem;
-  font-size: 1.125rem;
+  font-size: 1;
   white-space: nowrap;
 }
 

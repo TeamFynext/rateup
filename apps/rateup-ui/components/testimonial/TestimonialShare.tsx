@@ -32,8 +32,8 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
     );
 
   return (
-    <ScrollAreaAutosize>
-      <Stack mah={500}>
+    <ScrollAreaAutosize h={"100%"}>
+      <Stack>
         <Group p={"sm"}>
           {filteredTestimonials?.map((testimonial, index) => (
             <TestimonialCard

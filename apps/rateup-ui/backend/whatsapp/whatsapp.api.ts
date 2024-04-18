@@ -62,6 +62,7 @@ export async function tokenizeIp() {
 
 type imageResponse = {
   id: string;
+  uploadSessionId: string;
 };
 export async function uploadTemplateMedia(file: File) {
   const formData = new FormData();
@@ -88,10 +89,12 @@ export async function sendWaTemplateToUser(
   templateId: string,
   phone: string,
   parameterData: any,
+  teamId: string,
 ) {
   return axiosClient.post(`${TEMPLATES_URL}/${templateId}/send`, {
     templateId,
     phone,
     parameterData,
+    teamId,
   });
 }

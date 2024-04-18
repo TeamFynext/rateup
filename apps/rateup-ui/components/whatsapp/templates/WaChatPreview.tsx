@@ -1,5 +1,5 @@
 import { BackgroundImage, Box, Flex, Text } from "@mantine/core";
-import { IconWifi } from "@tabler/icons";
+import { IconWifi } from "@tabler/icons-react";
 import {
   IconAntennaBars5,
   IconBatteryFilled,

@@ -16,13 +16,14 @@ export const templateSchema = z
     name: z
       .string()
       .trim()
+      .regex(/^[a-z_0-9]+$/, {
+        message: "Name can only have lower-case letters and underscores",
+      })
       .min(1)
-      .max(512)
-      .refine((text) => !text.includes(" "), {
-        message: "Name cannot contain spaces. Replace it with underscore(_)",
-      }),
+      .max(512),
     body: z.string().trim().min(1).max(1024),
     footer: z.string().trim().max(60),
+    language: z.string(),
     header: z.union([
       z.null(),
       z.string().trim().min(1),
@@ -68,6 +69,9 @@ export const templateSchema = z
             .refine(isValidPhoneNumber)
             .optional(),
           url: z.string().trim().url().max(2000).optional(),
+          flow_id: z.string().optional(),
+          flow_action: z.string().optional(),
+          navigate_screen: z.string().optional(),
         }),
       )
       .max(10),
@@ -108,3 +112,9 @@ export const templateSchema = z
         message: errorMessage,
       });
   });
+
+export type WaTemplateDefaultValues = {
+  image?: {
+    link: string;
+  };
+};

@@ -1,44 +1,44 @@
 import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
-import { Group, Loader, RadioGroup, Stack } from "@mantine/core";
+import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
 import classes from "./styles.module.css";
 import { WaContact } from "../../../../../../types/global";
-import {
-  useSendWaTemplateToUser,
-  useWaTemplates,
-} from "../../../../../../backend/whatsapp/whatsapp.query";
+import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
 import NothingFound from "../../../../../NothingFound/NothingFound";
 import WaInboxTemplateSelectCard from "./templateSelectCard";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import WaInboxTemplatePreview from "./templatePreview";
 import WaTemplateSF from "./templateSF";
-import { WaTemplate } from "../../../../../../backend/whatsapp/whatsapp.api";
+import { TeamSelector } from "../../../../../input/TeamSelector";
+import useTemplatesAvailableForTeam from "../../../../../../hooks/team";
 interface Props {
   sessionExpired: boolean;
   waContact: WaContact;
 }
+
 export default function WaInboxTemplateDisplayModal(props: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [opened, { close: onClose, open }] = useDisclosure(false);
-  const [sfTemplates, setSFTemplates] = useState<WaTemplate[]>([]);
-
   const sendTemplate = useSendWaTemplateToUser(
     props?.waContact?.phone,
     props?.waContact?.id,
   );
-
-  const { data, isLoading, error } = useWaTemplates();
-  const acceptedTemplates = data?.filter(
+  const [teamId, setTeamId] = useState<string>("");
+  const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
+  const approvedTemplates = templatesAvailableForTeam?.filter(
     (template) => template?.data?.status === "APPROVED",
   );
-  useEffect(() => {
-    if (acceptedTemplates) {
-      setSFTemplates(acceptedTemplates);
-    }
-  }, [data]);
-  if (isLoading) return <Loader />;
-  if (error) return <div>Error: {error.message}</div>;
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const searchFilteredTemplates = approvedTemplates?.filter((template) =>
+    template.data.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  // Final list of templates after applying all filters
+  const filteredTemplates = searchFilteredTemplates;
+
+  const hasTemplates = filteredTemplates && filteredTemplates?.length > 0;
   return (
     <>
       <SimpleModalLayout
@@ -52,24 +52,38 @@ export default function WaInboxTemplateDisplayModal(props: Props) {
           noCustomHeader: true,
         }}
       >
-        {acceptedTemplates && acceptedTemplates?.length > 0 ? (
+        {true ? (
           <Stack className={classes.modal_inner}>
             <Group className={classes.template_card_list_preview_wrapper}>
               <Stack className={classes.template_card_list_wrapper}>
+                <Tooltip
+                  multiline
+                  w={300}
+                  label={
+                    "Some templates might not be available for a team, since they may have Flows which are not available for the team."
+                  }
+                >
+                  <div>
+                    {" "}
+                    {/* Adding a div since Tooltip isn't working on <Select /> */}
+                    <TeamSelector value={teamId} onChange={setTeamId} />
+                  </div>
+                </Tooltip>
                 <WaTemplateSF
-                  templateFullData={acceptedTemplates}
-                  setTemplateSFData={setSFTemplates}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
                 />
                 <RadioGroup onChange={setSelectedTemplateId} h={"100%"}>
-                  {sfTemplates?.map((template, i) => (
+                  {filteredTemplates?.map((template, i) => (
                     <WaInboxTemplateSelectCard {...template} key={i} />
                   ))}
                 </RadioGroup>
               </Stack>
-              {selectedTemplateId ? (
+              {hasTemplates && selectedTemplateId ? (
                 <WaInboxTemplatePreview
+                  teamId={teamId}
                   template={
-                    acceptedTemplates.find(
+                    filteredTemplates.find(
                       (template) => template.id === selectedTemplateId,
                     )?.data
                   }

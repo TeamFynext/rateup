@@ -3,12 +3,15 @@ import OurFeaturesSection from "./OurFeaturesSection";
 import OurSolutionsSection from "./OursolutionsSection";
 import Head from "next/head";
 import TestimonialsSection from "./TestimonialsSection";
-import TrustedBy from "./OursolutionsSection/TrustedBy";
-import { useRouter } from "next/router";
+import EmpowerYourBrandsGrowth from "./EmpowerYourBrandsGrowth";
+import Banner from "../../components/Banner";
+import { Box } from "@mantine/core";
+import PerfectSurveyForYourNeeds from "./Features/PerfectSurveyForYourNeeds";
+import Features from "./Features";
 
 function Home() {
   return (
-    <>
+    <Box style={{ fontFamily: `var(--font-rubik)` }}>
       <Head>
         <title>Customer Engagement platform - Feedback tool | RateUp</title>
         <meta
@@ -39,11 +42,17 @@ function Home() {
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
-      <TrustedBy />
-      <OurFeaturesSection />
-      <OurSolutionsSection />
+
+      <EmpowerYourBrandsGrowth />
+      <Banner
+        title={"Discover Rateup!"}
+        subtitle={"Your Complete Customer Engagement Solution"}
+      />
+      <Features />
+      {/* <OurFeaturesSection /> */}
+      {/* <OurSolutionsSection /> */}
       {/* <TestimonialsSection /> */}
-    </>
+    </Box>
   );
 }
 

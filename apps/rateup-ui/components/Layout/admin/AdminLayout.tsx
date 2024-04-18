@@ -18,10 +18,11 @@ import { useRouter } from "next/router";
 import LoggedInUserCard from "../Navbar/LoggedInUserCard";
 import { useUserInfo } from "../../../backend/user/user.query";
 import { adminNavItems } from "./admin.nav";
+import RateupLoader from "../../Loaders/RateupLoader";
 
 export function AdminPanelLayout({ children }) {
   const [opened, { toggle, open, close }] = useDisclosure(true);
-  const { data, isLoading, isError } = useUserInfo();
+  const { data, isPending, isError } = useUserInfo();
   const theme = useMantineTheme();
   const primaryColor = theme.colors[theme.primaryColor][6];
   const router = useRouter();
@@ -31,7 +32,7 @@ export function AdminPanelLayout({ children }) {
       router.push("/dashboard");
     }
   }
-
+  if (isPending) return <RateupLoader h={"100dvh"} />;
   return (
     <AppShell
       header={{ height: "60" }}

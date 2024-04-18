@@ -7,8 +7,22 @@ import { lexend500 } from "../../../../utils/fonts";
 import { LengthTracker } from "../../../input/LengthTracker";
 import "react-phone-number-input/style.css";
 import styles from "./ButtonInput.module.css";
+import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
+import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 
 const ButtonInput = ({ form, index, deleteButton, data }) => {
+  let { data: flows } = useWaFlowsFromDb(
+    data.type === WHATSAPP_BUTTON_TYPE.FLOW,
+  );
+  if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
+    const screeenId = flows?.find(
+      (data) => data.flowId === form?.values?.buttons?.[index]?.flow_id,
+    )?.json?.screens?.[0]?.id;
+    if (screeenId) {
+      data["navigate_screen"] = screeenId;
+    }
+  }
+
   switch (data.type) {
     case WHATSAPP_BUTTON_TYPE.QUICK_REPLY:
       return (
@@ -130,7 +144,6 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
                 {...form.getInputProps(`buttons.${index}.phone_number`)}
                 className={styles.inputPhone}
               />
-              {/* {form} */}
             </Box>
             <ActionIcon
               mt={24}
@@ -180,6 +193,53 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             }
             flex={1}
             {...form.getInputProps(`buttons.${index}.example`)}
+          />
+          <ActionIcon
+            mt={24}
+            variant="transparent"
+            onClick={() => deleteButton(index)}
+          >
+            <IconX />
+          </ActionIcon>
+        </>
+      );
+    case WHATSAPP_BUTTON_TYPE.FLOW:
+      return (
+        <>
+          <ContainedTextField
+            label={
+              <Text fz={14} ff={lexend500.style.fontFamily}>
+                Type of action
+              </Text>
+            }
+            value={"Open a Flow"}
+            readOnly
+          />
+          <ContainedTextField
+            label={
+              <Text fz={14} ff={lexend500.style.fontFamily}>
+                Button text
+              </Text>
+            }
+            rightSection={
+              <LengthTracker
+                length={form.values?.buttons?.[index]?.text?.length}
+                maxValue={25}
+                atStart
+              />
+            }
+            {...form.getInputProps(`buttons.${index}.text`)}
+          />
+          <FlowSelector
+            onlyPublished
+            id={"flowId"}
+            {...form.getInputProps(`buttons.${index}.flow_id`)}
+            label={
+              <Text fz={14} ff={lexend500.style.fontFamily}>
+                Flow
+              </Text>
+            }
+            comboboxProps={{ position: "top" }}
           />
           <ActionIcon
             mt={24}

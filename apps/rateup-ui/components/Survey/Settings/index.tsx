@@ -11,6 +11,7 @@ import SecuritySettings from "./SecuritySettings";
 import styles from "./SurveySettings.module.css";
 import TicketSettings from "./TicketSettings";
 import UniqueDeviceSettings from "./UniqueDeviceSettings";
+import FlowNameUpdate from "./FlowNameUpdate";
 
 const defaultEnabledModules = [
   "name",
@@ -32,12 +33,16 @@ interface SurveySettingsProps {
   survey: any;
   enabledModules?: string[];
   setSelectedLanguage?: (lang: string) => void;
+  flowName?: string;
+  flowDbId?: string;
 }
 const SurveySettings = ({
   surveyId,
   survey,
   enabledModules = defaultEnabledModules,
   setSelectedLanguage = null,
+  flowName,
+  flowDbId,
 }: SurveySettingsProps) => {
   const [kioskMode, setKioskMode] = useState(survey?.kioskMode);
   const [preview, setPreview] = useState(survey?.skipPreview);
@@ -114,6 +119,9 @@ const SurveySettings = ({
               surveyId={surveyId}
               enabledModules={enabledModules}
             />
+          )}
+          {enabledModules.includes("name-change") && (
+            <FlowNameUpdate name={flowName} dbFlowId={flowDbId} />
           )}
         </Box>
       </Box>

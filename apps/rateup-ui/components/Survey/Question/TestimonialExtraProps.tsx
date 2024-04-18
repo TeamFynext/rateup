@@ -14,12 +14,6 @@ const TestimonialExtraProps = ({ qId, form }) => {
   const [photo, setHasPhoto] = useState(features?.photo);
 
   useEffect(() => {
-    setHasRating(features?.rating);
-    setHasJobTitle(features?.jobTitle);
-    setHasPhoto(features?.photo);
-  }, [features]);
-
-  useEffect(() => {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: { ...features, rating: rating },

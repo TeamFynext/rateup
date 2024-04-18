@@ -35,6 +35,7 @@ const TestimonialCard = ({
         p={0}
         maw={350}
         w={280}
+        h={310}
       >
         <TestimonialContent
           testimonial={testimonial}

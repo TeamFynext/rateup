@@ -6,7 +6,7 @@ import {
   IconUsers,
   IconLogout,
   IconClipboardText,
-} from "@tabler/icons";
+} from "@tabler/icons-react";
 import { Group, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
 import { useRouter } from "next/router";
 

@@ -20,6 +20,7 @@
   --primary-color: #ffffff;
   --secondary-color: #000000;
   --tertiary-color: #1c518e;
+  --homepage-blue: #013553;
   --shade-of-blue: #edf2ff;
   --shade-of-blue-2: #3f5ba9;
   --shade-of-blue-3: #00397b;
@@ -57,6 +58,7 @@
   --gift-grey-3: #e6e6e6;
   --gift-grey-4: #848484;
   --gift-black: #2f2f2f;
+  --sucess-green: #39c907;
 }
 
 html {

@@ -1105,3 +1105,8 @@ export type WaTemplate = {
   language: WaTemplateLanguage;
   components: WaTemplateComponent[];
 };
+
+export type ChatBotMessage = {
+  content: string;
+  source: ChatBotSource;
+};

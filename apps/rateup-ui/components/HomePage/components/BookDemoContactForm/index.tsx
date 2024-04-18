@@ -11,9 +11,13 @@ type ButtonProps = {
 
 type BookDemoContactFormProps = {
   buttonProps?: ButtonProps;
+  className?: string;
 };
 
-function BookDemoContactForm({ buttonProps }: BookDemoContactFormProps) {
+function BookDemoContactForm({
+  buttonProps,
+  className = "",
+}: BookDemoContactFormProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
 
@@ -26,7 +30,7 @@ function BookDemoContactForm({ buttonProps }: BookDemoContactFormProps) {
   }, []);
 
   return (
-    <Flex>
+    <Flex className={className}>
       <Modal
         classNames={modalstyles}
         opened={opened}

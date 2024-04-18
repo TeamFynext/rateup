@@ -1,5 +1,4 @@
 import { Stack, Title } from "@mantine/core";
-import TrustedBy from "./TrustedBy";
 import { solutionsList } from "./constants";
 import styles from "./OurSolutionsSection.module.css";
 import InteractiveSolutionDescriptions from "../../../components/InteractiveSolutionDescriptions";

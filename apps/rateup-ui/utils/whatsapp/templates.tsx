@@ -2,14 +2,18 @@ import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../constants";
 
 export function parseTemplate(template) {
   let parsedTemplate: any = {};
+  parsedTemplate.name = template?.data?.name;
+  parsedTemplate.category = template?.data?.category;
+  parsedTemplate.status = template?.data?.status;
+  parsedTemplate.language = template?.data?.language;
+  parsedTemplate.format = "NONE";
+  parsedTemplate.header = null;
+  parsedTemplate.buttons = [];
+  parsedTemplate.footer = "";
 
-  parsedTemplate.name = template.data.name;
-  parsedTemplate.category = template.data.category;
-  parsedTemplate.status = template.data.status;
-
-  for (const component of template.data.components) {
+  for (const component of template?.data?.components ?? []) {
     if (component.type.toLowerCase() === "header") {
-      parsedTemplate.format = component?.format;
+      parsedTemplate.format = component?.format ?? "NONE";
       if (
         component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE ||
         component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.LOCATION

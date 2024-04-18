@@ -20,10 +20,10 @@ import {
   IconPlus,
   IconTrashXFilled,
   IconUserPlus,
+  IconSearch,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
-import { IconSearch } from "@tabler/icons";
 import styles from "./contacts.module.css";
 
 import { useDisclosure } from "@mantine/hooks";

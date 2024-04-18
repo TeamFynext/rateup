@@ -52,6 +52,7 @@ export const ShareFlow = ({
     ) {
       if (!waSettings) return;
       const phone = waSettings.phone?.replace("+", "").replaceAll(" ", "");
+
       if (shortUrlId) {
         setShareUrl(
           `${process.env.NEXT_PUBLIC_FRONTEND_URL}/was/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
@@ -75,6 +76,15 @@ export const ShareFlow = ({
     survey?.getLocation,
     waSettings,
   ]);
+
+  useEffect(() => {
+    const short = survey?.teams?.find(
+      (data) => data.mapId === surveyTeamMapId,
+    )?.shortUrlId;
+    if (short) {
+      setShortUrlId(short);
+    }
+  }, [survey?.teams, surveyTeamMapId]);
 
   const surveyUpdateMutation = useUpdateSurveyMutation();
 
@@ -103,6 +113,8 @@ export const ShareFlow = ({
     (value) => {
       const teamObj = survey.teams[value];
       setSurveyTeamMapId(teamObj.mapId);
+      console.log(teamObj.shortUrlId);
+
       setShortUrlId(teamObj.shortUrlId);
       setSelectTeamDropdownState(value);
     },

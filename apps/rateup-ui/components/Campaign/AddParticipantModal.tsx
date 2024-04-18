@@ -283,6 +283,7 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
           radius={"xl"}
           size="sm"
           w={90}
+          disabled={!group?._count.contacts}
         >
           Add
         </Button>

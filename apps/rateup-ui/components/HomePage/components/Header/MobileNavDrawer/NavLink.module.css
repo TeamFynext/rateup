@@ -2,9 +2,9 @@
 .root {
   padding: 1rem 0;
   background-color: transparent;
-  color: var(--grey-color-2);
+  color: var(--grey-color);
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 1rem;
 }
 
 .root:hover {
@@ -17,8 +17,6 @@
 
 .section {
   margin: 0;
-  width: 3.75rem;
-  height: 3.75rem;
 }
 
 .chevron {
@@ -27,5 +25,5 @@
 }
 
 .navlink-with-chevron {
-  padding: 0;
+  padding: 1rem 0;
 }

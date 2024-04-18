@@ -1,4 +1,4 @@
-import { Box, Stack, Text } from "@mantine/core";
+import { Box, Image, Stack, Text } from "@mantine/core";
 import {
   IconPhoto,
   IconVideo,
@@ -9,7 +9,13 @@ import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
 
 const MediaCardPreview = ({ children }) => {
   return (
-    <Stack w={"100%"} h={"80px"} justify="center" align="center">
+    <Stack
+      w={"100%"}
+      h={"80px"}
+      justify="center"
+      align="center"
+      component={"span"}
+    >
       {children}
     </Stack>
   );
@@ -31,7 +37,23 @@ export function HeaderWithFormatting(text, type) {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>
-          <IconPhoto size={40} />
+          {text instanceof File ? (
+            <Image
+              src={URL.createObjectURL(text)}
+              h={50}
+              w={50}
+              alt="image of the template content"
+            />
+          ) : text?.startsWith("http") ? (
+            <Image
+              src={text}
+              h={50}
+              w={50}
+              alt="image of the template content"
+            />
+          ) : (
+            <IconPhoto size={40} />
+          )}
         </MediaCardPreview>
       );
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:
