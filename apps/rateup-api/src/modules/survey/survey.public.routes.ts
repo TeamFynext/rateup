@@ -13,11 +13,13 @@ import {
   visitedSurveyHandler,
 } from "./survey.controller";
 import { $Tref } from "../team/team.schema";
+import { verifySurveyMonthlyLimitRestriction } from "./survey.auth";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
   server.get(
     "/:id",
     {
+      preHandler: [verifySurveyMonthlyLimitRestriction],
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
       },

@@ -13,6 +13,7 @@ import { createMenuBanner } from "./banner/banner.service";
 import { createMenuCategory } from "./category/category.service";
 import { createMenuItem } from "./item/item.service";
 import { getTeamById } from "../team/team.service";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export async function createMenu(data: CreateMenuInput) {
   if (data.teamId === undefined) return;
@@ -408,11 +409,24 @@ export async function getMenuLanding(id: string) {
   const subscription = await prisma.subscription.findFirst({
     where: menu?.team?.orgId,
   });
+
   const isExpired = dayjs().isAfter(subscription.expiresAt);
+
+  const usage = await prisma.usageStats.findUnique({
+    where: {
+      orgId: menu?.team?.orgId,
+    },
+  });
 
   if (!subscription.basePlanId && menu.visited >= 100)
     menu.expiry = "Your free plan quota has been exceeded.";
   else if (isExpired) menu.expiry = "Your subscription plan has expired.";
+  else if (
+    usage.monthlyMenuViews >=
+    subscription.features[SubscriptionFeaturePathName.Menu].count
+      .monthlyMenuViews
+  )
+    menu.expiry = "Your menu view quota has been exceeded";
 
   if (menu) {
     menu.subscription = subscription?.basePlanId;
