@@ -146,6 +146,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
     Papa.parse(csvfile, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header?.toLowerCase(),
       complete: function (results) {
         setCsvData(results?.data as ImportContact[]);
         setIsUpload(false);
@@ -357,7 +358,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                       <Checkbox
                         value="email"
                         label="Email"
-                        checked
                         styles={custominputstyle}
                       />
                     </Group>
@@ -490,7 +490,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                   existingContactIds.includes(customer?.id),
                 )
               }
-            ></RateupButtonBlue>
+            />
           </Group>
         </Stack>
       </form>

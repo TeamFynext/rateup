@@ -36,7 +36,7 @@ import GroupParticipant from "../../../components/Contacts/GroupParticipant";
 import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 
-export default function () {
+export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
   const [
     openedEditCustomer,
