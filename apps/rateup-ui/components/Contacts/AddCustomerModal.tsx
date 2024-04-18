@@ -45,7 +45,7 @@ export interface IAddCustomer {
 }
 
 const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
-  const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
+  const [contactType, setContactType] = useState<string[]>(["phone"]);
   const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -73,7 +73,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
       phone: "",
       email: "",
       importMethod: importMethod.MANUAL,
-      contactType: ["phone", "email"],
+      contactType: ["phone"],
       countryCode: "91",
     },
     validate: {

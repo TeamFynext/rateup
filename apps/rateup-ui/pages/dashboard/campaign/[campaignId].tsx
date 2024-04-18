@@ -175,6 +175,7 @@ export default () => {
 
 const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
   const [startCampaign, setStartCampaign] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (campaign) {
@@ -202,6 +203,11 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
   };
 
   const handleChange = () => {
+    if (!participantCount) {
+      setErrorMsg("No participants found");
+      return;
+    }
+    if (errorMsg) setErrorMsg("");
     setStartCampaign((prev) => {
       const newStartCampaign = !prev;
       handleStartCampaign(newStartCampaign);
@@ -225,6 +231,7 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
                 },
               }}
               onChange={handleChange}
+              error={errorMsg}
             />
           </Flex>
           <Group justify="space-between">

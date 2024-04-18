@@ -51,7 +51,7 @@ const TestimonialSelect = ({
       </Center>
     );
   return (
-    <ScrollAreaAutosize>
+    <ScrollAreaAutosize h={"100%"}>
       <Stack>
         <Group p={"sm"}>
           {filteredTestimonials?.map((testimonial, index) => {
@@ -78,8 +78,8 @@ const TestimonialSelect = ({
                         testimonial?.id,
                       ]);
                     else
-                      setSelectedTestimonialIds(
-                        (prev) => prev?.filter((t) => t !== testimonial?.id),
+                      setSelectedTestimonialIds((prev) =>
+                        prev?.filter((t) => t !== testimonial?.id),
                       );
                   }}
                   tabIndex={-1}
