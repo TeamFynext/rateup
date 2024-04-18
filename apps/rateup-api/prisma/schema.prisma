@@ -103,6 +103,7 @@ model Org {
   LoyaltyApiKey     LoyaltyApiKey?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
+  shortUrlId        String?            @unique
 }
 
 model UsageStats {

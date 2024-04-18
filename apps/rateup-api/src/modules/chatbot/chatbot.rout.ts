@@ -2,10 +2,14 @@ import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession";
 import {
   chatbotMessageHandler,
+  deleteChatHistoryHandler,
+  deleteEmbeddedSourceHandler,
+  deleteManyEmbeddedSourcesHandler,
+  getUploadedSourceHandler,
   uploadFileForAIEmbedHandler,
   uploadSourceForEmbedHandler,
 } from "./chatbot.controller";
-import { $chatbotRef, chatbotSchemas } from "./chatbot.schema";
+import { $chatbotRef } from "./chatbot.schema";
 import FastifyMultipart from "@fastify/multipart";
 
 export async function chatbotRoutes(server: FastifyInstance) {
@@ -16,7 +20,6 @@ export async function chatbotRoutes(server: FastifyInstance) {
     },
     throwFileSizeLimit: true,
   });
-  chatbotSchemas.forEach((schema) => server.addSchema(schema));
   server.post(
     "/embed-doc",
     {
@@ -46,4 +49,28 @@ export async function chatbotRoutes(server: FastifyInstance) {
     },
     chatbotMessageHandler,
   );
+
+  server.get("/", {}, getUploadedSourceHandler);
+
+  server.delete(
+    "/delete-source",
+    {
+      schema: {
+        body: $chatbotRef("deleteContentSchema"),
+      },
+    },
+    deleteEmbeddedSourceHandler,
+  );
+
+  server.delete(
+    "/delete-many-sources",
+    {
+      schema: {
+        body: $chatbotRef("deleteManyContentSchema"),
+      },
+    },
+    deleteManyEmbeddedSourcesHandler,
+  );
+
+  server.delete("/delete-chat-history", {}, deleteChatHistoryHandler);
 }
