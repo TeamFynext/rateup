@@ -126,6 +126,12 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
   switch (feature) {
     case sfpn.WebSurvey:
       return "Web Survey";
+    case sfpn.WebSurvey + ".encryption":
+      return "Encryption";
+    case sfpn.WebSurvey + ".emailNotification":
+      return "Email Notification";
+    case sfpn.WebSurvey + ".googleReview":
+      return "Google Review";
     case sfpn.WhatsAppSurvey:
       return "WhatsApp Survey";
     case sfpn.Menu:
