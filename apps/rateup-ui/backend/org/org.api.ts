@@ -83,3 +83,12 @@ export async function deleteAuthToken() {
   const res = await axiosClient.delete(`org/auth-token`);
   return res.data;
 }
+
+export async function createOrgShortUrl() {
+  return await axiosClient.post("/org/short-url");
+}
+
+export async function getOrgShortUrl() {
+  const res = await axiosClient.get("/org/short-url");
+  return res?.data as { shortUrlId: string };
+}
