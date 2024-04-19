@@ -406,15 +406,20 @@ export async function getMenuLanding(id: string) {
       ...menu,
     };
   }
-  const subscription = await prisma.subscription.findFirst({
-    where: menu?.team?.orgId,
+
+  let orgId = menu?.team?.orgId || menu?.menu?.team?.orgId;
+
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId,
+    },
   });
 
   const isExpired = dayjs().isAfter(subscription.expiresAt);
 
   const usage = await prisma.usageStats.findUnique({
     where: {
-      orgId: menu?.team?.orgId,
+      orgId,
     },
   });
 
@@ -424,9 +429,9 @@ export async function getMenuLanding(id: string) {
   else if (
     usage.monthlyMenuViews >=
     subscription.features[SubscriptionFeaturePathName.Menu].count
-      .monthlyMenuViews
+      .monthlyViewLimit
   )
-    menu.expiry = "Your menu view quota has been exceeded";
+    menu.expiry = "Your menu view quota has been exceeded.";
 
   if (menu) {
     menu.subscription = subscription?.basePlanId;
