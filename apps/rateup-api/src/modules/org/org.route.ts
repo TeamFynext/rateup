@@ -3,11 +3,13 @@ import {
   checkGoogleAccessHandler,
   createGoogleAuthToken,
   createOrgHandler,
+  createOrgShortUrlHanlder,
   deleteGoogleAuthTokenHandler,
   getAllMembersWithTeamsHandler,
   getAllOrgsHandler,
   getAllTeamsAndMembers,
   getGoogleAuthUrl,
+  getOrgShortUrlHanlder,
   getOrgStatsHandler,
   updateLogoHandler,
   updateOrgDetailsHandler,
@@ -128,5 +130,20 @@ export async function orgRoutes(server: FastifyInstance) {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     deleteGoogleAuthTokenHandler,
+  );
+
+  server.post(
+    "/short-url",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    createOrgShortUrlHanlder,
+  );
+  server.get(
+    "/short-url",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    getOrgShortUrlHanlder,
   );
 }
