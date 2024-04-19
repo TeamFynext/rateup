@@ -10,10 +10,10 @@ const waTemplateInput = {
   id: z.string().optional(),
   name: z
     .string()
-    .trim()
     .regex(/^[a-z_0-9]+$/, {
       message: "Name can only have lower-case letters and underscores",
     })
+    .trim()
     .min(1)
     .max(512),
   header: z.string(),
@@ -25,7 +25,7 @@ const waTemplateInput = {
   buttons: z
     .array(
       z.object({
-        text: z.string().min(1).max(24).optional(),
+        text: z.string().min(1).max(25).optional(),
         type: z.string().min(1),
         phone_number: z.string().max(25).optional(),
         url: z.string().max(2000).optional(),
