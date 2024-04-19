@@ -43,7 +43,18 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
   props: TextInputProps,
   ref?: React.Ref<HTMLInputElement>,
 ) {
-  return <TextInput ref={ref} classNames={classes} {...props} />;
+  return (
+    <TextInput
+      ref={ref}
+      classNames={classes}
+      {...props}
+      styles={{
+        input: {
+          paddingRight: props.rightSection ? 65 : 0,
+        },
+      }}
+    />
+  );
 });
 
 export function ContainedTextArea(props: TextareaProps) {

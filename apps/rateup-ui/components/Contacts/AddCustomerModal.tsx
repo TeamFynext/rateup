@@ -45,7 +45,7 @@ export interface IAddCustomer {
 }
 
 const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
-  const [contactType, setContactType] = useState<string[]>(["phone", "email"]);
+  const [contactType, setContactType] = useState<string[]>(["phone"]);
   const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -73,7 +73,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
       phone: "",
       email: "",
       importMethod: importMethod.MANUAL,
-      contactType: ["phone", "email"],
+      contactType: ["phone"],
       countryCode: "91",
     },
     validate: {
@@ -146,6 +146,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
     Papa.parse(csvfile, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header?.toLowerCase(),
       complete: function (results) {
         setCsvData(results?.data as ImportContact[]);
         setIsUpload(false);
@@ -357,7 +358,6 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                       <Checkbox
                         value="email"
                         label="Email"
-                        checked
                         styles={custominputstyle}
                       />
                     </Group>
@@ -490,7 +490,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                   existingContactIds.includes(customer?.id),
                 )
               }
-            ></RateupButtonBlue>
+            />
           </Group>
         </Stack>
       </form>

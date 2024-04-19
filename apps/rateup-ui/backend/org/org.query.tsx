@@ -14,6 +14,8 @@ import {
   createAuthToken,
   getGoogleAccessToken,
   deleteAuthToken,
+  createOrgShortUrl,
+  getOrgShortUrl,
 } from "./org.api";
 
 export const useTeamsMembersOfOrg = () => {
@@ -189,5 +191,22 @@ export const useDeleteAuthToken = () => {
         autoClose: 3000,
       });
     },
+  });
+};
+
+export const useCreateOrgShortUrlMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createOrgShortUrl,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orgShortUrl"] });
+    },
+  });
+};
+
+export const useGetOrgShortUrl = () => {
+  return useQuery({
+    queryKey: ["orgShortUrl"],
+    queryFn: getOrgShortUrl,
   });
 };

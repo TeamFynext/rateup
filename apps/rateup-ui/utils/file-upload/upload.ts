@@ -89,3 +89,7 @@ export const getFileNameFromFile = (data: File | string, label: string) => {
   else if (data?.length > 0) return data;
   else return label;
 };
+export const getLabel = (data: File | string, label: string) => {
+  if (data) return `Update ${label}`;
+  else return `Select a ${label}`;
+};

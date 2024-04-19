@@ -5,7 +5,7 @@ export function showSuccessToast(
   message: string,
   id = undefined,
   icon?: React.ReactNode,
-  updateNotification = false
+  updateNotification = false,
 ) {
   if (updateNotification) {
     notifications.update({
@@ -34,7 +34,7 @@ export function showErrorToast(
   message: string,
   id?: string,
   icon?: React.ReactNode,
-  updateNotification = false
+  updateNotification = false,
 ) {
   if (updateNotification) {
     notifications.update({
@@ -52,7 +52,7 @@ export function showErrorToast(
       color: "red",
       title: "Error",
       message: message,
-      autoClose: 2000,
+      autoClose: 3000,
       loading: false,
       icon,
     });
@@ -73,7 +73,7 @@ export function showLoadingToast(
   id: string | undefined = undefined,
   loading: boolean,
   title: string,
-  color: string = "teal"
+  color: string = "teal",
 ) {
   notifications.show({
     id: id,

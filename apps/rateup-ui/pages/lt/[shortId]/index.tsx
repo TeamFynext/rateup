@@ -5,7 +5,6 @@ import styles from "./lt.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import { imagesPath } from "../../../utils/constants";
 import { lexend } from "../../../utils/fonts";
-import { IconChevronRight } from "@tabler/icons-react";
 import UnsplashCreditText from "../../../components/LandingPageDashboardPage/LandingPageEditor/ThemeEditor/components/UnsplashCreditText";
 
 export const getServerSideProps = async (context) => {

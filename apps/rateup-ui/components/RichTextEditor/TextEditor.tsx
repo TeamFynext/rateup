@@ -34,11 +34,13 @@ export default function TextEditor({ form, selectedLanguage }) {
 
   useEffect(() => {
     if (editor) {
+      const selection = editor.state.selection;
       editor.commands.setContent(content, null, {
         preserveWhitespace: "full",
       });
+      editor.commands.setTextSelection(selection);
     }
-  }, [content, selectedLanguage]);
+  }, [content, editor]);
 
   return (
     <RichTextEditor editor={editor}>

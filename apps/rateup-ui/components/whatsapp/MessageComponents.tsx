@@ -100,7 +100,13 @@ export function QuickReplyButton({
     >
       <Group justify="center" c={theme.colors.blue[5]} gap={5}>
         {getIcon(type)}
-        <Text>{text}</Text>
+        <Text
+          style={{
+            wordBreak: "break-all",
+          }}
+        >
+          {text}
+        </Text>
       </Group>
     </Box>
   );

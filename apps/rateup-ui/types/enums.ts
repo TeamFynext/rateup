@@ -260,3 +260,8 @@ export enum ChatBotDataSourceType {
   FILE = "FILE",
   // API = "API"
 }
+
+export enum ChatBotSource {
+  HUMAN = "HUMAN",
+  AI = "AI",
+}

@@ -160,7 +160,7 @@ export default function App({
         <title>Rateup</title>
         <meta
           name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width"
+          content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
         />
         <link rel="shortcut icon" href="/favicon.png" />
         <link rel="canonical" href={canonicalUrl} />

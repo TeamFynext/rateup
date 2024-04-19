@@ -60,3 +60,23 @@
   background-color: var(--mantine-color-red-1);
   color: var(--mantine-color-red-6);
 }
+
+/* Delte Landing page modal styles which is being used in MoreOptionsMenu.tsx */
+.delete-confirmation-modal :global(.mantine-Modal-body) {
+  margin-top: 1.5rem;
+}
+
+.delete-confirmation-modal .are-you-sure-text {
+  text-align: center;
+}
+
+.delete-confirmation-modal div:nth-child(2) button {
+  border-radius: 0.625rem;
+}
+
+.delete-confirmation-modal
+  :global(.mantine-Modal-body)
+  div:nth-child(2)
+  button:nth-child(2) {
+  background-color: var(--mantine-color-red-7);
+}

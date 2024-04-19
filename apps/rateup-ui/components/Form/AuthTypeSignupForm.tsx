@@ -2,7 +2,7 @@ import { Center, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { isEmail, useForm } from "@mantine/form";
 import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
 import Link from "next/link";
-import { IconArrowAutofitLeft } from "@tabler/icons";
+import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import styles from "./AuthForm.module.css";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";

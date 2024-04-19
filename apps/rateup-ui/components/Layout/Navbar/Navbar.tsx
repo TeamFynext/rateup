@@ -3,7 +3,7 @@ import React from "react";
 import { Breadcrumbs, Group, Text } from "@mantine/core";
 import Link from "next/link";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { IconChevronRight, IconHome } from "@tabler/icons";
+import { IconChevronRight, IconHome } from "@tabler/icons-react";
 
 import styles from "./Navbar.module.css";
 import { IconCrown } from "@tabler/icons-react";
