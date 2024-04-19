@@ -65,7 +65,7 @@ import { parseTemplate } from "../../../../utils/whatsapp/templates";
 import ButtonInput from "../../../../components/whatsapp/templates/Details/ButtonInput";
 import styles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
 import { uploadFile } from "../../../../utils/file-upload/upload";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
 import { getErrorMessage } from "../../../../utils";
 
 export default function WhatsappTemplateById() {
@@ -138,7 +138,9 @@ export default function WhatsappTemplateById() {
   async function handleSubmit(saveAsDraft: boolean = false) {
     const { hasErrors, errors } = form.validate();
     if (hasErrors) {
-      showErrorToast(JSON.stringify(errors) ?? "Error in Template");
+      showErrorToast(
+        (Object.values(errors)?.[0] as string) ?? "Error in Template",
+      );
       return;
     }
     const dynamicVariableArray = parseStringWithVariables(form.values.body);
@@ -155,13 +157,7 @@ export default function WhatsappTemplateById() {
       }
     }
     const values = form.values;
-    const buttonArray = values.buttons?.filter(
-      (data) => data?.text?.trim().length > 24,
-    );
-    if (buttonArray?.length > 0) {
-      showErrorToast(`Max length of text in button should be 25`);
-      return;
-    } else if (values?.buttons?.length > 12) {
+    if (values?.buttons?.length > 12) {
       showErrorToast(`Max number of button in buttons should be 12`);
       return;
     }
@@ -280,20 +276,20 @@ export default function WhatsappTemplateById() {
     }, -1);
 
     if (lastIndex === -1 || e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-      newData.push(newObject);
+      form.insertListItem("buttons", newObject);
     } else {
-      newData.splice(lastIndex + 1, 0, newObject);
+      form.insertListItem("buttons", newObject, lastIndex + 1);
     }
-    form.setFieldValue("buttons", newData);
   };
   const deleteButton = (index: number) => {
-    form.setValues((prevValues) => ({
-      ...prevValues,
-      buttons: prevValues.buttons.filter((_, i) => i !== index),
-    }));
+    form.removeListItem("buttons", index);
   };
   const dynamicVariables = parseStringWithVariables(form.values.body);
-
+  const requiredIcon = (
+    <sup>
+      <IconAsterisk color="red" size={5} />
+    </sup>
+  );
   return (
     <MantineProvider theme={whatsappTheme}>
       <form>
@@ -329,13 +325,11 @@ export default function WhatsappTemplateById() {
                 loading={isSubmittingDraft}
                 variant="outline"
                 onClick={() => handleSubmit(true)}
-                disabled={!form.isDirty()}
               />
               <RateupButtonPrimary
                 title="Save & Submit"
                 loading={isSubmitting}
                 onClick={() => handleSubmit(false)}
-                disabled={!form.isDirty()}
               />
             </Flex>
           </Flex>
@@ -366,7 +360,7 @@ export default function WhatsappTemplateById() {
                   <ContainedTextField
                     label={
                       <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Template Name
+                        Template Name {requiredIcon}
                       </Text>
                     }
                     placeholder="Name"
@@ -384,7 +378,7 @@ export default function WhatsappTemplateById() {
                     <ContainedSelection
                       label={
                         <Text fz={14} ff={lexend500.style.fontFamily}>
-                          Category
+                          Category {requiredIcon}
                         </Text>
                       }
                       placeholder="Category"
@@ -395,7 +389,7 @@ export default function WhatsappTemplateById() {
                     <ContainedSelection
                       label={
                         <Text fz={14} ff={lexend500.style.fontFamily}>
-                          Language
+                          Language {requiredIcon}
                         </Text>
                       }
                       placeholder="Language"
@@ -406,12 +400,12 @@ export default function WhatsappTemplateById() {
                     />
                   </SimpleGrid>
                   <Grid>
-                    <Grid.Col span={5}>
+                    <Grid.Col span={6}>
                       <ContainedSelection
                         label={
                           <>
                             <Text fz={14} ff={lexend500.style.fontFamily}>
-                              Broadcast header
+                              Broadcast header {requiredIcon}
                             </Text>
                             <Text fz={13}>
                               Highlight your brand here, use images or videos,
@@ -449,7 +443,7 @@ export default function WhatsappTemplateById() {
                   </Grid>
                   <Stack gap={0}>
                     <Text fz={14} ff={lexend500.style.fontFamily}>
-                      Body
+                      Body {requiredIcon}
                     </Text>
                     <Text fz={13}>
                       Make your messages personal using variables and get more
@@ -552,13 +546,24 @@ export default function WhatsappTemplateById() {
                             form.values?.format,
                           )}
                         </Text>
-                        <Text fz={"0.95rem"}>
+                        <Text
+                          fz={"0.95rem"}
+                          style={{
+                            wordBreak: "break-all",
+                          }}
+                        >
                           {TextWithFormatting(
                             form.values?.body,
                             form.values?.example,
                           )}
                         </Text>
-                        <Text c="dimmed" fz={"0.9rem"}>
+                        <Text
+                          c="dimmed"
+                          fz={"0.9rem"}
+                          style={{
+                            wordBreak: "break-all",
+                          }}
+                        >
                           {form.values.footer}
                         </Text>
                       </ResponseMessageContainer>

@@ -142,8 +142,15 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
                 placeholder="Enter phone number"
                 value={form?.values?.phone || null}
                 {...form.getInputProps(`buttons.${index}.phone_number`)}
-                className={styles.inputPhone}
+                className={
+                  form?.errors?.[`buttons.${index}.phone_number`]
+                    ? styles.inputError
+                    : styles.inputPhone
+                }
               />
+              <Text fz={"xs"} c={"var(--mantine-color-red-6)"}>
+                {form?.errors?.[`buttons.${index}.phone_number`]}
+              </Text>
             </Box>
             <ActionIcon
               mt={24}
@@ -186,7 +193,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             placeholder="Enter sample code"
             rightSection={
               <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
+                length={form.values?.buttons?.[index]?.example?.length}
                 maxValue={15}
                 atStart
               />

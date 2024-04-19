@@ -12,3 +12,6 @@
   color: var(--mantine-color-gray-7);
   z-index: 1;
 }
+.section {
+  width: fit-content;
+}

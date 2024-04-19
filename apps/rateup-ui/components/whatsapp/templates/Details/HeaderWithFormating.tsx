@@ -1,4 +1,4 @@
-import { Box, Image, Stack, Text } from "@mantine/core";
+import { Box, Center, Image, Stack, Text } from "@mantine/core";
 import {
   IconPhoto,
   IconVideo,
@@ -37,23 +37,27 @@ export function HeaderWithFormatting(text, type) {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>
-          {text instanceof File ? (
-            <Image
-              src={URL.createObjectURL(text)}
-              h={50}
-              w={50}
-              alt="image of the template content"
-            />
-          ) : text?.startsWith("http") ? (
-            <Image
-              src={text}
-              h={50}
-              w={50}
-              alt="image of the template content"
-            />
-          ) : (
-            <IconPhoto size={40} />
-          )}
+          <Box pos={"relative"} w={"100%"} h={70} p={0} component="span">
+            {text instanceof File ? (
+              <Image
+                src={URL.createObjectURL(text)}
+                h={70}
+                w={"100%"}
+                alt="image of the template content"
+              />
+            ) : text?.startsWith("http") ? (
+              <Image
+                src={text}
+                h={70}
+                w={"100%"}
+                alt="image of the template content"
+              />
+            ) : (
+              <Center component="span">
+                <IconPhoto size={40} />
+              </Center>
+            )}
+          </Box>
         </MediaCardPreview>
       );
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:

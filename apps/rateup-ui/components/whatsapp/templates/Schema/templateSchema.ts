@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { WaTemplateStatus } from "../../../../types/enums";
-import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
+import {
+  WHATSAPP_BUTTON_TYPE,
+  WHATSAPP_TEMPLATE_BROADCAST_TYPE,
+} from "../../../../utils/constants";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
@@ -15,10 +18,10 @@ export const templateSchema = z
   .object({
     name: z
       .string()
-      .trim()
       .regex(/^[a-z_0-9]+$/, {
         message: "Name can only have lower-case letters and underscores",
       })
+      .trim()
       .min(1)
       .max(512),
     body: z.string().trim().min(1).max(1024),
@@ -85,6 +88,48 @@ export const templateSchema = z
     const videoType = ["video/mp4"];
     const imageType = ["image/png", "image/jpg", "image/jpeg"];
     const documentType = ["video/mp4"];
+    values.buttons?.map((data, index) => {
+      if (data.text?.trim()?.length === 0) {
+        ctx.addIssue({
+          path: ["buttons", index, "text"],
+          code: z.ZodIssueCode.custom,
+          message: "Button text is required",
+        });
+      }
+      switch (data.type) {
+        case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
+          if (!data.url) {
+            ctx.addIssue({
+              path: ["buttons", index, "url"],
+              code: z.ZodIssueCode.custom,
+              message: "website url is required",
+            });
+          }
+          break;
+        case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
+          if (!data.example) {
+            ctx.addIssue({
+              path: ["buttons", index, "example"],
+              code: z.ZodIssueCode.custom,
+              message: "Offer code is required",
+            });
+          }
+          break;
+        case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
+          if (!isValidPhoneNumber(data?.phone_number ?? "")) {
+            ctx.addIssue({
+              path: ["buttons", index, "phone_number"],
+              code: z.ZodIssueCode.custom,
+              message: "Invalid phone number",
+            });
+          }
+          break;
+
+        default:
+          break;
+      }
+    });
+
     const typeNotString = typeof value !== "string";
     if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE && typeNotString) {
       errorMessage =

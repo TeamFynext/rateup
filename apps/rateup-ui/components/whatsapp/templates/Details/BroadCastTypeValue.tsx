@@ -6,7 +6,7 @@ import {
   ContainedFileButton,
 } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
-import { getFileNameFromFile } from "../../../../utils/file-upload/upload";
+import { getLabel } from "../../../../utils/file-upload/upload";
 
 export const BroadCastTypeValue = ({ form, type }) => {
   const style = {
@@ -36,7 +36,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <ContainedFileButton
-          label={getFileNameFromFile(form.values.header, "Select a Image")}
+          label={getLabel(form.values.header, "Image")}
           mt={"xl"}
           placeholder={"Select an image"}
           {...form.getInputProps("header")}
@@ -47,7 +47,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:
       return (
         <ContainedFileButton
-          label={getFileNameFromFile(form.values.header, "Select a Video")}
+          label={getLabel(form.values.header, "Video")}
           mt={"xl"}
           placeholder={"Select an Video"}
           {...form.getInputProps("header")}
@@ -58,7 +58,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT:
       return (
         <ContainedFileButton
-          label={getFileNameFromFile(form.values.header, "Select a Document")}
+          label={getLabel(form.values.header, "Document")}
           mt={"xl"}
           placeholder={"Select an Document"}
           {...form.getInputProps("header")}
