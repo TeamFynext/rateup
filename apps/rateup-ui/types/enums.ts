@@ -135,6 +135,9 @@ export enum SortType {
 }
 export enum SubscriptionFeaturePathName {
   WebSurvey = "webSurvey",
+  EmailNotification = "webSurvey.emailNotification",
+  GoogleReview = "webSurvey.googleReview",
+  Encryption = "webSurvey.encryption",
   WhatsAppSurvey = "whatsappSurvey",
   WhatsAppCampaign = "whatsappCampaign",
   Menu = "menu",
