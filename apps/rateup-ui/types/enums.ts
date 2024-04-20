@@ -265,7 +265,3 @@ export enum ChatBotSource {
   HUMAN = "HUMAN",
   AI = "AI",
 }
-export enum WaFlowStartMessageSurveyIdentifier {
-  ID = "ID",
-  NAME = "NAME",
-}

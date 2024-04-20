@@ -9,7 +9,6 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { StatusBadge } from "../SurveyCardList";
-import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -254,7 +253,6 @@ export const ShareFlow = ({
         selectedTeamCode={
           teamSelectData.find((t) => t.value === surveyTeamMapId)?.label
         }
-        selectedSurveyTeamMapId={surveyTeamMapId}
       />
       <ShareQR
         url={shareUrl}

@@ -1114,5 +1114,4 @@ export type ChatBotMessage = {
 export type WaFlowStartMessageConfig = {
   prefix: string;
   suffix: string;
-  identifier: WaFlowStartMessageSurveyIdentifier;
 };

@@ -1,11 +1,8 @@
 import {
   Box,
   Button,
-  Center,
-  Code,
   FileButton,
   Group,
-  Radio,
   Stack,
   Text,
   TextInputProps,
@@ -13,24 +10,16 @@ import {
   TextareaProps,
   Title,
 } from "@mantine/core";
-import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { UseFormReturnType, useForm } from "@mantine/form";
 import {
   SentMessageContainer,
-  WaMessageBody,
   WaResponseMessage,
-  WaSentMessage,
 } from "../../whatsapp/MessageComponents";
 import whatsappStyles from "../../whatsapp/whatsapp.module.css";
 import { LengthTracker, LengthTrackerProps } from "../../input/LengthTracker";
-import {
-  SaveStatus,
-  WaFlowStartMessageSurveyIdentifier,
-} from "../../../types/enums";
+import { SaveStatus } from "../../../types/enums";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
 import templateStyles from "../../whatsapp/templates/template.module.css";
 import { useRouter } from "next/router";
@@ -49,10 +38,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { WaFlowStartMessageConfig } from "../../../types/global";
 import { FormValidateInput } from "@mantine/form/lib/types";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
-import {
-  generateWaSurveyIdentifier_byId,
-  generateWaSurveyIdentifier_byName,
-} from "../../../utils/whatsapp/wa_url";
+import { generateWaSurveyIdentifier_byName } from "../../../utils/whatsapp/wa_url";
 
 const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
@@ -278,21 +264,6 @@ export function FlowStartMessageEditor({
           flex: 1,
         }}
       >
-        <Radio.Group
-          label={"Survey Identifier"}
-          {...form.getInputProps("identifier")}
-        >
-          <Group>
-            <Radio
-              value={WaFlowStartMessageSurveyIdentifier.NAME}
-              label={"By Name"}
-            />
-            <Radio
-              value={WaFlowStartMessageSurveyIdentifier.ID}
-              label={"By ID"}
-            />
-          </Group>
-        </Radio.Group>
         <TextareaWithLengthTracker
           label={"Body"}
           {...form.getInputProps("prefix")}
@@ -308,10 +279,7 @@ export function FlowStartMessageEditor({
   );
 }
 
-export function FlowShareMessageEditor({
-  selectedTeamCode,
-  selectedSurveyTeamMapId,
-}) {
+export function FlowShareMessageEditor({ selectedTeamCode }) {
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
 
@@ -396,15 +364,10 @@ export function FlowShareMessageEditor({
                         fontSize: ".9rem",
                       }}
                     >
-                      {startMessageForm.values.identifier ===
-                      WaFlowStartMessageSurveyIdentifier.NAME
-                        ? generateWaSurveyIdentifier_byName(
-                            survey?.title,
-                            selectedTeamCode,
-                          ).replaceAll("`", "")
-                        : generateWaSurveyIdentifier_byId(
-                            selectedSurveyTeamMapId,
-                          ).replaceAll("`", "")}
+                      {generateWaSurveyIdentifier_byName(
+                        survey?.title,
+                        selectedTeamCode,
+                      ).replaceAll("`", "")}
                     </code>
                     <RenderNewLine text={startMessageForm.values.suffix} />
                   </p>
@@ -536,9 +499,6 @@ function generateStartMessageInitialValues(
   dbFlow: DbFlow,
 ): WaFlowStartMessageConfig {
   return {
-    identifier:
-      dbFlow.startMessageConfig.identifier ||
-      WaFlowStartMessageSurveyIdentifier.NAME,
     prefix:
       dbFlow.startMessageConfig.prefix ||
       "Send this message to start survey.\n",
