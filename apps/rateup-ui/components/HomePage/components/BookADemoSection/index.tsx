@@ -1,19 +1,12 @@
-import {
-  Center,
-  Flex,
-  Grid,
-  NumberInput,
-  TextInput,
-  Title,
-} from "@mantine/core";
-import styles from "./BookADemoSection.module.css";
-import commonStyles from "../../index.module.css";
+import { Title } from "@mantine/core";
+import { useRouter } from "next/router";
 import BookDemoContactForm from "../BookDemoContactForm";
 import Button from "../Button";
-import { useRouter } from "next/router";
+import styles from "./BookADemoSection.module.css";
 
 function BookADemoSection() {
   const router = useRouter();
+
   return (
     <div className={styles["book-a-demo-wrapper"]}>
       <div></div>
