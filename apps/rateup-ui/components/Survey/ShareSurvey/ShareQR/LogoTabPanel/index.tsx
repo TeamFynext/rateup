@@ -1,4 +1,5 @@
 import {
+  Box,
   FileInput,
   Flex,
   Group,
@@ -32,155 +33,158 @@ function LogoTabpanel({ state, dispatch, shareSettings }) {
       </Title>
 
       <Flex className={styles["logo-tab-options-container"]}>
-        {/* <Stack style={{ gap: "2rem" }}> */}
-        <Stack className={styles["option-container"]}>
-          <Title order={4} className={styles["option-heading"]}>
-            Image
-          </Title>
-          <FileInput
-            classNames={fileInputStyles}
-            placeholder="Select Logo"
-            accept="image/png,image/jpeg,image/svg+xml"
-            onChange={(value) => {
-              let resultValue = null;
-              if (value) {
-                resultValue = value;
-              } else {
-                const logoLink = shareSettings?.data?.logoFile;
-                if (logoLink) {
-                  resultValue = logoLink;
+        <Box>
+          <Stack className={styles["option-container"]}>
+            <Title order={4} className={styles["option-heading"]}>
+              Image
+            </Title>
+            <FileInput
+              classNames={fileInputStyles}
+              placeholder="Select Logo"
+              accept="image/png,image/jpeg,image/svg+xml"
+              onChange={(value) => {
+                let resultValue = null;
+                if (value) {
+                  resultValue = value;
                 } else {
-                  resultValue = `/images/rateup-star.svg`;
+                  const logoLink = shareSettings?.data?.logoFile;
+                  if (logoLink) {
+                    resultValue = logoLink;
+                  } else {
+                    resultValue = `/images/rateup-star.svg`;
+                  }
                 }
-              }
-              dispatch({
-                type: "file-input",
-                payload: resultValue,
-              });
-            }}
-            value={getLogoFileValueForFileInput(logoFile)}
-            clearable
-          />
-        </Stack>
-
-        <Stack className={styles["option-container"]}>
-          <Title order={4} className={styles["option-heading"]}>
-            Size
-          </Title>
-          <Slider
-            className={styles["slider"]}
-            value={logoSize}
-            onChange={(value) => {
-              dispatch({
-                type: "logo-size",
-                payload: value,
-              });
-            }}
-            label={(value) => value}
-            step={1}
-            defaultValue={70}
-            min={50}
-            max={100}
-          />
-        </Stack>
-
-        <Stack className={styles["option-container"]}>
-          <Title order={4} className={styles["option-heading"]}>
-            Fill Type
-          </Title>
-          <Group className={styles["fill-types-chip-container"]}>
-            <ChipGroup
-              multiple={false}
-              chipsData={logoFillTypes}
-              value={logoFillType}
-              handleChange={(value) => {
                 dispatch({
-                  type: "logo-fill-type",
-                  payload: value,
+                  type: "file-input",
+                  payload: resultValue,
                 });
               }}
+              value={getLogoFileValueForFileInput(logoFile)}
+              clearable
             />
-          </Group>
-        </Stack>
-        {/* </Stack> */}
+          </Stack>
 
-        {/* <Stack style={{ gap: "2rem" }}> */}
-        <Stack className={styles["option-container"]}>
-          <Title order={4} className={styles["option-heading"]}>
-            Border Radius
-          </Title>
-          <Slider
-            className={styles["slider"]}
-            value={logoBorderRadius}
-            onChange={(value) => {
-              dispatch({
-                type: "logo-border-radius",
-                payload: value,
-              });
-            }}
-            label={(value) => value}
-            step={1}
-            defaultValue={50}
-            min={0}
-            max={50}
-          />
-        </Stack>
-        <Stack className={styles["option-container"]}>
-          <Title order={4} className={styles["option-heading"]}>
-            Background Color
-          </Title>
-          <Radio.Group
-            onChange={(value) => {
-              if (value === "transparent") {
-                dispatch({
-                  type: "qr-bg-color",
-                  payload: value,
-                });
-              } else {
-                dispatch({
-                  type: "qr-bg-color",
-                  payload: "#FFFFFF",
-                });
-              }
-            }}
-            value={qrBgColor.startsWith("#") ? "color" : "transparent"}
-          >
-            <Stack>
-              <Radio
-                classNames={radioStyles}
-                value="transparent"
-                label="Transparent"
-              />
-              <Radio classNames={radioStyles} value="color" label="Color" />
-            </Stack>
-          </Radio.Group>
-          {qrBgColor.startsWith("#") && (
-            <CustomColorPicker
-              value={qrBgColor}
+          <Stack className={styles["option-container"]}>
+            <Title order={4} className={styles["option-heading"]}>
+              Size
+            </Title>
+            <Slider
+              className={styles["slider"]}
+              value={logoSize}
               onChange={(value) => {
                 dispatch({
-                  type: "qr-bg-color",
+                  type: "logo-size",
+                  payload: value,
+                });
+              }}
+              label={(value) => value}
+              step={1}
+              defaultValue={70}
+              min={50}
+              max={100}
+            />
+          </Stack>
+
+          <Stack className={styles["option-container"]}>
+            <Title order={4} className={styles["option-heading"]}>
+              Fill Type
+            </Title>
+            <Group className={styles["fill-types-chip-container"]}>
+              <ChipGroup
+                multiple={false}
+                chipsData={logoFillTypes}
+                value={logoFillType}
+                handleChange={(value) => {
+                  dispatch({
+                    type: "logo-fill-type",
+                    payload: value,
+                  });
+                }}
+              />
+            </Group>
+          </Stack>
+          {/* </Stack> */}
+
+          {/* <Stack style={{ gap: "2rem" }}> */}
+          <Stack className={styles["option-container"]}>
+            <Title order={4} className={styles["option-heading"]}>
+              Border Radius
+            </Title>
+            <Slider
+              className={styles["slider"]}
+              value={logoBorderRadius}
+              onChange={(value) => {
+                dispatch({
+                  type: "logo-border-radius",
+                  payload: value,
+                });
+              }}
+              label={(value) => value}
+              step={1}
+              defaultValue={50}
+              min={0}
+              max={50}
+            />
+          </Stack>
+        </Box>
+
+        <Box>
+          <Stack className={styles["option-container"]}>
+            <Title order={4} className={styles["option-heading"]}>
+              Background Color
+            </Title>
+            <Radio.Group
+              onChange={(value) => {
+                if (value === "transparent") {
+                  dispatch({
+                    type: "qr-bg-color",
+                    payload: value,
+                  });
+                } else {
+                  dispatch({
+                    type: "qr-bg-color",
+                    payload: "#FFFFFF",
+                  });
+                }
+              }}
+              value={qrBgColor.startsWith("#") ? "color" : "transparent"}
+            >
+              <Stack>
+                <Radio
+                  classNames={radioStyles}
+                  value="transparent"
+                  label="Transparent"
+                />
+                <Radio classNames={radioStyles} value="color" label="Color" />
+              </Stack>
+            </Radio.Group>
+            {qrBgColor.startsWith("#") && (
+              <CustomColorPicker
+                value={qrBgColor}
+                onChange={(value) => {
+                  dispatch({
+                    type: "qr-bg-color",
+                    payload: value,
+                  });
+                }}
+              />
+            )}
+          </Stack>
+          <Stack className={styles["option-container"]}>
+            <Title order={4} className={styles["option-heading"]}>
+              Color
+            </Title>
+            <CustomColorPicker
+              value={qrColor}
+              onChange={(value) => {
+                dispatch({
+                  type: "qr-color",
                   payload: value,
                 });
               }}
             />
-          )}
-        </Stack>
-        <Stack className={styles["option-container"]}>
-          <Title order={4} className={styles["option-heading"]}>
-            Color
-          </Title>
-          <CustomColorPicker
-            value={qrColor}
-            onChange={(value) => {
-              dispatch({
-                type: "qr-color",
-                payload: value,
-              });
-            }}
-          />
-        </Stack>
-        {/* </Stack> */}
+          </Stack>
+        </Box>
       </Flex>
     </Stack>
   );
