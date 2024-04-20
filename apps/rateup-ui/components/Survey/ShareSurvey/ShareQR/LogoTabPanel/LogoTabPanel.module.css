@@ -1,8 +1,5 @@
 .logo-tab-options-container {
   gap: 0;
-  flex-direction: column;
-  flex-wrap: wrap;
-  height: 27.25rem;
 }
 
 .panel-heading {
