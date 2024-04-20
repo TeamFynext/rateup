@@ -3,6 +3,7 @@ import {
   YNResponse,
   LDResponse,
   SmileyResponse,
+  WaFlowStartMessageSurveyIdentifier,
 } from "../../../types/enums";
 import {
   WaMessageBody,
@@ -594,6 +595,33 @@ export function getQuestionByIdFromSession(
 export function validateSession(session: WaSession) {
   if (!session) return false;
   return !(dayjs(session.createdAt).diff(dayjs(), "day") >= 1);
+}
+
+// format for start-survey-message is "`|st| <surveyTeamMapId>`"
+//                                 or "`|sn| <surveyName> @<TeamCode>`"
+// There could any text before of after it.
+
+const startSurveyRegex_withSurveyName =
+  /[\s\S]*`\|([A-Za-z0-9]+)\| ([A-Za-z0-9\s]+) @([A-Za-z0-9]+)`[\s\S]*/i;
+const startSurveyRegex_withSurveyTeamMapId =
+  /[\s\S]*`\|([A-Za-z0-9]+)\| ([A-Za-z0-9]+)`[\s\S]*/i;
+
+export function parseStartMessage(text: string) {
+  const surveyNameMatch = text.match(startSurveyRegex_withSurveyName);
+  const surveyTeamMapIdMatch = text.match(startSurveyRegex_withSurveyTeamMapId);
+  if (surveyNameMatch) {
+    const surveyName = surveyNameMatch[2].trim();
+    const teamCode = surveyNameMatch[3].trim();
+    return {
+      type: WaFlowStartMessageSurveyIdentifier.NAME,
+      surveyName,
+      teamCode,
+    };
+  } else if (surveyTeamMapIdMatch) {
+    const surveyTeamMapId = surveyTeamMapIdMatch[2].trim();
+    return { type: WaFlowStartMessageSurveyIdentifier.ID, surveyTeamMapId };
+  }
+  return null;
 }
 
 const _templateStatusChangeEventSampleData = {

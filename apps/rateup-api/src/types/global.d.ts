@@ -11,6 +11,7 @@ import {
   NPSWeightage,
   SubscriptionFeaturePathName as sfpn,
   WaFlowFormElementType,
+  WaFlowStartMessageSurveyIdentifier,
 } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
@@ -280,6 +281,11 @@ declare global {
       link: string;
     };
   };
+  type WaFlowStartMessageConfig = {
+    prefix: string;
+    suffix: string;
+    identifier: WaFlowStartMessageSurveyIdentifier;
+  };
 
   // PRISMA JSON TYPES
   namespace PrismaJson {
@@ -295,6 +301,7 @@ declare global {
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
     type PWaTemplateComponentParams = WaTemplateComponent;
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
+    type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
   }
 }
 export interface FlowLogicCondition {

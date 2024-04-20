@@ -15,3 +15,16 @@ export async function getSurveysOrgId(surveyId: string) {
   });
   return surveyTeamMap.team.orgId;
 }
+
+export async function getSurveyTeamMapIdFromShortId(shortId: string) {
+  const res = await prisma.surveyTeamMap.findFirst({
+    where: {
+      shortUrlId: shortId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return res?.id;
+}

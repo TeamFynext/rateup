@@ -215,3 +215,7 @@ export enum ChatBotDataSourceType {
   FILE = "FILE",
   // API = "API"
 }
+export enum WaFlowStartMessageSurveyIdentifier {
+  ID = "ID",
+  NAME = "NAME",
+}
