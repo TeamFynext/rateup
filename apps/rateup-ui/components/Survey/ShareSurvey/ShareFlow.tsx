@@ -17,7 +17,7 @@ import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../backend/whatsapp/flow/flow.query";
 import { ShareMethods } from "./ShareMethods";
 import { CopyLinkComponent } from "./ShareSurvey";
-import { FlowShareTemplateEditor } from "./FlowShareTemplateEditor";
+import { FlowShareMessageEditor } from "./FlowShareTemplateEditor";
 import { modals } from "@mantine/modals";
 import TagManager from "./TagManager";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -63,7 +63,7 @@ export const ShareFlow = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyShareUrl(phone, surveyTeamMapId));
+          throw new Error("Not implemented");
         }
       }
     }
@@ -250,7 +250,12 @@ export const ShareFlow = ({
           />
         </Group>
       </PaperLayout>
-      <FlowShareTemplateEditor />
+      <FlowShareMessageEditor
+        selectedTeamCode={
+          teamSelectData.find((t) => t.value === surveyTeamMapId)?.label
+        }
+        selectedSurveyTeamMapId={surveyTeamMapId}
+      />
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}

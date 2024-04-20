@@ -598,6 +598,7 @@ declare global {
     surveyId: string;
     templateMessage: WaFlowTemplateMessage;
     survey: any;
+    startMessageConfig: WaFlowStartMessageConfig;
   };
 
   type LoyaltyCampaign = {
@@ -1109,4 +1110,9 @@ export type WaTemplate = {
 export type ChatBotMessage = {
   content: string;
   source: ChatBotSource;
+};
+export type WaFlowStartMessageConfig = {
+  prefix: string;
+  suffix: string;
+  identifier: WaFlowStartMessageSurveyIdentifier;
 };

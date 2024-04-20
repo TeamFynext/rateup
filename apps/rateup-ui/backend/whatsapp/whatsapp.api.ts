@@ -98,3 +98,10 @@ export async function sendWaTemplateToUser(
     teamId,
   });
 }
+
+export async function getShareUrlFromSurveyTeamMapId(
+  surveyTeamMapShortId: string,
+) {
+  const res = await axiosClient.get(`${REDIRECT_URL}/${surveyTeamMapShortId}`);
+  return res.data;
+}
