@@ -10,6 +10,7 @@ const landingPageBaseSchema = z.object({
   links: z.any(),
   shareSettings: z.any(),
   isPublished: z.boolean(),
+  visitorsCount: z.number(),
 });
 
 const getLandingPageWithShortIdParams = z.object({
@@ -31,12 +32,23 @@ const updateLandingPageReqBody = z.object({
   isPublished: z.boolean().optional(),
 });
 
+const updatePageVisitsOrLinkClicksReqParams = z.object({
+  shortUrlId: z.string(),
+});
+
+const updatePageVisitsOrLinkClicksReqBody = z.object({
+  resourceToBeUpdated: z.enum(["page-visit", "link-click"]),
+  linkId: z.string().optional(),
+});
+
 const models = {
   landingPageBaseSchema,
   createLandingPageReqBody,
   getLandingPagesResponse,
   getLandingPageWithShortIdParams,
   updateLandingPageReqBody,
+  updatePageVisitsOrLinkClicksReqBody,
+  updatePageVisitsOrLinkClicksReqParams,
 };
 
 type CreateLandingPageReqBody = z.infer<typeof createLandingPageReqBody>;

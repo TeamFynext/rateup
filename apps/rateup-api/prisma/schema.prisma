@@ -967,6 +967,7 @@ model LandingPage {
   theme          Json?
   links          Json?
   additionalData Json?
+  visitorsCount  Int      @default(0)
   shareSettings  Json?
   isPublished    Boolean  @default(false)
   owner          Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
