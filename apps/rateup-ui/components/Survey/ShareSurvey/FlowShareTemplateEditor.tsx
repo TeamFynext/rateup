@@ -10,13 +10,13 @@ import {
   TextareaProps,
   Title,
 } from "@mantine/core";
-import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { useForm } from "@mantine/form";
-import { WaResponseMessage } from "../../whatsapp/MessageComponents";
+import { UseFormReturnType, useForm } from "@mantine/form";
+import {
+  SentMessageContainer,
+  WaResponseMessage,
+} from "../../whatsapp/MessageComponents";
 import whatsappStyles from "../../whatsapp/whatsapp.module.css";
 import { LengthTracker, LengthTrackerProps } from "../../input/LengthTracker";
 import { SaveStatus } from "../../../types/enums";
@@ -35,53 +35,32 @@ import {
 } from "../../../utils/file-upload/upload";
 import { ImageCropModal } from "../../Modal/ImageCropModal";
 import { useDisclosure } from "@mantine/hooks";
+import { WaFlowStartMessageConfig } from "../../../types/global";
+import { FormValidateInput } from "@mantine/form/lib/types";
+import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { generateWaSurveyIdentifier_byName } from "../../../utils/whatsapp/wa_url";
 
 const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
 
 /** Checks is all properties in ob1 is equal to that in ob2 */
 function isEqual(ob1: object, ob2: object): boolean {
-  return Object.keys(ob1).every((k) => ob1[k] === ob2[k]);
+  return Object.keys(ob1).every((k) => {
+    if (ob1[k] != ob2[k]) console.log(k, ob1[k], ob2[k]);
+    return ob1[k] == ob2[k];
+  });
 }
 
-export function FlowShareTemplateEditor() {
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
-
+export function FlowShareTemplateEditor({
+  form,
+  dbFlowId,
+  updateMutation,
+  initialValues,
+}) {
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const [status, setStatus] = useState(SaveStatus.saved);
 
-  const initialValues = {
-    header: dbFlow.templateMessage.header || "",
-    headerImage: dbFlow.templateMessage.headerImage || null,
-    body: dbFlow.templateMessage.body || "Would you like to start survey?",
-    footer: dbFlow.templateMessage.footer || "",
-    cta: dbFlow.templateMessage.cta || "Open",
-  };
-  const form = useForm({
-    initialValues: initialValues,
-    validate: {
-      header: (h) => h.length > 60 && exceed(60),
-      body: (b) => {
-        if (b.length === 0) {
-          return empty;
-        } else if (b.length > 1024) {
-          return exceed(1024);
-        }
-      },
-      footer: (f) => f.length > 60 && exceed(60),
-      cta: (c) => {
-        if (c.length === 0) {
-          return empty;
-        } else if (c.length > 20) {
-          return exceed(20);
-        }
-      },
-    },
-    validateInputOnChange: true,
-  });
-
-  const updateMutation = useUpdateFlowMutation();
+  form.setInitialValues(initialValues);
 
   useEffect(() => {
     if (!isEqual(form.values, initialValues)) return;
@@ -89,8 +68,8 @@ export function FlowShareTemplateEditor() {
     if (isEqual(form.values, dbFlow.templateMessage)) return;
     form.reset();
   }, [dbFlow]);
-
   // autosave
+
   useEffect(() => {
     if (!dbFlow) return;
     if (isEqual(form.values, dbFlow.templateMessage)) return;
@@ -157,14 +136,9 @@ export function FlowShareTemplateEditor() {
   const handleCropImageSave = (cropedImage) => {
     setImageToUpload(cropedImage);
   };
+
   return (
-    <PaperLayout
-      p="30px"
-      style={{
-        boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-        overflowX: "auto",
-      }}
-    >
+    <Stack gap={0}>
       {image && (
         <ImageCropModal
           opened={openedCropDialog}
@@ -175,76 +149,250 @@ export function FlowShareTemplateEditor() {
           aspect={16 / 9}
         />
       )}
-      <Group mb="sm">
+      <Group mb="4">
         <Title order={4}>Edit Template Message</Title>
         <SaveStatusIndicator status={status} />
       </Group>
+
+      <Stack
+        bg={"whitesmoke"}
+        p="md"
+        style={{
+          borderRadius: "8px",
+          flex: 1,
+        }}
+      >
+        <Group>
+          <FileButton
+            onChange={onImageUpload}
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+          >
+            {(props) => {
+              return (
+                <Button {...props}>
+                  {image ? "Change Image" : "Upload Image"}
+                </Button>
+              );
+            }}
+          </FileButton>
+
+          <Button variant="outline" onClick={handleRemoveImage}>
+            Remove Image
+          </Button>
+        </Group>
+
+        <TextareaWithLengthTracker
+          label={"Body"}
+          {...form.getInputProps("body")}
+          maxValue={1024}
+        />
+        <TextInputWithLengthTracker
+          label={"Footer"}
+          {...form.getInputProps("footer")}
+          maxValue={60}
+        />
+        <TextInputWithLengthTracker
+          label={"CTA"}
+          maxValue={20}
+          {...form.getInputProps("cta")}
+        />
+      </Stack>
+    </Stack>
+  );
+}
+
+interface FlowStartMessageEditorProps {
+  form: UseFormReturnType<WaFlowStartMessageConfig>;
+  dbFlowId: string;
+  updateMutation: any;
+  initialValues: WaFlowStartMessageConfig;
+}
+export function FlowStartMessageEditor({
+  form,
+  dbFlowId,
+  updateMutation,
+  initialValues,
+}: FlowStartMessageEditorProps) {
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+  const [status, setStatus] = useState(SaveStatus.saved);
+
+  form.setInitialValues(initialValues);
+
+  useEffect(() => {
+    if (!isEqual(form.values, initialValues)) return;
+    if (!dbFlow) return;
+    if (isEqual(form.values, dbFlow.startMessageConfig)) return;
+    form.reset();
+  }, [dbFlow]);
+  // autosave
+
+  useEffect(() => {
+    if (!dbFlow) return;
+    if (isEqual(form.values, dbFlow.startMessageConfig)) return;
+    setStatus(SaveStatus.notSaved);
+
+    const timer = setTimeout(() => {
+      setStatus(SaveStatus.saving);
+
+      updateMutation.mutate(
+        {
+          dbFlowId,
+          data: { startMessageConfig: form.values },
+        },
+        {
+          onSuccess: () => setStatus(SaveStatus.saved),
+          onError: () => setStatus(SaveStatus.notSaved),
+        },
+      );
+    }, 1000 * 1.5);
+
+    return () => clearTimeout(timer);
+  }, [form.values]);
+
+  return (
+    <Stack gap={0}>
+      <Group mb="4">
+        <Title order={4}>Edit Start Message</Title>
+        <SaveStatusIndicator status={status} />
+      </Group>
+
+      <Stack
+        bg={"whitesmoke"}
+        p="md"
+        style={{
+          borderRadius: "8px",
+          flex: 1,
+        }}
+      >
+        <TextareaWithLengthTracker
+          label={"Body"}
+          {...form.getInputProps("prefix")}
+          maxValue={1024}
+        />
+        <TextareaWithLengthTracker
+          label={"Suffix"}
+          {...form.getInputProps("suffix")}
+          maxValue={1024}
+        />
+      </Stack>
+    </Stack>
+  );
+}
+
+export function FlowShareMessageEditor({ selectedTeamCode }) {
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+
+  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+  const { data: survey } = useSurvey(dbFlow?.surveyId);
+  const updateMutation = useUpdateFlowMutation();
+  const templateInitialValues = generateTemplateInitialValues(dbFlow);
+
+  const templateForm = useForm({
+    initialValues: templateInitialValues,
+    validate: templateFormValidation,
+    validateInputOnChange: true,
+  });
+
+  const startMessageInitialValues = generateStartMessageInitialValues(dbFlow);
+  const startMessageForm = useForm<WaFlowStartMessageConfig>({
+    initialValues: startMessageInitialValues,
+  });
+
+  return (
+    <PaperLayout
+      p="30px"
+      style={{
+        boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+        overflowX: "auto",
+      }}
+    >
       <Group align={"stretch"} h={"100%"}>
         <Stack
           style={{
             flex: 1,
           }}
+          gap={"xl"}
         >
-          <Group>
-            <FileButton
-              onChange={onImageUpload}
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-            >
-              {(props) => {
-                return (
-                  <Button {...props}>
-                    {image ? "Change Image" : "Upload Image"}
-                  </Button>
-                );
-              }}
-            </FileButton>
-
-            <Button variant="outline" onClick={handleRemoveImage}>
-              Remove Image
-            </Button>
-          </Group>
-
-          <TextareaWithLengthTracker
-            label={"Body"}
-            {...form.getInputProps("body")}
-            maxValue={1024}
+          <FlowStartMessageEditor
+            form={startMessageForm}
+            dbFlowId={dbFlowId}
+            updateMutation={updateMutation}
+            initialValues={startMessageInitialValues}
           />
-          <TextInputWithLengthTracker
-            label={"Footer"}
-            {...form.getInputProps("footer")}
-            maxValue={60}
-          />
-          <TextInputWithLengthTracker
-            label={"CTA"}
-            maxValue={20}
-            {...form.getInputProps("cta")}
+          <FlowShareTemplateEditor
+            form={templateForm}
+            dbFlowId={dbFlowId}
+            updateMutation={updateMutation}
+            initialValues={templateInitialValues}
           />
         </Stack>
-        <Box
-          className={whatsappStyles.chatBg}
-          p="lg"
+        <Stack
+          gap={0}
           style={{
-            borderRadius: "8px",
-            overflow: "hidden",
             flex: 1,
             maxWidth: "400px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "end",
           }}
-          m={"sm"}
         >
-          <WaResponseMessage
-            header={form.values.header}
-            footer={form.values.footer}
-            body={form.values.body}
-            quickReplyButtons={[form.values.cta]}
-            image={getFileUrlFromKey(form.values.headerImage)}
-          />
-        </Box>
+          <Group mb="4" justify={"center"}>
+            <Title order={4}>Preview</Title>
+          </Group>
+          <Box
+            className={whatsappStyles.chatBg}
+            p="lg"
+            style={{
+              borderRadius: "8px",
+              overflow: "hidden",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "end",
+            }}
+            mx={"sm"}
+          >
+            <Stack>
+              <SentMessageContainer>
+                <Group align={"center"} pl={"xs"} h={"100%"}>
+                  <p>
+                    <RenderNewLine text={startMessageForm.values.prefix} />
+                    <code
+                      style={{
+                        backgroundColor: "rgba(11, 20, 26, .05)",
+                        color: "rgba(17, 27, 33, .7)",
+                        display: "inline-block",
+                        font: "inherit",
+                        fontSize: ".9rem",
+                      }}
+                    >
+                      {generateWaSurveyIdentifier_byName(
+                        survey?.title,
+                        selectedTeamCode,
+                      ).replaceAll("`", "")}
+                    </code>
+                    <RenderNewLine text={startMessageForm.values.suffix} />
+                  </p>
+                </Group>
+              </SentMessageContainer>
+
+              <WaResponseMessage
+                header={templateForm.values.header}
+                footer={templateForm.values.footer}
+                body={templateForm.values.body}
+                quickReplyButtons={[templateForm.values.cta]}
+                image={getFileUrlFromKey(templateForm.values.headerImage)}
+              />
+            </Stack>
+          </Box>
+        </Stack>
       </Group>
     </PaperLayout>
   );
+}
+
+function RenderNewLine({ text }) {
+  return text.split("\n").map((t, i) => {
+    return <p key={i}>{t}</p>;
+  });
 }
 
 type TextInputWithLengthTrackerProps = TextInputProps &
@@ -336,3 +484,43 @@ export function SaveStatusIndicator({ status }: SaveStatusProps) {
     </Group>
   );
 }
+
+function generateTemplateInitialValues(dbFlow: DbFlow) {
+  return {
+    header: dbFlow.templateMessage.header || "",
+    headerImage: dbFlow.templateMessage.headerImage || null,
+    body: dbFlow.templateMessage.body || "Would you like to start survey?",
+    footer: dbFlow.templateMessage.footer || "",
+    cta: dbFlow.templateMessage.cta || "Open",
+  };
+}
+
+function generateStartMessageInitialValues(
+  dbFlow: DbFlow,
+): WaFlowStartMessageConfig {
+  return {
+    prefix:
+      dbFlow.startMessageConfig.prefix ||
+      "Send this message to start survey.\n",
+    suffix: dbFlow.startMessageConfig.suffix || "",
+  };
+}
+
+const templateFormValidation: FormValidateInput<DbFlow["templateMessage"]> = {
+  header: (h) => h.length > 60 && exceed(60),
+  body: (b) => {
+    if (b.length === 0) {
+      return empty;
+    } else if (b.length > 1024) {
+      return exceed(1024);
+    }
+  },
+  footer: (f) => f.length > 60 && exceed(60),
+  cta: (c) => {
+    if (c.length === 0) {
+      return empty;
+    } else if (c.length > 20) {
+      return exceed(20);
+    }
+  },
+};

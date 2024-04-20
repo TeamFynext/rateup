@@ -3,6 +3,7 @@ import LinksEditor from "./LinksEditor";
 import styles from "./LandingPageEditor.module.css";
 import ThemeEditor from "./ThemeEditor";
 import SharePage from "./SharePage";
+import Stats from "./Stats";
 
 function TabPanelsComp({ value }) {
   return (
@@ -22,6 +23,9 @@ function TabPanelsComp({ value }) {
       </TabsPanel>
       <TabsPanel value="share">
         <SharePage />
+      </TabsPanel>
+      <TabsPanel className={styles["stats-tab-panel"]} value="stats">
+        <Stats />
       </TabsPanel>
     </Tabs>
   );
