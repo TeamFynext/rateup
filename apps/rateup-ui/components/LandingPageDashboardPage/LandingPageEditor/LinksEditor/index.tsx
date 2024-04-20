@@ -5,7 +5,7 @@ import { IconPlus } from "@tabler/icons-react";
 import NothingFound from "../../../NothingFound/NothingFound";
 import LinksList from "./components/LinksList";
 import { useDisclosure } from "@mantine/hooks";
-import AddLinkOverlay from "./components/AddLinkOverlay/AddLinkOverlay";
+import AddLinkModal from "./components/AddLinkOverlay/AddLinkModal";
 
 function LinksEditor() {
   const landingPageObj = useLandingPageObj();
@@ -38,7 +38,7 @@ function LinksEditor() {
         </ScrollArea>
 
         {isAddLinkModalOpen && (
-          <AddLinkOverlay
+          <AddLinkModal
             title={"Add Link"}
             opened={isAddLinkModalOpen}
             onClose={closeAddLinkModal}

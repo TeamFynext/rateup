@@ -6,6 +6,9 @@ import { useMediaQuery } from "@mantine/hooks";
 import { imagesPath } from "../../../utils/constants";
 import { lexend } from "../../../utils/fonts";
 import UnsplashCreditText from "../../../components/LandingPageDashboardPage/LandingPageEditor/ThemeEditor/components/UnsplashCreditText";
+import { useCallback, useEffect } from "react";
+import { produce } from "immer";
+import { usePageVisitsOrLinkClicksUpdateMutation } from "../../../backend/landingPage/landingPage.query";
 
 export const getServerSideProps = async (context) => {
   const { shortId } = context.params;
@@ -36,6 +39,10 @@ function Lt({ landingPageObj }) {
     );
   }
 
+  const shortUrlId = landingPageObj?.shortUrlId;
+  const pageVisitsOrLinkClicksMutation =
+    usePageVisitsOrLinkClicksUpdateMutation(shortUrlId);
+
   const isMobile = useMediaQuery("(max-width: 425px)");
 
   const theme = landingPageObj?.theme ?? defaultTheme;
@@ -61,6 +68,122 @@ function Lt({ landingPageObj }) {
     ...backgroundStyles,
     ...backgroundImageObj,
   };
+
+  useEffect(() => {
+    const landingPageVisitsData = localStorage.getItem("landingPageVisitsData");
+    if (!landingPageVisitsData) {
+      localStorage.setItem(
+        "landingPageVisitsData",
+        JSON.stringify({
+          [shortUrlId]: {
+            lastVisitedAt: new Date().toISOString(),
+            linkClicks: {},
+          },
+        }),
+      );
+      pageVisitsOrLinkClicksMutation.mutate({
+        resourceToBeUpdated: "page-visit",
+      });
+    } else if (landingPageVisitsData) {
+      const parsedVisitsDataObj = JSON.parse(
+        localStorage.getItem("landingPageVisitsData"),
+      );
+      const currentLandingPageLastVisited =
+        parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
+      if (!currentLandingPageLastVisited) {
+        const updatedParsedVisitsDataObj = produce(
+          parsedVisitsDataObj,
+          (draft) => {
+            draft[shortUrlId] = {
+              lastVisitedAt: new Date().toISOString(),
+              linkClicks: {},
+            };
+          },
+        );
+        localStorage.setItem(
+          "landingPageVisitsData",
+          JSON.stringify(updatedParsedVisitsDataObj),
+        );
+        pageVisitsOrLinkClicksMutation.mutate({
+          resourceToBeUpdated: "page-visit",
+        });
+        return;
+      }
+
+      const newDateObj = new Date();
+      // currentLandingPageLastVisited is an ISO time string.
+      const lastVisitedDateObj = new Date(currentLandingPageLastVisited);
+
+      const differenceInMinutes =
+        (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
+
+      if (differenceInMinutes > 60) {
+        const updatedParsedVisitsDataObj = produce(
+          parsedVisitsDataObj,
+          (draft) => {
+            draft[shortUrlId].lastVisitedAt = new Date().toISOString();
+          },
+        );
+        localStorage.setItem(
+          "landingPageVisitsData",
+          JSON.stringify(updatedParsedVisitsDataObj),
+        );
+        pageVisitsOrLinkClicksMutation.mutate({
+          resourceToBeUpdated: "page-visit",
+        });
+      }
+    }
+  }, []);
+
+  const handleLinkClick = useCallback((linkId) => {
+    const shortUrlId = landingPageObj.shortUrlId;
+    const parsedVisitsDataObj = JSON.parse(
+      localStorage.getItem("landingPageVisitsData"),
+    );
+    const linkClicksObj = parsedVisitsDataObj[shortUrlId]["linkClicks"][linkId];
+    if (!linkClicksObj) {
+      const updatedParsedVisitsDataObj = produce(
+        parsedVisitsDataObj,
+        (draft) => {
+          draft[shortUrlId]["linkClicks"][linkId] = {
+            lastClickedAt: new Date().toISOString(),
+          };
+        },
+      );
+      localStorage.setItem(
+        "landingPageVisitsData",
+        JSON.stringify(updatedParsedVisitsDataObj),
+      );
+      pageVisitsOrLinkClicksMutation.mutate({
+        resourceToBeUpdated: "link-click",
+        linkId,
+      });
+    } else if (linkClicksObj) {
+      // lastClickedAt is ISO time string.
+      const { lastClickedAt } = linkClicksObj;
+      const lastClickedDateObj = new Date(lastClickedAt);
+      const newDateObj = new Date();
+      const differenceInMinutes =
+        (+newDateObj - +lastClickedDateObj) / (1000 * 60);
+      if (differenceInMinutes > 60) {
+        const updatedParsedVisitsDataObj = produce(
+          parsedVisitsDataObj,
+          (draft) => {
+            draft[shortUrlId]["linkClicks"][linkId]["lastClickedAt"] =
+              new Date().toISOString();
+          },
+        );
+        localStorage.setItem(
+          "landingPageVisitsData",
+          JSON.stringify(updatedParsedVisitsDataObj),
+        );
+        pageVisitsOrLinkClicksMutation.mutate({
+          resourceToBeUpdated: "link-click",
+          linkId,
+        });
+      }
+    }
+  }, []);
 
   return (
     <Box
@@ -104,6 +227,7 @@ function Lt({ landingPageObj }) {
               className={styles["link-list-item"]}
               style={linkListItemStyles}
               href={linkUrl}
+              onClick={() => handleLinkClick(id)}
             >
               <span>{linkDisplayName}</span>
             </a>

@@ -1,5 +1,5 @@
-import { ActionIcon, Box, Button, Select } from "@mantine/core";
-import styles from "./AddLinkOverlay.module.css";
+import { ActionIcon, Box, Button, Modal, Select } from "@mantine/core";
+import styles from "./AddLinkModal.module.css";
 import { IconX } from "@tabler/icons-react";
 import { linkTypeOptions } from "../../constants";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -11,7 +11,7 @@ import { useUpdateLandingPageMutation } from "../../../../../../backend/landingP
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 
-function AddLinkOverlay({ title, opened, onClose, links }) {
+function AddLinkModal({ title, opened, onClose, links }) {
   const queryClient = useQueryClient();
 
   const {
@@ -172,8 +172,15 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
   }, [selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName]);
 
   return (
-    <Box
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      centered
       className={`${styles["addlink-overlay-div"]} ${opened ? styles["opened"] : styles["closed"]}`}
+      classNames={{
+        header: styles["modal-header"],
+        body: styles["modal-body"],
+      }}
     >
       <Box className={styles["header"]}>
         <h1 className={styles["title"]}>{title}</h1>
@@ -222,12 +229,12 @@ function AddLinkOverlay({ title, opened, onClose, links }) {
             onClick={onAddBtnClick}
             loading={updateLandingPageMutation.isPending}
           >
-            Add Link
+            Save
           </Button>
         </Box>
       </Box>
-    </Box>
+    </Modal>
   );
 }
 
-export default AddLinkOverlay;
+export default AddLinkModal;
