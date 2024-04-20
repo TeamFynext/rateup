@@ -239,9 +239,11 @@ export default function SurveyID() {
                           "teams",
                           "preview",
                           "location",
-
                           "notificationEmail",
-                          "endtoendencryption",
+                          hasFeature(
+                            subscription,
+                            SubscriptionFeaturePathName.Encryption,
+                          ) && "endtoendencryption",
                           "redirect",
                           "uniqueDeviceResponse",
                           hasFeature(
