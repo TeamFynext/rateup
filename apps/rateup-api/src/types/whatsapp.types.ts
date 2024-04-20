@@ -12,7 +12,7 @@ export type WaMessageBody = {
   object: string;
   entry: [
     {
-      id: string;
+      id: string; // waba_id
       changes: [
         {
           value: WaReceiveMessageBody;

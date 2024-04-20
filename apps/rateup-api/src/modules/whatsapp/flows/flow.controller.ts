@@ -117,10 +117,12 @@ export async function importFlowsHandler(
     log.trace("creating survey from flow %s", waFlowId);
     const { survey, flowMap: flowMapWithQuestionId } =
       await createSurveyFromFlow({
+        orgId: orgId,
         flowJson: json,
         flowMap: mapData[waFlowId],
         req: req,
         teamIds: req.body.teamIds,
+        title: waFlow.name,
       });
 
     log.trace("creating flow copy in db %s", waFlowId);
@@ -155,6 +157,7 @@ export async function createFlowHandler(
         teamIds,
         type: SurveyType.WaFlow,
         languages: ["en"],
+        orgId,
       },
       req,
     )) as Survey;
@@ -190,18 +193,21 @@ export async function updateFlowHandler(
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
 
+  log.trace("updating %o", req.body);
   const previousFlow = await getFlowFromDb(dbFlowId);
   const updatedFlow = await updateFlowInDb(orgId, dbFlowId, req.body);
-  const jsonWithTitle = getFlowJsonWithTitleAndDescription(
-    updatedFlow.json as unknown as WaFlowJson,
-    updatedFlow.map,
-    updatedFlow.survey,
-  );
-  const response = await updateFlowJsonInWa(
-    orgId,
-    updatedFlow.flowId,
-    jsonWithTitle as WaFlowJson,
-  );
+  if (req.body.json) {
+    const jsonWithTitle = getFlowJsonWithTitleAndDescription(
+      updatedFlow.json as unknown as WaFlowJson,
+      updatedFlow.map,
+      updatedFlow.survey,
+    );
+    const response = await updateFlowJsonInWa(
+      orgId,
+      updatedFlow.flowId,
+      jsonWithTitle as WaFlowJson,
+    );
+  }
 
   // add data_channel_uri if logic jumps are updated
   if (

@@ -63,7 +63,10 @@ export async function createSurveyHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const data = request.body;
+  const data = {
+    ...request.body,
+    orgId: request.user.orgId,
+  };
   try {
     const survey = await createSurvey(data, request);
     //creating a default survey theme once the survey is created

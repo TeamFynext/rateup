@@ -182,17 +182,10 @@ export async function deleteTemplateHandler(
     }
     const { id, name } = template as WaTemplateFormatted;
     if (id) {
-      const deleted = await deleteTemplate(orgId, id, name);
-      if (deleted) {
-        await deleteTemplateFromDb(templateId);
-        reply.code(204);
-      } else {
-        reply.code(500).send("error in deleteing from whatsapp");
-      }
-    } else {
-      await deleteTemplateFromDb(templateId);
-      reply.code(204);
+      await deleteTemplate(orgId, id, name);
     }
+    await deleteTemplateFromDb(templateId);
+    reply.code(204);
   } catch (e) {
     reply.code(500);
   }
