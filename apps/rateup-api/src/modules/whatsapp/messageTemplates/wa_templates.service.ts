@@ -193,8 +193,7 @@ export async function deleteTemplate(
     log.trace("Template deleted from whatsapp %o", res.data);
     return true;
   } catch (e: any) {
-    log.error("Error deleting template \n%o", e.response.data);
-    console.log(`TemplateId: ${templateId}, TemplateName: ${templateName}`);
+    log.error("Error deleting template \n%o\n%o", e, e.response?.data);
     return false;
   }
 }

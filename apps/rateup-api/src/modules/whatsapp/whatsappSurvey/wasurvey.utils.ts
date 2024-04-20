@@ -3,7 +3,6 @@ import {
   YNResponse,
   LDResponse,
   SmileyResponse,
-  WaFlowStartMessageSurveyIdentifier,
 } from "../../../types/enums";
 import {
   WaMessageBody,
@@ -597,86 +596,21 @@ export function validateSession(session: WaSession) {
   return !(dayjs(session.createdAt).diff(dayjs(), "day") >= 1);
 }
 
-// format for start-survey-message is "`|st| <surveyTeamMapId>`"
-//                                 or "`|sn| <surveyName> @<TeamCode>`"
+// format for start-survey-message is "`#<surveyName> @<TeamCode>`"
 // There could any text before of after it.
 
 const startSurveyRegex_withSurveyName =
-  /[\s\S]*`\|([A-Za-z0-9]+)\| ([A-Za-z0-9\s]+) @([A-Za-z0-9]+)`[\s\S]*/i;
-const startSurveyRegex_withSurveyTeamMapId =
-  /[\s\S]*`\|([A-Za-z0-9]+)\| ([A-Za-z0-9]+)`[\s\S]*/i;
+  /[\s\S]*`#([A-Za-z0-9\s]+) @([A-Za-z0-9]+)`[\s\S]*/i;
 
 export function parseStartMessage(text: string) {
   const surveyNameMatch = text.match(startSurveyRegex_withSurveyName);
-  const surveyTeamMapIdMatch = text.match(startSurveyRegex_withSurveyTeamMapId);
   if (surveyNameMatch) {
-    const surveyName = surveyNameMatch[2].trim();
-    const teamCode = surveyNameMatch[3].trim();
+    const surveyName = surveyNameMatch[1].trim();
+    const teamCode = surveyNameMatch[2].trim();
     return {
-      type: WaFlowStartMessageSurveyIdentifier.NAME,
       surveyName,
       teamCode,
     };
-  } else if (surveyTeamMapIdMatch) {
-    const surveyTeamMapId = surveyTeamMapIdMatch[2].trim();
-    return { type: WaFlowStartMessageSurveyIdentifier.ID, surveyTeamMapId };
   }
   return null;
 }
-
-const _templateStatusChangeEventSampleData = {
-  entry: [
-    {
-      id: "0",
-      time: 1695440875,
-      changes: [
-        {
-          field: "message_template_status_update",
-          value: {
-            event: "APPROVED",
-            message_template_id: 12345678,
-            message_template_name: "my_message_template",
-            message_template_language: "pt-BR",
-            reason: null,
-          },
-        },
-      ],
-    },
-  ],
-  object: "whatsapp_business_account",
-};
-const messageEventSampleData = {
-  object: "whatsapp_business_account",
-  entry: [
-    {
-      id: "0",
-      changes: [
-        {
-          field: "messages",
-          value: {
-            messaging_product: "whatsapp",
-            metadata: {
-              display_phone_number: "16505551111",
-              phone_number_id: "123456123",
-            },
-            contacts: [
-              {
-                profile: { name: "test user name" },
-                wa_id: "16315551181",
-              },
-            ],
-            messages: [
-              {
-                from: "16315551181",
-                id: "ABGGFlA5Fpa",
-                timestamp: "1504902988",
-                type: "text",
-                text: { body: "this is a text message" },
-              },
-            ],
-          },
-        },
-      ],
-    },
-  ],
-};

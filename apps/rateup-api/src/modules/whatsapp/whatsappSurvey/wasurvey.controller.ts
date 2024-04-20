@@ -30,7 +30,6 @@ import {
   WaTemplateStatus,
   QuestionType,
   WaTemplateComponentType,
-  WaFlowStartMessageSurveyIdentifier,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import {
@@ -38,10 +37,7 @@ import {
   updateTemplateInDb,
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
-import {
-  getWaSettingsByPhoneId,
-  getWaSettingsByWaBaId,
-} from "../settings/wa_settings.service";
+import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
@@ -58,10 +54,6 @@ import {
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { WhatsappSettings } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import {
-  getSurveyTeamMapIdFromShortId,
-  isShortId,
-} from "../../survey/survey.utils";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -99,13 +91,6 @@ export async function whatsappEventHandler(
   try {
     const body = request.body as WaMessageBody;
     log.trace("WaEvent => %o", body); // Log all events
-    const phone_id = body.entry[0].changes[0].value.metadata.phone_number_id;
-
-    const waSettings = await getWaSettingsByPhoneId(phone_id);
-    if (!waSettings) {
-      log.error("WaSettings not found for phone_id %s", phone_id);
-      return;
-    }
 
     const eventType = getEventType(body);
     if (!eventType) {
@@ -114,6 +99,14 @@ export async function whatsappEventHandler(
       return;
     } else if (eventType === WaEvent.Message) {
       log.trace("messageObject => %o", getMessageObject(body));
+
+      const phone_id = body.entry[0].changes[0].value.metadata.phone_number_id;
+      const waSettings = await getWaSettingsByPhoneId(phone_id);
+      if (!waSettings) {
+        log.error("WaSettings not found for phone_id %s", phone_id);
+        return;
+      }
+
       await whatsappMessageHandler(waSettings, body);
     } else if (eventType === WaEvent.TemplateStatusChange) {
       log.trace("template status change => %o", body);
@@ -314,38 +307,27 @@ async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
     return;
   }
 
-  let surveyTeamMapId: string;
-  if (parsedStartMessage.type === WaFlowStartMessageSurveyIdentifier.ID) {
-    if (isShortId(parsedStartMessage.surveyTeamMapId)) {
-      surveyTeamMapId = await getSurveyTeamMapIdFromShortId(
-        parsedStartMessage.surveyTeamMapId,
-      );
-    } else {
-      surveyTeamMapId = parsedStartMessage.surveyTeamMapId;
-    }
-  } else {
-    const { surveyName, teamCode } = parsedStartMessage;
-    const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
-      where: {
-        survey: {
-          title: surveyName,
-        },
-        team: {
-          code: teamCode,
-          orgId,
-        },
+  const { surveyName, teamCode } = parsedStartMessage;
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: {
+      survey: {
+        title: surveyName,
       },
-    });
-    if (!surveyTeamMap) {
-      log.error("surveyTeamMap not found with %o", {
-        surveyName,
-        teamCode,
+      team: {
+        code: teamCode,
         orgId,
-      });
-      return;
-    }
-    surveyTeamMapId = surveyTeamMap?.id;
+      },
+    },
+  });
+  if (!surveyTeamMap) {
+    log.error("surveyTeamMap not found with %o", {
+      surveyName,
+      teamCode,
+      orgId,
+    });
+    return;
   }
+  const surveyTeamMapId = surveyTeamMap?.id;
 
   if (!surveyTeamMapId) {
     log.error("surveyTeamMapId not found in message");

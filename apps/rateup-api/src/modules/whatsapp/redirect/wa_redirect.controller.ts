@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { getIp } from "../../../utils/http";
 import { tokenizeIp } from "./wa_redirect.service";
 import prisma from "../../../utils/prisma";
-import { WaFlowStartMessageSurveyIdentifier } from "../../../types/enums";
 
 export async function tokenizeIpHandler(
   request: FastifyRequest,
@@ -70,18 +69,9 @@ export async function getWaShareMessageFromSTMIdHandler(
   phone = phone.replace("+", "").replace(/\s/g, "");
 
   let message = "";
-  if (
-    res.startMessageConfig.identifier ===
-    WaFlowStartMessageSurveyIdentifier.NAME
-  ) {
-    message = res.startMessageConfig.prefix;
-    message += `\n\`|sn| ${res.survey.title} @${teamCode}\`\n`;
-    message += res.startMessageConfig.suffix;
-  } else {
-    message = res.startMessageConfig.prefix;
-    message += `\n\`|st| ${request.params.surveyTeamMapShortId}\`\n`;
-    message += res.startMessageConfig.suffix;
-  }
+  message = res.startMessageConfig.prefix;
+  message += `\n\`#${res.survey.title} @${teamCode}\`\n`;
+  message += res.startMessageConfig.suffix;
 
   reply.send({ shareUrl: generateWaMessageUrl(phone, message) });
 }

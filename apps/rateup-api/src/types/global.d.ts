@@ -11,7 +11,6 @@ import {
   NPSWeightage,
   SubscriptionFeaturePathName as sfpn,
   WaFlowFormElementType,
-  WaFlowStartMessageSurveyIdentifier,
 } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
@@ -284,7 +283,6 @@ declare global {
   type WaFlowStartMessageConfig = {
     prefix: string;
     suffix: string;
-    identifier: WaFlowStartMessageSurveyIdentifier;
   };
 
   // PRISMA JSON TYPES
