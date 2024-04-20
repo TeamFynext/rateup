@@ -20,8 +20,10 @@ function LandingPageLayout({ children, className = "" }) {
 
   const [scroll, scrollTo] = useWindowScroll();
   const maxScrollY =
-    document.documentElement.scrollHeight -
-    document.documentElement.clientHeight;
+    typeof window !== "undefined"
+      ? document.documentElement.scrollHeight -
+        document.documentElement.clientHeight
+      : 0;
 
   return (
     <div className={requiredClassName}>
