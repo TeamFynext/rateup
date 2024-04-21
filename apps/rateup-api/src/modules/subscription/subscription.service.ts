@@ -4,6 +4,8 @@ import { SampleSubscriptionFeatures } from "./subscription.data";
 import { updateSubscriptionInput } from "./subscription.schema";
 import { PaymentPlanType } from "@prisma/client";
 import { createStats } from "../stats/stats.service";
+import { SubscriptionFeaturePathName } from "../../types/enums";
+import { getNestedProperty } from "../../utils/misc/obj.utils";
 
 export async function createTrialSubscription(orgId: string, pClient = prisma) {
   // Check if the RATEUP TRIAL plan exists
@@ -98,4 +100,18 @@ export async function deleteSubscriptions(orgIds: Array<string>) {
       },
     },
   });
+}
+
+export async function hasFeature(
+  orgId: string,
+  featurePath: SubscriptionFeaturePathName,
+) {
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+  if (!subscription || typeof subscription.features !== "object") return false;
+  console.log(getNestedProperty(subscription.features, featurePath));
+  return getNestedProperty(subscription.features, featurePath).active;
 }
