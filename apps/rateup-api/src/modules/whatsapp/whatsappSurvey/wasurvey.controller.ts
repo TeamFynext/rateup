@@ -9,6 +9,7 @@ import {
   isValidResponse,
   parseMessage,
   parseResponse,
+  parseStartMessage,
   validateSession,
 } from "./wasurvey.utils";
 import {
@@ -19,7 +20,6 @@ import {
   sendMessage,
   sendNextQuestion,
   sendQuestion,
-  sendSurveyToParticipant,
   sendTextMessage,
   updateSession,
 } from "./wasurvey.service";
@@ -37,7 +37,7 @@ import {
   updateTemplateInDb,
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
-import { getWaSettingsByWaBaId } from "../settings/wa_settings.service";
+import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
@@ -45,7 +45,6 @@ import {
   updateStartedSurvey,
   updateVisitedSurvey,
 } from "../../survey/survey.service";
-import { getIpFromToken } from "../redirect/wa_redirect.service";
 import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
 import { handleRegisterMessage } from "../../loyalty/internal/campaign/campaign.service";
 import {
@@ -53,7 +52,6 @@ import {
   sendAutomatedReplyMessage,
 } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { getWaSettingsHandler } from "../settings/wa_settings.controller";
 import { WhatsappSettings } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
@@ -93,13 +91,6 @@ export async function whatsappEventHandler(
   try {
     const body = request.body as WaMessageBody;
     log.trace("WaEvent => %o", body); // Log all events
-    const wabaId = body.entry[0].id;
-    const waSettings = await getWaSettingsByWaBaId(wabaId);
-
-    if (!waSettings) {
-      log.error("WaSettings not found for wabaId %s", wabaId);
-      return;
-    }
 
     const eventType = getEventType(body);
     if (!eventType) {
@@ -108,6 +99,14 @@ export async function whatsappEventHandler(
       return;
     } else if (eventType === WaEvent.Message) {
       log.trace("messageObject => %o", getMessageObject(body));
+
+      const phone_id = body.entry[0].changes[0].value.metadata.phone_number_id;
+      const waSettings = await getWaSettingsByPhoneId(phone_id);
+      if (!waSettings) {
+        log.error("WaSettings not found for phone_id %s", phone_id);
+        return;
+      }
+
       await whatsappMessageHandler(waSettings, body);
     } else if (eventType === WaEvent.TemplateStatusChange) {
       log.trace("template status change => %o", body);
@@ -161,7 +160,8 @@ async function whatsappMessageHandler(
     completeMessageObject,
     userName,
   } = parsedMessage;
-  const saveMessage = await handleWaMessages(
+
+  await handleWaMessages(
     "receive",
     completeMessageObject,
     from,
@@ -171,7 +171,7 @@ async function whatsappMessageHandler(
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
 
-  if (message.startsWith("/start")) {
+  if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (message.startsWith("/register")) {
     await handleRegisterMessage(orgId, waMessage);
@@ -294,26 +294,70 @@ async function handleUserConsentedToSurvey(
 }
 
 async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {
-  const { from, message: tempMessage } = parseMessage(waMessage);
-  const messageWithTagSplit = tempMessage
-    ?.split("\n")
-    ?.slice(1)
-    ?.join(" ")
-    ?.split("?t=");
+  log.trace("handling start message");
+
+  const { from, message: fullMessage } = parseMessage(waMessage);
+  const messageWithTagSplit = fullMessage.split("?t=");
   const message = messageWithTagSplit?.[0];
   const tag = messageWithTagSplit?.[1];
-  log.trace("handling start message");
-  // delete any existing session if any
-  await deleteSession(orgId, from);
-  // create new session
-  const [_, surveyTeamMapId, ipToken] = message.split(" "); // format: /start <surveyTeamMapId>
 
-  let ip = undefined;
-  if (ipToken) {
-    ip = await getIpFromToken(ipToken);
+  const parsedStartMessage = parseStartMessage(message);
+  if (!parsedStartMessage) {
+    log.error("Not a valid start message");
+    return;
+  }
+
+  const { surveyName, teamCode } = parsedStartMessage;
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: {
+      survey: {
+        title: surveyName,
+      },
+      team: {
+        code: teamCode,
+        orgId,
+      },
+    },
+  });
+  if (!surveyTeamMap) {
+    log.error("surveyTeamMap not found with %o", {
+      surveyName,
+      teamCode,
+      orgId,
+    });
+    return;
+  }
+  const surveyTeamMapId = surveyTeamMap?.id;
+
+  if (!surveyTeamMapId) {
+    log.error("surveyTeamMapId not found in message");
+    return;
   }
 
   // TODO: handle invalid surveyTeamMapId
+  await handleStartSurvey({
+    from,
+    surveyTeamMapId,
+    orgId,
+    tag,
+  });
+}
+
+async function handleStartSurvey({
+  from,
+  surveyTeamMapId,
+  orgId,
+  ip,
+  tag,
+}: {
+  from: string;
+  surveyTeamMapId: string;
+  orgId: string;
+  ip?: string;
+  tag?: string;
+}) {
+  await deleteSession(orgId, from);
+
   let session = await createSession({
     phone: from,
     surveyTeamMapId,

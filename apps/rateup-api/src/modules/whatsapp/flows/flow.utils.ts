@@ -73,6 +73,9 @@ export function generateFlowMessageData({
     };
   }
 
+  if (dbFlow.json.screens.length === 0) {
+    throw new Error("Flow has no screens");
+  }
   const screen_id = dbFlow.json.screens[0].id;
 
   return {
@@ -252,21 +255,26 @@ interface CreateSurveyFromFlowProps {
   flowMap: any;
   req: any;
   teamIds: string[];
+  title: string;
+  orgId: string;
 }
 export async function createSurveyFromFlow({
   flowJson,
   flowMap,
   req,
   teamIds,
+  title,
+  orgId,
 }: CreateSurveyFromFlowProps) {
   const lang: string = "en";
-  const survey: CreateSurveyInput = {
-    title: flowJson.screens[0].title,
+  const survey = {
+    title: title,
     type: SurveyType.WaFlow,
     welcomePageEnabled: false,
     getLocation: false,
     languages: [lang], // TODO: add language support
     teamIds: teamIds,
+    orgId,
   };
 
   const surveyRes = (await createSurvey(survey, req)) as Survey;

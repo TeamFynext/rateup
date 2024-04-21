@@ -104,6 +104,7 @@ model Org {
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
   shortUrlId        String?            @unique
+  Survey            Survey[]
 }
 
 model UsageStats {
@@ -251,6 +252,8 @@ model Survey {
   WaFlow                  WaFlow?
   spreadSheetId           String?
   redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
+  org                     Org?            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String?         @db.Uuid
 }
 
 model SurveyTeamMap {
@@ -265,6 +268,8 @@ model SurveyTeamMap {
   surveyStats SurveyStats?
   campaign    Campaign[]
   menuLanding MenuLanding[]
+
+  @@unique([surveyId, teamId], name: "survey_team_unique")
 }
 
 //this is the model for grouped surveys
@@ -518,11 +523,11 @@ model Media {
 }
 
 model WaTemplate {
-  id           String   @id @default(uuid()) @db.Uuid
-  createdAt    DateTime @default(now())
+  id            String   @id @default(uuid()) @db.Uuid
+  createdAt     DateTime @default(now())
   /// [PWaTemplateWithTypesData]
-  data         Json
-  acceptButton String? // QuickReplyButton text which on clicking will send the survey to the user
+  data          Json
+  acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
   defaultValues Json? // default values for images and other fields
 
@@ -732,7 +737,9 @@ model WaFlow {
   logicJumps Json @default("{}")
 
   /// [PWaFlowTemplateMessage]
-  templateMessage Json @default("{}")
+  templateMessage    Json @default("{}")
+  /// [PWaFlowStartMessageConfig]
+  startMessageConfig Json @default("{}")
 
   org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId    String @db.Uuid
@@ -960,6 +967,7 @@ model LandingPage {
   theme          Json?
   links          Json?
   additionalData Json?
+  visitorsCount  Int      @default(0)
   shareSettings  Json?
   isPublished    Boolean  @default(false)
   owner          Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)

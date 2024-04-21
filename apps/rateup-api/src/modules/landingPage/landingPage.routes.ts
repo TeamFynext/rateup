@@ -8,6 +8,7 @@ import {
   getLinkTypeDropdownOptionsRouteOptions,
   getPublicLandingPageWithShortIdRouteOptions,
   updateLandingPageWithShortIdRouteOptions,
+  updatePageVisitsOrLinkClicksOptions,
 } from "./landingPage.routeOptions";
 
 export async function linkRoutes(server: FastifyInstance) {
@@ -34,6 +35,11 @@ export async function linkRoutes(server: FastifyInstance) {
   server.get(
     "/linkTypeDropdownOptions/:linkType",
     getLinkTypeDropdownOptionsRouteOptions,
+  );
+
+  server.patch(
+    "/pageVisitsOrLinkClicks/:shortUrlId",
+    updatePageVisitsOrLinkClicksOptions,
   );
 }
 

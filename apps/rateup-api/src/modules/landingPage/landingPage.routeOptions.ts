@@ -8,6 +8,7 @@ import {
   getLinkTypeDropdownOptions,
   getPublicLandingPageWithShortId,
   updateLandingPageWithShortId,
+  updatePageVisitsOrLinkClicks,
 } from "./landingPage.controllers";
 import { landingPageSchemaRef } from "./landingPage.schema";
 import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
@@ -71,6 +72,16 @@ const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWi
     handler: asyncErrHandler(getPublicLandingPageWithShortId),
   };
 
+const updatePageVisitsOrLinkClicksOptions: CustomRouteShortHandOptionsWithHandler =
+  {
+    schema: {
+      body: landingPageSchemaRef("updatePageVisitsOrLinkClicksReqBody"),
+      params: landingPageSchemaRef("updatePageVisitsOrLinkClicksReqParams"),
+    },
+    config: { isPublic: true },
+    handler: asyncErrHandler(updatePageVisitsOrLinkClicks),
+  };
+
 export {
   createLandingPageRouteOptions,
   deleteLandingPageByIdRouteOptions,
@@ -79,4 +90,5 @@ export {
   getLinkTypeDropdownOptionsRouteOptions,
   getPublicLandingPageWithShortIdRouteOptions,
   updateLandingPageWithShortIdRouteOptions,
+  updatePageVisitsOrLinkClicksOptions,
 };

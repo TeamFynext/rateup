@@ -35,6 +35,7 @@ const asyncErrHandler = (
     try {
       await functionToBeHandled(req, rep);
     } catch (err) {
+      console.log(err);
       rep.code(500).send({
         success: false,
         message: "unable to get data",

@@ -345,6 +345,7 @@ interface sendFlowProps {
 }
 export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
   try {
+    log.trace("Sending flow %s to %s", dbFlowId, phone);
     const dbFlow = await getFlowFromDb(dbFlowId);
 
     const messageData = generateFlowMessageData({

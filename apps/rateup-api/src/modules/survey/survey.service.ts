@@ -9,7 +9,6 @@ import {
 import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType } from "../../types/enums";
 import { log } from "../../utils/logger";
-import { getReviewsBySurveyTeamMapId } from "../reviewSuggestion/reviewSuggestion.service";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
@@ -19,7 +18,10 @@ import { offerArrayWithRange } from "../../utils/survey/offer";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
-export async function createSurvey(data: CreateSurveyInput, req) {
+export async function createSurvey(
+  data: CreateSurveyInput & { orgId: string },
+  req,
+) {
   const { userId: createdBy, email: notificationEmail, orgId } = req?.user;
 
   const { templateId, ...input } = data;

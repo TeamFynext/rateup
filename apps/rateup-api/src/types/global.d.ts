@@ -293,6 +293,10 @@ declare global {
       link: string;
     };
   };
+  type WaFlowStartMessageConfig = {
+    prefix: string;
+    suffix: string;
+  };
 
   // PRISMA JSON TYPES
   namespace PrismaJson {
@@ -308,6 +312,7 @@ declare global {
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
     type PWaTemplateComponentParams = WaTemplateComponent;
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
+    type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
   }
 }
 export interface FlowLogicCondition {

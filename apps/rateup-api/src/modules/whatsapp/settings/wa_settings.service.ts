@@ -64,6 +64,15 @@ export async function getWaSettingsByWaBaId(wabaId: string) {
   return getWaSettingsWithAccessTokenDecrypted(res);
 }
 
+export async function getWaSettingsByPhoneId(phoneId: string) {
+  const res = await prisma.whatsappSettings.findFirst({
+    where: {
+      phoneId,
+    },
+  });
+  return res;
+}
+
 function getWaSettingsWithAccessTokenDecrypted(
   waSettings: WhatsappSettings,
 ): Omit<WhatsappSettings, "accessToken_iv"> {

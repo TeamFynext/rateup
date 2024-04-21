@@ -1,0 +1,24 @@
+import { describe, expect, test } from "@jest/globals";
+import { parseStartMessage } from "./wasurvey.utils";
+
+describe("wasurvey utils", () => {
+  test("Should parse survey name with spaces from start message", () => {
+    const surveyName = `Survey Name with spaces`;
+    const teamCode = "MAIN";
+    const startMessage = `Send this message to start the survey.
+\`#${surveyName} @${teamCode}\`
+some suffix text`;
+
+    const res = parseStartMessage(startMessage);
+
+    expect(res).not.toBeNull();
+    expect(res.surveyName).toEqual(surveyName);
+    expect(res.teamCode).toEqual(teamCode);
+  });
+
+  test("Should return null if surveyTeamMapId is not found", () => {
+    const startMessage = `Send this message to start the survey. \`code\``;
+    const res = parseStartMessage(startMessage);
+    expect(res).toBeNull();
+  });
+});
