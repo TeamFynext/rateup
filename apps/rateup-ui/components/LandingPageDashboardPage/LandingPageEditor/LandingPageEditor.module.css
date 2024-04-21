@@ -36,7 +36,7 @@
 .tab-panel-root {
   overflow: hidden;
 }
-/* 
-.tab-panel {
+
+.tab-panel.stats-tab-panel {
   padding: 0.625rem;
-} */
+}

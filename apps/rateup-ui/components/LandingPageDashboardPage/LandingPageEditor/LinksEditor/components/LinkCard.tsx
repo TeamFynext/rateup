@@ -1,10 +1,13 @@
-import { Box, Button, Loader, TextInput } from "@mantine/core";
+import { Box, Button, Loader, Text, TextInput } from "@mantine/core";
 import styles from "../LinksEditor.module.css";
 import { IconGripVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { useUpdateLandingPageMutation } from "../../../../../backend/landingPage/landingPage.query";
 import { useLandingPageObj } from "../../LandingPageContext/LandingPageContext";
+import { modals } from "@mantine/modals";
+import modalStyles from "../../../CreateLandingPageModal/CreateLandingPageModal.module.css";
+import restOfModalStyles from "../../../LandingPageCard/LandingPageCard.module.css";
 
 function LinkCard({ linkObj, onDelete }) {
   const { id, linkDisplayName, linkUrl } = linkObj;
@@ -84,6 +87,26 @@ function LinkCard({ linkObj, onDelete }) {
     }
   }, [linkUrl, linkUrlInputState]);
 
+  const handleDeleteClick = useCallback(async () => {
+    modals.openConfirmModal({
+      title: "Delete Link?",
+      children: (
+        <Text className={restOfModalStyles["are-you-sure-text"]}>
+          Are you sure to delete this Link?
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      className: restOfModalStyles["delete-confirmation-modal"],
+      centered: true,
+      classNames: {
+        header: modalStyles["modal-header"],
+        body: modalStyles["modal-body"],
+        content: modalStyles["modal-content"],
+      },
+      onConfirm: () => onDelete(linkObj.id),
+    });
+  }, [onDelete, linkObj]);
+
   return (
     <Box className={styles["link-card"]}>
       <Box className={styles["drag-handle-icon-and-link-info-container"]}>
@@ -155,7 +178,8 @@ function LinkCard({ linkObj, onDelete }) {
         <Button
           className={styles["delete-btn"]}
           leftSection={<IconTrash size={"0.875rem"} />}
-          onClick={() => onDelete(linkObj.id)}
+          // onClick={() => onDelete(linkObj.id)}
+          onClick={handleDeleteClick}
         >
           Delete
         </Button>

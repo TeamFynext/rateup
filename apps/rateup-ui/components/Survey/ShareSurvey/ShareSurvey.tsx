@@ -22,7 +22,6 @@ import {
   IconPlayerPlay,
   IconX,
 } from "@tabler/icons-react";
-import { useRouter } from "next/router";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   ContainedSelection,
@@ -49,7 +48,6 @@ import { TabEnum } from "../SurveyId";
 import { StatusBadge } from "../SurveyCardList";
 import IFrameModal from "./IFrameModal";
 import NothingFound from "../../NothingFound/NothingFound";
-import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import TagManager from "./TagManager";
 import { SurveyType } from "../../../types/enums";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
@@ -110,7 +108,7 @@ const ShareSurvey = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyShareUrl(phone, surveyTeamMapId));
+          throw new Error("Not implemented");
         }
       }
     } else {

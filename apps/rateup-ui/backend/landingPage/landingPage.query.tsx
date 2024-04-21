@@ -6,6 +6,7 @@ import {
   getLandingPageWithShortId,
   getLandingPages,
   updateLandingPage,
+  updatePageVisitsOrLinkClicks,
 } from "./landingPage.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -106,6 +107,19 @@ function useLinkTypeOptions(linkType) {
   });
 }
 
+function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId) {
+  return useMutation({
+    mutationFn: (bodyData: {
+      resourceToBeUpdated: string;
+      linkId?: string;
+    }) => {
+      return updatePageVisitsOrLinkClicks(shortUrlId, bodyData);
+    },
+    onSuccess: () => {},
+    onError: () => {},
+  });
+}
+
 export {
   useLandingPages,
   useCreateLandingPageMutation,
@@ -113,4 +127,5 @@ export {
   useGetLandingPageWithShortId,
   useDeleteLandingPageMutation,
   useLinkTypeOptions,
+  usePageVisitsOrLinkClicksUpdateMutation,
 };

@@ -11,7 +11,7 @@ export function LengthTracker({
   atStart = false,
 }: LengthTrackerProps) {
   return (
-    <Group justify={atStart ? "start" : "flex-end"} miw={"80px"}>
+    <Group justify={atStart ? "start" : "flex-end"}>
       <Text c="dimmed" fz={".8rem"} pr="sm">
         <span
           style={{

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createWaTemplate,
   deleteWaTemplate,
+  getShareUrlFromSurveyTeamMapId,
   getUnregisteredTemplates,
   getWaTemplateById,
   getWaTemplates,
@@ -176,3 +177,10 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
     },
   });
 };
+
+export const useWaShareUrl = (surveyTeamMapShortId: string) =>
+  useQuery({
+    enabled: !!surveyTeamMapShortId,
+    queryKey: ["wa-share-url", surveyTeamMapShortId],
+    queryFn: () => getShareUrlFromSurveyTeamMapId(surveyTeamMapShortId),
+  });

@@ -13,6 +13,7 @@ function TabsListComp({ value, onChange }) {
         <TabsTab value="links">Links</TabsTab>
         <TabsTab value="theme">Theme</TabsTab>
         <TabsTab value="share">Share</TabsTab>
+        <TabsTab value="stats">Stats</TabsTab>
       </TabsList>
     </Tabs>
   );

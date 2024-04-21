@@ -9,7 +9,6 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { StatusBadge } from "../SurveyCardList";
-import { generateWaSurveyShareUrl } from "../../../utils/whatsapp/wa_url";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -17,7 +16,7 @@ import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../backend/whatsapp/flow/flow.query";
 import { ShareMethods } from "./ShareMethods";
 import { CopyLinkComponent } from "./ShareSurvey";
-import { FlowShareTemplateEditor } from "./FlowShareTemplateEditor";
+import { FlowShareMessageEditor } from "./FlowShareTemplateEditor";
 import { modals } from "@mantine/modals";
 import TagManager from "./TagManager";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -63,7 +62,7 @@ export const ShareFlow = ({
           // redirecting through our page to fetch ip
           setShareUrl(`${window.origin}/public/wa/${surveyTeamMapId}/redirect`);
         } else {
-          setShareUrl(generateWaSurveyShareUrl(phone, surveyTeamMapId));
+          throw new Error("Not implemented");
         }
       }
     }
@@ -250,7 +249,11 @@ export const ShareFlow = ({
           />
         </Group>
       </PaperLayout>
-      <FlowShareTemplateEditor />
+      <FlowShareMessageEditor
+        selectedTeamCode={
+          teamSelectData.find((t) => t.value === surveyTeamMapId)?.label
+        }
+      />
       <ShareQR
         url={shareUrl}
         sx={{ borderRadius: "0.5rem" }}

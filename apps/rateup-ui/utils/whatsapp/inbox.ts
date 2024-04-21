@@ -130,12 +130,12 @@ export function validateInboxTemplateSending(
         );
         switch (componentC.format) {
           case "IMAGE":
-            return (
-              !!defaultValues?.image?.link ||
-              sendHeaderComponent?.parameters[0]?.[
+            const hasDefaultImage = !!defaultValues?.image?.link;
+            const hasSelectedImage =
+              !!sendHeaderComponent?.parameters[0]?.[
                 componentC?.format.toLowerCase()
-              ]?.link
-            );
+              ]?.link;
+            return hasDefaultImage || hasSelectedImage;
           case "VIDEO":
           case "DOCUMENT":
             if (!sendHeaderComponent) return false;

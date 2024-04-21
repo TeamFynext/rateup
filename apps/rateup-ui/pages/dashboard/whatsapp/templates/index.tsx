@@ -2,13 +2,12 @@ import {
   ActionIcon,
   Flex,
   Group,
-  Menu,
   SimpleGrid,
   Space,
   Text,
   Title,
 } from "@mantine/core";
-import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconSelector, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -16,7 +15,10 @@ import {
   useDeleteWaTemplateMutation,
   useWaTemplates,
 } from "../../../../backend/whatsapp/whatsapp.query";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+} from "../../../../components/Button/RateupButtons";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
 import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/SyncTemplates";
@@ -54,7 +56,10 @@ export default function Template() {
   function handleEditClick(template) {
     router.push(`/dashboard/whatsapp/templates/${template.id}`);
   }
-  // TODO: delete template modal
+  const sortOrder = sort ? "desc" : "asc";
+  templates.sort((a, b) =>
+    dayjs(a.createdAt).isBefore(b.createdAt) === (sortOrder === "asc") ? -1 : 1,
+  );
   return (
     <>
       <Flex
@@ -112,17 +117,13 @@ export default function Template() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
+           */}
           <RateupButtonPrimary
-            onClick={() => setSort(!sort)}
+            onClick={() => setSort((prev) => !prev)}
             title={"Sort"}
             variant="subtle"
-            color="black"
-            sx={{
-              fontSize: "15px",
-              fontFamily: lexend400.style.fontFamily,
-            }}
-            rightIcon={<IconChevronDown size="1rem" />}
-          /> */}
+            rightIcon={<IconSelector size="1rem" />}
+          />
           <SyncTemplatesButton />
         </Flex>
       </Flex>

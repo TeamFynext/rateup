@@ -43,6 +43,14 @@ function getDropdownOptionsOfLinkType(linkType) {
   };
 }
 
+async function updatePageVisitsOrLinkClicks(shortUrlId, bodyData) {
+  const res = await axiosClient.patch(
+    `${url}/pageVisitsOrLinkClicks/${shortUrlId}`,
+    bodyData,
+  );
+  return res.data;
+}
+
 export {
   getLandingPages,
   getLandingPageWithShortId,
@@ -51,4 +59,5 @@ export {
   updateLandingPage,
   deleteLandingPage,
   getDropdownOptionsOfLinkType,
+  updatePageVisitsOrLinkClicks,
 };
