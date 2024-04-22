@@ -725,7 +725,7 @@ model WaFlow {
   dbFlowId  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
 
-  flowId  String? @unique
+  flowId  String?
   name    String
   status  String
   /// [PWaFlowJson]
@@ -745,6 +745,8 @@ model WaFlow {
   orgId    String @db.Uuid
   survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId String @unique @db.Uuid
+
+  @@unique([flowId, orgId])
 }
 
 model Testimonial {

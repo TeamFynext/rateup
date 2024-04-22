@@ -36,7 +36,8 @@ export async function createCampaignHandler(
     ?.buttons.find((b) => b.type === "FLOW")
     ?.["flow_id"].toString();
 
-  const dbFlow = await getFlowWithSurveyTeamMapIds(flowId);
+  const orgId = request.user.orgId;
+  const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
   if (!dbFlow) {
     log.error("Flow not found in db with id %s", flowId);
     reply.code(500).send("Flow not found in db");

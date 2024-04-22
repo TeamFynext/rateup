@@ -103,7 +103,8 @@ export async function saveTemplateAsDraftHandler(
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    let formattedTemplate: any = generateTemplate(request.body);
+    const { defaultValues, ...templateData } = request.body;
+    let formattedTemplate: any = generateTemplate(templateData);
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
       const template = await getDbTemplate(request.body.id);
@@ -113,7 +114,11 @@ export async function saveTemplateAsDraftHandler(
       template.data.language = formattedTemplate.language ?? "en";
       await updateTemplateInDb(request.body.id, template.data);
     } else {
-      await saveTemplate(formattedTemplate, orgId);
+      await saveTemplate(
+        formattedTemplate,
+        orgId,
+        defaultValues as WaTemplateDefaultValues,
+      );
     }
     reply.code(200);
   } catch (e) {
@@ -315,7 +320,7 @@ export async function sendTemplateToUserHandler(
         return;
       }
       // getting flow with surveyTeamMapId
-      const dbFlow = await getFlowWithSurveyTeamMapIds(flowId);
+      const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
       if (!dbFlow) {
         log.error("Flow not found in db with id %s", flowId);
         reply.code(500).send("Flow not found in db");
