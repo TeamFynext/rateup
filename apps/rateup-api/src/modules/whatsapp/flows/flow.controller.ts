@@ -249,9 +249,8 @@ export async function updateFlowMetaDataHandler(
       accessToken,
       req.body,
     );
-    console.log(data, "wa re");
-
     if (!data?.success) {
+      log.error("Flow Not updated in whatsapp\n%o", data);
       throw new Error("Flow Not updated in whatsapp");
     }
     res.status(204).send();
