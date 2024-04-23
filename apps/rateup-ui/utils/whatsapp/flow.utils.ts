@@ -163,7 +163,7 @@ export function getFlowFormElementsFromScreen(
   screen: WaFlowScreen,
   onlyInteractive = false,
 ) {
-  const elementsWithoutFooter = screen.layout.children
+  const elementsWithoutFooter = screen?.layout?.children
     .find((se) => se.type === "Form")
     .children.filter((fe) => fe.type !== WaFlowFormElementType.footer);
 
@@ -175,7 +175,7 @@ export function getFlowFormElementsFromScreen(
 }
 
 export function getFlowFooterElementsFromScreen(screen: WaFlowScreen) {
-  const elementsWithoutFooter = screen.layout.children
+  const elementsWithoutFooter = screen?.layout?.children
     .find((se) => se.type === "Form")
     .children.filter((fe) => fe.type === WaFlowFormElementType.footer);
   return elementsWithoutFooter;
@@ -563,6 +563,8 @@ export const flow_supported_questions = [
 export function questionTypeToFlowFormElementType(
   qtype: qt,
 ): WaFlowFormElementType {
+  console.log(qtype);
+
   switch (qtype) {
     case qt.Text:
     case qt.Email:
@@ -585,7 +587,6 @@ export function questionTypeToFlowFormElementType(
     case qt.MSQ:
       return WaFlowFormElementType.checkboxGroup;
     default:
-      localStorage.setItem("test", qtype);
       throw Error(qtype + "Not implemented");
   }
 }
