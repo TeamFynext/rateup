@@ -51,11 +51,11 @@ const AdvancedSettings = () => {
                   fw={"bold"}
                   variant="light"
                 >
-                  {googleAuthAccessToken.isExist ? "Active" : "Inactive"}
+                  {googleAuthAccessToken?.isExist ? "Active" : "Inactive"}
                 </Badge>
               </Group>
               <Stack>
-                {!googleAuthAccessToken.isExist ? (
+                {!googleAuthAccessToken?.isExist ? (
                   <Stack w={250}>
                     <RateupButtonPrimary
                       title="Sync Account"
@@ -69,7 +69,7 @@ const AdvancedSettings = () => {
                   </Stack>
                 ) : (
                   <Stack w={320}>
-                    {googleAuthAccessToken.auth?.userEmail ? (
+                    {googleAuthAccessToken?.auth?.userEmail ? (
                       <>
                         <Title order={4}> Synced account info</Title>
                         <Group justify="space-between">

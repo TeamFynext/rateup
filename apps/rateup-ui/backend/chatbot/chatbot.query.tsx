@@ -1,12 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  createChatbot,
   deleteChatbotResource,
   deleteChatHistory,
   deleteManyChatbotResource,
   deletePublicChatHistory,
+  getChatbotDetails,
+  getChatbotPublicPageStatus,
   getChatbotResources,
   sendChatbotMessage,
   sendPublicChatbotMessage,
+  updateChatbot,
   uploadSourceForEmbed,
 } from "./chatbot.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
@@ -95,5 +99,40 @@ export const usePublicChatMutation = () => {
     mutationFn: sendPublicChatbotMessage,
     onSuccess: (data) => {},
     onError: (error) => {},
+  });
+};
+
+export const useGetChatbotPublicPageStatus = (chatbotId: string) => {
+  return useQuery({
+    queryFn: () => getChatbotPublicPageStatus(chatbotId),
+    queryKey: ["chatbotPublicPageStatus", chatbotId],
+    enabled: !!chatbotId,
+  });
+};
+
+export const useGetChatbotDetails = () => {
+  return useQuery({
+    queryFn: getChatbotDetails,
+    queryKey: ["chatbotDetails"],
+  });
+};
+
+export const useCreateChatbot = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createChatbot,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatbotDetails"] });
+    },
+  });
+};
+
+export const useUpdateChatbot = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateChatbot,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatbotDetails"] });
+    },
   });
 };

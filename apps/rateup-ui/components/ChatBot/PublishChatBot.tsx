@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
-import {
-  useCreateOrgShortUrlMutation,
-  useGetOrgShortUrl,
-} from "../../backend/org/org.query";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { Flex, Stack } from "@mantine/core";
+import { Badge, Flex, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   showErrorToast,
@@ -19,12 +15,22 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey";
+import { ChatbotPublicPageStatus } from "../../types/enums";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useCreateChatbot,
+  useGetChatbotDetails,
+  useUpdateChatbot,
+} from "../../backend/chatbot/chatbot.query";
 
 const PublishChatbot = () => {
   const [chatbotPublicUrl, setChatbotPublicUrl] = useState("");
-  const createOrgUserShortUrlMutate = useCreateOrgShortUrlMutation();
-  const { data } = useGetOrgShortUrl();
+  const createChatbotUrlMutate = useCreateChatbot();
+  const { data: chatbotDetails } = useGetChatbotDetails();
+  const updateChatbotMutate = useUpdateChatbot();
   const [opened, { toggle }] = useDisclosure(false);
+  const [isActive, setIsActive] = useState(false);
+  const queryClient = useQueryClient();
 
   const generateUrl = () => {
     showLoadingToast(
@@ -33,7 +39,7 @@ const PublishChatbot = () => {
       true,
       "Generating",
     );
-    createOrgUserShortUrlMutate.mutate(null, {
+    createChatbotUrlMutate.mutate(null, {
       onSuccess: () => {
         showSuccessToast(
           "Url generated Successfully",
@@ -48,27 +54,71 @@ const PublishChatbot = () => {
     });
   };
 
+  const handleChatbotStatus = () => {
+    const loadingMessage = isActive
+      ? "Hold On..Deactivating public page"
+      : "Hold On..Activating public page";
+    const loadingTitle = isActive ? "Deactivating" : "Activating";
+    showLoadingToast(loadingMessage, "chatbot-page", true, loadingTitle);
+    updateChatbotMutate.mutate(
+      {
+        publicPageStatus: isActive
+          ? ChatbotPublicPageStatus.INACTIVE
+          : ChatbotPublicPageStatus.ACTIVE,
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["chatbotPublicPageStatus", chatbotDetails?.shortUrlId],
+          });
+          showSuccessToast(
+            isActive
+              ? "Page Deactivated Succesfully"
+              : "Page Activated Succesfully",
+            "chatbot-page",
+            <IconCheck />,
+            true,
+          );
+        },
+        onError: () => {
+          showErrorToast(
+            "something went wrong",
+            "chatbot-page",
+            <IconX />,
+            true,
+          );
+        },
+      },
+    );
+  };
   useEffect(() => {
-    if (data?.shortUrlId)
+    if (chatbotDetails?.shortUrlId)
       setChatbotPublicUrl(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/chatbot/${data?.shortUrlId}`,
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/chatbot/${chatbotDetails?.shortUrlId}`,
       );
-  }, [data]);
+    if (chatbotDetails?.publicPageStatus) {
+      setIsActive(
+        chatbotDetails?.publicPageStatus === ChatbotPublicPageStatus.ACTIVE
+          ? true
+          : false,
+      );
+    }
+  }, [chatbotDetails]);
   return (
     <PaperLayout>
       <Stack justify="flex-start">
-        <Flex justify={"flex-start"}>
+        <Flex justify={"space-between"}>
           <RateupButtonSecondary
             title={
-              data?.shortUrlId
+              chatbotDetails?.shortUrlId
                 ? "Show public url"
-                : createOrgUserShortUrlMutate.isPending
+                : createChatbotUrlMutate.isPending
                   ? "Generating.."
                   : "Generate Public Url"
             }
-            onClick={data?.shortUrlId ? toggle : generateUrl}
+            onClick={chatbotDetails?.shortUrlId ? toggle : generateUrl}
             rightIcon={
-              data?.shortUrlId ? (
+              chatbotDetails?.shortUrlId ? (
                 !opened ? (
                   <IconChevronDown />
                 ) : (
@@ -77,6 +127,21 @@ const PublishChatbot = () => {
               ) : null
             }
           />
+          {chatbotDetails ? (
+            <>
+              <Group>
+                <Text>Current Status:</Text>
+                <Badge color={isActive ? "green" : "red"}>
+                  {chatbotDetails?.publicPageStatus}
+                </Badge>
+              </Group>
+              <RateupButtonSecondary
+                color={isActive ? "red" : "var(--tertiary-color)"}
+                title={isActive ? "Deactivate" : "Activate"}
+                onClick={handleChatbotStatus}
+              />
+            </>
+          ) : null}
         </Flex>
         {opened && <CopyLinkComponent value={chatbotPublicUrl} />}
       </Stack>

@@ -265,3 +265,8 @@ export enum ChatBotSource {
   HUMAN = "HUMAN",
   AI = "AI",
 }
+
+export enum ChatbotPublicPageStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
