@@ -65,7 +65,6 @@ import { mygRoutes } from "./modules/myg/myg.route";
 import { mygSchemas } from "./modules/myg/myg.schema";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route";
 import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
-import { migrateData } from "./migrationHelper";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -146,8 +145,4 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(chatbotRoutes, { prefix: "api/chatbot" });
   server.register(chatbotPublicRoute, { prefix: "api/public/chatbot" });
   server.register(mygRoutes, { prefix: "api/myg" }); //TODO  MYG
-
-  server.get("/api/migrate/waContacts", async (req, rep) => {
-    await migrateData();
-  });
 }
