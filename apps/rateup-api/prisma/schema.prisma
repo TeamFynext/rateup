@@ -273,7 +273,6 @@ model SurveyTeamMap {
   responses   SurveyResponse[]
   sessions    WaSession[]
   surveyStats SurveyStats?
-  campaign    Campaign[]
   menuLanding MenuLanding[]
 
   @@unique([surveyId, teamId], name: "survey_team_unique")
@@ -364,6 +363,7 @@ model Contact {
   campaignParticipants CampaignParticipant[]
   waContact            WaContact?
   tags                 Json?
+  WaMessage            WaMessage[]
 
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
 }
@@ -404,8 +404,6 @@ model Campaign {
 
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
-  surveyTeamMap        SurveyTeamMap         @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId      String                @db.Uuid
   waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   waTemplateId         String?               @db.Uuid
   // TODO: add email template?
@@ -999,12 +997,14 @@ model WaMessage {
   id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt               DateTime  @default(now())
   waCreatedAt             DateTime?
-  waContactId             String    @db.Uuid
+  waContactId             String?    @db.Uuid
   /// [PWaMessageBody]
   messageBody             Json
   /// [PWaTemplateComponentParams]
   templateComponentParams Json?
-  waContact               WaContact @relation(fields: [waContactId], references: [id], onDelete: Cascade)
+  waContact               WaContact? @relation(fields: [waContactId], references: [id], onDelete: Cascade)
+  contact                 Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId               String?   @db.Uuid
 }
 
 model WaAutomatedReply {

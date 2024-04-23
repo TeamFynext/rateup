@@ -1,15 +1,14 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ByWaContactId, NewWaMessageBody } from "./wamessage.schema";
+import { NewWaMessageBody } from "./wamessage.schema";
 import {
   addNewWaMessage,
-  getWaMessagesByWaContactId,
+  getContactsWithLastMessage,
+  getWaMessagesByContactId,
 } from "./wamessage.service";
-import { ContactCore } from "../../../contact/contact.schema";
-import { waContactHandler } from "../contact/wacontact.controller";
 import {
-  getWaContactById,
-  updateWaContactUpdatedById,
-} from "../contact/wacontact.service";
+  ByContactIdParams,
+  ContactCore,
+} from "../../../contact/contact.schema";
 import { createTextMessage } from "../../whatsappSurvey/wasurvey.utils";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
 import {
@@ -19,6 +18,10 @@ import {
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service";
 import { log } from "../../../../utils/logger";
 import { handleSendWsMessage } from "./wamessage.ws.controller";
+import {
+  getContactById,
+  getOrCreateContactByPhone,
+} from "../../../contact/contact.service";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
@@ -41,8 +44,9 @@ export async function handleWaMessages(
       phone: phone,
       source: "whatsapp",
     };
-    // Handle the contact in either cases send or receive returns the merged format of contact and waContact
-    let waContact = await waContactHandler(contactCore, orgId);
+    // create contact if it does not exist
+    const contact = await getOrCreateContactByPhone(phone, orgId, contactCore);
+
     let parameterData = {};
     switch (type) {
       case "send": {
@@ -64,19 +68,14 @@ export async function handleWaMessages(
 
     const waMessage = await addNewWaMessage(
       waMessageBody,
-      waContact?.id,
+      contact.id,
       waTimeStamp,
       parameterData,
     );
-    const updatedWaContact = await updateWaContactUpdatedById(
-      waContact?.id,
-      waTimeStamp,
-    );
-    // Update the waContact with the updated timestamp
-    waContact = { ...waContact, updatedAt: updatedWaContact.updatedAt };
+
     // Send the message to the connected clients
     await handleSendWsMessage(orgId, {
-      contact: waContact,
+      contact: contact,
       message: waMessage,
     });
   } catch (error) {
@@ -85,18 +84,26 @@ export async function handleWaMessages(
 }
 
 export async function sendNewWaMessageHandler(
-  request: FastifyRequest<{ Body: NewWaMessageBody; Params: ByWaContactId }>,
+  request: FastifyRequest<{
+    Body: NewWaMessageBody;
+    Params: ByContactIdParams;
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const { waContactId } = request.params;
+    const { contactId } = request.params;
     const { type } = request.body;
     const { orgId } = request.user;
-    const waContact = await getWaContactById(waContactId);
+    const contact = await getContactById(contactId);
+    if (!contact) {
+      log.error("Contact not found with id %s", contactId);
+      reply.status(404).send("Contact not found");
+      return;
+    }
     switch (type) {
       case "text": {
         const messageBody = createTextMessage(
-          waContact?.phone,
+          contact.phone,
           "",
           request?.body?.text?.body,
         );
@@ -108,14 +115,27 @@ export async function sendNewWaMessageHandler(
     reply.status(500).send("Internal Server Error");
   }
 }
-export async function getWaMessagesByWaContactIdHandler(
-  request: FastifyRequest<{ Params: ByWaContactId }>,
+export async function getWaMessagesByContactIdHandler(
+  request: FastifyRequest<{ Params: ByContactIdParams }>,
   reply: FastifyReply,
 ) {
   try {
-    const { waContactId } = request.params;
-    const messages = await getWaMessagesByWaContactId(waContactId);
+    const { contactId } = request.params;
+    const messages = await getWaMessagesByContactId(contactId);
     reply.send(messages);
+  } catch (error) {
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function getContactsWithLastMessageHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const contacts = await getContactsWithLastMessage(orgId);
+    reply.send(contacts);
   } catch (error) {
     reply.status(500).send("Internal Server Error");
   }
