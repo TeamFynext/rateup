@@ -273,6 +273,7 @@ const FilterSelect = ({
       defaultValue={filterByTag}
       onChange={setFilterByTag}
       maw={360}
+      placeholder="Filter contacts"
     />
   );
 };
