@@ -149,6 +149,7 @@ export function SurveysPage({
                 isChecked={isChecked}
                 selectedTeamId={selectedTeamId}
                 teamsData={teamRes?.data}
+                refetchSurveys={refetch}
               />
             ))}
         </SurveyCardLayout>

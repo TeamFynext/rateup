@@ -37,12 +37,14 @@ interface SurveyMenuProps {
   survey: Survey;
   selectedTeamId: string;
   teamsData: any;
+  refetchSurveys: any;
 }
 
 export function SurveyMenu({
   survey,
   selectedTeamId,
   teamsData,
+  refetchSurveys,
 }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -145,7 +147,7 @@ export function SurveyMenu({
         message: "Survey status Updated!",
         autoClose: true,
       });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      refetchSurveys();
     },
   });
 
@@ -203,7 +205,7 @@ export function SurveyMenu({
         headerLabel="Are you sure to delete this Survey?"
         headerTitle="Delete Survey?"
         confirmLabel="Delete"
-        onConfirm={(e) => {
+        onConfirm={async (e) => {
           notifications.show({
             id: "delete-data",
             loading: true,
@@ -213,11 +215,12 @@ export function SurveyMenu({
             withCloseButton: false,
           });
           selectedTeamId && selectedTeamId !== "all"
-            ? surveyDeleteMutation.mutate({
+            ? await surveyDeleteMutation.mutateAsync({
                 id: survey?.id,
                 teamId: selectedTeamId,
               })
-            : surveyDeleteMutation.mutate({ id: survey?.id });
+            : await surveyDeleteMutation.mutateAsync({ id: survey?.id });
+          refetchSurveys();
         }}
       />
       <Menu.Target>
