@@ -141,3 +141,27 @@ export async function deleteWaSettings(orgId: string) {
     },
   });
 }
+
+export async function getContactTag(orgId: string) {
+  const res = await prisma.whatsappSettings.findFirst({
+    where: {
+      orgId,
+    },
+    select: {
+      contactTags: true,
+    },
+  });
+  return res;
+}
+
+export async function updateContactTag(orgId: string, tags: string[]) {
+  const res = await prisma.whatsappSettings.update({
+    where: {
+      orgId,
+    },
+    data: {
+      contactTags: tags,
+    },
+  });
+  return res;
+}

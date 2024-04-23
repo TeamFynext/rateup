@@ -1,5 +1,7 @@
 import axios from "axios";
 import { dataSourceUploadInput } from "./chatbot.schema";
+import { getShortUrlId } from "../../utils/commnUtils";
+import prisma from "../../utils/prisma";
 
 const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
 const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;
@@ -89,6 +91,40 @@ export async function deletePublicChatHistory(userId) {
   return await axios.delete(`${CHATBOT_PUBLIC_BASEURL}/${userId}`, {
     headers: {
       Accept: "application/json",
+    },
+  });
+}
+
+export async function createChatbot(orgId: string) {
+  return await prisma.chatbot.create({
+    data: {
+      orgId,
+      shortUrlId: getShortUrlId(),
+    },
+  });
+}
+
+export async function getChatbotDetails(orgId: string) {
+  return await prisma.chatbot.findUnique({
+    where: {
+      orgId,
+    },
+  });
+}
+
+export async function updateChatbotDetails(data, orgId: string) {
+  return await prisma.chatbot.update({
+    where: {
+      orgId,
+    },
+    data,
+  });
+}
+
+export async function getChatbotDetailsByShortUrlId(shortUrlId: string) {
+  return await prisma.chatbot.findUnique({
+    where: {
+      shortUrlId,
     },
   });
 }

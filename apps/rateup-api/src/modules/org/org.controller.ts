@@ -1,12 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
-  createOrgShortUrl,
   deleteGoogleAuthToken,
   getAccessToken,
   getAllMembersWithTeams,
   getAllOrgs,
-  getOrgShortUrl,
   getOrgStats,
   getTeamsMembers,
   initializeAuthClient,
@@ -252,33 +250,5 @@ export async function deleteGoogleAuthTokenHandler(
   } catch (error) {
     console.error(error);
     reply.code(500).send();
-  }
-}
-
-export async function createOrgShortUrlHanlder(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const res = await createOrgShortUrl(orgId);
-    reply.code(201).send(res);
-  } catch (error) {
-    console.error(error);
-    reply.code(500).send({ message: "Something went wrong" });
-  }
-}
-
-export async function getOrgShortUrlHanlder(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const shortUrlId = await getOrgShortUrl(orgId);
-    reply.code(201).send({ shortUrlId });
-  } catch (error) {
-    console.error(error);
-    reply.code(500).send({ message: "Something went wrong" });
   }
 }

@@ -9,7 +9,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { google } from "googleapis";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
-import { getShortUrlId } from "../../utils/commnUtils";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -518,41 +517,5 @@ export async function deleteGoogleAuthToken(orgId) {
       },
     }),
   ]);
-  return res;
-}
-
-export async function createOrgShortUrl(id) {
-  const res = await prisma.org.update({
-    where: {
-      id,
-    },
-    data: {
-      shortUrlId: getShortUrlId(),
-    },
-  });
-  return res;
-}
-
-export async function getOrgShortUrl(id) {
-  const { shortUrlId } = await prisma.org.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      shortUrlId: true,
-    },
-  });
-  return shortUrlId;
-}
-
-export async function getOrgFromShortUrl(shortUrlId) {
-  const res = await prisma.org.findUnique({
-    where: {
-      shortUrlId,
-    },
-    select: {
-      id: true,
-    },
-  });
   return res;
 }

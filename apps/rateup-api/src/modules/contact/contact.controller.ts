@@ -48,9 +48,7 @@ export async function createMultipleContactsHandler(
     const existingcontacts = await getContactsByOrgId(orgId);
     const filterNewContacts = newContacts.filter((contact) => {
       return !existingcontacts.some(
-        (existContact) =>
-          existContact.email === contact.email ||
-          existContact.phone === contact.phone,
+        (existContact) => existContact.phone === contact.phone,
       );
     });
     if (!filterNewContacts.length)

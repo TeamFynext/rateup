@@ -1,5 +1,4 @@
 import { buildJsonSchemas } from "fastify-zod";
-import { type } from "os";
 import { z } from "zod";
 
 const orgCore = {

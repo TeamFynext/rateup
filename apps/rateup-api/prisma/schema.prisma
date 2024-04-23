@@ -103,7 +103,7 @@ model Org {
   LoyaltyApiKey     LoyaltyApiKey?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
-  shortUrlId        String?            @unique
+  chatbot           Chatbot?
   Survey            Survey[]
 }
 
@@ -150,6 +150,7 @@ model WhatsappSettings {
   type String // enums.ts: WaConfigType
 
   encryption Json? // for flow {publicKey: string, privateKey: string}
+  contactTags       String[]           @default([])
 }
 
 model OrgMember {
@@ -348,7 +349,6 @@ model Contact {
 
   name   String?
   phone  String?
-  email  String?
   source String?
 
   org                  Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -357,9 +357,9 @@ model Contact {
   contactGroups        ContactGroupMap[]
   campaignParticipants CampaignParticipant[]
   waContact            WaContact?
+  tags                 Json?
 
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
-  @@unique([email, orgId], name: "contact_email_org_id_unique")
 }
 
 model ContactGroup {
@@ -523,8 +523,8 @@ model Media {
 }
 
 model WaTemplate {
-  id            String   @id @default(uuid()) @db.Uuid
-  createdAt     DateTime @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  createdAt      DateTime @default(now())
   /// [PWaTemplateWithTypesData]
   data          Json
   acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
@@ -1043,4 +1043,12 @@ model MyGInvoice {
   updatedAt       DateTime? @updatedAt
 
   @@unique([invoiceNumber, mobileNumber])
+}
+
+model Chatbot {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId            String  @unique @db.Uuid
+  org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  shortUrlId       String  @unique
+  publicPageStatus String? @default("INACTIVE")
 }

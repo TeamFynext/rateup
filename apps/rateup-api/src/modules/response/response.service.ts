@@ -498,12 +498,15 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const authClient = await initializeAuthClient();
   const token = await getAccessToken(orgId);
   authClient.credentials.refresh_token = token.refreshToken;
-  let doc = survey.spreadSheetId
+  const drive = google.drive({ version: "v3", auth: authClient });
+  const isDocExist = survey?.spreadSheetId
+    ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
+    : false;
+  let doc = isDocExist
     ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
     : null;
-  if (!survey.spreadSheetId) {
-    const driveFolderId = await getDriveFolderId(orgId, authClient);
-    const drive = google.drive({ version: "v3", auth: authClient });
+  if (!doc) {
+    const driveFolderId = await getDriveFolderId(orgId, authClient, drive);
     const existingFiles = await drive.files.list({
       q: `mimeType = 'application/vnd.google-apps.spreadsheet' and name = '${survey.title}' and '${driveFolderId}' in parents`,
       fields: "nextPageToken, files(id, name)",
@@ -670,7 +673,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   return survey;
 }
 
-export async function getDriveFolderId(orgId: string, authClient) {
+export async function getDriveFolderId(orgId: string, authClient, drive) {
   let { driveFolderId } = await prisma.org.findUnique({
     where: {
       id: orgId,
@@ -679,13 +682,16 @@ export async function getDriveFolderId(orgId: string, authClient) {
       driveFolderId: true,
     },
   });
-  if (!driveFolderId) {
+
+  const isFolderExist = driveFolderId
+    ? await checkFileExistInDrive(driveFolderId, drive)
+    : null;
+  if (!isFolderExist) {
     const folderName = "RateUp";
     const fileMetadata = {
       name: folderName,
       mimeType: "application/vnd.google-apps.folder",
     };
-    const drive = google.drive({ version: "v3", auth: authClient });
     const folderList = await drive.files.list({
       q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}'`,
       fields: "nextPageToken, files(id, name)",
@@ -710,6 +716,16 @@ export async function getDriveFolderId(orgId: string, authClient) {
     });
   }
   return driveFolderId;
+}
+
+async function checkFileExistInDrive(fileId, drive) {
+  try {
+    await drive.files.get({ fileId });
+    return true;
+  } catch (e) {
+    console.log(e);
+    if (e?.response?.statusText == "Not Found") return false;
+  }
 }
 interface IsheetResponse {
   surveyTeamMapId: string;
@@ -765,12 +781,14 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
       );
       response.responses.map((res: QuestionResponse) => {
         let QIndex;
-        let qstn = questions.find((q: Question, index: number) => {
-          if (q.id === res.questionId) {
-            QIndex = index + 1;
-            return q;
-          }
-        });
+        let qstn = (questions as unknown as Question[]).find(
+          (q: Question, index: number) => {
+            if (q.id === res.questionId) {
+              QIndex = index + 1;
+              return q;
+            }
+          },
+        );
         let qstnTitle =
           QIndex + "_" + getContent(qstn.title[response.language]).trim();
         if (
