@@ -46,24 +46,20 @@ import {
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
 enum ContactTabs {
-  CONTACTS = "Contacts",
-  GROUPS = "Groups",
-  SETTINGS = "Settings",
+  CONTACTS = "contacts",
+  GROUPS = "groups",
+  SETTINGS = "settings",
 }
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterByTag, setFilterByTag] = useState<string[]>([
-    "MANUAL",
-    "CSV IMPORT",
-  ]);
+  const [filterByTag, setFilterByTag] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<ContactTabs>(ContactTabs.CONTACTS);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [contactTags, setContactTags] = useState([]);
   const router = useRouter();
   const { tab } = router.query as { tab: string };
-
   useEffect(() => {
-    if (tab) {
+    if (tab && Object.values(ContactTabs).includes(tab as any)) {
       setActiveTab(tab as ContactTabs);
     }
   }, [tab]);
@@ -79,24 +75,28 @@ export default function Contacts() {
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
-
+  const sourceArray = Array.from(
+    new Set(contactData?.map((data) => data.source)),
+  );
   const updateContactTagsMutation = useUpdateContactTagsMutation();
   const filteredContacts = (
     searchTerm
       ? contactData.filter((contact) => {
           return (
             contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contact?.phone?.includes(searchTerm) ||
-            contact?.email?.includes(searchTerm)
+            contact?.phone?.includes(searchTerm)
           );
         })
       : contactData
   )
     ?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
-    ?.filter((data) => filterByTag?.includes(data.source))
     ?.filter((data) =>
-      filterByTag.filter((value) => !["MANUAL", "CSV IMPORT"].includes(value))
-        ?.length > 0
+      sourceArray?.some((data) => filterByTag.includes(data))
+        ? filterByTag?.includes(data.source)
+        : data,
+    )
+    ?.filter((data) =>
+      filterByTag.filter((value) => !sourceArray.includes(value))?.length > 0
         ? data?.contactGroups?.some((group) =>
             filterByTag?.includes(group.contactGroup.name),
           )
@@ -145,10 +145,14 @@ export default function Contacts() {
         <Flex justify="space-between" align={"center"} wrap={"wrap"} gap={10}>
           <SegmentedControl
             data={Object.values(ContactTabs)}
-            onChange={(value) => setActiveTab(value as ContactTabs)}
+            onChange={(value) => {
+              router.push(`contacts/?tab=${value}`);
+              setActiveTab(value as ContactTabs);
+            }}
             color={"var(--mantine-color-rateup-blue-filled)"}
             radius={"md"}
             defaultValue={activeTab}
+            value={activeTab}
           />
           <TextInput
             leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
@@ -172,6 +176,7 @@ export default function Contacts() {
               setFilterByTag={setFilterByTag}
               filterByTag={filterByTag}
               contactArray={contactGroups?.map((data) => data?.name)}
+              sourceArray={sourceArray}
             />
           )}
           <ContactActionMenu
@@ -253,11 +258,16 @@ export default function Contacts() {
   );
 }
 
-const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
+const FilterSelect = ({
+  setFilterByTag,
+  filterByTag,
+  contactArray,
+  sourceArray,
+}) => {
   return (
     <ContainedMultiSelect
       data={[
-        { group: "Source", items: ["MANUAL", "CSV IMPORT"] },
+        { group: "Source", items: sourceArray },
         { group: "Groups", items: contactArray ?? [] },
       ]}
       defaultValue={filterByTag}
