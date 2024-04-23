@@ -118,7 +118,7 @@ export const useSurveyTemplates = (surveyType) => {
   });
 };
 
-export const useSurveys = (specificTeamIsSelected: boolean) => {
+export const useSurveys = () => {
   return useQuery({
     queryKey: ["surveys"],
     queryFn: getSurveys,
