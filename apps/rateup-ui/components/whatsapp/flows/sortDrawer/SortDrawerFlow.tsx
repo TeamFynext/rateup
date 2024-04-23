@@ -39,7 +39,7 @@ const SortDrawerFlow = ({ opened, close, data = [] }: ISortDrawerProps) => {
             <IconGripVertical size={24} stroke={1.5} />
           </Stack>
           <Card shadow="sm" padding="lg" radius="lg" w={"90%"} p={"xs"}>
-            <Text fz={24} c={"var(--tertiary-color)"} tt={"capitalize"}>
+            <Text fz={24} tt={"capitalize"}>
               {item?.name}
             </Text>
           </Card>
