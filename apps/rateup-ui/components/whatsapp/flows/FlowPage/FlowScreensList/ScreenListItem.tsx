@@ -12,12 +12,11 @@ import {
 } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
 import {
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconChevronUp,
   IconGripVertical,
   IconPlus,
+  IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -48,6 +47,7 @@ import {
   FlowMaxScreens,
 } from "../../../whatsappConfig";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
 
 interface ScreenListItemProps {
   screens: WaFlowScreen[];
@@ -82,6 +82,8 @@ function ScreenListItem({
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [isOpen, { open, close }] = useDisclosure(false);
+
   const [pageNo, handlers] = useCounter(0, {
     min: 0,
     max: flowJson?.screens?.length - 1 ?? 0,
@@ -243,32 +245,19 @@ function ScreenListItem({
               </ActionIcon>
             </Tooltip>
             {flowEditable && (
-              <Tooltip label="Delete Screen">
-                <ActionIcon onClick={toggle} variant="subtle">
-                  <IconTrash size={20} />
-                </ActionIcon>
-              </Tooltip>
+              <>
+                <Tooltip label="Delete Screen">
+                  <ActionIcon onClick={toggle} variant="subtle">
+                    <IconTrash size={20} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip label="Swap order of screens" openDelay={500}>
+                  <ActionIcon onClick={open} variant={"subtle"} size={20}>
+                    <IconReplace size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </>
             )}
-            <Tooltip label="Move Screen Up" openDelay={500}>
-              <ActionIcon
-                onClick={() => handleMoveScreen("up")}
-                variant={"outline"}
-                size={20}
-                disabled={currentScreenIndex === 0}
-              >
-                <IconChevronUp size={20} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Move Screen Down" openDelay={500}>
-              <ActionIcon
-                onClick={() => handleMoveScreen("down")}
-                variant={"outline"}
-                size={20}
-                disabled={currentScreenIndex === flowJson.screens.length - 1}
-              >
-                <IconChevronDown size={20} />
-              </ActionIcon>
-            </Tooltip>
           </Group>
           <Text c={"dimmed"}>
             {`${flowJson.screens.length}/${FlowMaxScreens}`}
@@ -343,6 +332,14 @@ function ScreenListItem({
           />
         </Box>
       </Flex>
+      <SortDrawerFlow
+        close={close}
+        data={flowJson.screens?.map((data) => ({
+          id: data.id,
+          name: data.title,
+        }))}
+        opened={isOpen}
+      />
     </Stack>
   );
 }
@@ -409,7 +406,7 @@ function FormElementCard({
       <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
         {index + 1}
       </Badge>
-      <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
+      <Text px="xs" fw={500} style={{ flex: 1 }} lineClamp={2}>
         {text}
       </Text>
       {flowEditable && (
