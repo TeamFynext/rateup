@@ -25,6 +25,7 @@ import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../utils/constants";
+import { useRouter } from "next/router";
 
 interface GroupModalProps {
   groupClose: () => void;
@@ -43,7 +44,7 @@ const CreateGroupModal = ({
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState("");
-
+  const router = useRouter();
   const form = useForm({
     initialValues: groupDetails || {
       name: "",
@@ -92,11 +93,12 @@ const CreateGroupModal = ({
       });
     } else {
       createContactGroupMutation.mutate(form.values, {
-        onSuccess: () => {
+        onSuccess: (data) => {
           groupClose();
           close();
           setIsCreating(false);
           form.reset();
+          router.push(`/dashboard/contacts/${data?.data?.id}`);
         },
         onError: () => {
           groupClose();
