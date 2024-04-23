@@ -51,17 +51,8 @@ export default () => {
     refetch: refetchCampaign,
   } = useCampaignById(campaignId);
 
-  const selectedSurvey = campaignData?.surveyTeamMap?.survey;
-  const isWaFlow = selectedSurvey?.type === SurveyType.WaFlow;
-  const selectedSurveyId = isWaFlow
-    ? selectedSurvey?.WaFlow.dbFlowId
-    : selectedSurvey?.id;
-  const resultUrl = isWaFlow ? "whatsapp/flows" : "whatsapp";
-  const tab = isWaFlow ? "activeTab" : "tab";
-
   const campaignInfo = {
-    survey: campaignData?.surveyTeamMap.survey.title,
-    template: isWaFlow ? null : campaignData?.waTemplate?.data.name,
+    template: campaignData?.waTemplate?.data.name,
     team: campaignData?.team.name,
   };
 
@@ -130,12 +121,6 @@ export default () => {
             >
               Add Participants
             </Button>
-            <Anchor
-              size="xl"
-              href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/${resultUrl}/${selectedSurveyId}?${tab}=Result`}
-            >
-              <Title order={3}>Results</Title>
-            </Anchor>
           </Group>
           {filteredParticipants?.length > 0 ? (
             <SimpleGrid cols={3}>
@@ -294,18 +279,6 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
             </Badge>
           </Group>
           <Group justify="space-between">
-            <Stack gap={"xs"}>
-              <Title order={6}>Selected Survey</Title>
-              <Badge
-                variant="default"
-                classNames={{ root: style.input, label: style.badgeLabel }}
-                size={"xl"}
-                radius={"md"}
-                miw={200}
-              >
-                {campaignInfo?.survey}
-              </Badge>
-            </Stack>
             {campaignInfo?.template && (
               <Stack gap={"xs"}>
                 <Title order={6}>Selected Template</Title>
