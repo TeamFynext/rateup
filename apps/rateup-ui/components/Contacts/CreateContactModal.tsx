@@ -269,7 +269,6 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
                       {...form.getInputProps(`tags.${data}`)}
                       radius={"md"}
                       size="md"
-                      required
                       key={data}
                     />
                   ),

@@ -178,16 +178,17 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       submitButtonDisabled={isDisabledSubmit}
     >
       <Stack>
-        {action === ContactAcions.DELETE_GROUPS && (
-          <TeamSelector
-            value={selectedTeamId}
-            onChange={(value) => {
-              setSelectedGroups([]);
-              setSelectedIds([]);
-              setSelectedTeamId(value);
-            }}
-          />
-        )}
+        {action === ContactAcions.DELETE_GROUPS ||
+          (action === ContactAcions.ADD_CONTACTS_TO_GROUP && (
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(value) => {
+                setSelectedGroups([]);
+                setSelectedIds([]);
+                setSelectedTeamId(value);
+              }}
+            />
+          ))}
         {action !== ContactAcions.DELETE_GROUPS && (
           <FilterSelect
             contactArray={filteredGroups?.map((data) => data?.name)}

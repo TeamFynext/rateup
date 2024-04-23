@@ -44,10 +44,12 @@ const EditContactModal = ({
       phone: "+" + contact?.phone,
     },
     validate: {
-      phone: (value) => {
-        if (contactType.includes("phone"))
-          return !isValidPhoneNumber(value) ? "Invalid number" : null;
-      },
+      phone: (value) =>
+        !value
+          ? "Phone Number cannot be blank"
+          : !isValidPhoneNumber(value)
+            ? "Invalid phone number"
+            : null,
       tags: {},
       name: isNotEmpty("Name cannot be blank"),
     },
@@ -125,7 +127,10 @@ const EditContactModal = ({
 
           {contactType.includes("phone") && (
             <Stack gap={0}>
-              <Text>Phone Number</Text>
+              <Group gap={3}>
+                <Text>Phone Number</Text>
+                <Text c="red">*</Text>
+              </Group>
               <PhoneInputWithCountrySelect
                 defaultCountry="IN"
                 international

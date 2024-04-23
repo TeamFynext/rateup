@@ -153,23 +153,26 @@ export default function Contacts() {
             radius={"md"}
             defaultValue={activeTab}
             value={activeTab}
+            tt={"capitalize"}
           />
-          <TextInput
-            leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
-            radius="xl"
-            size="md"
-            placeholder={
-              activeTab == ContactTabs.CONTACTS
-                ? "Search contact"
-                : "Search contact groups"
-            }
-            rightSectionWidth={60}
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.currentTarget.value)}
-            flex={1}
-            maw={500}
-            m={"auto"}
-          />
+          {activeTab !== ContactTabs.SETTINGS && (
+            <TextInput
+              leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
+              radius="xl"
+              size="md"
+              placeholder={
+                activeTab == ContactTabs.CONTACTS
+                  ? "Search contact"
+                  : "Search contact groups"
+              }
+              rightSectionWidth={60}
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.currentTarget.value)}
+              flex={1}
+              maw={500}
+              m={"auto"}
+            />
+          )}
 
           {activeTab === ContactTabs.CONTACTS && (
             <FilterSelect
@@ -278,7 +281,6 @@ export const FilterSelect = ({
       ]}
       defaultValue={filterByTag}
       onChange={setFilterByTag}
-      maw={360}
       placeholder="Filter contacts"
     />
   );
