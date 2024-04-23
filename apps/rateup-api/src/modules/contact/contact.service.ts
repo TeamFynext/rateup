@@ -23,6 +23,7 @@ export async function createMultipleContacts(
 ) {
   const contactsData = contacts.map((contact) => ({ ...contact, orgId }));
   const result = await prisma.contact.createMany({
+    skipDuplicates: true,
     data: contactsData,
   });
 }

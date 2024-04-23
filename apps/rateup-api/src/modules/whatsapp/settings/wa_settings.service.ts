@@ -143,7 +143,7 @@ export async function deleteWaSettings(orgId: string) {
 }
 
 export async function getContactTag(orgId: string) {
-  const res = await prisma.whatsappSettings.findFirst({
+  const res = await prisma.waAccountSettings.findFirst({
     where: {
       orgId,
     },
@@ -155,11 +155,15 @@ export async function getContactTag(orgId: string) {
 }
 
 export async function updateContactTag(orgId: string, tags: string[]) {
-  const res = await prisma.whatsappSettings.update({
+  const res = await prisma.waAccountSettings.upsert({
     where: {
       orgId,
     },
-    data: {
+    create: {
+      orgId,
+      contactTags: tags,
+    },
+    update: {
       contactTags: tags,
     },
   });

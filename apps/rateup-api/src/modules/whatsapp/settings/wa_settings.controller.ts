@@ -36,7 +36,6 @@ export async function createWaSettingsHandler(
     phoneId: req.body.phoneId,
     appId: req.body.appId,
     type: WaConfigType.Manual,
-    contactTags: [],
   });
   return res.status(200).send(waSettings);
 }
