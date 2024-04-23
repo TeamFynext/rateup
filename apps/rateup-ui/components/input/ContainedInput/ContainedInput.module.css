@@ -1,7 +1,6 @@
 .input {
   height: 46px;
   border-radius: 12px;
-  color: black;
 }
 .input:focus {
   border: 1px solid var(--mantine-primary-color-filled);
@@ -11,7 +10,4 @@
   font-size: var(--mantine-font-size-xs);
   color: var(--mantine-color-gray-7);
   z-index: 1;
-}
-.section {
-  width: fit-content;
 }

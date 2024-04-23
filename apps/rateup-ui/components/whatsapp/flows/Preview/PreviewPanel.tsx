@@ -1,18 +1,7 @@
-import {
-  ActionIcon,
-  Box,
-  Flex,
-  Group,
-  Transition,
-  useMantineTheme,
-} from "@mantine/core";
+import { Box, Flex, Group, Transition, useMantineTheme } from "@mantine/core";
 import { useContext, useEffect, useState } from "react";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext";
-import {
-  getFlowJsonWithTitleAndDescription,
-  getScreenObjById,
-} from "../../../../utils/whatsapp/flow.utils";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { getFlowJsonWithTitleAndDescription } from "../../../../utils/whatsapp/flow.utils";
 import { WaFlowScreen } from "../../../../types/global";
 import { FlowChatPreview } from "./FlowChatPreview";
 
@@ -20,40 +9,19 @@ interface PreviewProps {
   previewOpened: boolean;
 }
 export function PreviewPanel({ previewOpened }: PreviewProps) {
-  const { survey, map, flowJson } = useContext(EditFlowContext);
+  const { survey, map, flowJson, screenNumber } = useContext(EditFlowContext);
   const theme = useMantineTheme();
-
   const [currentScreen, setCurrentScreen] = useState<WaFlowScreen>();
 
   useEffect(() => {
     if (flowJson.screens.length === 0) return;
     const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
-    if (currentScreen) {
-      const screen = getScreenObjById(json.screens, currentScreen.id);
-      if (screen) {
-        setCurrentScreen(screen);
-        return;
-      }
-    }
-    setCurrentScreen(json.screens[0]);
-  }, [flowJson.screens]);
+    if (typeof screenNumber === "number")
+      setCurrentScreen(json.screens?.[screenNumber ?? 0]);
+  }, [flowJson, map, screenNumber, survey]);
 
   if (!currentScreen) return null;
   const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
-  function handlePrevScreen() {
-    const currentScreenIndex = Math.max(
-      json.screens.findIndex((s) => s.id === currentScreen.id),
-      1,
-    );
-    setCurrentScreen(json.screens[currentScreenIndex - 1]);
-  }
-  function handleNextScreen() {
-    const currentScreenIndex = Math.min(
-      json.screens.findIndex((s) => s.id === currentScreen.id),
-      json.screens.length - 2,
-    );
-    setCurrentScreen(json.screens[currentScreenIndex + 1]);
-  }
 
   return (
     <Transition
@@ -76,9 +44,6 @@ export function PreviewPanel({ previewOpened }: PreviewProps) {
             }}
           >
             <Group justify="space-between" mb="sm">
-              <ActionIcon onClick={handlePrevScreen}>
-                <IconChevronLeft />
-              </ActionIcon>
               <Box
                 mx="sm"
                 py={4}
@@ -92,9 +57,6 @@ export function PreviewPanel({ previewOpened }: PreviewProps) {
               >
                 {currentScreen?.title}
               </Box>
-              <ActionIcon onClick={handleNextScreen}>
-                <IconChevronRight />
-              </ActionIcon>
             </Group>
             <Box
               style={{

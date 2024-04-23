@@ -1,23 +1,10 @@
-import {
-  ActionIcon,
-  Box,
-  Group,
-  Text,
-  Title,
-  Tooltip,
-  useMantineTheme,
-} from "@mantine/core";
+import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import ScreenListItem from "./ScreenListItem";
 import styles from "./FlowScreensList.module.css";
-import {
-  IconAlertTriangle,
-  IconChevronsDown,
-  IconChevronsUp,
-  IconPlus,
-} from "@tabler/icons-react";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import CreateFlowScreenModal from "./CreateFlowScreenModal";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import { DragDropContext } from "@hello-pangea/dnd";
 import {
@@ -50,10 +37,6 @@ function FlowScreensList({
   const theme = useMantineTheme();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-
-  const [expandedIds, setExpandedIds] = useState<string[]>(
-    flowJson.screens[0] ? [flowJson.screens[0].id] : [],
-  );
 
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
@@ -106,12 +89,6 @@ function FlowScreensList({
     }
   }
 
-  function handleFoldAll() {
-    setExpandedIds([]);
-  }
-  function handleOpenAll() {
-    setExpandedIds(flowJson.screens.map((s) => s.id));
-  }
   return (
     <Box className={styles["flow-screens-list-container"]}>
       {flowEditable || (
@@ -133,58 +110,15 @@ function FlowScreensList({
           </Text>
         </Group>
       )}
-      <Group justify={"space-between"} align={"center"} mb={"sm"}>
-        <Group gap={8}>
-          <Title order={2}>Screens</Title>
-          <Text c={"dimmed"}>
-            {`${flowJson.screens.length}/${FlowMaxScreens}`}
-          </Text>
-        </Group>
-        <Group gap={8}>
-          <Tooltip label="Add Screen" openDelay={500}>
-            <ActionIcon
-              onClick={handleCreateScreenClick}
-              variant="subtle"
-              disabled={!flowEditable}
-            >
-              <IconPlus />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Open all screens" openDelay={500}>
-            <ActionIcon variant={"subtle"} onClick={handleOpenAll}>
-              <IconChevronsDown />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Fold all screens" openDelay={500}>
-            <ActionIcon variant={"subtle"} onClick={handleFoldAll}>
-              <IconChevronsUp />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </Group>
       <DragDropContext onDragEnd={onDragEnd}>
         <Box className={styles["screens-list-div"]}>
-          {flowJson.screens.map((screen) => {
-            const expanded = expandedIds.includes(screen.id);
-            return (
-              <ScreenListItem
-                onDeleteElement={onDeleteElement}
-                onElementClick={onElementClick}
-                key={screen.id}
-                screen={screen}
-                onAddElementClick={onAddElementClick}
-                expanded={expanded}
-                setExpanded={() => {
-                  setExpandedIds(
-                    expanded
-                      ? expandedIds.filter((id) => id !== screen.id)
-                      : [...expandedIds, screen.id],
-                  );
-                }}
-              />
-            );
-          })}
+          <ScreenListItem
+            onDeleteElement={onDeleteElement}
+            onElementClick={onElementClick}
+            screens={flowJson.screens}
+            onAddElementClick={onAddElementClick}
+            handleCreateScreenClick={handleCreateScreenClick}
+          />
         </Box>
       </DragDropContext>
       <CreateFlowScreenModal

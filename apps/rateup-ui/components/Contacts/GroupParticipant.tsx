@@ -1,18 +1,16 @@
-import { Paper, Group, Title, Text, Menu } from "@mantine/core";
+import { Group, Title, Text, Menu } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRemoveContactsFromGroup } from "../../backend/campaign/contactGroup/contactGroup.query";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const GroupParticipant = ({ contact, groupId }) => {
   return (
-    <Paper shadow="xl" radius="md" p="xl">
+    <PaperLayout p="xl">
       <Group justify="space-between">
         <Title order={5}>{contact?.name}</Title>
-        <ParticipantMenu
-          contactId={contact?.id}
-          groupId={groupId}
-        ></ParticipantMenu>
+        <ParticipantMenu contactId={contact?.id} groupId={groupId} />
       </Group>
       <Text c="dimmed">{contact?.phone}</Text>
       <Text c="dimmed">{contact?.email}</Text>
@@ -22,7 +20,7 @@ const GroupParticipant = ({ contact, groupId }) => {
           created on {dayjs(contact?.createdAt).format("DD-MM-YYYY")}
         </Text>
       </Group>
-    </Paper>
+    </PaperLayout>
   );
 };
 
@@ -48,7 +46,7 @@ const ParticipantMenu = ({ contactId, groupId }) => {
   return (
     <Menu shadow="xl" position="bottom-end">
       <Menu.Target>
-        <IconDots color="grey"></IconDots>
+        <IconDots color="grey" cursor={"pointer"} />
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item

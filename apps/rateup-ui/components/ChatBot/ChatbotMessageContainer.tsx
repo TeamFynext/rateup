@@ -16,6 +16,7 @@ import { useEffect, useRef } from "react";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import { ChatBotMessage } from "../../types/global";
 import { ChatBotSource } from "../../types/enums";
+import { getHotkeyHandler } from "@mantine/hooks";
 
 interface ChatbotMessageContainerProps {
   handleSendQuery: () => void;
@@ -63,13 +64,14 @@ const ChatbotMessageContainer = ({
               <LoadingOverlay loaderProps={{ children: "Please wait..." }} />
             ) : (
               <Stack justify="flex-end" p={"xs"} gap={"xs"}>
-                {messages?.map((message) => (
+                {messages?.map((message, index) => (
                   <Group
                     justify={
                       message.source == ChatBotSource.HUMAN
                         ? "flex-end"
                         : "flex-start"
                     }
+                    key={index}
                   >
                     <PaperLayout
                       style={{
@@ -143,6 +145,7 @@ const ChatbotMessageContainer = ({
                 placeholder="Type in.."
                 variant="unstyled"
                 w={"90%"}
+                onKeyDown={getHotkeyHandler([["Enter", handleSendQuery]])}
               />
               <ActionIcon onClick={handleSendQuery}>
                 <IconSend />

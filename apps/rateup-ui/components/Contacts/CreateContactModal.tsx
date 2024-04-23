@@ -26,7 +26,7 @@ import Papa from "papaparse";
 import { importMethod } from "../../utils/enums";
 import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, emailPattern } from "../../utils/constants";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
@@ -39,7 +39,7 @@ export interface ImportContact {
   email?: string;
 }
 
-const CreateContactModal = ({ contactClose, close }) => {
+const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
   const [contactType, setContactType] = useState<string[]>(["phone"]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -51,10 +51,10 @@ const CreateContactModal = ({ contactClose, close }) => {
     initialValues: {
       name: "",
       phone: "",
-      email: "",
       importMethod: importMethod.MANUAL,
       contactType: ["phone"],
       countryCode: "91",
+      tags: {},
     },
     validate: {
       phone: (value) => {
@@ -71,17 +71,6 @@ const CreateContactModal = ({ contactClose, close }) => {
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         (value.length ? null : "Name cannot be blank"),
-      email: (value) => {
-        if (
-          form.values.importMethod == importMethod.MANUAL &&
-          contactType.includes("email")
-        )
-          return !value
-            ? "Email cannot be blank"
-            : !emailPattern.test(value)
-              ? "Invalid email"
-              : null;
-      },
       contactType: (value) =>
         !value.length ? "Must select any one: phone or email" : null,
     },
@@ -94,6 +83,7 @@ const CreateContactModal = ({ contactClose, close }) => {
     Papa.parse(csvfile, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header?.toLowerCase(),
       complete: function (results) {
         setCsvData(results?.data as ImportContact[]);
         setIsUpload(false);
@@ -122,17 +112,9 @@ const CreateContactModal = ({ contactClose, close }) => {
     setIsCreating(true);
     if (form.values.importMethod == importMethod.CSV) {
       let isValid: boolean = true;
-      csvData?.every(function (contact, index) {
+      csvData?.every(function (contact) {
         if (contactType.includes("phone") && !/^\d+$/.test(contact?.phone)) {
           showErrorToast("Failed to import: file contain invalid phone number");
-          isValid = false;
-          return false;
-        }
-        if (
-          contactType.includes("email") &&
-          !/^\S+@\S+$/.test(contact?.email)
-        ) {
-          showErrorToast("Failed to import: file contain invalid Email");
           isValid = false;
           return false;
         }
@@ -142,13 +124,21 @@ const CreateContactModal = ({ contactClose, close }) => {
         setCsvfile(null);
         return;
       }
-      let dataToUpload = csvData?.map(({ name, email, phone }) => ({
-        teamId: form.values.teamId,
-        email: !email ? undefined : email,
-        phone: !phone ? undefined : phone,
-        name: name,
-        source: importMethod.CSV,
-      }));
+      let dataToUpload = csvData?.map(({ name, phone, ...obj }) => {
+        const result = {};
+        for (const key of cTags) {
+          if (obj.hasOwnProperty(key) && contactType?.includes(key)) {
+            result[key] = obj[key];
+          }
+        }
+        return {
+          teamId: form.values.teamId,
+          phone: !phone ? undefined : phone,
+          name: name,
+          source: importMethod.CSV,
+          tags: result,
+        };
+      });
       importContactMutation.mutate(dataToUpload, {
         onSuccess: () => {
           setIsCreating(false);
@@ -162,14 +152,21 @@ const CreateContactModal = ({ contactClose, close }) => {
         },
       });
     } else {
+      const result = {};
+      for (const key of contactType) {
+        if (form.getValues()?.tags?.hasOwnProperty(key)) {
+          result[key] = form.getValues()?.tags?.[key];
+        }
+      }
+      form.values.tags = result;
       let contactData: ICreateContact = {
         name: form.values.name,
         phone: contactType.includes("phone")
           ? form.values.phone.slice(1)
           : undefined,
         teamId: form.values.teamId,
-        email: contactType.includes("email") ? form.values.email : undefined,
         source: importMethod.MANUAL,
+        tags: form.values.tags,
       };
       createContactMutation.mutate(contactData, {
         onSuccess: () => {
@@ -209,7 +206,14 @@ const CreateContactModal = ({ contactClose, close }) => {
               <Checkbox.Group value={contactType} onChange={setContactType}>
                 <Group>
                   <Checkbox value="phone" label="Phone" />
-                  <Checkbox value="email" label="Email" />
+                  {cTags?.map((data) => (
+                    <Checkbox
+                      value={data}
+                      label={data}
+                      key={data}
+                      tt={"capitalize"}
+                    />
+                  ))}
                 </Group>
               </Checkbox.Group>
             </Paper>
@@ -243,15 +247,19 @@ const CreateContactModal = ({ contactClose, close }) => {
                   </Text>
                 </Stack>
               )}
-              {contactType.includes("email") && (
-                <TextInput
-                  label="Email"
-                  placeholder="Enter email id"
-                  {...form.getInputProps("email")}
-                  required
-                  radius={"md"}
-                  size="md"
-                />
+              {contactType?.map(
+                (data) =>
+                  data !== "phone" && (
+                    <TextInput
+                      label={data}
+                      placeholder={`Enter ${data}`}
+                      {...form.getInputProps(`tags.${data}`)}
+                      radius={"md"}
+                      size="md"
+                      required
+                      key={data}
+                    />
+                  ),
               )}
             </SimpleGrid>
           )}

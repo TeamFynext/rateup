@@ -3,13 +3,13 @@ import React from "react";
 import { Breadcrumbs, Group, Text } from "@mantine/core";
 import Link from "next/link";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { IconChevronRight, IconHome } from "@tabler/icons-react";
+import { IconChevronRight, IconHome, IconCrown } from "@tabler/icons-react";
 
 import styles from "./Navbar.module.css";
-import { IconCrown } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import ExpiryComponent from "../../Premium/ExpiryComponent";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
+import ColorSchemaButton from "../../theme/ColorSchemaButton";
 
 export const Navbar = () => {
   const router = useRouter();
@@ -46,6 +46,7 @@ export const Navbar = () => {
           );
         })}
       </Breadcrumbs>
+      {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
       {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
         <ExpiryComponent expiryDate={subscription?.expiresAt}>
           <RateupButtonPrimary

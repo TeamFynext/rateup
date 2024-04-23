@@ -9,40 +9,47 @@ import {
   TextInput,
   Text,
 } from "@mantine/core";
-import { isEmail, isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
 import { useEffect, useState } from "react";
 import { useEditContactMutation } from "../../backend/campaign/contacts/contacts.query";
-import { IconPlus } from "@tabler/icons-react";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, emailPattern } from "../../utils/constants";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import styles from "./contact.module.css";
 
-const EditContactModal = ({ contact, closeEditModal, groupId }) => {
+const EditContactModal = ({
+  contact,
+  closeEditModal,
+  groupId,
+  tags = [],
+}: {
+  contact: ContactsData;
+  closeEditModal: () => void;
+  groupId: string;
+  tags: string[];
+}) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [contactType, setContactType] = useState<string[]>([]);
 
   const form = useForm({
-    initialValues: { ...contact, phone: "+" + contact?.phone },
+    initialValues: {
+      ...contact,
+      phone: "+" + contact?.phone,
+    },
     validate: {
       phone: (value) => {
         if (contactType.includes("phone"))
           return !isValidPhoneNumber(value) ? "Invalid number" : null;
       },
+      tags: {},
       name: isNotEmpty("Name cannot be blank"),
-      email: (value) =>
-        contactType.includes("email") &&
-        value?.length &&
-        !emailPattern.test(value)
-          ? "Invalid Email"
-          : null,
     },
   });
   const editContactMutation = useEditContactMutation(groupId);
@@ -55,8 +62,15 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
     form.values.phone = form.values.phone
       ? form.values.phone.slice(1)
       : undefined;
+    const result = {};
+    for (const key of contactType) {
+      if (form.getValues()?.tags?.hasOwnProperty(key)) {
+        result[key] = form.getValues()?.tags?.[key];
+      }
+    }
+    form?.setFieldValue("tags", result);
     editContactMutation.mutate(
-      { data: form.values, contactId: contact?.id },
+      { data: form.getValues(), contactId: contact?.id },
       {
         onSuccess: () => {
           setIsUpdating(false);
@@ -74,16 +88,17 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
   useEffect(() => {
     setContactType([
       contact.phone ? "phone" : undefined,
-      contact.email ? "email" : undefined,
+      ...(tags?.filter((tag) => contact?.tags?.hasOwnProperty(tag)) ?? []),
     ]);
   }, []);
+
   return (
-    <Box>
-      <form
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
-        ])}
-      >
+    <Box
+      onKeyDown={getHotkeyHandler([
+        [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+      ])}
+    >
+      <form>
         <SimpleGrid cols={2}>
           <TextInput
             label="Name"
@@ -97,7 +112,14 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
             <Checkbox.Group value={contactType} onChange={setContactType}>
               <Group>
                 <Checkbox value="phone" label="Phone" />
-                <Checkbox value="email" label="Email" />
+                {tags?.map((data) => (
+                  <Checkbox
+                    value={data}
+                    label={data}
+                    key={data}
+                    tt={"capitalize"}
+                  />
+                ))}
               </Group>
             </Checkbox.Group>
           </Paper>
@@ -118,14 +140,19 @@ const EditContactModal = ({ contact, closeEditModal, groupId }) => {
               </Text>
             </Stack>
           )}
-          {contactType.includes("email") && (
-            <TextInput
-              label="Email"
-              placeholder="Enter email id"
-              {...form.getInputProps("email")}
-              size="md"
-              radius={"md"}
-            />
+          {contactType?.map(
+            (data) =>
+              data !== "phone" && (
+                <TextInput
+                  label={data}
+                  placeholder={`Enter ${data}`}
+                  {...form.getInputProps(`tags.${data}`)}
+                  radius={"md"}
+                  size="md"
+                  required
+                  key={data}
+                />
+              ),
           )}
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"sm"} mt={"sm"}>

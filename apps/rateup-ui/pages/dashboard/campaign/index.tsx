@@ -29,7 +29,7 @@ import Heading from "../../../components/styled/Heading/Heading";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 
-export default function () {
+export default function CampaignList() {
   const [searchText, setSearchText] = useState("");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);

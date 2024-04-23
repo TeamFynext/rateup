@@ -15,6 +15,7 @@ interface SurveyCardProps {
   selectedTeamId: string;
   teamsData: any;
   route?: string;
+  refetchSurveys: any;
 }
 /**
  * The SurveyCard component used to display a survey in the surveys page (dashboard/surveys)
@@ -26,6 +27,7 @@ export function SurveyCard({
   selectedTeamId,
   teamsData,
   route,
+  refetchSurveys,
 }: SurveyCardProps): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
   useEffect(() => {
@@ -69,6 +71,7 @@ export function SurveyCard({
               survey={survey}
               selectedTeamId={selectedTeamId}
               teamsData={teamsData}
+              refetchSurveys={refetchSurveys}
             />
             {/* <Checkbox
               onClick={(e) => {
