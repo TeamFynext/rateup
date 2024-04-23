@@ -15,6 +15,7 @@ export async function addMultipleWaContacts(
   orgId: string,
 ) {
   const newContacts = await prisma.waContact.createMany({
+    skipDuplicates: true,
     data: contactIds.map((contactId) => ({
       contactId,
       orgId,
