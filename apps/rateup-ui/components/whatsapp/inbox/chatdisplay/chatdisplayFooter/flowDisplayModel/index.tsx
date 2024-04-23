@@ -11,19 +11,18 @@ import NothingFound from "../../../../../NothingFound/NothingFound";
 import { useState } from "react";
 import WaInboxFlowSelectCard from "./flowSelectCard";
 import classes from "./styles.module.css";
-import { WaContact } from "../../../../../../types/global";
 import { WaFlowStatus } from "../../../../../../types/enums";
 
 interface Props {
   sessionExpired: boolean;
-  waContact: WaContact;
+  contact: ContactsData;
 }
 export default function WaInboxFlowDisplayModal(props: Props) {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedDbFlowId, setSelectedDbFlowId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const { data, isLoading, error } = useWaFlowsFromDb();
-  const sendFlowToUser = useSendFlowToUser(props?.waContact?.phone);
+  const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   function onClose() {
     setSelectedDbFlowId("");
     close();

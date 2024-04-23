@@ -2,13 +2,11 @@ import { ActionIcon, Indicator, Menu } from "@mantine/core";
 import { IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
 import classes from "./styles.module.css";
 import WaInboxTemplateDisplayModal from "../templateDisplayModal";
-import { WaContact } from "../../../../../../types/global";
-import WaInboxFlowDisplayModal from "../flowDisplayModel";
 import { useRef } from "react";
 
 interface Props {
   sessionExpired: boolean;
-  waContact: WaContact;
+  contact: ContactsData;
 }
 export default function WaInboxFooterMenu(props: Props) {
   const ref = useRef(null);
