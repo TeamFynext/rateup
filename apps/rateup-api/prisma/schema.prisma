@@ -99,7 +99,6 @@ model Org {
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
   landingPage       LandingPage[]
-  WaContact         WaContact[]
   LoyaltyApiKey     LoyaltyApiKey?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
@@ -361,7 +360,6 @@ model Contact {
   responses            SurveyResponse[]
   contactGroups        ContactGroupMap[]
   campaignParticipants CampaignParticipant[]
-  waContact            WaContact?
   tags                 Json?
   WaMessage            WaMessage[]
 
@@ -980,29 +978,14 @@ model LandingPage {
   createdBy      User     @relation(fields: [createdById], references: [id])
 }
 
-model WaContact {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now())
-  contactId String      @unique @db.Uuid
-  contact   Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  orgId     String      @db.Uuid
-  org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  waInbox   WaMessage[]
-
-  @@unique([contactId, orgId])
-}
-
 model WaMessage {
   id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt               DateTime  @default(now())
   waCreatedAt             DateTime?
-  waContactId             String?    @db.Uuid
   /// [PWaMessageBody]
   messageBody             Json
   /// [PWaTemplateComponentParams]
   templateComponentParams Json?
-  waContact               WaContact? @relation(fields: [waContactId], references: [id], onDelete: Cascade)
   contact                 Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   contactId               String?   @db.Uuid
 }
