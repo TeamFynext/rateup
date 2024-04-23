@@ -75,7 +75,7 @@ export function MenuCard({
               {menu?.team?.code}
             </Badge>
           )}
-          <Flex align={"center"} justify={"space-between"}>
+          <Flex align={"center"} justify={"space-between"} c={"dimmed"}>
             <Flex>
               <Text size="sm" c="dimmed">
                 Created {timeSince}

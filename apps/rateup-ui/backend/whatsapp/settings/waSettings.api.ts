@@ -42,3 +42,14 @@ export const deRegisterBusinessClient = async () => {
   const res = axiosClient.post(`${authUrl}/deregister`);
   return res;
 };
+
+export async function updateContactTags(tags) {
+  return await axiosClient.post(`${SettingsUrl}/contact_tag`, tags);
+}
+type getContactTagsRes = {
+  contactTags: string[];
+};
+export async function getContactTags() {
+  return (await axiosClient.get(`${SettingsUrl}/contact_tag`))
+    ?.data as getContactTagsRes;
+}

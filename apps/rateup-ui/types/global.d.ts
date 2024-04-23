@@ -491,6 +491,19 @@ declare global {
     email: string;
     source: string;
     createdAt: Date;
+    tags?: any;
+    org: {
+      whatsappSettings: {
+        contactTags: string[];
+      };
+    };
+    contactGroups?: [
+      {
+        contactGroup?: {
+          name?: string;
+        };
+      },
+    ];
   };
 
   type ContactsResponse = {

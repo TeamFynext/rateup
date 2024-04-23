@@ -6,6 +6,7 @@ export interface ICreateContact {
   email?: string;
   teamId: string;
   source?: string;
+  tags?: any;
 }
 
 const CONTACT_BASE_URL = "/contact";

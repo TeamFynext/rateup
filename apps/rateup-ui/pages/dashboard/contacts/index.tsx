@@ -2,7 +2,6 @@ import {
   Flex,
   Group,
   Tabs,
-  Title,
   SimpleGrid,
   TextInput,
   Loader,
@@ -10,46 +9,56 @@ import {
   Container,
   Stack,
   Menu,
-  Text,
   Button,
   rem,
+  SegmentedControl,
 } from "@mantine/core";
 
 import {
   IconChevronDown,
-  IconPlus,
   IconTrashXFilled,
   IconUserPlus,
   IconSearch,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
-import styles from "./contacts.module.css";
-
 import { useDisclosure } from "@mantine/hooks";
-import OpenCreateModal from "../../../components/Contacts/OpenCreateModal";
 import { useCampaignContacts } from "../../../backend/campaign/contacts/contacts.query";
 import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import ContactCard from "../../../components/Card/ContactCard";
 import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import Heading from "../../../components/styled/Heading/Heading";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
 import ContactAction from "../../../components/Contacts/ContactAction";
-
+import OpenCreateMenu from "../../../components/Contacts/OpenCreateMenu";
+import {
+  ContainedMultiSelect,
+  ContainedTagInput,
+} from "../../../components/input/ContainedInput/ContainedInput";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import {
+  useGetContactTags,
+  useUpdateContactTagsMutation,
+} from "../../../backend/whatsapp/settings/waSettings.query";
 enum ContactTabs {
   CONTACTS = "Contacts",
   GROUPS = "Groups",
+  SETTINGS = "Settings",
 }
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterByTag, setFilterByTag] = useState<string[]>([
+    "MANUAL",
+    "CSV IMPORT",
+  ]);
   const [activeTab, setActiveTab] = useState<ContactTabs>(ContactTabs.CONTACTS);
   const [selectedTeamID, setSelectedTeamID] = useState("");
-  const [opened, { open, close }] = useDisclosure(false);
+  const [contactTags, setContactTags] = useState([]);
   const router = useRouter();
   const { tab } = router.query as { tab: string };
 
@@ -69,7 +78,9 @@ export default function Contacts() {
 
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
+  const { isPending, data: cTags } = useGetContactTags();
 
+  const updateContactTagsMutation = useUpdateContactTagsMutation();
   const filteredContacts = (
     searchTerm
       ? contactData.filter((contact) => {
@@ -80,7 +91,17 @@ export default function Contacts() {
           );
         })
       : contactData
-  )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
+  )
+    ?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
+    ?.filter((data) => filterByTag?.includes(data.source))
+    ?.filter((data) =>
+      filterByTag.filter((value) => !["MANUAL", "CSV IMPORT"].includes(value))
+        ?.length > 0
+        ? data?.contactGroups?.some((group) =>
+            filterByTag?.includes(group.contactGroup.name),
+          )
+        : data,
+    );
 
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
@@ -95,7 +116,8 @@ export default function Contacts() {
         })
       : contactGroups
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
-
+  if (isLoadingContacts || isLoadingContactgroup || isPending)
+    return <RateupLoader h={"100dvh"} />;
   return (
     <>
       <Flex
@@ -109,19 +131,7 @@ export default function Contacts() {
       >
         <Group gap={"md"}>
           <Heading title="Contacts" titleprops={{ w: "fit-content" }} />
-          <RateupButtonBlue
-            title="Create"
-            rightIcon={<IconPlus />}
-            onClick={open}
-          />
-          <FormModalLayout
-            centered
-            opened={opened}
-            onClose={close}
-            title="Create"
-          >
-            <OpenCreateModal close={close}></OpenCreateModal>
-          </FormModalLayout>
+          <OpenCreateMenu tags={cTags?.contactTags ?? []} />
         </Group>
         {activeTab === ContactTabs.GROUPS && (
           <TeamSelector
@@ -131,21 +141,15 @@ export default function Contacts() {
           />
         )}
       </Flex>
-      <Tabs
-        value={activeTab}
-        onChange={(value) => setActiveTab(value as ContactTabs)}
-        color="var(--tertiary-color)"
-        p="xl"
-      >
-        <Group justify="space-between">
-          <Tabs.List>
-            <Tabs.Tab value={ContactTabs.CONTACTS} className={styles.tabLabel}>
-              <Title order={4}>Contacts</Title>
-            </Tabs.Tab>
-            <Tabs.Tab value={ContactTabs.GROUPS} className={styles.tabLabel}>
-              <Title order={4}>Groups</Title>
-            </Tabs.Tab>
-          </Tabs.List>
+      <Tabs value={activeTab} color="var(--tertiary-color)" p="xl">
+        <Flex justify="space-between" align={"center"} wrap={"wrap"} gap={10}>
+          <SegmentedControl
+            data={Object.values(ContactTabs)}
+            onChange={(value) => setActiveTab(value as ContactTabs)}
+            color={"var(--mantine-color-rateup-blue-filled)"}
+            radius={"md"}
+            defaultValue={activeTab}
+          />
           <TextInput
             leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
             radius="xl"
@@ -158,15 +162,23 @@ export default function Contacts() {
             rightSectionWidth={60}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.currentTarget.value)}
-            w={{ base: 200, sm: 250, lg: 500 }}
+            flex={1}
+            maw={500}
             m={"auto"}
           />
-          {/* <RateupButtonOutline title="Select" onClick={openSelect}/> */}
+
+          {activeTab === ContactTabs.CONTACTS && (
+            <FilterSelect
+              setFilterByTag={setFilterByTag}
+              filterByTag={filterByTag}
+              contactArray={contactGroups?.map((data) => data?.name)}
+            />
+          )}
           <ContactActionMenu
             contacts={contactData}
             groups={contactGroupData?.data}
           />
-        </Group>
+        </Flex>
         <Tabs.Panel value={ContactTabs.CONTACTS}>
           {isLoadingContacts ? (
             <Center pt="xl">
@@ -180,7 +192,11 @@ export default function Contacts() {
               verticalSpacing={{ base: "md", sm: "xl" }}
             >
               {filteredContacts?.map((contact) => (
-                <ContactCard contact={contact} key={contact?.id} />
+                <ContactCard
+                  contact={contact}
+                  key={contact?.id}
+                  tags={cTags?.contactTags}
+                />
               ))}
             </SimpleGrid>
           ) : (
@@ -202,10 +218,7 @@ export default function Contacts() {
               verticalSpacing={{ base: "md", sm: "xl" }}
             >
               {filteredGroups?.map((group) => (
-                <ContactGroupCard
-                  group={group}
-                  key={group?.id}
-                ></ContactGroupCard>
+                <ContactGroupCard group={group} key={group?.id} />
               ))}
             </SimpleGrid>
           ) : (
@@ -214,11 +227,45 @@ export default function Contacts() {
             </Container>
           )}
         </Tabs.Panel>
+        <Tabs.Panel value={ContactTabs.SETTINGS}>
+          <PaperLayout mt={"xl"} p="xl">
+            <Stack align="start">
+              <ContainedTagInput
+                placeholder="Type field name and press enter"
+                label="Field names"
+                w={"400px"}
+                onChange={setContactTags}
+                defaultValue={cTags?.contactTags}
+              />
+              <RateupButtonPrimary
+                title="Update"
+                onClick={() => {
+                  updateContactTagsMutation.mutate({
+                    tags: contactTags,
+                  });
+                }}
+              />
+            </Stack>
+          </PaperLayout>
+        </Tabs.Panel>
       </Tabs>
     </>
   );
 }
 
+const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
+  return (
+    <ContainedMultiSelect
+      data={[
+        { group: "Source", items: ["MANUAL", "CSV IMPORT"] },
+        { group: "Groups", items: contactArray ?? [] },
+      ]}
+      defaultValue={filterByTag}
+      onChange={setFilterByTag}
+      maw={360}
+    />
+  );
+};
 export enum ContactAcions {
   DELETE_CONTACTS = "Delete Contacts",
   ADD_CONTACTS_TO_GROUP = "Add Contacts to Group",
@@ -249,9 +296,7 @@ const ContactActionMenu = ({ contacts, groups }) => {
             rightSection={<IconChevronDown size="1rem" />}
             style={{ maxWidth: "fit-content" }}
           >
-            <Text size="xs" c="dark.5">
-              More
-            </Text>
+            More
           </Button>
         </Menu.Target>
 

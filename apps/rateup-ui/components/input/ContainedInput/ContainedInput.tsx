@@ -50,7 +50,7 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
       {...props}
       styles={{
         input: {
-          paddingRight: props.rightSection ? 65 : 0,
+          paddingRight: props.rightSection ? 70 : 0,
         },
       }}
     />

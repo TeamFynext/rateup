@@ -1,6 +1,5 @@
 import {
   Stack,
-  Paper,
   Box,
   Title,
   SimpleGrid,
@@ -13,7 +12,13 @@ import {
   Loader,
   Badge,
 } from "@mantine/core";
-import { IconEdit, IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconPlus,
+  IconSearch,
+  IconTrash,
+  IconUsersGroup,
+} from "@tabler/icons-react";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -35,6 +40,8 @@ import { useTeamsByUser } from "../../../backend/team/team.query";
 import GroupParticipant from "../../../components/Contacts/GroupParticipant";
 import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
 import NothingFound from "../../../components/NothingFound/NothingFound";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useGetContactTags } from "../../../backend/whatsapp/settings/waSettings.query";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -48,6 +55,7 @@ export default function ContactGroup() {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const { update } = useRouteParams();
+  const { isPending, data: cTags } = useGetContactTags();
 
   const {
     isLoading: isLoading,
@@ -115,27 +123,31 @@ export default function ContactGroup() {
         );
       })
     : groupDetails?.contacts;
+  console.log(groupDetails, "gd");
 
   return (
     <>
-      {isLoading ? (
+      {isLoading || isPending ? (
         <Center>
           <Loader type="bars" />
         </Center>
       ) : (
         <Box p="lg" pr={150}>
           <Stack>
-            <Paper shadow="xl" p="xl" radius={"md"}>
+            <PaperLayout p="xl">
               <Group justify="space-between">
                 <Group>
                   <Avatar
                     src={
-                      groupDetails?.icon
-                        ? getFileUrlFromKey(groupDetails?.icon)
-                        : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`
+                      groupDetails?.icon &&
+                      getFileUrlFromKey(groupDetails?.icon)
                     }
+                    alt="profile pic"
                     size={"xl"}
-                  ></Avatar>
+                    radius={"md"}
+                  >
+                    <IconUsersGroup size={40} />
+                  </Avatar>
                   <Stack>
                     <Title>{groupDetails?.name}</Title>
                     <Group>
@@ -190,7 +202,7 @@ export default function ContactGroup() {
                   </Stack>
                 </Group>
               </Group>
-            </Paper>
+            </PaperLayout>
             <Box py="xl">
               <Center>
                 <Group>
@@ -235,7 +247,7 @@ export default function ContactGroup() {
                       contact={contact}
                       key={contact?.id}
                       groupId={groupDetails?.id}
-                    ></GroupParticipant>
+                    />
                   ))
                 ) : (
                   <NothingFound text="No members found" />
@@ -255,6 +267,7 @@ export default function ContactGroup() {
               close={close}
               teamId={groupDetails?.teamId}
               existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
+              tags={cTags?.contactTags}
             />
           </FormModalLayout>
           <FormModalLayout

@@ -98,7 +98,7 @@ export default function WhatsappTemplateById() {
   useEffect(() => {
     if (editingItem) {
       form.resetDirty();
-      form.initialize(parseTemplate(editingItem));
+      form.setValues(parseTemplate(editingItem));
     }
   }, [editingItem]);
 
@@ -460,14 +460,24 @@ export default function WhatsappTemplateById() {
                       styles={{
                         input: {
                           borderRadius: "0px 0px 12px 12px",
+                          paddingRight: 90,
+                        },
+                        section: {
+                          width: "fit-content",
                         },
                       }}
                       placeholder={`Enter the text`}
                       autosize
                       minRows={3}
-                      maxRows={3}
                       onSelect={handleSelect}
                       {...form.getInputProps("body")}
+                      rightSection={
+                        <LengthTracker
+                          length={form?.values?.body?.length}
+                          maxValue={1024}
+                          atStart
+                        />
+                      }
                     />
                   </Stack>
                   {dynamicVariables?.map((data, index) => (
@@ -551,6 +561,7 @@ export default function WhatsappTemplateById() {
                           style={{
                             wordBreak: "break-all",
                           }}
+                          lineClamp={7}
                         >
                           {TextWithFormatting(
                             form.values?.body,

@@ -1,4 +1,4 @@
-import { Badge, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core";
+import { Badge, Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
@@ -6,19 +6,21 @@ import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../Modal/FormModalLayout";
 import EditContactModal from "../Contacts/EditContactModal";
 import dayjs from "dayjs";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 interface ContactCardProps {
   contact: ContactsData;
   groupId?: string;
+  tags?: string[];
 }
 
-const ContactCard = ({ contact, groupId }: ContactCardProps) => {
+const ContactCard = ({ contact, groupId, tags }: ContactCardProps) => {
   return (
-    <Paper shadow="xl" radius="md" p="xl">
+    <PaperLayout p="xl">
       <Stack h={"100%"}>
         <Group justify="space-between">
           <Title order={5}>{contact?.name}</Title>
-          <ContactMenu contact={contact} groupId={groupId}></ContactMenu>
+          <ContactMenu contact={contact} groupId={groupId} tags={tags} />
         </Group>
         <Stack gap={0}>
           <Text c="dimmed">{contact?.phone}</Text>
@@ -33,11 +35,11 @@ const ContactCard = ({ contact, groupId }: ContactCardProps) => {
           </Badge>
         </Group>
       </Stack>
-    </Paper>
+    </PaperLayout>
   );
 };
 
-const ContactMenu = ({ contact, groupId }) => {
+const ContactMenu = ({ contact, groupId, tags }) => {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const openDeleteModal = () => {
@@ -62,7 +64,7 @@ const ContactMenu = ({ contact, groupId }) => {
   return (
     <Menu shadow="xl" position="bottom-end">
       <Menu.Target>
-        <IconDots color="grey"></IconDots>
+        <IconDots color="grey" cursor={"pointer"} />
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
@@ -92,6 +94,7 @@ const ContactMenu = ({ contact, groupId }) => {
           contact={contact}
           closeEditModal={closeEditModal}
           groupId={groupId}
+          tags={tags}
         />
       </FormModalLayout>
     </Menu>
