@@ -6,12 +6,7 @@ import { useState } from "react";
 
 export default function Surveys() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const {
-    isLoading,
-    error,
-    data: allSurveys,
-    refetch,
-  } = useSurveys(!!selectedTeamId);
+  const { isLoading, error, data: allSurveys, refetch } = useSurveys();
 
   if (isLoading) return <Loader type="bars" />;
   if (error || !Array.isArray(allSurveys)) {

@@ -337,7 +337,7 @@ function ActionMenu({
             radius="lg"
             size="xs"
             rightSection={<IconChevronDown size="1rem" />}
-            style={{ maxWidth: "fit-content" }}
+            style={{ maxWidth: "fit-content", marginLeft: "-14px" }}
           >
             <Text size="xs" c="dark.5">
               {" "}

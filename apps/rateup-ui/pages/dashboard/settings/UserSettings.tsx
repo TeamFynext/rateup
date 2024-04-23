@@ -349,7 +349,7 @@ const ProfileSettings = () => {
               }
             >
               <Stack>
-                <Title size="lg" fw={500}>
+                <Title size="lg" fw={500} style={{ marginBottom: "1rem" }}>
                   Change Password
                 </Title>
               </Stack>
