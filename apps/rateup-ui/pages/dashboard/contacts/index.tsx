@@ -23,7 +23,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
-import { useCampaignContacts } from "../../../backend/campaign/contacts/contacts.query";
+import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
 import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
 import ContactCard from "../../../components/Card/ContactCard";
 import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
@@ -65,13 +65,12 @@ export default function Contacts() {
     }
   }, [tab]);
 
-  const { isLoading: isLoadingContacts, data: contactData } =
-    useCampaignContacts() as {
-      isLoading: boolean;
-      data: ContactsData[];
-      error: any;
-      refetch: any;
-    };
+  const { isLoading: isLoadingContacts, data: contactData } = useContacts() as {
+    isLoading: boolean;
+    data: ContactsData[];
+    error: any;
+    refetch: any;
+  };
 
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();

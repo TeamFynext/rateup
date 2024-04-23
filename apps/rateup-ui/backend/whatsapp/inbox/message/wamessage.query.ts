@@ -1,10 +1,14 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getMessagesByWaContactId, sendNewWaMessage } from "./wamessage.api";
+import {
+  getContactsWithLastMessage,
+  getMessagesByContactId as getMessagesByContactId,
+  sendNewWaMessage,
+} from "./wamessage.api";
 
-export const useGetMessagesByWaContactId = (contactId: string) => {
+export const useGetMessagesByContactId = (contactId: string) => {
   return useQuery({
     queryKey: ["wa-messages", contactId],
-    queryFn: () => getMessagesByWaContactId(contactId),
+    queryFn: () => getMessagesByContactId(contactId),
     enabled: !!contactId,
   });
 };
@@ -17,3 +21,9 @@ export const useSendNewWaMessage = (contactId: string) => {
     },
   });
 };
+
+export const useContactsWithLastMessage = () =>
+  useQuery({
+    queryKey: ["contacts", "last-message"],
+    queryFn: getContactsWithLastMessage,
+  });

@@ -4,16 +4,23 @@ import { ContainedTextField } from "../../../../input/ContainedInput/ContainedIn
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { useSendNewWaMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { useForm } from "@mantine/form";
-import { WaContact } from "../../../../../types/global";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 import { useRef } from "react";
 import WaInboxFooterMenu from "./footerMenu";
+import { useContactById } from "../../../../../backend/campaign/contacts/contacts.query";
 
-export default function WaInboxChatDisplayFooter(props: WaContact) {
-  const timeStamp = props.userInitiatedFinalTimeStamp;
+export default function WaInboxChatDisplayFooter({
+  contactId,
+}: {
+  contactId: string;
+}) {
+  const { data: contact } = useContactById(contactId);
+  if (!contact) return null;
+
+  const timeStamp = new Date().toString();
   const inputRef = useRef(null);
-  const sendnewWaMessage = useSendNewWaMessage(props?.id);
+  const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const form = useForm({
     initialValues: {
       type: "text",
@@ -44,7 +51,7 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
     <div className={classes.wrapper}>
       <WaInboxFooterMenu
         sessionExpired={isInboxSessionExpired(timeStamp)}
-        waContact={props}
+        contact={contact}
       />
       <form action="" onSubmit={handleSendMessage} className={classes.form}>
         <ContainedTextField

@@ -4,27 +4,26 @@ import {
   deleteContact,
   deleteManyContacts,
   editContact,
+  getContactById,
   getContactsList,
-  getContactsNotInWaContact,
   importContacts,
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
-export const useCampaignContacts = () => {
+export const useContacts = () => {
   return useQuery({
     queryKey: ["campaignContactsData"],
     queryFn: () => getContactsList(),
   });
 };
 
-export const useContactsNotInWaContact = (opened: boolean) => {
-  return useQuery({
-    queryKey: ["contactsNotInWaContact"],
-    queryFn: () => getContactsNotInWaContact(),
-    enabled: opened,
+export const useContactById = (contactId: string) =>
+  useQuery({
+    enabled: !!contactId,
+    queryKey: ["campaignContactsData", contactId],
+    queryFn: () => getContactById(contactId),
   });
-};
 
 export const useCreateContactMutation = () => {
   const queryClient = useQueryClient();

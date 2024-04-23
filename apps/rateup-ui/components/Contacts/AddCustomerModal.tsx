@@ -24,7 +24,7 @@ import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useCampaignContacts } from "../../backend/campaign/contacts/contacts.query";
+import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { contactAddType, importMethod } from "../../utils/enums";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import { ImportContact } from "./CreateContactModal";
@@ -70,7 +70,7 @@ const AddCustomerModal = ({
     data: contactData,
     error: error,
     refetch: refetch,
-  } = useCampaignContacts() as {
+  } = useContacts() as {
     isLoading: boolean;
     data: ContactsData[];
     error: any;
