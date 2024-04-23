@@ -1,3 +1,4 @@
+import { Contact } from "@prisma/client";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
@@ -68,18 +69,6 @@ export async function getContactByPhoneNumberAndOrgId(
   return contact;
 }
 
-export async function getContactsNotInWaContact(orgId: string) {
-  const contacts = await prisma.contact.findMany({
-    where: {
-      orgId,
-      waContact: {
-        is: null,
-      },
-    },
-  });
-  return contacts;
-}
-
 export async function deleteContactById(contactId: string) {
   const user = await prisma.contact.delete({
     where: {
@@ -106,7 +95,11 @@ export async function updateContactById(
   return user;
 }
 
-export async function getOrCreateContactByPhone(phone: string, orgId: string) {
+export async function getOrCreateContactByPhone(
+  phone: string,
+  orgId: string,
+  additionalData?: Partial<Contact>,
+) {
   try {
     const contact = await prisma.contact.findFirst({
       // TODO: findout why findUnique is giving error
@@ -121,6 +114,7 @@ export async function getOrCreateContactByPhone(phone: string, orgId: string) {
     } else {
       return await prisma.contact.create({
         data: {
+          ...additionalData,
           phone,
           orgId,
         },
