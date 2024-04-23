@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import FormModalLayout from "../../../Modal/FormModalLayout";
 import { useListState } from "@mantine/hooks";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import classes from "./DndListHandle.module.css";
 import { IconGripVertical } from "@tabler/icons-react";
 import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";
@@ -14,9 +14,6 @@ interface Idata {
   name: string;
   image: string;
   disabled?: boolean;
-}
-interface IfilteredData {
-  id: string;
 }
 interface ISortDrawerProps {
   opened: boolean;
