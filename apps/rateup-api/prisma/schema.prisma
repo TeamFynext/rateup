@@ -105,6 +105,7 @@ model Org {
   UsageStats        UsageStats?
   chatbot           Chatbot?
   Survey            Survey[]
+  WaAccountSettings WaAccountSettings?
 }
 
 model UsageStats {
@@ -150,7 +151,12 @@ model WhatsappSettings {
   type String // enums.ts: WaConfigType
 
   encryption Json? // for flow {publicKey: string, privateKey: string}
-  contactTags       String[]           @default([])
+}
+
+model WaAccountSettings {
+  org         Org      @relation(fields: [orgId], references: [id])
+  orgId       String   @unique @db.Uuid
+  contactTags String[] @default([])
 }
 
 model OrgMember {
@@ -267,7 +273,6 @@ model SurveyTeamMap {
   responses   SurveyResponse[]
   sessions    WaSession[]
   surveyStats SurveyStats?
-  campaign    Campaign[]
   menuLanding MenuLanding[]
 
   @@unique([surveyId, teamId], name: "survey_team_unique")
@@ -358,6 +363,7 @@ model Contact {
   campaignParticipants CampaignParticipant[]
   waContact            WaContact?
   tags                 Json?
+  WaMessage            WaMessage[]
 
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
 }
@@ -398,8 +404,6 @@ model Campaign {
 
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
-  surveyTeamMap        SurveyTeamMap         @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId      String                @db.Uuid
   waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   waTemplateId         String?               @db.Uuid
   // TODO: add email template?
@@ -523,8 +527,8 @@ model Media {
 }
 
 model WaTemplate {
-  id             String   @id @default(uuid()) @db.Uuid
-  createdAt      DateTime @default(now())
+  id            String   @id @default(uuid()) @db.Uuid
+  createdAt     DateTime @default(now())
   /// [PWaTemplateWithTypesData]
   data          Json
   acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
@@ -993,12 +997,14 @@ model WaMessage {
   id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt               DateTime  @default(now())
   waCreatedAt             DateTime?
-  waContactId             String    @db.Uuid
+  waContactId             String?    @db.Uuid
   /// [PWaMessageBody]
   messageBody             Json
   /// [PWaTemplateComponentParams]
   templateComponentParams Json?
-  waContact               WaContact @relation(fields: [waContactId], references: [id], onDelete: Cascade)
+  waContact               WaContact? @relation(fields: [waContactId], references: [id], onDelete: Cascade)
+  contact                 Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId               String?   @db.Uuid
 }
 
 model WaAutomatedReply {

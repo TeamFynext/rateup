@@ -2,14 +2,14 @@ import prisma from "../../../../utils/prisma";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
-  waContactId: string,
+  contactId: string,
   waCreatedAt: string,
   componentParams?: any,
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
       messageBody,
-      waContactId,
+      contactId,
       waCreatedAt,
       templateComponentParams: componentParams,
     },
@@ -17,14 +17,34 @@ export async function addNewWaMessage(
   return newMessage;
 }
 
-export async function getWaMessagesByWaContactId(waContactId: string) {
+export async function getWaMessagesByContactId(contactId: string) {
   const messages = prisma.waMessage.findMany({
     where: {
-      waContactId,
+      contactId,
     },
     orderBy: {
       waCreatedAt: "asc",
     },
   });
   return messages;
+}
+
+export async function getContactsWithLastMessage(orgId: string) {
+  return await prisma.contact.findMany({
+    where: {
+      orgId,
+    },
+    include: {
+      WaMessage: {
+        orderBy: {
+          waCreatedAt: "desc",
+        },
+        take: 1,
+        select: {
+          messageBody: true,
+          waCreatedAt: true,
+        },
+      },
+    },
+  });
 }

@@ -12,8 +12,8 @@ import {
   createMultipleContacts,
   deleteContactById,
   deleteManyContacts,
+  getContactById,
   getContactsByOrgId,
-  getContactsNotInWaContact,
   updateContactById,
 } from "./contact.service";
 import { Prisma } from "@prisma/client";
@@ -75,14 +75,13 @@ export async function getAllContactsHandler(
   }
 }
 
-export async function getContactsNotInWaContactHandler(
-  request: FastifyRequest,
+export async function getContactByIdHandler(
+  request: FastifyRequest<{ Params: ByContactIdParams }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const contacts = await getContactsNotInWaContact(orgId);
-    return reply.code(200).send(contacts);
+    const contact = await getContactById(request.params.contactId);
+    return reply.code(200).send(contact);
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });

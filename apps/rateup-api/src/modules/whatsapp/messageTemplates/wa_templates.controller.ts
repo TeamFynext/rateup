@@ -35,8 +35,11 @@ import {
   updateTemplateInDb,
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
-import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
-import prisma from "../../../utils/prisma";
+import {
+  generateTemplate,
+  getFlowIdFromTemplateComponents,
+  waAllowedMimeTypes,
+} from "./wa_templates.utils";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
@@ -288,11 +291,9 @@ export async function sendTemplateToUserHandler(
     const { data, defaultValues } = dbTemplate;
     const components = parameterData;
 
-    const containsFlowButton = data.components.some((c) => {
-      if (c.type === "BUTTONS") {
-        return c.buttons.some((b) => b.type === "FLOW");
-      }
-    });
+    const containsFlowButton = !!getFlowIdFromTemplateComponents(
+      data.components,
+    );
 
     if (containsFlowButton) {
       const teamId = request.body.teamId;
@@ -310,10 +311,7 @@ export async function sendTemplateToUserHandler(
         ],
       });
 
-      const flowId = data.components
-        .find((c) => c.type === "BUTTONS")
-        ?.buttons.find((b) => b.type === "FLOW")
-        ?.["flow_id"].toString();
+      const flowId = getFlowIdFromTemplateComponents(data.components);
       if (!flowId) {
         log.error("Flow id not found in template\n Template => %o", data);
         reply.code(500).send("Flow id not found in template");
