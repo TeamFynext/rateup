@@ -29,7 +29,6 @@ function NextPrev({
   survey,
   isSavingResponses,
 }) {
-  console.log(themeStyles, "from nextprevvvvvvvvv");
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
