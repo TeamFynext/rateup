@@ -1,6 +1,7 @@
 import React from "react";
 import { Flex, Stack } from "@mantine/core";
 import PricingCard from "../Card/PricingCard";
+import PlanCard from "../Card/PlanCard";
 
 export const MenuSection = ({
   largeScreen,
@@ -18,17 +19,14 @@ export const MenuSection = ({
     <Stack my={"lg"}>
       <Flex justify={"center"} gap={"xl"} wrap={"wrap"}>
         {menuPlan?.map((data, index) => {
-          const mainColor =
-            index === 0 ? "var(--grey-color-4)" : "var(--shade-of-blue-5)";
           return (
-            <PricingCard
+            <PlanCard
               currencySymbol={currencySymbol}
               data={data}
               handlePlanSelection={handlePlanSelection}
               index={index}
               inversePeriod={inversePeriod}
               largeScreen={largeScreen}
-              mainColor={mainColor}
               key={data.id}
               menuPage={true}
             />

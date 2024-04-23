@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMediaQuery } from "@mantine/hooks";
 import {
   Box,
@@ -24,7 +24,7 @@ import { MotionTransition } from "../../../animation/MotionTransition";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const [value, setValue] = useState("Surveys");
-  const [checked, setChecked] = useState(true);
+  const [checked, setChecked] = useState(false);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
   const { updateRouteAndCart } = useRouteAndCartStore();
@@ -111,7 +111,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             { label: "Digital Menu", value: "Digital Menu" },
           ]}
         />
-        <Flex align="center" pos={"relative"} gap={"xs"}>
+        {/* <Flex align="center" pos={"relative"} gap={"xs"}>
           <Switch
             color={"var(--shade-of-blue-5)"}
             classNames={classes}
@@ -139,7 +139,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
               Save Upto {DISCOUNT_PERCENTAGE} Months
             </Text>
           </Stack>
-        </Flex>
+        </Flex> */}
       </SimpleGrid>
 
       <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">

@@ -8,14 +8,15 @@ export const sampleChoices = [
 ];
 
 export const widgetIds = [
-  "essential-yearly",
-  "essential-monthly",
-  "plus-yearly",
-  "plus-monthly",
-  "digital-menu-monthly",
-  "digital-menu-yearly",
-  "digital-menu-pro-monthly",
-  "digital-menu-pro-yearly",
+  "survey_m1",
+  "survey_m2",
+  "survey_m3",
+  "survey_m4",
+  "menu_m1",
+  "menu_m2",
+  "menu_m3",
+  "menu_m4",
+  "menu_m5",
 ];
 
 export const samplePictureChoices = [

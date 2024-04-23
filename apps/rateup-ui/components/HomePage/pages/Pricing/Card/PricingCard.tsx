@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { IconCircleCheck } from "@tabler/icons-react";
+import { IconCircleCheck, IconX } from "@tabler/icons-react";
 import {
   Box,
   Card,
@@ -45,10 +45,10 @@ const PricingCard = ({
   if (!menuPage && index === 1) {
     marginTop = "-8px";
   }
-  let title = `Buy ${data.displayName}`;
-  if (menuPage) {
-    title = index === 0 ? "Buy Rateup Menu" : "Buy Rateup Menu Pro";
-  }
+  let title = `Subscribe`;
+  // if (menuPage) {
+  //   title = index === 0 ? "Buy Rateup Menu" : "Buy Rateup Menu Pro";
+  // }
   return (
     <Card
       shadow="sm"
@@ -73,7 +73,7 @@ const PricingCard = ({
         mt={index === 2 && 10}
         labelPosition="center"
       />
-      {index === 2 ? (
+      {(menuPage && index === 3) || (!menuPage && index === 2) ? (
         <>
           <Center
             c={mainColor}
@@ -99,7 +99,7 @@ const PricingCard = ({
         </>
       ) : (
         <>
-          <Center c={mainColor} mb={largeScreen ? "lg" : "xs"}>
+          <Center c={mainColor} mb={largeScreen ? "sm" : "xs"}>
             <Text fz={Title1}>
               <sup
                 style={{
@@ -112,6 +112,17 @@ const PricingCard = ({
             </Text>
             <Text>/{data?.paymentPlan?.period}</Text>
           </Center>
+
+          <Stack
+            align="center"
+            ff={lexend300.style.fontFamily}
+            gap={5}
+            mt={"sm"}
+            mb={"xl"}
+          >
+            {generateListItems(data?.description)}
+          </Stack>
+
           <Center>
             <RateupButtonPrimary
               title={title}
@@ -121,6 +132,7 @@ const PricingCard = ({
                 fontSize: Title4,
                 height: Title2,
               }}
+              fullWidth
               className={ButtonStyles["button-hover"]}
               onClick={() =>
                 handlePlanSelection({
@@ -136,14 +148,6 @@ const PricingCard = ({
               }
             />
           </Center>
-          <Stack
-            align="center"
-            ff={lexend300.style.fontFamily}
-            gap={5}
-            mt={"xl"}
-          >
-            {generateListItems(data?.description)}
-          </Stack>
         </>
       )}
 
@@ -175,6 +179,7 @@ const PricingCard = ({
 };
 
 export default PricingCard;
+
 export const generateListItems = (listData: string[] = []) => (
   <List
     spacing="xs"
@@ -186,6 +191,23 @@ export const generateListItems = (listData: string[] = []) => (
       />
     }
   >
-    {listData?.map((item) => <List.Item key={item}>{item}</List.Item>)}
+    {listData.map((item) => {
+      const isNegative = item.startsWith("-");
+      const displayName = isNegative ? item.substring(1) : item;
+      return (
+        <List.Item
+          key={item}
+          icon={
+            isNegative && (
+              <IconX
+                style={{ width: rem(16), height: rem(16), color: "red" }}
+              />
+            )
+          }
+        >
+          {displayName}
+        </List.Item>
+      );
+    })}
   </List>
 );
