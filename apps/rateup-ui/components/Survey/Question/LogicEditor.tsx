@@ -211,21 +211,19 @@ function ConditionBlock({
   return (
     <Flex>
       <Group
-        gap="xs"
         style={{
           backgroundColor: colors.blue[0],
           borderRadius: "12px",
           position: "relative",
         }}
-        p={"xs"}
       >
-        <Text>If answer</Text>
+        <Text style={{ marginLeft: "10px" }}>If answer</Text>
         {/* Condition Selector */}
         <Select
           data={getConditions(selectedQ.type)}
           value={selectedCondition}
           onChange={setSelectedCondition as any}
-          maw={175}
+          maw={150}
           label="Condition"
         />
 
@@ -247,7 +245,7 @@ function ConditionBlock({
             onChange={setMatchData}
             placeholder="Select Responses"
             searchable
-            w={250}
+            w={155}
           />
         ) : (
           <Select
@@ -255,7 +253,7 @@ function ConditionBlock({
             value={Array.isArray(matchData) ? "" : matchData}
             data={getResponses(selectedQ, selectedLanguage)}
             onChange={setMatchData}
-            w={250}
+            w={165}
           />
         )}
         <Text>then</Text>
@@ -266,16 +264,17 @@ function ConditionBlock({
           data={possibleActions}
           value={selectedAction}
           onChange={setSelectedAction as any}
+          w={143}
         />
+        <ActionIcon
+          style={{ marginLeft: "10px", marginRight: "1rem" }}
+          onClick={handleDelete}
+          variant="outline"
+          color="red"
+        >
+          <IconTrash />
+        </ActionIcon>
       </Group>
-      <ActionIcon
-        style={{ right: "12px", marginLeft: "1rem", marginTop: "2rem" }}
-        onClick={handleDelete}
-        variant="outline"
-        color="red"
-      >
-        <IconTrash />
-      </ActionIcon>
     </Flex>
   );
 }

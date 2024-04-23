@@ -74,13 +74,14 @@ export function showLoadingToast(
   loading: boolean,
   title: string,
   color: string = "teal",
+  autoClose: number | boolean = 3000,
 ) {
   notifications.show({
     id: id,
     color: color,
     title: title,
     message: message,
-    autoClose: 3000,
+    autoClose: autoClose,
     loading: loading,
   });
 }

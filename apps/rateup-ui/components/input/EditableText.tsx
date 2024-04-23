@@ -22,6 +22,7 @@ interface EditableTextProps {
   handleOnFunction?: boolean;
   handleButtonTextUpdate?: () => void;
   size?: string;
+  radius?: string | number;
 }
 export function EditableText({
   text,
@@ -35,6 +36,7 @@ export function EditableText({
   handleOnFunction = true,
   handleButtonTextUpdate,
   size = "sm",
+  radius = "md",
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
   const [focusTrapToggle, setfocusTrapToggle] = useState(false);
@@ -68,6 +70,7 @@ export function EditableText({
           style={style}
           onDoubleClick={() => setEditingItem(id)}
           rightSectionPointerEvents="all"
+          radius={radius}
           placeholder={placeholder}
           onKeyUp={(event) => {
             if (event.key === "Enter" && saveOnEnter) {

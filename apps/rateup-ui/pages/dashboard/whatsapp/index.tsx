@@ -9,12 +9,7 @@ import { useRouter } from "next/router";
 export default function Surveys() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const router = useRouter();
-  const {
-    isLoading,
-    error,
-    data: allSurveys,
-    refetch,
-  } = useSurveys(!!selectedTeamId);
+  const { isLoading, error, data: allSurveys, refetch } = useSurveys();
 
   if (!whatsappOptions?.includes("surveys")) {
     router.push("/dashboard/whatsapp/flows");

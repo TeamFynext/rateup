@@ -12,12 +12,11 @@ import {
 } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
 import {
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconChevronUp,
   IconGripVertical,
   IconPlus,
+  IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -48,6 +47,8 @@ import {
   FlowMaxScreens,
 } from "../../../whatsappConfig";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
+import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 
 interface ScreenListItemProps {
   screens: WaFlowScreen[];
@@ -82,25 +83,32 @@ function ScreenListItem({
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [isOpen, { open, close }] = useDisclosure(false);
+
   const [pageNo, handlers] = useCounter(0, {
     min: 0,
-    max: flowJson?.screens?.length - 1 ?? 0,
+    max: flowJson?.screens?.length ?? 0,
   });
-
-  let screen = screens?.[pageNo];
-  const currentScreenIndex = flowJson.screens.findIndex(
-    (s) => s.id === screen.id,
+  const [screen, setScreen] = useState(flowJson?.screens?.[pageNo]);
+  const [elements, setElements] = useState(
+    getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]),
   );
-
-  const elements = getFlowFormElementsFromScreen(screen);
   const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
   const [footerLabel, setFooterLabel] = useState(
-    footerElement.label ?? "Continue",
+    footerElement?.label ?? "Continue",
   );
 
   useEffect(() => {
-    if (typeof pageNo === "number") setScreenNumber(pageNo);
-  }, [pageNo, setScreenNumber]);
+    if (flowJson?.screens) {
+      setScreenNumber(pageNo);
+      setScreen(flowJson?.screens?.[pageNo]);
+      setElements(getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]));
+      setFooterLabel(
+        getFlowFooterElementsFromScreen(flowJson?.screens?.[pageNo])?.[0]
+          ?.label ?? "Continue",
+      );
+    }
+  }, [flowJson?.screens, pageNo]);
 
   const handleDeleteScreen = () => {
     if (!flowEditable) return;
@@ -119,6 +127,7 @@ function ScreenListItem({
       draft.screens.splice(screenIndex, 1);
       updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
+    handlers.decrement();
     const feNames = getFlowFormElementsFromScreen(screen, true).map(
       (fe) => fe.name,
     );
@@ -172,177 +181,194 @@ function ScreenListItem({
     const element = elements[index];
     onElementClick(element.id, screen.id);
   }
-
-  function handleMoveScreen(action: "up" | "down") {
-    updateFlowJson((draft) => {
-      if (action === "up") {
-        moveFlowScreen(screen.id, currentScreenIndex - 1, draft);
-      } else if (action === "down") {
-        moveFlowScreen(screen.id, currentScreenIndex + 2, draft);
-      }
-    });
-  }
   return (
-    <Stack p="xs" key={screen.id} justify="space-between" h={"100%"}>
-      <Box mah={"85%"}>
-        <Text w={"100%"} ta={"center"}>
-          Page Name
-        </Text>
-        <ConfirmationModal
-          forDeleteFunctionality
-          opened={dialogOpened}
-          onClose={closeDialog}
-          headerLabel={`Are you sure you want to delete this Screen? It will also delete all
-        the elements in this screen.`}
-          headerTitle="Delete Screen?"
-          confirmLabel="Delete"
-          onConfirm={handleDeleteScreen}
-        />
-        <Group gap={5}>
-          <Tooltip label="Previous Screen">
-            <ActionIcon
-              onClick={handlers.decrement}
-              radius={"lg"}
-              disabled={pageNo === 0}
-            >
-              <IconChevronLeft size={20} />
-            </ActionIcon>
-          </Tooltip>
-          <EditableText
-            text={screen.title}
-            setText={updateScreenTitle}
-            id={screen.title}
-            editMode={flowEditable && editingItem === screen.title}
-            setEditingItem={setEditingItem}
-            placeholder="Section title (Required if more than one section is added)"
-            style={{
-              flex: 1,
-              fontWeight: "bold",
-              fontSize: "1.2rem",
-            }}
-          />
-          <Tooltip label="Next Screen">
-            <ActionIcon
-              onClick={handlers.increment}
-              radius={"lg"}
-              disabled={pageNo === flowJson?.screens?.length - 1}
-            >
-              <IconChevronRight size={20} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-        <Group mx={"xl"} justify="space-between">
-          <Group gap={4}>
-            <Tooltip label="Add Screen" openDelay={500}>
-              <ActionIcon
-                onClick={handleCreateScreenClick}
-                variant="subtle"
+    <Stack p="xs" key={screen?.id} justify="space-between" h={"100%"}>
+      {!screen ? (
+        <Stack
+          h={"100%"}
+          align="center"
+          justify="center"
+          style={{
+            cursor: "pointer",
+          }}
+        >
+          <Tooltip label="Add Screen" openDelay={500}>
+            <Stack align="center" onClick={handleCreateScreenClick}>
+              <IconPlus size={30} />
+              <RateupButtonPrimary
+                mt={"xl"}
+                size="lg"
+                title="Add Screen"
                 disabled={!flowEditable}
-              >
-                <IconPlus />
-              </ActionIcon>
-            </Tooltip>
-            {flowEditable && (
-              <Tooltip label="Delete Screen">
-                <ActionIcon onClick={toggle} variant="subtle">
-                  <IconTrash size={20} />
+              />
+            </Stack>
+          </Tooltip>
+        </Stack>
+      ) : (
+        <>
+          <Box mah={"85%"}>
+            <Text w={"100%"} ta={"center"}>
+              Page Name
+            </Text>
+            <ConfirmationModal
+              forDeleteFunctionality
+              opened={dialogOpened}
+              onClose={closeDialog}
+              headerLabel={`Are you sure you want to delete this Screen? It will also delete all
+        the elements in this screen.`}
+              headerTitle="Delete Screen?"
+              confirmLabel="Delete"
+              onConfirm={handleDeleteScreen}
+            />
+            <Group gap={5}>
+              <Tooltip label="Previous Screen">
+                <ActionIcon
+                  onClick={handlers.decrement}
+                  radius={"lg"}
+                  disabled={pageNo === 0}
+                >
+                  <IconChevronLeft size={20} />
                 </ActionIcon>
               </Tooltip>
-            )}
-            <Tooltip label="Move Screen Up" openDelay={500}>
-              <ActionIcon
-                onClick={() => handleMoveScreen("up")}
-                variant={"outline"}
-                size={20}
-                disabled={currentScreenIndex === 0}
+
+              <EditableText
+                text={screen.title}
+                setText={updateScreenTitle}
+                id={screen.title}
+                editMode={flowEditable && editingItem === screen.title}
+                setEditingItem={setEditingItem}
+                placeholder="Section title (Required if more than one section is added)"
+                style={{
+                  flex: 1,
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                }}
+              />
+              <Tooltip label="Next Screen">
+                <ActionIcon
+                  onClick={handlers.increment}
+                  radius={"lg"}
+                  disabled={pageNo === flowJson?.screens?.length - 1}
+                >
+                  <IconChevronRight size={20} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+            <Group mx={"xl"} justify="space-between" mt={"xs"}>
+              <Group gap={4}>
+                <Tooltip label="Add Screen" openDelay={500}>
+                  <ActionIcon
+                    onClick={handleCreateScreenClick}
+                    variant="subtle"
+                    disabled={!flowEditable}
+                  >
+                    <IconPlus />
+                  </ActionIcon>
+                </Tooltip>
+                {flowEditable && (
+                  <>
+                    <Tooltip label="Delete Screen">
+                      <ActionIcon onClick={toggle} variant="subtle">
+                        <IconTrash size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Swap order of screens" openDelay={500}>
+                      <ActionIcon onClick={open} variant={"subtle"} size={20}>
+                        <IconReplace size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
+              </Group>
+              <Text c={"dimmed"}>
+                {`${flowJson.screens.length}/${FlowMaxScreens}`}
+              </Text>
+            </Group>
+            <ScrollAreaAutosize mah={"88%"}>
+              <Droppable droppableId={screen?.id} direction="vertical">
+                {(provided) => (
+                  <Stack
+                    pt="lg"
+                    px={"xs"}
+                    gap={0}
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                  >
+                    {elements?.map((element, index) => {
+                      if (element.type === WaFlowFormElementType.footer) return;
+                      return (
+                        <DraggableFormElementCard
+                          fe={element}
+                          key={element.id}
+                          text={getFlowElementText(
+                            element,
+                            survey.questions,
+                            map,
+                          )}
+                          selected={selectedFormElementId === element.id}
+                          index={index}
+                          handleOpen={handleElementClick}
+                          handleDelete={handleDeleteFormElement}
+                        />
+                      );
+                    })}
+                    {provided.placeholder}
+                  </Stack>
+                )}
+              </Droppable>
+              <Group
+                style={{
+                  border: ".0625rem solid var(--mantine-color-gray-4)",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                }}
+                h={35}
+                m={"md"}
+                onClick={handleAddElementClick}
               >
-                <IconChevronUp size={20} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Move Screen Down" openDelay={500}>
-              <ActionIcon
-                onClick={() => handleMoveScreen("down")}
-                variant={"outline"}
-                size={20}
-                disabled={currentScreenIndex === flowJson.screens.length - 1}
-              >
-                <IconChevronDown size={20} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-          <Text c={"dimmed"}>
-            {`${flowJson.screens.length}/${FlowMaxScreens}`}
-          </Text>
-        </Group>
-        <ScrollAreaAutosize mah={"88%"}>
-          <Droppable droppableId={screen.id} direction="vertical">
-            {(provided) => (
-              <Stack
-                pt="lg"
-                px={"xs"}
-                gap={0}
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-              >
-                {elements.map((element, index) => {
-                  if (element.type === WaFlowFormElementType.footer) return;
-                  return (
-                    <DraggableFormElementCard
-                      fe={element}
-                      key={element.id}
-                      text={getFlowElementText(element, survey.questions, map)}
-                      selected={selectedFormElementId === element.id}
-                      index={index}
-                      handleOpen={handleElementClick}
-                      handleDelete={handleDeleteFormElement}
-                    />
-                  );
-                })}
-                {provided.placeholder}
-              </Stack>
-            )}
-          </Droppable>
-          <Group
-            style={{
-              border: ".0625rem solid var(--mantine-color-gray-4)",
-              borderRadius: "12px",
-              cursor: "pointer",
-            }}
-            h={35}
-            m={"md"}
-            onClick={handleAddElementClick}
-          >
-            <ActionIcon
-              h={"100%"}
-              style={{
-                borderRadius: "10px 0px 0px 10px",
-              }}
-            >
-              <IconPlus size={30} />
-            </ActionIcon>
-            <Text c="dimmed">Add Questions</Text>
-          </Group>
-        </ScrollAreaAutosize>
-      </Box>
-      <Flex w={"100%"} mt={"md"} gap={"xs"}>
-        <Box w={"100%"}>
-          <Text fz={"xs"}>Next button text</Text>
-          <EditableText
-            text={footerLabel}
-            setText={setFooterLabel}
-            setEditingItem={setEditingItemFooter}
-            id={screen.title}
-            editMode={flowEditable && editingItemForFooter === screen.title}
-            placeholder="Next button text"
-            handleOnFunction={false}
-            handleButtonTextUpdate={handleButtonTextUpdate}
-            size="md"
-            style={{
-              flex: 1,
-            }}
+                <ActionIcon
+                  h={"100%"}
+                  style={{
+                    borderRadius: "10px 0px 0px 10px",
+                  }}
+                >
+                  <IconPlus size={30} />
+                </ActionIcon>
+                <Text c="dimmed">Add Questions</Text>
+              </Group>
+            </ScrollAreaAutosize>
+          </Box>
+          <Flex w={"100%"} mt={"md"} gap={"xs"}>
+            <Stack align="center" w={"100%"} gap={4}>
+              <EditableText
+                text={footerLabel}
+                setText={setFooterLabel}
+                setEditingItem={setEditingItemFooter}
+                id={screen.title}
+                editMode={flowEditable && editingItemForFooter === screen.title}
+                placeholder="Next button text"
+                handleOnFunction={false}
+                handleButtonTextUpdate={handleButtonTextUpdate}
+                size="md"
+                radius={"lg"}
+                style={{
+                  flex: 1,
+                  maxWidth: 300,
+                }}
+              />
+              <Text fz={"xs"}>Next button text</Text>
+            </Stack>
+          </Flex>
+          <SortDrawerFlow
+            close={close}
+            data={flowJson.screens?.map((data) => ({
+              id: data.id,
+              name: data.title,
+            }))}
+            opened={isOpen}
           />
-        </Box>
-      </Flex>
+        </>
+      )}
     </Stack>
   );
 }
@@ -409,7 +435,7 @@ function FormElementCard({
       <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
         {index + 1}
       </Badge>
-      <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
+      <Text px="xs" fw={500} style={{ flex: 1 }} lineClamp={2}>
         {text}
       </Text>
       {flowEditable && (

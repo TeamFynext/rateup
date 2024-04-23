@@ -45,6 +45,7 @@ import {
   useGetContactTags,
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
+import { showLoadingToast } from "../../../utils/notifications";
 enum ContactTabs {
   CONTACTS = "contacts",
   GROUPS = "groups",
@@ -116,7 +117,7 @@ export default function Contacts() {
       : contactGroups
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
   if (isLoadingContacts || isLoadingContactgroup || isPending)
-    return <RateupLoader h={"100dvh"} />;
+    return <RateupLoader h={"90dvh"} />;
   return (
     <>
       <Flex
@@ -236,7 +237,7 @@ export default function Contacts() {
             <Stack align="start">
               <ContainedTagInput
                 placeholder="Type field name and press enter"
-                label="Field names"
+                label="Enter the Field name you want to add along with the existing fields in Csv Import."
                 w={"400px"}
                 onChange={setContactTags}
                 defaultValue={cTags?.contactTags}
@@ -247,6 +248,12 @@ export default function Contacts() {
                   updateContactTagsMutation.mutate({
                     tags: contactTags,
                   });
+                  showLoadingToast(
+                    "Contact tags updated successfully",
+                    "c-tags",
+                    true,
+                    "Loading",
+                  );
                 }}
               />
             </Stack>

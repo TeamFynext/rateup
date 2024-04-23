@@ -11,7 +11,11 @@ import { ChatBotDataSourceType } from "../../types/enums";
 import { useUploadSourceForEmbed } from "../../backend/chatbot/chatbot.query";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { uploadFileForEmbed } from "../../backend/chatbot/chatbot.api";
-import { showSuccessToast, showErrorToast } from "../../utils/notifications";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showLoadingToast,
+} from "../../utils/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 
 const UploadChatbotSource = ({ opened, close }) => {
@@ -41,6 +45,24 @@ const UploadChatbotSource = ({ opened, close }) => {
         break;
       case ChatBotDataSourceType.FILE:
         if (!file) return;
+        if (file.size > 1048576 * 10)
+          showLoadingToast(
+            "Hold on..file is getting uploaded. It may take few minutes",
+            "file-upload",
+            true,
+            "Uploading",
+            "teal",
+            false,
+          );
+        else
+          showLoadingToast(
+            "Hold on..file is getting uploaded",
+            "file-upload",
+            true,
+            "Uploading",
+            "teal",
+            false,
+          );
         await uploadFileForEmbed(file).then(
           () => {
             setIsUpload(false);
@@ -48,6 +70,7 @@ const UploadChatbotSource = ({ opened, close }) => {
               "File uploaded successfully",
               "file-upload",
               <IconCheck />,
+              true,
             );
             queryClient.invalidateQueries({ queryKey: ["chatbotResources"] });
             setFile(null);
@@ -55,7 +78,12 @@ const UploadChatbotSource = ({ opened, close }) => {
           },
           () => {
             setIsUpload(false);
-            showErrorToast("Errror uploading file", "file-upload", <IconX />);
+            showErrorToast(
+              "Errror uploading file",
+              "file-upload",
+              <IconX />,
+              true,
+            );
             close();
           },
         );
@@ -88,8 +116,8 @@ const UploadChatbotSource = ({ opened, close }) => {
         {source == ChatBotDataSourceType.FILE && (
           <ContainedFileInput
             label="Upload file"
-            placeholder="Upload a pdf file (.pdf)"
-            accept=".pdf"
+            placeholder="Upload a pdf file (.pdf/.epub)"
+            accept=".pdf,.epub"
             multiple={false}
             onChange={setFile}
           />

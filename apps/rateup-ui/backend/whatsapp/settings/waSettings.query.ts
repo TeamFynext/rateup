@@ -89,11 +89,16 @@ export function useUpdateContactTagsMutation() {
   return useMutation({
     mutationFn: (values: { tags: string[] }) => updateContactTags(values),
     onSuccess: () => {
-      showSuccessToast("Contact tags updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      showSuccessToast(
+        "Contact tags updated successfully",
+        "c-tags",
+        null,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["contactTags"] });
     },
     onError: (error: any) => {
-      showErrorToast(error?.response?.data?.message);
+      showErrorToast(error?.response?.data?.message, "c-tags", null, true);
     },
   });
 }

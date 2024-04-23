@@ -111,7 +111,6 @@ const EditContactModal = ({
           <Paper shadow="xl" p="md" px="xl">
             <Checkbox.Group value={contactType} onChange={setContactType}>
               <Group>
-                <Checkbox value="phone" label="Phone" />
                 {tags?.map((data) => (
                   <Checkbox
                     value={data}
