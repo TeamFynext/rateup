@@ -585,7 +585,8 @@ export function questionTypeToFlowFormElementType(
     case qt.MSQ:
       return WaFlowFormElementType.checkboxGroup;
     default:
-      throw Error("Not implemented");
+      localStorage.setItem("test", qtype);
+      throw Error(qtype + "Not implemented");
   }
 }
 /**
