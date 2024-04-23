@@ -4,34 +4,33 @@ import {
   deleteContact,
   deleteManyContacts,
   editContact,
+  getContactById,
   getContactsList,
-  getContactsNotInWaContact,
   importContacts,
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
-export const useCampaignContacts = () => {
+export const useContacts = () => {
   return useQuery({
-    queryKey: ["campaignContactsData"],
+    queryKey: ["contacts"],
     queryFn: () => getContactsList(),
   });
 };
 
-export const useContactsNotInWaContact = (opened: boolean) => {
-  return useQuery({
-    queryKey: ["contactsNotInWaContact"],
-    queryFn: () => getContactsNotInWaContact(),
-    enabled: opened,
+export const useContactById = (contactId: string) =>
+  useQuery({
+    enabled: !!contactId,
+    queryKey: ["contacts", contactId],
+    queryFn: () => getContactById(contactId),
   });
-};
 
 export const useCreateContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
+      queryClient.invalidateQueries({ queryKey: ["contacts"] }),
         showSuccessToast(
           "Contact created successfully.",
           "contact-create",
@@ -53,7 +52,7 @@ export const useImportContactMutation = () => {
   return useMutation({
     mutationFn: importContacts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       showSuccessToast(
         "Contacts imported successfully",
         "contact-create",
@@ -75,7 +74,7 @@ export const useContactDeleteMutation = (groupId: string) => {
   return useMutation({
     mutationFn: deleteContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       }),
@@ -100,7 +99,7 @@ export const useEditContactMutation = (groupId) => {
   return useMutation({
     mutationFn: editContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
@@ -125,7 +124,7 @@ export const useDeleteManyContactsMutation = () => {
   return useMutation({
     mutationFn: deleteManyContacts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });

@@ -6,6 +6,7 @@ export interface ICreateContact {
   email?: string;
   teamId: string;
   source?: string;
+  tags?: any;
 }
 
 const CONTACT_BASE_URL = "/contact";
@@ -15,10 +16,11 @@ export const getContactsList = async () => {
   return contactsData.data as ContactsData[];
 };
 
-export async function getContactsNotInWaContact() {
-  return (await axiosClient.get(`${CONTACT_BASE_URL}/notinwa`))
-    .data as ContactsData[];
+export async function getContactById(contactId: string) {
+  return (await axiosClient.get(`${CONTACT_BASE_URL}/${contactId}`))
+    .data as ContactsData;
 }
+
 export const createContact = async (data: ICreateContact) => {
   let res = await axiosClient.post(CONTACT_BASE_URL, data);
   return res;

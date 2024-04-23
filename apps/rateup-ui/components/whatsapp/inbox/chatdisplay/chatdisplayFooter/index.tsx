@@ -2,18 +2,34 @@ import { IconSend } from "@tabler/icons-react";
 import classes from "./styles.module.css";
 import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import { useSendNewWaMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useGetMessagesByContactId,
+  useSendNewWaMessage,
+} from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { useForm } from "@mantine/form";
-import { WaContact } from "../../../../../types/global";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 import { useRef } from "react";
 import WaInboxFooterMenu from "./footerMenu";
+import { useContactById } from "../../../../../backend/campaign/contacts/contacts.query";
 
-export default function WaInboxChatDisplayFooter(props: WaContact) {
-  const timeStamp = props.userInitiatedFinalTimeStamp;
+export default function WaInboxChatDisplayFooter({
+  contactId,
+}: {
+  contactId: string;
+}) {
+  const { data: contact } = useContactById(contactId);
+  const { data: messages } = useGetMessagesByContactId(contactId);
+  if (!contact) return null;
+
+  const receivedMessages = messages?.filter(
+    (m) => m.messageBody.exchangeProcess === "receive",
+  );
+  const timeStampOfLastReceivedMessage =
+    receivedMessages?.[receivedMessages.length - 1]?.waCreatedAt;
+
   const inputRef = useRef(null);
-  const sendnewWaMessage = useSendNewWaMessage(props?.id);
+  const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const form = useForm({
     initialValues: {
       type: "text",
@@ -40,16 +56,17 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
       inputRef.current.selectionEnd = newPosition;
     }, 0);
   }
+
+  const isSessionExpired = isInboxSessionExpired(
+    timeStampOfLastReceivedMessage,
+  );
   return (
     <div className={classes.wrapper}>
-      <WaInboxFooterMenu
-        sessionExpired={isInboxSessionExpired(timeStamp)}
-        waContact={props}
-      />
+      <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
       <form action="" onSubmit={handleSendMessage} className={classes.form}>
         <ContainedTextField
           ref={inputRef}
-          disabled={isInboxSessionExpired(timeStamp)}
+          disabled={isSessionExpired}
           leftSection={<PopoverEmojiPicker onEmojiClick={insertEmoji} />}
           flex={1}
           value={form.values.text.body}
@@ -60,7 +77,7 @@ export default function WaInboxChatDisplayFooter(props: WaContact) {
           }
         />
         <RateupButtonPrimary
-          disabled={isInboxSessionExpired(timeStamp)}
+          disabled={isSessionExpired}
           type={"submit"}
           title="Send"
           rightIcon={<IconSend />}

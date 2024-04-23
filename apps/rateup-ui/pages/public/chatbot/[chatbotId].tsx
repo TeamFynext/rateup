@@ -4,14 +4,16 @@ import { useRouter } from "next/router";
 import { useListState } from "@mantine/hooks";
 import {
   useDeletePublicChatHistory,
+  useGetChatbotPublicPageStatus,
   usePublicChatMutation,
 } from "../../../backend/chatbot/chatbot.query";
-import { ChatBotSource } from "../../../types/enums";
+import { ChatbotPublicPageStatus, ChatBotSource } from "../../../types/enums";
 import { ChatBotMessage } from "../../../types/global";
 import Head from "next/head";
-import { Center } from "@mantine/core";
+import { Center, Stack, Text, Image } from "@mantine/core";
 import useLocalStorage from "../../../hooks/localStorage";
 import { v4 as uuid } from "uuid";
+import { isEmptyObject } from "@tiptap/react";
 
 const index = () => {
   const router = useRouter();
@@ -19,14 +21,15 @@ const index = () => {
   const [messages, handler] = useListState<ChatBotMessage>([]);
   const [inputQuery, setInputQuery] = useState("");
   const publicMessageMutate = usePublicChatMutation();
+  const { data: chatbotStatus } = useGetChatbotPublicPageStatus(chatbotId);
   const deleteChatHistory = useDeletePublicChatHistory();
   const [chatbotUserId, setChatbotUserId] = useLocalStorage(
     "chatbotUserId",
-    null,
+    "",
   );
   const handleSendQuery = () => {
     let userId = JSON.parse(localStorage?.getItem("chatbotUserId"));
-    if (!userId) {
+    if (!userId || isEmptyObject(userId)) {
       userId = uuid();
       setChatbotUserId(userId);
     }
@@ -81,16 +84,31 @@ const index = () => {
         <meta property="og:image:alt" content="Org Icon" />
       </Head>
       <Center h={"100vh"}>
-        <ChatbotMessageContainer
-          inputQuery={inputQuery}
-          setInputQuery={setInputQuery}
-          messages={messages}
-          handleNewChat={handleNewChat}
-          handleSendQuery={handleSendQuery}
-          isMessagePending={publicMessageMutate.isPending}
-          isDeleteMessagePending={deleteChatHistory.isPending}
-          styleProps={{ width: 700 }}
-        />
+        {chatbotStatus?.publicPageStatus === ChatbotPublicPageStatus.ACTIVE ? (
+          <ChatbotMessageContainer
+            inputQuery={inputQuery}
+            setInputQuery={setInputQuery}
+            messages={messages}
+            handleNewChat={handleNewChat}
+            handleSendQuery={handleSendQuery}
+            isMessagePending={publicMessageMutate.isPending}
+            isDeleteMessagePending={deleteChatHistory.isPending}
+            styleProps={{ width: 700 }}
+          />
+        ) : (
+          <Stack justify="center" align="center">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
+              alt="Logo"
+              w={80}
+              h={80}
+              fit={"contain"}
+            />
+            <Text c="#CDCDCD" fw={"bold"} fz={28}>
+              Page Not Available..!
+            </Text>
+          </Stack>
+        )}
       </Center>
     </>
   );

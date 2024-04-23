@@ -9,7 +9,7 @@ export function CategoryChip({
 }) {
   return (
     <UnstyledButton
-      bg={selected ? "var(--orange-400)" : "white"}
+      bg={selected ? "var(--orange-400)" : "var(--mantine-color-body)"}
       c={selected ? "white" : "var(--grey-color, #494949)"}
       py={largeScreen ? 4 : 7}
       px={"md"}

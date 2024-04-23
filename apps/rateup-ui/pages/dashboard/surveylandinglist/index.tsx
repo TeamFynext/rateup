@@ -73,11 +73,7 @@ export default function SurveyLandingList() {
 
   const specificTeamIsSelected = selectedTeamId !== "all";
 
-  const {
-    isLoading,
-    error,
-    data: surveys,
-  } = useSurveys(specificTeamIsSelected);
+  const { isLoading, error, data: surveys } = useSurveys();
   const queryClient = useQueryClient();
 
   useEffect(() => {

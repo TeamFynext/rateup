@@ -491,6 +491,19 @@ declare global {
     email: string;
     source: string;
     createdAt: Date;
+    tags?: any;
+    org: {
+      whatsappSettings: {
+        contactTags: string[];
+      };
+    };
+    contactGroups?: [
+      {
+        contactGroup?: {
+          name?: string;
+        };
+      },
+    ];
   };
 
   type ContactsResponse = {
@@ -1006,20 +1019,11 @@ type WaInteractiveMessageAction = {
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
   };
 };
-export type WaInboxMessageBody = {
+export type WaInboxMessage = {
   exchangeProcess: "send" | "receive";
   send?: WaSendMessageBody;
   receive?: WaReceiveMessageBody;
-};
-export type WaContact = {
-  id: string;
-  contactId: string;
-  name: string;
-  phone: string;
-  source: string;
-  updatedAt: string;
-  lastMessage: { messageBody: WaInboxMessageBody; waCreatedAt: string };
-  userInitiatedFinalTimeStamp: string;
+  waCreatedAt: string;
 };
 
 export type WaTemplateFetchBody = {

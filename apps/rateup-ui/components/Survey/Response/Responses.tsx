@@ -417,7 +417,7 @@ const Responses = ({
       </PaperLayout>
 
       {responseCount > 0 ? (
-        <Box className={styles["responses-table-container"]}>
+        <PaperLayout className={styles["responses-table-container"]}>
           <TanstackTable data={responses} columns={columns} />
           <FormModalLayout
             opened={opened}
@@ -443,7 +443,7 @@ const Responses = ({
               </Text>
             </Stack>
           </FormModalLayout>
-        </Box>
+        </PaperLayout>
       ) : (
         <NothingFound text="No responses yet" />
       )}

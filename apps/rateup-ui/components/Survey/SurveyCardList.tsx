@@ -26,7 +26,7 @@ import { getTimeSince } from "../../utils";
 export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const [surveyidArray, setSurveyIdArray] = useState([]);
 
-  const { isLoading, error, data: surveys } = useSurveys(false);
+  const { isLoading, error, data: surveys } = useSurveys();
   const queryClient = useQueryClient();
 
   useEffect(() => {

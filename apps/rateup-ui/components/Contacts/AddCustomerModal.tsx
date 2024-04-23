@@ -10,6 +10,8 @@ import {
   ScrollArea,
   Table,
   Text,
+  Blockquote,
+  NavLink,
 } from "@mantine/core";
 import {
   RateupButtonSecondary,
@@ -17,34 +19,42 @@ import {
 } from "../Button/RateupButtons";
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
-import { IconSearch } from "@tabler/icons-react";
+import { IconDownload, IconInfoCircle, IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useCampaignContacts } from "../../backend/campaign/contacts/contacts.query";
+import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { contactAddType, importMethod } from "../../utils/enums";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import { ImportContact } from "./CreateContactModal";
 import Papa from "papaparse";
 import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, emailPattern } from "../../utils/constants";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import styles from "./contact.module.css";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 
 export interface IAddCustomer {
   name: string;
   email?: string;
   phone?: string;
   source?: string;
+  tags: any;
 }
 
-const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
+const AddCustomerModal = ({
+  groupId,
+  close,
+  teamId,
+  existingContactIds,
+  tags = [],
+}) => {
   const [contactType, setContactType] = useState<string[]>(["phone"]);
   const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,7 +70,7 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
     data: contactData,
     error: error,
     refetch: refetch,
-  } = useCampaignContacts() as {
+  } = useContacts() as {
     isLoading: boolean;
     data: ContactsData[];
     error: any;
@@ -71,10 +81,10 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
     initialValues: {
       name: "",
       phone: "",
-      email: "",
       importMethod: importMethod.MANUAL,
       contactType: ["phone"],
       countryCode: "91",
+      tags: {},
     },
     validate: {
       phone: (value) => {
@@ -95,20 +105,8 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
         !value.length
           ? "Name cannot be blank"
           : null,
-      email: (value) => {
-        if (
-          form.values.importMethod == importMethod.MANUAL &&
-          addType === contactAddType.NEW &&
-          contactType.includes("email")
-        )
-          return !value
-            ? "Email cannot be blank"
-            : !emailPattern.test(value)
-              ? "Invalid email"
-              : null;
-      },
       contactType: (value) =>
-        !value.length ? "Must select any one: phone or email" : null,
+        !value.length ? "Must select any one: phone" : null,
     },
   });
   const createNewContactMutation = useAddNewContactMutation(groupId);
@@ -164,17 +162,9 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
     setIsCreating(true);
     if (form.values.importMethod == importMethod.CSV) {
       let isValid: boolean = true;
-      csvData?.every(function (contact, index) {
+      csvData?.every(function (contact) {
         if (contactType.includes("phone") && !/^\d+$/.test(contact?.phone)) {
           showErrorToast("Failed to import: file contain invalid phone number");
-          isValid = false;
-          return false;
-        }
-        if (
-          contactType.includes("email") &&
-          !/^\S+@\S+$/.test(contact?.email)
-        ) {
-          showErrorToast("Failed to import: file contain invalid Email");
           isValid = false;
           return false;
         }
@@ -186,12 +176,20 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
         return;
       }
       let dataToUpload: IAddCustomer[] = csvData?.map(
-        ({ name, email, phone }) => ({
-          name,
-          email: !email ? undefined : email,
-          phone: !phone ? undefined : phone,
-          source: importMethod.CSV,
-        }),
+        ({ name, phone, ...obj }) => {
+          const result = {};
+          for (const key of tags) {
+            if (obj.hasOwnProperty(key) && contactType?.includes(key)) {
+              result[key] = obj[key];
+            }
+          }
+          return {
+            name,
+            phone: !phone ? undefined : phone,
+            source: importMethod.CSV,
+            tags: result,
+          };
+        },
       );
       createNewContactMutation.mutate(
         { data: dataToUpload, groupId: groupId },
@@ -230,14 +228,18 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
       } else {
         let contactData: IAddCustomer[] = [form.values];
         const phone = form.values.phone.slice(1);
+        const result = {};
+        for (const key of contactType) {
+          if (form.getValues()?.tags?.hasOwnProperty(key)) {
+            result[key] = form.getValues()?.tags?.[key];
+          }
+        }
         contactData = [
           {
             name: form.values.name,
             phone: contactType.includes("phone") ? phone : undefined,
-            email: contactType.includes("email")
-              ? form.values.email
-              : undefined,
             source: importMethod.MANUAL,
+            tags: result,
           },
         ];
         createNewContactMutation.mutate(
@@ -346,23 +348,25 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                   </Group>
                 </Radio.Group>
 
-                <Paper shadow="xl" p="md" px="xl">
-                  <Checkbox.Group value={contactType} onChange={setContactType}>
-                    <Group>
-                      <Checkbox
-                        value="phone"
-                        label="Phone"
-                        checked
-                        styles={custominputstyle}
-                      />
-                      <Checkbox
-                        value="email"
-                        label="Email"
-                        styles={custominputstyle}
-                      />
-                    </Group>
-                  </Checkbox.Group>
-                </Paper>
+                {tags?.length > 0 && (
+                  <Paper shadow="xl" p="md" px="xl">
+                    <Checkbox.Group
+                      value={contactType}
+                      onChange={setContactType}
+                    >
+                      <Group>
+                        {tags?.map((data) => (
+                          <Checkbox
+                            value={data}
+                            label={data}
+                            key={data}
+                            tt={"capitalize"}
+                          />
+                        ))}
+                      </Group>
+                    </Checkbox.Group>
+                  </Paper>
+                )}
               </Group>
               {form.values.importMethod == importMethod.MANUAL && (
                 <SimpleGrid cols={2}>
@@ -398,35 +402,58 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                       </Text>
                     </Stack>
                   )}
-                  {contactType.includes("email") && (
-                    <TextInput
-                      label="Email"
-                      placeholder="Enter email id"
-                      {...form.getInputProps("email")}
-                      required
-                      radius={"md"}
-                      size="md"
-                      styles={custominputstyle}
-                    />
+                  {contactType?.map(
+                    (data) =>
+                      data !== "phone" && (
+                        <TextInput
+                          label={data}
+                          placeholder={`Enter ${data}`}
+                          {...form.getInputProps(`tags.${data}`)}
+                          radius={"md"}
+                          size="md"
+                          key={data}
+                        />
+                      ),
                   )}
                 </SimpleGrid>
               )}
               {form.values.importMethod == importMethod.CSV && (
-                <ContainedFileInput
-                  mx={"lg"}
-                  label=""
-                  placeholder="Upload a csv file (.csv)"
-                  accept=".csv"
-                  multiple={false}
-                  onChange={setCsvfile}
-                  styles={{
-                    input: {
-                      border: "2px dashed lightgrey",
-                      height: "60px",
-                      textAlign: "center",
-                    },
-                  }}
-                ></ContainedFileInput>
+                <>
+                  <Blockquote
+                    color="blue"
+                    icon={<IconInfoCircle />}
+                    p={"sm"}
+                    iconSize={40}
+                    mx={"lg"}
+                  >
+                    Utilizing CSV file uploads to generate contact requires
+                    specific fields in the file: name, phone
+                    <NavLink
+                      href={getFileUrlFromKey("/File/contact/demo.csv", false)}
+                      label="Download Demo Csv File"
+                      leftSection={<IconDownload size="1rem" stroke={1.5} />}
+                      download
+                      active
+                      style={{ borderRadius: "4px" }}
+                      target="_blank"
+                    />
+                  </Blockquote>
+                  <ContainedFileInput
+                    mx={"lg"}
+                    label=""
+                    placeholder="Upload a csv file (.csv)"
+                    accept=".csv"
+                    multiple={false}
+                    onChange={setCsvfile}
+                    styles={{
+                      input: {
+                        border: "2px dashed lightgrey",
+                        height: "60px",
+                        textAlign: "center",
+                      },
+                    }}
+                  ></ContainedFileInput>
+                </>
               )}
             </Stack>
           )}
@@ -488,7 +515,8 @@ const AddCustomerModal = ({ groupId, close, teamId, existingContactIds }) => {
                 isUpload ||
                 contactData?.every((customer) =>
                   existingContactIds.includes(customer?.id),
-                )
+                ) ||
+                (form.values.importMethod == importMethod.CSV && !csvfile)
               }
             />
           </Group>

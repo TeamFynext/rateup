@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import {
-  WaInboxMessageBody,
+  WaInboxMessage,
   WaSendMessageBody,
   WaTemplateComponent,
   WaTemplateFetchBody,
@@ -16,7 +16,7 @@ export type ParsedWaMessageReturn = {
   interactive?: WaSendMessageBody["interactive"];
 };
 export function parseWaMessage(
-  messageBody: WaInboxMessageBody,
+  messageBody: WaInboxMessage,
 ): ParsedWaMessageReturn {
   let timeStamp: string = new Date().toLocaleTimeString();
   let messageType: string = "text";

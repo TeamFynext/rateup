@@ -253,7 +253,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
           wrap="nowrap"
           pos={"sticky"}
           top={0}
-          bg={"white"}
+          bg={"var(--mantine-color-body)"}
           style={{ zIndex: 10 }}
         >
           <ActionIcon onClick={open} variant="transparent">

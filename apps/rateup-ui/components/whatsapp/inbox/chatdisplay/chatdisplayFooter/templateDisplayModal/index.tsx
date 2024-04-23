@@ -3,7 +3,6 @@ import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
 import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
 import classes from "./styles.module.css";
-import { WaContact } from "../../../../../../types/global";
 import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
 import NothingFound from "../../../../../NothingFound/NothingFound";
 import WaInboxTemplateSelectCard from "./templateSelectCard";
@@ -14,16 +13,16 @@ import { TeamSelector } from "../../../../../input/TeamSelector";
 import useTemplatesAvailableForTeam from "../../../../../../hooks/team";
 interface Props {
   sessionExpired: boolean;
-  waContact: WaContact;
+  contact: ContactsData;
 }
 
-export default function WaInboxTemplateDisplayModal(props: Props) {
+export default function WaInboxTemplateDisplayModal({
+  sessionExpired,
+  contact,
+}: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [opened, { close: onClose, open }] = useDisclosure(false);
-  const sendTemplate = useSendWaTemplateToUser(
-    props?.waContact?.phone,
-    props?.waContact?.id,
-  );
+  const sendTemplate = useSendWaTemplateToUser(contact.phone, contact.id);
   const [teamId, setTeamId] = useState<string>("");
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
   const approvedTemplates = templatesAvailableForTeam?.filter(
@@ -46,7 +45,7 @@ export default function WaInboxTemplateDisplayModal(props: Props) {
           size: 1000,
           opened,
           onClose,
-          title: props?.sessionExpired
+          title: sessionExpired
             ? "Initiate conversation by sending a template"
             : "Send a template",
           noCustomHeader: true,
@@ -105,7 +104,7 @@ export default function WaInboxTemplateDisplayModal(props: Props) {
         variant="transparent"
         onClick={open}
         title={
-          props?.sessionExpired
+          sessionExpired
             ? "Initiate Conversation by Sending a Template"
             : "Send Template"
         }

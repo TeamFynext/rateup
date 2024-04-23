@@ -3,8 +3,10 @@ import {
   createWaSettings,
   deRegisterBusinessClient,
   deleteWaSettings,
+  getContactTags,
   getWaSettings,
   registerBusinessClient,
+  updateContactTags,
   upsertWaSettings,
 } from "./waSettings.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -81,3 +83,28 @@ export const useDeregisterBusinessClientMutation = () => {
     },
   });
 };
+
+export function useUpdateContactTagsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: { tags: string[] }) => updateContactTags(values),
+    onSuccess: () => {
+      showSuccessToast(
+        "Contact tags updated successfully",
+        "c-tags",
+        null,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["contactTags"] });
+    },
+    onError: (error: any) => {
+      showErrorToast(error?.response?.data?.message, "c-tags", null, true);
+    },
+  });
+}
+
+export const useGetContactTags = () =>
+  useQuery({
+    queryKey: ["contactTags"],
+    queryFn: getContactTags,
+  });

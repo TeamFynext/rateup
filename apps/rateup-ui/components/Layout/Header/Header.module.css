@@ -1,7 +1,7 @@
 .header {
   padding-top: var(--header-padding-top, 15px);
   padding-left: var(--header-padding-left, 15px);
-  background-color: var(--header-bg-color, #fff);
+  background-color: var(--header-bg-color, --mantine-color-body);
 }
 
 .mainSection {

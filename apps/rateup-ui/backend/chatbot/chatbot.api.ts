@@ -1,4 +1,7 @@
-import { ChatBotDataSourceType } from "../../types/enums";
+import {
+  ChatBotDataSourceType,
+  ChatbotPublicPageStatus,
+} from "../../types/enums";
 import { axiosClient, axiosClientIP } from "../apiClient";
 
 const CHATBOT_BASEURL = "/chatbot";
@@ -72,4 +75,21 @@ export async function deleteChatHistory() {
 
 export async function deletePublicChatHistory({ userId }) {
   return await axiosClientIP.delete(`${CHATBOT_PUBLIC_BASEURL}/${userId}`);
+}
+
+export async function getChatbotPublicPageStatus(chatbotId) {
+  return (await axiosClientIP.get(`${CHATBOT_PUBLIC_BASEURL}/${chatbotId}`))
+    ?.data as { publicPageStatus: ChatbotPublicPageStatus };
+}
+
+export async function getChatbotDetails() {
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbot`)).data;
+}
+
+export async function createChatbot() {
+  return await axiosClient.post(`${CHATBOT_BASEURL}/chatbot`);
+}
+
+export async function updateChatbot(data) {
+  return await axiosClient.put(`${CHATBOT_BASEURL}/chatbot`, data);
 }

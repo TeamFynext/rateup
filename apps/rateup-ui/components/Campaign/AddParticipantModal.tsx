@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconUser, IconUsers } from "@tabler/icons-react";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import { useCampaignContacts } from "../../backend/campaign/contacts/contacts.query";
+import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { useState } from "react";
 import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -30,7 +30,7 @@ const AddParticipantModal = ({ close, campaign }) => {
   const [selectedGroups, selectedGroupsHandlers] = useListState([]);
 
   const [searchText, setSearchText] = useState("");
-  const { data: contacts, isLoading: contactIsLoading } = useCampaignContacts();
+  const { data: contacts, isLoading: contactIsLoading } = useContacts();
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
 

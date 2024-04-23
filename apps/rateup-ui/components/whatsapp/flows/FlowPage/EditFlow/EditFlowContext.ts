@@ -17,6 +17,8 @@ interface IEditFlowContext {
 
   selectedScreenId: string;
   setSelectedScreenId: (screenId: string) => void;
+  screenNumber: number;
+  setScreenNumber: (value: number) => void;
 }
 export const EditFlowContext = createContext<IEditFlowContext>({
   flowJson: undefined,
@@ -30,4 +32,6 @@ export const EditFlowContext = createContext<IEditFlowContext>({
   setSelectedFormElementId: () => {},
   selectedScreenId: undefined,
   setSelectedScreenId: () => {},
+  screenNumber: undefined,
+  setScreenNumber: () => {},
 });

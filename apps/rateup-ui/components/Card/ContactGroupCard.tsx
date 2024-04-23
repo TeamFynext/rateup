@@ -1,8 +1,10 @@
-import { Avatar, Group, Paper, Stack, Title, Text, Badge } from "@mantine/core";
+import { Avatar, Group, Stack, Title, Text, Badge, Card } from "@mantine/core";
 import { useRouter } from "next/router";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { useTeamsByUser } from "../../backend/team/team.query";
 import dayjs from "dayjs";
+import { IconUsersGroup } from "@tabler/icons-react";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export const ContactGroupCard = ({ group }) => {
   const router = useRouter();
@@ -23,29 +25,23 @@ export const ContactGroupCard = ({ group }) => {
   });
 
   return (
-    <Paper
-      shadow="xl"
+    <PaperLayout
       p="xl"
-      radius="md"
+      hoveractive
       onClick={() => {
         router.push(`contacts/${group.id}`);
-      }}
-      style={{
-        cursor: "pointer",
       }}
     >
       <Group justify="space-between">
         <Stack gap={"sm"} justify={"center"} align={"center"}>
           <Avatar
-            src={
-              group?.icon
-                ? getFileUrlFromKey(group?.icon)
-                : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`
-            }
+            src={group?.icon && getFileUrlFromKey(group?.icon)}
             alt="profile pic"
-            radius="xl"
             size={60}
-          ></Avatar>
+            radius={"md"}
+          >
+            <IconUsersGroup />
+          </Avatar>
           <Title order={3}>{group?.name}</Title>
         </Stack>
         <Stack gap={0} align="center">
@@ -63,6 +59,6 @@ export const ContactGroupCard = ({ group }) => {
           {teamObj?.name}
         </Badge>
       </Group>
-    </Paper>
+    </PaperLayout>
   );
 };

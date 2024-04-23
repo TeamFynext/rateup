@@ -124,6 +124,7 @@ function FlowPage() {
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
   const [filterTags, setFilterTags] = useState([]);
+  const [screenNumber, setScreenNumber] = useState(0);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setTab(FlowTabEnum.Result);
@@ -187,6 +188,8 @@ function FlowPage() {
           setSelectedScreenId,
           setSelectedFormElementId,
           selectedFormElementId,
+          screenNumber,
+          setScreenNumber,
         }}
       >
         <SelectedLanguageContext.Provider
