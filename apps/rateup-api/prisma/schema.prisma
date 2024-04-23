@@ -105,6 +105,7 @@ model Org {
   UsageStats        UsageStats?
   chatbot           Chatbot?
   Survey            Survey[]
+  WaAccountSettings WaAccountSettings?
 }
 
 model UsageStats {
@@ -150,7 +151,12 @@ model WhatsappSettings {
   type String // enums.ts: WaConfigType
 
   encryption Json? // for flow {publicKey: string, privateKey: string}
-  contactTags       String[]           @default([])
+}
+
+model WaAccountSettings {
+  org         Org      @relation(fields: [orgId], references: [id])
+  orgId       String   @unique @db.Uuid
+  contactTags String[] @default([])
 }
 
 model OrgMember {
@@ -523,8 +529,8 @@ model Media {
 }
 
 model WaTemplate {
-  id             String   @id @default(uuid()) @db.Uuid
-  createdAt      DateTime @default(now())
+  id            String   @id @default(uuid()) @db.Uuid
+  createdAt     DateTime @default(now())
   /// [PWaTemplateWithTypesData]
   data          Json
   acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
