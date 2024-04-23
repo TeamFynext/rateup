@@ -120,7 +120,6 @@ export const useSurveyTemplates = (surveyType) => {
 
 export const useSurveys = (specificTeamIsSelected: boolean) => {
   return useQuery({
-    // enabled: !specificTeamIsSelected,
     queryKey: ["surveys"],
     queryFn: getSurveys,
   });
