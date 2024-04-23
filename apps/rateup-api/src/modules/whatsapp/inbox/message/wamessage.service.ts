@@ -18,7 +18,7 @@ export async function addNewWaMessage(
 }
 
 export async function getWaMessagesByContactId(contactId: string) {
-  const messages = prisma.waMessage.findMany({
+  const messages = await prisma.waMessage.findMany({
     where: {
       contactId,
     },
