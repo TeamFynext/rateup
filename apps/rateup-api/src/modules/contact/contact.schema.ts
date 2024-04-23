@@ -3,8 +3,8 @@ import { z } from "zod";
 
 export const contactCoreSchema = z.object({
   name: z.string(),
-  email: z.string().email().optional(),
   phone: z.string().optional(),
+  tags: z.any(),
   source: z.string(),
 });
 
@@ -12,8 +12,8 @@ export const createMultipleContactSchema = z.array(contactCoreSchema);
 
 const updateContactSchema = z.object({
   name: z.string().optional(),
-  email: z.string().email().nullable().optional(),
   phone: z.string().optional(),
+  tags: z.any(),
 });
 
 const byContactIdSchema = z.object({

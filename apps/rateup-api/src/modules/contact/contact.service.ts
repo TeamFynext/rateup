@@ -7,8 +7,8 @@ import {
 } from "./contact.schema";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
-  if (!contact.phone && !contact.email) {
-    throw new Error("Phone or email must be provided");
+  if (!contact.phone) {
+    throw new Error("Phone must be provided");
   }
   const user = await prisma.contact.create({
     data: contact,
@@ -39,6 +39,17 @@ export async function getContactsByOrgId(orgId: string) {
   const users = await prisma.contact.findMany({
     where: {
       orgId,
+    },
+    include: {
+      contactGroups: {
+        select: {
+          contactGroup: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
   return users;
@@ -89,7 +100,7 @@ export async function updateContactById(
     data: {
       name: contact.name,
       phone: contact.phone,
-      email: contact.email,
+      tags: contact.tags,
     },
   });
   return user;

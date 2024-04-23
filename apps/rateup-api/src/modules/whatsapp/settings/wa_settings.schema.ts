@@ -35,6 +35,9 @@ const getWaSettingsResponseSchema = z.object({
   accessToken: z.string(),
   type: z.nativeEnum(WaConfigType),
 });
+const contactTagSchema = z.object({
+  tags: z.array(z.string()),
+});
 
 export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
   buildJsonSchemas(
@@ -42,8 +45,10 @@ export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
       createWaSettingsInputSchema,
       updateWaSettingsInputSchema,
       getWaSettingsResponseSchema,
+      contactTagSchema,
     },
     { $id: "waSettingsSchema" },
   );
 export type createWaSettingsInput = z.infer<typeof createWaSettingsInputSchema>;
 export type updateWaSettingsInput = z.infer<typeof updateWaSettingsInputSchema>;
+export type ContactTagSchema = z.infer<typeof contactTagSchema>;
