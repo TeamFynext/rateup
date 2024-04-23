@@ -127,6 +127,7 @@ function ScreenListItem({
       draft.screens.splice(screenIndex, 1);
       updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
+    handlers.decrement();
     const feNames = getFlowFormElementsFromScreen(screen, true).map(
       (fe) => fe.name,
     );
