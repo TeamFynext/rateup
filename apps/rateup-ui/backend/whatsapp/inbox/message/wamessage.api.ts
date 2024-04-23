@@ -30,6 +30,21 @@ export type ContactsWithLastMessage = ContactsData & {
   }[];
 };
 export async function getContactsWithLastMessage() {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/contacts`))
+  const contacts = (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/contacts`))
     .data as ContactsWithLastMessage[];
+
+  const contactsWithLastMessage = contacts.filter(
+    (c) => c.WaMessage.length > 0,
+  );
+  const contactsWithoutLastMessage = contacts.filter(
+    (c) => c.WaMessage.length === 0,
+  );
+
+  const sortedContacts = contactsWithLastMessage.sort((a, b) => {
+    const aDate = new Date(a.WaMessage[0].waCreatedAt);
+    const bDate = new Date(b.WaMessage[0].waCreatedAt);
+    return bDate.getTime() - aDate.getTime();
+  });
+
+  return [...sortedContacts, ...contactsWithoutLastMessage];
 }
