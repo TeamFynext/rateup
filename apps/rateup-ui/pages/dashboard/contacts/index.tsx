@@ -264,7 +264,7 @@ export default function Contacts() {
   );
 }
 
-const FilterSelect = ({
+export const FilterSelect = ({
   setFilterByTag,
   filterByTag,
   contactArray,
