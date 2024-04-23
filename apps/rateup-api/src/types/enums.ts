@@ -215,3 +215,8 @@ export enum ChatBotDataSourceType {
   FILE = "FILE",
   // API = "API"
 }
+
+export enum ChatbotPublicPageStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}

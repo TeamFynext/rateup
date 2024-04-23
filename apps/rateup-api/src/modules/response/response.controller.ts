@@ -153,7 +153,13 @@ export async function createResponseHandler(
       updateInvoice(invoiceId, giftName);
     }
     reply.code(201).send(response);
-    const { surveyTeamMapId, responses, language, createdAt } = response;
+    const {
+      surveyTeamMapId,
+      responses: responseArray,
+      language,
+      createdAt,
+    } = response;
+    const responses = responseArray as unknown as QuestionResponse[];
     await saveResponseToGoogleSheet({
       surveyTeamMapId,
       responses,

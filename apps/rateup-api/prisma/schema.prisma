@@ -103,7 +103,7 @@ model Org {
   LoyaltyApiKey     LoyaltyApiKey?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
-  shortUrlId        String?            @unique
+  chatbot           Chatbot?
   Survey            Survey[]
 }
 
@@ -523,8 +523,8 @@ model Media {
 }
 
 model WaTemplate {
-  id            String   @id @default(uuid()) @db.Uuid
-  createdAt     DateTime @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  createdAt      DateTime @default(now())
   /// [PWaTemplateWithTypesData]
   data          Json
   acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
@@ -1043,4 +1043,12 @@ model MyGInvoice {
   updatedAt       DateTime? @updatedAt
 
   @@unique([invoiceNumber, mobileNumber])
+}
+
+model Chatbot {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId            String  @unique @db.Uuid
+  org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  shortUrlId       String  @unique
+  publicPageStatus String? @default("INACTIVE")
 }

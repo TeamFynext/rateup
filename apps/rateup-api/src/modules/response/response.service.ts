@@ -781,12 +781,14 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
       );
       response.responses.map((res: QuestionResponse) => {
         let QIndex;
-        let qstn = questions.find((q: Question, index: number) => {
-          if (q.id === res.questionId) {
-            QIndex = index + 1;
-            return q;
-          }
-        });
+        let qstn = (questions as unknown as Question[]).find(
+          (q: Question, index: number) => {
+            if (q.id === res.questionId) {
+              QIndex = index + 1;
+              return q;
+            }
+          },
+        );
         let qstnTitle =
           QIndex + "_" + getContent(qstn.title[response.language]).trim();
         if (
