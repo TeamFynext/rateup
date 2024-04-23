@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { WaGetMessagesBody } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../../../backend/whatsapp/inbox/ws";
 import { useUser } from "../../../../context/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function WhatsAppInbox() {
   const [messages, setMessages] = useState([] as WaGetMessagesBody[]);
@@ -35,6 +36,7 @@ export default function WhatsAppInbox() {
     }
   }, [data]);
 
+  const queryClient = useQueryClient();
   useEffect(() => {
     connectionRef.current = new WebSocket(
       `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${user?.orgId}`,
@@ -53,6 +55,12 @@ export default function WhatsAppInbox() {
       if (newMessage.contact.id === contactId) {
         setMessages((prevMessages) => [...prevMessages, newMessage.message]);
       }
+      // TODO - Invalidate only the contact with the new message
+      // or manually update state in ui to avoid unnecessary refetch.
+      // (Sorting is done in getContactsWithLastMessage. Don't forget to update that too)
+      queryClient.invalidateQueries({
+        queryKey: ["contacts", "last-message"],
+      });
     };
 
     connectionRef.current.onclose = () => {
