@@ -22,11 +22,11 @@ export default function WaInboxChatDisplayFooter({
   const { data: messages } = useGetMessagesByContactId(contactId);
   if (!contact) return null;
 
-  const receivedMessages = messages.filter(
+  const receivedMessages = messages?.filter(
     (m) => m.messageBody.exchangeProcess === "receive",
   );
   const timeStampOfLastReceivedMessage =
-    receivedMessages[receivedMessages.length - 1]?.waCreatedAt;
+    receivedMessages?.[receivedMessages.length - 1]?.waCreatedAt;
 
   const inputRef = useRef(null);
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
