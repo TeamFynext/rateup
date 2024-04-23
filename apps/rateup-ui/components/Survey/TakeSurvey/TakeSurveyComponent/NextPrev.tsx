@@ -7,10 +7,11 @@ import { QuestionType as Q } from "../../../../types/enums";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { emailPattern } from "../../../../utils/constants";
 import {
+  ActionIcon,
   Button,
   Center,
   Group,
-  RingProgress,
+  Progress,
   Stack,
   Text,
 } from "@mantine/core";
@@ -28,6 +29,7 @@ function NextPrev({
   survey,
   isSavingResponses,
 }) {
+  console.log(themeStyles, "from nextprevvvvvvvvv");
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -93,98 +95,91 @@ function NextPrev({
   return (
     <Stack gap={0} w={"100%"} justify="flex-end">
       <Text
+        mb={"0.625rem"}
         size={isMobile && "sm"}
         c={themeStyles?.backgroundColor}
         style={{ opacity: selectedQ?.required && !response ? 1 : 0 }}
       >
         *Choose an option or answer to proceed!
       </Text>
-      {errorMsg && isErrorInput && <Text c="red">Note: * {errorMsg}</Text>}
-      <Group justify="space-between" gap={0}>
-        <Button
-          radius={"xl"}
-          title=""
-          disabled={isFirstQuestion}
-          leftSection={<IconChevronLeft />}
-          size={isMobile ? "sm" : "lg"}
-          variant="outlined"
-          onClick={prev}
-          style={!isFirstQuestion && themeStyles}
-        >
-          Prev
-        </Button>
-        <RingProgress
-          className={styles["ring-progress"]}
-          sections={[
-            {
-              value: parseInt(getCompletionRate(num, total)),
-              color: themeStyles?.backgroundColor ?? "dark.2",
-            },
-            {
-              value: 100 - parseInt(getCompletionRate(num, total)),
-              color: themeStyles?.color ?? "dark",
-            },
-          ]}
-          size={isMobile ? 55 : 80}
-          thickness={isMobile ? 4 : 8}
-          label={
-            <Text
-              c={themeStyles?.backgroundColor ?? "dark.2"}
-              fw={700}
-              ta="center"
-              size={isMobile ? "xs" : "sm"}
+      {errorMsg && isErrorInput && (
+        <Text c="red" mb={"0.625rem"}>
+          Note: * {errorMsg}
+        </Text>
+      )}
+      <Stack className={styles["next-prev-btns-and-progress-container"]}>
+        <Group justify="flex-end">
+          <ActionIcon
+            className={styles["prev-btn"]}
+            title=""
+            disabled={isFirstQuestion}
+            variant="outlined"
+            onClick={prev}
+            style={
+              isFirstQuestion
+                ? { borderRadius: themeStyles?.borderRadius }
+                : {
+                    ...themeStyles,
+                    backgroundColor: `rgba(255, 255, 255, 0.75)`,
+                    outline: `2px solid ${themeStyles?.backgroundColor}`,
+                    color: themeStyles?.backgroundColor,
+                  }
+            }
+          >
+            <IconChevronLeft size={isMobile ? 20 : 24} />
+          </ActionIcon>
+          {isLastQuestion ? (
+            <Button
+              className={styles["submit-btn"]}
+              radius={"xl"}
+              disabled={
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              }
+              onClick={handleNextClick}
+              color="var(--tertiary-color)"
+              rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}
+              style={
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+                  ? { borderRadius: themeStyles.borderRadius }
+                  : themeStyles
+              }
+              loading={isSavingResponses}
             >
-              {getCompletionRate(num, total)}%
-            </Text>
-          }
+              Submit
+            </Button>
+          ) : (
+            <ActionIcon
+              className={styles["prev-btn"]}
+              disabled={
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+              }
+              onClick={handleNextClick}
+              color="var(--tertiary-color)"
+              style={
+                ((selectedQ?.required || selectedQ?.validationRules) &&
+                  !response) ||
+                isErrorInput
+                  ? { borderRadius: themeStyles.borderRadius }
+                  : themeStyles
+              }
+            >
+              <IconChevronRight size={isMobile ? 20 : 24} />
+            </ActionIcon>
+          )}
+        </Group>
+
+        <Progress
+          value={parseInt(getCompletionRate(num, total))}
+          transitionDuration={300}
+          color={themeStyles?.backgroundColor}
         />
-        {isLastQuestion ? (
-          <Button
-            radius={"xl"}
-            disabled={
-              ((selectedQ?.required || selectedQ?.validationRules) &&
-                !response) ||
-              isErrorInput
-            }
-            size={isMobile ? "sm" : "lg"}
-            onClick={handleNextClick}
-            color="var(--tertiary-color)"
-            rightSection={<IconChevronRight />}
-            style={
-              !(
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-              ) && themeStyles
-            }
-            loading={isSavingResponses}
-          >
-            Submit
-          </Button>
-        ) : (
-          <Button
-            radius={"xl"}
-            disabled={
-              ((selectedQ?.required || selectedQ?.validationRules) &&
-                !response) ||
-              isErrorInput
-            }
-            size={isMobile ? "sm" : "lg"}
-            onClick={handleNextClick}
-            color="var(--tertiary-color)"
-            rightSection={<IconChevronRight />}
-            style={
-              !(
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-              ) && themeStyles
-            }
-          >
-            Next
-          </Button>
-        )}
-      </Group>
+      </Stack>
     </Stack>
   );
 }

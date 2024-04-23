@@ -443,14 +443,14 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                       </Box>
 
                       <QuestionForm />
-                      <NextBtn
+                      {/* <NextBtn
                         next={handleNext}
                         survey={survey}
                         themeStyles={
                           surveyThemeData?.surveyTheme?.button?.styles
                         }
                         isSavingResponses={isSavingResponses || giftLoading}
-                      />
+                      /> */}
                     </ScrollArea.Autosize>
                   </motion.div>
                 </motion.div>
