@@ -411,7 +411,6 @@ const AddCustomerModal = ({
                           {...form.getInputProps(`tags.${data}`)}
                           radius={"md"}
                           size="md"
-                          required
                           key={data}
                         />
                       ),

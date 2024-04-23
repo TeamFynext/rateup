@@ -141,6 +141,7 @@ const CreateGroupModal = ({
             {...form.getInputProps("name")}
             size="md"
             radius={"md"}
+            required
           ></TextInput>
           {!isEdit ? (
             <Stack gap={0}>
