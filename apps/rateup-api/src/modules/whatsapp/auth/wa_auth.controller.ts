@@ -64,7 +64,6 @@ export async function registerBusinessClientHandler(
       accessToken,
       type: WaConfigType.Automated,
       appId: process.env.wa_app_id,
-      contactTags: [],
     });
 
     log.info("Business client registered successfully");
