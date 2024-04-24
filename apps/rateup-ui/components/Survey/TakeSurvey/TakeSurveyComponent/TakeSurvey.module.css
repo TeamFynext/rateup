@@ -1,3 +1,8 @@
+.take-survey-root-div {
+  height: 100%;
+  padding: 2rem;
+}
+
 .inputBox {
   width: 100%;
   max-width: 500px;
@@ -127,6 +132,10 @@
 }
 
 @media (max-width: 480px) {
+  .take-survey-root-div {
+    padding: 1rem;
+  }
+
   .rating svg {
     height: 50px;
     width: 50px;
