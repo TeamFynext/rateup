@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
-import { Box, Flex, Stack } from "@mantine/core";
-import PricingCard from "../Card/PricingCard";
+import React from "react";
+import { Box, Flex, Stack, Text } from "@mantine/core";
 import PlanCard from "../Card/PlanCard";
 import { PlanCardWidth } from "../Utils/constants";
 
@@ -35,16 +34,21 @@ export const SurveySection = ({
             <Box
               bg={"#1C518E"}
               c={"white"}
-              py={"8px"}
+              py={"10px"}
               px={"xl"}
               ta={"center"}
               style={{
-                borderRadius: "15px",
+                borderRadius: "15px 15px 0 0",
+                marginBottom: "",
+                zIndex: 2,
               }}
               w={PlanCardWidth}
               display={index === 1 ? "block" : "none"}
             >
-              Most Popular
+              <Text pb="xs" mt="-4px" size="sm">
+                {" "}
+                Most Popular{" "}
+              </Text>
             </Box>
             <PlanCard
               currencySymbol={currencySymbol}

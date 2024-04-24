@@ -4,6 +4,7 @@ import {
   Box,
   Card,
   Center,
+  Divider,
   Group,
   List,
   LoadingOverlay,
@@ -15,14 +16,7 @@ import {
 import { lexend300 } from "../../../../../utils/fonts";
 import { NumberAnimate } from "../Animate/NumberAnimate";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import {
-  CardWidth,
-  PlanCardWidth,
-  Title1,
-  Title2,
-  Title3,
-  Title4,
-} from "../Utils/constants";
+import { PlanCardWidth, Title4 } from "../Utils/constants";
 import ButtonStyles from "./Button.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import styles from "./Modal.module.css";
@@ -50,19 +44,28 @@ const PlanCard = ({
   }, []);
 
   let marginTop = "xl";
-  if (!menuPage && index === 1) {
-    marginTop = "-8px";
-  }
   let title = `Subscribe Now`;
+  let isPopular = false;
+
+  if ((!menuPage && index === 1) || (menuPage && index === 1)) {
+    marginTop = "-12px";
+    isPopular = true;
+    cardMainColor = "linear-gradient(90deg, #004F98, #387ADF)";
+  }
 
   return (
     <Card
       shadow="md"
-      padding="sm"
       radius="lg"
+      withBorder
       w={PlanCardWidth}
       mt={marginTop}
-      mih={"clamp(390px, 318.576px + 11.905vw, 490px)"}
+      mih={"100%"}
+      style={{
+        zIndex: 3,
+        borderTopLeftRadius: isPopular ? "0px" : "15px",
+        borderTopRightRadius: isPopular ? "0px" : "15px",
+      }}
     >
       <Card.Section>
         <Box m="xs" bg={cardMainColor} style={{ borderRadius: "5px" }}>
@@ -90,43 +93,40 @@ const PlanCard = ({
         </Box>
       </Card.Section>
       {(menuPage && index === 3) || (!menuPage && index === 2) ? (
-        <>
+        <Stack justify="space-around" h="100%">
           <Center
             c={cardMainColor}
             mb={largeScreen ? "xl" : "md"}
             mt={largeScreen ? "lg" : "xs"}
             pb={largeScreen && "5px"}
+            h="80%"
           >
             <Text fz={"clamp(30px, 25.712px + 0.714vw, 36px)"}>Lets Talk!</Text>
           </Center>
-          <Center>
+          <Center mb="lg">
             <RateupButtonPrimary
               title="Contact Sales"
               color={cardMainColor}
               onClick={open}
               radius={"xl"}
+              size="md"
               className={ButtonStyles["button-hover"]}
             />
           </Center>
-        </>
+        </Stack>
       ) : (
-        <>
-          <Stack
-            align="center"
-            ff={lexend300.style.fontFamily}
-            gap={5}
-            mt={"sm"}
-            mb={"xl"}
-          >
+        <Stack justify="space-between" h="100%">
+          <Stack ff={lexend300.style.fontFamily} gap={5} p="0" mt={"sm"}>
             {generateListItems(data?.description)}
           </Stack>
 
-          <Center>
+          <Center mb="lg">
             <RateupButtonPrimary
               title={title}
               color={cardMainColor}
               radius={"xl"}
               className={ButtonStyles["button-hover"]}
+              size="md"
               onClick={() =>
                 handlePlanSelection({
                   id: data?.id,
@@ -141,7 +141,7 @@ const PlanCard = ({
               }
             />
           </Center>
-        </>
+        </Stack>
       )}
 
       <Modal
@@ -188,18 +188,22 @@ export const generateListItems = (listData: string[] = []) => (
       const isNegative = item.startsWith("-");
       const displayName = isNegative ? item.substring(1) : item;
       return (
-        <List.Item
-          key={item}
-          icon={
-            isNegative && (
-              <IconX
-                style={{ width: rem(16), height: rem(16), color: "red" }}
-              />
-            )
-          }
-        >
-          {displayName}
-        </List.Item>
+        <>
+          <List.Item
+            key={item}
+            icon={
+              isNegative && (
+                <IconX
+                  style={{ width: rem(16), height: rem(16), color: "red" }}
+                />
+              )
+            }
+          >
+            {displayName}
+          </List.Item>
+
+          <Divider my="md" />
+        </>
       );
     })}
   </List>
