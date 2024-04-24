@@ -9,7 +9,13 @@ interface PaperLayoutProps extends PaperProps {
 }
 export default function PaperLayout(props: PaperLayoutProps) {
   const { hovered, ref } = useHover();
-  let { hoveractive, selected = true, className, ...restProps } = props;
+  let {
+    hoveractive,
+    selected = true,
+    className,
+    radius = "lg",
+    ...restProps
+  } = props;
 
   const paperLayoutDivClassName = `${styles["paper-layout-div"]} ${className} ${
     selected ? styles["selected"] : ""
@@ -20,6 +26,7 @@ export default function PaperLayout(props: PaperLayoutProps) {
   return (
     <Paper
       className={paperLayoutDivClassName}
+      radius={radius}
       ref={ref}
       {...restProps}
       style={{

@@ -93,7 +93,7 @@ export function isHtml(str: string) {
 }
 export const extractText = (htmlContent: string) => {
   // Regular expression to remove htmlContent tags
-  const regex = /(<([^>]+)>)/gi;
+  const regex = /(<([^>]+)>|&nbsp;)/gi;
   // Extract text from htmlContent by replacing htmlContent tags with an empty string
   return htmlContent?.replace(regex, "");
 };

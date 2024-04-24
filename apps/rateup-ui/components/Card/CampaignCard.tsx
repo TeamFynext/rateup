@@ -1,7 +1,6 @@
 import {
   Badge,
   Group,
-  Paper,
   Stack,
   Title,
   Text,
@@ -15,6 +14,7 @@ import dayjs from "dayjs";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDeleteCampaignMutation } from "../../backend/campaign/campaign.query";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const CampaignCard = ({ campaign }) => {
   const router = useRouter();
@@ -25,13 +25,9 @@ const CampaignCard = ({ campaign }) => {
 
   return (
     <>
-      <Paper
-        shadow={"xl"}
+      <PaperLayout
         p={"md"}
-        radius={"md"}
-        style={{
-          cursor: "pointer",
-        }}
+        hoveractive
         onClick={() => {
           router.push(`campaign/${campaign?.id}`);
         }}
@@ -42,7 +38,7 @@ const CampaignCard = ({ campaign }) => {
             <CampaignMenu campaign={campaign} />
           </Group>
           <Group justify={"space-between"}>
-            <Group gap={1}>
+            <Group>
               <Title order={3} c="#149a8a">
                 {campaign?._count.campaignParticipants}
               </Title>
@@ -69,7 +65,7 @@ const CampaignCard = ({ campaign }) => {
             </Badge>
           </Group>
         </Stack>
-      </Paper>
+      </PaperLayout>
     </>
   );
 };
