@@ -34,6 +34,7 @@ import {
 } from "../../../SurveyTheme.utils";
 import { SurveyThemeContext } from "../../../SurveyThemeContext";
 import { surveyUploadsPath } from "../../../../../../utils/constants";
+import NextPrevPreview from "./NextPrevPreview";
 
 export default function SurveyThemeView({ selectedType, setSelectedType }) {
   const { surveyTheme, mobileOrDesktop } = useContext(SurveyThemeContext);
@@ -231,7 +232,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
                 </Group>
               </Group>
             </Stack>
-            <NextPrev
+            <NextPrevPreview
               isMobile={mobileOrDesktop === PreviewTypeEnum.MOBILE}
               buttonStyles={buttonStyles}
             />
@@ -239,77 +240,5 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
         </BackgroundImage>
       </CreditsCard>
     </Flex>
-  );
-}
-
-function NextPrev({ isMobile, buttonStyles }) {
-  return (
-    <Stack
-      pt={40}
-      pb="md"
-      style={{
-        width: "100%",
-        minHeight: isMobile ? "143px" : "163px",
-      }}
-      justify="flex-end"
-    >
-      <Text c={buttonStyles.backgroundColor} mb="md" size={isMobile && "sm"}>
-        *Choose an option or answer to proceed!
-      </Text>
-      <Group justify="space-between">
-        <Button
-          radius={"xl"}
-          title=""
-          leftSection={<IconChevronLeft />}
-          size={isMobile ? "sm" : "lg"}
-          variant="outlined"
-          style={buttonStyles}
-        >
-          Prev
-        </Button>
-        <Center>
-          <RingProgress
-            sections={[
-              {
-                value: 10,
-                color: buttonStyles?.backgroundColor ?? "dark",
-              },
-              {
-                value: 90,
-                color: buttonStyles?.color ?? "dark.2",
-              },
-            ]}
-            size={isMobile ? 55 : 80}
-            thickness={isMobile ? 4 : 8}
-            label={
-              <Text
-                c={buttonStyles?.backgroundColor ?? "dark.2"}
-                fw={700}
-                ta="center"
-                size={isMobile ? "xs" : "sm"}
-              >
-                {10}%
-              </Text>
-            }
-          />
-        </Center>
-        <Button
-          radius={"xl"}
-          size={isMobile ? "sm" : "lg"}
-          rightSection={<IconChevronRight />}
-          style={buttonStyles}
-        >
-          Submit
-        </Button>
-        <Button
-          radius={"xl"}
-          size={isMobile ? "sm" : "lg"}
-          rightSection={<IconChevronRight />}
-          style={buttonStyles}
-        >
-          Next
-        </Button>
-      </Group>
-    </Stack>
   );
 }

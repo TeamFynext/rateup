@@ -370,7 +370,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
         <NextPrevFuncsContextProvider nextFn={handleNext} prevFn={handlePrev}>
-          <Container size={"md"}>
+          <Container size={"md"} className={styles["take-survey-root-div"]}>
             <Stack justify="space-between" h={"100%"} gap={0}>
               <ConfirmResponsesModal
                 opened={isConfirmResponsesModalOpen}
@@ -445,14 +445,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         </Box>
 
                         <QuestionForm />
-                        {/* <NextBtn
-                        next={handleNext}
-                        survey={survey}
-                        themeStyles={
-                          surveyThemeData?.surveyTheme?.button?.styles
-                        }
-                        isSavingResponses={isSavingResponses || giftLoading}
-                      /> */}
                       </ScrollArea.Autosize>
                     </motion.div>
                   </motion.div>

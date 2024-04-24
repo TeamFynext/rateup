@@ -56,21 +56,23 @@ function ButtonStyles({
           />
         </Box>
 
-        <Box className={"styles-section-div"}>
-          <h2>Border Radius</h2>
-          <Slider
-            min={0}
-            max={50}
-            defaultValue={18}
-            value={currentStyles?.styles?.borderRadius}
-            onChange={(e) => {
-              setCurrentstyles("button", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, borderRadius: e },
-              });
-            }}
-          />
-        </Box>
+        {selectedTab === ThemeTabEnum.WELCOME && (
+          <Box className={"styles-section-div"}>
+            <h2>Border Radius</h2>
+            <Slider
+              min={0}
+              max={50}
+              defaultValue={18}
+              value={currentStyles?.styles?.borderRadius}
+              onChange={(e) => {
+                setCurrentstyles("button", {
+                  ...currentStyles,
+                  styles: { ...currentStyles.styles, borderRadius: e },
+                });
+              }}
+            />
+          </Box>
+        )}
 
         {selectedTab === ThemeTabEnum.WELCOME && (
           <Box className={"styles-section-div"}>
