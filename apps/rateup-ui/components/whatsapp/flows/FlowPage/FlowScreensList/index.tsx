@@ -2,9 +2,9 @@ import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import ScreenListItem from "./ScreenListItem";
 import styles from "./FlowScreensList.module.css";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
+import { useCounter, useDisclosure } from "@mantine/hooks";
 import CreateFlowScreenModal from "./CreateFlowScreenModal";
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import { DragDropContext } from "@hello-pangea/dnd";
 import {
@@ -32,12 +32,17 @@ function FlowScreensList({
   onElementClick,
   onDeleteElement,
 }: FlowScreensListProps) {
-  const { flowJson, updateFlowJson } = useContext(EditFlowContext);
+  const { flowJson, updateFlowJson, setScreenNumber } =
+    useContext(EditFlowContext);
   const router = useRouter();
   const theme = useMantineTheme();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-
+  const firstRender = useRef(null);
+  const [pageNo, handlers] = useCounter(0, {
+    min: 0,
+    max: flowJson?.screens?.length ?? 0,
+  });
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
   const [
@@ -52,6 +57,14 @@ function FlowScreensList({
       openCreateFlowScreenModal();
     }
   }
+  useEffect(() => {
+    if (flowJson?.screens?.length) {
+      handlers?.set(firstRender?.current ? flowJson?.screens?.length - 1 : 0);
+    }
+    if (!firstRender?.current) {
+      firstRender.current = "true";
+    }
+  }, [flowJson?.screens?.length]);
 
   function onDragEnd({ destination, source }) {
     if (!destination) return;
@@ -115,9 +128,11 @@ function FlowScreensList({
           <ScreenListItem
             onDeleteElement={onDeleteElement}
             onElementClick={onElementClick}
-            screens={flowJson.screens}
+            screen={flowJson.screens?.[pageNo]}
             onAddElementClick={onAddElementClick}
             handleCreateScreenClick={handleCreateScreenClick}
+            pageNo={pageNo}
+            handlers={handlers}
           />
         </Box>
       </DragDropContext>

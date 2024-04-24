@@ -36,7 +36,6 @@ import {
   getFormObjFromScreenId,
   getQuestionsFromScreen,
   getScreenObjById,
-  moveFlowScreen,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
 import ConfirmationModal from "../../../../Modal/ConfirmationModal";
@@ -51,18 +50,27 @@ import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 
 interface ScreenListItemProps {
-  screens: WaFlowScreen[];
+  screen: WaFlowScreen;
   onAddElementClick: (screenId: string) => void;
   onElementClick: (feId: string, screenId: string) => void;
   onDeleteElement: (feId: string, screenId: string) => void;
   handleCreateScreenClick: () => void;
+  pageNo: number;
+  handlers: {
+    readonly increment: () => void;
+    readonly decrement: () => void;
+    readonly set: (value: number) => void;
+    readonly reset: () => void;
+  };
 }
 function ScreenListItem({
-  screens,
+  screen,
   onAddElementClick,
   onElementClick,
   onDeleteElement,
   handleCreateScreenClick,
+  pageNo,
+  handlers,
 }: Readonly<ScreenListItemProps>) {
   const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
   const [editingItemForFooter, setEditingItemFooter] = useState(null);
@@ -84,29 +92,16 @@ function ScreenListItem({
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isOpen, { open, close }] = useDisclosure(false);
-
-  const [pageNo, handlers] = useCounter(0, {
-    min: 0,
-    max: flowJson?.screens?.length ?? 0,
-  });
-  const [screen, setScreen] = useState(flowJson?.screens?.[pageNo]);
-  const [elements, setElements] = useState(
-    getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]),
-  );
+  const elements = getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]);
   const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
   const [footerLabel, setFooterLabel] = useState(
-    footerElement?.label ?? "Continue",
+    footerElement?.label ?? "Next",
   );
 
   useEffect(() => {
     if (flowJson?.screens) {
       setScreenNumber(pageNo);
-      setScreen(flowJson?.screens?.[pageNo]);
-      setElements(getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]));
-      setFooterLabel(
-        getFlowFooterElementsFromScreen(flowJson?.screens?.[pageNo])?.[0]
-          ?.label ?? "Continue",
-      );
+      setFooterLabel(footerElement?.label ?? "Next");
     }
   }, [flowJson?.screens, pageNo]);
 
@@ -207,9 +202,7 @@ function ScreenListItem({
       ) : (
         <>
           <Box mah={"85%"}>
-            <Text w={"100%"} ta={"center"}>
-              Page Name
-            </Text>
+            {/* <Text w={"100%"}></Text> */}
             <ConfirmationModal
               forDeleteFunctionality
               opened={dialogOpened}
@@ -226,12 +219,14 @@ function ScreenListItem({
                   onClick={handlers.decrement}
                   radius={"lg"}
                   disabled={pageNo === 0}
+                  mt={28}
                 >
                   <IconChevronLeft size={20} />
                 </ActionIcon>
               </Tooltip>
 
               <EditableText
+                label={`Screen ${pageNo + 1}`}
                 text={screen.title}
                 setText={updateScreenTitle}
                 id={screen.title}
@@ -249,6 +244,7 @@ function ScreenListItem({
                   onClick={handlers.increment}
                   radius={"lg"}
                   disabled={pageNo === flowJson?.screens?.length - 1}
+                  mt={28}
                 >
                   <IconChevronRight size={20} />
                 </ActionIcon>
@@ -316,25 +312,13 @@ function ScreenListItem({
                   </Stack>
                 )}
               </Droppable>
-              <Group
-                style={{
-                  border: ".0625rem solid var(--mantine-color-gray-4)",
-                  borderRadius: "12px",
-                  cursor: "pointer",
-                }}
-                h={35}
-                m={"md"}
-                onClick={handleAddElementClick}
-              >
-                <ActionIcon
-                  h={"100%"}
-                  style={{
-                    borderRadius: "10px 0px 0px 10px",
-                  }}
-                >
-                  <IconPlus size={30} />
-                </ActionIcon>
-                <Text c="dimmed">Add Questions</Text>
+              <Group m={"md"}>
+                <RateupButtonPrimary
+                  title="Add Question"
+                  rightIcon={<IconPlus />}
+                  onClick={handleAddElementClick}
+                  fullWidth
+                />
               </Group>
             </ScrollAreaAutosize>
           </Box>

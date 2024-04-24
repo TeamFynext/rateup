@@ -225,7 +225,7 @@ export function FlowImagePreview({
  * @param param0
  * @returns
  */
-export function FlowPreviewContainer({ children, onClose, style }) {
+export function FlowPreviewContainer({ children, footerLabel }) {
   return (
     <Stack
       style={{
@@ -233,11 +233,10 @@ export function FlowPreviewContainer({ children, onClose, style }) {
         borderRadius: "12px 12px 0px 0px",
         padding: "0px 4px 8px 4px",
         height: "90%",
-        ...style,
       }}
       gap={0}
     >
-      {FlowContainerHeader(onClose)}
+      {FlowContainerHeader(() => {})}
       <Divider />
       <Stack
         style={{
@@ -258,7 +257,7 @@ export function FlowPreviewContainer({ children, onClose, style }) {
           justifySelf: "end",
         }}
       >
-        Next {/* TODO: make footer button customizable */}
+        {footerLabel ?? "Next"}
       </Button>
     </Stack>
   );
