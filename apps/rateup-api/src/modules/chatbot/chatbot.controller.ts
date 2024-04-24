@@ -1,25 +1,30 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  ChatbotIdInput,
   chatbotMessageInput,
   dataSourceUploadInput,
   deleteContentInput,
   deleteManyContentInput,
   publicMessageInput,
+  updateChatbotInput,
   UserIdInput,
 } from "./chatbot.schema";
 import {
+  createChatbot,
   deleteChatHistory,
   deleteEmbeddedSource,
   deleteManyEmbeddedSource,
   deletePublicChatHistory,
   getAIResponseForQuery,
+  getChatbotDetails,
+  getChatbotDetailsByShortUrlId,
   getPublicAIResponseForQuery,
   getUploadedSources,
+  updateChatbotDetails,
   uploadFileForAIEmbed,
   uploadSourceForEmbed,
 } from "./chatbot.service";
 import { createJWT } from "../../utils/jwt";
-import { getOrgFromShortUrl } from "../org/org.services";
 
 export async function uploadSourceForEmbedHandler(
   request: FastifyRequest<{
@@ -89,9 +94,8 @@ export async function publicChatbotMessageHandler(
 ) {
   try {
     const { query, chatbotId, userId } = request.body;
-    //get orgId and userId from chatbotId
-    const { id } = await getOrgFromShortUrl(chatbotId);
-    const res = await getPublicAIResponseForQuery({ query, orgId: id, userId });
+    const { orgId } = await getChatbotDetailsByShortUrlId(chatbotId);
+    const res = await getPublicAIResponseForQuery({ query, orgId, userId });
     reply.code(200).send(res.data);
   } catch (e) {
     console.log(e);
@@ -165,5 +169,62 @@ export async function deletePublicChatHistoryHandler(
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "something went wrong" });
+  }
+}
+
+export async function getChatbotPublicPageStatusHandler(
+  request: FastifyRequest<{ Params: ChatbotIdInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { publicPageStatus } = await getChatbotDetailsByShortUrlId(
+      request.params.chatbotId,
+    );
+    reply.code(200).send({ publicPageStatus });
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send({ message: "something went wrong" });
+  }
+}
+
+export async function createChatbotHanlder(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await createChatbot(orgId);
+    reply.code(201).send(res);
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function getChatbotDetailsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await getChatbotDetails(orgId);
+    reply.code(200).send(res);
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send({ message: "something went wrong" });
+  }
+}
+
+export async function updateChatbotDetailsHanlder(
+  request: FastifyRequest<{ Body: updateChatbotInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await updateChatbotDetails(request.body, orgId);
+    reply.code(201).send(res);
+  } catch (error) {
+    console.error(error);
+    reply.code(500).send({ message: "Something went wrong" });
   }
 }

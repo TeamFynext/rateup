@@ -1,3 +1,4 @@
+import { Contact } from "@prisma/client";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
@@ -7,8 +8,8 @@ import {
 } from "./contact.schema";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
-  if (!contact.phone && !contact.email) {
-    throw new Error("Phone or email must be provided");
+  if (!contact.phone) {
+    throw new Error("Phone must be provided");
   }
   const user = await prisma.contact.create({
     data: contact,
@@ -22,6 +23,7 @@ export async function createMultipleContacts(
 ) {
   const contactsData = contacts.map((contact) => ({ ...contact, orgId }));
   const result = await prisma.contact.createMany({
+    skipDuplicates: true,
     data: contactsData,
   });
 }
@@ -40,6 +42,17 @@ export async function getContactsByOrgId(orgId: string) {
     where: {
       orgId,
     },
+    include: {
+      contactGroups: {
+        select: {
+          contactGroup: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
   return users;
 }
@@ -55,18 +68,6 @@ export async function getContactByPhoneNumberAndOrgId(
     },
   });
   return contact;
-}
-
-export async function getContactsNotInWaContact(orgId: string) {
-  const contacts = await prisma.contact.findMany({
-    where: {
-      orgId,
-      waContact: {
-        is: null,
-      },
-    },
-  });
-  return contacts;
 }
 
 export async function deleteContactById(contactId: string) {
@@ -89,13 +90,17 @@ export async function updateContactById(
     data: {
       name: contact.name,
       phone: contact.phone,
-      email: contact.email,
+      tags: contact.tags,
     },
   });
   return user;
 }
 
-export async function getOrCreateContactByPhone(phone: string, orgId: string) {
+export async function getOrCreateContactByPhone(
+  phone: string,
+  orgId: string,
+  additionalData?: Partial<Contact>,
+) {
   try {
     const contact = await prisma.contact.findFirst({
       // TODO: findout why findUnique is giving error
@@ -110,6 +115,7 @@ export async function getOrCreateContactByPhone(phone: string, orgId: string) {
     } else {
       return await prisma.contact.create({
         data: {
+          ...additionalData,
           phone,
           orgId,
         },

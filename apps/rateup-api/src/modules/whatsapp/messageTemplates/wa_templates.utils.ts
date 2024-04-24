@@ -5,8 +5,9 @@ import {
   WaTemplateSupportedFormats,
 } from "../../../types/enums";
 import {
+  WHATSAPP_BUTTON_TYPE,
   WaSendMessageBody,
-  WaTemplateFetchBody,
+  WaTemplateComponent,
   WaTemplateFetchComponents,
 } from "../../../types/whatsapp.types";
 import prisma from "../../../utils/prisma";
@@ -218,4 +219,20 @@ export async function getTemplateQuery(
     };
   }
   return commonQuery;
+}
+
+/**
+ * Returns flow_id if the templateComponents contains a flow button
+ * @param components
+ * @returns
+ */
+export function getFlowIdFromTemplateComponents(
+  components: WaTemplateComponent[],
+): string | undefined {
+  const flowId = components
+    .find((c) => c.type.toLocaleLowerCase() === WaTemplateComponentType.BUTTONS)
+    ?.buttons.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
+    ?.flow_id?.toString();
+
+  return flowId;
 }

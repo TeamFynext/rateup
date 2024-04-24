@@ -18,7 +18,7 @@ import prisma from "../utils/prisma";
 import {
   WaReceiveMessageBody,
   WaSendMessageBody,
-  WaTemplateComponent,
+  WaTemplateSendComponent,
 } from "./whatsapp.types";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 
@@ -310,7 +310,7 @@ declare global {
 
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
-    type PWaTemplateComponentParams = WaTemplateComponent;
+    type PWaTemplateComponentParams = WaTemplateSendComponent;
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
   }

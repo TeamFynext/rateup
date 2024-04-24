@@ -1,6 +1,9 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { ChatBotDataSourceType } from "../../types/enums";
+import {
+  ChatBotDataSourceType,
+  ChatbotPublicPageStatus,
+} from "../../types/enums";
 
 export const dataLoadSchema = z.object({
   source: z.string(),
@@ -27,6 +30,14 @@ export const byUserIdSchema = z.object({
   userId: z.string(),
 });
 
+export const byChatbotIdSchema = z.object({
+  chatbotId: z.string(),
+});
+
+export const updateChatbotSchema = z.object({
+  publicPageStatus: z.nativeEnum(ChatbotPublicPageStatus).optional(),
+});
+
 export const { schemas: chatbotSchemas, $ref: $chatbotRef } = buildJsonSchemas(
   {
     dataLoadSchema,
@@ -35,6 +46,8 @@ export const { schemas: chatbotSchemas, $ref: $chatbotRef } = buildJsonSchemas(
     deleteManyContentSchema,
     publicMessageSchema,
     byUserIdSchema,
+    byChatbotIdSchema,
+    updateChatbotSchema,
   },
   {
     $id: "chatbotSchema",
@@ -47,3 +60,5 @@ export type deleteContentInput = z.infer<typeof deleteContentSchema>;
 export type deleteManyContentInput = z.infer<typeof deleteManyContentSchema>;
 export type publicMessageInput = z.infer<typeof publicMessageSchema>;
 export type UserIdInput = z.infer<typeof byUserIdSchema>;
+export type ChatbotIdInput = z.infer<typeof byChatbotIdSchema>;
+export type updateChatbotInput = z.infer<typeof updateChatbotSchema>;

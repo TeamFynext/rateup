@@ -107,13 +107,6 @@ export async function addNewContactsToGroup(
       where: {
         OR: [
           {
-            email: {
-              in: contacts
-                .map((contact) => contact.email)
-                .filter((email) => email),
-            },
-          },
-          {
             phone: {
               in: contacts
                 .map((contact) => contact.phone)

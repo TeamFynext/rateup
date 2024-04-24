@@ -1,19 +1,16 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../../utils/checkSession";
-import { waContactSchemas } from "./contact/wacontact.schema";
 import { waMessageSchemas } from "./message/wamessage.schema";
-import { waContactRoutes } from "./contact/wacontact.routes";
 import { waMessageRoutes } from "./message/waMessage.routes";
 import { waWSMessageRoutes } from "./message/wamessage.ws.routes";
 
 export async function waInboxRoutes(server: FastifyInstance) {
-  const modules = [waContactSchemas, waMessageSchemas];
+  const modules = [waMessageSchemas];
   for (const module of modules) {
     for (const schema of module) {
       server.addSchema(schema);
     }
   }
-  server.register(waContactRoutes, { prefix: "/contact" });
   server.register(waMessageRoutes, { prefix: "/message" });
   server.register(waWSMessageRoutes, { prefix: "/ws" });
 }

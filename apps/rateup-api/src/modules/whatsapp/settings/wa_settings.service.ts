@@ -141,3 +141,31 @@ export async function deleteWaSettings(orgId: string) {
     },
   });
 }
+
+export async function getContactTag(orgId: string) {
+  const res = await prisma.waAccountSettings.findFirst({
+    where: {
+      orgId,
+    },
+    select: {
+      contactTags: true,
+    },
+  });
+  return res;
+}
+
+export async function updateContactTag(orgId: string, tags: string[]) {
+  const res = await prisma.waAccountSettings.upsert({
+    where: {
+      orgId,
+    },
+    create: {
+      orgId,
+      contactTags: tags,
+    },
+    update: {
+      contactTags: tags,
+    },
+  });
+  return res;
+}

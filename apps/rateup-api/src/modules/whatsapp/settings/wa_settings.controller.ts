@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  ContactTagSchema,
   createWaSettingsInput,
   updateWaSettingsInput,
 } from "./wa_settings.schema";
@@ -8,12 +9,15 @@ import { Role } from "../../org/org.services";
 import {
   createWaSettings,
   deleteWaSettings,
+  getContactTag,
   getWaSettings,
+  updateContactTag,
   updateWaSettings,
   upsertWaSettings,
 } from "./wa_settings.service";
 import { getPhoneDetails } from "../auth/wa_auth.service";
 import { WaConfigType } from "../../../types/enums";
+import { log } from "../../../utils/logger";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
@@ -92,4 +96,34 @@ export async function deleteWaSettingsHandler(
 
   await deleteWaSettings(req.user.orgId);
   return res.status(200).send();
+}
+
+export async function getContactTagHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getContactTag(orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting contact tags", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function updateContactTagHandler(
+  request: FastifyRequest<{
+    Body: ContactTagSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    await updateContactTag(orgId, request.body.tags);
+    reply.code(204).send();
+  } catch (error) {
+    log.error("Error while updating contact tags", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
 }

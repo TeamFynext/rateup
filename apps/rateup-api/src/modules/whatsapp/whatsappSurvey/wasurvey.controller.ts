@@ -54,6 +54,7 @@ import {
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { WhatsappSettings } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
+import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -485,8 +486,9 @@ async function handleLanguageResponse(
   }
 }
 
-export async function sendSurveyToParticipants(campaignId: string) {
+export async function sendCampaignToParticipants(campaignId: string) {
   try {
+    log.trace("Sending campaign to participants");
     const campaign = await prisma.campaign.findUnique({
       where: {
         id: campaignId,
@@ -497,27 +499,16 @@ export async function sendSurveyToParticipants(campaignId: string) {
             contact: true,
           },
         },
-        surveyTeamMap: {
+        team: {
           select: {
             id: true,
-            survey: {
-              select: {
-                WaFlow: {
-                  select: {
-                    dbFlowId: true,
-                    orgId: true,
-                  },
-                },
-                languages: true,
-                type: true,
-              },
-            },
+            orgId: true,
           },
         },
       },
     });
 
-    const orgId = campaign.surveyTeamMap.survey.WaFlow.orgId;
+    const orgId = campaign.team.orgId;
     const dbTemplate = await getDbTemplate(campaign.waTemplateId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${campaign.waTemplateId} not found`);
@@ -527,6 +518,7 @@ export async function sendSurveyToParticipants(campaignId: string) {
       dbTemplate.data.components.find(
         (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
       )?.format === `IMAGE`;
+
     if (containsImage) {
       if (!dbTemplate.defaultValues?.image?.link) {
         log.error("Image not found in template %o", dbTemplate);
@@ -562,28 +554,51 @@ export async function sendSurveyToParticipants(campaignId: string) {
       }
       // TODO: add rate limiting
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-      const existingSession = await getSession(
-        campaign.surveyTeamMap.survey.WaFlow.orgId,
-        contact.phone,
-      );
-      if (existingSession) {
-        if (validateSession(existingSession)) {
-          await deleteSession(orgId, contact.phone);
-        } else {
-          log.warn("Session already exists for %o. Skipping...", contact);
-          continue;
-        }
-      }
-      await createSession({
-        phone: contact.phone,
-        surveyTeamMapId: campaign.surveyTeamMapId,
-        orgId: orgId,
-        language: campaign.surveyTeamMap.survey.languages[0],
-      });
 
-      const templateComponents = [
-        ...components,
-        {
+      const templateComponents = components;
+
+      // check if template has a flow button
+      const flowId = getFlowIdFromTemplateComponents(
+        dbTemplate.data.components,
+      );
+      if (flowId) {
+        log.trace("Flow button identified. handling session...");
+        const existingSession = await getSession(orgId, contact.phone);
+        if (existingSession) {
+          if (validateSession(existingSession)) {
+            await deleteSession(orgId, contact.phone);
+          } else {
+            log.warn("Session already exists for %o. Skipping...", contact);
+            continue;
+          }
+        }
+        const teamId = campaign.team.id;
+        const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+          where: {
+            teamId,
+            survey: {
+              WaFlow: {
+                flowId: flowId,
+              },
+            },
+          },
+          select: {
+            id: true,
+            survey: {
+              select: {
+                languages: true,
+              },
+            },
+          },
+        });
+        await createSession({
+          phone: contact.phone,
+          surveyTeamMapId: surveyTeamMap.id,
+          orgId: orgId,
+          language: surveyTeamMap.survey.languages[0],
+        });
+
+        templateComponents.push({
           type: "button",
           sub_type: "flow",
           index: 0,
@@ -595,8 +610,9 @@ export async function sendSurveyToParticipants(campaignId: string) {
               },
             },
           ],
-        },
-      ];
+        });
+      }
+
       const templateQuery = {
         name: dbTemplate.data.name,
         language: {
