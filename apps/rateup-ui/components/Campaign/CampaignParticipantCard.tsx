@@ -1,14 +1,15 @@
-import { Paper, Group, Stack, Title, Badge, Text, Menu } from "@mantine/core";
+import { Group, Stack, Title, Badge, Text, Menu } from "@mantine/core";
 import { renderBadge } from "../Card/CampaignCard";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { CampaignStatus } from "../../types/enums";
 import { useRemoveCampaignParticipant } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const CampaignParticipantCard = ({ participant, campaign }) => {
   return (
     <>
-      <Paper shadow="xl" p="lg" radius={"md"}>
+      <PaperLayout radius={"md"}>
         <Stack gap={0}>
           <Group justify="space-between">
             <Title order={4}>{participant?.contact?.name}</Title>
@@ -29,7 +30,7 @@ const CampaignParticipantCard = ({ participant, campaign }) => {
             </Badge>
           </Group>
         </Stack>
-      </Paper>
+      </PaperLayout>
     </>
   );
 };
