@@ -19,7 +19,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const [selectedOp, setSelectedOp] = useState("");
   const router = useRouter();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const { nextFn } = useHandleNextPrevFuncs();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const options: any = selectedQ
     ? choices
@@ -41,7 +41,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
       (op) => (publicRoute ? op?.value?.value : op?.value) === value,
     );
     updateResponse(res);
-    nextFn?.();
+    if (!isLastQuestion) nextFn?.();
   };
   const fallbackEnable = publicRoute
     ? false

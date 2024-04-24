@@ -34,7 +34,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const router = useRouter();
   const theme = useMantineTheme();
   const otherInputContainerRef = useRef(null);
-  const { nextFn } = useHandleNextPrevFuncs();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const bDivRef = useRef(null);
   const options = selectedQ
@@ -60,7 +60,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     if (value !== selectedFeature?.other?.title) {
       const res = options?.find((op) => op?.value === value);
       updateResponse(res);
-      nextFn?.();
+      if (!isLastQuestion) nextFn?.();
     } else {
       updateResponse(null);
     }
