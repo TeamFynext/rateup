@@ -3,10 +3,12 @@ import { CurrentResponsesContext } from "../../../../../context/ResponseContext"
 import { NumberInput, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout";
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 
 export function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
   return (
     <FormPaperLayout>
       <NumberInput
@@ -17,6 +19,11 @@ export function NumberForm() {
         variant="unstyled"
         classNames={{
           input: classes.input,
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isLastQuestion) {
+            nextFn?.();
+          }
         }}
       />
     </FormPaperLayout>

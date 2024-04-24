@@ -266,7 +266,12 @@ export const TakeSurveyLayoutWeb = ({
               >
                 {survey?.isPublished === true && survey?.active === true ? (
                   survey?.isProtected && isPasswordVerified === false ? null : (
-                    <Paper radius={0} w={"100%"} bg={"transparent"}>
+                    <Paper
+                      radius={0}
+                      w={"100%"}
+                      bg={"transparent"}
+                      style={{ overflow: "hidden" }}
+                    >
                       {startClicked &&
                         (!selectedLanguage && survey?.languages?.length > 1 ? (
                           <SelectLang
