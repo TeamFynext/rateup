@@ -5,6 +5,7 @@ import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -15,13 +16,14 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
+  const { nextFn, prevFn } = useHandleNextPrevFuncs();
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
-    ? previewChoices?.[selectedLanguage]
-    : sampleChoices;
+      ? previewChoices?.[selectedLanguage]
+      : sampleChoices;
   const data = options?.map((op) => op?.value);
   useEffect(() => {
     if (response) {
@@ -32,6 +34,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const handleSelectedOp = (value) => {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
+    nextFn?.();
   };
   return (
     <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>

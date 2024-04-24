@@ -36,6 +36,9 @@ function NextPrev({
   const [errorMsg, setErrorMsg] = useState(null);
   const isMobile = useMediaQuery("(max-width: 480px)");
 
+  // themeStylesWoBr => themeStyles without border radius, border radius option will be removed from theme settings, for this we are taking themeStyles object without borderRadius, since old theme object will still have borderRadius.
+  const { borderRadius = "initial", ...themeStylesWoBr } = themeStyles;
+
   useEffect(() => {
     // TODO: check if rebase was done correctly
 
@@ -93,14 +96,16 @@ function NextPrev({
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
     <Stack gap={0} w={"100%"} justify="flex-end">
-      <Text
-        mb={"0.625rem"}
-        size={isMobile && "sm"}
-        c={themeStyles?.backgroundColor}
-        style={{ opacity: selectedQ?.required && !response ? 1 : 0 }}
-      >
-        *Choose an option or answer to proceed!
-      </Text>
+      {selectedQ?.required && !response && (
+        <Text
+          mb={"0.625rem"}
+          size={isMobile && "sm"}
+          c={themeStyles?.backgroundColor}
+        >
+          *Choose an option or answer to proceed!
+        </Text>
+      )}
+
       {errorMsg && isErrorInput && (
         <Text c="red" mb={"0.625rem"}>
           Note: * {errorMsg}
@@ -116,67 +121,45 @@ function NextPrev({
             onClick={prev}
             style={
               isFirstQuestion
-                ? { borderRadius: themeStyles?.borderRadius }
+                ? {}
                 : {
-                    ...themeStyles,
+                    ...themeStylesWoBr,
                     backgroundColor: `rgba(255, 255, 255, 0.75)`,
-                    outline: `2px solid ${themeStyles?.backgroundColor}`,
-                    color: themeStyles?.backgroundColor,
+                    outline: `2px solid ${themeStylesWoBr?.backgroundColor}`,
+                    color: themeStylesWoBr?.backgroundColor,
                   }
             }
           >
             <IconChevronLeft size={isMobile ? 20 : 24} />
           </ActionIcon>
-          {isLastQuestion ? (
-            <Button
-              className={styles["submit-btn"]}
-              radius={"xl"}
-              disabled={
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-              }
-              onClick={handleNextClick}
-              color="var(--tertiary-color)"
-              rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}
-              style={
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-                  ? { borderRadius: themeStyles.borderRadius }
-                  : themeStyles
-              }
-              loading={isSavingResponses}
-            >
-              Submit
-            </Button>
-          ) : (
-            <ActionIcon
-              className={styles["prev-btn"]}
-              disabled={
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-              }
-              onClick={handleNextClick}
-              color="var(--tertiary-color)"
-              style={
-                ((selectedQ?.required || selectedQ?.validationRules) &&
-                  !response) ||
-                isErrorInput
-                  ? { borderRadius: themeStyles.borderRadius }
-                  : themeStyles
-              }
-            >
-              <IconChevronRight size={isMobile ? 20 : 24} />
-            </ActionIcon>
-          )}
+          <Button
+            className={styles["submit-next-btn"]}
+            disabled={
+              ((selectedQ?.required || selectedQ?.validationRules) &&
+                !response) ||
+              isErrorInput
+            }
+            onClick={handleNextClick}
+            color="var(--tertiary-color)"
+            rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}
+            style={
+              ((selectedQ?.required || selectedQ?.validationRules) &&
+                !response) ||
+              isErrorInput
+                ? {}
+                : themeStylesWoBr
+            }
+            loading={isSavingResponses}
+          >
+            {isLastQuestion ? "Submit" : "Next"}
+          </Button>
         </Group>
 
         <Progress
           value={parseInt(getCompletionRate(num, total))}
           transitionDuration={300}
-          color={themeStyles?.backgroundColor}
+          color={themeStylesWoBr?.backgroundColor}
+          size={isMobile ? "xs" : "sm"}
         />
       </Stack>
     </Stack>

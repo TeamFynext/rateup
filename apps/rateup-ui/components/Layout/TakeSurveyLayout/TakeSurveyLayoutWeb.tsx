@@ -238,7 +238,7 @@ export const TakeSurveyLayoutWeb = ({
             >
               {/* .........Survey Header Section.......... */}
               {survey?.isPublished == true && !!startClicked && (
-                <Group justify="center" mt={"3vh"}>
+                <Group justify="center" mt={"3vh"} mb={"0.625rem"}>
                   <Stack
                     style={{
                       maxHeight: isMobile ? "65px" : "100px",

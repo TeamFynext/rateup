@@ -6,6 +6,7 @@ import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { samplePictureChoices } from "../../../../../utils/constants/forms";
 import { useRouter } from "next/router";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 
 interface PCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -18,6 +19,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const [selectedOp, setSelectedOp] = useState("");
   const router = useRouter();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { nextFn } = useHandleNextPrevFuncs();
 
   const options: any = selectedQ
     ? choices
@@ -39,6 +41,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
       (op) => (publicRoute ? op?.value?.value : op?.value) === value,
     );
     updateResponse(res);
+    nextFn?.();
   };
   const fallbackEnable = publicRoute
     ? false

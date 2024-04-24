@@ -97,12 +97,14 @@
 
 /* Next Prev component styles */
 .next-prev-btns-and-progress-container {
-  gap: 2rem;
+  margin-top: 0.625rem;
+  gap: 1rem;
 }
 
 .next-prev-btns-and-progress-container button {
   height: auto;
   padding: 0.625rem 1rem;
+  border-radius: 0.625rem;
 }
 
 .next-prev-btns-and-progress-container
@@ -112,21 +114,15 @@
 }
 
 .next-prev-btns-and-progress-container .prev-btn {
-  /* height: 100%; */
   width: 2.875rem;
 }
 
-.next-prev-btns-and-progress-container .next-btn {
-  /* height: 100%; */
-  width: 2.875rem;
-}
-
-.next-prev-btns-and-progress-container .submit-btn {
+.next-prev-btns-and-progress-container .submit-next-btn {
   font-size: 1rem;
   padding-right: 0.625rem;
 }
 
-.submit-btn :global(.mantine-Button-section) {
+.submit-next-btn :global(.mantine-Button-section) {
   margin-left: 0.3125rem;
 }
 
@@ -157,8 +153,13 @@
     min-height: calc(100dvh - 175px);
   }
 
+  /* Next Prev component styles */
   .next-prev-btns-and-progress-container {
     gap: 1rem;
+  }
+
+  .next-prev-btns-and-progress-container .prev-btn {
+    width: 2.625rem;
   }
 
   .next-prev-btns-and-progress-container button {
@@ -166,10 +167,11 @@
     padding: 0.625rem;
   }
 
-  .next-prev-btns-and-progress-container .submit-btn {
+  .next-prev-btns-and-progress-container .submit-next-btn {
     font-size: 0.875rem;
     padding: 0.625rem 1rem;
     padding-right: 0.625rem;
+    flex: 1;
   }
 }
 
