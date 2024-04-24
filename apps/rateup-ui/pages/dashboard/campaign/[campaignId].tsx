@@ -31,13 +31,14 @@ import {
 } from "../../../backend/campaign/campaign.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { renderBadge } from "../../../components/Card/CampaignCard";
-import { CampaignStatus, SurveyType } from "../../../types/enums";
+import { CampaignStatus } from "../../../types/enums";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import dayjs from "dayjs";
 import CampaignParticipantCard from "../../../components/Campaign/CampaignParticipantCard";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
-export default () => {
+const CampaignById = () => {
   const [searchText, setSearchText] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const router = useRouter();
@@ -157,7 +158,7 @@ export default () => {
     </>
   );
 };
-
+export default CampaignById;
 const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
   const [startCampaign, setStartCampaign] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -202,7 +203,7 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
 
   return (
     <>
-      <Paper shadow="xl" p={"lg"} radius={"md"}>
+      <PaperLayout p={"lg"} radius={"md"}>
         <Stack gap={"xl"}>
           <Flex justify={"center"} mb={"lg"}>
             <Switch
@@ -250,7 +251,7 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
             </Stack>
           </Group>
         </Stack>
-      </Paper>
+      </PaperLayout>
     </>
   );
 };
@@ -260,7 +261,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
     useDisclosure(false);
   return (
     <>
-      <Paper shadow="xl" p="lg" radius={"md"}>
+      <PaperLayout p="lg" radius={"md"}>
         <Stack gap={"xl"}>
           <Group justify="space-between" mb={"lg"}>
             <Group>
@@ -307,7 +308,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
             campaign={campaign}
           />
         </Modal>
-      </Paper>
+      </PaperLayout>
     </>
   );
 };
