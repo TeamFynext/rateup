@@ -47,7 +47,7 @@ import {
   checkRaiseTicketIssueQuestion,
   submitSurvey,
 } from "./util";
-import { NextPrevFuncsContextProvider } from "../../../../context/NextPrevFuncsContext";
+import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -369,7 +369,11 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <NextPrevFuncsContextProvider nextFn={handleNext} prevFn={handlePrev}>
+        <NextPrevFuncsAndLastQuestionContextProvider
+          nextFn={handleNext}
+          prevFn={handlePrev}
+          survey={survey}
+        >
           <Container size={"md"} className={styles["take-survey-root-div"]}>
             <Stack justify="space-between" h={"100%"} gap={0}>
               <ConfirmResponsesModal
@@ -462,7 +466,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               />
             </Stack>
           </Container>
-        </NextPrevFuncsContextProvider>
+        </NextPrevFuncsAndLastQuestionContextProvider>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>
   );

@@ -1,22 +1,36 @@
 import { createContext, useContext } from "react";
+import { SelectedQContext } from "./SelectedQ";
 
-const NextPrevFuncsContext = createContext({ nextFn: null, prevFn: null });
+const NextPrevFuncsAndLastQuestionContext = createContext({
+  nextFn: null,
+  prevFn: null,
+  isLastQuestion: false,
+});
 
-function NextPrevFuncsContextProvider({ nextFn, prevFn, children }) {
+function NextPrevFuncsAndLastQuestionContextProvider({
+  nextFn,
+  prevFn,
+  survey,
+  children,
+}) {
+  const { selectedQ } = useContext(SelectedQContext);
+  const isLastQuestion =
+    survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
-    <NextPrevFuncsContext.Provider
+    <NextPrevFuncsAndLastQuestionContext.Provider
       value={{
         nextFn,
         prevFn,
+        isLastQuestion,
       }}
     >
       {children}
-    </NextPrevFuncsContext.Provider>
+    </NextPrevFuncsAndLastQuestionContext.Provider>
   );
 }
 
 function useHandleNextPrevFuncs() {
-  return useContext(NextPrevFuncsContext);
+  return useContext(NextPrevFuncsAndLastQuestionContext);
 }
 
-export { NextPrevFuncsContextProvider, useHandleNextPrevFuncs };
+export { NextPrevFuncsAndLastQuestionContextProvider, useHandleNextPrevFuncs };

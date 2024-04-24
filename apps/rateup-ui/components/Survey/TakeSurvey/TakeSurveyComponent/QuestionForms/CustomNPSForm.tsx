@@ -16,7 +16,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
-  const { nextFn, prevFn } = useHandleNextPrevFuncs();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
@@ -34,7 +34,9 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const handleSelectedOp = (value) => {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
-    nextFn?.();
+    if (!isLastQuestion) {
+      nextFn?.();
+    }
   };
   return (
     <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
