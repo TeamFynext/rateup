@@ -103,7 +103,7 @@ export function FlowRadioPreview({
       }}
     >
       <Stack mt="xs">
-        {options.map((option, index) => (
+        {options?.map((option, index) => (
           <Radio
             styles={{
               body: {
@@ -310,21 +310,21 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return (
         <FlowRadioPreview
           label={fe.label}
-          options={fe["data-source"].map((ds) => ds.title)}
+          options={fe["data-source"]?.map((ds) => ds.title)}
         />
       );
     case WaFlowFormElementType.checkboxGroup:
       return (
         <FlowCheckBoxPreview
           label={fe.label}
-          options={fe["data-source"].map((ds) => ds.title)}
+          options={fe["data-source"]?.map((ds) => ds.title)}
         />
       );
     case WaFlowFormElementType.dropDown:
       return (
         <DropDownPreview
           label={fe.label}
-          options={fe["data-source"].map((ds) => ds.title)}
+          options={fe["data-source"]?.map((ds) => ds.title)}
         />
       );
     case WaFlowFormElementType.optIn:

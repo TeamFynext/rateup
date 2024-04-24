@@ -1,4 +1,5 @@
 import {
+  Box,
   Checkbox,
   Group,
   MultiSelect,
@@ -16,13 +17,15 @@ import {
   useDeleteManyContactGroupsMutation,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { TeamSelector } from "../input/TeamSelector";
-import { ContactAcions } from "../../pages/dashboard/contacts";
+import { ContactAcions, FilterSelect } from "../../pages/dashboard/contacts";
 
 const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedGroups, setSelectedGroups] = useState([]);
+  const [filterByTag, setFilterByTag] = useState<string[]>([]);
+
   const groupByTeams = allGroups?.filter(
     (group) => selectedTeamId === group?.teamId,
   );
@@ -86,32 +89,49 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
         break;
     }
   };
-  const rows = filteredContacts?.map((contact) => (
-    <Table.Tr
-      key={contact?.id}
-      bg={
-        selectedIds.includes(contact?.id)
-          ? "var(--mantine-color-blue-light)"
-          : undefined
-      }
-    >
-      <Table.Td>
-        <Checkbox
-          aria-label="Select row"
-          checked={selectedIds?.includes(contact?.id)}
-          onChange={(event) =>
-            setSelectedIds(
-              event.currentTarget.checked
-                ? [...selectedIds, contact?.id]
-                : selectedIds.filter((id) => id !== contact?.id),
-            )
-          }
-        />
-      </Table.Td>
-      <Table.Td>{contact?.name}</Table.Td>
-      <Table.Td>{contact?.phone}</Table.Td>
-    </Table.Tr>
-  ));
+
+  const sourceArray: string[] = Array.from(
+    new Set(filteredContacts?.map((data) => data?.source)),
+  );
+  const rows = filteredContacts
+    ?.filter((data) =>
+      sourceArray?.some((data) => filterByTag.includes(data))
+        ? filterByTag?.includes(data.source)
+        : data,
+    )
+    ?.filter((data) =>
+      filterByTag.filter((value) => !sourceArray.includes(value))?.length > 0
+        ? data?.contactGroups?.some((group) =>
+            filterByTag?.includes(group.contactGroup.name),
+          )
+        : data,
+    )
+    ?.map((contact) => (
+      <Table.Tr
+        key={contact?.id}
+        bg={
+          selectedIds.includes(contact?.id)
+            ? "var(--mantine-color-blue-light)"
+            : undefined
+        }
+      >
+        <Table.Td>
+          <Checkbox
+            aria-label="Select row"
+            checked={selectedIds?.includes(contact?.id)}
+            onChange={(event) =>
+              setSelectedIds(
+                event.currentTarget.checked
+                  ? [...selectedIds, contact?.id]
+                  : selectedIds.filter((id) => id !== contact?.id),
+              )
+            }
+          />
+        </Table.Td>
+        <Table.Td>{contact?.name}</Table.Td>
+        <Table.Td>{contact?.phone}</Table.Td>
+      </Table.Tr>
+    ));
 
   const groupRows = filteredGroups?.map((group) => (
     <Table.Tr
@@ -158,41 +178,55 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       submitButtonDisabled={isDisabledSubmit}
     >
       <Stack>
+        {action === ContactAcions.DELETE_GROUPS ||
+          (action === ContactAcions.ADD_CONTACTS_TO_GROUP && (
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(value) => {
+                setSelectedGroups([]);
+                setSelectedIds([]);
+                setSelectedTeamId(value);
+              }}
+            />
+          ))}
         {action !== ContactAcions.DELETE_GROUPS && (
-          <TeamSelector
-            value={selectedTeamId}
-            onChange={(value) => {
-              setSelectedGroups([]);
-              setSelectedIds([]);
-              setSelectedTeamId(value);
-            }}
+          <FilterSelect
+            contactArray={filteredGroups?.map((data) => data?.name)}
+            sourceArray={sourceArray}
+            filterByTag={filterByTag}
+            setFilterByTag={setFilterByTag}
           />
         )}
         <Group justify="space-between">
-          <Checkbox
-            aria-label="select all"
-            label="Select All"
-            checked={
-              action == ContactAcions.DELETE_GROUPS
-                ? groupByTeams?.length &&
-                  groupByTeams?.every((group) =>
-                    selectedIds.includes(group?.id),
-                  )
-                : allContacts?.length &&
-                  allContacts?.every((customer) =>
-                    selectedIds.includes(customer?.id),
-                  )
-            }
-            onChange={(event) => {
-              if (event.currentTarget.checked) {
-                setSelectedIds(
-                  action == ContactAcions.DELETE_GROUPS
-                    ? groupByTeams.map((group) => group.id)
-                    : allContacts.map((customer) => customer?.id),
-                );
-              } else setSelectedIds([]);
-            }}
-          />
+          {filterByTag?.length === 0 ? (
+            <Checkbox
+              aria-label="select all"
+              label="Select All"
+              checked={
+                action == ContactAcions.DELETE_GROUPS
+                  ? groupByTeams?.length &&
+                    groupByTeams?.every((group) =>
+                      selectedIds.includes(group?.id),
+                    )
+                  : allContacts?.length &&
+                    allContacts?.every((customer) =>
+                      selectedIds.includes(customer?.id),
+                    )
+              }
+              onChange={(event) => {
+                if (event.currentTarget.checked) {
+                  setSelectedIds(
+                    action == ContactAcions.DELETE_GROUPS
+                      ? groupByTeams.map((group) => group.id)
+                      : allContacts.map((customer) => customer?.id),
+                  );
+                } else setSelectedIds([]);
+              }}
+            />
+          ) : (
+            <Box />
+          )}
+
           <SearchInput
             placeholder={"Search"}
             searchText={searchText}

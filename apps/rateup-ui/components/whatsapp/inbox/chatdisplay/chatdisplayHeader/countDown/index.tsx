@@ -19,7 +19,7 @@ export default function WaInboxCountdownTimer({
   useEffect(() => {
     const intervalId = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
-    }, 1000);
+    }, 5000);
     return () => clearInterval(intervalId);
   }, [timeStamp]);
 

@@ -69,7 +69,7 @@ export const useAddNewContactMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       }),
-        queryClient.invalidateQueries({ queryKey: ["campaignContactsData"] }),
+        queryClient.invalidateQueries({ queryKey: ["contacts"] }),
         showSuccessToast(
           "Added new member successfully.",
           "contact-group-add-member",

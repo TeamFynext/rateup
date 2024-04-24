@@ -71,6 +71,28 @@ const ResultsOverview = ({ surveyId }) => {
       ),
     );
   }, [chartData]);
+
+  useEffect(() => {
+    if (questions) {
+      const allowedQuestionTypes = [
+        QuestionType.Rating,
+        QuestionType.Smiley,
+        QuestionType.LD,
+        QuestionType.YN,
+        QuestionType.Opinion,
+        QuestionType.CustomNPS,
+        QuestionType.MCQ,
+        QuestionType.MSQ,
+      ];
+      // Check if any of the allowed question types are present in the survey
+      const hasAllowedQuestions = questions.some((question) =>
+        allowedQuestionTypes.includes(question.type),
+      );
+
+      setIsAllowedQnsPresent(hasAllowedQuestions);
+    }
+  }, [questions]);
+
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
     teamWiseResponses,
@@ -88,6 +110,10 @@ const ResultsOverview = ({ surveyId }) => {
 
   if (error || QError) {
     return <div>Error </div>;
+  }
+
+  if (!isAllowedQnsPresent) {
+    return <div>No Data available for Analysis</div>;
   }
 
   const prepareData = (

@@ -23,7 +23,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
-import { useCampaignContacts } from "../../../backend/campaign/contacts/contacts.query";
+import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
 import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
 import ContactCard from "../../../components/Card/ContactCard";
 import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
@@ -45,6 +45,7 @@ import {
   useGetContactTags,
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
+import { showLoadingToast } from "../../../utils/notifications";
 enum ContactTabs {
   CONTACTS = "contacts",
   GROUPS = "groups",
@@ -64,13 +65,12 @@ export default function Contacts() {
     }
   }, [tab]);
 
-  const { isLoading: isLoadingContacts, data: contactData } =
-    useCampaignContacts() as {
-      isLoading: boolean;
-      data: ContactsData[];
-      error: any;
-      refetch: any;
-    };
+  const { isLoading: isLoadingContacts, data: contactData } = useContacts() as {
+    isLoading: boolean;
+    data: ContactsData[];
+    error: any;
+    refetch: any;
+  };
 
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
@@ -117,7 +117,7 @@ export default function Contacts() {
       : contactGroups
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
   if (isLoadingContacts || isLoadingContactgroup || isPending)
-    return <RateupLoader h={"100dvh"} />;
+    return <RateupLoader h={"90dvh"} />;
   return (
     <>
       <Flex
@@ -153,23 +153,26 @@ export default function Contacts() {
             radius={"md"}
             defaultValue={activeTab}
             value={activeTab}
+            tt={"capitalize"}
           />
-          <TextInput
-            leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
-            radius="xl"
-            size="md"
-            placeholder={
-              activeTab == ContactTabs.CONTACTS
-                ? "Search contact"
-                : "Search contact groups"
-            }
-            rightSectionWidth={60}
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.currentTarget.value)}
-            flex={1}
-            maw={500}
-            m={"auto"}
-          />
+          {activeTab !== ContactTabs.SETTINGS && (
+            <TextInput
+              leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
+              radius="xl"
+              size="md"
+              placeholder={
+                activeTab == ContactTabs.CONTACTS
+                  ? "Search contact"
+                  : "Search contact groups"
+              }
+              rightSectionWidth={60}
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.currentTarget.value)}
+              flex={1}
+              maw={500}
+              m={"auto"}
+            />
+          )}
 
           {activeTab === ContactTabs.CONTACTS && (
             <FilterSelect
@@ -237,7 +240,7 @@ export default function Contacts() {
             <Stack align="start">
               <ContainedTagInput
                 placeholder="Type field name and press enter"
-                label="Field names"
+                label="Enter the Field name you want to add along with the existing fields in Csv Import."
                 w={"400px"}
                 onChange={setContactTags}
                 defaultValue={cTags?.contactTags}
@@ -248,6 +251,12 @@ export default function Contacts() {
                   updateContactTagsMutation.mutate({
                     tags: contactTags,
                   });
+                  showLoadingToast(
+                    "Contact tags updated successfully",
+                    "c-tags",
+                    true,
+                    "Loading",
+                  );
                 }}
               />
             </Stack>
@@ -258,7 +267,7 @@ export default function Contacts() {
   );
 }
 
-const FilterSelect = ({
+export const FilterSelect = ({
   setFilterByTag,
   filterByTag,
   contactArray,
@@ -272,7 +281,6 @@ const FilterSelect = ({
       ]}
       defaultValue={filterByTag}
       onChange={setFilterByTag}
-      maw={360}
       placeholder="Filter contacts"
     />
   );

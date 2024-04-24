@@ -12,6 +12,7 @@ import {
   Center,
   Group,
   Progress,
+  RingProgress,
   Stack,
   Text,
 } from "@mantine/core";

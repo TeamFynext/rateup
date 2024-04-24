@@ -4,7 +4,7 @@ import classes from "./styles.module.css";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
 import {
-  WaInboxMessageBody,
+  WaInboxMessage,
   WaTemplateComponent,
 } from "../../../../../types/global";
 import WaInboxText from "./components/text";
@@ -30,7 +30,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
   });
 
   const singleMessage = (
-    messageBody: WaInboxMessageBody,
+    messageBody: WaInboxMessage,
     templateComponentParams: WaTemplateComponent[],
   ) => {
     const { messageContent, messageType, template, interactive } =

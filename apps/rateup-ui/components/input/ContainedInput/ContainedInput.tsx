@@ -52,6 +52,9 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
         input: {
           paddingRight: props.rightSection ? 70 : 0,
         },
+        section: {
+          width: props.rightSection && "fit-content",
+        },
       }}
     />
   );
