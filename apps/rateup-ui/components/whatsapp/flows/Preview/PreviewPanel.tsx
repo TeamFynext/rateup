@@ -43,21 +43,6 @@ export function PreviewPanel({ previewOpened }: PreviewProps) {
               height: "100%",
             }}
           >
-            <Group justify="space-between" mb="sm">
-              <Box
-                mx="sm"
-                py={4}
-                style={{
-                  borderRadius: "100px",
-                  flex: 1,
-                  textAlign: "center",
-                  color: "white",
-                  backgroundColor: theme.colors[theme.primaryColor][6],
-                }}
-              >
-                {currentScreen?.title}
-              </Box>
-            </Group>
             <Box
               style={{
                 display: "flex",
