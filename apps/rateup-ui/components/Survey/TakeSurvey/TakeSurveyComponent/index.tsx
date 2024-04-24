@@ -47,6 +47,7 @@ import {
   checkRaiseTicketIssueQuestion,
   submitSurvey,
 } from "./util";
+import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -368,106 +369,110 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <Container size={"md"}>
-          <Stack justify="space-between" h={"100%"} gap={0}>
-            <ConfirmResponsesModal
-              opened={isConfirmResponsesModalOpen}
-              close={closeConfirmResponsesModal}
-              survey={survey}
-              questionsHistory={questionsHistory}
-              responses={responses}
-              selectedLanguage={selectedLanguage}
-              surveyThemeData={surveyThemeData}
-              finishSurvey={finishSurvey}
-              isSavingResponses={isSavingResponses}
-              largeScreen={largeScreen}
-            />
-            <GiftModal
-              close={close}
-              invoiceList={invoiceList}
-              opened={opened}
-              handleInvoiceSubmit={handleInvoiceSubmit}
-            />
+        <NextPrevFuncsAndLastQuestionContextProvider
+          nextFn={handleNext}
+          prevFn={handlePrev}
+          survey={survey}
+        >
+          <Container size={"md"} className={styles["take-survey-root-div"]}>
+            <Stack justify="space-between" h={"100%"} gap={"0.625rem"}>
+              <ConfirmResponsesModal
+                opened={isConfirmResponsesModalOpen}
+                close={closeConfirmResponsesModal}
+                survey={survey}
+                questionsHistory={questionsHistory}
+                responses={responses}
+                selectedLanguage={selectedLanguage}
+                surveyThemeData={surveyThemeData}
+                finishSurvey={finishSurvey}
+                isSavingResponses={isSavingResponses}
+                largeScreen={largeScreen}
+              />
+              <GiftModal
+                close={close}
+                invoiceList={invoiceList}
+                opened={opened}
+                handleInvoiceSubmit={handleInvoiceSubmit}
+              />
 
-            <AnimatePresence initial={false}>
-              <Box
-                className={`${styles["question-form-title-desc-container"]}`}
-              >
-                <motion.div
-                  className={styles["question-form-title-desc-motion-div"]}
-                  key={selectedQ.id}
-                  transition={{
-                    type: "tween",
-                    duration: 0.5,
-                  }}
-                  initial={{
-                    x: aPDirection > 0 ? "120%" : "-120%",
-                    opacity: 0,
-                  }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
+              <AnimatePresence initial={false}>
+                <Box
+                  className={`${styles["question-form-title-desc-container"]}`}
                 >
                   <motion.div
-                    layout="position"
+                    className={styles["question-form-title-desc-motion-div"]}
+                    key={selectedQ.id}
                     transition={{
                       type: "tween",
-                      duration: 0.2,
+                      duration: 0.75,
                     }}
+                    initial={{
+                      x: aPDirection > 0 ? "100%" : "-100%",
+                      opacity: 0,
+                    }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: aPDirection > 0 ? "-100%" : "100%", opacity: 0 }}
                   >
-                    <ScrollArea.Autosize
-                      mah={formMaxHeight}
-                      p={0}
-                      m={0}
-                      w={"100%"}
+                    <motion.div
+                      layout="position"
+                      transition={{
+                        type: "tween",
+                        duration: 0.2,
+                      }}
+                      style={{
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
                     >
-                      <Box
-                        pb={smallScreen ? "sm" : "lg"}
-                        className={lexend.className}
-                        pr={smallScreen ? 0 : "md"}
+                      <ScrollArea.Autosize
+                        mah={"100%"}
+                        p={0}
+                        m={0}
+                        w={"100%"}
+                        type="hover"
                       >
-                        <QuestionTitle
-                          largeScreen={largeScreen}
-                          themeStyles={
-                            surveyThemeData?.surveyTheme?.title?.styles
-                          }
-                          smallScreen={smallScreen}
-                        />
-                        {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                          <QuestionDesc
+                        <Box
+                          pb={smallScreen ? "sm" : "lg"}
+                          className={lexend.className}
+                          pr={smallScreen ? 0 : "md"}
+                        >
+                          <QuestionTitle
                             largeScreen={largeScreen}
                             themeStyles={
-                              surveyThemeData?.surveyTheme?.subtitle?.styles
+                              surveyThemeData?.surveyTheme?.title?.styles
                             }
+                            smallScreen={smallScreen}
                           />
-                        )}
-                      </Box>
+                          {!isHtml(selectedQ?.title[selectedLanguage]) && (
+                            <QuestionDesc
+                              largeScreen={largeScreen}
+                              themeStyles={
+                                surveyThemeData?.surveyTheme?.subtitle?.styles
+                              }
+                            />
+                          )}
+                        </Box>
 
-                      <QuestionForm />
-                      <NextBtn
-                        next={handleNext}
-                        survey={survey}
-                        themeStyles={
-                          surveyThemeData?.surveyTheme?.button?.styles
-                        }
-                        isSavingResponses={isSavingResponses || giftLoading}
-                      />
-                    </ScrollArea.Autosize>
+                        <QuestionForm />
+                      </ScrollArea.Autosize>
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              </Box>
-            </AnimatePresence>
+                </Box>
+              </AnimatePresence>
 
-            <NextPrev
-              next={handleNext}
-              prev={handlePrev}
-              num={QnNo}
-              total={questionCount}
-              survey={survey}
-              themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
-              isSavingResponses={isSavingResponses || giftLoading}
-            />
-          </Stack>
-        </Container>
+              <NextPrev
+                next={handleNext}
+                prev={handlePrev}
+                num={QnNo}
+                total={questionCount}
+                survey={survey}
+                themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
+                isSavingResponses={isSavingResponses || giftLoading}
+              />
+            </Stack>
+          </Container>
+        </NextPrevFuncsAndLastQuestionContextProvider>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>
   );

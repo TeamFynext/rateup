@@ -299,6 +299,8 @@ function ElementEditor({
               placeholder="Enter question description here"
               {...form.getInputProps(`description.${selectedLanguage}`)}
               value={form.values.description[selectedLanguage]}
+              autosize
+              maxRows={6}
               styles={{
                 input: {
                   fontSize: "1.1rem",

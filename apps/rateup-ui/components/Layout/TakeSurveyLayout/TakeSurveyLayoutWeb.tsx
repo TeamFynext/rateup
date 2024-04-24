@@ -238,7 +238,7 @@ export const TakeSurveyLayoutWeb = ({
             >
               {/* .........Survey Header Section.......... */}
               {survey?.isPublished == true && !!startClicked && (
-                <Group justify="center" mt={"3vh"}>
+                <Group justify="center" mt={"3vh"} mb={"0.625rem"}>
                   <Stack
                     style={{
                       maxHeight: isMobile ? "65px" : "100px",
@@ -266,7 +266,12 @@ export const TakeSurveyLayoutWeb = ({
               >
                 {survey?.isPublished === true && survey?.active === true ? (
                   survey?.isProtected && isPasswordVerified === false ? null : (
-                    <Paper radius={0} w={"100%"} bg={"transparent"}>
+                    <Paper
+                      radius={0}
+                      w={"100%"}
+                      bg={"transparent"}
+                      style={{ overflow: "hidden" }}
+                    >
                       {startClicked &&
                         (!selectedLanguage && survey?.languages?.length > 1 ? (
                           <SelectLang

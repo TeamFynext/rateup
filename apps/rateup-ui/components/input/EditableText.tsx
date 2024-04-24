@@ -3,11 +3,12 @@ import {
   FocusTrap,
   Input,
   MantineStyleProp,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconCheck, IconPencil } from "@tabler/icons-react";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { SAVE_HOTKEY } from "../../utils/constants";
 
 interface EditableTextProps {
@@ -23,6 +24,7 @@ interface EditableTextProps {
   handleButtonTextUpdate?: () => void;
   size?: string;
   radius?: string | number;
+  label?: string | ReactNode;
 }
 export function EditableText({
   text,
@@ -37,6 +39,7 @@ export function EditableText({
   handleButtonTextUpdate,
   size = "sm",
   radius = "md",
+  label = "",
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
   const [focusTrapToggle, setfocusTrapToggle] = useState(false);
@@ -58,7 +61,7 @@ export function EditableText({
         }
         openDelay={500}
       >
-        <Input
+        <TextInput
           value={handleOnFunction ? tempText : text}
           readOnly={!editMode}
           onChange={(e) =>
@@ -68,6 +71,15 @@ export function EditableText({
           }
           size={size}
           style={style}
+          label={label}
+          styles={{
+            input: {
+              textAlign: "center",
+            },
+            label: {
+              width: "100%",
+            },
+          }}
           onDoubleClick={() => setEditingItem(id)}
           rightSectionPointerEvents="all"
           radius={radius}
