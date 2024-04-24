@@ -375,7 +375,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
           survey={survey}
         >
           <Container size={"md"} className={styles["take-survey-root-div"]}>
-            <Stack justify="space-between" h={"100%"} gap={0}>
+            <Stack justify="space-between" h={"100%"} gap={"0.625rem"}>
               <ConfirmResponsesModal
                 opened={isConfirmResponsesModalOpen}
                 close={closeConfirmResponsesModal}
@@ -404,14 +404,14 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     key={selectedQ.id}
                     transition={{
                       type: "tween",
-                      duration: 0.5,
+                      duration: 0.75,
                     }}
                     initial={{
-                      x: aPDirection > 0 ? "120%" : "-120%",
+                      x: aPDirection > 0 ? "100%" : "-100%",
                       opacity: 0,
                     }}
                     animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: aPDirection > 0 ? "-120%" : "120%", opacity: 0 }}
+                    exit={{ x: aPDirection > 0 ? "-100%" : "100%", opacity: 0 }}
                   >
                     <motion.div
                       layout="position"
@@ -419,12 +419,18 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         type: "tween",
                         duration: 0.2,
                       }}
+                      style={{
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
                     >
                       <ScrollArea.Autosize
-                        mah={formMaxHeight}
+                        mah={"100%"}
                         p={0}
                         m={0}
                         w={"100%"}
+                        type="hover"
                       >
                         <Box
                           pb={smallScreen ? "sm" : "lg"}

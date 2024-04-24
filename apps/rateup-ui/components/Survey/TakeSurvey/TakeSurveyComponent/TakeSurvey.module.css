@@ -1,6 +1,6 @@
 .take-survey-root-div {
   height: 100%;
-  padding: 2rem;
+  padding-bottom: 2rem;
 }
 
 .inputBox {
@@ -86,9 +86,7 @@
 
 .question-form-title-desc-container {
   position: relative;
-  min-height: 70vh;
-  min-height: 70dvh;
-  overflow: hidden;
+  flex: 1;
 }
 
 .question-form-title-desc-motion-div {
@@ -102,7 +100,6 @@
 
 /* Next Prev component styles */
 .next-prev-btns-and-progress-container {
-  margin-top: 0.625rem;
   gap: 1rem;
 }
 
@@ -133,7 +130,7 @@
 
 @media (max-width: 480px) {
   .take-survey-root-div {
-    padding: 1rem;
+    padding-bottom: 1rem;
   }
 
   .rating svg {
@@ -157,10 +154,10 @@
     font-size: "16px";
   }
 
-  .question-form-title-desc-container {
+  /* .question-form-title-desc-container {
     min-height: calc(100vh - 175px);
     min-height: calc(100dvh - 175px);
-  }
+  } */
 
   /* Next Prev component styles */
   .next-prev-btns-and-progress-container {
@@ -173,7 +170,7 @@
 
   .next-prev-btns-and-progress-container button {
     height: auto;
-    padding: 0.625rem;
+    padding-bottom: 0.625rem;
   }
 
   .next-prev-btns-and-progress-container .submit-next-btn {
