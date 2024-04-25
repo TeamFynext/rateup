@@ -596,6 +596,7 @@ export async function sendCampaignToParticipants(campaignId: string) {
           surveyTeamMapId: surveyTeamMap.id,
           orgId: orgId,
           language: surveyTeamMap.survey.languages[0],
+          campaignParticipantId: id,
         });
 
         templateComponents.push({
@@ -625,11 +626,13 @@ export async function sendCampaignToParticipants(campaignId: string) {
         templateQuery,
       );
 
-      await sendMessage(orgId, templateMessage);
+      const messageSentStatus = await sendMessage(orgId, templateMessage);
 
       log.trace("Template sent to participant %o", contact);
       await updateCampaignParticipant(id, {
-        status: CampaignParticipantStatus.SENT,
+        status: messageSentStatus
+          ? CampaignParticipantStatus.SENT
+          : CampaignParticipantStatus.FAILED,
       });
     }
     log.trace("Template sent to all participants");
