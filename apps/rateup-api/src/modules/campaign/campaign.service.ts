@@ -1,5 +1,5 @@
 import prisma from "../../utils/prisma";
-import { UpdateCampaignInput } from "./campaign.schema";
+import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { log } from "../../utils/logger";
@@ -67,7 +67,7 @@ export async function getCampaignsByOrgId(orgId: string) {
   return campaigns;
 }
 
-export async function createCampaign(data: any) {
+export async function createCampaign(data: CreateCampaignInput) {
   const campaign = await prisma.campaign.create({
     data: {
       name: data.name,
