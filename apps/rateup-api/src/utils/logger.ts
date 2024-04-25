@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import pino from "pino";
 import PinoPretty from "pino-pretty";
 const { NO_LOG } = process.env;
-const prettyLog = {
+const devLog = {
   transport: {
     target: "pino-pretty",
     options: {
@@ -12,22 +12,28 @@ const prettyLog = {
   },
   serializers: {
     req: function (req: FastifyRequest) {
-      return `${req.headers.origin}: ${req.method} ${req.url} FROM ${req.ip}` ;
+      return `${req.headers.origin}: ${req.method} ${req.url} FROM ${req.ip}`;
     },
     res: function (res: FastifyReply) {
       return `${res.statusCode}`;
-    }
-  }
+    },
+  },
 };
-console.log('set NO_LOG to true to disable logging')
-export const logOptions: any = NO_LOG === "true" ? false : prettyLog;
+console.log("set NO_LOG to true to disable logging");
+const isDevelopment = process.env.NODE_ENV === "development";
+
+// if NO_LOG is set to true, disable logging
+// if NODE_ENV is set to development, use pretty logging
+// else use default logging
+export const logOptions: any =
+  NO_LOG === "true" ? false : isDevelopment ? devLog : true;
 export const log = pino(
   {
     enabled: NO_LOG !== "true",
     // available levels: fatal, error, warn, info, debug, trace
     level: process.env.LOG_LEVEL || "info",
   },
-  PinoPretty()
+  PinoPretty(),
 );
 
-console.log(`LOG_LEVEL => ${process.env.LOG_LEVEL || "info"}`)
+console.log(`LOG_LEVEL => ${process.env.LOG_LEVEL || "info"}`);

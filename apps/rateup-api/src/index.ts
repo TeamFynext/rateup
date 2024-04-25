@@ -9,14 +9,23 @@ import { SuperTokensConfig, swaggerConfig } from "./config";
 import { registerRoutes } from "./registerRoutes";
 import formDataPlugin from "@fastify/formbody";
 import { parseArrayString } from "./utils/array";
-import { log } from "./utils/logger";
+import { log, logOptions } from "./utils/logger";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import fastifyCron from "fastify-cron";
 import { resetMonthlyCounts } from "./modules/stats/stats.service";
 
 const server = Fastify({
-  // logger: logOptions,
+  logger: logOptions,
+});
+
+// req.body is not serialized at the time of logging. So adding a hook to log the body
+// just before the request is processed
+server.addHook("preHandler", async (req, _rep) => {
+  // log body
+  if (req.body) {
+    log.trace("Request body for id %s: %o", req.id, req.body);
+  }
 });
 
 server.register(require("@fastify/websocket"));
