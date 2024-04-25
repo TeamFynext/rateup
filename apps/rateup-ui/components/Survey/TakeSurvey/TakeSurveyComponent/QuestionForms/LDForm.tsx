@@ -5,12 +5,37 @@ import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { LDResponse } from "../../../../../types/enums";
 import { useMediaQuery } from "@mantine/hooks";
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { useAnimate } from "framer-motion";
+import styles from "./LDForm.module.css";
 
 export function LDForm() {
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const [scope, animate] = useAnimate();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
+  const handleLikeOrDislikeClick = async (e) => {
+    const clikcedBtn = e.target;
+    const clickedBtnName = clikcedBtn.dataset.name;
+    if (clickedBtnName) {
+      if (clickedBtnName === "like") {
+        updateResponse(LDResponse.Like);
+      } else if (clickedBtnName === "dislike") {
+        updateResponse(LDResponse.Dislike);
+      }
+      await animate(
+        clikcedBtn,
+        { opacity: [0, 1, 0, 1, 0, 1] },
+        { duration: 0.65 },
+      );
+      if (!isLastQuestion) nextFn?.();
+    }
+  };
+
   return (
-    <Group p={"xs"}>
+    <Group p={"xs"} onClick={handleLikeOrDislikeClick}>
       <Box w={150}>
         <RateupButtonBlue
           size="md"
@@ -19,7 +44,8 @@ export function LDForm() {
           title="Dislike"
           leftIcon={<IconThumbDownFilled />}
           fullWidth
-          onClick={() => updateResponse(LDResponse.Dislike)}
+          className={styles["like-dislike-btn"]}
+          data-name={"dislike"}
         />
       </Box>
       <Box w={150} ml={!isMobile && "sm"}>
@@ -30,7 +56,8 @@ export function LDForm() {
           title="Like"
           fullWidth
           leftIcon={<IconThumbUpFilled />}
-          onClick={() => updateResponse(LDResponse.Like)}
+          className={styles["like-dislike-btn"]}
+          data-name={"like"}
         />
       </Box>
     </Group>

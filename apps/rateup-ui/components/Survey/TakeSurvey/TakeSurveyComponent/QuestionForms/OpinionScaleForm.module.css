@@ -1,0 +1,29 @@
+.opinion-scale {
+  padding: var(--mantine-spacing-sm);
+  gap: 1rem;
+}
+
+.opinion-scale-interval-btn {
+  padding: 0;
+  width: 52px;
+  height: 50px;
+  border-radius: 12px;
+}
+
+.opinion-scale-interval-btn * {
+  pointer-events: none;
+}
+
+.opinion-scale-first-five-btns-container,
+.opinion-scale-last-five-btns-container {
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .opinion-scale-interval-btn {
+    width: 42px;
+    height: 40px;
+    padding: 0;
+    border-radius: 12px;
+  }
+}

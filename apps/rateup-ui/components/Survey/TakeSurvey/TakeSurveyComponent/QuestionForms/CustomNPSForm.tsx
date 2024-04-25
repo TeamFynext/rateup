@@ -6,6 +6,7 @@ import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { useAnimate } from "framer-motion";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -16,6 +17,8 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
+
+  const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -31,16 +34,21 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
     }
   }, [response]);
 
-  const handleSelectedOp = (value) => {
+  const handleSelectedOp = async (value) => {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
-    if (!isLastQuestion) {
-      nextFn?.();
-    }
+    const selectedEle = scope.current?.querySelector(
+      `.mantine-focus-auto[data-checked="true"]`,
+    );
   };
   return (
     <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"}>
+      <Radio.Group
+        value={selectedOp}
+        onChange={handleSelectedOp}
+        mr={"sm"}
+        ref={scope}
+      >
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
     </ScrollArea.Autosize>
