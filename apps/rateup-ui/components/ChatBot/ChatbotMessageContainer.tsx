@@ -16,7 +16,7 @@ import { useEffect, useRef } from "react";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import { ChatBotMessage } from "../../types/global";
 import { ChatBotSource } from "../../types/enums";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { getHotkeyHandler, useMediaQuery } from "@mantine/hooks";
 
 interface ChatbotMessageContainerProps {
   handleSendQuery: () => void;
@@ -27,6 +27,7 @@ interface ChatbotMessageContainerProps {
   isMessagePending: boolean;
   isDeleteMessagePending: boolean;
   styleProps?;
+  isPublicPage: boolean;
 }
 
 const ChatbotMessageContainer = ({
@@ -38,8 +39,10 @@ const ChatbotMessageContainer = ({
   isMessagePending,
   isDeleteMessagePending,
   styleProps,
+  isPublicPage,
 }: ChatbotMessageContainerProps) => {
   const messagesEndRef = useRef(null);
+  const isMobile = useMediaQuery("(max-width: 480px)");
   const scrollToBottom = () => {
     messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
@@ -57,9 +60,9 @@ const ChatbotMessageContainer = ({
           onClick={handleNewChat}
         />
       </Flex>
-      <PaperLayout>
-        <Stack justify="flex-end" p={0}>
-          <ScrollAreaAutosize h={320}>
+      <PaperLayout bg={"#f5f6fa"}>
+        <Stack p={0}>
+          <ScrollAreaAutosize h={isPublicPage ? 500 : 320} scrollbarSize={4}>
             {isDeleteMessagePending ? (
               <LoadingOverlay loaderProps={{ children: "Please wait..." }} />
             ) : (
@@ -138,7 +141,7 @@ const ChatbotMessageContainer = ({
             )}
           </ScrollAreaAutosize>
           <PaperLayout py={0} withBorder>
-            <Group justify="space-between">
+            <Group gap={0} justify="space-between">
               <Textarea
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.currentTarget.value)}
@@ -146,9 +149,19 @@ const ChatbotMessageContainer = ({
                 variant="unstyled"
                 w={"90%"}
                 onKeyDown={getHotkeyHandler([["Enter", handleSendQuery]])}
+                mah={100}
+                mih={60}
+                autosize
               />
-              <ActionIcon onClick={handleSendQuery}>
-                <IconSend />
+              <ActionIcon
+                onClick={handleSendQuery}
+                size={isMobile ? "sm" : "md"}
+              >
+                {isMessagePending ? (
+                  <Loader color="white" size={"xs"} />
+                ) : (
+                  <IconSend />
+                )}
               </ActionIcon>
             </Group>
           </PaperLayout>

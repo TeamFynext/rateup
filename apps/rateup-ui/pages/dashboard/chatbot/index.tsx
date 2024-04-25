@@ -18,6 +18,7 @@ const ChatBot = () => {
   const deleteChatMutation = useDeleteChatHistory();
 
   const handleSendQuery = () => {
+    if (!inputQuery.trim().length || messageMutate.isPending) return;
     handler.append({ content: inputQuery, source: ChatBotSource.HUMAN });
     setInputQuery("");
     messageMutate.mutate(
@@ -55,6 +56,7 @@ const ChatBot = () => {
           handleSendQuery={handleSendQuery}
           isMessagePending={messageMutate.isPending}
           isDeleteMessagePending={deleteChatMutation.isPending}
+          isPublicPage={false}
         />
         <ChatbotResources />
       </SimpleGrid>

@@ -28,6 +28,7 @@ const index = () => {
     "",
   );
   const handleSendQuery = () => {
+    if (!inputQuery.trim().length) return;
     let userId = JSON.parse(localStorage?.getItem("chatbotUserId"));
     if (!userId || isEmptyObject(userId)) {
       userId = uuid();
@@ -93,7 +94,8 @@ const index = () => {
             handleSendQuery={handleSendQuery}
             isMessagePending={publicMessageMutate.isPending}
             isDeleteMessagePending={deleteChatHistory.isPending}
-            styleProps={{ width: 700 }}
+            styleProps={{ width: "80%", height: "100vh", paddingTop: "10px" }}
+            isPublicPage={true}
           />
         ) : (
           <Stack justify="center" align="center">
