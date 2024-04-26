@@ -9,8 +9,13 @@ import {
 import { SmileyResponse } from "../../../../../types/enums";
 
 import { getEmptyIcon, getFullIcon, getIconStyle } from "./SmileyRatingStyling";
+import { useAnimate } from "framer-motion";
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 
 const SmileyRating = ({ updateResponse, response }) => {
+  const [scope, animate] = useAnimate();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
   const updateStringResponse = (value) => {
     let stringValue;
     switch (value) {
@@ -53,13 +58,27 @@ const SmileyRating = ({ updateResponse, response }) => {
   const theme = useMantineTheme();
   return (
     <Rating
+      ref={scope}
       color="cyan"
       value={getNumericValue(response)}
       emptySymbol={(number) => getEmptyIcon(number, theme.primaryColor)}
       fullSymbol={(number) => getFullIcon(number, theme.primaryColor)}
       highlightSelectedOnly
-      onChange={(value) => {
+      onChange={async (value) => {
         updateStringResponse(value);
+        const selectedValueEle = scope.current.querySelectorAll(
+          `.mantine-Rating-symbolGroup:nth-child(${value})`,
+        );
+        if (!isLastQuestion) {
+          if (selectedValueEle) {
+            await animate(
+              selectedValueEle,
+              { opacity: [0, 1, 0, 1, 0, 1] },
+              { duration: 0.65 },
+            );
+          }
+          nextFn?.();
+        }
       }}
     />
   );
