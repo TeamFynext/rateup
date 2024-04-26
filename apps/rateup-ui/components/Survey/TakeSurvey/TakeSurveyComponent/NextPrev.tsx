@@ -38,8 +38,7 @@ function NextPrev({
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
-  const backgroundColor =
-    surveyThemeData?.surveyTheme?.bg?.styles?.backgroundColor ?? "transparent";
+  const backgroundColor = "transparent";
 
   // themeStylesWoBr => themeStyles without border radius, border radius option will be removed from theme settings, for this we are taking themeStyles object without borderRadius, since old theme object will still have borderRadius.
   const { borderRadius = "initial", ...themeStylesWoBr } = themeStyles;
