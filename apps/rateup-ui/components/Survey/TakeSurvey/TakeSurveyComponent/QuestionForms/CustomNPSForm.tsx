@@ -38,9 +38,18 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
     const selectedEle = scope.current?.querySelector(
-      `.mantine-focus-auto[data-checked="true"]`,
+      `.mantine-focus-auto[data-value="${value}"]`,
     );
+    if (selectedEle) {
+      await animate(
+        selectedEle,
+        { opacity: [0, 1, 0, 1, 0, 1] },
+        { duration: 0.65 },
+      );
+    }
+    if (!isLastQuestion) nextFn?.();
   };
+
   return (
     <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
       <Radio.Group

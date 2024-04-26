@@ -7,6 +7,7 @@ import { samplePictureChoices } from "../../../../../utils/constants/forms";
 import { useRouter } from "next/router";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { useAnimate } from "framer-motion";
 
 interface PCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -19,6 +20,8 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const [selectedOp, setSelectedOp] = useState("");
   const router = useRouter();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const options: any = selectedQ
@@ -36,11 +39,21 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
     }
   }, [response]);
 
-  const handleSelectedOp = (value) => {
+  const handleSelectedOp = async (value) => {
     const res = options?.find(
       (op) => (publicRoute ? op?.value?.value : op?.value) === value,
     );
     updateResponse(res);
+    const selectedEle = scope.current?.querySelector(
+      `.mantine-focus-auto[data-value="${value}"]`,
+    );
+    if (selectedEle) {
+      await animate(
+        selectedEle,
+        { opacity: [0, 1, 0, 1, 0, 1] },
+        { duration: 0.65 },
+      );
+    }
     if (!isLastQuestion) nextFn?.();
   };
   const fallbackEnable = publicRoute
@@ -57,6 +70,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
       onChange={handleSelectedOp}
       mr={"sm"}
       w={"100%"}
+      ref={scope}
     >
       <SingleSelectCard
         data={data}

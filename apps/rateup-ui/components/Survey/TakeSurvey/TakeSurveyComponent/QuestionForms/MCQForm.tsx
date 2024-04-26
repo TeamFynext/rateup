@@ -14,7 +14,7 @@ import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import classes from "../TakeSurvey.module.css";
 import { useRouter } from "next/router";
-import { AnimatePresence, motion } from "framer-motion";
+import { animate, AnimatePresence, motion, useAnimate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 
 interface MCQFormProps {
@@ -34,6 +34,8 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const router = useRouter();
   const theme = useMantineTheme();
   const otherInputContainerRef = useRef(null);
+
+  const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const bDivRef = useRef(null);
@@ -55,11 +57,21 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     }
   }, [response]);
 
-  const handleSelectedOp = (value) => {
+  const handleSelectedOp = async (value) => {
     setSelectedOp(value);
     if (value !== selectedFeature?.other?.title) {
       const res = options?.find((op) => op?.value === value);
       updateResponse(res);
+      const selectedEle = scope.current?.querySelector(
+        `.mantine-focus-auto[data-value="${value}"]`,
+      );
+      if (selectedEle) {
+        await animate(
+          selectedEle,
+          { opacity: [0, 1, 0, 1, 0, 1] },
+          { duration: 0.65 },
+        );
+      }
       if (!isLastQuestion) nextFn?.();
     } else {
       updateResponse(null);
@@ -85,7 +97,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   return (
     <Stack w={"100%"} mr="sm" py={"xs"} style={{ overflow: "hidden" }}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp}>
+      <Radio.Group value={selectedOp} onChange={handleSelectedOp} ref={scope}>
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
       <AnimatePresence initial={false}>
