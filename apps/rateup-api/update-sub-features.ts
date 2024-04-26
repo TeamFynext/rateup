@@ -11,9 +11,9 @@ async function updateSubscriptionFeatures() {
 
     const ticket = {
       count: {
-        max: 500,
+        max: 100,
       },
-      active: true,
+      active: false,
     };
 
     const newFeat = {
