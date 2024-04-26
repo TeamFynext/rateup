@@ -1,4 +1,12 @@
-import { Stack, Group, Title, Switch, Text } from "@mantine/core";
+import {
+  Stack,
+  Group,
+  Title,
+  Switch,
+  Text,
+  Button,
+  Tooltip,
+} from "@mantine/core";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
@@ -13,7 +21,10 @@ import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { useRouter } from "next/router";
-import { useWaFlowFromDb } from "../../../backend/whatsapp/flow/flow.query";
+import {
+  usePushToWaMutation,
+  useWaFlowFromDb,
+} from "../../../backend/whatsapp/flow/flow.query";
 import { ShareMethods } from "./ShareMethods";
 import { CopyLinkComponent } from "./ShareSurvey";
 import { FlowShareMessageEditor } from "./FlowShareTemplateEditor";
@@ -86,6 +97,7 @@ export const ShareFlow = ({
   }, [survey?.teams, surveyTeamMapId]);
 
   const surveyUpdateMutation = useUpdateSurveyMutation();
+  const pushToWaMutation = usePushToWaMutation();
 
   const surveyStatusUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
@@ -106,6 +118,7 @@ export const ShareFlow = ({
   }));
 
   const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
+  const canPublish = !isPublished && !dbFlow.pendingSave;
   const disableShare = !(isPublished || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
@@ -126,7 +139,7 @@ export const ShareFlow = ({
       children: (
         <Text size="sm">
           Are you sure you want to Publish this Flow? You{" "}
-          <b>can`&apos;`t edit flows after </b>
+          <b>can&apos;t edit flows after </b>
           publishing.
           <br />
           It is advised to test the flow by opening the link in before
@@ -161,6 +174,10 @@ export const ShareFlow = ({
     );
   }
 
+  function handleSaveToWa() {
+    pushToWaMutation.mutate(dbFlowId);
+  }
+
   return (
     <Stack p={2} h={"fit-content"}>
       <PaperLayout
@@ -171,18 +188,49 @@ export const ShareFlow = ({
         }}
       >
         <Group justify="space-between">
-          <Switch
-            fw={500}
-            size="lg"
-            checked={isPublished}
-            disabled={isPublished}
-            onChange={confirmModal}
-            label={
-              <Text fw={700} fz={"lg"}>
-                {isPublished ? "Published" : "Publish Survey"}
-              </Text>
-            }
-          />
+          <Group>
+            <Tooltip
+              label={
+                dbFlow.pendingSave
+                  ? "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
+                  : "No changes to save"
+              }
+            >
+              <Button
+                disabled={!dbFlow.pendingSave}
+                onClick={handleSaveToWa}
+                loading={pushToWaMutation.isPending}
+              >
+                Save to WhatsApp
+              </Button>
+            </Tooltip>
+            <Tooltip
+              label={
+                !isPublished
+                  ? dbFlow.pendingSave
+                    ? "Save your flow to WhatsApp first."
+                    : "Publish your flow to WhatsApp, so that you can share it."
+                  : "You can`t edit flows after publishing."
+              }
+            >
+              <div>
+                {" "}
+                {/* adding div since tooltip won't work when its children is an input element. TODO: fixthis */}
+                <Switch
+                  fw={500}
+                  size="lg"
+                  checked={isPublished}
+                  disabled={!canPublish}
+                  onChange={confirmModal}
+                  label={
+                    <Text fw={700} fz={"lg"}>
+                      {isPublished ? "Published" : "Publish Survey"}
+                    </Text>
+                  }
+                />
+              </div>
+            </Tooltip>
+          </Group>
           <Group>
             <Text>Current Status: </Text>
             {isPublished ? (

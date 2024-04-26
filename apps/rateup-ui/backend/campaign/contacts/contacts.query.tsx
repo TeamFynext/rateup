@@ -119,7 +119,7 @@ export const useEditContactMutation = (groupId) => {
   });
 };
 
-export const useDeleteManyContactsMutation = () => {
+export const useDeleteManyContactsMutation = (onSucess: () => void) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteManyContacts,
@@ -132,13 +132,16 @@ export const useDeleteManyContactsMutation = () => {
         "Contact Deleted successfully",
         "contact-delete",
         <IconCheck />,
+        true,
       );
+      onSucess();
     },
     onError: (error: any) => {
       showErrorToast(
         `Error deleting contact: ${error?.response?.data?.error}`,
         "contact-delete",
         <IconX />,
+        true,
       );
     },
   });

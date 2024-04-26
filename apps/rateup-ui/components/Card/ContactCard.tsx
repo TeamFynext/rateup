@@ -1,45 +1,13 @@
-import { Badge, Group, Menu, Stack, Text, Title } from "@mantine/core";
-import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
-import { modals } from "@mantine/modals";
-import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
+import { Box, Menu, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../Modal/FormModalLayout";
+import { modals } from "@mantine/modals";
+import { IconChevronDown, IconEdit, IconTrash } from "@tabler/icons-react";
+import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
 import EditContactModal from "../Contacts/EditContactModal";
-import dayjs from "dayjs";
-import PaperLayout from "../styled/Layouts/PaperLayout";
+import FormModalLayout from "../Modal/FormModalLayout";
 
-interface ContactCardProps {
-  contact: ContactsData;
-  groupId?: string;
-  tags?: string[];
-}
-
-const ContactCard = ({ contact, groupId, tags }: ContactCardProps) => {
-  return (
-    <PaperLayout p="xl">
-      <Stack h={"100%"}>
-        <Group justify="space-between">
-          <Title order={5}>{contact?.name}</Title>
-          <ContactMenu contact={contact} groupId={groupId} tags={tags} />
-        </Group>
-        <Stack gap={0}>
-          <Text c="dimmed">{contact?.phone}</Text>
-          <Text c="dimmed">{contact?.email}</Text>
-        </Stack>
-        <Group justify="space-between" mt={"auto"}>
-          <Text c="dimmed">
-            created on {dayjs(contact?.createdAt).format("DD-MM-YYYY")}
-          </Text>
-          <Badge size="md" variant="light" color="green" mt={"auto"}>
-            source: {contact?.source ?? "NA"}
-          </Badge>
-        </Group>
-      </Stack>
-    </PaperLayout>
-  );
-};
-
-const ContactMenu = ({ contact, groupId, tags }) => {
+export const ContactMenu = ({ contact, groupId, tags }) => {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const openDeleteModal = () => {
@@ -62,9 +30,16 @@ const ContactMenu = ({ contact, groupId, tags }) => {
     deleteMutation.mutate(contact?.id);
   };
   return (
-    <Menu shadow="xl" position="bottom-end">
+    <Menu shadow="xl" position="bottom-start">
       <Menu.Target>
-        <IconDots color="grey" cursor={"pointer"} />
+        <Box>
+          <RateupButtonPrimary
+            title="Select action"
+            variant="outline"
+            rightIcon={<IconChevronDown size="1rem" />}
+            size="xs"
+          />
+        </Box>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
@@ -100,5 +75,3 @@ const ContactMenu = ({ contact, groupId, tags }) => {
     </Menu>
   );
 };
-
-export default ContactCard;

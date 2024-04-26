@@ -1,51 +1,56 @@
 import {
+  Badge,
+  Button,
+  Center,
+  Checkbox,
+  CheckboxProps,
+  Container,
   Flex,
   Group,
-  Tabs,
-  SimpleGrid,
-  TextInput,
   Loader,
-  Center,
-  Container,
-  Stack,
   Menu,
-  Button,
-  rem,
   SegmentedControl,
+  SimpleGrid,
+  Stack,
+  Tabs,
+  TextInput,
+  rem,
 } from "@mantine/core";
 
 import {
   IconChevronDown,
+  IconSearch,
   IconTrashXFilled,
   IconUserPlus,
-  IconSearch,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
-import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
-import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
-import ContactCard from "../../../components/Card/ContactCard";
-import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
-import { TeamSelector } from "../../../components/input/TeamSelector";
-import Heading from "../../../components/styled/Heading/Heading";
-import NothingFound from "../../../components/NothingFound/NothingFound";
-import { useRouter } from "next/router";
+import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import ContactAction from "../../../components/Contacts/ContactAction";
-import OpenCreateMenu from "../../../components/Contacts/OpenCreateMenu";
-import {
-  ContainedMultiSelect,
-  ContainedTagInput,
-} from "../../../components/input/ContainedInput/ContainedInput";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
+import { useRouter } from "next/router";
+import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
+import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
 import {
   useGetContactTags,
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import { ContactMenu } from "../../../components/Card/ContactCard";
+import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
+import ContactAction from "../../../components/Contacts/ContactAction";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import NothingFound from "../../../components/NothingFound/NothingFound";
+import ContactTable from "../../../components/Table/ContactTable";
+import {
+  ContainedMultiSelect,
+  ContainedTagInput,
+} from "../../../components/input/ContainedInput/ContainedInput";
+import { TeamSelector } from "../../../components/input/TeamSelector";
+import Heading from "../../../components/styled/Heading/Heading";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { showLoadingToast } from "../../../utils/notifications";
+
 enum ContactTabs {
   CONTACTS = "contacts",
   GROUPS = "groups",
@@ -118,6 +123,80 @@ export default function Contacts() {
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
   if (isLoadingContacts || isLoadingContactgroup || isPending)
     return <RateupLoader h={"90dvh"} />;
+  const column: ColumnDef<any>[] = [
+    {
+      id: "select",
+      enableSorting: false,
+      header: ({ table }) => (
+        <IndeterminateCheckbox
+          {...{
+            checked: table.getIsAllRowsSelected(),
+            indeterminate: table.getIsSomeRowsSelected(),
+            onChange: table.getToggleAllRowsSelectedHandler(),
+          }}
+        />
+      ),
+      cell: ({ row }) => (
+        <div className="px-1">
+          <IndeterminateCheckbox
+            {...{
+              checked: row.getIsSelected(),
+              disabled: !row.getCanSelect(),
+              indeterminate: row.getIsSomeSelected(),
+              onChange: row.getToggleSelectedHandler(),
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      header: () => "Created",
+      accessorKey: "createdAt",
+      cell: (info) =>
+        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+    },
+    {
+      header: () => "Name",
+      accessorKey: "name",
+      cell: (info) => info.getValue(),
+    },
+    {
+      header: () => "Phone",
+      accessorKey: "phone",
+      cell: (info) => info.getValue(),
+    },
+    ...(cTags?.contactTags?.length > 0
+      ? cTags?.contactTags?.map((data) => ({
+          header: () => data,
+          accessorFn: (row) => row?.tags?.[data],
+          id: data,
+          cell: (info) => info.getValue()?.toString(),
+        }))
+      : []),
+    {
+      header: () => "Source",
+      accessorKey: "source",
+      cell: (info) => (
+        <Badge size="md" variant="light" color="green" mt={"auto"}>
+          {(info.getValue() as string) ?? "NA"}
+        </Badge>
+      ),
+    },
+    {
+      header: () => "Action",
+      accessorFn: (row) => row,
+      enableSorting: false,
+      enableGlobalFilter: false,
+      id: "action",
+      cell: (info) => (
+        <ContactMenu
+          contact={info.getValue()}
+          tags={cTags?.contactTags}
+          groupId={""}
+        />
+      ),
+    },
+  ];
   return (
     <>
       <Flex
@@ -131,7 +210,6 @@ export default function Contacts() {
       >
         <Group gap={"md"}>
           <Heading title="Contacts" titleprops={{ w: "fit-content" }} />
-          <OpenCreateMenu tags={cTags?.contactTags ?? []} />
         </Group>
         {activeTab === ContactTabs.GROUPS && (
           <TeamSelector
@@ -192,25 +270,14 @@ export default function Contacts() {
             <Center pt="xl">
               <Loader type="bars" />
             </Center>
-          ) : filteredContacts?.length > 0 ? (
-            <SimpleGrid
-              mt={"xl"}
-              cols={{ base: 1, sm: 2, lg: 3 }}
-              spacing={{ base: 10, sm: "xl", lg: "xl" }}
-              verticalSpacing={{ base: "md", sm: "xl" }}
-            >
-              {filteredContacts?.map((contact) => (
-                <ContactCard
-                  contact={contact}
-                  key={contact?.id}
-                  tags={cTags?.contactTags}
-                />
-              ))}
-            </SimpleGrid>
           ) : (
-            <Container mt={"7%"}>
-              <NothingFound text="No Contacts Found" />
-            </Container>
+            <PaperLayout mt={"xl"} px={0}>
+              <ContactTable
+                columns={column}
+                data={filteredContacts}
+                cTags={cTags?.contactTags}
+              />
+            </PaperLayout>
           )}
         </Tabs.Panel>
         <Tabs.Panel value={ContactTabs.GROUPS}>
@@ -367,3 +434,8 @@ const ContactActionMenu = ({ contacts, groups }) => {
     </Stack>
   );
 };
+
+export function IndeterminateCheckbox(props: CheckboxProps) {
+  const ref = React.useRef<HTMLInputElement>(null!);
+  return <Checkbox ref={ref} {...props} />;
+}

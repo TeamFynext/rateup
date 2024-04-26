@@ -40,7 +40,12 @@ export default function TemplateCard({ selectedType, setSelectedType }) {
       >
         <BackgroundImage
           className={classes.parentContainer}
-          style={{ height: "100%", width: "100%", objectFit: "fill" }}
+          style={{
+            height: "100%",
+            width: "100%",
+            objectFit: "fill",
+            backgroundColor: styles?.backgroundColor,
+          }}
           src={getImageUrl(
             mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
             unsplashImage?.[mobileOrDesktop],

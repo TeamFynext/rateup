@@ -178,7 +178,9 @@ export function CreateSurveyModal({
           queryClient.invalidateQueries({ queryKey: ["surveys"] });
           if (data?.id) {
             setIsLoading();
-            router.push(`${router.pathname}/${data?.id}`);
+            router.push({
+              pathname: `/dashboard/surveys/${data?.id}`,
+            });
           }
         },
         onError: (error) => {

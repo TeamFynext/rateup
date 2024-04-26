@@ -8,7 +8,7 @@ export const HoverCardComponent = ({
   content,
   fw = 300,
   fz = "md",
-  c = "dark.3",
+  c = "",
   lineClamp = 1,
   questionType = null,
 }) => {

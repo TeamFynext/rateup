@@ -29,7 +29,11 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   const groupByTeams = allGroups?.filter(
     (group) => selectedTeamId === group?.teamId,
   );
-  const deleteManyContactsMutation = useDeleteManyContactsMutation();
+  const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
+    setSelectedIds([]);
+    setSelectedTeamId(null);
+    close();
+  });
   const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation();
   const addContactToGroupsMutation =
     useAddExistingContactToMultipleGroupsMutation(selectedGroups);
@@ -57,13 +61,7 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   const handleSubmit = () => {
     switch (action) {
       case ContactAcions.DELETE_CONTACTS:
-        deleteManyContactsMutation.mutate(selectedIds, {
-          onSuccess: () => {
-            setSelectedIds([]);
-            setSelectedTeamId(null);
-            close();
-          },
-        });
+        deleteManyContactsMutation.mutate(selectedIds);
         break;
       case ContactAcions.ADD_CONTACTS_TO_GROUP:
         addContactToGroupsMutation.mutate(
