@@ -15,6 +15,7 @@ import {
   getUnsyncedFlowsHandler,
   importFlowsHandler,
   publishFlowHandler,
+  saveFlowJsonToWhatsappHandler,
   sendFlowHandler,
   updateFlowHandler,
   updateFlowMetaDataHandler,
@@ -87,6 +88,15 @@ export async function flowRoutes(server: FastifyInstance) {
       },
     },
     updateFlowHandler,
+  );
+  server.put(
+    "/:dbFlowId/push-to-wa",
+    {
+      schema: {
+        params: $waFlow("byDbFlowIdParams"),
+      },
+    },
+    saveFlowJsonToWhatsappHandler,
   );
   server.put(
     "/update-flow-metadata/:dbFlowId",

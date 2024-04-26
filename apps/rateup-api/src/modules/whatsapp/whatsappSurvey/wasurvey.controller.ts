@@ -539,6 +539,9 @@ export async function sendCampaignToParticipants(campaignId: string) {
       });
     }
 
+    // check if template has a flow button
+    const flowId = getFlowIdFromTemplateComponents(dbTemplate.data.components);
+
     for (const { contact, id, status } of campaign.campaignParticipants) {
       if (status === CampaignParticipantStatus.SENT) {
         log.warn(
@@ -555,12 +558,8 @@ export async function sendCampaignToParticipants(campaignId: string) {
       // TODO: add rate limiting
       // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
 
-      const templateComponents = components;
+      const templateComponents = [...components];
 
-      // check if template has a flow button
-      const flowId = getFlowIdFromTemplateComponents(
-        dbTemplate.data.components,
-      );
       if (flowId) {
         log.trace("Flow button identified. handling session...");
         const existingSession = await getSession(orgId, contact.phone);
@@ -596,6 +595,7 @@ export async function sendCampaignToParticipants(campaignId: string) {
           surveyTeamMapId: surveyTeamMap.id,
           orgId: orgId,
           language: surveyTeamMap.survey.languages[0],
+          campaignParticipantId: id,
         });
 
         templateComponents.push({
@@ -625,11 +625,13 @@ export async function sendCampaignToParticipants(campaignId: string) {
         templateQuery,
       );
 
-      await sendMessage(orgId, templateMessage);
+      const messageSentStatus = await sendMessage(orgId, templateMessage);
 
       log.trace("Template sent to participant %o", contact);
       await updateCampaignParticipant(id, {
-        status: CampaignParticipantStatus.SENT,
+        status: messageSentStatus
+          ? CampaignParticipantStatus.SENT
+          : CampaignParticipantStatus.FAILED,
       });
     }
     log.trace("Template sent to all participants");
