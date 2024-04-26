@@ -92,7 +92,7 @@ const TableRow = ({
           <HoverCardComponent
             content={item?.description}
             lineClamp={3}
-            c={"dark"}
+            c={"dimmed"}
           />
         </Text>
       </Table.Td>

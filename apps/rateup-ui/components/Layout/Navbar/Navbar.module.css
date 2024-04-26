@@ -57,3 +57,6 @@
   padding: var(--mantine-spacing-md);
   color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-0));
 }
+[data-mantine-color-scheme="dark"] .navbar {
+  background-color: var(--mantine-color-dark-8);
+}

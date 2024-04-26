@@ -57,14 +57,14 @@ export const useSurveyResponseColumns = ({
   const column: ColumnDef<any>[] = [
     {
       header: () => (
-        <Text c="dark.3" truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+        <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
           Created At
         </Text>
       ),
       filterFn: fuzzyFilter,
       accessorKey: "createdAt",
       cell: (info) => (
-        <Text c="dark.3" p={10} miw={200}>
+        <Text p={10} miw={200}>
           {dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")}
         </Text>
       ),
@@ -115,14 +115,7 @@ export const useSurveyResponseColumns = ({
       ? [
           {
             header: () => (
-              <Text
-                c="dark.3"
-                truncate="end"
-                miw={200}
-                maw={200}
-                fw={600}
-                fz={"lg"}
-              >
+              <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
                 Respondent&apos;s Mobile Number
               </Text>
             ),
@@ -130,7 +123,7 @@ export const useSurveyResponseColumns = ({
             accessorFn: (row) => row?.Contact?.phone,
             id: "respondentsMobileNumber",
             cell: (info) => (
-              <Text c="dark.3" p={10} miw={200}>
+              <Text p={10} miw={200}>
                 {info.getValue()?.toString()}
               </Text>
             ),
@@ -142,14 +135,7 @@ export const useSurveyResponseColumns = ({
       ? [
           {
             header: () => (
-              <Text
-                c="dark.3"
-                truncate="end"
-                miw={70}
-                maw={70}
-                fw={600}
-                fz={"lg"}
-              >
+              <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
                 Ticket
               </Text>
             ),
@@ -192,7 +178,7 @@ export const useSurveyResponseColumns = ({
       : []),
     {
       header: () => (
-        <Text c="dark.3" truncate="end" fw={600} miw={200} maw={200} fz={"lg"}>
+        <Text truncate="end" fw={600} miw={200} maw={200} fz={"lg"}>
           Action
         </Text>
       ),
@@ -333,15 +319,13 @@ function ActionMenu({
         <Menu.Target>
           <Button
             variant="outline"
-            color="dark.2"
             radius="lg"
             size="xs"
             rightSection={<IconChevronDown size="1rem" />}
             style={{ maxWidth: "fit-content", marginLeft: "-14px" }}
           >
             <Text size="xs" c="dark.5">
-              {" "}
-              Select Action{" "}
+              Select Action
             </Text>
           </Button>
         </Menu.Target>

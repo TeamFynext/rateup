@@ -139,7 +139,7 @@ export const ShareFlow = ({
       children: (
         <Text size="sm">
           Are you sure you want to Publish this Flow? You{" "}
-          <b>can`&apos;`t edit flows after </b>
+          <b>can&apos;t edit flows after </b>
           publishing.
           <br />
           It is advised to test the flow by opening the link in before

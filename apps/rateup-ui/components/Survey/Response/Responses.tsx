@@ -291,9 +291,7 @@ const Responses = ({
   const responseCount = responses?.length;
 
   return (
-    <Stack
-      className={styles["total-responses-header-and-responses-table-wrapper"]}
-    >
+    <Stack>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         openTicketModal={openTicketModal}
@@ -303,7 +301,7 @@ const Responses = ({
         surveyResponseId={selectedResponseId}
       />
 
-      <PaperLayout className={styles["total-responses-heading-container"]}>
+      <PaperLayout>
         <Group justify="space-between" align="center">
           <Flex>
             <Heading subtitle={`Total Responses : ${responseCount}`} />
@@ -417,7 +415,7 @@ const Responses = ({
       </PaperLayout>
 
       {responseCount > 0 ? (
-        <PaperLayout className={styles["responses-table-container"]}>
+        <PaperLayout px={0}>
           <TanstackTable data={responses} columns={columns} />
           <FormModalLayout
             opened={opened}
