@@ -12,7 +12,7 @@ import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/dist/client/components/navigation";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useBeforeUnload } from "react-use";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import {
@@ -130,6 +130,49 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       );
     }
   }, [survey]);
+
+  const takeSurveyRootDivRef = useRef(null);
+
+  let pendingUpdate = useRef(false);
+  const viewportHandler = (event) => {
+    if (pendingUpdate.current) return;
+    pendingUpdate.current = true;
+
+    requestAnimationFrame(() => {
+      pendingUpdate.current = false;
+      const takeSurveyRootDiv = takeSurveyRootDivRef.current;
+      const nextPrevBtnDiv = document.getElementById("next-prev-btn-div");
+      if (takeSurveyRootDiv && nextPrevBtnDiv) {
+        const nextPrevBtnDivHeight =
+          nextPrevBtnDiv.getBoundingClientRect().height;
+        const takeSurveyRootDivHeight =
+          takeSurveyRootDiv.getBoundingClientRect().height;
+        const visualViewport = event.target;
+        const offsetLeft = visualViewport.offsetLeft;
+        const offsetTop =
+          visualViewport.height -
+          takeSurveyRootDivHeight +
+          visualViewport.offsetTop -
+          nextPrevBtnDivHeight +
+          16;
+
+        nextPrevBtnDiv.style.transform = `translate(${offsetLeft}px, ${offsetTop}px) scale(${
+          1 / visualViewport.scale
+        }`;
+      }
+    });
+  };
+
+  useEffect(() => {
+    console.log("mounted");
+    window.visualViewport.addEventListener("scroll", viewportHandler);
+    window.visualViewport.addEventListener("resize", viewportHandler);
+
+    return () => {
+      window.visualViewport.removeEventListener("scroll", viewportHandler);
+      window.visualViewport.removeEventListener("resize", viewportHandler);
+    };
+  }, []);
 
   if (!survey) {
     return (
@@ -374,7 +417,11 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
           prevFn={handlePrev}
           survey={survey}
         >
-          <Container size={"md"} className={styles["take-survey-root-div"]}>
+          <Container
+            size={"md"}
+            className={styles["take-survey-root-div"]}
+            ref={takeSurveyRootDivRef}
+          >
             <Stack justify="space-between" h={"100%"} gap={"0.625rem"}>
               <ConfirmResponsesModal
                 opened={isConfirmResponsesModalOpen}
@@ -404,7 +451,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     key={selectedQ.id}
                     transition={{
                       type: "tween",
-                      duration: 0.75,
+                      duration: 0.85,
                     }}
                     initial={{
                       x: aPDirection > 0 ? "100%" : "-100%",
@@ -423,6 +470,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         height: "100%",
                         display: "flex",
                         alignItems: "center",
+                        padding: "0.625rem 0",
                       }}
                     >
                       <ScrollArea.Autosize
@@ -433,9 +481,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         type="hover"
                       >
                         <Box
-                          pb={smallScreen ? "sm" : "lg"}
-                          className={lexend.className}
-                          pr={smallScreen ? 0 : "md"}
+                          className={`${lexend.className}`}
+                          style={{ padding: "0.625rem 0" }}
                         >
                           <QuestionTitle
                             largeScreen={largeScreen}
@@ -467,7 +514,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                 num={QnNo}
                 total={questionCount}
                 survey={survey}
-                themeStyles={surveyThemeData?.surveyTheme?.button?.styles}
+                surveyThemeData={surveyThemeData}
                 isSavingResponses={isSavingResponses || giftLoading}
               />
             </Stack>

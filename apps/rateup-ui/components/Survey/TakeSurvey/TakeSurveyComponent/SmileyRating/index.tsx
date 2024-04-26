@@ -73,8 +73,8 @@ const SmileyRating = ({ updateResponse, response }) => {
           if (selectedValueEle) {
             await animate(
               selectedValueEle,
-              { opacity: [0, 1, 0, 1, 0, 1] },
-              { duration: 0.65 },
+              { opacity: [0, 1, 0, 1] },
+              { duration: 0.7 },
             );
           }
           nextFn?.();
