@@ -108,15 +108,6 @@ export function QuestionDetailedView({
     );
   }, [subscription]);
 
-  useEffect(() => {
-    console.log(
-      "state0",
-      hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
-    );
-
-    console.log("state", isGoogleReviewFeatureActive);
-  }, [isGoogleReviewFeatureActive]);
-
   const form = useForm({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
