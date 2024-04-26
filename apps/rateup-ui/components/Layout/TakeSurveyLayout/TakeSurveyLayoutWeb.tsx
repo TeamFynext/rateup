@@ -138,7 +138,6 @@ export const TakeSurveyLayoutWeb = ({
 
   useEffect(() => {
     window.visualViewport.addEventListener("resize", viewportHandler);
-    setVisualViewportHeight(window?.visualViewport?.height);
     () => {
       window.visualViewport.removeEventListener("resize", viewportHandler);
     };
