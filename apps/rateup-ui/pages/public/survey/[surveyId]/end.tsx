@@ -393,7 +393,7 @@ export default function ThankYou({
                     order={1}
                     fw={400}
                     style={{
-                      ...surveyThemeData?.thankyouTheme?.subtitle?.styles,
+                      ...surveyThemeData?.thankyouTheme?.title?.styles,
                       ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
                     }}
                   >
