@@ -8,6 +8,7 @@ import {
   ScrollArea,
   Anchor,
   Box,
+  useMantineColorScheme,
 } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useMediaQuery } from "@mantine/hooks";
@@ -40,6 +41,8 @@ function _NavbarLink({
   setActive,
 }: _NavbarLinkProps) {
   const router = useRouter();
+  const { colorScheme } = useMantineColorScheme();
+  const colorBasedOnLightMode = colorScheme === "light" ? "gray" : "white";
   return (
     <>
       {data.map(({ Icon, label, href, role, submenus }, parentIndex) => {
@@ -63,14 +66,14 @@ function _NavbarLink({
                     !(
                       (submenus?.length > 0 && active === parentIndex) ||
                       router.pathname === href
-                    ) && "gray",
+                    ) && colorBasedOnLightMode,
                 },
                 chevron: {
                   color:
                     !(
                       (submenus?.length > 0 && active === parentIndex) ||
                       router.pathname === href
-                    ) && "gray",
+                    ) && colorBasedOnLightMode,
                 },
               }}
               p={5}

@@ -123,7 +123,6 @@ export default function ContactGroup() {
         );
       })
     : groupDetails?.contacts;
-  console.log(groupDetails, "gd");
 
   return (
     <>

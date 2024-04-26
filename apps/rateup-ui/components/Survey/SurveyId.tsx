@@ -163,7 +163,7 @@ export default function SurveyID() {
                 <Title
                   styles={{
                     root: {
-                      fontSize: survey?.title?.length > 25 ? "20px " : "32px",
+                      fontSize: survey?.title?.length > 25 ? "20px " : "25px",
                       width: "100%",
                       // whiteSpace: "nowrap",
                       whiteSpace: "normal",

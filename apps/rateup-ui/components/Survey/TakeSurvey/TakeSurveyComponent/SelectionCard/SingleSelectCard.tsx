@@ -23,6 +23,7 @@ interface ImageCheckboxProps {
   selectedValue: string;
   fallbackEnable: boolean;
   sizeTrim: boolean;
+  dataValue: string;
 }
 
 export function ImageCheckbox({
@@ -35,6 +36,7 @@ export function ImageCheckbox({
   fallbackEnable,
   sizeTrim,
   className,
+  dataValue,
   ...others
 }: ImageCheckboxProps &
   Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
@@ -72,8 +74,8 @@ export function ImageCheckbox({
         )
           ? `var(--mantine-color-${theme.primaryColor}-filled)`
           : !hovered
-          ? ""
-          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
+            ? ""
+            : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
       }
       style={{
         borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
@@ -91,6 +93,7 @@ export function ImageCheckbox({
         classes.button,
         titleTypeString && classes.buttonWithOutImage,
       )}
+      data-value={dataValue}
     >
       <Checkbox
         checked={selectedValue === title && value}
@@ -149,6 +152,7 @@ export function SingleSelectCard({
       selectedValue={selectedValue}
       fallbackEnable={fallbackEnable}
       sizeTrim={sizeTrim}
+      dataValue={typeof item === "string" ? item : item.value}
     />
   ));
   const colsCount = includeImage

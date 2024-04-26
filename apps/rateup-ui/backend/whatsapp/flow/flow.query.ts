@@ -18,6 +18,7 @@ import {
   cloneFlowsProps,
   sendFlow,
   updateFlowMetaData,
+  pushFlowJsonToWa,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
@@ -222,6 +223,17 @@ export const useUpdateFlowMetaDataMutation = () => {
     },
     onError: (e) => {
       showErrorToast("Error saving flows");
+    },
+  });
+};
+
+export const usePushToWaMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: pushFlowJsonToWa,
+    onSuccess: (_, dbFlowId) => {
+      showSuccessToast("Flow saved to WhatsApp successfully");
+      qc.invalidateQueries({ queryKey: ["flow", "db", dbFlowId] });
     },
   });
 };

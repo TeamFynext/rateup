@@ -612,6 +612,7 @@ declare global {
     templateMessage: WaFlowTemplateMessage;
     survey: any;
     startMessageConfig: WaFlowStartMessageConfig;
+    pendingSave: boolean;
   };
 
   type LoyaltyCampaign = {

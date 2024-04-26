@@ -1,7 +1,9 @@
 import { useContext, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { Button, Flex, Group, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
+import styles from "./OpinionScaleForm.module.css";
+import { useAnimate } from "framer-motion";
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 
 interface iProps {
   initValue?: any;
@@ -11,6 +13,9 @@ export function OpinionScaleForm({ initValue }: iProps) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [isHovered, setIsHovered] = useState(null);
 
+  const [scope, animate] = useAnimate();
+  const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
   const handleHover = (index) => {
     setIsHovered(index);
   };
@@ -19,20 +24,35 @@ export function OpinionScaleForm({ initValue }: iProps) {
     setIsHovered(null);
   };
 
+  const handleBtnClick = async (e) => {
+    const clickedBtn = e.target;
+    const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
+    if (clickedBtnValue) {
+      !initValue && updateResponse(clickedBtnValue);
+      if (!isLastQuestion) {
+        if (clickedBtn) {
+          await animate(
+            clickedBtn,
+            { opacity: [0, 1, 0, 1, 0, 1] },
+            { duration: 0.65 },
+          );
+        }
+        nextFn?.();
+      }
+    }
+  };
+
   const renderButtons = () => {
     const oneToFive = [];
     const fiveToTen = [];
     for (let i = 1; i <= 10; i++) {
       const button = (
         <Button
-          className={classes["opinion-scale-interval-btn"]}
+          className={styles["opinion-scale-interval-btn"]}
           key={i}
           onMouseEnter={() => handleHover(i)}
           onMouseLeave={handleLeave}
           radius="xs"
-          onClick={() => {
-            !initValue && updateResponse(i);
-          }}
           variant={response === i || initValue == i ? "filled" : "outline"}
           styles={{
             root: {
@@ -51,6 +71,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
                   : `var(--mantine-color-${theme.primaryColor}-outline)`,
             },
           }}
+          data-btn-value={i}
         >
           {i}
         </Button>
@@ -62,12 +83,12 @@ export function OpinionScaleForm({ initValue }: iProps) {
       }
     }
     const firstFiveBtnsContiner = (
-      <Flex className={classes["opinion-scale-first-five-btns-container"]}>
+      <Flex className={styles["opinion-scale-first-five-btns-container"]}>
         {oneToFive}
       </Flex>
     );
     const secondFiveBtnsContainer = (
-      <Flex className={classes["opinion-scale-last-five-btns-container"]}>
+      <Flex className={styles["opinion-scale-last-five-btns-container"]}>
         {fiveToTen}
       </Flex>
     );
@@ -79,5 +100,9 @@ export function OpinionScaleForm({ initValue }: iProps) {
     );
   };
 
-  return <Group className={classes["opinion-scale"]}>{renderButtons()}</Group>;
+  return (
+    <Group onClick={handleBtnClick} className={styles["opinion-scale"]}>
+      {renderButtons()}
+    </Group>
+  );
 }

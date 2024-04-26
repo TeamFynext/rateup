@@ -127,3 +127,7 @@ export async function updateFlowMetaData(
     return error?.response?.data;
   }
 }
+
+export async function pushFlowJsonToWa(dbFlowId: string) {
+  return await axiosClient.put(`${BASE}/${dbFlowId}/push-to-wa`);
+}
