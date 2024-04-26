@@ -36,6 +36,8 @@ import WelcomePage from "../WelcomePage/WelcomePage";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { surveyUploadsPath } from "../../../utils/constants";
 import styles from "./TakeSurveyLayoutWeb.module.css";
+import useViewportSize from "./hooks/useViewportHook";
+import useOnScreenKeyboardScrollFix from "./hooks/useOnScreenKeyboardScrollFix";
 
 export const TakeSurveyLayoutWeb = ({
   survey,

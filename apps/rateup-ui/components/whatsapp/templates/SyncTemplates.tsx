@@ -20,6 +20,7 @@ import {
 } from "@tabler/icons-react";
 import {
   useRegisterTemplatesMutation,
+  useSyncTemplatesMutation,
   useUnregisteredTemplates,
 } from "../../../backend/whatsapp/whatsapp.query";
 import classes from "./template.module.css";
@@ -311,7 +312,7 @@ function DisplayTemplates({
   );
 }
 
-export function SyncTemplatesButton() {
+export function ImportTemplatesButton() {
   const [openModal, { open, close }] = useDisclosure(false);
   const {
     data: unregisteredTemplates,
@@ -345,5 +346,28 @@ export function SyncTemplatesButton() {
         unregisteredTemplates={unregisteredTemplates}
       />
     </>
+  );
+}
+
+export function SyncTemplatesButton() {
+  const syncMutation = useSyncTemplatesMutation();
+
+  function handleSyncClick() {
+    syncMutation.mutate();
+  }
+
+  return (
+    <Button
+      leftSection={
+        <IconRefresh
+          className={syncMutation.isPending ? classes.rotateInfinitely : ""}
+        />
+      }
+      variant="outline"
+      onClick={handleSyncClick}
+      radius={"lg"}
+    >
+      Sync
+    </Button>
   );
 }
