@@ -16,9 +16,9 @@ import {
   getUnsyncedFlows,
   publishFlowInWa,
   sendFlow,
+  syncLocalFlowToWhatsapp,
   updateFlowIdAndStatusInDb,
   updateFlowInDb,
-  updateFlowJsonInWa,
   updateFlowMetaDataInWa,
 } from "./flow.service";
 import {
@@ -193,21 +193,12 @@ export async function updateFlowHandler(
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
 
-  log.trace("updating %o", req.body);
+  log.trace("updating flow %o", req.body);
   const previousFlow = await getFlowFromDb(dbFlowId);
-  const updatedFlow = await updateFlowInDb(orgId, dbFlowId, req.body);
-  if (req.body.json) {
-    const jsonWithTitle = getFlowJsonWithTitleAndDescription(
-      updatedFlow.json as unknown as WaFlowJson,
-      updatedFlow.map,
-      updatedFlow.survey,
-    );
-    const response = await updateFlowJsonInWa(
-      orgId,
-      updatedFlow.flowId,
-      jsonWithTitle as WaFlowJson,
-    );
-  }
+  const updatedFlow = await updateFlowInDb(orgId, dbFlowId, {
+    ...req.body,
+    pendingSave: true,
+  });
 
   // add data_channel_uri if logic jumps are updated
   if (
@@ -228,6 +219,24 @@ export async function updateFlowHandler(
     log.trace("uri set to %s", endpoint_uri);
   }
   res.status(201).send();
+}
+
+export async function saveFlowJsonToWhatsappHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const { dbFlowId } = req.params;
+    await syncLocalFlowToWhatsapp(orgId, dbFlowId);
+
+    res.status(200).send();
+  } catch (error) {
+    log.error("Error saving flow json to whatsapp", error);
+    res.status(500).send(error.message);
+  }
 }
 
 export async function updateFlowMetaDataHandler(

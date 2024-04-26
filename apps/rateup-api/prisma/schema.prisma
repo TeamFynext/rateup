@@ -734,6 +734,8 @@ model WaFlow {
   json    Json
   /// [PWaFlowPreview]
   preview Json?
+  // whether the flow has changes present in our db that are not saved in whatsapp
+  pendingSave Boolean @default(true)
 
   map        Json
   logicJumps Json @default("{}")
