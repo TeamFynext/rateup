@@ -391,10 +391,8 @@ export default function ThankYou({
                   )}
                   <Title
                     order={1}
-                    fw={400}
                     style={{
                       ...surveyThemeData?.thankyouTheme?.title?.styles,
-                      ...{ fontSize: largeScreen ? "3rem" : "1.25rem" },
                     }}
                   >
                     {!!err
