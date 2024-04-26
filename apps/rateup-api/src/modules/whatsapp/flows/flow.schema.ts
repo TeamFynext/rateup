@@ -31,6 +31,7 @@ const updateFlowInput = z.object({
   logicJumps: z.any().optional(),
   templateMessage: z.custom<WaFlowTemplateMessage>().optional(),
   startMessageConfig: z.custom<WaFlowStartMessageConfig>().optional(),
+  pendingSave: z.boolean().optional(),
 });
 const updateFlowMetaInput = z.object({
   name: z.string().optional(),

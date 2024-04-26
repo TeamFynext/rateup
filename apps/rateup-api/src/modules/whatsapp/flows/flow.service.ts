@@ -6,6 +6,7 @@ import {
   generateFlowMessageData,
   generateQuestionResponsesFromFlowResponse,
   getFlowFormElementNameFromQuestionId,
+  getFlowJsonWithTitleAndDescription,
   injectIdToFlowJson,
   parseFlowResponse,
   parseResponseFromCurrentScreenResponse,
@@ -160,6 +161,30 @@ export async function getFlowFromDb(dbFlowId: string) {
     },
   });
   return flow;
+}
+
+// updates flow json of a flow from db to whatsapp
+export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      dbFlowId,
+    },
+    include: {
+      survey: true,
+    },
+  });
+  const jsonWithTitle = getFlowJsonWithTitleAndDescription(
+    flow.json as unknown as WaFlowJson,
+    flow.map,
+    flow.survey,
+  );
+  const response = await updateFlowJsonInWa(
+    orgId,
+    flow.flowId,
+    jsonWithTitle as WaFlowJson,
+  );
+  log.trace("Flow synced to whatsapp: %o", response);
+  await updateFlowInDb(orgId, dbFlowId, { pendingSave: false });
 }
 
 export async function getFlowFromDbByFlowId(orgId: string, flowId: string) {

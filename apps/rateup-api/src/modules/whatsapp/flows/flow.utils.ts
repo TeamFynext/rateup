@@ -382,6 +382,15 @@ export function getFlowJsonWithTitleAndDescription(
               survey.questions as unknown as Question[],
               map,
             );
+            if (!question) {
+              log.fatal(
+                `Question not found for formElement ${formElement.name}\n%o`,
+                formElement,
+              );
+              throw new Error(
+                `Question not found for formElement ${formElement.name}`,
+              );
+            }
             const {
               formElements: { titleElement, descriptionElement },
             } = getFlowElementJsonFromQuestion(question);
