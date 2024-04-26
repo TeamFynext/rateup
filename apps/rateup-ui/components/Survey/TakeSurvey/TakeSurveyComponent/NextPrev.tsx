@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
@@ -26,9 +26,9 @@ function NextPrev({
   next,
   num,
   total,
-  themeStyles,
   survey,
   isSavingResponses,
+  surveyThemeData,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -36,6 +36,10 @@ function NextPrev({
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const isMobile = useMediaQuery("(max-width: 480px)");
+
+  const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
+  const backgroundColor =
+    surveyThemeData?.surveyTheme?.bg?.styles?.backgroundColor ?? "transparent";
 
   // themeStylesWoBr => themeStyles without border radius, border radius option will be removed from theme settings, for this we are taking themeStyles object without borderRadius, since old theme object will still have borderRadius.
   const { borderRadius = "initial", ...themeStylesWoBr } = themeStyles;
@@ -96,7 +100,13 @@ function NextPrev({
   const isLastQuestion =
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
   return (
-    <Stack gap={0} w={"100%"} justify="flex-end">
+    <Stack
+      gap={0}
+      w={"100%"}
+      justify="flex-end"
+      id="next-prev-btn-div"
+      style={{ backgroundColor }}
+    >
       {selectedQ?.required && !response && (
         <Text
           mb={"0.625rem"}
@@ -125,7 +135,7 @@ function NextPrev({
                 ? {}
                 : {
                     ...themeStylesWoBr,
-                    backgroundColor: `rgba(255, 255, 255, 0.75)`,
+                    backgroundColor: `rgba(255, 255, 255)`,
                     outline: `2px solid ${themeStylesWoBr?.backgroundColor}`,
                     color: themeStylesWoBr?.backgroundColor,
                   }
