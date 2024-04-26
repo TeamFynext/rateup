@@ -112,9 +112,11 @@ export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
 };
 
 export const useSyncTemplatesMutation = (onSuccess?, onError?) => {
+  const queryClient = useQueryClient();
   const syncMutation = useMutation({
     mutationFn: syncTemplates,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       showSuccessToast("Templates Synced Successfully");
       onSuccess?.();
     },
