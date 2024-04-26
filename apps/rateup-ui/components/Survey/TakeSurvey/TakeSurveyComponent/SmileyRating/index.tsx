@@ -69,13 +69,16 @@ const SmileyRating = ({ updateResponse, response }) => {
         const selectedValueEle = scope.current.querySelectorAll(
           `.mantine-Rating-symbolGroup:nth-child(${value})`,
         );
-        if (selectedValueEle)
-          await animate(
-            selectedValueEle,
-            { opacity: [0, 1, 0, 1, 0, 1] },
-            { duration: 0.65 },
-          );
-        if (!isLastQuestion) nextFn?.();
+        if (!isLastQuestion) {
+          if (selectedValueEle) {
+            await animate(
+              selectedValueEle,
+              { opacity: [0, 1, 0, 1, 0, 1] },
+              { duration: 0.65 },
+            );
+          }
+          nextFn?.();
+        }
       }}
     />
   );

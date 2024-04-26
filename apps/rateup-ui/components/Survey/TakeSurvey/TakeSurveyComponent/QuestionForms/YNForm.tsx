@@ -13,20 +13,24 @@ export function YNForm() {
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const handleYesOrNOClick = async (e) => {
-    const clikcedBtn = e.target;
-    const clickedBtnName = clikcedBtn.dataset.name;
+    const clickedBtn = e.target;
+    const clickedBtnName = clickedBtn.dataset.name;
     if (clickedBtnName) {
       if (clickedBtnName === "yes") {
         updateResponse(YNResponse.Yes);
       } else if (clickedBtnName === "no") {
         updateResponse(YNResponse.No);
       }
-      await animate(
-        clikcedBtn,
-        { opacity: [0, 1, 0, 1, 0, 1] },
-        { duration: 0.65 },
-      );
-      if (!isLastQuestion) nextFn?.();
+      if (!isLastQuestion) {
+        if (clickedBtn) {
+          await animate(
+            clickedBtn,
+            { opacity: [0, 1, 0, 1, 0, 1] },
+            { duration: 0.65 },
+          );
+        }
+        nextFn?.();
+      }
     }
   };
 

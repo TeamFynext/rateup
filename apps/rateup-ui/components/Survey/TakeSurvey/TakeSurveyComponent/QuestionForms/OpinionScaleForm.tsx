@@ -25,16 +25,18 @@ export function OpinionScaleForm({ initValue }: iProps) {
   };
 
   const handleBtnClick = async (e) => {
-    const clikcedBtn = e.target;
-    const clickedBtnValue = parseInt(clikcedBtn.dataset.btnValue);
+    const clickedBtn = e.target;
+    const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {
       !initValue && updateResponse(clickedBtnValue);
       if (!isLastQuestion) {
-        await animate(
-          clikcedBtn,
-          { opacity: [0, 1, 0, 1, 0, 1] },
-          { duration: 0.65 },
-        );
+        if (clickedBtn) {
+          await animate(
+            clickedBtn,
+            { opacity: [0, 1, 0, 1, 0, 1] },
+            { duration: 0.65 },
+          );
+        }
         nextFn?.();
       }
     }

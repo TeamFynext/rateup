@@ -25,12 +25,16 @@ export function LDForm() {
       } else if (clickedBtnName === "dislike") {
         updateResponse(LDResponse.Dislike);
       }
-      await animate(
-        clikcedBtn,
-        { opacity: [0, 1, 0, 1, 0, 1] },
-        { duration: 0.65 },
-      );
-      if (!isLastQuestion) nextFn?.();
+      if (!isLastQuestion) {
+        if (clikcedBtn) {
+          await animate(
+            clikcedBtn,
+            { opacity: [0, 1, 0, 1, 0, 1] },
+            { duration: 0.65 },
+          );
+        }
+        nextFn?.();
+      }
     }
   };
 

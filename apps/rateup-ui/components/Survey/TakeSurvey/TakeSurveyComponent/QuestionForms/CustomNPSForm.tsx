@@ -40,14 +40,16 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
     const selectedEle = scope.current?.querySelector(
       `.mantine-focus-auto[data-value="${value}"]`,
     );
-    if (selectedEle) {
-      await animate(
-        selectedEle,
-        { opacity: [0, 1, 0, 1, 0, 1] },
-        { duration: 0.65 },
-      );
+    if (!isLastQuestion) {
+      if (selectedEle) {
+        await animate(
+          selectedEle,
+          { opacity: [0, 1, 0, 1, 0, 1] },
+          { duration: 0.65 },
+        );
+      }
+      nextFn?.();
     }
-    if (!isLastQuestion) nextFn?.();
   };
 
   return (

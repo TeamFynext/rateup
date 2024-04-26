@@ -19,14 +19,16 @@ export function RatingForm() {
     const selectedValueEle = scope.current.querySelectorAll(
       `.${classes.rating} .mantine-Rating-symbolGroup:nth-child(-n+${value})`,
     );
-    if (selectedValueEle) {
-      await animate(
-        selectedValueEle,
-        { opacity: [0, 1, 0, 1, 0, 1] },
-        { duration: 0.65 },
-      );
+    if (!isLastQuestion) {
+      if (selectedValueEle) {
+        await animate(
+          selectedValueEle,
+          { opacity: [0, 1, 0, 1, 0, 1] },
+          { duration: 0.65 },
+        );
+      }
+      nextFn?.();
     }
-    if (!isLastQuestion) nextFn?.();
   };
 
   return (
