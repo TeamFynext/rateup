@@ -53,6 +53,12 @@ export async function getSubscription(orgId: string) {
         select: {
           id: true,
           name: true,
+          paymentPlan: {
+            select: {
+              period: true,
+              amount: true,
+            },
+          },
         },
       },
       subscriptionRef: true,
@@ -88,6 +94,12 @@ export async function getSubscription(orgId: string) {
           select: {
             id: true,
             name: true,
+            paymentPlan: {
+              select: {
+                period: true,
+                amount: true,
+              },
+            },
           },
         },
         subscriptionRef: true,
