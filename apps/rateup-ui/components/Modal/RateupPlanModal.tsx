@@ -34,10 +34,7 @@ const RateupPlanModal = ({
       .string()
       .trim()
       .min(1, { message: "Plan Type should Not Be empty" }),
-    paymentPlanId: z
-      .string()
-      .trim()
-      .min(1, { message: "Payment Plan should Not Be empty" }),
+    paymentPlanId: z.string().optional(),
     description: z
       .array(z.string())
       .min(1, { message: "Description should Not Be empty" }),
@@ -103,9 +100,9 @@ const RateupPlanModal = ({
           label="Razorpay Payment Plan"
           placeholder="Payment Plan"
           data={razorPayPlanFiltered}
-          withAsterisk
           allowDeselect={false}
           {...form.getInputProps("paymentPlanId")}
+          disabled={!razorPayPlanFiltered?.length}
         />
         <ContainedTextField
           label="Name"
