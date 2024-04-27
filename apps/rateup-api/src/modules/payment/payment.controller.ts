@@ -149,6 +149,7 @@ export async function createRateUpPlanHandler(
     const newPlan = await createRateUpPlan(request?.body);
     reply.code(newPlan.code).send(newPlan.data);
   } catch (error) {
+    console.error(error);
     reply.code(500).send(error);
   }
 }
