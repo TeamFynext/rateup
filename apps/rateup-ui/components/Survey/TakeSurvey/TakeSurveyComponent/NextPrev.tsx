@@ -98,6 +98,7 @@ function NextPrev({
   const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
   const isLastQuestion =
     survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
+
   return (
     <Stack
       gap={0}
@@ -125,16 +126,7 @@ function NextPrev({
             disabled={isFirstQuestion}
             variant="outlined"
             onClick={prev}
-            style={
-              isFirstQuestion
-                ? {}
-                : {
-                    ...themeStylesWoBr,
-                    backgroundColor: `#FFFFFF`,
-                    outline: `2px solid ${inputColor}`,
-                    color: inputColor,
-                  }
-            }
+            style={isFirstQuestion ? {} : themeStylesWoBr}
           >
             <IconChevronLeft size={isMobile ? 20 : 24} />
           </ActionIcon>
