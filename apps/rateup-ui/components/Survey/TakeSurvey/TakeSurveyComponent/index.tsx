@@ -145,26 +145,23 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       if (takeSurveyRootDiv && nextPrevBtnDiv) {
         const nextPrevBtnDivHeight =
           nextPrevBtnDiv.getBoundingClientRect().height;
-        const takeSurveyRootDivHeight =
-          takeSurveyRootDiv.getBoundingClientRect().height;
+        const nextPrevBtnOffsetTop = nextPrevBtnDiv.offsetTop;
+
         const visualViewport = event.target;
         const offsetLeft = visualViewport.offsetLeft;
-        const offsetTop =
-          visualViewport.height -
-          takeSurveyRootDivHeight +
-          visualViewport.offsetTop -
-          nextPrevBtnDivHeight +
-          16;
 
-        nextPrevBtnDiv.style.transform = `translate(${offsetLeft}px, ${offsetTop}px) scale(${
-          1 / visualViewport.scale
-        }`;
+        const nextPrevBtnDivTranslateY =
+          -(
+            nextPrevBtnOffsetTop -
+            visualViewport.height +
+            nextPrevBtnDivHeight
+          ) + visualViewport.offsetTop;
+        nextPrevBtnDiv.style.transform = `translate(${offsetLeft}px, ${nextPrevBtnDivTranslateY}px)`;
       }
     });
   };
 
   useEffect(() => {
-    console.log("mounted");
     window.visualViewport.addEventListener("scroll", viewportHandler);
     window.visualViewport.addEventListener("resize", viewportHandler);
 
