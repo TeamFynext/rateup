@@ -60,11 +60,51 @@ export async function verifySurveyMaxCountRestriction(
     request.subscription.features[SubscriptionFeaturePathName.WebSurvey].count
       .max
   ) {
-    reply
-      .code(403)
-      .send({
-        message: "You have reached the maximum limit of surveys",
-        displayMessageInClient: true,
-      });
+    reply.code(403).send({
+      message: "You have reached the maximum limit of surveys",
+      displayMessageInClient: true,
+    });
+  }
+}
+
+export async function verifySurveyMonthlyLimitRestriction(
+  request: FastifyRequest<{
+    Params: GetSurveyByIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  let id = request.params.id;
+  const surveyTeamMapWhere = id.length === 8 ? { shortUrlId: id } : { id };
+  const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
+    where: surveyTeamMapWhere,
+    include: {
+      team: true,
+    },
+  });
+
+  let orgId = surveyTeamMap.team.orgId;
+
+  const usage = await prisma.usageStats.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+
+  if (
+    usage.monthlySurveyResponses >=
+    subscription.features[SubscriptionFeaturePathName.WebSurvey].count
+      .monthlyResponseLimit
+  ) {
+    reply.code(403).send({
+      message:
+        "You have reached the maximum monthly limit of surveys responses.",
+      displayMessageInClient: true,
+    });
   }
 }
