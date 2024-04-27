@@ -24,3 +24,15 @@
 .transition {
   transition: all 0.2s;
 }
+
+.item[data-select="false"] {
+  background-color: var(--mantine-body-color);
+}
+
+[data-mantine-color-scheme="dark"] .item[data-select="true"] {
+  background-color: var(--mantine-color-dark-8);
+}
+
+[data-mantine-color-scheme="light"] .item[data-select="true"] {
+  background-color: var(--light-grey-color);
+}

@@ -82,6 +82,7 @@ export function EditSurvey({
       p={2}
       gap={10}
       style={{ overflow: "auto" }}
+      bg={"var(--mantine-color-body)"}
     >
       <PaperLayout className={styles["question-sidebar-container"]}>
         <QuestionsSideBar

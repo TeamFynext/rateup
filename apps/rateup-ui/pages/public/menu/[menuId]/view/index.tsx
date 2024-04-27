@@ -153,7 +153,7 @@ export default function MenuLandingDetail({ fullMenu, menuBanner }) {
                   c={"white"}
                   h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
                   maw={largeScreen ? "2440px" : "768px"}
-                ></BackgroundImage>
+                />
               </Carousel.Slide>
             ))}
           </Carousel>

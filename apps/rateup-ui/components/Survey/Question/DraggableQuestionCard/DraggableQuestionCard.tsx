@@ -9,11 +9,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
-import {
-  IconBrandGoogle,
-  IconGripVertical,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import cx from "clsx";
 import { useRouter } from "next/router";
 import React, { useContext } from "react";
@@ -21,10 +17,10 @@ import { Draggable } from "react-beautiful-dnd";
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { extractText } from "../../../../utils";
+import { GoogleIcon } from "../../../Button/GoogleIcon";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { questionIcons } from "../QuestionTypeSelection";
 import classes from "./DraggableQuestionCard.module.css";
-import { GoogleIcon } from "../../../Button/GoogleIcon";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -86,8 +82,8 @@ export function DraggableQuestionCard({
               ref={provided.innerRef}
               onClick={() => handleOpenQuestion(question)}
               {...provided.draggableProps}
+              data-select={selected}
               style={{
-                backgroundColor: selected ? "var(--light-grey-color)" : "white",
                 ...provided.draggableProps.style,
               }}
             >
@@ -127,6 +123,7 @@ export function DraggableQuestionCard({
                     w={30}
                     h={30}
                     fit="contain"
+                    alt="image of logic jump"
                   />
                 )}
                 {question.googleReview && (

@@ -18,8 +18,6 @@
 }
 
 .text-input-for-picking-color {
-  background-color: var(--mantine-color-gray-1);
-  /* border: none; */
   border: 2px solid var(--mantine-color-gray-6);
   border-radius: 1rem;
   padding: 0.625rem 0.875rem;

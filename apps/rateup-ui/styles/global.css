@@ -59,6 +59,7 @@
   --gift-grey-4: #848484;
   --gift-black: #2f2f2f;
   --sucess-green: #39c907;
+  --text-color: light-dark(var(--grey-color), white);
 }
 
 html {
