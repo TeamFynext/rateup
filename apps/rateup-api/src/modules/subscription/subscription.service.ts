@@ -1,39 +1,53 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
-import { SampleSubscriptionFeatures } from "./subscription.data";
+import { FreePlanSubscriptionFeatures } from "./subscription.data";
 import { updateSubscriptionInput } from "./subscription.schema";
 import { PaymentPlanType } from "@prisma/client";
 import { createStats } from "../stats/stats.service";
+import { SubscriptionFeaturePathName } from "../../types/enums";
+import { getNestedProperty } from "../../utils/misc/obj.utils";
 
-export async function createTrialSubscription(orgId: string, pClient = prisma) {
-  // Check if the RATEUP TRIAL plan exists
-  const rateupTrialPlan = await pClient.rateupPlan.findFirst({
+export async function createFreePlanSubscription(
+  orgId: string,
+  pClient = prisma,
+) {
+  // Check if the FREE PLAN plan exists  -- was earlier RATEUP TRIAL
+  const rateupFreePlan = await pClient.rateupPlan.findFirst({
     where: {
-      name: "RATEUP TRIAL",
+      name: "FREE PLAN",
     },
   });
 
   let planId;
+  let freePlanDescription = [
+    "1 Survey",
+    "50 Response/Month",
+    "1 Menu",
+    "50 Views/Month",
+    "1 Team",
+    "1 User",
+  ];
 
-  if (rateupTrialPlan) {
-    planId = rateupTrialPlan.id;
+  if (rateupFreePlan) {
+    planId = rateupFreePlan.id;
   } else {
-    const newRateupTrialPlan = await pClient.rateupPlan.create({
+    const newRateupFreePlan = await pClient.rateupPlan.create({
       data: {
-        name: "RATEUP TRIAL",
-        displayName: "RATEUP TRIAL",
+        name: "FREE PLAN",
+        displayName: "FREE PLAN",
         planType: PaymentPlanType.BASE,
+        description: freePlanDescription,
       },
     });
-    planId = newRateupTrialPlan.id;
+    planId = newRateupFreePlan.id;
   }
 
   await pClient.subscription.create({
     data: {
       orgId,
       basePlanId: planId,
-      features: SampleSubscriptionFeatures as any,
-      expiresAt: dayjs().add(30, "day").toDate(),
+      features: FreePlanSubscriptionFeatures as any,
+      expiresAt: dayjs().add(100, "day").toDate(),
     },
   });
 }
@@ -58,44 +72,6 @@ export async function getSubscription(orgId: string) {
       subscriptionRef: true,
     },
   })) as unknown as Subscription;
-
-  //TODO - Resolve the temp solution
-  //here is a temp solution for missing features for existing users
-  if (!sub.features.ticket) {
-    const ticket = {
-      count: {
-        max: 500,
-      },
-      active: true,
-    };
-
-    sub.features.ticket = ticket;
-
-    let updatedSub = (await prisma.subscription.update({
-      where: {
-        orgId: sub.orgId,
-      },
-      data: {
-        features: sub.features,
-      },
-      select: {
-        orgId: true,
-        features: true,
-        renewedAt: true,
-        expiresAt: true,
-        createdAt: true,
-        basePlan: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        subscriptionRef: true,
-      },
-    })) as unknown as Subscription;
-
-    return updatedSub;
-  }
 
   //check if usageStats record exists & update
   if (orgId) await createStats(orgId);
@@ -136,4 +112,18 @@ export async function deleteSubscriptions(orgIds: Array<string>) {
       },
     },
   });
+}
+
+export async function hasFeature(
+  orgId: string,
+  featurePath: SubscriptionFeaturePathName,
+) {
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+  if (!subscription || typeof subscription.features !== "object") return false;
+  console.log(getNestedProperty(subscription.features, featurePath));
+  return getNestedProperty(subscription.features, featurePath).active;
 }

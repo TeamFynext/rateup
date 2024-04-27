@@ -10,7 +10,11 @@ import {
 } from "../../utils/survey/response.data";
 import { getAccessToken, initializeAuthClient } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
-import { ChoiceTypeQuestions, QuestionType } from "../../types/enums";
+import {
+  ChoiceTypeQuestions,
+  QuestionType,
+  SubscriptionFeaturePathName,
+} from "../../types/enums";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
@@ -19,6 +23,7 @@ import { autoGenerateTicket } from "../ticket/ticket.service";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { updateMonthlyStat } from "../stats/stats.service";
+import { hasFeature } from "../subscription/subscription.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -393,11 +398,23 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
           title: true,
         },
       },
+      team: {
+        select: {
+          orgId: true,
+        },
+      },
     },
   });
-  const { survey } = response ?? {};
+  const { survey, team } = response ?? {};
 
-  if (survey?.enableNotificationEmail && survey.notificationEmail) {
+  if (
+    survey?.enableNotificationEmail &&
+    survey.notificationEmail &&
+    (await hasFeature(
+      team.orgId,
+      SubscriptionFeaturePathName.EmailNotification,
+    ))
+  ) {
     const { notificationEmail } = survey;
     const surveyQuestion =
       surveyResponse?.surveyTeamMap?.survey?.questions ?? [];
