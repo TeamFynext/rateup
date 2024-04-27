@@ -83,7 +83,9 @@ const Billing = ({ subscription, processingPayment }) => {
                 </Text>
                 <Group>
                   <Title order={5}>Nil</Title>
-                  {subscription?.basePlan?.name !== "RATEUP TRIAL" ? (
+                  {!["FREE PLAN", "RATEUP TRIAL"].includes(
+                    subscription?.basePlan?.name,
+                  ) ? (
                     <RateupButtonPrimary title="Buy Addons" />
                   ) : null}
                 </Group>
