@@ -138,15 +138,13 @@
     font-size: "16px";
   }
 
-  /* .question-form-title-desc-container {
-    min-height: calc(100vh - 175px);
-    min-height: calc(100dvh - 175px);
-  } */
-
   /* Next Prev component styles */
+  .next-prev-btns-root-div {
+    padding-bottom: 1.25rem;
+  }
+
   .next-prev-btns-and-progress-container {
     gap: 1rem;
-    padding-bottom: 1rem;
   }
 
   .next-prev-btns-and-progress-container .prev-btn {
