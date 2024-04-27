@@ -17,7 +17,7 @@ export function CategoryDisplay({
     <Stack id={category?.id} fw={300} pb={"lg"}>
       <Stack gap={0}>
         <Text
-          c="var(--grey-color)"
+          c="var(--text-color)"
           fz="clamp(20px, 11.424px + 1.429vw, 32px)"
           tt={"capitalize"}
           fw={500}

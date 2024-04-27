@@ -49,6 +49,11 @@ export const contactColumn = (contactTags = []) => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
+    {
+      header: () => "Phone",
+      accessorKey: "phone",
+      cell: (info) => info.getValue(),
+    },
     ...(contactTags?.length > 0
       ? contactTags?.map((data) => ({
           header: () => data,
