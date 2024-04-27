@@ -134,7 +134,8 @@ const AccountSettings = () => {
   const isSubscriber = () => {
     return (
       checkExpiry(subscription?.expiresAt) ||
-      subscription?.basePlan?.name === "RATEUP TRIAL"
+      subscription?.basePlan?.name === "RATEUP TRIAL" ||
+      subscription?.basePlan?.name === "FREE PLAN"
     );
   };
 

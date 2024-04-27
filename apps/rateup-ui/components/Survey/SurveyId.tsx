@@ -239,15 +239,21 @@ export default function SurveyID() {
                           "teams",
                           "preview",
                           "location",
-                          "enableNotificationEmail",
                           "notificationEmail",
-                          "endtoendencryption",
+                          hasFeature(
+                            subscription,
+                            SubscriptionFeaturePathName.Encryption,
+                          ) && "endtoendencryption",
                           "redirect",
                           "uniqueDeviceResponse",
                           hasFeature(
                             subscription,
                             SubscriptionFeaturePathName.Ticket,
                           ) && "tickets",
+                          hasFeature(
+                            subscription,
+                            SubscriptionFeaturePathName.EmailNotification,
+                          ) && "enableNotificationEmail",
                         ]
                   }
                 />

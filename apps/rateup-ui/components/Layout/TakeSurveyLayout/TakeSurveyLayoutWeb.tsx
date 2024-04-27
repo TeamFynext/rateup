@@ -36,6 +36,8 @@ import WelcomePage from "../WelcomePage/WelcomePage";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { surveyUploadsPath } from "../../../utils/constants";
 import styles from "./TakeSurveyLayoutWeb.module.css";
+import useViewportSize from "./hooks/useViewportHook";
+import useOnScreenKeyboardScrollFix from "./hooks/useOnScreenKeyboardScrollFix";
 
 export const TakeSurveyLayoutWeb = ({
   survey,
@@ -118,39 +120,11 @@ export const TakeSurveyLayoutWeb = ({
     setSelectedLanguage(survey?.languages[0]);
   }
 
-  const [visualViewportHeight, setVisualViewportHeight] = useState<
-    string | number
-  >("");
-  const pendingUpdate = useRef(false);
-  const viewportHandler = useCallback(
-    (e) => {
-      if (pendingUpdate.current) return;
-      pendingUpdate.current = true;
-
-      requestAnimationFrame(() => {
-        pendingUpdate.current = false;
-
-        setVisualViewportHeight(e.target.height);
-      });
-    },
-    [pendingUpdate],
-  );
-
-  useEffect(() => {
-    window.visualViewport.addEventListener("resize", viewportHandler);
-    () => {
-      window.visualViewport.removeEventListener("resize", viewportHandler);
-    };
-  }, []);
-
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   const surveyThemeDataPrimaryColor =
     surveyThemeData?.surveyTheme?.input?.primaryColor;
 
-  const visualViewportHeightObj = visualViewportHeight
-    ? { height: visualViewportHeight }
-    : {};
   const takeSurveyLayoutWebRootStyles = !startClicked
     ? {
         ...welcomeThemeStyles,
@@ -158,7 +132,6 @@ export const TakeSurveyLayoutWeb = ({
     : {
         ...surveyThemesStyles,
         overflow: "hidden",
-        ...visualViewportHeightObj,
       };
 
   return (

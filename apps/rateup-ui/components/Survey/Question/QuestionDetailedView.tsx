@@ -11,6 +11,7 @@ import {
   ScrollArea,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { UseFormReturnType, useForm } from "@mantine/form";
 import { IconBrandGoogle, IconTicket } from "@tabler/icons-react";
@@ -23,7 +24,12 @@ import {
 } from "../../../backend/surveys/questions/questions.query";
 import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { NPSWeightage, QuestionType, SurveyType } from "../../../types/enums";
+import {
+  NPSWeightage,
+  QuestionType,
+  SubscriptionFeaturePathName,
+  SurveyType,
+} from "../../../types/enums";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
@@ -58,6 +64,8 @@ import { ChoicesCreator } from "./ChoicesCreator";
 import ContactExtraProps from "./ContactExtraProps";
 import TestimonialExtraProps from "./TestimonialExtraProps";
 import TncExtraProps from "./TncExtraProps";
+import { useSubscription } from "../../../backend/subscription/subscription.query";
+import { hasFeature } from "../../../utils/subscription/subscription";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -89,6 +97,16 @@ export function QuestionDetailedView({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
+
+  const { data: subscription } = useSubscription();
+  const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
+    useState(false);
+
+  useEffect(() => {
+    setIsGoogleReviewFeatureActive(
+      hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
+    );
+  }, [subscription]);
 
   const form = useForm({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
@@ -318,19 +336,40 @@ export function QuestionDetailedView({
 
                     {googleReviewSupportedTypes.includes(question?.type) && (
                       <Menu.Item>
-                        <RateupButtonSecondary
-                          title={"Google Review"}
-                          leftIcon={
-                            <IconBrandGoogle stroke={4} size={"1rem"} />
-                          }
-                          size="sm"
-                          fullWidth
-                          onClick={async () => {
-                            let save = await handleSave();
-                            save === "saved" &&
-                              setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
-                          }}
-                        />
+                        {isGoogleReviewFeatureActive ? (
+                          <RateupButtonSecondary
+                            title={"Google Review"}
+                            leftIcon={
+                              <IconBrandGoogle stroke={4} size={"1rem"} />
+                            }
+                            size="sm"
+                            fullWidth
+                            onClick={async () => {
+                              let save = await handleSave();
+                              save === "saved" &&
+                                setActiveTab(
+                                  QuestionTabsEnum.GoogleReviewEditor,
+                                );
+                            }}
+                          />
+                        ) : (
+                          <Tooltip
+                            label="Upgrade your Plan for this feature."
+                            disabled={isGoogleReviewFeatureActive}
+                            color="yellow"
+                          >
+                            <Button
+                              data-disabled
+                              radius="lg"
+                              onClick={(event) => event.preventDefault()}
+                              leftSection={
+                                <IconBrandGoogle stroke={4} size={"1rem"} />
+                              }
+                            >
+                              Google Review
+                            </Button>
+                          </Tooltip>
+                        )}
                       </Menu.Item>
                     )}
 

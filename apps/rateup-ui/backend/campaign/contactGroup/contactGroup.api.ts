@@ -32,7 +32,7 @@ export const getContactGroupById = async (groupId: string) => {
   );
   let contacts = await getContactsByGroupId(groupId);
   groupDataById.data.contacts = contacts;
-  return groupDataById?.data;
+  return groupDataById?.data as ContactGroupwithContacts;
 };
 
 export const getContactsByGroupId = async (groupId: string) => {
@@ -81,7 +81,7 @@ export const removeContactsFromGroup = async ({ contactIds, groupId }) => {
     `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts`,
     contactIds,
   );
-  return res;
+  return res?.data;
 };
 
 export const addExistingContactsToMultipleGroups = ({

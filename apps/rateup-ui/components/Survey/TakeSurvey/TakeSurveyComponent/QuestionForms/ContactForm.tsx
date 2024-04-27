@@ -79,6 +79,11 @@ const ContactForm = ({ features }) => {
                   color={`var(--mantine-color-${theme.primaryColor}-outline)`}
                 />
               }
+              styles={{
+                section: {
+                  zIndex: 0,
+                },
+              }}
             />
           </FormPaperLayout>
         </Stack>

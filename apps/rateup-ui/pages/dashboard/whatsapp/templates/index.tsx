@@ -97,27 +97,6 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          {/* <Menu shadow="md" withArrow>
-            <Menu.Target>
-              <Button
-                variant="subtle"
-                rightSection={<IconChevronDown />}
-                radius={"xl"}
-                color="dark"
-              >
-                Status
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item color="teal" leftSection={<IconCheck size={14} />}>
-                Active
-              </Menu.Item>
-              <Menu.Item color="red" leftSection={<IconX size={14} />}>
-                Inactive
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-           */}
           <RateupButtonPrimary
             onClick={() => setSort((prev) => !prev)}
             title={"Sort"}

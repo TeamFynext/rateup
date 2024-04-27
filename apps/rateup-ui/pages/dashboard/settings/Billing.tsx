@@ -27,7 +27,8 @@ const Billing = ({ subscription, processingPayment }) => {
                   </Text>
                   <Group>
                     <Title order={5}>{subscription?.basePlan?.name}</Title>
-                    {subscription?.basePlan?.name === "RATEUP TRIAL" ? (
+                    {subscription?.basePlan?.name === "RATEUP TRIAL" ||
+                    subscription?.basePlan?.name === "FREE PLAN" ? (
                       <RateupButtonPrimary
                         title="Upgrade plan"
                         onClick={toggle}
@@ -67,6 +68,12 @@ const Billing = ({ subscription, processingPayment }) => {
                       ? "Expired"
                       : "Active"}
                   </Badge>
+                  {checkExpiry(subscription?.expiresAt) ? (
+                    <RateupButtonPrimary
+                      title="Upgrade plan"
+                      onClick={toggle}
+                    />
+                  ) : null}
                 </Group>
               </Stack>
 

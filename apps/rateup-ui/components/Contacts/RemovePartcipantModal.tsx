@@ -12,7 +12,7 @@ import NothingFound from "../NothingFound/NothingFound";
 const RemovePartcipantModal = ({ customerList, groupId, close }) => {
   const [searchText, setSearchText] = useState("");
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
-  const removeContactsMutation = useRemoveContactsFromGroup(groupId);
+  const removeContactsMutation = useRemoveContactsFromGroup(groupId, () => {});
   const filteredCustomerList = searchText
     ? customerList?.filter(
         (customer) =>
