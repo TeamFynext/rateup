@@ -116,7 +116,7 @@ export default function Contacts() {
       header: () => "Action",
       accessorFn: (row) => row,
       enableSorting: false,
-      enableGlobalFilter: false,
+      enableColumnFilter: false,
       id: "action",
       cell: (info) => (
         <ContactMenu

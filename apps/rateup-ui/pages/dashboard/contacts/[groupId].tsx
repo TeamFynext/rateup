@@ -98,7 +98,7 @@ export default function ContactGroup() {
       header: () => "Action",
       accessorFn: (row) => row,
       enableSorting: false,
-      enableGlobalFilter: false,
+      enableColumnFilter: false,
       id: "action",
       cell: (info) => (
         <ParticipantMenu

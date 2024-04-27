@@ -39,12 +39,6 @@ export const selectCheckBox = [
 ];
 const contactDetailsColumn = [
   {
-    header: () => "Created",
-    accessorKey: "createdAt",
-    cell: (info) =>
-      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-  },
-  {
     header: () => "Name",
     accessorKey: "name",
     cell: (info) => info.getValue(),
@@ -54,12 +48,6 @@ const contactDetailsColumn = [
 export const contactColumn = (contactTags = []) => {
   return [
     ...selectCheckBox,
-    {
-      header: () => "Created",
-      accessorKey: "createdAt",
-      cell: (info) =>
-        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-    },
     ...contactDetailsColumn,
     ...(contactTags?.length > 0
       ? contactTags?.map((data) => ({
@@ -69,6 +57,7 @@ export const contactColumn = (contactTags = []) => {
           cell: (info) => info.getValue()?.toString(),
         }))
       : []),
+
     {
       header: () => "Source",
       accessorKey: "source",
@@ -78,16 +67,16 @@ export const contactColumn = (contactTags = []) => {
         </Badge>
       ),
     },
+    {
+      header: () => "Created",
+      accessorKey: "createdAt",
+      cell: (info) =>
+        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+    },
   ];
 };
 export const contactGroupColumn = [
   ...selectCheckBox,
-  {
-    header: () => "Created",
-    accessorKey: "createdAt",
-    cell: (info) =>
-      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-  },
   {
     header: () => "image",
     accessorKey: "icon",
@@ -116,11 +105,17 @@ export const contactGroupColumn = [
     ),
   },
   {
+    header: () => "Created",
+    accessorKey: "createdAt",
+    cell: (info) =>
+      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+  },
+  {
     header: () => "Detail View",
     id: "Detail",
     accessorKey: "id",
     enableSorting: false,
-    enableGlobalFilter: false,
+    enableColumnFilter: false,
     cell: (info) => (
       <Link href={`contacts/${info.getValue()}`}>
         <RateupButtonPrimary
@@ -132,23 +127,18 @@ export const contactGroupColumn = [
       </Link>
     ),
   },
+
   {
     header: () => "Action",
     accessorFn: (row) => row,
     enableSorting: false,
-    enableGlobalFilter: false,
+    enableColumnFilter: false,
     id: "action",
     cell: (info) => <ContactGroupMenu groupId={info?.row.original?.id} />,
   },
 ];
 
 export const contactParticipentColumn = [
-  {
-    header: () => "Created",
-    accessorKey: "createdAt",
-    cell: (info) =>
-      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-  },
   {
     header: () => "Name",
     accessorKey: "name",
@@ -180,11 +170,17 @@ export const contactParticipentColumn = [
     ),
   },
   {
+    header: () => "Created",
+    accessorKey: "createdAt",
+    cell: (info) =>
+      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+  },
+  {
     header: () => "Detail View",
     id: "Detail",
     accessorKey: "id",
     enableSorting: false,
-    enableGlobalFilter: false,
+    enableColumnFilter: false,
     cell: (info) => (
       <Link href={`campaign/${info.getValue()}`}>
         <RateupButtonPrimary
@@ -200,7 +196,7 @@ export const contactParticipentColumn = [
     header: () => "Action",
     accessorFn: (row) => row,
     enableSorting: false,
-    enableGlobalFilter: false,
+    enableColumnFilter: false,
     id: "action",
     cell: (info) => (
       <CampaignMenu
@@ -211,12 +207,6 @@ export const contactParticipentColumn = [
   },
 ];
 export const contactParticipentDetailColumn = [
-  {
-    header: () => "Created",
-    accessorKey: "createdAt",
-    cell: (info) =>
-      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-  },
   {
     header: () => "Name",
     accessorKey: "contact.name",
@@ -245,10 +235,16 @@ export const contactParticipentDetailColumn = [
     ),
   },
   {
+    header: () => "Created",
+    accessorKey: "createdAt",
+    cell: (info) =>
+      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+  },
+  {
     header: () => "Action",
     accessorFn: (row) => row,
     enableSorting: false,
-    enableGlobalFilter: false,
+    enableColumnFilter: false,
     id: "action",
     cell: (info) => (
       <CampaignParticipantMenu

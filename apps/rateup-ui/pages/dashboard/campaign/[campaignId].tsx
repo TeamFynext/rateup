@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Flex,
   Group,
@@ -104,21 +105,14 @@ const CampaignById = () => {
               campaign={campaignData}
             />
           </SimpleGrid>
-          <Group justify="center" gap={"xl"} mt={"lg"}>
+          <Group justify="space-between" gap={"xl"} mt={"lg"}>
             <Title order={2}>Participants</Title>
             <SearchInput
               placeholder={"Search Participants"}
               searchText={searchText}
               setSearchText={setSearchText}
             />
-            <Button
-              leftSection={<IconPlus />}
-              radius={"xl"}
-              size="md"
-              onClick={open}
-            >
-              Add Participants
-            </Button>
+            <Box w={50} h={50} />
           </Group>
           <PaperLayout px={0}>
             <TanstackTable
@@ -127,6 +121,7 @@ const CampaignById = () => {
               btnTitle="Add"
               toggle={open}
               disableFuzzyFnCustom={true}
+              topHeight={580}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
