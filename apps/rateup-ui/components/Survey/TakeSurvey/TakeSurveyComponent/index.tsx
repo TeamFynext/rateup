@@ -162,12 +162,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   };
 
   useEffect(() => {
-    window.visualViewport.addEventListener("scroll", viewportHandler);
-    window.visualViewport.addEventListener("resize", viewportHandler);
+    window?.visualViewport.addEventListener("scroll", viewportHandler);
+    window?.visualViewport.addEventListener("resize", viewportHandler);
 
     return () => {
-      window.visualViewport.removeEventListener("scroll", viewportHandler);
-      window.visualViewport.removeEventListener("resize", viewportHandler);
+      window?.visualViewport.removeEventListener("scroll", viewportHandler);
+      window?.visualViewport.removeEventListener("resize", viewportHandler);
     };
   }, []);
 
@@ -467,7 +467,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         height: "100%",
                         display: "flex",
                         alignItems: "center",
-                        padding: "0.625rem 0",
+                        padding: "0.625rem 0.3125rem",
                       }}
                     >
                       <ScrollArea.Autosize
@@ -475,7 +475,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                         p={0}
                         m={0}
                         w={"100%"}
-                        type="hover"
+                        type="never"
                       >
                         <Box
                           className={`${lexend.className}`}

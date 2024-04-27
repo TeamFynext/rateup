@@ -36,8 +36,6 @@ import WelcomePage from "../WelcomePage/WelcomePage";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { surveyUploadsPath } from "../../../utils/constants";
 import styles from "./TakeSurveyLayoutWeb.module.css";
-import useViewportSize from "./hooks/useViewportHook";
-import useOnScreenKeyboardScrollFix from "./hooks/useOnScreenKeyboardScrollFix";
 
 export const TakeSurveyLayoutWeb = ({
   survey,
@@ -252,23 +250,20 @@ export const TakeSurveyLayoutWeb = ({
             >
               {/* .........Survey Header Section.......... */}
               {survey?.isPublished == true && !!startClicked && (
-                <Group justify="center" mt={"3vh"} mb={"0.625rem"}>
-                  <Stack
-                    style={{
-                      maxHeight: isMobile ? "65px" : "100px",
-                      maxWidth: "30%",
-                    }}
-                  >
-                    {orgLogoSrc && (
-                      <Image
-                        src={orgLogoSrc}
-                        alt="Logo"
-                        h={isMobile ? 60 : 80}
-                        style={{ ...orgLogoStyles }}
-                      />
-                    )}
-                  </Stack>
-                </Group>
+                <Box
+                  // align="center"
+                  className={styles["logo-container"]}
+                >
+                  {orgLogoSrc && (
+                    <Image
+                      src={orgLogoSrc}
+                      alt="Logo"
+                      style={{ ...orgLogoStyles }}
+                      mah={100}
+                      maw={100}
+                    />
+                  )}
+                </Box>
               )}
 
               <Paper

@@ -38,7 +38,7 @@ function NextPrev({
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
-  const backgroundColor = "transparent";
+  const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
   // themeStylesWoBr => themeStyles without border radius, border radius option will be removed from theme settings, for this we are taking themeStyles object without borderRadius, since old theme object will still have borderRadius.
   const { borderRadius = "initial", ...themeStylesWoBr } = themeStyles;
@@ -104,20 +104,16 @@ function NextPrev({
       w={"100%"}
       justify="flex-end"
       id="next-prev-btn-div"
-      style={{ backgroundColor }}
+      className={styles["next-prev-btns-root-div"]}
     >
       {selectedQ?.required && !response && (
-        <Text
-          mb={"0.625rem"}
-          size={isMobile && "sm"}
-          c={themeStyles?.backgroundColor}
-        >
+        <Text className={styles["message-p"]} c={themeStyles?.backgroundColor}>
           *Choose an option or answer to proceed!
         </Text>
       )}
 
       {errorMsg && isErrorInput && (
-        <Text c="red" mb={"0.625rem"}>
+        <Text className={styles["message-p"]} c={"red"}>
           Note: * {errorMsg}
         </Text>
       )}
@@ -134,9 +130,9 @@ function NextPrev({
                 ? {}
                 : {
                     ...themeStylesWoBr,
-                    backgroundColor: `rgba(255, 255, 255)`,
-                    outline: `2px solid ${themeStylesWoBr?.backgroundColor}`,
-                    color: themeStylesWoBr?.backgroundColor,
+                    backgroundColor: `#FFFFFF`,
+                    outline: `2px solid ${inputColor}`,
+                    color: inputColor,
                   }
             }
           >
@@ -168,8 +164,11 @@ function NextPrev({
         <Progress
           value={parseInt(getCompletionRate(num, total))}
           transitionDuration={300}
-          color={themeStylesWoBr?.backgroundColor}
+          color={inputColor}
           size={isMobile ? "xs" : "sm"}
+          styles={{
+            root: { backgroundColor: "#dddddd" },
+          }}
         />
       </Stack>
     </Stack>
