@@ -1,109 +1,145 @@
-import {
-  ActionIcon,
-  Divider,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
-import React from "react";
+import { Center, Group, Loader, Stack, Title } from "@mantine/core";
 import { useUsageStats } from "../../../backend/stats/stats.query";
-import { notifications } from "@mantine/notifications";
-import { IconRefresh } from "@tabler/icons-react";
+import {
+  IconCategoryFilled,
+  IconClipboardList,
+  IconClockFilled,
+  IconEyeFilled,
+  IconMessageCircle2Filled,
+  IconRefresh,
+  IconSocial,
+  IconUsers,
+} from "@tabler/icons-react";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
-const UsageStats = () => {
-  const { data: stats, isPending, refetch } = useUsageStats();
-
+export const StatsCard = ({
+  Icon,
+  count,
+  stats,
+}: {
+  Icon: string;
+  count: number;
+  stats: string;
+}) => {
   return (
-    <Stack style={{ maxWidth: "1000px" }} mb="xl">
-      <Group gap={"md"}>
-        <Title order={2}>Usage Stats</Title>
-        <Tooltip label="Refresh data">
-          <ActionIcon
-            variant="light"
-            ml="sm"
-            mr="50px"
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-              refetch();
-              notifications.show({
-                id: "load-data",
-                color: "teal",
-                title: "Refreshing data",
-                loading: true,
-                message: "Hold.. your data is getting update...",
-                autoClose: 2000,
-              });
-            }}
+    <>
+      <PaperLayout w={350}>
+        <Group>
+          <Center
+            bg={"var(--tertiary-color)"}
+            p={"sm"}
+            style={{ borderRadius: "5px", color: "white" }}
           >
-            <IconRefresh style={{ width: "80%", height: "80%" }} stroke={1.5} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-      <Divider mb="md" />
+            <Icon />
+          </Center>
+          <Stack gap={1}>
+            <Title order={2}>{count}</Title>
+            <Title order={4} fw={400}>
+              {stats}
+            </Title>
+          </Stack>
+        </Group>
+      </PaperLayout>
+    </>
+  );
+};
+export const TeamStats = ({ stats }) => {
+  const statsArray = [
+    {
+      Icon: IconSocial as unknown as string,
+      count: stats?.teamsCount,
+      stats: "Teams",
+    },
+    {
+      Icon: IconUsers as unknown as string,
+      count: stats?.teamMembersCount,
+      stats: "Team Members",
+    },
+  ];
+  return (
+    <>
+      <Title order={4}>Team Stats</Title>
       <Group>
-        <Stack mb="xl">
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Teams :
-            </Title>
-            <Text> {stats?.teamsCount}</Text>
-          </Group>
-
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Team Members :
-            </Title>
-            <Text> {stats?.teamMembersCount} </Text>
-          </Group>
-        </Stack>
-
-        <Stack mb="xl">
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Surveys :
-            </Title>
-            <Text> {stats?.surveysCount} </Text>
-          </Group>
-
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Total Responses :
-            </Title>
-            <Text> {stats?.surveyResponsesCount} </Text>
-          </Group>
-
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Monthly Responses :
-            </Title>
-            <Text> {stats?.monthlySurveyResponses} </Text>
-          </Group>
-        </Stack>
-        <Stack mb="xl">
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Menus :
-            </Title>
-            <Text> {stats?.menusCount} </Text>
-          </Group>
-
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Total Menu Views :
-            </Title>
-            <Text> {stats?.menuViewsCount} </Text>
-          </Group>
-
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Monthly Menu Views :
-            </Title>
-            <Text> {stats?.monthlyMenuViews} </Text>
-          </Group>
-        </Stack>
+        {statsArray.map((item) => (
+          <StatsCard {...item} />
+        ))}
       </Group>
-    </Stack>
+    </>
+  );
+};
+
+export const MenuStats = ({ stats }) => {
+  const statsArray = [
+    {
+      Icon: IconCategoryFilled as unknown as string,
+      count: stats?.menusCount,
+      stats: "Menus",
+    },
+    {
+      Icon: IconEyeFilled as unknown as string,
+      count: stats?.monthlyMenuViews,
+      stats: "Monthly Menu view",
+    },
+    {
+      Icon: IconEyeFilled as unknown as string,
+      count: stats?.menuViewsCount,
+      stats: "Total Menu view",
+    },
+  ];
+  return (
+    <>
+      <Title order={4}>Menu Stats</Title>
+      <Group>
+        {statsArray.map((item) => (
+          <StatsCard {...item} />
+        ))}
+      </Group>
+    </>
+  );
+};
+export const SurveyStats = ({ stats }) => {
+  const statsArray = [
+    {
+      Icon: IconClipboardList as unknown as string,
+      count: stats?.surveysCount,
+      stats: "Surveys",
+    },
+    {
+      Icon: IconClockFilled as unknown as string,
+      count: stats?.monthlySurveyResponses,
+      stats: "Monthly Responses",
+    },
+    {
+      Icon: IconMessageCircle2Filled as unknown as string,
+      count: stats?.surveyResponsesCount,
+      stats: "Total Responses",
+    },
+  ];
+  return (
+    <>
+      <Title order={4}>Survey Stats</Title>
+      <Group>
+        {statsArray.map((item) => (
+          <StatsCard {...item} />
+        ))}
+      </Group>
+    </>
+  );
+};
+const UsageStats = () => {
+  const { data: stats, isPending, refetch, isFetching } = useUsageStats();
+  return (
+    <>
+      {isFetching ? (
+        <Loader type="bars" />
+      ) : (
+        <Stack gap={"md"}>
+          <TeamStats stats={stats} />
+          <SurveyStats stats={stats} />
+          <MenuStats stats={stats} />
+        </Stack>
+      )}
+    </>
   );
 };
 
