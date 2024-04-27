@@ -90,7 +90,6 @@ const TableLayout = ({
                           </UnstyledButton>
                           {enableFilter &&
                           filterVisibility &&
-                          header.column.getCanGlobalFilter() &&
                           header.column.getCanFilter() ? (
                             <>
                               <Filter column={header.column} table={table} />
