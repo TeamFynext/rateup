@@ -20,36 +20,40 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   return (
     <PaperLayout className="section-div">
       <Stack gap={"md"}>
-        <Group>
-          <Switch
-            className={`switch ${enableTickets ? "on" : "off"}`}
-            size="md"
-            checked={enableTickets}
-            onChange={() => {
-              editSurvey.mutate({
-                enableTickets: !enableTickets,
-              });
-            }}
-          />
-          <Box className={"switch-heading-and-desc-container"}>
-            <h3>Enable Ticketing</h3>
-          </Box>
-        </Group>
-        <Group>
-          <Switch
-            className={`switch ${enableTicketEmailAlerts ? "on" : "off"}`}
-            size="md"
-            checked={enableTicketEmailAlerts}
-            onChange={() => {
-              editSurvey.mutate({
-                enableTicketEmailAlerts: !enableTicketEmailAlerts,
-              });
-            }}
-          />
-          <Box className={"switch-heading-and-desc-container"}>
-            <h3>Enable Ticket Email Alerts</h3>
-          </Box>
-        </Group>
+        {enabledModules.includes("tickets") && (
+          <>
+            <Group>
+              <Switch
+                className={`switch ${enableTickets ? "on" : "off"}`}
+                size="md"
+                checked={enableTickets}
+                onChange={() => {
+                  editSurvey.mutate({
+                    enableTickets: !enableTickets,
+                  });
+                }}
+              />
+              <Box className={"switch-heading-and-desc-container"}>
+                <h3>Enable Ticketing</h3>
+              </Box>
+            </Group>
+            <Group>
+              <Switch
+                className={`switch ${enableTicketEmailAlerts ? "on" : "off"}`}
+                size="md"
+                checked={enableTicketEmailAlerts}
+                onChange={() => {
+                  editSurvey.mutate({
+                    enableTicketEmailAlerts: !enableTicketEmailAlerts,
+                  });
+                }}
+              />
+              <Box className={"switch-heading-and-desc-container"}>
+                <h3>Enable Ticket Email Alerts</h3>
+              </Box>
+            </Group>
+          </>
+        )}
         {enabledModules.includes("enableNotificationEmail") && (
           <NotificationEmailSettings surveyId={surveyId} survey={survey} />
         )}

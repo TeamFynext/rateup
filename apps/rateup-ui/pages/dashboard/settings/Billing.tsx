@@ -28,7 +28,8 @@ const Billing = ({ subscription, toggle, processingPayment }) => {
             </Title>
             <Text> {subscription?.basePlan?.name} </Text>
             {checkExpiry(subscription?.expiresAt) ||
-            subscription?.basePlan?.name === "RATEUP TRIAL" ? (
+            subscription?.basePlan?.name === "RATEUP TRIAL" ||
+            subscription?.basePlan?.name === "FREE PLAN" ? (
               <RateupButtonPrimary title="Upgrade plan" onClick={toggle} />
             ) : (
               <RateupButtonPrimary title="Buy Addons" />

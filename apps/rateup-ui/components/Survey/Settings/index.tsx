@@ -113,7 +113,8 @@ const SurveySettings = ({
             survey={survey}
           />
 
-          {enabledModules.includes("tickets") && (
+          {(enabledModules.includes("tickets") ||
+            enabledModules.includes("enableNotificationEmail")) && (
             <TicketSettings
               survey={survey}
               surveyId={surveyId}

@@ -1,6 +1,7 @@
 import React from "react";
-import { Box, Flex, Stack } from "@mantine/core";
-import PricingCard from "../Card/PricingCard";
+import { Box, Flex, Stack, Text } from "@mantine/core";
+import PlanCard from "../Card/PlanCard";
+import { PlanCardWidth } from "../Utils/constants";
 
 export const SurveySection = ({
   largeScreen,
@@ -28,34 +29,34 @@ export const SurveySection = ({
   return (
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
       {surveyPlan?.map((data, index) => {
-        let mainColor;
-        if (index == 0) mainColor = "var(--grey-color-4)";
-        else if (index === 1) mainColor = "var(--orange-400)";
-        else mainColor = "var(--shade-of-blue-2)";
         return (
           <Stack align="center" gap={0} pos={"relative"} key={data?.id}>
             <Box
-              bg={mainColor}
+              bg={"#1C518E"}
               c={"white"}
-              py={"8px"}
+              py={"10px"}
               px={"xl"}
               ta={"center"}
               style={{
-                borderRadius: "15px",
+                borderRadius: "15px 15px 0 0",
+                marginBottom: "",
+                zIndex: 2,
               }}
-              w={"fit-content"}
+              w={PlanCardWidth}
               display={index === 1 ? "block" : "none"}
             >
-              Most Popular
+              <Text pb="xs" mt="-4px" size="sm">
+                {" "}
+                Most Popular{" "}
+              </Text>
             </Box>
-            <PricingCard
+            <PlanCard
               currencySymbol={currencySymbol}
               data={data}
               handlePlanSelection={handlePlanSelection}
               index={index}
               inversePeriod={inversePeriod}
               largeScreen={largeScreen}
-              mainColor={mainColor}
             />
           </Stack>
         );
