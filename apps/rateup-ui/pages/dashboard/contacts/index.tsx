@@ -4,13 +4,11 @@ import {
   Center,
   Checkbox,
   CheckboxProps,
-  Container,
   Flex,
   Group,
   Loader,
   Menu,
   SegmentedControl,
-  SimpleGrid,
   Stack,
   Tabs,
   TextInput,
@@ -19,15 +17,17 @@ import {
 
 import {
   IconChevronDown,
+  IconChevronRight,
   IconSearch,
   IconTrashXFilled,
   IconUserPlus,
 } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
@@ -36,11 +36,12 @@ import {
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { ContactMenu } from "../../../components/Card/ContactCard";
-import { ContactGroupCard } from "../../../components/Card/ContactGroupCard";
+import {
+  ContactGroupMenu,
+  ContactMenu,
+} from "../../../components/Card/ContactCard";
 import ContactAction from "../../../components/Contacts/ContactAction";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
-import NothingFound from "../../../components/NothingFound/NothingFound";
 import ContactTable from "../../../components/Table/ContactTable";
 import {
   ContainedMultiSelect,
@@ -51,7 +52,7 @@ import Heading from "../../../components/styled/Heading/Heading";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { showLoadingToast } from "../../../utils/notifications";
 
-enum ContactTabs {
+export enum ContactTabs {
   CONTACTS = "contacts",
   GROUPS = "groups",
   SETTINGS = "settings",
@@ -59,16 +60,11 @@ enum ContactTabs {
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterByTag, setFilterByTag] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<ContactTabs>(ContactTabs.CONTACTS);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [contactTags, setContactTags] = useState([]);
   const router = useRouter();
-  const { tab } = router.query as { tab: string };
-  useEffect(() => {
-    if (tab && Object.values(ContactTabs).includes(tab as any)) {
-      setActiveTab(tab as ContactTabs);
-    }
-  }, [tab]);
+  const { tab = ContactTabs.CONTACTS } = router.query as { tab: string };
+  let activeTab = tab?.toString() as ContactTabs;
 
   const { isLoading: isLoadingContacts, data: contactData } = useContacts() as {
     isLoading: boolean;
@@ -197,6 +193,91 @@ export default function Contacts() {
       ),
     },
   ];
+  const columnGroup: ColumnDef<any>[] = [
+    {
+      id: "select",
+      enableSorting: false,
+      header: ({ table }) => (
+        <IndeterminateCheckbox
+          {...{
+            checked: table.getIsAllRowsSelected(),
+            indeterminate: table.getIsSomeRowsSelected(),
+            onChange: table.getToggleAllRowsSelectedHandler(),
+          }}
+        />
+      ),
+      cell: ({ row }) => (
+        <div className="px-1">
+          <IndeterminateCheckbox
+            {...{
+              checked: row.getIsSelected(),
+              disabled: !row.getCanSelect(),
+              indeterminate: row.getIsSomeSelected(),
+              onChange: row.getToggleSelectedHandler(),
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      header: () => "Created",
+      accessorKey: "createdAt",
+      cell: (info) =>
+        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+    },
+    {
+      header: () => "Name",
+      accessorKey: "name",
+      cell: (info) => info.getValue(),
+    },
+
+    {
+      header: () => "Name",
+      accessorKey: "name",
+      cell: (info) => info.getValue(),
+    },
+    {
+      header: () => "Members",
+      accessorKey: "_count.contacts",
+      id: "Members",
+      cell: (info) => info.getValue(),
+    },
+    {
+      header: () => "Team",
+      accessorKey: "team.name",
+      id: "Team",
+      cell: (info) => (
+        <Badge size="md" variant="light" color="green" mt={"auto"}>
+          {(info.getValue() as string) ?? "NA"}
+        </Badge>
+      ),
+    },
+    {
+      header: () => "Detail View",
+      id: "Detail",
+      accessorKey: "id",
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: (info) => (
+        <Link href={`contacts/${info.getValue()}`}>
+          <RateupButtonPrimary
+            title="Go"
+            rightIcon={<IconChevronRight size={14} />}
+            size="xs"
+            variant="light"
+          />
+        </Link>
+      ),
+    },
+    {
+      header: () => "Action",
+      accessorFn: (row) => row,
+      enableSorting: false,
+      enableGlobalFilter: false,
+      id: "action",
+      cell: (info) => <ContactGroupMenu groupId={info?.row.original?.id} />,
+    },
+  ];
   return (
     <>
       <Flex
@@ -219,18 +300,22 @@ export default function Contacts() {
           />
         )}
       </Flex>
-      <Tabs value={activeTab} color="var(--tertiary-color)" p="xl">
+      <Tabs
+        value={activeTab}
+        color="var(--tertiary-color)"
+        p="xl"
+        keepMounted={false}
+      >
         <Flex justify="space-between" align={"center"} wrap={"wrap"} gap={10}>
           <SegmentedControl
             data={Object.values(ContactTabs)}
-            onChange={(value) => {
-              router.push(`contacts/?tab=${value}`);
-              setActiveTab(value as ContactTabs);
-            }}
+            value={activeTab}
+            onChange={(value) =>
+              router.push(`/dashboard/contacts?tab=${value}`)
+            }
             color={"var(--mantine-color-rateup-blue-filled)"}
             radius={"md"}
             defaultValue={activeTab}
-            value={activeTab}
             tt={"capitalize"}
           />
           {activeTab !== ContactTabs.SETTINGS && (
@@ -285,21 +370,15 @@ export default function Contacts() {
             <Center pt="xl">
               <Loader type="bars" />
             </Center>
-          ) : filteredGroups?.length > 0 ? (
-            <SimpleGrid
-              mt={"xl"}
-              cols={{ base: 1, sm: 2, lg: 3 }}
-              spacing={{ base: 10, sm: "xl", lg: "xl" }}
-              verticalSpacing={{ base: "md", sm: "xl" }}
-            >
-              {filteredGroups?.map((group) => (
-                <ContactGroupCard group={group} key={group?.id} />
-              ))}
-            </SimpleGrid>
           ) : (
-            <Container mt={"7%"}>
-              <NothingFound text="No Contact Groups Found" />
-            </Container>
+            <PaperLayout mt={"xl"} px={0}>
+              <ContactTable
+                columns={columnGroup}
+                data={filteredGroups}
+                cTags={cTags?.contactTags}
+                tab={activeTab}
+              />
+            </PaperLayout>
           )}
         </Tabs.Panel>
         <Tabs.Panel value={ContactTabs.SETTINGS}>

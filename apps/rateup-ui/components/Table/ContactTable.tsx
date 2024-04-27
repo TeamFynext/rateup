@@ -1,4 +1,4 @@
-import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
+import { ActionIcon, Flex, Group, ThemeIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import {
@@ -20,6 +20,11 @@ import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import { showLoadingToast } from "../../utils/notifications";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
+import { ContactTabs } from "../../pages/dashboard/contacts";
+import {
+  useDeleteManyContactGroupsMutation,
+  useRemoveContactsFromGroup,
+} from "../../backend/campaign/contactGroup/contactGroup.query";
 
 function ContactTable({
   data,
@@ -29,6 +34,9 @@ function ContactTable({
   enableColumnSelection = true,
   cTags = [],
   topHeight,
+  tab = ContactTabs.CONTACTS,
+  open = () => {},
+  groupId = "",
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -37,6 +45,9 @@ function ContactTable({
   enableColumnSelection?: boolean;
   cTags: string[];
   topHeight?: number;
+  tab?: string;
+  open?: () => void;
+  groupId?: string;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -49,6 +60,14 @@ function ContactTable({
   );
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
+    setRowSelection({});
+  });
+  const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation(
+    () => {
+      setRowSelection({});
+    },
+  );
+  const removeContactsMutation = useRemoveContactsFromGroup(groupId, () => {
     setRowSelection({});
   });
 
@@ -84,6 +103,18 @@ function ContactTable({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
   });
+  let headerLabel = "Are you sure to delete these selected contacts?";
+  if (tab === ContactTabs.GROUPS)
+    headerLabel = "Are you sure to delete these selected contact groups?";
+  if (tab === "member")
+    headerLabel = "Are you sure to remove these selected members?";
+
+  let headerTitle = "Delete Contacts?";
+  if (tab === ContactTabs.GROUPS) headerTitle = "Delete Contact Groups?";
+  if (tab === "member") headerTitle = "Remove members?";
+  let tooltipMsg = "delete contacts";
+  if (tab === ContactTabs.GROUPS) tooltipMsg = "delete contact groups";
+  else if (tab === "member") tooltipMsg = "remove members";
 
   return (
     <>
@@ -92,26 +123,59 @@ function ContactTable({
           forDeleteFunctionality
           opened={dialogOpened}
           onClose={closeDialog}
-          headerLabel="Are you sure to delete these selected contacts?"
-          headerTitle="Delete Contacts?"
+          headerLabel={headerLabel}
+          headerTitle={headerTitle}
           confirmLabel="Delete"
           onConfirm={() => {
-            showLoadingToast(
-              "Contacts getting deleted",
-              "contact-delete",
-              true,
-              "Deleting Contacts",
-            );
-            deleteManyContactsMutation?.mutate(
-              Object.keys(rowSelection)?.map(
-                (index) => data?.[parseInt(index)]?.id,
-              ),
-            );
+            switch (tab) {
+              case ContactTabs.CONTACTS:
+                showLoadingToast(
+                  "Contacts getting deleted",
+                  "contact-delete",
+                  true,
+                  "Deleting Contacts",
+                );
+                deleteManyContactsMutation?.mutate(
+                  Object.keys(rowSelection)?.map(
+                    (index) => data?.[parseInt(index)]?.id,
+                  ),
+                );
+                break;
+              case ContactTabs.GROUPS:
+                showLoadingToast(
+                  "Contact groups getting deleted",
+                  "contact-group-delete",
+                  true,
+                  "Deleting Contact Groups",
+                );
+                deleteManyContactGroupsMutation.mutate(
+                  Object.keys(rowSelection)?.map(
+                    (index) => data?.[parseInt(index)]?.id,
+                  ),
+                );
+                break;
+              case "member":
+                showLoadingToast(
+                  "Members getting removed",
+                  "contact-group-remove",
+                  true,
+                  "Removing Members",
+                );
+                removeContactsMutation.mutate({
+                  contactIds: Object.keys(rowSelection)?.map(
+                    (index) => data?.[parseInt(index)]?.id,
+                  ),
+                  groupId,
+                });
+                break;
+              default:
+                break;
+            }
           }}
         />
         <Group gap={"xl"}>
           {Object.keys(rowSelection)?.length > 0 ? (
-            <Tooltip label={"Click to delete contacts"} onClick={toggle}>
+            <Tooltip label={`Click to ${tooltipMsg}`} onClick={toggle}>
               <ActionIcon variant="light">
                 <IconTrash />
               </ActionIcon>
@@ -123,8 +187,11 @@ function ContactTable({
               </ActionIcon>
             </Tooltip>
           )}
-          <OpenCreateMenu tags={cTags ?? []} />
+          <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
         </Group>
+        <ThemeIcon size="sm" w={"max-content"} variant="light" p={"xs"}>
+          Count: {data?.length ?? 0}
+        </ThemeIcon>
         <FilterToggles
           enableFilter={enableFilter}
           filterVisibility={filterVisibility}

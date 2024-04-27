@@ -34,7 +34,13 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
     setSelectedTeamId(null);
     close();
   });
-  const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation();
+  const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation(
+    () => {
+      setSelectedIds([]);
+      setSelectedTeamId(null);
+      close();
+    },
+  );
   const addContactToGroupsMutation =
     useAddExistingContactToMultipleGroupsMutation(selectedGroups);
 
@@ -77,13 +83,7 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
         );
         break;
       case ContactAcions.DELETE_GROUPS:
-        deleteManyContactGroupsMutation.mutate(selectedIds, {
-          onSuccess: () => {
-            setSelectedIds([]);
-            setSelectedTeamId(null);
-            close();
-          },
-        });
+        deleteManyContactGroupsMutation.mutate(selectedIds);
         break;
     }
   };

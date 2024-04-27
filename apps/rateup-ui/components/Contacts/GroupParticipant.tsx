@@ -1,9 +1,10 @@
 import { Group, Title, Text, Menu } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconDots, IconTrash } from "@tabler/icons-react";
+import { IconChevronDown, IconDots, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRemoveContactsFromGroup } from "../../backend/campaign/contactGroup/contactGroup.query";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
 
 const GroupParticipant = ({ contact, groupId }) => {
   return (
@@ -24,8 +25,8 @@ const GroupParticipant = ({ contact, groupId }) => {
   );
 };
 
-const ParticipantMenu = ({ contactId, groupId }) => {
-  const removeContactsMutation = useRemoveContactsFromGroup(groupId);
+export const ParticipantMenu = ({ contactId, groupId }) => {
+  const removeContactsMutation = useRemoveContactsFromGroup(groupId, () => {});
   const openDeleteModal = () => {
     modals.openConfirmModal({
       title: "Remove member",
@@ -44,20 +45,12 @@ const ParticipantMenu = ({ contactId, groupId }) => {
   };
 
   return (
-    <Menu shadow="xl" position="bottom-end">
-      <Menu.Target>
-        <IconDots color="grey" cursor={"pointer"} />
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item
-          color="red"
-          leftSection={<IconTrash size="1rem" />}
-          onClick={openDeleteModal}
-        >
-          Remove member
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+    <RateupButtonPrimary
+      title="Remove member"
+      variant="light"
+      size="xs"
+      onClick={openDeleteModal}
+    />
   );
 };
 

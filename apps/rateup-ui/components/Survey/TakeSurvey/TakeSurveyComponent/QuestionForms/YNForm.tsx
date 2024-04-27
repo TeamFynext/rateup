@@ -25,8 +25,8 @@ export function YNForm() {
         if (clickedBtn) {
           await animate(
             clickedBtn,
-            { opacity: [0, 1, 0, 1, 0, 1] },
-            { duration: 0.65 },
+            { opacity: [0, 1, 0, 1] },
+            { duration: 0.75 },
           );
         }
         nextFn?.();
