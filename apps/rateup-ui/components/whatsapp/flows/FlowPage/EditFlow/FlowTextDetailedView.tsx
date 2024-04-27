@@ -188,7 +188,7 @@ export function FlowTextDetailedView() {
 
       <Stack>
         <Divider />
-        <Group justify="space-between" p="xs" px={"sm"}>
+        <Group justify="flex-end" p="xs" px={"sm"}>
           <RateupButtonPrimary
             title={"Save"}
             size="md"

@@ -1,13 +1,12 @@
-import { Box, Menu } from "@mantine/core";
-import React from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlus } from "@tabler/icons-react";
+import { ContactTabs } from "../../pages/dashboard/contacts";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import { IconChevronDown, IconUser, IconUsersGroup } from "@tabler/icons-react";
 import FormModalLayout from "../Modal/FormModalLayout";
 import CreateContactModal from "./CreateContactModal";
 import CreateGroupModal from "./CreateGroupModal";
-import { useDisclosure } from "@mantine/hooks";
 
-const OpenCreateMenu = ({ tags = [] }) => {
+const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
     useDisclosure(false);
   const [groupOpened, { open: groupOpen, close: groupClose }] =
@@ -15,28 +14,19 @@ const OpenCreateMenu = ({ tags = [] }) => {
 
   return (
     <>
-      <Menu withArrow>
-        <Menu.Target>
-          <Box>
-            <RateupButtonBlue
-              title="Create"
-              rightIcon={<IconChevronDown size={20} />}
-            />
-          </Box>
-        </Menu.Target>
-
-        <Menu.Dropdown>
-          <Menu.Item leftSection={<IconUser size={14} />} onClick={contactOpen}>
-            Contact
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconUsersGroup size={14} />}
-            onClick={groupOpen}
-          >
-            Group
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <RateupButtonBlue
+        title={tab === "member" ? "Add Members" : "Create"}
+        rightIcon={<IconPlus size={20} />}
+        onClick={() => {
+          if (tab === ContactTabs.CONTACTS) {
+            contactOpen();
+          } else if (tab === ContactTabs.GROUPS) {
+            groupOpen();
+          } else {
+            toggle();
+          }
+        }}
+      />
       <FormModalLayout
         centered
         opened={contactOpened}

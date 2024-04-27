@@ -1,47 +1,44 @@
 import {
-  Stack,
-  Box,
-  Title,
-  SimpleGrid,
-  Group,
   Avatar,
+  Badge,
+  Box,
   Button,
+  Center,
+  Group,
+  Loader,
+  Stack,
   Text,
   TextInput,
-  Center,
-  Loader,
-  Badge,
+  Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import {
   IconEdit,
-  IconPlus,
   IconSearch,
   IconTrash,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
-import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
-import { useEffect, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { IndeterminateCheckbox } from ".";
 import {
   useContactGroupById,
   useDeleteGroupMutation,
 } from "../../../backend/campaign/contactGroup/contactGroup.query";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { modals } from "@mantine/modals";
-import { useRouteParams } from "../../../context/RouteParamsContext";
-import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
-import { useTeamsByUser } from "../../../backend/team/team.query";
-import GroupParticipant from "../../../components/Contacts/GroupParticipant";
-import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
-import NothingFound from "../../../components/NothingFound/NothingFound";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useGetContactTags } from "../../../backend/whatsapp/settings/waSettings.query";
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
+import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
+import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import ContactTable from "../../../components/Table/ContactTable";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useRouteParams } from "../../../context/RouteParamsContext";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import { ParticipantMenu } from "../../../components/Contacts/GroupParticipant";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -58,16 +55,11 @@ export default function ContactGroup() {
   const { isPending, data: cTags } = useGetContactTags();
 
   const {
-    isLoading: isLoading,
+    isPending: isLoading,
     data: groupDetails,
     error: groupByIderror,
     refetch: refetchgroupById,
-  } = useContactGroupById(groupId?.toString()) as {
-    isLoading: boolean;
-    data: ContactGroupwithContacts;
-    error: any;
-    refetch: any;
-  };
+  } = useContactGroupById(groupId?.toString());
 
   const deleteGroupMutation = useDeleteGroupMutation();
 
@@ -99,22 +91,6 @@ export default function ContactGroup() {
     update({ groupId: groupDetails?.name });
   }, [groupDetails?.name]);
 
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsData,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser() as {
-    isLoading: boolean;
-    error: any;
-    data: TeamsResponse;
-    refetch: any;
-  };
-
-  const teamObj = teamsData?.data?.find((team) => {
-    return team?.id === groupDetails?.teamId;
-  });
-
   const filteredCustomerList = searchTerm
     ? groupDetails?.contacts?.filter((contact) => {
         return (
@@ -123,6 +99,62 @@ export default function ContactGroup() {
         );
       })
     : groupDetails?.contacts;
+  const column: ColumnDef<any>[] = [
+    {
+      id: "select",
+      enableSorting: false,
+      header: ({ table }) => (
+        <IndeterminateCheckbox
+          {...{
+            checked: table.getIsAllRowsSelected(),
+            indeterminate: table.getIsSomeRowsSelected(),
+            onChange: table.getToggleAllRowsSelectedHandler(),
+          }}
+        />
+      ),
+      cell: ({ row }) => (
+        <div className="px-1">
+          <IndeterminateCheckbox
+            {...{
+              checked: row.getIsSelected(),
+              disabled: !row.getCanSelect(),
+              indeterminate: row.getIsSomeSelected(),
+              onChange: row.getToggleSelectedHandler(),
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      header: () => "Created",
+      accessorKey: "createdAt",
+      cell: (info) =>
+        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+    },
+    {
+      header: () => "Name",
+      accessorKey: "name",
+      cell: (info) => info.getValue(),
+    },
+    {
+      header: () => "Phone",
+      accessorKey: "phone",
+      cell: (info) => info.getValue(),
+    },
+    {
+      header: () => "Action",
+      accessorFn: (row) => row,
+      enableSorting: false,
+      enableGlobalFilter: false,
+      id: "action",
+      cell: (info) => (
+        <ParticipantMenu
+          contactId={info.row.original.id}
+          groupId={groupDetails?.id}
+        />
+      ),
+    },
+  ];
 
   return (
     <>
@@ -188,7 +220,7 @@ export default function ContactGroup() {
                     variant="outline"
                     size="xl"
                   >
-                    {teamObj?.name}
+                    {groupDetails?.team?.name}
                   </Badge>
                   <Stack gap={0}>
                     <Center>
@@ -202,7 +234,7 @@ export default function ContactGroup() {
                 </Group>
               </Group>
             </PaperLayout>
-            <Box py="xl">
+            <Box pt="xs">
               <Center>
                 <Group>
                   <TextInput
@@ -222,36 +254,22 @@ export default function ContactGroup() {
                     size="md"
                     onClick={openEditCustomer}
                   />
-                  <RateupButtonBlue
-                    title="Add member"
-                    rightIcon={<IconPlus />}
-                    radius="xl"
-                    size="md"
-                    onClick={open}
-                  ></RateupButtonBlue>
                 </Group>
               </Center>
             </Box>
             <Box>
               <Title order={2}>Members</Title>
-              <SimpleGrid
-                mt={"md"}
-                cols={{ base: 1, sm: 2, lg: 3 }}
-                spacing={{ base: 10, sm: "xl", lg: "xl" }}
-                verticalSpacing={{ base: "md", sm: "xl" }}
-              >
-                {filteredCustomerList?.length > 0 ? (
-                  filteredCustomerList?.map((contact) => (
-                    <GroupParticipant
-                      contact={contact}
-                      key={contact?.id}
-                      groupId={groupDetails?.id}
-                    />
-                  ))
-                ) : (
-                  <NothingFound text="No members found" />
-                )}
-              </SimpleGrid>
+              <PaperLayout mt={"xs"} px={0}>
+                <ContactTable
+                  columns={column}
+                  data={filteredCustomerList}
+                  cTags={cTags?.contactTags}
+                  tab={"member"}
+                  topHeight={520}
+                  open={open}
+                  groupId={groupDetails?.id}
+                />
+              </PaperLayout>
             </Box>
           </Stack>
           <FormModalLayout

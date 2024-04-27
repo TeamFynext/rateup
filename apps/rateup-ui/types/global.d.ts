@@ -525,6 +525,10 @@ declare global {
 
   interface ContactGroupwithContacts extends ContactGroup {
     contacts: ContactsData[];
+    team?: {
+      id?: string;
+      name?: string;
+    };
   }
   interface RM_Topic {
     id: string;

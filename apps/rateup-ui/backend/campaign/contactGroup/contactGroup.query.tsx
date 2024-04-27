@@ -49,6 +49,7 @@ export const useCreateContactGroupMutation = () => {
           "Contact Group created successfully.",
           "contact-group-create",
           <IconCheck />,
+          true,
         );
     },
     onError: (error: any) => {
@@ -56,6 +57,7 @@ export const useCreateContactGroupMutation = () => {
         `Error creating group: ${error?.response?.data?.error}`,
         "contact-group-create",
         <IconX />,
+        true,
       );
     },
   });
@@ -166,7 +168,10 @@ export const useAddExistingContactMutation = (groupId: string) => {
   });
 };
 
-export const useRemoveContactsFromGroup = (groupId: string) => {
+export const useRemoveContactsFromGroup = (
+  groupId: string,
+  onSucess: () => void,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeContactsFromGroup,
@@ -175,6 +180,7 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
         "Members removed from  group successfully.",
         "contact-group-remove",
         <IconCheck />,
+        true,
       );
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
@@ -182,12 +188,14 @@ export const useRemoveContactsFromGroup = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
+      onSucess();
     },
     onError(error: any) {
       showErrorToast(
         `Error removing members from group: ${error?.response?.data?.error}`,
         "contact-group-remove",
         <IconX />,
+        true,
       );
     },
   });
@@ -224,7 +232,7 @@ export const useAddExistingContactToMultipleGroupsMutation = (
   });
 };
 
-export const useDeleteManyContactGroupsMutation = () => {
+export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteManyContactGroups,
@@ -236,13 +244,16 @@ export const useDeleteManyContactGroupsMutation = () => {
         "Contact Groups Deleted successfully",
         "contact-group-delete",
         <IconCheck />,
+        true,
       );
+      onSucess();
     },
     onError: (error: any) => {
       showErrorToast(
         `Error deleting contact groups: ${error?.response?.data?.error}`,
         "contact-group-delete",
         <IconX />,
+        true,
       );
     },
   });
