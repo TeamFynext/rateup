@@ -205,6 +205,10 @@ declare global {
   interface SPlan {
     id: string;
     name: string;
+    paymentPlan?: {
+      period: string;
+      amount: number;
+    };
   }
 
   interface Subscription {
