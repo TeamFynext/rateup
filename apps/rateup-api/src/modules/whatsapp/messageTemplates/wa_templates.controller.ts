@@ -1,9 +1,16 @@
 import { Role } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { WaTemplateStatus } from "../../../types/enums";
+import {
+  WaTemplateComponentType,
+  WaTemplateStatus,
+} from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { getOrgIdAndRole } from "../../user/user.service";
-import { sendMessage } from "../whatsappSurvey/wasurvey.service";
+import {
+  createSession,
+  deleteSession,
+  sendMessage,
+} from "../whatsappSurvey/wasurvey.service";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import {
   ByTemplateIdParamsSchema,
@@ -28,7 +35,13 @@ import {
   updateTemplateInDb,
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
-import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
+import {
+  generateTemplate,
+  getFlowIdFromTemplateComponents,
+  waAllowedMimeTypes,
+} from "./wa_templates.utils";
+import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -63,19 +76,25 @@ export async function createTemplateHandler(
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
     // TODO: restrict access to super admin and admin?
 
-    const formattedTemplate = generateTemplate(request.body);
+    const { defaultValues, ...templateData } = request.body;
+    const formattedTemplate = generateTemplate(templateData);
     const template = await createTemplate(orgId, formattedTemplate);
     //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
     const fetchedTemplate = await fetchTemplate(template?.name, orgId);
-    if (request.body?.id) {
-      await updateTemplateInDb(request.body.id, fetchedTemplate);
+    if (templateData?.id) {
+      await updateTemplateInDb(templateData.id, fetchedTemplate);
     } else {
-      await saveTemplate(fetchedTemplate, orgId);
+      await saveTemplate(
+        fetchedTemplate,
+        orgId,
+        defaultValues as WaTemplateDefaultValues,
+      );
     }
     reply.code(200).send("template created");
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);
-    reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
+    let errorMessage = e?.message?.split("error_message:")?.[1];
+    reply.code(500).send(errorMessage ?? e);
   }
 }
 
@@ -87,21 +106,28 @@ export async function saveTemplateAsDraftHandler(
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    let formattedTemplate: any = generateTemplate(request.body);
+    const { defaultValues, ...templateData } = request.body;
+    let formattedTemplate: any = generateTemplate(templateData);
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
       const template = await getDbTemplate(request.body.id);
       template.data.name = request.body.name ?? template.data.name;
       template.data.components = formattedTemplate.components ?? [];
       template.data.status = WaTemplateStatus.DRAFT;
+      template.data.language = formattedTemplate.language ?? "en";
       await updateTemplateInDb(request.body.id, template.data);
     } else {
-      await saveTemplate(formattedTemplate, orgId);
+      await saveTemplate(
+        formattedTemplate,
+        orgId,
+        defaultValues as WaTemplateDefaultValues,
+      );
     }
     reply.code(200);
   } catch (e) {
     log.error("Error saving template as Draft\n%o", e?.response?.data);
-    reply.code(500).send(e?.response?.data ?? e);
+    let errorMessage = e?.message?.split("error_message:")?.[1];
+    reply.code(500).send(errorMessage ?? e);
   }
 }
 
@@ -143,7 +169,8 @@ export async function updateTemplateHandler(
     }
   } catch (e) {
     log.error("Error updating template \n%o", e?.response?.data);
-    reply.code(500).send(e?.response?.data?.error?.error_user_msg ?? e);
+    let errorMessage = e?.message?.split("error_message:")?.[1];
+    reply.code(500).send(errorMessage ?? e);
   }
 }
 
@@ -163,17 +190,10 @@ export async function deleteTemplateHandler(
     }
     const { id, name } = template as WaTemplateFormatted;
     if (id) {
-      const deleted = await deleteTemplate(orgId, id, name);
-      if (deleted) {
-        await deleteTemplateFromDb(templateId);
-        reply.code(204);
-      } else {
-        reply.code(500).send("error in deleteing from whatsapp");
-      }
-    } else {
-      await deleteTemplateFromDb(templateId);
-      reply.code(204);
+      await deleteTemplate(orgId, id, name);
     }
+    await deleteTemplateFromDb(templateId);
+    reply.code(204);
   } catch (e) {
     reply.code(500);
   }
@@ -239,9 +259,14 @@ export async function uploadHandler(
         .send({ message: "This file type is not permitted." });
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
     const size: any = data.fields.size;
-    const id = await uploadFileToWaTemplate(data, size?.value, orgId);
-    if (id === "error") return reply.code(400).send("image upload failed");
-    return reply.code(200).send({ id: id });
+    const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
+      data,
+      size?.value,
+      orgId,
+    );
+    if (fileHandle === "error")
+      return reply.code(400).send("image upload failed");
+    return reply.code(200).send({ id: fileHandle, uploadSessionId });
   } catch (e) {
     const error =
       typeof e?.message === "string" ? e?.message : e?.response?.data;
@@ -263,13 +288,93 @@ export async function sendTemplateToUserHandler(
     const { phone, parameterData } = request.body;
     const orgId = request.user.orgId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    const { data } = dbTemplate;
+    const { data, defaultValues } = dbTemplate;
+    const components = parameterData;
+
+    const containsFlowButton = !!getFlowIdFromTemplateComponents(
+      data.components,
+    );
+
+    if (containsFlowButton) {
+      const teamId = request.body.teamId;
+      components.push({
+        type: "button",
+        sub_type: "flow",
+        index: 0,
+        parameters: [
+          {
+            type: "action",
+            action: {
+              flow_token: phone,
+            },
+          },
+        ],
+      });
+
+      const flowId = getFlowIdFromTemplateComponents(data.components);
+      if (!flowId) {
+        log.error("Flow id not found in template\n Template => %o", data);
+        reply.code(500).send("Flow id not found in template");
+        return;
+      }
+      // getting flow with surveyTeamMapId
+      const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
+      if (!dbFlow) {
+        log.error("Flow not found in db with id %s", flowId);
+        reply.code(500).send("Flow not found in db");
+        return;
+      }
+
+      const surveyTeamMap = dbFlow?.survey?.teams.find(
+        (t) => t.teamId === teamId,
+      )?.id;
+      if (!surveyTeamMap) {
+        log.error("Team not found in survey;\nteam => %s", teamId);
+        reply.code(500).send("Team not found in survey");
+        return;
+      }
+
+      await deleteSession(orgId, phone);
+      await createSession({
+        phone,
+        orgId,
+        surveyTeamMapId: surveyTeamMap,
+        language: dbFlow?.survey?.languages[0],
+      });
+      log.trace("Session created successfully");
+    }
+
+    const containsImage =
+      dbTemplate.data.components.find(
+        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+      )?.format === `IMAGE`;
+    if (containsImage) {
+      if (!components.some((c) => c.type === "header")) {
+        if (defaultValues?.image?.link) {
+          components.push({
+            type: "header",
+            parameters: [
+              {
+                type: "image",
+                image: {
+                  link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+                },
+              },
+            ],
+          });
+        } else {
+          throw new Error(
+            "Image not found in template. Please upload an image and try again",
+          );
+        }
+      }
+    }
     const templateQuery = {
       name: data?.name,
       language: {
         code: dbTemplate.data?.language,
       },
-      components: parameterData,
+      components: components,
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
 

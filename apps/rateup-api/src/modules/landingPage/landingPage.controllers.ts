@@ -7,6 +7,7 @@ import {
   getLandingPageWithShortIdFromDB,
   getPublicLandingPageWithShortIdFromDB,
   updateLandingPageWithShortIdInDB,
+  updatePageVisitOrLinkClickInDB,
 } from "./landingPage.service";
 import { shortIdUniqueConstraintErrHandler } from "../../utils/commnUtils";
 
@@ -71,6 +72,40 @@ async function getLinkTypeDropdownOptions(
   rep.code(200).send(optionsArray);
 }
 
+enum ResourceToBeUpdated {
+  LinkClick = "link-click",
+  PageVisit = "page-visit",
+}
+// resourceToBeUpdated value will be "page-visit" or "link-click".
+async function updatePageVisitsOrLinkClicks(
+  req: FastifyRequest<{
+    Params: { shortUrlId: string };
+    Body: { resourceToBeUpdated: ResourceToBeUpdated; linkId?: string };
+  }>,
+  rep: FastifyReply,
+) {
+  const { resourceToBeUpdated, linkId = null } = req.body;
+  if (resourceToBeUpdated === ResourceToBeUpdated.LinkClick && !linkId) {
+    rep.code(400).send({
+      success: false,
+      message: "linkId field is required in the request body.",
+    });
+  } else {
+    const resultObj = await updatePageVisitOrLinkClickInDB(req);
+    if (resultObj) {
+      rep.code(200).send({
+        success: true,
+        message: "Updated button click successfully.",
+      });
+    } else {
+      rep.code(400).send({
+        success: false,
+        message: "Link with given linkId not found.",
+      });
+    }
+  }
+}
+
 export {
   getLandingPages,
   getLandingPageWithShortId,
@@ -79,4 +114,5 @@ export {
   updateLandingPageWithShortId,
   deleteLandingPageById,
   getLinkTypeDropdownOptions,
+  updatePageVisitsOrLinkClicks,
 };

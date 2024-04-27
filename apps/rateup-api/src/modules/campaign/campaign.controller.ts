@@ -16,13 +16,22 @@ import {
 } from "./campaign.service";
 import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
-import { CampaignStatus } from "../../types/enums";
+import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
+import { log } from "../../utils/logger";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
   reply: FastifyReply,
 ) {
-  const campaign = await createCampaign(request.body);
+  const { waTemplateId } = request.body;
+  const dbTemplate = await getDbTemplate(waTemplateId);
+  if (!dbTemplate) {
+    return reply.status(400).send({ message: "Template not found" });
+  }
+
+  const campaign = await createCampaign({
+    ...request.body,
+  });
   return reply.status(201).send(campaign);
 }
 

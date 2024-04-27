@@ -6,6 +6,7 @@ import {
   generateFlowMessageData,
   generateQuestionResponsesFromFlowResponse,
   getFlowFormElementNameFromQuestionId,
+  getFlowJsonWithTitleAndDescription,
   injectIdToFlowJson,
   parseFlowResponse,
   parseResponseFromCurrentScreenResponse,
@@ -35,10 +36,7 @@ import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
 } from "../../../utils/commnUtils";
-import {
-  WaMessageBody,
-  WaSendMessageBody,
-} from "../../../types/whatsapp.types";
+import { WaMessageBody } from "../../../types/whatsapp.types";
 
 /**
  * Get flows from whatsapp
@@ -163,6 +161,65 @@ export async function getFlowFromDb(dbFlowId: string) {
     },
   });
   return flow;
+}
+
+// updates flow json of a flow from db to whatsapp
+export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      dbFlowId,
+    },
+    include: {
+      survey: true,
+    },
+  });
+  const jsonWithTitle = getFlowJsonWithTitleAndDescription(
+    flow.json as unknown as WaFlowJson,
+    flow.map,
+    flow.survey,
+  );
+  const response = await updateFlowJsonInWa(
+    orgId,
+    flow.flowId,
+    jsonWithTitle as WaFlowJson,
+  );
+  log.trace("Flow synced to whatsapp: %o", response);
+  await updateFlowInDb(orgId, dbFlowId, { pendingSave: false });
+}
+
+export async function getFlowFromDbByFlowId(orgId: string, flowId: string) {
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      flowId,
+      orgId,
+    },
+  });
+  return flow;
+}
+
+export async function getFlowWithSurveyTeamMapIds(
+  orgId: string,
+  flowId: string,
+) {
+  return await prisma.waFlow.findFirst({
+    where: {
+      flowId: flowId,
+      orgId,
+    },
+    select: {
+      survey: {
+        select: {
+          languages: true,
+          teams: {
+            select: {
+              id: true, // surveyTeamMapId
+              teamId: true,
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 export async function getUnsyncedFlows(orgId: string) {
@@ -315,6 +372,7 @@ interface sendFlowProps {
 }
 export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
   try {
+    log.trace("Sending flow %s to %s", dbFlowId, phone);
     const dbFlow = await getFlowFromDb(dbFlowId);
 
     const messageData = generateFlowMessageData({
@@ -419,7 +477,7 @@ export async function updateFlowInDb(
   dbFlowId: string,
   data: UpdateFlowInput,
 ) {
-  return prisma.waFlow.update({
+  const updatedFlow = prisma.waFlow.update({
     where: {
       dbFlowId: dbFlowId,
     },
@@ -428,6 +486,23 @@ export async function updateFlowInDb(
       survey: true,
     },
   });
+
+  // updating survey title if name is updated
+  if (data.name) {
+    await prisma.survey.updateMany({
+      where: {
+        WaFlow: {
+          dbFlowId,
+          orgId,
+        },
+      },
+      data: {
+        title: data.name,
+      },
+    });
+  }
+
+  return updatedFlow;
 }
 export async function updateFlowMetaDataInWa(
   orgId: string,
@@ -754,6 +829,10 @@ export async function handleStaticFlowReply(
   }
 
   let session = await getSession(orgId, from);
+  if (!session) {
+    log.error("Session not found for %s", from);
+    return;
+  }
   const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
   const flow = await getFlowFromDb(dbFlowId);
 

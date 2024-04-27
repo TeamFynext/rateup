@@ -10,7 +10,11 @@ import {
 } from "../../utils/survey/response.data";
 import { getAccessToken, initializeAuthClient } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
-import { ChoiceTypeQuestions, QuestionType } from "../../types/enums";
+import {
+  ChoiceTypeQuestions,
+  QuestionType,
+  SubscriptionFeaturePathName,
+} from "../../types/enums";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
@@ -19,6 +23,7 @@ import { autoGenerateTicket } from "../ticket/ticket.service";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { updateMonthlyStat } from "../stats/stats.service";
+import { hasFeature } from "../subscription/subscription.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -82,6 +87,12 @@ export async function getAllResponses(
               teamId: true,
             },
           },
+          Contact: {
+            select: {
+              phone: true,
+            },
+          },
+          platform: true,
           Ticket: {
             select: {
               id: true,
@@ -121,6 +132,8 @@ export async function downloadExcelResponse(
   tz = "Asia/Calcutta",
 ) {
   const responses = allResponses && allResponses[0].responses;
+  const platform = responses?.[0]?.platform;
+
   const filteredSecondArray = questions.filter((item) =>
     visibleColumn.includes(item.title[defaultLanguage]),
   );
@@ -139,6 +152,10 @@ export async function downloadExcelResponse(
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
+    }
+    if (platform === "WHATSAPP") {
+      headerArray.push("Respondent's Mobile Number");
+      filteredSecondArray.push("Respondent's Mobile Number");
     }
     //TODO REMOVE LATER: MYG GIFT VISHU
     if (process.env.VISHU_SURVEY === surveyId) {
@@ -217,6 +234,8 @@ export async function downloadExcelResponse(
             .tz(tz)
             .format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
+        } else if (question === "Respondent's Mobile Number") {
+          responseValue = response?.Contact?.phone;
         } else {
           responseValue = "";
         }
@@ -379,11 +398,23 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
           title: true,
         },
       },
+      team: {
+        select: {
+          orgId: true,
+        },
+      },
     },
   });
-  const { survey } = response ?? {};
+  const { survey, team } = response ?? {};
 
-  if (survey?.enableNotificationEmail && survey.notificationEmail) {
+  if (
+    survey?.enableNotificationEmail &&
+    survey.notificationEmail &&
+    (await hasFeature(
+      team.orgId,
+      SubscriptionFeaturePathName.EmailNotification,
+    ))
+  ) {
     const { notificationEmail } = survey;
     const surveyQuestion =
       surveyResponse?.surveyTeamMap?.survey?.questions ?? [];
@@ -478,32 +509,46 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       title: true,
       languages: true,
       questions: true,
+      type: true,
     },
   });
   const authClient = await initializeAuthClient();
   const token = await getAccessToken(orgId);
   authClient.credentials.refresh_token = token.refreshToken;
-  const doc = survey.spreadSheetId
+  const drive = google.drive({ version: "v3", auth: authClient });
+  const isDocExist = survey?.spreadSheetId
+    ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
+    : false;
+  let doc = isDocExist
     ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
-    : await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
+    : null;
+  if (!doc) {
+    const driveFolderId = await getDriveFolderId(orgId, authClient, drive);
+    const existingFiles = await drive.files.list({
+      q: `mimeType = 'application/vnd.google-apps.spreadsheet' and name = '${survey.title}' and '${driveFolderId}' in parents`,
+      fields: "nextPageToken, files(id, name)",
+      spaces: "drive",
+    });
+    if (existingFiles.data.files.length) {
+      doc = new GoogleSpreadsheet(existingFiles.data.files[0].id, authClient);
+    } else {
+      doc = await GoogleSpreadsheet.createNewSpreadsheetDocument(authClient, {
         title: survey.title,
       });
-  if (!survey.spreadSheetId) {
-    const driveFolderId = await getDriveFolderId(orgId, authClient);
-    const drive = google.drive({ version: "v3", auth: authClient });
-    let fileId = doc.spreadsheetId;
-    const file = await drive.files.get({
-      fileId: fileId,
-      fields: "parents",
-    });
-    // Move the file to the new folder
-    const previousParents = file.data.parents.join(",");
-    await drive.files.update({
-      fileId: fileId,
-      removeParents: previousParents,
-      addParents: driveFolderId,
-      fields: "id, parents",
-    });
+      let fileId = doc.spreadsheetId;
+      const file = await drive.files.get({
+        fileId: fileId,
+        fields: "parents",
+      });
+      // Move the file to the new folder
+      const previousParents = file.data.parents.join(",");
+      await drive.files.update({
+        fileId: fileId,
+        removeParents: previousParents,
+        addParents: driveFolderId,
+        fields: "id, parents",
+      });
+    }
     await saveSheetIdToSurvey(doc.spreadsheetId, surveyId);
   }
   await doc.loadInfo();
@@ -645,7 +690,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   return survey;
 }
 
-export async function getDriveFolderId(orgId: string, authClient) {
+export async function getDriveFolderId(orgId: string, authClient, drive) {
   let { driveFolderId } = await prisma.org.findUnique({
     where: {
       id: orgId,
@@ -654,27 +699,50 @@ export async function getDriveFolderId(orgId: string, authClient) {
       driveFolderId: true,
     },
   });
-  if (!driveFolderId) {
+
+  const isFolderExist = driveFolderId
+    ? await checkFileExistInDrive(driveFolderId, drive)
+    : null;
+  if (!isFolderExist) {
+    const folderName = "RateUp";
     const fileMetadata = {
-      name: "RateUp",
+      name: folderName,
       mimeType: "application/vnd.google-apps.folder",
     };
-    const drive = google.drive({ version: "v3", auth: authClient });
-    const file = await drive.files.create({
-      requestBody: fileMetadata,
-      fields: "id",
+    const folderList = await drive.files.list({
+      q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}'`,
+      fields: "nextPageToken, files(id, name)",
+      spaces: "drive",
     });
-    driveFolderId = file.data.id;
+    if (folderList.data.files.length) {
+      driveFolderId = folderList.data.files[0].id;
+    } else {
+      const file = await drive.files.create({
+        requestBody: fileMetadata,
+        fields: "id",
+      });
+      driveFolderId = file.data.id;
+    }
     await prisma.org.update({
       where: {
         id: orgId,
       },
       data: {
-        driveFolderId: file.data.id,
+        driveFolderId,
       },
     });
   }
   return driveFolderId;
+}
+
+async function checkFileExistInDrive(fileId, drive) {
+  try {
+    await drive.files.get({ fileId });
+    return true;
+  } catch (e) {
+    console.log(e);
+    if (e?.response?.statusText == "Not Found") return false;
+  }
 }
 interface IsheetResponse {
   surveyTeamMapId: string;
@@ -683,95 +751,104 @@ interface IsheetResponse {
   createdAt: Date;
 }
 export async function saveResponseToGoogleSheet(response: IsheetResponse) {
-  const {
-    survey: { spreadSheetId, questions, id: surveyId },
-    team,
-  } = await prisma.surveyTeamMap.findUnique({
-    where: {
-      id: response.surveyTeamMapId,
-    },
-    select: {
-      survey: {
-        select: {
-          spreadSheetId: true,
-          questions: true,
-          id: true,
+  try {
+    const {
+      survey: { spreadSheetId, questions, id: surveyId },
+      team,
+    } = await prisma.surveyTeamMap.findUnique({
+      where: {
+        id: response.surveyTeamMapId,
+      },
+      select: {
+        survey: {
+          select: {
+            spreadSheetId: true,
+            questions: true,
+            id: true,
+          },
+        },
+        team: {
+          select: {
+            name: true,
+            orgId: true,
+          },
         },
       },
-      team: {
-        select: {
-          name: true,
-          orgId: true,
-        },
-      },
-    },
-  });
-  //TODO REMOVE LATER: MYG GIFT VISHU
-  if (process.env.VISHU_SURVEY === surveyId) {
-    questions.push({
-      id: "win_item",
-      type: QuestionType.WinItem,
-      title: { English: "Gift won" },
-      description: {},
-      required: true,
     });
-  }
-  if (spreadSheetId) {
-    const authClient = await initializeAuthClient();
-    const token = await getAccessToken(team.orgId);
-    authClient.credentials.refresh_token = token.refreshToken;
-    const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
-    await doc.loadInfo();
-    let sheet = await doc.sheetsByTitle[response.language];
-    const resObj = { team: team.name };
-    resObj["Created At"] = dayjs(response.createdAt).format(
-      "DD-MM-YYYY hh:mm A",
-    );
-    response.responses.map((res: QuestionResponse) => {
-      let QIndex;
-      let qstn = questions.find((q: Question, index: number) => {
-        if (q.id === res.questionId) {
-          QIndex = index + 1;
-          return q;
-        }
+    //TODO REMOVE LATER: MYG GIFT VISHU
+    if (process.env.VISHU_SURVEY === surveyId) {
+      questions.push({
+        id: "win_item",
+        type: QuestionType.WinItem,
+        title: { English: "Gift won" },
+        description: {},
+        required: true,
       });
-      let qstnTitle =
-        QIndex + "_" + getContent(qstn.title[response.language]).trim();
-      if (
-        [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
-          qstn.type,
+    }
+    if (spreadSheetId) {
+      const authClient = await initializeAuthClient();
+      const token = await getAccessToken(team.orgId);
+      authClient.credentials.refresh_token = token.refreshToken;
+      const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
+      await doc.loadInfo();
+      let sheet = await doc.sheetsByTitle[response.language];
+      const resObj = { team: team.name };
+      resObj["Created At"] = dayjs(response.createdAt).format(
+        "DD-MM-YYYY hh:mm A",
+      );
+      response.responses.map((res: QuestionResponse) => {
+        let QIndex;
+        let qstn = (questions as unknown as Question[]).find(
+          (q: Question, index: number) => {
+            if (q.id === res.questionId) {
+              QIndex = index + 1;
+              return q;
+            }
+          },
+        );
+        let qstnTitle =
+          QIndex + "_" + getContent(qstn.title[response.language]).trim();
+        if (
+          [
+            QuestionType.Contact,
+            QuestionType.Email,
+            QuestionType.Phone,
+          ].includes(qstn.type)
         )
-      )
-        Object.entries(res.response[res.type]).map(
-          ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
-        );
-      else if (qstn.type === QuestionType.Testimonial)
-        Object.entries(res.response[res.type]).map(
-          ([key, value]) =>
-            (resObj[(qstnTitle + ":" + key).trim()] =
-              key == "photo"
-                ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                : value),
-        );
-      else
-        resObj[
-          QIndex + "_" + getContent(qstn.title[response.language]).trim()
-        ] = getFormattedResponse(
-          res.response[res.type],
-          qstn,
-          response.language,
-        );
-    });
-    const newRow = await sheet.addRow(resObj);
-    const dateColumnIndex = sheet.headerValues.indexOf("Created At");
-    await sheet.loadCells();
-    sheet.getCell(newRow.rowNumber - 1, dateColumnIndex).numberFormat = {
-      type: "DATE",
-      pattern: 'dd-mm-yyyy hh:mm A/P"M"',
-    };
-    await sheet.saveUpdatedCells();
+          Object.entries(res.response[res.type]).map(
+            ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+          );
+        else if (qstn.type === QuestionType.Testimonial)
+          Object.entries(res.response[res.type]).map(
+            ([key, value]) =>
+              (resObj[(qstnTitle + ":" + key).trim()] =
+                key == "photo"
+                  ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                  : value),
+          );
+        else
+          resObj[
+            QIndex + "_" + getContent(qstn.title[response.language]).trim()
+          ] = getFormattedResponse(
+            res.response[res.type],
+            qstn,
+            response.language,
+          );
+      });
+      const newRow = await sheet.addRow(resObj);
+      const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+      await sheet.loadCells();
+      sheet.getCell(newRow.rowNumber - 1, dateColumnIndex).numberFormat = {
+        type: "DATE",
+        pattern: 'dd-mm-yyyy hh:mm A/P"M"',
+      };
+      await sheet.saveUpdatedCells();
+    }
+    return spreadSheetId;
+  } catch (error) {
+    console.error(error);
+    return null;
   }
-  return spreadSheetId;
 }
 
 export function getFormattedResponse(response, qstn, language) {

@@ -36,8 +36,13 @@ export async function callWhatsappApi(
   } else {
     log.error("Error calling WhatsApp API: %o", res);
     log.error("\nError Response => %o", res.data);
-    throw new Error(
-      `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_user_msg}`,
-    );
+    if (res.data?.error?.error_user_msg)
+      throw new Error(
+        `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_user_msg}`,
+      );
+    else
+      throw new Error(
+        `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_data?.details}`,
+      );
   }
 }

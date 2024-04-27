@@ -1,9 +1,8 @@
-
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function getSurveyTeamIdFromMap(surveyTeamMapId: string){
+export async function getSurveyTeamIdFromMap(surveyTeamMapId: string) {
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
     where: {
       id: surveyTeamMapId,
@@ -17,17 +16,16 @@ export async function getSurveyTeamIdFromMap(surveyTeamMapId: string){
   return surveyTeamMap?.teamId;
 }
 
-export async function getSurveyIdfromMap(surveyTeamMapId: string){
-    const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
-      where: {
-        id: surveyTeamMapId,
-      },
-    });
-  
-    if (!surveyTeamMap) {
-      return null;
-    }
-  
-    return surveyTeamMap?.surveyId;
+export async function getSurveyIdfromMap(surveyTeamMapId: string) {
+  const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
+    where: {
+      id: surveyTeamMapId,
+    },
+  });
+
+  if (!surveyTeamMap) {
+    return null;
   }
-  
+
+  return surveyTeamMap?.surveyId;
+}

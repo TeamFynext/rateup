@@ -148,6 +148,9 @@ export enum ReviewPlatform {
 }
 export enum SubscriptionFeaturePathName {
   WebSurvey = "webSurvey",
+  EmailNotification = "webSurvey.emailNotification",
+  GoogleReview = "webSurvey.googleReview",
+  Encryption = "webSurvey.encryption",
   WhatsAppSurvey = "whatsappSurvey",
   WhatsAppCampaign = "whatsappCampaign",
   Menu = "menu",
@@ -214,4 +217,9 @@ export enum ChatBotDataSourceType {
   WEB = "WEB",
   FILE = "FILE",
   // API = "API"
+}
+
+export enum ChatbotPublicPageStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
 }

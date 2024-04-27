@@ -64,6 +64,15 @@ export async function getWaSettingsByWaBaId(wabaId: string) {
   return getWaSettingsWithAccessTokenDecrypted(res);
 }
 
+export async function getWaSettingsByPhoneId(phoneId: string) {
+  const res = await prisma.whatsappSettings.findFirst({
+    where: {
+      phoneId,
+    },
+  });
+  return res;
+}
+
 function getWaSettingsWithAccessTokenDecrypted(
   waSettings: WhatsappSettings,
 ): Omit<WhatsappSettings, "accessToken_iv"> {
@@ -131,4 +140,32 @@ export async function deleteWaSettings(orgId: string) {
       orgId: orgId,
     },
   });
+}
+
+export async function getContactTag(orgId: string) {
+  const res = await prisma.waAccountSettings.findFirst({
+    where: {
+      orgId,
+    },
+    select: {
+      contactTags: true,
+    },
+  });
+  return res;
+}
+
+export async function updateContactTag(orgId: string, tags: string[]) {
+  const res = await prisma.waAccountSettings.upsert({
+    where: {
+      orgId,
+    },
+    create: {
+      orgId,
+      contactTags: tags,
+    },
+    update: {
+      contactTags: tags,
+    },
+  });
+  return res;
 }

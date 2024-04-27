@@ -16,9 +16,9 @@ import {
   getUnsyncedFlows,
   publishFlowInWa,
   sendFlow,
+  syncLocalFlowToWhatsapp,
   updateFlowIdAndStatusInDb,
   updateFlowInDb,
-  updateFlowJsonInWa,
   updateFlowMetaDataInWa,
 } from "./flow.service";
 import {
@@ -29,6 +29,7 @@ import {
   ImportFlowsBody,
   SendFlowBody,
   UpdateFlowInput,
+  UpdateFlowMetaInput,
   WaFlowSourceQuery,
 } from "./flow.schema";
 import {
@@ -39,6 +40,8 @@ import { log } from "../../../utils/logger";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
 import { Survey } from "@prisma/client";
+import { callWhatsappApi } from "../wa_axios";
+import { getWaSettings } from "../settings/wa_settings.service";
 
 /**
  * Get flows from whatsapp api or our database.
@@ -114,10 +117,12 @@ export async function importFlowsHandler(
     log.trace("creating survey from flow %s", waFlowId);
     const { survey, flowMap: flowMapWithQuestionId } =
       await createSurveyFromFlow({
+        orgId: orgId,
         flowJson: json,
         flowMap: mapData[waFlowId],
         req: req,
         teamIds: req.body.teamIds,
+        title: waFlow.name,
       });
 
     log.trace("creating flow copy in db %s", waFlowId);
@@ -152,6 +157,7 @@ export async function createFlowHandler(
         teamIds,
         type: SurveyType.WaFlow,
         languages: ["en"],
+        orgId,
       },
       req,
     )) as Survey;
@@ -187,18 +193,12 @@ export async function updateFlowHandler(
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
 
+  log.trace("updating flow %o", req.body);
   const previousFlow = await getFlowFromDb(dbFlowId);
-  const updatedFlow = await updateFlowInDb(orgId, dbFlowId, req.body);
-  const jsonWithTitle = getFlowJsonWithTitleAndDescription(
-    updatedFlow.json as unknown as WaFlowJson,
-    updatedFlow.map,
-    updatedFlow.survey,
-  );
-  const response = await updateFlowJsonInWa(
-    orgId,
-    updatedFlow.flowId,
-    jsonWithTitle as WaFlowJson,
-  );
+  const updatedFlow = await updateFlowInDb(orgId, dbFlowId, {
+    ...req.body,
+    pendingSave: true,
+  });
 
   // add data_channel_uri if logic jumps are updated
   if (
@@ -221,6 +221,53 @@ export async function updateFlowHandler(
   res.status(201).send();
 }
 
+export async function saveFlowJsonToWhatsappHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const { dbFlowId } = req.params;
+    await syncLocalFlowToWhatsapp(orgId, dbFlowId);
+
+    res.status(200).send();
+  } catch (error) {
+    log.error("Error saving flow json to whatsapp", error);
+    res.status(500).send(error.message);
+  }
+}
+
+export async function updateFlowMetaDataHandler(
+  req: FastifyRequest<{
+    Params: ByDbFlowIdParams;
+    Body: UpdateFlowMetaInput;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const { dbFlowId } = req.params;
+    const previousFlow = await getFlowFromDb(dbFlowId);
+    await updateFlowInDb(orgId, dbFlowId, req.body);
+    const { accessToken } = await getWaSettings(orgId);
+    const { data } = await callWhatsappApi(
+      `/${previousFlow?.flowId}`,
+      "POST",
+      accessToken,
+      req.body,
+    );
+    if (!data?.success) {
+      log.error("Flow Not updated in whatsapp\n%o", data);
+      throw new Error("Flow Not updated in whatsapp");
+    }
+    res.status(204).send();
+  } catch (error) {
+    log.error("Error Updating flow meta data", error);
+    res.status(500).send(error);
+  }
+}
 export async function cloneAndDeprecateFlowHandler(
   req: FastifyRequest<{
     Params: ByDbFlowIdParams;

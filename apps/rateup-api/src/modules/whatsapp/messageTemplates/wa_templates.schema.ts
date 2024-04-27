@@ -10,29 +10,42 @@ const waTemplateInput = {
   id: z.string().optional(),
   name: z
     .string()
+    .regex(/^[a-z_0-9]+$/, {
+      message: "Name can only have lower-case letters and underscores",
+    })
     .trim()
     .min(1)
-    .max(512)
-    .refine((text) => !text.includes(" "), {
-      message: "Name cannot contain spaces. Replace it with underscore(_)",
-    }),
+    .max(512),
   header: z.string(),
   body: z.string().max(1024).min(1),
   footer: z.string().max(60),
   category: z.string(),
   format: z.string(),
+  language: z.string(),
   buttons: z
     .array(
       z.object({
-        text: z.string().min(1).max(24).optional(),
+        text: z.string().min(1).max(25).optional(),
         type: z.string().min(1),
         phone_number: z.string().max(25).optional(),
         url: z.string().max(2000).optional(),
         example: z.string().max(15).optional(),
+        flow_id: z.string().optional(),
+        flow_action: z.string().optional(),
+        navigate_screen: z.string().optional(),
       }),
     )
     .optional(),
   example: z.array(z.string()).optional(),
+  defaultValues: z
+    .object({
+      image: z
+        .object({
+          link: z.string(),
+        })
+        .optional(),
+    })
+    .optional(),
 };
 
 const waTemplateFormattedInput = {
@@ -108,6 +121,7 @@ const registerTemplatesInDbBodySchema = z.array(
 const waUserSendTemplateBodySchema = z.object({
   phone: z.string(),
   parameterData: z.any(),
+  teamId: z.string().optional(),
 });
 
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(

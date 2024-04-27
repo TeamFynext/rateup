@@ -5,6 +5,7 @@ import {
   WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
+  WaTemplateSupportedFormats,
 } from "./enums";
 
 // TODO: find if there is an official type for this
@@ -12,7 +13,7 @@ export type WaMessageBody = {
   object: string;
   entry: [
     {
-      id: string;
+      id: string; // waba_id
       changes: [
         {
           value: WaReceiveMessageBody;
@@ -188,16 +189,39 @@ export enum WaTemplateSupportedParameters {
   DATE_TIME = "date_time",
 }
 
-type WaTemplateLanguage = {
-  code: string;
-};
-
-export type WaTemplateComponent = {
+// component type used while sending a template
+export type WaTemplateSendComponent = {
   type: WaTemplateComponentType;
   sub_type?: "quick_reply" | "list_reply" | "button_reply" | "nfm_reply";
   index?: number;
   parameters: WaTemplateParameter[];
 };
+// component type used when creating a template
+export type WaTemplateComponent = {
+  type: WaTemplateComponentTypeUpperCase;
+  format?: WaTemplateSupportedFormats;
+  text?: string;
+  example?: any;
+  buttons?: WaTemplateButton[];
+};
+
+export type WaTemplateButton = {
+  type: WHATSAPP_BUTTON_TYPE;
+  text: string;
+  phone_number?: string;
+  url?: string;
+  flow_id?: string;
+  flow_action?: "navigate" | "data_exchange";
+  navigate_screen?: string;
+};
+
+export enum WHATSAPP_BUTTON_TYPE {
+  QUICK_REPLY = "QUICK_REPLY",
+  COPY_CODE = "COPY_CODE",
+  PHONE_NUMBER = "PHONE_NUMBER",
+  URL = "URL",
+  FLOW = "FLOW",
+}
 
 type WaTemplateParameter = {
   type: WaTemplateSupportedParameters;
@@ -232,12 +256,6 @@ type Image = {
 
 type Document = {
   link: string;
-};
-
-export type WaTemplate = {
-  name: string;
-  language: WaTemplateLanguage;
-  components: WaTemplateComponent[];
 };
 
 //types for adding waTemplates to waCloud starts here

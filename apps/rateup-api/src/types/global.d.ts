@@ -18,7 +18,7 @@ import prisma from "../utils/prisma";
 import {
   WaReceiveMessageBody,
   WaSendMessageBody,
-  WaTemplateComponent,
+  WaTemplateSendComponent,
 } from "./whatsapp.types";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 
@@ -159,6 +159,7 @@ declare global {
     };
     acceptButton: string;
     orgId: string;
+    defaultValues: WaTemplateDefaultValues;
   };
   type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
 
@@ -173,12 +174,25 @@ declare global {
   };
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
-    [sfpn.Menu]: subscriptionCountRestriction & subscriptionActiveField;
+    [sfpn.Menu]: subscriptionCountRestriction &
+      subscriptionActiveField & {
+        count: {
+          monthlyViewLimit: number;
+        };
+      };
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &
       subscriptionCountRestriction;
-    [sfpn.WebSurvey]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.WebSurvey]: subscriptionActiveField &
+      subscriptionCountRestriction & {
+        encryption: subscriptionActiveField;
+        googleReview: subscriptionActiveField;
+        emailNotification: subscriptionActiveField;
+        count: {
+          monthlyResponseLimit: number;
+        };
+      };
     [sfpn.WhatsAppSurvey]: subscriptionActiveField &
       subscriptionCountRestriction;
     [sfpn.WhatsAppCampaign]: subscriptionActiveField &
@@ -274,6 +288,16 @@ declare global {
     send?: WaSendMessageBody;
     receive?: WaReceiveMessageBody;
   };
+  type WaTemplateDefaultValues = {
+    image?: {
+      link: string;
+    };
+  };
+  type WaFlowStartMessageConfig = {
+    prefix: string;
+    suffix: string;
+  };
+
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
@@ -286,7 +310,9 @@ declare global {
 
     type PWaMessageBody = WaInboxMessageBody;
     type PWaTemplateWithTypesData = WaTemplateWithTypes["data"];
-    type PWaTemplateComponentParams = WaTemplateComponent;
+    type PWaTemplateComponentParams = WaTemplateSendComponent;
+    type PWaTemplateDefaultValues = WaTemplateDefaultValues;
+    type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
   }
 }
 export interface FlowLogicCondition {

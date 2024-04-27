@@ -1,6 +1,6 @@
 import prisma from "../../utils/prisma";
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
-import { sendSurveyToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
+import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { log } from "../../utils/logger";
 
@@ -11,15 +11,6 @@ export async function getCampaignById(campaignId: string) {
     },
     include: {
       team: true,
-      surveyTeamMap: {
-        select: {
-          survey: {
-            include: {
-              WaFlow: true,
-            },
-          },
-        },
-      },
       waTemplate: {
         select: {
           data: true,
@@ -82,7 +73,6 @@ export async function createCampaign(data: CreateCampaignInput) {
       name: data.name,
       type: data.type,
       teamId: data.teamId,
-      surveyTeamMapId: data.surveyTeamMapId,
       waTemplateId: data.waTemplateId ?? undefined,
     },
   });
@@ -115,6 +105,6 @@ export async function startCampaign(campaignId: string) {
     startedAt: new Date(),
   });
   log.trace("updated campaign status to active");
-  await sendSurveyToParticipants(campaignId);
+  await sendCampaignToParticipants(campaignId);
   // add state indicating survey is sent to all participants?
 }

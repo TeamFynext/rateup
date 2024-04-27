@@ -148,13 +148,18 @@ export async function createTemplate(orgId: string, template: any) {
  * @param orgId
  * @returns
  */
-export async function saveTemplate(template: any, orgId: string) {
+export async function saveTemplate(
+  template: any,
+  orgId: string,
+  defaultValues: WaTemplateDefaultValues = {},
+) {
   try {
     const res = await prisma.waTemplate.create({
       data: {
         data: template,
         acceptButton: "",
         orgId: orgId,
+        defaultValues,
       },
     });
     log.trace("Template saved to db %o", res);
@@ -188,8 +193,7 @@ export async function deleteTemplate(
     log.trace("Template deleted from whatsapp %o", res.data);
     return true;
   } catch (e: any) {
-    log.error("Error deleting template \n%o", e.response.data);
-    console.log(`TemplateId: ${templateId}, TemplateName: ${templateName}`);
+    log.error("Error deleting template \n%o\n%o", e, e.response?.data);
     return false;
   }
 }
@@ -388,5 +392,8 @@ export async function uploadFileToWaTemplate(
     headers,
   );
   const data = (await imageUploadRes).data;
-  return data?.h ?? "error";
+  log.trace("Image uploaded to whatsapp %o", data);
+  const fileHandle = data?.h ?? "error";
+  const uploadSessionId = response.id;
+  return { fileHandle, uploadSessionId };
 }

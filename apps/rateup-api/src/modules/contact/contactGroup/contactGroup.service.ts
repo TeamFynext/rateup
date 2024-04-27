@@ -96,6 +96,7 @@ export async function addNewContactsToGroup(
   await prisma.$transaction(async (tx) => {
     // create contacts
     await tx.contact.createMany({
+      skipDuplicates: true,
       data: contacts.map((contact) => ({
         ...contact,
         orgId,
@@ -105,13 +106,6 @@ export async function addNewContactsToGroup(
     const createdContacts = await tx.contact.findMany({
       where: {
         OR: [
-          {
-            email: {
-              in: contacts
-                .map((contact) => contact.email)
-                .filter((email) => email),
-            },
-          },
           {
             phone: {
               in: contacts
@@ -125,6 +119,7 @@ export async function addNewContactsToGroup(
     });
     // create contact group map
     await tx.contactGroupMap.createMany({
+      skipDuplicates: true,
       data: createdContacts.map((contact) => ({
         contactId: contact.id,
         contactGroupId,

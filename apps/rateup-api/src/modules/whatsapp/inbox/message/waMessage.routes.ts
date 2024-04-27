@@ -1,29 +1,32 @@
 import { FastifyInstance } from "fastify";
 import {
-  getWaMessagesByWaContactIdHandler,
+  getContactsWithLastMessageHandler,
+  getWaMessagesByContactIdHandler,
   sendNewWaMessageHandler,
 } from "./wamessage.controller";
-import { $waMessage } from "./wamessage.schema";
 import { checkSession } from "../../../../utils/checkSession";
+import { $contactRef } from "../../../contact/contact.schema";
 
 export async function waMessageRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.get(
-    "/:waContactId",
+    "/:contactId",
     {
       schema: {
-        params: $waMessage("byWaContactId"),
+        params: $contactRef("byContactIdSchema"),
       },
     },
-    getWaMessagesByWaContactIdHandler,
+    getWaMessagesByContactIdHandler,
   );
   server.post(
-    "/:waContactId",
+    "/:contactId",
     {
       schema: {
-        params: $waMessage("byWaContactId"),
+        params: $contactRef("byContactIdSchema"),
       },
     },
     sendNewWaMessageHandler,
   );
+
+  server.get("/contacts", getContactsWithLastMessageHandler);
 }

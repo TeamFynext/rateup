@@ -99,10 +99,12 @@ model Org {
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
   landingPage       LandingPage[]
-  WaContact         WaContact[]
   LoyaltyApiKey     LoyaltyApiKey?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
+  chatbot           Chatbot?
+  Survey            Survey[]
+  WaAccountSettings WaAccountSettings?
 }
 
 model UsageStats {
@@ -148,6 +150,12 @@ model WhatsappSettings {
   type String // enums.ts: WaConfigType
 
   encryption Json? // for flow {publicKey: string, privateKey: string}
+}
+
+model WaAccountSettings {
+  org         Org      @relation(fields: [orgId], references: [id])
+  orgId       String   @unique @db.Uuid
+  contactTags String[] @default([])
 }
 
 model OrgMember {
@@ -250,6 +258,8 @@ model Survey {
   WaFlow                  WaFlow?
   spreadSheetId           String?
   redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
+  org                     Org?            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String?         @db.Uuid
 }
 
 model SurveyTeamMap {
@@ -262,8 +272,9 @@ model SurveyTeamMap {
   responses   SurveyResponse[]
   sessions    WaSession[]
   surveyStats SurveyStats?
-  campaign    Campaign[]
   menuLanding MenuLanding[]
+
+  @@unique([surveyId, teamId], name: "survey_team_unique")
 }
 
 //this is the model for grouped surveys
@@ -342,7 +353,6 @@ model Contact {
 
   name   String?
   phone  String?
-  email  String?
   source String?
 
   org                  Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -350,10 +360,10 @@ model Contact {
   responses            SurveyResponse[]
   contactGroups        ContactGroupMap[]
   campaignParticipants CampaignParticipant[]
-  waContact            WaContact?
+  tags                 Json?
+  WaMessage            WaMessage[]
 
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
-  @@unique([email, orgId], name: "contact_email_org_id_unique")
 }
 
 model ContactGroup {
@@ -392,8 +402,6 @@ model Campaign {
 
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
-  surveyTeamMap        SurveyTeamMap         @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId      String                @db.Uuid
   waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   waTemplateId         String?               @db.Uuid
   // TODO: add email template?
@@ -517,11 +525,13 @@ model Media {
 }
 
 model WaTemplate {
-  id           String   @id @default(uuid()) @db.Uuid
-  createdAt    DateTime @default(now())
+  id            String   @id @default(uuid()) @db.Uuid
+  createdAt     DateTime @default(now())
   /// [PWaTemplateWithTypesData]
-  data         Json
-  acceptButton String // QuickReplyButton text which on clicking will send the survey to the user
+  data          Json
+  acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
+  /// [PWaTemplateDefaultValues]
+  defaultValues Json? // default values for images and other fields
 
   org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String      @db.Uuid
@@ -717,24 +727,30 @@ model WaFlow {
   dbFlowId  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
 
-  flowId  String? @unique
+  flowId  String?
   name    String
   status  String
   /// [PWaFlowJson]
   json    Json
   /// [PWaFlowPreview]
   preview Json?
+  // whether the flow has changes present in our db that are not saved in whatsapp
+  pendingSave Boolean @default(true)
 
   map        Json
   logicJumps Json @default("{}")
 
   /// [PWaFlowTemplateMessage]
-  templateMessage Json @default("{}")
+  templateMessage    Json @default("{}")
+  /// [PWaFlowStartMessageConfig]
+  startMessageConfig Json @default("{}")
 
   org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId    String @db.Uuid
   survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   surveyId String @unique @db.Uuid
+
+  @@unique([flowId, orgId])
 }
 
 model Testimonial {
@@ -957,35 +973,23 @@ model LandingPage {
   theme          Json?
   links          Json?
   additionalData Json?
+  visitorsCount  Int      @default(0)
   shareSettings  Json?
   isPublished    Boolean  @default(false)
   owner          Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
   createdBy      User     @relation(fields: [createdById], references: [id])
 }
 
-model WaContact {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now())
-  contactId String      @unique @db.Uuid
-  contact   Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  orgId     String      @db.Uuid
-  org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  waInbox   WaMessage[]
-
-  @@unique([contactId, orgId])
-}
-
 model WaMessage {
   id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt               DateTime  @default(now())
   waCreatedAt             DateTime?
-  waContactId             String    @db.Uuid
   /// [PWaMessageBody]
   messageBody             Json
   /// [PWaTemplateComponentParams]
   templateComponentParams Json?
-  waContact               WaContact @relation(fields: [waContactId], references: [id], onDelete: Cascade)
+  contact                 Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId               String?   @db.Uuid
 }
 
 model WaAutomatedReply {
@@ -1030,4 +1034,12 @@ model MyGInvoice {
   updatedAt       DateTime? @updatedAt
 
   @@unique([invoiceNumber, mobileNumber])
+}
+
+model Chatbot {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId            String  @unique @db.Uuid
+  org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  shortUrlId       String  @unique
+  publicPageStatus String? @default("INACTIVE")
 }

@@ -119,6 +119,7 @@ async function generateAndGetOptionsFromDB(
                       team: {
                         select: {
                           name: true,
+                          tags: true,
                         },
                       },
                     },
@@ -153,6 +154,68 @@ async function generateAndGetOptionsFromDB(
   return resultArr;
 }
 
+async function updatePageVisitOrLinkClickInDB(req) {
+  const {
+    params: { shortUrlId },
+    body: { resourceToBeUpdated, linkId },
+  } = req;
+  if (resourceToBeUpdated === "page-visit") {
+    const updatedRecord = await prisma.landingPage.update({
+      where: {
+        shortUrlId,
+      },
+      data: {
+        visitorsCount: {
+          increment: 1,
+        },
+      },
+    });
+    return {
+      success: true,
+      message: "Updated visitor count successfully",
+    };
+  } else if (resourceToBeUpdated === "link-click") {
+    const { links }: { links: any } = await prisma.landingPage.findFirst({
+      where: {
+        shortUrlId,
+      },
+      select: {
+        links: true,
+      },
+    });
+    if (
+      links &&
+      links.length &&
+      links.find((linkObj) => linkObj.id === linkId)
+    ) {
+      const newLinks = links.map((linkObj, index) => {
+        const { noOfClicks = 0 } = linkObj;
+        if (linkObj.id === linkId) {
+          return {
+            ...linkObj,
+            noOfClicks: noOfClicks + 1,
+          };
+        } else {
+          return linkObj;
+        }
+      });
+
+      const updatedLandingPageObj = await prisma.landingPage.update({
+        where: {
+          shortUrlId,
+        },
+        data: {
+          links: newLinks,
+        },
+      });
+
+      return updatedLandingPageObj;
+    } else {
+      return null;
+    }
+  }
+}
+
 export {
   createLandingPageInDB,
   getAllLandingPagesFromDB,
@@ -161,4 +224,5 @@ export {
   updateLandingPageWithShortIdInDB,
   deleteLandingPageInDB,
   generateAndGetOptionsFromDB,
+  updatePageVisitOrLinkClickInDB,
 };
