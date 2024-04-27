@@ -11,7 +11,7 @@ import {
   Group,
 } from "@mantine/core";
 import { IconFilter } from "@tabler/icons-react";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
 
 const FilterToggles = ({
   table,
@@ -38,7 +38,7 @@ const FilterToggles = ({
         <Popover width={200} position="bottom" withArrow shadow="md" offset={2}>
           <Popover.Target>
             <Box>
-              <RateupButtonSecondary title="Select Fields" />
+              <RateupButtonPrimary title="Select Fields" variant="outline" />
             </Box>
           </Popover.Target>
           <Popover.Dropdown>
@@ -75,9 +75,10 @@ const FilterToggles = ({
       {enableFilter && (
         <Tooltip label="Clear the filtered values">
           <Box>
-            <RateupButtonSecondary
+            <RateupButtonPrimary
               onClick={() => table.resetColumnFilters()}
               title="Reset"
+              variant="outline"
             />
           </Box>
         </Tooltip>

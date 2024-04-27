@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Flex } from "@mantine/core";
+import { Box, Flex } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -15,6 +15,8 @@ import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndC
 import { fuzzyFilter } from "../Survey/Response/Filter";
 import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
+import { RateupButtonBlue } from "../Button/RateupButtons";
+import { IconPlus } from "@tabler/icons-react";
 
 function TanstackTable({
   data,
@@ -23,6 +25,9 @@ function TanstackTable({
   enablePagination = true,
   enableColumnSelection = true,
   topHeight,
+  btnTitle,
+  toggle,
+  disableFuzzyFnCustom = false,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -31,6 +36,9 @@ function TanstackTable({
   enableColumnSelection?: boolean;
   handleDeletion?: (seletedId: string[]) => void;
   topHeight?: number;
+  btnTitle?: string;
+  toggle?: () => void;
+  disableFuzzyFnCustom?: boolean;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -52,9 +60,7 @@ function TanstackTable({
   const table = useReactTable({
     data,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter,
-    },
+    ...(disableFuzzyFnCustom ? {} : { filterFns: { fuzzy: fuzzyFilter } }),
     state: {
       columnVisibility,
       sorting,
@@ -78,7 +84,16 @@ function TanstackTable({
 
   return (
     <>
-      <Flex gap={"md"} justify={"flex-end"} align={"center"} px={"xs"}>
+      <Flex gap={"md"} justify={"space-between"} align={"center"} px={"xs"}>
+        {toggle ? (
+          <RateupButtonBlue
+            title={btnTitle}
+            rightIcon={<IconPlus />}
+            onClick={toggle}
+          />
+        ) : (
+          <Box w={50} h={50} />
+        )}
         <FilterToggles
           enableFilter={enableFilter}
           filterVisibility={filterVisibility}

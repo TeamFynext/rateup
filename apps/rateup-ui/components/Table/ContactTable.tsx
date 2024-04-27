@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
 import { PAGE_SIZE } from "../../utils/constants";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
@@ -189,9 +189,6 @@ function ContactTable({
           )}
           <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
         </Group>
-        <ThemeIcon size="sm" w={"max-content"} variant="light" p={"xs"}>
-          Count: {data?.length ?? 0}
-        </ThemeIcon>
         <FilterToggles
           enableFilter={enableFilter}
           filterVisibility={filterVisibility}

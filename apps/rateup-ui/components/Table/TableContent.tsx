@@ -20,6 +20,7 @@ import { flexRender } from "@tanstack/react-table";
 import { PAGE_SIZE } from "../../utils/constants";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { Filter } from "./Filter/Filter";
+import { lexend600 } from "../../utils/fonts";
 
 const TableLayout = ({
   table,
@@ -149,38 +150,49 @@ const TableLayout = ({
           </Table>
         </Table.ScrollContainer>
       </Stack>
-      <Flex gap={"xl"} pt={"xs"} px={"xs"}>
-        {enablePagination && (
-          <Pagination.Root
-            total={table.getPageCount()}
-            onChange={(e) => table.setPageIndex(e - 1)}
-          >
-            <Group gap={5} justify="center">
-              <Pagination.First disabled={!table.getCanPreviousPage()} />
-              <Pagination.Previous disabled={!table.getCanPreviousPage()} />
-              <Pagination.Items />
-              <Pagination.Next disabled={!table.getCanNextPage()} />
-              <Pagination.Last disabled={!table.getCanNextPage()} />
-            </Group>
-          </Pagination.Root>
-        )}
+      <Flex
+        gap={"xl"}
+        pt={"xs"}
+        px={"xs"}
+        justify={"space-between"}
+        align={"center"}
+      >
         <Group>
-          <Text fz="sm">Rows Per page</Text>
-          <ContainedSelection
-            onChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-            value={String(table.getState().pagination.pageSize)}
-            data={PAGE_SIZE}
-            allowDeselect={false}
-            styles={{
-              input: {
-                height: 10,
-                width: 80,
-              },
-            }}
-          />
+          {enablePagination && (
+            <Pagination.Root
+              total={table.getPageCount()}
+              onChange={(e) => table.setPageIndex(e - 1)}
+            >
+              <Group gap={5} justify="center">
+                <Pagination.First disabled={!table.getCanPreviousPage()} />
+                <Pagination.Previous disabled={!table.getCanPreviousPage()} />
+                <Pagination.Items />
+                <Pagination.Next disabled={!table.getCanNextPage()} />
+                <Pagination.Last disabled={!table.getCanNextPage()} />
+              </Group>
+            </Pagination.Root>
+          )}
+          <Group>
+            <Text fz="sm">Rows Per page</Text>
+            <ContainedSelection
+              onChange={(value) => {
+                table.setPageSize(Number(value));
+              }}
+              value={String(table.getState().pagination.pageSize)}
+              data={PAGE_SIZE}
+              allowDeselect={false}
+              styles={{
+                input: {
+                  height: 10,
+                  width: 80,
+                },
+              }}
+            />
+          </Group>
         </Group>
+        <Text pr={"xs"} ff={lexend600.style.fontFamily}>
+          Total Rows: {table.getFilteredRowModel()?.flatRows?.length ?? 0}
+        </Text>
       </Flex>
     </>
   );

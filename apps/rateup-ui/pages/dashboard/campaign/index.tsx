@@ -1,33 +1,30 @@
 import {
   Button,
+  Center,
   Flex,
-  Group,
-  Loader,
   MantineProvider,
   Modal,
-  SimpleGrid,
   Stack,
-  TextInput,
-  Title,
   Text,
-  Center,
-  Container,
+  TextInput,
 } from "@mantine/core";
-import { TeamSelector } from "../../../components/input/TeamSelector";
-import { useEffect, useState } from "react";
-import { IconPlus, IconRefresh, IconSearch } from "@tabler/icons-react";
-import styles from "./campaign.module.css";
-import CampaignCard from "../../../components/Card/CampaignCard";
 import { useDisclosure } from "@mantine/hooks";
-import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
+import { IconRefresh, IconSearch } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 import {
   useCampaignData,
   useCampaignDataByTeam,
 } from "../../../backend/campaign/campaign.query";
-import { whatsappTheme } from "../../../config/mantineTheme";
+import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
+import { contactParticipentColumn } from "../../../components/Contacts/utils/utils";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import TanstackTable from "../../../components/Table/TanstackTable";
+import { TeamSelector } from "../../../components/input/TeamSelector";
 import Heading from "../../../components/styled/Heading/Heading";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
-import NothingFound from "../../../components/NothingFound/NothingFound";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { whatsappTheme } from "../../../config/mantineTheme";
+import styles from "./campaign.module.css";
 
 export default function CampaignList() {
   const [searchText, setSearchText] = useState("");
@@ -36,14 +33,14 @@ export default function CampaignList() {
   const enabled = !!selectedTeam && selectedTeam != "all";
   const {
     data: campaignDataByTeam,
-    isLoading,
+    isPending,
     isError,
     refetch,
   } = useCampaignDataByTeam(selectedTeam, enabled);
 
   const {
     data: campaignData,
-    isLoading: isAllCampaignLoading,
+    isPending: isAllCampaignLoading,
     isError: isAllCampaignError,
   } = useCampaignData();
 
@@ -62,34 +59,30 @@ export default function CampaignList() {
       : filteredCampaignsdata
   )?.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // sorting by date
 
+  if (isPending && isAllCampaignLoading) return <RateupLoader h={"90dvh"} />;
+
+  const column: ColumnDef<any>[] = contactParticipentColumn;
+
   return (
     <>
       <MantineProvider theme={whatsappTheme}>
-        <Stack gap={"lg"}>
+        <Stack gap={"sm"}>
           <Flex justify={"space-between"}>
-            <Group>
-              <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
-              <RateupButtonBlue
-                title="Create Campaign"
-                rightIcon={<IconPlus />}
-                onClick={open}
-              />
-            </Group>
+            <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
             <TeamSelector
               value={selectedTeam}
               onChange={setSelectedTeam}
               enableAll={true}
             />
           </Flex>
-          <Flex justify={"center"}>
+          <Center>
             <SearchInput
               placeholder={"Search Campaign"}
               searchText={searchText}
               setSearchText={setSearchText}
             />
-          </Flex>
+          </Center>
           <Center>
-            {isLoading && isAllCampaignLoading ? <Loader type="bars" /> : <></>}
             {isError && isAllCampaignError ? (
               <Stack>
                 <Text>Something went wrong</Text>
@@ -106,17 +99,15 @@ export default function CampaignList() {
             )}
           </Center>
 
-          {filteredCampaigns?.length > 0 ? (
-            <SimpleGrid cols={3} p="xl">
-              {filteredCampaigns?.map((campaign) => (
-                <CampaignCard campaign={campaign} key={campaign?.id} />
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Container mt={"7%"}>
-              <NothingFound text={"No campaigns found"} />
-            </Container>
-          )}
+          <PaperLayout px={0}>
+            <TanstackTable
+              columns={column}
+              data={filteredCampaigns}
+              btnTitle="Create"
+              toggle={open}
+              disableFuzzyFnCustom={true}
+            />
+          </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"lg"}>
             <CreateCampaignModal close={close} isEdit={false} />
           </Modal>

@@ -20,32 +20,25 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { IndeterminateCheckbox } from ".";
 import {
   useContactGroupById,
   useDeleteGroupMutation,
 } from "../../../backend/campaign/contactGroup/contactGroup.query";
 import { useGetContactTags } from "../../../backend/whatsapp/settings/waSettings.query";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
 import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
-import RemovePartcipantModal from "../../../components/Contacts/RemovePartcipantModal";
+import { ParticipantMenu } from "../../../components/Contacts/GroupParticipant";
+import { contactColumn } from "../../../components/Contacts/utils/utils";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import ContactTable from "../../../components/Table/ContactTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { ParticipantMenu } from "../../../components/Contacts/GroupParticipant";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
-  const [
-    openedEditCustomer,
-    { open: openEditCustomer, close: closeEditCustomer },
-  ] = useDisclosure(false);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
   const { groupId } = router.query;
@@ -100,47 +93,7 @@ export default function ContactGroup() {
       })
     : groupDetails?.contacts;
   const column: ColumnDef<any>[] = [
-    {
-      id: "select",
-      enableSorting: false,
-      header: ({ table }) => (
-        <IndeterminateCheckbox
-          {...{
-            checked: table.getIsAllRowsSelected(),
-            indeterminate: table.getIsSomeRowsSelected(),
-            onChange: table.getToggleAllRowsSelectedHandler(),
-          }}
-        />
-      ),
-      cell: ({ row }) => (
-        <div className="px-1">
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler(),
-            }}
-          />
-        </div>
-      ),
-    },
-    {
-      header: () => "Created",
-      accessorKey: "createdAt",
-      cell: (info) =>
-        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-    },
-    {
-      header: () => "Name",
-      accessorKey: "name",
-      cell: (info) => info.getValue(),
-    },
-    {
-      header: () => "Phone",
-      accessorKey: "phone",
-      cell: (info) => info.getValue(),
-    },
+    ...contactColumn(cTags?.contactTags ?? []),
     {
       header: () => "Action",
       accessorFn: (row) => row,
@@ -234,38 +187,29 @@ export default function ContactGroup() {
                 </Group>
               </Group>
             </PaperLayout>
-            <Box pt="xs">
-              <Center>
-                <Group>
-                  <TextInput
-                    leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
-                    radius="xl"
-                    size="md"
-                    placeholder={"Search member"}
-                    rightSectionWidth={60}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    w={500}
-                  />
-                  <RateupButtonSecondary
-                    title="Edit"
-                    leftIcon={<IconEdit />}
-                    radius={"xl"}
-                    size="md"
-                    onClick={openEditCustomer}
-                  />
-                </Group>
-              </Center>
-            </Box>
-            <Box>
-              <Title order={2}>Members</Title>
+            <Box mt={"xs"}>
+              <Group justify="space-between">
+                <Title order={2}>Members</Title>
+                <TextInput
+                  leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
+                  radius="xl"
+                  size="md"
+                  placeholder={"Search member"}
+                  rightSectionWidth={60}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  w={500}
+                />
+                <Box w={50} h={50} />
+              </Group>
+
               <PaperLayout mt={"xs"} px={0}>
                 <ContactTable
                   columns={column}
                   data={filteredCustomerList}
                   cTags={cTags?.contactTags}
                   tab={"member"}
-                  topHeight={520}
+                  topHeight={480}
                   open={open}
                   groupId={groupDetails?.id}
                 />
@@ -285,19 +229,6 @@ export default function ContactGroup() {
               teamId={groupDetails?.teamId}
               existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
               tags={cTags?.contactTags}
-            />
-          </FormModalLayout>
-          <FormModalLayout
-            centered
-            onClose={closeEditCustomer}
-            title="Remove members"
-            size="lg"
-            opened={openedEditCustomer}
-          >
-            <RemovePartcipantModal
-              customerList={groupDetails?.contacts}
-              groupId={groupDetails?.id}
-              close={closeEditCustomer}
             />
           </FormModalLayout>
         </Box>

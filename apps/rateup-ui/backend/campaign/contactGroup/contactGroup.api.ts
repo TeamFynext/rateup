@@ -16,7 +16,7 @@ export const getContactGroupList = async () => {
   let contactGroupData: ContactGroupResponse = await axiosClient.get(
     CONTACT_GROUP_BASE_URL,
   );
-  return contactGroupData;
+  return contactGroupData?.data;
 };
 
 export const getContactGroupsByTeamId = async (teamId: string) => {

@@ -60,7 +60,7 @@ const Templates = ({ survey }) => {
       <h2>{categoryName}</h2>
       <Group mt="-30px" align="flex-start">
         {surveys?.map((survey, index) => (
-          <Box>
+          <Box key={survey?.id}>
             <SurveyTemplates
               key={index}
               survey={survey}

@@ -1,42 +1,41 @@
 import {
-  Anchor,
+  ActionIcon,
+  Badge,
   Button,
   Flex,
   Group,
-  Paper,
+  MantineProvider,
+  Modal,
   SimpleGrid,
   Stack,
-  Title,
-  Text,
   Switch,
-  Badge,
-  Modal,
-  MantineProvider,
-  Center,
-  Loader,
-  ActionIcon,
+  Text,
+  Title,
   Tooltip,
 } from "@mantine/core";
-import { SearchInput } from ".";
-import { useEffect, useState } from "react";
-import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
-import style from "./campaign.module.css";
 import { useDisclosure } from "@mantine/hooks";
-import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
+import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { SearchInput } from ".";
 import {
   useCampaignById,
   useStartCampaign,
   useUpdateCampaignMutation,
 } from "../../../backend/campaign/campaign.query";
-import { useRouteParams } from "../../../context/RouteParamsContext";
-import { renderBadge } from "../../../components/Card/CampaignCard";
-import { CampaignStatus } from "../../../types/enums";
+import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
-import { whatsappTheme } from "../../../config/mantineTheme";
-import dayjs from "dayjs";
-import CampaignParticipantCard from "../../../components/Campaign/CampaignParticipantCard";
+import { renderBadge } from "../../../components/Card/CampaignCard";
+import { contactParticipentDetailColumn } from "../../../components/Contacts/utils/utils";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import TanstackTable from "../../../components/Table/TanstackTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { whatsappTheme } from "../../../config/mantineTheme";
+import { useRouteParams } from "../../../context/RouteParamsContext";
+import { CampaignStatus } from "../../../types/enums";
+import style from "./campaign.module.css";
 
 const CampaignById = () => {
   const [searchText, setSearchText] = useState("");
@@ -47,7 +46,7 @@ const CampaignById = () => {
 
   const {
     data: campaignData,
-    isLoading,
+    isPending,
     isFetching,
     refetch: refetchCampaign,
   } = useCampaignById(campaignId);
@@ -69,15 +68,13 @@ const CampaignById = () => {
           p?.contact?.phone.includes(searchText),
       )
     : participants;
+  if (isPending) return <RateupLoader h="90dvh" />;
+
+  const column: ColumnDef<any>[] = contactParticipentDetailColumn;
 
   return (
     <>
       <MantineProvider theme={whatsappTheme}>
-        {isLoading && (
-          <Center>
-            <Loader type="bars" />
-          </Center>
-        )}
         <Stack p={"md"} gap={"md"}>
           <Group>
             <Title>{campaignData?.name}</Title>
@@ -123,33 +120,15 @@ const CampaignById = () => {
               Add Participants
             </Button>
           </Group>
-          {filteredParticipants?.length > 0 ? (
-            <SimpleGrid cols={3}>
-              {filteredParticipants?.map((participant) => (
-                <CampaignParticipantCard
-                  participant={participant}
-                  key={participant?.id}
-                  campaign={campaignData}
-                />
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Flex justify={"center"} pt={"xl"}>
-              <Stack align={"center"}>
-                <Title c={"dimmed"} order={3}>
-                  No Participants Found
-                </Title>
-                <Button
-                  leftSection={<IconPlus />}
-                  radius={"xl"}
-                  size="md"
-                  onClick={open}
-                >
-                  Add Participants
-                </Button>
-              </Stack>
-            </Flex>
-          )}
+          <PaperLayout px={0}>
+            <TanstackTable
+              columns={column}
+              data={filteredParticipants}
+              btnTitle="Add"
+              toggle={open}
+              disableFuzzyFnCustom={true}
+            />
+          </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
             <AddParticipantModal close={close} campaign={campaignData} />
           </Modal>

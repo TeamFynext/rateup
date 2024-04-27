@@ -142,7 +142,7 @@ const CreateGroupModal = ({
             size="md"
             radius={"md"}
             required
-          ></TextInput>
+          />
           {!isEdit ? (
             <Stack gap={0}>
               <Text>Select Team</Text>

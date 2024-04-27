@@ -23,6 +23,7 @@ import { IconDownload, IconInfoCircle, IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
+  useContactGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { contactAddType, importMethod } from "../../utils/enums";
@@ -39,6 +40,7 @@ import PhoneInputWithCountrySelect, {
 import "react-phone-number-input/style.css";
 import styles from "./contact.module.css";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
+import { FilterSelect } from "../../pages/dashboard/contacts";
 
 export interface IAddCustomer {
   name: string;
@@ -64,7 +66,7 @@ const AddCustomerModal = ({
   const [filteredCustomerList, setFilteredCustomerList] = useState([]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isUpload, setIsUpload] = useState(false);
-
+  const [filterByTag, setFilterByTag] = useState([]);
   const {
     isLoading: isLoading,
     data: contactData,
@@ -76,6 +78,9 @@ const AddCustomerModal = ({
     error: any;
     refetch: any;
   };
+  const { isLoading: isLoadingContactgroup, data: contactGroupData } =
+    useContactGroup();
+  console.log(contactGroupData);
 
   const form = useForm({
     initialValues: {
@@ -274,36 +279,52 @@ const AddCustomerModal = ({
       fontSize: "14px",
     },
   };
-  const rows = filteredCustomerList?.map((contact) => (
-    <Table.Tr
-      key={contact?.id}
-      bg={
-        customerList.includes(contact?.id)
-          ? "var(--mantine-color-blue-light)"
-          : undefined
-      }
-    >
-      <Table.Td>
-        <Checkbox
-          aria-label="Select row"
-          checked={
-            customerList?.includes(contact?.id) ||
-            existingContactIds?.includes(contact?.id)
-          }
-          disabled={existingContactIds?.includes(contact?.id)}
-          onChange={(event) =>
-            setCustomerList(
-              event.currentTarget.checked
-                ? [...customerList, contact?.id]
-                : customerList.filter((id) => id !== contact?.id),
-            )
-          }
-        />
-      </Table.Td>
-      <Table.Td>{contact?.name}</Table.Td>
-      <Table.Td>{contact?.phone}</Table.Td>
-    </Table.Tr>
-  ));
+  const sourceArray: string[] = Array.from(
+    new Set(filteredCustomerList?.map((data) => data?.source)),
+  );
+  const rows = filteredCustomerList
+    ?.filter((data) =>
+      sourceArray?.some((data) => filterByTag.includes(data))
+        ? filterByTag?.includes(data.source)
+        : data,
+    )
+    ?.filter((data) =>
+      filterByTag.filter((value) => !sourceArray.includes(value))?.length > 0
+        ? data?.contactGroups?.some((group) =>
+            filterByTag?.includes(group.contactGroup.name),
+          )
+        : data,
+    )
+    ?.map((contact) => (
+      <Table.Tr
+        key={contact?.id}
+        bg={
+          customerList.includes(contact?.id)
+            ? "var(--mantine-color-blue-light)"
+            : undefined
+        }
+      >
+        <Table.Td>
+          <Checkbox
+            aria-label="Select row"
+            checked={
+              customerList?.includes(contact?.id) ||
+              existingContactIds?.includes(contact?.id)
+            }
+            disabled={existingContactIds?.includes(contact?.id)}
+            onChange={(event) =>
+              setCustomerList(
+                event.currentTarget.checked
+                  ? [...customerList, contact?.id]
+                  : customerList.filter((id) => id !== contact?.id),
+              )
+            }
+          />
+        </Table.Td>
+        <Table.Td>{contact?.name}</Table.Td>
+        <Table.Td>{contact?.phone}</Table.Td>
+      </Table.Tr>
+    ));
   return (
     <Box p="0">
       <form
@@ -459,6 +480,12 @@ const AddCustomerModal = ({
           )}
           {addType == contactAddType.EXISTING && (
             <Stack justify="center" gap={"md"}>
+              <FilterSelect
+                contactArray={contactGroupData?.map((data) => data?.name)}
+                sourceArray={sourceArray}
+                filterByTag={filterByTag}
+                setFilterByTag={setFilterByTag}
+              />
               <Group justify="space-between" px={"md"}>
                 <Checkbox
                   aria-label="select all"
@@ -471,7 +498,7 @@ const AddCustomerModal = ({
                       event.currentTarget.checked ? remainingContactIds : [],
                     );
                   }}
-                  disabled={contactData.every((customer) =>
+                  disabled={contactGroupData.every((customer) =>
                     existingContactIds.includes(customer?.id),
                   )}
                 />

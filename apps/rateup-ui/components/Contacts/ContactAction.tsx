@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Checkbox,
@@ -7,17 +8,13 @@ import {
   Stack,
   Table,
 } from "@mantine/core";
-import FormModalLayout from "../Modal/FormModalLayout";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { useState } from "react";
+import { useAddExistingContactToMultipleGroupsMutation } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { SearchInput } from "../../pages/dashboard/campaign";
-import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
-import {
-  useAddExistingContactToMultipleGroupsMutation,
-  useDeleteManyContactGroupsMutation,
-} from "../../backend/campaign/contactGroup/contactGroup.query";
+import { FilterSelect } from "../../pages/dashboard/contacts";
+import FormModalLayout from "../Modal/FormModalLayout";
 import { TeamSelector } from "../input/TeamSelector";
-import { ContactAcions, FilterSelect } from "../../pages/dashboard/contacts";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import { showLoadingToast } from "../../utils/notifications";
 
 const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   const [selectedIds, setSelectedIds] = useState([]);
@@ -26,28 +23,15 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [filterByTag, setFilterByTag] = useState<string[]>([]);
 
-  const groupByTeams = allGroups?.filter(
-    (group) => selectedTeamId === group?.teamId,
-  );
-  const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
-    setSelectedIds([]);
-    setSelectedTeamId(null);
-    close();
-  });
-  const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation(
-    () => {
+  const addContactToGroupsMutation =
+    useAddExistingContactToMultipleGroupsMutation(selectedGroups, () => {
       setSelectedIds([]);
       setSelectedTeamId(null);
+      setSelectedGroups([]);
       close();
-    },
-  );
-  const addContactToGroupsMutation =
-    useAddExistingContactToMultipleGroupsMutation(selectedGroups);
+    });
 
-  const isDisabledSubmit =
-    action === ContactAcions.ADD_CONTACTS_TO_GROUP
-      ? !selectedIds?.length || !selectedGroups?.length
-      : !selectedIds?.length;
+  const isDisabledSubmit = !selectedIds?.length || !selectedGroups?.length;
   const filteredGroups = allGroups?.filter(
     (group) => group?.teamId === selectedTeamId,
   );
@@ -65,27 +49,16 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
     : allContacts;
 
   const handleSubmit = () => {
-    switch (action) {
-      case ContactAcions.DELETE_CONTACTS:
-        deleteManyContactsMutation.mutate(selectedIds);
-        break;
-      case ContactAcions.ADD_CONTACTS_TO_GROUP:
-        addContactToGroupsMutation.mutate(
-          { contactIds: selectedIds, contactGroupIds: selectedGroups },
-          {
-            onSuccess: () => {
-              setSelectedIds([]);
-              setSelectedTeamId(null);
-              setSelectedGroups([]);
-              close();
-            },
-          },
-        );
-        break;
-      case ContactAcions.DELETE_GROUPS:
-        deleteManyContactGroupsMutation.mutate(selectedIds);
-        break;
-    }
+    showLoadingToast(
+      "Contact adding to existing group",
+      "contact-group-add-existing",
+      true,
+      "Adding Contact to group",
+    );
+    addContactToGroupsMutation.mutate({
+      contactIds: selectedIds,
+      contactGroupIds: selectedGroups,
+    });
   };
 
   const sourceArray: string[] = Array.from(
@@ -131,33 +104,6 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       </Table.Tr>
     ));
 
-  const groupRows = filteredGroups?.map((group) => (
-    <Table.Tr
-      key={group?.id}
-      bg={
-        selectedIds.includes(group?.id)
-          ? "var(--mantine-color-blue-light)"
-          : undefined
-      }
-    >
-      <Table.Td>
-        <Checkbox
-          aria-label="Select row"
-          checked={selectedIds?.includes(group?.id)}
-          onChange={(event) =>
-            setSelectedIds(
-              event.currentTarget.checked
-                ? [...selectedIds, group?.id]
-                : selectedIds.filter((id) => id !== group?.id),
-            )
-          }
-        />
-      </Table.Td>
-      <Table.Td>{group?.name}</Table.Td>
-      <Table.Td>{group?._count.contacts}</Table.Td>
-    </Table.Tr>
-  ));
-
   return (
     <FormModalLayout
       opened={opened}
@@ -176,48 +122,34 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       submitButtonDisabled={isDisabledSubmit}
     >
       <Stack>
-        {action === ContactAcions.DELETE_GROUPS ||
-          (action === ContactAcions.ADD_CONTACTS_TO_GROUP && (
-            <TeamSelector
-              value={selectedTeamId}
-              onChange={(value) => {
-                setSelectedGroups([]);
-                setSelectedIds([]);
-                setSelectedTeamId(value);
-              }}
-            />
-          ))}
-        {action !== ContactAcions.DELETE_GROUPS && (
-          <FilterSelect
-            contactArray={filteredGroups?.map((data) => data?.name)}
-            sourceArray={sourceArray}
-            filterByTag={filterByTag}
-            setFilterByTag={setFilterByTag}
-          />
-        )}
+        <TeamSelector
+          value={selectedTeamId}
+          onChange={(value) => {
+            setSelectedGroups([]);
+            setSelectedIds([]);
+            setSelectedTeamId(value);
+          }}
+        />
+        <FilterSelect
+          contactArray={filteredGroups?.map((data) => data?.name)}
+          sourceArray={sourceArray}
+          filterByTag={filterByTag}
+          setFilterByTag={setFilterByTag}
+        />
         <Group justify="space-between">
           {filterByTag?.length === 0 ? (
             <Checkbox
               aria-label="select all"
               label="Select All"
               checked={
-                action == ContactAcions.DELETE_GROUPS
-                  ? groupByTeams?.length &&
-                    groupByTeams?.every((group) =>
-                      selectedIds.includes(group?.id),
-                    )
-                  : allContacts?.length &&
-                    allContacts?.every((customer) =>
-                      selectedIds.includes(customer?.id),
-                    )
+                allContacts?.length &&
+                allContacts?.every((customer) =>
+                  selectedIds.includes(customer?.id),
+                )
               }
               onChange={(event) => {
                 if (event.currentTarget.checked) {
-                  setSelectedIds(
-                    action == ContactAcions.DELETE_GROUPS
-                      ? groupByTeams.map((group) => group.id)
-                      : allContacts.map((customer) => customer?.id),
-                  );
+                  setSelectedIds(allContacts.map((customer) => customer?.id));
                 } else setSelectedIds([]);
               }}
             />
@@ -237,38 +169,25 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
           <ScrollArea h={200}>
             <Table stickyHeader>
               <Table.Thead>
-                {action == ContactAcions.DELETE_CONTACTS && (
-                  <Table.Tr>
-                    <Table.Th />
-                    <Table.Th>Name</Table.Th>
-                    <Table.Th>Phone Number</Table.Th>
-                  </Table.Tr>
-                )}
-                {action == ContactAcions.DELETE_GROUPS && (
-                  <Table.Tr>
-                    <Table.Th />
-                    <Table.Th>Group</Table.Th>
-                    <Table.Th>Members</Table.Th>
-                  </Table.Tr>
-                )}
+                <Table.Tr>
+                  <Table.Th />
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th>Phone Number</Table.Th>
+                </Table.Tr>
               </Table.Thead>
-              <Table.Tbody>
-                {action == ContactAcions.DELETE_GROUPS ? groupRows : rows}
-              </Table.Tbody>
+              <Table.Tbody>{rows}</Table.Tbody>
             </Table>
           </ScrollArea>
         </PaperLayout>
-        {action == ContactAcions.ADD_CONTACTS_TO_GROUP ? (
-          <MultiSelect
-            radius={"10px"}
-            searchable
-            clearable
-            data={groupData}
-            value={selectedGroups}
-            onChange={setSelectedGroups}
-            placeholder={selectedGroups.length > 0 ? "" : "Select Groups"}
-          />
-        ) : null}
+        <MultiSelect
+          radius={"10px"}
+          searchable
+          clearable
+          data={groupData}
+          value={selectedGroups}
+          onChange={setSelectedGroups}
+          placeholder={selectedGroups.length > 0 ? "" : "Select Groups"}
+        />
       </Stack>
     </FormModalLayout>
   );

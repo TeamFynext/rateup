@@ -203,6 +203,7 @@ export const useRemoveContactsFromGroup = (
 
 export const useAddExistingContactToMultipleGroupsMutation = (
   groupIds: string[],
+  onSuccess: () => void,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -220,13 +221,16 @@ export const useAddExistingContactToMultipleGroupsMutation = (
         "Contacts added to groups successfully.",
         "contact-group-add-existing",
         <IconCheck />,
+        true,
       );
+      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
         `Error adding contacts to groups: ${error?.response?.data?.error}`,
         "contact-group-add-existing",
         <IconX />,
+        true,
       );
     },
   });

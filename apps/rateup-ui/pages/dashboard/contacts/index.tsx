@@ -1,56 +1,48 @@
+import { useState } from "react";
+
+import dayjs from "dayjs";
+
+import { useRouter } from "next/router";
+import { useDisclosure } from "@mantine/hooks";
+import { ColumnDef } from "@tanstack/react-table";
+import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import {
-  Badge,
   Button,
   Center,
-  Checkbox,
-  CheckboxProps,
   Flex,
   Group,
   Loader,
   Menu,
+  rem,
   SegmentedControl,
   Stack,
   Tabs,
   TextInput,
-  rem,
 } from "@mantine/core";
 
-import {
-  IconChevronDown,
-  IconChevronRight,
-  IconSearch,
-  IconTrashXFilled,
-  IconUserPlus,
-} from "@tabler/icons-react";
-import React, { useState } from "react";
-
-import { useDisclosure } from "@mantine/hooks";
-import { ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
-import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
-import {
-  useGetContactTags,
-  useUpdateContactTagsMutation,
-} from "../../../backend/whatsapp/settings/waSettings.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import {
-  ContactGroupMenu,
-  ContactMenu,
-} from "../../../components/Card/ContactCard";
-import ContactAction from "../../../components/Contacts/ContactAction";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
+import { showLoadingToast } from "../../../utils/notifications";
+import Heading from "../../../components/styled/Heading/Heading";
 import ContactTable from "../../../components/Table/ContactTable";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import { TeamSelector } from "../../../components/input/TeamSelector";
+import ContactAction from "../../../components/Contacts/ContactAction";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import {
+  contactColumn,
+  contactGroupColumn,
+} from "../../../components/Contacts/utils/utils";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
+import { ContactMenu } from "../../../components/Card/ContactCard";
+import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
 import {
   ContainedMultiSelect,
   ContainedTagInput,
 } from "../../../components/input/ContainedInput/ContainedInput";
-import { TeamSelector } from "../../../components/input/TeamSelector";
-import Heading from "../../../components/styled/Heading/Heading";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { showLoadingToast } from "../../../utils/notifications";
+import {
+  useGetContactTags,
+  useUpdateContactTagsMutation,
+} from "../../../backend/whatsapp/settings/waSettings.query";
 
 export enum ContactTabs {
   CONTACTS = "contacts",
@@ -106,10 +98,8 @@ export default function Contacts() {
 
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
-      ? contactGroupData?.data
-      : contactGroupData?.data?.filter(
-          (group) => group?.teamId === selectedTeamID,
-        );
+      ? contactGroupData
+      : contactGroupData?.filter((group) => group?.teamId === selectedTeamID);
   const filteredGroups = (
     searchTerm
       ? contactGroups.filter((group) => {
@@ -119,65 +109,9 @@ export default function Contacts() {
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
   if (isLoadingContacts || isLoadingContactgroup || isPending)
     return <RateupLoader h={"90dvh"} />;
+
   const column: ColumnDef<any>[] = [
-    {
-      id: "select",
-      enableSorting: false,
-      header: ({ table }) => (
-        <IndeterminateCheckbox
-          {...{
-            checked: table.getIsAllRowsSelected(),
-            indeterminate: table.getIsSomeRowsSelected(),
-            onChange: table.getToggleAllRowsSelectedHandler(),
-          }}
-        />
-      ),
-      cell: ({ row }) => (
-        <div className="px-1">
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler(),
-            }}
-          />
-        </div>
-      ),
-    },
-    {
-      header: () => "Created",
-      accessorKey: "createdAt",
-      cell: (info) =>
-        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-    },
-    {
-      header: () => "Name",
-      accessorKey: "name",
-      cell: (info) => info.getValue(),
-    },
-    {
-      header: () => "Phone",
-      accessorKey: "phone",
-      cell: (info) => info.getValue(),
-    },
-    ...(cTags?.contactTags?.length > 0
-      ? cTags?.contactTags?.map((data) => ({
-          header: () => data,
-          accessorFn: (row) => row?.tags?.[data],
-          id: data,
-          cell: (info) => info.getValue()?.toString(),
-        }))
-      : []),
-    {
-      header: () => "Source",
-      accessorKey: "source",
-      cell: (info) => (
-        <Badge size="md" variant="light" color="green" mt={"auto"}>
-          {(info.getValue() as string) ?? "NA"}
-        </Badge>
-      ),
-    },
+    ...contactColumn(cTags?.contactTags ?? []),
     {
       header: () => "Action",
       accessorFn: (row) => row,
@@ -193,91 +127,7 @@ export default function Contacts() {
       ),
     },
   ];
-  const columnGroup: ColumnDef<any>[] = [
-    {
-      id: "select",
-      enableSorting: false,
-      header: ({ table }) => (
-        <IndeterminateCheckbox
-          {...{
-            checked: table.getIsAllRowsSelected(),
-            indeterminate: table.getIsSomeRowsSelected(),
-            onChange: table.getToggleAllRowsSelectedHandler(),
-          }}
-        />
-      ),
-      cell: ({ row }) => (
-        <div className="px-1">
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler(),
-            }}
-          />
-        </div>
-      ),
-    },
-    {
-      header: () => "Created",
-      accessorKey: "createdAt",
-      cell: (info) =>
-        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-    },
-    {
-      header: () => "Name",
-      accessorKey: "name",
-      cell: (info) => info.getValue(),
-    },
-
-    {
-      header: () => "Name",
-      accessorKey: "name",
-      cell: (info) => info.getValue(),
-    },
-    {
-      header: () => "Members",
-      accessorKey: "_count.contacts",
-      id: "Members",
-      cell: (info) => info.getValue(),
-    },
-    {
-      header: () => "Team",
-      accessorKey: "team.name",
-      id: "Team",
-      cell: (info) => (
-        <Badge size="md" variant="light" color="green" mt={"auto"}>
-          {(info.getValue() as string) ?? "NA"}
-        </Badge>
-      ),
-    },
-    {
-      header: () => "Detail View",
-      id: "Detail",
-      accessorKey: "id",
-      enableSorting: false,
-      enableGlobalFilter: false,
-      cell: (info) => (
-        <Link href={`contacts/${info.getValue()}`}>
-          <RateupButtonPrimary
-            title="Go"
-            rightIcon={<IconChevronRight size={14} />}
-            size="xs"
-            variant="light"
-          />
-        </Link>
-      ),
-    },
-    {
-      header: () => "Action",
-      accessorFn: (row) => row,
-      enableSorting: false,
-      enableGlobalFilter: false,
-      id: "action",
-      cell: (info) => <ContactGroupMenu groupId={info?.row.original?.id} />,
-    },
-  ];
+  const columnGroup: ColumnDef<any>[] = contactGroupColumn;
   return (
     <>
       <Flex
@@ -345,10 +195,7 @@ export default function Contacts() {
               sourceArray={sourceArray}
             />
           )}
-          <ContactActionMenu
-            contacts={contactData}
-            groups={contactGroupData?.data}
-          />
+          <ContactActionMenu contacts={contactData} groups={contactGroupData} />
         </Flex>
         <Tabs.Panel value={ContactTabs.CONTACTS}>
           {isLoadingContacts ? (
@@ -477,30 +324,6 @@ const ContactActionMenu = ({ contacts, groups }) => {
           >
             Add Contacts to Group
           </Menu.Item>
-          <Menu.Item
-            color="red"
-            onClick={() => {
-              setSelectedAction(ContactAcions.DELETE_CONTACTS);
-              openActionModal();
-            }}
-            leftSection={
-              <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
-            }
-          >
-            Delete Contacts
-          </Menu.Item>
-          <Menu.Item
-            color="red"
-            onClick={() => {
-              setSelectedAction(ContactAcions.DELETE_GROUPS);
-              openActionModal();
-            }}
-            leftSection={
-              <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
-            }
-          >
-            Delete Groups
-          </Menu.Item>
         </Menu.Dropdown>
       </Menu>
       <ContactAction
@@ -513,8 +336,3 @@ const ContactActionMenu = ({ contacts, groups }) => {
     </Stack>
   );
 };
-
-export function IndeterminateCheckbox(props: CheckboxProps) {
-  const ref = React.useRef<HTMLInputElement>(null!);
-  return <Checkbox ref={ref} {...props} />;
-}
