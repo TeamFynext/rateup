@@ -1,66 +1,108 @@
-import {
-  Badge,
-  Divider,
-  Group,
-  Loader,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Badge, Group, Loader, Stack, Text, Title } from "@mantine/core";
 import React from "react";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
 import { formatIsoDateString } from "../../../utils/dateTime";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import Pricing from "../../../components/HomePage/pages/Pricing";
+import { useDisclosure } from "@mantine/hooks";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
-const Billing = ({ subscription, toggle, processingPayment }) => {
+const Billing = ({ subscription, processingPayment }) => {
+  const [openedUpgradeModal, { toggle, close: closeUpgradeModal }] =
+    useDisclosure(false);
   return (
-    <Stack style={{ maxWidth: "1000px" }}>
-      <Title order={2}>Billing</Title>
-      <Divider mb="md" />
-
+    <>
       {processingPayment ? (
-        <Loader color="blue" type="bars" />
+        <Loader type="bars" />
       ) : (
         <Stack>
-          <Group ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Current Plan :
-            </Title>
-            <Text> {subscription?.basePlan?.name} </Text>
-            {checkExpiry(subscription?.expiresAt) ||
-            subscription?.basePlan?.name === "RATEUP TRIAL" ||
-            subscription?.basePlan?.name === "FREE PLAN" ? (
-              <RateupButtonPrimary title="Upgrade plan" onClick={toggle} />
-            ) : (
-              <RateupButtonPrimary title="Buy Addons" />
-            )}
-          </Group>
+          <Title order={4}>Current Plan</Title>
+          <PaperLayout w={"60%"} p={"xl"}>
+            <Stack gap={"xl"}>
+              <Group justify="space-between">
+                <Stack gap={1}>
+                  <Text c={"GrayText"} fw={500} fz={15}>
+                    Plan Name
+                  </Text>
+                  <Group>
+                    <Title order={5}>{subscription?.basePlan?.name}</Title>
+                    {subscription?.basePlan?.name === "RATEUP TRIAL" ||
+                    subscription?.basePlan?.name === "FREE PLAN" ? (
+                      <RateupButtonPrimary
+                        title="Upgrade plan"
+                        onClick={toggle}
+                      />
+                    ) : null}
+                  </Group>
+                </Stack>
+                <Stack gap={1}>
+                  <Text c={"GrayText"} fw={500} fz={15}>
+                    Billing Cycle
+                  </Text>
+                  <Title order={5}>
+                    {subscription?.basePlan?.paymentPlan?.period ?? "----"}
+                  </Title>
+                </Stack>
+                <Stack gap={1}>
+                  <Text c={"GrayText"} fw={500} fz={15}>
+                    Plan Cost
+                  </Text>
+                  <Title order={5}>
+                    {subscription?.basePlan?.paymentPlan?.amount ?? "----"}
+                  </Title>
+                </Stack>
+              </Group>
+              <Stack gap={1}>
+                <Text c={"GrayText"} fw={500} fz={15}>
+                  Validity
+                </Text>
+                <Group>
+                  <Text> {formatIsoDateString(subscription?.expiresAt)} </Text>
+                  <Badge
+                    color={
+                      checkExpiry(subscription?.expiresAt) ? "red" : "green"
+                    }
+                  >
+                    {checkExpiry(subscription?.expiresAt)
+                      ? "Expired"
+                      : "Active"}
+                  </Badge>
+                  {checkExpiry(subscription?.expiresAt) ? (
+                    <RateupButtonPrimary
+                      title="Upgrade plan"
+                      onClick={toggle}
+                    />
+                  ) : null}
+                </Group>
+              </Stack>
 
-          <Group mt="xl" ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Validity :
-            </Title>
-            {checkExpiry(subscription?.expiresAt) ? (
-              <>
-                <Text> {formatIsoDateString(subscription?.expiresAt)} </Text>
-                <Badge color="red">Expired</Badge>
-              </>
-            ) : (
-              <>
-                <Text> {formatIsoDateString(subscription?.expiresAt)} </Text>
-                <Badge color="green">Active</Badge>
-              </>
-            )}
-          </Group>
-          <Group mt="xl" ml="xl">
-            <Title order={4} style={{ minWidth: "140px" }}>
-              Addons :
-            </Title>
-            Nil
-          </Group>
+              <Stack gap={1}>
+                <Text c={"GrayText"} fw={500} fz={15}>
+                  Addons
+                </Text>
+                <Group>
+                  <Title order={5}>Nil</Title>
+                  {subscription?.basePlan?.name !== "RATEUP TRIAL" ? (
+                    <RateupButtonPrimary title="Buy Addons" />
+                  ) : null}
+                </Group>
+              </Stack>
+            </Stack>
+          </PaperLayout>
         </Stack>
       )}
-    </Stack>
+
+      <FormModalLayout
+        opened={openedUpgradeModal}
+        onClose={closeUpgradeModal}
+        centered
+        title="Upgrade Your Plan"
+        size="auto"
+      >
+        <Pricing isAccount={true} handleSelection={closeUpgradeModal} />
+      </FormModalLayout>
+    </>
   );
 };
 

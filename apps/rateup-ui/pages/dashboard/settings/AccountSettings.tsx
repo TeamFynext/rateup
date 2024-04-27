@@ -1,12 +1,4 @@
-import {
-  Flex,
-  Title,
-  Group,
-  Text,
-  Stack,
-  Box,
-  Blockquote,
-} from "@mantine/core";
+import { Title, Group, Text, Stack, Blockquote, Tabs } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import {
@@ -16,7 +8,6 @@ import {
 import { useUser } from "../../../context/UserContext";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import Pricing from "../../../components/HomePage/pages/Pricing";
 import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import { generateListItems } from "../../../components/HomePage/pages/Pricing/Card/PricingCard";
 import OrderHistory from "./OrderHistory";
@@ -26,6 +17,12 @@ import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconInfoCircle } from "@tabler/icons-react";
 import UsageStats from "./UsageStats";
+
+export enum AccountSettingsTabs {
+  UsageStats = "Usage Stats",
+  Billing = "Billing",
+  OrderHistory = "Order History",
+}
 
 function loadScript(src) {
   return new Promise((resolve) => {
@@ -44,9 +41,6 @@ function loadScript(src) {
 const AccountSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [summaryView, { open: openSummary, close: closeSummary }] =
-    useDisclosure(false);
-
-  const [openedUpgradeModal, { toggle, close: closeUpgradeModal }] =
     useDisclosure(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -137,10 +131,6 @@ const AccountSettings = () => {
     }
   }, [cart.id]);
 
-  const handleSelection = () => {
-    closeUpgradeModal();
-  };
-
   const isSubscriber = () => {
     return (
       checkExpiry(subscription?.expiresAt) ||
@@ -149,15 +139,46 @@ const AccountSettings = () => {
     );
   };
 
+  const [activeTab, setActiveTab] = useState<AccountSettingsTabs>(
+    AccountSettingsTabs.UsageStats,
+  );
+
   return (
-    <Flex direction={"column"} h={"100%"}>
-      <UsageStats />
-      <Billing
-        subscription={subscription}
-        toggle={toggle}
-        processingPayment={processingPayment}
-      />
-      <OrderHistory orders={orders?.data} />
+    <>
+      <Tabs
+        keepMounted={false}
+        styles={{ tab: { fontSize: "18px", borderBottomWidth: "3px" } }}
+        value={activeTab}
+        onChange={(value) => setActiveTab(value as AccountSettingsTabs)}
+      >
+        <Tabs.List w={"fit-content"}>
+          {Object.values(AccountSettingsTabs).map((tab) => (
+            <Tabs.Tab
+              value={tab}
+              key={tab}
+              c={activeTab === tab ? "var(--tertiary-color)" : "GrayText"}
+            >
+              {tab}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+        <Tabs.Panel value={AccountSettingsTabs.UsageStats} py={"xl"} px={"lg"}>
+          <UsageStats />
+        </Tabs.Panel>
+        <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
+          <Billing
+            subscription={subscription}
+            processingPayment={processingPayment}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel
+          value={AccountSettingsTabs.OrderHistory}
+          py={"xl"}
+          px={"lg"}
+        >
+          <OrderHistory orders={orders?.data} />
+        </Tabs.Panel>
+      </Tabs>
 
       {/*....... Order confirmation Modal ......*/}
       <FormModalLayout
@@ -220,17 +241,6 @@ const AccountSettings = () => {
         )}
       </FormModalLayout>
 
-      {/*....... Upgrade plan Modal ......*/}
-      <FormModalLayout
-        opened={openedUpgradeModal}
-        onClose={closeUpgradeModal}
-        centered
-        title="Upgrade Your Plan"
-        size="auto"
-      >
-        <Pricing isAccount={true} handleSelection={handleSelection} />
-      </FormModalLayout>
-
       {/*....... Order summary Modal ......*/}
       <FormModalLayout
         opened={summaryView}
@@ -266,19 +276,7 @@ const AccountSettings = () => {
           </Stack>
         </Group>
       </FormModalLayout>
-
-      <FormModalLayout
-        opened={openedUpgradeModal}
-        onClose={closeUpgradeModal}
-        centered
-        title="Upgrade Your Plan"
-        size="auto"
-      >
-        <Box style={{ minHeight: "600px" }}>
-          <Pricing isAccount={true} handleSelection={handleSelection} />
-        </Box>
-      </FormModalLayout>
-    </Flex>
+    </>
   );
 };
 
