@@ -37,7 +37,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
             { duration: 0.75 },
           );
         }
-        nextFn?.();
+        nextFn?.(clickedBtnValue);
       }
     }
   };

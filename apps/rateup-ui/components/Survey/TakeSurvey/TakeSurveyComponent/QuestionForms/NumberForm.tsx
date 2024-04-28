@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { KeyboardEventHandler, useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { NumberInput, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
@@ -20,9 +20,9 @@ export function NumberForm() {
         classNames={{
           input: classes.input,
         }}
-        onKeyDown={(e) => {
+        onKeyDown={(e: any) => {
           if (e.key === "Enter" && !isLastQuestion) {
-            nextFn?.();
+            nextFn?.(e.target.value);
           }
         }}
       />

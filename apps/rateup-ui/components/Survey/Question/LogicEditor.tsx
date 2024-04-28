@@ -215,7 +215,9 @@ function ConditionBlock({
           backgroundColor: colors.blue[0],
           borderRadius: "12px",
           position: "relative",
+          flex: 1,
         }}
+        p="md"
       >
         <Text style={{ marginLeft: "10px" }}>If answer</Text>
         {/* Condition Selector */}
@@ -225,6 +227,7 @@ function ConditionBlock({
           onChange={setSelectedCondition as any}
           maw={150}
           label="Condition"
+          mb={"md"}
         />
 
         {/* Match Data */}
@@ -246,6 +249,7 @@ function ConditionBlock({
             placeholder="Select Responses"
             searchable
             w={155}
+            mb={"md"}
           />
         ) : (
           <Select
@@ -254,6 +258,7 @@ function ConditionBlock({
             data={getResponses(selectedQ, selectedLanguage)}
             onChange={setMatchData}
             w={165}
+            mb={"md"}
           />
         )}
         <Text>then</Text>
@@ -264,7 +269,10 @@ function ConditionBlock({
           data={possibleActions}
           value={selectedAction}
           onChange={setSelectedAction as any}
-          w={143}
+          style={{
+            flex: 1,
+          }}
+          mb={"md"}
         />
         <ActionIcon
           style={{ marginLeft: "10px", marginRight: "1rem" }}

@@ -12,30 +12,23 @@ export function YNForm() {
 
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
-  const handleYesOrNOClick = async (e) => {
+  const handleYesOrNOClick = async (e, value: YNResponse) => {
     const clickedBtn = e.target;
-    const clickedBtnName = clickedBtn.dataset.name;
-    if (clickedBtnName) {
-      if (clickedBtnName === "yes") {
-        updateResponse(YNResponse.Yes);
-      } else if (clickedBtnName === "no") {
-        updateResponse(YNResponse.No);
-      }
-      if (!isLastQuestion) {
-        if (clickedBtn) {
-          await animate(
-            clickedBtn,
-            { opacity: [0, 1, 0, 1] },
-            { duration: 0.75 },
-          );
-        }
-        nextFn?.();
+    updateResponse(value);
+    if (!isLastQuestion) {
+      if (clickedBtn) {
+        await animate(
+          clickedBtn,
+          { opacity: [0, 1, 0, 1] },
+          { duration: 0.75 },
+        );
+        nextFn?.(value);
       }
     }
   };
 
   return (
-    <Group p={"xs"} onClick={handleYesOrNOClick}>
+    <Group p={"xs"}>
       <Box w={100}>
         <RateupButtonBlue
           size="md"
@@ -44,7 +37,7 @@ export function YNForm() {
           title="No"
           fullWidth
           className={styles["yes-no-btn"]}
-          data-name={"no"}
+          onClick={(e) => handleYesOrNOClick(e, YNResponse.No)}
         />
       </Box>
       <Box w={100}>
@@ -55,7 +48,7 @@ export function YNForm() {
           title="Yes"
           fullWidth
           className={styles["yes-no-btn"]}
-          data-name={"yes"}
+          onClick={(e) => handleYesOrNOClick(e, YNResponse.Yes)}
         />
       </Box>
     </Group>

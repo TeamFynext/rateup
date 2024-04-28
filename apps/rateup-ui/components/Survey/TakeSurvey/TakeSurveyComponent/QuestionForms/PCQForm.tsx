@@ -55,7 +55,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
           { duration: 0.75 },
         );
       }
-      nextFn?.();
+      nextFn?.(res);
     }
   };
   const fallbackEnable = publicRoute

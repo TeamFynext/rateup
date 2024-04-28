@@ -19,22 +19,18 @@ export function LDForm() {
   const handleLikeOrDislikeClick = async (e) => {
     const clikcedBtn = e.target;
     const clickedBtnName = clikcedBtn.dataset.name;
-    if (clickedBtnName) {
-      if (clickedBtnName === "like") {
-        updateResponse(LDResponse.Like);
-      } else if (clickedBtnName === "dislike") {
-        updateResponse(LDResponse.Dislike);
+    const clickedRes =
+      clickedBtnName === "like" ? LDResponse.Like : LDResponse.Dislike;
+    updateResponse(clickedRes);
+    if (!isLastQuestion) {
+      if (clikcedBtn) {
+        await animate(
+          clikcedBtn,
+          { opacity: [0, 1, 0, 1] },
+          { duration: 0.75 },
+        );
       }
-      if (!isLastQuestion) {
-        if (clikcedBtn) {
-          await animate(
-            clikcedBtn,
-            { opacity: [0, 1, 0, 1] },
-            { duration: 0.75 },
-          );
-        }
-        nextFn?.();
-      }
+      nextFn?.(clickedRes);
     }
   };
 

@@ -206,7 +206,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     setApDirection(-1);
   };
 
-  const handleNext = () => {
+  const handleNext = (response: any) => {
+    const currentResponse_ = response ? response : currentResponse;
     const index = survey.questions.indexOf(selectedQ);
     if (index === -1) throw new Error("Question not found"); // this should never happen
 
@@ -215,7 +216,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       // Checking for logic jump
       const action = parseLogicAction(
         selectedQ,
-        currentResponse,
+        currentResponse_,
         selectedLanguage,
       );
       if (action) {

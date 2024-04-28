@@ -48,7 +48,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
           { duration: 0.75 },
         );
       }
-      nextFn?.();
+      nextFn?.(res);
     }
   };
 

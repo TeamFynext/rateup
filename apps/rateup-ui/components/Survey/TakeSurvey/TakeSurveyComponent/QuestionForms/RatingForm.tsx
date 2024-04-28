@@ -27,7 +27,7 @@ export function RatingForm() {
           { duration: 0.75 },
         );
       }
-      nextFn?.();
+      nextFn?.(value);
     }
   };
 

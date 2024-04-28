@@ -35,8 +35,8 @@ const SmileyRating = ({ updateResponse, response }) => {
         stringValue = SmileyResponse.VeryHappy;
         break;
     }
-
     updateResponse(stringValue);
+    return stringValue;
   };
 
   const getNumericValue = (stringValue) => {
@@ -77,7 +77,7 @@ const SmileyRating = ({ updateResponse, response }) => {
               { duration: 0.7 },
             );
           }
-          nextFn?.();
+          nextFn?.(updateStringResponse(value));
         }
       }}
     />

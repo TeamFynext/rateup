@@ -23,9 +23,9 @@ export function TextForm() {
           input: classes.input,
         }}
         style={{ maxWidth: "400px" }}
-        onKeyDown={(e) => {
+        onKeyDown={(e: any) => {
           if (e.key === "Enter" && !isLastQuestion) {
-            nextFn?.();
+            nextFn?.(e.currentTarget.value);
           }
         }}
       />

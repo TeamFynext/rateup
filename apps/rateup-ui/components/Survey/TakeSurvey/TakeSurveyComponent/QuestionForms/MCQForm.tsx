@@ -73,7 +73,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
             { duration: 0.75 },
           );
         }
-        nextFn?.();
+        nextFn?.(res);
       }
     } else {
       updateResponse(null);
