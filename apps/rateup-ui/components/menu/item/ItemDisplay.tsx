@@ -116,7 +116,7 @@ export function ItemDisplay({
           </Grid.Col>
           <Grid.Col span={7}>
             <Box
-              c="var(--text-color)"
+              c="var(--text-color-sp)"
               fw={"600"}
               w={"100%"}
               opacity={item?.disabled || categoryDisabled ? 0.5 : 1}

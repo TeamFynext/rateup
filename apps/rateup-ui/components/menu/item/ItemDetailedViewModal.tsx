@@ -118,7 +118,7 @@ export function ItemDetailedViewModal({
           )}
         </Box>
       ) : (
-        <Stack align="center" c={"var(--text-color)"} gap={0}>
+        <Stack align="center" c={"var(--text-color-sp)"} gap={0}>
           <Box
             style={{
               maxWidth: smallScreen

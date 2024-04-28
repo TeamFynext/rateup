@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconFilter } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import { extractText } from "../../../utils";
 
 const FilterToggles = ({
   table,
@@ -63,7 +64,7 @@ const FilterToggles = ({
                         checked: column.getIsVisible(),
                         onChange: column.getToggleVisibilityHandler(),
                       }}
-                      label={column?.id?.split("_,_")?.[0]}
+                      label={extractText(column?.id?.split("_,_")?.[0])}
                     />
                   </Flex>
                 );

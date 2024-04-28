@@ -122,7 +122,9 @@ function SurveyTheme({ survey }) {
                   <WelcomePageThemeView
                     {...{ selectedType, setSelectedType }}
                   />
-                  {!isWelcomePageEnabled && <Overlay color="#FFFFFF" />}
+                  {!isWelcomePageEnabled && (
+                    <Overlay className={styles["overlay"]} />
+                  )}
                 </Tabs.Panel>
                 <Tabs.Panel value={ThemeTabEnum.SURVEY}>
                   <SurveyThemeView {...{ selectedType, setSelectedType }} />
@@ -169,7 +171,9 @@ function SurveyTheme({ survey }) {
             />
             <Box className={styles["styles-component-container"]}>
               {selectedPageTab === ThemeTabEnum.WELCOME &&
-                !isWelcomePageEnabled && <Overlay color="#FFFFFF" />}
+                !isWelcomePageEnabled && (
+                  <Overlay className={styles["overlay"]} />
+                )}
               <StylesComponent
                 selectedType={
                   selectedType ? selectedType : SelectedItemEnum.BACKGROUND

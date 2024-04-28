@@ -28,14 +28,14 @@ const TableLayout = ({
   filterVisibility,
   tempVisibleColumnArray,
   enablePagination,
-  topHeight = 410,
+  topHeight = 420,
 }) => {
   return (
     <>
       <Stack justify="space-between" h={`calc(100dvh - ${topHeight}px`}>
         <Table.ScrollContainer minWidth={500} type="native" mt={4}>
           <Table stickyHeader striped highlightOnHover>
-            <Table.Thead>
+            <Table.Thead bg={"light-dark(white,var(--mantine-color-dark-6))"}>
               {table.getHeaderGroups().map((headerGroup, index) => (
                 <Table.Tr key={index}>
                   {headerGroup.headers.map((header, headerIndex) => (

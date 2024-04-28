@@ -119,7 +119,7 @@ const SurveyStats = ({ survey }) => {
             <Heading subtitle="User Stats" />
             <Group justify="space-between">
               <Text
-                c="var(--mantine-primary-color-filled)"
+                c="light-dark(var(--mantine-primary-color-filled),white)"
                 size="28px"
                 fw="700"
                 px="xl"
@@ -133,12 +133,7 @@ const SurveyStats = ({ survey }) => {
                     <Text fs={"20px"} fw="900" size={"30px"}>
                       {count}
                     </Text>
-                    <Badge
-                      color="var(--mantine-primary-color-filled)"
-                      variant="light"
-                    >
-                      {label}
-                    </Badge>
+                    <Badge variant="light">{label}</Badge>
                   </Stack>
                 </PaperLayout>
               ))}

@@ -10,7 +10,7 @@ export function CategoryChip({
   return (
     <UnstyledButton
       bg={selected ? "var(--orange-400)" : "var(--mantine-color-body)"}
-      c={selected ? "white" : "var(--text-color, #494949)"}
+      c={selected ? "white" : "var(--text-color-sp, #494949)"}
       py={largeScreen ? 4 : 7}
       px={"md"}
       onClick={() => onClick(categoryId)}

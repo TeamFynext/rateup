@@ -212,7 +212,7 @@ function ConditionBlock({
     <Flex>
       <Group
         style={{
-          backgroundColor: colors.blue[0],
+          backgroundColor: `light-dark(${colors.blue[0]},var(--mantine-color-dark-7))`,
           borderRadius: "12px",
           position: "relative",
           flex: 1,

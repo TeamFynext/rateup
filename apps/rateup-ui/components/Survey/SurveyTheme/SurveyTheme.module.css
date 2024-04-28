@@ -159,3 +159,7 @@
   background-color: #fff;
   width: 100%;
 }
+
+.overlay {
+  background-color: light-dark(#ffffff8e, #2e2e2ec0);
+}

@@ -30,7 +30,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .item[data-select="true"] {
-  background-color: var(--mantine-color-dark-8);
+  background-color: var(--mantine-color-dark-7);
 }
 
 [data-mantine-color-scheme="light"] .item[data-select="true"] {

@@ -303,7 +303,7 @@ export function QuestionDetailedView({
                       size="sm"
                       rightSection={<IconChevronDown size="1rem" />}
                     >
-                      <Text size="sm" c="dark.5" fw="700">
+                      <Text size="sm" c={"var(--text-color-sp)"} fw="700">
                         Actions
                       </Text>
                     </Button>
