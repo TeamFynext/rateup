@@ -21,4 +21,18 @@ some suffix text`;
     const res = parseStartMessage(startMessage);
     expect(res).toBeNull();
   });
+
+  test("Should parse special characters in survey name", () => {
+    const surveyName = `Survey Name with special characters !@#$%^&*()_+`;
+    const teamCode = "MAIN";
+    const startMessage = `Send this message to start the survey.
+\`#${surveyName} @${teamCode}\`
+some suffix text`;
+
+    const res = parseStartMessage(startMessage);
+
+    expect(res).not.toBeNull();
+    expect(res.surveyName).toEqual(surveyName);
+    expect(res.teamCode).toEqual(teamCode);
+  });
 });
