@@ -39,7 +39,7 @@ export enum TabEnum {
   Theme = "Theme",
 }
 
-export default function SurveyID() {
+export default function SurveyID(surveysSummary) {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
@@ -266,6 +266,7 @@ export default function SurveyID() {
                   encryptionpassword={encryptionpassword}
                   setEncryptionPassword={setEncryptionPassword}
                   subscription={subscription}
+                  surveysSummary={surveysSummary}
                 />
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Share}>
