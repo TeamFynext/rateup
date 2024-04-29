@@ -96,7 +96,6 @@ export async function whatsappEventHandler(
     const eventType = getEventType(body);
     if (!eventType) {
       // Probably a message delivery status. Ignoring...
-      reply.code(200).send();
       return;
     } else if (eventType === WaEvent.Message) {
       log.trace("messageObject => %o", getMessageObject(body));
