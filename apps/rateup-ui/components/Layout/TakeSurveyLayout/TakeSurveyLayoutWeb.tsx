@@ -261,6 +261,7 @@ export const TakeSurveyLayoutWeb = ({
                       style={{ ...orgLogoStyles }}
                       mah={100}
                       maw={100}
+                      fit="contain"
                     />
                   )}
                 </Box>
