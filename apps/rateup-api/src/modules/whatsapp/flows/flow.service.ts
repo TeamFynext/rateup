@@ -682,6 +682,10 @@ export const handleDecryptedFlowRequest = async (
               (q) => q.id === condition.questionId,
             );
             log.trace("raw response: %o", data[flowElementName]);
+            if (!data[flowElementName]) {
+              // TODO: add logicCondition for skipped questions
+              return false;
+            }
             const response = parseFlowResponse({
               flowJson: json,
               flowMap: dbFlow.map,
