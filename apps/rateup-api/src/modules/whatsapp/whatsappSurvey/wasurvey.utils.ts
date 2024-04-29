@@ -599,8 +599,7 @@ export function validateSession(session: WaSession) {
 // format for start-survey-message is "`#<surveyName> @<TeamCode>`"
 // There could any text before of after it.
 
-const startSurveyRegex_withSurveyName =
-  /[\s\S]*`#([A-Za-z0-9\s]+) @([A-Za-z0-9]+)`[\s\S]*/i;
+const startSurveyRegex_withSurveyName = /[\s\S]*`#([\s\S]+) @([\S]+)`[\s\S]*/i;
 
 export function parseStartMessage(text: string) {
   const surveyNameMatch = text.match(startSurveyRegex_withSurveyName);
