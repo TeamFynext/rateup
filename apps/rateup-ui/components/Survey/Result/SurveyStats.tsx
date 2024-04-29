@@ -24,7 +24,7 @@ enum LocationType {
 const maxZoom = 15;
 const minZoom = 2;
 
-const SurveyStats = ({ survey }) => {
+const SurveyStats = ({ survey, surveysSummary }) => {
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const {
     data: responses,
@@ -226,6 +226,7 @@ const SurveyStats = ({ survey }) => {
           setTimePeriod={setTimePeriod}
           isFetching={isFetching}
           refetch={refetch}
+          surveysSummary={surveysSummary}
         />
       </Stack>
     </Stack>
