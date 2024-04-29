@@ -4,7 +4,7 @@ import {
   createSurvey,
   deleteSurveyById,
   deleteSurveyFromTeam,
-  getActiveSurveysSummmaryByUserId,
+  getSurveysSummmaryByUserId,
   getGiftByPhone,
   getGiftByPrice,
   getGoogleUrlBySurveyTeamMapId,
@@ -256,8 +256,22 @@ export async function getActiveSurveysSummaryHandler(
 ) {
   try {
     const userId = request.userId;
-    const surveys = await getActiveSurveysSummmaryByUserId(userId);
+    const surveys = await getSurveysSummmaryByUserId(userId);
     reply.send(surveys);
+  } catch (e) {
+    console.error(e);
+    reply.code(500);
+  }
+}
+
+export async function getStoppedSurveysSummaryHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const userId = request.userId;
+    const stoppedSurveys = await getSurveysSummmaryByUserId(userId);
+    reply.send(stoppedSurveys);
   } catch (e) {
     console.error(e);
     reply.code(500);

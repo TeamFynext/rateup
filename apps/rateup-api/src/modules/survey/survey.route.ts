@@ -12,6 +12,7 @@ import {
   updateGoogleLinkHandler,
   getSurveysLandingHandler,
   getActiveSurveysSummaryHandler,
+  getStoppedSurveysSummaryHandler,
   getWebSurveysHandler,
   deleteTeamSurveyHandler,
   getSurveyStatsBySurveyTeamMapIdHandler,
@@ -57,6 +58,9 @@ export async function surveyRoutes(server: FastifyInstance) {
 
   // get all active surveys summary from user
   server.get("/summary/active", getActiveSurveysSummaryHandler);
+
+  // get all active surveys summary from user
+  server.get("/summary/stopped", getStoppedSurveysSummaryHandler);
 
   // get all surveys from user
   server.get("/surveylandings", getSurveysLandingHandler);
