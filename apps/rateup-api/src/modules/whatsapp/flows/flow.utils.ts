@@ -133,6 +133,13 @@ export function generateQuestionResponsesFromFlowResponse({
   let responses = [];
   for (const [payloadName, value] of Object.entries(flowResponses)) {
     if (payloadName === "flow_token") continue;
+    if (!value) {
+      log.trace(
+        "Empty value for payload %s. Question must have been skipped",
+        payloadName,
+      );
+      continue;
+    }
     try {
       const elementName = findElementNameFromPayloadName(
         payloadName,
@@ -186,7 +193,17 @@ export function parseFlowResponse({
   flowJson,
   response,
 }: parseFlowResponseProps) {
+  log.trace(
+    "Parsing response for element %s\nresponse => %o",
+    elementName,
+    response,
+  );
+
   const qType = flowMap[elementName].type;
+  log.trace("Question type: %s", qType);
+  if (!response) {
+    log.fatal("Unhandled empty response found for element %s", elementName);
+  }
   switch (qType) {
     case qt.Email:
       return { email: response };
@@ -208,6 +225,10 @@ export function parseFlowResponse({
     case qt.DDSS: {
       const el = getElementJson(flowJson, elementName);
       const choice = el["data-source"].find((c) => c.id === response);
+      if (!choice) {
+        log.error("Choice not found for response %s", response);
+        return undefined;
+      }
       return { value: choice.title } as Choice;
     }
     case qt.MSQ: {
@@ -222,8 +243,10 @@ export function parseFlowResponse({
 }
 
 export function getElementJson(flowJson: WaFlowJson, elementName: string) {
+  log.trace("Getting element json for %s", elementName);
   for (const formElement of waFlowFormElementIterator({ flowJson })) {
     if (formElement.name === elementName) {
+      log.trace("Found element %o", formElement);
       return formElement;
     }
   }
