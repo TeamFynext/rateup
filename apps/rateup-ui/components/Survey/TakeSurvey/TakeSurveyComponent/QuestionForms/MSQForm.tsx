@@ -1,12 +1,18 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Box, Checkbox, FocusTrap, Input, Stack } from "@mantine/core";
+import {
+  Box,
+  Checkbox,
+  FocusTrap,
+  Input,
+  Stack,
+  useMantineTheme,
+} from "@mantine/core";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { theme } from "../../../../../config/mantineTheme";
 import classes from "../TakeSurvey.module.css";
 
 interface MSQFormProps {
@@ -19,6 +25,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const choices = selectedQ?.choices[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState([]);
+  const theme = useMantineTheme();
 
   const options = selectedQ
     ? choices

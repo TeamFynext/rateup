@@ -28,11 +28,7 @@ function NextPrevPreview({ isMobile, buttonStyles }) {
             className={styles["prev-btn"]}
             title=""
             variant="outlined"
-            style={{
-              backgroundColor: `rgba(255, 255, 255, 0.75)`,
-              outline: `2px solid ${themeStylesWoBr?.backgroundColor}`,
-              color: themeStylesWoBr?.backgroundColor,
-            }}
+            style={themeStylesWoBr}
           >
             <IconChevronLeft size={isMobile ? 20 : 24} />
           </ActionIcon>
