@@ -29,15 +29,24 @@ const OverallResponseGraph = ({
   setTimePeriod,
   isFetching,
   refetch,
+  surveysSummary,
 }) => {
-  function getTotalCount(data) {
-    let totalCount = 0;
-    for (const item of data) {
-      totalCount += item?.responses;
-    }
-    return totalCount;
+  let total = 0;
+  if (
+    surveysSummary &&
+    surveysSummary.surveys &&
+    surveysSummary.stoppedSurveys
+  ) {
+    const activeResponses = surveysSummary.surveys
+      .filter((survey) => survey.active)
+      .flatMap((survey) => survey.teams.flatMap((team) => team.responses));
+
+    const stoppedResponses = surveysSummary.stoppedSurveys.flatMap((survey) =>
+      survey.teams.flatMap((team) => team.responses),
+    );
+    total = activeResponses.length + stoppedResponses.length;
   }
-  const total = getTotalCount(data);
+
   return (
     <PaperLayout px="xl" py="sm" style={{ flex: 0.7 }} miw={300} w={"100%"}>
       <>

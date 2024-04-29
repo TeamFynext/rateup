@@ -79,6 +79,13 @@ export async function getActiveSurveysSummary() {
   return surveysSummary;
 }
 
+export async function getStoppedSurveysSummary() {
+  let stoppedSurveysSummary: SurveySummaryData = (
+    await axiosClient.get(`${SURVEYURL}/summary/stopped`)
+  ).data;
+  return stoppedSurveysSummary;
+}
+
 export const getSurveysList = () =>
   axiosClient({
     url: `/survey`,

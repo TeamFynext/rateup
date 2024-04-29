@@ -96,6 +96,12 @@ export default function DashboardHome() {
       allResponses.push(...team?.responses);
     });
   });
+  surveysSummary?.stoppedSurveys?.forEach((survey) => {
+    survey?.teams?.forEach((team) => {
+      allResponses.push(...team?.responses);
+    });
+  });
+
   const filteredData = getFormattedResponseForAreaGraph(
     allResponses,
     timePeriod,
@@ -217,6 +223,7 @@ export default function DashboardHome() {
                 data={filteredData}
                 isFetching={isRefetching}
                 refetch={refetch}
+                surveysSummary={surveysSummary}
               />
             </Group>
             <FormModalLayout

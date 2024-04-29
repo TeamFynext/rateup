@@ -20,6 +20,7 @@ import {
   verifySurveyPassword,
   updateSurveyLandingPage,
   getActiveSurveysSummary,
+  getStoppedSurveysSummary,
   deleteSurvey,
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
@@ -137,6 +138,13 @@ export const useSurveysSummary = () => {
   return useQuery({
     queryKey: ["surveysSummary"],
     queryFn: getActiveSurveysSummary,
+  });
+};
+
+export const useStoppedSurveysSummary = () => {
+  return useQuery({
+    queryKey: ["stoppedSurveysSummary"],
+    queryFn: getStoppedSurveysSummary,
   });
 };
 
