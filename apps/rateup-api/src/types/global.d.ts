@@ -174,12 +174,25 @@ declare global {
   };
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
-    [sfpn.Menu]: subscriptionCountRestriction & subscriptionActiveField;
+    [sfpn.Menu]: subscriptionCountRestriction &
+      subscriptionActiveField & {
+        count: {
+          monthlyViewLimit: number;
+        };
+      };
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &
       subscriptionCountRestriction;
-    [sfpn.WebSurvey]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.WebSurvey]: subscriptionActiveField &
+      subscriptionCountRestriction & {
+        encryption: subscriptionActiveField;
+        googleReview: subscriptionActiveField;
+        emailNotification: subscriptionActiveField;
+        count: {
+          monthlyResponseLimit: number;
+        };
+      };
     [sfpn.WhatsAppSurvey]: subscriptionActiveField &
       subscriptionCountRestriction;
     [sfpn.WhatsAppCampaign]: subscriptionActiveField &
@@ -192,6 +205,10 @@ declare global {
   interface SPlan {
     id: string;
     name: string;
+    paymentPlan?: {
+      period: string;
+      amount: number;
+    };
   }
 
   interface Subscription {

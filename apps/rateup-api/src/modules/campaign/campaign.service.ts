@@ -32,6 +32,11 @@ export async function getCampaignsByTeamId(teamId: string) {
       teamId,
     },
     include: {
+      team: {
+        select: {
+          name: true,
+        },
+      },
       _count: {
         select: {
           campaignParticipants: {
@@ -53,6 +58,11 @@ export async function getCampaignsByOrgId(orgId: string) {
       },
     },
     include: {
+      team: {
+        select: {
+          name: true,
+        },
+      },
       _count: {
         select: {
           campaignParticipants: {

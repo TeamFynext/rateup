@@ -12,6 +12,11 @@ export async function getContactGroupById(contactGroupId: string) {
       id: contactGroupId,
     },
     include: {
+      team: {
+        select: {
+          name: true,
+        },
+      },
       _count: {
         select: {
           contacts: true,
@@ -27,6 +32,11 @@ export async function getContactGroupsByTeamId(teamId: string) {
       teamId,
     },
     include: {
+      team: {
+        select: {
+          name: true,
+        },
+      },
       _count: {
         select: {
           contacts: true,
@@ -44,6 +54,11 @@ export async function getContactGroupsByOrgId(orgId: string) {
       },
     },
     include: {
+      team: {
+        select: {
+          name: true,
+        },
+      },
       _count: {
         select: {
           contacts: true,

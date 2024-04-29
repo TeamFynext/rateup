@@ -10,6 +10,18 @@ import {
   deleteSubscriptionsInput,
   updateSubscriptionInput,
 } from "./subscription.schema";
+import { updateSubscriptionFeatures } from "./update-sub-features";
+
+//SUBB TEMP
+export async function subUpgradeHandler(req, res) {
+  try {
+    const subscription = await updateSubscriptionFeatures();
+
+    return res.send("Success...:" + subscription);
+  } catch (e) {
+    return res.send("failed...:" + e);
+  }
+}
 
 export async function getUserSubscriptionHandler(req, res) {
   const { orgId } = req.user;

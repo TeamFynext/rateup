@@ -11,7 +11,7 @@ import Session from "supertokens-node/recipe/session";
 import { Role } from "../../utils/enums";
 import supertokens from "supertokens-node";
 import { log } from "../../utils/logger";
-import { createTrialSubscription } from "../subscription/subscription.service";
+import { createFreePlanSubscription } from "../subscription/subscription.service";
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { cloneSurvey } from "../survey/survey.service";
@@ -86,8 +86,8 @@ export async function createUserSignup({
           userId: newUser.id,
         },
       });
-      // creating 1 week trial subscription
-      await createTrialSubscription(org.id, prisma as any);
+      // creating free plan subscription
+      await createFreePlanSubscription(org.id, prisma as any);
     });
 
     if (team.id && teamMember.userId) {
