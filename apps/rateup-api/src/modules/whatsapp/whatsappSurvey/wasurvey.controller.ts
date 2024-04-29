@@ -542,7 +542,13 @@ export async function sendCampaignToParticipants(campaignId: string) {
     const flowId = getFlowIdFromTemplateComponents(dbTemplate.data.components);
 
     for (const { contact, id, status } of campaign.campaignParticipants) {
-      if (status === CampaignParticipantStatus.SENT) {
+      if (
+        [
+          CampaignParticipantStatus.COMPLETED,
+          CampaignParticipantStatus.SENT,
+          CampaignParticipantStatus.RESPONDING,
+        ].includes(status as CampaignParticipantStatus)
+      ) {
         log.warn(
           "Campaign already sent to participant %o. Skipping...",
           contact,
