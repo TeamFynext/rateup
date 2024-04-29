@@ -171,16 +171,18 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
 
 //Update a Rateup Plan
 export async function updateRateUpPlan(data: updateRateUpPlanInput) {
-  const existData = await prisma.rateupPlan.findFirst({
-    where: {
-      paymentPlanId: data?.paymentPlanId,
-      id: {
-        not: data?.id,
+  if (data?.paymentPlanId) {
+    const existData = await prisma.rateupPlan.findFirst({
+      where: {
+        paymentPlanId: data?.paymentPlanId,
+        id: {
+          not: data?.id,
+        },
       },
-    },
-  });
-  if (existData) {
-    return { code: 400, data: "Payment Plan Id is already in Use" };
+    });
+    if (existData) {
+      return { code: 400, data: "Payment Plan Id is already in Use" };
+    }
   }
   if (data?.displayWidgetId) {
     await prisma.rateupPlan.updateMany({
@@ -199,7 +201,9 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       displayWidgetId: data?.displayWidgetId,
       description: data?.description,
       planType: data?.planType as PaymentPlanType,
-      paymentPlan: { connect: { id: data?.paymentPlanId } },
+      paymentPlan: data?.paymentPlanId
+        ? { connect: { id: data?.paymentPlanId } }
+        : undefined,
       features: data?.features,
     },
     where: {

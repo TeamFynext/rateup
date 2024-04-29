@@ -36,7 +36,7 @@ const updateRateUpPlanSchema = z.object({
   displayName: z.string().trim().min(1).optional(),
   displayWidgetId: z.string().trim().min(1).optional(),
   planType: z.nativeEnum(PaymentPlanType).optional(),
-  paymentPlanId: z.string().trim().min(1).optional(),
+  paymentPlanId: z.string().optional(),
   description: z.array(z.string()).min(1).optional(),
   features: z.any().optional(),
 });
