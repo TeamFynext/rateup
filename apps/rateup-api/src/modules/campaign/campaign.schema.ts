@@ -1,6 +1,10 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { CampaignStatus, CampaignType } from "../../types/enums";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+  CampaignType,
+} from "../../types/enums";
 
 const coreCampaignSchema = z.object({
   name: z.string(),
@@ -27,6 +31,9 @@ const getCampaignsQuerySchema = z.object({
   campaignId: z.string().optional(),
   teamId: z.string().optional(),
 });
+const sendCampaignInputSchema = z.object({
+  sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)),
+});
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(
     {
@@ -44,3 +51,4 @@ export type GetCampaignsQuery = z.infer<typeof getCampaignsQuerySchema>;
 export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;
 export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
 export type ByCampaignIdParams = z.infer<typeof byCampaignIdParamsSchema>;
+export type SendCampaignInput = z.infer<typeof sendCampaignInputSchema>;
