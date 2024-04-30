@@ -20,6 +20,7 @@ import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 const RateupPlan = () => {
   const [opened, { toggle, close }] = useDisclosure(false);
+  const [error, setError] = useState("");
   const [updatedField, setUpdatedField] = useState<any>("");
   const [
     openedDescriptonModal,
@@ -146,6 +147,10 @@ const RateupPlan = () => {
         buttonTitle="Update"
         includeCancelButton
         onSubmit={() => {
+          if (!updatedField?.description.length) {
+            setError("Cannot be empty");
+            return;
+          }
           handleMutation(updatedField);
         }}
       >
@@ -157,11 +162,13 @@ const RateupPlan = () => {
             value={updatedField?.description ?? []}
             onChange={(e) => {
               if (!e) return;
+              setError("");
               setUpdatedField({
                 ...updatedField,
                 description: e,
               });
             }}
+            error={error}
           />
         </Group>
       </FormModalLayout>

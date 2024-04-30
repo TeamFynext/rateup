@@ -1,5 +1,8 @@
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { useAllSubscriptions } from "../../backend/subscription/subscription.query";
+import {
+  useAllSubscriptions,
+  useUpdateSubscriptionMutation,
+} from "../../backend/subscription/subscription.query";
 import dayjs from "dayjs";
 import { Group, Skeleton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -7,39 +10,77 @@ import { SubscriptionEditorModal } from "../../components/adminPanel/Subscriptio
 import { FeatureBadge } from "../../components/adminPanel/Subscription/FeatureBadge";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import styles from "../../components/adminPanel/admin.module.css";
+import { useRateupPaymentsPlans } from "../../backend/payment/payment.query";
+import { useState } from "react";
+import ConfirmationModal from "../../components/Modal/ConfirmationModal";
 
-const columns: GridColDef[] = [
-  {
-    field: "orgId",
-    headerName: "OrgId",
-    width: 220,
-    cellClassName: styles.idCell,
-  },
-  { field: "orgName", headerName: "OrgName", width: 220 },
-  {
-    field: "features",
-    headerName: "Features",
-    minWidth: 300,
-    flex: 1,
-    renderCell: renderFeatures,
-  },
-  { field: "createdAt", headerName: "Created At", width: 120 },
-  { field: "renewedAt", headerName: "Renewed At", width: 120 },
-  { field: "expiresAt", headerName: "Expires At", width: 120 },
-];
 export default function () {
   const {
     data: subscriptions,
     isLoading: isSubscriptionsLoading,
     isError: isSubscriptionsError,
   } = useAllSubscriptions();
+
+  const { data: rateupPlans } = useRateupPaymentsPlans();
+  const updateSubscriptionMutation = useUpdateSubscriptionMutation();
+  const plansData = rateupPlans?.map((plan) => ({
+    value: plan.id,
+    label: plan.name,
+  }));
+
+  const [updatedField, setUpdatedField] = useState(null);
+  const [openedDialog, { open: openDialog, close: closeDialog }] =
+    useDisclosure(false);
+  const handleUpdateSubscriptionPlan = () => {
+    console.log(updatedField);
+    updateSubscriptionMutation.mutate({
+      orgId: updatedField?.orgId,
+      updatedData: { basePlanId: updatedField.basePlanId },
+    });
+  };
   if (isSubscriptionsError) return <div>error occured</div>;
+
+  const columns: GridColDef[] = [
+    {
+      field: "orgId",
+      headerName: "OrgId",
+      width: 120,
+      cellClassName: styles.idCell,
+    },
+    { field: "orgName", headerName: "OrgName", width: 220 },
+    {
+      field: "plan",
+      headerName: "Plan Name",
+      width: 220,
+      editable: true,
+      type: "singleSelect",
+      preProcessEditCellProps(params) {
+        if (params.hasChanged) {
+          setUpdatedField({ orgId: params.id, basePlanId: params.props.value });
+          openDialog();
+        }
+        return { ...params.props };
+      },
+      valueOptions: plansData,
+    },
+    {
+      field: "features",
+      headerName: "Features",
+      minWidth: 300,
+      flex: 1,
+      renderCell: renderFeatures,
+    },
+    { field: "createdAt", headerName: "Created At", width: 120 },
+    { field: "renewedAt", headerName: "Renewed At", width: 120 },
+    { field: "expiresAt", headerName: "Expires At", width: 120 },
+  ];
 
   const rows = subscriptions?.map((subscription) => {
     return {
       id: subscription.orgId,
       orgId: (subscription as any).org.id,
       orgName: (subscription as any).org.name,
+      plan: subscription.basePlan.id,
       features: subscription,
       createdAt: dayjs(subscription.createdAt).format("YYYY/MM/DD"),
       renewedAt: subscription.renewedAt
@@ -54,7 +95,18 @@ export default function () {
       {isSubscriptionsLoading ? (
         <Skeleton height={500} />
       ) : (
-        <DataGrid rows={rows} columns={columns} getRowHeight={() => "auto"} />
+        <>
+          <DataGrid rows={rows} columns={columns} getRowHeight={() => "auto"} />
+          <ConfirmationModal
+            opened={openedDialog}
+            onClose={closeDialog}
+            headerLabel={`Are you sure to update plan?`}
+            onConfirm={handleUpdateSubscriptionPlan}
+            confirmLabel="Yes"
+            closeLabel="Cancel"
+            headerTitle="Update Plan"
+          />
+        </>
       )}
     </div>
   );

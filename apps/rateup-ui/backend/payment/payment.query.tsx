@@ -4,6 +4,7 @@ import {
   ICreateCheckoutType,
   createCheckoutSession,
   createRateupPaymentPlan,
+  deletePaymentPlan,
   deleteRateupPaymentPlan,
   getAllOrdersUserOrg,
   getAllPaymentOrders,
@@ -230,3 +231,17 @@ export function usePaymentOrders() {
     queryFn: getAllPaymentOrders,
   });
 }
+
+export const useDeletePaymentPlanMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deletePaymentPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
+      showSuccessToast("Plan Deleted Succefully", "plan", <IconCheck />, true);
+    },
+    onError: () => {
+      showErrorToast("Error in deleting Plan", "plan", <IconCheck />, true);
+    },
+  });
+};
