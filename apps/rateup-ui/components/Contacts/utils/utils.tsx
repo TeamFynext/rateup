@@ -240,6 +240,11 @@ export const contactParticipentDetailColumn = [
     ),
   },
   {
+    header: () => "Error message",
+    accessorKey: "errorMessage",
+    cell: (info) => info.getValue(),
+  },
+  {
     header: () => "Created",
     accessorKey: "createdAt",
     cell: (info) =>

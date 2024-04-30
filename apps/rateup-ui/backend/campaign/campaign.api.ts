@@ -1,3 +1,4 @@
+import { CampaignParticipantStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 export const getCampaigns = async () => {
@@ -30,7 +31,12 @@ export const deleteCampaign = async (campaignId) => {
   return res;
 };
 
-export const startCampaign = async (campaignId) => {
-  let res = await axiosClient.post(`/campaign/${campaignId}/start`);
+export const sendCampaign = async (
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[],
+) => {
+  let res = await axiosClient.post(`/campaign/${campaignId}/send`, {
+    sendToStatuses,
+  });
   return res;
 };

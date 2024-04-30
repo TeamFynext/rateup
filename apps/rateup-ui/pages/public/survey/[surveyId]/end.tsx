@@ -281,6 +281,7 @@ export default function ThankYou({
                         alt="Rateup"
                         height={"auto"}
                         style={orgLogoStyles}
+                        fit="contain"
                       />
                     )}
                   </Center>
@@ -316,6 +317,7 @@ export default function ThankYou({
                         alt="Rateup"
                         height={"auto"}
                         style={orgLogoStyles}
+                        fit="contain"
                       />
                     )}
                   </Center>
@@ -378,6 +380,7 @@ export default function ThankYou({
                       alt="Rateup"
                       height={"auto"}
                       style={orgLogoStyles}
+                      fit="contain"
                     />
                   ) : (
                     <IconCircleCheck
