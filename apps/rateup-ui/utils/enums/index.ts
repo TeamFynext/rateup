@@ -1,4 +1,5 @@
 import {
+  CampaignParticipantStatus,
   LoyaltyCampaignType,
   QuestionType,
   SentimentClass,
@@ -182,5 +183,24 @@ export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
       return "Opt In";
     default:
       throw new Error("Invalid WaFlowFormElementType" + type);
+  }
+}
+
+export function getCampaignParticipantStatusLabel(
+  status: CampaignParticipantStatus,
+) {
+  switch (status) {
+    case CampaignParticipantStatus.PENDING:
+      return "Pending";
+    case CampaignParticipantStatus.SENT:
+      return "Sent";
+    case CampaignParticipantStatus.FAILED:
+      return "Failed";
+    case CampaignParticipantStatus.COMPLETED:
+      return "Completed";
+    case CampaignParticipantStatus.RESPONDING:
+      return "Responding";
+    default:
+      throw new Error("Invalid CampaignParticipantStatus" + status);
   }
 }

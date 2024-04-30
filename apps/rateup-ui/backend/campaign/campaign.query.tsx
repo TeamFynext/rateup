@@ -5,11 +5,13 @@ import {
   getCampaignById,
   getCampaigns,
   getCampaignsByTeam,
-  startCampaign,
+  sendCampaign,
   updateCampaign,
 } from "./campaign.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { CampaignParticipantStatus } from "../../types/enums";
+import { notifications } from "@mantine/notifications";
 
 export const useCampaignData = () => {
   return useQuery({
@@ -104,19 +106,23 @@ export const useDeleteCampaignMutation = (teamId) => {
   });
 };
 
-export const useStartCampaign = (campaignId, teamId) => {
+export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: startCampaign,
+    mutationFn: (sendToStatuses: CampaignParticipantStatus[]) =>
+      sendCampaign(campaignId, sendToStatuses),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
-      showSuccessToast(
-        "Campaign Started successfully.",
-        "campaign-start",
-        <IconCheck />,
-      );
+      notifications.show({
+        color: "teal",
+        title: "Campaign started successfully",
+        message: "It may take a few minutes to send to all participants.",
+        autoClose: 5000,
+        loading: false,
+        icon: <IconCheck />,
+      });
     },
     onError: (error: any) => {
       showErrorToast(

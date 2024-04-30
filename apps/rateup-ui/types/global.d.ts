@@ -16,6 +16,7 @@ import {
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
   WaTemplateCategory,
+  CampaignStatus,
 } from "./enums";
 
 type GoogleReview = {
@@ -1127,4 +1128,15 @@ export type ChatBotMessage = {
 export type WaFlowStartMessageConfig = {
   prefix: string;
   suffix: string;
+};
+export type Campaign = {
+  id: string;
+  createdAt: Date;
+  name: string;
+  startedAt: Date;
+  endedAt: Date;
+  status: CampaignStatus;
+  type: string;
+  teamId: string;
+  waTemplateId: string;
 };
