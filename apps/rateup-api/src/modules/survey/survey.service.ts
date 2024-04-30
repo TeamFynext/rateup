@@ -459,7 +459,7 @@ export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
 //------------SURVEY SUMMARY  ----
 //-----Returns summary(responses, stats) of active  and stopped surveys -- from ALL TEAMs in which the user is a member of
 
-export async function getSurveysSummmaryByUserId(userId: string) {
+export async function getActiveSurveysSummmaryByUserId(userId: string) {
   const teamIds = await getTeamIdsByUserId(userId);
   const allSurveys = await prisma.survey.count({
     where: {
@@ -515,7 +515,41 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       },
     },
   });
-  const stoppedSurveys = await prisma.survey.findMany({
+  const data = activeSurveys?.map((survey) => {
+    const surveys = {
+      ...survey,
+      teamMapIds: survey.teams.map((team) => ({
+        teamMapId: team.id,
+        teamName: team.team.name,
+        teamId: team.team.id,
+      })),
+      teams: survey.teams.map((team) => ({
+        id: team.team.id,
+        mapId: team.id,
+        teamName: team.team.name,
+        responses: team.responses,
+        surveyStats: team.surveyStats,
+      })),
+    };
+    return surveys;
+  });
+
+  let summaryData = {
+    totalTeamsCount: teamIds?.length,
+    totalSurveysCount: allSurveys,
+    activeSurveysCount: activeSurveys?.length,
+    surveys: data,
+  };
+
+  return summaryData;
+}
+
+//get all ative and stopped survey summary
+
+export async function getSurveysSummmaryByUserId(userId: string) {
+  const teamIds = await getTeamIdsByUserId(userId);
+
+  const allSurveys = await prisma.survey.findMany({
     where: {
       teams: {
         some: {
@@ -524,7 +558,6 @@ export async function getSurveysSummmaryByUserId(userId: string) {
           },
         },
       },
-      active: false,
     },
     include: {
       teams: {
@@ -558,7 +591,8 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       },
     },
   });
-  const data = activeSurveys?.map((survey) => {
+
+  const data = allSurveys?.map((survey) => {
     const surveys = {
       ...survey,
       teamMapIds: survey.teams.map((team) => ({
@@ -576,31 +610,11 @@ export async function getSurveysSummmaryByUserId(userId: string) {
     };
     return surveys;
   });
-  const stoppedSurveyData = stoppedSurveys?.map((survey) => {
-    const stoppedSurveys = {
-      ...survey,
-      teamMapIds: survey.teams.map((team) => ({
-        teamMapId: team.id,
-        teamName: team.team.name,
-        teamId: team.team.id,
-      })),
-      teams: survey.teams.map((team) => ({
-        id: team.team.id,
-        mapId: team.id,
-        teamName: team.team.name,
-        responses: team.responses,
-        surveyStats: team.surveyStats,
-      })),
-    };
-    return stoppedSurveys;
-  });
 
   let summaryData = {
     totalTeamsCount: teamIds?.length,
-    totalSurveysCount: allSurveys,
-    activeSurveysCount: activeSurveys?.length,
+    totalSurveysCount: allSurveys?.length,
     surveys: data,
-    stoppedSurveys: stoppedSurveyData,
   };
 
   return summaryData;

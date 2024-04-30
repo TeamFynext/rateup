@@ -29,6 +29,7 @@ import {
   updateSurveyPassword,
   updateVisitedSurvey,
   verifySurveyPassword,
+  getActiveSurveysSummmaryByUserId,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -256,7 +257,7 @@ export async function getActiveSurveysSummaryHandler(
 ) {
   try {
     const userId = request.userId;
-    const surveys = await getSurveysSummmaryByUserId(userId);
+    const surveys = await getActiveSurveysSummmaryByUserId(userId);
     reply.send(surveys);
   } catch (e) {
     console.error(e);
@@ -264,14 +265,14 @@ export async function getActiveSurveysSummaryHandler(
   }
 }
 
-export async function getStoppedSurveysSummaryHandler(
+export async function getSurveysSummaryHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
     const userId = request.userId;
-    const stoppedSurveys = await getSurveysSummmaryByUserId(userId);
-    reply.send(stoppedSurveys);
+    const surveys = await getSurveysSummmaryByUserId(userId);
+    reply.send(surveys);
   } catch (e) {
     console.error(e);
     reply.code(500);
