@@ -69,19 +69,17 @@ export default function CampaignList() {
         <Stack gap={"sm"}>
           <Flex justify={"space-between"}>
             <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
+            <SearchInput
+              placeholder={"Search Campaign"}
+              searchText={searchText}
+              setSearchText={setSearchText}
+            />
             <TeamSelector
               value={selectedTeam}
               onChange={setSelectedTeam}
               enableAll={true}
             />
           </Flex>
-          <Center>
-            <SearchInput
-              placeholder={"Search Campaign"}
-              searchText={searchText}
-              setSearchText={setSearchText}
-            />
-          </Center>
           <Center>
             {isError && isAllCampaignError ? (
               <Stack>
@@ -106,7 +104,7 @@ export default function CampaignList() {
               btnTitle="Create"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={330}
+              topHeight={200}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"lg"}>

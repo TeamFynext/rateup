@@ -3,10 +3,10 @@ import {
   Badge,
   Box,
   Button,
-  Flex,
   Group,
   MantineProvider,
   Modal,
+  MultiSelect,
   SimpleGrid,
   Stack,
   Switch,
@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { SearchInput } from ".";
 import {
   useCampaignById,
-  useStartCampaign,
+  useSendCampaign,
   useUpdateCampaignMutation,
 } from "../../../backend/campaign/campaign.query";
 import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
@@ -35,8 +35,14 @@ import TanstackTable from "../../../components/Table/TanstackTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { CampaignStatus } from "../../../types/enums";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+} from "../../../types/enums";
 import style from "./campaign.module.css";
+import { Campaign } from "../../../types/global";
+import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
+import { useForm } from "@mantine/form";
 
 const CampaignById = () => {
   const [searchText, setSearchText] = useState("");
@@ -121,7 +127,7 @@ const CampaignById = () => {
               btnTitle="Add"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={580}
+              topHeight={210}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
@@ -133,9 +139,20 @@ const CampaignById = () => {
   );
 };
 export default CampaignById;
-const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
+
+interface StartCampaignCardProps {
+  campaign: Campaign;
+  refetchCampaign: () => void;
+  participantCount: number;
+}
+const StartCampaignCard = ({
+  campaign,
+  refetchCampaign,
+  participantCount,
+}: StartCampaignCardProps) => {
   const [startCampaign, setStartCampaign] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [resendModalOpened, { open, close }] = useDisclosure(false);
 
   useEffect(() => {
     if (campaign) {
@@ -147,10 +164,11 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
     campaign?.id,
     campaign?.teamId,
   );
-  const startCampMutation = useStartCampaign(campaign?.id, campaign?.teamId);
+  const startCampMutation = useSendCampaign(campaign?.id, campaign?.teamId);
   const handleStartCampaign = (newStartCampaign) => {
     if (newStartCampaign === true) {
-      startCampMutation.mutate(campaign?.id);
+      // sending to all participants
+      startCampMutation.mutate(Object.values(CampaignParticipantStatus));
     } else {
       updateCampaign.mutate(
         {
@@ -175,11 +193,13 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
     });
   };
 
+  if (!campaign) return null;
+
   return (
     <>
       <PaperLayout p={"lg"} radius={"md"}>
-        <Stack gap={"xl"}>
-          <Flex justify={"center"} mb={"lg"}>
+        <Stack gap={"xl"} py={"sm"}>
+          <Group justify={"space-between"} mb={"md"}>
             <Switch
               checked={startCampaign}
               label={startCampaign ? "End Campaign" : "Start Campaign"}
@@ -193,7 +213,10 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
               onChange={handleChange}
               error={errorMsg}
             />
-          </Flex>
+            <Button variant="outline" radius={"xl"} onClick={open}>
+              Resend Campaign To
+            </Button>
+          </Group>
           <Group justify="space-between">
             <Stack gap={0}>
               <Title order={5} c={"#149A8A"}>
@@ -225,6 +248,11 @@ const StartCampaignCard = ({ campaign, refetchCampaign, participantCount }) => {
             </Stack>
           </Group>
         </Stack>
+        <ResendCampaignModal
+          campaign={campaign}
+          close={close}
+          opened={resendModalOpened}
+        />
       </PaperLayout>
     </>
   );
@@ -286,3 +314,60 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
     </>
   );
 };
+
+interface ResendCampaignModalProps {
+  campaign: Campaign;
+  close: () => void;
+  opened: boolean;
+}
+function ResendCampaignModal({
+  campaign,
+  close,
+  opened,
+}: ResendCampaignModalProps) {
+  const form = useForm({
+    initialValues: {
+      statuses: [CampaignParticipantStatus.FAILED],
+    },
+    validate: {
+      statuses: (value) => {
+        if (!value.length) {
+          return "Select at least one status";
+        }
+        return true;
+      },
+    },
+  });
+  const sendMutation = useSendCampaign(campaign.id, campaign.teamId);
+
+  function handleResendClick() {
+    sendMutation.mutate(form.values.statuses, {
+      onSuccess: () => {
+        close();
+      },
+    });
+  }
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={close}
+      size={"lg"}
+      centered
+      title="Resend Campaign To"
+    >
+      <Stack gap={"xl"} mt={"xl"}>
+        <MultiSelect
+          label="Select status of participants to resend campaign to"
+          placeholder="Select statuses"
+          data={Object.values(CampaignParticipantStatus).map((status) => ({
+            value: status,
+            label: getCampaignParticipantStatusLabel(status),
+          }))}
+          {...form.getInputProps("statuses")}
+        />
+        <Button onClick={handleResendClick}>Resend</Button>
+      </Stack>
+    </Modal>
+  );
+}

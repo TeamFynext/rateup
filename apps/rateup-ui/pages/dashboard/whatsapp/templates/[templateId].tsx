@@ -15,7 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { getHotkeyHandler, useToggle } from "@mantine/hooks";
 import { useRouter } from "next/router";
 
 import { zodResolver } from "mantine-form-zod-resolver";
@@ -79,6 +79,7 @@ export default function WhatsappTemplateById() {
   const [selectedText, setSelectedText] = useState("");
   const contentHistory = useRef([]); // Ref to store content history
   const inputRef = useRef(null);
+  const [value, toggle] = useToggle([true, false]);
 
   const form = useForm<z.infer<typeof templateSchema>>({
     initialValues: {
@@ -320,17 +321,23 @@ export default function WhatsappTemplateById() {
               direction="row"
               wrap="wrap"
             >
-              <RateupButtonPrimary
-                title="Save as draft"
-                loading={isSubmittingDraft}
-                variant="outline"
-                onClick={() => handleSubmit(true)}
-              />
-              <RateupButtonPrimary
-                title="Save & Submit"
-                loading={isSubmitting}
-                onClick={() => handleSubmit(false)}
-              />
+              {editingItem?.data?.id && value ? (
+                <RateupButtonPrimary title="Edit" onClick={toggle} />
+              ) : (
+                <>
+                  <RateupButtonPrimary
+                    title="Save as draft"
+                    loading={isSubmittingDraft}
+                    variant="outline"
+                    onClick={() => handleSubmit(true)}
+                  />
+                  <RateupButtonPrimary
+                    title="Save & Submit"
+                    loading={isSubmitting}
+                    onClick={() => handleSubmit(false)}
+                  />
+                </>
+              )}
             </Flex>
           </Flex>
           <Grid>

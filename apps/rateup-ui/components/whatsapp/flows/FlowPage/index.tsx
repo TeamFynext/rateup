@@ -234,6 +234,7 @@ function FlowPage() {
                       survey={survey}
                       setSelectedLanguage={setSelectedLanguage}
                       setFilterTags={setFilterTags}
+                      flowId={flow.flowId}
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Share}>

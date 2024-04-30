@@ -18,8 +18,11 @@ export default function WaInboxChatSelect(props: {
   const contactsWithAtleastOneMessage = props.contacts?.filter(
     (c) => c.WaMessage.length > 0,
   );
-  const filteredContacts = props.contacts?.filter((c) =>
-    c.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
+  const lowerCaseDebouncedSearchTerm = debouncedSearchTerm.toLowerCase();
+  const filteredContacts = props.contacts?.filter(
+    (c) =>
+      c.name?.toLowerCase().includes(lowerCaseDebouncedSearchTerm) ||
+      c.phone?.includes(lowerCaseDebouncedSearchTerm),
   );
   const contactListToDisplay = debouncedSearchTerm
     ? filteredContacts

@@ -25,6 +25,10 @@ export async function getWaFlowJson(flowId: string) {
   const res = await axiosClient.get(`${BASE}/${flowId}/json`);
   return res.data as WaFlowJson;
 }
+export async function getWaFlowMetrics(flowId: string) {
+  const res = await axiosClient.get(`${BASE}/metrics/${flowId}`);
+  return res.data;
+}
 
 export async function importFlows(
   waFlowIds: string[],

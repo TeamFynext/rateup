@@ -209,7 +209,7 @@ export default function ContactGroup() {
                   data={filteredCustomerList}
                   cTags={cTags?.contactTags}
                   tab={"member"}
-                  topHeight={480}
+                  topHeight={210}
                   open={open}
                   groupId={groupDetails?.id}
                 />
