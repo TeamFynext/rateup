@@ -116,9 +116,9 @@ export default function ContactGroup() {
           <Loader type="bars" />
         </Center>
       ) : (
-        <Box p="lg" pr={150}>
+        <Box mt={4}>
           <Stack>
-            <PaperLayout p="xl">
+            <PaperLayout>
               <Group justify="space-between">
                 <Group>
                   <Avatar
@@ -132,7 +132,7 @@ export default function ContactGroup() {
                   >
                     <IconUsersGroup size={40} />
                   </Avatar>
-                  <Stack>
+                  <Stack gap={0}>
                     <Title>{groupDetails?.name}</Title>
                     <Group>
                       <Button
@@ -181,7 +181,6 @@ export default function ContactGroup() {
                         {groupDetails?.contacts?.length}
                       </Title>
                     </Center>
-
                     <Text>members</Text>
                   </Stack>
                 </Group>
@@ -209,7 +208,7 @@ export default function ContactGroup() {
                   data={filteredCustomerList}
                   cTags={cTags?.contactTags}
                   tab={"member"}
-                  topHeight={210}
+                  topHeight={420}
                   open={open}
                   groupId={groupDetails?.id}
                 />

@@ -82,7 +82,7 @@ const CampaignById = () => {
   return (
     <>
       <MantineProvider theme={whatsappTheme}>
-        <Stack p={"md"} gap={"md"}>
+        <Stack gap={"md"}>
           <Group>
             <Title>{campaignData?.name}</Title>
             <Tooltip label="Refresh data">
@@ -111,7 +111,7 @@ const CampaignById = () => {
               campaign={campaignData}
             />
           </SimpleGrid>
-          <Group justify="space-between" gap={"xl"} mt={"lg"}>
+          <Group justify="space-between" gap={"xl"}>
             <Title order={2}>Participants</Title>
             <SearchInput
               placeholder={"Search Participants"}
@@ -127,7 +127,7 @@ const CampaignById = () => {
               btnTitle="Add"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={210}
+              topHeight={480}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
@@ -197,9 +197,9 @@ const StartCampaignCard = ({
 
   return (
     <>
-      <PaperLayout p={"lg"} radius={"md"}>
-        <Stack gap={"xl"} py={"sm"}>
-          <Group justify={"space-between"} mb={"md"}>
+      <PaperLayout radius={"md"}>
+        <Stack gap={"xs"}>
+          <Group justify={"space-between"}>
             <Switch
               checked={startCampaign}
               label={startCampaign ? "End Campaign" : "Start Campaign"}
@@ -219,16 +219,6 @@ const StartCampaignCard = ({
           </Group>
           <Group justify="space-between">
             <Stack gap={0}>
-              <Title order={5} c={"#149A8A"}>
-                Status
-              </Title>
-              <Text c="dimmed">
-                {campaign?.startedAt
-                  ? `Started at ${dayjs(campaign?.startedAt).format(
-                      "DD/MM/YYYY hh:mm A",
-                    )}`
-                  : null}
-              </Text>
               <Badge
                 variant={renderBadge(campaign?.status).variant}
                 color={renderBadge(campaign?.status).color}
@@ -237,6 +227,13 @@ const StartCampaignCard = ({
               >
                 {campaign?.status}
               </Badge>
+              <Text c="dimmed">
+                {campaign?.startedAt
+                  ? `Started at ${dayjs(campaign?.startedAt).format(
+                      "DD/MM/YYYY hh:mm A",
+                    )}`
+                  : null}
+              </Text>
             </Stack>
             <Stack gap={0} align={"center"}>
               <Title order={3} c={"#149a8a"}>
@@ -263,9 +260,9 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
     useDisclosure(false);
   return (
     <>
-      <PaperLayout p="lg" radius={"md"}>
-        <Stack gap={"xl"}>
-          <Group justify="space-between" mb={"lg"}>
+      <PaperLayout radius={"md"}>
+        <Stack gap={"xs"}>
+          <Group justify="space-between">
             <Group>
               <Title order={3}>Campaign Info</Title>
               <Button
