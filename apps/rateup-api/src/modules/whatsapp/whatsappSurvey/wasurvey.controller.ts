@@ -634,9 +634,10 @@ export async function sendCampaignToParticipants(campaignId: string) {
 
       log.trace("Template sent to participant %o", contact);
       await updateCampaignParticipant(id, {
-        status: messageSentStatus
+        status: messageSentStatus.status
           ? CampaignParticipantStatus.SENT
           : CampaignParticipantStatus.FAILED,
+        errorMessage: messageSentStatus.message,
       });
     }
     log.trace("Template sent to all participants");
