@@ -3,6 +3,7 @@ import {
   ByCampaignIdParams,
   CreateCampaignInput,
   GetCampaignsQuery,
+  SendCampaignInput,
   UpdateCampaignInput,
 } from "./campaign.schema";
 import {
@@ -11,7 +12,7 @@ import {
   getCampaignById,
   getCampaignsByOrgId,
   getCampaignsByTeamId,
-  startCampaign,
+  sendCampaign,
   updateCampaign,
 } from "./campaign.service";
 import { Role } from "@prisma/client";
@@ -77,10 +78,19 @@ export async function deleteCampaignByIdHandler(
   return reply.status(200).send(campaign);
 }
 
-export async function startCampaignHandler(
-  request: FastifyRequest<{ Params: ByCampaignIdParams }>,
+export async function sendCampaignHandler(
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+    Body: SendCampaignInput;
+  }>,
   reply: FastifyReply,
 ) {
-  await startCampaign(request.params.campaignId);
+  if (
+    !request.body.sendToStatuses ||
+    request.body.sendToStatuses.length === 0
+  ) {
+    return reply.status(400).send({ message: "sendToStatuses is required" });
+  }
+  await sendCampaign(request.params.campaignId, request.body.sendToStatuses);
   return reply.status(204).send();
 }
