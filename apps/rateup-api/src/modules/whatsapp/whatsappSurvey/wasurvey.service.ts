@@ -72,11 +72,13 @@ export async function sendMessage(
     );
     log.trace(`sent successfully %o %o `, res.data, res.statusText);
     await handleWaMessages("send", messageData, to, orgId);
-    return true;
+    return { status: true, message: "" };
   } catch (e: any) {
-    log.error("Error sending message");
-    console.log(e.response);
-    return false;
+    log.error("Error sending message", e);
+    return {
+      status: false,
+      message: e?.message?.split("error_message:")?.[1] ?? "failed to send",
+    };
   }
 }
 

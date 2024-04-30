@@ -40,6 +40,10 @@ export async function callWhatsappApi(
       throw new Error(
         `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_user_msg}`,
       );
+    else if (res.data?.error?.message)
+      throw new Error(
+        `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.message}`,
+      );
     else
       throw new Error(
         `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_data?.details}`,
