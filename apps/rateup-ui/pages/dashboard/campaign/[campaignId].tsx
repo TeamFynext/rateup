@@ -127,7 +127,7 @@ const CampaignById = () => {
               btnTitle="Add"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={580}
+              topHeight={210}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>

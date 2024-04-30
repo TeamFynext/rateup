@@ -19,6 +19,7 @@ import {
   sendFlow,
   updateFlowMetaData,
   pushFlowJsonToWa,
+  getWaFlowMetrics,
 } from "./flow.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
@@ -61,6 +62,13 @@ export const useWaFlowPreview = (dbFlowId: string) =>
     queryKey: ["flow", "preview", dbFlowId],
     queryFn: () => getFlowPreview(dbFlowId),
     enabled: !!dbFlowId,
+  });
+
+export const useWaFlowMetrics = (dbFlowId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ["flow-metrics", dbFlowId],
+    queryFn: () => getWaFlowMetrics(dbFlowId),
+    enabled,
   });
 
 export const useImportFlowsMutation = () => {

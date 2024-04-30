@@ -16,6 +16,7 @@ import {
 import { findCentroid } from "../../../utils/location";
 import { getFormattedResponseForAreaGraph } from "../../../utils/response";
 import OverallResponseGraph from "../../Graph/OverallResponseGraph";
+import { useWaFlowMetrics } from "../../../backend/whatsapp/flow/flow.query";
 enum LocationType {
   City = "city",
   State = "state",
@@ -24,7 +25,7 @@ enum LocationType {
 const maxZoom = 15;
 const minZoom = 2;
 
-const SurveyStats = ({ survey }) => {
+const SurveyStats = ({ survey, flowId = null }) => {
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const {
     data: responses,
@@ -38,6 +39,7 @@ const SurveyStats = ({ survey }) => {
     isFetching,
     refetch,
   } = useAllResponses(survey?.id);
+
   const [zoom, setZoom] = useState(7);
   const [isFindingZoomLevel, setIsFindingZoomLevel] = useState(false);
   const [locationType, setLocationType] = useState(LocationType.City);
@@ -54,7 +56,20 @@ const SurveyStats = ({ survey }) => {
     mergedResponses,
     timePeriod,
   );
-  if (isResponsesLoading || !responses) {
+  const responseLength = filteredResponsesByTeam?.reduce(
+    (acc: number, curr: any) => acc + curr?._count["responses"],
+    0,
+  );
+  const { data: flowMetrics, isPending } = useWaFlowMetrics(
+    flowId,
+    !!flowId && responseLength > 250,
+  );
+
+  if (
+    isResponsesLoading ||
+    !responses ||
+    (flowId && responseLength > 250 && isPending)
+  ) {
     // TODO: loading ui
     return null;
   }
@@ -82,10 +97,7 @@ const SurveyStats = ({ survey }) => {
       ),
     };
   }
-  const responseLength = filteredResponsesByTeam?.reduce(
-    (acc: number, curr: any) => acc + curr?._count["responses"],
-    0,
-  );
+
   const sortedCount = getSortedLocationCount(responses, locationType);
   const coords: Coordinates[] = responses.reduce((acc, curr) => {
     if (
@@ -97,20 +109,28 @@ const SurveyStats = ({ survey }) => {
     return acc;
   }, [] as Coordinates[]);
   const centroid = findCentroid(coords);
-  const surveyStatsCountArray = [
-    {
-      label: "Visited",
-      count: returnSurveyStats()?.visited ?? 0,
-    },
-    {
-      label: "Started",
-      count: returnSurveyStats()?.started ?? 0,
-    },
-    {
-      label: "Completed",
-      count: returnSurveyStats()?.completed ?? 0,
-    },
-  ];
+  const surveyStatsCountArray = [];
+  if (flowMetrics) {
+    surveyStatsCountArray.push({
+      label: "Flow Visited",
+      count: flowMetrics?.metric?.data_points?.[0]?.value ?? 0,
+    });
+  } else if (!flowId) {
+    surveyStatsCountArray.push(
+      {
+        label: "Visited",
+        count: returnSurveyStats()?.visited ?? 0,
+      },
+      {
+        label: "Started",
+        count: returnSurveyStats()?.started ?? 0,
+      },
+      {
+        label: "Completed",
+        count: returnSurveyStats()?.completed ?? 0,
+      },
+    );
+  }
   return (
     <Stack p={3}>
       <Stack mih="400px" gap={10}>
@@ -127,99 +147,111 @@ const SurveyStats = ({ survey }) => {
                 {responseLength ?? 0} &nbsp;{" "}
                 {responseLength > 1 ? "Responses" : "Response"}
               </Text>
-              {surveyStatsCountArray?.map(({ count, label }) => (
-                <PaperLayout style={{ flex: 1 }} key={label}>
-                  <Stack align={"center"}>
-                    <Text fs={"20px"} fw="900" size={"30px"}>
-                      {count}
-                    </Text>
-                    <Badge variant="light">{label}</Badge>
-                  </Stack>
+              {surveyStatsCountArray?.length === 0 ? (
+                <PaperLayout style={{ flex: 1 }}>
+                  <Text fw="900">Minimum 250+ response for metrics</Text>
                 </PaperLayout>
-              ))}
+              ) : (
+                surveyStatsCountArray?.map(({ count, label }) => (
+                  <PaperLayout style={{ flex: 1 }} key={label}>
+                    <Stack align={"center"}>
+                      <Text fs={"20px"} fw="900" size={"30px"}>
+                        {count}
+                      </Text>
+                      <Badge variant="light">{label}</Badge>
+                    </Stack>
+                  </PaperLayout>
+                ))
+              )}
             </Group>
           </Stack>
         </PaperLayout>
-        <Grid columns={10} p={2} gutter={"10px"} grow>
-          {/* Location-wise response frequency */}
-          <Grid.Col span={{ xs: 10, md: 3 }}>
-            <PaperLayout miw={300} h="350px">
-              <Stack>
-                <Group justify="space-between">
-                  <Heading subtitle="Top Traffic By:" />
-                  <ContainedSelection
-                    maw={100}
-                    radius={"xl"}
-                    data={Object.values(LocationType)}
-                    value={locationType}
-                    onChange={setLocationType as (value: LocationType) => void}
-                    w={150}
-                  />
-                </Group>
-                <LocationFrequencyDisplay sortedCount={sortedCount} />
-              </Stack>
-            </PaperLayout>
-          </Grid.Col>
-          {/* MAP Component */}
-          <Grid.Col span={{ xs: 10, md: 5 }}>
-            <PaperLayout
-              style={{ overflow: "hidden" }}
-              p={0}
-              w="100%"
-              h={"100%"}
-              mih={350}
-            >
-              <Map
-                defaultCenter={
-                  centroid ? [centroid.latitude, centroid.longitude] : [20, 78]
-                } // default set to India
-                zoom={zoom}
-                onBoundsChanged={({ zoom, bounds, initial }) => {
-                  if (initial) {
-                    if (!centroid) return setZoom(2);
-                    setIsFindingZoomLevel(true);
-                  }
-                  if (initial || isFindingZoomLevel) {
-                    // so that we wont reset user actions
-                    // TODO: find out if we can calculate the `bounds` using center, zoomLevel, and heightxwidth
-                    //       then we could calculate the zoomLevel in one go instead of waiting for pigeonMaps to render and return the current bounds
-                    const zoomAction = zoomInorOutToDisplayAllMarkers(
-                      coords,
-                      bounds,
-                    );
-                    if (zoomAction === ZoomAction.Out && minZoom < zoom) {
-                      setZoom(zoom - 1);
-                      return;
-                    } else {
-                      setIsFindingZoomLevel(false); // TODO: also set it to false if user manually zooms in/out before finding the zoom level
-                      return;
-                    }
-                  }
-                  setZoom(zoom);
-                }}
-                metaWheelZoom={true}
+        {!flowId && (
+          <Grid columns={10} p={2} gutter={"10px"} grow>
+            {/* Location-wise response frequency */}
+            <Grid.Col span={{ xs: 10, md: 3 }}>
+              <PaperLayout miw={300} h="350px">
+                <Stack>
+                  <Group justify="space-between">
+                    <Heading subtitle="Top Traffic By:" />
+                    <ContainedSelection
+                      maw={100}
+                      radius={"xl"}
+                      data={Object.values(LocationType)}
+                      value={locationType}
+                      onChange={
+                        setLocationType as (value: LocationType) => void
+                      }
+                      w={150}
+                    />
+                  </Group>
+                  <LocationFrequencyDisplay sortedCount={sortedCount} />
+                </Stack>
+              </PaperLayout>
+            </Grid.Col>
+            {/* MAP Component */}
+            <Grid.Col span={{ xs: 10, md: 5 }}>
+              <PaperLayout
+                style={{ overflow: "hidden" }}
+                p={0}
+                w="100%"
+                h={"100%"}
+                mih={350}
               >
-                <ZoomControl />
-                {coords &&
-                  coords.map(({ latitude, longitude }, index) => {
-                    if (!latitude || !longitude) return;
-                    return (
-                      <Marker
-                        anchor={[latitude, longitude]}
-                        style={{
-                          opacity: 0.7,
-                        }}
-                        offset={[-10, -21]}
-                        key={index}
-                      >
-                        <RedDot zoom={zoom} />
-                      </Marker>
-                    );
-                  })}
-              </Map>
-            </PaperLayout>
-          </Grid.Col>
-        </Grid>
+                <Map
+                  defaultCenter={
+                    centroid
+                      ? [centroid.latitude, centroid.longitude]
+                      : [20, 78]
+                  } // default set to India
+                  zoom={zoom}
+                  onBoundsChanged={({ zoom, bounds, initial }) => {
+                    if (initial) {
+                      if (!centroid) return setZoom(2);
+                      setIsFindingZoomLevel(true);
+                    }
+                    if (initial || isFindingZoomLevel) {
+                      // so that we wont reset user actions
+                      // TODO: find out if we can calculate the `bounds` using center, zoomLevel, and heightxwidth
+                      //       then we could calculate the zoomLevel in one go instead of waiting for pigeonMaps to render and return the current bounds
+                      const zoomAction = zoomInorOutToDisplayAllMarkers(
+                        coords,
+                        bounds,
+                      );
+                      if (zoomAction === ZoomAction.Out && minZoom < zoom) {
+                        setZoom(zoom - 1);
+                        return;
+                      } else {
+                        setIsFindingZoomLevel(false); // TODO: also set it to false if user manually zooms in/out before finding the zoom level
+                        return;
+                      }
+                    }
+                    setZoom(zoom);
+                  }}
+                  metaWheelZoom={true}
+                >
+                  <ZoomControl />
+                  {coords &&
+                    coords.map(({ latitude, longitude }, index) => {
+                      if (!latitude || !longitude) return;
+                      return (
+                        <Marker
+                          anchor={[latitude, longitude]}
+                          style={{
+                            opacity: 0.7,
+                          }}
+                          offset={[-10, -21]}
+                          key={index}
+                        >
+                          <RedDot zoom={zoom} />
+                        </Marker>
+                      );
+                    })}
+                </Map>
+              </PaperLayout>
+            </Grid.Col>
+          </Grid>
+        )}
         <OverallResponseGraph
           data={graphResponse}
           timePeriod={timePeriod}
