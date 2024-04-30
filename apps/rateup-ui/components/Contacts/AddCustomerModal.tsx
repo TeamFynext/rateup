@@ -80,7 +80,6 @@ const AddCustomerModal = ({
   };
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
-  console.log(contactGroupData);
 
   const form = useForm({
     initialValues: {

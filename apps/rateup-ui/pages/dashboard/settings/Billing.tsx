@@ -32,7 +32,6 @@ const Billing = ({
   const [openedUpgradeModal, { toggle, close: closeUpgradeModal }] =
     useDisclosure(false);
   //TODO
-  console.log(subscription);
   const handleCancelSubscription = () => {};
   return (
     <>

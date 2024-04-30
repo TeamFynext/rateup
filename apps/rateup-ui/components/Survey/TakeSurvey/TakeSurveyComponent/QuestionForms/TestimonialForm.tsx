@@ -97,7 +97,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     toggleCropDialog();
   };
   const theme = useMantineTheme();
-  console.log(features);
+
   return (
     <Stack miw={`min(100%,411px)`}>
       {selectedImage && (

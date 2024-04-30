@@ -32,7 +32,6 @@ export default function () {
   const [openedDialog, { open: openDialog, close: closeDialog }] =
     useDisclosure(false);
   const handleUpdateSubscriptionPlan = () => {
-    console.log(updatedField);
     updateSubscriptionMutation.mutate({
       orgId: updatedField?.orgId,
       updatedData: { basePlanId: updatedField.basePlanId },
