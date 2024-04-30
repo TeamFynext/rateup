@@ -3,7 +3,7 @@ import {
   createCampaignHandler,
   deleteCampaignByIdHandler,
   getCampaignsHandler,
-  startCampaignHandler,
+  sendCampaignHandler,
   updateCampaignByIdHandler,
 } from "./campaign.controller";
 import { $campaignRef } from "./campaign.schema";
@@ -66,12 +66,12 @@ export async function campaignRoutes(server: FastifyInstance) {
     deleteCampaignByIdHandler,
   );
   server.post(
-    "/:campaignId/start",
+    "/:campaignId/send",
     {
       schema: {
         params: $campaignRef("byCampaignIdParamsSchema"),
       },
     },
-    startCampaignHandler,
+    sendCampaignHandler,
   );
 }

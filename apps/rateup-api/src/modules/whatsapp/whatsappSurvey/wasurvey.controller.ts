@@ -52,7 +52,13 @@ import {
   sendAutomatedReplyMessage,
 } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { WhatsappSettings } from "@prisma/client";
+import {
+  Campaign,
+  CampaignParticipant,
+  Contact,
+  Team,
+  WhatsappSettings,
+} from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 
@@ -485,9 +491,18 @@ async function handleLanguageResponse(
   }
 }
 
-export async function sendCampaignToParticipants(campaignId: string) {
+export async function sendCampaignToParticipants(
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[] = [
+    CampaignParticipantStatus.PENDING,
+    CampaignParticipantStatus.FAILED,
+  ],
+) {
   try {
-    log.trace("Sending campaign to participants");
+    log.trace(
+      "Sending campaign to participants with statuses %o",
+      sendToStatuses,
+    );
     const campaign = await prisma.campaign.findUnique({
       where: {
         id: campaignId,
@@ -541,102 +556,130 @@ export async function sendCampaignToParticipants(campaignId: string) {
     // check if template has a flow button
     const flowId = getFlowIdFromTemplateComponents(dbTemplate.data.components);
 
-    for (const { contact, id, status } of campaign.campaignParticipants) {
-      if (status === CampaignParticipantStatus.SENT) {
-        log.warn(
-          "Campaign already sent to participant %o. Skipping...",
-          contact,
-        );
-        continue;
-      }
-      if (!contact.phone) {
-        log.warn("Contact %o does not have a phone number", contact);
-        // TODO: handle this case. maybe send email?
-        continue;
-      }
-      // TODO: add rate limiting
-      // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-
-      const templateComponents = [...components];
-
-      if (flowId) {
-        log.trace("Flow button identified. handling session...");
-        const existingSession = await getSession(orgId, contact.phone);
-        if (existingSession) {
-          if (validateSession(existingSession)) {
-            await deleteSession(orgId, contact.phone);
-          } else {
-            log.warn("Session already exists for %o. Skipping...", contact);
-            continue;
-          }
-        }
-        const teamId = campaign.team.id;
-        const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
-          where: {
-            teamId,
-            survey: {
-              WaFlow: {
-                flowId: flowId,
-              },
-            },
-          },
-          select: {
-            id: true,
-            survey: {
-              select: {
-                languages: true,
-              },
-            },
-          },
-        });
-        await createSession({
-          phone: contact.phone,
-          surveyTeamMapId: surveyTeamMap.id,
-          orgId: orgId,
-          language: surveyTeamMap.survey.languages[0],
-          campaignParticipantId: id,
-        });
-
-        templateComponents.push({
-          type: "button",
-          sub_type: "flow",
-          index: 0,
-          parameters: [
-            {
-              type: "action",
-              action: {
-                flow_token: contact.phone,
-              },
-            },
-          ],
-        });
-      }
-
-      const templateQuery = {
-        name: dbTemplate.data.name,
-        language: {
-          code: dbTemplate.data?.language,
-        },
-        components: templateComponents,
-      };
-      const templateMessage = createTemplateMessage(
-        contact.phone,
-        templateQuery,
-      );
-
-      const messageSentStatus = await sendMessage(orgId, templateMessage);
-
-      log.trace("Template sent to participant %o", contact);
-      await updateCampaignParticipant(id, {
-        status: messageSentStatus
-          ? CampaignParticipantStatus.SENT
-          : CampaignParticipantStatus.FAILED,
+    _sendCampaignToParticipants(
+      campaign,
+      sendToStatuses,
+      components,
+      flowId,
+      orgId,
+      dbTemplate,
+    )
+      .then(() => {
+        log.trace("Template sent to all participants");
+      })
+      .catch(() => {
+        log.error("Error sending template to participants");
       });
-    }
-    log.trace("Template sent to all participants");
+
     return true;
   } catch (e) {
     log.error(e);
     return false;
+  }
+}
+
+type _campaign = {
+  team: {
+    id: string;
+    orgId: string;
+  };
+  campaignParticipants: (CampaignParticipant & {
+    contact: Contact;
+  })[];
+};
+// TODO: use batch sending
+async function _sendCampaignToParticipants(
+  campaign: _campaign,
+  sendToStatuses: CampaignParticipantStatus[],
+  components: any,
+  flowId: string,
+  orgId: string,
+  dbTemplate: WaTemplateWithTypes,
+) {
+  for (const { contact, id, status } of campaign.campaignParticipants) {
+    if (!sendToStatuses.includes(status as CampaignParticipantStatus)) {
+      log.warn("Campaign already sent to participant %o. Skipping...", contact);
+      continue;
+    }
+    if (!contact.phone) {
+      log.warn("Contact %o does not have a phone number", contact);
+      // TODO: handle this case. maybe send email?
+      continue;
+    }
+    // TODO: add rate limiting
+    // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
+    const templateComponents = [...components];
+
+    if (flowId) {
+      log.trace("Flow button identified. handling session...");
+      const existingSession = await getSession(orgId, contact.phone);
+      if (existingSession) {
+        if (validateSession(existingSession)) {
+          await deleteSession(orgId, contact.phone);
+        } else {
+          log.warn("Session already exists for %o. Skipping...", contact);
+          continue;
+        }
+      }
+      const teamId = campaign.team.id;
+      const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+        where: {
+          teamId,
+          survey: {
+            WaFlow: {
+              flowId: flowId,
+            },
+          },
+        },
+        select: {
+          id: true,
+          survey: {
+            select: {
+              languages: true,
+            },
+          },
+        },
+      });
+      await createSession({
+        phone: contact.phone,
+        surveyTeamMapId: surveyTeamMap.id,
+        orgId: orgId,
+        language: surveyTeamMap.survey.languages[0],
+        campaignParticipantId: id,
+      });
+
+      templateComponents.push({
+        type: "button",
+        sub_type: "flow",
+        index: 0,
+        parameters: [
+          {
+            type: "action",
+            action: {
+              flow_token: contact.phone,
+            },
+          },
+        ],
+      });
+    }
+
+    const templateQuery = {
+      name: dbTemplate.data.name,
+      language: {
+        code: dbTemplate.data?.language,
+      },
+      components: templateComponents,
+    };
+    const templateMessage = createTemplateMessage(contact.phone, templateQuery);
+
+    const messageSentStatus = await sendMessage(orgId, templateMessage);
+
+    log.trace("Template sent to participant %o", contact);
+    await updateCampaignParticipant(id, {
+      status: messageSentStatus
+        ? CampaignParticipantStatus.SENT
+        : CampaignParticipantStatus.FAILED,
+      errorMessage: messageSentStatus.message,
+    });
   }
 }
