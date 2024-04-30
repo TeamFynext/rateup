@@ -82,9 +82,9 @@ const CampaignById = () => {
   return (
     <>
       <MantineProvider theme={whatsappTheme}>
-        <Stack gap={"md"}>
+        <Stack>
           <Group>
-            <Title>{campaignData?.name}</Title>
+            <Title order={2}>{campaignData?.name}</Title>
             <Tooltip label="Refresh data">
               <ActionIcon
                 variant="light"
@@ -127,7 +127,7 @@ const CampaignById = () => {
               btnTitle="Add"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={480}
+              topHeight={440}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
@@ -218,7 +218,7 @@ const StartCampaignCard = ({
             </Button>
           </Group>
           <Group justify="space-between">
-            <Stack gap={0}>
+            <Group>
               <Badge
                 variant={renderBadge(campaign?.status).variant}
                 color={renderBadge(campaign?.status).color}
@@ -234,15 +234,15 @@ const StartCampaignCard = ({
                     )}`
                   : null}
               </Text>
-            </Stack>
-            <Stack gap={0} align={"center"}>
+            </Group>
+            <Group>
               <Title order={3} c={"#149a8a"}>
                 {participantCount}
               </Title>
               <Title order={6} c={"#149a8a"}>
                 Participants
               </Title>
-            </Stack>
+            </Group>
           </Group>
         </Stack>
         <ResendCampaignModal
@@ -280,7 +280,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
           </Group>
           <Group justify="space-between">
             {campaignInfo?.template && (
-              <Stack gap={"xs"}>
+              <Group>
                 <Title order={6}>Selected Template</Title>
                 <Badge
                   variant="default"
@@ -291,7 +291,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
                 >
                   {campaignInfo?.template}
                 </Badge>
-              </Stack>
+              </Group>
             )}
           </Group>
         </Stack>
