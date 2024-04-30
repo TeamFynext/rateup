@@ -109,12 +109,15 @@ export async function deleteCampaign(campaignId: string) {
   });
 }
 
-export async function startCampaign(campaignId: string) {
+export async function sendCampaign(
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[],
+) {
   await updateCampaign(campaignId, {
     status: CampaignStatus.ACTIVE,
     startedAt: new Date(),
   });
   log.trace("updated campaign status to active");
-  await sendCampaignToParticipants(campaignId);
+  await sendCampaignToParticipants(campaignId, sendToStatuses);
   // add state indicating survey is sent to all participants?
 }
