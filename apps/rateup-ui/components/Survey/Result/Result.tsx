@@ -40,7 +40,6 @@ const Result = ({
   encryptionpassword,
   setEncryptionPassword,
   subscription = null,
-  surveysSummary,
 }) => {
   const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -131,7 +130,7 @@ const Result = ({
       </Box>
       <Box className={styles["panels-container"]}>
         <Tabs.Panel value="overview">
-          <SurveyStats survey={survey} surveysSummary={surveysSummary} />
+          <SurveyStats survey={survey} />
         </Tabs.Panel>
         <Tabs.Panel value="responses">
           <Responses

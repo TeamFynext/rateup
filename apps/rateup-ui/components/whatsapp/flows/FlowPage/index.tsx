@@ -31,7 +31,7 @@ import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
 import StyledTabs from "../../../styled/StyledTabs/StyledTabs";
 import RateupLoader from "../../../Loaders/RateupLoader";
 
-function FlowPage(surveysSummary) {
+function FlowPage() {
   const router = useRouter();
   const { tab: tabView } = router.query;
   const { dbFlowId } = router.query as { dbFlowId: string };
@@ -234,7 +234,6 @@ function FlowPage(surveysSummary) {
                       survey={survey}
                       setSelectedLanguage={setSelectedLanguage}
                       setFilterTags={setFilterTags}
-                      surveysSummary={surveysSummary}
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Share}>

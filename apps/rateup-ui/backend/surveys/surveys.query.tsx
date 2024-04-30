@@ -20,12 +20,13 @@ import {
   verifySurveyPassword,
   updateSurveyLandingPage,
   getActiveSurveysSummary,
-  getStoppedSurveysSummary,
+  // getStoppedSurveysSummary,
   deleteSurvey,
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
   getSurveyWithQuestions,
   getPhoneNumberFromSurveyTeamMapId,
+  getSurveysSummary,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -141,10 +142,10 @@ export const useSurveysSummary = () => {
   });
 };
 
-export const useStoppedSurveysSummary = () => {
+export const useAllSurveysSummary = () => {
   return useQuery({
-    queryKey: ["stoppedSurveysSummary"],
-    queryFn: getStoppedSurveysSummary,
+    queryKey: ["allSurveysSummary"],
+    queryFn: getSurveysSummary,
   });
 };
 

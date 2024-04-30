@@ -31,7 +31,10 @@ import {
   IconShoppingCart,
   IconCloudExclamation,
 } from "@tabler/icons-react";
-import { useSurveysSummary } from "../../backend/surveys/surveys.query";
+import {
+  useAllSurveysSummary,
+  useSurveysSummary,
+} from "../../backend/surveys/surveys.query";
 import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
@@ -74,6 +77,7 @@ export default function DashboardHome() {
     isInitialLoading: boolean;
     isRefetchError: boolean;
   };
+  const { data: allSurveysSummary } = useAllSurveysSummary();
   useEffect(() => {
     if (!isInitialLoading)
       notifications.show({
@@ -91,12 +95,7 @@ export default function DashboardHome() {
   }, [fetchStatus]);
 
   const allResponses = [];
-  surveysSummary?.surveys?.forEach((survey) => {
-    survey?.teams?.forEach((team) => {
-      allResponses.push(...team?.responses);
-    });
-  });
-  surveysSummary?.stoppedSurveys?.forEach((survey) => {
+  allSurveysSummary?.surveys?.forEach((survey) => {
     survey?.teams?.forEach((team) => {
       allResponses.push(...team?.responses);
     });
@@ -223,7 +222,6 @@ export default function DashboardHome() {
                 data={filteredData}
                 isFetching={isRefetching}
                 refetch={refetch}
-                surveysSummary={surveysSummary}
               />
             </Group>
             <FormModalLayout

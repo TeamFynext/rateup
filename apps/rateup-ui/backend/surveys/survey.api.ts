@@ -79,11 +79,11 @@ export async function getActiveSurveysSummary() {
   return surveysSummary;
 }
 
-export async function getStoppedSurveysSummary() {
-  let stoppedSurveysSummary: SurveySummaryData = (
-    await axiosClient.get(`${SURVEYURL}/summary/stopped`)
+export async function getSurveysSummary() {
+  let allSurveysSummary: SurveySummaryData = (
+    await axiosClient.get(`${SURVEYURL}/summary/all`)
   ).data;
-  return stoppedSurveysSummary;
+  return allSurveysSummary;
 }
 
 export const getSurveysList = () =>
