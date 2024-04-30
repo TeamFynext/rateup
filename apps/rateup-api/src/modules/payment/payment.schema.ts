@@ -45,12 +45,18 @@ const rateupPlanParamSchema = z.object({
   id: z.string(),
 });
 
+const paymentPlanDeleteSchema = z.object({
+  id: z.string(),
+  planId: z.string(),
+});
+
 export const { schemas: paymentSchemas, $ref: $Pref } = buildJsonSchemas(
   {
     createCheckoutRequestSchema,
     createRateUpPlanSchema,
     updateRateUpPlanSchema,
     rateupPlanParamSchema,
+    paymentPlanDeleteSchema,
   },
   { $id: "paymentSchema" },
 );
@@ -68,3 +74,4 @@ export type createRateUpPlanInput = z.infer<typeof createRateUpPlanSchema>;
 export type updateRateUpPlanInput = z.infer<typeof updateRateUpPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type rateupPlanParamInput = z.infer<typeof rateupPlanParamSchema>;
+export type paymentPlanDeleteInput = z.infer<typeof paymentPlanDeleteSchema>;

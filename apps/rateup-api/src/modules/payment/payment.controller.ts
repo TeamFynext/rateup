@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createCheckoutSession,
   createRateUpPlan,
+  deletePaymentPlan,
   deleteRateUpPlan,
   getAllOrgOrders,
   getAllPaymentOrders,
@@ -17,6 +18,7 @@ import {
 import {
   CreateCheckoutInput,
   createRateUpPlanInput,
+  paymentPlanDeleteInput,
   rateupPlanParamInput,
   UpdatePlanInput,
   updateRateUpPlanInput,
@@ -235,6 +237,20 @@ export async function getAllPaymentOrdersHandler(
     reply.code(201).send(allOrders);
   } catch (error) {
     console.log(error);
+    reply.code(500).send("Failed");
+  }
+}
+
+export async function deletePaymentPlanHandler(
+  request: FastifyRequest<{ Body: paymentPlanDeleteInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id, planId } = request.body;
+    const plan = await deletePaymentPlan(id, planId);
+    reply.code(200).send(plan);
+  } catch (error) {
+    console.error(error);
     reply.code(500).send("Failed");
   }
 }

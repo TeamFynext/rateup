@@ -1,4 +1,9 @@
-import { OrderStatus, PaymentStatus, PrismaClient } from "@prisma/client";
+import {
+  OrderStatus,
+  PaymentPlanStatus,
+  PaymentStatus,
+  PrismaClient,
+} from "@prisma/client";
 import axios from "axios";
 import {
   CreateCheckoutInput,
@@ -472,4 +477,24 @@ export async function getAllOrgOrders(orgId: string) {
     console.error("Error:", error);
     return { success: false, error: error.message };
   }
+}
+
+export async function deletePaymentPlan(id: string, planId: string) {
+  return await prisma.paymentPlans.delete({
+    where: {
+      id,
+      planId,
+      status: {
+        notIn: [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE],
+      },
+    },
+  });
+}
+
+export async function getRateuplanById(id: string) {
+  return await prisma.rateupPlan.findUnique({
+    where: {
+      id,
+    },
+  });
 }
