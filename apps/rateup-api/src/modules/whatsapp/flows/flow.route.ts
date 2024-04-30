@@ -10,6 +10,7 @@ import {
   deprecateFlowHandler,
   getFlowHandler,
   getFlowJsonHandler,
+  getFlowMetricsHandler,
   getFlowPreviewHandler,
   getFlowsHandler,
   getUnsyncedFlowsHandler,
@@ -56,6 +57,15 @@ export async function flowRoutes(server: FastifyInstance) {
       },
     },
     getFlowJsonHandler,
+  );
+  server.get(
+    "/metrics/:waFlowId",
+    {
+      schema: {
+        params: $waFlow("byWaFlowIdParams"),
+      },
+    },
+    getFlowMetricsHandler,
   );
 
   server.get("/unsynced", getUnsyncedFlowsHandler);
