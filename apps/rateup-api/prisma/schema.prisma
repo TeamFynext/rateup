@@ -142,8 +142,8 @@ model WhatsappSettings {
   accessToken     String // encrypted
   accessToken_iv  String
   wabaId          String // WhatsApp Business Account ID
-  phoneId         String
-  phone           String
+  phoneId         String  @unique
+  phone           String  @unique
   appId           String
   webhookPassword String?
 
