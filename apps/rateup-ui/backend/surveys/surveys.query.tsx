@@ -20,7 +20,6 @@ import {
   verifySurveyPassword,
   updateSurveyLandingPage,
   getActiveSurveysSummary,
-  // getStoppedSurveysSummary,
   deleteSurvey,
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
