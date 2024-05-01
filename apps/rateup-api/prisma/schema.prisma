@@ -426,6 +426,7 @@ model CampaignParticipant {
   response       SurveyResponse? @relation(fields: [responseId], references: [id], onDelete: Cascade)
   responseId     String?         @db.Uuid
   WaSession      WaSession?
+  errorMessage   String?
 
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
 }
@@ -727,13 +728,13 @@ model WaFlow {
   dbFlowId  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
 
-  flowId  String?
-  name    String
-  status  String
+  flowId      String?
+  name        String
+  status      String
   /// [PWaFlowJson]
-  json    Json
+  json        Json
   /// [PWaFlowPreview]
-  preview Json?
+  preview     Json?
   // whether the flow has changes present in our db that are not saved in whatsapp
   pendingSave Boolean @default(true)
 

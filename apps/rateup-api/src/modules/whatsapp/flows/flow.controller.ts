@@ -78,6 +78,27 @@ export async function getFlowHandler(
   res.send(flow);
 }
 
+export async function getFlowMetricsHandler(
+  req: FastifyRequest<{
+    Params: ByWaFlowIdParams;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { waFlowId } = req.params;
+    const { orgId } = req.user;
+    const { accessToken } = await getWaSettings(orgId);
+    const response = await callWhatsappApi(
+      `/${waFlowId}?fields=metric.name(ENDPOINT_REQUEST_COUNT).granularity(LIFETIME)`,
+      "GET",
+      accessToken,
+    );
+    res.send(response?.data);
+  } catch (error) {
+    log.error("error while getting flow metrics");
+    return res.status(500).send(error?.response);
+  }
+}
 export async function getUnsyncedFlowsHandler(
   req: FastifyRequest,
   res: FastifyReply,
