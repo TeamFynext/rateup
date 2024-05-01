@@ -208,7 +208,7 @@ export default function Contacts() {
                 columns={column}
                 data={filteredContacts}
                 cTags={cTags?.contactTags}
-                topHeight={220}
+                topHeight={375}
               />
             </PaperLayout>
           )}
@@ -225,7 +225,7 @@ export default function Contacts() {
                 data={filteredGroups}
                 cTags={cTags?.contactTags}
                 tab={activeTab}
-                topHeight={220}
+                topHeight={375}
               />
             </PaperLayout>
           )}

@@ -82,9 +82,9 @@ const CampaignById = () => {
   return (
     <>
       <MantineProvider theme={whatsappTheme}>
-        <Stack p={"md"} gap={"md"}>
+        <Stack>
           <Group>
-            <Title>{campaignData?.name}</Title>
+            <Title order={2}>{campaignData?.name}</Title>
             <Tooltip label="Refresh data">
               <ActionIcon
                 variant="light"
@@ -111,7 +111,7 @@ const CampaignById = () => {
               campaign={campaignData}
             />
           </SimpleGrid>
-          <Group justify="space-between" gap={"xl"} mt={"lg"}>
+          <Group justify="space-between" gap={"xl"}>
             <Title order={2}>Participants</Title>
             <SearchInput
               placeholder={"Search Participants"}
@@ -127,7 +127,7 @@ const CampaignById = () => {
               btnTitle="Add"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={210}
+              topHeight={440}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
@@ -197,9 +197,9 @@ const StartCampaignCard = ({
 
   return (
     <>
-      <PaperLayout p={"lg"} radius={"md"}>
-        <Stack gap={"xl"} py={"sm"}>
-          <Group justify={"space-between"} mb={"md"}>
+      <PaperLayout radius={"md"}>
+        <Stack gap={"xs"}>
+          <Group justify={"space-between"}>
             <Switch
               checked={startCampaign}
               label={startCampaign ? "End Campaign" : "Start Campaign"}
@@ -218,17 +218,7 @@ const StartCampaignCard = ({
             </Button>
           </Group>
           <Group justify="space-between">
-            <Stack gap={0}>
-              <Title order={5} c={"#149A8A"}>
-                Status
-              </Title>
-              <Text c="dimmed">
-                {campaign?.startedAt
-                  ? `Started at ${dayjs(campaign?.startedAt).format(
-                      "DD/MM/YYYY hh:mm A",
-                    )}`
-                  : null}
-              </Text>
+            <Group>
               <Badge
                 variant={renderBadge(campaign?.status).variant}
                 color={renderBadge(campaign?.status).color}
@@ -237,15 +227,22 @@ const StartCampaignCard = ({
               >
                 {campaign?.status}
               </Badge>
-            </Stack>
-            <Stack gap={0} align={"center"}>
+              <Text c="dimmed">
+                {campaign?.startedAt
+                  ? `Started at ${dayjs(campaign?.startedAt).format(
+                      "DD/MM/YYYY hh:mm A",
+                    )}`
+                  : null}
+              </Text>
+            </Group>
+            <Group>
               <Title order={3} c={"#149a8a"}>
                 {participantCount}
               </Title>
               <Title order={6} c={"#149a8a"}>
                 Participants
               </Title>
-            </Stack>
+            </Group>
           </Group>
         </Stack>
         <ResendCampaignModal
@@ -263,9 +260,9 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
     useDisclosure(false);
   return (
     <>
-      <PaperLayout p="lg" radius={"md"}>
-        <Stack gap={"xl"}>
-          <Group justify="space-between" mb={"lg"}>
+      <PaperLayout radius={"md"}>
+        <Stack gap={"xs"}>
+          <Group justify="space-between">
             <Group>
               <Title order={3}>Campaign Info</Title>
               <Button
@@ -283,7 +280,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
           </Group>
           <Group justify="space-between">
             {campaignInfo?.template && (
-              <Stack gap={"xs"}>
+              <Group>
                 <Title order={6}>Selected Template</Title>
                 <Badge
                   variant="default"
@@ -294,7 +291,7 @@ const CampaignInfoCard = ({ campaignInfo, campaign }) => {
                 >
                   {campaignInfo?.template}
                 </Badge>
-              </Stack>
+              </Group>
             )}
           </Group>
         </Stack>

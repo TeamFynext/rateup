@@ -104,7 +104,7 @@ export default function CampaignList() {
               btnTitle="Create"
               toggle={open}
               disableFuzzyFnCustom={true}
-              topHeight={200}
+              topHeight={280}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"lg"}>
