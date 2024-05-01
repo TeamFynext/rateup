@@ -14,24 +14,28 @@ export function reorder<T>(
 
 export function createBlankQuestion(
   type: QuestionType,
-  language: string,
+  languages: string[],
   surveyType = SurveyType.Web,
 ): Question {
+  const isWaFlow = surveyType === SurveyType.WaFlow;
+  const title = {};
+  const description = {};
+  const label = isWaFlow ? {} : undefined;
+
+  for (const language of languages) {
+    title[language] = isWaFlow ? "" : "<p></p><p></p><p></p>";
+    description[language] = "";
+    if (label) {
+      label[language] = "";
+    }
+  }
+
   return {
     // TODO: only set id when saving to db?
     id: "",
-    title: {
-      [language]: "<p></p><p></p><p></p>",
-    },
-    description: {
-      [language]: "",
-    },
-    label:
-      surveyType === SurveyType.WaFlow
-        ? {
-            [language]: "",
-          }
-        : undefined,
+    title,
+    description,
+    label,
     required: true,
     type,
   };
@@ -51,7 +55,10 @@ export function validateAllLanguagesArePopulated(
       });
     } else {
       languages.forEach((language: string) => {
-        if (!question[key][language] || question[key][language] == "") {
+        if (
+          !question[key][language] ||
+          question[key][language] == "<p></p><p></p><p></p>"
+        ) {
           if (!missingLangs.includes(language)) missingLangs.push(language);
         }
       });

@@ -93,7 +93,7 @@ function EditFlow() {
     if (Object.values(QuestionType).includes(type as QuestionType)) {
       const newQ = createBlankQuestion(
         type as QuestionType,
-        selectedLanguage,
+        [selectedLanguage],
         SurveyType.WaFlow,
       );
       setBlankQuestion(newQ);

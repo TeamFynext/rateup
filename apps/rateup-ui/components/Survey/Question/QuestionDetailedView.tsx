@@ -135,7 +135,9 @@ export function QuestionDetailedView({
       } else {
         if (incompleteLanguages.length > 0) {
           setSelectedLanguage(incompleteLanguages[0]);
-          showErrorToast("The choice count does not match across languages");
+          showErrorToast(
+            "Please Enter heading for all languages before saving.",
+          );
           return "error";
         }
         if (imageToDelete?.length > 0) {

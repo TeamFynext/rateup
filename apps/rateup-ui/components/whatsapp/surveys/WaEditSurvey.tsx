@@ -57,7 +57,7 @@ export function EditWhatsappSurvey({
     surveyId,
   });
   const handleTypeSelection = (type: QuestionType) => {
-    const newQ = createBlankQuestion(type, selectedLanguage);
+    const newQ = createBlankQuestion(type, surveyLanguages);
     const { id, ...restData } = newQ;
     const saveQ = { ...restData };
     questionCreateMutation.mutateAsync(saveQ).then((r) => {
