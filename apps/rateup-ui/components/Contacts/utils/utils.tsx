@@ -3,7 +3,7 @@ import { Badge, Checkbox, CheckboxProps, Image } from "@mantine/core";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { IconChevronRight, IconUsersGroup } from "@tabler/icons-react";
+import { IconEye, IconUsersGroup } from "@tabler/icons-react";
 import { ContactGroupMenu } from "../../Card/ContactCard";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { fallbackImage } from "../../../utils/constants";
@@ -124,8 +124,8 @@ export const contactGroupColumn = [
     cell: (info) => (
       <Link href={`contacts/${info.getValue()}`}>
         <RateupButtonPrimary
-          title="Go"
-          rightIcon={<IconChevronRight size={14} />}
+          title="View"
+          rightIcon={<IconEye size={14} />}
           size="xs"
           variant="light"
         />
@@ -189,8 +189,8 @@ export const contactParticipentColumn = [
     cell: (info) => (
       <Link href={`campaign/${info.getValue()}`}>
         <RateupButtonPrimary
-          title="Go"
-          rightIcon={<IconChevronRight size={14} />}
+          title="View"
+          rightIcon={<IconEye size={14} />}
           size="xs"
           variant="light"
         />

@@ -64,55 +64,53 @@ export default function CampaignList() {
   const column: ColumnDef<any>[] = contactParticipentColumn;
 
   return (
-    <>
-      <MantineProvider theme={whatsappTheme}>
-        <Stack gap={"sm"}>
-          <Flex justify={"space-between"}>
-            <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
-            <SearchInput
-              placeholder={"Search Campaign"}
-              searchText={searchText}
-              setSearchText={setSearchText}
-            />
-            <TeamSelector
-              value={selectedTeam}
-              onChange={setSelectedTeam}
-              enableAll={true}
-            />
-          </Flex>
-          <Center>
-            {isError && isAllCampaignError ? (
-              <Stack>
-                <Text>Something went wrong</Text>
-                <Button
-                  variant="outline"
-                  leftSection={<IconRefresh />}
-                  onClick={() => refetch}
-                >
-                  Retry
-                </Button>
-              </Stack>
-            ) : (
-              <></>
-            )}
-          </Center>
+    <MantineProvider theme={whatsappTheme}>
+      <Stack gap={"sm"}>
+        <Flex justify={"space-between"}>
+          <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
+          <SearchInput
+            placeholder={"Search Campaign"}
+            searchText={searchText}
+            setSearchText={setSearchText}
+          />
+          <TeamSelector
+            value={selectedTeam}
+            onChange={setSelectedTeam}
+            enableAll={true}
+          />
+        </Flex>
+        <Center>
+          {isError && isAllCampaignError ? (
+            <Stack>
+              <Text>Something went wrong</Text>
+              <Button
+                variant="outline"
+                leftSection={<IconRefresh />}
+                onClick={() => refetch}
+              >
+                Retry
+              </Button>
+            </Stack>
+          ) : (
+            <></>
+          )}
+        </Center>
 
-          <PaperLayout px={0}>
-            <TanstackTable
-              columns={column}
-              data={filteredCampaigns}
-              btnTitle="Create"
-              toggle={open}
-              disableFuzzyFnCustom={true}
-              topHeight={280}
-            />
-          </PaperLayout>
-          <Modal opened={opened} onClose={close} centered size={"lg"}>
-            <CreateCampaignModal close={close} isEdit={false} />
-          </Modal>
-        </Stack>
-      </MantineProvider>
-    </>
+        <PaperLayout px={0}>
+          <TanstackTable
+            columns={column}
+            data={filteredCampaigns}
+            btnTitle="Create"
+            toggle={open}
+            disableFuzzyFnCustom={true}
+            topHeight={280}
+          />
+        </PaperLayout>
+        <Modal opened={opened} onClose={close} centered size={"lg"}>
+          <CreateCampaignModal close={close} isEdit={false} />
+        </Modal>
+      </Stack>
+    </MantineProvider>
   );
 }
 

@@ -60,6 +60,27 @@ export const ButtonSelection = ({
         </Menu.Target>
 
         <Menu.Dropdown>
+          <Menu.Label>Flow Button</Menu.Label>
+          <Tooltip
+            label={
+              (btnLen > 0 || flowBtn) &&
+              "Remove all button to add a flow button"
+            }
+            display={!flowBtn || btnLen === 0 ? "none" : "block"}
+          >
+            <Box>
+              <Menu.Item
+                disabled={btnLen > 0 || flowBtn}
+                leftSection={
+                  <IconWaveSine style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
+              >
+                Add a flow
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Menu.Divider />
           <Menu.Label>Quick Reply Buttons</Menu.Label>
           <Tooltip
             label={flowBtn && "Remove flow button to add other buttons"}
@@ -84,26 +105,6 @@ export const ButtonSelection = ({
           <Menu.Divider />
 
           <Menu.Label>Call-to-action buttons</Menu.Label>
-          <Tooltip
-            label={
-              (btnLen > 0 || flowBtn) &&
-              "Remove all button to add a flow button"
-            }
-            display={!flowBtn || btnLen === 0 ? "none" : "block"}
-          >
-            <Box>
-              <Menu.Item
-                disabled={btnLen > 0 || flowBtn}
-                leftSection={
-                  <IconWaveSine style={{ width: rem(14), height: rem(14) }} />
-                }
-                onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
-              >
-                Add a flow
-              </Menu.Item>
-            </Box>
-          </Tooltip>
-
           <Tooltip
             label={flowBtn && "Remove flow button to add other buttons"}
             display={!flowBtn ? "none" : "block"}

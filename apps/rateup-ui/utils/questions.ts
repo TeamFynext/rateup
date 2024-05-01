@@ -23,7 +23,7 @@ export function createBlankQuestion(
   const label = isWaFlow ? {} : undefined;
 
   for (const language of languages) {
-    title[language] = isWaFlow ? "" : "<p></p><p></p><p></p>";
+    title[language] = "";
     description[language] = "";
     if (label) {
       label[language] = "";

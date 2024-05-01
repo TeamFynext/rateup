@@ -8,6 +8,7 @@ import {
   Grid,
   Group,
   MantineProvider,
+  Overlay,
   SimpleGrid,
   Stack,
   Text,
@@ -341,7 +342,10 @@ export default function WhatsappTemplateById() {
             </Flex>
           </Flex>
           <Grid>
-            <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }}>
+            <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }} pos={"relative"}>
+              {editingItem?.data?.id && value && (
+                <Overlay className={styles["overlay"]} />
+              )}
               <PaperLayout p={"xl"} h={"80dvh"}>
                 <Stack gap={"xs"}>
                   <Alert

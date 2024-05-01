@@ -149,6 +149,7 @@ const AddParticipantModal = ({ close, campaign }) => {
                         selectedContacts={selectedContacts}
                         selectedContactsHandlers={selectedContactsHandlers}
                         key={contact?.id}
+                        participants={campaign?.campaignParticipants}
                       />
                     ))
                   ) : (
@@ -161,6 +162,7 @@ const AddParticipantModal = ({ close, campaign }) => {
                         group={group}
                         selectedGroups={selectedGroups}
                         selectedGroupsHandlers={selectedGroupsHandlers}
+                        key={group.id}
                       />
                     ))
                   ) : (
@@ -178,6 +180,7 @@ const AddParticipantModal = ({ close, campaign }) => {
                     selectedContacts={selectedContacts}
                     selectedContactsHandlers={selectedContactsHandlers}
                     key={customer?.id}
+                    participants={campaign?.campaignParticipants}
                   />
                 ))}
                 {selectedGroups?.map((group) => (
@@ -216,8 +219,14 @@ const Individual = ({
   customer,
   selectedContacts,
   selectedContactsHandlers,
+  participants,
 }) => {
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
+
+  const isAlreadySeleted = participants.some(
+    (c) => c?.contactId === customer?.id,
+  );
+
   return (
     <Group justify="space-between" my={"xs"}>
       <Stack gap={0}>
@@ -245,8 +254,9 @@ const Individual = ({
           radius={"xl"}
           size="sm"
           w={90}
+          disabled={isAlreadySeleted}
         >
-          Add
+          {isAlreadySeleted ? "Added" : "Add"}
         </Button>
       )}
     </Group>

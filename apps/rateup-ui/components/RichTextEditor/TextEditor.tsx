@@ -108,7 +108,7 @@ export default function TextEditor({ form, selectedLanguage }) {
         </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>
 
-      <RichTextEditor.Content />
+      <RichTextEditor.Content mih={120} />
     </RichTextEditor>
   );
 }
