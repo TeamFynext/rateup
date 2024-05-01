@@ -21,7 +21,7 @@ export function createBlankQuestion(
     // TODO: only set id when saving to db?
     id: "",
     title: {
-      [language]: "",
+      [language]: "<p></p><p></p><p></p>",
     },
     description: {
       [language]: "",

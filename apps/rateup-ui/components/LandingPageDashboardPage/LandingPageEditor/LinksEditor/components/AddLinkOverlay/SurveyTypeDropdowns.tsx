@@ -10,6 +10,7 @@ import {
   getLinkTypeLabel,
   getSelectedSurveyTitleOptions,
   getSelectedTeamOptions,
+  getSurveyTitleWithId,
 } from "../../constants";
 import { useLinkTypeOptions } from "../../../../../../backend/landingPage/landingPage.query";
 import { useCallback, useEffect, useState } from "react";
@@ -36,7 +37,9 @@ function SurveyTypeDropdowns({
 
   const handleSurveyTitleAutoCompleteOnBlur = useCallback(
     (value) => {
-      onSurveyTitleAutoCompleteSearchChange(selectedSurveyTitle);
+      onSurveyTitleAutoCompleteSearchChange(
+        getSurveyTitleWithId(selectLinkTypeOptionsData, selectedSurveyTitle),
+      );
       setSTAutoCompleteSearchFocused(false);
     },
     [selectedSurveyTitle],

@@ -50,7 +50,7 @@ import QuestionTypePreview from "./Previews/QuestionTypePreview";
 
 import { LanguageCompletionView } from "./LanguageCompletionView";
 
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useBeforeUnload, useClickAway } from "react-use";
@@ -58,7 +58,6 @@ import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
 import { getQuestionTypeLabel } from "../../../utils/enums";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
 import TextEditor from "../../RichTextEditor/TextEditor";
 import { ChoicesCreator } from "./ChoicesCreator";
 import ContactExtraProps from "./ContactExtraProps";
@@ -123,13 +122,7 @@ export function QuestionDetailedView({
     ["title", "choices"],
   );
   const { imageToDelete, resetImage } = useImageStore();
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const formRef = useRef<HTMLDivElement | null>(null);
-  useClickAway(formRef, () => {
-    !dialogOpened && form.isDirty() && toggle();
-  });
-  useDisableClickOutside(formRef, form.isDirty(), toggle, dialogOpened);
-  useBeforeUnload(form.isDirty(), "You have unsaved changes, are you sure?");
 
   const handleSave = async () => {
     try {
@@ -184,33 +177,24 @@ export function QuestionDetailedView({
     }
   };
 
+  useEffect(() => {
+    if (form.isDirty()) handleSave();
+  }, [form.values.required, form.values.enableNpsAnalytics]);
+
   const isSaving =
     questionCreateMutation.isPending ||
     questionUpdateMutation.isPending ||
     deleteFileLoading;
   return (
     <form
-      onSubmit={form.onSubmit(handleSave)}
+      onSubmit={(e) => {
+        e.preventDefault();
+      }}
       style={{ height: "100%" }}
       onKeyDown={getHotkeyHandler([
         [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSave)(event)],
       ])}
     >
-      <ConfirmationModal
-        opened={dialogOpened}
-        onClose={() => {
-          form.reset();
-          closeDialog();
-        }}
-        headerLabel="If you don't Save, Your changes will be lost."
-        headerTitle="Do you want to save your changes?"
-        confirmLabel="Save Changes"
-        closeLabel="Discard Changes"
-        onConfirm={async () => {
-          await handleSave();
-        }}
-      />
-
       <Stack style={{ height: "100%" }} ref={formRef}>
         <ScrollArea style={{ flex: "1 1 0" }}>
           <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
@@ -220,6 +204,13 @@ export function QuestionDetailedView({
             <Stack
               style={{ minHeight: "150px", height: "100%", flex: 1 }}
               mr={"xs"}
+              onBlur={async (e) => {
+                const currentTarget = e.currentTarget;
+                const relatedTarget = e.relatedTarget;
+                if (!currentTarget.contains(relatedTarget)) {
+                  if (form.isDirty()) await handleSave();
+                }
+              }}
             >
               <TextEditor form={form} selectedLanguage={selectedLanguage} />
               <ExtraProps
@@ -269,7 +260,11 @@ export function QuestionDetailedView({
               color="var(--tertiary-color)"
               fw={600}
               mr={!NPSQuestions.includes(question?.type) && "100px"}
-              {...form.getInputProps("required", { type: "checkbox" })}
+              checked={form.values.required}
+              onChange={(e) => {
+                const checked = e.currentTarget.checked;
+                form.setFieldValue("required", checked);
+              }}
               disabled={question.type === QuestionType.InfoMessage}
             />
             {NPSQuestions.includes(question?.type) && (
@@ -277,9 +272,11 @@ export function QuestionDetailedView({
                 label="NPS Analytics"
                 color="var(--tertiary-color)"
                 fw={600}
-                {...form.getInputProps("enableNpsAnalytics", {
-                  type: "checkbox",
-                })}
+                checked={form.values.enableNpsAnalytics}
+                onChange={(e) => {
+                  const checked = e.currentTarget.checked;
+                  form.setFieldValue("enableNpsAnalytics", checked);
+                }}
               />
             )}
 
@@ -326,9 +323,7 @@ export function QuestionDetailedView({
                           }
                           size="sm"
                           onClick={async () => {
-                            let save = await handleSave();
-                            save === "saved" &&
-                              setActiveTab(QuestionTabsEnum.LogicEditor);
+                            setActiveTab(QuestionTabsEnum.LogicEditor);
                           }}
                         />
                       </Menu.Item>
@@ -479,23 +474,3 @@ function ExtraProps({ form, question, surveyType }: ExtraPropsProps) {
       return null;
   }
 }
-
-const useDisableClickOutside = (ref, isDirty, toggle, dialogOpened) => {
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isDirty && ref.current && !ref.current.contains(event.target)) {
-        event.stopPropagation();
-      }
-    };
-
-    // Add event listener when the form is dirty
-    if (isDirty && !dialogOpened) {
-      document.addEventListener("click", handleClickOutside, true);
-    }
-
-    // Remove event listener when the form is not dirty
-    return () => {
-      document.removeEventListener("click", handleClickOutside, true);
-    };
-  }, [isDirty, ref, toggle]);
-};

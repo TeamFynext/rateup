@@ -21,7 +21,10 @@ const getLinkTypeLabel = (value) => {
 const getSelectedSurveyTitleOptions = (surveysData) => {
   if (surveysData) {
     const data = surveysData.map((surveyObj) => {
-      return surveyObj.title;
+      return {
+        value: surveyObj.id,
+        label: surveyObj.title,
+      };
     });
     return data;
   }
@@ -31,7 +34,7 @@ const getSelectedSurveyTitleOptions = (surveysData) => {
 const getSelectedTeamOptions = (surveysData, selectedSurveyTitle) => {
   if (surveysData) {
     const data = surveysData.find(
-      (surveyObj) => surveyObj.title === selectedSurveyTitle,
+      (surveyObj) => surveyObj.id === selectedSurveyTitle,
     );
     const options = data?.teams.map(
       ({ shortUrlId, team: { name: teamName } }) => {
@@ -45,9 +48,16 @@ const getSelectedTeamOptions = (surveysData, selectedSurveyTitle) => {
   }
 };
 
+const getSurveyTitleWithId = (surveysData, surveyId) => {
+  return (
+    surveysData?.find((surveyObj) => surveyObj.id === surveyId)?.title ?? ""
+  );
+};
+
 export {
   linkTypeOptions,
   getLinkTypeLabel,
   getSelectedSurveyTitleOptions,
   getSelectedTeamOptions,
+  getSurveyTitleWithId,
 };

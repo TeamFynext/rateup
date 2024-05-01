@@ -44,7 +44,7 @@ export default function TextEditor({ form, selectedLanguage }) {
 
   return (
     <RichTextEditor editor={editor}>
-      <RichTextEditor.Toolbar sticky>
+      <RichTextEditor.Toolbar sticky tabIndex={-1}>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.ColorPicker
             colors={[
@@ -92,7 +92,7 @@ export default function TextEditor({ form, selectedLanguage }) {
         </RichTextEditor.ControlsGroup>
 
         <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Link />
+          <RichTextEditor.Link popoverProps={{ withinPortal: false }} />
           <RichTextEditor.Unlink />
         </RichTextEditor.ControlsGroup>
         <RichTextEditor.ControlsGroup>
