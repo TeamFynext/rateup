@@ -676,7 +676,7 @@ async function _sendCampaignToParticipants(
 
     log.trace("Template sent to participant %o", contact);
     await updateCampaignParticipant(id, {
-      status: messageSentStatus
+      status: messageSentStatus.status
         ? CampaignParticipantStatus.SENT
         : CampaignParticipantStatus.FAILED,
       errorMessage: messageSentStatus.message,
