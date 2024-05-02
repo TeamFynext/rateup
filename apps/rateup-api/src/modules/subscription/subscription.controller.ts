@@ -11,6 +11,11 @@ import {
   updateSubscriptionInput,
 } from "./subscription.schema";
 import { updateSubscriptionFeatures } from "./update-sub-features";
+import { getRateuplanById } from "../payment/payment.service";
+import {
+  FreePlanSubscriptionFeatures,
+  UnlimitedAccess,
+} from "./subscription.data";
 
 //SUBB TEMP
 export async function subUpgradeHandler(req, res) {
@@ -53,6 +58,14 @@ export async function updateSubscriptionHandler(
 ) {
   const { orgId } = req.params;
   const updatedData = req.body;
+  if (updatedData?.basePlanId) {
+    const rateupPlan = await getRateuplanById(updatedData?.basePlanId);
+    if (rateupPlan.name === "FREE PLAN")
+      updatedData.features = FreePlanSubscriptionFeatures;
+    else if (rateupPlan.name === "RATEUP TRIAL")
+      updatedData.features = UnlimitedAccess;
+    else updatedData.features = rateupPlan.features;
+  }
   const subscription = await updateSubscription(orgId, updatedData);
   return res.send(subscription);
 }

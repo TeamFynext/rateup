@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createCheckoutSessionHandler,
   createRateUpPlanHandler,
+  deletePaymentPlanHandler,
   deleteRateUpPlanHandler,
   getAllOrdersByOrg,
   getAllPaymentOrdersHandler,
@@ -93,5 +94,16 @@ export async function paymentRoutes(server: FastifyInstance) {
       preHandler: [assertRootOrg],
     },
     getAllPaymentOrdersHandler,
+  );
+
+  server.delete(
+    "/",
+    {
+      preHandler: [assertRootOrg],
+      schema: {
+        body: $Pref("paymentPlanDeleteSchema"),
+      },
+    },
+    deletePaymentPlanHandler,
   );
 }

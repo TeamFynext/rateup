@@ -457,7 +457,7 @@ export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
 }
 
 //------------SURVEY SUMMARY  ----
-//-----Returns summary(responses, stats) of active surveys -- from ALL TEAMs in which the user is a member of
+//-----Returns summary(responses, stats) of active  and stopped surveys -- from ALL TEAMs in which the user is a member of
 
 export async function getActiveSurveysSummmaryByUserId(userId: string) {
   const teamIds = await getTeamIdsByUserId(userId);
@@ -538,6 +538,82 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
     totalTeamsCount: teamIds?.length,
     totalSurveysCount: allSurveys,
     activeSurveysCount: activeSurveys?.length,
+    surveys: data,
+  };
+
+  return summaryData;
+}
+
+//get all ative and stopped survey summary
+
+export async function getSurveysSummmaryByUserId(userId: string) {
+  const teamIds = await getTeamIdsByUserId(userId);
+
+  const allSurveys = await prisma.survey.findMany({
+    where: {
+      teams: {
+        some: {
+          teamId: {
+            in: teamIds,
+          },
+        },
+      },
+    },
+    include: {
+      teams: {
+        select: {
+          id: true,
+          responses: {
+            select: {
+              id: true,
+              createdAt: true,
+            },
+          },
+          surveyStats: {
+            select: {
+              started: true,
+              completed: true,
+              visited: true,
+            },
+          },
+          team: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
+        },
+      },
+      WaFlow: {
+        select: {
+          dbFlowId: true,
+        },
+      },
+    },
+  });
+
+  const data = allSurveys?.map((survey) => {
+    const surveys = {
+      ...survey,
+      teamMapIds: survey.teams.map((team) => ({
+        teamMapId: team.id,
+        teamName: team.team.name,
+        teamId: team.team.id,
+      })),
+      teams: survey.teams.map((team) => ({
+        id: team.team.id,
+        mapId: team.id,
+        teamName: team.team.name,
+        responses: team.responses,
+        surveyStats: team.surveyStats,
+      })),
+    };
+    return surveys;
+  });
+
+  let summaryData = {
+    totalTeamsCount: teamIds?.length,
+    totalSurveysCount: allSurveys?.length,
     surveys: data,
   };
 

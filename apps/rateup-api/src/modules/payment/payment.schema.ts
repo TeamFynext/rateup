@@ -36,7 +36,7 @@ const updateRateUpPlanSchema = z.object({
   displayName: z.string().trim().min(1).optional(),
   displayWidgetId: z.string().trim().min(1).optional(),
   planType: z.nativeEnum(PaymentPlanType).optional(),
-  paymentPlanId: z.string().trim().min(1).optional(),
+  paymentPlanId: z.string().optional(),
   description: z.array(z.string()).min(1).optional(),
   features: z.any().optional(),
 });
@@ -45,12 +45,18 @@ const rateupPlanParamSchema = z.object({
   id: z.string(),
 });
 
+const paymentPlanDeleteSchema = z.object({
+  id: z.string(),
+  planId: z.string(),
+});
+
 export const { schemas: paymentSchemas, $ref: $Pref } = buildJsonSchemas(
   {
     createCheckoutRequestSchema,
     createRateUpPlanSchema,
     updateRateUpPlanSchema,
     rateupPlanParamSchema,
+    paymentPlanDeleteSchema,
   },
   { $id: "paymentSchema" },
 );
@@ -68,3 +74,4 @@ export type createRateUpPlanInput = z.infer<typeof createRateUpPlanSchema>;
 export type updateRateUpPlanInput = z.infer<typeof updateRateUpPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type rateupPlanParamInput = z.infer<typeof rateupPlanParamSchema>;
+export type paymentPlanDeleteInput = z.infer<typeof paymentPlanDeleteSchema>;
