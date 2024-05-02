@@ -283,128 +283,124 @@ export function QuestionDetailedView({
             )}
 
             <Stack px="sm">
-              {question.type !== QuestionType.InfoMessage && (
-                <Menu
-                  position="bottom-end"
-                  offset={4}
-                  withArrow
-                  arrowPosition="side"
-                  transitionProps={{
-                    transition: "rotate-right",
-                    duration: 150,
-                  }}
-                >
-                  <Menu.Target>
-                    <Button
-                      variant="outline"
-                      color="dark.2"
-                      radius="lg"
-                      size="sm"
-                      rightSection={<IconChevronDown size="1rem" />}
-                    >
-                      <Text size="sm" c={"var(--text-color-sp)"} fw="700">
-                        Actions
-                      </Text>
-                    </Button>
-                  </Menu.Target>
+              <Menu
+                position="bottom-end"
+                offset={4}
+                withArrow
+                arrowPosition="side"
+                transitionProps={{
+                  transition: "rotate-right",
+                  duration: 150,
+                }}
+              >
+                <Menu.Target>
+                  <Button
+                    variant="outline"
+                    color="dark.2"
+                    radius="lg"
+                    size="sm"
+                    rightSection={<IconChevronDown size="1rem" />}
+                  >
+                    <Text size="sm" c={"var(--text-color-sp)"} fw="700">
+                      Actions
+                    </Text>
+                  </Button>
+                </Menu.Target>
 
-                  <Menu.Dropdown>
-                    {logicSupportedTypes.includes(question?.type) && (
-                      <Menu.Item>
+                <Menu.Dropdown>
+                  {logicSupportedTypes.includes(question?.type) && (
+                    <Menu.Item>
+                      <RateupButtonSecondary
+                        title={"Logic Jump"}
+                        fullWidth
+                        leftIcon={
+                          <Image
+                            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                            h={30}
+                            w={30}
+                            fit="contain"
+                            alt="icon of login jump"
+                          />
+                        }
+                        size="sm"
+                        onClick={async () => {
+                          setActiveTab(QuestionTabsEnum.LogicEditor);
+                        }}
+                      />
+                    </Menu.Item>
+                  )}
+
+                  {googleReviewSupportedTypes.includes(question?.type) && (
+                    <Menu.Item>
+                      {isGoogleReviewFeatureActive ? (
                         <RateupButtonSecondary
-                          title={"Logic Jump"}
-                          fullWidth
+                          title={"Google Review"}
                           leftIcon={
-                            <Image
-                              src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                              h={30}
-                              w={30}
-                              fit="contain"
-                              alt="icon of login jump"
-                            />
+                            <IconBrandGoogle stroke={4} size={"1rem"} />
                           }
                           size="sm"
+                          fullWidth
                           onClick={async () => {
-                            setActiveTab(QuestionTabsEnum.LogicEditor);
+                            let save = await handleSave();
+                            save === "saved" &&
+                              setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
                           }}
                         />
-                      </Menu.Item>
-                    )}
-
-                    {googleReviewSupportedTypes.includes(question?.type) && (
-                      <Menu.Item>
-                        {isGoogleReviewFeatureActive ? (
-                          <RateupButtonSecondary
-                            title={"Google Review"}
-                            leftIcon={
+                      ) : (
+                        <Tooltip
+                          label="Upgrade your Plan for this feature."
+                          disabled={isGoogleReviewFeatureActive}
+                          color="yellow"
+                        >
+                          <Button
+                            data-disabled
+                            radius="lg"
+                            onClick={(event) => event.preventDefault()}
+                            leftSection={
                               <IconBrandGoogle stroke={4} size={"1rem"} />
                             }
-                            size="sm"
-                            fullWidth
-                            onClick={async () => {
-                              let save = await handleSave();
-                              save === "saved" &&
-                                setActiveTab(
-                                  QuestionTabsEnum.GoogleReviewEditor,
-                                );
-                            }}
-                          />
-                        ) : (
-                          <Tooltip
-                            label="Upgrade your Plan for this feature."
-                            disabled={isGoogleReviewFeatureActive}
-                            color="yellow"
                           >
-                            <Button
-                              data-disabled
-                              radius="lg"
-                              onClick={(event) => event.preventDefault()}
-                              leftSection={
-                                <IconBrandGoogle stroke={4} size={"1rem"} />
-                              }
-                            >
-                              Google Review
-                            </Button>
-                          </Tooltip>
-                        )}
-                      </Menu.Item>
-                    )}
+                            Google Review
+                          </Button>
+                        </Tooltip>
+                      )}
+                    </Menu.Item>
+                  )}
 
-                    {validationSupportedTypes.includes(question?.type) && (
-                      <Menu.Item>
-                        <RateupButtonSecondary
-                          title={"Custom Validation"}
-                          leftIcon={<IconEdit />}
-                          size="sm"
-                          fullWidth
-                          onClick={async () => {
-                            let save = await handleSave();
-                            save === "saved" &&
-                              setActiveTab(
-                                QuestionTabsEnum.ValidationRulesEditor,
-                              );
-                          }}
-                        />
-                      </Menu.Item>
-                    )}
-                    {ticketIssueSupportedTypes.includes(question?.type) && (
-                      <Menu.Item>
-                        <RateupButtonSecondary
-                          title={"Create Tickets"}
-                          leftIcon={<IconTicket stroke={4} size={"1rem"} />}
-                          size="sm"
-                          fullWidth
-                          onClick={async () => {
-                            let save = await handleSave();
-                            save === "saved" &&
-                              setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-                          }}
-                        />
-                      </Menu.Item>
-                    )}
-                  </Menu.Dropdown>
-                </Menu>
-              )}
+                  {validationSupportedTypes.includes(question?.type) && (
+                    <Menu.Item>
+                      <RateupButtonSecondary
+                        title={"Custom Validation"}
+                        leftIcon={<IconEdit />}
+                        size="sm"
+                        fullWidth
+                        onClick={async () => {
+                          let save = await handleSave();
+                          save === "saved" &&
+                            setActiveTab(
+                              QuestionTabsEnum.ValidationRulesEditor,
+                            );
+                        }}
+                      />
+                    </Menu.Item>
+                  )}
+                  {ticketIssueSupportedTypes.includes(question?.type) && (
+                    <Menu.Item>
+                      <RateupButtonSecondary
+                        title={"Create Tickets"}
+                        leftIcon={<IconTicket stroke={4} size={"1rem"} />}
+                        size="sm"
+                        fullWidth
+                        onClick={async () => {
+                          let save = await handleSave();
+                          save === "saved" &&
+                            setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                        }}
+                      />
+                    </Menu.Item>
+                  )}
+                </Menu.Dropdown>
+              </Menu>
             </Stack>
           </Group>
 
