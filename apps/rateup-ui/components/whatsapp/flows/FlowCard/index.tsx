@@ -90,7 +90,11 @@ function FlowCard({
       radius="lg"
       mih={"175px"}
       hoveractive={true}
-      onClick={() => router.push(`/dashboard/whatsapp/flows/${dbFlowId}`)}
+      onClick={() =>
+        router.push(
+          `/dashboard/whatsapp/flows/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,
+        )
+      }
     >
       <Stack gap={0} justify="space-between" h={"100%"}>
         <Flex gap={4} mb={"xs"}>

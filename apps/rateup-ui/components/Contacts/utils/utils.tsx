@@ -181,6 +181,23 @@ export const contactParticipentColumn = [
       dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
   },
   {
+    header: () => "Flow View",
+    id: "flow",
+    accessorKey: "flowId",
+    enableColumnFilter: false,
+    cell: (info) => (
+      <Link href={`whatsapp/flows/${info.getValue()}?tab=Result`}>
+        <RateupButtonPrimary
+          title="View"
+          rightIcon={<IconEye size={14} />}
+          size="xs"
+          variant="light"
+          disabled={!info.getValue()}
+        />
+      </Link>
+    ),
+  },
+  {
     header: () => "Detail View",
     id: "Detail",
     accessorKey: "id",
