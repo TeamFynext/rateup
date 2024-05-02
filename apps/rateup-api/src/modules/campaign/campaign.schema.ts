@@ -11,6 +11,7 @@ const coreCampaignSchema = z.object({
   type: z.nativeEnum(CampaignType),
   teamId: z.string(),
   waTemplateId: z.string(),
+  flowId: z.string().optional(),
 });
 
 const createCampaignInputSchema = coreCampaignSchema;
