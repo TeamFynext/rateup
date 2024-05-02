@@ -25,6 +25,7 @@ import {
   getSurveyTemplates,
   getSurveyWithQuestions,
   getPhoneNumberFromSurveyTeamMapId,
+  getSurveysSummary,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -137,6 +138,13 @@ export const useSurveysSummary = () => {
   return useQuery({
     queryKey: ["surveysSummary"],
     queryFn: getActiveSurveysSummary,
+  });
+};
+
+export const useAllSurveysSummary = () => {
+  return useQuery({
+    queryKey: ["allSurveysSummary"],
+    queryFn: getSurveysSummary,
   });
 };
 

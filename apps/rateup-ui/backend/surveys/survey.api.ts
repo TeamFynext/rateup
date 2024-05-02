@@ -79,6 +79,13 @@ export async function getActiveSurveysSummary() {
   return surveysSummary;
 }
 
+export async function getSurveysSummary() {
+  let allSurveysSummary: SurveySummaryData = (
+    await axiosClient.get(`${SURVEYURL}/summary/all`)
+  ).data;
+  return allSurveysSummary;
+}
+
 export const getSurveysList = () =>
   axiosClient({
     url: `/survey`,

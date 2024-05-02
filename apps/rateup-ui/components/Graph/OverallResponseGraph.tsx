@@ -22,6 +22,7 @@ import { RateupButtonBlue } from "../Button/RateupButtons";
 import NothingFound from "../NothingFound/NothingFound";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import classes from "./graph.module.css";
+import { useAllSurveysSummary } from "../../backend/surveys/surveys.query";
 
 const OverallResponseGraph = ({
   data,
@@ -30,14 +31,18 @@ const OverallResponseGraph = ({
   isFetching,
   refetch,
 }) => {
-  function getTotalCount(data) {
-    let totalCount = 0;
-    for (const item of data) {
-      totalCount += item?.responses;
-    }
-    return totalCount;
-  }
-  const total = getTotalCount(data);
+  const { data: allSurveysSummary } = useAllSurveysSummary();
+  let total = 0;
+
+  const allResponses = [];
+  allSurveysSummary?.surveys?.forEach((survey) => {
+    survey?.teams?.forEach((team) => {
+      allResponses.push(...team?.responses);
+    });
+  });
+
+  total = allResponses.length;
+
   return (
     <PaperLayout px="xl" py="sm" style={{ flex: 0.7 }} miw={300} w={"100%"}>
       <>
