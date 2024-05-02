@@ -78,12 +78,22 @@ export async function getCampaignsByOrgId(orgId: string) {
 }
 
 export async function createCampaign(data: CreateCampaignInput) {
+  let flowId = "";
+  if (data.flowId) {
+    const flow = await prisma.waFlow.findFirst({
+      where: {
+        flowId: data.flowId,
+      },
+    });
+    flowId = flow.dbFlowId;
+  }
   const campaign = await prisma.campaign.create({
     data: {
       name: data.name,
       type: data.type,
       teamId: data.teamId,
       waTemplateId: data.waTemplateId ?? undefined,
+      flowId: flowId,
     },
   });
   return campaign;

@@ -404,6 +404,7 @@ model Campaign {
   teamId               String                @db.Uuid
   waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   waTemplateId         String?               @db.Uuid
+  flowId               String?
   // TODO: add email template?
   campaignParticipants CampaignParticipant[]
 }
