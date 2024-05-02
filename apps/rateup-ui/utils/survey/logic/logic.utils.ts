@@ -12,7 +12,7 @@ import { getChoiceIndex } from "../../questions";
 
 export function parseLogicAction(
   question: Question,
-  userResponse: Choice | string | Choice[] | number,
+  userResponse: Choice | string | Choice[] | number | boolean,
   language: string,
 ): LogicAction | string {
   // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
@@ -22,6 +22,7 @@ export function parseLogicAction(
       userResponse = userResponse.toString();
     }
     const { type, logic: logicJumps = [] } = question;
+    if (type === Q.InfoMessage) userResponse = true;
     if (!logicSupportedTypes.includes(type) || !userResponse) {
       return LogicAction.NextQ;
     }

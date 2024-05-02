@@ -47,7 +47,7 @@ const Result = ({
     SelectedLanguageContext,
   );
   const [resultTab, setActiveResultTab] = useState<ResultTab>(
-    ResultTab.OverView,
+    flowId ? ResultTab.Responses : ResultTab.OverView,
   );
   //.
   //.
@@ -123,7 +123,7 @@ const Result = ({
     >
       <Box className={styles["result-page-tabs-and-filter-btn-container"]}>
         <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
-          <Tabs.Tab value="overview">Overview</Tabs.Tab>
+          {!flowId && <Tabs.Tab value="overview">Overview</Tabs.Tab>}
           <Tabs.Tab value="responses">Responses</Tabs.Tab>
           <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
           <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
