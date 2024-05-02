@@ -79,7 +79,7 @@ export default function () {
       id: subscription.orgId,
       orgId: (subscription as any).org.id,
       orgName: (subscription as any).org.name,
-      plan: subscription.basePlan.id,
+      plan: subscription?.basePlan?.id,
       features: subscription,
       createdAt: dayjs(subscription.createdAt).format("YYYY/MM/DD"),
       renewedAt: subscription.renewedAt
