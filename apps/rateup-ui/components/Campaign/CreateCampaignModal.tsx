@@ -33,6 +33,7 @@ const CreateCampaignModal = ({
       teamId: campaign?.teamId || "",
       surveyTeamMapId: campaign?.surveyTeamMapId || "",
       waTemplateId: campaign?.waTemplateId || "",
+      flowId: campaign?.flowId || "",
     },
     validate: {
       name: isNotEmpty("Name cannot be empty"),
@@ -63,6 +64,12 @@ const CreateCampaignModal = ({
   const handleSubmit = (values) => {
     const validation = form.validate();
     if (validation.hasErrors) return;
+    const flowId =
+      templates
+        ?.find((t) => t?.id === values?.waTemplateId)
+        ?.data?.components?.find((c) => c?.buttons)
+        ?.buttons?.find((b) => b?.type === "FLOW")?.flow_id ?? null;
+    values.flowId = flowId;
     values.waTemplateId = values.waTemplateId;
     if (isEdit) {
       updateCampaignMutation.mutate(

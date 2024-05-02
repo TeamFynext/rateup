@@ -563,8 +563,6 @@ export const flow_supported_questions = [
 export function questionTypeToFlowFormElementType(
   qtype: qt,
 ): WaFlowFormElementType {
-  console.log(qtype);
-
   switch (qtype) {
     case qt.Text:
     case qt.Email:

@@ -3,6 +3,7 @@ import {
   ActionIcon,
   Badge,
   Box,
+  Button,
   Flex,
   Group,
   ScrollAreaAutosize,
@@ -14,6 +15,7 @@ import { useCounter, useDisclosure } from "@mantine/hooks";
 import {
   IconChevronLeft,
   IconChevronRight,
+  IconDeviceFloppy,
   IconGripVertical,
   IconPlus,
   IconReplace,
@@ -22,7 +24,10 @@ import {
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import {
+  usePushToWaMutation,
+  useWaFlowFromDb,
+} from "../../../../../backend/whatsapp/flow/flow.query";
 import {
   WaFlowFormElementType,
   WaFlowStatus,
@@ -97,6 +102,7 @@ function ScreenListItem({
   const [footerLabel, setFooterLabel] = useState(
     footerElement?.label ?? "Next",
   );
+  const pushToWaMutation = usePushToWaMutation();
 
   useEffect(() => {
     if (flowJson?.screens) {
@@ -276,9 +282,30 @@ function ScreenListItem({
                   </>
                 )}
               </Group>
-              <Text c={"dimmed"}>
-                {`${flowJson.screens.length}/${FlowMaxScreens}`}
-              </Text>
+              <Group>
+                <Tooltip
+                  label={
+                    dbFlow.pendingSave
+                      ? "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
+                      : "No changes to save"
+                  }
+                >
+                  <ActionIcon
+                    onClick={() => {
+                      pushToWaMutation.mutate(dbFlowId);
+                    }}
+                    loading={pushToWaMutation.isPending}
+                    variant={"subtle"}
+                    size={20}
+                    disabled={!dbFlow.pendingSave}
+                  >
+                    <IconDeviceFloppy size={22} />
+                  </ActionIcon>
+                </Tooltip>
+                <Text c={"dimmed"}>
+                  {`${flowJson.screens.length}/${FlowMaxScreens}`}
+                </Text>
+              </Group>
             </Group>
             <ScrollAreaAutosize mah={"88%"}>
               <Droppable droppableId={screen?.id} direction="vertical">
