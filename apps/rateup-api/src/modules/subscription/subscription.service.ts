@@ -94,6 +94,12 @@ export async function getAllSubscriptions() {
           id: true,
         },
       },
+      basePlan: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 }

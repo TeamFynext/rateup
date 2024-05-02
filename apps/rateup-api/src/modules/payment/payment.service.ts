@@ -1,4 +1,9 @@
-import { OrderStatus, PaymentStatus, PrismaClient } from "@prisma/client";
+import {
+  OrderStatus,
+  PaymentPlanStatus,
+  PaymentStatus,
+  PrismaClient,
+} from "@prisma/client";
 import axios from "axios";
 import {
   CreateCheckoutInput,
@@ -171,16 +176,18 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
 
 //Update a Rateup Plan
 export async function updateRateUpPlan(data: updateRateUpPlanInput) {
-  const existData = await prisma.rateupPlan.findFirst({
-    where: {
-      paymentPlanId: data?.paymentPlanId,
-      id: {
-        not: data?.id,
+  if (data?.paymentPlanId) {
+    const existData = await prisma.rateupPlan.findFirst({
+      where: {
+        paymentPlanId: data?.paymentPlanId,
+        id: {
+          not: data?.id,
+        },
       },
-    },
-  });
-  if (existData) {
-    return { code: 400, data: "Payment Plan Id is already in Use" };
+    });
+    if (existData) {
+      return { code: 400, data: "Payment Plan Id is already in Use" };
+    }
   }
   if (data?.displayWidgetId) {
     await prisma.rateupPlan.updateMany({
@@ -199,7 +206,9 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       displayWidgetId: data?.displayWidgetId,
       description: data?.description,
       planType: data?.planType as PaymentPlanType,
-      paymentPlan: { connect: { id: data?.paymentPlanId } },
+      paymentPlan: data?.paymentPlanId
+        ? { connect: { id: data?.paymentPlanId } }
+        : undefined,
       features: data?.features,
     },
     where: {
@@ -468,4 +477,24 @@ export async function getAllOrgOrders(orgId: string) {
     console.error("Error:", error);
     return { success: false, error: error.message };
   }
+}
+
+export async function deletePaymentPlan(id: string, planId: string) {
+  return await prisma.paymentPlans.delete({
+    where: {
+      id,
+      planId,
+      status: {
+        notIn: [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE],
+      },
+    },
+  });
+}
+
+export async function getRateuplanById(id: string) {
+  return await prisma.rateupPlan.findUnique({
+    where: {
+      id,
+    },
+  });
 }

@@ -5,6 +5,7 @@ const updateSubscriptionInputSchema = z.object({
   features: z.any().optional(), // TODO: add validation
   expiresAt: z.date().optional(),
   renewAt: z.date().optional(),
+  basePlanId: z.string().uuid().optional(),
 });
 const deleteSubscriptionsInputSchema = z.array(z.string());
 
