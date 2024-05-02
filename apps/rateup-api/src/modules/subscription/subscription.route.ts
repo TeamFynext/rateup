@@ -4,7 +4,6 @@ import {
   getAllSubscriptionsHandler,
   getSubscriptionHandler,
   getUserSubscriptionHandler,
-  subUpgradeHandler,
   updateSubscriptionHandler,
 } from "./subscription.controller";
 import { assertRootOrg } from "../../utils/auth";
@@ -13,9 +12,6 @@ import { $Sref } from "../org/org.schema";
 
 export async function subscriptionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-
-  //SUBB TEMP
-  server.get("/upgrade", subUpgradeHandler);
 
   server.get("/", getUserSubscriptionHandler);
   server.get(
