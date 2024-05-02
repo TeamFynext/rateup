@@ -7,24 +7,29 @@ import {
   ActionIcon,
   Blockquote,
 } from "@mantine/core";
-import React from "react";
+import React, { useState } from "react";
 import {
   DataGrid,
+  GridActionsCellItem,
   GridColDef,
   GridPreProcessEditCellProps,
   GridToolbar,
 } from "@mui/x-data-grid";
 import styles from "../../../components/adminPanel/admin.module.css";
 import {
+  useDeletePaymentPlanMutation,
   usePaymentPlanUpdate,
   usePaymentsPlans,
   usePlanSyncMutation,
 } from "../../../backend/payment/payment.query";
 import dayjs from "dayjs";
 import { notifications } from "@mantine/notifications";
-import { IconInfoCircle, IconRefresh } from "@tabler/icons-react";
+import { IconInfoCircle, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { PaymentPlanStatus } from "../../../types/enums";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
+import { useDisclosure } from "@mantine/hooks";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { showLoadingToast } from "../../../utils/notifications";
 
 const RazorpayPlans = () => {
   const syncPlans = usePlanSyncMutation();
@@ -32,6 +37,22 @@ const RazorpayPlans = () => {
 
   const handleUpdatePlans = (updatedData) => {
     planUpdateMutate.mutate(updatedData);
+  };
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const deletePaymentPlanMutation = useDeletePaymentPlanMutation();
+
+  const [
+    openedDeleteModal,
+    { open: openDeleteModal, close: closeDeleteModal },
+  ] = useDisclosure(false);
+  const handleDeleteClick = () => {
+    const planIdLocal = Array.isArray(plans?.data)
+      ? plans?.data?.find((plan) => plan?.planId == selectedPlanId)?.id
+      : "";
+    deletePaymentPlanMutation.mutate({
+      id: planIdLocal,
+      planId: selectedPlanId,
+    });
   };
   const columns: GridColDef[] = [
     {
@@ -73,6 +94,30 @@ const RazorpayPlans = () => {
       ],
     },
     { field: "description", headerName: "Description", width: 150 },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
+      width: 100,
+      cellClassName: "actions",
+      getActions: ({ id, row }) => {
+        return [
+          <GridActionsCellItem
+            icon={<IconTrash />}
+            label="Delete"
+            disabled={[
+              PaymentPlanStatus.ACTIVE,
+              PaymentPlanStatus.LIVE,
+            ].includes(row.status)}
+            onClick={() => {
+              setSelectedPlanId(id as string);
+              openDeleteModal();
+            }}
+            color="inherit"
+          />,
+        ];
+      },
+    },
   ];
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
@@ -140,6 +185,24 @@ const RazorpayPlans = () => {
           }}
         />
       </Box>
+      <ConfirmationModal
+        opened={openedDeleteModal}
+        onClose={closeDeleteModal}
+        forDeleteFunctionality
+        confirmLabel="Delete"
+        headerTitle="Delete RazorPay Plan"
+        onConfirm={() => {
+          showLoadingToast(
+            "Hold on..Plan is getting deleted",
+            "plan",
+            true,
+            "Deleting Plan",
+          );
+          handleDeleteClick();
+        }}
+        headerLabel="Are you sure to delete this plan?"
+        closeLabel="cancel"
+      />
     </Stack>
   );
 };

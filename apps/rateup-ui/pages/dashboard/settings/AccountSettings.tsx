@@ -1,4 +1,12 @@
-import { Title, Group, Text, Stack, Blockquote, Tabs } from "@mantine/core";
+import {
+  Title,
+  Group,
+  Text,
+  Stack,
+  Blockquote,
+  Tabs,
+  ScrollAreaAutosize,
+} from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import {
@@ -48,7 +56,12 @@ const AccountSettings = () => {
   const createCheckout = useCreateCheckoutSession(setIsLoading, setOrder);
   const { user } = useUser();
 
-  const { data: subscription, isPending } = useSubscription();
+  const {
+    data: subscription,
+    isPending,
+    refetch,
+    isRefetching,
+  } = useSubscription();
   const { data: orders, refetch: refreshOrders } = useUserOrgOrders();
 
   const { cart, reset } = useRouteAndCartStore();
@@ -150,6 +163,7 @@ const AccountSettings = () => {
         styles={{ tab: { fontSize: "18px", borderBottomWidth: "3px" } }}
         value={activeTab}
         onChange={(value) => setActiveTab(value as AccountSettingsTabs)}
+        px={"md"}
       >
         <Tabs.List w={"fit-content"}>
           {Object.values(AccountSettingsTabs).map((tab) => (
@@ -162,22 +176,30 @@ const AccountSettings = () => {
             </Tabs.Tab>
           ))}
         </Tabs.List>
-        <Tabs.Panel value={AccountSettingsTabs.UsageStats} py={"xl"} px={"lg"}>
-          <UsageStats />
-        </Tabs.Panel>
-        <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
-          <Billing
-            subscription={subscription}
-            processingPayment={processingPayment}
-          />
-        </Tabs.Panel>
-        <Tabs.Panel
-          value={AccountSettingsTabs.OrderHistory}
-          py={"xl"}
-          px={"lg"}
-        >
-          <OrderHistory orders={orders?.data} />
-        </Tabs.Panel>
+        <ScrollAreaAutosize h={"70vh"} scrollbarSize={7}>
+          <Tabs.Panel
+            value={AccountSettingsTabs.UsageStats}
+            py={"xl"}
+            px={"lg"}
+          >
+            <UsageStats subscription={subscription} />
+          </Tabs.Panel>
+          <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
+            <Billing
+              subscription={subscription}
+              processingPayment={processingPayment}
+              refetch={refetch}
+              isRefetching={isRefetching}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel
+            value={AccountSettingsTabs.OrderHistory}
+            py={"xl"}
+            px={"lg"}
+          >
+            <OrderHistory orders={orders?.data} />
+          </Tabs.Panel>
+        </ScrollAreaAutosize>
       </Tabs>
 
       {/*....... Order confirmation Modal ......*/}

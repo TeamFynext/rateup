@@ -34,13 +34,11 @@ export default function ConfirmationModal({
   deleteQuotion,
 }: ConfirmationModalProps) {
   const [email, setEmail] = useState("");
-  const {
-    user: { email: currentUserMail },
-  } = useUser();
+  const { user } = useUser();
   function confirmation(e) {
     e.stopPropagation();
     if (includeEmailConfirmation) {
-      if (email === currentUserMail) {
+      if (email === user?.email) {
         onConfirm();
         onClose();
       } else {

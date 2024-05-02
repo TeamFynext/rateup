@@ -52,3 +52,7 @@ export async function getAllPaymentOrders() {
   let res = await axiosClient.get(`${PAYMENT_URL}orders/all`);
   return res?.data;
 }
+
+export async function deletePaymentPlan(data: { id: string; planId: string }) {
+  return await axiosClient.delete(`${PAYMENT_URL}`, { data });
+}
