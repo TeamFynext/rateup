@@ -7,6 +7,7 @@ export const SurveySection = ({
   largeScreen,
   handlePlanSelection,
   plans,
+  freePlan,
   currencySymbol,
 }) => {
   const surveyPlan = plans
@@ -25,10 +26,21 @@ export const SurveySection = ({
   }
   const inversePeriod =
     surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
+  if (freePlan?.length > 0) {
+    freePlan[0].paymentPlan = {
+      amount: 0,
+      currency: "",
+      period:
+        surveyPlan?.[0]?.paymentPlan?.period === "yearly"
+          ? "yearly"
+          : "monthly",
+    };
+  }
+  let surveyPlans = [...freePlan, ...surveyPlan];
 
   return (
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
-      {surveyPlan?.map((data, index) => {
+      {surveyPlans?.map((data, index) => {
         return (
           <Stack align="center" gap={0} pos={"relative"} key={data?.id}>
             <Box
@@ -55,6 +67,7 @@ export const SurveySection = ({
               data={data}
               handlePlanSelection={handlePlanSelection}
               index={index}
+              totalItems={surveyPlans?.length}
               inversePeriod={inversePeriod}
               largeScreen={largeScreen}
             />
