@@ -61,6 +61,7 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { notifications } from "@mantine/notifications";
+import _ from "lodash";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -168,12 +169,13 @@ function ElementEditor({
     }
   }
 
+  const formInitialValues = getInitialQuestionValues(
+    question,
+    surveyLanguages,
+    SurveyType.WaFlow,
+  );
   const form = useForm({
-    initialValues: getInitialQuestionValues(
-      question,
-      surveyLanguages,
-      SurveyType.WaFlow,
-    ),
+    initialValues: formInitialValues,
     validate: {
       title: (title) => {
         const value = title[selectedLanguage];
@@ -247,6 +249,10 @@ function ElementEditor({
   // TODO: defer error checking until user has entered some text
   labelInputProps.error = validateLabel(labelInputProps.value);
 
+  useEffect(() => {
+    if (formInitialValues.required !== form.values.required) handleSave();
+  }, [form.values.required]);
+
   return (
     <Stack
       style={{
@@ -293,7 +299,11 @@ function ElementEditor({
               placeholder="Enter question title here"
               maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
               {...form.getInputProps(`title.${selectedLanguage}`)}
+              onBlur={() => {
+                if (!_.isEqual(form.values, formInitialValues)) handleSave();
+              }}
             />
+
             <TextareaWithLengthTracker
               variant="unstyled"
               placeholder="Enter question description here"
@@ -308,9 +318,18 @@ function ElementEditor({
                 },
               }}
               maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
+              onBlur={() => {
+                if (!_.isEqual(form.values, formInitialValues)) handleSave();
+              }}
             />
 
-            <LabelTextInput {...labelInputProps} maxLength={labelMaxLength} />
+            <LabelTextInput
+              {...labelInputProps}
+              maxLength={labelMaxLength}
+              onBlur={() => {
+                if (!_.isEqual(form.values, formInitialValues)) handleSave();
+              }}
+            />
 
             <FlowQuestionExtraProps form={form} question={question} />
           </Stack>

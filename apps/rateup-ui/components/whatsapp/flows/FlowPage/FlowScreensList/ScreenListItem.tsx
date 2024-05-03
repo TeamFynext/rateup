@@ -9,6 +9,7 @@ import {
   ScrollAreaAutosize,
   Stack,
   Text,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
@@ -17,12 +18,13 @@ import {
   IconChevronRight,
   IconDeviceFloppy,
   IconGripVertical,
+  IconPencil,
   IconPlus,
   IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
 import {
   usePushToWaMutation,
@@ -53,6 +55,10 @@ import {
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import classNames from "classnames/bind";
+import styles from "./ScreenListIem.module.css";
+
+const cx = classNames.bind(styles);
 
 interface ScreenListItemProps {
   screen: WaFlowScreen;
@@ -77,8 +83,6 @@ function ScreenListItem({
   pageNo,
   handlers,
 }: Readonly<ScreenListItemProps>) {
-  const [editingItem, setEditingItem] = useState(null); // editing screen id (titleEdit)
-  const [editingItemForFooter, setEditingItemFooter] = useState(null);
   const {
     survey,
     flowJson,
@@ -99,7 +103,11 @@ function ScreenListItem({
   const [isOpen, { open, close }] = useDisclosure(false);
   const elements = getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]);
   const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
-  const [footerLabel, setFooterLabel] = useState(
+
+  const [screenTitleInputState, setScreenTitleInputState] = useState(
+    screen.title,
+  );
+  const [footerLabelInputState, setFooterLabelInputState] = useState(
     footerElement?.label ?? "Next",
   );
   const pushToWaMutation = usePushToWaMutation();
@@ -107,9 +115,13 @@ function ScreenListItem({
   useEffect(() => {
     if (flowJson?.screens) {
       setScreenNumber(pageNo);
-      setFooterLabel(footerElement?.label ?? "Next");
+      setFooterLabelInputState(footerElement?.label ?? "Next");
     }
   }, [flowJson?.screens, pageNo]);
+
+  useEffect(() => {
+    setScreenTitleInputState(screen.title);
+  }, [screen]);
 
   const handleDeleteScreen = () => {
     if (!flowEditable) return;
@@ -149,17 +161,6 @@ function ScreenListItem({
     });
   }
 
-  const handleButtonTextUpdate = () => {
-    if (!flowEditable) return;
-    updateFlowJson((draft) => {
-      const formEl = getFormObjFromScreenId(draft.screens, screen.id);
-      const footer = formEl.children.filter(
-        (data) => data.type === "Footer",
-      )?.[0];
-      footer.label = footerLabel;
-    });
-  };
-
   function handleAddElementClick() {
     if (!flowEditable) return;
     const elements = getFlowFormElementsFromScreen(screen);
@@ -182,6 +183,33 @@ function ScreenListItem({
     const element = elements[index];
     onElementClick(element.id, screen.id);
   }
+
+  function handleScreenTitleInputChange(e) {
+    setScreenTitleInputState(e.target.value);
+  }
+
+  function handleScreenTitleInputBlur() {
+    updateScreenTitle(screenTitleInputState);
+  }
+
+  function handleFooterLabelInputChange(e) {
+    setFooterLabelInputState(e.target.value);
+  }
+
+  function handleFooterLabelInputBlur() {
+    if (!flowEditable) return;
+    updateFlowJson((draft) => {
+      const formEl = getFormObjFromScreenId(draft.screens, screen.id);
+      const footer = formEl.children.filter(
+        (data) => data.type === "Footer",
+      )?.[0];
+      footer.label = footerLabelInputState;
+    });
+  }
+
+  const screenTitleInputRef = useRef(null);
+  const footerLabelInputRef = useRef(null);
+
   return (
     <Stack p="xs" key={screen?.id} justify="space-between" h={"100%"}>
       {!screen ? (
@@ -219,7 +247,10 @@ function ScreenListItem({
               confirmLabel="Delete"
               onConfirm={handleDeleteScreen}
             />
-            <Group gap={5}>
+            <Group
+              gap={5}
+              className={styles["screen-title-input-and-chevrons-container"]}
+            >
               <Tooltip label="Previous Screen">
                 <ActionIcon
                   onClick={handlers.decrement}
@@ -231,7 +262,7 @@ function ScreenListItem({
                 </ActionIcon>
               </Tooltip>
 
-              <EditableText
+              {/* <EditableText
                 label={`Screen ${pageNo + 1}`}
                 text={screen.title}
                 setText={updateScreenTitle}
@@ -244,7 +275,34 @@ function ScreenListItem({
                   fontWeight: "bold",
                   fontSize: "1.2rem",
                 }}
+              /> */}
+
+              <TextInput
+                ref={screenTitleInputRef}
+                className={styles["text-input"]}
+                label={`Screen ${pageNo + 1}`}
+                value={screenTitleInputState}
+                onChange={handleScreenTitleInputChange}
+                readOnly={!flowEditable}
+                placeholder="Section title (Required if more than one section is added)"
+                onBlur={handleScreenTitleInputBlur}
+                rightSection={
+                  flowEditable && (
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => screenTitleInputRef.current?.focus()}
+                    >
+                      <IconPencil size={20} />
+                    </ActionIcon>
+                  )
+                }
+                onKeyUp={(e) => {
+                  if (e.code === "Enter") {
+                    screenTitleInputRef.current?.blur();
+                  }
+                }}
               />
+
               <Tooltip label="Next Screen">
                 <ActionIcon
                   onClick={handlers.increment}
@@ -351,20 +409,28 @@ function ScreenListItem({
           </Box>
           <Flex w={"100%"} mt={"md"} gap={"xs"}>
             <Stack align="center" w={"100%"} gap={4}>
-              <EditableText
-                text={footerLabel}
-                setText={setFooterLabel}
-                setEditingItem={setEditingItemFooter}
-                id={screen.title}
-                editMode={flowEditable && editingItemForFooter === screen.title}
+              <TextInput
+                ref={footerLabelInputRef}
+                className={cx("text-input", "footer-label-input")}
+                value={footerLabelInputState}
+                onChange={handleFooterLabelInputChange}
+                readOnly={!flowEditable}
                 placeholder="Next button text"
-                handleOnFunction={false}
-                handleButtonTextUpdate={handleButtonTextUpdate}
-                size="md"
-                radius={"lg"}
-                style={{
-                  flex: 1,
-                  maxWidth: 300,
+                onBlur={handleFooterLabelInputBlur}
+                rightSection={
+                  flowEditable && (
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => footerLabelInputRef.current?.focus()}
+                    >
+                      <IconPencil size={20} />
+                    </ActionIcon>
+                  )
+                }
+                onKeyUp={(e) => {
+                  if (e.code === "Enter") {
+                    footerLabelInputRef.current?.blur();
+                  }
                 }}
               />
               <Text fz={"xs"}>Next button text</Text>
