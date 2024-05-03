@@ -1,5 +1,12 @@
 import React from "react";
-import { Badge, Checkbox, CheckboxProps, Image } from "@mantine/core";
+import {
+  Badge,
+  Checkbox,
+  CheckboxProps,
+  HoverCard,
+  Image,
+  Text,
+} from "@mantine/core";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -9,11 +16,14 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { fallbackImage } from "../../../utils/constants";
 import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
 import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
+import { ColumnDef } from "@tanstack/react-table";
+import { CampaignParticipantStatus } from "../../../types/enums";
 
-export const selectCheckBox = [
+export const selectCheckBox: ColumnDef<any>[] = [
   {
     id: "select",
     enableSorting: false,
+    maxSize: 10,
     header: ({ table }) => (
       <IndeterminateCheckbox
         {...{
@@ -37,7 +47,7 @@ export const selectCheckBox = [
     ),
   },
 ];
-const contactDetailsColumn = [
+const contactDetailsColumn: ColumnDef<any>[] = [
   {
     header: () => "Name",
     accessorKey: "name",
@@ -143,7 +153,7 @@ export const contactGroupColumn = [
   },
 ];
 
-export const contactParticipentColumn = [
+export const contactParticipentColumn: ColumnDef<any>[] = [
   {
     header: () => "Name",
     accessorKey: "name",
@@ -173,6 +183,12 @@ export const contactParticipentColumn = [
         {(info.getValue() as string) ?? "NA"}
       </Badge>
     ),
+  },
+  {
+    header: () => "participants count",
+    accessorKey: "_count.campaignParticipants",
+    id: "count",
+    cell: (info) => info.getValue(),
   },
   {
     header: () => "Created",
@@ -243,23 +259,44 @@ export const contactParticipentDetailColumn = [
   },
   {
     header: () => "Status",
-    accessorKey: "status",
-    cell: (info) => (
-      <Badge
-        color={renderBadge(info.getValue()).color}
-        variant={renderBadge(info.getValue()).variant}
-        radius={"sm"}
-        size={"lg"}
-        tt={"capitalize"}
-      >
-        {(info.getValue() as string) ?? "NA"}
-      </Badge>
-    ),
+    accessorFn: (row) => row,
+    id: "status",
+    cell: (info) =>
+      info?.getValue()?.status === CampaignParticipantStatus.FAILED ? (
+        <HoverCard width={280} shadow="md" withArrow>
+          <HoverCard.Target>
+            <Badge
+              color={renderBadge(info.getValue().status).color}
+              variant={renderBadge(info.getValue().status).variant}
+              radius={"sm"}
+              size={"lg"}
+              tt={"capitalize"}
+            >
+              {(info.getValue().status as string) ?? "NA"}
+            </Badge>
+          </HoverCard.Target>
+          <HoverCard.Dropdown>
+            <Text size="sm">{info.getValue()?.errorMessage}</Text>
+          </HoverCard.Dropdown>
+        </HoverCard>
+      ) : (
+        <Badge
+          color={renderBadge(info.getValue().status).color}
+          variant={renderBadge(info.getValue().status).variant}
+          radius={"sm"}
+          size={"lg"}
+          tt={"capitalize"}
+        >
+          {(info.getValue().status as string) ?? "NA"}
+        </Badge>
+      ),
   },
   {
-    header: () => "Error message",
-    accessorKey: "errorMessage",
-    cell: (info) => info.getValue(),
+    header: () => "SentAt",
+    accessorKey: "sentAt",
+    cell: (info) =>
+      info.getValue() &&
+      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
   },
   {
     header: () => "Created",
@@ -275,9 +312,9 @@ export const contactParticipentDetailColumn = [
     id: "action",
     cell: (info) => (
       <CampaignParticipantMenu
-        participantId={info?.row?.original?.id}
-        status={info?.row?.original?.status}
-        id={info?.row?.original?.campaignId}
+        participantId={info?.getValue()?.id}
+        status={info?.getValue()?.status}
+        id={info?.getValue()?.campaignId}
       />
     ),
   },

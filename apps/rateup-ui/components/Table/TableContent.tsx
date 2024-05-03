@@ -39,7 +39,11 @@ const TableLayout = ({
               {table.getHeaderGroups().map((headerGroup, index) => (
                 <Table.Tr key={index}>
                   {headerGroup.headers.map((header, headerIndex) => (
-                    <Table.Th key={headerIndex} colSpan={header.colSpan}>
+                    <Table.Th
+                      key={headerIndex}
+                      colSpan={header.colSpan}
+                      style={{ width: `${header.getSize()}px` }}
+                    >
                       {header.isPlaceholder ? null : (
                         <>
                           <UnstyledButton

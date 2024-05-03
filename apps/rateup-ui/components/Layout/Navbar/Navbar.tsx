@@ -1,22 +1,49 @@
+import { Anchor, Breadcrumbs, Group, Text } from "@mantine/core";
+import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React from "react";
-import { Breadcrumbs, Group, Text } from "@mantine/core";
-import Link from "next/link";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { IconChevronRight, IconHome, IconCrown } from "@tabler/icons-react";
-
 import styles from "./Navbar.module.css";
+import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import ExpiryComponent from "../../Premium/ExpiryComponent";
-import { useSubscription } from "../../../backend/subscription/subscription.query";
 import ColorSchemaButton from "../../theme/ColorSchemaButton";
+import Link from "next/link";
 
 export const Navbar = () => {
   const router = useRouter();
   const { pathname, query } = router;
-  const pathParts = pathname.split("/").filter((path) => path);
+  let pathParts = pathname.split("/").filter((path) => path);
   const routeParams = useRouteParams();
   const { data: subscription, isPending } = useSubscription();
+  const getUrl = (index, data) => {
+    let paramName = data;
+    if (data.startsWith("[") && data.endsWith("]")) {
+      paramName = data.slice(1, -1);
+    }
+    return data.startsWith("[") && data.endsWith("]")
+      ? `/${pathParts?.slice(0, index + 1)?.join("/")}/${query?.[paramName]}`
+      : `/${pathParts?.slice(0, index + 2)?.join("/")}`;
+  };
+  const items = pathParts
+    ?.slice(1)
+    ?.map((data, index) => ({
+      title: replaceRouteParameter(data, query, routeParams),
+      href: getUrl(index, data),
+    }))
+    ?.map((item, index) => (
+      <Link href={item.href} key={index} className={styles.breadcrumbsLink}>
+        <Text
+          size={"14px"}
+          c={
+            index === pathParts.length - 2
+              ? "var(--mantine-primary-color-filled)"
+              : "dark.2"
+          }
+        >
+          {item.title}
+        </Text>
+      </Link>
+    ));
   return (
     <Group justify="space-between" pr={"lg"} h={37}>
       <Breadcrumbs
@@ -24,29 +51,10 @@ export const Navbar = () => {
           <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
         }
       >
-        <Link href="/dashboard" className={styles["link"]}>
+        <Link href="/dashboard">
           <IconHome size={23} color="var(--mantine-color-gray-6)" />
         </Link>
-        {pathParts.map((part, index) => {
-          const paramName = part?.slice(1, -1);
-          part = replaceRouteParameter(part, query, routeParams);
-          if (part == "dashboard") return;
-          return (
-            <Link
-              className={styles["link"]}
-              href={`/${pathParts.slice(0, index).join("/")}/${query?.[paramName]}`}
-              key={index}
-              target="_blank"
-            >
-              <Text
-                c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
-                size={"14px"}
-              >
-                {part.charAt(0).toUpperCase() + part.slice(1)}
-              </Text>
-            </Link>
-          );
-        })}
+        {items}
       </Breadcrumbs>
       {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
       {!router.asPath.includes("/dashboard/settings?activeTab=account") && (

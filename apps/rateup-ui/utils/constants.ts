@@ -2,7 +2,8 @@ import { QuestionType, WaFlowFormElementType as wft } from "../types/enums";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`;
-export const isProduction = process.env.NODE_ENV === "production";
+export const isProduction =
+  process.env.NEXT_PUBLIC_FRONTEND_URL === "https://rateup.app";
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const ContactQuestions = [
