@@ -45,8 +45,8 @@ import {
 } from "../../../backend/whatsapp/settings/waSettings.query";
 
 export enum ContactTabs {
-  CONTACTS = "contacts",
   GROUPS = "groups",
+  CONTACTS = "contacts",
   SETTINGS = "settings",
 }
 export default function Contacts() {
@@ -55,7 +55,7 @@ export default function Contacts() {
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [contactTags, setContactTags] = useState([]);
   const router = useRouter();
-  const { tab = ContactTabs.CONTACTS } = router.query as { tab: string };
+  const { tab = ContactTabs.GROUPS } = router.query as { tab: string };
   let activeTab = tab?.toString() as ContactTabs;
 
   const { isLoading: isLoadingContacts, data: contactData } = useContacts() as {

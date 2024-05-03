@@ -60,11 +60,8 @@ export default function MenuById({ categories: initialCategories }) {
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
     null,
   );
-
-  const { tab } = router.query;
-  const [activeTab, setActiveTab] = useState<TabEnum | null>(
-    tab == TabEnum.Share ? TabEnum.Share : TabEnum.Menu,
-  );
+  const { tab = TabEnum.Menu } = router.query as { tab: string };
+  let activeTab = tab?.toString() as TabEnum;
 
   const {
     isLoading: isLoadingMenu,
@@ -78,15 +75,6 @@ export default function MenuById({ categories: initialCategories }) {
     data: categories,
   } = useCategories(menuId, initialCategories);
   let filteredCategory = categories;
-  useEffect(() => {
-    if (
-      tab &&
-      tab !== activeTab &&
-      Object.values(TabEnum).includes(tab as any)
-    ) {
-      setActiveTab(tab as TabEnum);
-    }
-  }, [tab]);
 
   useEffect(() => {
     update({ menuId: menuLandingData?.menu?.name });
@@ -123,7 +111,6 @@ export default function MenuById({ categories: initialCategories }) {
         value={activeTab}
         onChange={(value) => {
           router.push(`${menuId}?tab=${value}`);
-          setActiveTab(value as TabEnum);
         }}
       >
         <Grid columns={10} mb="md">

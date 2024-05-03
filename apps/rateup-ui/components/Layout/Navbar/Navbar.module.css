@@ -1,11 +1,3 @@
-.link {
-  text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
-}
-
 .navbar {
   z-index: 1;
   box-shadow:

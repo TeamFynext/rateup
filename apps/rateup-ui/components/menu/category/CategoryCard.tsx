@@ -70,8 +70,8 @@ export function CategoryCard({
 
   let itemsSearch = [];
   if (searchText !== "") {
-    itemsSearch = items?.filter(
-      (item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
+    itemsSearch = items?.filter((item) =>
+      item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
     );
   } else {
     itemsSearch = items;
@@ -83,7 +83,7 @@ export function CategoryCard({
 
   if (isLoading || isError) {
     return (
-      <Paper>
+      <PaperLayout>
         <CategoryCardHeader
           handleEdit={handleEdit}
           category={category}
@@ -92,7 +92,7 @@ export function CategoryCard({
           toggleSwapOrder={toggleSwapOrderCategory}
         />
         <RateupLoader m="sm" />
-      </Paper>
+      </PaperLayout>
     );
   }
 
