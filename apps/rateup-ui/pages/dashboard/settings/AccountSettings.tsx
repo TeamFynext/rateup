@@ -25,6 +25,7 @@ import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { IconInfoCircle } from "@tabler/icons-react";
 import UsageStats from "./UsageStats";
+import { useRouter } from "next/router";
 
 export enum AccountSettingsTabs {
   UsageStats = "Usage Stats",
@@ -55,6 +56,7 @@ const AccountSettings = () => {
   const [order, setOrder] = useState(null);
   const createCheckout = useCreateCheckoutSession(setIsLoading, setOrder);
   const { user } = useUser();
+  const router = useRouter();
 
   const {
     data: subscription,
@@ -63,6 +65,11 @@ const AccountSettings = () => {
     isRefetching,
   } = useSubscription();
   const { data: orders, refetch: refreshOrders } = useUserOrgOrders();
+
+  useEffect(() => {
+    if (router?.query?.activeTab === "account")
+      setActiveTab(AccountSettingsTabs.Billing);
+  }, [router.query?.activeTab]);
 
   const { cart, reset } = useRouteAndCartStore();
   const [selectedRateupPlan, setselectedRateupPlan] = useState("");

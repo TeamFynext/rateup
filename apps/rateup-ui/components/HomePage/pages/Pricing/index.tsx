@@ -43,8 +43,11 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
     if (!session) route = "/login";
     router.push(route);
   };
-
   if (isPending) return <RateupLoader />;
+
+  const freePlan = session
+    ? []
+    : data?.filter((plan) => plan?.displayName?.includes("FREE"));
 
   const plans = data?.filter(
     (item) =>
@@ -148,6 +151,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
             plans={updatedPlans}
+            freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
         ) : (
@@ -155,6 +159,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
             plans={updatedPlans}
+            freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
         )}

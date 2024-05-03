@@ -20,9 +20,11 @@ import { PlanCardWidth, Title4 } from "../Utils/constants";
 import ButtonStyles from "./Button.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import styles from "./Modal.module.css";
+import { useRouter } from "next/router";
 
 const PlanCard = ({
   index,
+  totalItems,
   mainColor = null,
   currencySymbol,
   data,
@@ -39,6 +41,7 @@ const PlanCard = ({
     if (opened) setIsIframeLoading(true);
   }, [opened]);
 
+  const router = useRouter();
   const upadateLoadingStateOfIframe = useCallback(() => {
     setIsIframeLoading(false);
   }, []);
@@ -92,7 +95,7 @@ const PlanCard = ({
           </Stack>
         </Box>
       </Card.Section>
-      {(menuPage && index === 3) || (!menuPage && index === 2) ? (
+      {totalItems - 1 === index ? (
         <Stack justify="space-around" h="100%">
           <Center
             c={cardMainColor}
@@ -127,18 +130,22 @@ const PlanCard = ({
               radius={"xl"}
               className={ButtonStyles["button-hover"]}
               size="md"
-              onClick={() =>
-                handlePlanSelection({
-                  id: data?.id,
-                  name: data?.displayName,
-                  currency: data?.currency,
-                  description: data?.description,
-                  amount: data?.paymentPlan?.amount,
-                  currencySymbol: currencySymbol,
-                  period: data?.paymentPlan?.period,
-                  planId: data?.paymentPlan?.planId,
-                })
-              }
+              onClick={() => {
+                if (data?.displayName.includes("FREE")) {
+                  router.push("/signup");
+                } else {
+                  handlePlanSelection({
+                    id: data?.id,
+                    name: data?.displayName,
+                    currency: data?.currency,
+                    description: data?.description,
+                    amount: data?.paymentPlan?.amount,
+                    currencySymbol: currencySymbol,
+                    period: data?.paymentPlan?.period,
+                    planId: data?.paymentPlan?.planId,
+                  });
+                }
+              }}
             />
           </Center>
         </Stack>
