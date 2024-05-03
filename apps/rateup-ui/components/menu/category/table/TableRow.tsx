@@ -88,13 +88,11 @@ const TableRow = ({
         )}
       </Table.Td>
       <Table.Td>
-        <Text>
-          <HoverCardComponent
-            content={item?.description}
-            lineClamp={3}
-            c={"dimmed"}
-          />
-        </Text>
+        <HoverCardComponent
+          content={item?.description}
+          lineClamp={3}
+          c={"dimmed"}
+        />
       </Table.Td>
       <Table.Td>
         <Anchor href={item?.videoUrl} target="_blank">
