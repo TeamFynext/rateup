@@ -4,6 +4,9 @@ import { useDisclosure } from "@mantine/hooks";
 import styles from "./BookADemoContactForm.module.css";
 import modalstyles from "./ModalStyles.module.css";
 import { useCallback, useEffect, useState } from "react";
+import { isProduction } from "../../../../utils/constants";
+import { analyseEvent } from "../../../../utils/gtag";
+import { fbEvent } from "../../../../utils/fbpixel";
 
 type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
@@ -54,7 +57,23 @@ function BookDemoContactForm({
           />
         )}
       </Modal>
-      <Button className="book-a-demo-btn" onClick={open} {...buttonProps}>
+      <Button
+        className="book-a-demo-btn"
+        onClick={() => {
+          if (isProduction) {
+            analyseEvent({
+              action: "button_click",
+              category: "book_demo",
+              label: "Clicked on Book demo button in home page",
+            });
+            fbEvent("BookDemo", {
+              label: "Clicked on Book demo button in home page",
+            });
+          }
+          open();
+        }}
+        {...buttonProps}
+      >
         Book a Demo
       </Button>
     </Flex>

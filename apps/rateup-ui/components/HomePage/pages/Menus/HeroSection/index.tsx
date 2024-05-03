@@ -4,6 +4,9 @@ import CustomMantineButton from "../../../components/Button";
 import { IconArrowRight } from "@tabler/icons-react";
 import styles from "./HeroSection.module.css";
 import Image from "next/image";
+import { isProduction } from "../../../../../utils/constants";
+import { analyseEvent } from "../../../../../utils/gtag";
+import { fbEvent } from "../../../../../utils/fbpixel";
 
 function HeroSection() {
   return (
@@ -18,7 +21,23 @@ function HeroSection() {
           <span className={styles["para-span"]}>digital menus.</span>
         </Text>
         <Flex className={styles["join-see-sample-btns-container"]}>
-          <CustomMantineButton whiteBackgroundGradientText>
+          <CustomMantineButton
+            whiteBackgroundGradientText
+            onClick={() => {
+              if (isProduction) {
+                analyseEvent({
+                  action: "button_click",
+                  category: "digital_menu",
+                  label:
+                    "Clicked on join now button in digital menu section of home page",
+                });
+                fbEvent("DigitalMenuJoinNow", {
+                  label:
+                    "Clicked on join now button in digital menu section of home page",
+                });
+              }
+            }}
+          >
             Join Now
           </CustomMantineButton>
 
@@ -27,6 +46,19 @@ function HeroSection() {
               className={styles["see-sample-button"]}
               rightSection={<IconArrowRight />}
               classNames={{ section: styles["see-sample-buttton-right-arrow"] }}
+              onClick={() => {
+                if (isProduction)
+                  analyseEvent({
+                    action: "button_click",
+                    category: "digital_menu",
+                    label:
+                      "Clicked on see now button in digital menu section of home page",
+                  });
+                fbEvent("DigitalMenuSeeNow", {
+                  label:
+                    "Clicked on see now button in digital menu section of home page",
+                });
+              }}
             >
               See Sample
             </Button>

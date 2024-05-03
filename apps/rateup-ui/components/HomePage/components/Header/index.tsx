@@ -11,6 +11,9 @@ import { useRouter } from "next/router";
 import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
 import classNames from "classnames/bind";
 import styles from "./Header.module.css";
+import { isProduction } from "../../../../utils/constants";
+import { analyseEvent } from "../../../../utils/gtag";
+import { fbEvent } from "../../../../utils/fbpixel";
 
 const cx = classNames.bind(styles);
 
@@ -41,7 +44,24 @@ function Header({ className = "" }) {
         <LoginSignupLinks />
       ) : (
         <Flex className={cx("join-now-btn-container")}>
-          <Button>Join Now</Button>
+          <Button
+            onClick={() => {
+              if (isProduction) {
+                analyseEvent({
+                  action: "button_click",
+                  category: "digital_menu",
+                  label:
+                    "Clicked on join now button in digital menu section of home page",
+                });
+                fbEvent("DigitalMenuJoinNow", {
+                  label:
+                    "Clicked on join now button in digital menu section of home page",
+                });
+              }
+            }}
+          >
+            Join Now
+          </Button>
         </Flex>
       )}
     </Flex>
