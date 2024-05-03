@@ -7,6 +7,9 @@ interface RouteParamsState {
   campaignId: string;
   collectionId: string;
   shortUrlId: string;
+  menuId: string;
+  templateId: string;
+  dbFlowId: string;
 }
 
 interface RouteParamsContextData {
@@ -22,6 +25,9 @@ const RouteParamsContext = createContext<RouteParamsContextData>({
     campaignId: "",
     collectionId: "",
     shortUrlId: "",
+    menuId: "",
+    templateId: "",
+    dbFlowId: "",
   },
   update: () => {},
 });
@@ -48,6 +54,9 @@ export const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({
     campaignId: "Campaign Name",
     collectionId: "Collection Name",
     shortUrlId: "LandingPage Name",
+    menuId: "Menu Name",
+    templateId: "Template Name",
+    dbFlowId: "Flow Name",
   });
 
   return (

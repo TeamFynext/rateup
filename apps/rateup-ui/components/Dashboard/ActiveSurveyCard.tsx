@@ -55,8 +55,8 @@ export default function ActiveSurveyCard({
           {[
             { title: "Responses", value: responsesCount ? responsesCount : 0 },
             { title: "Visited", value: visitedCount ? visitedCount : 0 },
-          ].map(({ title, value }) => (
-            <Stack style={{ flex: 1 }}>
+          ].map(({ title, value }, index) => (
+            <Stack style={{ flex: 1 }} key={index}>
               <Title
                 style={{
                   textAlign: "center",

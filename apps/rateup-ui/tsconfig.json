@@ -13,7 +13,8 @@
     "isolatedModules": true,
     "incremental": true,
     "strict": false,
-    "typeRoots": ["./types"],
+    "typeRoots": ["./types", "node_modules/@types"],
+    "types": ["gtag.js"],
     "jsx": "preserve"
   },
   "include": [

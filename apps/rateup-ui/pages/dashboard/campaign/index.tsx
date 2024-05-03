@@ -47,8 +47,7 @@ export default function CampaignList() {
   const filteredCampaignsdata =
     selectedTeam == "all" || !selectedTeam // filtering by team
       ? campaignData?.data
-      : campaignDataByTeam?.data;
-
+      : campaignDataByTeam?.data ?? [];
   const filteredCampaigns = (
     searchText
       ? filteredCampaignsdata.filter(

@@ -115,7 +115,6 @@ export default function Layout({ children }) {
               </NavControlContext.Provider>
             </Flex>
           </Flex>
-          {/* <ChatBot/> */}
           <FocusMode focus={focus} toggleFocus={toggleFocus} />
           <ReportBug />
         </Flex>

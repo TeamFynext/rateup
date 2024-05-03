@@ -35,6 +35,11 @@ import { useRouter } from "next/router";
 import { lexend300, notoColorEmogi } from "../utils/fonts";
 import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
 import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
+import GoogleAnalytics from "../components/Analytics/GoogleAnalytics";
+import { pageView } from "../utils/gtag";
+import { isProduction } from "../utils/constants";
+import FacebookPixel from "../components/Analytics/FacebookPixel";
+import { fbPageview } from "../utils/fbpixel";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -124,6 +129,13 @@ export default function App({
   }, [pageProps.fromSupertokens]);
 
   useEffect(() => {
+    const handleRouteChange = (url: URL) => {
+      if (isProduction) {
+        pageView(url);
+        fbPageview();
+      }
+    };
+
     const startNavigationProgress = () => {
       nprogress.start();
     };
@@ -138,11 +150,13 @@ export default function App({
 
     router.events.on("routeChangeStart", startNavigationProgress);
     router.events.on("routeChangeComplete", completeNavigationProgress);
+    router.events.on("routeChangeComplete", handleRouteChange);
     router.events.on("routeChangeError", resetNavigationProgress);
 
     return () => {
       router.events.off("routeChangeStart", startNavigationProgress);
       router.events.off("routeChangeComplete", completeNavigationProgress);
+      router.events.off("routeChangeComplete", handleRouteChange);
       router.events.off("routeChangeError", resetNavigationProgress);
     };
   }, [router]);
@@ -204,6 +218,12 @@ export default function App({
           </MantineProvider>
         </QueryClientProvider>
       </main>
+      {isProduction && (
+        <>
+          <GoogleAnalytics />
+          <FacebookPixel />
+        </>
+      )}
     </>
   );
 }
