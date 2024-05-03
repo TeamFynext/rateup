@@ -30,6 +30,7 @@ import { showErrorToast } from "../../../../utils/notifications";
 import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
 import StyledTabs from "../../../styled/StyledTabs/StyledTabs";
 import RateupLoader from "../../../Loaders/RateupLoader";
+import { useRouteParams } from "../../../../context/RouteParamsContext";
 
 function FlowPage() {
   const router = useRouter();
@@ -49,6 +50,7 @@ function FlowPage() {
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang, setSelectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
+  const { update } = useRouteParams();
 
   // initial data
   useEffect(() => {
@@ -58,7 +60,9 @@ function FlowPage() {
     if (!map && flow?.map) {
       updateMap(() => flow.map);
     }
-  }, [flow]);
+    update({ dbFlowId: flow?.name });
+  }, [flow, update]);
+
   useEffect(() => {
     if (surveyData) {
       updateSurvey(() => surveyData);

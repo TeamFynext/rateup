@@ -185,17 +185,17 @@ export const contactParticipentColumn = [
     id: "flow",
     accessorKey: "flowId",
     enableColumnFilter: false,
-    cell: (info) => (
-      <Link href={`whatsapp/flows/${info.getValue()}?tab=Result`}>
-        <RateupButtonPrimary
-          title="View"
-          rightIcon={<IconEye size={14} />}
-          size="xs"
-          variant="light"
-          disabled={!info.getValue()}
-        />
-      </Link>
-    ),
+    cell: (info) =>
+      info.getValue() && (
+        <Link href={`whatsapp/flows/${info.getValue()}?tab=Result`}>
+          <RateupButtonPrimary
+            title="View"
+            rightIcon={<IconEye size={14} />}
+            size="xs"
+            variant="light"
+          />
+        </Link>
+      ),
   },
   {
     header: () => "Detail View",
