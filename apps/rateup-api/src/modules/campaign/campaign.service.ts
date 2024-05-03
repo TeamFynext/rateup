@@ -65,11 +65,7 @@ export async function getCampaignsByOrgId(orgId: string) {
       },
       _count: {
         select: {
-          campaignParticipants: {
-            where: {
-              status: CampaignParticipantStatus.COMPLETED,
-            },
-          },
+          campaignParticipants: true,
         },
       },
     },
