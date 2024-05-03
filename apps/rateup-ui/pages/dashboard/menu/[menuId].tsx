@@ -31,6 +31,7 @@ import LandingPage from "../../../components/menu/landingPage/LandingPage";
 import { transformData } from "../../../components/menu/util/transformData";
 import Heading from "../../../components/styled/Heading/Heading";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
+import { useRouteParams } from "../../../context/RouteParamsContext";
 
 enum TabEnum {
   Menu = "Menu",
@@ -44,6 +45,7 @@ export default function MenuById({ categories: initialCategories }) {
   const router = useRouter();
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
+  const { update } = useRouteParams();
 
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [openUploadCsv, { close: closeUploadCsv, toggle }] =
@@ -85,6 +87,10 @@ export default function MenuById({ categories: initialCategories }) {
       setActiveTab(tab as TabEnum);
     }
   }, [tab]);
+
+  useEffect(() => {
+    update({ menuId: menuLandingData?.menu?.name });
+  }, [menuLandingData?.menu?.name, update]);
 
   if ((!categories && (isLoading || isError)) || isLoadingMenu) {
     return <RateupLoader />;

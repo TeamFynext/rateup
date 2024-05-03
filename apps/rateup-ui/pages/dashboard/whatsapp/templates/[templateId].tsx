@@ -68,6 +68,7 @@ import styles from "../../../../components/whatsapp/templates/Details/ButtonInpu
 import { uploadFile } from "../../../../utils/file-upload/upload";
 import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
 import { getErrorMessage } from "../../../../utils";
+import { useRouteParams } from "../../../../context/RouteParamsContext";
 
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +82,7 @@ export default function WhatsappTemplateById() {
   const contentHistory = useRef([]); // Ref to store content history
   const inputRef = useRef(null);
   const [value, toggle] = useToggle([true, false]);
+  const { update } = useRouteParams();
 
   const form = useForm<z.infer<typeof templateSchema>>({
     initialValues: {
@@ -101,6 +103,7 @@ export default function WhatsappTemplateById() {
     if (editingItem) {
       form.resetDirty();
       form.setValues(parseTemplate(editingItem));
+      update({ templateId: editingItem?.data?.name });
     }
   }, [editingItem]);
 

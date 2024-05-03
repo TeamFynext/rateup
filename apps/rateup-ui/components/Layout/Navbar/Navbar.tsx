@@ -28,13 +28,15 @@ export const Navbar = () => {
           <IconHome size={23} color="var(--mantine-color-gray-6)" />
         </Link>
         {pathParts.map((part, index) => {
+          const paramName = part?.slice(1, -1);
           part = replaceRouteParameter(part, query, routeParams);
           if (part == "dashboard") return;
           return (
             <Link
               className={styles["link"]}
-              href={`/${pathParts.slice(0, index + 1).join("/")}`}
+              href={`/${pathParts.slice(0, index).join("/")}/${query?.[paramName]}`}
               key={index}
+              target="_blank"
             >
               <Text
                 c={index === pathParts.length - 1 ? "blue.9" : "dark.2"}
