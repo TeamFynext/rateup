@@ -250,7 +250,8 @@ function ElementEditor({
   labelInputProps.error = validateLabel(labelInputProps.value);
 
   useEffect(() => {
-    if (formInitialValues.required !== form.values.required) handleSave();
+    if (formInitialValues.required !== form.values.required && form.isValid())
+      handleSave();
   }, [form.values.required]);
 
   return (
@@ -300,7 +301,11 @@ function ElementEditor({
               maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
               {...form.getInputProps(`title.${selectedLanguage}`)}
               onBlur={() => {
-                if (!_.isEqual(form.values, formInitialValues)) handleSave();
+                if (
+                  !_.isEqual(form.values, formInitialValues) &&
+                  form.isValid()
+                )
+                  handleSave();
               }}
             />
 
@@ -319,7 +324,11 @@ function ElementEditor({
               }}
               maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
               onBlur={() => {
-                if (!_.isEqual(form.values, formInitialValues)) handleSave();
+                if (
+                  !_.isEqual(form.values, formInitialValues) &&
+                  form.isValid()
+                )
+                  handleSave();
               }}
             />
 
@@ -327,7 +336,11 @@ function ElementEditor({
               {...labelInputProps}
               maxLength={labelMaxLength}
               onBlur={() => {
-                if (!_.isEqual(form.values, formInitialValues)) handleSave();
+                if (
+                  !_.isEqual(form.values, formInitialValues) &&
+                  form.isValid()
+                )
+                  handleSave();
               }}
             />
 

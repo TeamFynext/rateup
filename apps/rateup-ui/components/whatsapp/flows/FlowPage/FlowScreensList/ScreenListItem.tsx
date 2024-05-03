@@ -105,7 +105,7 @@ function ScreenListItem({
   const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
 
   const [screenTitleInputState, setScreenTitleInputState] = useState(
-    screen.title,
+    screen?.title,
   );
   const [footerLabelInputState, setFooterLabelInputState] = useState(
     footerElement?.label ?? "Next",
@@ -120,7 +120,7 @@ function ScreenListItem({
   }, [flowJson?.screens, pageNo]);
 
   useEffect(() => {
-    setScreenTitleInputState(screen.title);
+    setScreenTitleInputState(screen?.title);
   }, [screen]);
 
   const handleDeleteScreen = () => {
