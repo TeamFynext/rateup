@@ -28,7 +28,7 @@ export function YNForm() {
   };
 
   return (
-    <Group p={"xs"}>
+    <Group>
       <Box w={100}>
         <RateupButtonBlue
           size="md"

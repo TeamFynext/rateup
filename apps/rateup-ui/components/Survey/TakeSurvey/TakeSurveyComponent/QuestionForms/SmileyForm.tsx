@@ -6,7 +6,7 @@ import SmileyRating from "../SmileyRating";
 export function SmileyForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   return (
-    <Group p={"xs"}>
+    <Group>
       <SmileyRating updateResponse={updateResponse} response={response} />
     </Group>
   );

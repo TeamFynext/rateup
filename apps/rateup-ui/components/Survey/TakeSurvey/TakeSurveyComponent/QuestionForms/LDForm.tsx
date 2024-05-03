@@ -35,7 +35,7 @@ export function LDForm() {
   };
 
   return (
-    <Group p={"xs"} onClick={handleLikeOrDislikeClick}>
+    <Group onClick={handleLikeOrDislikeClick}>
       <Box w={150}>
         <RateupButtonBlue
           size="md"

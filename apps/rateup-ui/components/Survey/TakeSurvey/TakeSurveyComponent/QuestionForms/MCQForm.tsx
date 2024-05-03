@@ -98,7 +98,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   }
 
   return (
-    <Stack w={"100%"} mr="sm" py={"xs"} style={{ overflow: "hidden" }}>
+    <Stack w={"100%"} mr="sm" style={{ overflow: "hidden" }}>
       <Radio.Group value={selectedOp} onChange={handleSelectedOp} ref={scope}>
         <SingleSelectCard data={data} selectedValue={selectedOp} />
       </Radio.Group>
