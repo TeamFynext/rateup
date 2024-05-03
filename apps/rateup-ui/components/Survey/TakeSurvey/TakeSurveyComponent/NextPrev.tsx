@@ -11,6 +11,7 @@ import {
   Button,
   Center,
   Group,
+  Portal,
   Progress,
   RingProgress,
   Stack,
@@ -29,6 +30,7 @@ function NextPrev({
   survey,
   isSavingResponses,
   surveyThemeData,
+  errorTextDivRef,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -107,17 +109,25 @@ function NextPrev({
       id="next-prev-btn-div"
       className={styles["next-prev-btns-root-div"]}
     >
-      {selectedQ?.required && !response && (
-        <Text className={styles["message-p"]} c={themeStyles?.backgroundColor}>
-          *Choose an option or answer to proceed!
-        </Text>
+      {errorTextDivRef.current && (
+        <Portal target={errorTextDivRef.current}>
+          {selectedQ?.required && !response && (
+            <Text
+              className={styles["message-p"]}
+              c={themeStyles?.backgroundColor}
+            >
+              *Choose an option or answer to proceed!
+            </Text>
+          )}
+
+          {errorMsg && isErrorInput && (
+            <Text className={styles["message-p"]} c={"red"}>
+              Note: * {errorMsg}
+            </Text>
+          )}
+        </Portal>
       )}
 
-      {errorMsg && isErrorInput && (
-        <Text className={styles["message-p"]} c={"red"}>
-          Note: * {errorMsg}
-        </Text>
-      )}
       <Stack className={styles["next-prev-btns-and-progress-container"]}>
         <Group justify="flex-end">
           <ActionIcon

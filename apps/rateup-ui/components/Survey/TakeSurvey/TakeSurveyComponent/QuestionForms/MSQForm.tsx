@@ -84,7 +84,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   }
 
   return (
-    <Stack w={"100%"} mr="sm" py={"xs"} style={{ overflow: "hidden" }}>
+    <Stack w={"100%"} mr="sm" style={{ overflow: "hidden" }}>
       <Checkbox.Group
         value={selectedOp}
         onChange={handleSelectedOp}

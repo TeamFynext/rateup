@@ -41,13 +41,16 @@ import NextPrev from "./NextPrev";
 import QuestionDesc from "./QuestionDesc";
 import QuestionForm from "./QuestionForm";
 import QuestionTitle from "./QuestionTitle";
-import styles from "./TakeSurvey.module.css";
+import { QuestionType as Q } from "../../../../types/enums";
 import {
   checkGoogleReviewForQuestion,
   checkRaiseTicketIssueQuestion,
   submitSurvey,
+  validateResponse,
 } from "./util";
 import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
+import { validateQuestion } from "../../../../utils/validation";
+import styles from "./TakeSurvey.module.css";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -89,6 +92,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const updateCompleted = useUpdateCompletedMutation();
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
+
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
   const router = useRouter();
@@ -170,6 +174,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       window?.visualViewport.removeEventListener("resize", viewportHandler);
     };
   }, []);
+
+  const errorTextDivRef = useRef(null);
 
   if (!survey) {
     return (
@@ -420,7 +426,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
             className={styles["take-survey-root-div"]}
             ref={takeSurveyRootDivRef}
           >
-            <Stack justify="space-between" h={"100%"} gap={"0.625rem"}>
+            <Stack justify="space-between" h={"100%"} gap={"1rem"}>
               <ConfirmResponsesModal
                 opened={isConfirmResponsesModalOpen}
                 close={closeConfirmResponsesModal}
@@ -459,28 +465,21 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     exit={{ x: aPDirection > 0 ? "-100%" : "100%", opacity: 0 }}
                   >
                     <motion.div
+                      className={
+                        styles["question-and-error-text-containers-wrapper"]
+                      }
                       layout="position"
                       transition={{
                         type: "tween",
                         duration: 0.2,
                       }}
-                      style={{
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "0.625rem 0.3125rem",
-                      }}
                     >
                       <ScrollArea.Autosize
-                        mah={"100%"}
-                        p={0}
-                        m={0}
-                        w={"100%"}
                         type="never"
+                        className={styles["question-div"]}
                       >
                         <Box
-                          className={`${lexend.className}`}
-                          style={{ padding: "0.625rem 0" }}
+                          className={`${styles["title-desc-container"]} ${lexend.className}`}
                         >
                           <QuestionTitle
                             largeScreen={largeScreen}
@@ -501,6 +500,13 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
                         <QuestionForm />
                       </ScrollArea.Autosize>
+
+                      <Box
+                        className={styles["error-text-div"]}
+                        ref={errorTextDivRef}
+                      >
+                        {/* required, response error messages will be rendered here */}
+                      </Box>
                     </motion.div>
                   </motion.div>
                 </Box>
@@ -514,6 +520,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                 survey={survey}
                 surveyThemeData={surveyThemeData}
                 isSavingResponses={isSavingResponses || giftLoading}
+                errorTextDivRef={errorTextDivRef}
               />
             </Stack>
           </Container>
