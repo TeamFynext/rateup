@@ -7,6 +7,7 @@ export const MenuSection = ({
   largeScreen,
   handlePlanSelection,
   plans,
+  freePlan,
   currencySymbol,
 }) => {
   const menuPlan = plans
@@ -25,10 +26,22 @@ export const MenuSection = ({
   }
   const inversePeriod =
     menuPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
+
+  if (freePlan?.length > 0) {
+    freePlan[0].paymentPlan = {
+      amount: 0,
+      currency: "",
+      period:
+        menuPlan?.[0]?.paymentPlan?.period === "yearly" ? "yearly" : "monthly",
+    };
+  }
+
+  let menuPlans = [...freePlan, ...menuPlan];
+
   return (
     <Stack my={"lg"}>
       <Flex justify={"center"} gap={"xl"} wrap={"wrap"}>
-        {menuPlan?.map((data, index) => {
+        {menuPlans?.map((data, index) => {
           return (
             <Stack align="center" gap={0} pos={"relative"} key={data?.id}>
               <Box
@@ -55,6 +68,7 @@ export const MenuSection = ({
                 data={data}
                 handlePlanSelection={handlePlanSelection}
                 index={index}
+                totalItems={menuPlans.length}
                 inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
