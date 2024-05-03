@@ -2,11 +2,12 @@ import { Anchor, Breadcrumbs, Group, Text } from "@mantine/core";
 import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-
+import styles from "./Navbar.module.css";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import ExpiryComponent from "../../Premium/ExpiryComponent";
 import ColorSchemaButton from "../../theme/ColorSchemaButton";
+import Link from "next/link";
 
 export const Navbar = () => {
   const router = useRouter();
@@ -30,17 +31,18 @@ export const Navbar = () => {
       href: getUrl(index, data),
     }))
     ?.map((item, index) => (
-      <Anchor
-        href={item.href}
-        key={index}
-        c={
-          index === pathParts.length - 2
-            ? "var(--mantine-primary-color-filled)"
-            : "dark.2"
-        }
-      >
-        <Text size={"14px"}>{item.title}</Text>
-      </Anchor>
+      <Link href={item.href} key={index} className={styles.breadcrumbsLink}>
+        <Text
+          size={"14px"}
+          c={
+            index === pathParts.length - 2
+              ? "var(--mantine-primary-color-filled)"
+              : "dark.2"
+          }
+        >
+          {item.title}
+        </Text>
+      </Link>
     ));
   return (
     <Group justify="space-between" pr={"lg"} h={37}>
@@ -49,9 +51,9 @@ export const Navbar = () => {
           <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
         }
       >
-        <Anchor href="/dashboard">
+        <Link href="/dashboard">
           <IconHome size={23} color="var(--mantine-color-gray-6)" />
-        </Anchor>
+        </Link>
         {items}
       </Breadcrumbs>
       {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}

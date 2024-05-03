@@ -52,3 +52,11 @@
 [data-mantine-color-scheme="dark"] .navbar {
   background-color: var(--mantine-color-dark-8);
 }
+
+.breadcrumbsLink {
+  text-decoration: none;
+}
+
+.breadcrumbsLink:hover {
+  text-decoration: underline;
+}
