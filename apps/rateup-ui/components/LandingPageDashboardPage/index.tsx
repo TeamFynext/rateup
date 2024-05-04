@@ -6,8 +6,12 @@ import { useDisclosure } from "@mantine/hooks";
 import NothingFound from "../NothingFound/NothingFound";
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
 import LandingPageCardsList from "./LandingPageCardsList";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 function LandingPageDashboard() {
+  const router = useRouter();
+  const { action } = router.query;
   const [isCreateLandingPageModalOpen, createLandingPageModalHandlers] =
     useDisclosure();
 
@@ -36,6 +40,11 @@ function LandingPageDashboard() {
   } else if (data) {
     componentToBeRendered = <LandingPageCardsList landingPages={data} />;
   }
+  useEffect(() => {
+    if (action === "create") {
+      createLandingPageModalHandlers.open();
+    }
+  }, [action]);
 
   return (
     <Stack className={`${styles["landingPage-dashboard-page-div"]}`}>
