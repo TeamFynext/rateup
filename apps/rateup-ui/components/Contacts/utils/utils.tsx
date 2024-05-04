@@ -245,6 +245,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   },
 ];
 export const contactParticipentDetailColumn = [
+  ...selectCheckBox,
   {
     header: () => "Name",
     accessorKey: "contact.name",
@@ -324,3 +325,33 @@ export function IndeterminateCheckbox(props: CheckboxProps) {
   const ref = React.useRef<HTMLInputElement>(null!);
   return <Checkbox ref={ref} {...props} />;
 }
+
+export enum WhatsappTableType {
+  CONTACTS = "contacts",
+  GROUPS = "groups",
+  MEMBERS = "members",
+  PARTICIPANTS = "participants",
+}
+
+export const tabHeaderLabels = {
+  [WhatsappTableType.CONTACTS]: {
+    headerLabel: "Are you sure to delete these selected contacts?",
+    headerTitle: "Delete Contacts?",
+    tooltipMsg: "delete contacts",
+  },
+  [WhatsappTableType.GROUPS]: {
+    headerLabel: "Are you sure to delete these selected contact groups?",
+    headerTitle: "Delete Contact Groups?",
+    tooltipMsg: "delete contact groups",
+  },
+  [WhatsappTableType.MEMBERS]: {
+    headerLabel: "Are you sure to remove these selected members?",
+    headerTitle: "Remove members?",
+    tooltipMsg: "remove members",
+  },
+  [WhatsappTableType.PARTICIPANTS]: {
+    headerLabel: "Are you sure to remove these selected participants?",
+    headerTitle: "Remove participants?",
+    tooltipMsg: "remove participants",
+  },
+};

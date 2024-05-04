@@ -14,8 +14,9 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
+import { IconEdit, IconRefresh } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
@@ -29,9 +30,12 @@ import {
 import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
 import { renderBadge } from "../../../components/Card/CampaignCard";
-import { contactParticipentDetailColumn } from "../../../components/Contacts/utils/utils";
+import {
+  WhatsappTableType,
+  contactParticipentDetailColumn,
+} from "../../../components/Contacts/utils/utils";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
-import TanstackTable from "../../../components/Table/TanstackTable";
+import ContactTable from "../../../components/Table/ContactTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -39,10 +43,9 @@ import {
   CampaignParticipantStatus,
   CampaignStatus,
 } from "../../../types/enums";
-import style from "./campaign.module.css";
 import { Campaign } from "../../../types/global";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
-import { useForm } from "@mantine/form";
+import style from "./campaign.module.css";
 
 const CampaignById = () => {
   const [searchText, setSearchText] = useState("");
@@ -121,13 +124,14 @@ const CampaignById = () => {
             <Box w={50} h={50} />
           </Group>
           <PaperLayout px={0}>
-            <TanstackTable
+            <ContactTable
               columns={column}
               data={filteredParticipants}
               btnTitle="Add"
               toggle={open}
-              disableFuzzyFnCustom={true}
               topHeight={440}
+              tab={WhatsappTableType.PARTICIPANTS}
+              groupId={campaignData?.id}
             />
           </PaperLayout>
           <Modal opened={opened} onClose={close} centered size={"xl"}>
