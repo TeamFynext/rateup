@@ -17,22 +17,55 @@ export async function addNewWaMessage(
   return newMessage;
 }
 
-export async function getWaMessagesByContactId(contactId: string) {
+export async function getWaMessagesByContactId(
+  contactId: string,
+  page: number,
+) {
   const messages = await prisma.waMessage.findMany({
     where: {
       contactId,
     },
     orderBy: {
-      waCreatedAt: "asc",
+      waCreatedAt: "desc",
     },
+    skip: (page - 1) * 15,
+    take: 15,
   });
+  console.log(page, messages.length);
   return messages;
 }
 
 export async function getContactsWithLastMessage(orgId: string) {
-  return await prisma.contact.findMany({
+  const lastReceivedMessages = await prisma.contact.findMany({
+    where: { orgId },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      WaMessage: {
+        where: {
+          messageBody: {
+            path: ["exchangeProcess"],
+            equals: "receive",
+          },
+        },
+        orderBy: {
+          waCreatedAt: "desc",
+        },
+        take: 1,
+        select: {
+          messageBody: true,
+          waCreatedAt: true,
+        },
+      },
+    },
+  });
+  const contacts = await prisma.contact.findMany({
     where: {
       orgId,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
     include: {
       WaMessage: {
@@ -47,4 +80,14 @@ export async function getContactsWithLastMessage(orgId: string) {
       },
     },
   });
+  return contacts.map(({ WaMessage, ...rest }) => ({
+    ...rest,
+    lastMessage: {
+      messageBody: WaMessage?.length > 0 ? WaMessage[0]?.messageBody : null,
+      waCreatedAt: WaMessage?.length > 0 ? WaMessage[0]?.waCreatedAt : null,
+    },
+    userInitiatedFinalTimeStamp:
+      lastReceivedMessages?.find((msg) => msg?.id === rest?.id)?.WaMessage[0]
+        ?.waCreatedAt ?? null,
+  }));
 }

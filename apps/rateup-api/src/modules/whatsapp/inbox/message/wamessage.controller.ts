@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { NewWaMessageBody } from "./wamessage.schema";
+import { NewWaMessageBody, PaginateQuerySchema } from "./wamessage.schema";
 import {
   addNewWaMessage,
   getContactsWithLastMessage,
@@ -116,12 +116,16 @@ export async function sendNewWaMessageHandler(
   }
 }
 export async function getWaMessagesByContactIdHandler(
-  request: FastifyRequest<{ Params: ByContactIdParams }>,
+  request: FastifyRequest<{
+    Params: ByContactIdParams;
+    Querystring: PaginateQuerySchema;
+  }>,
   reply: FastifyReply,
 ) {
   try {
+    const page = parseInt(request.query.page) || 1;
     const { contactId } = request.params;
-    const messages = await getWaMessagesByContactId(contactId);
+    const messages = await getWaMessagesByContactId(contactId, page);
     reply.send(messages);
   } catch (error) {
     reply.status(500).send("Internal Server Error");
