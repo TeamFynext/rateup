@@ -172,7 +172,9 @@ const StartCampaignCard = ({
   const handleStartCampaign = (newStartCampaign) => {
     if (newStartCampaign === true) {
       // sending to all participants
-      startCampMutation.mutate(Object.values(CampaignParticipantStatus));
+      startCampMutation.mutate({
+        sendToStatuses: Object.values(CampaignParticipantStatus),
+      });
     } else {
       updateCampaign.mutate(
         {
@@ -342,11 +344,14 @@ function ResendCampaignModal({
   const sendMutation = useSendCampaign(campaign.id, campaign.teamId);
 
   function handleResendClick() {
-    sendMutation.mutate(form.values.statuses, {
-      onSuccess: () => {
-        close();
+    sendMutation.mutate(
+      { sendToStatuses: form.values.statuses },
+      {
+        onSuccess: () => {
+          close();
+        },
       },
-    });
+    );
   }
 
   return (

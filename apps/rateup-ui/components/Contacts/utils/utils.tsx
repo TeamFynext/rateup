@@ -185,10 +185,10 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
   {
-    header: () => "participants count",
+    header: () => "participants",
     accessorKey: "_count.campaignParticipants",
-    id: "count",
-    cell: (info) => info.getValue(),
+    id: "participants",
+    cell: (info) => <Badge variant="light">{info.getValue() as string}</Badge>,
   },
   {
     header: () => "Created",
@@ -316,6 +316,7 @@ export const contactParticipentDetailColumn = [
         participantId={info?.getValue()?.id}
         status={info?.getValue()?.status}
         id={info?.getValue()?.campaignId}
+        teamId={info?.getValue()?.teamId}
       />
     ),
   },
