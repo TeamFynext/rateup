@@ -4,6 +4,7 @@ import {
   addContactParticipants,
   addGroupParticipants,
   deleteCampaignParticipant,
+  deleteMulitpleGroupParticipants,
   getCampaignParticipants,
 } from "./campaignParticipants.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -88,6 +89,34 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
         `Error removing participants from campaign: ${error?.response?.data?.error}`,
         "campaign-participants-remove",
         <IconX />,
+      );
+    },
+  });
+};
+
+export const useRemoveMulitpleGroupParticipants = (
+  campaignId: string,
+  onSucess: () => void,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteMulitpleGroupParticipants,
+    onSuccess() {
+      showSuccessToast(
+        "Participants removed from campaign successfully.",
+        "campaign-mulitiple-participants-remove",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      onSucess();
+    },
+    onError(error: any) {
+      showErrorToast(
+        `Error removing participants from campaign: ${error?.response?.data?.error}`,
+        "campaign-mulitiple-participants-remove",
+        <IconX />,
+        true,
       );
     },
   });

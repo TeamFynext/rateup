@@ -30,7 +30,10 @@ import { useGetContactTags } from "../../../backend/whatsapp/settings/waSettings
 import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
 import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
 import { ParticipantMenu } from "../../../components/Contacts/GroupParticipant";
-import { contactColumn } from "../../../components/Contacts/utils/utils";
+import {
+  WhatsappTableType,
+  contactColumn,
+} from "../../../components/Contacts/utils/utils";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import ContactTable from "../../../components/Table/ContactTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
@@ -207,7 +210,7 @@ export default function ContactGroup() {
                   columns={column}
                   data={filteredCustomerList}
                   cTags={cTags?.contactTags}
-                  tab={"member"}
+                  tab={WhatsappTableType.MEMBERS}
                   topHeight={420}
                   open={open}
                   groupId={groupDetails?.id}
