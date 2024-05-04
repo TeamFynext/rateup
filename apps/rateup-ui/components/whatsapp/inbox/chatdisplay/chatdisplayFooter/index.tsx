@@ -2,32 +2,19 @@ import { IconSend } from "@tabler/icons-react";
 import classes from "./styles.module.css";
 import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import {
-  useGetMessagesByContactId,
-  useSendNewWaMessage,
-} from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import { useSendNewWaMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { useForm } from "@mantine/form";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 import { useRef } from "react";
 import WaInboxFooterMenu from "./footerMenu";
-import { useContactById } from "../../../../../backend/campaign/contacts/contacts.query";
+import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 
 export default function WaInboxChatDisplayFooter({
-  contactId,
+  contact,
 }: {
-  contactId: string;
+  contact: ContactsWithLastMessage;
 }) {
-  const { data: contact } = useContactById(contactId);
-  const { data: messages } = useGetMessagesByContactId(contactId);
-  if (!contact) return null;
-
-  const receivedMessages = messages?.filter(
-    (m) => m.messageBody.exchangeProcess === "receive",
-  );
-  const timeStampOfLastReceivedMessage =
-    receivedMessages?.[receivedMessages.length - 1]?.waCreatedAt;
-
   const inputRef = useRef(null);
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const form = useForm({
@@ -35,11 +22,20 @@ export default function WaInboxChatDisplayFooter({
       type: "text",
       text: { body: "" },
     },
+    validate: {
+      text: (value) => {
+        if (value.body.length === 0) {
+          return "Message can't be empty";
+        }
+      },
+    },
   });
-  function handleSendMessage(e) {
-    e.preventDefault();
-    sendnewWaMessage.mutate(form.values);
-    form.reset();
+  function handleSendMessage(values: typeof form.values) {
+    sendnewWaMessage.mutate(values, {
+      onSuccess: () => {
+        form.reset();
+      },
+    });
   }
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
@@ -58,12 +54,15 @@ export default function WaInboxChatDisplayFooter({
   }
 
   const isSessionExpired = isInboxSessionExpired(
-    timeStampOfLastReceivedMessage,
+    contact?.userInitiatedFinalTimeStamp,
   );
   return (
     <div className={classes.wrapper}>
       <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
-      <form action="" onSubmit={handleSendMessage} className={classes.form}>
+      <form
+        onSubmit={form.onSubmit((values) => handleSendMessage(values))}
+        className={classes.form}
+      >
         <ContainedTextField
           ref={inputRef}
           disabled={isSessionExpired}

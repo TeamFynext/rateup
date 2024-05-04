@@ -11,9 +11,10 @@ export type WaGetMessagesBody = {
   messageBody: WaInboxMessage;
   templateComponentParams: WaTemplateComponent[];
 };
-export async function getMessagesByContactId(contactId: string) {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/${contactId}`))
-    .data as WaGetMessagesBody[];
+export async function getMessagesByContactId(contactId: string, page: number) {
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/${contactId}?page=${page}`)
+  ).data as WaGetMessagesBody[];
 }
 
 export async function sendNewWaMessage(contactId: string, message: any) {
@@ -24,25 +25,26 @@ export async function sendNewWaMessage(contactId: string, message: any) {
 }
 
 export type ContactsWithLastMessage = ContactsData & {
-  WaMessage: {
-    waCreatedAt: Date;
+  lastMessage: {
+    waCreatedAt: string;
     messageBody: WaInboxMessage;
-  }[];
+  };
+  userInitiatedFinalTimeStamp: string;
 };
 export async function getContactsWithLastMessage() {
   const contacts = (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/contacts`))
     .data as ContactsWithLastMessage[];
 
   const contactsWithLastMessage = contacts.filter(
-    (c) => c.WaMessage.length > 0,
+    (c) => c.lastMessage.messageBody !== null,
   );
   const contactsWithoutLastMessage = contacts.filter(
-    (c) => c.WaMessage.length === 0,
+    (c) => c.lastMessage.messageBody === null,
   );
 
   const sortedContacts = contactsWithLastMessage.sort((a, b) => {
-    const aDate = new Date(a.WaMessage[0].waCreatedAt);
-    const bDate = new Date(b.WaMessage[0].waCreatedAt);
+    const aDate = new Date(a.lastMessage.waCreatedAt);
+    const bDate = new Date(b.lastMessage.waCreatedAt);
     return bDate.getTime() - aDate.getTime();
   });
 
