@@ -5,6 +5,7 @@ import { RateupButtonBlue } from "../Button/RateupButtons";
 import FormModalLayout from "../Modal/FormModalLayout";
 import CreateContactModal from "./CreateContactModal";
 import CreateGroupModal from "./CreateGroupModal";
+import { WhatsappTableType } from "./utils/utils";
 
 const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
@@ -15,7 +16,7 @@ const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
   return (
     <>
       <RateupButtonBlue
-        title={tab === "member" ? "Add Members" : "Create"}
+        title={tab === WhatsappTableType.MEMBERS ? "Add Members" : "Create"}
         rightIcon={<IconPlus size={20} />}
         onClick={() => {
           if (tab === ContactTabs.CONTACTS) {
