@@ -34,6 +34,7 @@ const getCampaignsQuerySchema = z.object({
 });
 const sendCampaignInputSchema = z.object({
   sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)),
+  participantId: z.string().optional(),
 });
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(
