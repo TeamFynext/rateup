@@ -680,6 +680,7 @@ async function _sendCampaignToParticipants(
         ? CampaignParticipantStatus.SENT
         : CampaignParticipantStatus.FAILED,
       errorMessage: messageSentStatus.message,
+      ...(messageSentStatus.status && { sentAt: new Date() }),
     });
   }
 }
