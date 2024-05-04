@@ -109,8 +109,13 @@ export const useDeleteCampaignMutation = (teamId) => {
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (sendToStatuses: CampaignParticipantStatus[]) =>
-      sendCampaign(campaignId, sendToStatuses),
+    mutationFn: ({
+      sendToStatuses,
+      participantId,
+    }: {
+      sendToStatuses: CampaignParticipantStatus[];
+      participantId?: string;
+    }) => sendCampaign(campaignId, sendToStatuses, participantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
