@@ -23,7 +23,7 @@ const createCheckoutRequestSchema = z.object({
 const createRateUpPlanSchema = z.object({
   name: z.string().trim().min(1),
   displayName: z.string().trim().min(1),
-  displayWidgetId: z.string().trim().min(1),
+  displayWidgetId: z.string().optional(),
   planType: z.nativeEnum(PaymentPlanType),
   paymentPlanId: z.string().optional(),
   description: z.array(z.string()).min(1),
@@ -34,7 +34,7 @@ const updateRateUpPlanSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1).optional(),
   displayName: z.string().trim().min(1).optional(),
-  displayWidgetId: z.string().trim().min(1).optional(),
+  displayWidgetId: z.string().optional(),
   planType: z.nativeEnum(PaymentPlanType).optional(),
   paymentPlanId: z.string().optional(),
   description: z.array(z.string()).min(1).optional(),
