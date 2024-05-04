@@ -673,7 +673,6 @@ async function _sendCampaignToParticipants(
     const templateMessage = createTemplateMessage(contact.phone, templateQuery);
 
     const messageSentStatus = await sendMessage(orgId, templateMessage);
-    console.log(messageSentStatus);
 
     log.trace("Template sent to participant %o", contact);
     await updateCampaignParticipant(id, {
