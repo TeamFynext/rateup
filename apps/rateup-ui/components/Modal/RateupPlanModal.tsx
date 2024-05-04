@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import FormModalLayout from "./FormModalLayout";
 import { useForm } from "@mantine/form";
 import {
@@ -7,12 +7,13 @@ import {
   ContainedTagInput,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { SimpleGrid } from "@mantine/core";
+import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
 import { PaymentType } from "../../types/enums";
 import { widgetIds } from "../../utils/constants/forms";
 import { notifications } from "@mantine/notifications";
+import { getSampleSubscriptionFeatures } from "../../utils/subscription/subscription";
 
 const RateupPlanModal = ({
   opened,
@@ -20,16 +21,14 @@ const RateupPlanModal = ({
   razorPayPlanFiltered,
   rateupPaymentsPlanMutation,
 }) => {
+  const [checked, setChecked] = useState(false);
   const schema = z.object({
     name: z.string().trim().min(1, { message: "Name should Not Be empty" }),
     displayName: z
       .string()
       .trim()
       .min(1, { message: "Display Name should Not Be empty" }),
-    displayWidgetId: z
-      .string()
-      .trim()
-      .min(1, { message: "Display WidgetId should Not Be empty" }),
+    displayWidgetId: z.string().optional(),
     planType: z
       .string()
       .trim()
@@ -50,7 +49,7 @@ const RateupPlanModal = ({
       planType: PaymentType.BASE,
       paymentPlanId: "",
       description: [],
-      features: null,
+      features: "",
     },
     validate: zodResolver(schema),
   });
@@ -68,6 +67,15 @@ const RateupPlanModal = ({
     if (rateupPaymentsPlanMutation?.isSuccess) form?.reset();
   }, [rateupPaymentsPlanMutation?.isSuccess]);
 
+  useEffect(() => {
+    if (checked) {
+      const sampleFeature = JSON.stringify(getSampleSubscriptionFeatures(10));
+      form?.setFieldValue("features", sampleFeature);
+    } else {
+      form?.setFieldValue("features", "");
+    }
+  }, [checked]);
+
   const handleSubmit = (values) => {
     rateupPaymentsPlanMutation.mutate(values);
     notifications.show({
@@ -78,6 +86,7 @@ const RateupPlanModal = ({
       message: "Hold.. your data is getting created...",
       autoClose: 2000,
     });
+    setChecked(false);
   };
 
   return (
@@ -100,7 +109,7 @@ const RateupPlanModal = ({
           label="Razorpay Payment Plan"
           placeholder="Payment Plan"
           data={razorPayPlanFiltered}
-          allowDeselect={false}
+          allowDeselect
           {...form.getInputProps("paymentPlanId")}
           disabled={!razorPayPlanFiltered?.length}
         />
@@ -120,8 +129,7 @@ const RateupPlanModal = ({
           label="Display Widget Id"
           placeholder="Widget Id"
           data={widgetIds}
-          withAsterisk
-          allowDeselect={false}
+          allowDeselect
           {...form.getInputProps("displayWidgetId")}
         />
         <ContainedSelection
@@ -133,12 +141,6 @@ const RateupPlanModal = ({
           allowDeselect={false}
           {...form.getInputProps("planType")}
         />
-        <ContainedJsonInput
-          label="Features - (give data in json format)"
-          placeholder="Features"
-          withAsterisk
-          {...form.getInputProps("features")}
-        />
         <ContainedTagInput
           label="Description"
           placeholder="Type Description and press enter"
@@ -146,6 +148,29 @@ const RateupPlanModal = ({
           {...form.getInputProps("description")}
         />
       </SimpleGrid>
+      <Stack gap={3} py="xs">
+        <Group justify="space-between">
+          <Group gap={0}>
+            <Text fz={"xs"}>Features - (give data in json format)</Text>
+            <Text fz={"xs"} c="red">
+              *
+            </Text>
+          </Group>
+          <Chip
+            size="xs"
+            checked={checked}
+            onChange={setChecked}
+            variant="light"
+          >
+            Sample Feature
+          </Chip>
+        </Group>
+        <ContainedJsonInput
+          placeholder="Features"
+          withAsterisk
+          {...form.getInputProps("features")}
+        />
+      </Stack>
     </FormModalLayout>
   );
 };

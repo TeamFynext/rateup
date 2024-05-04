@@ -64,7 +64,11 @@ const AccountSettings = () => {
     refetch,
     isRefetching,
   } = useSubscription();
-  const { data: orders, refetch: refreshOrders } = useUserOrgOrders();
+  const {
+    data: orders,
+    refetch: refreshOrders,
+    isRefetching: isRefetchOrders,
+  } = useUserOrgOrders();
 
   useEffect(() => {
     if (router?.query?.activeTab === "account")
@@ -204,7 +208,11 @@ const AccountSettings = () => {
             py={"xl"}
             px={"lg"}
           >
-            <OrderHistory orders={orders?.data} />
+            <OrderHistory
+              orders={orders?.data}
+              refetch={refreshOrders}
+              isRefetching={isRefetchOrders}
+            />
           </Tabs.Panel>
         </ScrollAreaAutosize>
       </Tabs>

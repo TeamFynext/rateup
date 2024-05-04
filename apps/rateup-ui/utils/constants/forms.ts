@@ -17,6 +17,7 @@ export const widgetIds = [
   "menu_m3",
   "menu_m4",
   "menu_m5",
+  "Nil",
 ];
 
 export const samplePictureChoices = [

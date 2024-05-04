@@ -6,6 +6,7 @@ import {
   Text,
   List,
   ScrollArea,
+  Flex,
 } from "@mantine/core";
 import { useState } from "react";
 import { formatIsoDateString } from "../../../utils/dateTime";
@@ -13,8 +14,15 @@ import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import NothingFound from "../../../components/NothingFound/NothingFound";
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import {
+  showLoadingToast,
+  showSuccessToast,
+} from "../../../utils/notifications";
+import { IconCheck, IconRefresh } from "@tabler/icons-react";
+import classes from "./setting.module.css";
 
-const OrderHistory = ({ orders }) => {
+const OrderHistory = ({ orders, refetch, isRefetching }) => {
   const [
     openedOrderDetails,
     { open: openOrderDetails, close: closeOrderDetails },
@@ -24,6 +32,33 @@ const OrderHistory = ({ orders }) => {
     <>
       {orders?.length > 0 ? (
         <>
+          <Flex justify={"flex-end"} p="sm">
+            <RateupButtonSecondary
+              title="Refresh"
+              onClick={async () => {
+                showLoadingToast(
+                  "Hold on...data getting updated.",
+                  "order-history",
+                  true,
+                  "Refreshing order history",
+                );
+                await refetch();
+                showSuccessToast(
+                  "Updated Succesfully",
+                  "order-history",
+                  <IconCheck />,
+                  true,
+                );
+              }}
+              leftIcon={
+                <IconRefresh
+                  className={isRefetching ? classes.rotateInfinitely : null}
+                  style={{ width: "90%", height: "90%" }}
+                  stroke={1.5}
+                />
+              }
+            />
+          </Flex>
           <Group justify="space-between" px={"sm"} c={"gray"}>
             <Text w={170}>Order Id</Text>
             <Text w={120}>Billing Date</Text>

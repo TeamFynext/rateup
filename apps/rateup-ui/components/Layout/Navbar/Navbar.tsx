@@ -39,6 +39,7 @@ export const Navbar = () => {
               ? "var(--mantine-primary-color-filled)"
               : "dark.2"
           }
+          tt={"capitalize"}
         >
           {item.title}
         </Text>
