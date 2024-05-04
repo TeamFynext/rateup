@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
-import { Box, Loader, Stack, Tabs, Text } from "@mantine/core";
+import { Box, Flex, Loader, Stack, Tabs, Text } from "@mantine/core";
 import Responses from "../Response/Responses";
 import SurveyStats from "./SurveyStats";
 import ResultsOverview from "./ResultsOverview";
@@ -25,6 +25,7 @@ import { pushToSessionStorage } from "../../../utils/essential";
 import { useUser } from "../../../context/UserContext";
 import { decryptPrivateKey } from "../../../utils/encryption";
 import { showErrorToast } from "../../../utils/notifications";
+import { useRouter } from "next/router";
 
 enum ResultTab {
   OverView = "overview",
@@ -177,6 +178,8 @@ function EncryptionPasswordModal({
   const {
     user: { encryptionKeys },
   } = useUser();
+
+  const router = useRouter();
   const [encryptionpassword, setEncryptionPassword] = useState("");
   async function onSubmitPassword() {
     const { privateKey } = await decryptPrivateKey(
@@ -191,6 +194,11 @@ function EncryptionPasswordModal({
       showErrorToast("Invalid Password");
     }
   }
+
+  const handleGoback = () => {
+    router.push(`/dashboard/surveys`);
+  };
+
   return (
     <SimpleModalLayout
       centered
@@ -206,12 +214,20 @@ function EncryptionPasswordModal({
           value={encryptionpassword}
           onChange={(e) => setEncryptionPassword(e.target.value)}
         />
-        <RateupButtonBlue
-          title="Submit"
-          onClick={() => {
-            onSubmitPassword();
-          }}
-        />
+        <Flex style={{ justifyContent: "center", gap: "40px" }}>
+          <RateupButtonBlue
+            title="Go back"
+            onClick={() => {
+              handleGoback();
+            }}
+          />
+          <RateupButtonBlue
+            title="Submit"
+            onClick={() => {
+              onSubmitPassword();
+            }}
+          />
+        </Flex>
       </Stack>
     </SimpleModalLayout>
   );
