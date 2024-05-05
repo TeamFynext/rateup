@@ -198,6 +198,7 @@ const AccountSettings = () => {
           <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
             <Billing
               subscription={subscription}
+              orders={orders?.data}
               processingPayment={processingPayment}
               refetch={refetch}
               isRefetching={isRefetching}
