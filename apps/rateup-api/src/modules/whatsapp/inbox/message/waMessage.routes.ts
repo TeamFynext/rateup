@@ -6,6 +6,7 @@ import {
 } from "./wamessage.controller";
 import { checkSession } from "../../../../utils/checkSession";
 import { $contactRef } from "../../../contact/contact.schema";
+import { $waMessage } from "./wamessage.schema";
 
 export async function waMessageRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -14,6 +15,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $contactRef("byContactIdSchema"),
+        querystring: $waMessage("PaginateQuerySchema"),
       },
     },
     getWaMessagesByContactIdHandler,

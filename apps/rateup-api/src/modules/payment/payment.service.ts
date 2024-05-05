@@ -150,25 +150,27 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
       return { code: 400, data: "Payment Plan Id is already in Use" };
     }
   }
-  await prisma.rateupPlan.updateMany({
-    where: {
-      displayWidgetId: data?.displayWidgetId,
-    },
-    data: {
-      displayWidgetId: null,
-    },
-  });
+  if (data?.displayWidgetId) {
+    await prisma.rateupPlan.updateMany({
+      where: {
+        displayWidgetId: data?.displayWidgetId,
+      },
+      data: {
+        displayWidgetId: null,
+      },
+    });
+  }
   const plans = await prisma.rateupPlan.create({
     data: {
       name: data.name,
       displayName: data.displayName,
-      displayWidgetId: data.displayWidgetId,
+      displayWidgetId: data.displayWidgetId ?? undefined,
       description: data.description,
       planType: data.planType as PaymentPlanType,
       paymentPlan: data?.paymentPlanId
         ? { connect: { id: data?.paymentPlanId } }
         : undefined,
-      features: JSON.parse(data.features),
+      features: data.features ? JSON.parse(data.features) : null,
     },
   });
   return { code: 201, data: plans };
@@ -203,7 +205,7 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
     data: {
       name: data?.name,
       displayName: data?.displayName,
-      displayWidgetId: data?.displayWidgetId,
+      displayWidgetId: data?.displayWidgetId ?? undefined,
       description: data?.description,
       planType: data?.planType as PaymentPlanType,
       paymentPlan: data?.paymentPlanId

@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../../utils/checkSession";
 import { waMessageSchemas } from "./message/wamessage.schema";
 import { waMessageRoutes } from "./message/waMessage.routes";
 import { waWSMessageRoutes } from "./message/wamessage.ws.routes";
