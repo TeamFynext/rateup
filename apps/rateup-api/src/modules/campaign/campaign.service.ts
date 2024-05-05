@@ -65,11 +65,7 @@ export async function getCampaignsByOrgId(orgId: string) {
       },
       _count: {
         select: {
-          campaignParticipants: {
-            where: {
-              status: CampaignParticipantStatus.COMPLETED,
-            },
-          },
+          campaignParticipants: true,
         },
       },
     },
@@ -122,12 +118,13 @@ export async function deleteCampaign(campaignId: string) {
 export async function sendCampaign(
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
+  participantId?: string,
 ) {
   await updateCampaign(campaignId, {
     status: CampaignStatus.ACTIVE,
     startedAt: new Date(),
   });
   log.trace("updated campaign status to active");
-  await sendCampaignToParticipants(campaignId, sendToStatuses);
+  await sendCampaignToParticipants(campaignId, sendToStatuses, participantId);
   // add state indicating survey is sent to all participants?
 }

@@ -91,6 +91,10 @@ export async function sendCampaignHandler(
   ) {
     return reply.status(400).send({ message: "sendToStatuses is required" });
   }
-  await sendCampaign(request.params.campaignId, request.body.sendToStatuses);
+  await sendCampaign(
+    request.params.campaignId,
+    request.body.sendToStatuses,
+    request.body.participantId,
+  );
   return reply.status(204).send();
 }

@@ -497,6 +497,7 @@ export async function sendCampaignToParticipants(
     CampaignParticipantStatus.PENDING,
     CampaignParticipantStatus.FAILED,
   ],
+  participantId?: string,
 ) {
   try {
     log.trace(
@@ -555,10 +556,18 @@ export async function sendCampaignToParticipants(
 
     // check if template has a flow button
     const flowId = getFlowIdFromTemplateComponents(dbTemplate.data.components);
-
+    let _campaignData = campaign;
+    let _sendToStatuses = sendToStatuses;
+    if (participantId) {
+      let _participant = campaign?.campaignParticipants.find(
+        (p) => p.id === participantId,
+      );
+      _campaignData.campaignParticipants = [_participant];
+      _sendToStatuses = [_participant.status as CampaignParticipantStatus];
+    }
     _sendCampaignToParticipants(
-      campaign,
-      sendToStatuses,
+      _campaignData,
+      _sendToStatuses,
       components,
       flowId,
       orgId,
@@ -680,6 +689,7 @@ async function _sendCampaignToParticipants(
         ? CampaignParticipantStatus.SENT
         : CampaignParticipantStatus.FAILED,
       errorMessage: messageSentStatus.message,
+      ...(messageSentStatus.status && { sentAt: new Date() }),
     });
   }
 }
