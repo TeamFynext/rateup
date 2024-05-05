@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  cancelRazorpaySubscriptionHandler,
   createCheckoutSessionHandler,
   createRateUpPlanHandler,
   deletePaymentPlanHandler,
@@ -84,6 +85,14 @@ export async function paymentRoutes(server: FastifyInstance) {
       preHandler: [assertRootOrg],
     },
     getAllPaymentSubscriptionHandler,
+  );
+
+  server.post(
+    "/subscriptions/cancel",
+    {
+      preHandler: [assertRootOrg],
+    },
+    cancelRazorpaySubscriptionHandler,
   );
 
   server.get("/org/orders", getAllOrdersByOrg);

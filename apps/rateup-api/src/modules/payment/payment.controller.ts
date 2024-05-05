@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  cancelRazorpaySubscription,
   createCheckoutSession,
   createRateUpPlan,
   deletePaymentPlan,
@@ -198,6 +199,8 @@ export async function updatePaymentPlanHandler(
   }
 }
 
+// Razorpay.....
+
 export async function getAllPaymentSubscriptionHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -208,6 +211,22 @@ export async function getAllPaymentSubscriptionHandler(
   } catch (error) {
     console.log(error);
     reply.code(500).send("Failed");
+  }
+}
+
+export async function cancelRazorpaySubscriptionHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    const accessTokenPayload = session.getAccessTokenPayload();
+    let orgId = accessTokenPayload.orgId;
+
+    await cancelRazorpaySubscription(orgId);
+    reply.code(204).send("Success");
+  } catch (error) {
+    reply.code(500).send(error);
   }
 }
 

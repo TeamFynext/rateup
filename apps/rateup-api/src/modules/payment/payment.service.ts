@@ -374,6 +374,38 @@ export async function getAllPaymentSubscriptions() {
   return subscriptions;
 }
 
+//Cancel razorpay subscription
+export async function cancelRazorpaySubscription(orgId) {
+  console.log("Cancelling subscription........");
+
+  if (!orgId) {
+    throw new Error("Organization data missing");
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+
+  if (!subscription || !subscription?.subscriptionRef) {
+    throw new Error("Subscription missing");
+  }
+
+  const res = await axios.get(
+    `https://api.razorpay.com/v1/subscriptions/${subscription?.subscriptionRef}/cancel`,
+    {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+      },
+    },
+  );
+
+  console.log(res);
+
+  return res?.status;
+}
+
 //Get all rateup orders
 export async function getAllPaymentOrders() {
   const orders = await prisma.order.findMany({
