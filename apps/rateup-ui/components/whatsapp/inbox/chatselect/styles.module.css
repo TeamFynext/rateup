@@ -34,5 +34,7 @@
   color: var(--mantine-color-dimmed);
 }
 .chat_cards_wrapper {
+  height: 100% !important;
+  width: 100% !important;
   overflow-y: auto;
 }

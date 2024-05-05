@@ -77,10 +77,11 @@ export default function WaInboxChatSelect(props: {
       <Divider />
       <div className={classes.chat_cards_wrapper}>
         <List
+          className={classes.chat_cards_wrapper}
           height={300}
           width={400}
           itemCount={filterContacts(contactListToDisplay)?.length || 0}
-          itemSize={70}
+          itemSize={72}
         >
           {({ index, style }) => {
             // Get the contact for this index

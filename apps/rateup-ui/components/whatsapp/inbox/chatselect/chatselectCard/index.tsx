@@ -9,7 +9,6 @@ import {
 } from "../../../../../utils/whatsapp/inbox";
 import WaInboxSessionBadge from "./sessionBadge";
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useInboxPaginationStore } from "../../inbox.store";
 
 interface WaInboxChatSelectCardProps {
   contact: ContactsWithLastMessage;
@@ -17,11 +16,9 @@ interface WaInboxChatSelectCardProps {
 export default function WaInboxChatSelectCard({
   contact,
 }: WaInboxChatSelectCardProps) {
-  const setPage = useInboxPaginationStore((state) => state.setPage);
   const router = useRouter();
   const params = useSearchParams();
   function handleChatCardClick() {
-    setPage(1);
     router.push(`?contactId=${contact.id}`);
   }
   const lastMessage = contact?.lastMessage;
@@ -36,7 +33,7 @@ export default function WaInboxChatSelectCard({
           <Group>
             <WaInboxSessionBadge timeStamp={lastMessage?.waCreatedAt} />
             <Text className={classes.chat_time}>
-              {formatToCustomTime(contact?.userInitiatedFinalTimeStamp)}
+              {formatToCustomTime(contact?.lastMessage?.waCreatedAt)}
             </Text>
           </Group>
         </Group>

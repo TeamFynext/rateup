@@ -12,30 +12,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ContactsWithLastMessage,
   WaGetMessagesBody,
+  WaMessagePage,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../../../backend/whatsapp/inbox/ws";
 import { useUser } from "../../../../context/UserContext";
-import { useInboxPaginationStore } from "../../../../components/whatsapp/inbox/inbox.store";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function WhatsAppInbox() {
   const queryClient = useQueryClient();
-  const page = useInboxPaginationStore((state) => state.page);
-  const messages = useInboxPaginationStore((state) => state.messages);
-  const setMessages = useInboxPaginationStore((state) => state.setMessages);
-  const appendMessages = useInboxPaginationStore(
-    (state) => state.appendMessages,
-  );
-  const prependMessages = useInboxPaginationStore(
-    (state) => state.prependMessages,
-  );
-  const setMessageLoading = useInboxPaginationStore(
-    (state) => state.setMessageLoading,
-  );
-  const setCurrentMessageCount = useInboxPaginationStore(
-    (state) => state.setCurrentMessageCount,
-  );
-
   const [contactList, setContactList] = useState(
     [] as ContactsWithLastMessage[],
   );
@@ -43,9 +27,8 @@ export default function WhatsAppInbox() {
   const connectionRef = useRef<WebSocket | null>(null);
 
   const searchParams = useSearchParams();
-  const { data, isLoading, error } = useGetMessagesByContactId(
+  const { data, error } = useGetMessagesByContactId(
     searchParams.get("contactId") as string,
-    page,
   );
 
   const {
@@ -86,16 +69,14 @@ export default function WhatsAppInbox() {
           ];
         }
 
-        //sort the contacts by last message
-        updatedContacts
+        //sort the contacts by last message timestamp
+        return updatedContacts
           ?.filter((contact) => contact.lastMessage.messageBody !== null)
           ?.sort((a, b) => {
             const aDate = new Date(a.lastMessage.waCreatedAt);
             const bDate = new Date(b.lastMessage.waCreatedAt);
             return bDate.getTime() - aDate.getTime();
           });
-
-        return updatedContacts;
       });
     },
     [],
@@ -108,30 +89,6 @@ export default function WhatsAppInbox() {
   }, [contactsWithLastMessage]);
 
   useEffect(() => {
-    if (data) {
-      setCurrentMessageCount(data.length);
-      const reversedArray = data.toReversed();
-      if (page === 1) {
-        setMessages(reversedArray);
-      } else {
-        setTimeout(() => {
-          setMessageLoading(false, "prepend");
-          //we should only prepend the messages if  and only if all the messages in reversedArray are not present in messages
-          // Check if every message in reversedArray is not present in messages
-          const shouldPrepend = reversedArray.every(
-            (msg) => !messages.find((m) => m.id === msg.id),
-          );
-          if (shouldPrepend) {
-            // If none of the messages in reversedArray are present in messages,
-            // prepend reversedArray to messages
-            prependMessages(reversedArray);
-          }
-        }, 500);
-      }
-    }
-  }, [data]);
-
-  useEffect(() => {
     connectionRef.current = new WebSocket(
       `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${user?.orgId}`,
     );
@@ -141,25 +98,21 @@ export default function WhatsAppInbox() {
     };
 
     connectionRef.current.onmessage = (event) => {
-      const contactId = new URLSearchParams(window.location.search).get(
-        "contactId",
-      );
       const newMessage: { contact: ContactsData; message: WaGetMessagesBody } =
         JSON.parse(event.data);
       updateWaContactsList(newMessage);
-      if (newMessage.contact.id === contactId) {
-        appendMessages([newMessage.message]);
+
+      //when a new message arrives then we need to take the values from the queryClient and update the messages in the first page
+      const currentData: {
+        pages: WaMessagePage[];
+        pageParams: string[];
+      } = queryClient.getQueryData(["wa-messages", newMessage.contact.id]);
+      if (currentData) {
+        const newData = { ...currentData };
+        newData.pages[0].messages.push(newMessage.message);
         queryClient.setQueryData(
-          ["wa-messages", newMessage.contact.id, 1],
-          (oldData: WaGetMessagesBody[]) => {
-            // Check if the message is already present in the data
-            if (!oldData.find((msg) => msg.id === newMessage.message.id)) {
-              // If not, append the new message
-              return [newMessage.message, ...oldData];
-            }
-            // If the message is already present, return the old data
-            return oldData;
-          },
+          ["wa-messages", newMessage.contact.id],
+          newData,
         );
       }
     };
@@ -173,7 +126,7 @@ export default function WhatsAppInbox() {
     };
   }, [updateWaContactsList]);
 
-  if (isLoading || isContactsLoading) return <Loader />;
+  if (isContactsLoading) return <Loader />;
   if (error) return <div>Error: {error.message}</div>;
   if (isContactsError) return <div>Error: {isContactsError.message}</div>;
 
@@ -184,7 +137,17 @@ export default function WhatsAppInbox() {
         <Group className={classes.inner}>
           <WaInboxChatSelect contacts={contactList} />
           <WaInboxChatDisplay
-            messages={messages}
+            messages={
+              data?.pages
+                .map((page) =>
+                  page.messages.sort(
+                    (a, b) =>
+                      new Date(a.waCreatedAt).getTime() -
+                      new Date(b.waCreatedAt).getTime(),
+                  ),
+                )
+                .flat() || []
+            }
             contact={contactList.find(
               (contact) => contact.id === searchParams.get("contactId"),
             )}

@@ -11,10 +11,20 @@ export type WaGetMessagesBody = {
   messageBody: WaInboxMessage;
   templateComponentParams: WaTemplateComponent[];
 };
-export async function getMessagesByContactId(contactId: string, page: number) {
+
+export type WaMessagePage = {
+  messages: WaGetMessagesBody[];
+  nextCursor: string;
+};
+export async function getMessagesByContactId(
+  contactId: string,
+  cursor: string,
+) {
   return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/${contactId}?page=${page}`)
-  ).data as WaGetMessagesBody[];
+    await axiosClient.get(
+      `${WA_CONTACT_BASE_PATH}/${contactId}?cursor=${cursor}`,
+    )
+  ).data as WaMessagePage;
 }
 
 export async function sendNewWaMessage(contactId: string, message: any) {

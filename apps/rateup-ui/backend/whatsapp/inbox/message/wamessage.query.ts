@@ -1,15 +1,20 @@
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
   getContactsWithLastMessage,
   getMessagesByContactId as getMessagesByContactId,
   sendNewWaMessage,
 } from "./wamessage.api";
 
-export const useGetMessagesByContactId = (contactId: string, page: number) => {
-  return useQuery({
-    queryKey: ["wa-messages", contactId, page],
-    queryFn: () => getMessagesByContactId(contactId, page),
-    // placeholderData: keepPreviousData,
+export const useGetMessagesByContactId = (contactId: string) => {
+  return useInfiniteQuery({
+    queryKey: ["wa-messages", contactId],
+    initialPageParam: "",
+    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    select: (data) => ({
+      pages: [...data.pages].reverse(),
+      pageParams: [...data.pageParams].reverse(),
+    }),
     enabled: !!contactId,
   });
 };
