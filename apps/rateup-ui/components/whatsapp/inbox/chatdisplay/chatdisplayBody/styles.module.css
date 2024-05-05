@@ -8,8 +8,8 @@
   height: 100%;
   background-color: #f5f6fa;
   overflow: auto;
-  padding: var(--mantine-spacing-xl) var(--mantine-spacing-xl)
-    var(--mantine-spacing-lg) var(--mantine-spacing-xl);
+  padding: 0 var(--mantine-spacing-xl) var(--mantine-spacing-lg)
+    var(--mantine-spacing-xl);
   display: flex;
   flex-direction: column;
   gap: var(--mantine-spacing-lg);
@@ -29,4 +29,15 @@
   border-bottom-right-radius: 0px;
   box-shadow: var(--mantine-shadow-xs);
   color: var(--mantine-primary-color-6);
+}
+.indicator_wrapper {
+  margin-top: var(--mantine-spacing-xs);
+  background-color: #dcf0e4;
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-xs);
+  padding: 10px;
+}
+.indicator_text {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-gray-6);
 }

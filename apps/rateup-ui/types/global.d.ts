@@ -1033,7 +1033,6 @@ export type WaInboxMessage = {
   exchangeProcess: "send" | "receive";
   send?: WaSendMessageBody;
   receive?: WaReceiveMessageBody;
-  waCreatedAt: string;
 };
 
 export type WaTemplateFetchBody = {

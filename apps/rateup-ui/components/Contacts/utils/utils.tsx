@@ -185,10 +185,10 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
   {
-    header: () => "participants count",
+    header: () => "participants",
     accessorKey: "_count.campaignParticipants",
-    id: "count",
-    cell: (info) => info.getValue(),
+    id: "participants",
+    cell: (info) => <Badge variant="light">{info.getValue() as string}</Badge>,
   },
   {
     header: () => "Created",
@@ -245,6 +245,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   },
 ];
 export const contactParticipentDetailColumn = [
+  ...selectCheckBox,
   {
     header: () => "Name",
     accessorKey: "contact.name",
@@ -315,6 +316,7 @@ export const contactParticipentDetailColumn = [
         participantId={info?.getValue()?.id}
         status={info?.getValue()?.status}
         id={info?.getValue()?.campaignId}
+        teamId={info?.getValue()?.teamId}
       />
     ),
   },
@@ -324,3 +326,33 @@ export function IndeterminateCheckbox(props: CheckboxProps) {
   const ref = React.useRef<HTMLInputElement>(null!);
   return <Checkbox ref={ref} {...props} />;
 }
+
+export enum WhatsappTableType {
+  CONTACTS = "contacts",
+  GROUPS = "groups",
+  MEMBERS = "members",
+  PARTICIPANTS = "participants",
+}
+
+export const tabHeaderLabels = {
+  [WhatsappTableType.CONTACTS]: {
+    headerLabel: "Are you sure to delete these selected contacts?",
+    headerTitle: "Delete Contacts?",
+    tooltipMsg: "delete contacts",
+  },
+  [WhatsappTableType.GROUPS]: {
+    headerLabel: "Are you sure to delete these selected contact groups?",
+    headerTitle: "Delete Contact Groups?",
+    tooltipMsg: "delete contact groups",
+  },
+  [WhatsappTableType.MEMBERS]: {
+    headerLabel: "Are you sure to remove these selected members?",
+    headerTitle: "Remove members?",
+    tooltipMsg: "remove members",
+  },
+  [WhatsappTableType.PARTICIPANTS]: {
+    headerLabel: "Are you sure to remove these selected participants?",
+    headerTitle: "Remove participants?",
+    tooltipMsg: "remove participants",
+  },
+};

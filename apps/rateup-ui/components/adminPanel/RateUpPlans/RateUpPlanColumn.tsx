@@ -60,11 +60,11 @@ export const generateColumns = (
         if (params.hasChanged) {
           handleMutation({
             id: params.id,
-            displayWidgetId: params.props.value,
+            displayWidgetId:
+              params.props.value === "Nil" ? null : params.props.value,
             paymentPlanId: params.row.paymentPlanId,
           });
         }
-
         return {
           ...params.props,
         };

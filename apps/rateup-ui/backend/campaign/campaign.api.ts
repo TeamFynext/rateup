@@ -34,9 +34,11 @@ export const deleteCampaign = async (campaignId) => {
 export const sendCampaign = async (
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
+  participantId?: string,
 ) => {
   let res = await axiosClient.post(`/campaign/${campaignId}/send`, {
     sendToStatuses,
+    participantId,
   });
   return res;
 };

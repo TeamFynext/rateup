@@ -1,6 +1,6 @@
-import { ActionIcon, Flex, Group, ThemeIcon, Tooltip } from "@mantine/core";
+import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -11,20 +11,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useEffect, useMemo } from "react";
-import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
-import { PAGE_SIZE } from "../../utils/constants";
-import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
-import ConfirmationModal from "../Modal/ConfirmationModal";
-import FilterToggles from "./Filter/FilterToggle";
-import TableLayout from "./TableContent";
-import { showLoadingToast } from "../../utils/notifications";
-import OpenCreateMenu from "../Contacts/OpenCreateMenu";
-import { ContactTabs } from "../../pages/dashboard/contacts";
+import React, { useEffect } from "react";
 import {
   useDeleteManyContactGroupsMutation,
   useRemoveContactsFromGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
+import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
+import { PAGE_SIZE } from "../../utils/constants";
+import { showLoadingToast } from "../../utils/notifications";
+import { RateupButtonBlue } from "../Button/RateupButtons";
+import OpenCreateMenu from "../Contacts/OpenCreateMenu";
+import { WhatsappTableType, tabHeaderLabels } from "../Contacts/utils/utils";
+import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
+import ConfirmationModal from "../Modal/ConfirmationModal";
+import FilterToggles from "./Filter/FilterToggle";
+import TableLayout from "./TableContent";
+import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 
 function ContactTable({
   data,
@@ -34,20 +36,24 @@ function ContactTable({
   enableColumnSelection = true,
   cTags = [],
   topHeight,
-  tab = ContactTabs.CONTACTS,
+  tab = WhatsappTableType.CONTACTS,
   open = () => {},
   groupId = "",
+  btnTitle = "",
+  toggle,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
   enableFilter?: boolean;
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
-  cTags: string[];
+  cTags?: string[];
   topHeight?: number;
   tab?: string;
   open?: () => void;
   groupId?: string;
+  btnTitle?: string;
+  toggle?: () => void;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -58,7 +64,10 @@ function ContactTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [
+    dialogOpened,
+    { toggle: toggleConfirmationModal, close: closeDialog },
+  ] = useDisclosure(false);
   const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
     setRowSelection({});
   });
@@ -70,6 +79,12 @@ function ContactTable({
   const removeContactsMutation = useRemoveContactsFromGroup(groupId, () => {
     setRowSelection({});
   });
+  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(
+    groupId,
+    () => {
+      setRowSelection({});
+    },
+  );
 
   let tempVisibleColumnArray: string[] = [];
 
@@ -103,18 +118,7 @@ function ContactTable({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
   });
-  let headerLabel = "Are you sure to delete these selected contacts?";
-  if (tab === ContactTabs.GROUPS)
-    headerLabel = "Are you sure to delete these selected contact groups?";
-  if (tab === "member")
-    headerLabel = "Are you sure to remove these selected members?";
-
-  let headerTitle = "Delete Contacts?";
-  if (tab === ContactTabs.GROUPS) headerTitle = "Delete Contact Groups?";
-  if (tab === "member") headerTitle = "Remove members?";
-  let tooltipMsg = "delete contacts";
-  if (tab === ContactTabs.GROUPS) tooltipMsg = "delete contact groups";
-  else if (tab === "member") tooltipMsg = "remove members";
+  const { headerLabel, headerTitle, tooltipMsg } = tabHeaderLabels[tab] || {};
 
   return (
     <>
@@ -127,34 +131,29 @@ function ContactTable({
           headerTitle={headerTitle}
           confirmLabel="Delete"
           onConfirm={() => {
+            const selectedIds = Object.keys(rowSelection)?.map(
+              (index) => data?.[parseInt(index)]?.id,
+            );
             switch (tab) {
-              case ContactTabs.CONTACTS:
+              case WhatsappTableType.CONTACTS:
                 showLoadingToast(
                   "Contacts getting deleted",
                   "contact-delete",
                   true,
                   "Deleting Contacts",
                 );
-                deleteManyContactsMutation?.mutate(
-                  Object.keys(rowSelection)?.map(
-                    (index) => data?.[parseInt(index)]?.id,
-                  ),
-                );
+                deleteManyContactsMutation?.mutate(selectedIds);
                 break;
-              case ContactTabs.GROUPS:
+              case WhatsappTableType.GROUPS:
                 showLoadingToast(
                   "Contact groups getting deleted",
                   "contact-group-delete",
                   true,
                   "Deleting Contact Groups",
                 );
-                deleteManyContactGroupsMutation.mutate(
-                  Object.keys(rowSelection)?.map(
-                    (index) => data?.[parseInt(index)]?.id,
-                  ),
-                );
+                deleteManyContactGroupsMutation.mutate(selectedIds);
                 break;
-              case "member":
+              case WhatsappTableType.MEMBERS:
                 showLoadingToast(
                   "Members getting removed",
                   "contact-group-remove",
@@ -162,10 +161,20 @@ function ContactTable({
                   "Removing Members",
                 );
                 removeContactsMutation.mutate({
-                  contactIds: Object.keys(rowSelection)?.map(
-                    (index) => data?.[parseInt(index)]?.id,
-                  ),
+                  contactIds: selectedIds,
                   groupId,
+                });
+                break;
+              case WhatsappTableType.PARTICIPANTS:
+                showLoadingToast(
+                  "Participants getting removed",
+                  "campaign-mulitiple-participants-remove",
+                  true,
+                  "Removing Participants",
+                );
+                removeMulitpleGroupParticipants.mutate({
+                  data: selectedIds,
+                  campaignId: groupId,
                 });
                 break;
               default:
@@ -175,7 +184,10 @@ function ContactTable({
         />
         <Group gap={"xl"}>
           {Object.keys(rowSelection)?.length > 0 ? (
-            <Tooltip label={`Click to ${tooltipMsg}`} onClick={toggle}>
+            <Tooltip
+              label={`Click to ${tooltipMsg}`}
+              onClick={toggleConfirmationModal}
+            >
               <ActionIcon variant="light">
                 <IconTrash />
               </ActionIcon>
@@ -187,7 +199,15 @@ function ContactTable({
               </ActionIcon>
             </Tooltip>
           )}
-          <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
+          {toggle ? (
+            <RateupButtonBlue
+              title={btnTitle}
+              rightIcon={<IconPlus />}
+              onClick={toggle}
+            />
+          ) : (
+            <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
+          )}
         </Group>
         <FilterToggles
           enableFilter={enableFilter}

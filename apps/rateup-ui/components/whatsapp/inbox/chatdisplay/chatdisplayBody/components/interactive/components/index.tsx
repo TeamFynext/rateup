@@ -1,7 +1,8 @@
-import { Button, Image, Text } from "@mantine/core";
+import { Button, Group, Image, Text } from "@mantine/core";
 import { WaSendMessageBody } from "../../../../../../../../types/global";
 import classes from "./styles.module.css";
 import WaInboxText from "../../text";
+import { IconCircleDashedCheck } from "@tabler/icons-react";
 
 interface Props {
   interactiveBody: WaSendMessageBody["interactive"];
@@ -11,7 +12,15 @@ export default function WaInboxInteractiveComponents(props: Props) {
   return (
     <>
       {props?.messageContent && (
-        <WaInboxText messageContent={`${props.messageContent} responded`} />
+        <Group gap={"xs"}>
+          <IconCircleDashedCheck
+            size={15}
+            color="var(--mantine-primary-color-9"
+          />
+          <Text className={classes.responded_text}>
+            {`${props.messageContent} responded`}
+          </Text>
+        </Group>
       )}
       {props?.interactiveBody?.header && (
         <WaInboxInteractiveHeader interactiveBody={props?.interactiveBody} />

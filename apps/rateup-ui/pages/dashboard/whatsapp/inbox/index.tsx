@@ -8,35 +8,86 @@ import {
   useContactsWithLastMessage,
   useGetMessagesByContactId,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { useEffect, useRef, useState } from "react";
-import { WaGetMessagesBody } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ContactsWithLastMessage,
+  WaGetMessagesBody,
+  WaMessagePage,
+} from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../../../backend/whatsapp/inbox/ws";
 import { useUser } from "../../../../context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function WhatsAppInbox() {
-  const [messages, setMessages] = useState([] as WaGetMessagesBody[]);
+  const queryClient = useQueryClient();
+  const [contactList, setContactList] = useState(
+    [] as ContactsWithLastMessage[],
+  );
   const { user } = useUser();
   const connectionRef = useRef<WebSocket | null>(null);
 
   const searchParams = useSearchParams();
-  let contactId = searchParams.get("contactId");
-  const { data, isLoading, error } = useGetMessagesByContactId(
-    contactId as string,
+  const { data, error } = useGetMessagesByContactId(
+    searchParams.get("contactId") as string,
   );
+
   const {
     data: contactsWithLastMessage,
     isLoading: isContactsLoading,
     error: isContactsError,
   } = useContactsWithLastMessage();
 
-  useEffect(() => {
-    if (data) {
-      setMessages(() => data);
-    }
-  }, [data]);
+  const updateWaContactsList = useCallback(
+    (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
+      setContactList((prevList) => {
+        let updatedContacts = [...prevList];
+        const contactIndex = updatedContacts.findIndex(
+          (contact) => contact.id === newMessage.contact.id,
+        );
+        if (contactIndex !== -1) {
+          // update the existiing contact with new message
+          updatedContacts[contactIndex] = {
+            ...updatedContacts[contactIndex],
+            lastMessage: newMessage?.message,
+            userInitiatedFinalTimeStamp:
+              newMessage.message.messageBody.exchangeProcess === "receive"
+                ? newMessage.message.waCreatedAt
+                : updatedContacts[contactIndex].userInitiatedFinalTimeStamp,
+          };
+        } else {
+          //add new contact with new message
+          updatedContacts = [
+            ...updatedContacts,
+            {
+              ...newMessage.contact,
+              lastMessage: newMessage.message,
+              userInitiatedFinalTimeStamp:
+                newMessage.message.messageBody.exchangeProcess === "receive"
+                  ? newMessage.message.waCreatedAt
+                  : updatedContacts[contactIndex].userInitiatedFinalTimeStamp,
+            },
+          ];
+        }
 
-  const queryClient = useQueryClient();
+        //sort the contacts by last message timestamp
+        return updatedContacts
+          ?.filter((contact) => contact.lastMessage.messageBody !== null)
+          ?.sort((a, b) => {
+            const aDate = new Date(a.lastMessage.waCreatedAt);
+            const bDate = new Date(b.lastMessage.waCreatedAt);
+            return bDate.getTime() - aDate.getTime();
+          });
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (contactsWithLastMessage) {
+      setContactList(() => contactsWithLastMessage);
+    }
+  }, [contactsWithLastMessage]);
+
   useEffect(() => {
     connectionRef.current = new WebSocket(
       `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${user?.orgId}`,
@@ -47,20 +98,23 @@ export default function WhatsAppInbox() {
     };
 
     connectionRef.current.onmessage = (event) => {
-      const contactId = new URLSearchParams(window.location.search).get(
-        "contactId",
-      );
       const newMessage: { contact: ContactsData; message: WaGetMessagesBody } =
         JSON.parse(event.data);
-      if (newMessage.contact.id === contactId) {
-        setMessages((prevMessages) => [...prevMessages, newMessage.message]);
+      updateWaContactsList(newMessage);
+
+      //when a new message arrives then we need to take the values from the queryClient and update the messages in the first page
+      const currentData: {
+        pages: WaMessagePage[];
+        pageParams: string[];
+      } = queryClient.getQueryData(["wa-messages", newMessage.contact.id]);
+      if (currentData) {
+        const newData = { ...currentData };
+        newData.pages[0].messages.push(newMessage.message);
+        queryClient.setQueryData(
+          ["wa-messages", newMessage.contact.id],
+          newData,
+        );
       }
-      // TODO - Invalidate only the contact with the new message
-      // or manually update state in ui to avoid unnecessary refetch.
-      // (Sorting is done in getContactsWithLastMessage. Don't forget to update that too)
-      queryClient.invalidateQueries({
-        queryKey: ["contacts", "last-message"],
-      });
     };
 
     connectionRef.current.onclose = () => {
@@ -70,9 +124,9 @@ export default function WhatsAppInbox() {
     return () => {
       connectionRef.current?.close();
     };
-  }, []);
+  }, [updateWaContactsList]);
 
-  if (isLoading || isContactsLoading) return <Loader />;
+  if (isContactsLoading) return <Loader />;
   if (error) return <div>Error: {error.message}</div>;
   if (isContactsError) return <div>Error: {isContactsError.message}</div>;
 
@@ -81,8 +135,23 @@ export default function WhatsAppInbox() {
       <div className={classes.wrapper}>
         <Title>Inbox</Title>
         <Group className={classes.inner}>
-          <WaInboxChatSelect contacts={contactsWithLastMessage} />
-          <WaInboxChatDisplay messages={messages} contactId={contactId} />
+          <WaInboxChatSelect contacts={contactList} />
+          <WaInboxChatDisplay
+            messages={
+              data?.pages
+                .map((page) =>
+                  page.messages.sort(
+                    (a, b) =>
+                      new Date(a.waCreatedAt).getTime() -
+                      new Date(b.waCreatedAt).getTime(),
+                  ),
+                )
+                .flat() || []
+            }
+            contact={contactList.find(
+              (contact) => contact.id === searchParams.get("contactId"),
+            )}
+          />
         </Group>
       </div>
     </MantineProvider>

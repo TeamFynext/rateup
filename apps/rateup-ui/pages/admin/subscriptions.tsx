@@ -114,6 +114,7 @@ export default function () {
 export function renderFeatures(params: GridRenderCellParams<any, any>) {
   const subscription = params.value;
   const features = subscription.features;
+  console.log(features);
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <Group

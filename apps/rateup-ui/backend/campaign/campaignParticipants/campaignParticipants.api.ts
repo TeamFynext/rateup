@@ -38,3 +38,12 @@ export const deleteCampaignParticipant = async ({
   );
   return res;
 };
+export const deleteMulitpleGroupParticipants = async ({ data, campaignId }) => {
+  let res = await axiosClient.delete(
+    `/campaign/${campaignId}/participants/multiple-delete`,
+    {
+      data: { ids: data },
+    },
+  );
+  return res?.data;
+};

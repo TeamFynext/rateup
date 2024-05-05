@@ -123,13 +123,13 @@ export default function DashboardHome() {
     },
     {
       Icon: IconBrandWhatsapp,
-      title: "WhatsApp Survey",
+      title: "WhatsApp Flows",
       routerPath: "/dashboard/whatsapp?action=create",
     },
     {
       Icon: IconPageBreak,
-      title: "Group Survey",
-      routerPath: "/dashboard/groupsurveys?action=create",
+      title: "Landing Page",
+      routerPath: "/dashboard/landingPages?action=create",
     },
   ];
 

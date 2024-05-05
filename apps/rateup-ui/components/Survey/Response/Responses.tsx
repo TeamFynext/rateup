@@ -328,7 +328,7 @@ const Responses = ({
               </ActionIcon>
             </Tooltip>
           </Flex>
-          {responseCount > 0 && !survey?.isEncrypted && (
+          {!survey?.isEncrypted && (
             <Popover
               position="bottom-end"
               withArrow
