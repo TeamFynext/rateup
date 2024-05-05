@@ -3,6 +3,7 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   PrismaClient,
+  SubscriptionStatus,
 } from "@prisma/client";
 import axios from "axios";
 import {
@@ -394,18 +395,35 @@ export async function cancelRazorpaySubscription(orgId) {
     throw new Error("Subscription missing");
   }
 
-  const res = await axios.get(
+  const cancelSubscriptionData = {
+    cancel_at_cycle_end: 0,
+  };
+
+  const res = await axios.post(
     `https://api.razorpay.com/v1/subscriptions/${subscription?.subscriptionRef}/cancel`,
+    cancelSubscriptionData,
     {
       headers: {
         Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/json",
       },
     },
   );
 
-  console.log(res);
+  if (res && res?.data?.id) {
+    const subscriptionStatus = await prisma.order.update({
+      data: {
+        subscriptionStatus: SubscriptionStatus.cancelled,
+      },
+      where: {
+        subscriptionId: res?.data?.id,
+      },
+    });
+  }
 
-  return res?.status;
+  console.log(res.data);
+
+  return res?.data?.status;
 }
 
 //Get all rateup orders
@@ -462,6 +480,10 @@ export async function getAllOrgOrders(orgId: string) {
         planId: true,
         paymentStatus: true,
         payment: true,
+        subscriptionId: true,
+        subscriptionStatus: true,
+        subscriptionChargeAt: true,
+        subscriptionEndedAt: true,
       },
     });
 
@@ -501,6 +523,10 @@ export async function getAllOrgOrders(orgId: string) {
         displayName,
         paymentMethod: order?.payment?.method || "",
         paymentStatus: order.paymentStatus,
+        subscriptionId: order.subscriptionId,
+        subscriptionStatus: order.subscriptionStatus,
+        subscriptionChargeAt: order.subscriptionChargeAt,
+        subscriptionEndedAt: order.subscriptionEndedAt,
       };
     });
 

@@ -87,7 +87,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     getAllPaymentSubscriptionHandler,
   );
 
-  server.post(
+  server.put(
     "/subscriptions/cancel",
     {
       preHandler: [assertRootOrg],
