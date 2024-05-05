@@ -674,21 +674,36 @@ enum PaymentStatus {
   FAILED
 }
 
+enum SubscriptionStatus {
+  none
+  created
+  authenticated
+  active
+  pending
+  halted
+  cancelled
+  completed
+  expired
+}
+
 model Order {
-  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name           String
-  createdAt      DateTime      @default(now())
-  createdBy      User          @relation(fields: [createdById], references: [id])
-  createdById    String        @db.Uuid
-  org            Org           @relation(fields: [orgId], references: [id])
-  orgId          String        @db.Uuid
-  status         OrderStatus   @default(PENDING)
-  planId         String
-  subscriptionId String        @unique
-  payment        Payments?     @relation("PaymentOrder")
-  paymentId      String?       @unique @db.Uuid
-  orderPayment   Payments?     @relation("OrderPayment", fields: [paymentId], references: [id])
-  paymentStatus  PaymentStatus @default(PENDING)
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String
+  createdAt            DateTime            @default(now())
+  createdBy            User                @relation(fields: [createdById], references: [id])
+  createdById          String              @db.Uuid
+  org                  Org                 @relation(fields: [orgId], references: [id])
+  orgId                String              @db.Uuid
+  status               OrderStatus         @default(PENDING)
+  planId               String
+  subscriptionId       String              @unique
+  subscriptionChargeAt DateTime? //next charge date
+  subscriptionEndedAt  DateTime? //cancelled or expired date
+  subscriptionStatus   SubscriptionStatus?
+  payment              Payments?           @relation("PaymentOrder")
+  paymentId            String?             @unique @db.Uuid
+  orderPayment         Payments?           @relation("OrderPayment", fields: [paymentId], references: [id])
+  paymentStatus        PaymentStatus       @default(PENDING)
 }
 
 model Payments {
