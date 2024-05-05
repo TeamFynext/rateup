@@ -123,9 +123,9 @@ export async function getWaMessagesByContactIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const page = parseInt(request.query.page) || 1;
+    const cursor = request.query.cursor || null;
     const { contactId } = request.params;
-    const messages = await getWaMessagesByContactId(contactId, page);
+    const messages = await getWaMessagesByContactId(contactId, cursor);
     reply.send(messages);
   } catch (error) {
     reply.status(500).send("Internal Server Error");

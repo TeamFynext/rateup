@@ -10,7 +10,7 @@ const NewWaMessageBody = z.object({
 });
 
 const PaginateQuerySchema = z.object({
-  page: z.string(),
+  cursor: z.string().optional(),
 });
 
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
