@@ -62,6 +62,7 @@ export async function createCheckoutSession(
         orgId: data.orgId,
         planId: data.planId,
         subscriptionId,
+        subscriptionStatus: SubscriptionStatus.none,
       },
     });
 
@@ -226,6 +227,37 @@ export async function deleteRateUpPlan(data: rateupPlanParamInput) {
   await prisma.rateupPlan.delete({
     where: { id: data.id },
   });
+}
+
+//Webhook action On Subscription Activated
+export async function activateSubscription(payload) {
+  try {
+    const { subscription, payment } = payload;
+    const { id, status, charge_at } = subscription?.entity;
+
+    console.log(
+      "....................Activating Subscription.....................",
+    );
+
+    if (id) {
+      const subscriptionStatus = await prisma.order.update({
+        data: {
+          subscriptionStatus: SubscriptionStatus.active,
+          ...(!charge_at
+            ? {}
+            : { subscriptionChargeAt: new Date(charge_at * 1000) }),
+        },
+        where: {
+          subscriptionId: id,
+        },
+      });
+
+      return { success: true, data: subscriptionStatus };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return { success: false, error: error.message };
+  }
 }
 
 //Webhook action On Subscription charged
@@ -414,6 +446,7 @@ export async function cancelRazorpaySubscription(orgId) {
     const subscriptionStatus = await prisma.order.update({
       data: {
         subscriptionStatus: SubscriptionStatus.cancelled,
+        subscriptionEndedAt: new Date(),
       },
       where: {
         subscriptionId: res?.data?.id,
