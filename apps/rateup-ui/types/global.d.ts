@@ -587,6 +587,7 @@ declare global {
     basePlan: SPlan;
     id?: string;
     paymentPlanId?: string;
+    subscriptionRef?: string;
   }
   type Org = {
     id: string;

@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Badge,
+  Blockquote,
   Group,
   Loader,
   Stack,
@@ -8,7 +9,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
 import { formatIsoDateString } from "../../../utils/dateTime";
@@ -16,17 +17,25 @@ import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import Pricing from "../../../components/HomePage/pages/Pricing";
 import { useDisclosure } from "@mantine/hooks";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { IconCheck, IconMail, IconRefresh } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconInfoCircle,
+  IconMail,
+  IconRefresh,
+} from "@tabler/icons-react";
 import classes from "./setting.module.css";
 import {
   showLoadingToast,
   showSuccessToast,
 } from "../../../utils/notifications";
 import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 const Billing = ({
   subscription,
   orders,
+  activeOrderData,
+  latestOrderData,
   processingPayment,
   refetch,
   isRefetching,
@@ -34,6 +43,7 @@ const Billing = ({
   const [openedUpgradeModal, { toggle, close: closeUpgradeModal }] =
     useDisclosure(false);
 
+  const [cancelDialogOpened, { open, close }] = useDisclosure();
   const CancelSubscription = useCancelRazorpaySubscriptionMutation();
 
   const handleCancelSubscription = () => {
@@ -46,21 +56,29 @@ const Billing = ({
     CancelSubscription.mutate();
   };
 
-  const [orderData, setOrderData] = useState(null);
-
-  useEffect(() => {
-    let order = orders?.filter(
-      (o) => o.subscriptionId === subscription.subscriptionRef,
-    );
-    setOrderData(order[0]);
-  }, [subscription, orders]);
-
   return (
     <>
       {processingPayment ? (
         <Loader type="bars" />
       ) : (
         <Stack>
+          {latestOrderData?.subscriptionStatus === "none" && (
+            <Group style={{ maxWidh: "380px" }}>
+              <Blockquote color="blue" icon={<IconInfoCircle />} my="lg">
+                <Text mb="lg">
+                  Your plan activation is under process. <br /> Kindly wait. You
+                  will recived activations status as an email shortly.
+                </Text>
+                <RateupButtonPrimary
+                  title="Refresh Status"
+                  onClick={refetch}
+                  rightIcon={<IconRefresh />}
+                  disabled={isRefetching}
+                />
+              </Blockquote>
+            </Group>
+          )}
+
           <Group>
             <Title order={4}>Current Plan</Title>
             <Tooltip label="Refresh data">
@@ -91,31 +109,50 @@ const Billing = ({
               </ActionIcon>
             </Tooltip>
           </Group>
+          <ConfirmationModal
+            forDeleteFunctionality
+            opened={cancelDialogOpened}
+            onClose={close}
+            headerLabel="Are you sure you want to cancel your active subscription?"
+            headerTitle="Cancel Subscription"
+            confirmLabel="Delete"
+            onConfirm={handleCancelSubscription}
+            includeEmailConfirmation={true}
+          />
           <PaperLayout w={"60%"} p={"xl"}>
             <Stack gap={"xl"}>
               <Group justify="space-between">
-                <Stack gap={1}>
+                <Stack gap={1} style={{ minWidth: "230px" }}>
                   <Text c={"GrayText"} fw={500} fz={15}>
                     Plan Name
                   </Text>
                   <Title order={5}>{subscription?.basePlan?.name}</Title>
                 </Stack>
-                {orderData?.subscriptionChargeAt && (
-                  <Stack gap={1}>
-                    <Text c={"GrayText"} fw={500} fz={15}>
-                      Next Charging on:
-                    </Text>
-                    <Title order={5}>{orderData?.subscriptionChargeAt}</Title>
-                  </Stack>
-                )}
-
-                {orderData?.subscriptionStatus === "cancelled" &&
-                  orderData?.subscriptionEndedAt && (
+                {activeOrderData?.subscriptionChargeAt &&
+                  activeOrderData?.subscriptionStatus !== "cancelled" && (
                     <Stack gap={1}>
                       <Text c={"GrayText"} fw={500} fz={15}>
-                        Ended on:
+                        Next Charging on:
                       </Text>
-                      <Title order={5}>{orderData?.subscriptionEndedAt}</Title>
+                      <Title order={5}>
+                        {formatIsoDateString(
+                          activeOrderData?.subscriptionChargeAt,
+                        )}
+                      </Title>
+                    </Stack>
+                  )}
+
+                {activeOrderData?.subscriptionStatus === "cancelled" &&
+                  activeOrderData?.subscriptionEndedAt && (
+                    <Stack gap={1}>
+                      <Text c={"GrayText"} fw={500} fz={15}>
+                        Cancelled on:
+                      </Text>
+                      <Title order={5}>
+                        {formatIsoDateString(
+                          activeOrderData?.subscriptionEndedAt,
+                        )}
+                      </Title>
                     </Stack>
                   )}
 
@@ -124,7 +161,7 @@ const Billing = ({
                   <RateupButtonPrimary title="Upgrade plan" onClick={toggle} />
                 ) : (
                   subscription?.basePlan?.name &&
-                  (orderData?.subscriptionStatus === "cancelled" ? (
+                  (activeOrderData?.subscriptionStatus === "cancelled" ? (
                     <RateupButtonPrimary
                       title="Cancelled"
                       onClick={() => {}}
@@ -133,7 +170,7 @@ const Billing = ({
                   ) : (
                     <RateupButtonPrimary
                       title="Cancel Subscription"
-                      onClick={handleCancelSubscription}
+                      onClick={open}
                       color="red"
                     />
                   ))
@@ -193,7 +230,14 @@ const Billing = ({
                 {!["FREE PLAN", "RATEUP TRIAL"].includes(
                   subscription?.basePlan?.name,
                 ) ? (
-                  <RateupButtonPrimary title="Buy Addons" disabled />
+                  activeOrderData?.subscriptionStatus === "cancelled" ? (
+                    <RateupButtonPrimary
+                      title="Upgrade plan"
+                      onClick={toggle}
+                    />
+                  ) : (
+                    <RateupButtonPrimary title="Buy Addons" disabled />
+                  )
                 ) : null}
               </Group>
 
