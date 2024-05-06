@@ -2,6 +2,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ICreateCheckoutType,
+  cancelRazorpaySubscription,
   createCheckoutSession,
   createRateupPaymentPlan,
   deletePaymentPlan,
@@ -222,6 +223,41 @@ export function usePaymentSubcription() {
   return useQuery({
     queryKey: ["paymentsubscription"],
     queryFn: getAllPaymentSubscription,
+  });
+}
+
+export function useCancelRazorpaySubscriptionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => cancelRazorpaySubscription(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        loading: false,
+        title: "Cancel Success",
+        message:
+          "Rateup Subscription cancelled. Enjoy services till expiry date.",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        loading: false,
+        title: "Failed",
+        message: error.response.data,
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
+    },
   });
 }
 

@@ -43,6 +43,11 @@ export async function getAllPaymentSubscription() {
   return res?.data;
 }
 
+export async function cancelRazorpaySubscription() {
+  let res = await axiosClient.put(`${SUBSCRIPTION_URL}/cancel`);
+  return res?.data;
+}
+
 export async function getAllOrdersUserOrg() {
   let res = await axiosClient.get(`${PAYMENT_URL}org/orders`);
   return res?.data;
