@@ -7,6 +7,7 @@ import {
   FileButton,
   Group,
   Image,
+  Loader,
   LoadingOverlay,
   Stack,
   Text,
@@ -14,8 +15,10 @@ import {
 import { uploadFile } from "../../../../../utils/file-upload/upload";
 import { IconX } from "@tabler/icons-react";
 import { getFileName } from "../../../SurveyTheme/components/BackgroundStyles";
-import { ImageCropModal } from "../../../../Modal/ImageCropModal";
-import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
+import imageCropModalStyles from "../../../../Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
+import styles from "./ImageForm.module.css";
+import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
 
 export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -23,18 +26,12 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     isPreview ? null : response || null,
   );
-
+  const [isHeic2anyConverting, setIsHeic2anyConverting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const resetRef = useRef<() => void>(null);
-  const [selectedImage, setSelectedImage] = useState({
-    url: "",
-    name: "",
-  });
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
+  const surveyThemeObj = useSurveyThemeData();
+  const surveyThemeBtnStyles = surveyThemeObj?.surveyTheme?.button?.styles;
 
   useEffect(() => {
     const uploadAndUpdate = async () => {
@@ -66,42 +63,72 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     updateResponse(null);
   }
 
-  const onChangePicture = (event: File) => {
-    if (!event) return;
-    setSelectedImage({
-      url: URL.createObjectURL(event),
-      name: event.name,
-    });
-    toggleCropDialog();
+  const onChangePicture = async (file: File) => {
+    if (!file) return;
+    const fileExtension = file.name?.split(".")?.pop()?.toLowerCase() ?? "jpg";
+
+    let selectedImageUrl: string;
+    let selectedImageName: string;
+
+    if (fileExtension === "heic") {
+      try {
+        const heic2any = (await import("heic2any")).default;
+        setIsHeic2anyConverting(true);
+        const convertedFile = (await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+        })) as Blob;
+        setIsHeic2anyConverting(false);
+        selectedImageUrl = URL.createObjectURL(convertedFile);
+        selectedImageName = file.name.toLowerCase().replace("heic", "jpeg");
+      } catch (err) {
+        console.log(err, "unbale to convert heic image to jpeg");
+      }
+    } else {
+      selectedImageUrl = URL.createObjectURL(file);
+      selectedImageName = file.name;
+    }
+
+    if (selectedImageUrl && selectedImageName) {
+      modals.openContextModal({
+        modal: "imageCropModal",
+        title: "Crop Image",
+        centered: true,
+        classNames: {
+          content: imageCropModalStyles["modal-content"],
+          header: imageCropModalStyles["modal-header"],
+          body: imageCropModalStyles["modal-body"],
+        },
+        innerProps: {
+          imageUrl: selectedImageUrl,
+          imageName: selectedImageName,
+          onSaveClick: handleCropImageSave,
+          aspectRatio: 4 / 3,
+        },
+      });
+    }
     resetRef?.current?.();
   };
 
-  const handleCropImageSave = async (cropedImage) => {
-    if (!cropedImage) return;
-    setFile(cropedImage);
+  const handleCropImageSave = async ({ file }) => {
+    if (!file) return;
+    setFile(file);
   };
 
   const isImageSelected = previewUrl || response?.length > 0;
   const imageContainerWidthAndHeight = isImageSelected ? 150 : 0;
 
   return (
-    <Stack>
-      <ImageCropModal
-        opened={openedCropDialog}
-        onclose={closeCropDialog}
-        imageName={selectedImage.name}
-        handleCropImageSave={handleCropImageSave}
-        image={selectedImage.url}
-        aspect={4 / 3}
-      />
-      <Box w={300}>
+    <Stack className={styles["image-form-root-div"]}>
+      <Stack className={styles["file-btn-and-converting-loader-container"]}>
         <FileButton
           resetRef={resetRef}
           onChange={onChangePicture}
-          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+          accept="image/png,image/jpeg,image/svg+xml,image/webp,.heic"
         >
           {(props) => (
             <Button
+              className={styles["upload-btn"]}
               fullWidth
               size="lg"
               radius="lg"
@@ -112,10 +139,24 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
             </Button>
           )}
         </FileButton>
-      </Box>
+
+        {isHeic2anyConverting && (
+          <Stack gap={0} className={styles["converting-loader-p-container"]}>
+            <p
+              className={styles["converting-text-p"]}
+              style={{
+                color: surveyThemeBtnStyles?.backgroundColor || "initial",
+              }}
+            >
+              Converting heic image to jpeg
+            </p>
+            <Loader type="dots" color={surveyThemeBtnStyles?.backgroundColor} />
+          </Stack>
+        )}
+      </Stack>
 
       <Box
-        className={"image-remove-icon-picked-file-text-container"}
+        className={styles["image-remove-icon-picked-file-text-container"]}
         style={{ position: "relative" }}
       >
         <Stack align="center">

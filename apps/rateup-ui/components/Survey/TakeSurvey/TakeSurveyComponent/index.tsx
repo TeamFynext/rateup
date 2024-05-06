@@ -51,6 +51,7 @@ import {
 import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
 import { validateQuestion } from "../../../../utils/validation";
 import styles from "./TakeSurvey.module.css";
+import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -416,115 +417,120 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       value={{ response: currentResponse, updateResponse }}
     >
       <SelectedQContext.Provider value={{ selectedQ }}>
-        <NextPrevFuncsAndLastQuestionContextProvider
-          nextFn={handleNext}
-          prevFn={handlePrev}
-          survey={survey}
-        >
-          <Container
-            size={"md"}
-            className={styles["take-survey-root-div"]}
-            ref={takeSurveyRootDivRef}
+        <SurveyThemeContextProvider surveyThemeObj={surveyThemeData}>
+          <NextPrevFuncsAndLastQuestionContextProvider
+            nextFn={handleNext}
+            prevFn={handlePrev}
+            survey={survey}
           >
-            <Stack justify="space-between" h={"100%"} gap={"1rem"}>
-              <ConfirmResponsesModal
-                opened={isConfirmResponsesModalOpen}
-                close={closeConfirmResponsesModal}
-                survey={survey}
-                questionsHistory={questionsHistory}
-                responses={responses}
-                selectedLanguage={selectedLanguage}
-                surveyThemeData={surveyThemeData}
-                finishSurvey={finishSurvey}
-                isSavingResponses={isSavingResponses}
-                largeScreen={largeScreen}
-              />
-              <GiftModal
-                close={close}
-                invoiceList={invoiceList}
-                opened={opened}
-                handleInvoiceSubmit={handleInvoiceSubmit}
-              />
+            <Container
+              size={"md"}
+              className={styles["take-survey-root-div"]}
+              ref={takeSurveyRootDivRef}
+            >
+              <Stack justify="space-between" h={"100%"} gap={"1rem"}>
+                <ConfirmResponsesModal
+                  opened={isConfirmResponsesModalOpen}
+                  close={closeConfirmResponsesModal}
+                  survey={survey}
+                  questionsHistory={questionsHistory}
+                  responses={responses}
+                  selectedLanguage={selectedLanguage}
+                  surveyThemeData={surveyThemeData}
+                  finishSurvey={finishSurvey}
+                  isSavingResponses={isSavingResponses}
+                  largeScreen={largeScreen}
+                />
+                <GiftModal
+                  close={close}
+                  invoiceList={invoiceList}
+                  opened={opened}
+                  handleInvoiceSubmit={handleInvoiceSubmit}
+                />
 
-              <AnimatePresence initial={false}>
-                <Box
-                  className={`${styles["question-form-title-desc-container"]}`}
-                >
-                  <motion.div
-                    className={styles["question-form-title-desc-motion-div"]}
-                    key={selectedQ.id}
-                    transition={{
-                      type: "tween",
-                      duration: 0.85,
-                    }}
-                    initial={{
-                      x: aPDirection > 0 ? "100%" : "-100%",
-                      opacity: 0,
-                    }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: aPDirection > 0 ? "-100%" : "100%", opacity: 0 }}
+                <AnimatePresence initial={false}>
+                  <Box
+                    className={`${styles["question-form-title-desc-container"]}`}
                   >
                     <motion.div
-                      className={
-                        styles["question-and-error-text-containers-wrapper"]
-                      }
-                      layout="position"
+                      className={styles["question-form-title-desc-motion-div"]}
+                      key={selectedQ.id}
                       transition={{
                         type: "tween",
-                        duration: 0.2,
+                        duration: 0.85,
+                      }}
+                      initial={{
+                        x: aPDirection > 0 ? "100%" : "-100%",
+                        opacity: 0,
+                      }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{
+                        x: aPDirection > 0 ? "-100%" : "100%",
+                        opacity: 0,
                       }}
                     >
-                      <ScrollArea.Autosize
-                        type="never"
-                        className={styles["question-div"]}
+                      <motion.div
+                        className={
+                          styles["question-and-error-text-containers-wrapper"]
+                        }
+                        layout="position"
+                        transition={{
+                          type: "tween",
+                          duration: 0.2,
+                        }}
                       >
-                        <Box
-                          className={`${styles["title-desc-container"]} ${lexend.className}`}
+                        <ScrollArea.Autosize
+                          type="never"
+                          className={styles["question-div"]}
                         >
-                          <QuestionTitle
-                            largeScreen={largeScreen}
-                            themeStyles={
-                              surveyThemeData?.surveyTheme?.title?.styles
-                            }
-                            smallScreen={smallScreen}
-                          />
-                          {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                            <QuestionDesc
+                          <Box
+                            className={`${styles["title-desc-container"]} ${lexend.className}`}
+                          >
+                            <QuestionTitle
                               largeScreen={largeScreen}
                               themeStyles={
-                                surveyThemeData?.surveyTheme?.subtitle?.styles
+                                surveyThemeData?.surveyTheme?.title?.styles
                               }
+                              smallScreen={smallScreen}
                             />
-                          )}
+                            {!isHtml(selectedQ?.title[selectedLanguage]) && (
+                              <QuestionDesc
+                                largeScreen={largeScreen}
+                                themeStyles={
+                                  surveyThemeData?.surveyTheme?.subtitle?.styles
+                                }
+                              />
+                            )}
+                          </Box>
+
+                          <QuestionForm />
+                        </ScrollArea.Autosize>
+
+                        <Box
+                          className={styles["error-text-div"]}
+                          ref={errorTextDivRef}
+                        >
+                          {/* required, response error messages will be rendered here */}
                         </Box>
-
-                        <QuestionForm />
-                      </ScrollArea.Autosize>
-
-                      <Box
-                        className={styles["error-text-div"]}
-                        ref={errorTextDivRef}
-                      >
-                        {/* required, response error messages will be rendered here */}
-                      </Box>
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                </Box>
-              </AnimatePresence>
+                  </Box>
+                </AnimatePresence>
 
-              <NextPrev
-                next={handleNext}
-                prev={handlePrev}
-                num={QnNo}
-                total={questionCount}
-                survey={survey}
-                surveyThemeData={surveyThemeData}
-                isSavingResponses={isSavingResponses || giftLoading}
-                errorTextDivRef={errorTextDivRef}
-              />
-            </Stack>
-          </Container>
-        </NextPrevFuncsAndLastQuestionContextProvider>
+                <NextPrev
+                  next={handleNext}
+                  prev={handlePrev}
+                  num={QnNo}
+                  total={questionCount}
+                  survey={survey}
+                  surveyThemeData={surveyThemeData}
+                  isSavingResponses={isSavingResponses || giftLoading}
+                  errorTextDivRef={errorTextDivRef}
+                />
+              </Stack>
+            </Container>
+          </NextPrevFuncsAndLastQuestionContextProvider>
+        </SurveyThemeContextProvider>
       </SelectedQContext.Provider>
     </CurrentResponsesContext.Provider>
   );
