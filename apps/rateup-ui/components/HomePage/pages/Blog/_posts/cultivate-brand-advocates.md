@@ -1,6 +1,6 @@
 ---
 title: "Cultivate positive brand advocates: A Puma Case Study"
-date: "10/01/2024"
+date: "05/06/2024"
 slug: "cultivate-brand-advocates"
 coverImage: "https://source.unsplash.com/a-view-of-a-clock-tower-through-a-window-EMzVcmsxmQA"
 ---

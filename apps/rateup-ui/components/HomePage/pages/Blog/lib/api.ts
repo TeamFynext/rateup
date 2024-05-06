@@ -2,6 +2,7 @@ import fs from "fs";
 import { join } from "path";
 import matter from "gray-matter";
 import PostType from "../interfaces/post";
+import dayjs from "dayjs";
 
 const postsDirectory = join(
   process.cwd(),
@@ -34,7 +35,9 @@ export function getPostBySlug(slug: string, fields: string[] = []): PostType {
     if (field === "coverImage") {
       items[field] = data[field];
     }
-
+    if (field === "date") {
+      items[field] = formatDate(data[field]);
+    }
     if (typeof data[field] !== "undefined") {
       items[field] = data[field];
     }
@@ -53,4 +56,10 @@ export function getAllPosts(fields: string[] = []): PostType[] {
     // sort posts by date in descending order
     .sort((post1, post2) => (post1.date > post2.date ? -1 : 1));
   return posts;
+}
+
+function formatDate(dateString: string): string {
+  // Parse the date string with the correct format
+  const date = dayjs(dateString, "DD/MM/YYYY");
+  return date.format("MMMM DD, YYYY");
 }

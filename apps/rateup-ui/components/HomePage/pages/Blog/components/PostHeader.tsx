@@ -15,7 +15,12 @@ const PostHeader = ({ title, coverImage, date }: Props) => {
 
       <CoverImage title={title} src={coverImage} />
       <div>
-        <DateFormatter dateString={date} />
+        <h1
+          style={{ marginTop: "1rem", marginBottom: "2rem", fontSize: "18px" }}
+        >
+          Published on:
+          <DateFormatter dateString={date} />
+        </h1>
       </div>
     </>
   );

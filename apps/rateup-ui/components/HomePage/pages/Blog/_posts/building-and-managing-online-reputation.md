@@ -1,6 +1,6 @@
 ---
 title: "Building and Managing Your Online Reputation: A Guide for Success"
-date: "16/01/2024"
+date: "01/16/2024"
 slug: "building-and-managing-online-reputation"
 coverImage: "https://source.unsplash.com/turned-on-acer-laptop-on-table-near-cup-zwsHjakE_iI"
 ---

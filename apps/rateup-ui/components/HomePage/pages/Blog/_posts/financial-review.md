@@ -1,7 +1,7 @@
 ---
 title: "Transforming Financial Fortunes: The Impact of Online Reputation Management Tools"
+date: "12/03/2023"
 slug: "financial-review"
-date: "31/12/2023"
 coverImage: "https://source.unsplash.com/fan-of-100-us-dollar-banknotes-lCPhGxs7pww"
 ---
 
