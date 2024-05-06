@@ -3,6 +3,7 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   PrismaClient,
+  SubscriptionStatus,
 } from "@prisma/client";
 import axios from "axios";
 import {
@@ -61,6 +62,7 @@ export async function createCheckoutSession(
         orgId: data.orgId,
         planId: data.planId,
         subscriptionId,
+        subscriptionStatus: SubscriptionStatus.none,
       },
     });
 
@@ -227,6 +229,37 @@ export async function deleteRateUpPlan(data: rateupPlanParamInput) {
   });
 }
 
+//Webhook action On Subscription Activated
+export async function activateSubscription(payload) {
+  try {
+    const { subscription, payment } = payload;
+    const { id, status, charge_at } = subscription?.entity;
+
+    console.log(
+      "....................Activating Subscription.....................",
+    );
+
+    if (id) {
+      const subscriptionStatus = await prisma.order.update({
+        data: {
+          subscriptionStatus: SubscriptionStatus.active,
+          ...(!charge_at
+            ? {}
+            : { subscriptionChargeAt: new Date(charge_at * 1000) }),
+        },
+        where: {
+          subscriptionId: id,
+        },
+      });
+
+      return { success: true, data: subscriptionStatus };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 //Webhook action On Subscription charged
 export async function updateSubscription(payload) {
   try {
@@ -376,6 +409,56 @@ export async function getAllPaymentSubscriptions() {
   return subscriptions;
 }
 
+//Cancel razorpay subscription
+export async function cancelRazorpaySubscription(orgId) {
+  console.log("Cancelling subscription........");
+
+  if (!orgId) {
+    throw new Error("Organization data missing");
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+
+  if (!subscription || !subscription?.subscriptionRef) {
+    throw new Error("Subscription missing");
+  }
+
+  const cancelSubscriptionData = {
+    cancel_at_cycle_end: 0,
+  };
+
+  const res = await axios.post(
+    `https://api.razorpay.com/v1/subscriptions/${subscription?.subscriptionRef}/cancel`,
+    cancelSubscriptionData,
+    {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (res && res?.data?.id) {
+    const subscriptionStatus = await prisma.order.update({
+      data: {
+        subscriptionStatus: SubscriptionStatus.cancelled,
+        subscriptionEndedAt: new Date(),
+      },
+      where: {
+        subscriptionId: res?.data?.id,
+      },
+    });
+  }
+
+  console.log(res.data);
+
+  return res?.data?.status;
+}
+
 //Get all rateup orders
 export async function getAllPaymentOrders() {
   const orders = await prisma.order.findMany({
@@ -430,6 +513,10 @@ export async function getAllOrgOrders(orgId: string) {
         planId: true,
         paymentStatus: true,
         payment: true,
+        subscriptionId: true,
+        subscriptionStatus: true,
+        subscriptionChargeAt: true,
+        subscriptionEndedAt: true,
       },
     });
 
@@ -469,6 +556,10 @@ export async function getAllOrgOrders(orgId: string) {
         displayName,
         paymentMethod: order?.payment?.method || "",
         paymentStatus: order.paymentStatus,
+        subscriptionId: order.subscriptionId,
+        subscriptionStatus: order.subscriptionStatus,
+        subscriptionChargeAt: order.subscriptionChargeAt,
+        subscriptionEndedAt: order.subscriptionEndedAt,
       };
     });
 
