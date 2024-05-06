@@ -156,3 +156,8 @@ text.content {
   width: calc(30% - 16px);
   margin: 8px;
 }
+
+.back-to-blog {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
