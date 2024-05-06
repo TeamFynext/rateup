@@ -81,6 +81,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
         setIsHeic2anyConverting(false);
         selectedImageUrl = URL.createObjectURL(convertedFile);
         selectedImageName = file.name.toLowerCase().replace("heic", "jpeg");
+        console.log("this is the converted file", convertedFile);
       } catch (err) {
         console.log(err, "unbale to convert heic image to jpeg");
       }
@@ -111,6 +112,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   };
 
   const handleCropImageSave = async ({ file }) => {
+    console.log("recieved file in handle crop image save", file);
     if (!file) return;
     setFile(file);
   };
