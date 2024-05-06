@@ -1,3 +1,4 @@
+import { WaMessage } from "@prisma/client";
 import prisma from "../../../../utils/prisma";
 
 export async function addNewWaMessage(
@@ -19,20 +20,37 @@ export async function addNewWaMessage(
 
 export async function getWaMessagesByContactId(
   contactId: string,
-  page: number,
+  cursor: string | null,
 ) {
-  const messages = await prisma.waMessage.findMany({
-    where: {
-      contactId,
-    },
-    orderBy: {
-      waCreatedAt: "desc",
-    },
-    skip: (page - 1) * 15,
-    take: 15,
-  });
-  console.log(page, messages.length);
-  return messages;
+  let messages: WaMessage[];
+  if (cursor) {
+    messages = await prisma.waMessage.findMany({
+      skip: 1,
+      take: 300,
+      cursor: {
+        id: cursor,
+      },
+      where: {
+        contactId,
+      },
+      orderBy: {
+        waCreatedAt: "desc",
+      },
+    });
+  } else {
+    messages = await prisma.waMessage.findMany({
+      take: 300,
+      where: {
+        contactId,
+      },
+      orderBy: {
+        waCreatedAt: "desc",
+      },
+    });
+  }
+  const nextCursor =
+    messages.length > 0 ? messages[messages.length - 1].id : null;
+  return { messages, nextCursor };
 }
 
 export async function getContactsWithLastMessage(orgId: string) {
