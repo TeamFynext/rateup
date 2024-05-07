@@ -19,8 +19,10 @@
   justify-content: space-between;
 }
 .chat_recepient_name {
-  font-size: var(--mantine-font-size-lg);
+  font-size: var(--mantine-font-size-md);
   font-weight: 600;
+  flex: 1;
+  max-width: 250px;
 }
 .latest_chat {
   font-size: var(--mantine-font-size-xs);

@@ -8,12 +8,12 @@ export default function WaInboxSessionBadge({
 }) {
   return (
     <Tooltip
+      position="top-start"
       label={
         isInboxSessionExpired(timeStamp) ? "Session Expired" : "Session Active"
       }
     >
       <Badge
-        variant="light"
         className={`${classes.session_expiry_badge} ${isInboxSessionExpired(timeStamp) ? classes.session_expiry_badge_expired : classes.session_expiry_badge_active}`}
       >
         {isInboxSessionExpired(timeStamp) ? "Expired" : "Active"}

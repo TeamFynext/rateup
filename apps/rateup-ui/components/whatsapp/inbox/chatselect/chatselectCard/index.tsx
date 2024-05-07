@@ -29,9 +29,17 @@ export default function WaInboxChatSelectCard({
     >
       <Stack className={classes.inner}>
         <Group className={classes.chat_card_header}>
-          <Text className={classes.chat_recepient_name}>{contact?.name}</Text>
-          <Group>
-            <WaInboxSessionBadge timeStamp={lastMessage?.waCreatedAt} />
+          <Text
+            className={classes.chat_recepient_name}
+            title={contact?.name}
+            truncate
+          >
+            {contact?.name}
+          </Text>
+          <Group gap={"xs"}>
+            <WaInboxSessionBadge
+              timeStamp={contact?.userInitiatedFinalTimeStamp}
+            />
             <Text className={classes.chat_time}>
               {formatToCustomTime(contact?.lastMessage?.waCreatedAt)}
             </Text>
