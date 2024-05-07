@@ -16,6 +16,7 @@ import {
 import { $Pref } from "./payment.schema";
 import { assertRootOrg } from "../../utils/auth";
 import { checkSession } from "../../utils/checkSession";
+import { checkRoleHandler } from "../../utils/checkRoleHandler";
 
 export async function paymentRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -90,7 +91,7 @@ export async function paymentRoutes(server: FastifyInstance) {
   server.put(
     "/subscriptions/cancel",
     {
-      preHandler: [assertRootOrg],
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
     },
     cancelRazorpaySubscriptionHandler,
   );
