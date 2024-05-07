@@ -3,6 +3,7 @@ import { join } from "path";
 import matter from "gray-matter";
 import PostType from "../interfaces/post";
 import dayjs from "dayjs";
+import { formatDate } from "../../../../../utils/dateTime";
 
 const postsDirectory = join(
   process.cwd(),
@@ -56,10 +57,4 @@ export function getAllPosts(fields: string[] = []): PostType[] {
     // sort posts by date in descending order
     .sort((post1, post2) => (post1.date > post2.date ? -1 : 1));
   return posts;
-}
-
-function formatDate(dateString: string): string {
-  // Parse the date string with the correct format
-  const date = dayjs(dateString, "DD/MM/YYYY");
-  return date.format("MMMM DD, YYYY");
 }
