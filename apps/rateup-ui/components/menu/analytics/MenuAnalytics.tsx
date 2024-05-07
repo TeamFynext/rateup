@@ -54,7 +54,7 @@ const MenuAnalytics = ({
               ]}
               label={
                 <Text c="var(--tertiary-color)" fw={700} ta="center" size="sm">
-                  {((visited ?? 0) / 100) * 100}% Used
+                  {Math.round(((visited ?? 0) / 100) * 100)}% Used
                 </Text>
               }
             />

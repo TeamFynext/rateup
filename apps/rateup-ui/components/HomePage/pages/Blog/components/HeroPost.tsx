@@ -13,7 +13,7 @@ type Props = {
   slug: string;
 };
 
-const HeroPost = ({ title, coverImage, slug }: Props) => {
+const HeroPost = ({ title, coverImage, date, slug }: Props) => {
   const router = useRouter();
 
   const handleClick = () => {

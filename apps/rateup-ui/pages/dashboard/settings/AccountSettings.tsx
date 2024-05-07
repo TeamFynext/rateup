@@ -64,7 +64,32 @@ const AccountSettings = () => {
     refetch,
     isRefetching,
   } = useSubscription();
-  const { data: orders, refetch: refreshOrders } = useUserOrgOrders();
+  const {
+    data: orders,
+    refetch: refreshOrders,
+    isRefetching: isRefetchOrders,
+  } = useUserOrgOrders();
+
+  const [activeOrderData, setActiveOrderData] = useState(null);
+  const [latestOrderData, setLatestOrderData] = useState(null);
+
+  useEffect(() => {
+    let order = orders?.data?.filter(
+      (o) => o.subscriptionId === subscription?.subscriptionRef,
+    );
+    order?.length > 0 && setActiveOrderData(order[0]);
+
+    let sorted = orders?.data?.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    sorted?.length && setLatestOrderData(sorted[0]);
+  }, [subscription, orders]);
+
+  useEffect(() => {
+    refetch();
+    refreshOrders();
+  }, [summaryView]);
 
   useEffect(() => {
     if (router?.query?.activeTab === "account")
@@ -163,6 +188,9 @@ const AccountSettings = () => {
     AccountSettingsTabs.UsageStats,
   );
 
+  let enablePurchase =
+    isSubscriber() || activeOrderData?.subscriptionStatus === "cancelled";
+
   return (
     <>
       <Tabs
@@ -194,8 +222,11 @@ const AccountSettings = () => {
           <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
             <Billing
               subscription={subscription}
+              activeOrderData={activeOrderData}
+              latestOrderData={latestOrderData}
               processingPayment={processingPayment}
               refetch={refetch}
+              refreshOrders={refreshOrders}
               isRefetching={isRefetching}
             />
           </Tabs.Panel>
@@ -204,7 +235,11 @@ const AccountSettings = () => {
             py={"xl"}
             px={"lg"}
           >
-            <OrderHistory orders={orders?.data} />
+            <OrderHistory
+              orders={orders?.data}
+              refetch={refreshOrders}
+              isRefetching={isRefetchOrders}
+            />
           </Tabs.Panel>
         </ScrollAreaAutosize>
       </Tabs>
@@ -217,9 +252,9 @@ const AccountSettings = () => {
           reset();
         }}
         centered
-        title={isSubscriber() ? "Confirm your Order" : "Buy Rateup Premium"}
-        buttonTitle={isSubscriber() && "Continue to Payment"}
-        includeCancelButton={isSubscriber()}
+        title={enablePurchase ? "Confirm your Order" : "Buy Rateup Premium"}
+        buttonTitle={enablePurchase && "Continue to Payment"}
+        includeCancelButton={enablePurchase}
         isLoading={isLoading}
         size="auto"
         cancelOnClick={() => {
@@ -233,7 +268,7 @@ const AccountSettings = () => {
           reset();
         }}
       >
-        {isSubscriber() ? (
+        {enablePurchase ? (
           <Group mt="xl" mb="40px" justify="space-between">
             <Stack mr="xl">
               <Title order={3}> {cart?.name} </Title>

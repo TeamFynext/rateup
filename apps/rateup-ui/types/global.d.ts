@@ -587,6 +587,7 @@ declare global {
     basePlan: SPlan;
     id?: string;
     paymentPlanId?: string;
+    subscriptionRef?: string;
   }
   type Org = {
     id: string;
@@ -1033,7 +1034,6 @@ export type WaInboxMessage = {
   exchangeProcess: "send" | "receive";
   send?: WaSendMessageBody;
   receive?: WaReceiveMessageBody;
-  waCreatedAt: string;
 };
 
 export type WaTemplateFetchBody = {

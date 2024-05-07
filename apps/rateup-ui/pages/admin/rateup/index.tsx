@@ -78,7 +78,9 @@ const RateupPlan = () => {
       displayName: plan.displayName,
       name: plan.name,
       description: plan.description,
-      displayWidgetId: plan.displayWidgetId,
+      displayWidgetId: plan.displayWidgetId?.length
+        ? plan.displayWidgetId
+        : "Nil",
       features: plan,
       planType: plan.planType,
       paymentPlanId: plan.paymentPlanId,

@@ -3,15 +3,17 @@ import NothingFound from "../../../NothingFound/NothingFound";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
 import WaInboxChatDisplayFooter from "./chatdisplayFooter";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
-import { WaGetMessagesBody } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
+import {
+  ContactsWithLastMessage,
+  WaGetMessagesBody,
+} from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { motion } from "framer-motion";
-import { useContactById } from "../../../../backend/campaign/contacts/contacts.query";
 export default function WaInboxChatDisplay({
   messages,
-  contactId,
+  contact,
 }: {
   messages: WaGetMessagesBody[];
-  contactId: string;
+  contact: ContactsWithLastMessage;
 }) {
   // Animation variants
   const variants = {
@@ -26,12 +28,9 @@ export default function WaInboxChatDisplay({
     },
   };
 
-  const { data: contact } = useContactById(contactId);
-  if (!contact) return null;
-
   return (
     <div className={classes.wrapper}>
-      {messages?.length >= 0 ? (
+      {messages?.length >= 0 && contact ? (
         <motion.div
           key={contact?.phone} // Add a unique key for the contact
           variants={variants} // Add the animation variants
@@ -39,9 +38,9 @@ export default function WaInboxChatDisplay({
           animate="show" // State when component is mounted
           className={classes.inner_animated}
         >
-          <WaInboxChatDisplayHeader contactId={contactId} />
+          <WaInboxChatDisplayHeader contact={contact} />
           <WaInboxChatDisplayBody data={messages} />
-          <WaInboxChatDisplayFooter contactId={contactId} />
+          <WaInboxChatDisplayFooter contact={contact} />
         </motion.div>
       ) : (
         <NothingFound text="Select a chat to see messages" />

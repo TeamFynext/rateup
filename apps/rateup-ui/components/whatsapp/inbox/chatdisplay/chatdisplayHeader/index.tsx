@@ -2,28 +2,14 @@ import { Avatar, Group, Stack, Text } from "@mantine/core";
 import classes from "./styles.module.css";
 import WaInboxCountdownTimer from "./countDown";
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useGetMessagesByContactId } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { useContactById } from "../../../../../backend/campaign/contacts/contacts.query";
-import dayjs from "dayjs";
 
 interface WaInboxChatDisplayHeaderProps {
-  contactId: string;
+  contact: ContactsWithLastMessage;
 }
 export default function WaInboxChatDisplayHeader({
-  contactId,
+  contact,
 }: WaInboxChatDisplayHeaderProps) {
-  const { data: contact } = useContactById(contactId);
   if (!contact) return null;
-
-  const { data: messages } = useGetMessagesByContactId(contactId);
-
-  const lastUserMessageTimeStamp = messages
-    ?.filter((m) => m.messageBody.exchangeProcess === "receive")
-    .sort(
-      (a, b) =>
-        new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
-    )[0]?.waCreatedAt;
-  console.log("lastUserMessageTimeStamp", lastUserMessageTimeStamp);
   return (
     <div className={classes.wrapper}>
       <Group>
@@ -35,7 +21,7 @@ export default function WaInboxChatDisplayHeader({
           <Text className={classes.phone}>{contact.phone}</Text>
         </Stack>
       </Group>
-      <WaInboxCountdownTimer timeStamp={lastUserMessageTimeStamp} />
+      <WaInboxCountdownTimer timeStamp={contact?.userInitiatedFinalTimeStamp} />
     </div>
   );
 }

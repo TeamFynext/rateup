@@ -7,6 +7,9 @@ import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
 import { useRouter } from "next/router";
 import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
+import { useEffect } from "react";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
+import { IconX } from "@tabler/icons-react";
 
 interface SubscriptionEditorModalProps {
   opened: boolean;
@@ -31,13 +34,27 @@ export function SubscriptionEditorModal({
     useRateupPaymentsPlanUpdateMutation(onClose);
   function handleSave() {
     if (rateupPlanEnable) {
+      showLoadingToast(
+        "Plan is getting updated..",
+        "load-data",
+        true,
+        "Updating",
+      );
       const updatedData: any = {
         id: subscription?.id,
         paymentPlanId: subscription?.paymentPlanId,
-        features: subscription?.features,
+        features: subscriptionForm?.values.features,
       };
       rateupPaymentsPlanUpdateMutation.mutate(updatedData);
     } else {
+      if (!subscription.basePlan.name.includes("custom")) {
+        showErrorToast(
+          "Subscription can only updated in custom plan",
+          "",
+          <IconX />,
+        );
+        return;
+      }
       updateMutation.mutate(
         { orgId: subscription.orgId, updatedData: subscriptionForm.values },
         {
@@ -48,6 +65,14 @@ export function SubscriptionEditorModal({
       );
     }
   }
+
+  useEffect(() => {
+    subscriptionForm.setValues({
+      features: subscription.features,
+      expiresAt: subscription.expiresAt,
+    });
+  }, [subscription, opened]);
+
   return (
     <Modal
       opened={opened}
@@ -96,7 +121,9 @@ export function SubscriptionEditorModal({
           </Stack>
         </Box>
         <Group justify="end">
-          <Button variant="outline">Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button loading={updateMutation.isPending} onClick={handleSave}>
             Save
           </Button>

@@ -1,11 +1,26 @@
-import { Text } from "@mantine/core";
+import { Box, Menu, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { IconChevronDown, IconSend, IconTrash } from "@tabler/icons-react";
 import { useRemoveCampaignParticipant } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
-import { CampaignStatus } from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import { useSendCampaign } from "../../backend/campaign/campaign.query";
 
-export const CampaignParticipantMenu = ({ id, status, participantId }) => {
+export const CampaignParticipantMenu = ({
+  id,
+  status,
+  participantId,
+  teamId,
+}) => {
   const removeCampainPartcipant = useRemoveCampaignParticipant(id);
+  const sendMutation = useSendCampaign(id, teamId);
+
+  function handleResendClick() {
+    sendMutation.mutate({
+      participantId,
+      sendToStatuses: [CampaignParticipantStatus.FAILED],
+    });
+  }
   const openDeleteModal = () => {
     modals.openConfirmModal({
       title: "Remove contact",
@@ -27,12 +42,35 @@ export const CampaignParticipantMenu = ({ id, status, participantId }) => {
   };
 
   return (
-    <RateupButtonPrimary
-      title="Remove participant"
-      variant="light"
-      size="xs"
-      onClick={openDeleteModal}
-      disabled={status == CampaignStatus.ACTIVE}
-    />
+    <Menu shadow="md" withArrow>
+      <Menu.Target>
+        <Box>
+          <RateupButtonPrimary
+            title="Select action"
+            variant="light"
+            rightIcon={<IconChevronDown size="16px" />}
+            size="xs"
+          />
+        </Box>
+      </Menu.Target>
+
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<IconSend size={"16px"} />}
+          onClick={handleResendClick}
+        >
+          Resend
+        </Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          color="red"
+          leftSection={<IconTrash size="16px" />}
+          onClick={openDeleteModal}
+          disabled={status == CampaignStatus.ACTIVE}
+        >
+          Remove participant
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 };
