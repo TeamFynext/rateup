@@ -1,6 +1,7 @@
 import CoverImage from "./CoverImageSub";
 import PostTitle from "./PostTitle";
 import DateFormatter from "./DateFormatter";
+import { Flex } from "@mantine/core";
 
 type Props = {
   title: string;
@@ -15,7 +16,12 @@ const PostHeader = ({ title, coverImage, date }: Props) => {
 
       <CoverImage title={title} src={coverImage} />
       <div>
-        <DateFormatter dateString={date} />
+        <Flex
+          style={{ marginTop: "1rem", marginBottom: "2rem", fontSize: "18px" }}
+        >
+          Published on:
+          <DateFormatter dateString={date} />
+        </Flex>
       </div>
     </>
   );

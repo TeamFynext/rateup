@@ -16,7 +16,10 @@ import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import { useDisclosure } from "@mantine/hooks";
 import SimpleModalLayout from "../../Modal/SimpleModalLayout";
@@ -26,6 +29,7 @@ import { useUser } from "../../../context/UserContext";
 import { decryptPrivateKey } from "../../../utils/encryption";
 import { showErrorToast } from "../../../utils/notifications";
 import { useRouter } from "next/router";
+import { IconArrowLeft } from "@tabler/icons-react";
 
 enum ResultTab {
   OverView = "overview",
@@ -215,8 +219,9 @@ function EncryptionPasswordModal({
           onChange={(e) => setEncryptionPassword(e.target.value)}
         />
         <Flex style={{ justifyContent: "center", gap: "40px" }}>
-          <RateupButtonBlue
+          <RateupButtonSecondary
             title="Go back"
+            leftIcon={<IconArrowLeft />}
             onClick={() => {
               handleGoback();
             }}
