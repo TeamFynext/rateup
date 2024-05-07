@@ -97,6 +97,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     }
   }
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+
   let choiceCounts = choicesToUse?.map((choice, index) => ({
     name: choice?.value,
     count: data?.filter((item) => {
@@ -112,7 +113,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
       } else {
         return Array.isArray(response)
           ? response.includes(choice?.value)
-          : response === choice?.value;
+          : response == choice?.value;
       }
     })?.length,
     fill: choice?.color,
