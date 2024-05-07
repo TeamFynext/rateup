@@ -242,7 +242,7 @@ export function useCancelRazorpaySubscriptionMutation() {
         message:
           "Rateup Subscription cancelled. Enjoy services till expiry date.",
         icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
+        autoClose: 4000,
       });
     },
     onError: (error: any) => {
@@ -255,7 +255,7 @@ export function useCancelRazorpaySubscriptionMutation() {
         title: "Failed",
         message: error.response.data,
         icon: <IconX size="1rem" />,
-        autoClose: 3000,
+        autoClose: 4000,
       });
     },
   });
