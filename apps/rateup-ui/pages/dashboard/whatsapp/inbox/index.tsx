@@ -17,6 +17,7 @@ import {
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../../../backend/whatsapp/inbox/ws";
 import { useUser } from "../../../../context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
+import WhatsAppInboxLoader from "../../../../components/whatsapp/inbox/loader";
 
 export default function WhatsAppInbox() {
   const queryClient = useQueryClient();
@@ -126,7 +127,8 @@ export default function WhatsAppInbox() {
     };
   }, [updateWaContactsList]);
 
-  if (isContactsLoading) return <Loader />;
+  if (isContactsLoading)
+    return <WhatsAppInboxLoader isLoading={isContactsLoading} />;
   if (error) return <div>Error: {error.message}</div>;
   if (isContactsError) return <div>Error: {isContactsError.message}</div>;
 
