@@ -90,6 +90,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
     }
   }
   const handleCropSubmit = async () => {
+    console.log(imageUrl, "image url in handle crop submit in imageCropModal");
     setScale(1);
     if (!imageUrl.startsWith("blob")) {
       const unsplashLink = generateCroppedLinkForUnsplash({
