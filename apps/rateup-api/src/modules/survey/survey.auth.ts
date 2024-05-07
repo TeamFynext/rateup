@@ -37,7 +37,7 @@ export async function verifySurveyCreateAccess(
 
 export async function verifySurveyMaxCountRestriction(
   request: FastifyRequest<{
-    Body: CreateSurveyInput;
+    // Body: CreateSurveyInput;
   }>,
   reply: FastifyReply,
 ) {
