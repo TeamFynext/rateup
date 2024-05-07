@@ -100,10 +100,15 @@ export function QuestionDetailedView({
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
     useState(false);
+  const [isTicketFeatureActive, setIsTicketFeatureActive] = useState(false);
 
   useEffect(() => {
     setIsGoogleReviewFeatureActive(
       hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
+    );
+
+    setIsTicketFeatureActive(
+      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     );
   }, [subscription]);
 
@@ -386,17 +391,36 @@ export function QuestionDetailedView({
                   )}
                   {ticketIssueSupportedTypes.includes(question?.type) && (
                     <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Create Tickets"}
-                        leftIcon={<IconTicket stroke={4} size={"1rem"} />}
-                        size="sm"
-                        fullWidth
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-                        }}
-                      />
+                      {isTicketFeatureActive ? (
+                        <RateupButtonSecondary
+                          title={"Create Tickets"}
+                          leftIcon={<IconTicket stroke={4} size={"1rem"} />}
+                          size="sm"
+                          fullWidth
+                          onClick={async () => {
+                            let save = await handleSave();
+                            save === "saved" &&
+                              setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                          }}
+                        />
+                      ) : (
+                        <Tooltip
+                          label="Upgrade your Plan for this feature."
+                          disabled={isTicketFeatureActive}
+                          color="yellow"
+                        >
+                          <Button
+                            data-disabled
+                            radius="lg"
+                            onClick={(event) => event.preventDefault()}
+                            leftSection={
+                              <IconBrandGoogle stroke={4} size={"1rem"} />
+                            }
+                          >
+                            Create Tickets
+                          </Button>
+                        </Tooltip>
+                      )}
                     </Menu.Item>
                   )}
                 </Menu.Dropdown>
