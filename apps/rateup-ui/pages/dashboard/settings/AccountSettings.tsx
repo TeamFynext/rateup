@@ -222,11 +222,11 @@ const AccountSettings = () => {
           <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
             <Billing
               subscription={subscription}
-              orders={orders?.data}
               activeOrderData={activeOrderData}
               latestOrderData={latestOrderData}
               processingPayment={processingPayment}
               refetch={refetch}
+              refreshOrders={refreshOrders}
               isRefetching={isRefetching}
             />
           </Tabs.Panel>

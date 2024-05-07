@@ -181,9 +181,10 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
             <Stack mr="xl">
               <Title order={5}> Plan Features </Title>
               <List>
-                {selectedOrder?.planFeatures?.map((feature) => (
-                  <List.Item key={feature}>{feature}</List.Item>
-                ))}
+                {selectedOrder?.planFeatures?.map((feature) => {
+                  if (feature.startsWith("-")) return null;
+                  else return <List.Item key={feature}>{feature}</List.Item>;
+                })}
               </List>
             </Stack>
           </Group>
