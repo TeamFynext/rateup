@@ -34,7 +34,14 @@ export function parseTemplate(template) {
           data.example = data.example?.[0];
         }
       });
-      parsedTemplate["buttons"] = component.buttons;
+      const parsedButtons = component.buttons.map((button) => {
+        const parsedButton = { ...button };
+        if (button.flow_id) {
+          parsedButton.flow_id = String(button?.flow_id);
+        }
+        return parsedButton;
+      });
+      parsedTemplate["buttons"] = parsedButtons;
     }
   }
   return parsedTemplate;

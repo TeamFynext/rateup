@@ -137,7 +137,7 @@ export function FlowCheckBoxPreview({
       }}
     >
       <Stack mt="xs">
-        {options.map((option, index) => (
+        {options?.map((option, index) => (
           <Checkbox
             styles={{
               body: {

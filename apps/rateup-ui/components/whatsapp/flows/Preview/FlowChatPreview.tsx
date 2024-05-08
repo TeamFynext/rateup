@@ -15,7 +15,7 @@ interface FlowChatPreviewProps {
 export const FlowChatPreview = ({ currentScreen }: FlowChatPreviewProps) => {
   const theme = useMantineTheme();
 
-  const elementsInScreen = getFlowFormElementsFromScreen(currentScreen);
+  const elementsInScreen = getFlowFormElementsFromScreen(currentScreen) ?? [];
   const footerElement = getFlowFooterElementsFromScreen(currentScreen)?.[0];
 
   return (
@@ -33,9 +33,9 @@ export const FlowChatPreview = ({ currentScreen }: FlowChatPreviewProps) => {
         {currentScreen?.title ?? "Screeen Name"}
       </Title>
       <FlowPreviewContainer footerLabel={footerElement?.label}>
-        {elementsInScreen.map((fe) => {
-          return <FlowFormElementPreview fe={fe} key={fe?.id} />;
-        })}
+        {elementsInScreen?.map((fe) => (
+          <FlowFormElementPreview fe={fe} key={fe?.id} />
+        ))}
       </FlowPreviewContainer>
     </>
   );
