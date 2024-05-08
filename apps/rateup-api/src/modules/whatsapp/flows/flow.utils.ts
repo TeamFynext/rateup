@@ -71,6 +71,11 @@ export function generateFlowMessageData({
     message.footer = {
       text: footer,
     };
+  } else {
+    // TODO
+    message.footer = {
+      text: "Powered by RateUp",
+    };
   }
 
   if (dbFlow.json.screens.length === 0) {
