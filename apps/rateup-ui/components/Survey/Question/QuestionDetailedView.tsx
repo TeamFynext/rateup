@@ -65,6 +65,7 @@ import TestimonialExtraProps from "./TestimonialExtraProps";
 import TncExtraProps from "./TncExtraProps";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { hasFeature } from "../../../utils/subscription/subscription";
+import AddressExtraProps from "./AddressExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -491,6 +492,8 @@ function ExtraProps({ form, question, surveyType }: ExtraPropsProps) {
       return <ContactExtraProps form={form} />;
     case QuestionType.TnC:
       return <TncExtraProps form={form} />;
+    case QuestionType.Address:
+      return <AddressExtraProps form={form} />;
     case QuestionType.InfoMessage:
     default:
       return null;

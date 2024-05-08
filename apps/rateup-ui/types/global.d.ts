@@ -69,7 +69,7 @@ declare global {
     googleReview?: GoogleReview;
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
-    validationRules?: ValidationRules;
+    validationRules?: ValidationRules | any;
     tnc?: TNC;
     enableNpsAnalytics?: boolean;
   }
@@ -233,13 +233,7 @@ declare global {
         phone?: string;
         email?: string;
       };
-      [QuestionType.Address]?: {
-        address1: string;
-        address2?: string;
-        city: string;
-        postalCode: string;
-        country: string;
-      };
+      [QuestionType.Address]?: any;
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
       [QuestionType.Rating]?: number;

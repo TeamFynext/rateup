@@ -132,6 +132,7 @@ export function EditWhatsappSurvey({
               selectedQ={selectedQ}
               setSelectedQ={setSelectedQ}
               setActiveTab={setActiveTab}
+              activeTab={activeTab}
             />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.None}>

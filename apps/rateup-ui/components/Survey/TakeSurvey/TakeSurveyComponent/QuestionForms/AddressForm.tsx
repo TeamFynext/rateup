@@ -3,77 +3,33 @@ import FormPaperLayout from "./layout/FormPaperLayout";
 import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import classes from "../TakeSurvey.module.css";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 
-const AddressForm = () => {
+const AddressForm = ({ features }) => {
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const fields = features?.[selectedLanguage]?.fields;
+
   return (
     <Stack w={"100%"} gap={"xs"}>
-      <FormPaperLayout>
-        <Input
-          placeholder="Address 1"
-          value={response?.address1 || ""}
-          onChange={(e) =>
-            updateResponse({ ...response, address1: e.currentTarget.value })
-          }
-          variant="unstyled"
-          classNames={{
-            input: classes.input,
-          }}
-        />
-      </FormPaperLayout>
-      <FormPaperLayout>
-        <Input
-          placeholder="Address 2"
-          value={response?.address2 || ""}
-          onChange={(e) =>
-            updateResponse({ ...response, address2: e.currentTarget.value })
-          }
-          classNames={{
-            input: classes.input,
-          }}
-          variant="unstyled"
-        />
-      </FormPaperLayout>
-      <FormPaperLayout>
-        <Input
-          placeholder="City"
-          value={response?.city || ""}
-          onChange={(e) =>
-            updateResponse({ ...response, city: e.currentTarget.value })
-          }
-          classNames={{
-            input: classes.input,
-          }}
-          variant="unstyled"
-        />
-      </FormPaperLayout>
-      <FormPaperLayout>
-        <Input
-          placeholder="Postal Code"
-          value={response?.postalCode || ""}
-          onChange={(e) =>
-            updateResponse({ ...response, postalCode: e.currentTarget.value })
-          }
-          classNames={{
-            input: classes.input,
-          }}
-          variant="unstyled"
-          minLength={5}
-        />
-      </FormPaperLayout>
-      <FormPaperLayout>
-        <Input
-          placeholder="Country"
-          value={response?.country || ""}
-          onChange={(e) =>
-            updateResponse({ ...response, country: e.currentTarget.value })
-          }
-          classNames={{
-            input: classes.input,
-          }}
-          variant="unstyled"
-        />
-      </FormPaperLayout>
+      {fields?.map((field, index) => (
+        <FormPaperLayout key={index}>
+          <Input
+            placeholder={field?.placeholderText}
+            value={response?.[field?.fieldKey] || ""}
+            onChange={(e) =>
+              updateResponse({
+                ...response,
+                [field?.fieldKey]: e.currentTarget.value,
+              })
+            }
+            variant="unstyled"
+            classNames={{
+              input: classes.input,
+            }}
+          />
+        </FormPaperLayout>
+      ))}
     </Stack>
   );
 };

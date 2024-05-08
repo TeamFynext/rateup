@@ -248,26 +248,9 @@ function ConfirmResponsesModal({
                             )[0];
                             return (
                               <Stack>
-                                <Group>
-                                  <Text fw="400">Adress 1: </Text>
-                                  <Text fw="300">{address?.address1}</Text>
-                                </Group>
-                                <Group>
-                                  <Text fw="400">Address 2: </Text>
-                                  <Text fw="300">{address?.address2}</Text>
-                                </Group>
-                                <Group>
-                                  <Text fw="400">City: </Text>
-                                  <Text fw="300">{address?.city}</Text>
-                                </Group>
-                                <Group>
-                                  <Text fw="400">Postal Code: </Text>
-                                  <Text fw="300">{address?.postalCode}</Text>
-                                </Group>
-                                <Group>
-                                  <Text fw="400">Country: </Text>
-                                  <Text fw="300">{address?.country}</Text>
-                                </Group>
+                                {Object.values(address).map((ad) => (
+                                  <Text fw="300">{ad}</Text>
+                                ))}
                               </Stack>
                             );
                           default:
