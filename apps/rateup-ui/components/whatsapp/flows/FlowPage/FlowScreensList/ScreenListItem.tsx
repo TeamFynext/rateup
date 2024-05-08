@@ -102,7 +102,8 @@ function ScreenListItem({
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isOpen, { open, close }] = useDisclosure(false);
   const elements = getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]);
-  const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
+  const footerElement =
+    screen?.[0] && getFlowFooterElementsFromScreen(screen)?.[0];
 
   const [screenTitleInputState, setScreenTitleInputState] = useState(
     screen?.title,

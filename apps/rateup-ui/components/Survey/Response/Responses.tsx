@@ -1,10 +1,8 @@
 import {
   ActionIcon,
-  Box,
   Button,
   Flex,
   Group,
-  Loader,
   Popover,
   Stack,
   Text,
@@ -20,10 +18,18 @@ import {
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
+import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { useRouter } from "next/router";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
+import {
+  useGetAuthorizationUrl,
+  useGetGoogleAccessToken,
+} from "../../../backend/org/org.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
@@ -38,29 +44,22 @@ import {
   SurveyType,
 } from "../../../types/enums";
 import { ContactQuestions } from "../../../utils/constants";
+import { TicketType } from "../../../utils/enums/ticket";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { hasFeature } from "../../../utils/subscription/subscription";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
+import RateupLoader from "../../Loaders/RateupLoader";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import TanstackTable from "../../Table/TanstackTable";
+import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
-import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
-import {
-  useGetAuthorizationUrl,
-  useGetGoogleAccessToken,
-} from "../../../backend/org/org.query";
-import CreateTicketModal from "../../Tickets/CreateTicketModal";
-import { TicketType } from "../../../utils/enums/ticket";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import dayjs from "dayjs";
-import { hasFeature } from "../../../utils/subscription/subscription";
-import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -118,7 +117,7 @@ const Responses = ({
     throw new Error("surveyId is an array");
   }
   const {
-    isLoading: isQLoading,
+    isPending: isQLoading,
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
@@ -217,7 +216,9 @@ const Responses = ({
     }
   };
   const columns = useSurveyResponseColumns({
-    questions: questions.filter((q) => q.type !== QuestionType.InfoMessage),
+    questions: !isQLoading
+      ? questions.filter((q) => q.type !== QuestionType.InfoMessage)
+      : [],
     defaultLanguage,
     setSelectedRowId,
     open,
@@ -284,9 +285,8 @@ const Responses = ({
     }
   }, [refreshing]);
 
-  if (isQLoading) return <Loader type="bars" />;
+  if (isQLoading || isLoading) return <RateupLoader />;
   if (QError) return <Text>An error has occurred</Text>;
-  if (isLoading) return <Loader type="bars" />;
 
   const responseCount = responses?.length;
 
