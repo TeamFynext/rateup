@@ -8,7 +8,7 @@ import {
   Button,
   Image,
   NumberInput,
-  Box,
+  ScrollAreaAutosize,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
@@ -159,14 +159,14 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
       </FileButton>
       {src && (
         <>
-          <Box h={200}>
+          <ScrollAreaAutosize mah={200}>
             <Image
               src={`data:image/jpg;base64,${src}`}
               h={height}
               w={width}
               alt="flow Image"
             />
-          </Box>
+          </ScrollAreaAutosize>
           <NumberInput
             label="Width"
             min={100}

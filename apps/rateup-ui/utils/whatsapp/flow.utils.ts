@@ -176,8 +176,8 @@ export function getFlowFormElementsFromScreen(
 
 export function getFlowFooterElementsFromScreen(screen: WaFlowScreen) {
   const elementsWithoutFooter = screen?.layout?.children
-    .find((se) => se.type === "Form")
-    .children.filter((fe) => fe.type === WaFlowFormElementType.footer);
+    ?.find((se) => se.type === "Form")
+    ?.children.filter((fe) => fe.type === WaFlowFormElementType.footer);
   return elementsWithoutFooter;
 }
 
