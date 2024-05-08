@@ -59,11 +59,16 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
               }
             />
           </Flex>
-          <Group justify="space-between" px={"sm"} c={"gray"}>
-            <Text w={170}>Order Id</Text>
+          <Group
+            justify="space-between"
+            px={"sm"}
+            c={"gray"}
+            style={{ marginLeft: "20px" }}
+          >
+            <Text w={150}>Order Id</Text>
             <Text w={120}>Billing Date</Text>
-            <Text w={170}>Plan</Text>
-            <Text w={120}>Amount</Text>
+            <Text w={100}>Plan</Text>
+            <Text w={100}>Amount</Text>
             <Text w={120}>Payment</Text>
             <Text w={120}>Status</Text>
           </Group>
@@ -85,15 +90,16 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
                         openOrderDetails();
                       }}
                       hoveractive
+                      style={{ margin: "auto" }}
                     >
                       <Group justify="space-between">
                         <Title order={5} w={170}>
                           {order?.id}
                         </Title>
-                        <Title order={5} w={120}>
+                        <Title order={5} w={140}>
                           {formatIsoDateString(order?.createdAt)}
                         </Title>
-                        <Title order={5} w={170}>
+                        <Title order={5} w={120}>
                           {order?.displayName}
                         </Title>
                         <Title order={5} w={120}>
