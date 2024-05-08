@@ -264,7 +264,7 @@ export async function activateSubscription(payload) {
 export async function updateSubscription(payload) {
   try {
     const { subscription, payment } = payload;
-    const { id, notes, current_end } = subscription?.entity;
+    const { id, notes, current_end, charge_at } = subscription?.entity;
 
     const rateupPlan = await prisma.rateupPlan.findUnique({
       where: { id: notes?.rateupPlanId },
@@ -285,6 +285,10 @@ export async function updateSubscription(payload) {
       where: { subscriptionId: id },
       data: {
         status: OrderStatus.COMPLETE,
+        subscriptionStatus: SubscriptionStatus.active,
+        ...(!charge_at
+          ? {}
+          : { subscriptionChargeAt: new Date(charge_at * 1000) }),
       },
     });
 
@@ -355,6 +359,7 @@ export async function verifyPayment(data, event) {
         data: {
           paymentStatus: PaymentStatus.FAILED,
           status: OrderStatus.FAILED,
+          subscriptionStatus: SubscriptionStatus.halted,
         },
       });
     } else {
@@ -363,6 +368,7 @@ export async function verifyPayment(data, event) {
         data: {
           paymentStatus: PaymentStatus.SUCCESS,
           status: OrderStatus.PENDING,
+          subscriptionStatus: SubscriptionStatus.pending,
         },
       });
     }
@@ -484,7 +490,7 @@ export async function getAllPaymentOrders() {
 //Get organization orders
 export async function getAllOrgOrders(orgId: string) {
   const fifteenMinutesAgo = new Date();
-  fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+  fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15); //cron
 
   try {
     await prisma.order.updateMany({
@@ -497,6 +503,7 @@ export async function getAllOrgOrders(orgId: string) {
       data: {
         status: OrderStatus.FAILED,
         paymentStatus: PaymentStatus.FAILED,
+        subscriptionStatus: SubscriptionStatus.halted,
       },
     });
 
