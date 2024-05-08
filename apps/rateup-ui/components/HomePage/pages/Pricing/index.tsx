@@ -31,9 +31,13 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const router = useRouter();
   const { data, isPending, isError } = useRateupPaymentsPlans();
 
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
-  const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  //const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  // const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+
+  const currency = "INR";
+  const currencySymbol = "₹";
+
   const session = useCheckSession();
 
   const handlePlanSelection = (data) => {
