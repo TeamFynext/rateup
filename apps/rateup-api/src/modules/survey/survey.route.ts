@@ -95,7 +95,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/clone/:id",
     {
-      preHandler: verifySurveyAccess,
+      preHandler: [verifySurveyAccess, verifySurveyMaxCountRestriction],
       schema: {
         params: $Sref("getSurveyByIdParamsSchema"),
         body: $Sref("cloneSurveySchema"),
