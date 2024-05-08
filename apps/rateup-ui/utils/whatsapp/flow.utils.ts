@@ -468,6 +468,12 @@ export function getFlowJsonWithTitleAndDescription(
               survey.questions,
               map,
             );
+            if (!question) {
+              // hacky fix for questions which has been deleted
+              // TODO: Fix this
+              console.error("Question not found for form element", formElement);
+              continue;
+            }
             const {
               formElements: { titleElement, descriptionElement },
             } = getFlowElementJsonFromQuestion(question);
@@ -500,6 +506,9 @@ export const getFormObjFromScreenId = (
 };
 
 export function getFlowElementJsonFromQuestion(question: Question) {
+  if (!question) {
+    throw new Error("Question not found");
+  }
   const { dataSource, mapData } = generateDataSourceFromQuestion(question);
   const type = questionTypeToFlowFormElementType(question.type);
   const questionElement: WaFlowFormElement = {
@@ -594,7 +603,6 @@ export function questionTypeToFlowFormElementType(
  */
 export function generateDataSourceFromQuestion(q: Question) {
   let choices: string[] = [];
-
   if (q.type === qt.Rating) {
     choices = Object.values(RatingResponses)
       .map((v) => ratingEmoji.repeat(v))
