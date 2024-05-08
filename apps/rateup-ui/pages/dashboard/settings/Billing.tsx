@@ -51,7 +51,7 @@ const Billing = ({
 
   const [isCustomPlan, setIsCustomPlan] = useState(false);
   const [isProcessingPlan, setIsProcessingPlan] = useState(
-    latestOrderData?.subscriptionStatus === "none" || false,
+    latestOrderData?.subscriptionStatus === "pending" || false,
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const Billing = ({
   }, [subscription?.basePlan?.name]);
 
   useEffect(() => {
-    setIsProcessingPlan(latestOrderData?.subscriptionStatus === "none");
+    setIsProcessingPlan(latestOrderData?.subscriptionStatus === "pending");
   }, [latestOrderData?.subscriptionStatus]);
 
   const [cancelDialogOpened, { open, close }] = useDisclosure();
@@ -109,7 +109,7 @@ const Billing = ({
                 <Text mb="lg">
                   Your plan activation is under process. <br /> You will receive
                   activation status via email shortly. <br />
-                  Usually takes upto 1 to 2 mins.
+                  Usually takes between 30seconds to 15 mins.
                 </Text>
                 <RateupButtonPrimary
                   title="Refresh Status"
