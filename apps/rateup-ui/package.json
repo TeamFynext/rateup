@@ -91,6 +91,7 @@
     "react-virtualized-auto-sizer": "^1.0.20",
     "react-webcam": "^7.2.0",
     "react-window": "^1.8.10",
+    "read-excel-file": "^5.8.0",
     "recharts": "^2.7.3",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
