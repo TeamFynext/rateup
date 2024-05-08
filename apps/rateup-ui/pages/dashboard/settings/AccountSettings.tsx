@@ -73,6 +73,10 @@ const AccountSettings = () => {
   const [activeOrderData, setActiveOrderData] = useState(null);
   const [latestOrderData, setLatestOrderData] = useState(null);
 
+  const [activeTab, setActiveTab] = useState<AccountSettingsTabs>(
+    AccountSettingsTabs.UsageStats,
+  );
+
   useEffect(() => {
     let order = orders?.data?.filter(
       (o) => o.subscriptionId === subscription?.subscriptionRef,
@@ -89,7 +93,7 @@ const AccountSettings = () => {
   useEffect(() => {
     refetch();
     refreshOrders();
-  }, [summaryView]);
+  }, [summaryView, activeTab]);
 
   useEffect(() => {
     if (router?.query?.activeTab === "account")
@@ -184,10 +188,6 @@ const AccountSettings = () => {
     );
   };
 
-  const [activeTab, setActiveTab] = useState<AccountSettingsTabs>(
-    AccountSettingsTabs.UsageStats,
-  );
-
   let enablePurchase =
     isSubscriber() || activeOrderData?.subscriptionStatus === "cancelled";
 
@@ -222,11 +222,11 @@ const AccountSettings = () => {
           <Tabs.Panel value={AccountSettingsTabs.Billing} py={"xl"} px={"lg"}>
             <Billing
               subscription={subscription}
-              orders={orders?.data}
               activeOrderData={activeOrderData}
               latestOrderData={latestOrderData}
               processingPayment={processingPayment}
               refetch={refetch}
+              refreshOrders={refreshOrders}
               isRefetching={isRefetching}
             />
           </Tabs.Panel>

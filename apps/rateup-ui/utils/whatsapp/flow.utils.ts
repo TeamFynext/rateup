@@ -164,11 +164,11 @@ export function getFlowFormElementsFromScreen(
   onlyInteractive = false,
 ) {
   const elementsWithoutFooter = screen?.layout?.children
-    .find((se) => se.type === "Form")
-    .children.filter((fe) => fe.type !== WaFlowFormElementType.footer);
+    ?.find((se) => se.type === "Form")
+    ?.children?.filter((fe) => fe.type !== WaFlowFormElementType.footer);
 
   if (onlyInteractive) {
-    return elementsWithoutFooter.filter((fe) => fe.name !== undefined);
+    return elementsWithoutFooter?.filter((fe) => fe.name !== undefined);
   } else {
     return elementsWithoutFooter;
   }
@@ -354,13 +354,14 @@ export const updateFlowJsonNavigationAndDataPassing = (
     }
 
     const layoutForm = screen.layout.children.find((c) => c.type === "Form");
-    const footerObject = layoutForm.children.find(
+    const footerObject = layoutForm?.children?.find(
       (c) => c.type === WaFlowFormElementType.footer,
     );
     const formElements = getFlowFormElementsFromScreen(screen, true);
+    if (!formElements) return;
     const currentScreenIsNotLast = currentIndex !== screens.length - 1;
 
-    const currentScreenPayload = formElements.reduce(
+    const currentScreenPayload = formElements?.reduce(
       (prev, fe) => ({
         ...prev,
         [fe.name]: `\${form.${fe.name}}`,
@@ -499,8 +500,6 @@ export const getFormObjFromScreenId = (
 };
 
 export function getFlowElementJsonFromQuestion(question: Question) {
-  // console.log(question);
-
   const { dataSource, mapData } = generateDataSourceFromQuestion(question);
   const type = questionTypeToFlowFormElementType(question.type);
   const questionElement: WaFlowFormElement = {
