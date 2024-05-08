@@ -33,9 +33,9 @@ const AddressExtraProps = ({ form }) => {
       },
       { fieldKey: "address2", placeholderText: "Address 2" },
       { fieldKey: "city", placeholderText: "City" },
-      { fieldKey: "postalCode", placeholderText: "Postal Code" },
       { fieldKey: "state", placeholderText: "State" },
       { fieldKey: "country", placeholderText: "Country" },
+      { fieldKey: "postalCode", placeholderText: "Postal Code" },
     ],
   };
 
@@ -93,9 +93,9 @@ const AddressExtraProps = ({ form }) => {
             { fieldKey: "address1", placeholderText: "Address 1" },
             { fieldKey: "address2", placeholderText: "Address 2" },
             { fieldKey: "city", placeholderText: "City" },
-            { fieldKey: "postalCode", placeholderText: "Postal Code" },
             { fieldKey: "state", placeholderText: "State" },
             { fieldKey: "country", placeholderText: "Country" },
+            { fieldKey: "postalCode", placeholderText: "Postal Code" },
           ],
         },
       });
@@ -118,15 +118,13 @@ const AddressExtraProps = ({ form }) => {
           >
             <IconEdit />
           </ActionIcon>
-          {!addressMandatoryFields.includes(f?.fieldKey) && (
-            <ActionIcon
-              variant="subtle"
-              onClick={() => handleDelete(f)}
-              size={"sm"}
-            >
-              <IconTrash color="red" />
-            </ActionIcon>
-          )}
+          <ActionIcon
+            variant="subtle"
+            onClick={() => handleDelete(f)}
+            size={"sm"}
+          >
+            <IconTrash color="red" />
+          </ActionIcon>
         </Group>
       </Table.Td>
     </Table.Tr>

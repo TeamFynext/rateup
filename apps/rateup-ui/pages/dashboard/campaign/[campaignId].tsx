@@ -187,7 +187,7 @@ const StartCampaignCard = ({
   };
 
   const handleChange = () => {
-    if (!participantCount) {
+    if (!participantCount && !startCampaign) {
       setErrorMsg("No participants found");
       return;
     }
@@ -201,6 +201,9 @@ const StartCampaignCard = ({
 
   if (!campaign) return null;
 
+  useEffect(() => {
+    if (participantCount) setErrorMsg("");
+  }, [participantCount]);
   return (
     <>
       <PaperLayout radius={"md"}>
@@ -219,7 +222,12 @@ const StartCampaignCard = ({
               onChange={handleChange}
               error={errorMsg}
             />
-            <Button variant="outline" radius={"xl"} onClick={open}>
+            <Button
+              variant="outline"
+              radius={"xl"}
+              disabled={!participantCount}
+              onClick={open}
+            >
               Resend Campaign To
             </Button>
           </Group>
