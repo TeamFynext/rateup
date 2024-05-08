@@ -98,7 +98,9 @@ const questionCore = {
     ])
     .optional(),
   logic: z.array(logicJumpSchema).optional(),
-  validationRules: z.union([z.null(), validationRulesSchema]).optional(),
+  validationRules: z
+    .union([z.null(), validationRulesSchema, z.any()])
+    .optional(),
   tnc: z
     .record(
       z.object({
@@ -165,7 +167,9 @@ const updateQuestionRequestSchema = z.object({
       }),
     ])
     .optional(),
-  validationRules: z.union([z.null(), validationRulesSchema]).optional(),
+  validationRules: z
+    .union([z.null(), validationRulesSchema, z.any()])
+    .optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
