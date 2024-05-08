@@ -73,6 +73,10 @@ const AccountSettings = () => {
   const [activeOrderData, setActiveOrderData] = useState(null);
   const [latestOrderData, setLatestOrderData] = useState(null);
 
+  const [activeTab, setActiveTab] = useState<AccountSettingsTabs>(
+    AccountSettingsTabs.UsageStats,
+  );
+
   useEffect(() => {
     let order = orders?.data?.filter(
       (o) => o.subscriptionId === subscription?.subscriptionRef,
@@ -89,7 +93,7 @@ const AccountSettings = () => {
   useEffect(() => {
     refetch();
     refreshOrders();
-  }, [summaryView]);
+  }, [summaryView, activeTab]);
 
   useEffect(() => {
     if (router?.query?.activeTab === "account")
@@ -183,10 +187,6 @@ const AccountSettings = () => {
       subscription?.basePlan?.name === "FREE PLAN"
     );
   };
-
-  const [activeTab, setActiveTab] = useState<AccountSettingsTabs>(
-    AccountSettingsTabs.UsageStats,
-  );
 
   let enablePurchase =
     isSubscriber() || activeOrderData?.subscriptionStatus === "cancelled";
