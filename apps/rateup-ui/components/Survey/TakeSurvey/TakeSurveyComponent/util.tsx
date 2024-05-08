@@ -180,7 +180,7 @@ export function getQuestionForm(type, selectedQ) {
     case Q.InfoMessage:
       return <></>;
     case Q.Address:
-      return <AddressForm key={selectedQ?.id} />;
+      return <AddressForm key={selectedQ?.id} features={selectedQ?.features} />;
     default:
       return <div>not implemented</div>;
   }
@@ -214,17 +214,6 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
           errMsg = "Email cannot be blank";
         else if (!emailPattern.test(response?.email))
           errMsg = "Enter a valid email";
-      }
-      break;
-    case QuestionType.Address:
-      const { address1, city, postalCode, country } = response;
-      if (selectedQ.required) {
-        if (!address1?.length) errMsg = "Address 1 cannot be blank";
-        else if (!city?.length) errMsg = "City cannot be blank";
-        else if (!postalCode?.length) errMsg = "Postal code cannot be blank";
-        else if (postalCode?.length < 4)
-          errMsg = "Please enter valid postal code";
-        else if (!country?.length) errMsg = "Country cannot be blank";
       }
       break;
     case QuestionType.Testimonial:

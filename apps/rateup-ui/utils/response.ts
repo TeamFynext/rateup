@@ -92,13 +92,7 @@ function formatChoiceTypeQuestions(q, response) {
 
 function formattedAddressInfo(response) {
   if (typeof response === "string") return response;
-  return [
-    `Address 1: ${response?.address1 ?? "NA"}`,
-    `Address 2: ${response?.address2 ?? "NA"}`,
-    `City: ${response?.city ?? "NA"}`,
-    `Postal Code: ${response?.postalCode ?? "NA"}`,
-    `Country: ${response?.country ?? "NA"}`,
-  ];
+  return Object.entries(response).map(([key, value]) => `${key}:${value}`);
 }
 
 function formatWaList(response) {

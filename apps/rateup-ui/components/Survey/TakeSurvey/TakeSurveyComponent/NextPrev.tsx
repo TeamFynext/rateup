@@ -60,9 +60,10 @@ function NextPrev({
       response &&
       (selectedQ?.type === Q.Number ||
         selectedQ?.type === Q.Text ||
-        selectedQ?.type === Q.TextArea)
+        selectedQ?.type === Q.TextArea ||
+        selectedQ?.type === Q.Address)
     ) {
-      let error = validateQuestion(selectedQ, response);
+      let error = validateQuestion(selectedQ, response, selectedLanguage);
       if (error?.length > 0) {
         setIsErrorInput(true);
         setErrorMsg(error?.length ? error : null);

@@ -1,3 +1,4 @@
+import { QuestionType } from "../../types/enums";
 export function validateLength(input, min, max) {
   if (input.toString().length < min || input.toString().length > max) {
     return false;
@@ -33,37 +34,68 @@ export function validateTextType(input, type) {
   } else if (type === "Letters_&_Numbers") {
     var regex = /^[a-zA-Z0-9\s]+$/;
     return regex.test(input);
+  } else if (type === "Numbers") {
+    var regex = /^[0-9\s]+$/;
+    return regex.test(input);
   }
   return true;
 }
 
-export function validateQuestion(question, input) {
+export function validateQuestion(question, input, selectedLanguage) {
   if (question?.validationRules) {
-    if (question?.validationRules?.length) {
-      if (
-        !validateLength(
-          input,
-          question?.validationRules?.length?.min,
-          question?.validationRules?.length?.max,
-        )
-      ) {
-        return question?.validationRules?.length?.errorMessage;
+    if (question?.type === QuestionType.Address) {
+      const fields = question?.features?.[selectedLanguage]?.fields;
+      for (const field of fields) {
+        if (question?.validationRules?.[field?.fieldKey]) {
+          const validationRules = question?.validationRules?.[field?.fieldKey];
+          for (const rule of validationRules) {
+            if (rule?.ruleType === "length") {
+              if (
+                !input?.[field?.fieldKey] ||
+                !validateLength(input?.[field?.fieldKey], rule?.min, rule?.max)
+              ) {
+                return rule?.errorMessage;
+              }
+            } else if (rule?.ruleType === "textType") {
+              if (
+                !input?.[field?.fieldKey] ||
+                !validateTextType(input?.[field?.fieldKey], rule?.type)
+              ) {
+                return rule?.errorMessage;
+              }
+            }
+          }
+        }
       }
-    }
-    if (question.validationRules.wordCount) {
-      if (
-        !validateWordCount(
-          input,
-          question?.validationRules?.wordCount?.min,
-          question?.validationRules?.wordCount?.max,
-        )
-      ) {
-        return question?.validationRules?.wordCount?.errorMessage;
+    } else {
+      if (question?.validationRules?.length) {
+        if (
+          !validateLength(
+            input,
+            question?.validationRules?.length?.min,
+            question?.validationRules?.length?.max,
+          )
+        ) {
+          return question?.validationRules?.length?.errorMessage;
+        }
       }
-    }
-    if (question.validationRules.textType) {
-      if (!validateTextType(input, question?.validationRules?.textType?.type)) {
-        return question?.validationRules?.textType?.errorMessage;
+      if (question.validationRules.wordCount) {
+        if (
+          !validateWordCount(
+            input,
+            question?.validationRules?.wordCount?.min,
+            question?.validationRules?.wordCount?.max,
+          )
+        ) {
+          return question?.validationRules?.wordCount?.errorMessage;
+        }
+      }
+      if (question.validationRules.textType) {
+        if (
+          !validateTextType(input, question?.validationRules?.textType?.type)
+        ) {
+          return question?.validationRules?.textType?.errorMessage;
+        }
       }
     }
   }

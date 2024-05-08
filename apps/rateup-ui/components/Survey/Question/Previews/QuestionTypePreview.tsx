@@ -72,7 +72,7 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
     case Q.TnC:
       return <TermsNConditionsForm tncData={tnc} />;
     case Q.Address:
-      return <AddressForm />;
+      return <AddressForm features={features} />;
     default:
       return <div>not implemented</div>;
   }
