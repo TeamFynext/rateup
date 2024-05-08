@@ -94,7 +94,7 @@ function FlowPage() {
       updateFlowJson((draft) => {
         for (const screen of draft.screens) {
           const form = screen.layout.children.find((se) => se.type === "Form");
-          for (let i = 0; i < form.children.length; i++) {
+          for (let i = 0; i < form?.children?.length; i++) {
             const fe = form.children[i];
             const question = getQuestionFromFlowFormElementName(
               fe.name,
