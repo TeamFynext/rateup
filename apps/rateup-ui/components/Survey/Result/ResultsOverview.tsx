@@ -113,7 +113,7 @@ const ResultsOverview = ({ surveyId }) => {
   }
 
   if (!isAllowedQnsPresent) {
-    return <div>No Data available for Analysis</div>;
+    return <NothingFound text="No Data available for Analysis" />;
   }
 
   const prepareData = (

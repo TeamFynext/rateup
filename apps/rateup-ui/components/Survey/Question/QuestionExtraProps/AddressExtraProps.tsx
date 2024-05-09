@@ -2,13 +2,13 @@ import { ActionIcon, Group, Stack, Table } from "@mantine/core";
 import {
   ContainedTextArea,
   ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
+} from "../../../input/ContainedInput/ContainedInput";
 import { useContext, useEffect, useState } from "react";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+} from "../../../Button/RateupButtons";
 import {
   IconEdit,
   IconGripVertical,
@@ -16,10 +16,10 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { isNotEmpty, useForm } from "@mantine/form";
-import FormModalLayout from "../../Modal/FormModalLayout";
+import FormModalLayout from "../../../Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { reorder } from "../../../utils/questions";
+import { reorder } from "../../../../utils/questions";
 import classes from "./Style.module.css";
 
 const AddressExtraProps = ({ form }) => {

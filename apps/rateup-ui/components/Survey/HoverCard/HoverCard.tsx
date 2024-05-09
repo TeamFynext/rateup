@@ -20,7 +20,9 @@ export const HoverCardComponent = ({
       styles={{ dropdown: { maxWidth: 400 } }}
       position="bottom-start"
     >
-      {[QuestionType.Address].includes(questionType) && content?.length > 0 ? (
+      {[QuestionType.Address, QuestionType.MultiTextInput].includes(
+        questionType,
+      ) && content?.length > 0 ? (
         <HoverCard.Target>
           <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
             {content[0]}
@@ -58,7 +60,9 @@ export const HoverCardComponent = ({
             }}
             mah={250}
           >
-            {[QuestionType.Address].includes(questionType) ? (
+            {[QuestionType.Address, QuestionType.MultiTextInput].includes(
+              questionType,
+            ) ? (
               content?.length > 0 &&
               content?.map((c) => (
                 <Text c={c} miw={200} maw={200} fw={fw} fz={fz} key={c}>

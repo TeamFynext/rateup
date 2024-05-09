@@ -105,6 +105,8 @@ export function getQuestionTypeLabel(
       return "Embedded Link";
     case WaFlowFormNonInputElementType.optIn:
       return "Opt In";
+    case QuestionType.MultiTextInput:
+      return "Multi Text Input";
     default:
       throw new Error("Invalid Question Type");
   }
