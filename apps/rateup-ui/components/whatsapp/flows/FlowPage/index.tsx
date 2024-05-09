@@ -85,6 +85,7 @@ function FlowPage() {
   }, [flowJson, flowEditable, dbFlowId, flow?.status, map]); // Add dependencies explicitly
 
   // update flowJson when there is a change in questions
+  // or when there is a change in logicJumps
   useEffect(() => {
     if (!flowEditable) return;
     if (questions && flowJson) {
@@ -114,7 +115,7 @@ function FlowPage() {
         updateFlowJsonNavigationAndDataPassing(draft, flow);
       });
     }
-  }, [questions]);
+  }, [questions, flow?.logicJumps]);
 
   // surveyId start
   // Things common to [surveyId].tsx

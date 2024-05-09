@@ -65,6 +65,7 @@ import TestimonialExtraProps from "./TestimonialExtraProps";
 import TncExtraProps from "./TncExtraProps";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { hasFeature } from "../../../utils/subscription/subscription";
+import ImportChoices from "./ImportChoices";
 import AddressExtraProps from "./AddressExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
@@ -127,6 +128,7 @@ export function QuestionDetailedView({
     surveyLanguages,
     ["title", "choices"],
   );
+
   const { imageToDelete, resetImage } = useImageStore();
   const formRef = useRef<HTMLDivElement | null>(null);
 
@@ -225,6 +227,8 @@ export function QuestionDetailedView({
                 form={form}
                 question={question}
                 surveyType={SurveyType.Web}
+                surveyLanguages={surveyLanguages}
+                handleSave={handleSave}
               />
             </Stack>
             <LanguageCompletionView
@@ -467,8 +471,16 @@ interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
   surveyType: SurveyType;
+  surveyLanguages: string[];
+  handleSave: () => void;
 }
-function ExtraProps({ form, question, surveyType }: ExtraPropsProps) {
+function ExtraProps({
+  form,
+  question,
+  surveyType,
+  surveyLanguages,
+  handleSave,
+}: ExtraPropsProps) {
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
@@ -476,11 +488,20 @@ function ExtraProps({ form, question, surveyType }: ExtraPropsProps) {
     case QuestionType.DDMS:
     case QuestionType.CustomNPS:
       return (
-        <ChoicesCreator
-          qId={question?.id}
-          form={form}
-          surveyType={surveyType}
-        />
+        <>
+          <ImportChoices
+            mantineFormObj={form}
+            surveyLanguagesArr={surveyLanguages}
+            questionObj={question}
+            handleSave={handleSave}
+          />
+
+          <ChoicesCreator
+            qId={question?.id}
+            form={form}
+            surveyType={surveyType}
+          />
+        </>
       );
     case QuestionType.PCQ:
       return <ChoicesCreator qId={question?.id} form={form} image />;
