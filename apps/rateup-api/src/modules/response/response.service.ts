@@ -199,6 +199,18 @@ export async function downloadExcelResponse(
               responseValue = responseValue?.toString();
               break;
             }
+            case QuestionType.Address:
+            case QuestionType.MultiTextInput:
+              const fields = question?.features?.[defaultLanguage]?.fields;
+              if (fields) {
+                responseValue = fields
+                  ?.map(
+                    (f) =>
+                      `${f.fieldKey}:  ${responseValue?.[f.fieldKey] ?? "NA"}`,
+                  )
+                  .join(", ");
+              }
+              break;
           }
           if (
             QuestionType.Contact === responseType &&
@@ -855,9 +867,13 @@ export function getFormattedResponse(response, qstn, language) {
   let formattedResponse = "";
   switch (qstn?.type) {
     case QuestionType.Address:
-      formattedResponse = Object.entries(response)
-        .map(([key, value]) => `${key}: ${String(value)}`)
-        .join(", ");
+    case QuestionType.MultiTextInput:
+      const fields = qstn?.features?.[language]?.fields;
+      if (fields) {
+        return fields
+          ?.map((f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`)
+          .join(", ");
+      }
       break;
     case QuestionType.MCQ:
       formattedResponse =
