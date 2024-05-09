@@ -45,6 +45,7 @@ const CreateCampaignModal = ({
   const templates = useTemplatesAvailableForTeam(form.values.teamId);
   if (
     form.values.waTemplateId &&
+    templates?.length &&
     !templates.map((t) => t.id).includes(form.values.waTemplateId)
   ) {
     form.setFieldValue("waTemplateId", "");

@@ -32,7 +32,7 @@ export function getResponse(q: any, response: any) {
     case QuestionType.EmailPhone:
       return formatContactInfo(response);
     case QuestionType.Address:
-      return formattedAddressInfo(response);
+      return formattedAddressInfo(q, response);
     case QuestionType.DDMS:
     case QuestionType.MSQ:
     case QuestionType.CustomNPS:
@@ -90,9 +90,26 @@ function formatChoiceTypeQuestions(q, response) {
   return formattedValue;
 }
 
-function formattedAddressInfo(response) {
+function formattedAddressInfo(q, response) {
   if (typeof response === "string") return response;
-  return Object.entries(response).map(([key, value]) => `${key}:${value}`);
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
+  const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
+  if (fields) {
+    return fields?.map(
+      (f) => `${f.fieldKey}:${response?.[f.fieldKey] ?? "NA"}`,
+    );
+  } else {
+    return [
+      `Address 1: ${response?.address1 ?? "NA"}`,
+      `Address 2: ${response?.address2 ?? "NA"}`,
+      `City: ${response?.city ?? "NA"}`,
+      `State: ${response?.state ?? "NA"}`,
+      `Country: ${response?.country ?? "NA"}`,
+      `Postal Code: ${response?.postalCode ?? "NA"}`,
+    ];
+  }
 }
 
 function formatWaList(response) {
