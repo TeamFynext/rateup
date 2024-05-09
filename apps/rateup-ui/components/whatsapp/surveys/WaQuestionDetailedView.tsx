@@ -40,7 +40,7 @@ import { QuestionTabsEnum } from "./WaEditSurvey";
 import { LengthTracker } from "../../input/LengthTracker";
 import { WA_BODY_CHAR_LIMIT, WA_HEADER_CHAR_LIMIT } from "../whatsappConfig";
 import { WaListMessageItemsCreator } from "./WaListMessageItemsCreator";
-import { ChoicesCreator } from "../../Survey/Question/ChoicesCreator";
+import { ChoicesCreator } from "../../Survey/Question/QuestionExtraProps/ChoicesCreator";
 import { showErrorToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
@@ -48,7 +48,7 @@ import {
 } from "../../../utils/questions";
 import { WhatsappChatPreview } from "./WaChatPreview";
 import { LanguageCompletionView } from "../../Survey/Question/LanguageCompletionView";
-import TestimonialExtraProps from "../../Survey/Question/TestimonialExtraProps";
+import TestimonialExtraProps from "../../Survey/Question/QuestionExtraProps/TestimonialExtraProps";
 import { notifications } from "@mantine/notifications";
 
 interface QuestionDetailedViewProps {

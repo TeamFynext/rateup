@@ -53,7 +53,7 @@ import {
   getFlowTextLimit,
   questionTypeToFlowFormElementType,
 } from "../../../../../utils/whatsapp/flow.utils";
-import { ChoicesCreator } from "../../../../Survey/Question/ChoicesCreator";
+import { ChoicesCreator } from "../../../../Survey/Question/QuestionExtraProps/ChoicesCreator";
 import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";

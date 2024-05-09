@@ -15,32 +15,36 @@ import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useState, useContext, useCallback, useRef, useEffect } from "react";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+} from "../../../Button/RateupButtons";
 import {
   ContainedTextArea,
   ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
-import { LengthTracker } from "../../input/LengthTracker";
-import inputStyles from "../../input/InputStyles.module.css";
-import { NPSWeightage, QuestionType, SurveyType } from "../../../types/enums";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { getNpsColor } from "./QuestionDetailedView";
-import SurveyContext from "../../../context/SurveyContext";
+} from "../../../input/ContainedInput/ContainedInput";
+import { LengthTracker } from "../../../input/LengthTracker";
+import inputStyles from "../../../input/InputStyles.module.css";
+import {
+  NPSWeightage,
+  QuestionType,
+  SurveyType,
+} from "../../../../types/enums";
+import FormModalLayout from "../../../Modal/FormModalLayout";
+import { getNpsColor } from "../QuestionDetailedView";
+import SurveyContext from "../../../../context/SurveyContext";
 import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
-} from "../../../utils/constants";
-import { showErrorToast } from "../../../utils/notifications";
-import { ImageCropModal } from "../../Modal/ImageCropModal";
-import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import { uploadFile } from "../../../utils/file-upload/upload";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
-import { useResponses } from "../../../backend/surveys/response/response.query";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
+} from "../../../../utils/constants";
+import { showErrorToast } from "../../../../utils/notifications";
+import { ImageCropModal } from "../../../Modal/ImageCropModal";
+import { useImageStore } from "../../../HomePage/pages/Pricing/store/RouteAndCartStore";
+import { uploadFile } from "../../../../utils/file-upload/upload";
+import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import { useResponses } from "../../../../backend/surveys/response/response.query";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
