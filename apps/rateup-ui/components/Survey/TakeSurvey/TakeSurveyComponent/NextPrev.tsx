@@ -21,6 +21,7 @@ import { validateQuestion } from "../../../../utils/validation";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import styles from "./TakeSurvey.module.css";
 import { validateResponse } from "./util";
+import { validationSupportedTypes } from "../../../../utils/data";
 
 function NextPrev({
   prev,
@@ -58,10 +59,7 @@ function NextPrev({
     if (
       selectedQ?.validationRules &&
       response &&
-      (selectedQ?.type === Q.Number ||
-        selectedQ?.type === Q.Text ||
-        selectedQ?.type === Q.TextArea ||
-        selectedQ?.type === Q.Address)
+      validationSupportedTypes.includes(selectedQ?.type)
     ) {
       let error = validateQuestion(selectedQ, response, selectedLanguage);
       if (error?.length > 0) {

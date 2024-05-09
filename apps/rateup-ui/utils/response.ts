@@ -42,6 +42,8 @@ export function getResponse(q: any, response: any) {
       return formatChoiceTypeQuestions(q, response);
     case QuestionType.WaList:
       return formatWaList(response);
+    case QuestionType.MultiTextInput:
+      return formatMultiTextInput(q, response);
     default:
       return formatDefaultResponse(q, response);
   }
@@ -58,6 +60,19 @@ function formatContactInfo(response) {
     .filter(Boolean)
     .map(([key, value]) => `${key}: ${String(value)}`)
     .join(", ");
+}
+
+function formatMultiTextInput(q, response) {
+  if (typeof response === "string") return response;
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
+  const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
+  if (fields) {
+    return fields?.map(
+      (f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
+    );
+  }
 }
 
 function formatChoiceTypeQuestions(q, response) {
@@ -98,7 +113,7 @@ function formattedAddressInfo(q, response) {
   const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
   if (fields) {
     return fields?.map(
-      (f) => `${f.fieldKey}:${response?.[f.fieldKey] ?? "NA"}`,
+      (f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
     );
   } else {
     return [

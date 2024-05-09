@@ -82,7 +82,7 @@ const ValidationRulesEditor = ({
   const [opened, { open, close }] = useDisclosure(false);
   const [ruleList, setRuleList] = useState(["length", "wordCount", "textType"]);
 
-  const [addressRules, setAddressRules] =
+  const [multiInputRules, setMultiInputRules] =
     useState<Record<string, Rule[]>>(null);
   const [selectedRule, setSelectedRule] = useState(null);
 
@@ -141,14 +141,18 @@ const ValidationRulesEditor = ({
         setRuleList(["length"]);
         break;
       case Q.Address:
-        setRuleList(["length", "textType"]);
+      case Q.MultiTextInput:
+        setRuleList(["length", "textType", "required"]);
         break;
     }
   }, [selectedQ]);
 
   useEffect(() => {
-    if (selectedQ?.type === Q.Address && selectedQ?.validationRules) {
-      setAddressRules(selectedQ?.validationRules);
+    if (
+      [Q.Address, Q.MultiTextInput].includes(selectedQ?.type) &&
+      selectedQ?.validationRules
+    ) {
+      setMultiInputRules(selectedQ?.validationRules);
     }
   }, [activeTab]);
 
@@ -158,7 +162,7 @@ const ValidationRulesEditor = ({
   };
 
   useEffect(() => {
-    if (selectedQ?.type !== Q.Address) {
+    if (![Q.Address, Q.MultiTextInput].includes(selectedQ?.type)) {
       let validationResult = form.validate();
 
       if (validationResult?.hasErrors) {
@@ -176,26 +180,26 @@ const ValidationRulesEditor = ({
     if (
       selectedQ?.hasOwnProperty("validationRules") &&
       selectedQ?.validationRules !== null &&
-      selectedQ?.type !== Q.Address
+      ![Q.Address, Q.MultiTextInput].includes(selectedQ?.type)
     ) {
       const updatedValues = { ...selectedQ?.validationRules };
       form.reset();
       setValues(updatedValues);
     } else {
       if (
-        selectedQ?.type === Q.Address &&
+        [Q.Address, Q.MultiTextInput].includes(selectedQ?.type) &&
         selectedQ?.validationRules !== null
       ) {
-        setAddressRules(selectedQ?.validationRules);
+        setMultiInputRules(selectedQ?.validationRules);
       } else {
-        setAddressRules(null);
+        setMultiInputRules(null);
       }
       form.reset();
     }
   }, [selectedQ?.id]);
 
   const addRule = (ruleType: string) => {
-    if (selectedQ.type === Q.Address) {
+    if ([Q.Address, Q.MultiTextInput].includes(selectedQ?.type)) {
       let newRule;
       if (ruleType === "length") {
         newRule = {
@@ -210,13 +214,24 @@ const ValidationRulesEditor = ({
           ruleType,
         };
         newRule.errorMessage = `${selectedFieldKey}: only ${newRule.type} are allowed`;
+      } else if (ruleType === "required") {
+        newRule = {
+          ruleType,
+          errorMessage: `${selectedFieldKey} cannot be empty`,
+        };
       }
-      const previousRules = addressRules?.[selectedFieldKey];
+      const previousRules = multiInputRules?.[selectedFieldKey];
       if (previousRules) {
         previousRules.push(newRule);
-        setAddressRules({ ...addressRules, [selectedFieldKey]: previousRules });
+        setMultiInputRules({
+          ...multiInputRules,
+          [selectedFieldKey]: previousRules,
+        });
       } else {
-        setAddressRules({ ...addressRules, [selectedFieldKey]: [newRule] });
+        setMultiInputRules({
+          ...multiInputRules,
+          [selectedFieldKey]: [newRule],
+        });
       }
     } else {
       if (ruleType === "textType") {
@@ -248,7 +263,7 @@ const ValidationRulesEditor = ({
   };
 
   const handleSave = async () => {
-    if (selectedQ?.type !== Q.Address) {
+    if (![Q.Address, Q.MultiTextInput].includes(selectedQ?.type)) {
       const validationResult = form.validate();
       if (validationResult?.hasErrors) {
         // There are validation errors, do not save the form
@@ -265,8 +280,9 @@ const ValidationRulesEditor = ({
     });
 
     const data = {
-      validationRules:
-        selectedQ?.type === Q.Address ? addressRules : { ...form.values },
+      validationRules: [Q.Address, Q.MultiTextInput].includes(selectedQ?.type)
+        ? multiInputRules
+        : { ...form.values },
     };
 
     await questionUpdateMutation.mutateAsync({
@@ -277,8 +293,8 @@ const ValidationRulesEditor = ({
     setActiveTab(QuestionTabsEnum.Edit);
   };
 
-  const AddressQuestionRules = () => {
-    const addressForm = useForm({
+  const MultiInputValidationRules = () => {
+    const ruleForm = useForm({
       initialValues: selectedRule,
       validate: {
         min:
@@ -291,29 +307,27 @@ const ValidationRulesEditor = ({
       },
     });
     const handleUpdateRule = () => {
-      if (addressForm.validate().hasErrors) return;
-      const newRules = addressRules?.[addressForm.values.fieldKey];
-      let rule = newRules.find(
-        (r) => r.ruleType == addressForm.values.ruleType,
-      );
+      if (ruleForm.validate().hasErrors) return;
+      const newRules = multiInputRules?.[ruleForm.values.fieldKey];
+      let rule = newRules.find((r) => r.ruleType == ruleForm.values.ruleType);
       if (rule.ruleType == "length") {
-        rule.min = addressForm.values.min;
-        rule.max = addressForm.values.max;
+        rule.min = ruleForm.values.min;
+        rule.max = ruleForm.values.max;
       }
       if (rule.ruleType == "textType") {
-        rule.type = addressForm.values.type;
+        rule.type = ruleForm.values.type;
       }
-      rule.errorMessage = addressForm.values.errorMessage;
-      setAddressRules({
-        ...addressRules,
-        [addressForm.values.fieldKey]: newRules,
+      rule.errorMessage = ruleForm.values.errorMessage;
+      setMultiInputRules({
+        ...multiInputRules,
+        [ruleForm.values.fieldKey]: newRules,
       });
       setSelectedRule(null);
       close();
     };
 
     useEffect(() => {
-      addressForm.setValues(selectedRule);
+      ruleForm.setValues(selectedRule);
     }, [selectedRule]);
 
     return (
@@ -334,7 +348,7 @@ const ValidationRulesEditor = ({
               placeholder="Select rule type"
               data={ruleList?.filter(
                 (ruleType) =>
-                  !addressRules?.[selectedFieldKey]?.some(
+                  !multiInputRules?.[selectedFieldKey]?.some(
                     (r) => r.ruleType == ruleType,
                   ),
               )}
@@ -343,20 +357,20 @@ const ValidationRulesEditor = ({
           </Group>
         </Paper>
         <ScrollAreaAutosize h={230} scrollbarSize={8}>
-          {addressRules &&
-            Object.entries(addressRules)?.map(([fieldKey, rules], index) => (
+          {multiInputRules &&
+            Object.entries(multiInputRules)?.map(([fieldKey, rules], index) => (
               <Paper bg={colors.blue[0]} p={"sm"} my={"xs"} key={index}>
                 <Group>
                   <Title order={6}>{fieldKey}</Title>
                   <ActionIcon
                     variant="subtle"
                     onClick={() => {
-                      const updatedAddressRules = { ...addressRules };
-                      if (fieldKey in updatedAddressRules)
-                        delete updatedAddressRules[fieldKey];
-                      if (!Object.keys(updatedAddressRules).length)
-                        setAddressRules(null);
-                      setAddressRules(updatedAddressRules);
+                      const updatedMultiInputRules = { ...multiInputRules };
+                      if (fieldKey in updatedMultiInputRules)
+                        delete updatedMultiInputRules[fieldKey];
+                      if (!Object.keys(updatedMultiInputRules).length)
+                        setMultiInputRules(null);
+                      setMultiInputRules(updatedMultiInputRules);
                     }}
                   >
                     <IconTrash color={colors.red[5]} />
@@ -413,13 +427,13 @@ const ValidationRulesEditor = ({
                           (rule) => rule?.ruleType !== r?.ruleType,
                         );
                         if (!newRules.length) {
-                          delete addressRules?.[fieldKey];
-                          if (isEmptyObject(addressRules))
-                            setAddressRules(null);
-                          else setAddressRules(addressRules);
+                          delete multiInputRules?.[fieldKey];
+                          if (isEmptyObject(multiInputRules))
+                            setMultiInputRules(null);
+                          else setMultiInputRules(multiInputRules);
                         }
-                        setAddressRules({
-                          ...addressRules,
+                        setMultiInputRules({
+                          ...multiInputRules,
                           [fieldKey]: newRules,
                         });
                       }}
@@ -440,25 +454,25 @@ const ValidationRulesEditor = ({
             {selectedRule?.ruleType === "length" && (
               <>
                 <ContainedNumberInput
-                  {...addressForm.getInputProps("min")}
+                  {...ruleForm.getInputProps("min")}
                   label={"Min"}
                   w={"fit-content"}
                 />
                 <ContainedNumberInput
-                  {...addressForm.getInputProps("max")}
+                  {...ruleForm.getInputProps("max")}
                   label={"Max"}
                 />
               </>
             )}
             {selectedRule?.ruleType === "textType" && (
               <ContainedSelection
-                {...addressForm.getInputProps("type")}
+                {...ruleForm.getInputProps("type")}
                 label={"Type"}
                 data={["Letters", "Letters_&_Numbers", "Numbers"]}
               />
             )}
             <ContainedTextField
-              {...addressForm.getInputProps("errorMessage")}
+              {...ruleForm.getInputProps("errorMessage")}
               label={"Error Message"}
               description={
                 "please change according to display text of the field"
@@ -483,8 +497,8 @@ const ValidationRulesEditor = ({
           Add validation rules to the user input for this question.
         </Text>
         <Divider />
-        {selectedQ?.type === Q.Address ? (
-          <AddressQuestionRules />
+        {[Q.Address, Q.MultiTextInput].includes(selectedQ?.type) ? (
+          <MultiInputValidationRules />
         ) : (
           <Paper
             style={{ minHeight: "300px", minWidth: "650px", maxWidth: "650px" }}

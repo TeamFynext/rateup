@@ -1,9 +1,18 @@
-import { Button, FileButton, Stack } from "@mantine/core";
+import {
+  Blockquote,
+  Box,
+  Button,
+  FileButton,
+  Group,
+  NavLink,
+  Stack,
+} from "@mantine/core";
 import readXlsxFile from "read-excel-file";
 import classNames from "classnames/bind";
 import styles from "./ImportChoices.module.css";
 import { useCallback, useRef } from "react";
 import { showErrorToast } from "../../../../utils/notifications";
+import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 
 const cx = classNames.bind(styles);
 
@@ -114,13 +123,30 @@ function ImportChoices({
   return (
     <Stack className={cx("import-choices-root-div")}>
       <p>Import Choices from Excel File</p>
-      <FileButton
-        resetRef={fileButtonResetRef}
-        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        onChange={handleFileButtonChange}
-      >
-        {(props) => <Button {...props}>Choose .xlsx file</Button>}
-      </FileButton>
+      <Group gap={"1.5rem"}>
+        <FileButton
+          resetRef={fileButtonResetRef}
+          accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          onChange={handleFileButtonChange}
+        >
+          {(props) => <Button {...props}>Choose .xlsx file</Button>}
+        </FileButton>
+        <Stack className={cx("blockquote-container")}>
+          <Blockquote icon={<IconInfoCircle />} iconSize={"1.25rem"}>
+            <span>
+              Column headings in Excel file should be the selected language key.
+            </span>
+            <NavLink
+              href={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
+              label="Download Demo .xlsx File"
+              leftSection={<IconDownload size="1rem" stroke={1.5} />}
+              download
+              active
+              style={{ borderRadius: "4px" }}
+            />
+          </Blockquote>
+        </Stack>
+      </Group>
     </Stack>
   );
 }
