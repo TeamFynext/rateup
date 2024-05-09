@@ -938,7 +938,40 @@ function validateSurvey(surveyData) {
         });
       }
     }
+    if (
+      [QuestionType.Address, QuestionType.MultiTextInput].includes(
+        question?.type,
+      )
+    ) {
+      if (!question?.features) {
+        incompleteQuestions.push({
+          id: question.id,
+          title: question.title,
+          error: `fields are missing`,
+        });
+      } else {
+        let fieldLanguages = Object.entries(question?.features).map(
+          ([lang, value]: [string, any]) => {
+            if (value?.fields?.length) return lang;
+          },
+        );
+        let fieldMissingLangs = languages.filter(
+          (lang) => !fieldLanguages.includes(lang),
+        );
+        if (fieldMissingLangs.length > 0) {
+          incompleteQuestions.push({
+            id: question.id,
+            title: question.title,
+            error: `fields are required, but missing for languages: ${fieldMissingLangs.join(
+              ", ",
+            )}`,
+          });
+        }
+      }
+    }
   });
+
+  console.log(incompleteQuestions);
 
   return incompleteQuestions;
 }
