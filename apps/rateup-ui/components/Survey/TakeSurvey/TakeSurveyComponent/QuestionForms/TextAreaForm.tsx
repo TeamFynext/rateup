@@ -13,7 +13,7 @@ export function TextAreaForm() {
         placeholder="Enter your answer"
         value={response?.length > 0 ? response?.replace(", ", "\n") : ""}
         onChange={(e) => {
-          const replacedValue = e.currentTarget.value.replace(/\n/g, ", ");
+          const replacedValue = e.currentTarget.value.replace(/\n/g, "\n");
           updateResponse(replacedValue);
         }}
         style={{ maxWidth: "400px" }}
