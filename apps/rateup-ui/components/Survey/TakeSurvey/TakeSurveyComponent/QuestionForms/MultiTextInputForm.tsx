@@ -14,7 +14,6 @@ const MultiTextInputForm = ({ features }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const fields: CustomInputFields[] = features?.[selectedLanguage].fields;
-  console.log(fields);
   return (
     <Stack w={"100%"} gap={"xs"}>
       {fields?.map((field, index) => (

@@ -66,7 +66,6 @@ import TncExtraProps from "./QuestionExtraProps/TncExtraProps";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { hasFeature } from "../../../utils/subscription/subscription";
 import ImportChoices from "./ImportChoices";
-import AddressExtraProps from "./QuestionExtraProps/AddressExtraProps";
 import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
@@ -208,8 +207,19 @@ export function QuestionDetailedView({
     >
       <Stack style={{ height: "100%" }} ref={formRef}>
         <ScrollArea style={{ flex: "1 1 0" }}>
-          <Badge variant="outline" size="lg" style={{ overflow: "visible" }}>
-            {getQuestionTypeLabel(question.type)}
+          <Badge
+            variant={getQuestionTypeLabel(question.type) ? "outline" : "light"}
+            size="lg"
+            style={{ overflow: "visible" }}
+            color={
+              getQuestionTypeLabel(question.type)
+                ? "var(--tertiary-color)"
+                : "red"
+            }
+          >
+            {getQuestionTypeLabel(question.type)
+              ? getQuestionTypeLabel(question.type)
+              : "Not Available"}
           </Badge>
           <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
             <Stack
@@ -514,8 +524,6 @@ function ExtraProps({
       return <ContactExtraProps form={form} />;
     case QuestionType.TnC:
       return <TncExtraProps form={form} />;
-    case QuestionType.Address:
-      return <AddressExtraProps form={form} />;
     case QuestionType.MultiTextInput:
       return <MultiTextInputExtraProps form={form} />;
     case QuestionType.InfoMessage:

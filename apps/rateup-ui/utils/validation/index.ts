@@ -43,11 +43,7 @@ export function validateTextType(input, type) {
 
 export function validateQuestion(question, input, selectedLanguage) {
   if (question?.validationRules) {
-    if (
-      [QuestionType.Address, QuestionType.MultiTextInput].includes(
-        question?.type,
-      )
-    ) {
+    if ([QuestionType.MultiTextInput].includes(question?.type)) {
       const fields = question?.features?.[selectedLanguage]?.fields;
       for (const field of fields) {
         if (question?.validationRules?.[field?.fieldKey]) {

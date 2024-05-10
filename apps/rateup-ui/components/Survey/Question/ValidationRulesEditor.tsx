@@ -140,7 +140,6 @@ const ValidationRulesEditor = ({
       case Q.Number:
         setRuleList(["length"]);
         break;
-      case Q.Address:
       case Q.MultiTextInput:
         setRuleList(["length", "textType", "required"]);
         break;
@@ -149,7 +148,7 @@ const ValidationRulesEditor = ({
 
   useEffect(() => {
     if (
-      [Q.Address, Q.MultiTextInput].includes(selectedQ?.type) &&
+      [Q.MultiTextInput].includes(selectedQ?.type) &&
       selectedQ?.validationRules
     ) {
       setMultiInputRules(selectedQ?.validationRules);
@@ -162,7 +161,7 @@ const ValidationRulesEditor = ({
   };
 
   useEffect(() => {
-    if (![Q.Address, Q.MultiTextInput].includes(selectedQ?.type)) {
+    if (![Q.MultiTextInput].includes(selectedQ?.type)) {
       let validationResult = form.validate();
 
       if (validationResult?.hasErrors) {
@@ -180,14 +179,14 @@ const ValidationRulesEditor = ({
     if (
       selectedQ?.hasOwnProperty("validationRules") &&
       selectedQ?.validationRules !== null &&
-      ![Q.Address, Q.MultiTextInput].includes(selectedQ?.type)
+      ![Q.MultiTextInput].includes(selectedQ?.type)
     ) {
       const updatedValues = { ...selectedQ?.validationRules };
       form.reset();
       setValues(updatedValues);
     } else {
       if (
-        [Q.Address, Q.MultiTextInput].includes(selectedQ?.type) &&
+        [Q.MultiTextInput].includes(selectedQ?.type) &&
         selectedQ?.validationRules !== null
       ) {
         setMultiInputRules(selectedQ?.validationRules);
@@ -199,7 +198,7 @@ const ValidationRulesEditor = ({
   }, [selectedQ?.id]);
 
   const addRule = (ruleType: string) => {
-    if ([Q.Address, Q.MultiTextInput].includes(selectedQ?.type)) {
+    if ([Q.MultiTextInput].includes(selectedQ?.type)) {
       let newRule;
       if (ruleType === "length") {
         newRule = {
@@ -263,7 +262,7 @@ const ValidationRulesEditor = ({
   };
 
   const handleSave = async () => {
-    if (![Q.Address, Q.MultiTextInput].includes(selectedQ?.type)) {
+    if (![Q.MultiTextInput].includes(selectedQ?.type)) {
       const validationResult = form.validate();
       if (validationResult?.hasErrors) {
         // There are validation errors, do not save the form
@@ -280,7 +279,7 @@ const ValidationRulesEditor = ({
     });
 
     const data = {
-      validationRules: [Q.Address, Q.MultiTextInput].includes(selectedQ?.type)
+      validationRules: [Q.MultiTextInput].includes(selectedQ?.type)
         ? multiInputRules
         : { ...form.values },
     };
@@ -497,7 +496,7 @@ const ValidationRulesEditor = ({
           Add validation rules to the user input for this question.
         </Text>
         <Divider />
-        {[Q.Address, Q.MultiTextInput].includes(selectedQ?.type) ? (
+        {[Q.MultiTextInput].includes(selectedQ?.type) ? (
           <MultiInputValidationRules />
         ) : (
           <Paper

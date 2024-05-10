@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  HoverCard,
+  Image,
+  ScrollAreaAutosize,
+  Text,
+} from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { QuestionType } from "../../../types/enums";
 import { extractText, isHtml } from "../../../utils";
@@ -12,6 +19,12 @@ export const HoverCardComponent = ({
   lineClamp = 1,
   questionType = null,
 }) => {
+  if (questionType && !Object.values(QuestionType).includes(questionType))
+    return (
+      <Badge variant={"light"} color="red">
+        Not Available
+      </Badge>
+    );
   return (
     <HoverCard
       width={"fit-content"}
@@ -20,9 +33,8 @@ export const HoverCardComponent = ({
       styles={{ dropdown: { maxWidth: 400 } }}
       position="bottom-start"
     >
-      {[QuestionType.Address, QuestionType.MultiTextInput].includes(
-        questionType,
-      ) && content?.length > 0 ? (
+      {[QuestionType.MultiTextInput].includes(questionType) &&
+      content?.length > 0 ? (
         <HoverCard.Target>
           <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
             {content[0]}
@@ -60,9 +72,7 @@ export const HoverCardComponent = ({
             }}
             mah={250}
           >
-            {[QuestionType.Address, QuestionType.MultiTextInput].includes(
-              questionType,
-            ) ? (
+            {[QuestionType.MultiTextInput].includes(questionType) ? (
               content?.length > 0 &&
               content?.map((c) => (
                 <Text c={c} miw={200} maw={200} fw={fw} fz={fz} key={c}>

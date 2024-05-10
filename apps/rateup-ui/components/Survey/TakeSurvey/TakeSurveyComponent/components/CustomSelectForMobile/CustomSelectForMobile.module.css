@@ -1,0 +1,65 @@
+.input-btn {
+  width: 100%;
+}
+
+.input-btn :global(.mantine-Input-input) {
+  height: auto;
+  padding: 0.625rem 1rem;
+  line-height: 1.5;
+  border: 1px solid var(--mantine-color-primaryColor-5);
+}
+
+.search-input-and-options-container {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  background-color: white;
+  border-radius: 1rem;
+  z-index: 250;
+  padding: 1rem;
+}
+
+.back-btn-and-search-input-container {
+  gap: 0.5rem;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-input input {
+  width: 100%;
+  padding: 0;
+}
+
+.options-container-root {
+  flex: 1;
+  overflow: hidden;
+}
+
+.options-container-div {
+  gap: 0.625rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--mantine-color-gray-2);
+  padding: 10px 1rem;
+  border-radius: 0.625rem;
+}
+
+.option.selected {
+  background-color: var(--mantine-color-primaryColor-5);
+  color: white;
+}
+
+.option-text-span {
+  flex: 1;
+}
+
+.checked-icon-span {
+  height: 1rem;
+}

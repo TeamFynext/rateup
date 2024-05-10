@@ -242,7 +242,6 @@ function ConfirmResponsesModal({
                                 )}
                               </Stack>
                             );
-                          case Q.Address:
                           case Q.MultiTextInput:
                             const answers = Object.values(
                               response?.response,
