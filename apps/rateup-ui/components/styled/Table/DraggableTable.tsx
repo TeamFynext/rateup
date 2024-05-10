@@ -1,10 +1,9 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { ActionIcon, Group, Table } from "@mantine/core";
+import { ActionIcon, Group, ScrollAreaAutosize, Table } from "@mantine/core";
 import { IconEdit, IconGripVertical, IconTrash } from "@tabler/icons-react";
 import React from "react";
 import { reorder } from "../../../utils/questions";
 import classes from "./DraggableTableStyle.module.css";
-import NothingFound from "../../NothingFound/NothingFound";
 
 type TableHeader = {
   headerKey: string;
@@ -19,6 +18,8 @@ interface IDraggableTableProps {
   deleteEnabled?: boolean;
   handleEdit?: (item) => void;
   handleDelete?: (item) => void;
+  withRowBorder: boolean;
+  maxHeight?: string | number;
 }
 const DraggableTable = ({
   headers,
@@ -29,26 +30,37 @@ const DraggableTable = ({
   deleteEnabled = false,
   handleEdit,
   handleDelete,
+  withRowBorder = true,
+  maxHeight = 250,
 }: IDraggableTableProps) => {
   if (!items || !items?.length) return;
 
   const headerKeys = headers.map((header) => header.headerKey);
 
   const rows = items?.map((item, index) => (
-    <Draggable key={index} index={index} draggableId={item?.[itemUniqueKey]}>
+    <Draggable
+      key={item?.[itemUniqueKey]}
+      index={index}
+      draggableId={item?.[itemUniqueKey]}
+    >
       {(provided) => (
         <Table.Tr
+          key={item?.[itemUniqueKey]}
           className={classes.item}
           ref={provided.innerRef}
           {...provided.draggableProps}
         >
-          <Table.Td>
-            <div {...provided.dragHandleProps} className={classes.dragHandle}>
+          <Table.Td w={50}>
+            <div className={classes.dragHandle} {...provided.dragHandleProps}>
               <IconGripVertical stroke={1.5} />
             </div>
           </Table.Td>
-          {headerKeys?.map((key) => <Table.Td>{item[key]}</Table.Td>)}
-          <Table.Td>
+          {headerKeys?.map((key, keyIndex) => (
+            <Table.Td w={200} key={keyIndex}>
+              {item[key]}
+            </Table.Td>
+          ))}
+          <Table.Td w={270}>
             <Group>
               {editEnabled && (
                 <ActionIcon
@@ -78,35 +90,40 @@ const DraggableTable = ({
   ));
 
   return (
-    <DragDropContext
-      onDragEnd={({ source, destination }) => {
-        const reorderedItems = reorder(
-          items,
-          source.index,
-          destination?.index || 0,
-        );
-        handleDragEnd(reorderedItems);
-      }}
-    >
-      <Table stickyHeader withRowBorders={false}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th />
-            {headers?.map((header) => (
-              <Table.Th>{header.headerValue}</Table.Th>
-            ))}
-          </Table.Tr>
-        </Table.Thead>
-        <Droppable droppableId="dnd-list" direction="vertical">
-          {(provided) => (
-            <Table.Tbody {...provided.droppableProps} ref={provided.innerRef}>
-              {rows}
-              {provided.placeholder}
-            </Table.Tbody>
-          )}
-        </Droppable>
-      </Table>
-    </DragDropContext>
+    <ScrollAreaAutosize mah={maxHeight} scrollbarSize={6}>
+      <DragDropContext
+        onDragEnd={({ source, destination }) => {
+          const reorderedItems = reorder(
+            items,
+            source.index,
+            destination?.index || 0,
+          );
+          handleDragEnd(reorderedItems);
+        }}
+      >
+        <Table stickyHeader withRowBorders={withRowBorder}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th w={50} />
+              {headers?.map((header, index) => (
+                <Table.Th w={200} key={index}>
+                  {header.headerValue}
+                </Table.Th>
+              ))}
+              <Table.Th w={270} />
+            </Table.Tr>
+          </Table.Thead>
+          <Droppable droppableId="dnd-list" direction="vertical">
+            {(provided) => (
+              <Table.Tbody {...provided.droppableProps} ref={provided.innerRef}>
+                {rows}
+                {provided.placeholder}
+              </Table.Tbody>
+            )}
+          </Droppable>
+        </Table>
+      </DragDropContext>
+    </ScrollAreaAutosize>
   );
 };
 

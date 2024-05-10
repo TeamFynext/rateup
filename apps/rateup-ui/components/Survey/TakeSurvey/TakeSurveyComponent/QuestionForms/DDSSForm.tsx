@@ -7,6 +7,7 @@ import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import { useMediaQuery } from "@mantine/hooks";
+import CustomSelectForMobile from "../components/CustomSelectForMobile";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -40,13 +41,9 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const theme = useMantineTheme();
   const pos = isMobile ? "top" : "bottom";
 
-  return (
+  return !isMobile ? (
     <FormPaperLayout>
       <Select
-        style={{
-          minWidth: "300px",
-          maxWidth: "500px",
-        }}
         placeholder="Select one / type in to search"
         data={data}
         value={selectedOp}
@@ -74,5 +71,12 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
         searchable
       />
     </FormPaperLayout>
+  ) : (
+    <CustomSelectForMobile
+      value={selectedOp}
+      data={data}
+      placeholder="Select one"
+      onChange={handleSelectedOp}
+    />
   );
 }
