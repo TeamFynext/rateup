@@ -11,7 +11,6 @@ export const ContactQuestions = [
   QuestionType.Email,
   QuestionType.Phone,
   // QuestionType.EmailPhone,
-  QuestionType.Address,
 ];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
@@ -55,6 +54,7 @@ export const InputQuestions = [
   QuestionType.Number,
   QuestionType.Date,
   QuestionType.Photo,
+  QuestionType.MultiTextInput,
 ];
 
 export const OtherQuestions = [

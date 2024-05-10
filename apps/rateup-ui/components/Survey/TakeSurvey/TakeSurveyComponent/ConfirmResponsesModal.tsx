@@ -242,13 +242,13 @@ function ConfirmResponsesModal({
                                 )}
                               </Stack>
                             );
-                          case Q.Address:
-                            const address = Object.values(
+                          case Q.MultiTextInput:
+                            const answers = Object.values(
                               response?.response,
                             )[0];
                             return (
                               <Stack>
-                                {Object.values(address).map((ad) => (
+                                {Object.values(answers).map((ad) => (
                                   <Text fw="300">{ad}</Text>
                                 ))}
                               </Stack>

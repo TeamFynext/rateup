@@ -1,6 +1,6 @@
 import { Flex, Paper, Switch } from "@mantine/core";
 import { useContext, useState, useEffect } from "react";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 
 const TestimonialExtraProps = ({ qId, form }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;

@@ -95,8 +95,6 @@ export function getQuestionTypeLabel(
       return "Contact";
     case QuestionType.TnC:
       return "Terms & Conditions";
-    case QuestionType.Address:
-      return "Address";
     case WaFlowFormNonInputElementType.image:
       return "Image";
     case WaFlowFormNonInputElementType.nonInputText:
@@ -105,8 +103,10 @@ export function getQuestionTypeLabel(
       return "Embedded Link";
     case WaFlowFormNonInputElementType.optIn:
       return "Opt In";
+    case QuestionType.MultiTextInput:
+      return "Multi Text Input";
     default:
-      throw new Error("Invalid Question Type");
+      return false;
   }
 }
 

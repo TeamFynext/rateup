@@ -43,7 +43,7 @@ export function validateTextType(input, type) {
 
 export function validateQuestion(question, input, selectedLanguage) {
   if (question?.validationRules) {
-    if (question?.type === QuestionType.Address) {
+    if ([QuestionType.MultiTextInput].includes(question?.type)) {
       const fields = question?.features?.[selectedLanguage]?.fields;
       for (const field of fields) {
         if (question?.validationRules?.[field?.fieldKey]) {
@@ -60,6 +60,13 @@ export function validateQuestion(question, input, selectedLanguage) {
               if (
                 !input?.[field?.fieldKey] ||
                 !validateTextType(input?.[field?.fieldKey], rule?.type)
+              ) {
+                return rule?.errorMessage;
+              }
+            } else if (rule?.ruleType === "required") {
+              if (
+                !input?.[field?.fieldKey] ||
+                !input?.[field?.fieldKey]?.trim().length
               ) {
                 return rule?.errorMessage;
               }

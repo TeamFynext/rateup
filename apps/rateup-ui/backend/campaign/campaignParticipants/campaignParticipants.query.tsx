@@ -18,6 +18,9 @@ export const useAddContactParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaignParticipants", campaignId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["campaigns"],
+      });
       showSuccessToast("Added participants successfully.");
     },
     onError: (error: any) => {
@@ -36,6 +39,9 @@ export const useAddGroupParticipantMutation = (campaignId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignParticipants", campaignId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["campaigns"],
       });
       showSuccessToast("Added group participants successfully.");
     },
@@ -61,6 +67,9 @@ export const useAddCampaignParticipants = (campaignId) => {
     mutationFn: addCampaignParticipants,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaigns"],
+      });
       showSuccessToast("Campaign particiants added successfully.");
     },
     onError: (error: any) => {
@@ -83,6 +92,9 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
         <IconCheck />,
       );
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaigns"],
+      });
     },
     onError(error: any) {
       showErrorToast(
@@ -109,6 +121,9 @@ export const useRemoveMulitpleGroupParticipants = (
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaigns"],
+      });
       onSucess();
     },
     onError(error: any) {

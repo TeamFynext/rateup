@@ -1,8 +1,8 @@
 import { Flex, Paper, Stack, Switch } from "@mantine/core";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { useCallback, useContext } from "react";
-import { ContainedTextArea } from "../../input/ContainedInput/ContainedInput";
-import { QuestionType } from "../../../types/enums";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { useCallback, useContext, useEffect } from "react";
+import { ContainedTextArea } from "../../../input/ContainedInput/ContainedInput";
+import { QuestionType } from "../../../../types/enums";
 
 const ContactExtraProps = ({ form }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
@@ -34,9 +34,10 @@ const ContactExtraProps = ({ form }) => {
       [selectedLanguage]: features,
     });
   }
-  useCallback(() => {
-    updateFeatures(features);
-  }, [features]);
+  useEffect(() => {
+    if (!form.values.features) updateFeatures(features);
+  }, [form]);
+
   return (
     <Stack gap={"xl"}>
       <Flex justify={"flex-start"} columnGap={"lg"}>

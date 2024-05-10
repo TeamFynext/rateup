@@ -57,6 +57,7 @@ import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import classNames from "classnames/bind";
 import styles from "./ScreenListIem.module.css";
+import { FlowChoiceQuestions } from "../../../../../utils/constants";
 
 const cx = classNames.bind(styles);
 
@@ -206,6 +207,29 @@ function ScreenListItem({
       footer.label = footerLabelInputState;
     });
   }
+  const handleSaveJsonToWa = () => {
+    let errorMessages = [];
+    for (const flScreen of flowJson?.screens) {
+      const questions = getQuestionsFromScreen(flScreen, survey, map);
+      for (const qs of questions) {
+        if (FlowChoiceQuestions.includes(qs.type)) {
+          let choice = Object.values(qs?.choices ?? {})?.[0];
+          if (!choice || choice?.length === 0) {
+            let title = Object.values(qs?.title ?? {})?.[0];
+            let label = Object.values(qs?.label ?? {})?.[0];
+            errorMessages.push(title || label);
+          }
+        }
+      }
+    }
+    if (errorMessages.length > 0) {
+      errorMessages?.map((error) =>
+        showErrorToast(`Atleast one choice in ${error} question needed`),
+      );
+    } else {
+      pushToWaMutation.mutate(dbFlowId);
+    }
+  };
 
   const screenTitleInputRef = useRef(null);
   const footerLabelInputRef = useRef(null);
@@ -349,9 +373,7 @@ function ScreenListItem({
                   }
                 >
                   <ActionIcon
-                    onClick={() => {
-                      pushToWaMutation.mutate(dbFlowId);
-                    }}
+                    onClick={handleSaveJsonToWa}
                     loading={pushToWaMutation.isPending}
                     variant={"subtle"}
                     size={20}
