@@ -1,0 +1,26 @@
+.pills-input {
+  width: 100%;
+  display: flex;
+}
+
+.pills-input :global(.mantine-Input-wrapper) {
+  width: 100%;
+}
+
+.pills-input :global(.mantine-Input-wrapper) :global(.mantine-Input-input) {
+  padding: 0.625rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border: 1px solid var(--mantine-color-primaryColor-5);
+}
+
+.pills-group {
+  flex: 1;
+}
+
+.deselect-all-btn {
+  align-self: flex-start;
+  height: auto;
+  padding: 0.625rem;
+}
