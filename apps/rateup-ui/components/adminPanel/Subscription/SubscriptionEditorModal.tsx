@@ -47,7 +47,7 @@ export function SubscriptionEditorModal({
       };
       rateupPaymentsPlanUpdateMutation.mutate(updatedData);
     } else {
-      if (!subscription.basePlan.name.includes("custom")) {
+      if (!subscription.basePlan.name.toUpperCase().includes("CUSTOM")) {
         showErrorToast(
           "Subscription can only updated in custom plan",
           "",
