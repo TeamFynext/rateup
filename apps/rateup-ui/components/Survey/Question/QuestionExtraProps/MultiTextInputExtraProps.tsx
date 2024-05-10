@@ -44,9 +44,9 @@ const MultiTextInputExtraProps = ({ form }) => {
     },
   });
   const handleDragEnd = (values) => {
-    form.setFieldValues("features", {
-      ...features,
-      [selectedLanguage]: values,
+    form.setFieldValue("features", {
+      ...form.values.features,
+      [selectedLanguage]: { ...features, fields: values },
     });
   };
 
@@ -97,7 +97,7 @@ const MultiTextInputExtraProps = ({ form }) => {
   };
 
   useEffect(() => {
-    if (!features?.fields) {
+    if (!form.values.features?.[selectedLanguage]?.fields) {
       form.setFieldValue("features", {
         ...form.values.features,
         [selectedLanguage]: {
@@ -124,6 +124,7 @@ const MultiTextInputExtraProps = ({ form }) => {
         handleEdit={handleEdit}
         handleDelete={handleDelete}
         itemUniqueKey={"fieldKey"}
+        withRowBorder={false}
       />
       <Group>
         <ContainedTextField
@@ -131,7 +132,7 @@ const MultiTextInputExtraProps = ({ form }) => {
           {...fieldForm.getInputProps("fieldKey")}
           w={200}
         />
-        <ContainedTextArea
+        <ContainedTextField
           label={"Enter display text for field"}
           w={350}
           {...fieldForm.getInputProps("placeholderText")}

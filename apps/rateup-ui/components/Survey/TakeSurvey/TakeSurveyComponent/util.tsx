@@ -24,7 +24,6 @@ import ContactForm from "./QuestionForms/ContactForm";
 import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { emailPattern } from "../../../../utils/constants";
-import AddressForm from "./QuestionForms/AddressForm";
 import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
 
 const shouldShowGoogleReview = (question, userResponse) => {
@@ -180,8 +179,6 @@ export function getQuestionForm(type, selectedQ) {
       );
     case Q.InfoMessage:
       return <></>;
-    case Q.Address:
-      return <AddressForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.MultiTextInput:
       return (
         <MultiTextInputForm

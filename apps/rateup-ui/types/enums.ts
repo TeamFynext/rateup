@@ -30,7 +30,6 @@ export enum QuestionType {
   PCQ = "Picture Choice",
   TnC = "Terms & Conditions",
   Contact = "Contact",
-  Address = "Address",
   MultiTextInput = "MultiTextInput",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",

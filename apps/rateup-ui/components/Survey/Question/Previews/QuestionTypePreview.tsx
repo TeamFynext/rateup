@@ -21,7 +21,6 @@ import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQF
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
 import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
 import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/InfoMessageForm";
-import AddressForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/AddressForm";
 import MultiTextInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MultiTextInputForm";
 
 const QuestionTypePreview = ({ type, choices, features, tnc }) => {
@@ -72,8 +71,6 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       return <InfoMessage />;
     case Q.TnC:
       return <TermsNConditionsForm tncData={tnc} />;
-    case Q.Address:
-      return <AddressForm features={features} />;
     case Q.MultiTextInput:
       return <MultiTextInputForm features={features} />;
     default:

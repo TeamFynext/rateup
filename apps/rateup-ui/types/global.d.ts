@@ -233,7 +233,6 @@ declare global {
         phone?: string;
         email?: string;
       };
-      [QuestionType.Address]?: any;
       [QuestionType.LD]?: LDResponse;
       [QuestionType.YN]?: YNResponse;
       [QuestionType.Rating]?: number;
