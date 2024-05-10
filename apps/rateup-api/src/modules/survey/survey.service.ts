@@ -938,11 +938,7 @@ function validateSurvey(surveyData) {
         });
       }
     }
-    if (
-      [QuestionType.Address, QuestionType.MultiTextInput].includes(
-        question?.type,
-      )
-    ) {
+    if ([QuestionType.MultiTextInput].includes(question?.type)) {
       if (!question?.features) {
         incompleteQuestions.push({
           id: question.id,

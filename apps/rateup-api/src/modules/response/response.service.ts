@@ -199,7 +199,6 @@ export async function downloadExcelResponse(
               responseValue = responseValue?.toString();
               break;
             }
-            case QuestionType.Address:
             case QuestionType.MultiTextInput:
               const fields = question?.features?.[defaultLanguage]?.fields;
               if (fields) {
@@ -866,7 +865,6 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
 export function getFormattedResponse(response, qstn, language) {
   let formattedResponse = "";
   switch (qstn?.type) {
-    case QuestionType.Address:
     case QuestionType.MultiTextInput:
       const fields = qstn?.features?.[language]?.fields;
       if (fields) {
