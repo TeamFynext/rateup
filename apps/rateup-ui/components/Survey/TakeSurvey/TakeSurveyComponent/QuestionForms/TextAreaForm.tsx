@@ -12,7 +12,7 @@ export function TextAreaForm() {
   const handleChange = (e) => {
     const newValue = e.currentTarget.value;
 
-    const updatedResponse = newValue?.replace(/\n/g, ", ");
+    const updatedResponse = newValue?.replace(/\n+/g, ", ");
     updateResponse(updatedResponse);
     setInputValue(newValue);
   };
