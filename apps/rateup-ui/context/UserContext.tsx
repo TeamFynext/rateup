@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from "react";
+import { orgWsMessage } from "../types/global";
 
 export interface User {
   role: string;
@@ -21,15 +22,18 @@ export interface User {
 interface UserContextProps {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  wsData: orgWsMessage;
+  setWsData: React.Dispatch<React.SetStateAction<orgWsMessage>>;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [wsData, setWsData] = useState<orgWsMessage>({} as orgWsMessage);
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, wsData, setWsData }}>
       {children}
     </UserContext.Provider>
   );
@@ -43,4 +47,12 @@ const useUser = () => {
   return context;
 };
 
-export { UserProvider, useUser };
+const useWsData = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error("useWsData must be used within a UserProvider");
+  }
+  return { wsData: context.wsData, setWsData: context.setWsData };
+};
+
+export { UserProvider, useUser, useWsData };
