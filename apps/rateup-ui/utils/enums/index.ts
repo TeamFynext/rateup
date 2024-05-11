@@ -105,6 +105,8 @@ export function getQuestionTypeLabel(
       return "Opt In";
     case QuestionType.MultiTextInput:
       return "Multi Text Input";
+    case QuestionType.MCQGrid:
+      return "Single Select Grid";
     default:
       return false;
   }

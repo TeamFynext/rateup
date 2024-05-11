@@ -253,6 +253,19 @@ function ConfirmResponsesModal({
                                 ))}
                               </Stack>
                             );
+                          case Q.MCQGrid:
+                            const results = Object.values(
+                              response?.response,
+                            )[0];
+                            return (
+                              <Stack>
+                                {Object.entries(results).map(([q, res]) => (
+                                  <Text fw="300">
+                                    {q}: {res?.value}
+                                  </Text>
+                                ))}
+                              </Stack>
+                            );
                           default:
                             return JSON.stringify(
                               Object.values(response?.response)[0],

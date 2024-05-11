@@ -8,6 +8,7 @@ import {
 } from "./questions.api";
 import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 import { notifications } from "@mantine/notifications";
+import { IconX } from "@tabler/icons-react";
 
 export const useQuestions = (surveyId: string) => {
   return useQuery({
@@ -61,7 +62,7 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
     onError: (err) => {
-      showErrorToast("Error updating question");
+      showErrorToast("Error updating question", "load-data", <IconX />, true);
     },
   });
 

@@ -42,6 +42,8 @@ export function getResponse(q: any, response: any) {
       return formatWaList(response);
     case QuestionType.MultiTextInput:
       return formatMultiTextInput(q, response);
+    case QuestionType.MCQGrid:
+      return formatMCQGridResponse(q, response);
     default:
       return formatDefaultResponse(q, response);
   }
@@ -71,6 +73,16 @@ function formatMultiTextInput(q, response) {
       (f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
     );
   }
+}
+
+function formatMCQGridResponse(question, response) {
+  if (!response) return;
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
+  const gridQuestions =
+    question?.features?.[selectedLanguage || defaultLanguage]?.questions;
+  return gridQuestions?.map((q) => `${q}: ${response?.[q]?.value ?? "NA"}`);
 }
 
 function formatChoiceTypeQuestions(q, response) {
