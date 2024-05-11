@@ -46,14 +46,20 @@
 .option {
   display: flex;
   align-items: center;
-  border: 1px solid var(--mantine-color-gray-2);
-  padding: 10px 1rem;
-  border-radius: 0.625rem;
+  background-color: transparent;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.option.selected {
-  background-color: var(--mantine-color-primaryColor-5);
-  color: white;
+.option-text-checked-icon-container {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 10px 1rem;
+  border: 1px solid var(--mantine-color-gray-2);
+  border-radius: 0.625rem;
+  background-color: transparent;
 }
 
 .option-text-span {
