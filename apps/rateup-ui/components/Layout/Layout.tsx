@@ -1,9 +1,9 @@
-﻿import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { Flex, Transition } from "@mantine/core";
 import { HeaderTabs } from "./Header/Header";
 import { IUserInfoApiResponse } from "../../backend/user/user.api";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUser } from "../../context/UserContext";
+import { useUser, useWsData } from "../../context/UserContext";
 import { RouteParamsProvider } from "../../context/RouteParamsContext";
 import SessionAuth from "../SuperToken/SessionAuth";
 import { useRouter } from "next/router";
@@ -14,10 +14,15 @@ import ReportBug from "../ReportBug";
 import styles from "./Layout.module.css";
 import { useUserInfo } from "../../backend/user/user.query";
 import { NavControlContext } from "../../context/NavControlContext";
-import ChatBot from "../../pages/dashboard/chatbot";
+import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
+import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
+import { orgWsMessage } from "../../types/global";
+import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 // @ts-ignore
 export default function Layout({ children }) {
   const router = useRouter();
+  const notifyWsMessages = useNotifyWsMessages();
+  const connectionRef = useRef<WebSocket | null>(null);
   const [navOpened, setNavOpened] = useState(true);
   const [focus, toggleFocus] = useState(false);
   const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
@@ -25,6 +30,7 @@ export default function Layout({ children }) {
     null,
   );
   const { setUser } = useUser();
+  const { setWsData } = useWsData();
   const queryClient = useQueryClient();
   const {
     isLoading: isLoadingUserInfo,
@@ -32,6 +38,34 @@ export default function Layout({ children }) {
     error: errorUserInfo,
     refetch,
   } = useUserInfo();
+
+  const { data, error } = useOrgWsAuthCheck();
+
+  useEffect(() => {
+    if (data && !error) {
+      connectionRef.current = new WebSocket(
+        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data?.afterAuthId}`,
+      );
+
+      connectionRef.current.onopen = () => {
+        console.log("Connected to websocket");
+      };
+
+      connectionRef.current.onmessage = (event) => {
+        const newMessage: orgWsMessage = JSON.parse(event.data);
+        setWsData(newMessage);
+        notifyWsMessages(newMessage);
+      };
+
+      connectionRef.current.onclose = () => {
+        console.log("Disconnected from websocket");
+      };
+
+      return () => {
+        connectionRef.current?.close();
+      };
+    }
+  }, [data, setWsData]);
 
   if (router.query.msg === "welcome") {
     refetch();

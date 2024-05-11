@@ -30,12 +30,15 @@ export const useCreateContactMutation = () => {
   return useMutation({
     mutationFn: createContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] }),
-        showSuccessToast(
-          "Contact created successfully.",
-          "contact-create",
-          <IconCheck />,
-        );
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["contacts", "last-message"],
+      });
+      showSuccessToast(
+        "Contact created successfully.",
+        "contact-create",
+        <IconCheck />,
+      );
     },
     onError: (error: any) => {
       showErrorToast(
