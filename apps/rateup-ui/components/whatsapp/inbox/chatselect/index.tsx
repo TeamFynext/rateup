@@ -1,4 +1,4 @@
-import { Divider, Group, SegmentedControl, Stack, Text } from "@mantine/core";
+import { Divider, Group, Stack, Text } from "@mantine/core";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
 import { IconSearch } from "@tabler/icons-react";
@@ -8,13 +8,18 @@ import { useState } from "react";
 import { useDebouncedValue, useElementSize } from "@mantine/hooks";
 import { parseWaMessage } from "../../../../utils/whatsapp/inbox";
 import { FixedSizeList as List } from "react-window";
+import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
 }) {
+  const [filter, setFilter] = useState<ChatFilter>({
+    strict: false,
+    general: "all",
+    multiselect: [],
+  });
   const { ref, width, height } = useElementSize();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 300);
-  const [filter, setFilter] = useState<"all" | "usermessages">("all");
 
   if (!props.contacts) {
     return null;
@@ -28,21 +33,49 @@ export default function WaInboxChatSelect(props: {
       c.name?.toLowerCase().includes(lowerCaseDebouncedSearchTerm) ||
       c.phone?.includes(lowerCaseDebouncedSearchTerm),
   );
-  const contactListToDisplay = debouncedSearchTerm
-    ? filteredContacts
-    : contactsWithAtleastOneMessage;
+  const contactListToDisplay =
+    debouncedSearchTerm || filter.multiselect.length > 0
+      ? filteredContacts
+      : contactsWithAtleastOneMessage;
 
   function filterContacts(contacts: ContactsWithLastMessage[]) {
-    if (filter === "all") {
-      return contacts;
-    } else {
-      return contacts.filter((c) => {
-        if (c.lastMessage.messageBody.exchangeProcess === "receive") {
+    let result = contacts;
+    if (filter.general !== "all") {
+      result = contacts?.filter((c) => {
+        if (c?.lastMessage?.messageBody?.exchangeProcess === "receive") {
           const { messageType } = parseWaMessage(c.lastMessage.messageBody);
           return messageType !== "interactive";
         }
       });
     }
+    if (filter.multiselect.length > 0) {
+      if (filter.strict) {
+        result = result?.filter((c) => {
+          return filter.multiselect.every((f) => {
+            if (f.group === "groups") {
+              // If the group name is 'Groups', check if the groups array includes the value
+              return c.groups.includes(f.value);
+            } else {
+              // Otherwise, check if the tags object has a matching key-value pair
+              return c.tags[f.group] === f.value;
+            }
+          });
+        });
+      } else {
+        result = result.filter((c) => {
+          return filter.multiselect.some((f) => {
+            if (f.group === "groups") {
+              // If the group name is 'Groups', check if the groups array includes the value
+              return c.groups.includes(f.value);
+            } else {
+              // Otherwise, check if the tags object has a matching key-value pair
+              return c.tags[f.group] === f.value;
+            }
+          });
+        });
+      }
+    }
+    return result;
   }
 
   return (
@@ -63,15 +96,8 @@ export default function WaInboxChatSelect(props: {
               </Text>
             </Group>
           </Stack>
-          <SegmentedControl
-            value={filter}
-            onChange={(value) => setFilter(value as "all" | "usermessages")}
-            data={[
-              { value: "all", label: "All" },
-              { value: "usermessages", label: "User Messages" },
-            ]}
-            color={"var(--mantine-primary-color-6)"}
-            radius={"md"}
+          <WaInboxChatFilter
+            {...{ filter, setFilter, contacts: props?.contacts }}
           />
         </Group>
       </Stack>

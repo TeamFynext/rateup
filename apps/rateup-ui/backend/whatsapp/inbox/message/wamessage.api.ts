@@ -35,6 +35,7 @@ export async function sendNewWaMessage(contactId: string, message: any) {
 }
 
 export type ContactsWithLastMessage = ContactsData & {
+  groups?: string[];
   lastMessage: {
     waCreatedAt: string;
     messageBody: WaInboxMessage;
