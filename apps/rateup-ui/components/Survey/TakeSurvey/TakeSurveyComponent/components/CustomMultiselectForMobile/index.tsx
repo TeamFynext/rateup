@@ -15,7 +15,12 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import classNames from "classnames/bind";
-import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconDeselect,
+  IconSquareX,
+} from "@tabler/icons-react";
 import { motion, useAnimate } from "framer-motion";
 import commonStyles from "../CustomSelectForMobile/CustomSelectForMobile.module.css";
 import styles from "./CustomMultiselectForMobile.module.css";
@@ -176,12 +181,19 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
                 placeholder="Type in to search"
               />
             </Group>
-            <Button
-              className={cx("deselect-all-btn")}
-              onClick={handleDeselectAll}
-            >
-              Deselect all
-            </Button>
+            <Group>
+              <ActionIcon
+                className={cx("deselect-all-btn")}
+                onClick={handleDeselectAll}
+              >
+                <IconDeselect />
+              </ActionIcon>
+
+              <ActionIcon onClick={() => setIsOptionSelectionDivVisible(false)}>
+                <IconSquareX />
+              </ActionIcon>
+            </Group>
+
             <Combobox.Options className={cxCommon("options-container-root")}>
               <ScrollAreaAutosize h={"100%"} scrollbarSize={7} offsetScrollbars>
                 <Stack className={cxCommon("options-container-div")}>
