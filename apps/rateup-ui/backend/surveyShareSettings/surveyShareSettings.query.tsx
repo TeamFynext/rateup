@@ -23,7 +23,7 @@ const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
           queryKey: [queryKey, { resourceName, id }],
         });
         showSuccessToast(
-          "Settigs Updated Successfully",
+          "Settings Updated Successfully",
           "survey-share-settings",
           <IconCheck />,
         );

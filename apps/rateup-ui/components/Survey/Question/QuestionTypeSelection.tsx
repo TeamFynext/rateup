@@ -9,7 +9,11 @@ import {
   Title,
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import { IconScaleOutline, IconTextPlus } from "@tabler/icons-react";
+import {
+  IconGridDots,
+  IconScaleOutline,
+  IconTextPlus,
+} from "@tabler/icons-react";
 import {
   Icon123,
   IconAddressBook,
@@ -171,6 +175,7 @@ const questionIcons = {
   [QuestionType.TnC]: IconCheckbox,
   [QuestionType.InfoMessage]: IconMailFilled,
   [QuestionType.MultiTextInput]: IconTextPlus,
+  [QuestionType.MCQGrid]: IconGridDots,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,

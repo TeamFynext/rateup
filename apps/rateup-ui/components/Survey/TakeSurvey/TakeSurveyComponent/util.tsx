@@ -25,6 +25,7 @@ import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { emailPattern } from "../../../../utils/constants";
 import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
+import MCQGridForm from "./QuestionForms/MCQGridForm";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -186,6 +187,8 @@ export function getQuestionForm(type, selectedQ) {
           features={selectedQ?.features}
         />
       );
+    case Q.MCQGrid:
+      return <MCQGridForm key={selectedQ?.id} features={selectedQ?.features} />;
     default:
       return <div>not implemented</div>;
   }
@@ -226,6 +229,12 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
       if ((selectedQ.required && name?.length < 3) || testimonial?.length < 5)
         errMsg =
           "Name - min 3 characters, and \n testimonial - min 5 characters";
+      break;
+    case QuestionType.MCQGrid:
+      const questions = selectedQ?.features?.[selectedLanguage]?.questions;
+      const responsedQuestions = Object.keys(response);
+      if (!questions.every((q) => responsedQuestions.includes(q)))
+        errMsg = "All questions are mandatory";
       break;
     default:
       errMsg = "";

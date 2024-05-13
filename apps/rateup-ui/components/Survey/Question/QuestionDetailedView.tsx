@@ -67,6 +67,7 @@ import { useSubscription } from "../../../backend/subscription/subscription.quer
 import { hasFeature } from "../../../utils/subscription/subscription";
 import ImportChoices from "./ImportChoices";
 import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
+import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -173,6 +174,7 @@ export function QuestionDetailedView({
             autoClose: false,
             withCloseButton: false,
           });
+          console.log("form values", form.values);
           questionUpdateMutation.mutate({
             qId: question.id,
             data: form.values,
@@ -526,6 +528,8 @@ function ExtraProps({
       return <TncExtraProps form={form} />;
     case QuestionType.MultiTextInput:
       return <MultiTextInputExtraProps form={form} />;
+    case QuestionType.MCQGrid:
+      return <MCQGridExtraProps form={form} qId={question.id} />;
     case QuestionType.InfoMessage:
     default:
       return null;

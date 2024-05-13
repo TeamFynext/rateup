@@ -46,6 +46,7 @@ export const ChoiceQuestions = [
   QuestionType.DDSS,
   QuestionType.DDMS,
   QuestionType.PCQ,
+  QuestionType.MCQGrid,
 ];
 
 export const InputQuestions = [

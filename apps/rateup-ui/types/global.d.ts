@@ -1,4 +1,5 @@
 // Any modification to this file should be reflected in the backend
+import { WaGetMessagesBody } from "../backend/whatsapp/inbox/message/wamessage.api";
 import {
   QuestionType,
   MenuItemPriceType,
@@ -1132,4 +1133,13 @@ export type Campaign = {
   type: string;
   teamId: string;
   waTemplateId: string;
+};
+
+//type for org websocket messages
+export type orgWsMessage = {
+  type: "inbox";
+  inbox?: {
+    contact: ContactsData;
+    message: WaGetMessagesBody;
+  };
 };

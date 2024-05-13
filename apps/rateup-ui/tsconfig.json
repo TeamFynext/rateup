@@ -22,7 +22,8 @@
     "**/*.ts",
     "**/*.tsx",
     "postcss.config.ts",
-    "utils/encryption/index.ts"
+    "utils/encryption/index.ts",
+    "fake-data.js"
   ],
   "exclude": ["node_modules"]
 }

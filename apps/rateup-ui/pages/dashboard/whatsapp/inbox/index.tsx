@@ -8,14 +8,13 @@ import {
   useContactsWithLastMessage,
   useGetMessagesByContactId,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ContactsWithLastMessage,
   WaGetMessagesBody,
   WaMessagePage,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../../../backend/whatsapp/inbox/ws";
-import { useUser } from "../../../../context/UserContext";
+import { useWsData } from "../../../../context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
 import WhatsAppInboxLoader from "../../../../components/whatsapp/inbox/loader";
 
@@ -24,8 +23,7 @@ export default function WhatsAppInbox() {
   const [contactList, setContactList] = useState(
     [] as ContactsWithLastMessage[],
   );
-  const { user } = useUser();
-  const connectionRef = useRef<WebSocket | null>(null);
+  const { wsData } = useWsData();
 
   const searchParams = useSearchParams();
   const { data, error } = useGetMessagesByContactId(
@@ -53,7 +51,7 @@ export default function WhatsAppInbox() {
             userInitiatedFinalTimeStamp:
               newMessage.message.messageBody.exchangeProcess === "receive"
                 ? newMessage.message.waCreatedAt
-                : updatedContacts[contactIndex].userInitiatedFinalTimeStamp,
+                : updatedContacts[contactIndex]?.userInitiatedFinalTimeStamp,
           };
         } else {
           //add new contact with new message
@@ -65,7 +63,7 @@ export default function WhatsAppInbox() {
               userInitiatedFinalTimeStamp:
                 newMessage.message.messageBody.exchangeProcess === "receive"
                   ? newMessage.message.waCreatedAt
-                  : updatedContacts[contactIndex].userInitiatedFinalTimeStamp,
+                  : updatedContacts[contactIndex]?.userInitiatedFinalTimeStamp,
             },
           ];
         }
@@ -90,42 +88,25 @@ export default function WhatsAppInbox() {
   }, [contactsWithLastMessage]);
 
   useEffect(() => {
-    connectionRef.current = new WebSocket(
-      `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${user?.orgId}`,
-    );
-
-    connectionRef.current.onopen = () => {
-      console.log("Connected to websocket");
-    };
-
-    connectionRef.current.onmessage = (event) => {
-      const newMessage: { contact: ContactsData; message: WaGetMessagesBody } =
-        JSON.parse(event.data);
-      updateWaContactsList(newMessage);
-
+    if (wsData && wsData.type === "inbox") {
+      updateWaContactsList(wsData.inbox);
       //when a new message arrives then we need to take the values from the queryClient and update the messages in the first page
       const currentData: {
         pages: WaMessagePage[];
         pageParams: string[];
-      } = queryClient.getQueryData(["wa-messages", newMessage.contact.id]);
+      } = queryClient.getQueryData(["wa-messages", wsData.inbox.contact.id]);
       if (currentData) {
         const newData = { ...currentData };
-        newData.pages[0].messages.push(newMessage.message);
-        queryClient.setQueryData(
-          ["wa-messages", newMessage.contact.id],
-          newData,
-        );
+        if (!newData.pages[0].messages.includes(wsData.inbox.message)) {
+          newData.pages[0].messages.push(wsData.inbox.message);
+          queryClient.setQueryData(
+            ["wa-messages", wsData.inbox.contact.id],
+            newData,
+          );
+        }
       }
-    };
-
-    connectionRef.current.onclose = () => {
-      console.log("Disconnected from websocket");
-    };
-
-    return () => {
-      connectionRef.current?.close();
-    };
-  }, [updateWaContactsList]);
+    }
+  }, [wsData]);
 
   if (isContactsLoading)
     return <WhatsAppInboxLoader isLoading={isContactsLoading} />;
