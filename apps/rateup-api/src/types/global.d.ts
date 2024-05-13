@@ -1,5 +1,5 @@
 // Any modification to this file should be reflected in the frontend
-import { Prisma, Role } from "@prisma/client";
+import { Contact, Prisma, Role, WaMessage } from "@prisma/client";
 import {
   QuestionType,
   SmileyResponse,
@@ -321,6 +321,15 @@ export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
   action: LogicAction;
 }
+
+export type orgWsMessage = {
+  type: "inbox";
+  inbox?: {
+    contact: Contact;
+    message: WaMessage;
+  };
+};
+
 declare module "fastify" {
   interface FastifyRequest {
     userId: string;

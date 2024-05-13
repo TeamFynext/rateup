@@ -96,10 +96,21 @@ export async function getContactsWithLastMessage(orgId: string) {
           waCreatedAt: true,
         },
       },
+      contactGroups: {
+        include: {
+          contactGroup: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
-  return contacts.map(({ WaMessage, ...rest }) => ({
+  return contacts.map(({ WaMessage, contactGroups, tags, ...rest }) => ({
     ...rest,
+    tags: tags ?? {},
+    groups: contactGroups.map(({ contactGroup }) => contactGroup.name),
     lastMessage: {
       messageBody: WaMessage?.length > 0 ? WaMessage[0]?.messageBody : null,
       waCreatedAt: WaMessage?.length > 0 ? WaMessage[0]?.waCreatedAt : null,

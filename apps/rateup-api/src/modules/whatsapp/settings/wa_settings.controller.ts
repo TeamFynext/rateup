@@ -105,7 +105,7 @@ export async function getContactTagHandler(
   try {
     const { orgId } = request.user;
     const data = await getContactTag(orgId);
-    reply.code(200).send(data);
+    reply.code(200).send(data ?? { contactTags: [] });
   } catch (error) {
     log.error("Error while getting contact tags", error);
     reply.code(500).send({ message: "Something went wrong" });

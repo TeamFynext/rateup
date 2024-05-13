@@ -884,6 +884,7 @@ function validateSurvey(surveyData) {
         QuestionType.DDSS,
         QuestionType.DDMS,
         QuestionType.CustomNPS,
+        QuestionType.MCQGrid,
       ].includes(question?.type)
     ) {
       if (question?.choices) {
@@ -966,8 +967,6 @@ function validateSurvey(surveyData) {
       }
     }
   });
-
-  console.log(incompleteQuestions);
 
   return incompleteQuestions;
 }
