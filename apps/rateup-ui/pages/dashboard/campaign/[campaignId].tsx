@@ -7,18 +7,18 @@ import {
   MantineProvider,
   Modal,
   MultiSelect,
+  SegmentedControl,
   SimpleGrid,
   Stack,
-  Switch,
+  Tabs,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconRefresh } from "@tabler/icons-react";
+import { IconPencil, IconRefresh, IconSend } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { SearchInput } from ".";
@@ -29,13 +29,16 @@ import {
 } from "../../../backend/campaign/campaign.query";
 import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
-import { renderBadge } from "../../../components/Card/CampaignCard";
 import {
   WhatsappTableType,
   contactParticipentDetailColumn,
 } from "../../../components/Contacts/utils/utils";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ContactTable from "../../../components/Table/ContactTable";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../../../components/input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -45,7 +48,13 @@ import {
 } from "../../../types/enums";
 import { Campaign } from "../../../types/global";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
+import { lexend600 } from "../../../utils/fonts";
 import style from "./campaign.module.css";
+
+export enum CampaignParticipantsTabs {
+  INFO = "info",
+  PARTICIPANTS = "participants",
+}
 
 const CampaignById = () => {
   const [searchText, setSearchText] = useState("");
@@ -53,11 +62,16 @@ const CampaignById = () => {
   const router = useRouter();
   const { campaignId } = router.query;
   const { update } = useRouteParams();
+  const { tab = CampaignParticipantsTabs.INFO } = router.query as {
+    tab: string;
+  };
+  let activeTab = tab?.toString() as CampaignParticipantsTabs;
 
   const {
     data: campaignData,
     isPending,
     isFetching,
+    isError,
     refetch: refetchCampaign,
   } = useCampaignById(campaignId);
 
@@ -79,67 +93,94 @@ const CampaignById = () => {
       )
     : participants;
   if (isPending) return <RateupLoader h="90dvh" />;
-
+  if (isError)
+    return (
+      <Group>
+        <Text>Error occured refresh data</Text>
+        <Tooltip label="Refresh data">
+          <ActionIcon
+            variant="light"
+            aria-label="refresh"
+            onClick={() => refetchCampaign()}
+          >
+            <IconRefresh
+              className={isFetching ? style.rotateInfinitely : undefined}
+              style={{ width: "90%", height: "90%" }}
+              stroke={1.5}
+            />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    );
   const column: ColumnDef<any>[] = contactParticipentDetailColumn;
 
   return (
-    <>
-      <MantineProvider theme={whatsappTheme}>
-        <Stack>
-          <Group>
-            <Title order={2}>{campaignData?.name}</Title>
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                aria-label="refresh"
-                onClick={() => refetchCampaign()}
-              >
-                <IconRefresh
-                  className={isFetching ? style.rotateInfinitely : undefined}
-                  style={{ width: "90%", height: "90%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-
-          <SimpleGrid cols={2}>
-            <StartCampaignCard
-              campaign={campaignData}
-              refetchCampaign={refetchCampaign}
-              participantCount={campaignData?.campaignParticipants.length}
-            />
-            <CampaignInfoCard
-              campaignInfo={campaignInfo}
-              campaign={campaignData}
-            />
-          </SimpleGrid>
-          <Group justify="space-between" gap={"xl"}>
-            <Title order={2}>Participants</Title>
+    <MantineProvider theme={whatsappTheme}>
+      <Stack mx={"xl"}>
+        <Title order={2} tt={"uppercase"}>
+          {campaignData?.name}
+        </Title>
+        <Group justify="space-between">
+          <SegmentedControl
+            data={Object.values(CampaignParticipantsTabs)}
+            value={activeTab}
+            onChange={(value) =>
+              router.push(
+                `/dashboard/campaign/${router?.query?.campaignId}?tab=${value}`,
+              )
+            }
+            color={"var(--mantine-color-whatsapp-green-filled)"}
+            radius={"md"}
+            defaultValue={activeTab}
+            tt={"capitalize"}
+            miw={200}
+          />
+          {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
             <SearchInput
               placeholder={"Search Participants"}
               searchText={searchText}
               setSearchText={setSearchText}
             />
-            <Box w={50} h={50} />
-          </Group>
-          <PaperLayout px={0}>
-            <ContactTable
-              columns={column}
-              data={filteredParticipants}
-              btnTitle="Add"
-              toggle={open}
-              topHeight={440}
-              tab={WhatsappTableType.PARTICIPANTS}
-              groupId={campaignData?.id}
+          )}
+
+          <Box w={50} h={50} />
+        </Group>
+        <Tabs value={activeTab} color="var(--tertiary-color)">
+          <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
+            <StartCampaignCard
+              campaign={campaignData}
+              refetchCampaign={refetchCampaign}
+              participantCount={campaignData?.campaignParticipants.length}
+              campaignInfo={campaignInfo}
             />
-          </PaperLayout>
-          <Modal opened={opened} onClose={close} centered size={"xl"}>
-            <AddParticipantModal close={close} campaign={campaignData} />
-          </Modal>
-        </Stack>
-      </MantineProvider>
-    </>
+            <CampaignInfoCard
+              participantCount={campaignData?.campaignParticipants.length}
+              stats={
+                campaignData?.campaignParticipants?.[0]
+                  ?.WaMessageCampaginParticipantMap
+              }
+              responseCount={campaignData?.responseCount}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS}>
+            <PaperLayout px={0}>
+              <ContactTable
+                columns={column}
+                data={filteredParticipants}
+                btnTitle="Add"
+                toggle={open}
+                topHeight={310}
+                tab={WhatsappTableType.PARTICIPANTS}
+                groupId={campaignData?.id}
+              />
+            </PaperLayout>
+            <Modal opened={opened} onClose={close} centered size={"xl"}>
+              <AddParticipantModal close={close} campaign={campaignData} />
+            </Modal>
+          </Tabs.Panel>
+        </Tabs>
+      </Stack>
+    </MantineProvider>
   );
 };
 export default CampaignById;
@@ -148,15 +189,19 @@ interface StartCampaignCardProps {
   campaign: Campaign;
   refetchCampaign: () => void;
   participantCount: number;
+  campaignInfo;
 }
 const StartCampaignCard = ({
   campaign,
   refetchCampaign,
   participantCount,
+  campaignInfo,
 }: StartCampaignCardProps) => {
   const [startCampaign, setStartCampaign] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [resendModalOpened, { open, close }] = useDisclosure(false);
+  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
+    useDisclosure(false);
 
   useEffect(() => {
     if (campaign) {
@@ -199,130 +244,134 @@ const StartCampaignCard = ({
     });
   };
 
-  if (!campaign) return null;
-
   useEffect(() => {
     if (participantCount) setErrorMsg("");
   }, [participantCount]);
+
+  if (!campaign) return null;
+
   return (
-    <>
-      <PaperLayout radius={"md"}>
-        <Stack gap={"xs"}>
-          <Group justify={"space-between"}>
-            <Switch
-              checked={startCampaign}
-              label={startCampaign ? "End Campaign" : "Start Campaign"}
-              styles={{
-                label: {
-                  color: "#149A8A",
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                },
-              }}
-              onChange={handleChange}
-              error={errorMsg}
+    <PaperLayout radius={"md"}>
+      <Stack>
+        <Group justify="space-between">
+          <Group>
+            <ContainedTextField
+              value={campaign?.name}
+              label="Campaign Name"
+              required
+              readOnly
+              rightSection={
+                <ActionIcon
+                  variant={"transparent"}
+                  onClick={openEditModal}
+                  mr={"xs"}
+                >
+                  <IconPencil />
+                </ActionIcon>
+              }
             />
+            <ContainedSelection
+              value={campaignInfo?.template}
+              label="Choose Template"
+              required
+              data={[campaignInfo?.template]}
+              readOnly
+            />
+          </Group>
+          <Group>
             <Button
               variant="outline"
               radius={"xl"}
               disabled={!participantCount}
-              onClick={open}
+              onClick={startCampaign ? open : handleChange}
+              rightSection={<IconSend size={16} />}
             >
-              Resend Campaign To
+              {startCampaign ? "Resend" : "Send"}
             </Button>
-          </Group>
-          <Group justify="space-between">
-            <Group>
-              <Badge
-                variant={renderBadge(campaign?.status).variant}
-                color={renderBadge(campaign?.status).color}
-                size="lg"
-                radius={"md"}
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                aria-label="refresh"
+                onClick={() => refetchCampaign()}
               >
-                {campaign?.status}
-              </Badge>
-              <Text c="dimmed">
-                {campaign?.startedAt
-                  ? `Started at ${dayjs(campaign?.startedAt).format(
-                      "DD/MM/YYYY hh:mm A",
-                    )}`
-                  : null}
-              </Text>
-            </Group>
-            <Group>
-              <Title order={3} c={"#149a8a"}>
-                {participantCount}
-              </Title>
-              <Title order={6} c={"#149a8a"}>
-                Participants
-              </Title>
-            </Group>
-          </Group>
-        </Stack>
-        <ResendCampaignModal
-          campaign={campaign}
-          close={close}
-          opened={resendModalOpened}
-        />
-      </PaperLayout>
-    </>
-  );
-};
-
-const CampaignInfoCard = ({ campaignInfo, campaign }) => {
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
-  return (
-    <>
-      <PaperLayout radius={"md"}>
-        <Stack gap={"xs"}>
-          <Group justify="space-between">
-            <Group>
-              <Title order={3}>Campaign Info</Title>
-              <Button
-                variant="outline"
-                leftSection={<IconEdit />}
-                radius={"xl"}
-                onClick={openEditModal}
-              >
-                Edit
-              </Button>
-            </Group>
+                <IconRefresh
+                  style={{ width: "90%", height: "90%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
             <Badge variant="outline" size="xl">
               {campaignInfo?.team}
             </Badge>
           </Group>
-          <Group justify="space-between">
-            {campaignInfo?.template && (
-              <Group>
-                <Title order={6}>Selected Template</Title>
-                <Badge
-                  variant="default"
-                  classNames={{ root: style.input, label: style.badgeLabel }}
-                  size={"xl"}
-                  radius={"md"}
-                  miw={200}
-                >
-                  {campaignInfo?.template}
-                </Badge>
-              </Group>
-            )}
-          </Group>
+        </Group>
+      </Stack>
+      <ResendCampaignModal
+        campaign={campaign}
+        close={close}
+        opened={resendModalOpened}
+      />
+      <Modal
+        opened={openedEditModal}
+        onClose={closeEditModal}
+        size={"lg"}
+        centered
+      >
+        <CreateCampaignModal
+          isEdit={true}
+          close={closeEditModal}
+          campaign={campaign}
+        />
+      </Modal>
+    </PaperLayout>
+  );
+};
+
+const CampaignInfoCard = ({ participantCount, stats, responseCount }) => {
+  // Initialize counts
+  let countRead = 0;
+  let countSent = 0;
+  let countFailed = 0;
+  let countDelivered = 0;
+
+  // Iterate through each message
+  stats?.forEach((item) => {
+    const stats = item?.waMessage?.stats;
+
+    // Increment counts based on the presence of data
+    if (stats.read) countRead++;
+    if (stats.sent) countSent++;
+    if (stats.failed) countFailed++;
+    if (stats.delivered) countDelivered++;
+  });
+
+  return (
+    <SimpleGrid cols={3} m={"xl"}>
+      {[
+        { label: "Participants", count: participantCount },
+        { label: "Pending", count: participantCount - countSent },
+        { label: "Sent", count: countSent },
+        { label: "Delivered", count: countDelivered },
+        { label: "Read", count: countRead },
+        // { label: "Responded", count: responseCount ?? 0 },
+        { label: "Failed", count: countFailed, color: "red" },
+      ].map((item) => (
+        <Stack key={item.label} gap={0} align="center">
+          <Text ff={lexend600.style.fontFamily} fz={30}>
+            {item.count}
+          </Text>
+          <Badge
+            variant="light"
+            radius={"md"}
+            color={item.color}
+            fullWidth
+            p={"lg"}
+          >
+            {item.label}
+          </Badge>
         </Stack>
-        <Modal
-          opened={openedEditModal}
-          onClose={closeEditModal}
-          size={"lg"}
-          centered
-        >
-          <CreateCampaignModal
-            isEdit={true}
-            close={closeEditModal}
-            campaign={campaign}
-          />
-        </Modal>
-      </PaperLayout>
-    </>
+      ))}
+    </SimpleGrid>
   );
 };
 
@@ -335,7 +384,7 @@ function ResendCampaignModal({
   campaign,
   close,
   opened,
-}: ResendCampaignModalProps) {
+}: Readonly<ResendCampaignModalProps>) {
   const form = useForm({
     initialValues: {
       statuses: [CampaignParticipantStatus.FAILED],

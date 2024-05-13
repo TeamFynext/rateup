@@ -71,6 +71,7 @@ const SurveySummaryNew = ({
     case QuestionType.CustomNPS:
     case QuestionType.MSQ:
     case QuestionType.DDMS:
+    case QuestionType.MCQGrid:
       return (
         <ScrollArea.Autosize mah={500} maw={450}>
           <SimpleGrid cols={1}>

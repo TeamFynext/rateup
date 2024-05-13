@@ -202,6 +202,10 @@ export function getCampaignParticipantStatusLabel(
       return "Completed";
     case CampaignParticipantStatus.RESPONDING:
       return "Responding";
+    case CampaignParticipantStatus.DELIVERED:
+      return "Delivered";
+    case CampaignParticipantStatus.READ:
+      return "Read";
     default:
       throw new Error("Invalid CampaignParticipantStatus" + status);
   }
