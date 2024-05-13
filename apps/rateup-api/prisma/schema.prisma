@@ -418,16 +418,17 @@ model CampaignParticipant {
   respondedAt DateTime?
   source      String    @default("INDIVIDUAL") // enums.ts: CampaignParticipantSource
 
-  campaign       Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  campaignId     String          @db.Uuid
-  contact        Contact         @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  contactId      String          @db.Uuid
-  contactGroup   ContactGroup?   @relation(fields: [contactGroupId], references: [id], onDelete: Cascade)
-  contactGroupId String?         @db.Uuid
-  response       SurveyResponse? @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  responseId     String?         @db.Uuid
-  WaSession      WaSession?
-  errorMessage   String?
+  campaign                        Campaign                          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId                      String                            @db.Uuid
+  contact                         Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId                       String                            @db.Uuid
+  contactGroup                    ContactGroup?                     @relation(fields: [contactGroupId], references: [id], onDelete: Cascade)
+  contactGroupId                  String?                           @db.Uuid
+  response                        SurveyResponse?                   @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  responseId                      String?                           @db.Uuid
+  WaSession                       WaSession?
+  errorMessage                    String?
+  WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
 
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
 }
@@ -998,15 +999,27 @@ model LandingPage {
 }
 
 model WaMessage {
-  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt               DateTime  @default(now())
-  waCreatedAt             DateTime?
+  id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                       DateTime                          @default(now())
+  waCreatedAt                     DateTime?
   /// [PWaMessageBody]
-  messageBody             Json
+  messageBody                     Json
   /// [PWaTemplateComponentParams]
-  templateComponentParams Json?
-  contact                 Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  contactId               String?   @db.Uuid
+  templateComponentParams         Json?
+  contact                         Contact?                          @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId                       String?                           @db.Uuid
+  messageId                       String?
+  stats                           Json?                             @default("{\"failed\": \"\",\"sent\": \"\",\"delivered\": \"\" ,\"read\": \"\"}")
+  WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
+}
+
+model WaMessageCampaginParticipantMap {
+  campaignParticipant   CampaignParticipant @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
+  campaignParticipantId String              @db.Uuid
+  waMessage             WaMessage           @relation(fields: [waMessageId], references: [id], onDelete: Cascade)
+  waMessageId           String              @db.Uuid
+
+  @@id([campaignParticipantId, waMessageId]) // Composite primary key
 }
 
 model WaAutomatedReply {

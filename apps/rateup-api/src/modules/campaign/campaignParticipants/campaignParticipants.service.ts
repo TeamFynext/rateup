@@ -140,3 +140,20 @@ export async function multipleDeleteCampaignParticipant(
   });
   return campaignParticipant;
 }
+export async function addWaMessageCampaignParticipantMap(
+  campaignParticipantId: string,
+  messageId: string,
+) {
+  const waMessage = await prisma.waMessage.findFirst({
+    where: {
+      messageId,
+    },
+  });
+  const mapData = await prisma.waMessageCampaginParticipantMap.create({
+    data: {
+      campaignParticipantId,
+      waMessageId: waMessage?.id,
+    },
+  });
+  return mapData;
+}

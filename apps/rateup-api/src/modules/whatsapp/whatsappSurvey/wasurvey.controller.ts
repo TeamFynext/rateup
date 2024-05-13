@@ -16,6 +16,7 @@ import {
   createSession,
   deleteSession,
   getSession,
+  handleMessageStatusUpdate,
   handleTestimonialReply,
   sendMessage,
   sendNextQuestion,
@@ -39,7 +40,10 @@ import {
 } from "../messageTemplates/wa_templates.service";
 import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
 import { WaMessageBody } from "../../../types/whatsapp.types";
-import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
+import {
+  addWaMessageCampaignParticipantMap,
+  updateCampaignParticipant,
+} from "../../campaign/campaignParticipants/campaignParticipants.service";
 import prisma from "../../../utils/prisma";
 import {
   updateStartedSurvey,
@@ -52,13 +56,7 @@ import {
   sendAutomatedReplyMessage,
 } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import {
-  Campaign,
-  CampaignParticipant,
-  Contact,
-  Team,
-  WhatsappSettings,
-} from "@prisma/client";
+import { CampaignParticipant, Contact, WhatsappSettings } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 
@@ -102,6 +100,16 @@ export async function whatsappEventHandler(
     const eventType = getEventType(body);
     if (!eventType) {
       // Probably a message delivery status. Ignoring...
+      return;
+    } else if (
+      [WaEvent.DELIVERED, WaEvent.READ, WaEvent.FAILED, WaEvent.SENT].includes(
+        eventType,
+      )
+    ) {
+      await handleMessageStatusUpdate(
+        eventType,
+        body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
+      );
       return;
     } else if (eventType === WaEvent.Message) {
       log.trace("messageObject => %o", getMessageObject(body));
@@ -173,6 +181,7 @@ async function whatsappMessageHandler(
     from,
     orgId,
     userName,
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
   );
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
@@ -688,8 +697,10 @@ async function _sendCampaignToParticipants(
       status: messageSentStatus.status
         ? CampaignParticipantStatus.SENT
         : CampaignParticipantStatus.FAILED,
-      errorMessage: messageSentStatus.message,
+      errorMessage: messageSentStatus.status ? "" : messageSentStatus.message,
       ...(messageSentStatus.status && { sentAt: new Date() }),
     });
+    if (messageSentStatus.status)
+      await addWaMessageCampaignParticipantMap(id, messageSentStatus.message);
   }
 }

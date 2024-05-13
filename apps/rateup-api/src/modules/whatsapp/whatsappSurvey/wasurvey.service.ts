@@ -1,47 +1,45 @@
-import { ResponsePlatform, SurveyResponse, WaSession } from "@prisma/client";
+import { ResponsePlatform } from "@prisma/client";
 import {
   CampaignParticipantStatus,
   LogicAction,
+  QuestionType as Q,
   QuestionType,
 } from "../../../types/enums";
 import {
   WaMessageBody,
   WaSendMessageBody,
-  WaTemplateFetchBody,
 } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
+import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
+import { getOrCreateContactByPhone } from "../../contact/contact.service";
 import { getQuestionsBySurveyId } from "../../question/question.service";
 import { parseLogicAction } from "../../question/question.utils";
+import { CreateResponseInput } from "../../response/response.schema";
 import {
   createResponse,
   saveResponseToGoogleSheet,
   updateResponse,
 } from "../../response/response.service";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
-import {
-  createTextMessage,
-  generateMessageDataFromQuestion,
-  createTemplateMessage,
-  getQuestionByIdFromSession,
-  createCTAButtonMessage,
-  parseMessage,
-  ratingEmoji,
-  createNativeListMessage,
-  getMessageObject,
-  downloadAndUpload,
-} from "./wasurvey.utils";
-import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
-import { CreateResponseInput } from "../../response/response.schema";
-import { QuestionType as Q } from "../../../types/enums";
 import {
   updateCompletedSurvey,
   updateVisitedSurvey,
 } from "../../survey/survey.service";
-import { getOrCreateContactByPhone } from "../../contact/contact.service";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { fetchTemplate } from "../messageTemplates/wa_templates.service";
+import { getWaSettings } from "../settings/wa_settings.service";
+import { callWhatsappApi } from "../wa_axios";
+import {
+  createCTAButtonMessage,
+  createNativeListMessage,
+  createTemplateMessage,
+  createTextMessage,
+  downloadAndUpload,
+  generateMessageDataFromQuestion,
+  getMessageObject,
+  getQuestionByIdFromSession,
+  parseMessage,
+  ratingEmoji,
+} from "./wasurvey.utils";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -71,8 +69,15 @@ export async function sendMessage(
       messageData,
     );
     log.trace(`sent successfully %o %o `, res.data, res.statusText);
-    await handleWaMessages("send", messageData, to, orgId);
-    return { status: true, message: "" };
+    await handleWaMessages(
+      "send",
+      messageData,
+      to,
+      orgId,
+      null,
+      res?.data?.messages?.[0]?.id,
+    );
+    return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
     log.error("Error sending message", e);
     return {
@@ -129,6 +134,7 @@ interface createSessionParams {
   campaignParticipantId?: string;
   ip?: string;
   tag?: string;
+  type?: string;
 }
 export async function createSession({
   phone,
@@ -140,6 +146,7 @@ export async function createSession({
   campaignParticipantId,
   ip = "",
   tag,
+  type = "survey",
 }: createSessionParams) {
   log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
 
@@ -154,6 +161,7 @@ export async function createSession({
       campaignParticipantId: campaignParticipantId,
       ip: ip ? ip : undefined,
       tag,
+      type,
     },
     include: toBeIncludedWaSessionRelations,
   });
@@ -550,3 +558,28 @@ export async function handleTestimonialReply(
   });
   await handleTestimonialQuestion(question, session);
 }
+export const handleMessageStatusUpdate = async (
+  status: string,
+  messageId: string,
+) => {
+  if (!messageId) return;
+
+  const msg = await prisma.waMessage.findFirst({
+    where: {
+      messageId,
+    },
+  });
+
+  if (!msg) return;
+  // Ensure msg.stats is initialized
+  msg.stats = msg.stats || {};
+  msg.stats[status] = new Date();
+  const d = await prisma.waMessage.update({
+    where: {
+      id: msg.id,
+    },
+    data: {
+      stats: msg.stats,
+    },
+  });
+};
