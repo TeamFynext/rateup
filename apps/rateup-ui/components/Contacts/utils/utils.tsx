@@ -170,25 +170,14 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
   {
-    header: () => "Status",
-    accessorKey: "status",
-    cell: (info) => (
-      <Badge
-        color={renderBadge(info.getValue()).color}
-        variant={renderBadge(info.getValue()).variant}
-        radius={"sm"}
-        size={"lg"}
-        tt={"capitalize"}
-      >
-        {(info.getValue() as string) ?? "NA"}
-      </Badge>
-    ),
-  },
-  {
     header: () => "participants",
     accessorKey: "_count.campaignParticipants",
     id: "participants",
-    cell: (info) => <Badge variant="light">{info.getValue() as string}</Badge>,
+    cell: (info) => (
+      <Badge variant="light" ml={"xl"}>
+        {info.getValue() as string}
+      </Badge>
+    ),
   },
   {
     header: () => "Created",
@@ -203,7 +192,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     enableColumnFilter: false,
     cell: (info) =>
       info.getValue() && (
-        <Link href={`whatsapp/flows/${info.getValue()}?tab=Result`}>
+        <Link href={`whatsapp/flows/${info.getValue() as string}?tab=Result`}>
           <RateupButtonPrimary
             title="View"
             rightIcon={<IconEye size={14} />}
@@ -220,7 +209,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     enableSorting: false,
     enableColumnFilter: false,
     cell: (info) => (
-      <Link href={`campaign/${info.getValue()}`}>
+      <Link href={`campaign/${info.getValue() as string}`}>
         <RateupButtonPrimary
           title="View"
           rightIcon={<IconEye size={14} />}
@@ -262,35 +251,45 @@ export const contactParticipentDetailColumn = [
     header: () => "Status",
     accessorFn: (row) => row,
     id: "status",
-    cell: (info) =>
-      info?.getValue()?.status === CampaignParticipantStatus.FAILED ? (
+    cell: (info) => {
+      let statusData: string = (info?.getValue()?.waStatus || "").toUpperCase();
+      const FlowId = info?.getValue()?.campaign?.flowId;
+      const participantStatus = info.getValue().status?.toUpperCase();
+      const errorMessage = info.getValue().errorMessage;
+      if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED) {
+        statusData = CampaignParticipantStatus.COMPLETED;
+      } else if (!statusData || errorMessage) {
+        statusData = participantStatus;
+      }
+      return statusData === CampaignParticipantStatus.FAILED ? (
         <HoverCard width={280} shadow="md" withArrow>
           <HoverCard.Target>
             <Badge
-              color={renderBadge(info.getValue().status).color}
-              variant={renderBadge(info.getValue().status).variant}
+              color={renderBadge(statusData).color}
+              variant={renderBadge(statusData).variant}
               radius={"sm"}
               size={"lg"}
               tt={"capitalize"}
             >
-              {(info.getValue().status as string) ?? "NA"}
+              {(statusData as string) ?? "NA"}
             </Badge>
           </HoverCard.Target>
           <HoverCard.Dropdown>
-            <Text size="sm">{info.getValue()?.errorMessage}</Text>
+            <Text size="sm">{errorMessage}</Text>
           </HoverCard.Dropdown>
         </HoverCard>
       ) : (
         <Badge
-          color={renderBadge(info.getValue().status).color}
-          variant={renderBadge(info.getValue().status).variant}
+          color={renderBadge(statusData).color}
+          variant={renderBadge(statusData).variant}
           radius={"sm"}
           size={"lg"}
-          tt={"capitalize"}
+          tt={"uppercase"}
         >
-          {(info.getValue().status as string) ?? "NA"}
+          {(statusData as string) ?? "NA"}
         </Badge>
-      ),
+      );
+    },
   },
   {
     header: () => "SentAt",
