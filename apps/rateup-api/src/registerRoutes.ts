@@ -65,6 +65,7 @@ import { mygRoutes } from "./modules/myg/myg.route";
 import { mygSchemas } from "./modules/myg/myg.schema";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route";
 import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
+import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -129,6 +130,7 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(reputationManagementRoutes, { prefix: "api/rm" });
   server.register(subscriptionRoutes, { prefix: "api/subscription" });
   server.register(paymentRoutes, { prefix: "api/payment" });
+  server.register(paymentStripeRoutes, { prefix: "api/payment/stripe" });
   server.register(paymentPublicRoutes, { prefix: "api/public/payment" });
   server.register(surveyThemeRoutes, { prefix: "api/surveyTheme" });
   server.register(testimonialRoutes, { prefix: "api/testimonials" });
