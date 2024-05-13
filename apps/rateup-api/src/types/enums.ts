@@ -114,6 +114,10 @@ export enum WaFlowStatus {
 export enum WaEvent {
   TemplateStatusChange = "message_template_status_update",
   Message = "messages",
+  DELIVERED = "delivered",
+  SENT = "sent",
+  FAILED = "failed",
+  READ = "read",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues

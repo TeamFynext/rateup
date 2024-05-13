@@ -30,6 +30,7 @@ export async function handleWaMessages(
   phone: string,
   orgId: string,
   userName?: string,
+  messageId?: string,
 ) {
   try {
     // Create the message body
@@ -71,6 +72,7 @@ export async function handleWaMessages(
       contact.id,
       waTimeStamp,
       parameterData,
+      messageId,
     );
 
     // Send the message to the connected clients
