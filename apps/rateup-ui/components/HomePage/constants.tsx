@@ -59,31 +59,14 @@ const headerNavLinks = [
   },
 ];
 
-const excludeLinks = ["Pricing", "Features", "Solutions"];
-
 export const footerNavLinks = {
   "our-company": {
     heading: "Our Company",
-    linksArray: [
-      ...headerNavLinks.filter((obj) => !excludeLinks.includes(obj.linkText)),
-
-      {
-        href: "/contact-us",
-        linkText: "Contact Us",
-      },
-    ],
+    linksArray: [...headerNavLinks.filter((obj) => obj.linkText !== "Pricing")],
   },
   pricing: {
-    heading: "Product",
+    heading: "Pricing",
     linksArray: [
-      {
-        href: "/#our-solutions",
-        linkText: "Solutions",
-      },
-      {
-        href: "/#our-features",
-        linkText: "Features",
-      },
       {
         href: "/pricing",
         linkText: "Pricing",
