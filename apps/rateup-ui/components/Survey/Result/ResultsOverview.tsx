@@ -11,7 +11,7 @@ import {
   SmileyResponse,
   YNResponse,
 } from "../../../types/enums";
-import { Divider, Stack } from "@mantine/core";
+import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
 import SurveyContext from "../../../context/SurveyContext";
@@ -28,6 +28,7 @@ import {
 } from "../../../utils/response";
 import { stringToColour } from "../../../utils/essential";
 import RateupLoader from "../../Loaders/RateupLoader";
+import { getContent } from "../../../utils";
 
 const ResultsOverview = ({ surveyId }) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
@@ -83,6 +84,7 @@ const ResultsOverview = ({ surveyId }) => {
         QuestionType.CustomNPS,
         QuestionType.MCQ,
         QuestionType.MSQ,
+        QuestionType.MCQGrid,
       ];
       // Check if any of the allowed question types are present in the survey
       const hasAllowedQuestions = questions.some((question) =>
@@ -228,6 +230,7 @@ const ResultsOverview = ({ surveyId }) => {
               selectedLanguage ? selectedLanguage : defaultLanguage
             ]?.other
           : false,
+        features: question?.features?.[selectedLanguage || defaultLanguage],
       };
     });
   };
@@ -253,7 +256,8 @@ const ResultsOverview = ({ surveyId }) => {
                         item.type === QuestionType.LD ||
                         item.type === QuestionType.YN ||
                         item.type === QuestionType.Opinion ||
-                        item.type === QuestionType.CustomNPS,
+                        item.type === QuestionType.CustomNPS ||
+                        item.type === QuestionType.MCQGrid,
                     )
                     ?.filter((item) => item.enableNpsAnalytics === true)
                     ?.map((item, index, filteredArray) => (
@@ -288,28 +292,74 @@ const ResultsOverview = ({ surveyId }) => {
                     item.type === QuestionType.MSQ ||
                     item.type === QuestionType.DDSS ||
                     item.type === QuestionType.DDMS ||
-                    item.type === QuestionType.CustomNPS,
+                    item.type === QuestionType.CustomNPS ||
+                    item.type === QuestionType.MCQGrid,
                 )
-                ?.map((item, index) => (
-                  <React.Fragment key={index}>
-                    <QuestionBarChart
-                      key={index}
-                      question={item?.question}
-                      no={index + 1}
-                      choices={item?.choices?.map((choice) => {
-                        return {
-                          value: choice.value,
-                          color: stringToColour(choice.value),
-                        };
-                      })}
-                      data={item?.responses}
-                      questionType={item?.type}
-                      choicesInAllLang={item?.choicesInAllLang}
-                      mcqOtherFeature={item?.mcqOtherFeature}
-                    />
-                    {index < chartData?.length - 1 && <Divider my="md" />}
-                  </React.Fragment>
-                ))}
+                ?.map((item, index) =>
+                  item.type === QuestionType.MCQGrid ? (
+                    <>
+                      <React.Fragment key={index}>
+                        <Flex justify="space-between">
+                          <Flex gap={"xs"} w={"85%"}>
+                            <Text fw={800} c={"dark.3"}>
+                              {index + 1}.{" "}
+                            </Text>
+                            <Text fw={800} c={"dark.3"}>
+                              {getContent(item.question)}
+                            </Text>
+                          </Flex>
+                          <Badge variant="dot">{item.type}</Badge>
+                        </Flex>
+                        <Stack px={"lg"} py={"lg"}>
+                          {item?.features?.questions.map((question, qindex) => (
+                            <QuestionBarChart
+                              key={qindex}
+                              question={question}
+                              no={qindex + 1}
+                              choices={item?.choices?.map((choice) => {
+                                return {
+                                  value: choice.value,
+                                  color: stringToColour(choice.value),
+                                };
+                              })}
+                              data={item?.responses?.map((res) => {
+                                const formattedResponse =
+                                  res.response?.[item?.type]?.[question];
+                                return {
+                                  ...res,
+                                  response: { [item?.type]: formattedResponse },
+                                };
+                              })}
+                              questionType={item?.type}
+                              choicesInAllLang={item?.choicesInAllLang}
+                              mcqOtherFeature={item?.mcqOtherFeature}
+                            />
+                          ))}
+                        </Stack>
+                        {index < chartData?.length - 1 && <Divider my="md" />}
+                      </React.Fragment>
+                    </>
+                  ) : (
+                    <React.Fragment key={index}>
+                      <QuestionBarChart
+                        key={index}
+                        question={item?.question}
+                        no={index + 1}
+                        choices={item?.choices?.map((choice) => {
+                          return {
+                            value: choice.value,
+                            color: stringToColour(choice.value),
+                          };
+                        })}
+                        data={item?.responses}
+                        questionType={item?.type}
+                        choicesInAllLang={item?.choicesInAllLang}
+                        mcqOtherFeature={item?.mcqOtherFeature}
+                      />
+                      {index < chartData?.length - 1 && <Divider my="md" />}
+                    </React.Fragment>
+                  ),
+                )}
             </PaperLayout>
           </Stack>
         ) : (

@@ -73,7 +73,7 @@ const getChoiceCountsforAll = (
   } else {
     let choiceIndex = null;
     for (var i = 0; i < languages?.length; i++) {
-      choiceIndex = languages[i]?.findIndex((c) => c.value == response.value);
+      choiceIndex = languages[i]?.findIndex((c) => c.value == response?.value);
       if (choiceIndex == -1) continue;
       break;
     }
@@ -102,7 +102,10 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     name: choice?.value,
     count: data?.filter((item) => {
       const response = item?.response[questionType];
-      if (ChoiceTypeQuestions.includes(questionType)) {
+      if (
+        ChoiceTypeQuestions.includes(questionType) ||
+        questionType === QuestionType.MCQGrid
+      ) {
         if (selectedLanguage) {
           return Array.isArray(response)
             ? response?.some((r) => r.value === choice?.value)
@@ -145,7 +148,9 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
             {getContent(question)}
           </Text>
         </Flex>
-        <Badge variant="dot">{questionType}</Badge>
+        {questionType !== QuestionType.MCQGrid && (
+          <Badge variant="dot">{questionType}</Badge>
+        )}
       </Flex>
       <Group align="center" justify="center">
         <Stack style={{ flex: 1 }} align="center">
