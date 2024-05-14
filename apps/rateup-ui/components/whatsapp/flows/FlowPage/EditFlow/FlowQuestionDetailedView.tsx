@@ -195,11 +195,17 @@ function ElementEditor({
     },
   });
 
-  const incompleteLanguages = validateAllLanguagesArePopulated(
-    form.values as Question,
-    surveyLanguages,
-    ["choices"],
-  );
+  form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+    handleSave();
+  });
+
+  function getIncompleteLanguages() {
+    return validateAllLanguagesArePopulated(
+      form.values as Question,
+      surveyLanguages,
+      ["choices"],
+    );
+  }
 
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
@@ -212,8 +218,8 @@ function ElementEditor({
       showErrorToast("Fix errors before saving");
       return "error";
     } else {
-      if (incompleteLanguages.length > 0) {
-        setSelectedLanguage(incompleteLanguages[0]);
+      if (getIncompleteLanguages().length > 0) {
+        setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
       }
 
@@ -235,7 +241,10 @@ function ElementEditor({
           autoClose: false,
           withCloseButton: false,
         });
-        questionUpdateMutation.mutate({ qId: question.id, data: form.values });
+        questionUpdateMutation.mutate({
+          qId: question.id,
+          data: form.getValues(),
+        });
       }
     }
 
@@ -344,7 +353,11 @@ function ElementEditor({
               }}
             />
 
-            <FlowQuestionExtraProps form={form} question={question} />
+            <FlowQuestionExtraProps
+              form={form}
+              question={question}
+              handleSave={handleSave}
+            />
           </Stack>
         </Group>
       </ScrollArea>
@@ -394,9 +407,9 @@ function ElementEditor({
           </Group>
           <RateupButtonPrimary
             title={
-              incompleteLanguages.length > 1 ||
-              (incompleteLanguages.length > 0 &&
-                incompleteLanguages[0] !== selectedLanguage)
+              getIncompleteLanguages().length > 1 ||
+              (getIncompleteLanguages().length > 0 &&
+                getIncompleteLanguages()[0] !== selectedLanguage)
                 ? "Fill Next Language"
                 : "Save"
             }
@@ -441,8 +454,13 @@ function LabelTextInput(props: TextInputProps & { maxLength: number }) {
 interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
+  handleSave: () => void;
 }
-function FlowQuestionExtraProps({ form, question }: ExtraPropsProps) {
+function FlowQuestionExtraProps({
+  form,
+  question,
+  handleSave,
+}: ExtraPropsProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   switch (question.type) {
     case QuestionType.MCQ:
