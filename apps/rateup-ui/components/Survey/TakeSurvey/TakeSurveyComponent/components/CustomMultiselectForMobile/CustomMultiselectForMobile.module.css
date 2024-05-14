@@ -18,9 +18,3 @@
 .pills-group {
   flex: 1;
 }
-
-.deselect-all-btn {
-  align-self: flex-start;
-  height: auto;
-  padding: 0.625rem;
-}

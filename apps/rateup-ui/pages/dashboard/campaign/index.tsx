@@ -105,7 +105,13 @@ export default function CampaignList() {
             topHeight={280}
           />
         </PaperLayout>
-        <Modal opened={opened} onClose={close} centered size={"lg"}>
+        <Modal
+          opened={opened}
+          onClose={close}
+          centered
+          size={"lg"}
+          radius={"lg"}
+        >
           <CreateCampaignModal close={close} isEdit={false} />
         </Modal>
       </Stack>
