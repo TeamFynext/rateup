@@ -22,6 +22,7 @@ export async function campaignRoutes(server: FastifyInstance) {
       SubscriptionFeaturePathName.WhatsAppCampaign,
     ]),
   );
+  campaignParticipantsSchemas.forEach((schema) => server.addSchema(schema));
   server.register(campaignParticipantRoutes, {
     prefix: ":campaignId/participants",
   });

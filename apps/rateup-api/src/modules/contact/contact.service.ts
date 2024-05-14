@@ -26,7 +26,6 @@ export async function createMultipleContacts(
     skipDuplicates: true,
     data: contactsData,
   });
-  return result;
 }
 
 export async function getContactById(contactId: string) {
