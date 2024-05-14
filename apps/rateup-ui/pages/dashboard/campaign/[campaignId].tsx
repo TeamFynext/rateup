@@ -17,7 +17,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil, IconRefresh, IconSend } from "@tabler/icons-react";
+import { IconRefresh, IconSend } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -35,10 +35,6 @@ import {
 } from "../../../components/Contacts/utils/utils";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ContactTable from "../../../components/Table/ContactTable";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "../../../components/input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -254,30 +250,11 @@ const StartCampaignCard = ({
     <PaperLayout radius={"md"}>
       <Stack>
         <Group justify="space-between">
-          <Group>
-            <ContainedTextField
-              value={campaign?.name}
-              label="Campaign Name"
-              required
-              readOnly
-              rightSection={
-                <ActionIcon
-                  variant={"transparent"}
-                  onClick={openEditModal}
-                  mr={"xs"}
-                >
-                  <IconPencil />
-                </ActionIcon>
-              }
-            />
-            <ContainedSelection
-              value={campaignInfo?.template}
-              label="Choose Template"
-              required
-              data={[campaignInfo?.template]}
-              readOnly
-            />
-          </Group>
+          <CreateCampaignModal
+            isEdit={true}
+            close={closeEditModal}
+            campaign={campaign}
+          />
           <Group>
             <Button
               variant="outline"
@@ -311,18 +288,6 @@ const StartCampaignCard = ({
         close={close}
         opened={resendModalOpened}
       />
-      <Modal
-        opened={openedEditModal}
-        onClose={closeEditModal}
-        size={"lg"}
-        centered
-      >
-        <CreateCampaignModal
-          isEdit={true}
-          close={closeEditModal}
-          campaign={campaign}
-        />
-      </Modal>
     </PaperLayout>
   );
 };
