@@ -17,7 +17,6 @@ import {
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useMediaQuery } from "@mantine/hooks";
 import { sampleChoices } from "../../../../../utils/constants/forms";
-import PaperLayout from "../../../../styled/Layouts/PaperLayout";
 
 interface MCQGridFormProps {
   features: any;
@@ -124,7 +123,7 @@ const MCQGridMobileForm = ({
   const theme = useMantineTheme();
   return (
     <ScrollAreaAutosize
-      mah={"100vh"}
+      mah={"75vh"}
       w={"100%"}
       scrollbarSize={4}
       offsetScrollbars
