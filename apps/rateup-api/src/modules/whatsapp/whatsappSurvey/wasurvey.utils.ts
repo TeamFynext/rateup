@@ -37,6 +37,9 @@ export function getEventType(data: WaMessageBody) {
       data.entry[0].changes[0].value.messages?.length > 0
     ) {
       return WaEvent.Message;
+    } else if (data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status) {
+      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]
+        ?.status as WaEvent;
     }
   }
   return null;

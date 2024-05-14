@@ -18,7 +18,6 @@ import {
 import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
-import { log } from "../../utils/logger";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,

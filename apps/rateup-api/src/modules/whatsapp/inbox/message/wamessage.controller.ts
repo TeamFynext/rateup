@@ -17,11 +17,11 @@ import {
 } from "./wamessage.utils";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service";
 import { log } from "../../../../utils/logger";
-import { handleSendWsMessage } from "./wamessage.ws.controller";
 import {
   getContactById,
   getOrCreateContactByPhone,
 } from "../../../contact/contact.service";
+import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
@@ -30,6 +30,7 @@ export async function handleWaMessages(
   phone: string,
   orgId: string,
   userName?: string,
+  messageId?: string,
 ) {
   try {
     // Create the message body
@@ -71,12 +72,16 @@ export async function handleWaMessages(
       contact.id,
       waTimeStamp,
       parameterData,
+      messageId,
     );
 
     // Send the message to the connected clients
-    await handleSendWsMessage(orgId, {
-      contact: contact,
-      message: waMessage,
+    await sendViaWstoOrgHandler(orgId, {
+      type: "inbox",
+      inbox: {
+        contact: contact,
+        message: waMessage,
+      },
     });
   } catch (error) {
     log.error("Error in handleWaMessages: ", error);
@@ -115,6 +120,7 @@ export async function sendNewWaMessageHandler(
     reply.status(500).send("Internal Server Error");
   }
 }
+
 export async function getWaMessagesByContactIdHandler(
   request: FastifyRequest<{
     Params: ByContactIdParams;
@@ -141,6 +147,7 @@ export async function getContactsWithLastMessageHandler(
     const contacts = await getContactsWithLastMessage(orgId);
     reply.send(contacts);
   } catch (error) {
+    console.log(error);
     reply.status(500).send("Internal Server Error");
   }
 }

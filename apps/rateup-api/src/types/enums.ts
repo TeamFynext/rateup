@@ -29,6 +29,7 @@ export enum QuestionType {
   TnC = "Terms & Conditions",
   Contact = "Contact",
   MultiTextInput = "MultiTextInput",
+  MCQGrid = "MCQ Grid",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",
   Invoice_Id = "invoice_id",
@@ -113,6 +114,10 @@ export enum WaFlowStatus {
 export enum WaEvent {
   TemplateStatusChange = "message_template_status_update",
   Message = "messages",
+  DELIVERED = "delivered",
+  SENT = "sent",
+  FAILED = "failed",
+  READ = "read",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues

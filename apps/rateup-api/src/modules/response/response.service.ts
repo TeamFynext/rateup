@@ -146,7 +146,11 @@ export async function downloadExcelResponse(
               (data) =>
                 `${getContent(question.title[defaultLanguage])}: ${data[0]}`,
             ) ?? []
-        : [getContent(question.title[defaultLanguage])],
+        : question.type === QuestionType.MCQGrid
+          ? question.features?.[defaultLanguage]?.questions?.map(
+              (q) => `${getContent(question.title[defaultLanguage])}: ${q}`,
+            ) ?? []
+          : [getContent(question.title[defaultLanguage])],
     );
     const createdAt = "Date";
     if (visibleColumn.includes("createdAt")) {
@@ -218,6 +222,15 @@ export async function downloadExcelResponse(
             tempArray.push({ [answerIndex]: questionId });
             Object.values(responseValue)?.map((value) =>
               bodyArray[answerIndex].push(value),
+            );
+            flag = false;
+          } else if (
+            QuestionType.MCQGrid === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            Object.values(responseValue)?.map((res: Choice) =>
+              bodyArray[answerIndex].push(res?.value),
             );
             flag = false;
           } else if (!tempArray.includes({ [answerIndex]: questionId })) {
@@ -623,6 +636,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         Object.entries(q.features?.[lang]).map(([key, value]) =>
           value ? questionTitles.push((qstnTitle + ":" + key).trim()) : null,
         );
+      } else if (q.type === QuestionType.MCQGrid) {
+        const subQs = q.features?.[lang]?.questions;
+        subQs.map((qstn) =>
+          questionTitles.push((qstnTitle + ":" + qstn).trim()),
+        );
       } else questionTitles.push(qstnTitle);
     });
 
@@ -674,6 +692,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                   key == "photo"
                     ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
                     : value),
+            );
+          else if (qstn.type === QuestionType.MCQGrid)
+            Object.entries(res.response[res.type]).map(
+              ([key, value]: [string, Choice]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
             );
           else
             resObj[qstnTitle] = getFormattedResponse(
@@ -836,6 +859,11 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
                 key == "photo"
                   ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
                   : value),
+          );
+        else if (qstn.type === QuestionType.MCQGrid)
+          Object.entries(res.response[res.type]).map(
+            ([key, value]: [string, Choice]) =>
+              (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
           );
         else
           resObj[

@@ -66,6 +66,8 @@ import { mygSchemas } from "./modules/myg/myg.schema";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route";
 import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route";
+import { orgWsRoutes } from "./modules/org/ws/org.ws.routes";
+import { orgWsSchemas } from "./modules/org/ws/org.ws.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -94,6 +96,7 @@ export function registerRoutes(server: FastifyInstance): void {
     landingPageSchemas,
     statsSchemas,
     chatbotSchemas,
+    orgWsSchemas,
     mygSchemas, //TODO MYG
   ];
   for (const module of modules) {
@@ -146,5 +149,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(statsRoutes, { prefix: "/api/stats" });
   server.register(chatbotRoutes, { prefix: "api/chatbot" });
   server.register(chatbotPublicRoute, { prefix: "api/public/chatbot" });
+  server.register(orgWsRoutes, { prefix: "api/org/ws" });
   server.register(mygRoutes, { prefix: "api/myg" }); //TODO  MYG
 }

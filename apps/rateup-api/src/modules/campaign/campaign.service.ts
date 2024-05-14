@@ -19,9 +19,48 @@ export async function getCampaignById(campaignId: string) {
       campaignParticipants: {
         include: {
           contact: true,
+          campaign: {
+            select: {
+              flowId: true,
+            },
+          },
+          WaMessageCampaginParticipantMap: {
+            include: {
+              waMessage: {
+                select: {
+                  stats: true,
+                  waCreatedAt: true,
+                },
+              },
+            },
+            orderBy: {
+              waMessage: {
+                waCreatedAt: "desc",
+              },
+            },
+          },
         },
       },
     },
+  });
+  campaign.campaignParticipants.forEach((participant: any) => {
+    // Find the latest status and timestamp
+    let latestStatus = null;
+    let latestTimestamp = null;
+
+    participant.WaMessageCampaginParticipantMap.forEach((mapping) => {
+      Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
+        if (timestamp) {
+          if (!latestTimestamp || timestamp > latestTimestamp) {
+            latestTimestamp = timestamp;
+            latestStatus = status;
+          }
+        }
+      });
+    });
+
+    // Assign the latest status to waStatus
+    participant.waStatus = latestStatus;
   });
   return campaign;
 }

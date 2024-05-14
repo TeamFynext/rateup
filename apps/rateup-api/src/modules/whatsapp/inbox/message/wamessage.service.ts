@@ -6,6 +6,7 @@ export async function addNewWaMessage(
   contactId: string,
   waCreatedAt: string,
   componentParams?: any,
+  messageId?: string,
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
@@ -13,6 +14,7 @@ export async function addNewWaMessage(
       contactId,
       waCreatedAt,
       templateComponentParams: componentParams,
+      messageId,
     },
   });
   return newMessage;
@@ -96,10 +98,21 @@ export async function getContactsWithLastMessage(orgId: string) {
           waCreatedAt: true,
         },
       },
+      contactGroups: {
+        include: {
+          contactGroup: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
-  return contacts.map(({ WaMessage, ...rest }) => ({
+  return contacts.map(({ WaMessage, contactGroups, tags, ...rest }) => ({
     ...rest,
+    tags: tags ?? {},
+    groups: contactGroups.map(({ contactGroup }) => contactGroup.name),
     lastMessage: {
       messageBody: WaMessage?.length > 0 ? WaMessage[0]?.messageBody : null,
       waCreatedAt: WaMessage?.length > 0 ? WaMessage[0]?.waCreatedAt : null,
