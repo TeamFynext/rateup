@@ -167,6 +167,7 @@ const CreateCampaignModal = ({
             <RateupButtonPrimary
               title="Create Now"
               loading={createCampaignMutation.isPending}
+              type={"submit"}
             />
           </Flex>
         )}
