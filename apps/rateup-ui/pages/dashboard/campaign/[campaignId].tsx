@@ -151,10 +151,7 @@ const CampaignById = () => {
             />
             <CampaignInfoCard
               participantCount={campaignData?.campaignParticipants.length}
-              stats={
-                campaignData?.campaignParticipants?.[0]
-                  ?.WaMessageCampaginParticipantMap
-              }
+              campaginParticipants={campaignData?.campaignParticipants}
               responseCount={campaignData?.responseCount}
             />
           </Tabs.Panel>
@@ -292,14 +289,26 @@ const StartCampaignCard = ({
   );
 };
 
-const CampaignInfoCard = ({ participantCount, stats, responseCount }) => {
+const CampaignInfoCard = ({
+  participantCount,
+  responseCount,
+  campaginParticipants,
+}) => {
+  let stats = campaginParticipants?.[0]?.WaMessageCampaginParticipantMap;
   // Initialize counts
   let countRead = 0;
   let countSent = 0;
   let countFailed = 0;
   let countDelivered = 0;
+  let countPending = 0;
+  let countError = 0;
 
-  // Iterate through each message
+  campaginParticipants?.forEach((participants) => {
+    if (participants?.status === CampaignParticipantStatus.PENDING)
+      countPending++;
+    else if (participants?.status === CampaignParticipantStatus.FAILED)
+      countError++;
+  });
   stats?.forEach((item) => {
     const stats = item?.waMessage?.stats;
 
@@ -314,12 +323,12 @@ const CampaignInfoCard = ({ participantCount, stats, responseCount }) => {
     <SimpleGrid cols={3} m={"xl"}>
       {[
         { label: "Participants", count: participantCount },
-        { label: "Pending", count: participantCount - countSent },
+        { label: "Pending", count: countPending },
         { label: "Sent", count: countSent },
         { label: "Delivered", count: countDelivered },
         { label: "Read", count: countRead },
         // { label: "Responded", count: responseCount ?? 0 },
-        { label: "Failed", count: countFailed, color: "red" },
+        { label: "Failed", count: countFailed + countError, color: "red" },
       ].map((item) => (
         <Stack key={item.label} gap={0} align="center">
           <Text ff={lexend600.style.fontFamily} fz={30}>
