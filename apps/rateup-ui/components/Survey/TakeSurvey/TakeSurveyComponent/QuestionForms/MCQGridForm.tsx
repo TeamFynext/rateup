@@ -123,7 +123,7 @@ const MCQGridMobileForm = ({
   const theme = useMantineTheme();
   return (
     <ScrollAreaAutosize
-      mah={"75vh"}
+      mah={"100%"}
       w={"100%"}
       scrollbarSize={4}
       offsetScrollbars
