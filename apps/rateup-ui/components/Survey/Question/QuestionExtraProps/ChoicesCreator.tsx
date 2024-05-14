@@ -170,6 +170,7 @@ export function ChoicesCreator({
     },
     [handleAddChoice],
   );
+
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {

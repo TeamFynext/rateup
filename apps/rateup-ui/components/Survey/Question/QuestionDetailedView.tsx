@@ -119,16 +119,24 @@ export function QuestionDetailedView({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
 
+  form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+    if (!getIncompleteLanguages()?.length) {
+      handleSave();
+    }
+  });
+
   useEffect(() => {
     form.setInitialValues(getInitialQuestionValues(question, surveyLanguages));
     form.reset();
   }, [question, surveyLanguages]);
 
-  const incompleteLanguages = validateAllLanguagesArePopulated(
-    form.values as Question,
-    surveyLanguages,
-    ["title", "choices"],
-  );
+  function getIncompleteLanguages() {
+    return validateAllLanguagesArePopulated(
+      form.getValues() as Question,
+      surveyLanguages,
+      ["title", "choices"],
+    );
+  }
 
   const { imageToDelete, resetImage } = useImageStore();
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -142,10 +150,10 @@ export function QuestionDetailedView({
         showErrorToast("Question title is missing");
         return "error";
       } else {
-        if (incompleteLanguages.length > 0) {
-          setSelectedLanguage(incompleteLanguages[0]);
+        if (getIncompleteLanguages().length > 0) {
+          setSelectedLanguage(getIncompleteLanguages()[0]);
           showErrorToast(
-            "Please Enter heading for all languages before saving.",
+            "Please Enter heading and choices for all languages before saving.",
           );
           return "error";
         }
@@ -177,7 +185,7 @@ export function QuestionDetailedView({
           console.log("form values", form.values);
           questionUpdateMutation.mutate({
             qId: question.id,
-            data: form.values,
+            data: form.getValues(),
           });
         }
       }
@@ -227,15 +235,22 @@ export function QuestionDetailedView({
             <Stack
               style={{ minHeight: "150px", height: "100%", flex: 1 }}
               mr={"xs"}
-              onBlur={async (e) => {
-                const currentTarget = e.currentTarget;
-                const relatedTarget = e.relatedTarget;
-                if (!currentTarget.contains(relatedTarget)) {
-                  if (form.isDirty()) await handleSave();
-                }
-              }}
             >
-              <TextEditor form={form} selectedLanguage={selectedLanguage} />
+              <Group
+                onBlur={async (e) => {
+                  const currentTarget = e.currentTarget;
+                  const relatedTarget = e.relatedTarget;
+                  if (
+                    !currentTarget.contains(relatedTarget) &&
+                    getIncompleteLanguages()?.length === 0
+                  ) {
+                    if (form.isDirty()) await handleSave();
+                  }
+                }}
+              >
+                <TextEditor form={form} selectedLanguage={selectedLanguage} />
+              </Group>
+
               <ExtraProps
                 form={form}
                 question={question}
@@ -248,7 +263,7 @@ export function QuestionDetailedView({
               selectedLanguage={selectedLanguage}
               setSelectedLanguage={setSelectedLanguage}
               languages={surveyLanguages}
-              notCompletedLanguages={incompleteLanguages}
+              notCompletedLanguages={getIncompleteLanguages()}
             />
           </Group>
           <Divider
@@ -449,9 +464,9 @@ export function QuestionDetailedView({
           <Group>
             <RateupButtonBlue
               title={
-                incompleteLanguages.length > 1 ||
-                (incompleteLanguages.length > 0 &&
-                  incompleteLanguages[0] !== selectedLanguage)
+                getIncompleteLanguages().length > 1 ||
+                (getIncompleteLanguages().length > 0 &&
+                  getIncompleteLanguages()[0] !== selectedLanguage)
                   ? "Fill Next Language"
                   : "Save"
               }

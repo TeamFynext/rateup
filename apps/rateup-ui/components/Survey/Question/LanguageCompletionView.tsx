@@ -13,10 +13,6 @@ export const LanguageCompletionView = ({
   selectedLanguage?: string;
   setSelectedLanguage?: React.Dispatch<React.SetStateAction<string>>;
 }) => {
-  function isLanguageCompleted(language: string) {
-    return !notCompletedLanguages.includes(language);
-  }
-
   return (
     <PaperLayout w={"fit-content"} p={10} radius={"md"}>
       <Stack gap={5}>
@@ -28,7 +24,9 @@ export const LanguageCompletionView = ({
               id={language}
               ref={ref}
               style={{ cursor: "pointer" }}
-              color={isLanguageCompleted(language) ? "green" : "red"}
+              color={
+                !notCompletedLanguages.includes(language) ? "green" : "red"
+              }
               variant={
                 selectedLanguage === language || hovered ? "filled" : "light"
               }

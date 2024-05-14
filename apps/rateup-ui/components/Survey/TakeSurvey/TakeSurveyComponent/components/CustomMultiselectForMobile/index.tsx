@@ -15,12 +15,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import classNames from "classnames/bind";
-import {
-  IconArrowLeft,
-  IconCheck,
-  IconDeselect,
-  IconSquareX,
-} from "@tabler/icons-react";
+import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
 import { motion, useAnimate } from "framer-motion";
 import commonStyles from "../CustomSelectForMobile/CustomSelectForMobile.module.css";
 import styles from "./CustomMultiselectForMobile.module.css";
@@ -189,9 +184,12 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
                 <IconDeselect />
               </ActionIcon>
 
-              <ActionIcon onClick={() => setIsOptionSelectionDivVisible(false)}>
-                <IconSquareX />
-              </ActionIcon>
+              <Button
+                className={cx("close-btn")}
+                onClick={() => setIsOptionSelectionDivVisible(false)}
+              >
+                Close
+              </Button>
             </Group>
 
             <Combobox.Options className={cxCommon("options-container-root")}>

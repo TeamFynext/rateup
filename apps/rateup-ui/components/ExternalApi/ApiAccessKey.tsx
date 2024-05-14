@@ -8,24 +8,19 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "../../../../components/input/ContainedInput/ContainedInput";
-import {
-  useCreateLoyaltyApiKey,
-  useDeleteLoyaltyApiKey,
-  useLoyaltyApiKey,
-  useRegenerateLoyaltyApiKey,
-} from "../../../../backend/loyalty/apiKey/loyaltyApiKey.query";
-import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
-import { useState } from "react";
 import { IconCopy, IconReload, IconTrash } from "@tabler/icons-react";
-import { LinkCopyElement } from "../../../../components/input/LinkCopyElement";
-import { useUser } from "../../../../context/UserContext";
-import { CopyLinkComponent } from "../../../../components/Survey/ShareSurvey/ShareSurvey";
+import { useState } from "react";
+import {
+  useLoyaltyApiKey,
+  useCreateLoyaltyApiKey,
+  useRegenerateLoyaltyApiKey,
+  useDeleteLoyaltyApiKey,
+} from "../../backend/loyalty/apiKey/loyaltyApiKey.query";
+import { useUser } from "../../context/UserContext";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
-export default function LoyaltyApiPage() {
+export default function ApiAccessKeyPage() {
   const { data } = useLoyaltyApiKey();
   const generateMutation = useCreateLoyaltyApiKey();
 
@@ -41,13 +36,17 @@ export default function LoyaltyApiPage() {
 
   const { user } = useUser();
   const apiEndpoint =
-    process.env.NEXT_PUBLIC_API_URL + "/api/loyalty/external/" + user?.orgId;
+    process.env.NEXT_PUBLIC_API_URL +
+    "/api/external/" +
+    "v1/" +
+    user?.orgId +
+    "/";
 
   if (!data) return;
 
   return (
     <Stack>
-      <Title> Loyalty API </Title>
+      <Title order={3}> API Config </Title>
       <PaperLayout>
         <Stack>
           <Title order={4}>Api Access Key</Title>
@@ -95,7 +94,7 @@ export default function LoyaltyApiPage() {
             <>
               <Text>
                 You have not generated an API Access Key yet. API Access Key is
-                required to access the all loyalty API endpoints.
+                required to access the all API endpoints.
               </Text>
               <Button
                 onClick={handleGenerateApiKey}
@@ -109,22 +108,25 @@ export default function LoyaltyApiPage() {
       </PaperLayout>
 
       <PaperLayout>
-        <ContainedTextField
-          value={apiEndpoint}
-          styles={{
-            section: {
-              width: "fit-content",
-            },
-            input: {
-              paddingRight: "46px",
-            },
-            root: {
-              borderRadius: "12px",
-              overflow: "hidden",
-            },
-          }}
-          rightSection={<ApiCopyButton value={apiEndpoint} />}
-        />
+        <Stack>
+          <Title order={4}>API Base URL</Title>
+          <ContainedTextField
+            value={apiEndpoint}
+            styles={{
+              section: {
+                width: "fit-content",
+              },
+              input: {
+                paddingRight: "46px",
+              },
+              root: {
+                borderRadius: "12px",
+                overflow: "hidden",
+              },
+            }}
+            rightSection={<ApiCopyButton value={apiEndpoint} />}
+          />
+        </Stack>
       </PaperLayout>
     </Stack>
   );

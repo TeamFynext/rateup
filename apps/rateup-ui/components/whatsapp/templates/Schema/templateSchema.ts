@@ -87,7 +87,7 @@ export const templateSchema = z
     let errorMessage = "";
     const videoType = ["video/mp4"];
     const imageType = ["image/png", "image/jpg", "image/jpeg"];
-    const documentType = ["video/mp4"];
+    const documentType = [...imageType, ...videoType, "application/pdf"];
     values.buttons?.map((data, index) => {
       if (data.text?.trim()?.length === 0) {
         ctx.addIssue({
