@@ -6,12 +6,7 @@ export const isProduction =
   process.env.NEXT_PUBLIC_FRONTEND_URL === "https://rateup.app";
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-export const ContactQuestions = [
-  QuestionType.Contact,
-  QuestionType.Email,
-  QuestionType.Phone,
-  // QuestionType.EmailPhone,
-];
+export const ContactQuestions = [QuestionType.Contact];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
 

@@ -27,10 +27,10 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { selectedQ } = useContext(SelectedQContext);
   const choices =
-    selectedQ?.choices[selectedLanguage] ||
+    selectedQ?.choices?.[selectedLanguage] ||
     previewChoices?.[selectedLanguage] ||
     sampleChoices;
-  const questions = features?.[selectedLanguage].questions;
+  const questions = features?.[selectedLanguage]?.questions;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
@@ -86,7 +86,7 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
   ));
 
   return (
-    <Stack w={"100%"}>
+    <Stack w={"100%"} justify="center">
       <ScrollArea scrollbarSize={6} h={450} w={isMobile ? 380 : 750}>
         <Table
           horizontalSpacing={"md"}
@@ -123,72 +123,62 @@ const MCQGridMobileForm = ({
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   return (
-    <PaperLayout
+    <ScrollAreaAutosize
+      mah={"100vh"}
       w={"100%"}
-      style={{
-        border: `1px solid var(--mantine-color-gray-6)`,
-        borderRadius: "10px",
-      }}
+      scrollbarSize={4}
+      offsetScrollbars
       p={"sm"}
-      shadow="lg"
     >
-      <ScrollAreaAutosize mah={430} scrollbarSize={4} offsetScrollbars>
-        {questions?.map((question, index) => (
-          <Stack key={index}>
-            <Title order={5}>{question}</Title>
-            <Stack>
-              {choices?.map((choice) => {
-                const isSelected = response?.[question]?.value == choice?.value;
-                return (
-                  <UnstyledButton
-                    key={choice?.value}
-                    onClick={() =>
-                      handleUpdateResponse(choice?.value, question)
+      {questions?.map((question, index) => (
+        <Stack key={index}>
+          <Title order={5}>{question}</Title>
+          <Stack>
+            {choices?.map((choice) => {
+              const isSelected = response?.[question]?.value == choice?.value;
+              return (
+                <UnstyledButton
+                  key={choice?.value}
+                  onClick={() => handleUpdateResponse(choice?.value, question)}
+                  bg={
+                    isSelected
+                      ? `var(--mantine-color-${theme.primaryColor}-filled)`
+                      : "var(--mantine-color-gray-3)"
+                  }
+                  style={{ borderRadius: "5px" }}
+                  p={"xs"}
+                >
+                  <Radio
+                    value={choice?.value}
+                    checked={response?.[question]?.value == choice?.value}
+                    onChange={(e) =>
+                      handleUpdateResponse(e.currentTarget.value, question)
                     }
-                    bg={
+                    size="md"
+                    icon={CheckIcon}
+                    label={choice?.value}
+                    c={
                       isSelected
-                        ? `var(--mantine-color-${theme.primaryColor}-filled)`
-                        : "var(--mantine-color-gray-3)"
+                        ? "var(--mantine-color-white)"
+                        : `var(--mantine-color-${theme.primaryColor}-outline)`
                     }
-                    style={{ borderRadius: "5px" }}
-                    p={"xs"}
-                  >
-                    <Radio
-                      value={choice?.value}
-                      checked={response?.[question]?.value == choice?.value}
-                      onChange={(e) =>
-                        handleUpdateResponse(e.currentTarget.value, question)
-                      }
-                      size="md"
-                      icon={CheckIcon}
-                      label={choice?.value}
-                      c={
-                        isSelected
-                          ? "var(--mantine-color-white)"
-                          : `var(--mantine-color-${theme.primaryColor}-outline)`
-                      }
-                      variant="outline"
-                      styles={{
-                        radio: {
-                          backgroundColor: "var(--mantine-color-white)",
-                        },
-                      }}
-                    />
-                  </UnstyledButton>
-                );
-              })}
-            </Stack>
-            {index + 1 < questions?.length && (
-              <Divider
-                my={"sm"}
-                c={"var(--mantine-color-gray-6)"}
-                size={"sm"}
-              />
-            )}
+                    variant="outline"
+                    styles={{
+                      radio: {
+                        backgroundColor: "var(--mantine-color-white)",
+                      },
+                    }}
+                  />
+                </UnstyledButton>
+              );
+            })}
           </Stack>
-        ))}
-      </ScrollAreaAutosize>
-    </PaperLayout>
+          {index + 1 < questions?.length && (
+            <Divider my={"sm"} c={"var(--mantine-color-gray-6)"} size={"sm"} />
+          )}
+        </Stack>
+      ))}
+    </ScrollAreaAutosize>
   );
 };
 
