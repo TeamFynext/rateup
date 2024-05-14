@@ -88,9 +88,7 @@ const waTemplateFormattedInput = {
   category: z.nativeEnum(WaTemplateCategory),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
-export const waTemplateFormattedInputSchema = z.object(
-  waTemplateFormattedInput,
-);
+const waTemplateFormattedInputSchema = z.object(waTemplateFormattedInput);
 
 // used for saving to db
 const waTemplateCore = {
@@ -107,7 +105,7 @@ const waTemplateFormattedCore = {
   status: z.string(),
 };
 const waTemplateSchema = z.object(waTemplateCore);
-export const waTemplateFormattedSchema = z.object(waTemplateFormattedCore);
+const waTemplateFormattedSchema = z.object(waTemplateFormattedCore);
 
 const byTemplateIdParamsSchema = z.object({
   templateId: z.string(),

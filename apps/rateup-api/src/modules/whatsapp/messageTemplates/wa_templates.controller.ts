@@ -30,7 +30,6 @@ import {
   getUnregisteredTemplates,
   registerTemplatesInDb,
   saveTemplate,
-  sendTemplateToPhone,
   syncTemplates,
   updateTemplate,
   updateTemplateInDb,
@@ -43,11 +42,6 @@ import {
 } from "./wa_templates.utils";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import prisma from "../../../utils/prisma";
-import {
-  SendTemplateToContacts,
-  SendTemplateToContactGroups,
-} from "../../external/v1/whatsapp/template/wa_templates.external.schema";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -296,7 +290,6 @@ export async function sendTemplateToUserHandler(
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     const { data, defaultValues } = dbTemplate;
     const components = parameterData;
-    log.trace("parameterData => %o", parameterData);
 
     const containsFlowButton = !!getFlowIdFromTemplateComponents(
       data.components,
@@ -390,84 +383,5 @@ export async function sendTemplateToUserHandler(
   } catch (error) {
     log.error("Error sending template to user \n%o", error);
     reply.code(500).send(error);
-  }
-}
-
-export async function sendTemplatesToContactsHandler(
-  req: FastifyRequest<{
-    Body: SendTemplateToContacts;
-    Params: ByTemplateIdParamsSchema;
-  }>,
-  res: FastifyReply,
-) {
-  try {
-    const { templateId } = req.params;
-    const orgId = req.user.orgId;
-    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    const contacts = await prisma.contact.findMany({
-      where: {
-        id: {
-          in: req.body.contactIds,
-        },
-      },
-      select: {
-        phone: true,
-      },
-    });
-
-    for (const contact of contacts) {
-      await sendTemplateToPhone({
-        orgId,
-        phone: contact.phone,
-        dbTemplate,
-        teamId: req.body.teamId,
-        header: req.body.header,
-      });
-    }
-  } catch (error) {
-    log.error("Error sending template to contacts \n%o", error);
-    res.code(500).send(error);
-  }
-}
-
-export async function sendTemplatesToContactGroupsHandler(
-  req: FastifyRequest<{
-    Body: SendTemplateToContactGroups;
-    Params: ByTemplateIdParamsSchema;
-  }>,
-  res: FastifyReply,
-) {
-  try {
-    const { templateId } = req.params;
-    const orgId = req.user.orgId;
-    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    // TODO: can we optimize this query?
-    const contacts = await prisma.contact.findMany({
-      where: {
-        contactGroups: {
-          some: {
-            contactGroupId: {
-              in: req.body.contactGroupIds,
-            },
-          },
-        },
-      },
-      select: {
-        phone: true,
-      },
-    });
-
-    for (const contact of contacts) {
-      await sendTemplateToPhone({
-        orgId,
-        phone: contact.phone,
-        dbTemplate,
-        teamId: req.body.teamId,
-        header: req.body.header,
-      });
-    }
-  } catch (error) {
-    log.error("Error sending template to contactGroups \n%o", error);
-    res.code(500).send(error);
   }
 }

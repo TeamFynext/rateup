@@ -9,6 +9,7 @@ import { loyaltyRewardRoutes } from "./reward/reward.route";
 import { loyaltyCampaignPublicRoutes } from "./campaign/campaign.public.route";
 import { loyaltyCustomerRoutes } from "./customer/customer.route";
 import { LoyaltyCampaign_RewardEvent_Routes } from "./campaignRewardEvent/ca_re.route";
+import { loyaltyApiKeyRoutes } from "./apiKey/lc_apiKey.route";
 
 export async function loyaltyInternalRoutes(server: FastifyInstance) {
   const modules = [
@@ -31,4 +32,5 @@ export async function loyaltyInternalRoutes(server: FastifyInstance) {
     prefix: "/:campaignId/reward-event",
   });
   server.register(loyaltyCustomerRoutes, { prefix: "/customer" });
+  server.register(loyaltyApiKeyRoutes, { prefix: "/api-key" });
 }

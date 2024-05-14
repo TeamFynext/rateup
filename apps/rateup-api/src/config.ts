@@ -16,9 +16,6 @@ import jwt from "supertokens-node/recipe/jwt";
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
   : "http://localhost:3000";
-const backendUrl = process.env.API_URL
-  ? process.env.API_URL
-  : "http://localhost:3001";
 
 export const SuperTokensConfig: TypeInput = {
   framework: "fastify",
@@ -312,74 +309,45 @@ export const SuperTokensConfig: TypeInput = {
   ],
 };
 
-const loyaltyTags = [
-  {
-    name: "Loyalty/Campaign",
-    description: "Loyalty Campaign related endpoints",
-  },
-  {
-    name: "Loyalty/Campaign Reward",
-    description: "Loyalty Campaign Reward related endpoints",
-  },
-  {
-    name: "Loyalty/Customer",
-    description: "Loyalty Customer related endpoints",
-  },
-  {
-    name: "Loyalty/Campaign -> RewardEvent",
-    description: "RewardEvent of a campaign related endpoints",
-  },
-  {
-    name: "Loyalty/Customer -> RewardEvent",
-    description: "RewardEvent of a customer related endpoints",
-  },
-  {
-    name: "Loyalty/ReferralCode",
-    description: "ReferralCode related endpoints",
-  },
-];
-
-const publicTags = [
-  {
-    name: "Contacts",
-    description: "Contact related endpoints",
-  },
-  {
-    name: "Contacts/Groups",
-    description: "Contact Group related endpoints",
-  },
-  {
-    name: "Team",
-    description: "Team related endpoints",
-  },
-  {
-    name: "Campaign",
-    description: "Campaign related endpoints",
-  },
-  {
-    name: "Campaign/Participants",
-    description: "Campaign Participants related endpoints",
-  },
-  {
-    name: "WhatsApp/Template",
-    description: "WhatsApp Template related endpoints",
-  },
-];
-
 export const swaggerConfig: SwaggerOptions = {
   openapi: {
     openapi: "3.0.0",
     info: {
-      title: "Rateup API",
+      title: "Fastify Swagger Example",
       version: "1.0.0",
     },
     servers: [
       {
-        url: backendUrl,
-        description: "server",
+        url: "http://localhost:3000",
+        description: "Development server",
       },
     ],
-    tags: publicTags,
+    tags: [
+      {
+        name: "Loyalty Campaign",
+        description: "Loyalty Campaign related endpoints",
+      },
+      {
+        name: "Loyalty Campaign Reward",
+        description: "Loyalty Campaign Reward related endpoints",
+      },
+      {
+        name: "Loyalty Customer",
+        description: "Loyalty Customer related endpoints",
+      },
+      {
+        name: "Loyalty Campaign -> RewardEvent",
+        description: "RewardEvent of a campaign related endpoints",
+      },
+      {
+        name: "Loyalty Customer -> RewardEvent",
+        description: "RewardEvent of a customer related endpoints",
+      },
+      {
+        name: "Loyalty ReferralCode",
+        description: "ReferralCode related endpoints",
+      },
+    ],
   },
   hideUntagged: true,
 };
