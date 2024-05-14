@@ -1,7 +1,6 @@
 import { axiosClient } from "../../apiClient";
-import { LOYALTY_BASE } from "../base";
 
-const base = LOYALTY_BASE + "/api-key";
+const base = "/api-access-token";
 
 export async function createApiKey() {
   const res = await axiosClient.post(base);
