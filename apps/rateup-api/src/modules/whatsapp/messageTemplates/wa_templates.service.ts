@@ -1,13 +1,27 @@
 import { MultipartFile } from "@fastify/multipart";
+import { WaTemplate } from "@prisma/client";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
+import { CreateWaTemplateInput } from "./wa_templates.schema";
 import {
-  CreateWaTemplateInput,
-  WaTemplateFormatted,
-} from "./wa_templates.schema";
-import { generateTemplate } from "./wa_templates.utils";
+  generateTemplate,
+  getFlowIdFromTemplateComponents,
+} from "./wa_templates.utils";
+import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
+import {
+  createSession,
+  deleteSession,
+  sendMessage,
+} from "../whatsappSurvey/wasurvey.service";
+import {
+  WaTemplateComponentType,
+  WaTemplateSupportedFormats,
+} from "../../../types/enums";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
+import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
+import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
 
 /**
  * fetches templates from WhatsApp Business API
@@ -396,4 +410,125 @@ export async function uploadFileToWaTemplate(
   const fileHandle = data?.h ?? "error";
   const uploadSessionId = response.id;
   return { fileHandle, uploadSessionId };
+}
+
+// TODO: refactor
+// things to do:
+//   - create functions for creating flow & image components
+
+interface SendTemplateToPhoneProps {
+  orgId: string;
+  dbTemplate: WaTemplate;
+  phone: string;
+  teamId: string | undefined;
+  header: SendTemplateHeaderComponent;
+}
+export async function sendTemplateToPhone({
+  orgId,
+  dbTemplate,
+  header,
+  phone,
+  teamId,
+}: SendTemplateToPhoneProps) {
+  log.trace("Sending template to phone %s", phone);
+
+  const { data, defaultValues } = dbTemplate;
+  const components = [];
+  if (header) {
+    components.push(header);
+  }
+
+  const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
+
+  if (containsFlowButton) {
+    components.push({
+      type: "button",
+      sub_type: "flow",
+      index: 0,
+      parameters: [
+        {
+          type: "action",
+          action: {
+            flow_token: phone,
+          },
+        },
+      ],
+    });
+
+    const flowId = getFlowIdFromTemplateComponents(data.components);
+    if (!flowId) {
+      log.error("Flow id not found in template\n Template => %o", data);
+      throw new Error("Flow id not found in template");
+    }
+    // getting flow with surveyTeamMapId
+    const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
+    if (!dbFlow) {
+      log.error("Flow not found in db with id %s", flowId);
+      throw new Error("Flow not found in db");
+    }
+
+    if (!teamId) {
+      log.error("Team id not found in request");
+      throw new Error("Team id not found in request");
+    }
+    const surveyTeamMap = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)
+      ?.id;
+    if (!surveyTeamMap) {
+      log.error("Team not found in survey;\nteam => %s", teamId);
+      throw new Error("Team not found in survey");
+    }
+
+    await deleteSession(orgId, phone);
+    await createSession({
+      phone,
+      orgId,
+      surveyTeamMapId: surveyTeamMap,
+      language: dbFlow?.survey?.languages[0],
+    });
+    log.trace("Session created successfully");
+  }
+
+  const containsImageComponent =
+    dbTemplate.data.components.find(
+      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+    )?.format === `IMAGE`;
+  const containsImageOverrideInRequest = header?.parameters.some(
+    (p) => p.type === "image",
+  );
+  if (
+    containsImageComponent &&
+    !containsImageOverrideInRequest // if the request has image then don't add default image
+  ) {
+    if (!components.some((c) => c.type === "header")) {
+      if (defaultValues?.image?.link) {
+        components.push({
+          type: "header",
+          parameters: [
+            {
+              type: "image",
+              image: {
+                link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+              },
+            },
+          ],
+        });
+      } else {
+        throw new Error(
+          "Image not found in template. Please upload an image and try again",
+        );
+      }
+    } else {
+      log.warn("A header component is already present in template");
+    }
+  }
+  const templateQuery = {
+    name: data?.name,
+    language: {
+      code: dbTemplate.data?.language,
+    },
+    components: components,
+  };
+  const templateMessage = createTemplateMessage(phone, templateQuery);
+  await sendMessage(orgId, templateMessage);
+  log.trace("Template send to user successfully");
 }

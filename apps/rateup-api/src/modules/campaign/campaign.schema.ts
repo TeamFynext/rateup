@@ -32,6 +32,18 @@ const getCampaignsQuerySchema = z.object({
   campaignId: z.string().optional(),
   teamId: z.string().optional(),
 });
+const campaignResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.nativeEnum(CampaignType),
+  teamId: z.string(),
+  waTemplateId: z.string(),
+  status: z.nativeEnum(CampaignStatus),
+  startedAt: z.date().optional(),
+  createdAt: z.date(),
+  endedAt: z.date().optional(),
+});
+
 const sendCampaignInputSchema = z.object({
   sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)),
   participantId: z.string().optional(),
@@ -43,6 +55,8 @@ export const { schemas: campaignSchemas, $ref: $campaignRef } =
       byCampaignIdParamsSchema,
       updateCampaignInputSchema,
       getCampaignsQuerySchema,
+      campaignResponseSchema,
+      sendCampaignInputSchema,
     },
     {
       $id: "campaignSchema",

@@ -1,5 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
+import { CampaignParticipantStatus } from "../../../types/enums";
 
 const byCampaignParticipantIdParamsSchema = z.object({
   campaignParticipantId: z.string().uuid(),
@@ -21,6 +22,15 @@ const deleteCampaignParticipantsSchema = z.object({
   ids: z.array(z.string()).min(1),
 });
 
+const campaignParticipantResponseSchema = z.object({
+  id: z.string().uuid(),
+  campaignId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  createdAt: z.date(),
+  status: z.nativeEnum(CampaignParticipantStatus),
+  sentAt: z.date().optional(),
+});
+
 export const {
   schemas: campaignParticipantsSchemas,
   $ref: $campaignParticipantsRef,
@@ -30,6 +40,7 @@ export const {
     createCampaignParticipantsFromGroupsSchema,
     createCampaignParticipantsFromContactsSchema,
     createCampaignParticipantsSchema,
+    campaignParticipantResponseSchema,
     deleteCampaignParticipantsSchema,
   },
   {
