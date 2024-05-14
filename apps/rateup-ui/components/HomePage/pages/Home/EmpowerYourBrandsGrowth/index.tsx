@@ -9,7 +9,10 @@ const cx = classNames.bind(styles);
 
 function EmpowerYourBrandsGrowth() {
   return (
-    <Stack className={cx("empower-your-brands-growth-section")}>
+    <Stack
+      className={cx("empower-your-brands-growth-section")}
+      id="our-solutions"
+    >
       <h1 className={cx("heading-h1")}>
         <span className={cx("empower-your-span")}>Empower Your</span>
         <LightBlueGradientBg className={cx("brand-growth-txt-span")}>
