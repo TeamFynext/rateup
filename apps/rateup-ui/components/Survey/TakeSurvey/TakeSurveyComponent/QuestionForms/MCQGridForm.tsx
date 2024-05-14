@@ -13,6 +13,7 @@ import {
   useMantineTheme,
   ScrollAreaAutosize,
   Divider,
+  Box,
 } from "@mantine/core";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useMediaQuery } from "@mantine/hooks";
@@ -86,25 +87,23 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
 
   return (
     <Stack w={"100%"} justify="center">
-      <ScrollArea scrollbarSize={6} h={450} w={isMobile ? 380 : 750}>
-        <Table
-          horizontalSpacing={"md"}
-          verticalSpacing={"md"}
-          withRowBorders={false}
-          highlightOnHover
-        >
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th
-                style={{ position: "sticky", left: 0, top: 0, zIndex: 2 }}
-                bg={"#CDCDCD"}
-              ></Table.Th>
-              {columns}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
-      </ScrollArea>
+      <Table
+        horizontalSpacing={"md"}
+        verticalSpacing={"md"}
+        withRowBorders={false}
+        highlightOnHover
+      >
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th
+              style={{ position: "sticky", left: 0, top: 0, zIndex: 2 }}
+              bg={"#CDCDCD"}
+            ></Table.Th>
+            {columns}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{rows}</Table.Tbody>
+      </Table>
     </Stack>
   );
 };
@@ -122,13 +121,7 @@ const MCQGridMobileForm = ({
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   return (
-    <ScrollAreaAutosize
-      mah={"100%"}
-      w={"100%"}
-      scrollbarSize={4}
-      offsetScrollbars
-      p={"sm"}
-    >
+    <Box w={"100%"}>
       {questions?.map((question, index) => (
         <Stack key={index}>
           <Title order={5}>{question}</Title>
@@ -177,7 +170,7 @@ const MCQGridMobileForm = ({
           )}
         </Stack>
       ))}
-    </ScrollAreaAutosize>
+    </Box>
   );
 };
 
