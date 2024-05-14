@@ -4,7 +4,7 @@ import {
   useUpdateSubscriptionMutation,
 } from "../../backend/subscription/subscription.query";
 import dayjs from "dayjs";
-import { Group, Skeleton } from "@mantine/core";
+import { Flex, Group, Input, Skeleton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { SubscriptionEditorModal } from "../../components/adminPanel/Subscription/SubscriptionEditorModal";
 import { FeatureBadge } from "../../components/adminPanel/Subscription/FeatureBadge";
@@ -29,6 +29,7 @@ export default function () {
   }));
 
   const [updatedField, setUpdatedField] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [openedDialog, { open: openDialog, close: closeDialog }] =
     useDisclosure(false);
   const handleUpdateSubscriptionPlan = () => {
@@ -88,14 +89,37 @@ export default function () {
       expiresAt: dayjs(subscription.expiresAt).format("YYYY/MM/DD"),
     };
   });
+
+  const filteredRows = searchQuery
+    ? rows.filter(
+        (row) =>
+          row.orgName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          row.orgId
+            .toString()
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()),
+      )
+    : rows;
   return (
     <div>
-      <h1>Subscriptions</h1>
+      <Flex justify="space-between">
+        <h1>Subscriptions</h1>
+        <Input
+          placeholder="🔍  Search by OrgName or orgId"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: "300px" }}
+        />
+      </Flex>
       {isSubscriptionsLoading ? (
         <Skeleton height={500} />
       ) : (
         <>
-          <DataGrid rows={rows} columns={columns} getRowHeight={() => "auto"} />
+          <DataGrid
+            rows={filteredRows}
+            columns={columns}
+            getRowHeight={() => "auto"}
+          />
           <ConfirmationModal
             opened={openedDialog}
             onClose={closeDialog}
