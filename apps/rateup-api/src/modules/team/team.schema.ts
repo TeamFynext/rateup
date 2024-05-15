@@ -24,7 +24,6 @@ const createTeamResponseSchema = z.object({
     userId: z.string(),
   }),
 });
-
 const getTeamsByOrgRequestSchema = z.object({
   orgId: z.string(),
 });
@@ -97,7 +96,7 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     byTeamIdParamsSchema,
     bySurveyTeamMapIdParamsSchema,
   },
-  { $id: "teamSchema" }
+  { $id: "teamSchema" },
 );
 
 export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
