@@ -1,8 +1,9 @@
 import { useContext, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Textarea, useMantineTheme } from "@mantine/core";
+import { useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout";
+import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput";
 
 export function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -19,16 +20,16 @@ export function TextAreaForm() {
 
   return (
     <FormPaperLayout>
-      <Textarea
+      <ContainedTextArea
         placeholder="Enter your answer"
         value={inputValue}
         onChange={handleChange}
-        style={{ maxWidth: "400px" }}
         variant="unstyled"
         size="sm"
         classNames={{
           input: classes.input,
         }}
+        p={0}
       />
     </FormPaperLayout>
   );

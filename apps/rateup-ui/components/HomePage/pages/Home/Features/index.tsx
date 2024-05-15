@@ -14,7 +14,7 @@ const cx = classNames.bind(styles);
 
 function Features() {
   return (
-    <Stack className={cx("features-root-div")}>
+    <Stack className={cx("features-root-div")} id="our-features">
       <PerfectSurveyForYourNeeds />
       <ReputationFeaturesSection />
       <Banner

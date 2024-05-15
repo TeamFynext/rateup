@@ -1,19 +1,19 @@
-import { Button, Flex, Group, SimpleGrid, Title } from "@mantine/core";
-import { TeamSelector } from "../input/TeamSelector";
+import { Box, Flex, Group, SimpleGrid, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "../input/ContainedInput/ContainedInput";
-import { CampaignStatus, CampaignType, SurveyType } from "../../types/enums";
-import { useWaTemplates } from "../../backend/whatsapp/whatsapp.query";
+import { getHotkeyHandler } from "@mantine/hooks";
 import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "../../backend/campaign/campaign.query";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
 import useTemplatesAvailableForTeam from "../../hooks/team";
+import { CampaignStatus, CampaignType } from "../../types/enums";
+import { SAVE_HOTKEY } from "../../utils/constants";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
+import { TeamSelector } from "../input/TeamSelector";
 
 interface CreateCampaignProps {
   close: () => void;
@@ -106,11 +106,9 @@ const CreateCampaignModal = ({
           [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
         ])}
       >
-        <Group justify={"space-between"} mt={"lg"}>
-          <Title order={2}>
-            {isEdit ? "Edit Campaign" : "Create Campaign"}
-          </Title>
-          {!isEdit && (
+        {!isEdit && (
+          <Group justify={"space-between"} mt={4}>
+            <Title order={2}>Create Campaign</Title>
             <TeamSelector
               placeholder="Select Team"
               withAsterisk
@@ -123,9 +121,9 @@ const CreateCampaignModal = ({
               }}
               searchable
             />
-          )}
-        </Group>
-        <SimpleGrid cols={2} p={"lg"}>
+          </Group>
+        )}
+        <SimpleGrid cols={isEdit ? 3 : 2} p={"lg"}>
           <ContainedTextField
             label="Campaign Name"
             placeholder="Enter campaign name"
@@ -133,34 +131,46 @@ const CreateCampaignModal = ({
             {...form.getInputProps("name")}
             styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
           />
-          {isEdit && campaign?.status === CampaignStatus.ACTIVE ? (
-            <></>
-          ) : (
-            <ContainedSelection
-              label="Choose Template"
-              withAsterisk
-              placeholder="Select Template"
-              styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
-              {...form.getInputProps("waTemplateId")}
-              data={templatesData}
-            />
+          <ContainedSelection
+            label="Choose Template"
+            withAsterisk
+            placeholder="Select Template"
+            {...form.getInputProps("waTemplateId")}
+            readOnly={isEdit && campaign?.status === CampaignStatus.ACTIVE}
+            data={templatesData}
+            styles={{
+              input: {
+                cursor:
+                  isEdit && campaign?.status === CampaignStatus.ACTIVE
+                    ? "default"
+                    : "pointer",
+              },
+            }}
+          />
+          {isEdit && (
+            <Box mt={26}>
+              <RateupButtonPrimary
+                loading={updateCampaignMutation.isPending}
+                title="Update"
+                disabled={!form.isDirty()}
+              />
+            </Box>
           )}
         </SimpleGrid>
-        <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
-          <Button variant="outline" radius={"xl"} onClick={close}>
-            Cancel
-          </Button>
-          <Button
-            radius={"xl"}
-            type={"submit"}
-            loading={
-              createCampaignMutation.isPending ||
-              updateCampaignMutation.isPending
-            }
-          >
-            {isEdit ? "Edit" : "Create Now"}
-          </Button>
-        </Flex>
+        {!isEdit && (
+          <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
+            <RateupButtonPrimary
+              onClick={close}
+              title="Cancel"
+              variant="outline"
+            />
+            <RateupButtonPrimary
+              title="Create Now"
+              loading={createCampaignMutation.isPending}
+              type={"submit"}
+            />
+          </Flex>
+        )}
       </form>
     </>
   );

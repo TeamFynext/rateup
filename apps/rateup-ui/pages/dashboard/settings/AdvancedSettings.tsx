@@ -10,6 +10,7 @@ import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import useLocalStorage from "../../../hooks/localStorage";
 import { notifications } from "@mantine/notifications";
 import ETESettings from "./EteSettings";
+import ApiAccessKeyPage from "../../../components/ExternalApi/ApiAccessKey";
 
 const AdvancedSettings = () => {
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
@@ -99,6 +100,8 @@ const AdvancedSettings = () => {
       </Stack>
       <Divider />
       <ETESettings />
+      <Divider />
+      <ApiAccessKeyPage />
     </Stack>
   );
 };

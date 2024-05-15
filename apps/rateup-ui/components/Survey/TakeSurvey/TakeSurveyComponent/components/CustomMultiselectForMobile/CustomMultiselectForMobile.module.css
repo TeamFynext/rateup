@@ -18,3 +18,8 @@
 .pills-group {
   flex: 1;
 }
+
+.close-btn {
+  height: auto;
+  padding: 0.375rem 0.625rem;
+}

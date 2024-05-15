@@ -9,7 +9,7 @@ import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export const useLoyaltyApiKey = () =>
   useQuery({
-    queryKey: ["loyaltyApiKey"],
+    queryKey: ["apiAccessToken"],
     queryFn: getApiKeyCreatedAt,
   });
 
@@ -19,7 +19,7 @@ export const useCreateLoyaltyApiKey = () => {
     mutationFn: createApiKey,
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["loyaltyApiKey"],
+        queryKey: ["apiAccessToken"],
       });
       showSuccessToast("API Key created successfully");
     },
@@ -36,7 +36,7 @@ export const useDeleteLoyaltyApiKey = () => {
     mutationFn: deleteApiKey,
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["loyaltyApiKey"],
+        queryKey: ["apiAccessToken"],
       });
       showSuccessToast("API Key deleted successfully");
     },
@@ -53,7 +53,7 @@ export const useRegenerateLoyaltyApiKey = () => {
     mutationFn: regenerateApiKey,
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["loyaltyApiKey"],
+        queryKey: ["apiAccessToken"],
       });
       showSuccessToast("API Key regenerated successfully");
     },
