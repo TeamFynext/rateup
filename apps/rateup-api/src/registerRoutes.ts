@@ -68,6 +68,7 @@ import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes";
 import { orgWsSchemas } from "./modules/org/ws/org.ws.schema";
+import { paymentStripeSchemas } from "./modules/payment/stripe/stripe.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -89,6 +90,7 @@ export function registerRoutes(server: FastifyInstance): void {
     unsplashSchemas,
     surveyThemeSchemas,
     paymentSchemas,
+    paymentStripeSchemas,
     testimonialSchemas,
     testimonialCollectionSchemas,
     ticketSchemas,

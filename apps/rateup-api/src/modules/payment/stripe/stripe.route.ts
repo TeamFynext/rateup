@@ -4,6 +4,7 @@ import {
   getSessionStatusHandler,
   webHookHandler,
 } from "./stripe.controller";
+import { $PSref } from "./stripe.schema";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
   //server.addHook("preHandler", checkSession);
@@ -32,9 +33,9 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
   server.post(
     "/create-checkout-session",
     {
-      //   schema: {
-      //     params: $Uref(""),
-      //   },
+      schema: {
+        body: $PSref("createStripeCheckoutSchema"),
+      },
     },
     createCheckoutSessionHandler,
   );
@@ -43,7 +44,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     "/session-status",
     {
       //   schema: {
-      //     params: $Uref(""),
+      //     params: $PSref(""),
       //   },
     },
     getSessionStatusHandler,
@@ -53,7 +54,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     "/webhook",
     {
       //   schema: {
-      //     params: $Uref(""),
+      //     params: $PSref(""),
       //   },
     },
     webHookHandler,

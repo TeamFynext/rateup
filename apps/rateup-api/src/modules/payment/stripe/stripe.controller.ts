@@ -15,7 +15,8 @@ export async function createCheckoutSessionHandler(
     line_items: [
       {
         // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-        price: "price_1ORn93SCIzXPthRgsl8i8sxq",
+        //TODO make dynamic
+        price: "price_1PGQRySEU5WPzKjqmpSIcB4N",
         quantity: 1,
       },
     ],
