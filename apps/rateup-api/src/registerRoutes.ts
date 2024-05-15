@@ -65,6 +65,9 @@ import { mygRoutes } from "./modules/myg/myg.route";
 import { mygSchemas } from "./modules/myg/myg.schema";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route";
 import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
+import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route";
+import { campaignParticipantsSchemas } from "./modules/campaign/campaignParticipants/campaignParticipants.schema";
+import { externalRoutes } from "./modules/external/external.route";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes";
 import { orgWsSchemas } from "./modules/org/ws/org.ws.schema";
 
@@ -97,6 +100,7 @@ export function registerRoutes(server: FastifyInstance): void {
     chatbotSchemas,
     orgWsSchemas,
     mygSchemas, //TODO MYG
+    campaignParticipantsSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -149,4 +153,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(chatbotPublicRoute, { prefix: "api/public/chatbot" });
   server.register(orgWsRoutes, { prefix: "api/org/ws" });
   server.register(mygRoutes, { prefix: "api/myg" }); //TODO  MYG
+  server.register(apiAccessTokenRoutes, { prefix: "api/api-access-token" });
+  server.register(externalRoutes, { prefix: "api/external" });
 }

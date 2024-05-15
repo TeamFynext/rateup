@@ -41,6 +41,12 @@ const deleteManyGroupSchema = z.object({
   contactGroupIds: z.array(z.string()),
 });
 
+const contactGroupResponseSchema = coreContactGroupSchema.extend({
+  id: z.string(),
+  createdAt: z.string(),
+  teamId: z.string(),
+});
+
 export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
   buildJsonSchemas(
     {
@@ -53,6 +59,7 @@ export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
       removeGroupContactsSchema,
       addExistingContactsToMultipleGroupsInputSchema,
       deleteManyGroupSchema,
+      contactGroupResponseSchema,
     },
     {
       $id: "contactGroupSchema",
