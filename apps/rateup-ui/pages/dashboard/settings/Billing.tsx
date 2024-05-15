@@ -31,6 +31,15 @@ import {
 import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
+import { useCreateStripeCheckoutSession } from "../../../backend/payment/stripe/stripe.query";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY, {});
+
 const Billing = ({
   subscription,
   activeOrderData,
@@ -73,6 +82,12 @@ const Billing = ({
   const CancelSubscription = useCancelRazorpaySubscriptionMutation();
   const { ref, width } = useElementSize();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadStripe, setLoadStripe] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
+
+  const createCheckout = useCreateStripeCheckoutSession(setIsLoading);
+
   const handleCancelSubscription = () => {
     showLoadingToast(
       "Hold.. your subscription is getting cancelled...",
@@ -92,8 +107,31 @@ const Billing = ({
     refreshOrders();
   }
 
+  function handleStripe() {
+    let data = { priceId: "price_1PGQRySEU5WPzKjqmpSIcB4N" };
+    createCheckout.mutate(data, {
+      onSuccess: (data) => {
+        console.log("data", data?.data);
+        setClientSecret(data?.data?.clientSecret);
+        setLoadStripe(true);
+      },
+      onError: () => {},
+    });
+  }
+
   return (
     <>
+      {loadStripe && clientSecret && (
+        <EmbeddedCheckoutProvider
+          stripe={stripePromise}
+          options={{ clientSecret }}
+        >
+          <EmbeddedCheckout />
+        </EmbeddedCheckoutProvider>
+      )}
+
+      <RateupButtonPrimary title="Pay now Stripe" onClick={handleStripe} />
+
       {processingPayment ? (
         <Loader type="bars" />
       ) : (
