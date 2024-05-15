@@ -233,7 +233,10 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
     case QuestionType.MCQGrid:
       const questions = selectedQ?.features?.[selectedLanguage]?.questions;
       const responsedQuestions = Object.keys(response);
-      if (!questions.every((q) => responsedQuestions.includes(q)))
+      if (
+        !questions.every((q) => responsedQuestions.includes(q)) &&
+        selectedQ.required
+      )
         errMsg = "All questions are mandatory";
       break;
     default:

@@ -322,14 +322,23 @@ const ResultsOverview = ({ surveyId }) => {
                                   color: stringToColour(choice.value),
                                 };
                               })}
-                              data={item?.responses?.map((res) => {
-                                const formattedResponse =
-                                  res.response?.[item?.type]?.[question];
-                                return {
-                                  ...res,
-                                  response: { [item?.type]: formattedResponse },
-                                };
-                              })}
+                              data={item?.responses
+                                ?.filter((res) => {
+                                  const formattedResponse =
+                                    res.response?.[item?.type]?.[question];
+                                  if (!formattedResponse) return false;
+                                  return true;
+                                })
+                                ?.map((res) => {
+                                  const formattedResponse =
+                                    res.response?.[item?.type]?.[question];
+                                  return {
+                                    ...res,
+                                    response: {
+                                      [item?.type]: formattedResponse,
+                                    },
+                                  };
+                                })}
                               questionType={item?.type}
                               choicesInAllLang={item?.choicesInAllLang}
                               mcqOtherFeature={item?.mcqOtherFeature}
