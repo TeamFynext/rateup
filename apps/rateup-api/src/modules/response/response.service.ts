@@ -229,8 +229,10 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            Object.values(responseValue)?.map((res: Choice) =>
-              bodyArray[answerIndex].push(res?.value),
+            question?.features?.[defaultLanguage]?.questions?.map((q) =>
+              responseValue?.[q]
+                ? bodyArray[answerIndex].push(responseValue?.[q]?.value)
+                : bodyArray[answerIndex].push(""),
             );
             flag = false;
           } else if (!tempArray.includes({ [answerIndex]: questionId })) {
@@ -261,6 +263,12 @@ export async function downloadExcelResponse(
         } else if (question === "Respondent's Mobile Number") {
           responseValue = response?.Contact?.phone;
         } else {
+          if (question.type === QuestionType.MCQGrid) {
+            question?.features?.[defaultLanguage]?.questions?.map((q) =>
+              bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          }
           responseValue = "";
         }
         if (flag) {
