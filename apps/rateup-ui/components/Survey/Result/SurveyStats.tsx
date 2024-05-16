@@ -1,5 +1,14 @@
 import React, { useContext, useState } from "react";
-import { Group, Text, Badge, Stack, Box, Grid } from "@mantine/core";
+import {
+  Group,
+  Text,
+  Badge,
+  Stack,
+  Box,
+  Grid,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
 import {
   useAllResponses,
@@ -17,6 +26,10 @@ import { findCentroid } from "../../../utils/location";
 import { getFormattedResponseForAreaGraph } from "../../../utils/response";
 import OverallResponseGraph from "../../Graph/OverallResponseGraph";
 import { useWaFlowMetrics } from "../../../backend/whatsapp/flow/flow.query";
+import { IconCheck, IconRefresh } from "@tabler/icons-react";
+import classes from "../../Graph/graph.module.css";
+import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { showSuccessToast } from "../../../utils/notifications";
 enum LocationType {
   City = "city",
   State = "state",
@@ -39,6 +52,14 @@ const SurveyStats = ({ survey, flowId = null }) => {
     isFetching,
     refetch,
   } = useAllResponses(survey?.id);
+
+  const {
+    isLoading: isSurveyLoading,
+    error: surveyError,
+    data,
+    refetch: surveyRefetch,
+    isRefetching: isSurveyFetching,
+  } = useSurvey(survey?.id);
 
   const [zoom, setZoom] = useState(7);
   const [isFindingZoomLevel, setIsFindingZoomLevel] = useState(false);
@@ -136,7 +157,32 @@ const SurveyStats = ({ survey, flowId = null }) => {
       <Stack mih="400px" gap={10}>
         <PaperLayout px="lg" py={"lg"}>
           <Stack gap={0}>
-            <Heading subtitle="User Stats" />
+            <Group>
+              <Heading subtitle="User Stats" />
+              <Tooltip label="Refresh stats">
+                <ActionIcon
+                  onClick={async () => {
+                    await Promise.all([surveyRefetch(), refetch()]);
+                    showSuccessToast(
+                      "User stats updated",
+                      "load-data",
+                      <IconCheck />,
+                    );
+                  }}
+                  variant="light"
+                >
+                  <IconRefresh
+                    className={
+                      isSurveyFetching || isFetching
+                        ? classes.rotateInfinitely
+                        : null
+                    }
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+
             <Group justify="space-between">
               <Text
                 c="light-dark(var(--mantine-primary-color-filled),white)"
