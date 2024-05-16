@@ -1079,19 +1079,13 @@ export async function verifySurveyPassword(
 export async function updateVisitedSurvey(id: string) {
   let surveyStats;
   try {
-    surveyStats = await prisma.surveyStats.update({
+    surveyStats = await prisma.surveyStats.upsert({
       where: { surveyTeamMapId: id },
-      data: { visited: { increment: 1 } },
+      update: { visited: { increment: 1 } },
+      create: { surveyTeamMapId: id, visited: 1 },
     });
   } catch (error: any) {
-    if (error?.code === "P2025") {
-      // Record not found error
-      surveyStats = await prisma.surveyStats.create({
-        data: { surveyTeamMapId: id, visited: 1 },
-      });
-    } else {
-      throw error;
-    }
+    throw error;
   }
   return surveyStats;
 }
@@ -1099,20 +1093,13 @@ export async function updateVisitedSurvey(id: string) {
 export async function updateStartedSurvey(id: string) {
   let surveyStats;
   try {
-    surveyStats = await prisma.surveyStats.update({
+    surveyStats = await prisma.surveyStats.upsert({
       where: { surveyTeamMapId: id },
-      data: { started: { increment: 1 } },
+      update: { started: { increment: 1 } },
+      create: { surveyTeamMapId: id, started: 1, visited: 1 },
     });
   } catch (error: any) {
-    log.error(error);
-    if (error?.code === "P2025") {
-      // Record not found error
-      surveyStats = await prisma.surveyStats.create({
-        data: { surveyTeamMapId: id, visited: 1 },
-      });
-    } else {
-      throw error;
-    }
+    throw error;
   }
   return surveyStats;
 }
@@ -1120,19 +1107,13 @@ export async function updateStartedSurvey(id: string) {
 export async function updateCompletedSurvey(id: string) {
   let surveyStats;
   try {
-    surveyStats = await prisma.surveyStats.update({
+    surveyStats = await prisma.surveyStats.upsert({
       where: { surveyTeamMapId: id },
-      data: { completed: { increment: 1 } },
+      update: { completed: { increment: 1 } },
+      create: { surveyTeamMapId: id, completed: 1, visited: 1, started: 1 },
     });
   } catch (error: any) {
-    if (error?.code === "P2025") {
-      // Record not found error
-      surveyStats = await prisma.surveyStats.create({
-        data: { surveyTeamMapId: id, completed: 1 },
-      });
-    } else {
-      throw error;
-    }
+    throw error;
   }
   return surveyStats;
 }
