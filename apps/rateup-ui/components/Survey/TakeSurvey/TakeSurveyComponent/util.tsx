@@ -247,3 +247,10 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
   }
   return errMsg;
 };
+
+export const handleInputScrollIntoView = (e) => {
+  const domEle = e.currentTarget;
+  setTimeout(() => {
+    domEle.scrollIntoView({ block: "center" });
+  }, 700);
+};
