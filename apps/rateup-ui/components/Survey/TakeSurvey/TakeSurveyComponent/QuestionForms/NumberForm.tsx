@@ -4,6 +4,7 @@ import { NumberInput, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { handleInputScrollIntoView } from "../util";
 
 export function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -25,6 +26,7 @@ export function NumberForm() {
             nextFn?.(e.target.value);
           }
         }}
+        onClick={handleInputScrollIntoView}
       />
     </FormPaperLayout>
   );

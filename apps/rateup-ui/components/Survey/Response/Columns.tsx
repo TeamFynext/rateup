@@ -30,6 +30,10 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import PreviewModal from "../../Modal/PreviewModal";
 import { fuzzyFilter } from "./Filter";
+import {
+  getFileNameFromKey,
+  getFileUrlFromKey,
+} from "../../../utils/file-upload/upload";
 
 export const useSurveyResponseColumns = ({
   questions = [],
@@ -288,6 +292,22 @@ function BadgeorTextorPreview({
         />
       </Stack>
     );
+  } else if (questionType == QuestionType.File) {
+    return response ? (
+      <Group gap={"xs"}>
+        <Text fw={300} fz="md" c="dark.3">
+          {getFileNameFromKey(response)}
+        </Text>
+        <RateupButtonBlue
+          onClick={() => {
+            window.open(getFileUrlFromKey(response), "_blank");
+          }}
+          title="Preview"
+          leftIcon={<IconEye size={"1rem"} />}
+          size="compact-xs"
+        />
+      </Group>
+    ) : null;
   } else {
     return (
       <HoverCardComponent content={response} questionType={questionType} />

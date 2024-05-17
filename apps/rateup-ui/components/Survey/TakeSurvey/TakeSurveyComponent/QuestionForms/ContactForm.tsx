@@ -7,12 +7,14 @@ import classes from "../TakeSurvey.module.css";
 import "react-phone-number-input/style.css";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import FormPaperLayout from "./layout/FormPaperLayout";
+import { handleInputScrollIntoView } from "../util";
 
 const ContactForm = ({ features }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];
   const theme = useMantineTheme();
+
   return (
     <Stack w={"100%"} gap={"lg"}>
       {selectedFeature?.name.isEnabled && (
@@ -32,6 +34,7 @@ const ContactForm = ({ features }) => {
                 input: classes.input,
                 root: classes.textRoot,
               }}
+              onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>
         </Stack>
@@ -52,6 +55,7 @@ const ContactForm = ({ features }) => {
                 updateResponse({ ...response, phone: value })
               }
               className={classes.inputPhone}
+              onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>
         </Stack>
@@ -84,6 +88,7 @@ const ContactForm = ({ features }) => {
                   zIndex: 0,
                 },
               }}
+              onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>
         </Stack>
