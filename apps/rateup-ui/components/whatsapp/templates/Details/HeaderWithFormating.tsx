@@ -11,7 +11,7 @@ const MediaCardPreview = ({ children }) => {
   return (
     <Stack
       w={"100%"}
-      h={"80px"}
+      mih={"80px"}
       justify="center"
       align="center"
       component={"span"}
@@ -37,18 +37,18 @@ export function HeaderWithFormatting(text, type) {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>
-          <Box pos={"relative"} w={"100%"} h={70} p={0} component="span">
+          <Box pos={"relative"} w={"100%"} p={0} component="span">
             {text instanceof File ? (
               <Image
                 src={URL.createObjectURL(text)}
-                h={70}
+                mih={70}
                 w={"100%"}
                 alt="image of the template content"
               />
             ) : text?.startsWith("http") ? (
               <Image
                 src={text}
-                h={70}
+                mih={70}
                 w={"100%"}
                 alt="image of the template content"
               />

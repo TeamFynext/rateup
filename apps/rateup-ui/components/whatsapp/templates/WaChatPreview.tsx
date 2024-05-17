@@ -1,4 +1,11 @@
-import { BackgroundImage, Box, Flex, Text } from "@mantine/core";
+import {
+  BackgroundImage,
+  Box,
+  Flex,
+  ScrollArea,
+  ScrollAreaAutosize,
+  Text,
+} from "@mantine/core";
 import { IconWifi } from "@tabler/icons-react";
 import {
   IconAntennaBars5,
@@ -44,20 +51,22 @@ const WaChatPreview = ({ children }) => {
             </Box>
           </Flex>
           <Box bg={"var(--wa-green)"} h={30} />
-          <Text
-            fz={8}
-            m={"xs"}
-            bg={"var(--wa-alert-info)"}
-            px={"xs"}
-            ff={lexend500.style.fontFamily}
-            style={{
-              borderRadius: 4,
-            }}
-          >
-            <IconInfoCircle size={8} /> This business uses a secure service from
-            Meta to manage this chat. Tap to learn more
-          </Text>
-          {children}
+          <ScrollAreaAutosize mah={440}>
+            <Text
+              fz={8}
+              m={"xs"}
+              bg={"var(--wa-alert-info)"}
+              px={"xs"}
+              ff={lexend500.style.fontFamily}
+              style={{
+                borderRadius: 4,
+              }}
+            >
+              <IconInfoCircle size={8} /> This business uses a secure service
+              from Meta to manage this chat. Tap to learn more
+            </Text>
+            {children}
+          </ScrollAreaAutosize>
         </div>
         <SendMessageMock />
       </BackgroundImage>
