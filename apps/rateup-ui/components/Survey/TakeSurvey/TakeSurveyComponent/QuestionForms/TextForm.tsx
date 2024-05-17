@@ -4,6 +4,7 @@ import { Input, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { handleInputScrollIntoView } from "../util";
 
 export function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -22,6 +23,7 @@ export function TextForm() {
         classNames={{
           input: classes.input,
         }}
+        onClick={handleInputScrollIntoView}
         style={{ maxWidth: "400px" }}
         onKeyDown={(e: any) => {
           if (e.key === "Enter" && !isLastQuestion) {

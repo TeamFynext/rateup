@@ -294,7 +294,6 @@ const CampaignInfoCard = ({
   responseCount,
   campaginParticipants,
 }) => {
-  let stats = campaginParticipants?.[0]?.WaMessageCampaginParticipantMap;
   // Initialize counts
   let countRead = 0;
   let countSent = 0;
@@ -308,15 +307,14 @@ const CampaignInfoCard = ({
       countPending++;
     else if (participants?.status === CampaignParticipantStatus.FAILED)
       countError++;
-  });
-  stats?.forEach((item) => {
-    const stats = item?.waMessage?.stats;
-
-    // Increment counts based on the presence of data
-    if (stats.read) countRead++;
-    if (stats.sent) countSent++;
-    if (stats.failed) countFailed++;
-    if (stats.delivered) countDelivered++;
+    else
+      participants?.WaMessageCampaginParticipantMap?.forEach((item) => {
+        const stats = item?.waMessage?.stats;
+        if (stats.read) countRead++;
+        if (stats.sent) countSent++;
+        if (stats.failed) countFailed++;
+        if (stats.delivered) countDelivered++;
+      });
   });
 
   return (

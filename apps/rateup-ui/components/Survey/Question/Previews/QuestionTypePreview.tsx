@@ -23,6 +23,7 @@ import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/Quest
 import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/InfoMessageForm";
 import MultiTextInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MultiTextInputForm";
 import MCQGridForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQGridForm";
+import FileInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/FileInputForm";
 
 const QuestionTypePreview = ({ type, choices, features, tnc }) => {
   switch (type) {
@@ -76,6 +77,8 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       return <MultiTextInputForm features={features} />;
     case Q.MCQGrid:
       return <MCQGridForm features={features} previewChoices={choices} />;
+    case Q.File:
+      return <FileInputForm isPreview={true} />;
     default:
       return <div>not implemented</div>;
   }
