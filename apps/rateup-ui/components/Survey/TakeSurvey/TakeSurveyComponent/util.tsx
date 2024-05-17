@@ -26,6 +26,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { emailPattern } from "../../../../utils/constants";
 import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
 import MCQGridForm from "./QuestionForms/MCQGridForm";
+import FileInputForm from "./QuestionForms/FileInputForm";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -189,6 +190,8 @@ export function getQuestionForm(type, selectedQ) {
       );
     case Q.MCQGrid:
       return <MCQGridForm key={selectedQ?.id} features={selectedQ?.features} />;
+    case Q.File:
+      return <FileInputForm />;
     default:
       return <div>not implemented</div>;
   }
