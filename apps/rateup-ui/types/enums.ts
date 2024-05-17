@@ -32,6 +32,7 @@ export enum QuestionType {
   Contact = "Contact",
   MultiTextInput = "MultiTextInput",
   MCQGrid = "MCQ Grid",
+  File = "File",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",
   Invoice_Id = "invoice_id",
