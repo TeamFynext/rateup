@@ -51,6 +51,7 @@ export const InputQuestions = [
   QuestionType.Date,
   QuestionType.Photo,
   QuestionType.MultiTextInput,
+  QuestionType.File,
 ];
 
 export const OtherQuestions = [

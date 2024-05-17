@@ -107,6 +107,8 @@ export function getQuestionTypeLabel(
       return "Multi Text Input";
     case QuestionType.MCQGrid:
       return "Single Select Grid";
+    case QuestionType.File:
+      return "File Input";
     default:
       return false;
   }

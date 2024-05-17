@@ -241,6 +241,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             onlyPublished
             id={"flowId"}
             {...form.getInputProps(`buttons.${index}.flow_id`)}
+            searchable
             label={
               <Text fz={14} ff={lexend500.style.fontFamily}>
                 Flow

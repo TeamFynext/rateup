@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import {
+  IconFileFilled,
   IconGridDots,
   IconScaleOutline,
   IconTextPlus,
@@ -173,6 +174,7 @@ const questionIcons = {
   [QuestionType.InfoMessage]: IconMailFilled,
   [QuestionType.MultiTextInput]: IconTextPlus,
   [QuestionType.MCQGrid]: IconGridDots,
+  [QuestionType.File]: IconFileFilled,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,
