@@ -35,7 +35,10 @@ export default function () {
   const handleUpdateSubscriptionPlan = () => {
     updateSubscriptionMutation.mutate({
       orgId: updatedField?.orgId,
-      updatedData: { basePlanId: updatedField.basePlanId },
+      updatedData: {
+        basePlanId: updatedField.basePlanId,
+        renewedAt: new Date(),
+      },
     });
   };
   if (isSubscriptionsError) return <div>error occured</div>;
