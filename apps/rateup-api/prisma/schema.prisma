@@ -99,7 +99,7 @@ model Org {
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
   landingPage       LandingPage[]
-  LoyaltyApiKey     LoyaltyApiKey?
+  ApiAccessToken    ApiAccessToken?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
   chatbot           Chatbot?
@@ -1039,13 +1039,13 @@ model WaAutomatedReply {
   responseTemplateId String?
 }
 
-model LoyaltyApiKey {
+model ApiAccessToken {
   orgId String @unique @db.Uuid
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   // hashed key
-  apiKey    String
-  createdAt DateTime @default(now())
+  accessToken String
+  createdAt   DateTime @default(now())
 }
 
 // TODO remove later: FOR myg vishu gift
