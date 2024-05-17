@@ -184,7 +184,8 @@ export async function downloadExcelResponse(
           responseValue = responseObj.response[question.type];
           const responseType = responseObj.type;
           switch (responseType) {
-            case QuestionType.Photo: {
+            case QuestionType.Photo:
+            case QuestionType.File: {
               responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
               break;
             }
@@ -934,6 +935,7 @@ export function getFormattedResponse(response, qstn, language) {
       formattedResponse = dayjs(response).format("DD, MMM YYYY");
       break;
     case QuestionType.Photo:
+    case QuestionType.File:
       formattedResponse = `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${response}`;
       break;
     case QuestionType.PCQ:
