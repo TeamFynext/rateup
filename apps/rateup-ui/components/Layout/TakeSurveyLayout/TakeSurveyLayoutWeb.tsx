@@ -76,8 +76,8 @@ export const TakeSurveyLayoutWeb = ({
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
-  const updateVisited = useUpdateVisitedMutation();
-  const updateStarted = useUpdateStartedMutation();
+  const updateVisited = useUpdateVisitedMutation(survey?.id);
+  const updateStarted = useUpdateStartedMutation(survey?.id);
 
   const [opened, { open, close }] = useDisclosure(survey?.isProtected);
   const [passwordInput, setPasswordInput] = useState("");

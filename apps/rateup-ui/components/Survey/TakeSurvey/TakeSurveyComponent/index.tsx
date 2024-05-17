@@ -90,7 +90,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const { setQuestionCount, setCurrentQuestionNo, questionCount } =
     useContext(QuestionCountContext);
-  const updateCompleted = useUpdateCompletedMutation();
+  const updateCompleted = useUpdateCompletedMutation(survey?.id);
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
 
