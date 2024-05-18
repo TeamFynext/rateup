@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
+import axios from "axios";
 
 const prisma = new PrismaClient();
 
@@ -53,4 +54,96 @@ export async function createPayment(payload) {
     // return payment;
   }
   return null;
+}
+
+export async function syncStripeProducts() {
+  const [stripeProductRes, priceRes] = await Promise.all([
+    (
+      await axios.get("https://api.stripe.com/v1/products", {
+        headers: {
+          Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+        },
+      })
+    )?.data,
+    (
+      await axios.get("https://api.stripe.com/v1/prices", {
+        headers: {
+          Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+        },
+      })
+    )?.data,
+  ]);
+  const stripeProducts = stripeProductRes?.data;
+  const priceList = priceRes?.data;
+  const formattedData = [];
+  for (const product of stripeProducts) {
+    const price = priceList.find(
+      (price) => price?.id === product?.default_price,
+    );
+    formattedData.push({
+      name: product?.name,
+      description: product?.description,
+      createdAt: product?.created,
+      active: product?.active,
+      liveMode: product?.livemode,
+      productId: product?.id,
+      priceId: product?.default_price,
+      currency: price?.currency,
+      amount: price?.unit_amount,
+      interval: price?.recurring?.interval,
+      intervalCount: price?.recurring?.interval_count,
+      type: price.type,
+    });
+  }
+  const existingProducts = (await prisma.stripeProducts.findMany()).map(
+    (product) => product.productId,
+  );
+  const data = existingProducts
+    ? formattedData.filter(
+        (product) => !existingProducts.includes(product?.productId),
+      )
+    : formattedData;
+  await prisma.stripeProducts.createMany({
+    data,
+  });
+}
+
+export async function getStripeProducts() {
+  const res = await prisma.stripeProducts.findMany();
+  return res;
+}
+
+export async function getAllStripeSubscriptions() {
+  const subscriptions = (
+    await axios.get("https://api.stripe.com/v1/subscriptions", {
+      headers: {
+        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      },
+    })
+  )?.data?.data;
+  const allStripeProducts = await prisma.stripeProducts.findMany();
+  return subscriptions?.map((sub) => {
+    const product = allStripeProducts?.find(
+      (prod) => prod.productId === sub.plan.product,
+    );
+    return {
+      id: sub.id,
+      productName: product.name,
+      amount: product.amount,
+      currency: product.currency,
+      status: sub.status,
+      createdAt: sub.created,
+      startsAt: sub.current_period_start,
+      endsAt: sub.current_period_end,
+    };
+  });
+}
+
+export async function updateStripeProduct(productId, data) {
+  return await prisma.stripeProducts.update({
+    where: {
+      productId,
+    },
+    data,
+  });
 }

@@ -1,7 +1,11 @@
 import { FastifyInstance } from "fastify";
 import {
   createCheckoutSessionHandler,
+  getAllStripeSubscriptionsHandler,
   getSessionStatusHandler,
+  getStripeProductsHandler,
+  syncStripeProductsHandler,
+  updateStripeProductsHandler,
   webHookHandler,
 } from "./stripe.controller";
 import { $PSref } from "./stripe.schema";
@@ -58,5 +62,19 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
       //   },
     },
     webHookHandler,
+  );
+
+  server.get("/products", {}, getStripeProductsHandler);
+
+  server.get("/subscriptions", {}, getAllStripeSubscriptionsHandler);
+  server.post("/sync-products", {}, syncStripeProductsHandler);
+  server.put(
+    "/product",
+    {
+      schema: {
+        body: $PSref("updateProductSchema"),
+      },
+    },
+    updateStripeProductsHandler,
   );
 }
