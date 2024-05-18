@@ -4,6 +4,7 @@ import { useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput";
+import { handleInputScrollIntoView } from "../util";
 
 export function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -30,6 +31,7 @@ export function TextAreaForm() {
           input: classes.input,
         }}
         p={0}
+        onClick={handleInputScrollIntoView}
       />
     </FormPaperLayout>
   );

@@ -574,8 +574,10 @@ export default function WhatsappTemplateById() {
                           fz={"0.95rem"}
                           style={{
                             wordBreak: "break-all",
+                            whiteSpace: "pre-wrap",
+                            fontFamily: "inherit",
                           }}
-                          lineClamp={7}
+                          component="pre"
                         >
                           {TextWithFormatting(
                             form.values?.body,

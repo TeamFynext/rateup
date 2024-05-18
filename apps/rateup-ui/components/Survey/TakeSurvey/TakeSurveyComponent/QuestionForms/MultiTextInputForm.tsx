@@ -5,6 +5,7 @@ import { CurrentResponsesContext } from "../../../../../context/ResponseContext"
 import { Input, Stack } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
+import { handleInputScrollIntoView } from "../util";
 
 type CustomInputFields = {
   fieldKey: string;
@@ -31,6 +32,7 @@ const MultiTextInputForm = ({ features }) => {
             classNames={{
               input: classes.input,
             }}
+            onClick={handleInputScrollIntoView}
           />
         </FormPaperLayout>
       ))}

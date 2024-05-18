@@ -151,8 +151,8 @@ const CampaignById = () => {
             />
             <CampaignInfoCard
               participantCount={campaignData?.campaignParticipants.length}
-              campaginParticipants={campaignData?.campaignParticipants}
-              responseCount={campaignData?.responseCount}
+              stats={campaignData?.stats}
+              flowId={campaignData?.flowId}
             />
           </Tabs.Panel>
           <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS}>
@@ -289,46 +289,18 @@ const StartCampaignCard = ({
   );
 };
 
-const CampaignInfoCard = ({
-  participantCount,
-  responseCount,
-  campaginParticipants,
-}) => {
-  let stats = campaginParticipants?.[0]?.WaMessageCampaginParticipantMap;
-  // Initialize counts
-  let countRead = 0;
-  let countSent = 0;
-  let countFailed = 0;
-  let countDelivered = 0;
-  let countPending = 0;
-  let countError = 0;
-
-  campaginParticipants?.forEach((participants) => {
-    if (participants?.status === CampaignParticipantStatus.PENDING)
-      countPending++;
-    else if (participants?.status === CampaignParticipantStatus.FAILED)
-      countError++;
-  });
-  stats?.forEach((item) => {
-    const stats = item?.waMessage?.stats;
-
-    // Increment counts based on the presence of data
-    if (stats.read) countRead++;
-    if (stats.sent) countSent++;
-    if (stats.failed) countFailed++;
-    if (stats.delivered) countDelivered++;
-  });
-
+const CampaignInfoCard = ({ participantCount, stats, flowId }) => {
   return (
     <SimpleGrid cols={3} m={"xl"}>
       {[
         { label: "Participants", count: participantCount },
-        { label: "Pending", count: countPending },
-        { label: "Sent", count: countSent },
-        { label: "Delivered", count: countDelivered },
-        { label: "Read", count: countRead },
+        { label: "Pending", count: stats?.countPending },
+        { label: "Sent", count: stats?.countSent },
+        { label: "Delivered", count: stats?.countDelivered },
+        { label: "Read", count: stats?.countRead },
+        ...(flowId && [{ label: "Completed", count: stats?.countCompleted }]),
+        { label: "Failed", count: stats?.countFailed, color: "red" },
         // { label: "Responded", count: responseCount ?? 0 },
-        { label: "Failed", count: countFailed + countError, color: "red" },
       ].map((item) => (
         <Stack key={item.label} gap={0} align="center">
           <Text ff={lexend600.style.fontFamily} fz={30}>

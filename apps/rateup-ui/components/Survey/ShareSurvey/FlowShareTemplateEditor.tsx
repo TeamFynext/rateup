@@ -33,8 +33,6 @@ import {
   getFileUrlFromKey,
   uploadFile,
 } from "../../../utils/file-upload/upload";
-import { ImageCropModal } from "../../Modal/ImageCropModal";
-import { useDisclosure } from "@mantine/hooks";
 import { WaFlowStartMessageConfig } from "../../../types/global";
 import { FormValidateInput } from "@mantine/form/lib/types";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
@@ -93,8 +91,6 @@ export function FlowShareTemplateEditor({
     return () => clearTimeout(timer);
   }, [form.values]);
 
-  const [image, setImage] = useState(null);
-
   const max_mb = 1;
   const onImageUpload = (event: File) => {
     if (!event) return;
@@ -102,12 +98,7 @@ export function FlowShareTemplateEditor({
       showErrorToast(`Max file size is ${max_mb} MB`);
       return;
     }
-    setImage({
-      url: URL.createObjectURL(event),
-      name: event.name,
-    });
-
-    toggleCropDialog();
+    setImageToUpload(event);
   };
 
   const [imageToUpload, setImageToUpload] = useState(null);
@@ -125,30 +116,11 @@ export function FlowShareTemplateEditor({
 
   function handleRemoveImage() {
     form.setFieldValue("headerImage", "");
-    setImage(null);
+    setImageToUpload(null);
   }
-
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
-
-  const handleCropImageSave = (cropedImage) => {
-    setImageToUpload(cropedImage);
-  };
 
   return (
     <Stack gap={0}>
-      {image && (
-        <ImageCropModal
-          opened={openedCropDialog}
-          onclose={closeCropDialog}
-          imageName={image.name}
-          handleCropImageSave={handleCropImageSave}
-          image={image.url}
-          aspect={16 / 9}
-        />
-      )}
       <Group mb="4">
         <Title order={4}>Edit Template Message</Title>
         <SaveStatusIndicator status={status} />
@@ -170,7 +142,7 @@ export function FlowShareTemplateEditor({
             {(props) => {
               return (
                 <Button {...props}>
-                  {image ? "Change Image" : "Upload Image"}
+                  {imageToUpload ? "Change Image" : "Upload Image"}
                 </Button>
               );
             }}

@@ -4,12 +4,14 @@ import {
   Button,
   Flex,
   Grid,
+  Group,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import {
+  IconFileFilled,
   IconGridDots,
   IconScaleOutline,
   IconTextPlus,
@@ -48,6 +50,7 @@ import {
 import { googleReviewSupportedTypes } from "../../../utils/data";
 import { getQuestionTypeLabel } from "../../../utils/enums";
 import { GoogleIcon } from "../../Button/GoogleIcon";
+import classes from "./QuestionDetailedView.module.css";
 
 interface QuestionTypeSelectionProps {
   questionTypeGroups: Array<{
@@ -75,12 +78,8 @@ export function QuestionTypeSelection({
           key={type}
           size="lg"
           leftSection={<Icon size={"1rem"} />}
-          variant={hovered ? "outline" : "default"}
-          styles={{
-            root: {
-              boxShadow: hovered ? "3px 3px 10px rgba(0, 0, 0, 0.1)" : "none",
-            },
-          }}
+          variant={"default"}
+          className={classes.questionTypeButton}
           p={15}
           onClick={() => handleQuestionTypeClick(type as QuestionType)}
           onMouseOver={() => {
@@ -99,26 +98,6 @@ export function QuestionTypeSelection({
   };
   return (
     <Flex direction={"column"} h={"100%"}>
-      <Flex justify={"flex-end"} py="sm">
-        {IsGoogleReviewSupported ? (
-          <Badge
-            leftSection={<GoogleIcon width={"1.3rem"} height={"1.3rem"} />}
-            radius={"md"}
-            color="var(--bg-grey-color)"
-            c="grey"
-            size={"xl"}
-            styles={{
-              label: {
-                textTransform: "capitalize",
-              },
-            }}
-          >
-            Review Supported
-          </Badge>
-        ) : (
-          <Box h={"xl"}></Box>
-        )}
-      </Flex>
       <Stack
         gap={"md"}
         style={{
@@ -129,9 +108,28 @@ export function QuestionTypeSelection({
         {questionTypeGroups?.map((qtype, i) => {
           return (
             <Stack gap={"sm"} key={i}>
-              <Title order={4} c="dimmed">
-                {qtype?.title}
-              </Title>
+              <Group justify="space-between">
+                <Title order={4} c="dimmed">
+                  {qtype?.title}
+                </Title>
+                {IsGoogleReviewSupported && i == 0 ? (
+                  <Badge
+                    leftSection={<GoogleIcon width={"1rem"} height={"1rem"} />}
+                    radius={"md"}
+                    color="var(--bg-grey-color)"
+                    c="grey"
+                    size={"lg"}
+                    styles={{
+                      label: {
+                        textTransform: "capitalize",
+                      },
+                    }}
+                  >
+                    Review Supported
+                  </Badge>
+                ) : null}
+              </Group>
+
               <Grid px={"lg"}>
                 {qtype?.questionTypes?.map((type, index) => {
                   return (
@@ -176,6 +174,7 @@ const questionIcons = {
   [QuestionType.InfoMessage]: IconMailFilled,
   [QuestionType.MultiTextInput]: IconTextPlus,
   [QuestionType.MCQGrid]: IconGridDots,
+  [QuestionType.File]: IconFileFilled,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,
