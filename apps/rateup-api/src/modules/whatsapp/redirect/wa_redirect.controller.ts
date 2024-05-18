@@ -73,7 +73,10 @@ export async function getWaShareMessageFromSTMIdHandler(
   message += `\n\`#${res.survey.title} @${teamCode}\`\n`;
   message += res.startMessageConfig.suffix;
 
-  reply.send({ shareUrl: generateWaMessageUrl(phone, message) });
+  reply.send({
+    shareUrl: generateWaMessageUrl(phone, message),
+    title: res?.survey?.title,
+  });
 }
 
 export function generateWaMessageUrl(phone: string, message: string) {

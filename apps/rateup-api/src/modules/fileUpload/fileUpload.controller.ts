@@ -9,12 +9,17 @@ export async function uploadController(
   reply: FastifyReply,
 ) {
   const data = await req.file();
-  if (!allowedMimeTypes.includes(data?.mimetype) || data.type !== "file") {
-    log.debug("mime => %o", data?.mimetype);
-    log.debug("type => %o", data.type);
-    return reply
-      .code(400)
-      .send({ message: "This file type is not permitted." });
+  const metadata = data?.fields?.metadata
+    ? JSON.parse(data?.fields?.metadata?.["value"])
+    : null;
+  if (!metadata || !metadata.allowAll) {
+    if (!allowedMimeTypes.includes(data?.mimetype) || data.type !== "file") {
+      log.debug("mime => %o", data?.mimetype);
+      log.debug("type => %o", data.type);
+      return reply
+        .code(400)
+        .send({ message: "This file type is not permitted." });
+    }
   }
   const { filename, file } = data;
   const uniqueFilename = `${Date.now()}-${filename.replace(
