@@ -1,5 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createPayment } from "./stripe.service";
+import {
+  createPayment,
+  getAllStripeSubscriptions,
+  getStripeProducts,
+  syncStripeProducts,
+  updateStripeProduct,
+} from "./stripe.service";
+import { updateProductInput } from "./stripe.schema";
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
 interface SessionRetrieveRequest {
@@ -82,4 +89,57 @@ export async function webHookHandler(
   }
 
   reply.status(200);
+}
+
+export async function getStripeProductsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getStripeProducts();
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function syncStripeProductsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await syncStripeProducts();
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getAllStripeSubscriptionsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getAllStripeSubscriptions();
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updateStripeProductsHandler(
+  request: FastifyRequest<{ Body: updateProductInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { productId, ...data } = request.body;
+    const res = await updateStripeProduct(productId, data);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
 }
