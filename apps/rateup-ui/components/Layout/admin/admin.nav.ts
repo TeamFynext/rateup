@@ -1,4 +1,5 @@
 import {
+  IconBrandStripe,
   IconBusinessplan,
   IconCreditCard,
   IconDatabasePlus,
@@ -21,14 +22,14 @@ export const adminNavItems = [
     href: "/admin/subscriptions",
   },
   {
-    Icon: IconListDetails,
-    label: "RazorPay Plans",
-    href: "/admin/razorpay/plans",
+    Icon: IconWallet,
+    label: "RazorPay",
+    href: "/admin/razorpay",
   },
   {
-    Icon: IconWallet,
-    label: "RazorPay Subs",
-    href: "/admin/razorpay/subscriptions",
+    Icon: IconBrandStripe,
+    label: "Stripe",
+    href: "/admin/stripe",
   },
   {
     Icon: IconCreditCard,

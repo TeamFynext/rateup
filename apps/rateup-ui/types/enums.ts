@@ -276,3 +276,8 @@ export enum ChatbotPublicPageStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
 }
+
+export enum StripeProductType {
+  one_time = "one_time",
+  recurring = "recurring",
+}

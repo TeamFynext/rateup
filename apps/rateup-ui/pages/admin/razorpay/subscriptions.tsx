@@ -53,9 +53,9 @@ const RazorpaySubscriptions = () => {
     });
   }
   return (
-    <Stack mah={"100%"}>
+    <Stack mah={"100%"} py={"md"}>
       <Group gap={"md"}>
-        <Title order={2}>Razorpay Subscriptions</Title>
+        <Title order={4}>Razorpay Subscriptions</Title>
         <Tooltip label="Refresh data">
           <ActionIcon
             variant="light"
@@ -77,10 +77,10 @@ const RazorpaySubscriptions = () => {
           </ActionIcon>
         </Tooltip>
       </Group>
-      <Blockquote color="blue" icon={<IconInfoCircle />}>
+      <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
         List of Subscriptions from Razorpay DB{" "}
       </Blockquote>
-      <Box h="75vh">
+      <Box h="52vh">
         <DataGrid
           rows={rows}
           columns={columns}
