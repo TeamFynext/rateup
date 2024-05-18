@@ -480,17 +480,15 @@ export function useUpdateCompletedMutation(surveyId: string) {
   });
 }
 
-export function useDeleteSurveyMutation() {
+export const useDeleteSurveyMutation = () => {
   const queryClient = useQueryClient();
-  const surveyDeleteMutation = useMutation({
-    mutationFn: deleteSurvey,
+  return useMutation({
+    mutationFn: (surveyId: string) => deleteSurvey(surveyId),
     onSuccess: () => {
-      showSuccessToast("Survey Deleted Successfully!");
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
   });
-  return surveyDeleteMutation;
-}
+};
 
 export function useUpdateSurveyMutation() {
   const queryClient = useQueryClient();
