@@ -56,7 +56,10 @@ export function SubscriptionEditorModal({
         return;
       }
       updateMutation.mutate(
-        { orgId: subscription.orgId, updatedData: subscriptionForm.values },
+        {
+          orgId: subscription.orgId,
+          updatedData: { ...subscriptionForm.values, renewedAt: new Date() },
+        },
         {
           onSuccess: () => {
             onClose();

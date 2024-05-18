@@ -182,7 +182,6 @@ export function QuestionDetailedView({
             autoClose: false,
             withCloseButton: false,
           });
-          console.log("form values", form.values);
           questionUpdateMutation.mutate({
             qId: question.id,
             data: form.getValues(),

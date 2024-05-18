@@ -1,8 +1,15 @@
 import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import { createStripeCheckoutSession } from "./stripe.api";
+import {
+  createStripeCheckoutSession,
+  getAllStripeSubscriptions,
+  getStripeProducts,
+  syncStripeProducts,
+  updateStripeProduct,
+} from "./stripe.api";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export function useCreateStripeCheckoutSession(setIsLoading) {
   const router = useRouter();
@@ -36,3 +43,41 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
     },
   });
 }
+
+export const useSyncStripeProducts = () => {
+  return useMutation({
+    mutationFn: syncStripeProducts,
+    onSuccess: () => {
+      showSuccessToast("Stripe products synced successfully");
+    },
+    onError: () => {
+      showErrorToast("Error in Syncing stripe products");
+    },
+  });
+};
+
+export const useUpdateStripeProduct = () => {
+  return useMutation({
+    mutationFn: updateStripeProduct,
+    onSuccess: () => {
+      showSuccessToast("Stripe product updated successfully");
+    },
+    onError: () => {
+      showErrorToast("Error in updating stripe product");
+    },
+  });
+};
+
+export const useGetStripeProducts = () => {
+  return useQuery({
+    queryFn: getStripeProducts,
+    queryKey: ["stripeProducts"],
+  });
+};
+
+export const useGetAllStripeSubscriptions = () => {
+  return useQuery({
+    queryFn: getAllStripeSubscriptions,
+    queryKey: ["stripeSubscriptions"],
+  });
+};

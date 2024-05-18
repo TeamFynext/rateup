@@ -38,6 +38,7 @@ export const useSurvey = (surveyId: string) => {
     queryKey: ["survey", surveyId],
     enabled: !!surveyId,
     queryFn: () => getSurvey(surveyId),
+    refetchOnWindowFocus: "always",
   });
 };
 
@@ -449,21 +450,33 @@ export const useUpdateSurveyGoogleLinkMutation = (
   return updateMutation;
 };
 
-export function useUpdateVisitedMutation() {
+export function useUpdateVisitedMutation(surveyId: string) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => updateSurveyVisited(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
   });
 }
 
-export function useUpdateStartedMutation() {
+export function useUpdateStartedMutation(surveyId: string) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => updateSurveyStarted(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
   });
 }
 
-export function useUpdateCompletedMutation() {
+export function useUpdateCompletedMutation(surveyId: string) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => updateSurveyCompleted(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
   });
 }
 

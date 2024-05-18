@@ -32,6 +32,7 @@ export enum QuestionType {
   Contact = "Contact",
   MultiTextInput = "MultiTextInput",
   MCQGrid = "MCQ Grid",
+  File = "File",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",
   Invoice_Id = "invoice_id",
@@ -275,4 +276,9 @@ export enum ChatBotSource {
 export enum ChatbotPublicPageStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
+}
+
+export enum StripeProductType {
+  one_time = "one_time",
+  recurring = "recurring",
 }
