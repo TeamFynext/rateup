@@ -4,16 +4,12 @@ import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { useMediaQuery } from "@mantine/hooks";
 import { QuestionType as Q } from "../../../../types/enums";
-import { isValidPhoneNumber } from "react-phone-number-input";
-import { emailPattern } from "../../../../utils/constants";
 import {
   ActionIcon,
   Button,
-  Center,
   Group,
   Portal,
   Progress,
-  RingProgress,
   Stack,
   Text,
 } from "@mantine/core";
@@ -168,7 +164,7 @@ function NextPrev({
           color={inputColor}
           size={isMobile ? "xs" : "sm"}
           styles={{
-            root: { backgroundColor: "#dddddd" },
+            root: { backgroundColor: "#d0d0d0" },
           }}
         />
       </Stack>

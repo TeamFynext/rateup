@@ -1,6 +1,11 @@
 import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { MultiSelect, useMantineTheme } from "@mantine/core";
+import {
+  MultiSelect,
+  isLightColor,
+  luminance,
+  useMantineTheme,
+} from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -20,6 +25,15 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const isMobile = useMediaQuery("(max-width: 480px)");
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+
+  const pillBgColor =
+    luminance(themePrimaryColor) > 0.8
+      ? `var(--mantine-color-gray-7)`
+      : themePrimaryColor;
+  const pillTextColor = isLightColor(pillBgColor) ? "#000000" : "#FFFFFF";
 
   const [selectedOp, setSelectedOp] = useState([]);
   const options = selectedQ
@@ -69,8 +83,8 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
             zIndex: 999,
           },
           pill: {
-            color: "var(--mantine-color-white)",
-            backgroundColor: `var(--mantine-color-${theme.primaryColor}-filled)`,
+            color: pillTextColor,
+            backgroundColor: pillBgColor,
           },
         }}
         searchable

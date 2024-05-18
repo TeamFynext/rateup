@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Box, Group } from "@mantine/core";
+import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { LDResponse } from "../../../../../types/enums";
@@ -12,6 +12,9 @@ import styles from "./LDForm.module.css";
 export function LDForm() {
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
 
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
@@ -34,12 +37,22 @@ export function LDForm() {
     }
   };
 
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
+
   return (
     <Group onClick={handleLikeOrDislikeClick}>
       <Box w={150}>
         <RateupButtonBlue
           size="md"
           variant={response === LDResponse.Dislike ? "filled" : "outline"}
+          sx={{
+            color:
+              response === LDResponse.Dislike
+                ? foregroundColor
+                : themePrimaryColor,
+          }}
           radius="xl"
           title="Dislike"
           leftIcon={<IconThumbDownFilled />}
@@ -52,6 +65,12 @@ export function LDForm() {
         <RateupButtonBlue
           size="md"
           variant={response === LDResponse.Like ? "filled" : "outline"}
+          sx={{
+            color:
+              response === LDResponse.Like
+                ? foregroundColor
+                : themePrimaryColor,
+          }}
           radius="xl"
           title="Like"
           fullWidth

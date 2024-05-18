@@ -13,10 +13,13 @@ import {
   useMantineTheme,
   ScrollAreaAutosize,
   Divider,
+  isLightColor,
+  luminance,
 } from "@mantine/core";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useMediaQuery } from "@mantine/hooks";
 import { sampleChoices } from "../../../../../utils/constants/forms";
+import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
 
 interface MCQGridFormProps {
   features: any;
@@ -32,6 +35,9 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
   const questions = features?.[selectedLanguage]?.questions;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
 
   const handleUpdateResponse = (value, question) => {
     const choice = choices?.find((ch) => ch.value === value);
@@ -67,6 +73,8 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
             }
             size="md"
             icon={CheckIcon}
+            color={themePrimaryColor}
+            iconColor={isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF"}
           />
         </Table.Td>
       ))}
@@ -121,6 +129,11 @@ const MCQGridMobileForm = ({
 }: MCQGridMobileFormProps) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
+  const themePrimaryColor = theme.colors.primaryColor[5];
+  const textColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
+  const surveyTheme = useSurveyThemeData()?.surveyTheme;
+  const titleColor = surveyTheme?.title.styles?.color;
+
   return (
     <ScrollAreaAutosize
       mah={"100%"}
@@ -131,7 +144,9 @@ const MCQGridMobileForm = ({
     >
       {questions?.map((question, index) => (
         <Stack key={index}>
-          <Title order={5}>{question}</Title>
+          <Title order={5} c={titleColor || "black"}>
+            {question}
+          </Title>
           <Stack>
             {choices?.map((choice) => {
               const isSelected = response?.[question]?.value == choice?.value;
@@ -139,12 +154,11 @@ const MCQGridMobileForm = ({
                 <UnstyledButton
                   key={choice?.value}
                   onClick={() => handleUpdateResponse(choice?.value, question)}
-                  bg={
-                    isSelected
-                      ? `var(--mantine-color-${theme.primaryColor}-filled)`
-                      : "var(--mantine-color-gray-3)"
-                  }
-                  style={{ borderRadius: "5px" }}
+                  bg={isSelected ? themePrimaryColor : "transparent"}
+                  style={{
+                    borderRadius: "5px",
+                    border: `1px solid ${themePrimaryColor}`,
+                  }}
                   p={"xs"}
                 >
                   <Radio
@@ -156,17 +170,9 @@ const MCQGridMobileForm = ({
                     size="md"
                     icon={CheckIcon}
                     label={choice?.value}
-                    c={
-                      isSelected
-                        ? "var(--mantine-color-white)"
-                        : `var(--mantine-color-${theme.primaryColor}-outline)`
-                    }
+                    c={isSelected ? textColor : themePrimaryColor}
                     variant="outline"
-                    styles={{
-                      radio: {
-                        backgroundColor: "var(--mantine-color-white)",
-                      },
-                    }}
+                    color={textColor}
                   />
                 </UnstyledButton>
               );

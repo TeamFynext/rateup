@@ -6,6 +6,7 @@ import {
   Group,
   Modal,
   Text,
+  luminance,
   useMantineTheme,
 } from "@mantine/core";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -19,6 +20,11 @@ export function TermsNConditionsForm({ tncData }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   const primaryColor = theme.colors[theme.primaryColor][8];
+
+  const textColor =
+    luminance(primaryColor) > 0.8
+      ? `var(--mantine-color-gray-7)`
+      : primaryColor;
 
   const tnc = tncData?.[selectedLanguage] || {
     title: "I agree to",
@@ -35,16 +41,18 @@ export function TermsNConditionsForm({ tncData }) {
           labelPosition="right"
           value={response || false}
           onChange={(e) => updateResponse(e.currentTarget.checked)}
+          color={textColor}
           label={
             <>
               <Group mt="-2px" p="0" gap={0}>
-                <Text c={primaryColor}>{tnc?.title} </Text>
+                <Text c={textColor}>{tnc?.title} </Text>
                 <Anchor
                   ml="6px"
                   underline="always"
                   href="#"
                   onClick={open}
                   inherit
+                  c={"var(--tertiary-color)"}
                 >
                   {tnc?.urlTitle}
                 </Anchor>
