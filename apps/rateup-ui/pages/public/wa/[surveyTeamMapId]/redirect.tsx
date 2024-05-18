@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import { Box, Stack } from "@mantine/core";
+import { useEffect } from "react";
 
 export default function Redirect({
   tag = null,
@@ -9,12 +10,13 @@ export default function Redirect({
   surveyTeamMapIdOrShortId,
 }) {
   const router = useRouter();
-  setTimeout(() => {
+
+  useEffect(() => {
     const url = tag
       ? res.shareUrl + encodeURIComponent(`?t=${tag}`)
       : res.shareUrl;
     if (url) router.push(url);
-  }, 200);
+  }, [res.shareUrl, router, tag]);
 
   return (
     <>
