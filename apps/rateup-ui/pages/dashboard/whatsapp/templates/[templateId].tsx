@@ -577,7 +577,6 @@ export default function WhatsappTemplateById() {
                             whiteSpace: "pre-wrap",
                             fontFamily: "inherit",
                           }}
-                          lineClamp={7}
                           component="pre"
                         >
                           {TextWithFormatting(
