@@ -1,13 +1,49 @@
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import Redirect from "../../public/wa/[surveyTeamMapId]/redirect";
+import { getShareUrlFromSurveyTeamMapId } from "../../../backend/whatsapp/whatsapp.api";
+
+interface ServerSidePropsContext {
+  params: {
+    shortId: string;
+    tag: string;
+    surveyTeamMapId: string;
+  };
+}
 
 // Whatsapp survey
-function Was() {
-  const router = useRouter();
-  const shortId = router.query.shortId;
-  const tag = router.query.tag;
-
-  return <Redirect shortId={shortId} tag={tag} />;
+export const getServerSideProps = async ({
+  params,
+}: ServerSidePropsContext) => {
+  const surveyTeamMapIdOrShortId: string = params.shortId
+    ? params.shortId
+    : params.surveyTeamMapId;
+  try {
+    const data = await getShareUrlFromSurveyTeamMapId(surveyTeamMapIdOrShortId);
+    return {
+      props: {
+        res: data,
+        tag: params?.tag ?? null,
+        surveyTeamMapIdOrShortId: surveyTeamMapIdOrShortId,
+      },
+    };
+  } catch (error) {
+    return {
+      props: {
+        res: { title: "flow" },
+        tag: params?.tag ?? null,
+        surveyTeamMapIdOrShortId: surveyTeamMapIdOrShortId,
+      },
+    };
+  }
+};
+function Was({ res, tag = null, surveyTeamMapIdOrShortId }) {
+  return (
+    <Redirect
+      tag={tag}
+      res={res}
+      surveyTeamMapIdOrShortId={surveyTeamMapIdOrShortId}
+    />
+  );
 }
 
 export default Was;
