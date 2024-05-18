@@ -11,8 +11,7 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
-import { deleteSurvey } from "../../../backend/surveys/survey.api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDeleteSurveyMutation } from "../../../backend/surveys/surveys.query";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -25,8 +24,7 @@ const OtherSettings = () => {
   const [verifyEmail, setVerifyEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
-
-  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const resetResponsesStats = useResetResponsesStats(
     surveyId,
@@ -63,30 +61,7 @@ const OtherSettings = () => {
     }
   };
 
-  const router = useRouter();
-  const deleteSurveyMutation = useMutation({
-    mutationFn: () => deleteSurvey(surveyId),
-    onSuccess: () => {
-      notifications.show({
-        id: "delete-survey",
-        color: "teal",
-        title: "Success",
-        message: "Survey deleted successfully!",
-        autoClose: 2000,
-      });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      router.push("/dashboard/surveys");
-    },
-    onError: (error: any) => {
-      notifications.show({
-        id: "delete-survey",
-        color: "red",
-        title: "Error",
-        message: error.message,
-        autoClose: 4000,
-      });
-    },
-  });
+  const deleteSurveyMutation = useDeleteSurveyMutation();
 
   const confirmDeleteSurvey = () => {
     notifications.show({
@@ -98,7 +73,8 @@ const OtherSettings = () => {
       withCloseButton: false,
     });
     setIsLoading(true);
-    deleteSurveyMutation.mutate();
+    deleteSurveyMutation.mutate(surveyId);
+    router.push(`/dashboard/surveys`);
   };
 
   return (
@@ -149,7 +125,7 @@ const OtherSettings = () => {
       </FormModalLayout>
       <FormModalLayout
         opened={deleteModalOpened}
-        onClose={closeDeleteModal}
+        onClose={close}
         centered
         title="Confirm Delete Survey"
         buttonTitle="Confirm"
