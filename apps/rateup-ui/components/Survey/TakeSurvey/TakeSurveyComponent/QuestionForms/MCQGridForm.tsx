@@ -37,7 +37,9 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const handleUpdateResponse = (value, question) => {
     const choice = choices?.find((ch) => ch.value === value);
@@ -129,7 +131,9 @@ const MCQGridMobileForm = ({
 }: MCQGridMobileFormProps) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
-  const themePrimaryColor = theme.colors.primaryColor[5];
+  const themePrimaryColor = theme.colors.primaryColor
+    ? theme.colors.primaryColor[5]
+    : "#1C518E";
   const textColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
   const surveyTheme = useSurveyThemeData()?.surveyTheme;
   const titleColor = surveyTheme?.title.styles?.color;

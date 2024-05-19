@@ -30,7 +30,9 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
 
-  const themePrimaryColor = theme.colors.primaryColor[5];
+  const themePrimaryColor = theme.colors.primaryColor
+    ? theme.colors.primaryColor[5]
+    : "#1C518E";
   const dragFileTextColor =
     luminance(themePrimaryColor) > 0.8
       ? `var(--mantine-color-gray-7)`

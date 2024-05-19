@@ -11,7 +11,9 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [value, setValue] = useState<Date | null>(null);
   const theme = useMantineTheme();
-  const themePrimaryColor = theme.colors.primaryColor[5];
+  const themePrimaryColor = theme.colors.primaryColor
+    ? theme.colors.primaryColor[5]
+    : "#1C518E";
   const primaryColor =
     luminance(themePrimaryColor) > 0.8
       ? `var(--mantine-color-gray-9)`

@@ -13,7 +13,9 @@ export function YNForm() {
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const handleYesOrNOClick = async (e, value: YNResponse) => {
     const clickedBtn = e.target;
