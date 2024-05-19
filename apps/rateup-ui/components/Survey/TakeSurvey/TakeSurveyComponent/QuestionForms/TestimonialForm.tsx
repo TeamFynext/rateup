@@ -28,6 +28,7 @@ import FormModalLayout from "../../../../Modal/FormModalLayout";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal";
 import { fallbackImage } from "../../../../../utils/constants";
 import FormPaperLayout from "./layout/FormPaperLayout";
+import { handleInputScrollIntoView } from "../util";
 
 interface TestimonialProps {
   features;
@@ -120,6 +121,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           classNames={{
             input: classes.input,
           }}
+          onClick={handleInputScrollIntoView}
         />
       </FormPaperLayout>
       {features?.[selectedLanguage]?.jobTitle && (
@@ -133,6 +135,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             classNames={{
               input: classes.input,
             }}
+            onClick={handleInputScrollIntoView}
           />
         </FormPaperLayout>
       )}
@@ -146,6 +149,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           classNames={{
             input: classes.input,
           }}
+          onClick={handleInputScrollIntoView}
         />
       </FormPaperLayout>
       {features?.[selectedLanguage]?.rating && (

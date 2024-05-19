@@ -7,7 +7,6 @@ import {
   FileButton,
   Group,
   Image,
-  Loader,
   LoadingOverlay,
   Stack,
   Text,
@@ -15,8 +14,6 @@ import {
 import { uploadFile } from "../../../../../utils/file-upload/upload";
 import { IconX } from "@tabler/icons-react";
 import { getFileName } from "../../../SurveyTheme/components/BackgroundStyles";
-import { modals } from "@mantine/modals";
-import imageCropModalStyles from "../../../../Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 import styles from "./ImageForm.module.css";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
 
@@ -26,12 +23,9 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     isPreview ? null : response || null,
   );
-  const [isHeic2anyConverting, setIsHeic2anyConverting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const resetRef = useRef<() => void>(null);
-  const surveyThemeObj = useSurveyThemeData();
-  const surveyThemeBtnStyles = surveyThemeObj?.surveyTheme?.button?.styles;
 
   useEffect(() => {
     const uploadAndUpdate = async () => {
@@ -65,55 +59,6 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
 
   const onChangePicture = async (file: File) => {
     if (!file) return;
-    const fileExtension = file.name?.split(".")?.pop()?.toLowerCase() ?? "jpg";
-
-    let selectedImageUrl: string;
-    let selectedImageName: string;
-
-    if (fileExtension === "heic") {
-      try {
-        const heic2any = (await import("heic2any")).default;
-        setIsHeic2anyConverting(true);
-        const convertedFile = (await heic2any({
-          blob: file,
-          toType: "image/jpeg",
-        })) as Blob;
-        setIsHeic2anyConverting(false);
-        selectedImageUrl = URL.createObjectURL(convertedFile);
-        selectedImageName = file.name.toLowerCase().replace("heic", "jpeg");
-        console.log("this is the converted file", convertedFile);
-      } catch (err) {
-        console.log(err, "unbale to convert heic image to jpeg");
-      }
-    } else {
-      selectedImageUrl = URL.createObjectURL(file);
-      selectedImageName = file.name;
-    }
-
-    if (selectedImageUrl && selectedImageName) {
-      modals.openContextModal({
-        modal: "imageCropModal",
-        title: "Crop Image",
-        centered: true,
-        classNames: {
-          content: imageCropModalStyles["modal-content"],
-          header: imageCropModalStyles["modal-header"],
-          body: imageCropModalStyles["modal-body"],
-        },
-        innerProps: {
-          imageUrl: selectedImageUrl,
-          imageName: selectedImageName,
-          onSaveClick: handleCropImageSave,
-          aspectRatio: 4 / 3,
-        },
-      });
-    }
-    resetRef?.current?.();
-  };
-
-  const handleCropImageSave = async ({ file }) => {
-    console.log("recieved file in handle crop image save", file);
-    if (!file) return;
     setFile(file);
   };
 
@@ -141,20 +86,6 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
             </Button>
           )}
         </FileButton>
-
-        {isHeic2anyConverting && (
-          <Stack gap={0} className={styles["converting-loader-p-container"]}>
-            <p
-              className={styles["converting-text-p"]}
-              style={{
-                color: surveyThemeBtnStyles?.backgroundColor || "initial",
-              }}
-            >
-              Converting heic image to jpeg
-            </p>
-            <Loader type="dots" color={surveyThemeBtnStyles?.backgroundColor} />
-          </Stack>
-        )}
       </Stack>
 
       <Box

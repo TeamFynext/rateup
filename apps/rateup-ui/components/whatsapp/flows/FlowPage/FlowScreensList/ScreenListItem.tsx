@@ -421,7 +421,7 @@ function ScreenListItem({
               </Droppable>
               <Group m={"md"}>
                 <RateupButtonPrimary
-                  title="Add Question"
+                  title="Add Element"
                   rightIcon={<IconPlus />}
                   onClick={handleAddElementClick}
                   fullWidth

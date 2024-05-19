@@ -10,7 +10,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   WaFlowFormElementType,
   WhatsappFlowFontWeight,
@@ -56,6 +56,10 @@ export function FlowTextDetailedView() {
       },
     },
   });
+  useEffect(() => {
+    if (form.isValid()) handleSaveElement();
+  }, [form.values]);
+
   const textDecoration = [
     WaFlowFormElementType.textBody,
     WaFlowFormElementType.textCaption,
@@ -181,6 +185,7 @@ export function FlowTextDetailedView() {
                     : "none",
               }}
               fontNormal={textDecoration}
+              fontSize={textFontSize[nonInputTextType]}
             />
           </Stack>
         </Group>
@@ -206,15 +211,16 @@ function FlowTextElementEditor(
     value?: string;
     maxValue: number;
     fontNormal: boolean;
+    fontSize: string;
   },
 ) {
-  const { fontNormal, ...otherProp } = props;
+  const { fontNormal, fontSize, ...otherProp } = props;
   return (
     <TextareaWithLengthTracker
-      fz="lg"
+      fz={fontSize}
       styles={{
         input: {
-          fontSize: "1.75rem",
+          fontSize: fontSize,
           fontWeight: props.fontNormal ? "inherit" : 800,
         },
       }}
@@ -246,4 +252,11 @@ export const getTextStyle = (style: string, type: boolean): {} => {
       break;
   }
   return response;
+};
+
+let textFontSize = {
+  [WaFlowFormElementType.textHeading]: "22px",
+  [WaFlowFormElementType.textSubHeading]: "20px",
+  [WaFlowFormElementType.textBody]: "18px",
+  [WaFlowFormElementType.textCaption]: "16px",
 };

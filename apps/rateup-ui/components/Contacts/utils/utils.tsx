@@ -18,6 +18,7 @@ import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
 import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
 import { ColumnDef } from "@tanstack/react-table";
 import { CampaignParticipantStatus } from "../../../types/enums";
+import { rankItem } from "@tanstack/match-sorter-utils";
 
 export const selectCheckBox: ColumnDef<any>[] = [
   {
@@ -233,6 +234,41 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
 ];
+const getStatusData = (info) => {
+  let statusData: string = (info?.waStatus || "").toUpperCase();
+  const FlowId = info?.campaign?.flowId;
+  const participantStatus = info.status?.toUpperCase();
+  const errorMessage = info.errorMessage;
+  if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED) {
+    statusData = CampaignParticipantStatus.COMPLETED;
+  } else if (!statusData || errorMessage) {
+    statusData = participantStatus;
+  }
+  return statusData ?? "";
+};
+const customStatusSort = (rowA: any, rowB: any) => {
+  const statusA = getStatusData(rowA?.original);
+  const statusB = getStatusData(rowB?.original);
+
+  // Define the order of statuses based on your requirements
+  const statusOrder = {
+    [CampaignParticipantStatus.COMPLETED]: 1,
+    [CampaignParticipantStatus.DELIVERED]: 2,
+    [CampaignParticipantStatus.FAILED]: 3,
+    [CampaignParticipantStatus.PENDING]: 4,
+    [CampaignParticipantStatus.READ]: 5,
+    [CampaignParticipantStatus.SENT]: 6,
+  };
+
+  // Compare the statuses based on the custom order
+  return statusOrder[statusA] - statusOrder[statusB];
+};
+const fuzzyFilter = (row, columnId, value, addMeta) => {
+  const itemRank = rankItem(getStatusData(row?.original), value);
+  addMeta(itemRank);
+  return itemRank.passed;
+};
+
 export const contactParticipentDetailColumn = [
   ...selectCheckBox,
   {
@@ -251,6 +287,8 @@ export const contactParticipentDetailColumn = [
     header: () => "Status",
     accessorFn: (row) => row,
     id: "status",
+    filterFn: fuzzyFilter,
+    sortingFn: customStatusSort,
     cell: (info) => {
       let statusData: string = (info?.getValue()?.waStatus || "").toUpperCase();
       const FlowId = info?.getValue()?.campaign?.flowId;
