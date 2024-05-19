@@ -8,6 +8,7 @@ import {
   Portal,
   ScrollAreaAutosize,
   Stack,
+  luminance,
   useCombobox,
   useMantineTheme,
 } from "@mantine/core";
@@ -21,6 +22,11 @@ const cx = classNames.bind(styles);
 function CustomSelectForMobile({ value, data, placeholder, onChange }) {
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+
+  const primaryColor =
+    luminance(themePrimaryColor) > 0.8
+      ? `var(--mantine-color-gray-7)`
+      : themePrimaryColor;
 
   const [search, setSearch] = useState("");
   const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] =
@@ -40,7 +46,7 @@ function CustomSelectForMobile({ value, data, placeholder, onChange }) {
     .map((item) => {
       const styleObj =
         item === value
-          ? { backgroundColor: themePrimaryColor, color: "#FFFFFF" }
+          ? { backgroundColor: primaryColor, color: "#FFFFFF" }
           : { backgroundColor: "#FFFFFF", color: "#000000" };
       return (
         <Combobox.Option
@@ -101,7 +107,7 @@ function CustomSelectForMobile({ value, data, placeholder, onChange }) {
         if (value !== val) {
           await animate(
             selectedEle,
-            { backgroundColor: themePrimaryColor, color: "#FFFFFF" },
+            { backgroundColor: primaryColor, color: "#FFFFFF" },
             { duration: 0.5 },
           );
         }
@@ -133,7 +139,7 @@ function CustomSelectForMobile({ value, data, placeholder, onChange }) {
                 variant="transparent"
                 onClick={() => setIsOptionSelectionDivVisible(false)}
               >
-                <IconArrowLeft />
+                <IconArrowLeft color={primaryColor} />
               </ActionIcon>
               <Combobox.Search
                 className={cx("search-input")}

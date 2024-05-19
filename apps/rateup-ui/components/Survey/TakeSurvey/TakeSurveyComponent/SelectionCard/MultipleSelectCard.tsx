@@ -5,9 +5,12 @@ import {
   Text,
   SimpleGrid,
   useMantineTheme,
+  Button,
+  isLightColor,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
+import { IconCheck } from "@tabler/icons-react";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -41,31 +44,46 @@ export function ImageCheckbox({
     hovered: boolean;
     ref: React.RefObject<HTMLButtonElement>;
   };
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
+
+  const optionStylesObj = {
+    height: "auto",
+    border: `1px solid ${themePrimaryColor}`,
+    backgroundColor: !hovered
+      ? "transparent"
+      : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+    color: themePrimaryColor,
+  };
+
+  const isSelected = selectedValue.includes(title);
+  const selectedOptionStylesObj = isSelected
+    ? {
+        backgroundColor: themePrimaryColor,
+        color: foregroundColor,
+      }
+    : {};
+
   return (
-    <UnstyledButton
+    <Button
       {...others}
       ref={ref}
+      style={{
+        ...optionStylesObj,
+        ...selectedOptionStylesObj,
+      }}
       onClick={() => {
         handleChange(!value);
         checkBoxRef?.current?.click();
       }}
       data-checked={selectedValue.includes(title) || undefined}
       className={classes.button}
-      c={
-        selectedValue.includes(title)
-          ? "var(--mantine-color-white)"
-          : `var(--mantine-color-${theme.primaryColor}-outline)`
-      }
-      bg={
-        selectedValue.includes(title)
-          ? `var(--mantine-color-${theme.primaryColor}-filled)`
-          : !hovered
-          ? ""
-          : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
-      }
-      style={{
-        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
-      }}
+      leftSection={isSelected ? <IconCheck size={"1rem"} /> : null}
     >
       <Checkbox
         ref={checkBoxRef}
@@ -73,13 +91,14 @@ export function ImageCheckbox({
         checked={value}
         onChange={() => {}}
         tabIndex={-1}
+        style={{ visibility: "hidden", width: 0, height: 0 }}
         styles={{ input: { cursor: "pointer" } }}
         display={checkBoxEnable ? "block" : "none"}
       />
-      <Text size="sm" lh={1.5} ml={"xs"}>
+      <Text size="sm" lh={1.5}>
         {title}
       </Text>
-    </UnstyledButton>
+    </Button>
   );
 }
 

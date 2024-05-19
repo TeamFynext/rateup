@@ -11,6 +11,8 @@ import {
   Portal,
   ScrollAreaAutosize,
   Stack,
+  isLightColor,
+  luminance,
   useCombobox,
   useMantineTheme,
 } from "@mantine/core";
@@ -26,6 +28,12 @@ const cx = classNames.bind(styles);
 function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+
+  const primaryColor =
+    luminance(themePrimaryColor) > 0.8
+      ? `var(--mantine-color-gray-7)`
+      : themePrimaryColor;
+  const pillTextColor = isLightColor(primaryColor) ? "#000000" : "#FFFFFF";
 
   const [scope, animate] = useAnimate();
   const optionsMotionDivRefs = useRef(null);
@@ -62,7 +70,7 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
       if (domEle) {
         await animate(
           domEle,
-          { backgroundColor: themePrimaryColor, color: "#FFFFFF" },
+          { backgroundColor: primaryColor, color: "#FFFFFF" },
           { duration: 0.5 },
         );
       }
@@ -92,7 +100,7 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
     .map((item) => {
       const isSelectedItem = value.includes(item);
       const styleObj = isSelectedItem
-        ? { backgroundColor: themePrimaryColor, color: "#FFFFFF" }
+        ? { backgroundColor: primaryColor, color: "#FFFFFF" }
         : { backgroundColor: "#FFFFFF", color: "#000000" };
       return (
         <Combobox.Option
@@ -125,7 +133,15 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
     });
 
   const values = value.map((item) => (
-    <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
+    <Pill
+      style={{
+        backgroundColor: primaryColor,
+        color: pillTextColor,
+      }}
+      key={item}
+      withRemoveButton
+      onRemove={() => handleValueRemove(item)}
+    >
       {item}
     </Pill>
   ));
@@ -167,7 +183,7 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
                 variant="transparent"
                 onClick={() => setIsOptionSelectionDivVisible(false)}
               >
-                <IconArrowLeft />
+                <IconArrowLeft color={primaryColor} />
               </ActionIcon>
               <Combobox.Search
                 className={cxCommon("search-input")}
