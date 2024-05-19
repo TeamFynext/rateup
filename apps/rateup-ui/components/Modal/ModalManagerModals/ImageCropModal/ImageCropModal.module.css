@@ -51,11 +51,15 @@
   border-radius: 0.625rem;
 }
 
-.cancel-btn:hover {
+.save-btn {
+  background-color: initial;
+  border: 1px solid var(--tertiary-color);
   color: var(--tertiary-color);
-  background-color: rgba(28, 81, 142, 0.1);
+  border-radius: 0.625rem;
 }
 
-.save-btn {
-  border-radius: 0.625rem;
+.cancel-btn:hover,
+.save-btn:hover {
+  color: var(--tertiary-color);
+  background-color: rgba(28, 81, 142, 0.1);
 }

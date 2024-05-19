@@ -175,6 +175,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
     <Modal
       opened={opened}
       onClose={onClose}
+      radius="lg"
       centered
       className={`${styles["addlink-overlay-div"]} ${opened ? styles["opened"] : styles["closed"]}`}
       classNames={{

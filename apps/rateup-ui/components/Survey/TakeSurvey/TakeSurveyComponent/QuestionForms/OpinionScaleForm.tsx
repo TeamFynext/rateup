@@ -1,9 +1,16 @@
 import { useContext, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Button, Flex, Group, useMantineTheme } from "@mantine/core";
+import {
+  Button,
+  Flex,
+  Group,
+  isLightColor,
+  useMantineTheme,
+} from "@mantine/core";
 import styles from "./OpinionScaleForm.module.css";
 import { useAnimate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
 
 interface iProps {
   initValue?: any;
@@ -12,6 +19,14 @@ export function OpinionScaleForm({ initValue }: iProps) {
   const theme = useMantineTheme();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [isHovered, setIsHovered] = useState(null);
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
 
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
@@ -54,6 +69,12 @@ export function OpinionScaleForm({ initValue }: iProps) {
           onMouseLeave={handleLeave}
           radius="xs"
           variant={response === i || initValue == i ? "filled" : "outline"}
+          style={{
+            color:
+              response === i || initValue == i
+                ? foregroundColor
+                : themePrimaryColor,
+          }}
           styles={{
             root: {
               backgroundColor:

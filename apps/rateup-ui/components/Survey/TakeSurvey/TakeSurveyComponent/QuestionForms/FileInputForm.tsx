@@ -3,6 +3,7 @@ import {
   Group,
   Loader,
   LoadingOverlay,
+  luminance,
   rem,
   Stack,
   Text,
@@ -28,6 +29,14 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
+
+  const themePrimaryColor = theme.colors.primaryColor
+    ? theme.colors.primaryColor[5]
+    : "#1C518E";
+  const dragFileTextColor =
+    luminance(themePrimaryColor) > 0.8
+      ? `var(--mantine-color-gray-7)`
+      : themePrimaryColor;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const handleUploadedFiles = async () => {
@@ -111,11 +120,7 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
             />
           </Dropzone.Idle>
           <div>
-            <Text
-              size="md"
-              inline
-              c={`var(--mantine-color-${theme.primaryColor}-outline)`}
-            >
+            <Text size="md" inline c={dragFileTextColor}>
               Drag file here or click to select file
             </Text>
             <Text size="xs" c="dimmed" inline mt={7}>

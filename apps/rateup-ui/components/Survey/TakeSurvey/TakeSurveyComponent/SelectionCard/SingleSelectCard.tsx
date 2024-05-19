@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
   UnstyledButton,
+  isLightColor,
   useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
@@ -53,32 +54,41 @@ export function ImageCheckbox({
     hovered: boolean;
     ref: React.RefObject<HTMLButtonElement>;
   };
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
+
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
+
+  const optionStylesObj = {
+    border: `1px solid ${themePrimaryColor}`,
+    backgroundColor: !hovered
+      ? "transparent"
+      : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+    color: themePrimaryColor,
+  };
+
+  const isSelected = titleTypeString
+    ? selectedValue === title
+    : selectedValue === title.value;
+  const selectedOptionStylesObj = isSelected
+    ? {
+        backgroundColor: themePrimaryColor,
+        color: foregroundColor,
+      }
+    : {};
+
   return (
     <UnstyledButton
       {...others}
       ref={ref}
-      c={
-        (
-          titleTypeString
-            ? selectedValue === title
-            : selectedValue === title?.value
-        )
-          ? "var(--mantine-color-white)"
-          : `var(--mantine-color-${theme.primaryColor}-outline)`
-      }
-      bg={
-        (
-          titleTypeString
-            ? selectedValue === title
-            : selectedValue === title?.value
-        )
-          ? `var(--mantine-color-${theme.primaryColor}-filled)`
-          : !hovered
-            ? ""
-            : `var(--mantine-color-${theme.primaryColor}-outline-hover)`
-      }
       style={{
-        borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
+        ...optionStylesObj,
+        ...selectedOptionStylesObj,
       }}
       onClick={() => {
         handleChange(true);

@@ -27,6 +27,9 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
 
   const resetRef = useRef<() => void>(null);
 
+  const surveyThemeObj = useSurveyThemeData();
+  const pickedFileTextColor = surveyThemeObj?.surveyTheme?.title?.styles?.color;
+
   useEffect(() => {
     const uploadAndUpdate = async () => {
       if (file) {
@@ -136,7 +139,11 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
           </Box>
 
           {isImageSelected && (
-            <Text size="sm" style={{ textAlign: "center" }}>
+            <Text
+              size="sm"
+              style={{ textAlign: "center" }}
+              c={pickedFileTextColor}
+            >
               Picked file:{" "}
               {file?.name || getFileName(response, isPreview || false)}
             </Text>

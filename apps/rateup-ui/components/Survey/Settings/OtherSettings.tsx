@@ -11,14 +11,20 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import SurveyContext from "../../../context/SurveyContext";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { useDeleteSurveyMutation } from "../../../backend/surveys/surveys.query";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [
+    deleteModalOpened,
+    { open: openDeleteModal, close: closeDeleteModal },
+  ] = useDisclosure(false);
   const { surveyId } = useRouter().query as { surveyId: string };
   const { surveyTeamMapId } = useContext(SurveyContext);
   const [verifyEmail, setVerifyEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
+  const router = useRouter();
 
   const resetResponsesStats = useResetResponsesStats(
     surveyId,
@@ -55,6 +61,22 @@ const OtherSettings = () => {
     }
   };
 
+  const deleteSurveyMutation = useDeleteSurveyMutation();
+
+  const confirmDeleteSurvey = () => {
+    notifications.show({
+      id: "delete-survey",
+      loading: true,
+      title: "Deleting survey..",
+      message: `Hold on, survey is getting deleted...`,
+      autoClose: true,
+      withCloseButton: false,
+    });
+    setIsLoading(true);
+    deleteSurveyMutation.mutate(surveyId);
+    router.push(`/dashboard/surveys`);
+  };
+
   return (
     <>
       <PaperLayout shadow="xl" p={"xl"}>
@@ -63,11 +85,18 @@ const OtherSettings = () => {
             <Title order={4}>DANGER ZONE</Title>
             <Text c="dimmed">Reset data and responses</Text>
           </Stack>
-          <RateupButtonBlue
-            color="red"
-            title="Reset Response data"
-            onClick={open}
-          />
+          <Stack>
+            <RateupButtonBlue
+              color="red"
+              title="Reset Response data"
+              onClick={open}
+            />
+            <RateupButtonBlue
+              color="red"
+              title="Delete Survey"
+              onClick={openDeleteModal}
+            />
+          </Stack>
         </Group>
       </PaperLayout>
       <FormModalLayout
@@ -93,6 +122,21 @@ const OtherSettings = () => {
             Once reset, all response data will be lost.
           </Text>
         </Stack>
+      </FormModalLayout>
+      <FormModalLayout
+        opened={deleteModalOpened}
+        onClose={close}
+        centered
+        title="Confirm Delete Survey"
+        buttonTitle="Confirm"
+        includeCancelButton
+        isLoading={isLoading}
+        onSubmit={confirmDeleteSurvey}
+      >
+        <Text style={{ color: "red" }}>
+          Are you sure you want to delete this survey? <br />
+          This action cannot be undone..!!
+        </Text>
       </FormModalLayout>
     </>
   );

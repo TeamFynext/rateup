@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Box, Group } from "@mantine/core";
+import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import { YNResponse } from "../../../../../types/enums";
 import styles from "./YNForm.module.css";
@@ -11,6 +11,11 @@ export function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
+  const mantineTheme = useMantineTheme();
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const handleYesOrNOClick = async (e, value: YNResponse) => {
     const clickedBtn = e.target;
@@ -27,6 +32,10 @@ export function YNForm() {
     }
   };
 
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
+
   return (
     <Group>
       <Box w={100}>
@@ -38,6 +47,10 @@ export function YNForm() {
           fullWidth
           className={styles["yes-no-btn"]}
           onClick={(e) => handleYesOrNOClick(e, YNResponse.No)}
+          sx={{
+            color:
+              response === YNResponse.No ? foregroundColor : themePrimaryColor,
+          }}
         />
       </Box>
       <Box w={100}>
@@ -49,6 +62,10 @@ export function YNForm() {
           fullWidth
           className={styles["yes-no-btn"]}
           onClick={(e) => handleYesOrNOClick(e, YNResponse.Yes)}
+          sx={{
+            color:
+              response === YNResponse.Yes ? foregroundColor : themePrimaryColor,
+          }}
         />
       </Box>
     </Group>

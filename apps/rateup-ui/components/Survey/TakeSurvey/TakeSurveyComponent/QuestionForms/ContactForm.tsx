@@ -77,12 +77,7 @@ const ContactForm = ({ features }) => {
                 input: classes.input,
                 root: classes.textRoot,
               }}
-              leftSection={
-                <IconMail
-                  size="1.2rem"
-                  color={`var(--mantine-color-${theme.primaryColor}-outline)`}
-                />
-              }
+              leftSection={<IconMail size="1.2rem" />}
               styles={{
                 section: {
                   zIndex: 0,
