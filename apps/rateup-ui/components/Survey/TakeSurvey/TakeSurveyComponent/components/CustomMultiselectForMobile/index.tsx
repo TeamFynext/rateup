@@ -27,7 +27,9 @@ const cx = classNames.bind(styles);
 
 function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
   const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const primaryColor =
     luminance(themePrimaryColor) > 0.8

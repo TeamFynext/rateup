@@ -46,7 +46,9 @@ export function ImageCheckbox({
   };
 
   const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const foregroundColor = isLightColor(themePrimaryColor)
     ? "#000000"

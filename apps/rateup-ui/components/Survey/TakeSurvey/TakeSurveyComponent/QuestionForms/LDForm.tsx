@@ -14,7 +14,9 @@ export function LDForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();

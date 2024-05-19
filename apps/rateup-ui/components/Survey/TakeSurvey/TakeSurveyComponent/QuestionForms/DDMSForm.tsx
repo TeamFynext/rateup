@@ -27,7 +27,9 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor[5];
+  const themePrimaryColor = mantineTheme.colors.primaryColor
+    ? mantineTheme.colors.primaryColor[5]
+    : "#1C518E";
 
   const pillBgColor =
     luminance(themePrimaryColor) > 0.8
