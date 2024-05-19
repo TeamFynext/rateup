@@ -1,14 +1,15 @@
-import { Divider, Group, Stack, Text } from "@mantine/core";
+import { ActionIcon, Divider, Group, Loader, Stack, Text } from "@mantine/core";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
-import { IconSearch } from "@tabler/icons-react";
+import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import WaInboxChatSelectCard from "./chatselectCard";
 import { ContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebouncedValue, useElementSize } from "@mantine/hooks";
 import { parseWaMessage } from "../../../../utils/whatsapp/inbox";
 import { FixedSizeList as List } from "react-window";
 import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
+import { useContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
 }) {
@@ -20,6 +21,17 @@ export default function WaInboxChatSelect(props: {
   const { ref, width, height } = useElementSize();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 300);
+  const [shouldFetchAgain, setShouldFetchAgain] = useState(true);
+
+  const {
+    error, // Error
+    fetchNextPage,
+    isError,
+    data,
+    isFetchingNextPage,
+    refetch,
+    isRefetching,
+  } = useContactsWithLastMessage();
 
   if (!props.contacts) {
     return null;
@@ -57,7 +69,7 @@ export default function WaInboxChatSelect(props: {
               return c.groups.includes(f.value);
             } else {
               // Otherwise, check if the tags object has a matching key-value pair
-              return c.tags[f.group] === f.value;
+              return c?.tags[f.group] === f.value ?? false;
             }
           });
         });
@@ -69,7 +81,7 @@ export default function WaInboxChatSelect(props: {
               return c.groups.includes(f.value);
             } else {
               // Otherwise, check if the tags object has a matching key-value pair
-              return c.tags[f.group] === f.value;
+              return c?.tags[f.group] === f.value ?? false;
             }
           });
         });
@@ -77,6 +89,14 @@ export default function WaInboxChatSelect(props: {
     }
     return result;
   }
+  useEffect(() => {
+    if (
+      data.pages.length > 0 &&
+      data.pages[data.pages.length - 1].length === 0
+    ) {
+      setShouldFetchAgain(false);
+    }
+  }, [data]);
 
   return (
     <Stack className={classes.wrapper}>
@@ -94,6 +114,14 @@ export default function WaInboxChatSelect(props: {
               <Text className={classes.chat_indicator_text}>
                 {filterContacts(contactListToDisplay)?.length || 0} Chats
               </Text>
+              {isFetchingNextPage && <Loader size={10} />}
+              <ActionIcon
+                size={"xs"}
+                loading={isRefetching}
+                onClick={() => refetch()}
+              >
+                <IconRefresh />
+              </ActionIcon>
             </Group>
           </Stack>
           <WaInboxChatFilter
@@ -108,6 +136,16 @@ export default function WaInboxChatSelect(props: {
           width={width}
           itemCount={filterContacts(contactListToDisplay)?.length || 0}
           itemSize={69}
+          onItemsRendered={(e) => {
+            if (
+              !isFetchingNextPage &&
+              shouldFetchAgain &&
+              e.visibleStopIndex === contactListToDisplay.length - 1
+            ) {
+              fetchNextPage();
+            }
+          }}
+          overscanCount={2}
         >
           {({ index, style }) => {
             // Get the contact for this index
@@ -121,6 +159,11 @@ export default function WaInboxChatSelect(props: {
             );
           }}
         </List>
+        {isError && (
+          <Text size="xs" c="red">
+            {error?.message}
+          </Text>
+        )}
       </div>
     </Stack>
   );

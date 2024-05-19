@@ -60,7 +60,7 @@ export default function WaInboxChatFilter(props: Props) {
       let items = Array.from(
         new Set(
           contacts
-            .filter((contact) => contact.tags[tag])
+            .filter((contact) => contact?.tags && contact.tags[tag])
             .map((contact) => contact.tags[tag]),
         ),
       );
