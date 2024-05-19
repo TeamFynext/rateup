@@ -11,7 +11,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery, useViewportSize } from "@mantine/hooks";
-import { IconCircleCheck, IconHome } from "@tabler/icons-react";
+import { IconHome } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -374,24 +374,6 @@ export default function ThankYou({
                     flex: 0,
                   }}
                 >
-                  {orgLogoSrc ? (
-                    <Image
-                      src={orgLogoSrc}
-                      alt="Rateup"
-                      height={"auto"}
-                      style={orgLogoStyles}
-                      fit="contain"
-                    />
-                  ) : (
-                    <IconCircleCheck
-                      size={"3rem"}
-                      style={orgLogoStyles}
-                      color={
-                        surveyThemeData?.thankyouTheme?.title?.styles?.color ??
-                        "#fff"
-                      }
-                    />
-                  )}
                   <Title
                     order={1}
                     style={{
