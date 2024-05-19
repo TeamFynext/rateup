@@ -18,6 +18,15 @@ export const widgetIds = [
   "menu_m4",
   "menu_m5",
   "Nil",
+  "survey_m1_dollar",
+  "survey_m2_dollar",
+  "survey_m3_dollar",
+  "survey_m4_dollar",
+  "menu_m1_dollar",
+  "menu_m2_dollar",
+  "menu_m3_dollar",
+  "menu_m4_dollar",
+  "menu_m5_dollar",
 ];
 
 export const samplePictureChoices = [
