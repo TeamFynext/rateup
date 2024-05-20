@@ -1,12 +1,17 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createPayment,
+  deleteStripeProduct,
   getAllStripeSubscriptions,
   getStripeProducts,
   syncStripeProducts,
   updateStripeProduct,
 } from "./stripe.service";
-import { GetSessionStatusQuery, updateProductInput } from "./stripe.schema";
+import {
+  productIdParamsInput,
+  updateProductInput,
+  GetSessionStatusQuery,
+} from "./stripe.schema";
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
 interface SessionRetrieveRequest {
@@ -138,6 +143,19 @@ export async function updateStripeProductsHandler(
   try {
     const { productId, ...data } = request.body;
     const res = await updateStripeProduct(productId, data);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteStripeProductsHandler(
+  request: FastifyRequest<{ Params: productIdParamsInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await deleteStripeProduct(request.params.productId);
     reply.code(200).send(res);
   } catch (e) {
     console.error(e);

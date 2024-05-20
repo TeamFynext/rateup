@@ -3,9 +3,31 @@ import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { log } from "../../utils/logger";
+import dayjs from "dayjs";
 
+type campaginExtentend = {
+  team: {
+    id: string;
+    createdAt: Date;
+    name: string;
+    code: string;
+    googleLink: string;
+    tags: string[];
+    orgId: string;
+  };
+  waTemplate: {
+    data: {};
+  };
+  campaignParticipants: {
+    status: string;
+    WaMessageCampaginParticipantMap: any[];
+    waStatus?: string;
+  }[];
+  flowId?: string;
+  stats?: {};
+};
 export async function getCampaignById(campaignId: string) {
-  const campaign = await prisma.campaign.findUnique({
+  const campaign: campaginExtentend = await prisma.campaign.findUnique({
     where: {
       id: campaignId,
     },
@@ -43,25 +65,70 @@ export async function getCampaignById(campaignId: string) {
       },
     },
   });
-  campaign.campaignParticipants.forEach((participant: any) => {
-    // Find the latest status and timestamp
+  let countRead = 0;
+  let countSent = 0;
+  let countFailed = 0;
+  let countDelivered = 0;
+  let countPending = 0;
+  let countCompleted = 0;
+
+  function getLatestStatus(participant) {
     let latestStatus = null;
     let latestTimestamp = null;
 
     participant.WaMessageCampaginParticipantMap.forEach((mapping) => {
       Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
-        if (timestamp) {
-          if (!latestTimestamp || timestamp > latestTimestamp) {
-            latestTimestamp = timestamp;
-            latestStatus = status;
-          }
+        if (
+          timestamp &&
+          (!latestTimestamp ||
+            dayjs(timestamp as string).isAfter(latestTimestamp))
+        ) {
+          latestTimestamp = dayjs(timestamp as string);
+          latestStatus = status;
         }
       });
     });
 
-    // Assign the latest status to waStatus
+    return latestStatus;
+  }
+
+  function updateCounters(stats) {
+    if (stats.read) countRead++;
+    if (stats.sent) countSent++;
+    if (stats.delivered) countDelivered++;
+  }
+
+  campaign.campaignParticipants.forEach((participant) => {
+    const participantStatus = participant.status;
+    const latestStatus = getLatestStatus(participant);
+
+    if (participantStatus === CampaignParticipantStatus.PENDING) {
+      countPending++;
+    } else if (participantStatus === CampaignParticipantStatus.FAILED) {
+      countFailed++;
+    } else {
+      participant.WaMessageCampaginParticipantMap.forEach((item) => {
+        updateCounters(item.waMessage.stats);
+      });
+    }
+    if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
+      countFailed++;
+    }
+    const FlowId = campaign?.flowId;
+    if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED)
+      countCompleted++;
     participant.waStatus = latestStatus;
+    delete participant.WaMessageCampaginParticipantMap;
   });
+
+  campaign.stats = {
+    countRead,
+    countSent,
+    countFailed,
+    countDelivered,
+    countPending,
+    countCompleted,
+  };
   return campaign;
 }
 
