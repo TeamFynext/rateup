@@ -89,7 +89,7 @@ export async function syncStripeProducts() {
       productId: product?.id,
       priceId: product?.default_price,
       currency: price?.currency,
-      amount: price?.unit_amount,
+      amount: price?.unit_amount / 100,
       interval: price?.recurring?.interval,
       intervalCount: price?.recurring?.interval_count,
       type: price.type,
@@ -145,5 +145,13 @@ export async function updateStripeProduct(productId, data) {
       productId,
     },
     data,
+  });
+}
+
+export async function deleteStripeProduct(productId) {
+  return await prisma.stripeProducts.delete({
+    where: {
+      productId,
+    },
   });
 }

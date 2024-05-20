@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   createCheckoutSessionHandler,
+  deleteStripeProductsHandler,
   getAllStripeSubscriptionsHandler,
   getSessionStatusHandler,
   getStripeProductsHandler,
@@ -76,5 +77,14 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
       },
     },
     updateStripeProductsHandler,
+  );
+  server.delete(
+    "/product/:productId",
+    {
+      schema: {
+        params: $PSref("productIdParamsSchema"),
+      },
+    },
+    deleteStripeProductsHandler,
   );
 }
