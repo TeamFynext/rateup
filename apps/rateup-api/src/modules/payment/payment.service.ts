@@ -152,6 +152,16 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
       return { code: 400, data: "Payment Plan Id is already in Use" };
     }
   }
+  if (data?.stripeId) {
+    const existData = await prisma.rateupPlan.findFirst({
+      where: {
+        stripeId: data?.stripeId,
+      },
+    });
+    if (existData) {
+      return { code: 400, data: "Plan is already in Use" };
+    }
+  }
   if (data?.displayWidgetId) {
     await prisma.rateupPlan.updateMany({
       where: {
@@ -171,6 +181,9 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
       planType: data.planType as PaymentPlanType,
       paymentPlan: data?.paymentPlanId
         ? { connect: { id: data?.paymentPlanId } }
+        : undefined,
+      stripeProduct: data?.stripeId
+        ? { connect: { id: data?.stripeId } }
         : undefined,
       features: data.features ? JSON.parse(data.features) : null,
     },
@@ -193,6 +206,19 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       return { code: 400, data: "Payment Plan Id is already in Use" };
     }
   }
+  if (data?.stripeId) {
+    const existData = await prisma.rateupPlan.findFirst({
+      where: {
+        stripeId: data?.stripeId,
+        id: {
+          not: data?.id,
+        },
+      },
+    });
+    if (existData) {
+      return { code: 400, data: "Payment Plan Id is already in Use" };
+    }
+  }
   if (data?.displayWidgetId) {
     await prisma.rateupPlan.updateMany({
       where: {
@@ -203,6 +229,7 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       },
     });
   }
+
   const plans = await prisma.rateupPlan.update({
     data: {
       name: data?.name,
@@ -212,6 +239,9 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       planType: data?.planType as PaymentPlanType,
       paymentPlan: data?.paymentPlanId
         ? { connect: { id: data?.paymentPlanId } }
+        : undefined,
+      stripeProduct: data?.stripeId
+        ? { connect: { id: data?.stripeId } }
         : undefined,
       features: data?.features,
     },
