@@ -139,13 +139,14 @@ export async function getWaMessagesByContactIdHandler(
 }
 
 export async function getContactsWithLastMessageHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: PaginateQuerySchema }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    const contacts = await getContactsWithLastMessage(orgId);
-    reply.send(contacts);
+    const { page } = request.query;
+    const contacts = await getContactsWithLastMessage(orgId, parseInt(page));
+    reply.status(200).send(contacts);
   } catch (error) {
     console.log(error);
     reply.status(500).send("Internal Server Error");
