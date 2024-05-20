@@ -29,7 +29,10 @@ export const useSendNewWaMessage = (contactId: string) => {
 };
 
 export const useContactsWithLastMessage = () =>
-  useQuery({
+  useInfiniteQuery({
     queryKey: ["contacts", "last-message"],
-    queryFn: getContactsWithLastMessage,
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => getContactsWithLastMessage(pageParam),
+    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    placeholderData: { pages: [], pageParams: [] },
   });

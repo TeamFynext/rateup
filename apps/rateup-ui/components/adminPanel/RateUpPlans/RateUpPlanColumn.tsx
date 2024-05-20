@@ -14,6 +14,7 @@ import styles from "../../../components/adminPanel/admin.module.css";
 
 export const generateColumns = (
   data,
+  stripeProducts,
   handleMutation,
   setUpdatedField,
   rateupPaymentsPlanDelete,
@@ -120,6 +121,26 @@ export const generateColumns = (
         };
       },
       valueOptions: data,
+    },
+    {
+      field: "stripeId",
+      headerName: "Stripe Product",
+      width: 220,
+      cellClassName: styles.idCell,
+      editable: true,
+      type: "singleSelect",
+      preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
+        if (params.hasChanged) {
+          handleMutation({
+            id: params.id,
+            stripeId: params.props.value,
+          });
+        }
+        return {
+          ...params.props,
+        };
+      },
+      valueOptions: stripeProducts,
     },
     {
       field: "features",

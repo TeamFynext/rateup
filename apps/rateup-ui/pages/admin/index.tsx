@@ -18,7 +18,7 @@ export default function Page() {
       <RateupButtonPrimary
         title="Manage Razorpay Plans"
         size="md"
-        onClick={() => router.push("/admin/razorpay/plans")}
+        onClick={() => router.push("/admin/razorpay")}
       />
     </Stack>
   );
