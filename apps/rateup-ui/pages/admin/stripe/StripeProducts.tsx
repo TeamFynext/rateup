@@ -1,11 +1,22 @@
-import { Badge, Flex, Stack } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Blockquote,
+  Flex,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import {
   DataGrid,
+  GridActionsCellItem,
   GridColDef,
   GridPreProcessEditCellProps,
   GridRenderCellParams,
 } from "@mui/x-data-grid";
 import {
+  useDeleteStripeProduct,
   useGetStripeProducts,
   useSyncStripeProducts,
   useUpdateStripeProduct,
@@ -13,13 +24,31 @@ import {
 import { PaymentPlanStatus } from "../../../types/enums";
 import dayjs from "dayjs";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
-import { IconRefresh } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconInfoCircle,
+  IconRefresh,
+  IconTrash,
+} from "@tabler/icons-react";
 import classes from "../../../components/Graph/graph.module.css";
+import { useDisclosure } from "@mantine/hooks";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import {
+  showLoadingToast,
+  showSuccessToast,
+} from "../../../utils/notifications";
+import { useState } from "react";
 
 const StripeProducts = () => {
-  const { data: products } = useGetStripeProducts();
+  const { data: products, isRefetching, refetch } = useGetStripeProducts();
   const updateProductMutate = useUpdateStripeProduct();
   const syncStripeProductMutate = useSyncStripeProducts();
+  const deleteStripeProduct = useDeleteStripeProduct();
+  const [
+    openedDeleteModal,
+    { open: openDeleteModal, close: closeDeleteModal },
+  ] = useDisclosure(false);
+  const [productId, setProductId] = useState("");
   const columns: GridColDef[] = [
     { field: "id", headerName: "Product ID", width: 200 },
     { field: "name", headerName: "Name", width: 200 },
@@ -75,6 +104,30 @@ const StripeProducts = () => {
       ],
     },
     { field: "createdAt", headerName: "Created At", width: 200 },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
+      width: 100,
+      cellClassName: "actions",
+      getActions: ({ id, row }) => {
+        return [
+          <GridActionsCellItem
+            icon={<IconTrash />}
+            label="Delete"
+            disabled={[
+              PaymentPlanStatus.ACTIVE,
+              PaymentPlanStatus.LIVE,
+            ].includes(row.status)}
+            onClick={() => {
+              setProductId(id as string);
+              openDeleteModal();
+            }}
+            color="inherit"
+          />,
+        ];
+      },
+    },
   ];
   const rows = products
     ? products?.map((product) => ({
@@ -93,26 +146,70 @@ const StripeProducts = () => {
       }))
     : [];
 
+  const handleDeleteProduct = () => {
+    deleteStripeProduct.mutate(productId);
+  };
   return (
-    <Stack py={"xs"} h={"74vh"}>
-      <Flex justify={"flex-end"} py={"xs"}>
-        {" "}
-        <RateupButtonSecondary
-          title="Sync Data"
-          leftIcon={
-            <IconRefresh
-              className={
-                syncStripeProductMutate.isPending
-                  ? classes.rotateInfinitely
-                  : null
-              }
-              stroke={1.3}
-            />
-          }
-          onClick={() => syncStripeProductMutate.mutate()}
-        />
-      </Flex>
+    <Stack pt={"lg"} h={"74vh"}>
+      <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
+        <Group justify="space-between">
+          <Group gap={"xs"}>
+            <Text>List of products from Stripe DB</Text>
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
+                  await refetch();
+                  showSuccessToast(
+                    "Data updated successfully",
+                    "",
+                    <IconCheck />,
+                  );
+                }}
+              >
+                <IconRefresh
+                  style={{ width: "80%", height: "80%" }}
+                  className={isRefetching ? classes.rotateInfinitely : null}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+          <RateupButtonSecondary
+            title="Sync"
+            leftIcon={
+              <IconRefresh
+                className={
+                  syncStripeProductMutate.isPending
+                    ? classes.rotateInfinitely
+                    : null
+                }
+                stroke={1.3}
+              />
+            }
+            onClick={() => syncStripeProductMutate.mutate()}
+          />
+        </Group>
+      </Blockquote>
       <DataGrid rows={rows} columns={columns} />
+      <ConfirmationModal
+        opened={openedDeleteModal}
+        onClose={closeDeleteModal}
+        forDeleteFunctionality
+        confirmLabel="Delete"
+        headerTitle="Delete Stripe Product"
+        onConfirm={() => {
+          showLoadingToast(
+            "Hold on..Stripe Product is getting deleted",
+            "stripe",
+            true,
+            "Deleting Stripe product",
+          );
+          handleDeleteProduct();
+        }}
+        headerLabel="Are you sure to delete this stripe product?"
+        closeLabel="cancel"
+      />
     </Stack>
   );
 };

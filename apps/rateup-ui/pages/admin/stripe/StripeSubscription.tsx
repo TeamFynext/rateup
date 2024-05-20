@@ -1,9 +1,16 @@
-import { Badge, Flex, Stack } from "@mantine/core";
+import {
+  Badge,
+  Blockquote,
+  Text,
+  Group,
+  Stack,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import { GridColDef, DataGrid, GridRenderCellParams } from "@mui/x-data-grid";
 import { useGetAllStripeSubscriptions } from "../../../backend/payment/stripe/stripe.query";
 import dayjs from "dayjs";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
-import { IconRefresh } from "@tabler/icons-react";
+import { IconCheck, IconInfoCircle, IconRefresh } from "@tabler/icons-react";
 import classes from "../../../components/Graph/graph.module.css";
 import { showSuccessToast } from "../../../utils/notifications";
 
@@ -13,7 +20,7 @@ const StripeSubscription = () => {
     refetch,
     isRefetching,
   } = useGetAllStripeSubscriptions();
-  console.log("subscriptions", subscriptions);
+
   const columns: GridColDef[] = [
     { field: "id", headerName: "Subscription ID", width: 300 },
     { field: "productName", headerName: "Product Name", width: 200 },
@@ -23,7 +30,15 @@ const StripeSubscription = () => {
       field: "status",
       headerName: "Status",
       renderCell: (params: GridRenderCellParams<any, any>) => {
-        return <Badge>{params.value}</Badge>;
+        return (
+          <Badge
+            color={
+              ["active", "trialing"].includes(params.value) ? "green" : "red"
+            }
+          >
+            {params.value}
+          </Badge>
+        );
       },
       width: 200,
     },
@@ -40,22 +55,33 @@ const StripeSubscription = () => {
       }))
     : [];
   return (
-    <Stack py={"xs"} h={"74vh"}>
-      <Flex justify={"flex-end"} py={"xs"}>
-        <RateupButtonSecondary
-          title="Refresh Data"
-          leftIcon={
-            <IconRefresh
-              className={isRefetching ? classes.rotateInfinitely : null}
-              stroke={1.3}
-            />
-          }
-          onClick={async () => {
-            await refetch();
-            showSuccessToast("Updated Successfully");
-          }}
-        />
-      </Flex>
+    <Stack pt={"lg"} h={"74vh"}>
+      <Blockquote icon={<IconInfoCircle />} color="blue" p={"md"}>
+        <Group justify="space-between">
+          <Group gap={"xs"}>
+            <Text>List of subscriptions from stripe DB</Text>
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
+                  await refetch();
+                  showSuccessToast(
+                    "Data updated successfully",
+                    "",
+                    <IconCheck />,
+                  );
+                }}
+              >
+                <IconRefresh
+                  style={{ width: "80%", height: "80%" }}
+                  className={isRefetching ? classes.rotateInfinitely : null}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+      </Blockquote>
       <DataGrid rows={rows} columns={columns} />
     </Stack>
   );
