@@ -5,19 +5,42 @@ import {
 } from "@stripe/react-stripe-js";
 
 import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/router";
+import { useCreateStripeCheckoutSession } from "../../../../backend/payment/stripe/stripe.query";
 
 //stripe checkout
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY, {});
 
 const Checkout = () => {
+  const router = useRouter();
+  const { pid } = router.query;
+
   const [isLoading, setIsLoading] = useState(false);
   const [loadStripe, setLoadStripe] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
 
+  const createCheckout = useCreateStripeCheckoutSession(setIsLoading);
+
+  useEffect(() => {
+    pid && handleStripe();
+  }, [pid]);
+
+  function handleStripe() {
+    let data = { priceId: pid };
+    createCheckout.mutate(data, {
+      onSuccess: (data) => {
+        console.log("data", data?.data);
+        setClientSecret(data?.data?.clientSecret);
+        setLoadStripe(true);
+      },
+      onError: () => {},
+    });
+  }
+
   return (
     <div>
-      {loadStripe && clientSecret && (
+      {pid && clientSecret && (
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
           options={{ clientSecret }}

@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import {
   createStripeCheckoutSession,
   getAllStripeSubscriptions,
+  getCheckoutSession,
   getStripeProducts,
   syncStripeProducts,
   updateStripeProduct,
@@ -43,6 +44,14 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
     },
   });
 }
+
+export const useGetStripeCheckoutSession = (sessionId) => {
+  return useQuery({
+    enabled: !!sessionId,
+    queryFn: () => getCheckoutSession(sessionId),
+    queryKey: ["checkoutSessionStatus"],
+  });
+};
 
 export const useSyncStripeProducts = () => {
   return useMutation({

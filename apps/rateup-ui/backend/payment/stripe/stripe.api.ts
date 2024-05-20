@@ -6,6 +6,14 @@ export async function createStripeCheckoutSession(data: any) {
   return await axiosClient.post(`${STRIPE_URL}/create-checkout-session`, data);
 }
 
+export async function getCheckoutSession(sessionId: string) {
+  return (
+    await axiosClient.get(
+      `${STRIPE_URL}/session-status?session_id=${sessionId}`,
+    )
+  ).data as any;
+}
+
 export async function syncStripeProducts() {
   return (await axiosClient.post(`${STRIPE_URL}/sync-products`)).data;
 }

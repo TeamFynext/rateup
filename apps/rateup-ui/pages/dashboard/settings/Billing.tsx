@@ -37,8 +37,9 @@ import {
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
 import { useCreateStripeCheckoutSession } from "../../../backend/payment/stripe/stripe.query";
+import { useRouter } from "next/router";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY, {});
+// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY, {});
 
 const Billing = ({
   subscription,
@@ -81,12 +82,13 @@ const Billing = ({
   const [cancelDialogOpened, { open, close }] = useDisclosure();
   const CancelSubscription = useCancelRazorpaySubscriptionMutation();
   const { ref, width } = useElementSize();
+  const router = useRouter();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadStripe, setLoadStripe] = useState(false);
-  const [clientSecret, setClientSecret] = useState("");
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [loadStripe, setLoadStripe] = useState(false);
+  // const [clientSecret, setClientSecret] = useState("");
 
-  const createCheckout = useCreateStripeCheckoutSession(setIsLoading);
+  // const createCheckout = useCreateStripeCheckoutSession(setIsLoading);
 
   const handleCancelSubscription = () => {
     showLoadingToast(
@@ -107,30 +109,37 @@ const Billing = ({
     refreshOrders();
   }
 
-  function handleStripe() {
-    let data = { priceId: "price_1PGQRySEU5WPzKjqmpSIcB4N" };
-    createCheckout.mutate(data, {
-      onSuccess: (data) => {
-        console.log("data", data?.data);
-        setClientSecret(data?.data?.clientSecret);
-        setLoadStripe(true);
-      },
-      onError: () => {},
-    });
-  }
+  // function handleStripe() {
+  //   let data = { priceId: "price_1PGQRySEU5WPzKjqmpSIcB4N" };
+  //   createCheckout.mutate(data, {
+  //     onSuccess: (data) => {
+  //       console.log("data", data?.data);
+  //       setClientSecret(data?.data?.clientSecret);
+  //       setLoadStripe(true);
+  //     },
+  //     onError: () => {},
+  //   });
+  // }
 
   return (
     <>
-      {loadStripe && clientSecret && (
+      {/* {loadStripe && clientSecret && (
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
           options={{ clientSecret }}
         >
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
-      )}
+      )} */}
 
-      <RateupButtonPrimary title="Pay now Stripe" onClick={handleStripe} />
+      <RateupButtonPrimary
+        title="Pay now Stripe"
+        onClick={() => {
+          router.push(
+            "/dashboard/payment/checkout?pid=price_1PGQRySEU5WPzKjqmpSIcB4N",
+          );
+        }}
+      />
 
       {processingPayment ? (
         <Loader type="bars" />
