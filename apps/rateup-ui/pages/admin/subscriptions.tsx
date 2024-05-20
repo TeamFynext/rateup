@@ -4,7 +4,7 @@ import {
   useUpdateSubscriptionMutation,
 } from "../../backend/subscription/subscription.query";
 import dayjs from "dayjs";
-import { Flex, Group, Input, Skeleton } from "@mantine/core";
+import { CloseButton, Flex, Group, Input, Skeleton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { SubscriptionEditorModal } from "../../components/adminPanel/Subscription/SubscriptionEditorModal";
 import { FeatureBadge } from "../../components/adminPanel/Subscription/FeatureBadge";
@@ -13,6 +13,7 @@ import styles from "../../components/adminPanel/admin.module.css";
 import { useRateupPaymentsPlans } from "../../backend/payment/payment.query";
 import { useState } from "react";
 import ConfirmationModal from "../../components/Modal/ConfirmationModal";
+import { IconSearch } from "@tabler/icons-react";
 
 export default function () {
   const {
@@ -108,9 +109,19 @@ export default function () {
       <Flex justify="space-between">
         <h1>Subscriptions</h1>
         <Input
-          placeholder="🔍  Search by OrgName or orgId"
+          placeholder="Search by OrgName or orgId"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          rightSectionPointerEvents="all"
+          mt="md"
+          leftSection={<IconSearch size={16} />}
+          rightSection={
+            <CloseButton
+              aria-label="Clear input"
+              onClick={() => setSearchQuery("")}
+              style={{ display: searchQuery ? undefined : "none" }}
+            />
+          }
           style={{ width: "300px" }}
         />
       </Flex>
