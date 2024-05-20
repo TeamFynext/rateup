@@ -6,7 +6,7 @@ import {
   syncStripeProducts,
   updateStripeProduct,
 } from "./stripe.service";
-import { updateProductInput } from "./stripe.schema";
+import { GetSessionStatusQuery, updateProductInput } from "./stripe.schema";
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
 interface SessionRetrieveRequest {
@@ -23,19 +23,19 @@ export async function createCheckoutSessionHandler(
       {
         // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
         //TODO make dynamic
-        price: "price_1PGQRySEU5WPzKjqmpSIcB4N",
+        price: "price_1PIE1ASEU5WPzKjq5wA24XhE",
         quantity: 1,
       },
     ],
     mode: "subscription",
-    return_url: `${process.env.FRONTEND_URL}/payment/return?session_id={CHECKOUT_SESSION_ID}`,
+    return_url: `${process.env.FRONTEND_URL}/dashboard/payment/summary?session_id={CHECKOUT_SESSION_ID}`,
   });
 
   reply.send({ clientSecret: session.client_secret });
 }
 
 export async function getSessionStatusHandler(
-  request: FastifyRequest<{ Querystring: SessionRetrieveRequest }>,
+  request: FastifyRequest<{ Querystring: GetSessionStatusQuery }>,
   reply: FastifyReply,
 ) {
   const session = await stripe.checkout.sessions.retrieve(
@@ -44,6 +44,7 @@ export async function getSessionStatusHandler(
 
   reply.send({
     status: session.status,
+    payment_status: session.payment_status,
     customer_email: session.customer_details.email,
   });
 }

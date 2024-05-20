@@ -47,9 +47,9 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
   server.get(
     "/session-status",
     {
-      //   schema: {
-      //     params: $PSref(""),
-      //   },
+      schema: {
+        querystring: $PSref("getSessionStatus"),
+      },
     },
     getSessionStatusHandler,
   );
