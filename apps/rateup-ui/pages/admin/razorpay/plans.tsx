@@ -1,11 +1,11 @@
 import {
   Box,
   Stack,
-  Title,
   Group,
-  Tooltip,
-  ActionIcon,
   Blockquote,
+  Text,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
 import React, { useState } from "react";
 import {
@@ -23,13 +23,22 @@ import {
   usePlanSyncMutation,
 } from "../../../backend/payment/payment.query";
 import dayjs from "dayjs";
-import { notifications } from "@mantine/notifications";
-import { IconInfoCircle, IconRefresh, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconInfoCircle,
+  IconRefresh,
+  IconTrash,
+} from "@tabler/icons-react";
 import { PaymentPlanStatus } from "../../../types/enums";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import { showLoadingToast } from "../../../utils/notifications";
+import {
+  showLoadingToast,
+  showSuccessToast,
+} from "../../../utils/notifications";
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import classes from "../../../components/Graph/graph.module.css";
 
 const RazorpayPlans = () => {
   const syncPlans = usePlanSyncMutation();
@@ -120,7 +129,13 @@ const RazorpayPlans = () => {
     },
   ];
 
-  const { data: plans, isLoading, isError } = usePaymentsPlans();
+  const {
+    data: plans,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = usePaymentsPlans();
   if (isError) return <div>error occured</div>;
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
@@ -141,32 +156,47 @@ const RazorpayPlans = () => {
     : [];
 
   return (
-    <Stack mah={"100%"} py={"md"}>
-      <Group gap={"md"}>
-        <Title order={4}>Razorpay Plans</Title>
-        <Tooltip label="Refresh data">
-          <ActionIcon
-            variant="light"
-            ml="xs"
-            mr="50px"
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-              syncPlans.mutate();
-              notifications.show({
-                id: "load-data",
-                color: "teal",
-                title: "Refreshing data",
-                loading: true,
-                message: "Hold.. your data is getting update...",
-                autoClose: 2000,
-              });
-            }}
-          >
-            <IconRefresh style={{ width: "80%", height: "80%" }} stroke={1.5} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+    <Stack mah={"100%"} pt={"lg"}>
       <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
-        List of plans from Razorpay DB{" "}
+        <Group justify="space-between">
+          <Group gap={"xs"}>
+            <Text>List of plans from Razorpay DB</Text>
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
+                  await refetch();
+                  showSuccessToast(
+                    "Data updated successfully",
+                    "",
+                    <IconCheck />,
+                  );
+                }}
+              >
+                <IconRefresh
+                  style={{ width: "80%", height: "80%" }}
+                  className={isRefetching ? classes.rotateInfinitely : null}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+
+          <RateupButtonSecondary
+            title="Sync"
+            leftIcon={
+              <IconRefresh
+                className={
+                  syncPlans.isPending ? classes.rotateInfinitely : null
+                }
+                stroke={1.3}
+              />
+            }
+            onClick={async () => {
+              syncPlans.mutate();
+            }}
+          />
+        </Group>
       </Blockquote>
       <Box h={"52vh"}>
         <DataGrid

@@ -14,6 +14,10 @@ export async function updateStripeProduct(data) {
   return (await axiosClient.put(`${STRIPE_URL}/product`, data)).data;
 }
 
+export async function deleteStripeProduct(productId: string) {
+  return (await axiosClient.delete(`${STRIPE_URL}/product/${productId}`)).data;
+}
+
 export async function getStripeProducts() {
   return (await axiosClient.get(`${STRIPE_URL}/products`))
     .data as Array<StripeProduct>;

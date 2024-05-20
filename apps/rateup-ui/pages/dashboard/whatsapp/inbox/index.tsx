@@ -1,4 +1,4 @@
-import { Group, Loader, MantineProvider, Title } from "@mantine/core";
+import { Group, MantineProvider, Title } from "@mantine/core";
 import classes from "./styles.module.css";
 import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect";
 import WaInboxChatDisplay from "../../../../components/whatsapp/inbox/chatdisplay";
@@ -32,50 +32,60 @@ export default function WhatsAppInbox() {
 
   const {
     data: contactsWithLastMessage,
-    isLoading: isContactsLoading,
+    isLoading: isContactsFetching,
     error: isContactsError,
   } = useContactsWithLastMessage();
+
+  function findAndReturnTheIndexOfTheContact(
+    list: ContactsWithLastMessage[],
+    contactId: string,
+  ) {
+    return list.findIndex((contact) => contact.id === contactId);
+  }
+
+  function updateTheContactObject(
+    cObj: ContactsWithLastMessage,
+    newMessage: WaGetMessagesBody,
+  ) {
+    return {
+      ...cObj,
+      lastMessage: newMessage,
+      userInitiatedFinalTimeStamp:
+        newMessage.messageBody.exchangeProcess === "receive"
+          ? newMessage.waCreatedAt
+          : cObj?.userInitiatedFinalTimeStamp,
+    };
+  }
 
   const updateWaContactsList = useCallback(
     (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
       setContactList((prevList) => {
         let updatedContacts = [...prevList];
-        const contactIndex = updatedContacts.findIndex(
-          (contact) => contact.id === newMessage.contact.id,
+        const contactIndex = findAndReturnTheIndexOfTheContact(
+          updatedContacts,
+          newMessage.contact.id,
+        );
+        findAndReturnTheIndexOfTheContact(
+          updatedContacts,
+          newMessage.contact.id,
         );
         if (contactIndex !== -1) {
           // update the existiing contact with new message
-          updatedContacts[contactIndex] = {
-            ...updatedContacts[contactIndex],
-            lastMessage: newMessage?.message,
-            userInitiatedFinalTimeStamp:
-              newMessage.message.messageBody.exchangeProcess === "receive"
-                ? newMessage.message.waCreatedAt
-                : updatedContacts[contactIndex]?.userInitiatedFinalTimeStamp,
-          };
+          updatedContacts[contactIndex] = updateTheContactObject(
+            updatedContacts[contactIndex],
+            newMessage.message,
+          );
         } else {
-          //add new contact with new message
-          updatedContacts = [
-            ...updatedContacts,
-            {
-              ...newMessage.contact,
-              lastMessage: newMessage.message,
-              userInitiatedFinalTimeStamp:
-                newMessage.message.messageBody.exchangeProcess === "receive"
-                  ? newMessage.message.waCreatedAt
-                  : updatedContacts[contactIndex]?.userInitiatedFinalTimeStamp,
-            },
-          ];
-        }
-
-        //sort the contacts by last message timestamp
-        return updatedContacts
-          ?.filter((contact) => contact.lastMessage.messageBody !== null)
-          ?.sort((a, b) => {
-            const aDate = new Date(a.lastMessage.waCreatedAt);
-            const bDate = new Date(b.lastMessage.waCreatedAt);
-            return bDate.getTime() - aDate.getTime();
+          queryClient.invalidateQueries({
+            queryKey: ["contacts", "last-message"],
           });
+        }
+        //sort the contacts by last message timestamp
+        return updatedContacts?.sort((a, b) => {
+          const aDate = new Date(a.lastMessage.waCreatedAt);
+          const bDate = new Date(b.lastMessage.waCreatedAt);
+          return bDate.getTime() - aDate.getTime();
+        });
       });
     },
     [],
@@ -83,7 +93,9 @@ export default function WhatsAppInbox() {
 
   useEffect(() => {
     if (contactsWithLastMessage) {
-      setContactList(() => contactsWithLastMessage);
+      setContactList(
+        contactsWithLastMessage?.pages?.map((page) => page).flat(),
+      );
     }
   }, [contactsWithLastMessage]);
 
@@ -108,8 +120,8 @@ export default function WhatsAppInbox() {
     }
   }, [wsData]);
 
-  if (isContactsLoading)
-    return <WhatsAppInboxLoader isLoading={isContactsLoading} />;
+  if (isContactsFetching)
+    return <WhatsAppInboxLoader isLoading={isContactsFetching} />;
   if (error) return <div>Error: {error.message}</div>;
   if (isContactsError) return <div>Error: {isContactsError.message}</div>;
 

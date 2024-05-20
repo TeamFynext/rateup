@@ -1,9 +1,10 @@
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import {
   createStripeCheckoutSession,
+  deleteStripeProduct,
   getAllStripeSubscriptions,
   getStripeProducts,
   syncStripeProducts,
@@ -45,25 +46,61 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
 }
 
 export const useSyncStripeProducts = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: syncStripeProducts,
     onSuccess: () => {
-      showSuccessToast("Stripe products synced successfully");
+      queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
+      showSuccessToast(
+        "Stripe products synced successfully",
+        "",
+        <IconCheck />,
+      );
     },
     onError: () => {
-      showErrorToast("Error in Syncing stripe products");
+      showErrorToast("Error in Syncing stripe products", "", <IconX />);
     },
   });
 };
 
 export const useUpdateStripeProduct = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateStripeProduct,
     onSuccess: () => {
-      showSuccessToast("Stripe product updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
+      showSuccessToast(
+        "Stripe product updated successfully",
+        "",
+        <IconCheck />,
+      );
     },
     onError: () => {
-      showErrorToast("Error in updating stripe product");
+      showErrorToast("Error in updating stripe product", "", <IconX />);
+    },
+  });
+};
+
+export const useDeleteStripeProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteStripeProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
+      showSuccessToast(
+        "Stripe product deleted successfully",
+        "stripe",
+        <IconCheck />,
+        true,
+      );
+    },
+    onError: () => {
+      showErrorToast(
+        "Error in deleting stripe product",
+        "stripe",
+        <IconX />,
+        true,
+      );
     },
   });
 };

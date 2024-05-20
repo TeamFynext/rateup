@@ -17,7 +17,12 @@ import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTagInput } from "../../../components/input/ContainedInput/ContainedInput";
 import { generateColumns } from "../../../components/adminPanel/RateUpPlans/RateUpPlanColumn";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
+import { useGetStripeProducts } from "../../../backend/payment/stripe/stripe.query";
 
+export enum PaymentPlans {
+  razorpay = "Razorpay Plans",
+  stripe = "Stripe Products",
+}
 const RateupPlan = () => {
   const [opened, { toggle, close }] = useDisclosure(false);
   const [error, setError] = useState("");
@@ -33,6 +38,7 @@ const RateupPlan = () => {
     isPending: isRazorPayPlansLoading,
     isError: isRazorPayPlansError,
   } = usePaymentsPlans();
+  const { data: stripeProducts } = useGetStripeProducts();
   const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
   const rateupPaymentsPlanUpdateMutation =
     useRateupPaymentsPlanUpdateMutation(closeDescriptonModal);
@@ -51,6 +57,11 @@ const RateupPlan = () => {
         value: filteredPlan.id,
         label: filteredPlan.name,
       })) ?? [];
+  const formattedStripeProducts = stripeProducts?.map((product) => ({
+    value: product.id,
+    label: product.name,
+  }));
+
   const handleCellEditStopUpdate = (cellData) => {
     if (cellData?.colDef?.type === "singleSelect" || !updatedField) return;
 
@@ -84,6 +95,7 @@ const RateupPlan = () => {
       features: plan,
       planType: plan.planType,
       paymentPlanId: plan.paymentPlanId,
+      stripeId: plan.stripeId,
       createdAt: plan?.createdAt,
     };
   });
@@ -97,6 +109,10 @@ const RateupPlan = () => {
     );
     setUpdatedField("");
   };
+  const planList = [
+    { group: PaymentPlans.razorpay, items: razorPayPlanFiltered },
+    { group: PaymentPlans.stripe, items: formattedStripeProducts },
+  ];
 
   return (
     <Stack mah={"100%"}>
@@ -107,18 +123,14 @@ const RateupPlan = () => {
           rightIcon={<IconPlus size={16} />}
           onClick={toggle}
         />
-        <RateupPlanModal
-          opened={opened}
-          close={close}
-          razorPayPlanFiltered={razorPayPlanFiltered}
-          rateupPaymentsPlanMutation={rateupPaymentsPlanMutation}
-        />
+        <RateupPlanModal opened={opened} close={close} planList={planList} />
       </Group>
       <Box h="75vh">
         <DataGrid
           rows={rows}
           columns={generateColumns(
             razorPayPlanFiltered,
+            formattedStripeProducts,
             handleMutation,
             setUpdatedField,
             rateupPaymentsPlanDelete,
