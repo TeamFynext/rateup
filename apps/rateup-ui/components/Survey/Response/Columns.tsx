@@ -80,6 +80,7 @@ export const useSurveyResponseColumns = ({
             q?.description[
               selectedLanguage ? selectedLanguage : defaultLanguage
             ] ||
+            q?.label[selectedLanguage ? selectedLanguage : defaultLanguage] ||
             "";
           return {
             ...(![
@@ -89,10 +90,22 @@ export const useSurveyResponseColumns = ({
             ].includes(q?.type) && {
               filterFn: fuzzyFilter,
             }),
-            accessorFn: (row) =>
-              row.responses
+            accessorFn: (row) => {
+              const response = row.responses
                 ?.filter((item) => item?.questionId === q.id)
-                ?.find((item) => item?.type === q.type)?.response[q.type],
+                ?.find((item) => item?.type === q.type)?.response[q.type];
+              if (
+                [
+                  QuestionType.Rating,
+                  QuestionType.Opinion,
+                  QuestionType.Number,
+                ].includes(q.type)
+              ) {
+                return Number(response);
+              }
+
+              return response;
+            },
             id: content + "_,_" + q.type + "_,_" + q.id,
             header: () => (
               <HoverCardComponent content={content} fw={600} fz={"lg"} />
@@ -105,6 +118,8 @@ export const useSurveyResponseColumns = ({
               q.type,
             ),
             cell: (info) => {
+              console.log(q.type, info.getValue(), typeof info.getValue());
+
               return (
                 <BadgeorTextorPreview
                   questionType={q?.type}

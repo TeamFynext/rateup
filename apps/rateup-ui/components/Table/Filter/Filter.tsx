@@ -63,16 +63,7 @@ export const Filter = ({
           max={max}
           step={1}
           defaultValue={[min, max]}
-          onChange={(value) => {
-            column.setFilterValue((old: [number, number]) => [
-              value[0],
-              old?.[1],
-            ]);
-            column.setFilterValue((old: [number, number]) => [
-              old?.[0],
-              value[1],
-            ]);
-          }}
+          onChange={column.setFilterValue}
         />
       </Stack>
     );
