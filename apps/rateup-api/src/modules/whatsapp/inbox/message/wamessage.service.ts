@@ -1,6 +1,5 @@
 import { Contact, WaMessage } from "@prisma/client";
 import prisma from "../../../../utils/prisma";
-import { getContactsByOrgId } from "../../../contact/contact.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -106,8 +105,8 @@ WHERE
     c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL
 ORDER BY 
     lm."waCreatedAt" DESC NULLS LAST
-LIMIT 10 
-OFFSET ${(page - 1) * 10}`;
+LIMIT 10000 
+OFFSET ${(page - 1) * 10000}`;
   return contacts.map(
     ({
       latestmessage,
