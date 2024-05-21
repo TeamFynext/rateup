@@ -76,7 +76,13 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
     case Q.MultiTextInput:
       return <MultiTextInputForm features={features} />;
     case Q.MCQGrid:
-      return <MCQGridForm features={features} previewChoices={choices} />;
+      return (
+        <MCQGridForm
+          features={features}
+          previewChoices={choices}
+          isPreview={true}
+        />
+      );
     case Q.File:
       return <FileInputForm isPreview={true} />;
     default:

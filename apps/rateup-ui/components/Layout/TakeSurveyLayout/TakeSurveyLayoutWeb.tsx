@@ -97,8 +97,13 @@ export const TakeSurveyLayoutWeb = ({
       surveyTeamMapId && updateVisited.mutate(surveyTeamMapId);
     } else {
       setStartClicked(true);
-      surveyTeamMapId && updateVisited.mutate(surveyTeamMapId);
-      surveyTeamMapId && updateStarted.mutate(surveyTeamMapId);
+      if (surveyTeamMapId) {
+        updateVisited.mutate(surveyTeamMapId, {
+          onSuccess: () => {
+            updateStarted.mutate(surveyTeamMapId);
+          },
+        });
+      }
     }
   }, [survey?.welcomePageEnabled]);
 
