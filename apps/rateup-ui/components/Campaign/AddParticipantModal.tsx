@@ -23,8 +23,8 @@ import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/co
 import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import { showWarnToast } from "../../utils/notifications";
 import {
+  CampaignParticipantAddStatus,
   CampaignParticipantSource,
-  CampaignParticipantStatus,
 } from "../../types/enums";
 import { useListState } from "@mantine/hooks";
 import { useCampaignData } from "../../backend/campaign/campaign.query";
@@ -38,7 +38,7 @@ const AddParticipantModal = ({ close, campaign }) => {
   const [selectedGroups, selectedGroupsHandlers] = useListState([]);
   const [selectedCampaigns, selectedCampaignsHandlers] = useListState([]);
   const [selectedStatus, selectedStatusHandlers] = useListState(
-    Object.values(CampaignParticipantStatus) || [],
+    Object.values(CampaignParticipantAddStatus) || [],
   );
 
   const [searchText, setSearchText] = useState("");
@@ -162,7 +162,7 @@ const AddParticipantModal = ({ close, campaign }) => {
           <Stack gap={1}>
             <PaperLayout>
               <Group justify="space-between" mb={4}>
-                <Title order={6}>Select Contacts</Title>
+                <Title order={6}>Select {selectedTab?.toLowerCase()}</Title>
                 <Checkbox
                   label="Select all"
                   c={"#149a8a"}
@@ -208,7 +208,7 @@ const AddParticipantModal = ({ close, campaign }) => {
                     <MultiSelect
                       label="message status"
                       placeholder="Pick status"
-                      data={Object.values(CampaignParticipantStatus)}
+                      data={Object.values(CampaignParticipantAddStatus)}
                       onChange={(e: any) => selectedStatusHandlers.setState(e)}
                       value={selectedStatus}
                       searchable
@@ -379,13 +379,8 @@ const CustomerCampaign = ({
   const isSelected = selectedCampaigns.some((c) => c?.id === campaign?.id);
 
   return (
-    <Group justify="space-between">
-      <Stack gap={0}>
-        <Title order={5}>{campaign?.name}</Title>
-        <Text c={"dimmed"} size="sm">
-          {campaign?._count.campaignParticipants} members
-        </Text>
-      </Stack>
+    <Group justify="space-between" py={4}>
+      <Title order={5}>{campaign?.name}</Title>
       {isSelected ? (
         <Button
           variant="outline"
