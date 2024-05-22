@@ -10,6 +10,7 @@ import {
   CreateCampaignParticipantsInput,
 } from "./campaignParticipants.schema";
 import { getLatestStatus } from "../campaign.service";
+import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,
@@ -89,10 +90,11 @@ export async function createCampaignParticipantsFromAnotherCampaign(
       latestStatus = CampaignParticipantStatus.FAILED;
     participant.status = latestStatus ?? CampaignParticipantStatus.PENDING;
   });
+  const status = mapStatuses(data.status);
   const campaignParticipants = await prisma.campaignParticipant.createMany({
     data: campaignParticipantsOld
       ?.filter((participant) =>
-        data.status.includes(participant.status?.toUpperCase() as any),
+        status.includes(participant.status?.toUpperCase()),
       )
       ?.map(({ contactId, contactGroupId }) => ({
         campaignId,
