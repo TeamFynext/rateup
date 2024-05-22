@@ -167,7 +167,18 @@ const CampaignById = () => {
                 groupId={campaignData?.id}
               />
             </PaperLayout>
-            <Modal opened={opened} onClose={close} centered size={"xl"}>
+            <Modal
+              opened={opened}
+              onClose={close}
+              centered
+              size={"xl"}
+              radius={"lg"}
+              title={
+                <Title order={2} pl={"md"}>
+                  Add Participants
+                </Title>
+              }
+            >
               <AddParticipantModal close={close} campaign={campaignData} />
             </Modal>
           </Tabs.Panel>

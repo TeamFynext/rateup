@@ -256,8 +256,9 @@ export function getFlowElementText(
 ) {
   if (fe.type === WaFlowFormElementType.image) {
     return "IMAGE";
-  }
-  if (fe.text) {
+  } else if (fe.type === WaFlowFormElementType.optIn) {
+    return fe.label;
+  } else if (fe.text) {
     return fe.text;
   } else {
     try {

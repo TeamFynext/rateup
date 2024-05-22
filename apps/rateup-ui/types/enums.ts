@@ -107,11 +107,12 @@ export enum CampaignType {
 export enum CampaignParticipantSource {
   GROUP = "GROUP",
   INDIVIDUAL = "INDIVIDUAL",
+  CAMPAIGN = "CAMPAIGN",
 }
 export enum CampaignParticipantStatus {
   PENDING = "PENDING",
   SENT = "SENT",
-  RESPONDING = "RESPONDING",
+  // RESPONDING = "RESPONDING",
   FAILED = "FAILED",
   COMPLETED = "COMPLETED",
   READ = "READ",
