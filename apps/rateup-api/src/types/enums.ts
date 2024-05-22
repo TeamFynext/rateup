@@ -141,6 +141,8 @@ export enum CampaignParticipantStatus {
   RESPONDING = "RESPONDING",
   FAILED = "FAILED",
   COMPLETED = "COMPLETED",
+  READ = "READ",
+  DELIVERED = "DELIVERED",
 }
 
 export enum NPSWeightage {

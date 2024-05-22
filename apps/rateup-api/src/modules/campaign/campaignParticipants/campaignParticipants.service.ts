@@ -9,6 +9,7 @@ import {
   CreateCampaignParticipantsFromGroupsInput,
   CreateCampaignParticipantsInput,
 } from "./campaignParticipants.schema";
+import { getLatestStatus } from "../campaign.service";
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,
@@ -49,7 +50,61 @@ export async function createCampaignParticipantsFromContacts(
   });
   return campaignParticipants;
 }
-
+export async function createCampaignParticipantsFromAnotherCampaign(
+  campaignId: string,
+  data: Partial<
+    Omit<CreateCampaignParticipantsInput, "groupIds" | "contactIds">
+  >,
+) {
+  const campaignParticipantsOld = await prisma.campaignParticipant.findMany({
+    where: {
+      campaignId: {
+        in: data.campaignIds,
+      },
+    },
+    include: {
+      campaign: {
+        select: {
+          flowId: true,
+        },
+      },
+      WaMessageCampaginParticipantMap: {
+        include: {
+          waMessage: {
+            select: {
+              stats: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  campaignParticipantsOld?.forEach((participant) => {
+    const participantStatus = participant.status;
+    let latestStatus = getLatestStatus(participant);
+    const FlowId = participant?.campaign?.flowId;
+    if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED)
+      latestStatus = CampaignParticipantStatus.COMPLETED;
+    else if (participantStatus === CampaignParticipantStatus.FAILED)
+      latestStatus = CampaignParticipantStatus.FAILED;
+    participant.status = latestStatus ?? CampaignParticipantStatus.PENDING;
+  });
+  const campaignParticipants = await prisma.campaignParticipant.createMany({
+    data: campaignParticipantsOld
+      ?.filter((participant) =>
+        data.status.includes(participant.status?.toUpperCase() as any),
+      )
+      ?.map(({ contactId, contactGroupId }) => ({
+        campaignId,
+        contactId: contactId,
+        source: CampaignParticipantSource.GROUP,
+        contactGroupId: contactGroupId,
+        status: CampaignParticipantStatus.PENDING,
+      })),
+    skipDuplicates: true,
+  });
+  return campaignParticipants;
+}
 export async function createCampaignParticipants(
   campaignId: string,
   data: CreateCampaignParticipantsInput,
@@ -61,6 +116,7 @@ export async function createCampaignParticipants(
     createCampaignParticipantsFromGroup(campaignId, {
       groupIds: data.groupIds,
     }),
+    createCampaignParticipantsFromAnotherCampaign(campaignId, data),
   ]);
   promise.then((results) => results).catch((error) => error);
 }

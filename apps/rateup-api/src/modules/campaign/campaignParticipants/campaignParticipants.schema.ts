@@ -17,6 +17,8 @@ const createCampaignParticipantsFromContactsSchema = z.object({
 const createCampaignParticipantsSchema = z.object({
   contactIds: z.array(z.string().uuid()),
   groupIds: z.array(z.string().uuid()),
+  status: z.array(z.nativeEnum(CampaignParticipantStatus)),
+  campaignIds: z.array(z.string().uuid()),
 });
 const deleteCampaignParticipantsSchema = z.object({
   ids: z.array(z.string()).min(1),

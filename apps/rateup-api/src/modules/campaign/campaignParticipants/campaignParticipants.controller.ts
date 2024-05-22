@@ -52,6 +52,10 @@ export async function createCampaignParticipantsHandler(
   }>,
   reply: FastifyReply,
 ) {
+  if (request.body.campaignIds?.length > 0) {
+    if (request.body.status?.length < 1)
+      return reply.code(400).send({ error: "atleast one status required" });
+  }
   const campaignParticipants = await createCampaignParticipants(
     request.params.campaignId,
     request.body,

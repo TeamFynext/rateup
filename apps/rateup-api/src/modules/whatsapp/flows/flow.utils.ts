@@ -403,7 +403,8 @@ export function getFlowJsonWithTitleAndDescription(
           const formElement = screenElement.children[i];
           if (
             formElement.name !== undefined &&
-            formElement.type !== WaFlowFormElementType.footer
+            formElement.type !== WaFlowFormElementType.footer &&
+            formElement.type !== WaFlowFormElementType.optIn
           ) {
             const question = getQuestionFromFlowFormElementName(
               formElement.name,
