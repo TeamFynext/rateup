@@ -118,6 +118,12 @@ export enum CampaignParticipantStatus {
   READ = "READ",
   DELIVERED = "DELIVERED",
 }
+export enum CampaignParticipantAddStatus {
+  COMPLETED = "COMPLETED",
+  NOTCOMPLETED = "NOT COMPLETED",
+  PENDING = "PENDING",
+  FAILED = "FAILED",
+}
 
 export enum NPSWeightage {
   PROMOTER = "PROMOTER",
