@@ -301,18 +301,21 @@ const StartCampaignCard = ({
 };
 
 const CampaignInfoCard = ({ participantCount, stats, flowId }) => {
+  const statsArray = [
+    { label: "Participants", count: participantCount },
+    { label: "Pending", count: stats?.countPending },
+    { label: "Sent", count: stats?.countSent },
+    { label: "Delivered", count: stats?.countDelivered },
+    { label: "Read", count: stats?.countRead },
+    { label: "Failed", count: stats?.countFailed, color: "red" },
+    // { label: "Responded", count: responseCount ?? 0 },
+  ];
+  if (flowId) {
+    statsArray.push({ label: "Completed", count: stats?.countCompleted });
+  }
   return (
     <SimpleGrid cols={3} m={"xl"}>
-      {[
-        { label: "Participants", count: participantCount },
-        { label: "Pending", count: stats?.countPending },
-        { label: "Sent", count: stats?.countSent },
-        { label: "Delivered", count: stats?.countDelivered },
-        { label: "Read", count: stats?.countRead },
-        ...(flowId && [{ label: "Completed", count: stats?.countCompleted }]),
-        { label: "Failed", count: stats?.countFailed, color: "red" },
-        // { label: "Responded", count: responseCount ?? 0 },
-      ].map((item) => (
+      {statsArray.map((item) => (
         <Stack key={item.label} gap={0} align="center">
           <Text ff={lexend600.style.fontFamily} fz={30}>
             {item.count}
