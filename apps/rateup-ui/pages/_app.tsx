@@ -209,7 +209,6 @@ export default function App({
                         transition={{ duration: 0.5 }}
                       >
                         <Component {...pageProps} />
-                        {isProduction ? <CookieConsentBanner /> : null}
                       </motion.div>
                     </AnimatePresence>
                   </LayoutComponent>
