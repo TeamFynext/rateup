@@ -1,4 +1,4 @@
-import { WaMessage } from "@prisma/client";
+import { Contact, WaMessage } from "@prisma/client";
 import prisma from "../../../../utils/prisma";
 
 export async function addNewWaMessage(
@@ -55,70 +55,74 @@ export async function getWaMessagesByContactId(
   return { messages, nextCursor };
 }
 
-export async function getContactsWithLastMessage(orgId: string) {
-  const lastReceivedMessages = await prisma.contact.findMany({
-    where: { orgId },
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      WaMessage: {
-        where: {
-          messageBody: {
-            path: ["exchangeProcess"],
-            equals: "receive",
-          },
-        },
-        orderBy: {
-          waCreatedAt: "desc",
-        },
-        take: 1,
-        select: {
-          messageBody: true,
-          waCreatedAt: true,
-        },
+export async function getContactsWithLastMessage(
+  orgId: string,
+  page: number = 1,
+) {
+  const contacts: Array<
+    Contact & {
+      latestmessage: WaMessage;
+      latestreceivemessage: WaMessage;
+      latestmessagetime: string;
+      latestreceivetime: string;
+    }
+  > = await prisma.$queryRaw`
+WITH LatestMessages AS (
+    SELECT DISTINCT ON (w."contactId")
+        w."contactId",
+        w."messageBody",
+        w."waCreatedAt"
+    FROM
+        "WaMessage" w
+    ORDER BY
+        w."contactId", w."waCreatedAt" DESC
+),
+LatestReceiveMessages AS (
+    SELECT DISTINCT ON (w."contactId")
+        w."contactId",
+        w."messageBody" AS receiveMessageBody,
+        w."waCreatedAt" AS receiveCreatedAt
+    FROM
+        "WaMessage" w
+    WHERE
+        w."messageBody"->'exchangeProcess' = '"receive"'
+    ORDER BY
+        w."contactId", w."waCreatedAt" DESC
+)
+SELECT
+    c.*,
+    lm."messageBody" AS LatestMessage,
+    lm."waCreatedAt" AS LatestMessageTime,
+    lrm.receiveMessageBody AS LatestReceiveMessage,
+    lrm.receiveCreatedAt AS LatestReceiveTime
+FROM
+    "Contact" c
+LEFT JOIN
+    LatestMessages lm ON c.id = lm."contactId"
+LEFT JOIN
+    LatestReceiveMessages lrm ON c.id = lrm."contactId"
+WHERE
+    c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL
+ORDER BY 
+    lm."waCreatedAt" DESC NULLS LAST
+LIMIT 10000 
+OFFSET ${(page - 1) * 10000}`;
+  return contacts.map(
+    ({
+      latestmessage,
+      latestmessagetime,
+      latestreceivetime,
+      tags,
+      ...rest
+    }) => ({
+      ...rest,
+      tags: tags ?? {},
+      groups: [],
+      lastMessage: {
+        messageBody: latestmessage ?? null,
+        waCreatedAt: latestmessagetime ?? null,
       },
-    },
-  });
-  const contacts = await prisma.contact.findMany({
-    where: {
-      orgId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      WaMessage: {
-        orderBy: {
-          waCreatedAt: "desc",
-        },
-        take: 1,
-        select: {
-          messageBody: true,
-          waCreatedAt: true,
-        },
-      },
-      contactGroups: {
-        include: {
-          contactGroup: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  return contacts.map(({ WaMessage, contactGroups, tags, ...rest }) => ({
-    ...rest,
-    tags: tags ?? {},
-    groups: contactGroups.map(({ contactGroup }) => contactGroup.name),
-    lastMessage: {
-      messageBody: WaMessage?.length > 0 ? WaMessage[0]?.messageBody : null,
-      waCreatedAt: WaMessage?.length > 0 ? WaMessage[0]?.waCreatedAt : null,
-    },
-    userInitiatedFinalTimeStamp:
-      lastReceivedMessages?.find((msg) => msg?.id === rest?.id)?.WaMessage[0]
-        ?.waCreatedAt ?? null,
-  }));
+      userInitiatedFinalTimeStamp: latestreceivetime ?? null,
+    }),
+  );
 }

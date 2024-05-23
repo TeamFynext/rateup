@@ -622,9 +622,7 @@ export async function getSurveysSummmaryByUserId(userId: string) {
 
 //------------get survey templates list --------
 export async function getSurveyTemplates(surveyType: string) {
-  const teamId =
-    process.env.SURVEY_TEMPLATES_TEAM_ID ||
-    "591ec71f-984e-46b0-88e9-1ef46db9f33a";
+  const teamId = process.env.SURVEY_TEMPLATES_TEAM_ID;
   const surveyTeamMaps = await prisma.surveyTeamMap.findMany({
     where: {
       teamId: teamId,

@@ -25,6 +25,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $contactRef("byContactIdSchema"),
+        querystring: $waMessage("PaginateQuerySchema"),
       },
     },
     sendNewWaMessageHandler,
