@@ -1,5 +1,5 @@
 import { Dialog, Group, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import Link from "next/link";
 import {
   RateupButtonBlue,
@@ -13,6 +13,7 @@ import dayjs from "dayjs";
 const CookieConsentBanner = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [cookieConsent, setCookieConsent] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 480px)");
 
   useEffect(() => {
     const storedCookieConsent = JSON.parse(
@@ -44,9 +45,11 @@ const CookieConsentBanner = () => {
       p={"xl"}
       style={{ border: "1px solid var(--tertiary-color)" }}
       shadow="xl"
+      position={{ bottom: 20, right: isMobile ? undefined : 90, left: 30 }}
+      zIndex={150}
     >
       <Group justify="space-between">
-        <Text fw={"bold"}>
+        <Text fw={"bold"} fz={isMobile ? 14 : 16}>
           We use cookies in our site. See{" "}
           <Link href={"/privacy-policy"} style={{ textDecoration: "none" }}>
             our Privacy and policy
@@ -69,6 +72,7 @@ const CookieConsentBanner = () => {
               );
               close();
             }}
+            size={isMobile ? "xs" : "md"}
           />
           <RateupButtonBlue
             title="Accept"
@@ -84,6 +88,7 @@ const CookieConsentBanner = () => {
               );
               close();
             }}
+            size={isMobile ? "xs" : "md"}
           />
         </Group>
       </Group>
