@@ -35,7 +35,10 @@ const RateupPlanModal = ({ opened, close, planList }) => {
     description: z
       .array(z.string())
       .min(1, { message: "Description should Not Be empty" }),
-    features: z.any(),
+    features: z
+      .string()
+      .trim()
+      .min(1, { message: "Features should Not Be empty" }),
   });
 
   const form = useForm({

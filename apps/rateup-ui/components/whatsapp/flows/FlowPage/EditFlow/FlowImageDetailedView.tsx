@@ -84,7 +84,7 @@ export function FlowImageDetailedView() {
       }}
       justify="space-between"
     >
-      <ScrollArea h={"80%"}>
+      <ScrollAreaAutosize mah={"65dvh"}>
         <Group justify="space-between">
           <Badge variant="outline" size="lg" color="gray">
             {getWaFlowFormElementTypeLabel(selectedFormElement.type)}
@@ -109,7 +109,7 @@ export function FlowImageDetailedView() {
             />
           </Stack>
         </Group>
-      </ScrollArea>
+      </ScrollAreaAutosize>
 
       <Stack>
         <Divider />
@@ -159,14 +159,13 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
       </FileButton>
       {src && (
         <>
-          <ScrollAreaAutosize mah={200}>
-            <Image
-              src={`data:image/jpg;base64,${src}`}
-              h={height}
-              w={width}
-              alt="flow Image"
-            />
-          </ScrollAreaAutosize>
+          <Image
+            src={`data:image/jpg;base64,${src}`}
+            h={height}
+            w={width - 100}
+            mah={height}
+            alt="flow Image"
+          />
           <NumberInput
             label="Width"
             min={100}

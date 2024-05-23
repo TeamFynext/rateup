@@ -6,27 +6,54 @@ import { COORDINATESX, COORDINATESY } from "../../../../utils/constants";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 import { ThemeTabEnum } from "../SurveyTheme.enums";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
+} from "../SurveyThemeContext";
+import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 
-function ButtonStyles({
-  currentStyles,
-  setCurrentstyles,
-  selectedTab,
-}: {
-  currentStyles: ButtonType;
-  setCurrentstyles: (key: string, value: any) => void;
-  selectedTab: ThemeTabEnum;
-}) {
-  const handleColorPickerChange = useCallback(
-    (valueObj) => {
-      const { themeObjKey, propertyChanged, value } = valueObj;
-      if (currentStyles?.styles)
-        setCurrentstyles(themeObjKey, {
-          ...currentStyles,
-          styles: { ...currentStyles.styles, [propertyChanged]: value },
-        });
-    },
-    [currentStyles],
-  );
+function ButtonStyles() {
+  const selectedPageTab = useSelectedPageTab();
+  const surveyTheme = useSurveyThemeContextValue();
+  const { button } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+
+  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+
+  const handleBackgroundColorChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "button-background-color-change",
+      payload: value,
+    });
+  }, []);
+
+  const handleTextColorChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "button-text-color-change",
+      payload: value,
+    });
+  }, []);
+
+  const handleBorderRadiusChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "button-border-radius-change",
+      payload: value,
+    });
+  }, []);
+
+  const handleXCoOrdinateChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "button-x-coordinate-change",
+      payload: value,
+    });
+  }, []);
+
+  const handleYCoOrdinateChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "button-y-coordinate-change",
+      payload: value,
+    });
+  }, []);
 
   return (
     <>
@@ -34,73 +61,49 @@ function ButtonStyles({
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Background Color</h2>
           <CustomColorPicker
-            // we can get this optionalDataObj in onChange handler
-            optionalDataObj={{
-              themeObjKey: "button",
-              propertyChanged: "backgroundColor",
-            }}
-            value={currentStyles?.styles?.backgroundColor}
-            onChange={handleColorPickerChange}
+            value={button?.styles?.backgroundColor}
+            onChange={handleBackgroundColorChange}
           />
         </Box>
 
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Text Color</h2>
           <CustomColorPicker
-            optionalDataObj={{
-              themeObjKey: "button",
-              propertyChanged: "color",
-            }}
-            value={currentStyles?.styles?.color}
-            onChange={handleColorPickerChange}
+            value={button?.styles?.color}
+            onChange={handleTextColorChange}
           />
         </Box>
 
-        {selectedTab === ThemeTabEnum.WELCOME && (
+        {selectedPageTab === ThemeTabEnum.WELCOME && (
           <Box className={"styles-section-div"}>
             <h2>Border Radius</h2>
             <Slider
               min={0}
               max={50}
               defaultValue={18}
-              value={currentStyles?.styles?.borderRadius}
-              onChange={(e) => {
-                setCurrentstyles("button", {
-                  ...currentStyles,
-                  styles: { ...currentStyles.styles, borderRadius: e },
-                });
-              }}
+              value={button?.styles?.borderRadius}
+              onChange={handleBorderRadiusChange}
             />
           </Box>
         )}
 
-        {selectedTab === ThemeTabEnum.WELCOME && (
+        {selectedPageTab === ThemeTabEnum.WELCOME && (
           <Box className={"styles-section-div"}>
             <h2>Button position</h2>
             <Flex gap={"sm"}>
               <ContainedSelection
                 data={COORDINATESX}
                 placeholder="X axis"
-                defaultValue={currentStyles?.position?.x ?? COORDINATESX?.[1]}
-                onChange={(e) => {
-                  setCurrentstyles("button", {
-                    ...currentStyles,
-                    position: { ...currentStyles.position, ...{ x: e } },
-                  });
-                }}
+                defaultValue={button?.position?.x ?? COORDINATESX?.[1]}
+                onChange={handleXCoOrdinateChange}
                 allowDeselect={false}
                 label={"x axis"}
               />
               <ContainedSelection
                 data={COORDINATESY}
                 placeholder="Y axis"
-                defaultValue={currentStyles?.position?.y ?? COORDINATESY?.[3]}
-                onChange={(e) => {
-                  setCurrentstyles("button", {
-                    ...currentStyles,
-                    position: { ...currentStyles.position, ...{ y: e } },
-                  });
-                }}
+                defaultValue={button?.position?.y ?? COORDINATESY?.[3]}
+                onChange={handleYCoOrdinateChange}
                 allowDeselect={false}
                 label={"y axis"}
               />

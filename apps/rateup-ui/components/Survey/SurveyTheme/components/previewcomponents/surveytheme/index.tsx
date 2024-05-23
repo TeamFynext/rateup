@@ -1,47 +1,42 @@
 import {
-  ActionIcon,
   BackgroundImage,
   Badge,
   Box,
   Button,
-  Center,
   Flex,
   Group,
   Image,
   MantineProvider,
-  RingProgress,
   ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconEdit,
-} from "@tabler/icons-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../../context/SelectedLanguage";
+import { surveyUploadsPath } from "../../../../../../utils/constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import QuestionTypePreview from "../../../../Question/Previews/QuestionTypePreview";
 import { questionTypeEnumArray } from "../../../SurveyTheme.constants";
-import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
+import { PreviewTypeEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
+import { getFeaturesBasedOnQuestionType } from "../../../SurveyTheme.utils";
 import {
-  getFeaturesBasedOnQuestionType,
-  getImageUrl,
-} from "../../../SurveyTheme.utils";
-import { SurveyThemeContext } from "../../../SurveyThemeContext";
-import { surveyUploadsPath } from "../../../../../../utils/constants";
+  useSelectedPreview,
+  useSurveyThemeContextValue,
+} from "../../../SurveyThemeContext";
 import NextPrevPreview from "./NextPrevPreview";
 
-export default function SurveyThemeView({ selectedType, setSelectedType }) {
-  const { surveyTheme, mobileOrDesktop } = useContext(SurveyThemeContext);
+export default function SurveyThemeView() {
+  const surveyTheme = useSurveyThemeContextValue();
+  const selectedPreview = useSelectedPreview();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const { surveyTheme: _surveyTheme } = surveyTheme;
   const [currentQuestionTypeCount, setCurrentQuestionTypeCount] = useState(0);
   const [currentResponse, updateResponse] = useState(null || []);
+
   //here subtitle, title and label are not customisable, its only added to preserve the consistency of the schema and ease of implementation.
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
@@ -76,43 +71,27 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
     };
   }, [orgLogo]);
 
+  const backgroundImageSrc =
+    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
+
   return (
     <Flex
       align={"center"}
       h="100%"
       style={styles}
-      onClick={(e) => {
-        e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-      }}
       ff={lexend300.style.fontFamily}
     >
       <CreditsCard
-        enableCredits={unsplashImage?.[mobileOrDesktop]}
-        url={
-          mobileOrDesktop === PreviewTypeEnum.DESKTOP
-            ? encodeURI(desktopbg)
-            : encodeURI(mobilebg)
-        }
+        enableCredits={backgroundImageSrc?.startsWith(
+          "https://images.unsplash.com",
+        )}
+        url={backgroundImageSrc}
       >
         <BackgroundImage
           className={classes.parentContainer}
           style={{ height: "100%", width: "100%", objectFit: "contain" }}
-          src={getImageUrl(
-            mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
-            unsplashImage?.[mobileOrDesktop],
-          )}
+          src={backgroundImageSrc}
         >
-          <ActionIcon
-            variant="default"
-            size="md"
-            radius="lg"
-            onClick={(e) => {
-              e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-            }}
-            className={`${classes.actionIcon} ${classes.bgActionIcon}`}
-          >
-            <IconEdit style={{ width: "70%", height: "70%" }} />
-          </ActionIcon>
           <Flex
             h={"100%"}
             direction={"column"}
@@ -129,17 +108,6 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
             )}
 
             <Box className={classes.titleBox} w={"fit-content"}>
-              <ActionIcon
-                variant="default"
-                radius="lg"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation(), setSelectedType(SelectedItemEnum.TITLE);
-                }}
-                className={classes.actionIcon}
-              >
-                <IconEdit style={{ width: "70%", height: "70%" }} />
-              </ActionIcon>
               <Text style={titleStyles}>Why is the sky blue?</Text>
               <Text
                 c={titleStyles?.color}
@@ -233,7 +201,7 @@ export default function SurveyThemeView({ selectedType, setSelectedType }) {
               </Group>
             </Stack>
             <NextPrevPreview
-              isMobile={mobileOrDesktop === PreviewTypeEnum.MOBILE}
+              isMobile={selectedPreview === PreviewTypeEnum.MOBILE}
               buttonStyles={buttonStyles}
             />
           </Flex>

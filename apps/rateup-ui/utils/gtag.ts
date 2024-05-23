@@ -23,3 +23,9 @@ export const analyseEvent = ({
     value: value ?? undefined,
   });
 };
+
+export const setGAConsent = (access: "granted" | "denied") => {
+  window.gtag("consent", "update", {
+    analytics_storage: access,
+  });
+};

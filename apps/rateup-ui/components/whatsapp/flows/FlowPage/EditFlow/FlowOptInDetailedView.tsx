@@ -34,6 +34,10 @@ export function FlowOptedInDetailedView() {
     initialValues: {
       label: selectedFormElement.label || "",
       type: selectedFormElement.type,
+      name:
+        selectedFormElement?.name ||
+        "OptIn" + selectedFormElement?.id ||
+        "OptIn",
     },
     validate: {
       label: (value) => {
@@ -63,6 +67,7 @@ export function FlowOptedInDetailedView() {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
         formEl.children[index].label = form.values.label;
         formEl.children[index].type = selectedFormElement.type;
+        formEl.children[index].name = form.values.name;
       });
     }
   }

@@ -514,6 +514,9 @@ declare global {
     teamId: string;
     icon: string;
     createdAt: string;
+    _count: {
+      contacts: number;
+    };
   };
   type ContactGroupResponse = {
     message: string;

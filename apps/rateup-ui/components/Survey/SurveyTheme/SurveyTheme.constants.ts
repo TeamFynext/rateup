@@ -1,4 +1,5 @@
 import { QuestionType } from "../../../types/enums";
+import { SelectedItemEnum } from "./SurveyTheme.enums";
 
 export const dummyImage =
   "https://www.freeiconspng.com/uploads/no-image-icon-4.png";
@@ -99,3 +100,43 @@ export const questionTypeEnumArray = [
   QuestionType.TnC,
   QuestionType.InfoMessage,
 ];
+
+const commonSupportedPageEditors = [
+  SelectedItemEnum.BACKGROUND,
+  SelectedItemEnum.TITLE,
+];
+
+const surveyPageEditors = [
+  ...commonSupportedPageEditors,
+  SelectedItemEnum.BUTTON,
+  SelectedItemEnum.INPUT,
+  SelectedItemEnum.LOGO,
+];
+
+const welcomePageEditors = [
+  ...commonSupportedPageEditors,
+  SelectedItemEnum.SUBTITLE,
+  SelectedItemEnum.BUTTON,
+];
+
+const thankyouPageEditors = [
+  ...commonSupportedPageEditors,
+  SelectedItemEnum.SUBTITLE,
+];
+
+export const supportedPageEditors = {
+  surveyPage: surveyPageEditors,
+  welcomePage: welcomePageEditors,
+  thankyouPage: thankyouPageEditors,
+};
+
+export const getSurveyThemeKeyOf = (selectedPageTab) => {
+  switch (selectedPageTab) {
+    case "surveyPage":
+      return "surveyTheme";
+    case "welcomePage":
+      return "welcomeTheme";
+    case "thankyouPage":
+      return "thankyouTheme";
+  }
+};

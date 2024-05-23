@@ -1,19 +1,19 @@
 import { Button, Group, Text } from "@mantine/core";
-import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
-import { useCallback, useContext, useState } from "react";
-import { SurveyThemeContext } from "../../SurveyThemeContext";
-import _ from "lodash";
-import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
-import styles from "./SaveButton.module.css";
 import { useHotkeys } from "@mantine/hooks";
+import _ from "lodash";
+import { useCallback, useState } from "react";
+import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
+import { useSurveyThemeContextValue } from "../../SurveyThemeContext";
+import styles from "./SaveButton.module.css";
 
 function SaveButton({ survey, themeSelectorState, allThemesArr }) {
   const themeObjBeingEdited = allThemesArr?.find(
     (obj) => obj.id === themeSelectorState,
   );
 
-  const { surveyTheme: themeObjState } = useContext(SurveyThemeContext);
+  const themeObjState = useSurveyThemeContextValue();
   let themeObjFromApi = themeObjState;
   if (themeObjBeingEdited) {
     themeObjFromApi = themeObjBeingEdited.theme;
@@ -31,9 +31,7 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
   const handleSaveTheme = useCallback(async () => {
     setIsSaving(true);
     const themeObjStateCopy = _.cloneDeep(themeObjState);
-    const {
-      surveyTheme: { logo: orgLogoStylesObj },
-    } = themeObjStateCopy;
+    const { logo: orgLogoStylesObj } = themeObjStateCopy;
     let orgLogoStylesObject = orgLogoStylesObj;
     if (!orgLogoStylesObject) {
       orgLogoStylesObject = {

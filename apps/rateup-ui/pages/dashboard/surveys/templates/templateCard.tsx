@@ -1,25 +1,20 @@
-import React, { useContext } from "react";
-import { produce } from "immer";
-import { Flex, Stack, BackgroundImage } from "@mantine/core";
-import classes from "../../../../components/Survey/SurveyTheme/SurveyTheme.module.css";
-import { PreviewTypeEnum } from "../../../../components/Survey/SurveyTheme/SurveyTheme.enums";
-import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
-import { lexend300 } from "../../../../utils/fonts";
+import { BackgroundImage, Flex, Stack } from "@mantine/core";
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
+import { PreviewTypeEnum } from "../../../../components/Survey/SurveyTheme/SurveyTheme.enums";
+import classes from "../../../../components/Survey/SurveyTheme/SurveyTheme.module.css";
+import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
+import {
+  useSelectedPreview,
+  useSurveyThemeContextValue,
+} from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
+import { lexend300 } from "../../../../utils/fonts";
 
-import { SurveyThemeContext } from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
+export default function TemplateCard() {
+  const surveyTheme = useSurveyThemeContextValue();
+  const selectedPreview = useSelectedPreview();
 
-export default function TemplateCard({ selectedType, setSelectedType }) {
-  const { surveyTheme, setSurveyTheme, mobileOrDesktop } =
-    useContext(SurveyThemeContext);
   const { welcomeTheme } = surveyTheme || {};
-  function updateThemeText(key: string, value: any) {
-    setSurveyTheme(
-      produce((draft) => {
-        draft.welcomeTheme[key] = value;
-      }),
-    );
-  }
+
   const {
     bg: { styles, desktopbg, mobilebg, unsplashImage },
     // button: { styles: buttonStyles, label, position },
@@ -28,15 +23,16 @@ export default function TemplateCard({ selectedType, setSelectedType }) {
     title: { styles: titleStyles, title },
   } = welcomeTheme;
 
+  const backgroundImageSrc =
+    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
+
   return (
     <Flex align={"center"} h={200} w={300} ff={lexend300.style.fontFamily}>
       <CreditsCard
-        enableCredits={unsplashImage?.[mobileOrDesktop]}
-        url={
-          mobileOrDesktop === PreviewTypeEnum.DESKTOP
-            ? encodeURI(desktopbg)
-            : encodeURI(mobilebg)
-        }
+        enableCredits={backgroundImageSrc?.startsWith(
+          "https://images.unsplash.com",
+        )}
+        url={backgroundImageSrc}
       >
         <BackgroundImage
           className={classes.parentContainer}
@@ -46,10 +42,7 @@ export default function TemplateCard({ selectedType, setSelectedType }) {
             objectFit: "fill",
             backgroundColor: styles?.backgroundColor,
           }}
-          src={getImageUrl(
-            mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
-            unsplashImage?.[mobileOrDesktop],
-          )}
+          src={backgroundImageSrc}
         >
           <Flex
             justify={"center"}

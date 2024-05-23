@@ -1,4 +1,4 @@
-import { Box, Button } from "@mantine/core";
+import { Box } from "@mantine/core";
 import ThemePreview from "./components/ThemePreview";
 import styles from "./ThemeEditor.module.css";
 import ThemeStyles from "./components/ThemeStylesEditor";

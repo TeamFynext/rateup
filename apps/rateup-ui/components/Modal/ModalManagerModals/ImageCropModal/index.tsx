@@ -90,7 +90,6 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
     }
   }
   const handleCropSubmit = async () => {
-    console.log(imageUrl, "image url in handle crop submit in imageCropModal");
     setScale(1);
     if (!imageUrl.startsWith("blob")) {
       const unsplashLink = generateCroppedLinkForUnsplash({
@@ -123,7 +122,8 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
               source: "user-device",
               file,
             });
-            URL.revokeObjectURL(imageUrl);
+            // This setTimeout is to prevent get imageUrl not found error in CanvasPreview.ts file.
+            setTimeout(() => URL.revokeObjectURL(imageUrl), 100);
             modals.closeAll();
           }
         },
@@ -163,18 +163,16 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
 
   return (
     <>
-      {imageUrl?.startsWith("blob:") && (
-        <NumberInput
-          label="Scale the Image"
-          step={0.1}
-          min={0.1}
-          max={1}
-          defaultValue={scale}
-          onChange={(e) => setScale(Number(e))}
-          decimalScale={1}
-          fixedDecimalScale
-        />
-      )}
+      <NumberInput
+        label="Scale the Image"
+        step={0.1}
+        min={0.1}
+        max={1}
+        defaultValue={scale}
+        onChange={(e) => setScale(Number(e))}
+        decimalScale={1}
+        fixedDecimalScale
+      />
 
       <Box className={styles["react-crop-container"]}>
         {

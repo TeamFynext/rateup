@@ -21,6 +21,7 @@ import {
   usePaymentPlanUpdate,
   usePaymentsPlans,
   usePlanSyncMutation,
+  useRateupPaymentsPlans,
 } from "../../../backend/payment/payment.query";
 import dayjs from "dayjs";
 import {
@@ -28,12 +29,14 @@ import {
   IconInfoCircle,
   IconRefresh,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react";
 import { PaymentPlanStatus } from "../../../types/enums";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import {
+  showErrorToast,
   showLoadingToast,
   showSuccessToast,
 } from "../../../utils/notifications";
@@ -43,6 +46,7 @@ import classes from "../../../components/Graph/graph.module.css";
 const RazorpayPlans = () => {
   const syncPlans = usePlanSyncMutation();
   const planUpdateMutate = usePaymentPlanUpdate();
+  const { data: rateupPlans, isPending } = useRateupPaymentsPlans();
 
   const handleUpdatePlans = (updatedData) => {
     planUpdateMutate.mutate(updatedData);
@@ -58,6 +62,18 @@ const RazorpayPlans = () => {
     const planIdLocal = Array.isArray(plans?.data)
       ? plans?.data?.find((plan) => plan?.planId == selectedPlanId)?.id
       : "";
+    const planInrateupPlans =
+      rateupPlans &&
+      rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
+    if (planInrateupPlans) {
+      showErrorToast(
+        "Unable to delete.Plan is in use in rateup plan",
+        "plan",
+        <IconX />,
+        true,
+      );
+      return;
+    }
     deletePaymentPlanMutation.mutate({
       id: planIdLocal,
       planId: selectedPlanId,

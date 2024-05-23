@@ -1,5 +1,6 @@
 import { Box, Image, Textarea } from "@mantine/core";
-import styles from "./ThemePreview.module.css";
+import { useCallback, useRef } from "react";
+import { imagesPath } from "../../../../../HomePage/constants";
 import PreviewDeviceSelector from "../../../../../Survey/SurveyTheme/components/PreviewDeviceSelector";
 import {
   useSelectedPreviewDevice,
@@ -7,10 +8,8 @@ import {
   useThemeDispatch,
   useThemeObj,
 } from "../../ThemeContext/ThemeContext";
-import { imagesPath } from "../../../../../HomePage/constants";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { IconChevronRight } from "@tabler/icons-react";
 import UnsplashCreditText from "../UnsplashCreditText";
+import styles from "./ThemePreview.module.css";
 
 function ThemePreview() {
   const selectedPreviewDevice = useSelectedPreviewDevice();

@@ -108,7 +108,7 @@ function CustomColorPicker({
       <Popover.Dropdown>
         <ColorPicker
           format="hex"
-          value={value}
+          value={!value?.length ? "#000000" : value}
           onChange={handleInputChange}
           swatches={[
             "#25262b",
