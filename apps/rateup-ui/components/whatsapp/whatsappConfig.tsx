@@ -11,7 +11,7 @@ export const WA_FLOW_SUBHEADING_CHAR_LIMIT = 60;
 export const WA_FLOW_EMBEDDED_LINK_LIMIT = 25;
 export const WA_FLOW_OPT_IN_LIMIT = 100;
 export const FlowMaxScreens = 8;
-export const FlowMaxElementsPerScreen = 10;
+export const FlowMaxElementsPerScreen = 50;
 export function getFlowLabelLimit(type: WaFlowFormElementType) {
   switch (type) {
     case WaFlowFormElementType.checkboxGroup:

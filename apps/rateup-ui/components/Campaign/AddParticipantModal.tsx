@@ -7,20 +7,28 @@ import {
   Stack,
   Title,
   Text,
-  Paper,
   Flex,
   Loader,
   Box,
+  SegmentedControl,
+  MultiSelect,
+  Tabs,
+  CloseButton,
 } from "@mantine/core";
-import { IconPlus, IconUser, IconUsers } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { useState } from "react";
 import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import { showWarnToast } from "../../utils/notifications";
-import { CampaignParticipantSource } from "../../types/enums";
+import {
+  CampaignParticipantAddStatus,
+  CampaignParticipantSource,
+} from "../../types/enums";
 import { useListState } from "@mantine/hooks";
+import { useCampaignData } from "../../backend/campaign/campaign.query";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const AddParticipantModal = ({ close, campaign }) => {
   const [selectedTab, setSelectedTab] = useState(
@@ -28,11 +36,17 @@ const AddParticipantModal = ({ close, campaign }) => {
   );
   const [selectedContacts, selectedContactsHandlers] = useListState([]);
   const [selectedGroups, selectedGroupsHandlers] = useListState([]);
+  const [selectedCampaigns, selectedCampaignsHandlers] = useListState([]);
+  const [selectedStatus, selectedStatusHandlers] = useListState(
+    Object.values(CampaignParticipantAddStatus) || [],
+  );
 
   const [searchText, setSearchText] = useState("");
   const { data: contacts, isLoading: contactIsLoading } = useContacts();
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
+  const { data: campaignData, isPending: isAllCampaignLoading } =
+    useCampaignData();
 
   const isSelectedAll =
     selectedTab === CampaignParticipantSource.INDIVIDUAL
@@ -42,14 +56,24 @@ const AddParticipantModal = ({ close, campaign }) => {
   const addCampaignParticipants = useAddCampaignParticipants(campaign?.id);
 
   const handleSubmit = () => {
-    if (!selectedContacts.length && !selectedGroups.length) {
+    if (
+      selectedContacts.length === 0 &&
+      selectedGroups.length === 0 &&
+      selectedCampaigns?.length === 0
+    ) {
       showWarnToast("You have not selected any participant");
       return;
     }
 
     const contactIds = selectedContacts.map((customer) => customer.id);
     const groupIds = selectedGroups.map((group) => group.id);
-    const participants = { contactIds: contactIds, groupIds: groupIds };
+    const campaignIds = selectedCampaigns.map((campaign) => campaign.id);
+    const participants = {
+      contactIds,
+      groupIds,
+      campaignIds,
+      status: selectedStatus,
+    };
     addCampaignParticipants.mutate(
       { data: participants, campaignId: campaign?.id },
       {
@@ -59,18 +83,31 @@ const AddParticipantModal = ({ close, campaign }) => {
   };
 
   function handleSelectAll(e) {
-    if (e.target.checked) {
-      if (selectedTab == CampaignParticipantSource.INDIVIDUAL) {
-        selectedContactsHandlers.setState(contacts);
-      } else {
-        selectedGroupsHandlers.setState(contactGroup.data);
-      }
-    } else {
-      if (selectedTab == CampaignParticipantSource.INDIVIDUAL) {
-        selectedContactsHandlers.setState([]);
-      } else {
-        selectedGroupsHandlers.setState([]);
-      }
+    const isChecked = e.target.checked;
+    const emptyState = [];
+
+    switch (selectedTab) {
+      case CampaignParticipantSource.INDIVIDUAL:
+        selectedContactsHandlers.setState(isChecked ? contacts : emptyState);
+        break;
+      case CampaignParticipantSource.GROUP:
+        selectedGroupsHandlers.setState(
+          isChecked
+            ? contactGroup.data?.filter((data) => data?._count.contacts)
+            : emptyState,
+        );
+        break;
+      case CampaignParticipantSource.CAMPAIGN:
+        selectedCampaignsHandlers.setState(
+          isChecked
+            ? campaignData.data?.filter(
+                (data) => data?._count.campaignParticipants,
+              )
+            : emptyState,
+        );
+        break;
+      default:
+        break;
     }
   }
 
@@ -86,94 +123,119 @@ const AddParticipantModal = ({ close, campaign }) => {
         g.name.toLowerCase().includes(searchText.toLowerCase()),
       )
     : contactGroup?.data;
+  const filteredCampaigns = searchText
+    ? campaignData?.data.filter((g) =>
+        g.name.toLowerCase().includes(searchText.toLowerCase()),
+      )
+    : campaignData?.data;
+
   return (
-    <Box p={"lg"}>
+    <Box px={"md"} pb={"md"}>
       <Stack>
-        <Group justify="space-between">
-          <Title order={2}>Add Participants</Title>
-          <Group>
-            <Button
-              variant={
-                selectedTab == CampaignParticipantSource.INDIVIDUAL
-                  ? "outline"
-                  : "default"
-              }
-              leftSection={<IconUser />}
-              radius={"md"}
-              onClick={() =>
-                setSelectedTab(CampaignParticipantSource.INDIVIDUAL)
-              }
-            >
-              Individual
-            </Button>
-            <Button
-              variant={
-                selectedTab == CampaignParticipantSource.GROUP
-                  ? "outline"
-                  : "default"
-              }
-              leftSection={<IconUsers />}
-              radius={"md"}
-              onClick={() => setSelectedTab(CampaignParticipantSource.GROUP)}
-            >
-              Group
-            </Button>
-          </Group>
-        </Group>
         <SimpleGrid cols={2}>
-          <Stack gap={1}>
-            <Group justify="space-between" mb={"xs"}>
-              <Title order={6}>Select Contacts</Title>
-              <Checkbox
-                label="Select all"
-                c={"#149a8a"}
-                checked={isSelectedAll}
-                onChange={handleSelectAll}
+          <ContainedTextField
+            placeholder={`Search ${selectedTab?.toLowerCase()}`}
+            value={searchText}
+            onChange={(e) => setSearchText(e.currentTarget.value)}
+            rightSection={
+              <CloseButton
+                aria-label="Clear input"
+                onClick={() => setSearchText("")}
+                display={searchText ? undefined : "none"}
+                mr={"xs"}
               />
-            </Group>
-            <ContainedTextField
-              placeholder="Search contacts"
-              radius={"lg"}
-              size="md"
-              value={searchText}
-              onChange={(e) => setSearchText(e.currentTarget.value)}
-            />
-            <ScrollArea h={200}>
-              <Paper shadow="xl" p={"lg"}>
-                {contactIsLoading || (groupIsLoading && <Loader type="bars" />)}
-                {selectedTab == CampaignParticipantSource.INDIVIDUAL &&
-                  (filteredContacts?.length > 0 ? (
-                    filteredContacts.map((contact) => (
-                      <Individual
-                        customer={contact}
-                        selectedContacts={selectedContacts}
-                        selectedContactsHandlers={selectedContactsHandlers}
-                        key={contact?.id}
-                        participants={campaign?.campaignParticipants}
-                      />
-                    ))
-                  ) : (
-                    <Text>No contacts found</Text>
-                  ))}
-                {selectedTab == CampaignParticipantSource.GROUP &&
-                  (filteredGroups?.length > 0 ? (
-                    filteredGroups.map((group) => (
-                      <CustomerGroup
-                        group={group}
-                        selectedGroups={selectedGroups}
-                        selectedGroupsHandlers={selectedGroupsHandlers}
-                        key={group.id}
-                      />
-                    ))
-                  ) : (
-                    <Text>No group found</Text>
-                  ))}
-              </Paper>
-            </ScrollArea>
+            }
+            mah={40}
+          />
+          <SegmentedControl
+            data={Object.values(CampaignParticipantSource)}
+            value={selectedTab}
+            onChange={(value) =>
+              setSelectedTab(value as CampaignParticipantSource)
+            }
+            color={"var(--mantine-color-whatsapp-green-filled)"}
+            radius={"md"}
+            defaultValue={CampaignParticipantSource.INDIVIDUAL}
+            tt={"capitalize"}
+            miw={200}
+          />
+          <Stack gap={1}>
+            <PaperLayout>
+              <Group justify="space-between" mb={4}>
+                <Title order={6}>Select {selectedTab?.toLowerCase()}</Title>
+                <Checkbox
+                  label="Select all"
+                  c={"#149a8a"}
+                  checked={isSelectedAll}
+                  onChange={handleSelectAll}
+                />
+              </Group>
+              <ScrollArea h={300} pr={"sm"}>
+                <Tabs value={selectedTab} color="var(--tertiary-color)">
+                  {contactIsLoading ||
+                    isAllCampaignLoading ||
+                    (groupIsLoading && <Loader type="bars" />)}
+                  <Tabs.Panel value={CampaignParticipantSource.INDIVIDUAL}>
+                    {filteredContacts?.length > 0 ? (
+                      filteredContacts.map((contact) => (
+                        <Individual
+                          customer={contact}
+                          selectedContacts={selectedContacts}
+                          selectedContactsHandlers={selectedContactsHandlers}
+                          key={contact?.id}
+                          participants={campaign?.campaignParticipants}
+                        />
+                      ))
+                    ) : (
+                      <Text>No contacts found</Text>
+                    )}
+                  </Tabs.Panel>
+                  <Tabs.Panel value={CampaignParticipantSource.GROUP}>
+                    {filteredGroups?.length > 0 ? (
+                      filteredGroups.map((group) => (
+                        <CustomerGroup
+                          group={group}
+                          selectedGroups={selectedGroups}
+                          selectedGroupsHandlers={selectedGroupsHandlers}
+                          key={group.id}
+                        />
+                      ))
+                    ) : (
+                      <Text>No group found</Text>
+                    )}
+                  </Tabs.Panel>
+                  <Tabs.Panel value={CampaignParticipantSource.CAMPAIGN}>
+                    <MultiSelect
+                      label="message status"
+                      placeholder="Pick status"
+                      data={Object.values(CampaignParticipantAddStatus)}
+                      onChange={(e: any) => selectedStatusHandlers.setState(e)}
+                      value={selectedStatus}
+                      searchable
+                      hidePickedOptions
+                    />
+                    {filteredCampaigns?.length > 0 ? (
+                      filteredCampaigns.map((campaign) => (
+                        <CustomerCampaign
+                          campaign={campaign}
+                          selectedCampaigns={selectedCampaigns}
+                          selectedCampaignsHandlers={selectedCampaignsHandlers}
+                          key={campaign.id}
+                        />
+                      ))
+                    ) : (
+                      <Text>No group found</Text>
+                    )}
+                  </Tabs.Panel>
+                </Tabs>
+              </ScrollArea>
+            </PaperLayout>
           </Stack>
-          <ScrollArea h={200}>
-            {selectedContacts?.length || selectedGroups?.length ? (
-              <Paper shadow="xl" p={"lg"}>
+          {selectedContacts?.length > 0 ||
+          selectedGroups?.length > 0 ||
+          selectedCampaigns?.length > 0 ? (
+            <PaperLayout>
+              <ScrollArea h={325} pr={"sm"}>
                 {selectedContacts?.map((customer) => (
                   <Individual
                     customer={customer}
@@ -191,13 +253,21 @@ const AddParticipantModal = ({ close, campaign }) => {
                     key={group?.id}
                   />
                 ))}
-              </Paper>
-            ) : (
-              <></>
-            )}
-          </ScrollArea>
+                {selectedCampaigns?.map((group) => (
+                  <CustomerCampaign
+                    campaign={group}
+                    selectedCampaigns={selectedCampaigns}
+                    selectedCampaignsHandlers={selectedCampaignsHandlers}
+                    key={group?.id}
+                  />
+                ))}
+              </ScrollArea>
+            </PaperLayout>
+          ) : (
+            <></>
+          )}
         </SimpleGrid>
-        <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
+        <Flex justify={"flex-end"} gap={"md"}>
           <Button variant="outline" radius={"xl"} onClick={close}>
             Cancel
           </Button>
@@ -301,5 +371,41 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
     </Group>
   );
 };
+const CustomerCampaign = ({
+  campaign,
+  selectedCampaigns,
+  selectedCampaignsHandlers,
+}) => {
+  const isSelected = selectedCampaigns.some((c) => c?.id === campaign?.id);
 
+  return (
+    <Group justify="space-between" py={4}>
+      <Title order={5}>{campaign?.name}</Title>
+      {isSelected ? (
+        <Button
+          variant="outline"
+          onClick={() => {
+            selectedCampaignsHandlers.filter((c) => c?.id !== campaign?.id);
+          }}
+          radius={"xl"}
+          size="sm"
+        >
+          Remove
+        </Button>
+      ) : (
+        <Button
+          onClick={() => {
+            selectedCampaignsHandlers.append(campaign);
+          }}
+          radius={"xl"}
+          size="sm"
+          w={90}
+          disabled={!campaign?._count.campaignParticipants}
+        >
+          Add
+        </Button>
+      )}
+    </Group>
+  );
+};
 export default AddParticipantModal;

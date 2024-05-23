@@ -46,41 +46,66 @@ export function getDividerLabel(tabState: SelectedItemEnum) {
   }
 }
 
-export async function destructureThemeAndUploadImagesIfAny(
-  surveyTheme: SurveyTheme,
-) {
+export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   const {
     welcomeTheme: {
-      bg: { desktopbg: welcomeDesktopBg, mobilebg: welcomeMobileBg },
+      bg: {
+        desktopbg: welcomeDesktopBg,
+        mobilebg: welcomeMobileBg,
+        desktopbgFile: welcomeDesktopBgFile,
+        mobilebgFile: welcomeMobileBgFile,
+      },
     },
     surveyTheme: {
-      bg: { desktopbg: surveyDesktopBg, mobilebg: surveyMobileBg },
-      logo: { logo: orgLogo },
+      bg: {
+        desktopbg: surveyDesktopBg,
+        mobilebg: surveyMobileBg,
+        desktopbgFile: surveyDesktopBgFile,
+        mobilebgFile: surveyMobileBgFile,
+      },
+      logo: { logoFile },
     },
     thankyouTheme: {
-      bg: { desktopbg: thankyouDesktopBg, mobilebg: thankyouMobileBg },
+      bg: {
+        desktopbg: thankyouDesktopBg,
+        mobilebg: thankyouMobileBg,
+        desktopbgFile: thankyouDesktopBgFile,
+        mobilebgFile: thankyouMobileBgFile,
+      },
     },
   } = surveyTheme;
 
   const images = [
-    welcomeDesktopBg ?? "",
-    welcomeMobileBg ?? "",
-    surveyDesktopBg ?? "",
-    surveyMobileBg ?? "",
-    thankyouDesktopBg ?? "",
-    thankyouMobileBg ?? "",
-    orgLogo ?? "",
+    welcomeDesktopBgFile ?? welcomeDesktopBg,
+    welcomeMobileBgFile ?? welcomeMobileBg,
+    surveyDesktopBgFile ?? surveyDesktopBg,
+    surveyMobileBgFile ?? surveyMobileBg,
+    thankyouDesktopBgFile ?? thankyouDesktopBg,
+    thankyouMobileBgFile ?? thankyouMobileBg,
+    logoFile ?? "",
   ];
+
+  console.log(images, "from surveyTheme");
 
   const urls = await Promise.all(
     images.map((image: string | File | Blob) =>
       image instanceof File || image instanceof Blob
-        ? uploadFile(image)
+        ? uploadFile(image).then(
+            (fileKey) =>
+              `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${fileKey}`,
+          )
         : Promise.resolve(image),
     ),
   );
 
-  const newSurveyTheme: SurveyTheme = produce(surveyTheme, (draft) => {
+  const newSurveyTheme = produce(surveyTheme, (draft) => {
+    delete draft.welcomeTheme.bg.desktopbgFile;
+    delete draft.welcomeTheme.bg.mobilebgFile;
+    delete draft.surveyTheme.bg.desktopbgFile;
+    delete draft.surveyTheme.bg.mobilebgFile;
+    delete draft.thankyouTheme.bg.desktopbgFile;
+    delete draft.thankyouTheme.bg.mobilebgFile;
+    delete draft.surveyTheme.logo.logoFile;
     [
       draft.welcomeTheme.bg.desktopbg,
       draft.welcomeTheme.bg.mobilebg,
@@ -91,7 +116,8 @@ export async function destructureThemeAndUploadImagesIfAny(
       draft.surveyTheme.logo.logo,
     ] = urls;
   });
-  return newSurveyTheme;
+
+  return newSurveyTheme as unknown as SurveyTheme;
 }
 
 export function getFeaturesBasedOnQuestionType(

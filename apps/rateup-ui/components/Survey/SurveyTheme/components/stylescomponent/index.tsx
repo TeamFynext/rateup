@@ -1,147 +1,53 @@
 import {
   Box,
   MantineProvider,
+  Overlay,
   ScrollArea,
   Select,
-  Stack,
   Tabs,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import { produce } from "immer";
-import { useContext, useEffect, useState } from "react";
-import { useSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { theme } from "../../../../../config/mantineTheme";
 import { SelectedItemEnum, ThemeTabEnum } from "../../SurveyTheme.enums";
-import { SurveyThemeContext } from "../../SurveyThemeContext";
 import {
-  ThankyouTheme,
-  WelcomeTheme,
-  _SurveyTheme,
-} from "../../surveyTheme.types";
+  useSelectedEditor,
+  useSelectedPageTab,
+  useSetSelectedEditor,
+} from "../../SurveyThemeContext";
+import { _SurveyTheme } from "../../surveyTheme.types";
 import BackgroundStyles from "../BackgroundStyles";
 import ButtonStyles from "../ButtonStyles";
 import DescStyles from "../DescStyles";
 import HeaderStyles from "../HeaderStyles";
 import InputStyles from "../InputStyles";
-import CustomSwitch from "./CustomSwitch";
-import styles from "./StylesComponent.module.css";
 import LogoStyles from "../LogoStyles";
-
-type SelectedStyles = WelcomeTheme | _SurveyTheme | ThankyouTheme;
-interface StylesComponentProps {
-  selectedType: SelectedItemEnum;
-  availableStyleComponents: Array<SelectedItemEnum>;
-  setSelectedTab: any;
-  selectedTab: ThemeTabEnum;
-  survey: any;
-}
+import { supportedPageEditors } from "../../SurveyTheme.constants";
+import styles from "./StylesComponent.module.css";
+import surveyThemeStyles from "../../SurveyTheme.module.css";
 
 function RenderOption({ option, checked }) {
   return <Box>{option.label}</Box>;
 }
 
-function StylesComponent({
-  selectedType,
-  selectedTab,
-  survey,
-  availableStyleComponents,
-}: StylesComponentProps) {
-  const [tabState, setTabState] = useState<string>(SelectedItemEnum.BACKGROUND);
-  const { surveyTheme, setSurveyTheme } = useContext(SurveyThemeContext);
-  const { data: _webSurveyTheme } = useSurveyTheme(survey?.webSurveyThemeId);
-  const {
-    id,
-    welcomeTheme,
-    surveyTheme: _surveyTheme,
-    thankyouTheme,
-  } = surveyTheme;
-  const [selectedTabStyles, setSelectedTabStyles] = useState<SelectedStyles>();
+function StylesComponent({ survey }) {
+  const selectedPageTab = useSelectedPageTab();
+  const selectedEditor = useSelectedEditor();
+  const setSelectedEditor = useSetSelectedEditor();
 
-  useEffect(() => {
-    switch (selectedTab) {
-      case ThemeTabEnum.WELCOME:
-        setSelectedTabStyles(welcomeTheme);
-        break;
-      case ThemeTabEnum.SURVEY:
-        setSelectedTabStyles(_surveyTheme);
-        break;
-      case ThemeTabEnum.THANKYOU:
-        setSelectedTabStyles(thankyouTheme);
-        break;
-      default:
-        break;
-    }
-  }, [selectedTab, surveyTheme]);
-
-  useEffect(() => {
-    switch (selectedType) {
-      case SelectedItemEnum.TITLE:
-        setTabState(SelectedItemEnum.TITLE);
-        break;
-      case SelectedItemEnum.SUBTITLE:
-        setTabState(SelectedItemEnum.SUBTITLE);
-        break;
-      case SelectedItemEnum.BUTTON:
-        setTabState(SelectedItemEnum.BUTTON);
-        break;
-      case SelectedItemEnum.BACKGROUND:
-        setTabState(SelectedItemEnum.BACKGROUND);
-        break;
-      case SelectedItemEnum.INPUT:
-        setTabState(SelectedItemEnum.INPUT);
-        break;
-      default:
-        setTabState(SelectedItemEnum.BACKGROUND);
-        break;
-    }
-  }, [selectedType]);
-
-  useEffect(() => {
-    setTabState(SelectedItemEnum.BACKGROUND);
-  }, [selectedTab]);
-
-  function updateSelectedTabStyle(key: string, value: any) {
-    switch (selectedTab) {
-      case ThemeTabEnum.WELCOME:
-        setSurveyTheme(
-          produce((draft) => {
-            draft.welcomeTheme[key] = value;
-          }),
-        );
-        break;
-      case ThemeTabEnum.SURVEY:
-        setSurveyTheme(
-          produce((draft) => {
-            draft.surveyTheme[key] = value;
-          }),
-        );
-        break;
-      case ThemeTabEnum.THANKYOU:
-        setSurveyTheme(
-          produce((draft) => {
-            draft.thankyouTheme[key] = value;
-          }),
-        );
-        break;
-      default:
-        break;
-    }
-  }
-
-  useEffect(() => {
-    setSurveyTheme(_webSurveyTheme);
-  }, [_webSurveyTheme]);
-
-  const confettiEnabled = (selectedTabStyles as ThankyouTheme)?.confettiEnabled;
+  const isWelcomePageEnabled = survey?.welcomePageEnabled;
 
   return (
     <MantineProvider theme={theme}>
       <ScrollArea type="hover" className={styles["styles-component-div"]}>
+        {selectedPageTab === ThemeTabEnum.WELCOME && !isWelcomePageEnabled && (
+          <Overlay className={surveyThemeStyles["overlay"]} />
+        )}
+
         <Select
           className={styles["editor-select-dropdown"]}
-          value={tabState}
-          data={availableStyleComponents}
-          onChange={(value: string) => setTabState(value as SelectedItemEnum)}
+          value={selectedEditor}
+          data={supportedPageEditors[selectedPageTab]}
+          onChange={setSelectedEditor}
           leftSection={<IconEdit width={"1rem"} />}
           renderOption={RenderOption}
           classNames={{
@@ -151,79 +57,52 @@ function StylesComponent({
           allowDeselect={false}
         />
 
-        <Tabs value={tabState}>
-          {availableStyleComponents.includes(SelectedItemEnum.BACKGROUND) && (
+        <Tabs value={selectedEditor}>
+          {supportedPageEditors[selectedPageTab].includes(
+            SelectedItemEnum.BACKGROUND,
+          ) && (
             <Tabs.Panel value={SelectedItemEnum.BACKGROUND}>
-              <Stack w="100%">
-                {selectedTab === ThemeTabEnum.THANKYOU && (
-                  <CustomSwitch
-                    checked={confettiEnabled}
-                    onChange={(e) =>
-                      updateSelectedTabStyle(
-                        "confettiEnabled",
-                        e?.target?.checked,
-                      )
-                    }
-                    label={"Confetti Enabled"}
-                  />
-                )}
-                <BackgroundStyles
-                  currentStyles={selectedTabStyles?.bg}
-                  setCurrentstyles={updateSelectedTabStyle}
-                />
-              </Stack>
+              <BackgroundStyles />
             </Tabs.Panel>
           )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.TITLE) && (
+          {supportedPageEditors[selectedPageTab].includes(
+            SelectedItemEnum.TITLE,
+          ) && (
             <Tabs.Panel value={SelectedItemEnum.TITLE}>
-              <HeaderStyles
-                currentStyles={
-                  (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.title
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-                selectedTab={selectedTab}
-              />
+              <HeaderStyles />
             </Tabs.Panel>
           )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.SUBTITLE) && (
+          {supportedPageEditors[selectedPageTab].includes(
+            SelectedItemEnum.SUBTITLE,
+          ) && (
             <Tabs.Panel value={SelectedItemEnum.SUBTITLE}>
-              <DescStyles
-                currentStyles={
-                  (selectedTabStyles as ThankyouTheme | WelcomeTheme)?.subtitle
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-              />
+              <DescStyles />
             </Tabs.Panel>
           )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.BUTTON) && (
+          {supportedPageEditors[selectedPageTab].includes(
+            SelectedItemEnum.BUTTON,
+          ) && (
             <Tabs.Panel value={SelectedItemEnum.BUTTON}>
-              <ButtonStyles
-                selectedTab={selectedTab}
-                currentStyles={
-                  (selectedTabStyles as _SurveyTheme | WelcomeTheme)?.button
-                }
-                setCurrentstyles={updateSelectedTabStyle}
-              />
-            </Tabs.Panel>
-          )}
-          {availableStyleComponents.includes(SelectedItemEnum.INPUT) && (
-            <Tabs.Panel value={SelectedItemEnum.INPUT}>
-              <InputStyles
-                currentStyles={(selectedTabStyles as _SurveyTheme)?.input}
-                setCurrentstyles={updateSelectedTabStyle}
-              />
+              <ButtonStyles />
             </Tabs.Panel>
           )}
 
-          {availableStyleComponents.includes(SelectedItemEnum.LOGO) && (
+          {supportedPageEditors[selectedPageTab].includes(
+            SelectedItemEnum.INPUT,
+          ) && (
+            <Tabs.Panel value={SelectedItemEnum.INPUT}>
+              <InputStyles />
+            </Tabs.Panel>
+          )}
+
+          {supportedPageEditors[selectedPageTab].includes(
+            SelectedItemEnum.LOGO,
+          ) && (
             <Tabs.Panel value={SelectedItemEnum.LOGO}>
-              <LogoStyles
-                currentStyles={(selectedTabStyles as _SurveyTheme)?.logo}
-                setCurrentstyles={updateSelectedTabStyle}
-              />
+              <LogoStyles />
             </Tabs.Panel>
           )}
         </Tabs>

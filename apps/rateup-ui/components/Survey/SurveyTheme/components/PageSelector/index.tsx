@@ -1,14 +1,29 @@
 import { Tabs } from "@mantine/core";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import styles from "./PageSelector.module.css";
+import {
+  useSelectedPageTab,
+  useSurveyThemeStateDispatch,
+} from "../../SurveyThemeContext";
+import { useCallback } from "react";
 
-function PageSelector({ onChange, value }) {
+function PageSelector() {
+  const selectedPageTab = useSelectedPageTab();
+  const stateDispatch = useSurveyThemeStateDispatch();
+
+  const handleChange = useCallback((value) => {
+    stateDispatch({
+      type: "selected-page-tab-change",
+      payload: value,
+    });
+  }, []);
+
   return (
     <Tabs
       classNames={styles}
-      onChange={onChange}
+      onChange={handleChange}
       defaultValue={ThemeTabEnum.SURVEY}
-      value={value}
+      value={selectedPageTab}
     >
       <Tabs.List>
         <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey</Tabs.Tab>

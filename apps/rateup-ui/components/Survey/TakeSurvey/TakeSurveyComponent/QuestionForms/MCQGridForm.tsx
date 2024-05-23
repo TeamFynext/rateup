@@ -24,8 +24,13 @@ import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
 interface MCQGridFormProps {
   features: any;
   previewChoices?: Choice[];
+  isPreview?: boolean;
 }
-const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
+const MCQGridForm = ({
+  features,
+  previewChoices,
+  isPreview,
+}: MCQGridFormProps) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { selectedQ } = useContext(SelectedQContext);
   const choices =
@@ -96,7 +101,7 @@ const MCQGridForm = ({ features, previewChoices }: MCQGridFormProps) => {
 
   return (
     <Stack w={"100%"} justify="center">
-      <ScrollArea scrollbarSize={6} h={450} w={isMobile ? 380 : 750}>
+      <ScrollArea scrollbarSize={6} h={"65vh"} w={isPreview ? 700 : 900}>
         <Table
           horizontalSpacing={"md"}
           verticalSpacing={"md"}

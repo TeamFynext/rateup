@@ -110,7 +110,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
         ) : (
           _photoList?.map((photo, i) => (
             <UnsplashPhoto
-              key={photo?.id}
+              key={photo ? photo.id + i : i}
               photo={photo}
               handleUnsplashImageSave={handleImageClick}
               close={() => context.closeModal(thisModalId)}
