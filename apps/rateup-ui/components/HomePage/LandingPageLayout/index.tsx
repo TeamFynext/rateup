@@ -7,6 +7,8 @@ import { lexend, rubik } from "../../../utils/fonts";
 import classNames from "classnames/bind";
 import { useWindowScroll } from "@mantine/hooks";
 import { IconArrowUp } from "@tabler/icons-react";
+import CookieConsentBanner from "../../Analytics/CookieConsentBanner";
+import { isProduction } from "../../../utils/constants";
 
 const cx = classNames.bind(styles);
 
@@ -49,6 +51,7 @@ function LandingPageLayout({ children, className = "" }) {
           <IconArrowUp width={"55%"} height={"55%"} />
         </ActionIcon>
       )}
+      {isProduction ? <CookieConsentBanner /> : null}
     </div>
   );
 }
