@@ -26,6 +26,26 @@ type campaginExtentend = {
   flowId?: string;
   stats?: {};
 };
+export function getLatestStatus(participant) {
+  let latestStatus = null;
+  let latestTimestamp = null;
+
+  participant.WaMessageCampaginParticipantMap.forEach((mapping) => {
+    Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
+      if (
+        timestamp &&
+        (!latestTimestamp ||
+          dayjs(timestamp as string).isAfter(latestTimestamp))
+      ) {
+        latestTimestamp = dayjs(timestamp as string);
+        latestStatus = status;
+      }
+    });
+  });
+
+  return latestStatus;
+}
+
 export async function getCampaignById(campaignId: string) {
   const campaign: campaginExtentend = await prisma.campaign.findUnique({
     where: {
@@ -71,26 +91,6 @@ export async function getCampaignById(campaignId: string) {
   let countDelivered = 0;
   let countPending = 0;
   let countCompleted = 0;
-
-  function getLatestStatus(participant) {
-    let latestStatus = null;
-    let latestTimestamp = null;
-
-    participant.WaMessageCampaginParticipantMap.forEach((mapping) => {
-      Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
-        if (
-          timestamp &&
-          (!latestTimestamp ||
-            dayjs(timestamp as string).isAfter(latestTimestamp))
-        ) {
-          latestTimestamp = dayjs(timestamp as string);
-          latestStatus = status;
-        }
-      });
-    });
-
-    return latestStatus;
-  }
 
   function updateCounters(stats) {
     if (stats.read) countRead++;

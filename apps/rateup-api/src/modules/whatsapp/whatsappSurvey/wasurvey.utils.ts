@@ -3,6 +3,8 @@ import {
   YNResponse,
   LDResponse,
   SmileyResponse,
+  CampaignParticipantAddStatus,
+  CampaignParticipantStatus,
 } from "../../../types/enums";
 import {
   WaMessageBody,
@@ -615,4 +617,32 @@ export function parseStartMessage(text: string) {
     };
   }
   return null;
+}
+
+export function mapStatuses(addStatuses) {
+  const statusMap = {
+    [CampaignParticipantAddStatus.COMPLETED]: [
+      CampaignParticipantStatus.COMPLETED,
+    ],
+    [CampaignParticipantAddStatus.NOTCOMPLETED]: [
+      CampaignParticipantStatus.SENT,
+      CampaignParticipantStatus.FAILED,
+      CampaignParticipantStatus.READ,
+      CampaignParticipantStatus.DELIVERED,
+      CampaignParticipantStatus.PENDING,
+    ],
+    [CampaignParticipantAddStatus.PENDING]: [CampaignParticipantStatus.PENDING],
+    [CampaignParticipantAddStatus.FAILED]: [CampaignParticipantStatus.FAILED],
+  };
+
+  const result = new Set();
+
+  addStatuses.forEach((status) => {
+    const mappedStatuses = statusMap[status];
+    if (mappedStatuses) {
+      mappedStatuses.forEach((s) => result.add(s));
+    }
+  });
+
+  return Array.from(result);
 }
