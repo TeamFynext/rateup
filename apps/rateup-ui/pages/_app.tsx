@@ -40,6 +40,7 @@ import { pageView } from "../utils/gtag";
 import { isProduction } from "../utils/constants";
 import FacebookPixel from "../components/Analytics/FacebookPixel";
 import { fbPageview } from "../utils/fbpixel";
+import CookieConsentBanner from "../components/Analytics/CookieConsentBanner";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -179,6 +180,12 @@ export default function App({
         <link rel="shortcut icon" href="/favicon.png" />
         <link rel="canonical" href={canonicalUrl} />
       </Head>
+      {isProduction && (
+        <>
+          <GoogleAnalytics />
+          <FacebookPixel />
+        </>
+      )}
       {/* notoColorEmogi is added as fallback for displaying emogies */}
       <main className={`${lexend300.className},${notoColorEmogi.className}`}>
         <QueryClientProvider client={queryClient}>
@@ -202,6 +209,7 @@ export default function App({
                         transition={{ duration: 0.5 }}
                       >
                         <Component {...pageProps} />
+                        {isProduction ? <CookieConsentBanner /> : null}
                       </motion.div>
                     </AnimatePresence>
                   </LayoutComponent>
@@ -218,12 +226,6 @@ export default function App({
           </MantineProvider>
         </QueryClientProvider>
       </main>
-      {isProduction && (
-        <>
-          <GoogleAnalytics />
-          <FacebookPixel />
-        </>
-      )}
     </>
   );
 }

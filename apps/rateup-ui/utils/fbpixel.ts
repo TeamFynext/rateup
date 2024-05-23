@@ -14,3 +14,8 @@ export const fbEvent = (name, options = {}, custom = true) => {
     window.fbq("track", name, options);
   }
 };
+
+export const fbConsent = (access: "grant" | "revoke") => {
+  //@ts-ignore
+  window.fbq("consent", access);
+};
