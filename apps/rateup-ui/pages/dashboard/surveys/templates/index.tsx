@@ -1,41 +1,31 @@
-import React, { useContext, useState } from "react";
-import { useRouter } from "next/router";
-import { useUser } from "../../../../context/UserContext";
-import { useTeamsByUser } from "../../../../backend/team/team.query";
-import {
-  useCreateSurveyMutation,
-  useSurveyTemplates,
-} from "../../../../backend/surveys/surveys.query";
-import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import { IconPlus, IconRefresh } from "@tabler/icons-react";
 import {
   ActionIcon,
-  BackgroundImage,
   Box,
-  Center,
-  Flex,
   Group,
   Loader,
-  Paper,
+  Tooltip as MantineTooltip,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import Heading from "../../../../components/styled/Heading/Heading";
-import FormModalLayout from "../../../../components/Modal/FormModalLayout";
-import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
-import SurveyTemplates from "./surveyTemplates";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import SurveyThemeContextProvider, {
-  SurveyThemeContext,
-} from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
-import { UserRole } from "../../../../utils/enums";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
+import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
+import { useTeamsByUser } from "../../../../backend/team/team.query";
 import {
   RateupButtonBlue,
   RateupButtonPrimary,
 } from "../../../../components/Button/RateupButtons";
-import { Tooltip as MantineTooltip } from "@mantine/core";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import FormModalLayout from "../../../../components/Modal/FormModalLayout";
+import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
+import Heading from "../../../../components/styled/Heading/Heading";
+import { useUser } from "../../../../context/UserContext";
+import { UserRole } from "../../../../utils/enums";
+import SurveyTemplates from "./surveyTemplates";
 
 const Templates = ({ survey }) => {
   const { user } = useUser();

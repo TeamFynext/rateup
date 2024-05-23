@@ -137,6 +137,28 @@ export const TakeSurveyLayoutWeb = ({
         overflow: "hidden",
       };
 
+  const surveyThemeMobileBgUrl =
+    surveyThemeData?.surveyTheme?.bg?.mobilebg || "";
+  const surveyThemeDesktopBgUrl =
+    surveyThemeData?.surveyTheme?.bg?.desktopbg || "";
+
+  const welcomeThemeMobileBgUrl =
+    surveyThemeData?.welcomeTheme?.bg?.mobilebg || "";
+  const welcomeThemeDesktopBgUrl =
+    surveyThemeData?.welcomeTheme?.bg?.desktopbg || "";
+
+  const surveyPageBgUrl = isMobile
+    ? surveyThemeMobileBgUrl
+    : surveyThemeDesktopBgUrl;
+  const welcomePageBgUrl = isMobile
+    ? welcomeThemeMobileBgUrl
+    : welcomeThemeDesktopBgUrl;
+
+  const backgroundImageSrc = !startClicked ? welcomePageBgUrl : surveyPageBgUrl;
+  const isUnsplashImage = backgroundImageSrc?.startsWith(
+    "https://images.unsplash.com",
+  );
+
   return (
     <MantineProvider
       theme={{
@@ -197,22 +219,7 @@ export const TakeSurveyLayoutWeb = ({
           // mih={"100dvh"}
           style={takeSurveyLayoutWebRootStyles}
         >
-          <CreditsCard
-            enableCredits={
-              !startClicked
-                ? isMobile
-                  ? surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.mobile
-                  : surveyThemeData?.welcomeTheme?.bg?.unsplashImage?.desktop
-                : isMobile
-                  ? surveyThemeData?.surveyTheme?.bg?.unsplashImage?.mobile
-                  : surveyThemeData?.surveyTheme?.bg?.unsplashImage?.desktop
-            }
-            url={
-              isMobile && surveyThemeData?.welcomeTheme?.bg?.mobilebg
-                ? surveyThemeData?.welcomeTheme?.bg?.mobilebg
-                : surveyThemeData?.welcomeTheme?.bg?.desktopbg
-            }
-          >
+          <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
             <BackgroundImage
               // mih={"100dvh"}
               h={"100%"}
@@ -223,35 +230,7 @@ export const TakeSurveyLayoutWeb = ({
                 justifyContent: "space-between",
                 objectFit: "contain",
               }}
-              src={
-                !startClicked
-                  ? surveyThemeData?.welcomeTheme?.bg?.desktopbg ||
-                    surveyThemeData?.welcomeTheme?.bg?.mobilebg
-                    ? getImageUrl(
-                        isMobile && surveyThemeData?.welcomeTheme?.bg?.mobilebg
-                          ? surveyThemeData?.welcomeTheme?.bg?.mobilebg
-                          : surveyThemeData?.welcomeTheme?.bg?.desktopbg,
-                        isMobile
-                          ? surveyThemeData?.welcomeTheme?.bg?.unsplashImage
-                              ?.mobile
-                          : surveyThemeData?.welcomeTheme?.bg?.unsplashImage
-                              ?.desktop,
-                      )
-                    : ""
-                  : surveyThemeData?.surveyTheme?.bg?.desktopbg ||
-                      surveyThemeData?.surveyTheme?.bg?.mobilebg
-                    ? getImageUrl(
-                        isMobile && surveyThemeData?.surveyTheme?.bg?.mobilebg
-                          ? surveyThemeData?.surveyTheme?.bg?.mobilebg
-                          : surveyThemeData?.surveyTheme?.bg?.desktopbg,
-                        isMobile
-                          ? surveyThemeData?.surveyTheme?.bg?.unsplashImage
-                              ?.mobile
-                          : surveyThemeData?.surveyTheme?.bg?.unsplashImage
-                              ?.desktop,
-                      )
-                    : ""
-              }
+              src={backgroundImageSrc}
             >
               {/* .........Survey Header Section.......... */}
               {survey?.isPublished == true && !!startClicked && (

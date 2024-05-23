@@ -6,7 +6,7 @@ import {
 } from "../../../../ThemeContext/ThemeContext";
 import { useCallback } from "react";
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker";
-import LocalOrUnsplashImagePicker from "../LocalOrUnsplashImagePicker";
+import LocalOrUnsplashImagePicker from "../../../../../../../LocalOrUnsplashImagePicker";
 
 function BackgroundEditor() {
   const {

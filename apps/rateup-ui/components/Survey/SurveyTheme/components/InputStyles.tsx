@@ -1,34 +1,27 @@
-import {
-  Stack,
-  Text,
-  Divider,
-  Button,
-  Group,
-  ScrollArea,
-  Box,
-} from "@mantine/core";
+import { Box, Group, Stack } from "@mantine/core";
 
-import React, { useCallback } from "react";
-import { Input } from "../surveyTheme.types";
+import { useCallback } from "react";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
+import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
+} from "../SurveyThemeContext";
 
-function InputStyles({
-  currentStyles,
-  setCurrentstyles,
-}: {
-  currentStyles: Input;
-  setCurrentstyles: (key: string, value: any) => void;
-}) {
-  const handleColorPickerChange = useCallback(
-    (valueObj) => {
-      const { themeObjKey, propertyChanged, value } = valueObj;
-      setCurrentstyles(themeObjKey, {
-        ...currentStyles,
-        [propertyChanged]: value,
-      });
-    },
-    [currentStyles],
-  );
+function InputStyles() {
+  const selectedPageTab = useSelectedPageTab();
+  const surveyTheme = useSurveyThemeContextValue();
+  const { input } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+
+  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+
+  const handleColorPickerChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "input-color-change",
+      payload: value,
+    });
+  }, []);
 
   return (
     <>
@@ -37,11 +30,7 @@ function InputStyles({
           <Box className={"custom-color-picker-and-heading-container"}>
             <h2>Text Color</h2>
             <CustomColorPicker
-              optionalDataObj={{
-                themeObjKey: "input",
-                propertyChanged: "primaryColor",
-              }}
-              value={currentStyles?.primaryColor}
+              value={input?.primaryColor}
               onChange={handleColorPickerChange}
             />
           </Box>
