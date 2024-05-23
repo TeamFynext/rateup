@@ -106,7 +106,7 @@ function NextPrev({
     >
       {errorTextDivRef.current && (
         <Portal target={errorTextDivRef.current}>
-          {selectedQ?.required && !response && (
+          {selectedQ?.required && !response && response !== 0 && (
             <Text
               className={styles["message-p"]}
               c={themeStyles?.backgroundColor}
@@ -139,6 +139,7 @@ function NextPrev({
             className={styles["submit-next-btn"]}
             disabled={
               ((selectedQ?.required || selectedQ?.validationRules) &&
+                response !== 0 &&
                 !response) ||
               isErrorInput
             }
@@ -147,6 +148,7 @@ function NextPrev({
             rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}
             style={
               ((selectedQ?.required || selectedQ?.validationRules) &&
+                response !== 0 &&
                 !response) ||
               isErrorInput
                 ? {}

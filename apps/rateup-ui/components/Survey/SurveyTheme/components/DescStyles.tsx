@@ -1,30 +1,41 @@
 import { useCallback } from "react";
-
 import { Box, Group, NumberInput, Select, Stack } from "@mantine/core";
-
-import { Subtitle } from "../surveyTheme.types";
-import { FontWeights } from "../SurveyTheme.constants";
+import { FontWeights, getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import styles from "./stylescomponent/StylesComponent.module.css";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
+} from "../SurveyThemeContext";
 
-function DescStyles({
-  currentStyles,
-  setCurrentstyles,
-}: {
-  currentStyles: Subtitle;
-  setCurrentstyles: (key: string, value: any) => void;
-}) {
-  const handleColorPickerChange = useCallback(
-    (valueObj) => {
-      const { themeObjKey, propertyChanged, value } = valueObj;
-      if (currentStyles?.styles)
-        setCurrentstyles(themeObjKey, {
-          ...currentStyles,
-          styles: { ...currentStyles.styles, [propertyChanged]: value },
-        });
-    },
-    [currentStyles],
-  );
+function DescStyles() {
+  const selectedPageTab = useSelectedPageTab();
+  const surveyTheme = useSurveyThemeContextValue();
+  const { subtitle } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+
+  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+
+  const handleColorChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "subtitle-color-change",
+      payload: value,
+    });
+  }, []);
+
+  const handleFontWeightChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "subtitle-font-weight-change",
+      payload: value,
+    });
+  }, []);
+
+  const handleFontSizeChange = useCallback((value) => {
+    surveyThemeDispatch({
+      type: "subtitle-font-size-change",
+      payload: value,
+    });
+  }, []);
 
   return (
     <>
@@ -34,43 +45,27 @@ function DescStyles({
             label="Font weight"
             name="fontWeight"
             data={FontWeights}
-            // maw={120}
-            value={currentStyles?.styles?.fontWeight}
+            value={subtitle?.styles?.fontWeight}
             classNames={{ label: styles["label"] }}
-            onChange={(e) => {
-              setCurrentstyles("subtitle", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, fontWeight: e },
-              });
-            }}
+            onChange={handleFontWeightChange}
           />
           <NumberInput
             min={10}
             max={100}
-            // maw={120}
             defaultValue={18}
             placeholder="size"
             label="Font Size"
             name="fontSize"
             classNames={{ label: styles["label"] }}
-            value={currentStyles?.styles?.fontSize}
-            onChange={(e) => {
-              setCurrentstyles("subtitle", {
-                ...currentStyles,
-                styles: { ...currentStyles.styles, fontSize: e },
-              });
-            }}
+            value={subtitle?.styles?.fontSize}
+            onChange={handleFontSizeChange}
           />
         </Group>
         <Box className={"custom-color-picker-and-heading-container"}>
           <h2>Text Color</h2>
           <CustomColorPicker
-            optionalDataObj={{
-              themeObjKey: "subtitle",
-              propertyChanged: "color",
-            }}
-            value={currentStyles?.styles?.color}
-            onChange={handleColorPickerChange}
+            value={subtitle?.styles?.color}
+            onChange={handleColorChange}
           />
         </Box>
       </Stack>

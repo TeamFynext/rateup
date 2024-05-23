@@ -9,23 +9,25 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { IconEdit } from "@tabler/icons-react";
-import { produce } from "immer";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Confetti from "react-confetti";
+import { surveyUploadsPath } from "../../../../../../utils/constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
-import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
+import { PreviewTypeEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
-import { getImageUrl } from "../../../SurveyTheme.utils";
-import { SurveyThemeContext } from "../../../SurveyThemeContext";
-import { surveyUploadsPath } from "../../../../../../utils/constants";
-export default function ThankyouPageThemeView({
-  selectedType,
-  setSelectedType,
-}) {
-  const { surveyTheme, setSurveyTheme, mobileOrDesktop } =
-    useContext(SurveyThemeContext);
+import {
+  useSelectedPreview,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
+} from "../../../SurveyThemeContext";
+import { IconEdit } from "@tabler/icons-react";
+
+export default function ThankyouPageThemeView() {
+  const surveyTheme = useSurveyThemeContextValue();
+  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+  const selectedPreview = useSelectedPreview();
+
   const {
     thankyouTheme,
     surveyTheme: { logo: orgLogoStylesObj },
@@ -37,13 +39,6 @@ export default function ThankyouPageThemeView({
     title: { styles: titleStyles, title },
     confettiEnabled,
   } = thankyouTheme;
-  function updateThemeText(key: string, value: any) {
-    setSurveyTheme(
-      produce((draft) => {
-        draft.thankyouTheme[key] = value;
-      }),
-    );
-  }
 
   let orgLogoStylesObject = orgLogoStylesObj;
   if (!orgLogoStylesObject) {
@@ -70,45 +65,47 @@ export default function ThankyouPageThemeView({
     };
   }, [orgLogo]);
 
+  const backgroundImageSrc =
+    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
+
+  const handleTitleInputChange = useCallback((e) => {
+    surveyThemeDispatch({
+      type: "title-text-change",
+      payload: e.target.value,
+    });
+  }, []);
+
+  const handleSubtitleTextareaChange = useCallback((e) => {
+    surveyThemeDispatch({
+      type: "subtitle-text-change",
+      payload: e.target.value,
+    });
+  }, []);
+
+  const titleInputRef = useRef(null);
+  const subtitleInputRef = useRef(null);
+
   return (
     <Flex
       align={"center"}
       h="100%"
       style={styles}
-      onClick={(e) => {
-        e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-      }}
       ff={lexend300.style.fontFamily}
     >
       <CreditsCard
-        enableCredits={unsplashImage?.[mobileOrDesktop]}
-        url={
-          mobileOrDesktop === PreviewTypeEnum.DESKTOP
-            ? encodeURI(desktopbg)
-            : encodeURI(mobilebg)
-        }
+        enableCredits={backgroundImageSrc?.startsWith(
+          "https://images.unsplash.com",
+        )}
+        url={backgroundImageSrc}
       >
         <BackgroundImage
           ref={ref}
           className={classes.parentContainer}
           style={{ height: "100%", width: "100%", objectFit: "contain" }}
-          src={getImageUrl(
-            mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
-            unsplashImage?.[mobileOrDesktop],
-          )}
+          src={backgroundImageSrc}
         >
           {confettiEnabled && <Confetti width={width} height={height} />}
-          <ActionIcon
-            variant="default"
-            size="md"
-            radius="lg"
-            onClick={(e) => {
-              e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-            }}
-            className={`${classes.actionIcon} ${classes.bgActionIcon}`}
-          >
-            <IconEdit style={{ width: "70%", height: "70%" }} />
-          </ActionIcon>
+
           <form style={{ width: "100%", height: "100%" }}>
             <Flex
               justify={"center"}
@@ -125,19 +122,7 @@ export default function ThankyouPageThemeView({
               )}
 
               <Tooltip label="Edit title">
-                <Box className={classes.titleBox} mt={20}>
-                  <ActionIcon
-                    variant="default"
-                    radius="lg"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation(),
-                        setSelectedType(SelectedItemEnum.TITLE);
-                    }}
-                    className={classes.actionIcon}
-                  >
-                    <IconEdit style={{ width: "70%", height: "70%" }} />
-                  </ActionIcon>
+                <Box className={classes.titleBox} mt={20} w={"50%"}>
                   <TextInput
                     className={lexend.className}
                     placeholder={"Thankyou"}
@@ -145,10 +130,6 @@ export default function ThankyouPageThemeView({
                     size="xxl"
                     name="headerText"
                     onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => {
-                      e.stopPropagation();
-                      setSelectedType(SelectedItemEnum.TITLE);
-                    }}
                     styles={{
                       input: {
                         ...titleStyles,
@@ -157,46 +138,31 @@ export default function ThankyouPageThemeView({
                       },
                     }}
                     value={title}
-                    onChange={(e) =>
-                      updateThemeText("title", {
-                        ...thankyouTheme.title,
-                        title: e.target.value,
-                      })
-                    }
+                    onChange={handleTitleInputChange}
+                    ref={titleInputRef}
                   />
+
+                  <ActionIcon
+                    variant="default"
+                    radius="lg"
+                    size="sm"
+                    className={classes.actionIcon}
+                    onClick={() => titleInputRef.current?.focus()}
+                  >
+                    <IconEdit style={{ width: "70%", height: "70%" }} />
+                  </ActionIcon>
                 </Box>
               </Tooltip>
               {/* //--------------------------- */}
               <Tooltip label="Edit subtitle">
                 <Box className={classes.titleBox} mt={20} w={"50%"}>
-                  <ActionIcon
-                    variant="default"
-                    radius="lg"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation(),
-                        setSelectedType(SelectedItemEnum.SUBTITLE);
-                    }}
-                    className={classes.actionIcon}
-                  >
-                    <IconEdit style={{ width: "70%", height: "70%" }} />
-                  </ActionIcon>
                   <Textarea
                     className={lexend.className}
-                    onChange={(e) =>
-                      updateThemeText("subtitle", {
-                        ...thankyouTheme.subtitle,
-                        subtitle: e.target.value,
-                      })
-                    }
+                    onChange={handleSubtitleTextareaChange}
                     value={subtitle}
                     placeholder={"Please fill the survey"}
                     variant="unstyled"
                     onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => {
-                      e.stopPropagation(),
-                        setSelectedType(SelectedItemEnum.SUBTITLE);
-                    }}
                     name="descText"
                     styles={{
                       input: {
@@ -206,7 +172,17 @@ export default function ThankyouPageThemeView({
                     }}
                     mt="lg"
                     ta={"center"}
+                    ref={subtitleInputRef}
                   />
+                  <ActionIcon
+                    variant="default"
+                    radius="lg"
+                    size="sm"
+                    className={classes.actionIcon}
+                    onClick={() => subtitleInputRef.current?.focus()}
+                  >
+                    <IconEdit style={{ width: "70%", height: "70%" }} />
+                  </ActionIcon>
                 </Box>
               </Tooltip>
             </Flex>

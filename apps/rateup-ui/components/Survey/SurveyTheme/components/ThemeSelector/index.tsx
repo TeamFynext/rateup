@@ -1,12 +1,12 @@
 import { Group } from "@mantine/core";
-import { useCallback, useContext, useState } from "react";
-import { SurveyThemeContext } from "../../SurveyThemeContext";
-import ComboBoxComponent from "./ComboBoxComponent";
-import { getOptions } from "./constants";
-import CreateNewThemeModal from "./CreateNewThemeModal";
-import styles from "./ThemeSelector.module.css";
-import RenameThemeModal from "./RenameThemeModal";
 import { useDisclosure } from "@mantine/hooks";
+import { useCallback, useState } from "react";
+import { useSurveyThemeStateDispatch } from "../../SurveyThemeContext";
+import ComboBoxComponent from "./ComboBoxComponent";
+import CreateNewThemeModal from "./CreateNewThemeModal";
+import RenameThemeModal from "./RenameThemeModal";
+import styles from "./ThemeSelector.module.css";
+import { getOptions } from "./constants";
 
 function ThemeSelector({
   className = "",
@@ -16,7 +16,8 @@ function ThemeSelector({
   isAllThemesFetchPending,
   survey,
 }) {
-  const { surveyTheme, setSurveyTheme } = useContext(SurveyThemeContext);
+  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+
   const [
     isRenameThemeModalOpened,
     { open: openRenameThemeModal, close: closeRenameThemeModal },
@@ -29,7 +30,12 @@ function ThemeSelector({
     (value) => {
       setThemeSelectorState(value);
       const themeObj = allThemesArr?.find((obj) => obj.id === value);
-      if (themeObj) setSurveyTheme(themeObj.theme);
+      if (themeObj) {
+        surveyThemeDispatch({
+          type: "set-survey-theme",
+          payload: themeObj.theme,
+        });
+      }
     },
     [allThemesArr],
   );

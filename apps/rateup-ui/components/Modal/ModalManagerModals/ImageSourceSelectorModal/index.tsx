@@ -11,31 +11,34 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
 
-  const handleFileBtnValueChange = useCallback((fileObj) => {
-    if (!fileObj) {
-      // context.closeModal(thisModalId);
-      onImageSelected(null);
-    } else if (fileObj) {
-      const { name } = fileObj;
-      const url = URL.createObjectURL(fileObj);
-      modals.openContextModal({
-        modal: "imageCropModal",
-        title: "Crop Image",
-        centered: true,
-        classNames: {
-          content: imageCropModalStyles["modal-content"],
-          header: imageCropModalStyles["modal-header"],
-          body: imageCropModalStyles["modal-body"],
-        },
-        innerProps: {
-          imageUrl: url,
-          imageName: name,
-          onSaveClick: onImageSelected,
-          aspectRatio,
-        },
-      });
-    }
-  }, []);
+  const handleFileBtnValueChange = useCallback(
+    (fileObj) => {
+      if (!fileObj) {
+        // context.closeModal(thisModalId);
+        onImageSelected(null);
+      } else if (fileObj) {
+        const { name } = fileObj;
+        const url = URL.createObjectURL(fileObj);
+        modals.openContextModal({
+          modal: "imageCropModal",
+          title: "Crop Image",
+          centered: true,
+          classNames: {
+            content: imageCropModalStyles["modal-content"],
+            header: imageCropModalStyles["modal-header"],
+            body: imageCropModalStyles["modal-body"],
+          },
+          innerProps: {
+            imageUrl: url,
+            imageName: name,
+            onSaveClick: onImageSelected,
+            aspectRatio,
+          },
+        });
+      }
+    },
+    [onImageSelected],
+  );
 
   const handleUnsplashBtnClick = useCallback(() => {
     modals.openContextModal({
@@ -52,7 +55,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
         aspectRatio,
       },
     });
-  }, []);
+  }, [onImageSelected, aspectRatio]);
 
   return (
     <Group className={styles["container"]}>

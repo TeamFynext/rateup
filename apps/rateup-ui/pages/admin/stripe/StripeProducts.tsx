@@ -29,26 +29,49 @@ import {
   IconInfoCircle,
   IconRefresh,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react";
 import classes from "../../../components/Graph/graph.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import {
+  showErrorToast,
   showLoadingToast,
   showSuccessToast,
 } from "../../../utils/notifications";
 import { useState } from "react";
+import { useRateupPaymentsPlans } from "../../../backend/payment/payment.query";
 
 const StripeProducts = () => {
   const { data: products, isRefetching, refetch } = useGetStripeProducts();
   const updateProductMutate = useUpdateStripeProduct();
   const syncStripeProductMutate = useSyncStripeProducts();
   const deleteStripeProduct = useDeleteStripeProduct();
+  const { data: rateupPlans, isPending, isError } = useRateupPaymentsPlans();
   const [
     openedDeleteModal,
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productId, setProductId] = useState("");
+
+  const handleDeleteProduct = () => {
+    const product =
+      products && products?.find((prod) => prod.productId == productId);
+    const productInRateupPlan =
+      rateupPlans &&
+      rateupPlans?.find((plan) => plan?.stripeId === product?.id);
+    if (productInRateupPlan) {
+      showErrorToast(
+        "Unable to delete. Product is in use in rateup plan",
+        "stripe",
+        <IconX />,
+        true,
+      );
+      return;
+    }
+    deleteStripeProduct.mutate(productId);
+  };
+
   const columns: GridColDef[] = [
     { field: "id", headerName: "Product ID", width: 200 },
     { field: "name", headerName: "Name", width: 200 },
@@ -146,9 +169,6 @@ const StripeProducts = () => {
       }))
     : [];
 
-  const handleDeleteProduct = () => {
-    deleteStripeProduct.mutate(productId);
-  };
   return (
     <Stack pt={"lg"} h={"74vh"}>
       <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>

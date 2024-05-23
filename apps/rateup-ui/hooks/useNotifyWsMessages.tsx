@@ -30,6 +30,9 @@ export function useNotifyWsMessages() {
               );
             },
           );
+          queryClient.invalidateQueries({
+            queryKey: ["contacts", "last-message"],
+          });
           const currentData: {
             pages: WaMessagePage[];
             pageParams: string[];

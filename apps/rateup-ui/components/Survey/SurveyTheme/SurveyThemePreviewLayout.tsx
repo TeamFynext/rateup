@@ -1,61 +1,17 @@
-import {
-  Badge,
-  Box,
-  Group,
-  LoadingOverlay,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
-import TabsCommon from "../../menu/landingPage/Tabs/TabsCommon";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { useContext } from "react";
+import { Box, Overlay, Stack, Tabs } from "@mantine/core";
 import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
-import { SurveyThemeContext } from "./SurveyThemeContext";
+import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
+import SurveyThemeView from "./components/previewcomponents/surveytheme";
+import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
+import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
+import styles from "./SurveyTheme.module.css";
 
-interface SurveyThemePreviewLayoutProps {
-  children: any;
-  isLoading: boolean;
-  themeType: ThemeTabEnum;
-  survey: any;
-  mobileOrDesktop: PreviewTypeEnum;
-}
+function SurveyThemePreviewLayout({ survey }) {
+  const selectedPageTab = useSelectedPageTab();
+  const selectedPreview = useSelectedPreview();
 
-export default function SurveyThemePreviewLayout({
-  children,
-  isLoading,
-  mobileOrDesktop,
-  themeType,
-  survey,
-}: SurveyThemePreviewLayoutProps) {
   return (
     <Stack h="100%" w={"100%"} p={"0.4375rem"}>
-      <LoadingOverlay visible={isLoading} overlayProps={{ blur: 2 }} />
-      {/* <Group justify="space-between" px={10} pb={10}> */}
-      {/* <Group>
-          <Title order={2} c={"dimmed"}>
-            Preview
-          </Title>
-          <TabsCommon
-            tabHeading={[PreviewTypeEnum.DESKTOP, PreviewTypeEnum.MOBILE]}
-            radius={"lg"}
-            value={mobileOrDesktop}
-            onChange={(value: string) =>
-              setMobileOrDesktop(value as PreviewTypeEnum)
-            }
-          >
-            <></>
-          </TabsCommon>
-        </Group> */}
-      {/* {themeType === ThemeTabEnum.WELCOME && (
-          <Group>
-            <Text>Status: </Text>
-            <Badge color={survey?.welcomePageEnabled ? "green" : "red"}>
-              {survey?.welcomePageEnabled ? "ENABLED" : "DISABLED"}
-            </Badge>
-          </Group>
-        )} */}
-      {/* </Group> */}
       <Box
         style={{
           display: "flex",
@@ -65,12 +21,28 @@ export default function SurveyThemePreviewLayout({
       >
         <Box
           h={"100%"}
-          // mah={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 650 : 1000}
-          w={mobileOrDesktop === PreviewTypeEnum.MOBILE ? 380 : "100%"}
+          w={selectedPreview === PreviewTypeEnum.MOBILE ? 380 : "100%"}
         >
-          {children}
+          <Tabs
+            value={selectedPageTab}
+            classNames={{
+              root: styles["survey-theme-preview-tab-panels-root"],
+            }}
+          >
+            <Tabs.Panel value={ThemeTabEnum.WELCOME}>
+              <WelcomePageThemeView survey={survey} />
+            </Tabs.Panel>
+            <Tabs.Panel value={ThemeTabEnum.SURVEY}>
+              <SurveyThemeView />
+            </Tabs.Panel>
+            <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
+              <ThankyouPageThemeView />
+            </Tabs.Panel>
+          </Tabs>
         </Box>
       </Box>
     </Stack>
   );
 }
+
+export default SurveyThemePreviewLayout;
