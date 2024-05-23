@@ -35,8 +35,11 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   // const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
   // const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
 
-  const currency = "INR";
-  const currencySymbol = "₹";
+  const currency = "USD";
+  const currencySymbol = "$";
+
+  // const currency = "INR";
+  // const currencySymbol = "₹";
 
   const session = useCheckSession();
 
@@ -53,16 +56,32 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
     ? []
     : data?.filter((plan) => plan?.displayName?.includes("FREE"));
 
-  const plans = data?.filter(
-    (item) =>
-      item?.paymentPlan?.period === (checked ? "yearly" : "monthly") &&
-      item?.paymentPlan?.currency === currency,
-  );
-  const inversePlans = data?.filter(
-    (item) =>
-      item?.paymentPlan?.period === (!checked ? "yearly" : "monthly") &&
-      item?.paymentPlan?.currency === currency,
-  );
+  const plans = data?.filter((item) => {
+    if (item?.paymentPlan) {
+      return (
+        item?.paymentPlan?.period === (checked ? "yearly" : "monthly") &&
+        item?.paymentPlan?.currency === currency
+      );
+    } else {
+      return (
+        item?.stripeProduct?.interval === (checked ? "year" : "month") &&
+        item?.stripeProduct?.currency?.toUpperCase() === currency
+      );
+    }
+  });
+  const inversePlans = data?.filter((item) => {
+    if (item?.paymentPlan) {
+      return (
+        item?.paymentPlan?.period === (!checked ? "yearly" : "monthly") &&
+        item?.paymentPlan?.currency === currency
+      );
+    } else {
+      return (
+        item?.stripeProduct?.interval === (!checked ? "year" : "month") &&
+        item?.stripeProduct?.currency?.toUpperCase() === currency
+      );
+    }
+  });
 
   const updatedPlans = plans?.map((plan) => {
     const correspondingInversePlan = inversePlans?.find(
