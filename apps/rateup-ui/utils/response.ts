@@ -19,7 +19,7 @@ import { useContext } from "react";
 import SelectedLanguageContext from "../context/SelectedLanguage";
 
 export function getResponse(q: any, response: any) {
-  if (!response) return "";
+  if (!response && response !== 0) return "";
 
   switch (q?.type) {
     case QuestionType.Testimonial:

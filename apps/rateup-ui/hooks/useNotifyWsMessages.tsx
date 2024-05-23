@@ -16,7 +16,10 @@ export function useNotifyWsMessages() {
 
     switch (message.type) {
       case "inbox": {
-        if (window.location.pathname !== pathnamesMap.inbox) {
+        if (
+          window.location.pathname !== pathnamesMap.inbox &&
+          message?.inbox?.message?.messageBody?.exchangeProcess === "receive"
+        ) {
           showInfoToast(
             "Whatsapp Inbox",
             `You have a new message from ${message.inbox.contact.name}`,
@@ -27,6 +30,9 @@ export function useNotifyWsMessages() {
               );
             },
           );
+          queryClient.invalidateQueries({
+            queryKey: ["contacts", "last-message"],
+          });
           const currentData: {
             pages: WaMessagePage[];
             pageParams: string[];

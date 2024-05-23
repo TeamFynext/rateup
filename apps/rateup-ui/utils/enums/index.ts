@@ -202,8 +202,6 @@ export function getCampaignParticipantStatusLabel(
       return "Failed";
     case CampaignParticipantStatus.COMPLETED:
       return "Completed";
-    case CampaignParticipantStatus.RESPONDING:
-      return "Responding";
     case CampaignParticipantStatus.DELIVERED:
       return "Delivered";
     case CampaignParticipantStatus.READ:

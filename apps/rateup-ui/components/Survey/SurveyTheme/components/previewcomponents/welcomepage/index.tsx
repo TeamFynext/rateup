@@ -1,45 +1,41 @@
-import React, { useContext, useEffect, useState } from "react";
-import { SurveyThemeContext } from "../../../SurveyThemeContext";
-import { produce } from "immer";
 import {
-  Flex,
-  TextInput,
-  BackgroundImage,
-  Image,
-  Tooltip,
-  Box,
   ActionIcon,
+  BackgroundImage,
+  Box,
+  Flex,
+  Image,
+  Overlay,
+  TextInput,
   Textarea,
+  Tooltip,
 } from "@mantine/core";
-import { IconEdit } from "@tabler/icons-react";
-import classes from "../../../SurveyTheme.module.css";
-import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
-import { getImageUrl } from "../../../SurveyTheme.utils";
-import { dummyImage } from "../../../SurveyTheme.constants";
-import { lexend, lexend300 } from "../../../../../../utils/fonts";
-import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cordinateStyle } from "../../../../../../utils";
 import { surveyUploadsPath } from "../../../../../../utils/constants";
+import { lexend, lexend300 } from "../../../../../../utils/fonts";
+import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { PreviewTypeEnum } from "../../../SurveyTheme.enums";
+import classes from "../../../SurveyTheme.module.css";
+import {
+  useSelectedPreview,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
+} from "../../../SurveyThemeContext";
+import { IconEdit } from "@tabler/icons-react";
 
-export default function WelcomePageThemeView({
-  selectedType,
-  setSelectedType,
-}) {
-  const { surveyTheme, setSurveyTheme, mobileOrDesktop } =
-    useContext(SurveyThemeContext);
+export default function WelcomePageThemeView({ survey }) {
+  const surveyTheme = useSurveyThemeContextValue();
+  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+  const selectedPreview = useSelectedPreview();
+  const isWelcomePageEnabled = survey?.welcomePageEnabled;
+
   const {
     welcomeTheme,
     surveyTheme: { logo: orgLogoStylesObj },
   } = surveyTheme;
-  function updateThemeText(key: string, value: any) {
-    setSurveyTheme(
-      produce((draft) => {
-        draft.welcomeTheme[key] = value;
-      }),
-    );
-  }
+
   const {
-    bg: { styles, desktopbg, mobilebg, unsplashImage },
+    bg: { styles, desktopbg, mobilebg },
     button: { styles: buttonStyles, label, position },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
@@ -70,47 +66,53 @@ export default function WelcomePageThemeView({
     };
   }, [orgLogo]);
 
+  const backgroundImageSrc =
+    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
+
+  const handleTitleInputChange = useCallback((e) => {
+    surveyThemeDispatch({
+      type: "title-text-change",
+      payload: e.target.value,
+    });
+  }, []);
+
+  const handleSubtitleTextareaChange = useCallback((e) => {
+    surveyThemeDispatch({
+      type: "subtitle-text-change",
+      payload: e.target.value,
+    });
+  }, []);
+
+  const handleStartBtnTextChange = useCallback((e) => {
+    surveyThemeDispatch({
+      type: "welcome-page-start-button-text-change",
+      payload: e.target.value,
+    });
+  }, []);
+
+  const titleInputRef = useRef(null);
+  const subtitleInputRef = useRef(null);
+  const startBtnInputRef = useRef(null);
+
   return (
     <Flex
       align={"center"}
       h="100%"
       style={styles}
-      onClick={(e) => {
-        e.stopPropagation(), setSelectedType(SelectedItemEnum.BACKGROUND);
-      }}
       ff={lexend300.style.fontFamily}
     >
+      {!isWelcomePageEnabled && <Overlay className={classes["overlay"]} />}
       <CreditsCard
-        enableCredits={unsplashImage?.[mobileOrDesktop]}
-        url={
-          mobileOrDesktop === PreviewTypeEnum.DESKTOP
-            ? encodeURI(desktopbg)
-            : encodeURI(mobilebg)
-        }
+        enableCredits={backgroundImageSrc?.startsWith(
+          "https://images.unsplash.com",
+        )}
+        url={backgroundImageSrc}
       >
         <BackgroundImage
           className={classes.parentContainer}
           style={{ height: "100%", width: "100%", objectFit: "contain" }}
-          src={getImageUrl(
-            mobileOrDesktop === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg,
-            unsplashImage?.[mobileOrDesktop],
-          )}
+          src={backgroundImageSrc}
         >
-          <Tooltip label={"Edit Background"}>
-            <ActionIcon
-              variant="default"
-              size="md"
-              radius="lg"
-              onClick={(e) => {
-                e.stopPropagation(),
-                  setSelectedType(SelectedItemEnum.BACKGROUND);
-              }}
-              className={`${classes.actionIcon} ${mobileOrDesktop === PreviewTypeEnum.DESKTOP ? classes.welcomePageBgDtEditActionIcon : classes.welcomePageBgMbEditActionIcon}`}
-            >
-              <IconEdit style={{ width: "70%", height: "70%" }} />
-            </ActionIcon>
-          </Tooltip>
-
           <Flex
             justify={"center"}
             align={"center"}
@@ -118,8 +120,6 @@ export default function WelcomePageThemeView({
             direction={"column"}
             pos={"relative"}
           >
-            {/* //---------------------------- */}
-
             {orgLogoSrc && (
               <Image
                 src={orgLogoSrc}
@@ -129,19 +129,7 @@ export default function WelcomePageThemeView({
             )}
 
             <Tooltip label="Edit title">
-              <Box className={classes.titleBox} mt={20}>
-                <ActionIcon
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation(),
-                      setSelectedType(SelectedItemEnum.TITLE);
-                  }}
-                  className={classes.actionIcon}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
+              <Box className={classes.titleBox} mt={20} w={"50%"}>
                 <TextInput
                   className={lexend.className}
                   placeholder={"Welcome"}
@@ -149,10 +137,6 @@ export default function WelcomePageThemeView({
                   size="xxl"
                   name="headerText"
                   onClick={(e) => e.stopPropagation()}
-                  onFocus={(e) => {
-                    e.stopPropagation(),
-                      setSelectedType(SelectedItemEnum.TITLE);
-                  }}
                   styles={{
                     input: {
                       ...titleStyles,
@@ -161,39 +145,29 @@ export default function WelcomePageThemeView({
                     },
                   }}
                   value={title}
-                  onChange={(e) =>
-                    updateThemeText("title", {
-                      ...welcomeTheme.title,
-                      title: e.target.value,
-                    })
-                  }
+                  onChange={handleTitleInputChange}
+                  ref={titleInputRef}
                 />
+
+                <ActionIcon
+                  variant="default"
+                  radius="lg"
+                  size="sm"
+                  className={classes.actionIcon}
+                  onClick={() => titleInputRef.current?.focus()}
+                >
+                  <IconEdit style={{ width: "70%", height: "70%" }} />
+                </ActionIcon>
               </Box>
             </Tooltip>
             {/* //--------------------------- */}
             <Tooltip label="Edit subtitle">
               <Box className={classes.titleBox} mt={20} w={"50%"}>
-                <ActionIcon
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation(),
-                      setSelectedType(SelectedItemEnum.SUBTITLE);
-                  }}
-                  className={classes.actionIcon}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
                 <Textarea
                   className={lexend.className}
                   placeholder={"Please fill the survey"}
                   variant="unstyled"
                   onClick={(e) => e.stopPropagation()}
-                  onFocus={(e) => {
-                    e.stopPropagation(),
-                      setSelectedType(SelectedItemEnum.SUBTITLE);
-                  }}
                   name="descText"
                   styles={{
                     input: {
@@ -203,17 +177,24 @@ export default function WelcomePageThemeView({
                   }}
                   ta={"center"}
                   value={subtitle}
-                  onChange={(e) =>
-                    updateThemeText("subtitle", {
-                      ...welcomeTheme.subtitle,
-                      subtitle: e.target.value,
-                    })
-                  }
+                  onChange={handleSubtitleTextareaChange}
+                  ref={subtitleInputRef}
                 />
+
+                <ActionIcon
+                  variant="default"
+                  radius="lg"
+                  size="sm"
+                  className={classes.actionIcon}
+                  onClick={() => subtitleInputRef.current?.focus()}
+                >
+                  <IconEdit style={{ width: "70%", height: "70%" }} />
+                </ActionIcon>
               </Box>
             </Tooltip>
 
             <Box
+              w={"50%"}
               className={classes.buttonBox}
               style={{
                 display: "flex",
@@ -227,34 +208,13 @@ export default function WelcomePageThemeView({
                 style={buttonStyles}
                 onClick={(e) => e.stopPropagation()}
               >
-                <ActionIcon
-                  variant="default"
-                  size="sm"
-                  radius="lg"
-                  onClick={(e) => {
-                    e.stopPropagation(),
-                      setSelectedType(SelectedItemEnum.BUTTON);
-                  }}
-                  className={classes.actionIcon}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
                 <TextInput
-                  onChange={(e) =>
-                    updateThemeText("button", {
-                      ...welcomeTheme.button,
-                      label: e.target.value,
-                    })
-                  }
+                  onChange={handleStartBtnTextChange}
                   value={label}
                   placeholder={"Start Survey"}
                   variant="unstyled"
                   name="buttonText"
                   size="xs"
-                  onFocus={(e) => {
-                    e.stopPropagation(),
-                      setSelectedType(SelectedItemEnum.BUTTON);
-                  }}
                   styles={{
                     input: {
                       color: "inherit",
@@ -266,7 +226,18 @@ export default function WelcomePageThemeView({
                       fontFamily: "inherit",
                     },
                   }}
+                  ref={startBtnInputRef}
                 />
+
+                <ActionIcon
+                  variant="default"
+                  radius="lg"
+                  size="sm"
+                  className={classes.actionIcon}
+                  onClick={() => startBtnInputRef.current?.focus()}
+                >
+                  <IconEdit style={{ width: "70%", height: "70%" }} />
+                </ActionIcon>
               </Flex>
             </Box>
           </Flex>

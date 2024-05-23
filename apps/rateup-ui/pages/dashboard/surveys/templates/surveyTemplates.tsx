@@ -1,14 +1,11 @@
-import { Stack, Paper, Text, Center, Skeleton } from "@mantine/core";
-import SurveyThemeContextProvider from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
-import WelcomePageThemeView from "../../../../components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
+import { Paper, Skeleton, Stack } from "@mantine/core";
 import { useState } from "react";
 import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import {
   PreviewTypeEnum,
   SelectedItemEnum,
 } from "../../../../components/Survey/SurveyTheme/SurveyTheme.enums";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import TestTemplate from "./templateCard";
+import { SurveyThemeContextProvider } from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
 import TemplateCard from "./templateCard";
 
 const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
@@ -16,9 +13,6 @@ const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
     survey?.webSurveyThemeId,
   );
 
-  const [selectedPreview, setSelectedPreview] = useState(
-    PreviewTypeEnum.DESKTOP,
-  );
   const [selectedType, setSelectedType] = useState<SelectedItemEnum>(
     SelectedItemEnum.BACKGROUND,
   );
@@ -44,11 +38,7 @@ const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
   }
 
   return (
-    <SurveyThemeContextProvider
-      surveyTheme={surveyTheme}
-      mobileOrDesktop={selectedPreview}
-      setMobileOrDesktop={setSelectedPreview}
-    >
+    <SurveyThemeContextProvider surveyTheme={surveyTheme}>
       <Stack>
         <Paper
           radius={"lg"}
@@ -70,7 +60,7 @@ const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
             objectFit: "cover",
           }}
         >
-          <TemplateCard {...{ selectedType, setSelectedType }} />
+          <TemplateCard />
         </Paper>
       </Stack>
     </SurveyThemeContextProvider>

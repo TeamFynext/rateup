@@ -15,7 +15,7 @@ export function NumberForm() {
       <NumberInput
         size="sm"
         placeholder="Enter number input"
-        value={parseInt(response) || null}
+        value={response == 0 ? 0 : response || null}
         onChange={(value) => updateResponse(value)}
         variant="unstyled"
         classNames={{
