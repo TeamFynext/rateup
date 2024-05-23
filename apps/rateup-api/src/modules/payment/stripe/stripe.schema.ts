@@ -3,7 +3,18 @@ import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const createStripeCheckoutSchema = z.object({
-  priceId: z.string().trim().min(1),
+  orgId: z.string({
+    required_error: "Org Id is required",
+  }),
+  priceId: z.string({
+    required_error: "Price Id is required",
+  }),
+  planName: z.string({
+    required_error: "Plan name is required",
+  }),
+  rateupPlanId: z.string({
+    required_error: "Rateup Plan Id is required",
+  }),
 });
 
 const updateProductSchema = z.object({

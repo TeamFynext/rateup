@@ -1,8 +1,22 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, SubscriptionStatus } from "@prisma/client";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import axios from "axios";
 
 const prisma = new PrismaClient();
+
+export async function createOrder(data, userId) {
+  const order = await prisma.order.create({
+    data: {
+      name: data.planName,
+      createdById: userId,
+      orgId: data.orgId,
+      priceId: data.priceId,
+      subscriptionStatus: SubscriptionStatus.none,
+    },
+  });
+
+  return order;
+}
 
 export async function createPayment(payload) {
   console.log("creating  payment....");

@@ -1,5 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import Session from "supertokens-node/recipe/session";
 import {
+  createOrder,
   createPayment,
   deleteStripeProduct,
   getAllStripeSubscriptions,
@@ -11,6 +13,7 @@ import {
   productIdParamsInput,
   updateProductInput,
   GetSessionStatusQuery,
+  CreateStripeCheckoutInput,
 } from "./stripe.schema";
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
@@ -19,16 +22,21 @@ interface SessionRetrieveRequest {
 }
 
 export async function createCheckoutSessionHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Body: CreateStripeCheckoutInput;
+  }>,
   reply: FastifyReply,
 ) {
+  const data = request.body;
+  let userSession = await Session.getSession(request, reply);
+  const userId = userSession.getUserId();
+
   const session = await stripe.checkout.sessions.create({
     ui_mode: "embedded",
     line_items: [
       {
         // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-        //TODO make dynamic
-        price: "price_1PIE1ASEU5WPzKjq5wA24XhE",
+        price: data.priceId, //"price_1PIE1ASEU5WPzKjq5wA24XhE",
         quantity: 1,
       },
     ],
@@ -36,7 +44,13 @@ export async function createCheckoutSessionHandler(
     return_url: `${process.env.FRONTEND_URL}/dashboard/payment/summary?session_id={CHECKOUT_SESSION_ID}`,
   });
 
-  reply.send({ clientSecret: session.client_secret });
+  try {
+    await createOrder(data, userId);
+    reply.send({ clientSecret: session.client_secret });
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
 }
 
 export async function getSessionStatusHandler(
@@ -58,20 +72,29 @@ export async function webHookHandler(
   request: FastifyRequest<{ Querystring: SessionRetrieveRequest }>,
   reply: FastifyReply,
 ) {
-  const payload = JSON.parse(request?.body?.toString());
+  console.log("Web hoook hit.................");
+  //console.log(request?.body)
+
+  //  const payload = JSON.parse(request?.body?.toString());
   const sig = request.headers["stripe-signature"];
-  const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(request?.body, sig, endpointSecret);
+    event = await stripe.webhooks.constructEvent(
+      request?.body,
+      sig,
+      endpointSecret,
+    );
   } catch (err) {
     console.log(" event error");
+    console.log(err.message);
+
     return reply.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log(event.type);
+  console.log("event...........", event.type);
 
   // Handle the checkout.session.completed event
   if (event.type === "checkout.session.completed") {

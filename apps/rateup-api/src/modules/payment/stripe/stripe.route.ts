@@ -55,16 +55,6 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     getSessionStatusHandler,
   );
 
-  server.post(
-    "/webhook",
-    {
-      //   schema: {
-      //     params: $PSref(""),
-      //   },
-    },
-    webHookHandler,
-  );
-
   server.get("/products", {}, getStripeProductsHandler);
 
   server.get("/subscriptions", {}, getAllStripeSubscriptionsHandler);

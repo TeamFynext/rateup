@@ -72,6 +72,7 @@ import { externalRoutes } from "./modules/external/external.route";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes";
 import { orgWsSchemas } from "./modules/org/ws/org.ws.schema";
 import { paymentStripeSchemas } from "./modules/payment/stripe/stripe.schema";
+import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -139,8 +140,9 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(reputationManagementRoutes, { prefix: "api/rm" });
   server.register(subscriptionRoutes, { prefix: "api/subscription" });
   server.register(paymentRoutes, { prefix: "api/payment" });
-  server.register(paymentStripeRoutes, { prefix: "api/payment/stripe" });
   server.register(paymentPublicRoutes, { prefix: "api/public/payment" });
+  server.register(paymentStripeRoutes, { prefix: "api/payment/stripe" });
+  server.register(stripePublicRoutes, { prefix: "api/public/payment/stripe" });
   server.register(surveyThemeRoutes, { prefix: "api/surveyTheme" });
   server.register(testimonialRoutes, { prefix: "api/testimonials" });
   server.register(testimonialCollectionRoutes, {

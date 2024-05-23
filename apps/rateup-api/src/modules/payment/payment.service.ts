@@ -62,6 +62,7 @@ export async function createCheckoutSession(
         orgId: data.orgId,
         planId: data.planId,
         subscriptionId,
+        rateupPlanId: data.rateupPlanId,
         subscriptionStatus: SubscriptionStatus.none,
       },
     });
@@ -133,6 +134,7 @@ export async function getAllRateupPaymentPlans() {
   const plans = await prisma.rateupPlan.findMany({
     include: {
       paymentPlan: true,
+      stripeProduct: true,
     },
     orderBy: {
       createdAt: "asc",
@@ -548,6 +550,7 @@ export async function getAllOrgOrders(orgId: string) {
         createdBy: true,
         status: true,
         planId: true,
+        priceId: true,
         paymentStatus: true,
         payment: true,
         subscriptionId: true,
@@ -558,19 +561,34 @@ export async function getAllOrgOrders(orgId: string) {
     });
 
     const planDetailsPromises = orders.map(async (order) => {
-      const planDetail = await prisma.paymentPlans.findFirst({
-        where: {
-          planId: order.planId,
-        },
-        select: {
-          amount: true,
-          currency: true,
-          description: true,
-          period: true,
-          RateupPlan: true,
-        },
-      });
-
+      let planDetail = null;
+      if (order.planId) {
+        planDetail = await prisma.paymentPlans.findFirst({
+          where: {
+            planId: order.planId,
+          },
+          select: {
+            amount: true,
+            currency: true,
+            description: true,
+            period: true,
+            RateupPlan: true,
+          },
+        });
+      } else if (order.priceId) {
+        planDetail = await prisma.stripeProducts.findFirst({
+          where: {
+            priceId: order.priceId,
+          },
+          select: {
+            amount: true,
+            currency: true,
+            description: true,
+            interval: true,
+            RateupPlan: true,
+          },
+        });
+      }
       const {
         RateupPlan: { description: planFeatures, planType, displayName },
       } = planDetail;

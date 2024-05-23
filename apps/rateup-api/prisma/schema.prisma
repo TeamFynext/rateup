@@ -706,6 +706,7 @@ model RateupPlan {
   createdAt       DateTime        @default(now())
   stripeProduct   StripeProducts? @relation(fields: [stripeId], references: [id])
   stripeId        String?         @unique @db.Uuid
+  orders          Order[]
 }
 
 enum OrderStatus {
@@ -741,8 +742,9 @@ model Order {
   org                  Org                 @relation(fields: [orgId], references: [id])
   orgId                String              @db.Uuid
   status               OrderStatus         @default(PENDING)
-  planId               String
-  subscriptionId       String              @unique
+  priceId              String? // stripe price
+  planId               String? // razorpay plan
+  subscriptionId       String?             @unique
   subscriptionChargeAt DateTime? //next charge date
   subscriptionEndedAt  DateTime? //cancelled or expired date
   subscriptionStatus   SubscriptionStatus?
@@ -750,6 +752,8 @@ model Order {
   paymentId            String?             @unique @db.Uuid
   orderPayment         Payments?           @relation("OrderPayment", fields: [paymentId], references: [id])
   paymentStatus        PaymentStatus       @default(PENDING)
+  RateupPlan           RateupPlan?         @relation(fields: [rateupPlanId], references: [id])
+  rateupPlanId         String?             @db.Uuid
 }
 
 model Payments {
