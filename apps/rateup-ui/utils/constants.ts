@@ -79,6 +79,7 @@ const FlowInputQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
   QuestionType.Date,
+  QuestionType.Optin,
 ];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
@@ -101,7 +102,7 @@ const flowNonInputElements = [
   wft.nonInputText,
   wft.image,
   // not currectly working
-  // , wft.embeddedLink,wft.optIn
+  // , wft.embeddedLink,
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links

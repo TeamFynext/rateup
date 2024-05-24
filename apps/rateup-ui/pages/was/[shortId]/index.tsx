@@ -29,7 +29,7 @@ export const getServerSideProps = async ({
   } catch (error) {
     return {
       props: {
-        res: { title: "flow" },
+        res: { title: "flow", orgName: "rateup" },
         tag: params?.tag ?? null,
         surveyTeamMapIdOrShortId: surveyTeamMapIdOrShortId,
       },
