@@ -170,6 +170,7 @@ const updateQuestionRequestSchema = z.object({
   validationRules: z
     .union([z.null(), validationRulesSchema, z.any()])
     .optional(),
+  optinScreenId: z.string().optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
