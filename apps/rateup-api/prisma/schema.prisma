@@ -754,6 +754,7 @@ model Order {
   paymentStatus        PaymentStatus       @default(PENDING)
   RateupPlan           RateupPlan?         @relation(fields: [rateupPlanId], references: [id])
   rateupPlanId         String?             @db.Uuid
+  checkoutRefId        String?             @unique
 }
 
 model Payments {

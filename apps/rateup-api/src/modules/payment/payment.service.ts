@@ -401,6 +401,7 @@ export async function verifyPayment(data, event) {
           paymentStatus: PaymentStatus.SUCCESS,
           status: OrderStatus.PENDING,
           subscriptionStatus: SubscriptionStatus.pending,
+          paymentId: payment.id,
         },
       });
     }

@@ -1,4 +1,9 @@
-import { PrismaClient, SubscriptionStatus } from "@prisma/client";
+import {
+  OrderStatus,
+  PaymentStatus,
+  PrismaClient,
+  SubscriptionStatus,
+} from "@prisma/client";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import axios from "axios";
 
@@ -10,12 +15,71 @@ export async function createOrder(data, userId) {
       name: data.planName,
       createdById: userId,
       orgId: data.orgId,
-      priceId: data.priceId,
       subscriptionStatus: SubscriptionStatus.none,
+      rateupPlanId: data?.rateupPlanId,
+    },
+  });
+  return order;
+}
+
+export async function updateOrder(id, priceId, sessionId) {
+  const order = await prisma.order.update({
+    where: { id: id },
+    data: {
+      priceId: priceId,
+      subscriptionStatus: SubscriptionStatus.none,
+      checkoutRefId: sessionId,
     },
   });
 
   return order;
+}
+
+export async function processOrder(payload) {
+  const {
+    id,
+    amount_total,
+    mode,
+    subscription,
+    payment_method_types,
+    metadata,
+  } = payload;
+
+  let subscriptionData = await getSingleStripeSubscription(subscription);
+
+  let invoiceData = await getSingleStripeInvoice(
+    subscriptionData.latest_invoice,
+  );
+
+  const payment = await prisma.payments.create({
+    data: {
+      payId: invoiceData.payment_intent,
+      amount: invoiceData.amount_paid,
+      currency: invoiceData.currency.toUpperCase(),
+      method: payment_method_types[0] || "",
+      description: "Stripe Subscription create",
+      customer_email: invoiceData.customer_email || "",
+      customer_phone: invoiceData.customer_phone || "",
+      rateupOrderId: metadata?.rateupOrderId,
+      createdAt: invoiceData.status_transitions.paid_at,
+    },
+  });
+
+  let updatedOrder = await prisma.order.update({
+    where: { checkoutRefId: id },
+    data: {
+      paymentId: payment.id,
+      paymentStatus: PaymentStatus.SUCCESS,
+      status: OrderStatus.COMPLETE,
+      subscriptionStatus: SubscriptionStatus.active,
+      subscriptionId: subscription,
+      subscriptionChargeAt: new Date(
+        subscriptionData.current_period_end * 1000,
+      ),
+    },
+  });
+
+  return updatedOrder;
 }
 
 export async function createPayment(payload) {
@@ -125,6 +189,30 @@ export async function syncStripeProducts() {
 export async function getStripeProducts() {
   const res = await prisma.stripeProducts.findMany();
   return res;
+}
+
+export async function getSingleStripeInvoice(id) {
+  const invoice = (
+    await axios.get(`https://api.stripe.com/v1/invoices/${id}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      },
+    })
+  )?.data;
+
+  return invoice;
+}
+
+export async function getSingleStripeSubscription(id) {
+  const subscription = (
+    await axios.get(`https://api.stripe.com/v1/subscriptions/${id}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      },
+    })
+  )?.data;
+
+  return subscription;
 }
 
 export async function getAllStripeSubscriptions() {

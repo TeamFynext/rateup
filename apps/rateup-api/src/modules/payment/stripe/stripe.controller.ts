@@ -6,7 +6,9 @@ import {
   deleteStripeProduct,
   getAllStripeSubscriptions,
   getStripeProducts,
+  processOrder,
   syncStripeProducts,
+  updateOrder,
   updateStripeProduct,
 } from "./stripe.service";
 import {
@@ -31,6 +33,8 @@ export async function createCheckoutSessionHandler(
   let userSession = await Session.getSession(request, reply);
   const userId = userSession.getUserId();
 
+  let newOrder = await createOrder(data, userId);
+
   const session = await stripe.checkout.sessions.create({
     ui_mode: "embedded",
     line_items: [
@@ -42,10 +46,16 @@ export async function createCheckoutSessionHandler(
     ],
     mode: "subscription",
     return_url: `${process.env.FRONTEND_URL}/dashboard/payment/summary?session_id={CHECKOUT_SESSION_ID}`,
+    metadata: {
+      rateupOrderId: newOrder.id,
+    },
   });
 
+  const sessionId = session.id;
+
   try {
-    await createOrder(data, userId);
+    await updateOrder(newOrder.id, data.priceId, sessionId);
+
     reply.send({ clientSecret: session.client_secret });
   } catch (e) {
     console.error(e);
@@ -72,8 +82,7 @@ export async function webHookHandler(
   request: FastifyRequest<{ Querystring: SessionRetrieveRequest }>,
   reply: FastifyReply,
 ) {
-  console.log("Web hoook hit.................");
-  //console.log(request?.body)
+  console.log("Stripe Web hoook hit.................");
 
   //  const payload = JSON.parse(request?.body?.toString());
   const sig = request.headers["stripe-signature"];
@@ -88,7 +97,7 @@ export async function webHookHandler(
       endpointSecret,
     );
   } catch (err) {
-    console.log(" event error");
+    console.log(".....event error");
     console.log(err.message);
 
     return reply.status(400).send(`Webhook Error: ${err.message}`);
@@ -98,23 +107,9 @@ export async function webHookHandler(
 
   // Handle the checkout.session.completed event
   if (event.type === "checkout.session.completed") {
-    console.log(event.data.object);
+    await processOrder(event.data.object);
 
-    console.log("calling create payment");
-
-    const payment = createPayment(request?.body);
-
-    // Retrieve the session. If you require line items in the response, you may include them by expanding line_items.
-    const sessionWithLineItems = await stripe.checkout.sessions.retrieve(
-      event.data.object.id,
-      {
-        expand: ["line_items"],
-      },
-    );
-    const lineItems = sessionWithLineItems.line_items;
-
-    // Fulfill the purchase...
-    //  fulfillOrder(lineItems);
+    console.log("processing done........");
   }
 
   reply.status(200);
