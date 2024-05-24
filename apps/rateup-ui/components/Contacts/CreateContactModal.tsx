@@ -44,7 +44,7 @@ export interface ImportContact {
 }
 
 const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
-  const [contactType, setContactType] = useState<string[]>(["phone"]);
+  const [contactType, setContactType] = useState<string[]>(["phone", ...cTags]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpload, setIsUpload] = useState(false);

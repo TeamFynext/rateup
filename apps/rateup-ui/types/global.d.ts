@@ -73,6 +73,7 @@ declare global {
     validationRules?: ValidationRules | any;
     tnc?: TNC;
     enableNpsAnalytics?: boolean;
+    optinScreenId?: string;
   }
   type WaSectionsType = Array<{
     title?: string;

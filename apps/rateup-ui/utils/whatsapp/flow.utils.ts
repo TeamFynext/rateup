@@ -593,6 +593,8 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.radioButtonsGroup;
     case qt.MSQ:
       return WaFlowFormElementType.checkboxGroup;
+    case qt.Optin:
+      return WaFlowFormElementType.optIn;
     default:
       throw Error(qtype + "Not implemented");
   }

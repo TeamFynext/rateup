@@ -51,6 +51,7 @@ import { FlowLogicEditor } from "./FlowLogicEditor";
 import { LengthTracker } from "../../../../input/LengthTracker";
 import {
   getFlowTextLimit,
+  getFormObjFromScreenId,
   questionTypeToFlowFormElementType,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { ChoicesCreator } from "../../../../Survey/Question/QuestionExtraProps/ChoicesCreator";
@@ -62,6 +63,7 @@ import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { notifications } from "@mantine/notifications";
 import _ from "lodash";
+import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -146,6 +148,8 @@ function ElementEditor({
 }: ElementEditorProps) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const { selectedScreenId, flowJson, updateFlowJson } =
+    useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -157,6 +161,10 @@ function ElementEditor({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
+  const currentIndex = flowJson.screens.findIndex(
+    (s) => s.id === selectedScreenId,
+  );
+  const nextScreens = flowJson.screens.slice(currentIndex + 1);
 
   const labelMaxLength = getFlowLabelLimit(
     questionTypeToFlowFormElementType(question.type),
@@ -222,7 +230,24 @@ function ElementEditor({
         setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
       }
-
+      if (question.type === QuestionType.Optin) {
+        updateFlowJson((draft) => {
+          const formEl = getFormObjFromScreenId(
+            draft.screens,
+            selectedScreenId,
+          );
+          if (form.values.optinScreenId) {
+            formEl.children[currentIndex + 1]["on-click-action"] = {
+              name: "navigate",
+              next: {
+                type: "screen",
+                name: form.values.optinScreenId,
+              },
+              payload: {},
+            };
+          }
+        });
+      }
       // Checking if its a new question
       if (!question.id) {
         // Creating new question
@@ -291,56 +316,61 @@ function ElementEditor({
             gap={0}
             p={"sm"}
           >
-            <TextareaWithLengthTracker
-              fw={800}
-              fz="lg"
-              styles={{
-                input: {
-                  fontSize: "1.75rem",
-                  fontWeight: 700, // set custom font size for this TextInput
-                },
-              }}
-              style={{
-                marginBottom: "20px", // add 30px bottom margin
-              }}
-              variant="unstyled"
-              autosize
-              maxRows={3}
-              placeholder="Enter question title here"
-              maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
-              {...form.getInputProps(`title.${selectedLanguage}`)}
-              onBlur={() => {
-                if (
-                  !_.isEqual(form.values, formInitialValues) &&
-                  form.isValid()
-                )
-                  handleSave();
-              }}
-            />
+            {question.type !== QuestionType.Optin && (
+              <>
+                <TextareaWithLengthTracker
+                  fw={800}
+                  fz="lg"
+                  styles={{
+                    input: {
+                      fontSize: "1.75rem",
+                      fontWeight: 700, // set custom font size for this TextInput
+                    },
+                  }}
+                  style={{
+                    marginBottom: "20px", // add 30px bottom margin
+                  }}
+                  variant="unstyled"
+                  autosize
+                  maxRows={3}
+                  placeholder="Enter question title here"
+                  maxValue={getFlowTextLimit(
+                    WaFlowFormElementType.textSubHeading,
+                  )}
+                  {...form.getInputProps(`title.${selectedLanguage}`)}
+                  onBlur={() => {
+                    if (
+                      !_.isEqual(form.values, formInitialValues) &&
+                      form.isValid()
+                    )
+                      handleSave();
+                  }}
+                />
 
-            <TextareaWithLengthTracker
-              variant="unstyled"
-              placeholder="Enter question description here"
-              {...form.getInputProps(`description.${selectedLanguage}`)}
-              value={form.values.description[selectedLanguage]}
-              autosize
-              maxRows={6}
-              styles={{
-                input: {
-                  fontSize: "1.1rem",
-                  fontWeight: 400, // set custom font size for this TextInput
-                },
-              }}
-              maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
-              onBlur={() => {
-                if (
-                  !_.isEqual(form.values, formInitialValues) &&
-                  form.isValid()
-                )
-                  handleSave();
-              }}
-            />
-
+                <TextareaWithLengthTracker
+                  variant="unstyled"
+                  placeholder="Enter question description here"
+                  {...form.getInputProps(`description.${selectedLanguage}`)}
+                  value={form.values.description[selectedLanguage]}
+                  autosize
+                  maxRows={6}
+                  styles={{
+                    input: {
+                      fontSize: "1.1rem",
+                      fontWeight: 400, // set custom font size for this TextInput
+                    },
+                  }}
+                  maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
+                  onBlur={() => {
+                    if (
+                      !_.isEqual(form.values, formInitialValues) &&
+                      form.isValid()
+                    )
+                      handleSave();
+                  }}
+                />
+              </>
+            )}
             <LabelTextInput
               {...labelInputProps}
               maxLength={labelMaxLength}
@@ -352,6 +382,18 @@ function ElementEditor({
                   handleSave();
               }}
             />
+            {question.type === QuestionType.Optin && (
+              <ContainedSelection
+                data={nextScreens?.map((data) => ({
+                  label: data?.title,
+                  value: data?.id,
+                }))}
+                {...form.getInputProps("optinScreenId")}
+                label={"Read more screen"}
+                placeholder="select next screen to show the details"
+                w={300}
+              />
+            )}
 
             <FlowQuestionExtraProps
               form={form}
