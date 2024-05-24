@@ -58,7 +58,7 @@ export const TakeSurveyLayoutWeb = ({
     orgLogo = surveyThemeData.surveyTheme?.logo?.logo;
     orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
     if (orgLogo && orgLogo.length) {
-      orgLogoSrc = `${surveyUploadsPath}${orgLogo}`;
+      orgLogoSrc = orgLogo;
     }
   }
 

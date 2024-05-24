@@ -6,7 +6,6 @@ import {
 } from "../../../backend/surveyTheme/surveyTheme.query";
 import RateupLoader from "../../Loaders/RateupLoader";
 import PageSelector from "./components/PageSelector";
-import PreviewDeviceSelector from "./components/PreviewDeviceSelector";
 import SaveButton from "./components/SaveButton";
 import StylesComponent from "./components/stylescomponent";
 import ThemeSelector from "./components/ThemeSelector";

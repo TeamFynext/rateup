@@ -63,7 +63,7 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
         desktopbgFile: surveyDesktopBgFile,
         mobilebgFile: surveyMobileBgFile,
       },
-      logo: { logoFile },
+      logo: { logoFile, logo },
     },
     thankyouTheme: {
       bg: {
@@ -82,10 +82,8 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
     surveyMobileBgFile ?? surveyMobileBg,
     thankyouDesktopBgFile ?? thankyouDesktopBg,
     thankyouMobileBgFile ?? thankyouMobileBg,
-    logoFile ?? "",
+    logoFile ?? logo,
   ];
-
-  console.log(images, "from surveyTheme");
 
   const urls = await Promise.all(
     images.map((image: string | File | Blob) =>
