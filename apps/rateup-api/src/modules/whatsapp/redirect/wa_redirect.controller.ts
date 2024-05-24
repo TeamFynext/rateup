@@ -31,6 +31,7 @@ export async function getWaShareMessageFromSTMIdHandler(
     select: {
       org: {
         select: {
+          name: true,
           whatsappSettings: {
             select: {
               phone: true,
@@ -76,6 +77,7 @@ export async function getWaShareMessageFromSTMIdHandler(
   reply.send({
     shareUrl: generateWaMessageUrl(phone, message),
     title: res?.survey?.title,
+    orgName: res?.org?.name,
   });
 }
 
