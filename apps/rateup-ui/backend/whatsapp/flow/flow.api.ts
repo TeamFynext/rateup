@@ -1,7 +1,23 @@
 import { notifications } from "@mantine/notifications";
 import { WHATSAPP_URL } from "..";
 import { WaFlowJson, WaFlowWa } from "../../../types/global";
-import { axiosClient } from "../../apiClient";
+import { axiosClient as ac } from "../../apiClient";
+import { CreateAxiosDefaults } from "axios";
+import { showErrorToast } from "../../../utils/notifications";
+
+const axiosInstanceConfig: CreateAxiosDefaults = {
+  timeout: 15000,
+};
+// cloning axios instance with default config
+// @ts-ignore  (Ignoring known error https://github.com/axios/axios/issues/5095)
+const axiosClient = ac.create(axiosInstanceConfig);
+
+axiosClient.interceptors.response.use(undefined, (error) => {
+  if (error.code === "ECONNABORTED") {
+    showErrorToast("Request Timed Out");
+  }
+  return Promise.reject(error);
+});
 
 const BASE = `${WHATSAPP_URL}/flows`;
 
