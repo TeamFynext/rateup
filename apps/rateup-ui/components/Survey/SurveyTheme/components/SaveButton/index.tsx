@@ -30,21 +30,25 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
 
   const handleSaveTheme = useCallback(async () => {
     setIsSaving(true);
-    const themeObjStateCopy = _.cloneDeep(themeObjState);
-    const { logo: orgLogoStylesObj } = themeObjStateCopy;
-    let orgLogoStylesObject = orgLogoStylesObj;
-    if (!orgLogoStylesObject) {
-      orgLogoStylesObject = {
+
+    const {
+      surveyTheme: { logo: orgLogoStylesObj },
+    } = themeObjState;
+
+    let finalThemeObj = themeObjState;
+    if (!orgLogoStylesObj) {
+      finalThemeObj = _.cloneDeep(themeObjState);
+      finalThemeObj.surveyTheme.logo = {
         logo: "",
         styles: {
           width: 50,
           height: 50,
         },
       };
-      themeObjStateCopy.surveyTheme.logo = orgLogoStylesObject;
     }
+
     const newSurveyTheme =
-      await destructureThemeAndUploadImagesIfAny(themeObjStateCopy);
+      await destructureThemeAndUploadImagesIfAny(finalThemeObj);
 
     await updateSurveyTheme.mutateAsync({
       surveyThemeId: themeObjBeingEdited?.id,
