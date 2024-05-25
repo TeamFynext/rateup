@@ -56,15 +56,6 @@ const MCQGridForm = ({
   const [tableHeight, setTableHeight] = useState<number>(null);
   const [tableWidth, setTableWidth] = useState<number>(null);
 
-  if (isMobile)
-    return (
-      <MCQGridMobileForm
-        choices={choices}
-        questions={questions}
-        handleUpdateResponse={handleUpdateResponse}
-      />
-    );
-
   useEffect(() => {
     if (tableRef.current) {
       const height = tableRef.current.clientHeight;
@@ -73,6 +64,15 @@ const MCQGridForm = ({
       setTableWidth(width);
     }
   }, []);
+
+  if (isMobile)
+    return (
+      <MCQGridMobileForm
+        choices={choices}
+        questions={questions}
+        handleUpdateResponse={handleUpdateResponse}
+      />
+    );
 
   const TableComponent = () => {
     const rows = questions?.map((question) => (
