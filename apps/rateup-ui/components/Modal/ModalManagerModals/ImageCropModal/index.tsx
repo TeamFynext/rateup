@@ -1,165 +1,79 @@
-import ReactCrop, {
-  centerCrop,
-  convertToPixelCrop,
-  Crop,
-  makeAspectCrop,
-  PixelCrop,
-} from "react-image-crop";
-import { useDebounceEffect } from "../../../menu/hook/useDebounceEffect";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { canvasPreview } from "../../../menu/easyCrop/CanvasPreview";
-import { mimeTypesForImage } from "../../../../utils/constants";
-import { Box, Button, Group, NumberInput, Stack, Image } from "@mantine/core";
-import RateupLoader from "../../../Loaders/RateupLoader";
-import "react-image-crop/dist/ReactCrop.css";
-import styles from "./ImageCropModal.module.css";
+import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { useCallback, useRef, useState } from "react";
+import Cropper, { ReactCropperElement } from "react-cropper";
+import "cropperjs/dist/cropper.css";
+import { mimeTypesForImage } from "../../../../utils/constants";
+import styles from "./ImageCropModal.module.css";
 
 function ImageCropModal({ context, id: thisModalId, innerProps }) {
   const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } =
     innerProps;
-  const [crop, setCrop] = useState<Crop>();
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [scale, setScale] = useState(1);
+
+  const cropperRef = useRef<ReactCropperElement>();
+  const [scale, setScale] = useState(0.4);
+  const [isCropperReady, setIsCropperReady] = useState(false);
+
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const isUnsplashImage = !imageUrl.startsWith("blob:");
 
-  useEffect(() => {
-    setIsImageLoading(true);
-  }, [imageUrl]);
+  const generateCroppedLinkForUnsplash = () => {
+    const { x, y, width, height } = cropperRef.current?.cropper.getData();
+    const { naturalWidth, naturalHeight } =
+      cropperRef.current?.cropper.getImageData();
+    const focalPointX = (x + width / 2) / naturalWidth;
+    const focalPointY = (y + height / 2) / naturalHeight;
 
-  useDebounceEffect(
-    () => {
-      if (
-        completedCrop?.width &&
-        completedCrop?.height &&
-        imgRef.current &&
-        previewCanvasRef.current
-      ) {
-        canvasPreview(
-          imgRef.current,
-          previewCanvasRef.current,
-          completedCrop,
-          scale,
-          fileExtension,
-        );
-      }
-    },
-    100,
-    [completedCrop, scale],
-  );
+    const [urlStringWithoutQueryParams, queryParamsString] =
+      imageUrl.split("?");
+    const queryParams = new URLSearchParams(queryParamsString);
 
-  function centerAspectCrop(
-    mediaWidth: number,
-    mediaHeight: number,
-    aspect: number,
-  ) {
-    return centerCrop(
-      makeAspectCrop(
-        {
-          unit: "%",
-          width: 100,
-        },
-        aspect,
-        mediaWidth,
-        mediaHeight,
-      ),
-      mediaWidth,
-      mediaHeight,
-    );
-  }
-  useEffect(() => {
-    setCrop({
-      unit: "%",
-      width: 100,
-      height: 100,
-      x: 0,
-      y: 0,
-    });
-  }, [imageUrl]);
+    queryParams.set("w", `${width}`);
+    queryParams.set("h", `${height}`);
+    queryParams.set("fit", "crop");
+    queryParams.set("crop", "focalPoint");
+    queryParams.set("fp-x", `${focalPointX}`);
+    queryParams.set("fp-y", `${focalPointY}`);
+    queryParams.set("fp-z", "1");
+    // queryParams.set("fp-debug", "true");
 
-  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
-    setIsImageLoading(false);
-    if (aspectRatio) {
-      const { width, height } = e.currentTarget;
-      const percentCrop = centerAspectCrop(width, height, aspectRatio);
-      setCrop(percentCrop);
-      setCompletedCrop(convertToPixelCrop(percentCrop, width, height));
-    }
-  }
-  const handleCropSubmit = async () => {
-    setScale(1);
-    if (!imageUrl.startsWith("blob")) {
-      const unsplashLink = generateCroppedLinkForUnsplash({
-        crop: completedCrop,
-        H: imgRef?.current?.height,
-        W: imgRef?.current?.width,
-        nW: imgRef?.current?.naturalWidth,
-        nH: imgRef?.current?.naturalHeight,
-        image: imageUrl,
-      });
-      const croppedImgLink = encodeURI(
-        `https://images.unsplash.com/${unsplashLink}`,
-      );
+    const newImageUrl = `${urlStringWithoutQueryParams}?${queryParams.toString()}`;
+    return encodeURI(newImageUrl);
+  };
+
+  const handleCancelBtnClick = useCallback(() => {
+    if (onCancelClick) onCancelClick();
+    context.closeModal(thisModalId);
+  }, [thisModalId, onCancelClick]);
+
+  const handleSaveBtnClick = useCallback(() => {
+    if (isUnsplashImage) {
+      const generatedUrl = generateCroppedLinkForUnsplash();
       onSaveClick({
-        url: croppedImgLink,
+        url: generatedUrl,
         source: "unsplash",
         file: null,
       });
       modals.closeAll();
     } else {
-      previewCanvasRef?.current?.toBlob(
-        (blob) => {
-          if (!blob) return;
-          if (onSaveClick) {
-            const file = new File([blob], imageName, {
-              type: mimeTypesForImage[fileExtension],
-            });
-            onSaveClick({
-              url: URL.createObjectURL(blob),
-              source: "user-device",
-              file,
-            });
-            // This setTimeout is to prevent get imageUrl not found error in CanvasPreview.ts file.
-            setTimeout(() => URL.revokeObjectURL(imageUrl), 100);
-            modals.closeAll();
-          }
-        },
-        mimeTypesForImage[fileExtension],
-        0.9,
-      );
+      const croppedCanvas = cropperRef.current?.cropper.getCroppedCanvas();
+      croppedCanvas?.toBlob((blob) => {
+        if (!blob) return;
+        if (onSaveClick) {
+          const file = new File([blob], imageName, {
+            type: mimeTypesForImage[fileExtension],
+          });
+          onSaveClick({
+            url: URL.createObjectURL(blob),
+            source: "user-device",
+            file,
+          });
+          setTimeout(() => URL.revokeObjectURL(imageUrl), 100);
+          modals.closeAll();
+        }
+      }, mimeTypesForImage[fileExtension]);
     }
-  };
-  const generateCroppedLinkForUnsplash = ({ crop, W, H, nW, nH, image }) => {
-    const urlParts = image?.split("?");
-    const baseUrl = urlParts?.[0];
-    const urlSegments = baseUrl?.split("/");
-    const photoKey = urlSegments?.[urlSegments?.length - 1];
-    const params = new URLSearchParams(urlParts[1]);
-    const author = params.get("author");
-    const username = params.get("username");
-    const ixid = params.get("ixid");
-    const ixlib = params.get("ixlib");
-    const q = params.get("q");
-    const errorFraction = 0.04;
-    //fp-z value
-    let z = 2 - crop.width / W;
-    //fp-x value
-    let x = crop.x / (W - crop.width) + errorFraction;
-    //fp-x value
-    let y = crop.y / (H - crop.height) + errorFraction;
-    const cropWidth = (crop.width / W) * nW;
-    const cropHeigth = (crop.height / H) * nH;
-
-    return `${photoKey}?crop=focalpoint&fit=crop&q=${q}&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}&ixid=${ixid}&ixlib=${ixlib}&author=${author}&username=${username}`;
-  };
-
-  const handleCancelClick = useCallback(() => {
-    if (onCancelClick) onCancelClick();
-    context.closeModal(thisModalId);
-  }, [thisModalId, onCancelClick]);
+  }, []);
 
   return (
     <>
@@ -168,57 +82,50 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
         step={0.1}
         min={0.1}
         max={1}
-        defaultValue={scale}
+        defaultValue={0.4}
+        value={scale}
         onChange={(e) => setScale(Number(e))}
         decimalScale={1}
         fixedDecimalScale
       />
 
-      <Box className={styles["react-crop-container"]}>
-        {
-          <ReactCrop
-            crop={crop}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
-            onComplete={(c) => setCompletedCrop(c)}
-            aspect={aspectRatio}
-            minHeight={100}
-            keepSelection
-            className={styles["react-crop-div"]}
-          >
-            <Image
-              src={imageUrl}
-              onLoad={onImageLoad}
-              ref={imgRef}
-              style={{
-                transform: `scale(${scale})`,
-              }}
-              alt="cropping image"
-              fit="contain"
-            />
-          </ReactCrop>
-        }
+      <Box className={styles["cropper-container"]}>
+        <LoadingOverlay
+          visible={!isCropperReady}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+          loaderProps={{ type: "bars" }}
+        />
 
-        {isImageLoading && (
-          <Stack miw={350} mih={250} justify="center">
-            <RateupLoader />
-          </Stack>
-        )}
+        <Cropper
+          ref={cropperRef}
+          style={{ height: "100%", width: "100%" }}
+          initialAspectRatio={aspectRatio}
+          aspectRatio={aspectRatio}
+          preview=".img-preview"
+          src={imageUrl}
+          viewMode={0}
+          zoomable
+          zoomTo={scale}
+          zoomOnTouch={false}
+          zoomOnWheel={false}
+          minCropBoxHeight={100}
+          minCropBoxWidth={100}
+          background={false}
+          responsive={true}
+          autoCropArea={1}
+          checkOrientation={false}
+          guides={true}
+          highlight
+          ready={(e) => setIsCropperReady(true)}
+        />
       </Box>
 
-      <canvas
-        ref={previewCanvasRef}
-        style={{
-          display: "none",
-          width: completedCrop?.width,
-          height: completedCrop?.height,
-        }}
-      />
-
       <Group className={styles["cancel-save-btn-container"]} justify="right">
-        <Button className={styles["cancel-btn"]} onClick={handleCancelClick}>
+        <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
           Cancel
         </Button>
-        <Button className={styles["save-btn"]} onClick={handleCropSubmit}>
+        <Button className={styles["save-btn"]} onClick={handleSaveBtnClick}>
           Save
         </Button>
       </Group>
