@@ -47,11 +47,10 @@ function WelcomePage({
         />
       )}
       <Text style={surveyThemeData?.title?.styles}>
-        {surveyThemeData?.title?.title || "Welcome"}
+        {surveyThemeData?.title?.title || " "}
       </Text>
       <Text style={surveyThemeData?.subtitle?.styles}>
-        {surveyThemeData?.subtitle?.subtitle ||
-          "Welcome to the survey, please click the button below to start the survey."}
+        {surveyThemeData?.subtitle?.subtitle || " "}
       </Text>
       <div
         style={{
