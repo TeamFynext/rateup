@@ -165,6 +165,7 @@ const CampaignById = () => {
                 topHeight={310}
                 tab={WhatsappTableType.PARTICIPANTS}
                 groupId={campaignData?.id}
+                refetch={refetchCampaign}
               />
             </PaperLayout>
             <Modal

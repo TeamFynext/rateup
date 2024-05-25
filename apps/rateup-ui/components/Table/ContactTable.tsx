@@ -1,6 +1,11 @@
 import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconPlus,
+  IconRefresh,
+  IconTrash,
+} from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -18,7 +23,7 @@ import {
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
 import { PAGE_SIZE } from "../../utils/constants";
-import { showLoadingToast } from "../../utils/notifications";
+import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
 import { WhatsappTableType, tabHeaderLabels } from "../Contacts/utils/utils";
@@ -41,6 +46,7 @@ function ContactTable({
   groupId = "",
   btnTitle = "",
   toggle,
+  refetch,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -54,6 +60,7 @@ function ContactTable({
   groupId?: string;
   btnTitle?: string;
   toggle?: () => void;
+  refetch: () => void;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -206,7 +213,31 @@ function ContactTable({
               onClick={toggle}
             />
           ) : (
-            <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
+            <Group gap={"sm"}>
+              <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
+              <Tooltip label={"Refresh"}>
+                <ActionIcon
+                  variant="light"
+                  onClick={async () => {
+                    showLoadingToast(
+                      "Data getting loaded...",
+                      "contacts",
+                      true,
+                      "Loading",
+                    );
+                    await refetch();
+                    showSuccessToast(
+                      "Data updated",
+                      "contacts",
+                      <IconCheck />,
+                      true,
+                    );
+                  }}
+                >
+                  <IconRefresh stroke={1.5} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
           )}
         </Group>
         <FilterToggles

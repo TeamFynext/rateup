@@ -31,6 +31,15 @@ export const importContacts = async (data) => {
   return res;
 };
 
+export const importCSVContacts = async (data) => {
+  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res;
+};
+
 export const deleteContact = async (contactId: string) => {
   let res = await axiosClient.delete(`${CONTACT_BASE_URL}/${contactId}`);
   return res;

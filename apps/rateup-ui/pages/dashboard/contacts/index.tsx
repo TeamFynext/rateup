@@ -58,15 +58,22 @@ export default function Contacts() {
   const { tab = ContactTabs.GROUPS } = router.query as { tab: string };
   let activeTab = tab?.toString() as ContactTabs;
 
-  const { isLoading: isLoadingContacts, data: contactData } = useContacts() as {
+  const {
+    isLoading: isLoadingContacts,
+    data: contactData,
+    refetch: refetchContacts,
+  } = useContacts() as {
     isLoading: boolean;
     data: ContactsData[];
     error: any;
     refetch: any;
   };
 
-  const { isLoading: isLoadingContactgroup, data: contactGroupData } =
-    useContactGroup();
+  const {
+    isLoading: isLoadingContactgroup,
+    data: contactGroupData,
+    refetch: refetchGroups,
+  } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
   const sourceArray = Array.from(
     new Set(contactData?.map((data) => data.source)),
@@ -209,6 +216,7 @@ export default function Contacts() {
                 data={filteredContacts}
                 cTags={cTags?.contactTags}
                 topHeight={375}
+                refetch={refetchContacts}
               />
             </PaperLayout>
           )}
@@ -226,6 +234,7 @@ export default function Contacts() {
                 cTags={cTags?.contactTags}
                 tab={activeTab}
                 topHeight={375}
+                refetch={refetchGroups}
               />
             </PaperLayout>
           )}

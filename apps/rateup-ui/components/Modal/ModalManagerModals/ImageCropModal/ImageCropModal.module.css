@@ -29,6 +29,7 @@
 .cropper-container {
   position: relative;
   height: 350px;
+  overflow: hidden;
 }
 
 .cancel-btn {

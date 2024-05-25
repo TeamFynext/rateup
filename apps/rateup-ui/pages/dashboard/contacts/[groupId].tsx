@@ -214,6 +214,7 @@ export default function ContactGroup() {
                   topHeight={420}
                   open={open}
                   groupId={groupDetails?.id}
+                  refetch={refetchgroupById}
                 />
               </PaperLayout>
             </Box>

@@ -250,7 +250,8 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
 
 export const handleInputScrollIntoView = (e) => {
   const domEle = e.currentTarget;
+  domEle.style.scrollMarginTop = "40px";
   setTimeout(() => {
-    domEle.scrollIntoView({ block: "center" });
+    domEle.scrollIntoView({ block: "start" });
   }, 700);
 };

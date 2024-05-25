@@ -78,7 +78,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
   return (
     <>
       <NumberInput
-        label="Scale the Image"
+        label="Zoom the Image"
         step={0.1}
         min={0.1}
         max={1}
@@ -107,8 +107,6 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
           viewMode={0}
           zoomable
           zoomTo={scale}
-          zoomOnTouch={false}
-          zoomOnWheel={false}
           minCropBoxHeight={100}
           minCropBoxWidth={100}
           background={false}

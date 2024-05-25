@@ -3,6 +3,7 @@ import {
   addExistingContactsToGroup,
   addExistingContactsToMultipleGroups,
   addNewContact,
+  addNewContactFromCSV,
   createContactGroup,
   deleteContactGroup,
   deleteManyContactGroups,
@@ -67,6 +68,31 @@ export const useAddNewContactMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addNewContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupById", groupId],
+      }),
+        queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+        showSuccessToast(
+          "Added new member successfully.",
+          "contact-group-add-member",
+          <IconCheck />,
+        );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error adding member: ${error?.response?.data?.error}`,
+        "contact-group-add-member",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useAddNewContactFromCSVMutation = (groupId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addNewContactFromCSV,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
