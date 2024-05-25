@@ -380,6 +380,16 @@ export const swaggerConfig: SwaggerOptions = {
       },
     ],
     tags: publicTags,
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "access_token",
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }],
   },
   hideUntagged: true,
 };

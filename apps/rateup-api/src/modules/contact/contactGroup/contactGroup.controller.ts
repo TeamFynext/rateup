@@ -80,6 +80,16 @@ export async function createContactGroupHandler(
     reply.code(201).send(contactGroup);
   } catch (error) {
     log.error(error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        reply
+          .code(500)
+          .send({
+            error:
+              "Contact group with this name already exist in the provided team",
+          });
+      }
+    }
     reply.code(500).send({ error: "Something went wrong" });
   }
 }
