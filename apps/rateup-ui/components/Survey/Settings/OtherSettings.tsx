@@ -125,7 +125,7 @@ const OtherSettings = () => {
       </FormModalLayout>
       <FormModalLayout
         opened={deleteModalOpened}
-        onClose={close}
+        onClose={closeDeleteModal}
         centered
         title="Confirm Delete Survey"
         buttonTitle="Confirm"

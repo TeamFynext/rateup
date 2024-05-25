@@ -6,6 +6,7 @@ import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 import commonStyles from "../mmCommonStyles.module.css";
 import styles from "./ImageSourceSelectorModal.module.css";
+import { mmImageCropModalClassnames } from "../../../../utils/constants";
 
 function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;
@@ -23,11 +24,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
           modal: "imageCropModal",
           title: "Crop Image",
           centered: true,
-          classNames: {
-            content: imageCropModalStyles["modal-content"],
-            header: imageCropModalStyles["modal-header"],
-            body: imageCropModalStyles["modal-body"],
-          },
+          classNames: mmImageCropModalClassnames,
           innerProps: {
             imageUrl: url,
             imageName: name,

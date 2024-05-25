@@ -7,6 +7,15 @@ function surveyThemeReducer(state, action) {
 
   switch (action.type) {
     case "set-survey-theme": {
+      if (!payload.surveyTheme.logo) {
+        payload.surveyTheme.logo = {
+          logo: "",
+          styles: {
+            width: 50,
+            height: 50,
+          },
+        };
+      }
       state.surveyTheme = payload;
       break;
     }

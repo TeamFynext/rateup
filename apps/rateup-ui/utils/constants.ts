@@ -1,4 +1,5 @@
 import { QuestionType, WaFlowFormElementType as wft } from "../types/enums";
+import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`;
@@ -79,6 +80,7 @@ const FlowInputQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
   QuestionType.Date,
+  QuestionType.Optin,
 ];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
@@ -101,7 +103,7 @@ const flowNonInputElements = [
   wft.nonInputText,
   wft.image,
   // not currectly working
-  // , wft.embeddedLink,wft.optIn
+  // , wft.embeddedLink,
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links
@@ -244,3 +246,9 @@ export const WHATSAPP_TEMPLATE_LANGUAGE = [
   { label: "Vietnamese", value: "vi" },
   { label: "Zulu", value: "zu" },
 ];
+
+export const mmImageCropModalClassnames = {
+  content: MMImageCropModalStyles["modal-content"],
+  header: MMImageCropModalStyles["modal-header"],
+  body: MMImageCropModalStyles["modal-body"],
+};

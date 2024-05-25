@@ -25,8 +25,6 @@ import {
   ContainedTimeInput,
 } from "../input/ContainedInput/ContainedInput";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
-import { ImageCropModal } from "../Modal/ImageCropModal";
-import { useDisclosure } from "@mantine/hooks";
 import {
   createCustomTimestamp,
   formatToCustomTime,
@@ -35,8 +33,10 @@ import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
   fallbackImage,
+  mmImageCropModalClassnames,
 } from "../../utils/constants";
 import { showErrorToast } from "../../utils/notifications";
+import { modals } from "@mantine/modals";
 
 interface CreateMenuCategoryModalProps {
   readonly opened: boolean;
@@ -52,15 +52,7 @@ export function CreateMenuCategoryModal({
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-  const [selectedImage, setSelectedImage] = useState({
-    url: "",
-    name: "",
-  });
   const resetRef = useRef<() => void>(null);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
 
   const form = useForm({
     initialValues: editingItem ?? {
@@ -164,23 +156,39 @@ export function CreateMenuCategoryModal({
   if (!menuId) {
     return null;
   }
+
+  const handleCropImageSave = (croppedImageObj) => {
+    if (croppedImageObj) {
+      const { file, url } = croppedImageObj;
+      form.setFieldValue("image", url);
+      setImageToUpload(file);
+    }
+  };
+
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
       showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
-    setSelectedImage({
-      url: URL.createObjectURL(event),
-      name: event.name,
+    const imageBlobUrl = URL.createObjectURL(event);
+    const imageName = event.name;
+
+    modals.openContextModal({
+      modal: "imageCropModal",
+      title: "Crop Image",
+      centered: true,
+      classNames: mmImageCropModalClassnames,
+      innerProps: {
+        imageUrl: imageBlobUrl,
+        imageName: imageName,
+        onSaveClick: handleCropImageSave,
+        aspectRatio: 4 / 3,
+      },
     });
-    toggleCropDialog();
     resetRef?.current?.();
   };
-  const handleCropImageSave = (cropedImage: File) => {
-    form.setFieldValue("image", URL.createObjectURL(cropedImage));
-    setImageToUpload(cropedImage);
-  };
+
   return (
     <FormModalLayout
       opened={opened}
@@ -192,14 +200,6 @@ export function CreateMenuCategoryModal({
       size="55rem"
     >
       <Stack>
-        <ImageCropModal
-          opened={openedCropDialog}
-          onclose={closeCropDialog}
-          imageName={selectedImage.name}
-          handleCropImageSave={handleCropImageSave}
-          image={selectedImage.url}
-          aspect={16 / 9}
-        />
         <LoadingOverlay
           visible={
             createMenuCategoryMutation.isPending ||

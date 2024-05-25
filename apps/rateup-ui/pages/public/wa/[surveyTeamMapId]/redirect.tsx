@@ -21,8 +21,7 @@ export default function Redirect({
   return (
     <>
       <Head>
-        <title>{`Rateup - Welcome to ${res?.title}`}</title>
-
+        <title>{`Rateup - Welcome to ${res?.orgName}`}</title>
         <meta
           name="description"
           content={`This is the menu of ${res?.title}`}

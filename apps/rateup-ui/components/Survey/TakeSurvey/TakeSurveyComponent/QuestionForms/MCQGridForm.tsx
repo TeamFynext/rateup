@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import {
@@ -41,6 +41,7 @@ const MCQGridForm = ({
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
+  const tableRef = useRef(null);
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
@@ -52,6 +53,8 @@ const MCQGridForm = ({
   };
 
   const isMobile = useMediaQuery("(max-width: 480px)");
+  const [tableHeight, setTableHeight] = useState<number>(null);
+  const [tableWidth, setTableWidth] = useState<number>(null);
 
   if (isMobile)
     return (
@@ -62,64 +65,90 @@ const MCQGridForm = ({
       />
     );
 
-  const rows = questions?.map((question) => (
-    <Table.Tr key={question}>
-      <Table.Td
-        style={{ position: "sticky", left: 0, zIndex: 1 }}
-        bg={`#E4E6ED`}
-      >
-        {question}
-      </Table.Td>
-      {choices?.map((choice) => (
-        <Table.Td key={choice?.value}>
-          <Radio
-            value={choice?.value}
-            checked={response?.[question]?.value == choice?.value}
-            onChange={(e) =>
-              handleUpdateResponse(e.currentTarget.value, question)
-            }
-            size="md"
-            icon={CheckIcon}
-            color={themePrimaryColor}
-            iconColor={isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF"}
-          />
-        </Table.Td>
-      ))}
-    </Table.Tr>
-  ));
+  useEffect(() => {
+    if (tableRef.current) {
+      const height = tableRef.current.clientHeight;
+      const width = tableRef.current.clientWidth;
+      setTableHeight(height);
+      setTableWidth(width);
+    }
+  }, []);
 
-  const columns = choices?.map((choice) => (
-    <Table.Th
-      key={choice?.value}
-      w={100}
-      style={{ position: "sticky", left: 0, top: 0, zIndex: 1 }}
-      bg={"#CDCDCD"}
-    >
-      {choice?.value}
-    </Table.Th>
-  ));
+  const TableComponent = () => {
+    const rows = questions?.map((question) => (
+      <Table.Tr key={question}>
+        <Table.Td
+          style={{ position: "sticky", left: 0, top: 0, zIndex: 1 }}
+          bg={`#E4E6ED`}
+        >
+          {question}
+        </Table.Td>
+        {choices?.map((choice) => (
+          <Table.Td key={choice?.value}>
+            <Radio
+              value={choice?.value}
+              checked={response?.[question]?.value == choice?.value}
+              onChange={(e) =>
+                handleUpdateResponse(e.currentTarget.value, question)
+              }
+              size="md"
+              icon={CheckIcon}
+              color={themePrimaryColor}
+              iconColor={
+                isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF"
+              }
+            />
+          </Table.Td>
+        ))}
+      </Table.Tr>
+    ));
+
+    const columns = choices?.map((choice) => (
+      <Table.Th
+        key={choice?.value}
+        w={100}
+        style={{ position: "sticky", top: 0, zIndex: 2 }}
+        bg={"#CDCDCD"}
+      >
+        {choice?.value}
+      </Table.Th>
+    ));
+
+    return (
+      <Table
+        horizontalSpacing={"md"}
+        verticalSpacing={"md"}
+        withRowBorders={false}
+        highlightOnHover
+        ref={tableRef}
+      >
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th
+              style={{ position: "sticky", top: 0, left: 0, zIndex: 3 }}
+              bg={"#CDCDCD"}
+            ></Table.Th>
+            {columns}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{rows}</Table.Tbody>
+      </Table>
+    );
+  };
 
   return (
-    <Stack w={"100%"} justify="center">
-      <ScrollArea scrollbarSize={6} h={"65vh"} w={isPreview ? 700 : 900}>
-        <Table
-          horizontalSpacing={"md"}
-          verticalSpacing={"md"}
-          withRowBorders={false}
-          highlightOnHover
+    <Stack justify="center" w={isPreview ? 700 : "100%"}>
+      {tableHeight > 450 || tableWidth > 900 ? (
+        <ScrollArea
+          scrollbarSize={6}
+          h={tableHeight > 450 ? "65vh" : "100%"}
+          w={isPreview ? 700 : 900}
         >
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th
-                style={{ position: "sticky", left: 0, top: 0, zIndex: 2 }}
-                bg={"#CDCDCD"}
-              ></Table.Th>
-              {columns}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
-      </ScrollArea>
+          <TableComponent />
+        </ScrollArea>
+      ) : (
+        <TableComponent />
+      )}
     </Stack>
   );
 };

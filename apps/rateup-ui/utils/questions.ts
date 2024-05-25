@@ -94,6 +94,7 @@ export const getInitialQuestionValues = (
     choices: question?.choices,
     features: question?.features,
     tnc: question?.tnc,
+    optinScreenId: question?.optinScreenId,
     sections:
       type === SurveyType.WhatsApp ? question?.sections || {} : undefined,
   };

@@ -1,27 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import FormModalLayout from "./FormModalLayout";
-import ReactCrop, {
-  centerCrop,
-  makeAspectCrop,
-  Crop,
-  PixelCrop,
-  convertToPixelCrop,
-} from "react-image-crop";
-import { useDebounceEffect } from "../menu/hook/useDebounceEffect";
-import { canvasPreview } from "../menu/easyCrop/CanvasPreview";
-import "react-image-crop/dist/ReactCrop.css";
 import {
   Box,
   Button,
   Group,
-  Image,
+  LoadingOverlay,
   Modal,
   NumberInput,
-  Stack,
 } from "@mantine/core";
+import "cropperjs/dist/cropper.css";
+import { useCallback, useRef, useState } from "react";
+import Cropper, { ReactCropperElement } from "react-cropper";
 import { mimeTypesForImage } from "../../utils/constants";
-import RateupLoader from "../Loaders/RateupLoader";
-import styles from "./ImageCropModal.module.css";
+import styles from "./ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 interface ImageCropModalProps {
   opened: boolean;
@@ -40,125 +29,61 @@ export const ImageCropModal = ({
   handleCropImageSave,
   aspect = 4 / 3,
 }: ImageCropModalProps) => {
-  const [crop, setCrop] = useState<Crop>();
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [scale, setScale] = useState(1);
+  const cropperRef = useRef<ReactCropperElement>();
+  const [scale, setScale] = useState(0.4);
+  const [isCropperReady, setIsCropperReady] = useState(false);
+
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
+  const isUnsplashImage = !image?.startsWith("blob:");
 
-  useDebounceEffect(
-    () => {
-      if (
-        completedCrop?.width &&
-        completedCrop?.height &&
-        imgRef.current &&
-        previewCanvasRef.current
-      ) {
-        canvasPreview(
-          imgRef.current,
-          previewCanvasRef.current,
-          completedCrop,
-          scale,
-          fileExtension,
-        );
-      }
-    },
-    100,
-    [completedCrop, scale],
-  );
+  const generateCroppedLinkForUnsplash = () => {
+    const { x, y, width, height } = cropperRef.current?.cropper.getData();
+    const { naturalWidth, naturalHeight } =
+      cropperRef.current?.cropper.getImageData();
+    const focalPointX = (x + width / 2) / naturalWidth;
+    const focalPointY = (y + height / 2) / naturalHeight;
 
-  function centerAspectCrop(
-    mediaWidth: number,
-    mediaHeight: number,
-    aspect: number,
-  ) {
-    return centerCrop(
-      makeAspectCrop(
-        {
-          unit: "%",
-          width: 100,
-        },
-        aspect,
-        mediaWidth,
-        mediaHeight,
-      ),
-      mediaWidth,
-      mediaHeight,
-    );
-  }
-  useEffect(() => {
-    setCrop({
-      unit: "%",
-      width: 100,
-      height: 100,
-      x: 0,
-      y: 0,
-    });
-  }, [image]);
+    const [urlStringWithoutQueryParams, queryParamsString] = image.split("?");
+    const queryParams = new URLSearchParams(queryParamsString);
 
-  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
-    if (aspect) {
-      const { width, height } = e.currentTarget;
-      const percentCrop = centerAspectCrop(width, height, aspect);
-      setCrop(percentCrop);
-      setCompletedCrop(convertToPixelCrop(percentCrop, width, height));
-    }
-  }
-  const handleCropSubmit = async () => {
-    setScale(1);
-    if (!image?.startsWith("blob:")) {
-      const unsplashLink = generateCroppedLinkForUnsplash({
-        crop: completedCrop,
-        H: imgRef?.current?.height,
-        W: imgRef?.current?.width,
-        nW: imgRef?.current?.naturalWidth,
-        nH: imgRef?.current?.naturalHeight,
-        image,
-      });
-      handleCropImageSave(unsplashLink);
+    queryParams.set("w", `${width}`);
+    queryParams.set("h", `${height}`);
+    queryParams.set("fit", "crop");
+    queryParams.set("crop", "focalPoint");
+    queryParams.set("fp-x", `${focalPointX}`);
+    queryParams.set("fp-y", `${focalPointY}`);
+    queryParams.set("fp-z", "1");
+    // queryParams.set("fp-debug", "true");
+
+    const newImageUrl = `${urlStringWithoutQueryParams}?${queryParams.toString()}`;
+    return encodeURI(newImageUrl);
+  };
+
+  const handleCancelBtnClick = useCallback(() => {
+    onclose();
+  }, [onclose]);
+
+  const handleSaveBtnClick = useCallback(() => {
+    if (isUnsplashImage) {
+      const generatedUrl = generateCroppedLinkForUnsplash();
+      handleCropImageSave(generatedUrl);
       onclose();
     } else {
-      previewCanvasRef?.current?.toBlob(
-        (blob) => {
-          if (!blob) return;
-          const file = new File([blob], imageName, {
-            type: mimeTypesForImage[fileExtension],
-          });
-
-          if (handleCropImageSave) {
-            handleCropImageSave(file);
-            onclose();
-          }
-        },
-        mimeTypesForImage[fileExtension],
-        0.9,
-      );
+      const croppedCanvas = cropperRef.current?.cropper.getCroppedCanvas();
+      croppedCanvas?.toBlob((blob) => {
+        if (!blob) return;
+        const file = new File([blob], imageName, {
+          type: mimeTypesForImage[fileExtension],
+        });
+        if (handleCropImageSave) {
+          handleCropImageSave(file);
+          setTimeout(() => URL.revokeObjectURL(image), 100);
+          onclose();
+        }
+      }, mimeTypesForImage[fileExtension]);
     }
-  };
-  const generateCroppedLinkForUnsplash = ({ crop, W, H, nW, nH, image }) => {
-    const urlParts = image?.split("?");
-    const baseUrl = urlParts?.[0];
-    const urlSegments = baseUrl?.split("/");
-    const photoKey = urlSegments?.[urlSegments?.length - 1];
-    const params = new URLSearchParams(urlParts[1]);
-    const author = params.get("author");
-    const username = params.get("username");
-    const ixid = params.get("ixid");
-    const ixlib = params.get("ixlib");
-    const q = params.get("q");
-    const errorFraction = 0.04;
-    //fp-z value
-    let z = 2 - crop.width / W;
-    //fp-x value
-    let x = crop.x / (W - crop.width) + errorFraction;
-    //fp-x value
-    let y = crop.y / (H - crop.height) + errorFraction;
-    const cropWidth = (crop.width / W) * nW;
-    const cropHeigth = (crop.height / H) * nH;
+  }, [isUnsplashImage, fileExtension, image, imageName, handleCropImageSave]);
 
-    return `${photoKey}?crop=focalpoint&fit=crop&q=${q}&w=${cropWidth}&h=${cropHeigth}&fp-y=${y}&fp-x=${x}&fp-z=${z}&ixid=${ixid}&ixlib=${ixlib}&author=${author}&username=${username}`;
-  };
   return (
     <Modal
       classNames={{
@@ -170,72 +95,64 @@ export const ImageCropModal = ({
       centered
       onClose={() => {
         onclose();
-        setScale(1);
+        setScale(0.4);
       }}
       opened={opened}
       radius={"lg"}
       zIndex={9999}
     >
-      {image?.startsWith("blob:") && (
-        <NumberInput
-          label="Scale the Image"
-          step={0.1}
-          min={0.1}
-          max={1}
-          defaultValue={scale}
-          onChange={(e) => setScale(Number(e))}
-          decimalScale={1}
-          fixedDecimalScale
-        />
-      )}
-
-      <Box className={styles["react-crop-container"]}>
-        <ReactCrop
-          crop={crop}
-          onChange={(_, percentCrop) => setCrop(percentCrop)}
-          onComplete={(c) => setCompletedCrop(c)}
-          aspect={aspect}
-          keepSelection
-          // className={styles["react-crop-div"]}
-        >
-          <Image
-            src={image}
-            onLoad={onImageLoad}
-            ref={imgRef}
-            style={{
-              transform: `scale(${scale})`,
-            }}
-            alt="cropping image"
-            fit="contain"
-          />
-        </ReactCrop>
-
-        {!imgRef.current && (
-          <Stack miw={350} mih={250} justify="center">
-            <RateupLoader />
-          </Stack>
-        )}
-        <Box h={100} />
-      </Box>
-
-      <canvas
-        ref={previewCanvasRef}
-        style={{
-          display: "none",
-          width: completedCrop?.width,
-          height: completedCrop?.height,
-        }}
+      <NumberInput
+        label="Scale the Image"
+        step={0.1}
+        min={0.1}
+        max={1}
+        defaultValue={0.4}
+        value={scale}
+        onChange={(e) => setScale(Number(e))}
+        decimalScale={1}
+        fixedDecimalScale
       />
-      <Box bg={"white"} pos={"fixed"} right={0} bottom={0} w={"100%"} p={"xs"}>
-        <Group className={styles["cancel-save-btn-container"]} justify="right">
-          <Button className={styles["cancel-btn"]} onClick={onclose}>
-            Cancel
-          </Button>
-          <Button className={styles["save-btn"]} onClick={handleCropSubmit}>
-            Save
-          </Button>
-        </Group>
+
+      <Box className={styles["cropper-container"]}>
+        <LoadingOverlay
+          visible={!isCropperReady}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+          loaderProps={{ type: "bars" }}
+        />
+
+        <Cropper
+          ref={cropperRef}
+          style={{ height: "100%", width: "100%" }}
+          initialAspectRatio={aspect}
+          aspectRatio={aspect}
+          preview=".img-preview"
+          src={image}
+          viewMode={0}
+          zoomable
+          zoomTo={scale}
+          zoomOnTouch={false}
+          zoomOnWheel={false}
+          minCropBoxHeight={100}
+          minCropBoxWidth={100}
+          background={false}
+          responsive={true}
+          autoCropArea={1}
+          checkOrientation={false}
+          guides={true}
+          highlight
+          ready={(e) => setIsCropperReady(true)}
+        />
       </Box>
+
+      <Group className={styles["cancel-save-btn-container"]} justify="right">
+        <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
+          Cancel
+        </Button>
+        <Button className={styles["save-btn"]} onClick={handleSaveBtnClick}>
+          Save
+        </Button>
+      </Group>
     </Modal>
   );
 };

@@ -12,7 +12,6 @@ import {
 import { modals } from "@mantine/modals";
 import { IconStar, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useCallback, useRef } from "react";
-import imageCropModalStyles from "../../../Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import {
   useSelectedPageTab,
@@ -20,6 +19,7 @@ import {
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext";
 import styles from "./stylescomponent/StylesComponent.module.css";
+import { mmImageCropModalClassnames } from "../../../../utils/constants";
 
 function LogoStyles() {
   const selectedPageTab = useSelectedPageTab();
@@ -69,11 +69,7 @@ function LogoStyles() {
           modal: "imageCropModal",
           title: "Crop Image",
           centered: true,
-          classNames: {
-            content: imageCropModalStyles["modal-content"],
-            header: imageCropModalStyles["modal-header"],
-            body: imageCropModalStyles["modal-body"],
-          },
+          classNames: mmImageCropModalClassnames,
           innerProps: {
             imageUrl: url,
             imageName: name,
@@ -88,6 +84,8 @@ function LogoStyles() {
           payload: { file: null, url: "" },
         });
       }
+
+      resetLogoRef.current?.();
     },
     [onCroppedImgSave, onCroppedImgCancel],
   );
