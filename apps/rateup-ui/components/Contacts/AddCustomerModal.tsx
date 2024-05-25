@@ -22,6 +22,7 @@ import { useForm } from "@mantine/form";
 import { IconDownload, IconInfoCircle, IconSearch } from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
+  useAddNewContactFromCSVMutation,
   useAddNewContactMutation,
   useContactGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
@@ -58,15 +59,16 @@ const AddCustomerModal = ({
   tags = [],
 }) => {
   const [contactType, setContactType] = useState<string[]>(["phone"]);
-  const [csvData, setCsvData] = useState<ImportContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [addType, setAddType] = useState(contactAddType.NEW);
   const [customerList, setCustomerList] = useState<string[]>([]);
   const [filteredCustomerList, setFilteredCustomerList] = useState([]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
-  const [isUpload, setIsUpload] = useState(false);
   const [filterByTag, setFilterByTag] = useState([]);
+  const createNewContactMutation = useAddNewContactMutation(groupId);
+  const addExistingContactsMutation = useAddExistingContactMutation(groupId);
+  const createNewContactsFromCSV = useAddNewContactFromCSVMutation(groupId);
   const {
     isLoading: isLoading,
     data: contactData,
@@ -113,8 +115,7 @@ const AddCustomerModal = ({
         !value.length ? "Must select any one: phone" : null,
     },
   });
-  const createNewContactMutation = useAddNewContactMutation(groupId);
-  const addExistingContactsMutation = useAddExistingContactMutation(groupId);
+
   const allContactIds = contactData?.map((customer) => customer?.id);
   const remainingContactIds = allContactIds?.filter(
     (c) => !existingContactIds?.includes(c),
@@ -141,20 +142,7 @@ const AddCustomerModal = ({
       }
     }
   }, [searchTerm, contactData]);
-  useEffect(() => {
-    if (csvfile == null) return;
 
-    setIsUpload(true);
-    Papa.parse(csvfile, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header?.toLowerCase(),
-      complete: function (results) {
-        setCsvData(results?.data as ImportContact[]);
-        setIsUpload(false);
-      },
-    });
-  }, [csvfile]);
   const handleSubmit = () => {
     const validation = form.validate();
     if (validation.hasErrors) {
@@ -165,47 +153,16 @@ const AddCustomerModal = ({
     }
     setIsCreating(true);
     if (form.values.importMethod == importMethod.CSV) {
-      let isValid: boolean = true;
-      csvData?.every(function (contact) {
-        if (contactType.includes("phone") && !/^\d+$/.test(contact?.phone)) {
-          showErrorToast("Failed to import: file contain invalid phone number");
-          isValid = false;
-          return false;
-        }
-        return true;
-      });
-      if (!isValid) {
-        setCsvfile(null);
-        setIsCreating(false);
-        return;
-      }
-      let dataToUpload: IAddCustomer[] = csvData?.map(
-        ({ name, phone, ...obj }) => {
-          const result = {};
-          for (const key of tags) {
-            if (obj.hasOwnProperty(key) && contactType?.includes(key)) {
-              result[key] = obj[key];
-            }
-          }
-          return {
-            name,
-            phone: !phone ? undefined : phone,
-            source: importMethod.CSV,
-            tags: result,
-          };
-        },
-      );
-      createNewContactMutation.mutate(
-        { data: dataToUpload, groupId: groupId },
+      if (!csvfile) return;
+      const formData = new FormData();
+      formData.append("file", csvfile);
+      createNewContactsFromCSV.mutate(
+        { data: formData, groupId },
         {
-          onSuccess: () => {
+          onSettled: () => {
+            setIsCreating(false);
+            form.reset();
             close();
-            setIsCreating(false);
-            form.reset();
-          },
-          onError: () => {
-            setIsCreating(false);
-            form.reset();
           },
         },
       );
@@ -538,7 +495,7 @@ const AddCustomerModal = ({
               onClick={handleSubmit}
               loading={isCreating}
               disabled={
-                isUpload ||
+                // isUpload ||
                 contactData?.every((customer) =>
                   existingContactIds.includes(customer?.id),
                 ) ||
