@@ -106,7 +106,7 @@ function LogoStyles() {
           name="height"
           style={{ flex: 1 }}
           classNames={{ label: styles["label"] }}
-          value={logo.styles.height}
+          value={logo?.styles.height}
           onChange={handleHeightInputChange}
         />
         <NumberInput
@@ -117,7 +117,7 @@ function LogoStyles() {
           name="Width"
           style={{ flex: 1 }}
           classNames={{ label: styles["label"] }}
-          value={logo.styles.width}
+          value={logo?.styles.width}
           onChange={handleWidthInputChange}
         />
       </Group>
@@ -154,7 +154,7 @@ function LogoStyles() {
               color="red"
               size={"md"}
               radius={"xl"}
-              disabled={!logo.logo}
+              disabled={!logo?.logo}
               onClick={handleDeletBtnClick}
             >
               <IconTrash size={15} />
