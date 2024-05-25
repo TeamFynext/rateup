@@ -6,6 +6,8 @@ import {
   createMultipleContactInput,
   updateContactSchema,
 } from "./contact.schema";
+import Papa from "papaparse";
+import { getContactTag } from "../whatsapp/settings/wa_settings.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -135,5 +137,78 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       },
     },
   });
+  return res;
+}
+
+export async function importCSVContacts(file, orgId) {
+  return new Promise((resolve, reject) => {
+    let contacts = [];
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      chunkSize: 1024 * 1024,
+      transformHeader: (header) => header?.toLowerCase(),
+      chunk: function (results) {
+        if (results?.data) {
+          if (
+            results?.data.some((contact) =>
+              !contact?.phone && !contact?.name
+                ? false
+                : !contact?.phone ||
+                  !/^\d+$/.test(contact?.phone) ||
+                  !contact?.name,
+            )
+          ) {
+            throw new Error("Phone number or Name is missing/invalid");
+          }
+          contacts.push(...results?.data);
+        }
+      },
+      complete: async function (results) {
+        console.log("Contacts processed completely");
+        if (contacts?.length) {
+          try {
+            const res = await createContactsFromCsv(contacts, orgId);
+            resolve(res);
+          } catch (err) {
+            reject(err);
+          }
+        } else {
+          throw new Error("No contacts found");
+        }
+      },
+      error: function (error) {
+        reject(error);
+      },
+    });
+  });
+}
+
+export async function createContactsFromCsv(contacts, orgId) {
+  const tags = (await getContactTag(orgId))?.contactTags ?? [];
+  let data = contacts?.map(({ name, phone, ...obj }) => {
+    const result = {};
+    if (tags?.length) {
+      for (const key of tags) {
+        if (obj?.hasOwnProperty(key)) {
+          result[key] = obj[key];
+        }
+      }
+    }
+    return {
+      name,
+      phone,
+      source: "CSV IMPORT",
+      tags: result ?? undefined,
+    };
+  });
+  const existingcontacts = await getContactsByOrgId(orgId);
+  const filterNewContacts = data.filter((contact) => {
+    return !existingcontacts.some(
+      (existContact) => existContact.phone === contact.phone,
+    );
+  });
+  if (!filterNewContacts.length) throw new Error("All contacts already exist");
+  const res = await createMultipleContacts(data, orgId);
   return res;
 }

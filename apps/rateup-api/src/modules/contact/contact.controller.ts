@@ -14,6 +14,7 @@ import {
   deleteManyContacts,
   getContactById,
   getContactsByOrgId,
+  importCSVContacts,
   updateContactById,
 } from "./contact.service";
 import { Prisma } from "@prisma/client";
@@ -137,5 +138,20 @@ export async function deleteManyContactsHandler(
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function importCSVContactsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { file } = await request.file();
+    const orgId = request.user.orgId;
+    const res = await importCSVContacts(file, orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e?.message || "Something went wrong" });
   }
 }

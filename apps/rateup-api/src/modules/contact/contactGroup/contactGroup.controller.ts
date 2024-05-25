@@ -24,6 +24,7 @@ import {
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
+  addNewContactsfromCSVToGroup,
 } from "./contactGroup.service";
 import { verifyRole } from "../../../utils/auth";
 import { Prisma, Role } from "@prisma/client";
@@ -82,12 +83,10 @@ export async function createContactGroupHandler(
     log.error(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
-        reply
-          .code(500)
-          .send({
-            error:
-              "Contact group with this name already exist in the provided team",
-          });
+        reply.code(500).send({
+          error:
+            "Contact group with this name already exist in the provided team",
+        });
       }
     }
     reply.code(500).send({ error: "Something went wrong" });
@@ -221,5 +220,21 @@ export async function deleteManyContactGroupsHandler(
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function addNewContactsfromCSVToGroupHandler(
+  request: FastifyRequest<{ Params: ByContactGroupIdParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { file } = await request.file();
+    const { orgId } = request.user;
+    const contactGroupId = request.params.contactGroupId;
+    const res = await addNewContactsfromCSVToGroup(file, contactGroupId, orgId);
+    reply.code(200).send(res);
+  } catch (err) {
+    log.error(err);
+    reply.code(500).send({ error: err?.message || "Something went wrong" });
   }
 }
