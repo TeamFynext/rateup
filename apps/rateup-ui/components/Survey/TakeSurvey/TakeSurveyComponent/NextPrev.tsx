@@ -30,7 +30,7 @@ function NextPrev({
   errorTextDivRef,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
-  const { response } = useContext(CurrentResponsesContext);
+  const { response = {} } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -43,14 +43,11 @@ function NextPrev({
   const { borderRadius = "initial", ...themeStylesWoBr } = themeStyles;
 
   useEffect(() => {
-    // TODO: check if rebase was done correctly
+    const errMsg = validateResponse(response, selectedQ, selectedLanguage);
+    setErrorMsg(errMsg);
+    if (errMsg.length) setIsErrorInput(true);
+    else setIsErrorInput(false);
 
-    if (response) {
-      const errMsg = validateResponse(response, selectedQ, selectedLanguage);
-      setErrorMsg(errMsg);
-      if (errMsg.length) setIsErrorInput(true);
-      else setIsErrorInput(false);
-    }
     //custom validation rules
     if (
       selectedQ?.validationRules &&
