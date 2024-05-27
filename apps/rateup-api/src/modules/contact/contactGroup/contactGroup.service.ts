@@ -1,13 +1,11 @@
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
-import { getContactTag } from "../../whatsapp/settings/wa_settings.service";
 import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
 } from "./contactGroup.schema";
-import Papa from "papaparse";
 
 export async function getContactGroupById(contactGroupId: string) {
   const contactGroup = await prisma.contactGroup.findUnique({
@@ -229,82 +227,4 @@ export async function deleteManyContactGroups(groupIds: string[]) {
       },
     },
   });
-}
-
-export async function addNewContactsfromCSVToGroup(
-  file,
-  contactGroupId,
-  orgId,
-) {
-  return new Promise((resolve, reject) => {
-    let contacts = [];
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      chunkSize: 1024 * 1024,
-      transformHeader: (header) => header?.toLowerCase(),
-      chunk: function (results) {
-        if (results?.data) {
-          if (
-            results?.data.some((contact) =>
-              !contact?.phone && !contact?.name
-                ? false
-                : !contact?.phone ||
-                  !/^\d+$/.test(contact?.phone) ||
-                  !contact?.name,
-            )
-          ) {
-            throw new Error("Phone number or Name is missing/invalid");
-          }
-          contacts.push(
-            ...results?.data.filter(
-              (contact) => contact?.phone && contact?.name,
-            ),
-          );
-        }
-      },
-      complete: async function (results) {
-        console.log("Contacts processed completely");
-        if (contacts?.length) {
-          try {
-            const res = await addNewContactsFromCsv(
-              contactGroupId,
-              contacts,
-              orgId,
-            );
-            resolve(res);
-          } catch (err) {
-            reject(err);
-          }
-        } else {
-          throw new Error("No contacts found");
-        }
-      },
-      error: function (error) {
-        reject(error);
-      },
-    });
-  });
-}
-
-export async function addNewContactsFromCsv(contactGroupId, contacts, orgId) {
-  const tags = (await getContactTag(orgId))?.contactTags ?? [];
-  let data = contacts?.map(({ name, phone, ...obj }) => {
-    const result = {};
-    if (tags?.length) {
-      for (const key of tags) {
-        if (obj?.hasOwnProperty(key)) {
-          result[key] = obj[key];
-        }
-      }
-    }
-    return {
-      name,
-      phone,
-      source: "CSV IMPORT",
-      tags: result ?? undefined,
-    };
-  });
-  const res = await addNewContactsToGroup(contactGroupId, data, orgId);
-  return res;
 }
