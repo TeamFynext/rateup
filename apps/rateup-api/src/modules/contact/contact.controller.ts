@@ -18,6 +18,7 @@ import {
   updateContactById,
 } from "./contact.service";
 import { Prisma } from "@prisma/client";
+import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
 
 export async function createContactHandler(
   request: FastifyRequest<{ Body: ContactCore }>,
@@ -146,9 +147,29 @@ export async function importCSVContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { file } = await request.file();
+    const file = await request.file();
     const orgId = request.user.orgId;
-    const res = await importCSVContacts(file, orgId);
+    if (!dataExtractFileMimeTypes.includes(file?.mimetype))
+      return reply
+        .code(400)
+        .send({ error: "This file type is not permitted." });
+
+    let tags = Object.values(file?.fields ?? {})
+      .slice(1)
+      .reduce((acc, data) => {
+        const item = (Array.isArray(data) ? data[0] : data) as {
+          value: string;
+        };
+        if (item?.value) {
+          acc.push(item.value);
+        }
+        return acc;
+      }, [] as string[]);
+
+    const res: any = await importCSVContacts(file, orgId, tags);
+    if (res.status === "error") {
+      return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
+    }
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

@@ -24,10 +24,11 @@ import {
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
-  addNewContactsfromCSVToGroup,
 } from "./contactGroup.service";
 import { verifyRole } from "../../../utils/auth";
 import { Prisma, Role } from "@prisma/client";
+import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
+import { importCSVContacts } from "../contact.service";
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{
@@ -228,10 +229,29 @@ export async function addNewContactsfromCSVToGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { file } = await request.file();
+    const file = await request.file();
     const { orgId } = request.user;
     const contactGroupId = request.params.contactGroupId;
-    const res = await addNewContactsfromCSVToGroup(file, contactGroupId, orgId);
+    if (!dataExtractFileMimeTypes.includes(file?.mimetype))
+      return reply
+        .code(400)
+        .send({ error: "This file type is not permitted." });
+
+    let tags = Object.values(file?.fields ?? {})
+      .slice(1)
+      .reduce((acc, data) => {
+        const item = (Array.isArray(data) ? data[0] : data) as {
+          value: string;
+        };
+        if (item?.value) {
+          acc.push(item.value);
+        }
+        return acc;
+      }, [] as string[]);
+    const res: any = await importCSVContacts(file, orgId, tags, contactGroupId);
+    if (res.status === "error") {
+      return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
+    }
     reply.code(200).send(res);
   } catch (err) {
     log.error(err);
