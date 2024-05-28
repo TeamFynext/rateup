@@ -5,23 +5,43 @@ import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import WaInboxChatSelectCard from "./chatselectCard";
 import { ContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { useEffect, useState } from "react";
-import { useDebouncedValue, useElementSize } from "@mantine/hooks";
-import { parseWaMessage } from "../../../../utils/whatsapp/inbox";
+import { useElementSize } from "@mantine/hooks";
 import { FixedSizeList as List } from "react-window";
 import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
-import { useContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useContactsWithLastMessage,
+  useFilteredContacts,
+} from "../../../../backend/whatsapp/inbox/message/wamessage.query";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
 }) {
   const [filter, setFilter] = useState<ChatFilter>({
-    strict: false,
-    general: "all",
-    multiselect: [],
+    messageType: "all",
+    strictFilter: false,
+    searchTerm: "",
+    contactGroups: [],
+    campaigns: [],
+    tags: [],
   });
+  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
   const { ref, width, height } = useElementSize();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm] = useDebouncedValue(searchTerm, 300);
-  const [shouldFetchAgain, setShouldFetchAgain] = useState(true);
+  const [shouldFetchAgainData, setShouldFetchAgainData] = useState(true);
+  const [
+    shouldFetchAgainFilteredContacts,
+    setShouldFetchAgainFilteredContacts,
+  ] = useState(true);
+
+  const {
+    data: filteredContacts,
+    isFetchingNextPage: isFilteredContactsFetchingNextPage,
+    error: filteredContactsError,
+    fetchNextPage: fetchNextPageFilteredContacts,
+    refetch: refetchFilteredContacts,
+    isRefetching: isRefetchingFilteredContacts,
+  } = useFilteredContacts(
+    encodeURIComponent(JSON.stringify(processedFilter)),
+    checkIfAnyFilterisActive(filter) ? true : false,
+  );
 
   const {
     error, // Error
@@ -36,97 +56,97 @@ export default function WaInboxChatSelect(props: {
   if (!props.contacts) {
     return null;
   }
-  const contactsWithAtleastOneMessage = props.contacts?.filter(
-    (c) => c.lastMessage?.messageBody !== null,
-  );
-  const lowerCaseDebouncedSearchTerm = debouncedSearchTerm.toLowerCase();
-  const filteredContacts = props.contacts?.filter(
-    (c) =>
-      c.name?.toLowerCase().includes(lowerCaseDebouncedSearchTerm) ||
-      c.phone?.includes(lowerCaseDebouncedSearchTerm),
-  );
-  const contactListToDisplay =
-    debouncedSearchTerm || filter.multiselect.length > 0
-      ? filteredContacts
-      : contactsWithAtleastOneMessage;
-
-  function filterContacts(contacts: ContactsWithLastMessage[]) {
-    let result = contacts;
-    if (filter.general !== "all") {
-      result = contacts?.filter((c) => {
-        if (c?.lastMessage?.messageBody?.exchangeProcess === "receive") {
-          const { messageType } = parseWaMessage(c.lastMessage.messageBody);
-          return messageType !== "interactive";
-        }
-      });
-    }
-    if (filter.multiselect.length > 0) {
-      if (filter.strict) {
-        result = result?.filter((c) => {
-          return filter.multiselect.every((f) => {
-            if (f.group === "groups") {
-              // If the group name is 'Groups', check if the groups array includes the value
-              return c.groups.includes(f.value);
-            } else {
-              // Otherwise, check if the tags object has a matching key-value pair
-              return c?.tags[f.group] === f.value ?? false;
-            }
-          });
-        });
-      } else {
-        result = result.filter((c) => {
-          return filter.multiselect.some((f) => {
-            if (f.group === "groups") {
-              // If the group name is 'Groups', check if the groups array includes the value
-              return c.groups.includes(f.value);
-            } else {
-              // Otherwise, check if the tags object has a matching key-value pair
-              return c?.tags[f.group] === f.value ?? false;
-            }
-          });
-        });
-      }
-    }
-    return result;
+  function checkIfAnyFilterisActive(filters: any) {
+    return (
+      filters.contactGroups.length > 0 ||
+      filters.campaigns.length > 0 ||
+      filters.tags.length > 0 ||
+      filters.searchTerm?.length > 0 ||
+      filters.messageType !== "all" ||
+      filters.strictFilter !== false
+    );
   }
+  function prepareFilters(filters: any) {
+    setFilter(filters);
+    if (checkIfAnyFilterisActive(filters)) {
+      const processedFilters = {
+        ...filters,
+        contactGroups: filters?.contactGroups?.map((group) => group.value),
+        campaigns: filters?.campaigns?.map((group) => group.value),
+        tags: filters?.tags?.map((group) => ({
+          [group.group]: group.value,
+        })),
+      };
+      setProcessedFilter(processedFilters);
+    }
+  }
+  const contactsToDisplay = checkIfAnyFilterisActive(filter)
+    ? filteredContacts?.pages?.length > 0
+      ? filteredContacts?.pages
+          ?.flat()
+          ?.map((page) => page)
+          .flat()
+      : []
+    : props?.contacts;
+
   useEffect(() => {
     if (
       data.pages.length > 0 &&
       data.pages[data.pages.length - 1].length === 0
     ) {
-      setShouldFetchAgain(false);
+      setShouldFetchAgainData(false);
+    } else {
+      setShouldFetchAgainData(true);
     }
   }, [data]);
 
+  useEffect(() => {
+    if (
+      filteredContacts.pages.length > 0 &&
+      filteredContacts.pages[filteredContacts.pages.length - 1].length === 0
+    ) {
+      setShouldFetchAgainFilteredContacts(false);
+    } else {
+      setShouldFetchAgainFilteredContacts(true);
+    }
+  }, [filteredContacts]);
   return (
     <Stack className={classes.wrapper}>
       <Stack className={classes.chat_select_header}>
         <ContainedTextField
           leftSection={<IconSearch />}
           placeholder="Search Contacts"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.currentTarget.value)}
+          value={filter?.searchTerm || ""}
+          onChange={(e) =>
+            prepareFilters({ ...filter, searchTerm: e.currentTarget.value })
+          }
         />
         <Group className={classes.chat_select_header_filter_add_section}>
           <Stack gap={0}>
             <Text className={classes.chat_select_filter_text}>All Chats</Text>
             <Group className={classes.chat_select_filter_indicator_wrapper}>
               <Text className={classes.chat_indicator_text}>
-                {filterContacts(contactListToDisplay)?.length || 0} Chats
+                {contactsToDisplay?.length || 0} Chats
               </Text>
-              {isFetchingNextPage && <Loader size={10} />}
+              {(isFetchingNextPage || isFilteredContactsFetchingNextPage) && (
+                <Loader size={10} />
+              )}
               <ActionIcon
                 size={"xs"}
-                loading={isRefetching}
-                onClick={() => refetch()}
+                loading={isRefetching || isRefetchingFilteredContacts}
+                onClick={() => {
+                  if (checkIfAnyFilterisActive(filter)) {
+                    refetchFilteredContacts();
+                  } else {
+                    refetch();
+                  }
+                }}
               >
                 <IconRefresh />
               </ActionIcon>
             </Group>
           </Stack>
-          <WaInboxChatFilter
-            {...{ filter, setFilter, contacts: props?.contacts }}
-          />
+          <WaInboxChatFilter {...{ filter, setFilter: prepareFilters }} />
         </Group>
       </Stack>
       <Divider />
@@ -134,13 +154,21 @@ export default function WaInboxChatSelect(props: {
         <List
           height={height}
           width={width}
-          itemCount={filterContacts(contactListToDisplay)?.length || 0}
+          itemCount={contactsToDisplay?.length || 0}
           itemSize={69}
           onItemsRendered={(e) => {
-            if (
+            if (filteredContacts?.pages?.length > 0) {
+              if (
+                !isFilteredContactsFetchingNextPage &&
+                shouldFetchAgainFilteredContacts &&
+                e.visibleStopIndex === contactsToDisplay.length - 1
+              ) {
+                fetchNextPageFilteredContacts();
+              }
+            } else if (
               !isFetchingNextPage &&
-              shouldFetchAgain &&
-              e.visibleStopIndex === contactListToDisplay.length - 1
+              shouldFetchAgainData &&
+              e.visibleStopIndex === contactsToDisplay.length - 1
             ) {
               fetchNextPage();
             }
@@ -149,7 +177,7 @@ export default function WaInboxChatSelect(props: {
         >
           {({ index, style }) => {
             // Get the contact for this index
-            const contact = filterContacts(contactListToDisplay)[index];
+            const contact = contactsToDisplay[index];
 
             // Render the item
             return (
@@ -159,9 +187,10 @@ export default function WaInboxChatSelect(props: {
             );
           }}
         </List>
-        {isError && (
+        {(isError || filteredContactsError) && (
           <Text size="xs" c="red">
             {error?.message}
+            {filteredContactsError?.message}
           </Text>
         )}
       </div>

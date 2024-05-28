@@ -48,3 +48,15 @@ export async function getContactsWithLastMessage(page: number) {
     await axiosClient.get(`${WA_CONTACT_BASE_PATH}/contacts?page=${page}`)
   ).data as ContactsWithLastMessage[];
 }
+
+export async function getChatFilterData() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/filterdata`)).data;
+}
+
+export async function getFilteredContacts(filterData: string, page: number) {
+  return (
+    await axiosClient.get(
+      `${WA_CONTACT_BASE_PATH}/contactsfiltered?filterData=${filterData}&page=${page}`,
+    )
+  ).data as ContactsWithLastMessage[];
+}
