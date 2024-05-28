@@ -1,6 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
+  getChatFilterData,
   getContactsWithLastMessage,
+  getFilteredContacts,
   getMessagesByContactId as getMessagesByContactId,
   sendNewWaMessage,
 } from "./wamessage.api";
@@ -36,3 +38,24 @@ export const useContactsWithLastMessage = () =>
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     placeholderData: { pages: [], pageParams: [] },
   });
+
+export const useChatFilterData = () => {
+  return useQuery({
+    queryKey: ["contacts", "filter-data"],
+    queryFn: getChatFilterData,
+  });
+};
+
+export const useFilteredContacts = (
+  filterData: string,
+  queryEnabled: boolean,
+) => {
+  return useInfiniteQuery({
+    queryKey: ["contacts", "filtered", filterData],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
+    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    placeholderData: { pages: [], pageParams: [] },
+    enabled: queryEnabled,
+  });
+};
