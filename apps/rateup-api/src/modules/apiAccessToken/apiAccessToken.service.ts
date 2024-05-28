@@ -7,7 +7,7 @@ export async function generateApiKey() {
 
   // will saltRounds=8 bottleneck the performance?
   // For each api request we will hash the key
-  const hash = await bcrypt.hash(randomKey, 8);
+  const hash = await bcrypt.hash(randomKey, 5);
   return { key: randomKey, hash };
 }
 

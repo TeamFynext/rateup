@@ -3,6 +3,7 @@ import { log } from "../../utils/logger";
 import { ByOrgIdParams } from "../org/org.schema";
 import { verifyApiAccessToken } from "./apiAccessToken.service";
 import { getOrgById } from "../org/org.services";
+import { Role } from "@prisma/client";
 
 /**
  * Verifies that the api-access-key is valid & sets orgId on the request.user object.
@@ -14,7 +15,6 @@ export const verifyApiAccessTokenHook = async (
   reply: FastifyReply,
 ) => {
   try {
-    console.log("verifyApiAccessTokenHook", request.url, request.params);
     const orgId = request.params.orgId;
     if (!orgId) {
       log.warn(
@@ -66,7 +66,7 @@ export const verifyApiAccessTokenHook = async (
     }
 
     // since most of the *.service.ts functions fetches user from request object
-    const user = { orgId };
+    const user = { orgId, role: Role.SUPER_ADMIN };
     (request as any).user! = user;
   } catch (err) {
     log.error("Error checking session\n%o", err);

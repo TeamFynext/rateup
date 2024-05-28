@@ -19,6 +19,10 @@ const updateContactGroupInputSchema = z.object({
 const byContactGroupIdParamsSchema = z.object({
   contactGroupId: z.string(),
 });
+const byContactGroupIdWithOrgIdParamsSchema =
+  byContactGroupIdParamsSchema.extend({
+    orgId: z.string(),
+  });
 
 const addExistingContactsToGroupInputSchema = z.object({
   contactIds: z.array(z.string()),
@@ -36,6 +40,9 @@ const getContactGroupsQuerySchema = z.object({
 const removeGroupContactsSchema = z.array(z.string());
 
 const addNewContactsToGroupInputSchema = z.array(contactCoreSchema);
+const extAddNewContactsToGroupInputSchema = z.array(
+  contactCoreSchema.omit({ source: true }),
+);
 
 const deleteManyGroupSchema = z.object({
   contactGroupIds: z.array(z.string()),
@@ -60,6 +67,8 @@ export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
       addExistingContactsToMultipleGroupsInputSchema,
       deleteManyGroupSchema,
       contactGroupResponseSchema,
+      byContactGroupIdWithOrgIdParamsSchema,
+      extAddNewContactsToGroupInputSchema,
     },
     {
       $id: "contactGroupSchema",

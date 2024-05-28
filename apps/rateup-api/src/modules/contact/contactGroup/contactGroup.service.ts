@@ -1,3 +1,4 @@
+import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import {
   AddNewContactsToGroupInput,
@@ -181,19 +182,12 @@ export async function removeContactsFromGroup(
   contactGroupId: string,
   contactIds: RemoveGroupContactsSchema,
 ) {
-  const participants = contactIds.map((c) => ({
-    contactId_contactGroupId: {
-      contactId: c,
-      contactGroupId: contactGroupId,
-    },
-  }));
-  return await prisma.contactGroup.update({
+  log.trace("Removing contacts from group %s %o", contactGroupId, contactIds);
+  return await prisma.contactGroupMap.deleteMany({
     where: {
-      id: contactGroupId,
-    },
-    data: {
-      contacts: {
-        delete: participants,
+      contactGroupId,
+      contactId: {
+        in: contactIds,
       },
     },
   });
