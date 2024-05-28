@@ -11,6 +11,7 @@ import { getContactTag } from "../whatsapp/settings/wa_settings.service";
 import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
 import { addNewContactsToGroup } from "./contactGroup/contactGroup.service";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -158,19 +159,27 @@ export async function importCSVContacts(
     let errorContact = [];
 
     const processContact = (contact) => {
-      if (!contact?.phone || !/^\d+$/.test(contact.phone) || !contact?.name) {
+      let phno = contact.phone?.startsWith("+")
+        ? contact.phone
+        : `+${contact.phone}`;
+      if (!contact?.phone || !isValidPhoneNumber(phno) || !contact?.name) {
         errorContact.push({
           name: contact?.name ? contact.name : "name is missing/invalid",
           phone: contact?.phone ? contact.phone : "phone is missing/invalid",
         });
       } else {
+        if (contact.phone?.startsWith("+")) {
+          contact.phone = contact.phone?.slice(1);
+        }
         contacts.push(contact);
       }
     };
 
     const finalizeProcessing = async () => {
       try {
-        if (contacts.length > 0) {
+        if (contacts.length === 0 && errorContact.length > 0) {
+          resolve({ data: errorContact, status: "error" });
+        } else if (contacts.length > 0) {
           const res = await createContactsFromCsv(
             contacts,
             orgId,
