@@ -82,7 +82,6 @@ export default function FormModalLayout({
           {includeCancelButton && (
             <RateupButtonSecondary
               color="var(--tertiary-color)"
-              loading={isLoading}
               type="reset"
               variant="subtle"
               onClick={cancelOnClick ? cancelOnClick : onClose}

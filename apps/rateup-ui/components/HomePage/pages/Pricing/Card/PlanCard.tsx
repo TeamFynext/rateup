@@ -139,10 +139,18 @@ const PlanCard = ({
                     name: data?.displayName,
                     currency: data?.currency,
                     description: data?.description,
-                    amount: data?.paymentPlan?.amount,
+                    amount: data?.paymentPlan
+                      ? data?.paymentPlan?.amount
+                      : data?.stripeProduct?.amount,
                     currencySymbol: currencySymbol,
-                    period: data?.paymentPlan?.period,
-                    planId: data?.paymentPlan?.planId,
+                    period: data?.paymentPlan
+                      ? data?.paymentPlan?.period
+                      : data?.stripeProduct?.interval,
+                    gateway: data?.paymentPlan ? "RAZORPAY" : "STRIPE",
+                    planId: data?.paymentPlan ? data?.paymentPlan?.planId : "",
+                    priceId: data?.paymentPlan
+                      ? ""
+                      : data?.stripeProduct?.priceId,
                   });
                 }
               }}
