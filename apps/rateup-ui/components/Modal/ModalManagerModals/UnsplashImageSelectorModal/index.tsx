@@ -20,6 +20,7 @@ import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput
 import { IconSearch, IconArrowRight } from "@tabler/icons-react";
 import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 import { modals } from "@mantine/modals";
+import { mmImageCropModalClassnames } from "../../../../utils/constants";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, aspectRatio } = innerProps;
@@ -50,11 +51,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
       modal: "imageCropModal",
       title: "Crop Image",
       centered: true,
-      classNames: {
-        content: imageCropModalStyles["modal-content"],
-        header: imageCropModalStyles["modal-header"],
-        body: imageCropModalStyles["modal-body"],
-      },
+      classNames: mmImageCropModalClassnames,
       innerProps: {
         imageUrl: url,
         imageName: name,

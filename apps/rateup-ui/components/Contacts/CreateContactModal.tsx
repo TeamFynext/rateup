@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Paper,
   Stack,
@@ -8,23 +9,17 @@ import {
   Radio,
   SimpleGrid,
   TextInput,
-  Progress,
   Blockquote,
   NavLink,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import {
-  useCreateContactMutation,
-  useImportContactMutation,
-} from "../../backend/campaign/contacts/contacts.query";
+import { useCreateContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import { ICreateContact } from "../../backend/campaign/contacts/contacts.api";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
-import Papa from "papaparse";
 import { importMethod } from "../../utils/enums";
 import { showErrorToast } from "../../utils/notifications";
 import { getHotkeyHandler } from "@mantine/hooks";
@@ -43,29 +38,28 @@ export interface ImportContact {
   email?: string;
 }
 
-const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
-  const [contactType, setContactType] = useState<string[]>(["phone"]);
+const CreateContactModal = ({
+  contactClose,
+  close,
+  cTags = [],
+  importCSVContactMutation,
+}) => {
+  const [contactType, setContactType] = useState<string[]>([...cTags]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [isUpload, setIsUpload] = useState(false);
-  const [csvData, setCsvData] = useState<ImportContact[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-
+  const createContactMutation = useCreateContactMutation();
   const form = useForm({
     initialValues: {
       name: "",
       phone: "",
       importMethod: importMethod.MANUAL,
-      contactType: ["phone"],
+      contactType: [],
       countryCode: "91",
       tags: {},
     },
     validate: {
       phone: (value) => {
-        if (
-          form.values.importMethod == importMethod.MANUAL &&
-          contactType.includes("phone")
-        )
+        if (form.values.importMethod == importMethod.MANUAL)
           return !value
             ? "Phone Number cannot be blank"
             : !isValidPhoneNumber(value)
@@ -75,29 +69,8 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         (value.length ? null : "Name cannot be blank"),
-      contactType: (value) =>
-        !value.length ? "Must select any one: phone or email" : null,
     },
   });
-
-  useEffect(() => {
-    if (csvfile == null) return;
-
-    setIsUpload(true);
-    Papa.parse(csvfile, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header?.toLowerCase(),
-      complete: function (results) {
-        setCsvData(results?.data as ImportContact[]);
-        setIsUpload(false);
-      },
-    });
-  }, [csvfile]);
-
-  const createContactMutation = useCreateContactMutation();
-
-  const importContactMutation = useImportContactMutation();
 
   useEffect(() => {
     if (form?.values) {
@@ -106,92 +79,59 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
   }, [contactType]);
 
   const handleSubmit = () => {
-    try {
-      const validation = form.validate();
-      if (validation.hasErrors) {
-        if (validation.errors.contactType) {
-          showErrorToast(validation.errors.contactType);
-        }
-        return;
+    const validation = form.validate();
+    if (validation.hasErrors) {
+      if (validation.errors.contactType) {
+        showErrorToast(validation.errors.contactType);
       }
-      setIsCreating(true);
-      if (form.values.importMethod == importMethod.CSV) {
-        let isValid: boolean = true;
-        csvData?.every(function (contact) {
-          if (contactType.includes("phone") && !/^\d+$/.test(contact?.phone)) {
-            showErrorToast(
-              "Failed to import: file contain invalid phone number",
-            );
-            isValid = false;
-            return false;
-          }
-          return true;
-        });
-        if (!isValid) {
+      return;
+    }
+    setIsCreating(true);
+    if (form.values.importMethod == importMethod.CSV) {
+      if (!csvfile) return;
+      const formData = new FormData();
+      formData.append("file", csvfile);
+      contactType.forEach((item, index) => {
+        formData.append(`tags[${index}]`, item);
+      });
+      importCSVContactMutation.mutate(formData, {
+        onSettled: () => {
+          setIsCreating(false);
+          form.reset();
           setCsvfile(null);
-          return;
+          contactClose();
+          close();
+        },
+      });
+    } else {
+      const result = {};
+      for (const key of contactType) {
+        if (form.getValues()?.tags?.hasOwnProperty(key)) {
+          result[key] = form.getValues()?.tags?.[key];
         }
-        let dataToUpload = csvData?.map(({ name, phone, ...obj }) => {
-          const result = {};
-          for (const key of cTags) {
-            if (obj.hasOwnProperty(key) && contactType?.includes(key)) {
-              result[key] = obj[key];
-            }
-          }
-          return {
-            teamId: form.values.teamId,
-            phone: !phone ? undefined : phone,
-            name: name,
-            source: importMethod.CSV,
-            tags: result,
-          };
-        });
-        importContactMutation.mutate(dataToUpload, {
-          onSuccess: () => {
-            setIsCreating(false);
-            contactClose();
-            close();
-          },
-          onError: () => {
-            setIsCreating(false);
-            form.reset();
-            form.setFieldValue("importMethod", importMethod.CSV);
-          },
-        });
-      } else {
-        const result = {};
-        for (const key of contactType) {
-          if (form.getValues()?.tags?.hasOwnProperty(key)) {
-            result[key] = form.getValues()?.tags?.[key];
-          }
-        }
-        form.values.tags = result;
-        let contactData: ICreateContact = {
-          name: form.values.name,
-          phone: contactType.includes("phone")
-            ? form.values.phone.slice(1)
-            : undefined,
-          teamId: form.values.teamId,
-          source: importMethod.MANUAL,
-          tags: form.values.tags,
-        };
-        createContactMutation.mutate(contactData, {
-          onSuccess: () => {
-            setIsCreating(false);
-            contactClose();
-            close();
-            form.reset();
-          },
-          onError: () => {
-            setIsCreating(false);
-            form.reset();
-          },
-        });
       }
-    } catch (error) {
-      setIsCreating(false);
-    } finally {
-      setIsCreating(false);
+      form.values.tags = result;
+      let contactData: ICreateContact = {
+        name: form.values.name,
+        phone: contactType.includes("phone")
+          ? form.values.phone.slice(1)
+          : undefined,
+        teamId: form.values.teamId,
+        source: importMethod.MANUAL,
+        tags: form.values.tags,
+      };
+      createContactMutation.mutate(contactData, {
+        onSuccess: () => {
+          setIsCreating(false);
+          contactClose();
+          close();
+          form.reset();
+        },
+        onError: () => {
+          setIsCreating(false);
+          form.reset();
+        },
+      });
     }
   };
   return (
@@ -210,7 +150,7 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
             >
               <Group>
                 <Radio value={importMethod.MANUAL} label="Manual" />
-                <Radio value={importMethod.CSV} label="Import CSV" />
+                <Radio value={importMethod.CSV} label="Import CSV/XLSX" />
               </Group>
             </Radio.Group>
 
@@ -241,25 +181,24 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
                 size="md"
                 required
               />
-              {contactType.includes("phone") && (
-                <Stack gap={0}>
-                  <Group gap={3}>
-                    <Text>Phone Number</Text>
-                    <Text c="red">*</Text>
-                  </Group>
-                  <PhoneInputWithCountrySelect
-                    defaultCountry="IN"
-                    international
-                    countryCallingCodeEditable={false}
-                    placeholder="Enter phone number"
-                    {...form.getInputProps("phone")}
-                    className={styles.inputPhone}
-                  />
-                  <Text size="sm" c={"red"}>
-                    {form?.errors?.phone}
-                  </Text>
-                </Stack>
-              )}
+              <Stack gap={0}>
+                <Group gap={3}>
+                  <Text>Phone Number</Text>
+                  <Text c="red">*</Text>
+                </Group>
+                <PhoneInputWithCountrySelect
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
+                  placeholder="Enter phone number"
+                  {...form.getInputProps("phone")}
+                  className={styles.inputPhone}
+                />
+                <Text size="sm" c={"red"}>
+                  {form?.errors?.phone}
+                </Text>
+              </Stack>
+
               {contactType?.map(
                 (data) =>
                   data !== "phone" && (
@@ -284,8 +223,8 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
                 iconSize={40}
                 mx={"lg"}
               >
-                Utilizing CSV file uploads to generate contact requires specific
-                fields in the file: name, phone
+                Utilizing CSV/XLSX file uploads to generate contact requires
+                specific fields in the file: name, phone
                 <NavLink
                   href={getFileUrlFromKey("/File/contact/demo.csv", false)}
                   label="Download Demo Csv File"
@@ -299,8 +238,8 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
               <ContainedFileInput
                 mx={"lg"}
                 label=""
-                placeholder="Upload a csv file (.csv)"
-                accept=".csv"
+                placeholder="Upload a csv file (.csv) or excel file (.xlsx)"
+                accept=".csv,.xlsx"
                 multiple={false}
                 onChange={setCsvfile}
                 styles={{
@@ -310,8 +249,7 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
                     textAlign: "center",
                   },
                 }}
-              ></ContainedFileInput>
-              {isUpload && <Progress value={uploadProgress} />}
+              />
             </Stack>
           )}
 
@@ -330,8 +268,7 @@ const CreateContactModal = ({ contactClose, close, cTags = [] }) => {
               loading={isCreating}
               onClick={handleSubmit}
               disabled={
-                isUpload ||
-                (form.values.importMethod == importMethod.CSV && !csvfile)
+                form.values.importMethod == importMethod.CSV && !csvfile
               }
             ></RateupButtonBlue>
           </Group>

@@ -23,6 +23,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import {
+  useAddNewContactFromCSVMutation,
   useContactGroupById,
   useDeleteGroupMutation,
 } from "../../../backend/campaign/contactGroup/contactGroup.query";
@@ -39,6 +40,7 @@ import ContactTable from "../../../components/Table/ContactTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import ContactImportErrorModal from "../../../components/Contacts/ContactImportErrorModal";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -49,6 +51,9 @@ export default function ContactGroup() {
     useDisclosure(false);
   const { update } = useRouteParams();
   const { isPending, data: cTags } = useGetContactTags();
+  const createNewContactsFromCSV = useAddNewContactFromCSVMutation(
+    groupId?.toString(),
+  );
 
   const {
     isPending: isLoading,
@@ -120,6 +125,10 @@ export default function ContactGroup() {
         </Center>
       ) : (
         <Box mt={4}>
+          <ContactImportErrorModal
+            body={createNewContactsFromCSV?.error?.response?.data}
+            isError={createNewContactsFromCSV.isError}
+          />
           <Stack>
             <PaperLayout>
               <Group justify="space-between">
@@ -214,6 +223,7 @@ export default function ContactGroup() {
                   topHeight={420}
                   open={open}
                   groupId={groupDetails?.id}
+                  refetch={refetchgroupById}
                 />
               </PaperLayout>
             </Box>
@@ -231,6 +241,7 @@ export default function ContactGroup() {
               teamId={groupDetails?.teamId}
               existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
               tags={cTags?.contactTags}
+              createNewContactsFromCSV={createNewContactsFromCSV}
             />
           </FormModalLayout>
         </Box>

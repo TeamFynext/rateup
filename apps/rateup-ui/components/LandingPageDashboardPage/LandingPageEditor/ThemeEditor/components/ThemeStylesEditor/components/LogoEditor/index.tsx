@@ -16,7 +16,7 @@ import {
 import { useCallback, useRef } from "react";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
-import imageCropModalStyles from "../../../../../../../Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
+import { mmImageCropModalClassnames } from "../../../../../../../../utils/constants";
 
 function LogoEditor() {
   const {
@@ -63,11 +63,7 @@ function LogoEditor() {
         modal: "imageCropModal",
         title: "Crop Image",
         centered: true,
-        classNames: {
-          content: imageCropModalStyles["modal-content"],
-          header: imageCropModalStyles["modal-header"],
-          body: imageCropModalStyles["modal-body"],
-        },
+        classNames: mmImageCropModalClassnames,
         innerProps: {
           imageUrl: url,
           imageName: name,

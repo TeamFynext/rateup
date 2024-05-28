@@ -58,7 +58,7 @@ export const TakeSurveyLayoutWeb = ({
     orgLogo = surveyThemeData.surveyTheme?.logo?.logo;
     orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
     if (orgLogo && orgLogo.length) {
-      orgLogoSrc = `${surveyUploadsPath}${orgLogo}`;
+      orgLogoSrc = orgLogo;
     }
   }
 
@@ -150,14 +150,19 @@ export const TakeSurveyLayoutWeb = ({
   const surveyPageBgUrl = isMobile
     ? surveyThemeMobileBgUrl
     : surveyThemeDesktopBgUrl;
+
   const welcomePageBgUrl = isMobile
     ? welcomeThemeMobileBgUrl
     : welcomeThemeDesktopBgUrl;
 
-  const backgroundImageSrc = !startClicked ? welcomePageBgUrl : surveyPageBgUrl;
-  const isUnsplashImage = backgroundImageSrc?.startsWith(
-    "https://images.unsplash.com",
-  );
+  const bgImgUrl = !startClicked ? welcomePageBgUrl : surveyPageBgUrl;
+  const isUnsplashImage = bgImgUrl?.startsWith("https://images.unsplash.com");
+  let backgroundImageSrc = bgImgUrl;
+  if (!bgImgUrl.startsWith("http://") && !bgImgUrl.startsWith("https://")) {
+    backgroundImageSrc = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}/${bgImgUrl}`;
+  } else if (isUnsplashImage) {
+    backgroundImageSrc = encodeURI(bgImgUrl);
+  }
 
   return (
     <MantineProvider

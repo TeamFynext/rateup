@@ -178,6 +178,18 @@ export default function ThankYou({
     setTimeout(() => setPulsing(false), 600);
   };
   if (isLoading) return <RateupLoader h={"100dvh"} />;
+
+  const desktopbg = surveyThemeData?.thankyouTheme?.bg?.desktopbg || "";
+  const mobilebg = surveyThemeData?.thankyouTheme?.bg?.mobilebg || "";
+  const bgImgUrl = !isMobile ? desktopbg : mobilebg;
+  const isUnsplashImage = bgImgUrl?.startsWith("https://images.unsplash.com");
+  let backgroundImageSrc = bgImgUrl;
+  if (!bgImgUrl.startsWith("http://") && !bgImgUrl.startsWith("https://")) {
+    backgroundImageSrc = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}/${bgImgUrl}`;
+  } else if (isUnsplashImage) {
+    backgroundImageSrc = encodeURI(bgImgUrl);
+  }
+
   return (
     <CreditsCard
       enableCredits={
@@ -242,20 +254,7 @@ export default function ThankYou({
               ?.backgroundColor
               ? surveyThemeData?.thankyouTheme?.bg?.styles?.backgroundColor
               : theme.colors[theme.primaryColor][6],
-            backgroundImage:
-              surveyThemeData?.thankyouTheme?.bg?.desktopbg ||
-              surveyThemeData?.thankyouTheme?.bg?.mobilebg
-                ? `url(${getImageUrl(
-                    isMobile
-                      ? surveyThemeData?.thankyouTheme?.bg?.mobilebg
-                      : surveyThemeData?.thankyouTheme?.bg?.desktopbg,
-                    isMobile
-                      ? surveyThemeData?.thankyouTheme?.bg?.unsplashImage
-                          ?.mobile
-                      : surveyThemeData?.thankyouTheme?.bg?.unsplashImage
-                          ?.desktop,
-                  )})`
-                : "",
+            backgroundImage: `url(${backgroundImageSrc})`,
             backgroundRepeat: "no-repeat",
             backgroundSize: "cover",
             backgroundPosition: "center",

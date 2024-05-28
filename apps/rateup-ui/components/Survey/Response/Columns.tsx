@@ -310,7 +310,13 @@ function BadgeorTextorPreview({
   } else if (questionType == QuestionType.File) {
     return response ? (
       <Group gap={"xs"}>
-        <Text fw={300} fz="md" c="dark.3">
+        <Text
+          fw={300}
+          fz="md"
+          c="dark.3"
+          w={150}
+          style={{ overflowWrap: "break-word" }}
+        >
           {getFileNameFromKey(response)}
         </Text>
         <RateupButtonBlue

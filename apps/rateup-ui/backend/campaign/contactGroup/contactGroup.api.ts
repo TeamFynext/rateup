@@ -55,6 +55,19 @@ export const addNewContact = ({ data, groupId }) => {
   return res;
 };
 
+export const addNewContactFromCSV = ({ data, groupId }) => {
+  let res = axiosClient.post(
+    `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/new/importcsv`,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return res;
+};
+
 export const deleteContactGroup = (groupId) => {
   let res = axiosClient.delete(`${CONTACT_GROUP_BASE_URL}/${groupId}`);
   return res;

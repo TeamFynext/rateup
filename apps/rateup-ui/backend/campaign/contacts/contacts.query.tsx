@@ -7,6 +7,7 @@ import {
   getContactById,
   getContactsList,
   importContacts,
+  importCSVContacts,
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -72,6 +73,30 @@ export const useImportContactMutation = () => {
   });
 };
 
+export const useImportCSVContactMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importCSVContacts,
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["contacts", "last-message"],
+      });
+      showSuccessToast(
+        "Contacts imported successfully",
+        "contact-create",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error creating the contact: ${error?.response?.data?.error}`,
+        "contact-create",
+        <IconX />,
+      );
+    },
+  });
+};
 export const useContactDeleteMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
