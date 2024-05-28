@@ -99,7 +99,10 @@ const AccountSettings = () => {
   useEffect(() => {
     if (router?.query?.activeTab === "account")
       setActiveTab(AccountSettingsTabs.Billing);
-  }, [router.query?.activeTab]);
+
+    if (router?.query?.view === "myOrders")
+      setActiveTab(AccountSettingsTabs.OrderHistory);
+  }, [router.query?.activeTab, router?.query?.view]);
 
   const { cart, reset } = useRouteAndCartStore();
   const [selectedRateupPlan, setselectedRateupPlan] = useState("");

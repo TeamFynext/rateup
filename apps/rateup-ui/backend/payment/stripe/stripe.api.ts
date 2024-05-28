@@ -1,6 +1,7 @@
 import { axiosClient } from "../../apiClient";
 
 const STRIPE_URL = "/payment/stripe";
+const STRIPE_SUBSCRIPTIONS = `${STRIPE_URL}/subscriptions`;
 
 export async function createStripeCheckoutSession(data: any) {
   return await axiosClient.post(`${STRIPE_URL}/create-checkout-session`, data);
@@ -32,6 +33,11 @@ export async function getStripeProducts() {
 }
 
 export async function getAllStripeSubscriptions() {
-  return (await axiosClient.get(`${STRIPE_URL}/subscriptions`))
+  return (await axiosClient.get(`${STRIPE_SUBSCRIPTIONS}`))
     .data as Array<StripeSubscription>;
+}
+
+export async function cancelStripeSubscription() {
+  let res = await axiosClient.put(`${STRIPE_SUBSCRIPTIONS}/cancel`);
+  return res?.data;
 }

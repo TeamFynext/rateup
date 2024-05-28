@@ -31,6 +31,7 @@ import {
 import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import { useRouter } from "next/router";
+import { useCancelStripeSubscriptionMutation } from "../../../backend/payment/stripe/stripe.query";
 
 const Billing = ({
   subscription,
@@ -71,7 +72,9 @@ const Billing = ({
   }, [latestOrderData?.subscriptionStatus]);
 
   const [cancelDialogOpened, { open, close }] = useDisclosure();
-  const CancelSubscription = useCancelRazorpaySubscriptionMutation();
+  const CancelRazorpaySubscription = useCancelRazorpaySubscriptionMutation();
+  const CancelStripeSubscription = useCancelStripeSubscriptionMutation();
+
   const { ref, width } = useElementSize();
   const router = useRouter();
   const handleCancelSubscription = () => {
@@ -81,11 +84,20 @@ const Billing = ({
       true,
       "Cancelling Subscription",
     );
-    CancelSubscription.mutate(null, {
-      onSuccess: (r) => {
-        openCancelResult();
-      },
-    });
+
+    if (subscription?.basePlan?.stripeProduct) {
+      CancelStripeSubscription.mutate(null, {
+        onSuccess: (r) => {
+          openCancelResult();
+        },
+      });
+    } else {
+      CancelRazorpaySubscription.mutate(null, {
+        onSuccess: (r) => {
+          openCancelResult();
+        },
+      });
+    }
   };
 
   function handleRefresh() {
@@ -158,7 +170,8 @@ const Billing = ({
             onClose={close}
             headerLabel="Are you sure you want to cancel your active subscription?"
             headerTitle="Cancel Subscription"
-            confirmLabel="Delete"
+            confirmLabel="Confirm Cancel"
+            closeLabel="Close "
             onConfirm={handleCancelSubscription}
             includeEmailConfirmation={true}
           />
@@ -267,7 +280,9 @@ const Billing = ({
                     Billing Cycle
                   </Text>
                   <Title order={5}>
-                    {subscription?.basePlan?.paymentPlan?.period ?? "----"}
+                    {(subscription?.basePlan?.paymentPlan?.period ||
+                      subscription?.basePlan?.stripeProduct.interval) ??
+                      "----"}
                   </Title>
                 </Stack>
                 <Stack gap={1}>
@@ -275,7 +290,11 @@ const Billing = ({
                     Plan Cost
                   </Text>
                   <Title order={5}>
-                    {subscription?.basePlan?.paymentPlan?.amount ?? "----"}
+                    {subscription?.basePlan?.paymentPlan?.amount
+                      ? `₹${subscription.basePlan.paymentPlan.amount}`
+                      : subscription?.basePlan?.stripeProduct?.amount
+                        ? `$${subscription.basePlan.stripeProduct.amount}`
+                        : "----"}
                   </Title>
                 </Stack>
               </Group>
