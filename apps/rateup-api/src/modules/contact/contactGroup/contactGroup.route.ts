@@ -11,9 +11,17 @@ import {
   removeContactsFromGroupHandler,
   addExistingContactsToMultipleGroupsHandler,
   deleteManyContactGroupsHandler,
+  addNewContactsfromCSVToGroupHandler,
 } from "./contactGroup.controller";
+import fastifyMultipart from "@fastify/multipart";
 
 export async function contactGroupRoutes(server: FastifyInstance) {
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 10,
+    },
+    throwFileSizeLimit: true,
+  });
   server.post(
     "/",
     {
@@ -85,6 +93,17 @@ export async function contactGroupRoutes(server: FastifyInstance) {
       },
     },
     addNewContactsToGroupHandler,
+  );
+
+  server.post(
+    "/:contactGroupId/contacts/new/importcsv",
+    {
+      schema: {
+        params: $contactGroupRef("byContactGroupIdParamsSchema"),
+        consumes: ["multipart/form-data"],
+      },
+    },
+    addNewContactsfromCSVToGroupHandler,
   );
 
   server.put(

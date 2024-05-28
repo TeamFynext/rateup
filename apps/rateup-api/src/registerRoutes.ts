@@ -65,11 +65,14 @@ import { mygRoutes } from "./modules/myg/myg.route";
 import { mygSchemas } from "./modules/myg/myg.schema";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route";
 import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
+import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route";
 import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route";
 import { campaignParticipantsSchemas } from "./modules/campaign/campaignParticipants/campaignParticipants.schema";
 import { externalRoutes } from "./modules/external/external.route";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes";
 import { orgWsSchemas } from "./modules/org/ws/org.ws.schema";
+import { paymentStripeSchemas } from "./modules/payment/stripe/stripe.schema";
+import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -91,6 +94,7 @@ export function registerRoutes(server: FastifyInstance): void {
     unsplashSchemas,
     surveyThemeSchemas,
     paymentSchemas,
+    paymentStripeSchemas,
     testimonialSchemas,
     testimonialCollectionSchemas,
     ticketSchemas,
@@ -137,6 +141,8 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(subscriptionRoutes, { prefix: "api/subscription" });
   server.register(paymentRoutes, { prefix: "api/payment" });
   server.register(paymentPublicRoutes, { prefix: "api/public/payment" });
+  server.register(paymentStripeRoutes, { prefix: "api/payment/stripe" });
+  server.register(stripePublicRoutes, { prefix: "api/public/payment/stripe" });
   server.register(surveyThemeRoutes, { prefix: "api/surveyTheme" });
   server.register(testimonialRoutes, { prefix: "api/testimonials" });
   server.register(testimonialCollectionRoutes, {

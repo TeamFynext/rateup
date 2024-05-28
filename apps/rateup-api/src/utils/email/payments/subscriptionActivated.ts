@@ -3,6 +3,7 @@ import { formatDateT1 } from "../../date";
 export function createEmailBodySubscriptionActivated(
   plan: string,
   validity: Date,
+  isRenewed: boolean = false,
 ) {
   const formattedDate = formatDateT1(validity);
 
@@ -110,7 +111,9 @@ export function createEmailBodySubscriptionActivated(
                     <th>
                       <img
                         class="rateup-logo"
-                          src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+                          src="${
+                            process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
+                          }/images/email/rateup_logo.png"
                           alt="Rateup Logo"
                           width="134"
                           height="76"
@@ -118,7 +121,9 @@ export function createEmailBodySubscriptionActivated(
                     </th>
                   </tr>
                   <tr>
-                    <th class="email-title">Your Rateup Subscription is active now ✅</th>
+                    <th class="email-title">Your Rateup Subscription is ${
+                      isRenewed ? "renewed" : "activated"
+                    } now ✅</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -126,7 +131,9 @@ export function createEmailBodySubscriptionActivated(
                   <tr>
                     <td>
                       <p class="email-body">
-                        Recent order created on Rateup.app is successfully processed. 
+                        Recent  ${
+                          isRenewed ? "renewal of subscription" : "order"
+                        }  created on Rateup.app is successfully processed. 
                         <br/><br/>
                         Subscribed Plan:  <b> ${plan} </b><br/> 
                         Valid till:  <b> ${formattedDate} </b> <br/> <br/>

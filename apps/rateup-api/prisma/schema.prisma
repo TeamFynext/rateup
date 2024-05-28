@@ -632,7 +632,7 @@ model Subscription {
   createdAt       DateTime    @default(now())
   basePlan        RateupPlan? @relation(fields: [basePlanId], references: [id])
   basePlanId      String?     @db.Uuid
-  subscriptionRef String? //gateway Subscription id
+  subscriptionRef String?     @unique //gateway Subscription id
 }
 
 // used to tokenize some data
@@ -649,6 +649,7 @@ enum PaymentPlanStatus {
   INACTIVE
 }
 
+//For Razorpay PLans
 model PaymentPlans {
   id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   planId      String
@@ -661,6 +662,51 @@ model PaymentPlans {
   interval    Int
   status      PaymentPlanStatus @default(NULL)
   RateupPlan  RateupPlan?
+}
+
+enum StripeProductType {
+  one_time
+  recurring
+}
+
+model StripeProducts {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  description   String?
+  createdAt     Int
+  active        Boolean //stripe product status
+  liveMode      Boolean
+  productId     String            @unique
+  priceId       String
+  currency      String
+  amount        Float
+  interval      String
+  intervalCount Int
+  type          StripeProductType
+  RateupPlan    RateupPlan?
+  status        PaymentPlanStatus @default(NULL)
+}
+
+enum PaymentPlanType {
+  BASE
+  ADDON
+}
+
+model RateupPlan {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  displayName     String?
+  displayWidgetId String?
+  planType        PaymentPlanType
+  paymentPlan     PaymentPlans?   @relation(fields: [paymentPlanId], references: [id])
+  paymentPlanId   String?         @unique @db.Uuid
+  Subscription    Subscription[]
+  description     String[]        @default([])
+  features        Json?
+  createdAt       DateTime        @default(now())
+  stripeProduct   StripeProducts? @relation(fields: [stripeId], references: [id])
+  stripeId        String?         @unique @db.Uuid
+  orders          Order[]
 }
 
 enum OrderStatus {
@@ -696,8 +742,9 @@ model Order {
   org                  Org                 @relation(fields: [orgId], references: [id])
   orgId                String              @db.Uuid
   status               OrderStatus         @default(PENDING)
-  planId               String
-  subscriptionId       String              @unique
+  priceId              String? // stripe price
+  planId               String? // razorpay plan
+  subscriptionId       String?             @unique
   subscriptionChargeAt DateTime? //next charge date
   subscriptionEndedAt  DateTime? //cancelled or expired date
   subscriptionStatus   SubscriptionStatus?
@@ -705,6 +752,9 @@ model Order {
   paymentId            String?             @unique @db.Uuid
   orderPayment         Payments?           @relation("OrderPayment", fields: [paymentId], references: [id])
   paymentStatus        PaymentStatus       @default(PENDING)
+  RateupPlan           RateupPlan?         @relation(fields: [rateupPlanId], references: [id])
+  rateupPlanId         String?             @db.Uuid
+  checkoutRefId        String?             @unique
 }
 
 model Payments {
@@ -720,25 +770,6 @@ model Payments {
   customer_email String?
   customer_phone String?
   OrderPayment   Order?  @relation("OrderPayment")
-}
-
-enum PaymentPlanType {
-  BASE
-  ADDON
-}
-
-model RateupPlan {
-  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  displayName     String?
-  displayWidgetId String?
-  planType        PaymentPlanType
-  paymentPlan     PaymentPlans?   @relation(fields: [paymentPlanId], references: [id])
-  paymentPlanId   String?         @unique @db.Uuid
-  Subscription    Subscription[]
-  description     String[]        @default([])
-  features        Json?
-  createdAt       DateTime        @default(now())
 }
 
 model WaFlow {

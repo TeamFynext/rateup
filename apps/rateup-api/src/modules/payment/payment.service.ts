@@ -62,6 +62,7 @@ export async function createCheckoutSession(
         orgId: data.orgId,
         planId: data.planId,
         subscriptionId,
+        rateupPlanId: data.rateupPlanId,
         subscriptionStatus: SubscriptionStatus.none,
       },
     });
@@ -133,6 +134,7 @@ export async function getAllRateupPaymentPlans() {
   const plans = await prisma.rateupPlan.findMany({
     include: {
       paymentPlan: true,
+      stripeProduct: true,
     },
     orderBy: {
       createdAt: "asc",
@@ -150,6 +152,16 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
     });
     if (existData) {
       return { code: 400, data: "Payment Plan Id is already in Use" };
+    }
+  }
+  if (data?.stripeId) {
+    const existData = await prisma.rateupPlan.findFirst({
+      where: {
+        stripeId: data?.stripeId,
+      },
+    });
+    if (existData) {
+      return { code: 400, data: "Plan is already in Use" };
     }
   }
   if (data?.displayWidgetId) {
@@ -172,6 +184,9 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
       paymentPlan: data?.paymentPlanId
         ? { connect: { id: data?.paymentPlanId } }
         : undefined,
+      stripeProduct: data?.stripeId
+        ? { connect: { id: data?.stripeId } }
+        : undefined,
       features: data.features ? JSON.parse(data.features) : null,
     },
   });
@@ -193,6 +208,19 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       return { code: 400, data: "Payment Plan Id is already in Use" };
     }
   }
+  if (data?.stripeId) {
+    const existData = await prisma.rateupPlan.findFirst({
+      where: {
+        stripeId: data?.stripeId,
+        id: {
+          not: data?.id,
+        },
+      },
+    });
+    if (existData) {
+      return { code: 400, data: "Payment Plan Id is already in Use" };
+    }
+  }
   if (data?.displayWidgetId) {
     await prisma.rateupPlan.updateMany({
       where: {
@@ -203,6 +231,7 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       },
     });
   }
+
   const plans = await prisma.rateupPlan.update({
     data: {
       name: data?.name,
@@ -212,6 +241,9 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       planType: data?.planType as PaymentPlanType,
       paymentPlan: data?.paymentPlanId
         ? { connect: { id: data?.paymentPlanId } }
+        : undefined,
+      stripeProduct: data?.stripeId
+        ? { connect: { id: data?.stripeId } }
         : undefined,
       features: data?.features,
     },
@@ -369,6 +401,7 @@ export async function verifyPayment(data, event) {
           paymentStatus: PaymentStatus.SUCCESS,
           status: OrderStatus.PENDING,
           subscriptionStatus: SubscriptionStatus.pending,
+          paymentId: payment.id,
         },
       });
     }
@@ -518,6 +551,7 @@ export async function getAllOrgOrders(orgId: string) {
         createdBy: true,
         status: true,
         planId: true,
+        priceId: true,
         paymentStatus: true,
         payment: true,
         subscriptionId: true,
@@ -527,20 +561,39 @@ export async function getAllOrgOrders(orgId: string) {
       },
     });
 
-    const planDetailsPromises = orders.map(async (order) => {
-      const planDetail = await prisma.paymentPlans.findFirst({
-        where: {
-          planId: order.planId,
-        },
-        select: {
-          amount: true,
-          currency: true,
-          description: true,
-          period: true,
-          RateupPlan: true,
-        },
-      });
+    const filteredOrders = orders.filter(
+      (order) => order.planId || order.priceId,
+    );
 
+    const planDetailsPromises = filteredOrders.map(async (order) => {
+      let planDetail = null;
+      if (order.planId) {
+        planDetail = await prisma.paymentPlans.findFirst({
+          where: {
+            planId: order.planId,
+          },
+          select: {
+            amount: true,
+            currency: true,
+            description: true,
+            period: true,
+            RateupPlan: true,
+          },
+        });
+      } else if (order.priceId) {
+        planDetail = await prisma.stripeProducts.findFirst({
+          where: {
+            priceId: order.priceId,
+          },
+          select: {
+            amount: true,
+            currency: true,
+            description: true,
+            interval: true,
+            RateupPlan: true,
+          },
+        });
+      }
       const {
         RateupPlan: { description: planFeatures, planType, displayName },
       } = planDetail;

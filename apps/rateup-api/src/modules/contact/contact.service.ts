@@ -6,6 +6,11 @@ import {
   createMultipleContactInput,
   updateContactSchema,
 } from "./contact.schema";
+import Papa from "papaparse";
+import { getContactTag } from "../whatsapp/settings/wa_settings.service";
+import xlsx from "node-xlsx";
+import { MultipartFile } from "@fastify/multipart";
+import { addNewContactsToGroup } from "./contactGroup/contactGroup.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -135,5 +140,126 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       },
     },
   });
+  return res;
+}
+
+export async function importCSVContacts(
+  fileBody: MultipartFile,
+  orgId: string,
+  tags: string[],
+  contactGroupId?: string,
+) {
+  const { mimetype } = fileBody;
+  const file =
+    mimetype === "text/csv" ? fileBody.file : await fileBody.toBuffer();
+
+  return new Promise(async (resolve, reject) => {
+    let contacts = [];
+    let errorContact = [];
+
+    const processContact = (contact) => {
+      if (!contact?.phone || !/^\d+$/.test(contact.phone) || !contact?.name) {
+        errorContact.push({
+          name: contact?.name ? contact.name : "name is missing/invalid",
+          phone: contact?.phone ? contact.phone : "phone is missing/invalid",
+        });
+      } else {
+        contacts.push(contact);
+      }
+    };
+
+    const finalizeProcessing = async () => {
+      try {
+        if (contacts.length > 0) {
+          const res = await createContactsFromCsv(
+            contacts,
+            orgId,
+            tags,
+            contactGroupId,
+          );
+          if (errorContact.length > 0) {
+            resolve({ data: errorContact, status: "error" });
+          } else {
+            resolve({ data: res, status: "success" });
+          }
+        } else {
+          throw new Error("No contacts found");
+        }
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    if (mimetype === "text/csv") {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        chunkSize: 1024 * 1024,
+        transformHeader: (header) => header?.trim()?.toLowerCase(),
+        chunk: (results) => {
+          if (results?.data) {
+            results.data.forEach(processContact);
+          }
+        },
+        complete: finalizeProcessing,
+        error: (error) => {
+          reject(error);
+        },
+      });
+    } else {
+      const workSheetsFromFile = xlsx.parse(file);
+      const headers =
+        workSheetsFromFile?.[0]?.data?.[0]?.map(
+          (header) => header?.toString().toLowerCase(),
+        ) ?? [];
+      const headerIndices = headers.map((header, index) => ({ header, index }));
+
+      workSheetsFromFile?.[0]?.data?.slice(1).forEach((row) => {
+        let contact = {};
+        headerIndices.forEach(({ header, index }) => {
+          contact[header] = row[index]?.toString()?.trim();
+        });
+        processContact(contact);
+      });
+      await finalizeProcessing();
+    }
+  });
+}
+
+export async function createContactsFromCsv(
+  contacts,
+  orgId,
+  cTags,
+  contactGroupId,
+) {
+  const tags = (await getContactTag(orgId))?.contactTags ?? [];
+  let data = contacts?.map(({ name, phone, ...obj }) => {
+    const result = {};
+    if (tags?.length > 0) {
+      for (const key of tags) {
+        if (obj?.hasOwnProperty(key) && cTags.includes(key)) {
+          result[key] = obj[key];
+        }
+      }
+    }
+    return {
+      name,
+      phone,
+      source: "CSV IMPORT",
+      tags: result ?? undefined,
+    };
+  });
+  if (contactGroupId) {
+    const res = await addNewContactsToGroup(contactGroupId, data, orgId);
+    return res;
+  }
+  const existingcontacts = await getContactsByOrgId(orgId);
+  const filterNewContacts = data.filter((contact) => {
+    return !existingcontacts.some(
+      (existContact) => existContact.phone === contact.phone,
+    );
+  });
+  if (!filterNewContacts.length) throw new Error("All contacts already exist");
+  const res = await createMultipleContacts(data, orgId);
   return res;
 }

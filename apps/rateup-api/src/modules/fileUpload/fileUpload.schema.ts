@@ -13,13 +13,10 @@ export const allowedMimeTypes = [
   "application/svg+xml",
   "application/pdf",
 ];
-
-//   export const uploadFileSchema = z.object({
-//     file: z.string().nullable().refine(value => allowedMimeTypes.includes(value?.mimetype), {
-//       message: "Invalid file format",
-//       path: ["file"]
-//     }),
-//   });
+export const dataExtractFileMimeTypes = [
+  "text/csv",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
 
 export const uploadFileSchema = z.object({
   file: z.any().refine((value) => allowedMimeTypes.includes(value), {
