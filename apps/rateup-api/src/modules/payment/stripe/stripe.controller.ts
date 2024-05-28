@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import {
   createOrder,
-  createPayment,
+  createStripePayment,
   deleteStripeProduct,
   getAllStripeSubscriptions,
   getStripeProducts,
@@ -49,6 +49,12 @@ export async function createCheckoutSessionHandler(
     metadata: {
       rateupOrderId: newOrder.id,
     },
+    customer_email: data.email,
+    subscription_data: {
+      metadata: {
+        rateupOrderId: newOrder.id,
+      },
+    },
   });
 
   const sessionId = session.id;
@@ -82,9 +88,8 @@ export async function webHookHandler(
   request: FastifyRequest<{ Querystring: SessionRetrieveRequest }>,
   reply: FastifyReply,
 ) {
-  console.log("Stripe Web hoook hit.................");
+  console.log("Stripe Web hoook Action.................");
 
-  //  const payload = JSON.parse(request?.body?.toString());
   const sig = request.headers["stripe-signature"];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -97,20 +102,36 @@ export async function webHookHandler(
       endpointSecret,
     );
   } catch (err) {
-    console.log(".....event error");
+    console.log(".....Event error");
     console.log(err.message);
 
     return reply.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log("event...........", event.type);
+  console.log("Stripe Event...........", event.type);
 
   // Handle the checkout.session.completed event
   if (event.type === "checkout.session.completed") {
     await processOrder(event.data.object);
-
-    console.log("processing done........");
   }
+
+  //Trigger on every payment including recurring payments
+  if (event.type === "invoice.paid") {
+    await createStripePayment(event.data.object);
+  }
+
+  // if (event.type === "payment_intent.succeeded") {
+
+  // }
+
+  if (event.type === "payment_intent.payment_failed") {
+    console.log("payment_intent.payment_failed .......");
+  }
+
+  // if (event.type === "charge.succeeded") {
+  //   console.log("charge.succeeded .......");
+  //   console.log(event.data.object);
+  // }
 
   reply.status(200);
 }

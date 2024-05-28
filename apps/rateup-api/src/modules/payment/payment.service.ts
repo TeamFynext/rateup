@@ -561,7 +561,11 @@ export async function getAllOrgOrders(orgId: string) {
       },
     });
 
-    const planDetailsPromises = orders.map(async (order) => {
+    const filteredOrders = orders.filter(
+      (order) => order.planId || order.priceId,
+    );
+
+    const planDetailsPromises = filteredOrders.map(async (order) => {
       let planDetail = null;
       if (order.planId) {
         planDetail = await prisma.paymentPlans.findFirst({

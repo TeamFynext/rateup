@@ -632,7 +632,7 @@ model Subscription {
   createdAt       DateTime    @default(now())
   basePlan        RateupPlan? @relation(fields: [basePlanId], references: [id])
   basePlanId      String?     @db.Uuid
-  subscriptionRef String? //gateway Subscription id
+  subscriptionRef String?     @unique //gateway Subscription id
 }
 
 // used to tokenize some data

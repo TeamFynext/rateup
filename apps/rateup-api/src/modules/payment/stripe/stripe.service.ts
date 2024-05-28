@@ -6,8 +6,10 @@ import {
 } from "@prisma/client";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import axios from "axios";
+import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
 
 const prisma = new PrismaClient();
+const STRIPE_API = "https://api.stripe.com/v1";
 
 export async function createOrder(data, userId) {
   const order = await prisma.order.create({
@@ -17,6 +19,8 @@ export async function createOrder(data, userId) {
       orgId: data.orgId,
       subscriptionStatus: SubscriptionStatus.none,
       rateupPlanId: data?.rateupPlanId,
+      status: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.PENDING,
     },
   });
   return order;
@@ -35,15 +39,117 @@ export async function updateOrder(id, priceId, sessionId) {
   return order;
 }
 
+export async function createStripePayment(invoiceData) {
+  if (invoiceData.billing_reason === "subscription_create") {
+    const { payment_intent, subscription } = invoiceData;
+
+    let orderId = invoiceData.subscription_details?.metadata?.rateupOrderId;
+    let paymentIntentData = await getSinglePaymentIntent(payment_intent);
+    let subscriptionData = await getSingleStripeSubscription(subscription);
+
+    const payment = await prisma.payments.create({
+      data: {
+        payId: payment_intent,
+        amount: invoiceData.amount_paid,
+        currency: invoiceData.currency.toUpperCase(),
+        method: paymentIntentData.payment_method_types[0] || "",
+        description: paymentIntentData.description,
+        customer_email: invoiceData.customer_email || "",
+        customer_phone: invoiceData.customer_phone || "",
+        rateupOrderId:
+          invoiceData.subscription_details?.metadata?.rateupOrderId,
+        createdAt: invoiceData.status_transitions.paid_at,
+      },
+    });
+
+    let updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        paymentId: payment.id,
+        paymentStatus: PaymentStatus.SUCCESS,
+        status: OrderStatus.COMPLETE,
+        subscriptionStatus: SubscriptionStatus.active,
+        subscriptionId: subscription,
+        subscriptionChargeAt: new Date(
+          subscriptionData.current_period_end * 1000,
+        ),
+      },
+      include: {
+        RateupPlan: true,
+      },
+    });
+
+    if (updatedOrder) {
+      const updatedSubscription = await prisma.subscription.update({
+        where: { orgId: updatedOrder?.orgId },
+        data: {
+          basePlanId: updatedOrder?.rateupPlanId,
+          features: updatedOrder.RateupPlan?.features,
+          renewedAt: new Date(),
+          expiresAt: new Date(subscriptionData.current_period_end * 1000),
+          subscriptionRef: subscription,
+        },
+      });
+
+      console.log("Sending stripe subscription summary email....");
+
+      const msg = {
+        to: invoiceData.customer_email,
+        subject: "Rateup Subscription Activated - Rateup.app",
+        text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
+        html: createEmailBodySubscriptionActivated(
+          updatedOrder?.RateupPlan?.displayName,
+          new Date(subscriptionData.current_period_end * 1000),
+        ),
+      };
+      try {
+        sendAWSEmail(msg);
+      } catch (error) {
+        console.error(error);
+        throw new Error("Email sending failed. E:" + error);
+      }
+    }
+    return payment;
+  } else if (invoiceData.billing_reason === "subscription_cycle") {
+    //ACTION ON RECURRING PAYMENT
+    const { subscription } = invoiceData;
+
+    let subscriptionData = await getSingleStripeSubscription(subscription);
+
+    const updatedSubscription = await prisma.subscription.update({
+      where: { subscriptionRef: subscription },
+      data: {
+        renewedAt: new Date(),
+        expiresAt: new Date(subscriptionData.current_period_end * 1000),
+      },
+      include: {
+        basePlan: true,
+      },
+    });
+
+    const msg = {
+      to: invoiceData.customer_email,
+      subject: "Rateup Subscription Renewed - Rateup.app",
+      text: `We have received a payment of ${invoiceData.amount_paid / 100}`,
+      html: createEmailBodySubscriptionActivated(
+        updatedSubscription?.basePlan?.displayName,
+        new Date(subscriptionData.current_period_end * 1000),
+        true,
+      ),
+    };
+    try {
+      sendAWSEmail(msg);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
+    }
+
+    return updatedSubscription;
+  }
+}
+
 export async function processOrder(payload) {
-  const {
-    id,
-    amount_total,
-    mode,
-    subscription,
-    payment_method_types,
-    metadata,
-  } = payload;
+  const { id, subscription } = payload;
 
   let subscriptionData = await getSingleStripeSubscription(subscription);
 
@@ -51,100 +157,44 @@ export async function processOrder(payload) {
     subscriptionData.latest_invoice,
   );
 
-  const payment = await prisma.payments.create({
-    data: {
-      payId: invoiceData.payment_intent,
-      amount: invoiceData.amount_paid,
-      currency: invoiceData.currency.toUpperCase(),
-      method: payment_method_types[0] || "",
-      description: "Stripe Subscription create",
-      customer_email: invoiceData.customer_email || "",
-      customer_phone: invoiceData.customer_phone || "",
-      rateupOrderId: metadata?.rateupOrderId,
-      createdAt: invoiceData.status_transitions.paid_at,
-    },
-  });
-
-  let updatedOrder = await prisma.order.update({
-    where: { checkoutRefId: id },
-    data: {
-      paymentId: payment.id,
-      paymentStatus: PaymentStatus.SUCCESS,
-      status: OrderStatus.COMPLETE,
-      subscriptionStatus: SubscriptionStatus.active,
-      subscriptionId: subscription,
-      subscriptionChargeAt: new Date(
-        subscriptionData.current_period_end * 1000,
-      ),
-    },
-  });
-
-  return updatedOrder;
-}
-
-export async function createPayment(payload) {
-  console.log("creating  payment....");
-  console.log(payload);
-
-  const {
-    payment_intent,
-    amount_paid,
-    billing_reason,
-    currency,
-    customer_email,
-    customer_name,
-    invoice_pdf,
-  } = payload?.data?.object;
-
-  if (payment_intent && amount_paid) {
-    // const payment = await prisma.payments.create({
-    //   data: {
-    //     payment_intent,
-    //     amount_paid,
-    //     billing_reason,
-    //     currency,
-    //     customer_email,
-    //     customer_name,
-    //   },
-    // });
-    // if (payment) {
-    //   console.log("sending email....");
-    //   const msg = {
-    //     to: customer_email, // Change to your recipient
-    //     // from: 'hello@rateup.app', // Change to your verified sender
-    //     subject: "Payment Received - Rateup.app",
-    //     text: `We have received a payment of ${amount_paid}`,
-    //     html: createEmailBodyPaymentReceived(
-    //       customer_name,
-    //       customer_email,
-    //       amount_paid,
-    //       currency,
-    //       invoice_pdf,
-    //     ),
-    //   };
-    //   try {
-    //     sendAWSEmail(msg);
-    //   } catch (error) {
-    //     console.error(error);
-    //     throw new Error("Email sending failed. E:" + error);
-    //   }
-    // }
-    // return payment;
+  if (invoiceData?.status && invoiceData?.status === "paid") {
+    let updatedOrder = await prisma.order.update({
+      where: { checkoutRefId: id },
+      data: {
+        subscriptionStatus: SubscriptionStatus.active,
+        subscriptionId: subscription,
+        subscriptionChargeAt: new Date(
+          subscriptionData.current_period_end * 1000,
+        ),
+      },
+    });
+    return updatedOrder;
+  } else {
+    let updatedOrder = await prisma.order.update({
+      where: { checkoutRefId: id },
+      data: {
+        subscriptionStatus: SubscriptionStatus.pending,
+        subscriptionId: subscription,
+        subscriptionChargeAt: new Date(
+          subscriptionData.current_period_end * 1000,
+        ),
+      },
+    });
+    return updatedOrder;
   }
-  return null;
 }
 
 export async function syncStripeProducts() {
   const [stripeProductRes, priceRes] = await Promise.all([
     (
-      await axios.get("https://api.stripe.com/v1/products", {
+      await axios.get(`${STRIPE_API}/products`, {
         headers: {
           Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
         },
       })
     )?.data,
     (
-      await axios.get("https://api.stripe.com/v1/prices", {
+      await axios.get(`${STRIPE_API}/prices`, {
         headers: {
           Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
         },
@@ -193,7 +243,7 @@ export async function getStripeProducts() {
 
 export async function getSingleStripeInvoice(id) {
   const invoice = (
-    await axios.get(`https://api.stripe.com/v1/invoices/${id}`, {
+    await axios.get(`${STRIPE_API}/invoices/${id}`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },
@@ -203,9 +253,21 @@ export async function getSingleStripeInvoice(id) {
   return invoice;
 }
 
+export async function getSinglePaymentIntent(id) {
+  const payment_intent = (
+    await axios.get(`${STRIPE_API}/payment_intents/${id}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      },
+    })
+  )?.data;
+
+  return payment_intent;
+}
+
 export async function getSingleStripeSubscription(id) {
   const subscription = (
-    await axios.get(`https://api.stripe.com/v1/subscriptions/${id}`, {
+    await axios.get(`${STRIPE_API}/subscriptions/${id}`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },
@@ -217,7 +279,7 @@ export async function getSingleStripeSubscription(id) {
 
 export async function getAllStripeSubscriptions() {
   const subscriptions = (
-    await axios.get("https://api.stripe.com/v1/subscriptions", {
+    await axios.get(`${STRIPE_API}/subscriptions`, {
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       },

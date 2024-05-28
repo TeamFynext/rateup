@@ -15,6 +15,11 @@ const createStripeCheckoutSchema = z.object({
   rateupPlanId: z.string({
     required_error: "Rateup Plan Id is required",
   }),
+  email: z
+    .string({
+      required_error: "Email Id is required",
+    })
+    .email("Invalid email."),
 });
 
 const updateProductSchema = z.object({
