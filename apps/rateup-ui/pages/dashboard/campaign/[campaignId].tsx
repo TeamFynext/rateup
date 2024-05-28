@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Badge,
-  Box,
   Button,
   Group,
   MantineProvider,
@@ -116,7 +115,7 @@ const CampaignById = () => {
         <Title order={2} tt={"uppercase"}>
           {campaignData?.name}
         </Title>
-        <Group justify="space-between">
+        <Group>
           <SegmentedControl
             data={Object.values(CampaignParticipantsTabs)}
             value={activeTab}
@@ -131,6 +130,11 @@ const CampaignById = () => {
             tt={"capitalize"}
             miw={200}
           />
+          <StartCampaignCard
+            campaign={campaignData}
+            refetchCampaign={refetchCampaign}
+            participantCount={campaignData?.campaignParticipants.length}
+          />
           {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
             <SearchInput
               placeholder={"Search Participants"}
@@ -138,15 +142,13 @@ const CampaignById = () => {
               setSearchText={setSearchText}
             />
           )}
-
-          <Box w={50} h={50} />
         </Group>
+
         <Tabs value={activeTab} color="var(--tertiary-color)">
           <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
-            <StartCampaignCard
+            <StartCampaignCardRightSection
               campaign={campaignData}
               refetchCampaign={refetchCampaign}
-              participantCount={campaignData?.campaignParticipants.length}
               campaignInfo={campaignInfo}
             />
             <CampaignInfoCard
@@ -194,19 +196,15 @@ interface StartCampaignCardProps {
   campaign: Campaign;
   refetchCampaign: () => void;
   participantCount: number;
-  campaignInfo;
 }
 const StartCampaignCard = ({
   campaign,
   refetchCampaign,
   participantCount,
-  campaignInfo,
 }: StartCampaignCardProps) => {
   const [startCampaign, setStartCampaign] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [resendModalOpened, { open, close }] = useDisclosure(false);
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
 
   useEffect(() => {
     if (campaign) {
@@ -256,51 +254,59 @@ const StartCampaignCard = ({
   if (!campaign) return null;
 
   return (
-    <PaperLayout radius={"md"}>
-      <Stack>
-        <Group justify="space-between">
-          <CreateCampaignModal
-            isEdit={true}
-            close={closeEditModal}
-            campaign={campaign}
-          />
-          <Group>
-            <Button
-              variant="outline"
-              radius={"xl"}
-              disabled={!participantCount}
-              onClick={startCampaign ? open : handleChange}
-              rightSection={<IconSend size={16} />}
-            >
-              {startCampaign ? "Resend" : "Send"}
-            </Button>
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                aria-label="refresh"
-                onClick={() => refetchCampaign()}
-              >
-                <IconRefresh
-                  style={{ width: "90%", height: "90%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
-            <Badge variant="outline" size="xl">
-              {campaignInfo?.team}
-            </Badge>
-          </Group>
-        </Group>
-      </Stack>
+    <>
+      <Button
+        variant="outline"
+        radius={"xl"}
+        disabled={!participantCount}
+        onClick={startCampaign ? open : handleChange}
+        rightSection={<IconSend size={16} />}
+      >
+        {startCampaign ? "Resend" : "Send"}
+      </Button>
       <ResendCampaignModal
         campaign={campaign}
         close={close}
         opened={resendModalOpened}
       />
+    </>
+  );
+};
+const StartCampaignCardRightSection = ({
+  campaign,
+  refetchCampaign,
+  campaignInfo,
+}) => {
+  if (!campaign) return null;
+  return (
+    <PaperLayout radius={"md"}>
+      <Group justify="space-between">
+        <CreateCampaignModal
+          isEdit={true}
+          campaign={campaign}
+          close={() => {}}
+        />
+        <Group>
+          <Tooltip label="Refresh data">
+            <ActionIcon
+              variant="light"
+              aria-label="refresh"
+              onClick={() => refetchCampaign()}
+            >
+              <IconRefresh
+                style={{ width: "90%", height: "90%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+          </Tooltip>
+          <Badge variant="outline" size="xl">
+            {campaignInfo?.team}
+          </Badge>
+        </Group>
+      </Group>
     </PaperLayout>
   );
 };
-
 const CampaignInfoCard = ({ participantCount, stats, flowId }) => {
   const statsArray = [
     { label: "Participants", count: participantCount },
