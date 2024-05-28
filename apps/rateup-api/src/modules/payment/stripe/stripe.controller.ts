@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import {
+  cancelStripeSubscription,
   createOrder,
   createStripePayment,
   deleteStripeProduct,
@@ -172,6 +173,22 @@ export async function getAllStripeSubscriptionsHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function cancelStripeSubscriptionHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    const accessTokenPayload = session.getAccessTokenPayload();
+    let orgId = accessTokenPayload.orgId;
+
+    await cancelStripeSubscription(orgId);
+    reply.code(204).send("Success");
+  } catch (error) {
+    reply.code(500).send(error);
   }
 }
 
