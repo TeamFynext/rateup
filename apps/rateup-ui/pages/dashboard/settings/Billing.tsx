@@ -30,6 +30,7 @@ import {
 } from "../../../utils/notifications";
 import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { useRouter } from "next/router";
 
 const Billing = ({
   subscription,
@@ -72,7 +73,7 @@ const Billing = ({
   const [cancelDialogOpened, { open, close }] = useDisclosure();
   const CancelSubscription = useCancelRazorpaySubscriptionMutation();
   const { ref, width } = useElementSize();
-
+  const router = useRouter();
   const handleCancelSubscription = () => {
     showLoadingToast(
       "Hold.. your subscription is getting cancelled...",
@@ -94,6 +95,15 @@ const Billing = ({
 
   return (
     <>
+      <RateupButtonPrimary
+        title="Pay now Stripe"
+        onClick={() => {
+          router.push(
+            "/dashboard/payment/checkout?pid=price_1PGQRySEU5WPzKjqmpSIcB4N",
+          );
+        }}
+      />
+
       {processingPayment ? (
         <Loader type="bars" />
       ) : (

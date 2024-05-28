@@ -10,6 +10,7 @@ import { Form, useForm } from "@mantine/form";
 import { useUpdateLandingPageMutation } from "../../../../../../backend/landingPage/landingPage.query";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
+import FormModalLayout from "../../../../../Modal/FormModalLayout";
 
 function AddLinkModal({ title, opened, onClose, links }) {
   const queryClient = useQueryClient();
@@ -170,31 +171,24 @@ function AddLinkModal({ title, opened, onClose, links }) {
       validateDropdownValues();
     }
   }, [selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName]);
-
   return (
-    <Modal
+    <FormModalLayout
       opened={opened}
       onClose={onClose}
-      radius="lg"
+      title={title}
       centered
-      className={`${styles["addlink-overlay-div"]} ${opened ? styles["opened"] : styles["closed"]}`}
-      classNames={{
-        header: styles["modal-header"],
-        body: styles["modal-body"],
-      }}
+      onSubmit={onAddBtnClick}
+      buttonTitle="Save"
+      includeCancelButton
     >
-      <Box className={styles["header"]}>
-        <h1 className={styles["title"]}>{title}</h1>
-        <ActionIcon
-          className={styles["close-btn"]}
-          onClick={() => {
-            onClose();
-          }}
-        >
-          <IconX />
-        </ActionIcon>
-      </Box>
-
+      <ActionIcon
+        className={styles["close-btn"]}
+        onClick={() => {
+          onClose();
+        }}
+      >
+        <IconX />
+      </ActionIcon>
       <Box className={styles["body"]}>
         <Select
           value={selectedLinkType}
@@ -223,18 +217,8 @@ function AddLinkModal({ title, opened, onClose, links }) {
         ) : (
           <CustomLinkInputs form={customLinksInputsForm} />
         )}
-
-        <Box className={styles["add-btn-container"]}>
-          <Button
-            className={styles["add-link-btn"]}
-            onClick={onAddBtnClick}
-            loading={updateLandingPageMutation.isPending}
-          >
-            Save
-          </Button>
-        </Box>
       </Box>
-    </Modal>
+    </FormModalLayout>
   );
 }
 

@@ -77,7 +77,7 @@ export const useImportCSVContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importCSVContacts,
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["contacts", "last-message"],

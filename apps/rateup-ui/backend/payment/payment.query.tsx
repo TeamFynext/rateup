@@ -144,7 +144,7 @@ export function usePlanSyncMutation() {
     mutationFn: () => syncRazorPayPlans(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
-      notifications.update({
+      notifications.show({
         id: "load-data",
         color: "teal",
         loading: false,
@@ -155,7 +155,7 @@ export function usePlanSyncMutation() {
       });
     },
     onError: (error: any) => {
-      notifications.update({
+      notifications.show({
         id: "load-data",
         color: "red",
         loading: false,

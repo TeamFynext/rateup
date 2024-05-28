@@ -1,19 +1,20 @@
 import {
   Stack,
   Group,
-  Title,
-  ActionIcon,
   Box,
-  Tooltip,
   Text,
   Blockquote,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
-import { IconInfoCircle, IconRefresh } from "@tabler/icons-react";
+import { IconCheck, IconInfoCircle, IconRefresh } from "@tabler/icons-react";
 import React from "react";
 import { usePaymentSubcription } from "../../../backend/payment/payment.query";
 import styles from "../../../components/adminPanel/admin.module.css";
+import { showSuccessToast } from "../../../utils/notifications";
+import classes from "../../../components/Graph/graph.module.css";
 
 const RazorpaySubscriptions = () => {
   const {
@@ -21,6 +22,7 @@ const RazorpaySubscriptions = () => {
     isFetched,
     refetch: refetchSubscribtions,
     isLoading,
+    isRefetching,
   } = usePaymentSubcription();
   const columns: GridColDef[] = [
     {
@@ -53,34 +55,34 @@ const RazorpaySubscriptions = () => {
     });
   }
   return (
-    <Stack mah={"100%"}>
-      <Group gap={"md"}>
-        <Title order={2}>Razorpay Subscriptions</Title>
-        <Tooltip label="Refresh data">
-          <ActionIcon
-            variant="light"
-            ml="xs"
-            mr="50px"
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-              refetchSubscribtions();
-              notifications.show({
-                id: "load-data",
-                color: "teal",
-                title: "Refreshing data",
-                loading: true,
-                message: "Hold.. your data is getting update...",
-                autoClose: 2000,
-              });
-            }}
-          >
-            <IconRefresh style={{ width: "80%", height: "80%" }} stroke={1.5} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-      <Blockquote color="blue" icon={<IconInfoCircle />}>
-        List of Subscriptions from Razorpay DB{" "}
+    <Stack mah={"100%"} pt={"lg"}>
+      <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
+        <Group justify="space-between">
+          <Group gap={"xs"}>
+            <Text>List of Subscriptions from Razorpay DB</Text>
+            <Tooltip label="Refresh data">
+              <ActionIcon
+                variant="light"
+                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
+                  await refetchSubscribtions();
+                  showSuccessToast(
+                    "Data updated successfully",
+                    "",
+                    <IconCheck />,
+                  );
+                }}
+              >
+                <IconRefresh
+                  style={{ width: "80%", height: "80%" }}
+                  className={isRefetching ? classes.rotateInfinitely : null}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
       </Blockquote>
-      <Box h="75vh">
+      <Box h="52vh">
         <DataGrid
           rows={rows}
           columns={columns}

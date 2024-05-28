@@ -6,15 +6,22 @@ import FormModalLayout from "../Modal/FormModalLayout";
 import CreateContactModal from "./CreateContactModal";
 import CreateGroupModal from "./CreateGroupModal";
 import { WhatsappTableType } from "./utils/utils";
+import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
+import ContactImportErrorModal from "./ContactImportErrorModal";
 
 const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
     useDisclosure(false);
   const [groupOpened, { open: groupOpen, close: groupClose }] =
     useDisclosure(false);
+  const importCSVContactMutation = useImportCSVContactMutation();
 
   return (
     <>
+      <ContactImportErrorModal
+        body={importCSVContactMutation?.error?.response?.data}
+        isError={importCSVContactMutation.isError}
+      />
       <RateupButtonBlue
         title={tab === WhatsappTableType.MEMBERS ? "Add Members" : "Create"}
         rightIcon={<IconPlus size={20} />}
@@ -39,6 +46,7 @@ const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
           contactClose={contactClose}
           close={close}
           cTags={tags}
+          importCSVContactMutation={importCSVContactMutation}
         />
       </FormModalLayout>
       <FormModalLayout

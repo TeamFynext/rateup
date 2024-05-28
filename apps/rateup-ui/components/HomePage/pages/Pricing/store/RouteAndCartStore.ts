@@ -8,7 +8,9 @@ type Cart = {
   amount: string;
   currencySymbol: string;
   period: string;
+  gateway: string;
   planId: string;
+  priceId: string;
 };
 export type Store = {
   route: string;
@@ -29,7 +31,9 @@ const initialState = {
     amount: "0",
     currencySymbol: "$",
     period: "",
+    gateway: "",
     planId: "",
+    priceId: "",
   },
 };
 

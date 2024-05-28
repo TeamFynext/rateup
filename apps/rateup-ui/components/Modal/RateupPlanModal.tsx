@@ -14,14 +14,12 @@ import { PaymentType } from "../../types/enums";
 import { widgetIds } from "../../utils/constants/forms";
 import { notifications } from "@mantine/notifications";
 import { getSampleSubscriptionFeatures } from "../../utils/subscription/subscription";
+import { useRateupPaymentsPlanMutation } from "../../backend/payment/payment.query";
+import { PaymentPlans } from "../../pages/admin/rateup";
 
-const RateupPlanModal = ({
-  opened,
-  close,
-  razorPayPlanFiltered,
-  rateupPaymentsPlanMutation,
-}) => {
+const RateupPlanModal = ({ opened, close, planList }) => {
   const [checked, setChecked] = useState(false);
+  const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
   const schema = z.object({
     name: z.string().trim().min(1, { message: "Name should Not Be empty" }),
     displayName: z
@@ -37,7 +35,10 @@ const RateupPlanModal = ({
     description: z
       .array(z.string())
       .min(1, { message: "Description should Not Be empty" }),
-    features: z.any(),
+    features: z
+      .string()
+      .trim()
+      .min(1, { message: "Features should Not Be empty" }),
   });
 
   const form = useForm({
@@ -48,6 +49,7 @@ const RateupPlanModal = ({
       displayWidgetId: "",
       planType: PaymentType.BASE,
       paymentPlanId: "",
+      stripeId: "",
       description: [],
       features: "",
     },
@@ -56,12 +58,20 @@ const RateupPlanModal = ({
 
   useEffect(() => {
     if (form?.values?.paymentPlanId) {
-      const name = razorPayPlanFiltered?.filter(
-        (data) => data?.value === form?.values?.paymentPlanId,
-      )?.[0]?.label;
+      const name = planList
+        ?.find((data) => data?.group === PaymentPlans.razorpay)
+        ?.items?.find(
+          (item) => item.value === form?.values?.paymentPlanId,
+        )?.label;
       form?.setFieldValue("name", name);
     }
-  }, [form?.values?.paymentPlanId]);
+    if (form?.values?.stripeId) {
+      const name = planList
+        ?.find((data) => data?.group === PaymentPlans.stripe)
+        ?.items?.find((item) => item.value === form?.values?.stripeId)?.label;
+      form?.setFieldValue("name", name);
+    }
+  }, [form?.values?.paymentPlanId, form?.values?.stripeId]);
 
   useEffect(() => {
     if (rateupPaymentsPlanMutation?.isSuccess) form?.reset();
@@ -106,12 +116,30 @@ const RateupPlanModal = ({
     >
       <SimpleGrid cols={2}>
         <ContainedSelection
-          label="Razorpay Payment Plan"
+          label="Razorpay/Stripe Payment Plan"
           placeholder="Payment Plan"
-          data={razorPayPlanFiltered}
+          data={planList}
           allowDeselect
-          {...form.getInputProps("paymentPlanId")}
-          disabled={!razorPayPlanFiltered?.length}
+          onChange={(value) => {
+            let fieldId = "";
+            let otherFieldId = "";
+            for (const plan of planList) {
+              if (plan?.items?.find((pl) => pl.value === value)) {
+                fieldId =
+                  plan?.group === PaymentPlans.razorpay
+                    ? "paymentPlanId"
+                    : "stripeId";
+                otherFieldId =
+                  plan?.group === PaymentPlans.razorpay
+                    ? "stripeId"
+                    : "paymentPlanId";
+                break;
+              }
+            }
+            form.setFieldValue(fieldId, value);
+            form.setFieldValue(otherFieldId, "");
+          }}
+          disabled={!planList?.length}
         />
         <ContainedTextField
           label="Name"

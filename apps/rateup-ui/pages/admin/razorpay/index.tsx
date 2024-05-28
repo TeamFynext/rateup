@@ -1,26 +1,57 @@
-import React from "react";
+import React, { useState } from "react";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { Stack } from "@mantine/core";
+import { Stack, Tabs, Title } from "@mantine/core";
 import { useRouter } from "next/router";
+import RazorpayPlans from "./plans";
+import RazorpaySubscriptions from "./subscriptions";
 
+enum RazorpayTabs {
+  plans = "Plans",
+  subscriptions = "Subscriptions",
+}
 const index = () => {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<RazorpayTabs>(RazorpayTabs.plans);
 
   return (
-    <Stack style={{ maxWidth: " 300px" }}>
-      <h1>RazorPay Dashboard</h1>
+    <Stack>
+      <Title order={3}>Razorpay Dashboard</Title>
+      <Tabs
+        value={activeTab}
+        onChange={(value) => setActiveTab(value as RazorpayTabs)}
+        keepMounted={false}
+        styles={{ tab: { fontSize: "18px", borderBottomWidth: "3px" } }}
+      >
+        <Tabs.List>
+          <Tabs.Tab
+            value={RazorpayTabs.plans}
+            c={
+              activeTab === RazorpayTabs.plans
+                ? "var(--tertiary-color)"
+                : "GrayText"
+            }
+          >
+            Plans
+          </Tabs.Tab>
+          <Tabs.Tab
+            value={RazorpayTabs.subscriptions}
+            c={
+              activeTab === RazorpayTabs.subscriptions
+                ? "var(--tertiary-color)"
+                : "GrayText"
+            }
+          >
+            Subscriptions
+          </Tabs.Tab>
+        </Tabs.List>
 
-      <RateupButtonPrimary
-        title="Manage Plans"
-        size="md"
-        onClick={() => router.push("/admin/razorpay/plans")}
-      />
-
-      <RateupButtonPrimary
-        title="Manage Subscriptions"
-        onClick={() => router.push("/admin/razorpay/subscriptions")}
-        size="md"
-      />
+        <Tabs.Panel value={RazorpayTabs.plans}>
+          <RazorpayPlans />
+        </Tabs.Panel>
+        <Tabs.Panel value={RazorpayTabs.subscriptions}>
+          <RazorpaySubscriptions />
+        </Tabs.Panel>
+      </Tabs>
     </Stack>
   );
 };

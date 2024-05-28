@@ -91,6 +91,7 @@ const AccountSettings = () => {
   }, [subscription, orders]);
 
   useEffect(() => {
+    close();
     refetch();
     refreshOrders();
   }, [summaryView, activeTab]);
@@ -262,10 +263,15 @@ const AccountSettings = () => {
           reset();
         }}
         onSubmit={() => {
-          setProcessingPayment(true);
-          createCheckout.mutate(checkoutDetails);
-          close();
-          reset();
+          if (cart.gateway === "STRIPE") {
+            close();
+            router.push(`/dashboard/payment/checkout?pid=${cart.priceId}`);
+          } else {
+            setProcessingPayment(true);
+            createCheckout.mutate(checkoutDetails);
+            close();
+            reset();
+          }
         }}
       >
         {enablePurchase ? (

@@ -1,0 +1,129 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/router";
+import {
+  createStripeCheckoutSession,
+  deleteStripeProduct,
+  getAllStripeSubscriptions,
+  getCheckoutSession,
+  getStripeProducts,
+  syncStripeProducts,
+  updateStripeProduct,
+} from "./stripe.api";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+
+export function useCreateStripeCheckoutSession(setIsLoading) {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: (values: any) => createStripeCheckoutSession(values),
+    onSuccess: (data) => {
+      notifications.show({
+        id: "load-data",
+        color: "teal",
+        title: "Processing Started",
+        message: "Please wait get ready for payment",
+        icon: <IconCheck size="1rem" />,
+        loading: true,
+        autoClose: 3000,
+      });
+      setIsLoading(false);
+      //setOrder(data.data.data);
+    },
+    onError: (error: any) => {
+      console.error("Error creating order:" + error.message);
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+
+      setIsLoading(false);
+    },
+  });
+}
+
+export const useGetStripeCheckoutSession = (sessionId) => {
+  return useQuery({
+    enabled: !!sessionId,
+    queryFn: () => getCheckoutSession(sessionId),
+    queryKey: ["checkoutSessionStatus"],
+  });
+};
+
+export const useSyncStripeProducts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncStripeProducts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
+      showSuccessToast(
+        "Stripe products synced successfully",
+        "",
+        <IconCheck />,
+      );
+    },
+    onError: () => {
+      showErrorToast("Error in Syncing stripe products", "", <IconX />);
+    },
+  });
+};
+
+export const useUpdateStripeProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateStripeProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
+      showSuccessToast(
+        "Stripe product updated successfully",
+        "",
+        <IconCheck />,
+      );
+    },
+    onError: () => {
+      showErrorToast("Error in updating stripe product", "", <IconX />);
+    },
+  });
+};
+
+export const useDeleteStripeProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteStripeProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
+      showSuccessToast(
+        "Stripe product deleted successfully",
+        "stripe",
+        <IconCheck />,
+        true,
+      );
+    },
+    onError: () => {
+      showErrorToast(
+        "Error in deleting stripe product",
+        "stripe",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useGetStripeProducts = () => {
+  return useQuery({
+    queryFn: getStripeProducts,
+    queryKey: ["stripeProducts"],
+  });
+};
+
+export const useGetAllStripeSubscriptions = () => {
+  return useQuery({
+    queryFn: getAllStripeSubscriptions,
+    queryKey: ["stripeSubscriptions"],
+  });
+};

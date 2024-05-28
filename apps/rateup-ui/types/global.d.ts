@@ -18,6 +18,8 @@ import {
   WaTemplateStatus,
   WaTemplateCategory,
   CampaignStatus,
+  StripeProductType,
+  PaymentPlanStatus,
 } from "./enums";
 
 type GoogleReview = {
@@ -576,6 +578,33 @@ declare global {
       amount: number;
     };
   }
+
+  type StripeProduct = {
+    id: string;
+    productId: string;
+    name: string;
+    description?: string;
+    createdAt: number;
+    active: boolean;
+    liveMode: boolean;
+    priceId: String;
+    currency: string;
+    amount: number;
+    interval: string;
+    intervalCount: number;
+    type: StripeProductType;
+    status: PaymentPlanStatus;
+  };
+  type StripeSubscription = {
+    id: string;
+    productName: string;
+    amount: number;
+    currency: string;
+    status: string;
+    createdAt: number;
+    startsAt: number;
+    endsAt: number;
+  };
   interface Subscription {
     orgId: string;
     features: SubscriptionFeatures;
