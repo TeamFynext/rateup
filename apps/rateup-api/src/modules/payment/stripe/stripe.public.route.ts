@@ -6,7 +6,6 @@ export async function stripePublicRoutes(server: FastifyInstance) {
     "application/json",
     { parseAs: "string" },
     function (request, body, done) {
-      console.log("request url................", request.url);
       if (request.url === "/api/public/payment/stripe/webhook") {
         done(null, body);
       } else {

@@ -10,13 +10,10 @@ import {
   webHookHandler,
 } from "./stripe.controller";
 import { $PSref } from "./stripe.schema";
+import { checkSession } from "../../../utils/checkSession";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
-  //server.addHook("preHandler", checkSession);
-
-  // server.addContentTypeParser('application/json', { parseAs: 'string' }, function (request, body, done) {
-  //   done(null, body);
-  // });
+  server.addHook("preHandler", checkSession);
 
   server.addContentTypeParser(
     "application/json",
