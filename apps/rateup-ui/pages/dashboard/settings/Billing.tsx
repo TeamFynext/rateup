@@ -95,15 +95,6 @@ const Billing = ({
 
   return (
     <>
-      <RateupButtonPrimary
-        title="Pay now Stripe"
-        onClick={() => {
-          router.push(
-            "/dashboard/payment/checkout?pid=price_1PGQRySEU5WPzKjqmpSIcB4N",
-          );
-        }}
-      />
-
       {processingPayment ? (
         <Loader type="bars" />
       ) : (
