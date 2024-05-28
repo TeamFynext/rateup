@@ -14,6 +14,8 @@ import {
   deleteWaSettings,
 } from "../settings/wa_settings.service";
 import { WaConfigType } from "../../../types/enums";
+import { GraphApiError } from "../wa_axios";
+import { handleWhatsappError } from "../wa_error_handler";
 
 export async function registerBusinessClientHandler(
   req: FastifyRequest<{
@@ -55,7 +57,6 @@ export async function registerBusinessClientHandler(
     // Registering phone number
     const registerRes = await registerPhoneNumber(phone.id, accessToken);
     log.trace("Phone registration response: %o", registerRes);
-
     // Saving settings
     await createWaSettings(orgId, {
       wabaId,
@@ -72,7 +73,11 @@ export async function registerBusinessClientHandler(
       .send({ message: "Business client registered successfully" });
   } catch (e) {
     log.error(e);
-    rep.status(500).send({ message: "Internal server error" });
+    if (e instanceof GraphApiError) {
+      handleWhatsappError(e, req, rep);
+    } else {
+      rep.status(500).send({ message: "Internal server error" });
+    }
   }
 }
 

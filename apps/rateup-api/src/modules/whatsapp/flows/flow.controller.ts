@@ -40,8 +40,9 @@ import { log } from "../../../utils/logger";
 import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
 import { Survey } from "@prisma/client";
-import { callWhatsappApi } from "../wa_axios";
+import { GraphApiError, callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
+import { getGraphApiErrorMessage } from "../wa_error_handler";
 
 /**
  * Get flows from whatsapp api or our database.
@@ -196,11 +197,11 @@ export async function createFlowHandler(
       name: name,
     });
   } catch (error) {
-    return res
-      .status(400)
-      .send(
-        error?.message?.split("error_message:")?.[1] ?? "Creating flow Error",
-      );
+    let message = "Creating flow Error";
+    if (error instanceof GraphApiError) {
+      message = getGraphApiErrorMessage(error);
+    }
+    return res.status(400).send(message);
   }
 }
 

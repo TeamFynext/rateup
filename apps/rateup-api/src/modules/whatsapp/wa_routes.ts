@@ -12,6 +12,7 @@ import { waAutomatedReplySchemas } from "./automatedReply/wa_automatedReply.sche
 import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route";
 import { waInboxRoutes } from "./inbox/wainbox.routes";
 import { waAuthRoutes } from "./auth/wa_auth.route";
+import { handleWhatsappError } from "./wa_error_handler";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [
@@ -25,6 +26,9 @@ export async function whatsappRoutes(server: FastifyInstance) {
       server.addSchema(schema);
     }
   }
+
+  server.setErrorHandler(handleWhatsappError);
+
   server.register(waTemplatesRoutes, { prefix: "/templates" });
   server.register(flowRoutes, { prefix: "/flows" });
   server.register(waSettingsRoutes, { prefix: "/settings" });

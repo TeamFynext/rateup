@@ -21,7 +21,7 @@ export async function callWhatsappApi(
       ...headAuth,
       ...headerConfig,
     },
-    validateStatus: () => true,
+    validateStatus: () => true, // don't throw error on non-2xx status
     ...otherConfig,
   };
   log.trace(
@@ -36,17 +36,31 @@ export async function callWhatsappApi(
   } else {
     log.error("Error calling WhatsApp API: %o", res);
     log.error("\nError Response => %o", res.data);
-    if (res.data?.error?.error_user_msg)
-      throw new Error(
-        `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_user_msg}`,
-      );
-    else if (res.data?.error?.message)
-      throw new Error(
-        `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.message}`,
-      );
-    else
-      throw new Error(
-        `Error calling WhatsApp API: ${res.status} error_message:${res.data?.error?.error_data?.details}`,
-      );
+    if (res.data?.error) {
+      throw new GraphApiError(res);
+    } else {
+      log.fatal("FIXME: Couldn't identify error response");
+      throw new Error("Error calling WhatsApp API");
+    }
+  }
+}
+
+interface GraphApiErrorType {
+  message: string;
+  type: string;
+  code: number;
+  fbtrace_id: string;
+  error_subcode?: number;
+  error_user_title?: string;
+  error_user_msg?: string;
+}
+
+export class GraphApiError extends Error {
+  error: GraphApiErrorType;
+  constructor(res: AxiosResponse) {
+    let message = "Something went wrong";
+    super(message);
+    this.name = "GraphApiError";
+    this.error = res.data.error;
   }
 }
