@@ -113,9 +113,7 @@ const CreateContactModal = ({
       form.values.tags = result;
       let contactData: ICreateContact = {
         name: form.values.name,
-        phone: contactType.includes("phone")
-          ? form.values.phone.slice(1)
-          : undefined,
+        phone: form.values.phone.slice(1),
         teamId: form.values.teamId,
         source: importMethod.MANUAL,
         tags: form.values.tags,
