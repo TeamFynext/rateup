@@ -51,7 +51,7 @@ import styles from "./settings.style.module.css";
 
 function WhatsAppManualConfiguration({ waSettings }) {
   const form = useForm({
-    initialValues: waSettings || {
+    initialValues: {
       wabaId: "",
       phoneId: "",
       accessToken: "",
@@ -70,6 +70,8 @@ function WhatsAppManualConfiguration({ waSettings }) {
   useEffect(() => {
     if (waSettings) {
       form.setValues(waSettings);
+    } else {
+      form.reset();
     }
   }, [waSettings]);
 
@@ -134,6 +136,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
                 leftSection={<IconTrash />}
                 onClick={handleDelete}
                 radius="lg"
+                disabled={!waSettings}
               >
                 Delete Configuration
               </Button>
@@ -254,7 +257,12 @@ function MetaLoginButton() {
   }
 
   return (
-    <Button onClick={login} color={"#1877f2"} size={"lg"}>
+    <Button
+      onClick={login}
+      color={"#1877f2"}
+      size={"lg"}
+      loading={registerMutation.isPending}
+    >
       Login with Facebook
     </Button>
   );
