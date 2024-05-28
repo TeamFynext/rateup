@@ -40,6 +40,7 @@ const Checkout = () => {
       planName: cart.name,
       rateupPlanId: cart.id,
       orgId: user?.orgId,
+      email: user?.email,
     };
     createCheckout.mutate(data, {
       onSuccess: (data) => {
