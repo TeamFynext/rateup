@@ -195,7 +195,7 @@ const AddCustomerModal = ({
         contactData = [
           {
             name: form.values.name,
-            phone: contactType.includes("phone") ? phone : undefined,
+            phone: phone,
             source: importMethod.MANUAL,
             tags: result,
           },
