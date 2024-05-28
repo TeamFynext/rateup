@@ -30,16 +30,22 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const { updateRouteAndCart } = useRouteAndCartStore();
   const router = useRouter();
   const { data, isPending, isError } = useRateupPaymentsPlans();
+  const { gateway } = router.query;
 
   //const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   // const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
   // const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
 
-  const currency = "USD";
-  const currencySymbol = "$";
+  // const currency = "USD";
+  // const currencySymbol = "$";
 
-  // const currency = "INR";
-  // const currencySymbol = "₹";
+  let currency = "INR";
+  let currencySymbol = "₹";
+
+  if (gateway === "stripe") {
+    currency = "USD";
+    currencySymbol = "$";
+  }
 
   const session = useCheckSession();
 
