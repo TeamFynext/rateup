@@ -19,6 +19,7 @@ import {
 } from "./contact.service";
 import { Prisma } from "@prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 export async function createContactHandler(
   request: FastifyRequest<{ Body: ContactCore }>,
@@ -26,6 +27,9 @@ export async function createContactHandler(
 ) {
   try {
     const { orgId } = request.user;
+    if (!isValidPhoneNumber(`+${request.body.phone}`))
+      return reply.code(400).send({ error: "Phone number is not valid" });
+
     const contact = await createContact({ ...request.body, orgId });
     reply.code(201).send(contact);
   } catch (error) {

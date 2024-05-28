@@ -31,6 +31,7 @@
     "fastify-zod": "^1.4.0",
     "google-spreadsheet": "^4.1.1",
     "googleapis": "^131.0.0",
+    "libphonenumber-js": "^1.11.2",
     "nanoid": "^3.3.7",
     "nanoid-dictionary": "^5.0.0-beta.1",
     "node-xlsx": "^0.23.0",

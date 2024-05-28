@@ -48,6 +48,11 @@ import {
   SendTemplateToContacts,
   SendTemplateToContactGroups,
 } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
+import { GraphApiError } from "../wa_axios";
+import {
+  getGraphApiErrorMessage,
+  handleWhatsappError,
+} from "../wa_error_handler";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -99,7 +104,10 @@ export async function createTemplateHandler(
     reply.code(200).send("template created");
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);
-    let errorMessage = e?.message?.split("error_message:")?.[1];
+    let errorMessage = "Error creating template";
+    if (e instanceof GraphApiError) {
+      errorMessage = getGraphApiErrorMessage(e);
+    }
     reply.code(500).send(errorMessage ?? e);
   }
 }
@@ -132,8 +140,11 @@ export async function saveTemplateAsDraftHandler(
     reply.code(200);
   } catch (e) {
     log.error("Error saving template as Draft\n%o", e?.response?.data);
-    let errorMessage = e?.message?.split("error_message:")?.[1];
-    reply.code(500).send(errorMessage ?? e);
+    if (e instanceof GraphApiError) {
+      handleWhatsappError(e, request, reply);
+    } else {
+      reply.code(500).send(e);
+    }
   }
 }
 
@@ -175,8 +186,11 @@ export async function updateTemplateHandler(
     }
   } catch (e) {
     log.error("Error updating template \n%o", e?.response?.data);
-    let errorMessage = e?.message?.split("error_message:")?.[1];
-    reply.code(500).send(errorMessage ?? e);
+    if (e instanceof GraphApiError) {
+      handleWhatsappError(e, request, reply);
+    } else {
+      reply.code(500).send(e);
+    }
   }
 }
 

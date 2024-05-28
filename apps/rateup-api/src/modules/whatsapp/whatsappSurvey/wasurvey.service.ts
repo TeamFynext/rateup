@@ -27,7 +27,7 @@ import {
 } from "../../survey/survey.service";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
+import { GraphApiError, callWhatsappApi } from "../wa_axios";
 import {
   createCTAButtonMessage,
   createNativeListMessage,
@@ -40,6 +40,7 @@ import {
   parseMessage,
   ratingEmoji,
 } from "./wasurvey.utils";
+import { getGraphApiErrorMessage } from "../wa_error_handler";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -80,9 +81,13 @@ export async function sendMessage(
     return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
     log.error("Error sending message", e);
+    let errorMessage = `Failed to send message`;
+    if (e instanceof GraphApiError) {
+      errorMessage = getGraphApiErrorMessage(e);
+    }
     return {
       status: false,
-      message: e?.message?.split("error_message:")?.[1] ?? "failed to send",
+      message: errorMessage,
     };
   }
 }

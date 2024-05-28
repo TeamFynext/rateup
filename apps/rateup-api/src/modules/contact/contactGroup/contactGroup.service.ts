@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import {
@@ -100,13 +101,16 @@ export async function getContactsByContactGroupId(contactGroupId: string) {
 
 export async function addNewContactsToGroup(
   contactGroupId: string,
-  contacts: AddNewContactsToGroupInput,
+  contactsBody: AddNewContactsToGroupInput,
   orgId: string,
 ) {
   const contactGroup = await getContactGroupById(contactGroupId);
   if (!contactGroup) {
     throw new Error("Contact group not found");
   }
+  const contacts = contactsBody.filter((data) =>
+    isValidPhoneNumber(`+${data.phone}`),
+  );
   // TODO: we could create uuid manually and skip the findMany query.
   // TODO: check if below query can be optimized
   await prisma.$transaction(async (tx) => {
