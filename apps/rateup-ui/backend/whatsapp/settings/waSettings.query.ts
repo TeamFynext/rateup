@@ -10,6 +10,7 @@ import {
   upsertWaSettings,
 } from "./waSettings.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { showErrorToastFromError } from "../../../utils/query";
 
 export const useWaSettings = (enabled = true) =>
   useQuery({
@@ -18,36 +19,32 @@ export const useWaSettings = (enabled = true) =>
     enabled,
   });
 
-export const useCreateWaSettingsMutation = (onSuccess?, onError?) => {
+export const useCreateWaSettingsMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createWaSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       showSuccessToast("Updated Successfully");
-      onSuccess?.();
     },
-    onError: () => {
-      onError?.();
-      showErrorToast("Error updating settings!");
+    onError: (e) => {
+      showErrorToastFromError(e, "Error updating settings!");
     },
   });
 
   return createMutation;
 };
 
-export const useUpsertWaSettingsMutation = (onSuccess?, onError?) => {
+export const useUpsertWaSettingsMutation = () => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: upsertWaSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       showSuccessToast("Updated Successfully");
-      onSuccess?.();
     },
-    onError: () => {
-      onError?.();
-      showErrorToast("Error updating settings!");
+    onError: (e) => {
+      showErrorToastFromError(e, "Error updating settings!");
     },
   });
 
@@ -60,6 +57,10 @@ export const useDeleteWaSettingsMutation = () => {
     mutationFn: deleteWaSettings,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
+      showSuccessToast("Deleted Successfully");
+    },
+    onError: (e) => {
+      showErrorToastFromError(e, "Error deleting settings!");
     },
   });
 };
@@ -71,6 +72,9 @@ export const useRegisterBusinessClientMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
     },
+    onError: (e) => {
+      showErrorToastFromError(e, "Error registering business client!");
+    },
   });
 };
 
@@ -80,6 +84,9 @@ export const useDeregisterBusinessClientMutation = () => {
     mutationFn: deRegisterBusinessClient,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
+    },
+    onError: (e) => {
+      showErrorToastFromError(e, "Error deregistering business client!");
     },
   });
 };
