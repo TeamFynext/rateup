@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 import {
+  generateChatFilterDataHandler,
   getContactsWithLastMessageHandler,
+  getFilteredContactsHandler,
   getWaMessagesByContactIdHandler,
   sendNewWaMessageHandler,
 } from "./wamessage.controller";
@@ -32,4 +34,14 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.get("/contacts", getContactsWithLastMessageHandler);
+  server.get("/filterdata", generateChatFilterDataHandler);
+  server.get(
+    "/contactsfiltered",
+    {
+      schema: {
+        querystring: $waMessage("waChatFilterQuerySchema"),
+      },
+    },
+    getFilteredContactsHandler,
+  );
 }

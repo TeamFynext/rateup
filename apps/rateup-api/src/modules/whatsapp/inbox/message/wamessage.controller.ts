@@ -1,7 +1,14 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { NewWaMessageBody, PaginateQuerySchema } from "./wamessage.schema";
+import {
+  NewWaMessageBody,
+  PaginateQuerySchema,
+  WaChatFilterSchema,
+  WaChatFilterQuerySchema,
+} from "./wamessage.schema";
 import {
   addNewWaMessage,
+  filterChats,
+  generateChatFilterData,
   getContactsWithLastMessage,
   getWaMessagesByContactId,
 } from "./wamessage.service";
@@ -146,6 +153,40 @@ export async function getContactsWithLastMessageHandler(
     const { orgId } = request.user;
     const { page } = request.query;
     const contacts = await getContactsWithLastMessage(orgId, parseInt(page));
+    reply.status(200).send(contacts);
+  } catch (error) {
+    console.log(error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function generateChatFilterDataHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const orgId = request.user.orgId;
+  const chatFilters = await generateChatFilterData(orgId);
+  if (chatFilters) {
+    reply.status(200).send(chatFilters);
+  } else {
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function getFilteredContactsHandler(
+  request: FastifyRequest<{
+    Querystring: WaChatFilterQuerySchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { page, filterData } = request.query;
+    const contacts = await filterChats(
+      orgId,
+      parseInt(page),
+      JSON.parse(decodeURIComponent(filterData)),
+    );
     reply.status(200).send(contacts);
   } catch (error) {
     console.log(error);
