@@ -1,16 +1,28 @@
-import { ActionIcon, Box, Button, Modal, Select } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Modal,
+  Select,
+  Stack,
+  TextInput,
+} from "@mantine/core";
 import styles from "./AddLinkModal.module.css";
 import { IconX } from "@tabler/icons-react";
 import { linkTypeOptions } from "../../constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SurveyTypeDropdowns from "./SurveyTypeDropdowns";
-import CustomLinkInputs from "./CustomLinkInputs";
+
 import { Form, useForm } from "@mantine/form";
 import { useUpdateLandingPageMutation } from "../../../../../../backend/landingPage/landingPage.query";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import FormModalLayout from "../../../../../Modal/FormModalLayout";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../../../../../input/ContainedInput/ContainedInput";
 
 function AddLinkModal({ title, opened, onClose, links }) {
   const queryClient = useQueryClient();
@@ -181,16 +193,8 @@ function AddLinkModal({ title, opened, onClose, links }) {
       buttonTitle="Save"
       includeCancelButton
     >
-      <ActionIcon
-        className={styles["close-btn"]}
-        onClick={() => {
-          onClose();
-        }}
-      >
-        <IconX />
-      </ActionIcon>
-      <Box className={styles["body"]}>
-        <Select
+      <Stack gap={"sm"}>
+        <ContainedSelection
           value={selectedLinkType}
           label={"Select Link type"}
           placeholder="Select Link Type"
@@ -215,9 +219,22 @@ function AddLinkModal({ title, opened, onClose, links }) {
             errors={dropdownErrors}
           />
         ) : (
-          <CustomLinkInputs form={customLinksInputsForm} />
+          <>
+            <ContainedTextField
+              label="Link Display name"
+              placeholder="Enter Link Display Name"
+              {...customLinksInputsForm.getInputProps("linkDisplayName")}
+              withAsterisk
+            />
+            <ContainedTextField
+              label="Link Url"
+              placeholder="Enter Url"
+              {...customLinksInputsForm.getInputProps("linkUrl")}
+              withAsterisk
+            />
+          </>
         )}
-      </Box>
+      </Stack>
     </FormModalLayout>
   );
 }
