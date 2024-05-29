@@ -6,6 +6,7 @@ import { useForm } from "@mantine/form";
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { IconPlus } from "@tabler/icons-react";
 import FormModalLayout from "../../../../Modal/FormModalLayout";
+import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 
 function CreateNewThemeModal() {
   const [opened, { open, close }] = useDisclosure();
@@ -57,7 +58,7 @@ function CreateNewThemeModal() {
         includeCancelButton
       >
         <form onSubmit={form.onSubmit(handleFormSubmit)}>
-          <TextInput
+          <ContainedTextField
             label="Theme Name"
             placeholder="Enter Theme Name"
             {...form.getInputProps("name")}

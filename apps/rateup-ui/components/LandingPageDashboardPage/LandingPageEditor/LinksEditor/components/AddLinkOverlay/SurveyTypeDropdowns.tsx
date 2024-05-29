@@ -1,11 +1,4 @@
-import {
-  Autocomplete,
-  Combobox,
-  Loader,
-  Select,
-  TextInput,
-} from "@mantine/core";
-import styles from "./AddLinkOverlay.module.css";
+import { Combobox, Loader } from "@mantine/core";
 import {
   getLinkTypeLabel,
   getSelectedSurveyTitleOptions,
@@ -14,6 +7,11 @@ import {
 } from "../../constants";
 import { useLinkTypeOptions } from "../../../../../../backend/landingPage/landingPage.query";
 import { useCallback, useEffect, useState } from "react";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../../../../../input/ContainedInput/ContainedInput";
+import { TeamSelector } from "../../../../../input/TeamSelector";
 
 function SurveyTypeDropdowns({
   selectedLinkType,
@@ -71,7 +69,7 @@ function SurveyTypeDropdowns({
 
   return (
     <>
-      <Autocomplete
+      <ContainedSelection
         value={surveyTitleAutoCompleteSearch}
         onChange={onSurveyTitleAutoCompleteSearchChange}
         data={selectedSurveyTitleOptions}
@@ -99,7 +97,7 @@ function SurveyTypeDropdowns({
         withAsterisk
       />
 
-      <Select
+      <TeamSelector
         label={"Select Team"}
         value={selectedTeam}
         onChange={onSelectedTeamDDChange}
@@ -110,7 +108,7 @@ function SurveyTypeDropdowns({
         withAsterisk
       />
 
-      <TextInput
+      <ContainedTextField
         label={"Link Display name"}
         placeholder="Enter Link Display Name"
         value={linkDisplayName}
