@@ -281,7 +281,7 @@ const Billing = ({
                   </Text>
                   <Title order={5}>
                     {(subscription?.basePlan?.paymentPlan?.period ||
-                      subscription?.basePlan?.stripeProduct.interval) ??
+                      subscription?.basePlan?.stripeProduct?.interval) ??
                       "----"}
                   </Title>
                 </Stack>
