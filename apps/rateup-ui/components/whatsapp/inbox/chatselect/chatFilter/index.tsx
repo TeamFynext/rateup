@@ -1,7 +1,9 @@
 import {
+  Button,
   HoverCard,
   HoverCardDropdown,
   HoverCardTarget,
+  Indicator,
   Loader,
   SegmentedControl,
   Stack,
@@ -11,81 +13,138 @@ import {
 } from "@mantine/core";
 import { IconFilter } from "@tabler/icons-react";
 import classes from "./styles.module.css";
-import { useContactGroup } from "../../../../../backend/campaign/contactGroup/contactGroup.query";
-import { useGetContactTags } from "../../../../../backend/whatsapp/settings/waSettings.query";
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
-import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 
+export type MultiGV = {
+  group: string;
+  value: string;
+};
 export type ChatFilter = {
-  strict: boolean;
-  general: "all" | "replied" | "unread" | "usermessages";
-  multiselect: { group: string; value: string }[];
+  messageType: "all" | "replied" | "unread" | "usermessages";
+  strictFilter: boolean;
+  searchTerm?: string;
+  contactGroups: Array<MultiGV>;
+  campaigns: Array<MultiGV>;
+  tags: Array<MultiGV>;
 };
 interface Props {
   filter: ChatFilter;
   setFilter: (filter: ChatFilter) => void;
-  contacts: ContactsWithLastMessage[];
 }
 
 export default function WaInboxChatFilter(props: Props) {
-  const {
-    data: Ctags,
-    isLoading: CtagsLoading,
-    error: CtagError,
-  } = useGetContactTags();
-  const {
-    data: Cgroups,
-    isLoading: CgroupsLoading,
-    error: CgroupsError,
-  } = useContactGroup();
-
-  if (CgroupsLoading || CtagsLoading) {
+  const { data, isLoading, error } = useChatFilterData();
+  if (isLoading) {
     return <Loader size={"xs"} />;
   }
-  if (CgroupsError || CtagError) {
+  if (error) {
     return (
       <Text size="xs" c={"red"}>
         Failed to fetch filter data
       </Text>
     );
   }
-  function generateTagsDataBasedOnContacts(
-    contacts: ContactsWithLastMessage[],
-  ): {
-    group: string;
-    items: { label: string; value: string }[];
-  }[] {
-    let CtagsNames = Ctags?.contactTags?.map((tag) => tag);
-    return CtagsNames?.map((tag) => {
-      let items = Array.from(
-        new Set(
-          contacts
-            .filter((contact) => contact?.tags && contact.tags[tag])
-            .map((contact) => contact.tags[tag]),
-        ),
-      );
-      return {
-        group: tag,
-        items: items.map((item) => ({ label: item, value: `${tag}|-${item}` })),
-      };
-    });
-  }
+  const allMultiSelectFilters = [
+    ...props?.filter?.contactGroups,
+    ...props?.filter?.campaigns,
+    ...props?.filter?.tags,
+  ];
 
-  function setFilters(type: "general" | "multiselect" | "strict", value: any) {
+  function setFilters(
+    type:
+      | "messageType"
+      | "strictFilter"
+      | "contactGroups"
+      | "campaigns"
+      | "tags",
+    value: any,
+  ) {
     props.setFilter({ ...props.filter, [type]: value });
+  }
+  function multiSelectOnChange(cf: ChatFilter, value: Array<MultiGV>) {
+    const current_filter = { contactGroups: [], campaigns: [], tags: [] };
+    if (value.length === 0) {
+      props.setFilter({ ...cf, contactGroups: [], campaigns: [], tags: [] });
+    } else {
+      const fcgs = value?.filter((v) => v.group === "contactGroups");
+      const fcs = value?.filter((v) => v.group === "campaigns");
+      const fts = value?.filter(
+        (v) => v.group !== "contactGroups" && v.group !== "campaigns",
+      );
+      if (fcgs.length > 0) {
+        current_filter.contactGroups = fcgs;
+      }
+      if (fcs.length > 0) {
+        current_filter.campaigns = fcs;
+      }
+      if (fts.length > 0) {
+        current_filter.tags = fts;
+      }
+      props.setFilter({
+        ...cf,
+        contactGroups: current_filter.contactGroups,
+        campaigns: current_filter.campaigns,
+        tags: current_filter.tags,
+      });
+    }
+  }
+  function getFilterActiveCount() {
+    let count = 0;
+    if (props.filter.contactGroups.length > 0) {
+      count += props.filter.contactGroups.length;
+    }
+    if (props.filter.campaigns.length > 0) {
+      count += props.filter.campaigns.length;
+    }
+    if (props.filter.tags.length > 0) {
+      count += props.filter.tags.length;
+    }
+    if (props.filter.messageType !== "all") {
+      count += 1;
+    }
+    if (props.filter.strictFilter !== false) {
+      count += 1;
+    }
+    return count;
+  }
+  function clearFilters() {
+    props.setFilter({
+      contactGroups: [],
+      campaigns: [],
+      tags: [],
+      messageType: "all",
+      strictFilter: false,
+    });
   }
   return (
     <HoverCard position="right-start">
       <HoverCardTarget>
-        <ThemeIcon className={classes.theme_icon} variant="light">
-          <IconFilter />
-        </ThemeIcon>
+        <Indicator
+          label={getFilterActiveCount()}
+          size={"xl"}
+          styles={{
+            indicator: {
+              borderRadius: "50%",
+              width: 15,
+              height: 15,
+              fontSize: 10,
+            },
+          }}
+        >
+          <ThemeIcon className={classes.theme_icon} variant="light">
+            <IconFilter />
+          </ThemeIcon>
+        </Indicator>
       </HoverCardTarget>
       <HoverCardDropdown>
         <Stack>
+          <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
+            clear filters
+          </Button>
           <SegmentedControl
-            value={props.filter.general}
-            onChange={(value) => setFilters("general", value)}
+            value={props.filter.messageType}
+            onChange={(value) => setFilters("messageType", value)}
             data={[
               { value: "all", label: "All" },
               { value: "usermessages", label: "User Messages" },
@@ -95,34 +154,27 @@ export default function WaInboxChatFilter(props: Props) {
           />
           <ContainedMultiSelect
             maw={250}
-            label={
-              <Switch
-                w={"100%"}
-                size="xs"
-                label={`${props?.filter?.strict ? "Disable" : "Enable"} Strict filter`}
-                checked={props.filter.strict}
-                onChange={(e) => setFilters("strict", e.currentTarget.checked)}
-              />
-            }
-            placeholder="Tags, Groups"
-            data={[
-              ...[
-                {
-                  group: "Groups",
-                  items: Cgroups?.map((group) => ({
-                    label: group.name,
-                    value: `groups|-${group.name}`,
-                  })),
-                },
-              ],
-              ...generateTagsDataBasedOnContacts(props.contacts),
-            ]}
-            defaultValue={props.filter.multiselect.map(
+            //TODO reimplement strict filter
+
+            // label={
+            //   <Switch
+            //     w={"100%"}
+            //     size="xs"
+            //     label={`${props?.filter?.strictFilter ? "Disable" : "Enable"} Strict filter`}
+            //     checked={props.filter.strictFilter}
+            //     onChange={(e) =>
+            //       setFilters("strictFilter", e.currentTarget.checked)
+            //     }
+            //   />
+            // }
+            placeholder="Tags, Groups, Campaigns"
+            data={data}
+            value={allMultiSelectFilters?.map(
               (val) => `${val.group}|-${val.value}`,
             )}
             onChange={(value) => {
-              setFilters(
-                "multiselect",
+              multiSelectOnChange(
+                props.filter,
                 value.map((val) => {
                   const grpname = val.split("|-")[0];
                   const grpval = val.split("|-")[1];
