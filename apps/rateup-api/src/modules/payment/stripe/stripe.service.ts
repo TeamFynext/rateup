@@ -149,6 +149,23 @@ export async function createStripePayment(invoiceData) {
   }
 }
 
+export async function handleInvoicePaymentFailed(invoiceData) {
+  const { billing_reason, subscription, customer_email } = invoiceData;
+  console.log("Sub Id: ", subscription);
+
+  if (billing_reason === "subscription_cycle") {
+    console.log("Recurring Payment Failed...", customer_email);
+    //notifyCustomer(subscriptionId, 'Your subscription renewal has failed. Please update your payment method.');
+    // await stripe.subscriptions.del(subscriptionId);
+  } else if (billing_reason === "subscription_create") {
+    console.log("Subscription Create Payment Failed...", customer_email);
+    // await stripe.subscriptions.update(subscriptionId, {cancel_at_period_end: true});
+  } else if (billing_reason === "subscription_update") {
+    console.log("Subscription Update Payment Failed...", customer_email);
+    // await stripe.subscriptions.update(subscriptionId, {cancel_at_period_end: true});
+  }
+}
+
 export async function processOrder(payload) {
   const { id, subscription } = payload;
 
