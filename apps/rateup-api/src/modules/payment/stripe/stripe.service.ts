@@ -10,6 +10,7 @@ import { createEmailBodySubscriptionActivated } from "../../../utils/email/payme
 
 const prisma = new PrismaClient();
 const STRIPE_API = "https://api.stripe.com/v1";
+const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
 export async function createOrder(data, userId) {
   const order = await prisma.order.create({
@@ -301,6 +302,42 @@ export async function getAllStripeSubscriptions() {
       endsAt: sub.current_period_end,
     };
   });
+}
+
+//Cancel Stripe subscription
+export async function cancelStripeSubscription(orgId) {
+  console.log("Cancelling subscription........");
+
+  if (!orgId) {
+    throw new Error("Organization data missing");
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      orgId: orgId,
+    },
+  });
+
+  if (!subscription || !subscription?.subscriptionRef) {
+    throw new Error("Subscription missing");
+  }
+
+  const res = await stripe.subscriptions.cancel(subscription?.subscriptionRef);
+  console.log("Cancelling Stripe subscription");
+
+  if (res && res?.id) {
+    const subscriptionStatus = await prisma.order.update({
+      data: {
+        subscriptionStatus: SubscriptionStatus.cancelled,
+        subscriptionEndedAt: new Date(),
+      },
+      where: {
+        subscriptionId: res?.id,
+      },
+    });
+  }
+
+  return res?.status;
 }
 
 export async function updateStripeProduct(productId, data) {

@@ -73,6 +73,12 @@ export async function getSubscription(orgId: string) {
               amount: true,
             },
           },
+          stripeProduct: {
+            select: {
+              interval: true,
+              amount: true,
+            },
+          },
         },
       },
       subscriptionRef: true,
