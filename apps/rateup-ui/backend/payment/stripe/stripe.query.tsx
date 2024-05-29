@@ -3,6 +3,7 @@ import { notifications } from "@mantine/notifications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import {
+  cancelStripeSubscription,
   createStripeCheckoutSession,
   deleteStripeProduct,
   getAllStripeSubscriptions,
@@ -127,3 +128,38 @@ export const useGetAllStripeSubscriptions = () => {
     queryKey: ["stripeSubscriptions"],
   });
 };
+
+export function useCancelStripeSubscriptionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => cancelStripeSubscription(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      notifications.update({
+        id: "load-data",
+        color: "teal",
+        loading: false,
+        title: "Cancel Success",
+        message:
+          "Rateup Subscription cancelled. Enjoy services till expiry date.",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 4000,
+      });
+    },
+    onError: (error: any) => {
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
+      notifications.update({
+        id: "load-data",
+        color: "red",
+        loading: false,
+        title: "Failed",
+        message: error.response.data,
+        icon: <IconX size="1rem" />,
+        autoClose: 4000,
+      });
+    },
+  });
+}
