@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  cancelStripeSubscriptionHandler,
   createCheckoutSessionHandler,
   deleteStripeProductsHandler,
   getAllStripeSubscriptionsHandler,
@@ -11,6 +12,7 @@ import {
 } from "./stripe.controller";
 import { $PSref } from "./stripe.schema";
 import { checkSession } from "../../../utils/checkSession";
+import { checkRoleHandler } from "../../../utils/checkRoleHandler";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -55,6 +57,15 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
   server.get("/products", {}, getStripeProductsHandler);
 
   server.get("/subscriptions", {}, getAllStripeSubscriptionsHandler);
+
+  server.put(
+    "/subscriptions/cancel",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+    },
+    cancelStripeSubscriptionHandler,
+  );
+
   server.post("/sync-products", {}, syncStripeProductsHandler);
   server.put(
     "/product",
