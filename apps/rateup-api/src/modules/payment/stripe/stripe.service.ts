@@ -7,6 +7,7 @@ import {
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
+import { paymentFailed } from "../../../utils/email/payments/paymentFailed";
 
 const prisma = new PrismaClient();
 const STRIPE_API = "https://api.stripe.com/v1";
@@ -146,6 +147,55 @@ export async function createStripePayment(invoiceData) {
     }
 
     return updatedSubscription;
+  }
+}
+
+export async function handleInvoicePaymentFailed(invoiceData) {
+  const { billing_reason, subscription, customer_email } = invoiceData;
+  console.log("Sub Id: ", subscription);
+
+  if (billing_reason === "subscription_cycle") {
+    console.log("Recurring Payment Failed...", customer_email);
+
+    const msg = {
+      to: invoiceData.customer_email,
+      subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
+      text: `Subscription Renewal Failed. Please update your payment method.`,
+      html: paymentFailed(
+        `${process.env.FRONTEND_URL}/dashboard/settings?activeTab=account`,
+        true,
+      ),
+    };
+    try {
+      sendAWSEmail(msg);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
+    }
+    // await stripe.subscriptions.del(subscriptionId);
+  } else if (billing_reason === "subscription_create") {
+    console.log("Subscription Create Payment Failed...", customer_email);
+
+    const msg = {
+      to: invoiceData.customer_email,
+      subject: "Payment Failed - Rateup.app Subscription",
+      text: `Subscription Payment Failed. Please update your payment method.`,
+      html: paymentFailed(
+        `${process.env.FRONTEND_URL}/dashboard/settings?activeTab=account`,
+        false,
+      ),
+    };
+    try {
+      sendAWSEmail(msg);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
+    }
+
+    // await stripe.subscriptions.update(subscriptionId, {cancel_at_period_end: true});
+  } else if (billing_reason === "subscription_update") {
+    console.log("Subscription Update Payment Failed...", customer_email);
+    // await stripe.subscriptions.update(subscriptionId, {cancel_at_period_end: true});
   }
 }
 

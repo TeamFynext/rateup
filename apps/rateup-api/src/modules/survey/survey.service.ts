@@ -190,6 +190,7 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
           surveyStats: true,
         },
       },
+      webSurveyTheme: true,
     },
   });
 
@@ -223,7 +224,11 @@ export async function getPublicSurveyById(id: string) {
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
     where: surveyTeamMapWhere,
     include: {
-      survey: true,
+      survey: {
+        include: {
+          webSurveyTheme: true,
+        },
+      },
     },
   });
 
