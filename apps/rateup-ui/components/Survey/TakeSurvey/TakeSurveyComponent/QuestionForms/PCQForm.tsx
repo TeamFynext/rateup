@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
 interface PCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -33,15 +34,23 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const publicRoute =
     router.pathname.startsWith("/public") || router.pathname.startsWith("/ws");
 
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+
   useEffect(() => {
     if (response) {
-      setSelectedOp(publicRoute ? response.value.value : response.value);
+      setSelectedOp(
+        publicRoute || isSurveyThemePreview
+          ? response.value.value
+          : response.value,
+      );
     }
   }, [response]);
 
   const handleSelectedOp = async (value) => {
     const res = options?.find(
-      (op) => (publicRoute ? op?.value?.value : op?.value) === value,
+      (op) =>
+        (publicRoute || isSurveyThemePreview ? op?.value?.value : op?.value) ===
+        value,
     );
     updateResponse(res);
     const selectedEle = scope.current?.querySelector(
@@ -58,12 +67,13 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
       nextFn?.(res);
     }
   };
-  const fallbackEnable = publicRoute
-    ? false
-    : !(
-        previewChoices?.[selectedLanguage] &&
-        previewChoices?.[selectedLanguage]?.length > 0
-      );
+  const fallbackEnable =
+    publicRoute || isSurveyThemePreview
+      ? false
+      : !(
+          previewChoices?.[selectedLanguage] &&
+          previewChoices?.[selectedLanguage]?.length > 0
+        );
   const data = options?.map((op) => op?.value);
 
   return (

@@ -5,9 +5,13 @@ import classes from "../TakeSurvey.module.css";
 import { useMediaQuery } from "@mantine/hooks";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 
 export function RatingForm() {
-  const isMobile = useMediaQuery("(max-width: 480px)");
+  const selectedPreview = useSelectedPreview();
+  const isMobile =
+    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
 

@@ -23,6 +23,9 @@ export default function WhatsAppInbox() {
   const [contactList, setContactList] = useState(
     [] as ContactsWithLastMessage[],
   );
+  const [filteredContactList, setFilteredContactList] = useState(
+    [] as ContactsWithLastMessage[],
+  );
   const { wsData } = useWsData();
 
   const searchParams = useSearchParams();
@@ -130,7 +133,10 @@ export default function WhatsAppInbox() {
       <div className={classes.wrapper}>
         <Title>Inbox</Title>
         <Group className={classes.inner}>
-          <WaInboxChatSelect contacts={contactList} />
+          <WaInboxChatSelect
+            contacts={contactList}
+            setFilteredContacts={setFilteredContactList}
+          />
           <WaInboxChatDisplay
             messages={
               data?.pages
@@ -143,9 +149,15 @@ export default function WhatsAppInbox() {
                 )
                 .flat() || []
             }
-            contact={contactList.find(
-              (contact) => contact.id === searchParams.get("contactId"),
-            )}
+            contact={
+              contactList.find(
+                (contact) => contact.id === searchParams.get("contactId"),
+              ) ??
+              filteredContactList.find(
+                (contact) => contact.id === searchParams.get("contactId"),
+              ) ??
+              ({} as ContactsWithLastMessage)
+            }
           />
         </Group>
       </div>

@@ -36,21 +36,14 @@ import WelcomePage from "../WelcomePage/WelcomePage";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { surveyUploadsPath } from "../../../utils/constants";
 import styles from "./TakeSurveyLayoutWeb.module.css";
+import { getBgImgAndBgColor } from "./utils";
+import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
+import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
-export const TakeSurveyLayoutWeb = ({
-  survey,
-  children,
-}: {
-  survey: any;
-  children: any;
-}) => {
-  const { data: surveyThemeData, isLoading } = useSurveyTheme(
-    survey?.webSurveyThemeId,
-  ) as {
-    data: SurveyTheme;
-    isLoading: boolean;
-  };
+export const TakeSurveyLayoutWeb = ({ survey, children }) => {
+  const { theme: surveyThemeData } = survey?.webSurveyTheme;
 
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
   let orgLogo = null;
   let orgLogoStyles = null;
   let orgLogoSrc = null;
@@ -62,14 +55,15 @@ export const TakeSurveyLayoutWeb = ({
     }
   }
 
-  const welcomeThemeStyles = surveyThemeData?.welcomeTheme?.bg?.styles ?? {};
-  const surveyThemesStyles = surveyThemeData?.surveyTheme?.bg?.styles ?? {};
+  // This one is being used for preview in surveyTheme editor(TakeSurveyLayoutWeb and TakeSurvey component is also being used in surveyTheme editor).
+  const selectedPreview = useSelectedPreview();
 
   const surveyTeamMapId = survey?.surveyTeamMapId;
   const { start } = useRouter().query as { start?: boolean };
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
-  const isMobile = useMediaQuery("(max-width: 480px)");
+  const isMobile =
+    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
   const [startClicked, setStartClicked] = useState<boolean>(start || false);
   const [questionCount, setQuestionCount] = useState(0);
@@ -123,46 +117,25 @@ export const TakeSurveyLayoutWeb = ({
     setSelectedLanguage(survey?.languages[0]);
   }
 
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
-
   const surveyThemeDataPrimaryColor =
     surveyThemeData?.surveyTheme?.input?.primaryColor;
 
-  const takeSurveyLayoutWebRootStyles = !startClicked
-    ? {
-        ...welcomeThemeStyles,
-      }
-    : {
-        ...surveyThemesStyles,
-        overflow: "hidden",
-      };
+  const isWelcomeThemeActive = !startClicked;
+  const useSurveyBackground =
+    isWelcomeThemeActive &&
+    surveyThemeData["welcomeTheme"].bg.useSurveyBackground;
+  let requiredSurveyThemeObjKey = "surveyTheme";
+  if (isWelcomeThemeActive && !useSurveyBackground)
+    requiredSurveyThemeObjKey = "welcomeTheme";
 
-  const surveyThemeMobileBgUrl =
-    surveyThemeData?.surveyTheme?.bg?.mobilebg || "";
-  const surveyThemeDesktopBgUrl =
-    surveyThemeData?.surveyTheme?.bg?.desktopbg || "";
-
-  const welcomeThemeMobileBgUrl =
-    surveyThemeData?.welcomeTheme?.bg?.mobilebg || "";
-  const welcomeThemeDesktopBgUrl =
-    surveyThemeData?.welcomeTheme?.bg?.desktopbg || "";
-
-  const surveyPageBgUrl = isMobile
-    ? surveyThemeMobileBgUrl
-    : surveyThemeDesktopBgUrl;
-
-  const welcomePageBgUrl = isMobile
-    ? welcomeThemeMobileBgUrl
-    : welcomeThemeDesktopBgUrl;
-
-  const bgImgUrl = !startClicked ? welcomePageBgUrl : surveyPageBgUrl;
-  const isUnsplashImage = bgImgUrl?.startsWith("https://images.unsplash.com");
-  let backgroundImageSrc = bgImgUrl;
-  if (!bgImgUrl.startsWith("http://") && !bgImgUrl.startsWith("https://")) {
-    backgroundImageSrc = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}/${bgImgUrl}`;
-  } else if (isUnsplashImage) {
-    backgroundImageSrc = encodeURI(bgImgUrl);
-  }
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyThemeData,
+    requiredSurveyThemeObjKey,
+    isMobile,
+  );
+  const isUnsplashImage = backgroundImageSrc?.startsWith(
+    "https://images.unsplash.com",
+  );
 
   return (
     <MantineProvider
@@ -219,10 +192,10 @@ export const TakeSurveyLayoutWeb = ({
         </FormModalLayout>
 
         <Stack
-          className={styles["take-survey-layout-web-root-div"]}
+          className={`${styles["take-survey-layout-web-root-div"]} take-survey-layout-web-root-div`}
           w={"100%"}
           // mih={"100dvh"}
-          style={takeSurveyLayoutWebRootStyles}
+          style={{ backgroundColor }}
         >
           <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
             <BackgroundImage
@@ -238,23 +211,24 @@ export const TakeSurveyLayoutWeb = ({
               src={backgroundImageSrc}
             >
               {/* .........Survey Header Section.......... */}
-              {survey?.isPublished == true && !!startClicked && (
-                <Box
-                  // align="center"
-                  className={styles["logo-container"]}
-                >
-                  {orgLogoSrc && (
-                    <Image
-                      src={orgLogoSrc}
-                      alt="Logo"
-                      style={{ ...orgLogoStyles }}
-                      mah={100}
-                      maw={100}
-                      fit="contain"
-                    />
-                  )}
-                </Box>
-              )}
+              {survey?.isPublished == true &&
+                (startClicked || isSurveyThemePreview) && (
+                  <Box
+                    // align="center"
+                    className={styles["logo-container"]}
+                  >
+                    {orgLogoSrc && (
+                      <Image
+                        src={orgLogoSrc}
+                        alt="Logo"
+                        style={{ ...orgLogoStyles }}
+                        mah={100}
+                        maw={100}
+                        fit="contain"
+                      />
+                    )}
+                  </Box>
+                )}
 
               <Paper
                 pt="-50px"
@@ -271,8 +245,10 @@ export const TakeSurveyLayoutWeb = ({
                       bg={"transparent"}
                       style={{ overflow: "hidden" }}
                     >
-                      {startClicked &&
-                        (!selectedLanguage && survey?.languages?.length > 1 ? (
+                      {(startClicked || isSurveyThemePreview) &&
+                        (!selectedLanguage &&
+                        survey?.languages?.length > 1 &&
+                        !isSurveyThemePreview ? (
                           <SelectLang
                             languages={survey?.languages}
                             selectedLanguage={selectedLanguage}
@@ -292,7 +268,7 @@ export const TakeSurveyLayoutWeb = ({
                           )
                         ))}
 
-                      {!startClicked && (
+                      {!startClicked && !isSurveyThemePreview && (
                         <WelcomePage
                           surveyThemeData={surveyThemeData?.welcomeTheme}
                           onStart={handleStartClick}

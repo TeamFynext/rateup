@@ -8,9 +8,12 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
 import styles from "./LDForm.module.css";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 
 export function LDForm() {
-  const isMobile = useMediaQuery("(max-width: 480px)");
+  const selectedPreview = useSelectedPreview();
+  const isMobile =
+    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const mantineTheme = useMantineTheme();

@@ -33,7 +33,7 @@ function SurveyThemePreviewLayout({ survey }) {
               <WelcomePageThemeView survey={survey} />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.SURVEY}>
-              <SurveyThemeView />
+              <SurveyThemeView survey={survey} />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
               <ThankyouPageThemeView />

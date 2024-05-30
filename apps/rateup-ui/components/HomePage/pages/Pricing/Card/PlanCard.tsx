@@ -35,11 +35,18 @@ const PlanCard = ({
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
+  const [isStripe, setIsStripe] = useState(false);
   let cardMainColor = "linear-gradient(90deg, #387adf, #50c4ed)";
 
   useEffect(() => {
     if (opened) setIsIframeLoading(true);
   }, [opened]);
+
+  useEffect(() => {
+    if (data?.stripeProduct?.amount) {
+      setIsStripe(true);
+    }
+  }, [data]);
 
   const router = useRouter();
   const upadateLoadingStateOfIframe = useCallback(() => {
@@ -79,11 +86,19 @@ const PlanCard = ({
 
             <Group>
               <Text size={"lg"} fw={500} c={"white"}>
-                {data?.paymentPlan?.period ? (
+                {data?.paymentPlan?.period || data?.stripeProduct?.interval ? (
                   <>
                     {currencySymbol}
-                    <NumberAnimate value={data?.paymentPlan?.amount} />
-                    {data?.paymentPlan?.period === "monthly"
+                    <NumberAnimate
+                      value={
+                        data?.paymentPlan?.amount || data?.stripeProduct?.amount
+                      }
+                    />
+                    {(
+                      !isStripe
+                        ? data?.paymentPlan?.period === "monthly"
+                        : data?.stripeProduct?.interval === "month"
+                    )
                       ? " / month"
                       : " / year"}
                   </>

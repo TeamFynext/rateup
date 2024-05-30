@@ -1,24 +1,34 @@
 import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
+import _ from "lodash";
+import {
+  addWelcomeBtnPositionObjIfNotPresent,
+  verifyAndConvertSurveyThemeObj,
+} from "./SurveyTheme.utils";
 
 function surveyThemeReducer(state, action) {
   const { payload } = action;
-  const { selectedPageTab, surveyTheme } = state;
+  const { selectedPageTab, surveyTheme, selectedEditor, selectedPreview } =
+    state;
   const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab);
 
   switch (action.type) {
     case "set-survey-theme": {
-      if (!payload.surveyTheme.logo) {
-        payload.surveyTheme.logo = {
-          logo: "",
-          styles: {
-            width: 50,
-            height: 50,
-          },
-        };
-      }
-      state.surveyTheme = payload;
+      const surveyThemeInRequiredStructure =
+        verifyAndConvertSurveyThemeObj(payload);
+      state.surveyTheme = surveyThemeInRequiredStructure;
       break;
     }
+
+    case "selected-editor-change": {
+      state.selectedEditor = payload;
+      break;
+    }
+
+    case "selected-preview-change": {
+      state.selectedPreview = payload;
+      break;
+    }
+
     case "selected-page-tab-change": {
       state.selectedPageTab = payload;
       break;
@@ -37,24 +47,43 @@ function surveyThemeReducer(state, action) {
     }
 
     case "bg-background-color-change": {
-      surveyTheme[surveyThemeKey].bg.styles.backgroundColor = payload;
+      if (selectedPreview === "desktop") {
+        surveyTheme[surveyThemeKey].bg.desktopBg.bgColor = payload;
+      }
+      if (selectedPreview === "mobile") {
+        surveyTheme[surveyThemeKey].bg.mobileBg.bgColor = payload;
+      }
       break;
     }
-    case "bg-desktopbg-change": {
-      const { desktopbg, desktopbgFile } = payload;
-      surveyTheme[surveyThemeKey].bg.desktopbg = desktopbg;
-      surveyTheme[surveyThemeKey].bg.desktopbgFile = desktopbgFile;
+    case "bg-desktopBgImg-change": {
+      const { desktopBgImg, desktopBgImgFile } = payload;
+      surveyTheme[surveyThemeKey].bg.desktopBg.imageUrl = desktopBgImg;
+      surveyTheme[surveyThemeKey].bg.desktopBgImgFile = desktopBgImgFile;
       break;
     }
-    case "bg-mobilebg-change": {
-      const { mobilebg, mobilebgFile } = payload;
-      surveyTheme[surveyThemeKey].bg.mobilebg = mobilebg;
-      surveyTheme[surveyThemeKey].bg.mobilebgFile = mobilebgFile;
+    case "bg-mobileBgImg-change": {
+      const { mobileBgImg, mobileBgImgFile } = payload;
+      surveyTheme[surveyThemeKey].bg.mobileBg.imageUrl = mobileBgImg;
+      surveyTheme[surveyThemeKey].bg.mobileBgImgFile = mobileBgImgFile;
+      break;
+    }
+    case "bg-choose-background-radio-change": {
+      if (selectedPreview === "desktop") {
+        surveyTheme[surveyThemeKey].bg.desktopBg.chooseBgRadioInputValue =
+          payload;
+      }
+      if (selectedPreview === "mobile") {
+        surveyTheme[surveyThemeKey].bg.mobileBg.chooseBgRadioInputValue =
+          payload;
+      }
       break;
     }
     case "bg-confetti-change": {
       surveyTheme[surveyThemeKey].confettiEnabled = payload;
       break;
+    }
+    case "bg-use-survey-background-checkbox-change": {
+      surveyTheme[surveyThemeKey].bg.useSurveyBackground = payload;
     }
 
     case "title-color-change": {
@@ -96,6 +125,7 @@ function surveyThemeReducer(state, action) {
       break;
     }
     case "button-x-coordinate-change": {
+      addWelcomeBtnPositionObjIfNotPresent(surveyTheme, surveyThemeKey);
       surveyTheme[surveyThemeKey].button.position.x = payload;
       break;
     }

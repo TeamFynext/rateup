@@ -31,9 +31,7 @@ function WelcomePage({
     <Stack
       align="center"
       justify="center"
-      style={{
-        minHeight: "100dvh",
-      }}
+      h={"100%"}
       p={"lg"}
       className={lexend.className}
       gap={largeScreen ? "xl" : "sm"}

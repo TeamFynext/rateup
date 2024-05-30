@@ -22,6 +22,7 @@ import {
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
 import { IconEdit } from "@tabler/icons-react";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
 export default function ThankyouPageThemeView() {
   const surveyTheme = useSurveyThemeContextValue();
@@ -65,8 +66,13 @@ export default function ThankyouPageThemeView() {
     };
   }, [orgLogo]);
 
-  const backgroundImageSrc =
-    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
+  const useSurveyBackground =
+    surveyTheme["thankyouTheme"].bg.useSurveyBackground;
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyTheme,
+    useSurveyBackground ? "surveyTheme" : "thankyouTheme",
+    selectedPreview === "mobile",
+  );
 
   const handleTitleInputChange = useCallback((e) => {
     surveyThemeDispatch({
@@ -89,7 +95,7 @@ export default function ThankyouPageThemeView() {
     <Flex
       align={"center"}
       h="100%"
-      style={styles}
+      style={{ backgroundColor }}
       ff={lexend300.style.fontFamily}
     >
       <CreditsCard

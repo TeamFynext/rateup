@@ -14,6 +14,7 @@ import {
 } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
+  setFilteredContacts: (contacts: ContactsWithLastMessage[]) => void;
 }) {
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "all",
@@ -101,13 +102,17 @@ export default function WaInboxChatSelect(props: {
   }, [data]);
 
   useEffect(() => {
-    if (
-      filteredContacts.pages.length > 0 &&
-      filteredContacts.pages[filteredContacts.pages.length - 1].length === 0
-    ) {
-      setShouldFetchAgainFilteredContacts(false);
-    } else {
-      setShouldFetchAgainFilteredContacts(true);
+    if (filteredContacts.pages.length > 0) {
+      props?.setFilteredContacts(
+        filteredContacts?.pages?.map((page) => page).flat(),
+      );
+      if (
+        filteredContacts.pages[filteredContacts.pages.length - 1].length === 0
+      ) {
+        setShouldFetchAgainFilteredContacts(false);
+      } else {
+        setShouldFetchAgainFilteredContacts(true);
+      }
     }
   }, [filteredContacts]);
   return (

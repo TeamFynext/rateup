@@ -144,6 +144,7 @@ type ExtendedSurvey = Survey & {
   googleLink: string;
   reviews: Array<any>;
   webSurveyThemeId: string;
+  webSurveyTheme: any;
 };
 
 export async function getPublicSurvey(surveyId: string) {

@@ -28,6 +28,7 @@ function NextPrev({
   isSavingResponses,
   surveyThemeData,
   errorTextDivRef,
+  isSurveyThemePreview = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response = {} } = useContext(CurrentResponsesContext);
@@ -89,9 +90,11 @@ function NextPrev({
   }
 
   if (!survey) return null;
-  const isFirstQuestion = survey?.questions?.indexOf(selectedQ) === 0;
+  const isFirstQuestion =
+    survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 0;
   const isLastQuestion =
-    survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1;
+    survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
+    survey?.questions?.length - 1;
 
   return (
     <Stack
@@ -138,7 +141,8 @@ function NextPrev({
               ((selectedQ?.required || selectedQ?.validationRules) &&
                 response !== 0 &&
                 !response) ||
-              isErrorInput
+              isErrorInput ||
+              (isLastQuestion && isSurveyThemePreview)
             }
             onClick={handleNextClick}
             color="var(--tertiary-color)"

@@ -20,6 +20,7 @@ import { CurrentResponsesContext } from "../../../../../context/ResponseContext"
 import { useMediaQuery } from "@mantine/hooks";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 
 interface MCQGridFormProps {
   features: any;
@@ -52,7 +53,10 @@ const MCQGridForm = ({
     updateResponse({ ...response, [question]: choice });
   };
 
-  const isMobile = useMediaQuery("(max-width: 480px)");
+  const selectedPreview = useSelectedPreview();
+  const isMobile =
+    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+
   const [tableHeight, setTableHeight] = useState<number>(null);
   const [tableWidth, setTableWidth] = useState<number>(null);
 

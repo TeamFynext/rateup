@@ -19,7 +19,13 @@ import { motion, useAnimate } from "framer-motion";
 
 const cx = classNames.bind(styles);
 
-function CustomSelectForMobile({ value, data, placeholder, onChange }) {
+function CustomSelectForMobile({
+  value,
+  data,
+  placeholder,
+  onChange,
+  portalProps = {},
+}) {
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
@@ -134,8 +140,10 @@ function CustomSelectForMobile({ value, data, placeholder, onChange }) {
       </Combobox.EventsTarget>
 
       {isOptionSelectionDivVisible && (
-        <Portal>
-          <Stack className={cx("search-input-and-options-container")}>
+        <Portal {...portalProps}>
+          <Stack
+            className={`${cx("search-input-and-options-container")} search-input-and-options-container`}
+          >
             <Group className={cx("back-btn-and-search-input-container")}>
               <ActionIcon
                 variant="transparent"
