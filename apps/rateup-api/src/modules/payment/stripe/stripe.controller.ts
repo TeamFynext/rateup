@@ -7,6 +7,7 @@ import {
   deleteStripeProduct,
   getAllStripeSubscriptions,
   getStripeProducts,
+  handleInvoicePaymentFailed,
   processOrder,
   syncStripeProducts,
   updateOrder,
@@ -111,28 +112,23 @@ export async function webHookHandler(
 
   console.log("Stripe Event...........", event.type);
 
-  // Handle the checkout.session.completed event
-  if (event.type === "checkout.session.completed") {
-    await processOrder(event.data.object);
+  switch (event.type) {
+    case "checkout.session.completed":
+      await processOrder(event.data.object);
+      break;
+
+    case "invoice.paid":
+      await createStripePayment(event.data.object);
+      break;
+
+    case "invoice.payment_failed":
+      await handleInvoicePaymentFailed(event.data.object);
+      break;
+
+    //... handle other event types
+    default:
+      console.log(`Unhandled event type :  ${event.type}`);
   }
-
-  //Trigger on every payment including recurring payments
-  if (event.type === "invoice.paid") {
-    await createStripePayment(event.data.object);
-  }
-
-  // if (event.type === "payment_intent.succeeded") {
-
-  // }
-
-  if (event.type === "payment_intent.payment_failed") {
-    console.log("payment_intent.payment_failed .......");
-  }
-
-  // if (event.type === "charge.succeeded") {
-  //   console.log("charge.succeeded .......");
-  //   console.log(event.data.object);
-  // }
 
   reply.status(200);
 }
