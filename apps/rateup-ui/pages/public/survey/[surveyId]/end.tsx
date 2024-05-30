@@ -12,11 +12,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { IconHome } from "@tabler/icons-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
-import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import {
   getPublicSurvey,
   getPublicSurveyGoogleLink,
@@ -25,15 +25,11 @@ import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/revi
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
-import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
-import { SurveyTheme } from "../../../../components/Survey/SurveyTheme/surveyTheme.types";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import { surveyUploadsPath } from "../../../../utils/constants";
-import { imagesPath } from "../../../../utils/constants";
-import { motion } from "framer-motion";
-import styles from "./end.module.css";
+import { imagesPath, surveyUploadsPath } from "../../../../utils/constants";
 import { lexend500, lexend600 } from "../../../../utils/fonts";
+import styles from "./end.module.css";
+import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
@@ -55,7 +51,7 @@ export async function getServerSideProps(context) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
-      propsToPass.surveyThemeId = survey?.webSurveyThemeId;
+      propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
     }
   } else {
     const survey = await getPublicSurvey(surveyId);
@@ -63,7 +59,7 @@ export async function getServerSideProps(context) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
-      propsToPass.surveyThemeId = survey?.webSurveyThemeId;
+      propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
     }
   }
   return {
@@ -79,7 +75,7 @@ export default function ThankYou({
   surveyIdValue,
   fromShortUrl,
   redirect = null,
-  surveyThemeId,
+  surveyThemeData,
   gift = {
     name: "",
     image: "",
@@ -153,12 +149,6 @@ export default function ThankYou({
     }
   }, []);
 
-  const { data: surveyThemeData, isLoading } = useSurveyTheme(
-    surveyThemeId,
-  ) as {
-    data: SurveyTheme;
-    isLoading: boolean;
-  };
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
 
@@ -177,31 +167,22 @@ export default function ThankYou({
     setImageLoading(false);
     setTimeout(() => setPulsing(false), 600);
   };
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
 
-  const desktopbg = surveyThemeData?.thankyouTheme?.bg?.desktopbg || "";
-  const mobilebg = surveyThemeData?.thankyouTheme?.bg?.mobilebg || "";
-  const bgImgUrl = !isMobile ? desktopbg : mobilebg;
-  const isUnsplashImage = bgImgUrl?.startsWith("https://images.unsplash.com");
-  let backgroundImageSrc = bgImgUrl;
-  if (!bgImgUrl.startsWith("http://") && !bgImgUrl.startsWith("https://")) {
-    backgroundImageSrc = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}/${bgImgUrl}`;
-  } else if (isUnsplashImage) {
-    backgroundImageSrc = encodeURI(bgImgUrl);
-  }
+  const useSurveyBackground =
+    surveyThemeData["thankyouTheme"].bg.useSurveyBackground;
+
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyThemeData,
+    useSurveyBackground ? "surveyTheme" : "thankyouTheme",
+    isMobile,
+  );
 
   return (
     <CreditsCard
-      enableCredits={
-        isMobile
-          ? surveyThemeData?.thankyouTheme?.bg?.unsplashImage?.mobile
-          : surveyThemeData?.thankyouTheme?.bg?.unsplashImage?.desktop
-      }
-      url={
-        isMobile && surveyThemeData?.thankyouTheme?.bg?.mobilebg
-          ? surveyThemeData?.thankyouTheme?.bg?.mobilebg
-          : surveyThemeData?.thankyouTheme?.bg?.desktopbg
-      }
+      enableCredits={backgroundImageSrc?.startsWith(
+        "https://images.unsplash.com",
+      )}
+      url={backgroundImageSrc}
     >
       <Modal
         opened={opened}
@@ -235,7 +216,6 @@ export default function ThankYou({
           </Text>
           <Group justify={"flex-end"} mt={"md"}>
             <RateupButtonBlue
-              loading={isLoading}
               type="submit"
               title={"Reveal"}
               onClick={toggle}
@@ -250,10 +230,7 @@ export default function ThankYou({
           ...surveyThemeData?.thankyouTheme?.bg?.styles,
           ...{
             height: "100dvh",
-            backgroundColor: surveyThemeData?.thankyouTheme?.bg?.styles
-              ?.backgroundColor
-              ? surveyThemeData?.thankyouTheme?.bg?.styles?.backgroundColor
-              : theme.colors[theme.primaryColor][6],
+            backgroundColor: backgroundColor,
             backgroundImage: `url(${backgroundImageSrc})`,
             backgroundRepeat: "no-repeat",
             backgroundSize: "cover",

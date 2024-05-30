@@ -22,6 +22,7 @@ import {
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
 import { IconEdit } from "@tabler/icons-react";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
 export default function WelcomePageThemeView({ survey }) {
   const surveyTheme = useSurveyThemeContextValue();
@@ -66,9 +67,6 @@ export default function WelcomePageThemeView({ survey }) {
     };
   }, [orgLogo]);
 
-  const backgroundImageSrc =
-    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
-
   const handleTitleInputChange = useCallback((e) => {
     surveyThemeDispatch({
       type: "title-text-change",
@@ -94,11 +92,19 @@ export default function WelcomePageThemeView({ survey }) {
   const subtitleInputRef = useRef(null);
   const startBtnInputRef = useRef(null);
 
+  const useSurveyBackground =
+    surveyTheme["welcomeTheme"].bg.useSurveyBackground;
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyTheme,
+    useSurveyBackground ? "surveyTheme" : "welcomeTheme",
+    selectedPreview === "mobile",
+  );
+
   return (
     <Flex
       align={"center"}
       h="100%"
-      style={styles}
+      style={{ backgroundColor }}
       ff={lexend300.style.fontFamily}
     >
       {!isWelcomePageEnabled && <Overlay className={classes["overlay"]} />}

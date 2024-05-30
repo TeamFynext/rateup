@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { luminance, useMantineTheme } from "@mantine/core";
 import classes from "../TakeSurvey.module.css";
@@ -6,6 +6,8 @@ import { DatePickerInput } from "@mantine/dates";
 import { IconCalendarEvent } from "@tabler/icons-react";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import { useOs } from "@mantine/hooks";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
 export function DateForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -19,8 +21,19 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
       ? `var(--mantine-color-gray-9)`
       : themePrimaryColor;
 
+  const selectedPreview = useSelectedPreview();
   const os = useOs();
-  const isMobile = os === "android" || os === "ios";
+  const isMobile =
+    os === "android" || os === "ios" || selectedPreview === "mobile";
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const takeSurveyLayoutWebDomNodeRef = useRef(null);
+
+  useEffect(() => {
+    const takeSurveyLayoutWebRootDiv = document.querySelector(
+      ".take-survey-layout-web-root-div",
+    );
+    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
+  }, []);
 
   return (
     <FormPaperLayout>
@@ -34,6 +47,10 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
         dropdownType={isMobile ? "modal" : "popover"}
         modalProps={{
           centered: true,
+          portalProps: {
+            target:
+              isSurveyThemePreview && takeSurveyLayoutWebDomNodeRef.current,
+          },
         }}
         variant="unstyled"
         leftSection={<IconCalendarEvent size="1.2rem" color={primaryColor} />}

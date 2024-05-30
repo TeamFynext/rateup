@@ -3,6 +3,7 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 import { SelectedItemEnum } from "./SurveyTheme.enums";
 import { SurveyTheme } from "./surveyTheme.types";
 import { QuestionType } from "../../../types/enums";
+import _ from "lodash";
 
 export function getImageUrl(
   imageObject: string | Blob,
@@ -50,38 +51,38 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   const {
     welcomeTheme: {
       bg: {
-        desktopbg: welcomeDesktopBg,
-        mobilebg: welcomeMobileBg,
-        desktopbgFile: welcomeDesktopBgFile,
-        mobilebgFile: welcomeMobileBgFile,
+        desktopBg: { imageUrl: welcomeDesktopBgImgUrl },
+        mobileBg: { imageUrl: welcomeMobileBgImgUrl },
+        desktopBgImgFile: welcomeDesktopBgImgFile,
+        mobileBgImgFile: welcomeMobileBgImgFile,
       },
     },
     surveyTheme: {
       bg: {
-        desktopbg: surveyDesktopBg,
-        mobilebg: surveyMobileBg,
-        desktopbgFile: surveyDesktopBgFile,
-        mobilebgFile: surveyMobileBgFile,
+        desktopBg: { imageUrl: surveyDesktopBgImgUrl },
+        mobileBg: { imageUrl: surveyMobileBgImgUrl },
+        desktopBgImgFile: surveyDesktopBgImgFile,
+        mobileBgImgFile: surveyMobileBgImgFile,
       },
       logo: { logoFile, logo },
     },
     thankyouTheme: {
       bg: {
-        desktopbg: thankyouDesktopBg,
-        mobilebg: thankyouMobileBg,
-        desktopbgFile: thankyouDesktopBgFile,
-        mobilebgFile: thankyouMobileBgFile,
+        desktopBg: { imageUrl: thankyouDesktopBgImgUrl },
+        mobileBg: { imageUrl: thankyouMobileBgImgUrl },
+        desktopBgImgFile: thankyouDesktopBgImgFile,
+        mobileBgImgFile: thankyouMobileBgImgFile,
       },
     },
   } = surveyTheme;
 
   const images = [
-    welcomeDesktopBgFile ?? welcomeDesktopBg,
-    welcomeMobileBgFile ?? welcomeMobileBg,
-    surveyDesktopBgFile ?? surveyDesktopBg,
-    surveyMobileBgFile ?? surveyMobileBg,
-    thankyouDesktopBgFile ?? thankyouDesktopBg,
-    thankyouMobileBgFile ?? thankyouMobileBg,
+    welcomeDesktopBgImgFile ?? welcomeDesktopBgImgUrl,
+    welcomeMobileBgImgFile ?? welcomeMobileBgImgUrl,
+    surveyDesktopBgImgFile ?? surveyDesktopBgImgUrl,
+    surveyMobileBgImgFile ?? surveyMobileBgImgUrl,
+    thankyouDesktopBgImgFile ?? thankyouDesktopBgImgUrl,
+    thankyouMobileBgImgFile ?? thankyouMobileBgImgUrl,
     logoFile ?? logo,
   ];
 
@@ -97,20 +98,20 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   );
 
   const newSurveyTheme = produce(surveyTheme, (draft) => {
-    delete draft.welcomeTheme.bg.desktopbgFile;
-    delete draft.welcomeTheme.bg.mobilebgFile;
-    delete draft.surveyTheme.bg.desktopbgFile;
-    delete draft.surveyTheme.bg.mobilebgFile;
-    delete draft.thankyouTheme.bg.desktopbgFile;
-    delete draft.thankyouTheme.bg.mobilebgFile;
+    delete draft.welcomeTheme.bg.desktopBgImgFile;
+    delete draft.welcomeTheme.bg.mobileBgImgFile;
+    delete draft.surveyTheme.bg.desktopBgImgFile;
+    delete draft.surveyTheme.bg.mobileBgImgFile;
+    delete draft.thankyouTheme.bg.desktopBgImgFile;
+    delete draft.thankyouTheme.bg.mobileBgImgFile;
     delete draft.surveyTheme.logo.logoFile;
     [
-      draft.welcomeTheme.bg.desktopbg,
-      draft.welcomeTheme.bg.mobilebg,
-      draft.surveyTheme.bg.desktopbg,
-      draft.surveyTheme.bg.mobilebg,
-      draft.thankyouTheme.bg.desktopbg,
-      draft.thankyouTheme.bg.mobilebg,
+      draft.welcomeTheme.bg.desktopBg.imageUrl,
+      draft.welcomeTheme.bg.mobileBg.imageUrl,
+      draft.surveyTheme.bg.desktopBg.imageUrl,
+      draft.surveyTheme.bg.mobileBg.imageUrl,
+      draft.thankyouTheme.bg.desktopBg.imageUrl,
+      draft.thankyouTheme.bg.mobileBg.imageUrl,
       draft.surveyTheme.logo.logo,
     ] = urls;
   });
@@ -167,3 +168,99 @@ export function getFeaturesBasedOnQuestionType(
       return {};
   }
 }
+
+export const addSurveyThemeLogoObjIfNotPresent = (payloadCopy) => {
+  payloadCopy.surveyTheme.logo = {
+    logo: "",
+    styles: {
+      width: 50,
+      height: 50,
+    },
+  };
+};
+
+const getBgImageUrl = (str) => {
+  let urlStr = str;
+  if (!str) urlStr = "";
+
+  let resultStr = "";
+
+  if (urlStr.startsWith("https://") || urlStr.startsWith("http://")) {
+    resultStr = urlStr;
+  } else if (urlStr.length > 0 && !urlStr.startsWith("#")) {
+    resultStr = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${urlStr}`;
+  }
+  return resultStr;
+};
+
+const getChooseBgRadioValue = (urlStr) => {
+  const str = getBgImageUrl(urlStr);
+  if (str.startsWith("https://") || str.startsWith("http://")) {
+    return "image";
+  } else {
+    return "color";
+  }
+};
+
+export const convertBgObjToReqStructure = (payloadCopy) => {
+  for (const key in payloadCopy) {
+    const bgObj = payloadCopy[key].bg;
+    const desktopbg = bgObj.desktopbg;
+    const mobilebg = bgObj.mobilebg;
+
+    const desktopChooseBgRadioInputValue = getChooseBgRadioValue(desktopbg);
+    const mobileChooseBgRadioInputValue = getChooseBgRadioValue(mobilebg);
+
+    const resultBgObj = {
+      desktopBg: {
+        chooseBgRadioInputValue: desktopChooseBgRadioInputValue,
+        imageUrl: getBgImageUrl(desktopbg),
+        bgColor: desktopbg?.startsWith("#") ? desktopbg : "#f7f7f7",
+      },
+      mobileBg: {
+        chooseBgRadioInputValue: mobileChooseBgRadioInputValue,
+        imageUrl: getBgImageUrl(mobilebg),
+        bgColor: mobilebg?.startsWith("#") ? mobilebg : "#f7f7f7",
+      },
+    };
+
+    payloadCopy[key].bg = resultBgObj;
+  }
+};
+
+export const verifyAndConvertSurveyThemeObj = (surveyTheme) => {
+  const surveyThemeCopy = _.cloneDeep(surveyTheme);
+  if (
+    surveyTheme["surveyTheme"].bg.hasOwnProperty("desktopbg") &&
+    surveyTheme["surveyTheme"].bg.hasOwnProperty("mobilebg")
+  ) {
+    const desktopBg = surveyTheme["surveyTheme"].bg.desktopbg;
+    const mobileBg = surveyTheme["surveyTheme"].bg.mobilebg;
+    const isBgObjInReqStructure =
+      typeof desktopBg === "object" && typeof mobileBg === "object";
+    const surveyThemeLogoKeyPresent = surveyTheme["surveyTheme"].logo;
+
+    if (!isBgObjInReqStructure || !surveyThemeLogoKeyPresent) {
+      if (!isBgObjInReqStructure) convertBgObjToReqStructure(surveyThemeCopy);
+      if (!surveyThemeLogoKeyPresent)
+        addSurveyThemeLogoObjIfNotPresent(surveyThemeCopy);
+    }
+  }
+
+  if (!surveyTheme["welcomeTheme"].bg.useSurveyBackground) {
+    // use survey background checkbox will be present in webpage theme and thankyou page theme background editor, for that useSurveyBackground is being used.
+    surveyThemeCopy["welcomeTheme"].bg.useSurveyBackground = false;
+    surveyThemeCopy["thankyouTheme"].bg.useSurveyBackground = false;
+  }
+
+  return surveyThemeCopy;
+};
+
+export const addWelcomeBtnPositionObjIfNotPresent = (
+  surveyTheme,
+  surveyThemeKey,
+) => {
+  if (!surveyTheme[surveyThemeKey].button.position) {
+    surveyTheme[surveyThemeKey].button.position = { x: "CENTER", y: "DEFAULT" };
+  }
+};

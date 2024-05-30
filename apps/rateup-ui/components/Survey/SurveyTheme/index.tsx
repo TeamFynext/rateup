@@ -16,9 +16,7 @@ import WelcomePageSwitch from "./components/WelcomePageSwitch";
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
 
 function SurveyTheme({ survey }) {
-  const { data: surveyTheme, isLoading } = useSurveyTheme(
-    survey?.webSurveyThemeId,
-  );
+  const { theme: surveyTheme } = survey?.webSurveyTheme;
 
   // selected surveyThemeId.
   const [themeSelectorState, setThemeSelectorState] = useState(
@@ -27,8 +25,6 @@ function SurveyTheme({ survey }) {
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } =
     useAllThemes();
-
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   if (!surveyTheme)
     return (

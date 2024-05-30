@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import {
   MultiSelect,
@@ -13,6 +13,8 @@ import { sampleChoices } from "../../../../../utils/constants/forms";
 import FormPaperLayout from "./layout/FormPaperLayout";
 import { useMediaQuery } from "@mantine/hooks";
 import CustomMultiselectForMobile from "../components/CustomMultiselectForMobile";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -24,7 +26,12 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const choices = selectedQ?.choices[selectedLanguage];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const isMobile = useMediaQuery("(max-width: 480px)");
+  const selectedPreview = useSelectedPreview();
+  const isMobile =
+    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+
+  const takeSurveyLayoutWebDomNodeRef = useRef(null);
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
 
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
@@ -51,6 +58,13 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       setSelectedOp(response?.map((r) => r?.value));
     }
   }, [response]);
+
+  useEffect(() => {
+    const takeSurveyLayoutWebRootDiv = document.querySelector(
+      ".take-survey-layout-web-root-div",
+    );
+    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
+  }, []);
 
   const handleSelectedOp = (values) => {
     const res = options?.filter((op) => values?.includes(op?.value));
@@ -98,6 +112,9 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       data={data}
       onChange={handleSelectedOp}
       placeholder="Select one or more"
+      portalProps={{
+        target: isSurveyThemePreview && takeSurveyLayoutWebDomNodeRef.current,
+      }}
     />
   );
 }

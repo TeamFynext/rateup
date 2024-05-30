@@ -14,7 +14,6 @@ import { useSearchParams } from "next/dist/client/components/navigation";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useBeforeUnload } from "react-use";
-import { useSurveyTheme } from "../../../../backend/surveyTheme/surveyTheme.query";
 import {
   Invoice,
   getInvoicesByPhNo,
@@ -52,8 +51,11 @@ import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context
 import { validateQuestion } from "../../../../utils/validation";
 import styles from "./TakeSurvey.module.css";
 import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
+import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const smallScreen = useMediaQuery("(max-width: 30em)");
   const searchParams = useSearchParams();
@@ -64,12 +66,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const surveyTeamMapId = survey.surveyTeamMapId;
   useBeforeUnload(true, "Your inputs are not submitted yet, are you sure?");
 
-  const { data: surveyThemeData, isLoading: IsLoading } = useSurveyTheme(
-    survey?.webSurveyThemeId,
-  ) as {
-    data: SurveyTheme;
-    isLoading: boolean;
-  };
+  const { theme: surveyThemeData } = survey?.webSurveyTheme;
+
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [invoiceList, setInvoiceList] = useState<Invoice[]>([]);
@@ -161,7 +159,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
             visualViewport.height +
             nextPrevBtnDivHeight
           ) + visualViewport.offsetTop;
-        nextPrevBtnDiv.style.transform = `translate(${offsetLeft}px, ${nextPrevBtnDivTranslateY}px)`;
+        if (!isSurveyThemePreview)
+          nextPrevBtnDiv.style.transform = `translate(${offsetLeft}px, ${nextPrevBtnDivTranslateY}px)`;
       }
     });
   };
@@ -174,7 +173,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       window?.visualViewport.removeEventListener("scroll", viewportHandler);
       window?.visualViewport.removeEventListener("resize", viewportHandler);
     };
-  }, []);
+  }, [isSurveyThemePreview]);
 
   const errorTextDivRef = useRef(null);
 
@@ -215,7 +214,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const handleNext = (response: any) => {
     const currentResponse_ = response ? response : currentResponse;
-    const index = survey.questions.indexOf(selectedQ);
+    const index = survey.questions.findIndex((Q) => selectedQ.id === Q.id);
     if (index === -1) throw new Error("Question not found"); // this should never happen
 
     if (index < survey.questions.length - 1) {
@@ -410,8 +409,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     }
   };
 
-  if (IsLoading) return <RateupLoader h={"100dvh"} />;
-
   return (
     <CurrentResponsesContext.Provider
       value={{ response: currentResponse, updateResponse }}
@@ -526,6 +523,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                   surveyThemeData={surveyThemeData}
                   isSavingResponses={isSavingResponses || giftLoading}
                   errorTextDivRef={errorTextDivRef}
+                  isSurveyThemePreview={isSurveyThemePreview}
                 />
               </Stack>
             </Container>

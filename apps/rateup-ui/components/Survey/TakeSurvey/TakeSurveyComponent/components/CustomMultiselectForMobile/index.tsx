@@ -25,7 +25,13 @@ import styles from "./CustomMultiselectForMobile.module.css";
 const cxCommon = classNames.bind(commonStyles);
 const cx = classNames.bind(styles);
 
-function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
+function CustomMultiselectForMobile({
+  value,
+  data,
+  onChange,
+  placeholder,
+  portalProps = {},
+}) {
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
@@ -178,8 +184,10 @@ function CustomMultiselectForMobile({ value, data, onChange, placeholder }) {
       </Combobox.EventsTarget>
 
       {isOptionSelectionDivVisible && (
-        <Portal>
-          <Stack className={cxCommon("search-input-and-options-container")}>
+        <Portal {...portalProps}>
+          <Stack
+            className={`${cxCommon("search-input-and-options-container")} search-input-and-options-container`}
+          >
             <Group className={cxCommon("back-btn-and-search-input-container")}>
               <ActionIcon
                 variant="transparent"
