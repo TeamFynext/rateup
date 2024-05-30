@@ -1,6 +1,5 @@
 import { Card, Group, Stack, Text, Tooltip } from "@mantine/core";
 import classes from "./styles.module.css";
-import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
 import { formatToCustomTime } from "../../../../../utils/dateTime";
 import {
@@ -9,6 +8,7 @@ import {
 } from "../../../../../utils/whatsapp/inbox";
 import WaInboxSessionBadge from "./sessionBadge";
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import Link from "next/link";
 
 interface WaInboxChatSelectCardProps {
   contact: ContactsWithLastMessage;
@@ -16,16 +16,13 @@ interface WaInboxChatSelectCardProps {
 export default function WaInboxChatSelectCard({
   contact,
 }: WaInboxChatSelectCardProps) {
-  const router = useRouter();
   const params = useSearchParams();
-  function handleChatCardClick() {
-    router.push(`?contactId=${contact.id}`);
-  }
   const lastMessage = contact?.lastMessage;
   return (
     <Card
+      component={Link}
+      href={`?contactId=${contact?.id}`}
       className={`${classes.wrapper} ${params.get("contactId") === contact?.id && classes.highlighted_wrapper}`}
-      onClick={handleChatCardClick}
     >
       <Stack className={classes.inner}>
         <Group className={classes.chat_card_header}>
