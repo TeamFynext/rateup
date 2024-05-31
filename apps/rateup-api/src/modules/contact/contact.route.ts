@@ -47,7 +47,15 @@ export async function contactRoutes(server: FastifyInstance) {
     createMultipleContactsHandler,
   );
 
-  server.get("/", getAllContactsHandler);
+  server.get(
+    "/",
+    {
+      schema: {
+        params: $contactRef("paginationQuery"),
+      },
+    },
+    getAllContactsHandler,
+  );
   server.get(
     "/:contactId",
     {

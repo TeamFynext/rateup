@@ -5,6 +5,7 @@ import {
   deleteManyContactsInput,
   updateContactSchema,
   ContactCore,
+  PaginationQuery,
 } from "./contact.schema";
 import { log } from "../../utils/logger";
 import {
@@ -14,6 +15,7 @@ import {
   deleteManyContacts,
   getContactById,
   getContactsByOrgId,
+  getExistingContactCountByPhno,
   importCSVContacts,
   updateContactById,
 } from "./contact.service";
@@ -51,13 +53,11 @@ export async function createMultipleContactsHandler(
   try {
     const newContacts = request.body;
     const { orgId } = request.user;
-    const existingcontacts = await getContactsByOrgId(orgId);
-    const filterNewContacts = newContacts.filter((contact) => {
-      return !existingcontacts.some(
-        (existContact) => existContact.phone === contact.phone,
-      );
-    });
-    if (!filterNewContacts.length)
+    const filterNewContacts = await getExistingContactCountByPhno(
+      newContacts.map((item) => item.phone),
+      orgId,
+    );
+    if (filterNewContacts === (newContacts?.length ?? 0))
       throw new Error("All contacts already exist");
     const res = await createMultipleContacts(newContacts, orgId);
     reply.code(201).send(res);
@@ -68,12 +68,12 @@ export async function createMultipleContactsHandler(
 }
 
 export async function getAllContactsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: PaginationQuery }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    const contacts = await getContactsByOrgId(orgId);
+    const contacts = await getContactsByOrgId(orgId, request.query);
     return reply.code(200).send(contacts);
   } catch (error) {
     log.error(error);
