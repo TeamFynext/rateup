@@ -238,3 +238,8 @@ export enum ChatbotPublicPageStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
 }
+
+export enum SurveyVariableType {
+  DEFAULT = "DEFAULT",
+  CUSTOM = "CUSTOM",
+}

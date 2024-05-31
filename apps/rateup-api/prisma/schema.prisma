@@ -260,6 +260,7 @@ model Survey {
   redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
   org                     Org?            @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                   String?         @db.Uuid
+  surveyVariables         SurveyVariables[]
 }
 
 model SurveyTeamMap {
@@ -1103,4 +1104,15 @@ model Chatbot {
   org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   shortUrlId       String  @unique
   publicPageStatus String? @default("INACTIVE")
+}
+
+model SurveyVariables {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  value           String
+  type            String
+  surveyId        String   @db.Uuid 
+  survey          Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@unique([name, surveyId], name: "variable_name_survey_id_unique")
 }

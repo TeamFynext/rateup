@@ -30,6 +30,10 @@ import {
   updateVisitedSurvey,
   verifySurveyPassword,
   getActiveSurveysSummmaryByUserId,
+  createSurveyVariable,
+  getSurveyVariables,
+  updateSurveyVariable,
+  deleteSurveyVariable,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -41,6 +45,8 @@ import {
   GiftInput,
   IdParamInput,
   PhoneParamInput,
+  surveyVariableInput,
+  surveyVariableUpdateInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
@@ -636,5 +642,75 @@ export async function getInvoicesByPhoneNoHandler(
   } catch (e) {
     reply.code(500).send("Something Went Wrong! Try again.");
     log.error(e);
+  }
+}
+
+export async function createSurveyVariableHandler(
+  request: FastifyRequest<{ Params: IdParamInput; Body: surveyVariableInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const surveyId = request.params.id;
+    const res = await createSurveyVariable(surveyId, request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ error: e?.message || "Something Went Wrong! Try again." });
+  }
+}
+
+export async function getSurveyVariablesHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const surveyId = request.params.id;
+    const res = await getSurveyVariables(surveyId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ error: e?.message || "Something Went Wrong! Try again." });
+  }
+}
+
+export async function updateSurveyVariableHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+    Body: surveyVariableUpdateInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const variableId = request.params.id;
+    const res = await updateSurveyVariable(variableId, request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ error: e?.message || "Something Went Wrong! Try again." });
+  }
+}
+
+export async function deleteSurveyVariableHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+    Body: surveyVariableUpdateInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const variableId = request.params.id;
+    const res = await deleteSurveyVariable(variableId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }

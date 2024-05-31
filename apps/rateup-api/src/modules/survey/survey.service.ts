@@ -2,18 +2,23 @@ import prisma, { excludeFields } from "../../utils/prisma";
 import {
   CreateSurveyInput,
   DeleteTeamSurveyInput,
+  surveyVariableInput,
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
 } from "./survey.schema";
 import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
-import { QuestionType } from "../../types/enums";
+import { QuestionType, SurveyVariableType } from "../../types/enums";
 import { log } from "../../utils/logger";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
 } from "../../utils/commnUtils";
-import { getSurveysOrgId, isShortId } from "./survey.utils";
+import {
+  createSurveyDefaultVariableForQuestion,
+  getSurveysOrgId,
+  isShortId,
+} from "./survey.utils";
 import { offerArrayWithRange } from "../../utils/survey/offer";
 
 // TODO: fix return type
@@ -1308,4 +1313,57 @@ export async function updateInvoice(id: string, gift: string) {
     },
   });
   return invoices;
+}
+
+export async function createSurveyVariable(
+  surveyId: string,
+  variable: surveyVariableInput,
+) {
+  const res = await prisma.surveyVariables.create({
+    data: {
+      name: variable?.name,
+      type: variable?.type,
+      value: variable?.value,
+      surveyId,
+    },
+  });
+  return res;
+}
+export async function getSurveyVariables(surveyId: string) {
+  const res = await prisma.surveyVariables.findMany({
+    where: {
+      surveyId,
+    },
+  });
+  return res;
+}
+
+//update on question order change
+export async function updateSurveyVariables(surveyId, questions) {
+  await prisma.surveyVariables.deleteMany({
+    where: {
+      type: SurveyVariableType.DEFAULT as string,
+      surveyId,
+    },
+  });
+  for (const [index, question] of questions.entries()) {
+    await createSurveyDefaultVariableForQuestion(surveyId, question, index);
+  }
+}
+
+export async function updateSurveyVariable(variableId, data) {
+  return await prisma.surveyVariables.update({
+    where: {
+      id: variableId,
+    },
+    data,
+  });
+}
+
+export async function deleteSurveyVariable(variableId) {
+  return await prisma.surveyVariables.delete({
+    where: {
+      id: variableId,
+    },
+  });
 }

@@ -4,9 +4,9 @@ import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail";
 import prisma from "../../utils/prisma";
 import {
-  extractText,
   generateResponseData,
-  isHtml,
+  getContent,
+  getReplacedTitleFromVariable,
 } from "../../utils/survey/response.data";
 import { getAccessToken, initializeAuthClient } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
@@ -118,10 +118,6 @@ export async function getAllResponses(
 
   return responseData;
 }
-const getContent = (title: string) => {
-  if (isHtml(title)) return extractText(title);
-  else return title;
-};
 
 export async function downloadExcelResponse(
   surveyId,
@@ -133,9 +129,11 @@ export async function downloadExcelResponse(
 ) {
   const responses = allResponses && allResponses[0].responses;
   const platform = responses?.[0]?.platform;
-
   const filteredSecondArray = questions.filter((item) =>
-    visibleColumn.includes(item.title[defaultLanguage]),
+    visibleColumn.includes(
+      getReplacedTitleFromVariable({ title: item.title[defaultLanguage] }) ||
+        item.title[defaultLanguage],
+    ),
   );
   if (filteredSecondArray && responses) {
     const headerArray = filteredSecondArray.flatMap((question) =>
@@ -152,6 +150,7 @@ export async function downloadExcelResponse(
             ) ?? []
           : [getContent(question.title[defaultLanguage])],
     );
+
     const createdAt = "Date";
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
@@ -682,37 +681,39 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               return q;
             }
           });
-          let qstnTitle = QIndex + "_" + getContent(qstn.title[lang])?.trim();
-          if (
-            [
-              QuestionType.Contact,
-              QuestionType.Email,
-              QuestionType.Phone,
-            ].includes(qstn.type)
-          )
-            Object.entries(res.response[res.type]).map(
-              ([key, value]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] = value),
-            );
-          else if (qstn.type === QuestionType.Testimonial)
-            Object.entries(res.response[res.type]).map(
-              ([key, value]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] =
-                  key == "photo"
-                    ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                    : value),
-            );
-          else if (qstn.type === QuestionType.MCQGrid)
-            Object.entries(res.response[res.type]).map(
-              ([key, value]: [string, Choice]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
-            );
-          else
-            resObj[qstnTitle] = getFormattedResponse(
-              res.response[res.type],
-              qstn,
-              lang,
-            );
+          if (qstn) {
+            let qstnTitle = QIndex + "_" + getContent(qstn.title[lang])?.trim();
+            if (
+              [
+                QuestionType.Contact,
+                QuestionType.Email,
+                QuestionType.Phone,
+              ].includes(qstn.type)
+            )
+              Object.entries(res.response[res.type]).map(
+                ([key, value]) =>
+                  (resObj[(qstnTitle + ":" + key).trim()] = value),
+              );
+            else if (qstn.type === QuestionType.Testimonial)
+              Object.entries(res.response[res.type]).map(
+                ([key, value]) =>
+                  (resObj[(qstnTitle + ":" + key).trim()] =
+                    key == "photo"
+                      ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                      : value),
+              );
+            else if (qstn.type === QuestionType.MCQGrid)
+              Object.entries(res.response[res.type]).map(
+                ([key, value]: [string, Choice]) =>
+                  (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+              );
+            else
+              resObj[qstnTitle] = getFormattedResponse(
+                res.response[res.type],
+                qstn,
+                lang,
+              );
+          }
         });
         responseForSheet.push(resObj);
       });
