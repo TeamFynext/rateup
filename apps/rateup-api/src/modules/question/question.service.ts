@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
 import prisma from "../../utils/prisma";
 import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema";
+import { updateSurveyVariables } from "../survey/survey.service";
+import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils";
 
 export async function createQuestion(
   surveyId: string,
@@ -32,6 +34,7 @@ export async function createQuestion(
   questions.splice(position, 0, newQuestion);
   await updateQuestionsOnSurvey(surveyId, questions);
 
+  await createSurveyDefaultVariableForQuestion(surveyId, newQuestion, position);
   return newQuestion;
 }
 
@@ -64,6 +67,7 @@ export async function deleteQuestionById(surveyId: string, id: string) {
     (question) => question.id !== id,
   );
   await updateQuestionsOnSurvey(surveyId, questions);
+  await updateSurveyVariables(surveyId, questions);
 }
 
 export async function reorderQuestions(
@@ -76,6 +80,7 @@ export async function reorderQuestions(
   ) as Array<Question>;
 
   await updateQuestionsOnSurvey(surveyId, orderedQuestions);
+  await updateSurveyVariables(surveyId, orderedQuestions);
 }
 
 export async function updateQuestion(

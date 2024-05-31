@@ -6,6 +6,7 @@ import {
   YNResponse,
 } from "../../types/enums";
 import { ResponsePlatform } from "@prisma/client";
+import cheerio from "cheerio";
 
 export const generateResponseData = (surveyTeamMapId, survey) => {
   return {
@@ -138,6 +139,52 @@ export const extractText = (htmlContent: string) => {
 };
 
 export const getContent = (title: string) => {
-  if (isHtml(title)) return extractText(title);
+  if (isHtml(title))
+    return extractText(getReplacedTitleFromVariable({ title }) || title);
   else return title;
+};
+
+export const getPropValueFromQuestionCustomComponent = (
+  str,
+  componentName = "variable-component",
+  prop = "label",
+) => {
+  const doc = cheerio.load(str);
+  const labels = [];
+  const customComponents = doc(componentName);
+  if (!customComponents?.length) return null;
+  customComponents.each((index, component) => {
+    const label = doc(component).attr(prop);
+    if (label) {
+      labels.push(label);
+    }
+  });
+  return labels;
+};
+
+interface IReplaceTitleForVar {
+  title: string;
+  prop?: string;
+  componentName?: string;
+}
+
+export const getReplacedTitleFromVariable = ({
+  title,
+  prop = "label",
+  componentName = "variable-component",
+}: IReplaceTitleForVar) => {
+  const doc = cheerio.load(title);
+  const variables = getPropValueFromQuestionCustomComponent(
+    title,
+    componentName,
+    prop,
+  );
+  if (!variables) return null;
+  variables.forEach((value) => {
+    const component = doc(`${componentName}[${prop}="${value}"]`).first();
+    if (component?.length) {
+      component.replaceWith(`{${value}}`);
+    }
+  });
+  return doc("body").html();
 };

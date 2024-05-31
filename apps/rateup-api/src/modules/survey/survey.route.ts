@@ -18,6 +18,10 @@ import {
   getSurveyTemplatesHandler,
   getSurveysWithQuestionsHandler,
   getSurveysSummaryHandler,
+  createSurveyVariableHandler,
+  getSurveyVariablesHandler,
+  updateSurveyVariableHandler,
+  deleteSurveyVariableHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import {
@@ -188,5 +192,46 @@ export async function surveyRoutes(server: FastifyInstance) {
       },
     },
     updateGoogleLinkHandler,
+  );
+
+  server.post(
+    "/survey-variables/:id",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+        body: $Sref("surveyVariableSchema"),
+      },
+    },
+    createSurveyVariableHandler,
+  );
+  server.get(
+    "/survey-variables/:id",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    getSurveyVariablesHandler,
+  );
+
+  server.put(
+    "/survey-variables/:id",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+        body: $Sref("surveyVariableUpdateSchema"),
+      },
+    },
+    updateSurveyVariableHandler,
+  );
+
+  server.delete(
+    "/survey-variables/:id",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    deleteSurveyVariableHandler,
   );
 }

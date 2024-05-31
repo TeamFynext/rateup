@@ -183,6 +183,17 @@ const updateGoogleLinkRequestSchema = z.object({
     .min(5, "Invalid link"),
 });
 
+const surveyVariableSchema = z.object({
+  name: z.string().trim().min(1, "Variable name cannot be blank"),
+  value: z.string().trim().min(1, "Variable value cannot be blank"),
+  type: z.string().trim().min(1, "Variable type cannot be blank"),
+});
+
+const surveyVariableUpdateSchema = z.object({
+  name: z.string().optional(),
+  value: z.string().optional(),
+});
+
 export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
@@ -201,6 +212,8 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     giftRequestSchema,
     giftByPhoneRequestSchema,
     phoneParamsSchema,
+    surveyVariableSchema,
+    surveyVariableUpdateSchema,
   },
   { $id: "surveySchema" },
 );
@@ -235,4 +248,9 @@ export type IdParamInput = z.infer<typeof idParamsSchema>;
 export type CloneSurveyInput = z.infer<typeof cloneSurveySchema>;
 export type UpdateGoogleLinkInput = z.infer<
   typeof updateGoogleLinkRequestSchema
+>;
+export type surveyVariableInput = z.infer<typeof surveyVariableSchema>;
+
+export type surveyVariableUpdateInput = z.infer<
+  typeof surveyVariableUpdateSchema
 >;
