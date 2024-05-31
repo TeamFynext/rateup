@@ -11,7 +11,10 @@ import { useEffect, useState } from "react";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
 import { useRouter } from "next/router";
 import { EditSurvey } from "./EditSurvey";
-import { useSurvey } from "../../backend/surveys/surveys.query";
+import {
+  useGetSurveyVariables,
+  useSurvey,
+} from "../../backend/surveys/surveys.query";
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import ShareSurvey from "./ShareSurvey/ShareSurvey";
 import StyledTabs from "../../components/styled/StyledTabs/StyledTabs";
@@ -55,6 +58,8 @@ export default function SurveyID() {
     data: survey,
   } = useSurvey(surveyId);
   const { isLoading, error, data: questions } = useQuestions(surveyId);
+
+  const { data: surveyVariables } = useGetSurveyVariables(surveyId);
   const { update } = useRouteParams();
   useEffect(() => {
     update({ surveyId: survey?.title });
@@ -73,6 +78,7 @@ export default function SurveyID() {
   const [filterTeams, setFilterTeams] = useState([]);
   const [filterTags, setFilterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
+  const [variables, setVariables] = useState([]);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
@@ -128,6 +134,10 @@ export default function SurveyID() {
     }
   }, [savedEncryptionPassword]);
 
+  useEffect(() => {
+    setVariables(surveyVariables ?? []);
+  }, [surveyVariables]);
+
   if (isLoading || isSurveyLoading || !activeTab)
     return <RateupLoader h={"80dvh"} />;
   if (error || surveyError) {
@@ -150,6 +160,7 @@ export default function SurveyID() {
             filterTags,
             encryptionpassword,
             surveyId,
+            variables,
           }}
         >
           <StyledTabs

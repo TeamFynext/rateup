@@ -1,7 +1,11 @@
 import React from "react";
 import { notifications } from "@mantine/notifications";
 import { createResponsePublic } from "../../../../backend/surveys/response/response.api";
-import { QuestionType, QuestionType as Q } from "../../../../types/enums";
+import {
+  QuestionType,
+  QuestionType as Q,
+  SurveyVariableType,
+} from "../../../../types/enums";
 import { TextForm } from "./QuestionForms/TextForm";
 import { TextAreaForm } from "./QuestionForms/TextAreaForm";
 import { NumberForm } from "./QuestionForms/NumberForm";
@@ -27,6 +31,7 @@ import { emailPattern } from "../../../../utils/constants";
 import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
 import MCQGridForm from "./QuestionForms/MCQGridForm";
 import FileInputForm from "./QuestionForms/FileInputForm";
+import { useGetSurveyVariables } from "../../../../backend/surveys/surveys.query";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -255,3 +260,125 @@ export const handleInputScrollIntoView = (e) => {
     domEle.scrollIntoView({ block: "start" });
   }, 700);
 };
+
+export const getPropValueFromQuestionCustomComponent = (
+  str,
+  componentName = "variable-component",
+  prop = "label",
+) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, "text/html");
+  const labels = [];
+  const customComponents = doc.querySelectorAll(componentName);
+  if (!customComponents?.length) return null;
+  customComponents.forEach((component) => {
+    const label = component.getAttribute(prop);
+    if (label) {
+      labels.push(label);
+    }
+  });
+  return labels;
+};
+
+interface IReplaceTitleForVar {
+  title: string;
+  prop?: string;
+  componentName?: string;
+  responses?: QuestionResponse[];
+  surveyId: string;
+  isPublicPage?: boolean;
+}
+
+export const getReplacedTitleFromVariable = ({
+  title,
+  prop = "label",
+  componentName = "variable-component",
+  responses,
+  surveyId,
+  isPublicPage,
+}: IReplaceTitleForVar) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(title, "text/html");
+  const variables = getPropValueFromQuestionCustomComponent(
+    title,
+    componentName,
+    prop,
+  );
+  if (!variables) return null;
+  variables.forEach((value) => {
+    const component = Array.from(doc.querySelectorAll(componentName)).find(
+      (el) => el.getAttribute(prop) === value,
+    );
+    if (component) {
+      const parent = component.parentNode;
+      const replacementNode = doc.createTextNode(
+        isPublicPage
+          ? getValueFromVariable(value, responses, surveyId)
+          : `{${value}}`,
+      );
+      parent.replaceChild(replacementNode, component);
+    }
+  });
+  return doc.body.innerHTML;
+};
+
+function getValueFromVariable(
+  variable: string,
+  responses: QuestionResponse[],
+  surveyId,
+) {
+  const { data: variables } = useGetSurveyVariables(surveyId);
+  let variableObj =
+    variables && variables?.find((val) => val?.name === variable);
+  if (variableObj) {
+    if (variableObj.type === SurveyVariableType.CUSTOM)
+      return variableObj.value;
+    const response = responses?.find(
+      (res) => res?.questionId === variableObj.value,
+    );
+    return response
+      ? getFormattedResponseForVariable(
+          response.response?.[response?.type],
+          response?.type,
+          variable,
+        )
+      : "";
+  }
+  return "";
+}
+
+function getFormattedResponseForVariable(response, questionType, variable) {
+  switch (questionType) {
+    case QuestionType.Contact:
+      return variable.includes("name")
+        ? response?.name ?? ""
+        : variable.includes("phone")
+          ? response?.phone ?? ""
+          : variable.includes("email")
+            ? response?.email ?? ""
+            : "";
+    case QuestionType.Testimonial:
+      return variable.includes("name")
+        ? response?.name ?? ""
+        : variable.includes("testimonial")
+          ? response?.testimonial ?? ""
+          : variable.includes("jobTitle")
+            ? response?.jobTitle ?? ""
+            : variable.includes("rating")
+              ? response?.rating ?? ""
+              : "";
+    case QuestionType.Text:
+    case QuestionType.Date:
+    case QuestionType.LD:
+    case QuestionType.Number:
+    case QuestionType.Opinion:
+    case QuestionType.YN:
+    case QuestionType.Rating:
+    case QuestionType.Smiley:
+    case QuestionType.TextArea:
+    case QuestionType.TnC:
+      return response;
+    default:
+      return "";
+  }
+}

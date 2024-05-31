@@ -38,6 +38,7 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { getContent } from "../../../utils";
+import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
 //import end
 //.............................................................................
 // default export component start
@@ -114,9 +115,20 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
                   <Flex justify="space-between">
                     <Text c="dark.3" fw={900} w={"85%"}>
                       {getContent(
-                        q.title[
-                          selectedLanguage ? selectedLanguage : defaultLanguage
-                        ],
+                        getReplacedTitleFromVariable({
+                          title:
+                            q.title[
+                              selectedLanguage
+                                ? selectedLanguage
+                                : defaultLanguage
+                            ],
+                          surveyId,
+                        }) ||
+                          q.title[
+                            selectedLanguage
+                              ? selectedLanguage
+                              : defaultLanguage
+                          ],
                       )}
                     </Text>
                     <Badge variant="dot">{q.type}</Badge>

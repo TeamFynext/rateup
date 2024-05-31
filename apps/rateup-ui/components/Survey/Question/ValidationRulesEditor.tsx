@@ -38,7 +38,7 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
-  setActiveTab: (tab: QuestionTabsEnum) => void;
+  setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
   activeTab: QuestionTabsEnum;
 }
 

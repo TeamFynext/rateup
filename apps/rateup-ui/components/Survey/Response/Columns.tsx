@@ -34,6 +34,7 @@ import {
   getFileNameFromKey,
   getFileUrlFromKey,
 } from "../../../utils/file-upload/upload";
+import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
 
 export const useSurveyResponseColumns = ({
   questions = [],
@@ -76,11 +77,16 @@ export const useSurveyResponseColumns = ({
     ...(questions?.length > 0
       ? questions?.map((q) => {
           const content =
+            getReplacedTitleFromVariable({
+              title:
+                q?.title[selectedLanguage ? selectedLanguage : defaultLanguage],
+              surveyId,
+            }) ||
             q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
             q?.description[
               selectedLanguage ? selectedLanguage : defaultLanguage
             ] ||
-            q?.label[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+            q?.label?.[selectedLanguage ? selectedLanguage : defaultLanguage] ||
             "";
           return {
             ...(![

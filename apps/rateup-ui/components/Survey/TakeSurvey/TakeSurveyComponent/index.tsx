@@ -489,6 +489,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                                 surveyThemeData?.surveyTheme?.title?.styles
                               }
                               smallScreen={smallScreen}
+                              responses={responses}
+                              surveyId={survey?.id}
                             />
                             {!isHtml(selectedQ?.title[selectedLanguage]) && (
                               <QuestionDesc

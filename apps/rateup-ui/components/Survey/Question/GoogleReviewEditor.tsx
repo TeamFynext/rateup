@@ -29,7 +29,7 @@ import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal";
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
-  setActiveTab: (tab: QuestionTabsEnum) => void;
+  setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
   surveyId?: string;
 }
 

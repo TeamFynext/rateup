@@ -20,6 +20,7 @@ import {
   CampaignStatus,
   StripeProductType,
   PaymentPlanStatus,
+  SurveyVariableType,
 } from "./enums";
 
 type GoogleReview = {
@@ -81,6 +82,14 @@ declare global {
     title?: string;
     rows: Array<{ title: string; description: string }>;
   }>;
+
+  type SurveyVariable = {
+    id: string;
+    name: string;
+    value: string;
+    type: SurveyVariableType;
+    surveyId?: string;
+  };
 
   type Survey = {
     id: string;

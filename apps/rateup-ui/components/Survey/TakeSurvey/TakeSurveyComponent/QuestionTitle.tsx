@@ -3,17 +3,33 @@ import { useContext } from "react";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import classes from "./TakeSurvey.module.css";
-import { QuestionType } from "../../../../types/enums";
+import { getReplacedTitleFromVariable } from "./util";
 
-function QuestionTitle({ largeScreen, themeStyles, smallScreen }) {
+function QuestionTitle({
+  largeScreen,
+  themeStyles,
+  smallScreen,
+  responses,
+  surveyId,
+}) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  return selectedQ?.title[selectedLanguage] ? (
+  const data = {
+    title: selectedQ?.title[selectedLanguage],
+    componentName: "variable-component",
+    prop: "label",
+    responses,
+    surveyId,
+    isPublicPage: true,
+  };
+  const replacedTitle =
+    getReplacedTitleFromVariable(data) ?? selectedQ?.title[selectedLanguage];
+  return replacedTitle ? (
     <Text
       style={{
         color: themeStyles?.color,
       }}
-      dangerouslySetInnerHTML={{ __html: selectedQ.title[selectedLanguage] }}
+      dangerouslySetInnerHTML={{ __html: replacedTitle }}
     />
   ) : (
     <Text

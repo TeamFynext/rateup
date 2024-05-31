@@ -345,6 +345,16 @@ export function QuestionDetailedView({
                 </Menu.Target>
 
                 <Menu.Dropdown>
+                  <Menu.Item>
+                    <RateupButtonSecondary
+                      title={"Variables"}
+                      fullWidth
+                      size="sm"
+                      onClick={() =>
+                        setActiveTab(QuestionTabsEnum.VariableEditor)
+                      }
+                    />
+                  </Menu.Item>
                   {logicSupportedTypes.includes(question?.type) && (
                     <Menu.Item>
                       <RateupButtonSecondary

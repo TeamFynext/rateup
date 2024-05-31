@@ -29,6 +29,7 @@ import {
 import { stringToColour } from "../../../utils/essential";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { getContent } from "../../../utils";
+import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
 
 const ResultsOverview = ({ surveyId }) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
@@ -207,6 +208,10 @@ const ResultsOverview = ({ surveyId }) => {
       }
       return {
         question:
+          getReplacedTitleFromVariable({
+            title: question?.title[selectedLanguage || defaultLanguage],
+            surveyId,
+          }) ||
           question?.title[
             selectedLanguage ? selectedLanguage : defaultLanguage
           ],
