@@ -4,16 +4,32 @@ export interface ICreateContact {
   name: string;
   phone?: string;
   email?: string;
-  teamId: string;
+  teamId?: string;
   source?: string;
   tags?: any;
 }
 
 const CONTACT_BASE_URL = "/contact";
 
-export const getContactsList = async () => {
-  let contactsData: ContactsResponse = await axiosClient.get(CONTACT_BASE_URL);
-  return contactsData.data as ContactsData[];
+export const getContactsList = async (
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  },
+  search: string,
+  sort: {
+    id: string;
+    desc: boolean;
+  },
+  columnFilters: { id: string; value: string }[],
+) => {
+  let filter = columnFilters
+    .map((data) => `&${data.id}=${data.value}`)
+    .join("&");
+  let desc = sort.desc ? "desc" : "asc";
+  let contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
+  let contactsData = await axiosClient.get(contactUrl);
+  return contactsData.data as { users: ContactsData[]; totalCount: number };
 };
 
 export async function getContactById(contactId: string) {
@@ -32,11 +48,7 @@ export const importContacts = async (data) => {
 };
 
 export const importCSVContacts = async (data) => {
-  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data);
   return res;
 };
 

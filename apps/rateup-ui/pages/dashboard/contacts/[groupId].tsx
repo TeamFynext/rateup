@@ -11,7 +11,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import {
   IconEdit,
@@ -19,7 +19,11 @@ import {
   IconTrash,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+} from "@tanstack/react-table";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import {
@@ -32,6 +36,7 @@ import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
 import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
 import { ParticipantMenu } from "../../../components/Contacts/GroupParticipant";
 import {
+  CONTACT_SORT,
   WhatsappTableType,
   contactColumn,
 } from "../../../components/Contacts/utils/utils";
@@ -45,6 +50,9 @@ import ContactImportErrorModal from "../../../components/Contacts/ContactImportE
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
   const { groupId } = router.query;
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
@@ -224,6 +232,10 @@ export default function ContactGroup() {
                   open={open}
                   groupId={groupDetails?.id}
                   refetch={refetchgroupById}
+                  setSorting={setSorting}
+                  sorting={sorting}
+                  columnFilters={columnFilters}
+                  setColumnFilters={setColumnFilters}
                 />
               </PaperLayout>
             </Box>

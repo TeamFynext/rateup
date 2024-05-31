@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Paper,
   Stack,
@@ -44,7 +44,6 @@ const CreateContactModal = ({
   cTags = [],
   importCSVContactMutation,
 }) => {
-  const [contactType, setContactType] = useState<string[]>([...cTags]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
@@ -52,48 +51,45 @@ const CreateContactModal = ({
     initialValues: {
       name: "",
       phone: "",
-      importMethod: importMethod.MANUAL,
-      contactType: [],
+      source: importMethod.MANUAL,
+      contactType: cTags ?? [],
       countryCode: "91",
       tags: {},
     },
     validate: {
-      phone: (value) => {
-        if (form.values.importMethod == importMethod.MANUAL)
+      phone: (value, values) => {
+        if (values.source == importMethod.MANUAL)
           return !value
             ? "Phone Number cannot be blank"
             : !isValidPhoneNumber(value)
               ? "Invalid phone number"
               : null;
       },
-      name: (value) =>
-        form.values.importMethod == importMethod.MANUAL &&
+      name: (value, values) =>
+        values.source == importMethod.MANUAL &&
         (value.length ? null : "Name cannot be blank"),
     },
   });
 
-  useEffect(() => {
-    if (form?.values) {
-      form.values.contactType = contactType;
-    }
-  }, [contactType]);
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validation = form.validate();
     if (validation.hasErrors) {
       if (validation.errors.contactType) {
-        showErrorToast(validation.errors.contactType);
+        showErrorToast(validation.errors.contactType as string);
       }
       return;
     }
     setIsCreating(true);
-    if (form.values.importMethod == importMethod.CSV) {
+    if (form.getValues().source == importMethod.CSV) {
       if (!csvfile) return;
       const formData = new FormData();
       formData.append("file", csvfile);
-      contactType.forEach((item, index) => {
-        formData.append(`tags[${index}]`, item);
-      });
+      for await (const item of form.getValues().contactType) {
+        formData.append(
+          `tags[${form.getValues().contactType.indexOf(item)}]`,
+          item,
+        );
+      }
       importCSVContactMutation.mutate(formData, {
         onSettled: () => {
           setIsCreating(false);
@@ -105,18 +101,15 @@ const CreateContactModal = ({
       });
     } else {
       const result = {};
-      for (const key of contactType) {
+      for (const key of form.getValues().contactType) {
         if (form.getValues()?.tags?.hasOwnProperty(key)) {
           result[key] = form.getValues()?.tags?.[key];
         }
       }
-      form.values.tags = result;
+      form.getValues().tags = result;
       let contactData: ICreateContact = {
-        name: form.values.name,
-        phone: form.values.phone.slice(1),
-        teamId: form.values.teamId,
-        source: importMethod.MANUAL,
-        tags: form.values.tags,
+        ...form.getValues(),
+        phone: form.getValues().phone.slice(1),
       };
       createContactMutation.mutate(contactData, {
         onSuccess: () => {
@@ -137,14 +130,15 @@ const CreateContactModal = ({
       <form
         onSubmit={handleSubmit}
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
+        onReset={form.reset}
       >
         <Stack>
           <Group justify="space-between">
             <Radio.Group
-              value={form.values.importMethod}
-              onChange={(value) => form.setFieldValue("importMethod", value)}
               name="importMethod"
               label="Import Contacts"
+              key={form.key("source")}
+              {...form.getInputProps("source")}
             >
               <Group>
                 <Radio value={importMethod.MANUAL} label="Manual" />
@@ -154,7 +148,10 @@ const CreateContactModal = ({
 
             {cTags?.length > 0 && (
               <Paper shadow="xl" p="md" px="xl">
-                <Checkbox.Group value={contactType} onChange={setContactType}>
+                <Checkbox.Group
+                  key={form.key("contactType")}
+                  {...form.getInputProps("contactType")}
+                >
                   <Group>
                     {cTags?.map((data) => (
                       <Checkbox
@@ -169,15 +166,16 @@ const CreateContactModal = ({
               </Paper>
             )}
           </Group>
-          {form.values.importMethod == importMethod.MANUAL && (
+          {form.getValues().source == importMethod.MANUAL && (
             <SimpleGrid cols={2}>
               <TextInput
                 label="Name"
                 placeholder="Enter name"
-                {...form.getInputProps("name")}
                 radius={"md"}
                 size="md"
                 required
+                key={form.key("name")}
+                {...form.getInputProps("name")}
               />
               <Stack gap={0}>
                 <Group gap={3}>
@@ -189,30 +187,33 @@ const CreateContactModal = ({
                   international
                   countryCallingCodeEditable={false}
                   placeholder="Enter phone number"
-                  {...form.getInputProps("phone")}
                   className={styles.inputPhone}
+                  key={form.key("phone")}
+                  {...form.getInputProps("phone")}
                 />
                 <Text size="sm" c={"red"}>
                   {form?.errors?.phone}
                 </Text>
               </Stack>
 
-              {contactType?.map(
-                (data) =>
-                  data !== "phone" && (
-                    <TextInput
-                      label={data}
-                      placeholder={`Enter ${data}`}
-                      {...form.getInputProps(`tags.${data}`)}
-                      radius={"md"}
-                      size="md"
-                      key={data}
-                    />
-                  ),
-              )}
+              {form
+                .getValues()
+                .contactType?.map(
+                  (data) =>
+                    data !== "phone" && (
+                      <TextInput
+                        label={data}
+                        placeholder={`Enter ${data}`}
+                        radius={"md"}
+                        size="md"
+                        key={form.key(`tags.${data}`)}
+                        {...form.getInputProps(`tags.${data}`)}
+                      />
+                    ),
+                )}
             </SimpleGrid>
           )}
-          {form.values.importMethod == importMethod.CSV && (
+          {form.getValues().source == importMethod.CSV && (
             <Stack>
               <Blockquote
                 color="blue"
@@ -252,23 +253,18 @@ const CreateContactModal = ({
           )}
 
           <Group justify="flex-end">
-            <RateupButtonSecondary
-              title="cancel"
-              onClick={contactClose}
-            ></RateupButtonSecondary>
+            <RateupButtonSecondary title="cancel" onClick={contactClose} />
             <RateupButtonBlue
               title={
-                form.values.importMethod == importMethod.MANUAL
+                form.getValues().source == importMethod.MANUAL
                   ? "Add Contact"
                   : "Import Contacts"
               }
               type="button"
               loading={isCreating}
               onClick={handleSubmit}
-              disabled={
-                form.values.importMethod == importMethod.CSV && !csvfile
-              }
-            ></RateupButtonBlue>
+              disabled={form.getValues().source == importMethod.CSV && !csvfile}
+            />
           </Group>
         </Stack>
       </form>

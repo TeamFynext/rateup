@@ -71,6 +71,7 @@ export const contactColumn = (contactTags = []) => {
           accessorFn: (row) => row?.tags?.[data],
           id: data,
           cell: (info) => info.getValue()?.toString(),
+          enableSorting: false,
         }))
       : []),
 
@@ -393,3 +394,5 @@ export const tabHeaderLabels = {
     tooltipMsg: "remove participants",
   },
 };
+
+export const CONTACT_SORT = { id: "createdAt", desc: true };

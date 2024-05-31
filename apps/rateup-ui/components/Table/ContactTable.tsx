@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo } from "react";
 import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -8,15 +9,12 @@ import {
 } from "@tabler/icons-react";
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useEffect } from "react";
 import {
   useDeleteManyContactGroupsMutation,
   useRemoveContactsFromGroup,
@@ -47,6 +45,13 @@ function ContactTable({
   btnTitle = "",
   toggle,
   refetch,
+  pagination,
+  setPagination,
+  sorting,
+  setSorting,
+  totalCount,
+  columnFilters,
+  setColumnFilters,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -61,16 +66,18 @@ function ContactTable({
   btnTitle?: string;
   toggle?: () => void;
   refetch: () => void;
+  pagination?;
+  setPagination?;
+  sorting;
+  setSorting;
+  totalCount?: number;
+  columnFilters;
+  setColumnFilters;
 }>) {
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "createdAt", desc: true },
-  ]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+
   const [
     dialogOpened,
     { toggle: toggleConfirmationModal, close: closeDialog },
@@ -93,7 +100,7 @@ function ContactTable({
     },
   );
 
-  let tempVisibleColumnArray: string[] = [];
+  const tempVisibleColumnArray = useMemo(() => [], []);
 
   useEffect(() => {
     if (tempVisibleColumnArray)
@@ -101,7 +108,14 @@ function ContactTable({
         .getState()
         .updateVisibleColumnArray(tempVisibleColumnArray);
   }, [tempVisibleColumnArray]);
-
+  let initialState = {};
+  if (!pagination) {
+    initialState = {
+      pagination: {
+        pageSize: Number(PAGE_SIZE[0]),
+      },
+    };
+  }
   const table = useReactTable({
     data,
     columns,
@@ -110,12 +124,14 @@ function ContactTable({
       sorting,
       columnFilters,
       rowSelection,
+      ...(pagination ? { pagination } : {}),
     },
-    initialState: {
-      pagination: {
-        pageSize: Number(PAGE_SIZE[0]),
-      },
-    },
+    initialState,
+    rowCount: totalCount,
+    manualPagination: !!pagination,
+    manualSorting: !!pagination,
+    manualFiltering: !!pagination,
+    ...(pagination ? { onPaginationChange: setPagination } : {}),
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -126,7 +142,6 @@ function ContactTable({
     onRowSelectionChange: setRowSelection,
   });
   const { headerLabel, headerTitle, tooltipMsg } = tabHeaderLabels[tab] || {};
-
   return (
     <>
       <Flex gap={"md"} justify={"space-between"} align={"center"} px={"xs"}>

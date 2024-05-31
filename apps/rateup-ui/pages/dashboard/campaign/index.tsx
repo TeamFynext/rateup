@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
@@ -27,7 +27,7 @@ import { whatsappTheme } from "../../../config/mantineTheme";
 import styles from "./campaign.module.css";
 
 export default function CampaignList() {
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useDebouncedState("", 200);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
   const enabled = !!selectedTeam && selectedTeam != "all";
@@ -128,7 +128,7 @@ export const SearchInput = ({
 }) => {
   return (
     <TextInput
-      value={searchText}
+      defaultValue={searchText}
       onChange={(e) => setSearchText(e.currentTarget.value)}
       size={size}
       radius={"xl"}
