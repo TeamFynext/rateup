@@ -4,6 +4,7 @@ import prisma from "../../utils/prisma";
 import {
   ContactCore,
   createMultipleContactInput,
+  PaginationQuery,
   updateContactSchema,
 } from "./contact.schema";
 import Papa from "papaparse";
@@ -43,25 +44,97 @@ export async function getContactById(contactId: string) {
   });
   return user;
 }
-
-export async function getContactsByOrgId(orgId: string) {
-  const users = await prisma.contact.findMany({
-    where: {
-      orgId,
-    },
-    include: {
-      contactGroups: {
-        select: {
-          contactGroup: {
-            select: {
-              name: true,
-            },
+export async function getContactsByOrgId(
+  orgId: string,
+  query?: PaginationQuery,
+) {
+  const {
+    page = 0,
+    limit = 500,
+    search = "",
+    sort = "createdAt",
+    desc = "asc",
+    ...filter
+  } = query ?? {
+    page: 0,
+    limit: 500,
+    search: "",
+    sort: "createdAt",
+    desc: "asc",
+  };
+  let filterData = [];
+  if (filter) {
+    const params = new URLSearchParams(filter);
+    for await (const [key, value] of params.entries()) {
+      if (["name", "phone", "source"].includes(key)) {
+        filterData.push({
+          [key]: {
+            contains: value,
+            mode: "insensitive",
+          },
+        });
+      } else if ("createdAt" === key) {
+        filterData.push({
+          [key]: {
+            equal: value,
+            mode: "insensitive",
+          },
+        });
+      } else {
+        filterData.push({
+          tags: {
+            path: [key],
+            string_contains: value,
+          },
+        });
+      }
+    }
+  }
+  if (search?.length > 0) {
+    filterData.push({
+      name: {
+        contains: search,
+        mode: "insensitive",
+      },
+    });
+    filterData.push({
+      phone: {
+        contains: search,
+        mode: "insensitive",
+      },
+    });
+  }
+  // Define the search condition
+  const searchCondition: any =
+    filterData?.length > 0 ? { orgId, OR: filterData } : { orgId };
+  // Count total matching contacts
+  const totalCount = await prisma.contact.count({
+    where: searchCondition,
+  });
+  const includeCondition = {
+    contactGroups: {
+      select: {
+        contactGroup: {
+          select: {
+            name: true,
           },
         },
       },
     },
+  };
+  // Fetch paginated contacts
+  const users = await prisma.contact.findMany({
+    where: searchCondition,
+    include: includeCondition,
+    skip: Number(page) * Number(limit),
+    take: Number(limit),
+    orderBy: {
+      [sort]: desc,
+    },
   });
-  return users;
+
+  // Return the result
+  return { users, totalCount };
 }
 
 export async function getContactByPhoneNumberAndOrgId(
@@ -151,8 +224,10 @@ export async function importCSVContacts(
   contactGroupId?: string,
 ) {
   const { mimetype } = fileBody;
-  const file =
-    mimetype === "text/csv" ? fileBody.file : await fileBody.toBuffer();
+  const csvType = ["text/csv", "application/vnd.ms-excel"];
+  const file = csvType.includes(mimetype)
+    ? fileBody.file
+    : await fileBody.toBuffer();
 
   return new Promise(async (resolve, reject) => {
     let contacts = [];
@@ -199,7 +274,7 @@ export async function importCSVContacts(
       }
     };
 
-    if (mimetype === "text/csv") {
+    if (csvType.includes(mimetype)) {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -262,13 +337,26 @@ export async function createContactsFromCsv(
     const res = await addNewContactsToGroup(contactGroupId, data, orgId);
     return res;
   }
-  const existingcontacts = await getContactsByOrgId(orgId);
-  const filterNewContacts = data.filter((contact) => {
-    return !existingcontacts.some(
-      (existContact) => existContact.phone === contact.phone,
-    );
-  });
-  if (!filterNewContacts.length) throw new Error("All contacts already exist");
+  const filterNewContacts = await getExistingContactCountByPhno(
+    data.map((item) => item.phone),
+    orgId,
+  );
+  if (filterNewContacts === (data?.length ?? 0))
+    throw new Error("All contacts already exist");
   const res = await createMultipleContacts(data, orgId);
   return res;
+}
+
+export async function getExistingContactCountByPhno(
+  ids: string[],
+  orgId: string,
+) {
+  return await prisma.contact.count({
+    where: {
+      phone: {
+        in: ids,
+      },
+      orgId,
+    },
+  });
 }

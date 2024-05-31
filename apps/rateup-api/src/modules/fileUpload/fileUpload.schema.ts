@@ -15,6 +15,7 @@ export const allowedMimeTypes = [
 ];
 export const dataExtractFileMimeTypes = [
   "text/csv",
+  "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
