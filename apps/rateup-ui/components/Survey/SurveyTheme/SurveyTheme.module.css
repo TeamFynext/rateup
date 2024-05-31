@@ -23,6 +23,7 @@
   display: flex;
   gap: 0.625rem;
   padding: 5px;
+  max-height: 800px;
 }
 
 .theme-preview-container,
@@ -83,6 +84,12 @@
 .switch-body label {
   cursor: pointer;
   border: none;
+}
+
+.survey-theme-preview-layout-div {
+  height: 100%;
+  width: 100%;
+  padding: 0.4375rem;
 }
 
 .survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {

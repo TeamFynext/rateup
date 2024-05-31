@@ -14,6 +14,8 @@ import cx from "clsx";
 import React, { useRef } from "react";
 import { getImageValue } from "../../../../../utils/file-upload/upload";
 import classes from "./ImageCheckboxes.module.css";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -165,11 +167,24 @@ export function SingleSelectCard({
       dataValue={typeof item === "string" ? item : item.value}
     />
   ));
+
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const selectedPreview = useSelectedPreview();
+  const surveyThemeMobilePreview =
+    isSurveyThemePreview && selectedPreview === "mobile";
+
   const colsCount = includeImage
     ? { base: 2, xs: 3, sm: 4, md: 5 }
     : { base: 1, xs: 2, sm: 3, md: 4 };
+
+  const columnsCount = surveyThemeMobilePreview
+    ? includeImage
+      ? 2
+      : 1
+    : colsCount;
+
   return (
-    <SimpleGrid cols={sizeTrim ? 1 : colsCount} spacing={10}>
+    <SimpleGrid cols={sizeTrim ? 1 : columnsCount} spacing={10}>
       {items}
     </SimpleGrid>
   );

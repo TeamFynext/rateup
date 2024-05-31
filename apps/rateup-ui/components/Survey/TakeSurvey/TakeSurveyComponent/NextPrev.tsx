@@ -145,7 +145,6 @@ function NextPrev({
               (isLastQuestion && isSurveyThemePreview)
             }
             onClick={handleNextClick}
-            color="var(--tertiary-color)"
             rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}
             style={
               ((selectedQ?.required || selectedQ?.validationRules) &&
@@ -156,6 +155,9 @@ function NextPrev({
                 : themeStylesWoBr
             }
             loading={isSavingResponses}
+            loaderProps={{
+              color: themeStylesWoBr?.color || "white",
+            }}
           >
             {isLastQuestion ? "Submit" : "Next"}
           </Button>

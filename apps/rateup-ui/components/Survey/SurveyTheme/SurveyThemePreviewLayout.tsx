@@ -11,7 +11,7 @@ function SurveyThemePreviewLayout({ survey }) {
   const selectedPreview = useSelectedPreview();
 
   return (
-    <Stack h="100%" w={"100%"} p={"0.4375rem"}>
+    <Stack className={styles["survey-theme-preview-layout-div"]}>
       <Box
         style={{
           display: "flex",

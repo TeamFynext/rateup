@@ -44,6 +44,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
 
   const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+
   let orgLogo = null;
   let orgLogoStyles = null;
   let orgLogoSrc = null;
@@ -73,13 +74,21 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const updateVisited = useUpdateVisitedMutation(survey?.id);
   const updateStarted = useUpdateStartedMutation(survey?.id);
 
-  const [opened, { open, close }] = useDisclosure(survey?.isProtected);
+  const [opened, { open, close }] = useDisclosure(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
   useEffect(() => {
-    if (!opened) if (survey?.isProtected && !isPasswordVerified) open();
-  }, [opened]);
+    const isLoginInputModalRequired =
+      survey?.isPublished &&
+      survey?.active &&
+      survey?.isProtected &&
+      !isPasswordVerified &&
+      !isSurveyThemePreview;
+    if (isLoginInputModalRequired) {
+      if (!opened) open();
+    }
+  }, [opened, isSurveyThemePreview]);
 
   useEffect(() => {
     if (start === true) setStartClicked(true);
@@ -125,7 +134,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     isWelcomeThemeActive &&
     surveyThemeData["welcomeTheme"].bg.useSurveyBackground;
   let requiredSurveyThemeObjKey = "surveyTheme";
-  if (isWelcomeThemeActive && !useSurveyBackground)
+  if (!isSurveyThemePreview && isWelcomeThemeActive && !useSurveyBackground)
     requiredSurveyThemeObjKey = "welcomeTheme";
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
@@ -177,6 +186,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
             verifySurveyPassword.mutate();
           }}
           buttonTitle={"Login"}
+          submitBtnColor={"var(--tertiary-color)"}
         >
           <Text mt="lg" size="sm" c="gray">
             Hey Welcome , <br /> You need to enter password to continue.
@@ -211,7 +221,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
               src={backgroundImageSrc}
             >
               {/* .........Survey Header Section.......... */}
-              {survey?.isPublished == true &&
+              {(survey?.isPublished == true || isSurveyThemePreview) &&
                 (startClicked || isSurveyThemePreview) && (
                   <Box
                     // align="center"
@@ -237,8 +247,11 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                 style={{ padding: 0, margin: 0, flex: 1 }}
                 display={"flex"}
               >
-                {survey?.isPublished === true && survey?.active === true ? (
-                  survey?.isProtected && isPasswordVerified === false ? null : (
+                {(survey?.isPublished && survey?.active) ||
+                isSurveyThemePreview ? (
+                  survey?.isProtected &&
+                  !isPasswordVerified &&
+                  !isSurveyThemePreview ? null : (
                     <Paper
                       radius={0}
                       w={"100%"}

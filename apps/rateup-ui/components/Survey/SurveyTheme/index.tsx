@@ -1,19 +1,15 @@
 import { Box, Center, Group } from "@mantine/core";
 import { useState } from "react";
-import {
-  useAllThemes,
-  useSurveyTheme,
-} from "../../../backend/surveyTheme/surveyTheme.query";
-import RateupLoader from "../../Loaders/RateupLoader";
-import PageSelector from "./components/PageSelector";
-import SaveButton from "./components/SaveButton";
-import StylesComponent from "./components/stylescomponent";
-import ThemeSelector from "./components/ThemeSelector";
-import styles from "./SurveyTheme.module.css";
+import { useAllThemes } from "../../../backend/surveyTheme/surveyTheme.query";
 import { SurveyThemeContextProvider } from "./SurveyThemeContext";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
-import WelcomePageSwitch from "./components/WelcomePageSwitch";
+import PageSelector from "./components/PageSelector";
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
+import SaveButton from "./components/SaveButton";
+import ThemeSelector from "./components/ThemeSelector";
+import WelcomePageSwitch from "./components/WelcomePageSwitch";
+import StylesComponent from "./components/stylescomponent";
+import styles from "./SurveyTheme.module.css";
 
 function SurveyTheme({ survey }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;

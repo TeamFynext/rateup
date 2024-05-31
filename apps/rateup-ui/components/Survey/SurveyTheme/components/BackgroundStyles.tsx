@@ -98,7 +98,7 @@ function BackgroundStyles() {
         <CustomSwitch
           checked={confettiEnabled}
           onChange={handleConfettiChange}
-          label={"Confetti Enabled"}
+          label={!confettiEnabled ? "Enable Confetti" : "Disable Confetti"}
         />
       )}
 
