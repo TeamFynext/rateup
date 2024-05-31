@@ -1,4 +1,12 @@
-import { Stack, Group, Avatar, Badge, Text, Button } from "@mantine/core";
+import {
+  Stack,
+  Group,
+  Avatar,
+  Badge,
+  Text,
+  Button,
+  Tooltip,
+} from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -63,9 +71,11 @@ export function SurveyCard({
     >
       <Stack justify="space-between" h={"100%"}>
         <Group justify={"space-between"} align={"center"}>
-          <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
-            {survey?.title}
-          </Text>
+          <Tooltip label={survey?.title}>
+            <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
+              {survey?.title}
+            </Text>
+          </Tooltip>
           <Group align={"center"} gap="xs">
             <SurveyMenu
               survey={survey}

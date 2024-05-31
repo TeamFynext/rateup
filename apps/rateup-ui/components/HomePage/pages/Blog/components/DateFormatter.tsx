@@ -8,7 +8,7 @@ type Props = {
 };
 
 const DateFormatter = ({ dateString }: Props) => {
-  const date = dayjs(dateString, "DD/MM/YYYY")
+  const date = dayjs(dateString, "MM/DD/YYYY")
     .locale("en")
     .format("MMMM DD, YYYY");
 
