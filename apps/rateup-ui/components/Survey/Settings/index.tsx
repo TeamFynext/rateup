@@ -48,6 +48,10 @@ const SurveySettings = ({
   const [kioskMode, setKioskMode] = useState(survey?.kioskMode);
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
+  const [
+    webSurveyAutoTransitionToNextQues,
+    setwebSurveyAutoTransitionToNextQues,
+  ] = useState(survey?.webSurveyAutoTransitionToNextQues);
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
   const [redirect, setRedirect] = useState(survey?.redirect);
   const [redirectError, setRedirectError] = useState({ url: "", time: "" });
@@ -99,6 +103,12 @@ const SurveySettings = ({
             setLocation={setLocation}
             preview={preview}
             setPreview={setPreview}
+            webSurveyAutoTransitionToNextQues={
+              webSurveyAutoTransitionToNextQues
+            }
+            setwebSurveyAutoTransitionToNextQues={
+              setwebSurveyAutoTransitionToNextQues
+            }
             survey={survey}
             surveyId={surveyId}
           />

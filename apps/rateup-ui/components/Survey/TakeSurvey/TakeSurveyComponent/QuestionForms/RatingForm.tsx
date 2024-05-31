@@ -6,6 +6,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import { useSurveyContext } from "../SurveyContext";
 
 export function RatingForm() {
   const selectedPreview = useSelectedPreview();
@@ -18,12 +19,14 @@ export function RatingForm() {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
+
   const onRatingChange = async (value) => {
     updateResponse(value);
     const selectedValueEle = scope.current.querySelectorAll(
       `.${classes.rating} .mantine-Rating-symbolGroup:nth-child(-n+${value})`,
     );
-    if (!isLastQuestion) {
+    if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (selectedValueEle) {
         await animate(
           selectedValueEle,

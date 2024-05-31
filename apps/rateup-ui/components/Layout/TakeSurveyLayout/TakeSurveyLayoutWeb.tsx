@@ -17,8 +17,7 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconChevronRight } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useSurveyTheme } from "../../../backend/surveyTheme/surveyTheme.query";
+import { useEffect, useState } from "react";
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
@@ -28,17 +27,13 @@ import QuestionCountContext from "../../../context/QuestionCountContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { CreditsCard } from "../../Card/CreditsCard";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import { getImageUrl } from "../../Survey/SurveyTheme/SurveyTheme.utils";
-import { SurveyTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
+import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
+import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import WelcomePage from "../WelcomePage/WelcomePage";
-import RateupLoader from "../../Loaders/RateupLoader";
-import { surveyUploadsPath } from "../../../utils/constants";
 import styles from "./TakeSurveyLayoutWeb.module.css";
 import { getBgImgAndBgColor } from "./utils";
-import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
-import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
 export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;

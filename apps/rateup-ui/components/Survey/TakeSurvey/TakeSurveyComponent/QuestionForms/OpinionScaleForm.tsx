@@ -14,6 +14,7 @@ import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import styles from "./OpinionScaleForm.module.css";
 import classNames from "classnames/bind";
 import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSurveyContext } from "../SurveyContext";
 
 const cx = classNames.bind(styles);
 interface iProps {
@@ -35,6 +36,8 @@ export function OpinionScaleForm({ initValue }: iProps) {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
+
   const handleHover = (index) => {
     setIsHovered(index);
   };
@@ -48,7 +51,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
     const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {
       !initValue && updateResponse(clickedBtnValue);
-      if (!isLastQuestion) {
+      if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
         if (clickedBtn) {
           await animate(
             clickedBtn,

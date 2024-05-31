@@ -6,11 +6,13 @@ import { YNResponse } from "../../../../../types/enums";
 import styles from "./YNForm.module.css";
 import { animate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { useSurveyContext } from "../SurveyContext";
 
 export function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
@@ -20,7 +22,7 @@ export function YNForm() {
   const handleYesOrNOClick = async (e, value: YNResponse) => {
     const clickedBtn = e.target;
     updateResponse(value);
-    if (!isLastQuestion) {
+    if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (clickedBtn) {
         await animate(
           clickedBtn,

@@ -11,10 +11,13 @@ import { SmileyResponse } from "../../../../../types/enums";
 import { getEmptyIcon, getFullIcon, getIconStyle } from "./SmileyRatingStyling";
 import { useAnimate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { useSurveyContext } from "../SurveyContext";
 
 const SmileyRating = ({ updateResponse, response }) => {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
   const updateStringResponse = (value) => {
     let stringValue;
@@ -69,7 +72,7 @@ const SmileyRating = ({ updateResponse, response }) => {
         const selectedValueEle = scope.current.querySelectorAll(
           `.mantine-Rating-symbolGroup:nth-child(${value})`,
         );
-        if (!isLastQuestion) {
+        if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
           if (selectedValueEle) {
             await animate(
               selectedValueEle,
