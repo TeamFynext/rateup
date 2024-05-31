@@ -134,6 +134,9 @@ export async function getTemplateWithHSMId(hsmId: string) {
  */
 export async function createTemplate(orgId: string, template: any) {
   const waSettings = await getWaSettings(orgId);
+  if (!waSettings) {
+    throw new Error("No WhatsApp settings found for orgId " + orgId);
+  }
   const res = await callWhatsappApi(
     `/${waSettings.wabaId}/message_templates`,
     "POST",

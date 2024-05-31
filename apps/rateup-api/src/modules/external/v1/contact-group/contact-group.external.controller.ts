@@ -3,7 +3,7 @@ import {
   AddNewContactsToGroupInput,
   ByContactGroupIdParams,
 } from "../../../contact/contactGroup/contactGroup.schema";
-import { addNewContactsToGroupHandler } from "../../../contact/contactGroup/contactGroup.controller";
+import { addNewContactsToGroupHandler } from "../contact/internal-copy/contact/contactGroup/contactGroup.controller";
 
 export async function extAddNewContactsToGroupHandler(
   request: FastifyRequest<{

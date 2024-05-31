@@ -1,5 +1,4 @@
 import { buildJsonSchemas } from "fastify-zod";
-
 import { z } from "zod";
 import { contactCoreSchema } from "../../../contact/contact.schema";
 

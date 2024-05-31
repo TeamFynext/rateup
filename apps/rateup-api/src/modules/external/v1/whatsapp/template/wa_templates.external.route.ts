@@ -1,11 +1,11 @@
 import { FastifyInstance } from "fastify";
+import { $waTemplateExternalRef } from "./wa_templates.external.schema";
 import {
   getTemplatesHandler,
-  sendTemplatesToContactsHandler,
+  sendTemplateToContactHandler,
   sendTemplatesToContactGroupsHandler,
-} from "../../../../whatsapp/messageTemplates/wa_templates.controller";
-import { $WTref } from "../../../../whatsapp/messageTemplates/wa_templates.schema";
-import { $waTemplateExternalRef } from "./wa_templates.external.schema";
+  sendTemplatesToContactsHandler,
+} from "../internal-copy/whatsapp/messageTemplates/wa_templates.controller";
 
 export async function extWaTemplateRoutes(server: FastifyInstance) {
   server.get(
@@ -27,10 +27,24 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
   );
 
   server.post(
+    "/:templateId/send/contact/:contactId",
+    {
+      schema: {
+        params: $waTemplateExternalRef("sendTemplateToContactParamsWithOrgId"),
+        body: $waTemplateExternalRef("sendTemplateToContact"),
+        tags: ["WhatsApp/Template"],
+        description: "Send a template to a contact. Supports variables in body",
+        summary: "Send a template to a contact",
+      },
+    },
+    sendTemplateToContactHandler,
+  );
+
+  server.post(
     "/:templateId/send/contacts",
     {
       schema: {
-        params: $WTref("byTemplateIdParamsSchema"),
+        params: $waTemplateExternalRef("sendTemplateToContactsParamsWithOrgId"),
         body: $waTemplateExternalRef("sendTemplatesToContacts"),
         tags: ["WhatsApp/Template"],
         description: "Send a template to contacts",
@@ -44,7 +58,9 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
     "/:templateId/send/contact-groups",
     {
       schema: {
-        params: $WTref("byTemplateIdParamsSchema"),
+        params: $waTemplateExternalRef(
+          "sendTemplateToContactGroupsParamsWithOrgId",
+        ),
         body: $waTemplateExternalRef("sendTemplatesToContactGroups"),
         tags: ["WhatsApp/Template"],
         description: "Send a template to contact groups",

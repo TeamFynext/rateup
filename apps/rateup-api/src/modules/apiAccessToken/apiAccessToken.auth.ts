@@ -25,6 +25,23 @@ export const verifyApiAccessTokenHook = async (
       reply.code(404).send({ message: "Not found" });
       return;
     }
+    try {
+      const org = await getOrgById(orgId);
+      if (!org) {
+        log.error("Org not found\n%o", request.headers);
+        reply.code(404).send({
+          message: "Not found",
+          error: `Org with orgId='${orgId}' not found`,
+        });
+        return;
+      }
+    } catch (err) {
+      log.warn("Invalid orgId\n%o", request.headers);
+      reply.code(404).send({
+        message: "Not found",
+        error: `Org with orgId='${orgId}' not found`,
+      });
+    }
 
     const authHeader = request.headers.authorization;
     if (!authHeader.startsWith("Bearer ")) {
@@ -48,21 +65,11 @@ export const verifyApiAccessTokenHook = async (
     const isValid = await verifyApiAccessToken(orgId, accessToken);
 
     if (!isValid) {
-      const org = await getOrgById(orgId);
-      if (!org) {
-        log.error("Org not found\n%o", request.headers);
-        reply.code(404).send({
-          message: "Not found",
-          error: `Org with orgId='${orgId}' not found`,
-        });
-        return;
-      } else {
-        log.error("Invalid access token\n%o", request.headers);
-        reply
-          .code(401)
-          .send({ message: "Not authorized", error: "Invalid access token" });
-        return;
-      }
+      log.error("Invalid access token\n%o", request.headers);
+      reply
+        .code(401)
+        .send({ message: "Not authorized", error: "Invalid access token" });
+      return;
     }
 
     // since most of the *.service.ts functions fetches user from request object
