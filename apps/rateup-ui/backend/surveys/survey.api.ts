@@ -293,9 +293,12 @@ export async function getInvoicesByPhNo(phoneNumber: string) {
   }
 }
 
-export async function getSurveyVariables(surveyId) {
-  return (await axiosClient.get(`${SURVEYURL}/survey-variables/${surveyId}`))
-    .data as Array<SurveyVariable>;
+export async function getSurveyVariables(surveyId, isPublic) {
+  return (
+    await axiosClient.get(
+      `${isPublic ? SURVEY_PUBLIC_URL : SURVEYURL}/survey-variables/${surveyId}`,
+    )
+  ).data as Array<SurveyVariable>;
 }
 
 export async function createSurveyVariable({ surveyId, data }) {

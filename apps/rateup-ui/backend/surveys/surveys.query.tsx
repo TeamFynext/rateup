@@ -515,10 +515,10 @@ export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
   });
 };
 
-export const useGetSurveyVariables = (surveyId) => {
+export const useGetSurveyVariables = (surveyId, isPublic) => {
   return useQuery({
     queryKey: ["surveyVariables", surveyId],
-    queryFn: () => getSurveyVariables(surveyId),
+    queryFn: () => getSurveyVariables(surveyId, isPublic),
     enabled: !!surveyId,
   });
 };

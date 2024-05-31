@@ -59,7 +59,7 @@ export default function SurveyID() {
   } = useSurvey(surveyId);
   const { isLoading, error, data: questions } = useQuestions(surveyId);
 
-  const { data: surveyVariables } = useGetSurveyVariables(surveyId);
+  const { data: surveyVariables } = useGetSurveyVariables(surveyId, false);
   const { update } = useRouteParams();
   useEffect(() => {
     update({ surveyId: survey?.title });

@@ -327,7 +327,7 @@ function getValueFromVariable(
   responses: QuestionResponse[],
   surveyId,
 ) {
-  const { data: variables } = useGetSurveyVariables(surveyId);
+  const { data: variables } = useGetSurveyVariables(surveyId, true);
   let variableObj =
     variables && variables?.find((val) => val?.name === variable);
   if (variableObj) {
