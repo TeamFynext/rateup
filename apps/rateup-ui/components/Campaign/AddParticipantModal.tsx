@@ -119,8 +119,16 @@ const AddParticipantModal = ({ close, campaign }) => {
   }
 
   const filteredContacts = contacts?.filter((c) => c.phone != null);
-  const filteredGroups = contactGroup?.data;
-  const filteredCampaigns = campaignData?.data;
+  const filteredGroups = searchText
+    ? contactGroup?.data.filter((g) =>
+        g.name.toLowerCase().includes(searchText.toLowerCase()),
+      )
+    : contactGroup?.data;
+  const filteredCampaigns = searchText
+    ? campaignData?.data.filter((g) =>
+        g.name.toLowerCase().includes(searchText.toLowerCase()),
+      )
+    : campaignData?.data;
   let totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
   return (
