@@ -29,8 +29,8 @@ import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { contactAddType, importMethod } from "../../utils/enums";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import { showErrorToast } from "../../utils/notifications";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
+import { getHotkeyHandler, useDebouncedState } from "@mantine/hooks";
+import { PAGE_SIZE, SAVE_HOTKEY } from "../../utils/constants";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
@@ -39,6 +39,8 @@ import "react-phone-number-input/style.css";
 import styles from "./contact.module.css";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { FilterSelect } from "../../pages/dashboard/contacts";
+import RateupLoader from "../Loaders/RateupLoader";
+import ContactPagination from "./ContactPagination";
 
 export interface IAddCustomer {
   name: string;
@@ -57,29 +59,22 @@ const AddCustomerModal = ({
   createNewContactsFromCSV,
 }) => {
   const [contactType, setContactType] = useState<string[]>([...tags]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [isCreating, setIsCreating] = useState(false);
   const [addType, setAddType] = useState(contactAddType.NEW);
   const [customerList, setCustomerList] = useState<string[]>([]);
-  const [filteredCustomerList, setFilteredCustomerList] = useState([]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [filterByTag, setFilterByTag] = useState([]);
   const createNewContactMutation = useAddNewContactMutation(groupId);
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
-  const {
-    isLoading: isLoading,
-    data: contactData,
-    error: error,
-    refetch: refetch,
-  } = useContacts() as {
-    isLoading: boolean;
-    data: ContactsData[];
-    error: any;
-    refetch: any;
-  };
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
+  const { isPending, data } = useContacts(pagination, searchTerm);
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
-
+  let contactData = data?.users;
   const form = useForm({
     initialValues: {
       name: "",
@@ -118,24 +113,6 @@ const AddCustomerModal = ({
   useEffect(() => {
     form.values.contactType = contactType;
   }, [contactType]);
-  useEffect(() => {
-    if (!searchTerm.length && contactData) {
-      setFilteredCustomerList(contactData);
-    } else {
-      if (contactData) {
-        setFilteredCustomerList(
-          contactData?.filter((contact) => {
-            return (
-              contact?.name
-                .toLowerCase()
-                .startsWith(searchTerm.toLowerCase()) ||
-              contact?.phone?.startsWith(searchTerm)
-            );
-          }),
-        );
-      }
-    }
-  }, [searchTerm, contactData]);
 
   const handleSubmit = () => {
     const validation = form.validate();
@@ -233,9 +210,9 @@ const AddCustomerModal = ({
     },
   };
   const sourceArray: string[] = Array.from(
-    new Set(filteredCustomerList?.map((data) => data?.source)),
+    new Set(contactData?.map((data) => data?.source)),
   );
-  const rows = filteredCustomerList
+  const rows = contactData
     ?.filter((data) =>
       sourceArray?.some((data) => filterByTag.includes(data))
         ? filterByTag?.includes(data.source)
@@ -278,6 +255,9 @@ const AddCustomerModal = ({
         <Table.Td>{contact?.phone}</Table.Td>
       </Table.Tr>
     ));
+  if (isPending) return <RateupLoader />;
+  let totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
+
   return (
     <Box p="0">
       <form
@@ -459,7 +439,7 @@ const AddCustomerModal = ({
                   size="sm"
                   placeholder={"Search Contact"}
                   rightSectionWidth={60}
-                  value={searchTerm}
+                  defaultValue={searchTerm}
                   onChange={(event) => setSearchTerm(event.currentTarget.value)}
                   w={300}
                 />
@@ -477,6 +457,11 @@ const AddCustomerModal = ({
                     <Table.Tbody>{rows}</Table.Tbody>
                   </Table>
                 </ScrollArea>
+                <ContactPagination
+                  pagination={pagination}
+                  setPagination={setPagination}
+                  totalPageCount={totalPageCount}
+                />
               </PaperLayout>
             </Stack>
           )}

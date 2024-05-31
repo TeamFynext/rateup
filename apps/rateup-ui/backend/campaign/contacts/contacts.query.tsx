@@ -11,11 +11,20 @@ import {
 } from "./contacts.api";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 
-export const useContacts = () => {
+export const useContacts = (
+  pagination,
+  searchData?,
+  sorting?,
+  columnFilters?,
+) => {
+  let sort = sorting ?? CONTACT_SORT;
+  let filters = columnFilters ?? [];
+  let search = searchData ?? "";
   return useQuery({
-    queryKey: ["contacts"],
-    queryFn: () => getContactsList(),
+    queryKey: ["contacts", pagination, search, sort, filters],
+    queryFn: () => getContactsList(pagination, search, sort, filters),
   });
 };
 

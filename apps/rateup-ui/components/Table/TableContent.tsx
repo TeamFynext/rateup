@@ -16,12 +16,20 @@ import {
   IconChevronDown,
   IconSelector,
 } from "@tabler/icons-react";
-import { flexRender } from "@tanstack/react-table";
+import { Table as TableType, flexRender } from "@tanstack/react-table";
 import { PAGE_SIZE } from "../../utils/constants";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { Filter } from "./Filter/Filter";
 import { lexend600 } from "../../utils/fonts";
 
+type TableLayoutProps = {
+  table: TableType<any>;
+  enableFilter: boolean;
+  filterVisibility: boolean;
+  tempVisibleColumnArray: string[];
+  enablePagination: boolean;
+  topHeight: number;
+};
 const TableLayout = ({
   table,
   enableFilter,
@@ -29,7 +37,7 @@ const TableLayout = ({
   tempVisibleColumnArray,
   enablePagination,
   topHeight = 420,
-}) => {
+}: TableLayoutProps) => {
   return (
     <>
       <Stack justify="space-between" h={`calc(100dvh - ${topHeight}px`}>
@@ -194,7 +202,7 @@ const TableLayout = ({
           </Group>
         </Group>
         <Text pr={"xs"} ff={lexend600.style.fontFamily}>
-          Total Rows: {table.getFilteredRowModel()?.flatRows?.length ?? 0}
+          Total Rows: {table.getRowCount() ?? 0}
         </Text>
       </Flex>
     </>

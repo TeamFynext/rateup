@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import dayjs from "dayjs";
 
 import { useRouter } from "next/router";
-import { useDisclosure } from "@mantine/hooks";
-import { ColumnDef } from "@tanstack/react-table";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import {
   Button,
@@ -28,6 +28,7 @@ import { TeamSelector } from "../../../components/input/TeamSelector";
 import ContactAction from "../../../components/Contacts/ContactAction";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import {
+  CONTACT_SORT,
   contactColumn,
   contactGroupColumn,
 } from "../../../components/Contacts/utils/utils";
@@ -43,6 +44,7 @@ import {
   useGetContactTags,
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
+import { PAGE_SIZE } from "../../../utils/constants";
 
 export enum ContactTabs {
   GROUPS = "groups",
@@ -50,24 +52,31 @@ export enum ContactTabs {
   SETTINGS = "settings",
 }
 export default function Contacts() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [filterByTag, setFilterByTag] = useState<string[]>([]);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [contactTags, setContactTags] = useState([]);
+  const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
+  const [sortingGroup, setSortingGroup] = useState<SortingState>([
+    CONTACT_SORT,
+  ]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
+  const [columnFiltersGroup, setColumnFiltersGroup] =
+    useDebouncedState<ColumnFiltersState>([], 200);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
   const router = useRouter();
   const { tab = ContactTabs.GROUPS } = router.query as { tab: string };
   let activeTab = tab?.toString() as ContactTabs;
 
   const {
-    isLoading: isLoadingContacts,
+    isPending: isLoadingContacts,
     data: contactData,
     refetch: refetchContacts,
-  } = useContacts() as {
-    isLoading: boolean;
-    data: ContactsData[];
-    error: any;
-    refetch: any;
-  };
+  } = useContacts(pagination, searchTerm, sorting?.[0], columnFilters);
 
   const {
     isLoading: isLoadingContactgroup,
@@ -76,20 +85,10 @@ export default function Contacts() {
   } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
   const sourceArray = Array.from(
-    new Set(contactData?.map((data) => data.source)),
+    new Set(contactData?.users?.map((data) => data.source)),
   );
   const updateContactTagsMutation = useUpdateContactTagsMutation();
-  const filteredContacts = (
-    searchTerm
-      ? contactData.filter((contact) => {
-          return (
-            contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contact?.phone?.includes(searchTerm)
-          );
-        })
-      : contactData
-  )
-    ?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
+  const filteredContacts = contactData?.users
     ?.filter((data) =>
       sourceArray?.some((data) => filterByTag.includes(data))
         ? filterByTag?.includes(data.source)
@@ -114,27 +113,36 @@ export default function Contacts() {
         })
       : contactGroups
   )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
+
+  const column = useMemo(
+    () => [
+      ...contactColumn(cTags?.contactTags ?? []),
+      {
+        header: "Action",
+        accessorFn: (row) => row,
+        enableSorting: false,
+        enableColumnFilter: false,
+        id: "action",
+        cell: (info) => (
+          <ContactMenu
+            contact={info.getValue()}
+            tags={cTags?.contactTags}
+            groupId={""}
+          />
+        ),
+      },
+    ],
+    [cTags],
+  );
+
+  const columnGroup = useMemo(() => contactGroupColumn, []);
+  const contactMemoData = useMemo(
+    () => filteredContacts ?? [],
+    [filteredContacts],
+  );
+
   if (isLoadingContacts || isLoadingContactgroup || isPending)
     return <RateupLoader h={"90dvh"} />;
-
-  const column: ColumnDef<any>[] = [
-    ...contactColumn(cTags?.contactTags ?? []),
-    {
-      header: () => "Action",
-      accessorFn: (row) => row,
-      enableSorting: false,
-      enableColumnFilter: false,
-      id: "action",
-      cell: (info) => (
-        <ContactMenu
-          contact={info.getValue()}
-          tags={cTags?.contactTags}
-          groupId={""}
-        />
-      ),
-    },
-  ];
-  const columnGroup: ColumnDef<any>[] = contactGroupColumn;
   return (
     <>
       <Flex
@@ -177,7 +185,7 @@ export default function Contacts() {
           />
           {activeTab !== ContactTabs.SETTINGS && (
             <TextInput
-              leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
+              leftSection={<IconSearch size="17.6px" stroke={1.5} />}
               radius="xl"
               size="md"
               placeholder={
@@ -186,7 +194,7 @@ export default function Contacts() {
                   : "Search contact groups"
               }
               rightSectionWidth={60}
-              value={searchTerm}
+              defaultValue={searchTerm}
               onChange={(event) => setSearchTerm(event.currentTarget.value)}
               flex={1}
               maw={500}
@@ -202,7 +210,7 @@ export default function Contacts() {
               sourceArray={sourceArray}
             />
           )}
-          <ContactActionMenu contacts={contactData} groups={contactGroupData} />
+          <ContactActionMenu groups={contactGroupData} />
         </Flex>
         <Tabs.Panel value={ContactTabs.CONTACTS}>
           {isLoadingContacts ? (
@@ -213,10 +221,17 @@ export default function Contacts() {
             <PaperLayout mt={"xl"} px={0}>
               <ContactTable
                 columns={column}
-                data={filteredContacts}
+                data={contactMemoData ?? []}
                 cTags={cTags?.contactTags}
                 topHeight={375}
                 refetch={refetchContacts}
+                pagination={pagination}
+                setPagination={setPagination}
+                totalCount={contactData?.totalCount}
+                setSorting={setSorting}
+                sorting={sorting}
+                columnFilters={columnFilters}
+                setColumnFilters={setColumnFilters}
               />
             </PaperLayout>
           )}
@@ -235,6 +250,10 @@ export default function Contacts() {
                 tab={activeTab}
                 topHeight={375}
                 refetch={refetchGroups}
+                setSorting={setSortingGroup}
+                sorting={sortingGroup}
+                columnFilters={columnFiltersGroup}
+                setColumnFilters={setColumnFiltersGroup}
               />
             </PaperLayout>
           )}
@@ -245,7 +264,7 @@ export default function Contacts() {
               <ContainedTagInput
                 placeholder="Type field name and press enter"
                 label="Enter the Field name you want to add along with the existing fields in Csv Import."
-                w={"400px"}
+                w={"25rem"}
                 onChange={setContactTags}
                 defaultValue={cTags?.contactTags}
               />
@@ -295,7 +314,7 @@ export enum ContactAcions {
   DELETE_GROUPS = "Delete Groups",
 }
 
-const ContactActionMenu = ({ contacts, groups }) => {
+const ContactActionMenu = ({ groups }) => {
   const [
     actionModalOpened,
     { open: openActionModal, close: closeActionModal },
@@ -316,7 +335,7 @@ const ContactActionMenu = ({ contacts, groups }) => {
             color="dark.2"
             radius="lg"
             size="xs"
-            rightSection={<IconChevronDown size="1rem" />}
+            rightSection={<IconChevronDown size="16px" />}
             style={{ maxWidth: "fit-content" }}
           >
             More
@@ -340,7 +359,6 @@ const ContactActionMenu = ({ contacts, groups }) => {
       <ContactAction
         opened={actionModalOpened}
         close={closeActionModal}
-        allContacts={contacts}
         allGroups={groups}
         action={action}
       />

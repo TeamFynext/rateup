@@ -26,9 +26,12 @@ import {
   CampaignParticipantAddStatus,
   CampaignParticipantSource,
 } from "../../types/enums";
-import { useListState } from "@mantine/hooks";
+import { useDebouncedState, useListState } from "@mantine/hooks";
 import { useCampaignData } from "../../backend/campaign/campaign.query";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import { PAGE_SIZE } from "../../utils/constants";
+import RateupLoader from "../Loaders/RateupLoader";
+import ContactPagination from "../Contacts/ContactPagination";
 
 const AddParticipantModal = ({ close, campaign }) => {
   const [selectedTab, setSelectedTab] = useState(
@@ -41,19 +44,23 @@ const AddParticipantModal = ({ close, campaign }) => {
     Object.values(CampaignParticipantAddStatus) || [],
   );
 
-  const [searchText, setSearchText] = useState("");
-  const { data: contacts, isLoading: contactIsLoading } = useContacts();
+  const [searchText, setSearchText] = useDebouncedState("", 200);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
+  const { data, isPending } = useContacts(pagination, searchText);
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
   const { data: campaignData, isPending: isAllCampaignLoading } =
     useCampaignData();
-
+  const addCampaignParticipants = useAddCampaignParticipants(campaign?.id);
+  if (isPending) return <RateupLoader />;
+  let contacts = data?.users;
   const isSelectedAll =
     selectedTab === CampaignParticipantSource.INDIVIDUAL
       ? selectedContacts.length === contacts?.length
       : selectedGroups.length === contactGroup?.data.length;
-
-  const addCampaignParticipants = useAddCampaignParticipants(campaign?.id);
 
   const handleSubmit = () => {
     if (
@@ -111,23 +118,10 @@ const AddParticipantModal = ({ close, campaign }) => {
     }
   }
 
-  const filteredContacts = searchText
-    ? contacts?.filter(
-        (c) =>
-          c.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          c.phone.includes(searchText),
-      )
-    : contacts?.filter((c) => c.phone != null);
-  const filteredGroups = searchText
-    ? contactGroup?.data.filter((g) =>
-        g.name.toLowerCase().includes(searchText.toLowerCase()),
-      )
-    : contactGroup?.data;
-  const filteredCampaigns = searchText
-    ? campaignData?.data.filter((g) =>
-        g.name.toLowerCase().includes(searchText.toLowerCase()),
-      )
-    : campaignData?.data;
+  const filteredContacts = contacts?.filter((c) => c.phone != null);
+  const filteredGroups = contactGroup?.data;
+  const filteredCampaigns = campaignData?.data;
+  let totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
   return (
     <Box px={"md"} pb={"md"}>
@@ -135,7 +129,7 @@ const AddParticipantModal = ({ close, campaign }) => {
         <SimpleGrid cols={2}>
           <ContainedTextField
             placeholder={`Search ${selectedTab?.toLowerCase()}`}
-            value={searchText}
+            defaultValue={searchText}
             onChange={(e) => setSearchText(e.currentTarget.value)}
             rightSection={
               <CloseButton
@@ -172,7 +166,7 @@ const AddParticipantModal = ({ close, campaign }) => {
               </Group>
               <ScrollArea h={300} pr={"sm"}>
                 <Tabs value={selectedTab} color="var(--tertiary-color)">
-                  {contactIsLoading ||
+                  {isPending ||
                     isAllCampaignLoading ||
                     (groupIsLoading && <Loader type="bars" />)}
                   <Tabs.Panel value={CampaignParticipantSource.INDIVIDUAL}>
@@ -229,6 +223,14 @@ const AddParticipantModal = ({ close, campaign }) => {
                   </Tabs.Panel>
                 </Tabs>
               </ScrollArea>
+              {selectedTab === CampaignParticipantSource.INDIVIDUAL &&
+                filteredContacts?.length > 0 && (
+                  <ContactPagination
+                    pagination={pagination}
+                    setPagination={setPagination}
+                    totalPageCount={totalPageCount}
+                  />
+                )}
             </PaperLayout>
           </Stack>
           {selectedContacts?.length > 0 ||

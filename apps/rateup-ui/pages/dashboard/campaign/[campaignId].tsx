@@ -15,9 +15,13 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconRefresh, IconSend } from "@tabler/icons-react";
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+} from "@tanstack/react-table";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { SearchInput } from ".";
@@ -29,6 +33,7 @@ import {
 import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
 import {
+  CONTACT_SORT,
   WhatsappTableType,
   contactParticipentDetailColumn,
 } from "../../../components/Contacts/utils/utils";
@@ -52,8 +57,11 @@ export enum CampaignParticipantsTabs {
 }
 
 const CampaignById = () => {
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useDebouncedState("", 200);
   const [opened, { open, close }] = useDisclosure(false);
+  const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
   const { campaignId } = router.query;
   const { update } = useRouteParams();
@@ -168,6 +176,10 @@ const CampaignById = () => {
                 tab={WhatsappTableType.PARTICIPANTS}
                 groupId={campaignData?.id}
                 refetch={refetchCampaign}
+                setSorting={setSorting}
+                sorting={sorting}
+                columnFilters={columnFilters}
+                setColumnFilters={setColumnFilters}
               />
             </PaperLayout>
             <Modal

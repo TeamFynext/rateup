@@ -15,13 +15,22 @@ import FormModalLayout from "../Modal/FormModalLayout";
 import { TeamSelector } from "../input/TeamSelector";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { showLoadingToast } from "../../utils/notifications";
+import { useContacts } from "../../backend/campaign/contacts/contacts.query";
+import { PAGE_SIZE } from "../../utils/constants";
+import RateupLoader from "../Loaders/RateupLoader";
+import { useDebouncedState } from "@mantine/hooks";
+import ContactPagination from "./ContactPagination";
 
-const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
+const ContactAction = ({ opened, close, allGroups, action }) => {
   const [selectedIds, setSelectedIds] = useState([]);
-  const [searchText, setSearchText] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [filterByTag, setFilterByTag] = useState<string[]>([]);
+  const [searchText, setSearchText] = useDebouncedState("", 200);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
 
   const addContactToGroupsMutation =
     useAddExistingContactToMultipleGroupsMutation(selectedGroups, () => {
@@ -30,7 +39,11 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       setSelectedGroups([]);
       close();
     });
-
+  const {
+    isPending,
+    data: allContacts,
+    refetch,
+  } = useContacts(pagination, searchText);
   const isDisabledSubmit = !selectedIds?.length || !selectedGroups?.length;
   const filteredGroups = allGroups?.filter(
     (group) => group?.teamId === selectedTeamId,
@@ -39,14 +52,6 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
     label: g?.name,
     value: g?.id,
   }));
-  const filteredContacts = searchText
-    ? allContacts?.filter(
-        (contact) =>
-          contact?.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          contact?.phone?.includes(searchText) ||
-          contact?.email?.includes(searchText),
-      )
-    : allContacts;
 
   const handleSubmit = () => {
     showLoadingToast(
@@ -62,9 +67,9 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
   };
 
   const sourceArray: string[] = Array.from(
-    new Set(filteredContacts?.map((data) => data?.source)),
+    new Set(allContacts?.users?.map((data) => data?.source)),
   );
-  const rows = filteredContacts
+  const rows = allContacts?.users
     ?.filter((data) =>
       sourceArray?.some((data) => filterByTag.includes(data))
         ? filterByTag?.includes(data.source)
@@ -103,7 +108,7 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
         <Table.Td>{contact?.phone}</Table.Td>
       </Table.Tr>
     ));
-
+  let totalPageCount = (allContacts?.totalCount ?? 1) / pagination.pageSize;
   return (
     <FormModalLayout
       opened={opened}
@@ -121,74 +126,92 @@ const ContactAction = ({ opened, close, allContacts, allGroups, action }) => {
       onSubmit={handleSubmit}
       submitButtonDisabled={isDisabledSubmit}
     >
-      <Stack>
-        <TeamSelector
-          value={selectedTeamId}
-          onChange={(value) => {
-            setSelectedGroups([]);
-            setSelectedIds([]);
-            setSelectedTeamId(value);
-          }}
-        />
-        <FilterSelect
-          contactArray={filteredGroups?.map((data) => data?.name)}
-          sourceArray={sourceArray}
-          filterByTag={filterByTag}
-          setFilterByTag={setFilterByTag}
-        />
-        <Group justify="space-between">
-          {filterByTag?.length === 0 ? (
-            <Checkbox
-              aria-label="select all"
-              label="Select All"
-              checked={
-                allContacts?.length &&
-                allContacts?.every((customer) =>
-                  selectedIds.includes(customer?.id),
-                )
-              }
-              onChange={(event) => {
-                if (event.currentTarget.checked) {
-                  setSelectedIds(allContacts.map((customer) => customer?.id));
-                } else setSelectedIds([]);
+      {isPending ? (
+        <RateupLoader />
+      ) : (
+        <Stack>
+          <Group justify="space-between">
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(value) => {
+                setSelectedGroups([]);
+                setSelectedIds([]);
+                setSelectedTeamId(value);
+              }}
+              styles={{
+                input: {
+                  height: "10px",
+                },
               }}
             />
-          ) : (
-            <Box />
-          )}
+            <FilterSelect
+              contactArray={filteredGroups?.map((data) => data?.name)}
+              sourceArray={sourceArray}
+              filterByTag={filterByTag}
+              setFilterByTag={setFilterByTag}
+            />
+          </Group>
+          <Group justify="space-between">
+            {filterByTag?.length === 0 ? (
+              <Checkbox
+                aria-label="select all"
+                label="Select All"
+                checked={
+                  allContacts?.users?.length &&
+                  allContacts?.users?.every((customer) =>
+                    selectedIds.includes(customer?.id),
+                  )
+                }
+                onChange={(event) => {
+                  if (event.currentTarget.checked) {
+                    setSelectedIds(
+                      allContacts?.users.map((customer) => customer?.id),
+                    );
+                  } else setSelectedIds([]);
+                }}
+              />
+            ) : (
+              <Box />
+            )}
 
-          <SearchInput
-            placeholder={"Search"}
-            searchText={searchText}
-            setSearchText={setSearchText}
-            width={300}
-            size="sm"
+            <SearchInput
+              placeholder={"Search"}
+              searchText={searchText}
+              setSearchText={setSearchText}
+              width={300}
+              size="sm"
+            />
+          </Group>
+          <PaperLayout>
+            <ScrollArea h={200}>
+              <Table stickyHeader>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th />
+                    <Table.Th>Name</Table.Th>
+                    <Table.Th>Phone Number</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{rows}</Table.Tbody>
+              </Table>
+            </ScrollArea>
+            <ContactPagination
+              pagination={pagination}
+              setPagination={setPagination}
+              totalPageCount={totalPageCount}
+            />
+          </PaperLayout>
+          <MultiSelect
+            radius={"10px"}
+            searchable
+            clearable
+            data={groupData}
+            value={selectedGroups}
+            onChange={setSelectedGroups}
+            placeholder={selectedGroups.length > 0 ? "" : "Select Groups"}
           />
-        </Group>
-        <PaperLayout>
-          <ScrollArea h={200}>
-            <Table stickyHeader>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th />
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Phone Number</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>{rows}</Table.Tbody>
-            </Table>
-          </ScrollArea>
-        </PaperLayout>
-        <MultiSelect
-          radius={"10px"}
-          searchable
-          clearable
-          data={groupData}
-          value={selectedGroups}
-          onChange={setSelectedGroups}
-          placeholder={selectedGroups.length > 0 ? "" : "Select Groups"}
-        />
-      </Stack>
+        </Stack>
+      )}
     </FormModalLayout>
   );
 };
