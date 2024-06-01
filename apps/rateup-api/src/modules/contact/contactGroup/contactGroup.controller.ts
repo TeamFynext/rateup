@@ -236,9 +236,15 @@ export async function addNewContactsfromCSVToGroupHandler(
       return reply
         .code(400)
         .send({ error: "This file type is not permitted." });
-
+    let updateField = file?.fields?.update;
+    const updateItem = (
+      Array.isArray(updateField) ? updateField[0] : updateField
+    ) as {
+      value: string;
+    };
+    const updateExisting = updateItem?.value === "true";
     let tags = Object.values(file?.fields ?? {})
-      .slice(1)
+      .slice(2)
       .reduce((acc, data) => {
         const item = (Array.isArray(data) ? data[0] : data) as {
           value: string;
@@ -248,7 +254,13 @@ export async function addNewContactsfromCSVToGroupHandler(
         }
         return acc;
       }, [] as string[]);
-    const res: any = await importCSVContacts(file, orgId, tags, contactGroupId);
+    const res: any = await importCSVContacts(
+      file,
+      orgId,
+      tags,
+      updateExisting,
+      contactGroupId,
+    );
     if (res.status === "error") {
       return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
     }
