@@ -13,23 +13,15 @@ import {
   updateWaSettings,
   upsertWaSettings,
 } from "./wa_settings.service";
-import { Role } from "@prisma/client";
 import { WaConfigType } from "../../../../../../../types/enums";
 import { log } from "../../../../../../../utils/logger";
-import { getOrgIdAndRole } from "../../../../../../user/user.service";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
-  const waSettings = await createWaSettings(org.orgId, {
+  const orgId = req.user.orgId;
+  const waSettings = await createWaSettings(orgId, {
     accessToken: req.body.accessToken,
     wabaId: req.body.wabaId,
     phoneId: req.body.phoneId,
@@ -43,8 +35,8 @@ export async function getWaSettingsHandler(
   req: FastifyRequest,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  const waSettings = await getWaSettings(org.orgId);
+  const orgId = req.user.orgId;
+  const waSettings = await getWaSettings(orgId);
   if (!waSettings) {
     return res.status(204).send();
   }
@@ -55,14 +47,8 @@ export async function updateWaSettingsHandler(
   req: FastifyRequest<{ Body: updateWaSettingsInput }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
-  const waSettings = await updateWaSettings(org.orgId, req.body);
+  const orgId = req.user.orgId;
+  const waSettings = await updateWaSettings(orgId, req.body);
   return res.status(200).send(waSettings);
 }
 
@@ -70,14 +56,8 @@ export async function upsertWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
-  const waSettings = await upsertWaSettings(org.orgId, req.body);
+  const orgId = req.user.orgId;
+  const waSettings = await upsertWaSettings(orgId, req.body);
   return res.status(200).send(waSettings);
 }
 
@@ -85,14 +65,6 @@ export async function deleteWaSettingsHandler(
   req: FastifyRequest,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
-
   await deleteWaSettings(req.user.orgId);
   return res.status(200).send();
 }
