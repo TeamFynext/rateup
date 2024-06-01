@@ -84,23 +84,7 @@ export default function Contacts() {
     refetch: refetchGroups,
   } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
-  const sourceArray = Array.from(
-    new Set(contactData?.users?.map((data) => data.source)),
-  );
   const updateContactTagsMutation = useUpdateContactTagsMutation();
-  const filteredContacts = contactData?.users
-    ?.filter((data) =>
-      sourceArray?.some((data) => filterByTag.includes(data))
-        ? filterByTag?.includes(data.source)
-        : data,
-    )
-    ?.filter((data) =>
-      filterByTag.filter((value) => !sourceArray.includes(value))?.length > 0
-        ? data?.contactGroups?.some((group) =>
-            filterByTag?.includes(group.contactGroup.name),
-          )
-        : data,
-    );
 
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
@@ -137,8 +121,8 @@ export default function Contacts() {
 
   const columnGroup = useMemo(() => contactGroupColumn, []);
   const contactMemoData = useMemo(
-    () => filteredContacts ?? [],
-    [filteredContacts],
+    () => contactData?.users ?? [],
+    [contactData?.users],
   );
 
   if (isLoadingContacts || isLoadingContactgroup || isPending)
@@ -204,10 +188,12 @@ export default function Contacts() {
 
           {activeTab === ContactTabs.CONTACTS && (
             <FilterSelect
-              setFilterByTag={setFilterByTag}
-              filterByTag={filterByTag}
-              contactArray={contactGroups?.map((data) => data?.name)}
-              sourceArray={sourceArray}
+              setFilterByTag={setColumnFilters}
+              filterByTag={columnFilters}
+              contactArray={contactGroups?.map((data) => ({
+                value: data?.id,
+                label: data?.name,
+              }))}
             />
           )}
           <ContactActionMenu groups={contactGroupData} />
@@ -290,20 +276,19 @@ export default function Contacts() {
   );
 }
 
-export const FilterSelect = ({
-  setFilterByTag,
-  filterByTag,
-  contactArray,
-  sourceArray,
-}) => {
+export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
   return (
     <ContainedMultiSelect
-      data={[
-        { group: "Source", items: sourceArray },
-        { group: "Groups", items: contactArray ?? [] },
-      ]}
+      data={[{ group: "Groups", items: contactArray ?? [] }]}
       defaultValue={filterByTag}
-      onChange={setFilterByTag}
+      onChange={(e) => {
+        setFilterByTag((prev) => {
+          if (e.length === 0) {
+            return prev.filter((item) => item.id !== "filterGroupName");
+          }
+          return [...prev, { id: "filterGroupName", value: e.join(",") }];
+        });
+      }}
       placeholder="Filter contacts"
     />
   );
