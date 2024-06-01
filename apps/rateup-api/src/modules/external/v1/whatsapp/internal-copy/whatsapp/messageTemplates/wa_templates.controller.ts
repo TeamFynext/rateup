@@ -48,8 +48,10 @@ import {
   SendTemplateToContacts,
   SendTemplateToContactGroups,
   SendTemplateToContact,
+  SendTemplateByNameToPhone,
 } from "../../../template/wa_templates.external.schema";
 import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -426,6 +428,43 @@ export async function sendTemplateToContactHandler(
   } catch (error) {
     log.error("Error sending template to contacts \n%o", error);
     res.code(500).send(error);
+  }
+}
+
+export async function sendTemplateByNameToPhoneHandler(
+  req: FastifyRequest<{
+    Body: SendTemplateByNameToPhone;
+  }>,
+  rep: FastifyReply,
+) {
+  try {
+    const { templateName } = req.body;
+    const orgId = req.user.orgId;
+    const dbTemplate = await prisma.waTemplate.findFirst({
+      where: {
+        data: {
+          path: ["name"],
+          equals: templateName,
+        },
+        orgId,
+      },
+    });
+
+    const phone = parsePhoneNumber(req.body.phone, "IN");
+    if (phone.isValid() === false) {
+      return rep.code(400).send("Invalid phone number.");
+    }
+
+    await sendTemplateToPhone({
+      orgId,
+      phone: phone.number,
+      dbTemplate,
+      teamId: req.body.teamId,
+      body_variables: req.body.body_variables,
+    });
+  } catch (error) {
+    log.error("Error sending template to contacts \n%o", error);
+    rep.code(500).send(error);
   }
 }
 

@@ -59,6 +59,12 @@ const sendTemplateToContact = sendTemplatesToContacts
   .extend({
     body_variables: z.array(z.string()).optional(),
   });
+const sendTemplateByNameToPhone = z.object({
+  templateName: z.string(),
+  phone: z.string(),
+  body_variables: z.array(z.string()).optional(),
+  teamId: z.string().optional(),
+});
 const sendTemplateToContactParams = z.object({
   templateId: z.string(),
   contactId: z.string(),
@@ -94,6 +100,7 @@ export const {
     sendTemplateToContactParamsWithOrgId,
     sendTemplateToContactsParamsWithOrgId,
     sendTemplateToContactGroupsParamsWithOrgId,
+    sendTemplateByNameToPhone,
   },
   { $id: "waTemplateExternal" },
 );
@@ -108,4 +115,7 @@ export type SendTemplateToContactGroups = z.infer<
 >;
 export type SendTemplateHeaderComponent = z.infer<
   typeof templateHeaderComponent
+>;
+export type SendTemplateByNameToPhone = z.infer<
+  typeof sendTemplateByNameToPhone
 >;

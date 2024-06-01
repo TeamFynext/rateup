@@ -417,7 +417,7 @@ interface SendTemplateToPhoneProps {
   orgId: string;
   dbTemplate: WaTemplate;
   phone: string;
-  teamId: string | undefined;
+  teamId?: string | undefined;
   header?: SendTemplateHeaderComponent;
   body_variables?: string[];
 }
