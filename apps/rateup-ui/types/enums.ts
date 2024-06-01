@@ -290,3 +290,7 @@ export enum StripeProductType {
   one_time = "one_time",
   recurring = "recurring",
 }
+export enum SurveyVariableType {
+  DEFAULT = "DEFAULT",
+  CUSTOM = "CUSTOM",
+}

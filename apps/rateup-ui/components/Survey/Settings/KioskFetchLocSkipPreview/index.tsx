@@ -6,6 +6,7 @@ import {
   updateGetLocation,
   updateKioskMode,
   updateSkipPreview,
+  updatewebSurveyAutoTransitionToNextQues,
 } from "../updateSettings";
 import UniqueDeviceSettings from "../UniqueDeviceSettings";
 
@@ -21,6 +22,8 @@ function KioskFetchLocSkipPreview({
   setPreview,
   survey,
   surveyId,
+  webSurveyAutoTransitionToNextQues,
+  setwebSurveyAutoTransitionToNextQues,
 }) {
   return (
     <>
@@ -84,6 +87,27 @@ function KioskFetchLocSkipPreview({
           {enabledModules.includes("uniqueDeviceResponse") && (
             <UniqueDeviceSettings surveyId={surveyId} survey={survey} />
           )}
+
+          <Group>
+            <Switch
+              className={`switch ${webSurveyAutoTransitionToNextQues ? "on" : "off"}`}
+              size="md"
+              checked={webSurveyAutoTransitionToNextQues}
+              onChange={() =>
+                updatewebSurveyAutoTransitionToNextQues(
+                  setwebSurveyAutoTransitionToNextQues,
+                  editSurvey,
+                )
+              }
+            />
+            <Box className={"switch-heading-and-desc-container"}>
+              <h3>Automatic Transition</h3>
+              <p>
+                Proceed to the next question automatically after making a
+                selection
+              </p>
+            </Box>
+          </Group>
         </PaperLayout>
       )}
     </>

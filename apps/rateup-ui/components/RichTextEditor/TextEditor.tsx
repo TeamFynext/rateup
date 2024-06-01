@@ -1,6 +1,9 @@
-import { useEffect } from "react";
-
-import { Link, RichTextEditor } from "@mantine/tiptap";
+import { useContext, useEffect } from "react";
+import {
+  Link,
+  RichTextEditor,
+  useRichTextEditorContext,
+} from "@mantine/tiptap";
 import { Color } from "@tiptap/extension-color";
 import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
@@ -8,6 +11,15 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import { isHtml } from "../../utils";
+import { Select } from "@mantine/core";
+import { VariableComponentExtension } from "./MantineComponentExtension";
+import SurveyContext from "../../context/SurveyContext";
+import { useQuestions } from "../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../context/SelectedLanguage";
+import {
+  getFilteredVariablesForQuestion,
+  getFormattedTitleFromVariable,
+} from "../../utils/survey/question/question.utils";
 
 export default function TextEditor({ form, selectedLanguage }) {
   const content = getContent(
@@ -22,6 +34,7 @@ export default function TextEditor({ form, selectedLanguage }) {
       TextStyle,
       Color,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      VariableComponentExtension,
     ],
     content: content,
     onUpdate: ({ editor }) => {
@@ -39,6 +52,7 @@ export default function TextEditor({ form, selectedLanguage }) {
         preserveWhitespace: "full",
       });
       editor.commands.setTextSelection(selection);
+      form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
     }
   }, [content, editor]);
 
@@ -106,19 +120,53 @@ export default function TextEditor({ form, selectedLanguage }) {
           <RichTextEditor.Undo />
           <RichTextEditor.Redo />
         </RichTextEditor.ControlsGroup>
+        <InsertVariableControl question={form?.values} />
       </RichTextEditor.Toolbar>
-
       <RichTextEditor.Content mih={120} />
     </RichTextEditor>
   );
 }
 
 const getContent = (title: string, desc: string) => {
+  const { variables } = useContext(SurveyContext);
   if (isHtml(title)) {
-    return title;
+    return getFormattedTitleFromVariable(title, variables) || title;
   } else if (desc) {
     return `<h3>${title}</h3><p> ${desc}</p>`;
   } else {
     return `<h3>${title}</h3>`;
   }
+};
+
+const InsertVariableControl = ({ question }) => {
+  const { editor } = useRichTextEditorContext();
+  const { variables, surveyId } = useContext(SurveyContext);
+  const { data: questions } = useQuestions(surveyId);
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const fileteredVariables = variables?.length
+    ? getFilteredVariablesForQuestion(
+        variables,
+        selectedLanguage,
+        questions,
+        question,
+      )
+    : [];
+  const variablesData =
+    fileteredVariables?.map((val: SurveyVariable) => val?.name) ?? [];
+
+  return (
+    <RichTextEditor.Control>
+      <Select
+        data={variablesData}
+        placeholder={"variables"}
+        onChange={(value) => {
+          if (!value) return;
+          editor?.commands.insertContent(
+            `<variable-component label=${value}></variable-component>`,
+          );
+        }}
+        disabled={!variablesData?.length}
+      />
+    </RichTextEditor.Control>
+  );
 };

@@ -2,6 +2,7 @@
   height: 100vh;
   height: 100dvh;
   position: relative;
+  gap: 0;
 }
 
 .take-survey-layout-web-root-div :global(.search-input-and-options-container) {

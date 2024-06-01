@@ -9,6 +9,7 @@ import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsCont
 import { useAnimate } from "framer-motion";
 import styles from "./LDForm.module.css";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import { useSurveyContext } from "../SurveyContext";
 
 export function LDForm() {
   const selectedPreview = useSelectedPreview();
@@ -24,13 +25,15 @@ export function LDForm() {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
+
   const handleLikeOrDislikeClick = async (e) => {
     const clikcedBtn = e.target;
     const clickedBtnName = clikcedBtn.dataset.name;
     const clickedRes =
       clickedBtnName === "like" ? LDResponse.Like : LDResponse.Dislike;
     updateResponse(clickedRes);
-    if (!isLastQuestion) {
+    if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (clikcedBtn) {
         await animate(
           clikcedBtn,

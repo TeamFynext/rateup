@@ -34,6 +34,9 @@ export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
       showSuccessToast("Question created");
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
     },
     onError: (e) => {
       showErrorToast("An error has occurred");
@@ -81,6 +84,9 @@ export const useQuestionDeleteMutation = (
       onSuccess(variables);
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
       showSuccessToast("Question deleted");
     },
     onError: (e) => {
@@ -101,6 +107,9 @@ export const useReplaceQuestionsMutation = (surveyId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
     },
     onError: (e) => {
       console.error(e);

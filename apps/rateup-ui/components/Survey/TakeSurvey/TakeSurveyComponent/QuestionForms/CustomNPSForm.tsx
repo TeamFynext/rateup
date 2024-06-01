@@ -7,6 +7,7 @@ import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
+import { useSurveyContext } from "../SurveyContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -20,6 +21,8 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
 
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
@@ -40,7 +43,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
     const selectedEle = scope.current?.querySelector(
       `.mantine-focus-auto[data-value="${value}"]`,
     );
-    if (!isLastQuestion) {
+    if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (selectedEle) {
         await animate(
           selectedEle,

@@ -41,6 +41,17 @@ export const updateSkipPreview = (setPreview, editSurvey) => {
   });
 };
 
+export const updatewebSurveyAutoTransitionToNextQues = (
+  setwebSurveyAutoTransitionToNextQues,
+  editSurvey,
+) => {
+  setwebSurveyAutoTransitionToNextQues((prev) => {
+    const newValue = !prev;
+    editSurvey.mutateAsync({ webSurveyAutoTransitionToNextQues: newValue });
+    return newValue;
+  });
+};
+
 export const updatePwdSurvey = (
   updateSurveyPassword,
   setPasswordProtection,

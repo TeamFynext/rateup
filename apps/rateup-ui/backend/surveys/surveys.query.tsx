@@ -26,6 +26,10 @@ import {
   getSurveyWithQuestions,
   getPhoneNumberFromSurveyTeamMapId,
   getSurveysSummary,
+  getSurveyVariables,
+  createSurveyVariable,
+  updateSurveyVariable,
+  deleteSurveyVariable,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -508,5 +512,73 @@ export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
     enabled: !!surveyTeamMapId,
     queryKey: ["surveyStats", surveyTeamMapId],
     queryFn: () => getSurveyStatsBySurveyTeamMapId(surveyTeamMapId),
+  });
+};
+
+export const useGetSurveyVariables = (surveyId, isPublic) => {
+  return useQuery({
+    queryKey: ["surveyVariables", surveyId],
+    queryFn: () => getSurveyVariables(surveyId, isPublic),
+    enabled: !!surveyId,
+  });
+};
+
+export const useCreateSurveyVariableMutation = (surveyId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createSurveyVariable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
+      showSuccessToast("Variable created successfully", "", <IconCheck />);
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        `Error creating variable:${e?.response?.data?.error}`,
+        "",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useUpdateSurveyVariableMutation = (surveyId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateSurveyVariable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
+      showSuccessToast("Variable updated successfully", "", <IconCheck />);
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        `Error updating variable:${e?.response?.data?.error}`,
+        "",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useDeleteSurveyVariableMutation = (surveyId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteSurveyVariable,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
+      showSuccessToast("Variable deleted successfully", "", <IconCheck />);
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        `Error deleting variable:${e?.response?.data?.error}`,
+        "",
+        <IconX />,
+      );
+    },
   });
 };

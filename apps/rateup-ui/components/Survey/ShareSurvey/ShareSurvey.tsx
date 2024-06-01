@@ -523,11 +523,13 @@ interface CopyLinkComponentProps {
   value: string;
   disabled?: boolean;
   label?: string;
+  buttonRadius?: string | number;
 }
 export const CopyLinkComponent = ({
   value,
   disabled = false,
   label = "",
+  buttonRadius = "md",
 }: CopyLinkComponentProps) => {
   return (
     <Group gap={"0px"} align="center">
@@ -549,6 +551,8 @@ export const CopyLinkComponent = ({
             onClick={copy}
             rightSection={<IconCopy />}
             disabled={disabled}
+            radius={buttonRadius}
+            mt={label ? "md" : undefined}
           >
             {copied ? "Copied url" : "Copy url"}
           </Button>

@@ -45,7 +45,7 @@ import {
 
 interface LogicEditorProps {
   selectedQ: Question;
-  setActiveTab: (tab: QuestionTabsEnum) => void;
+  setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
 }
 const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   const { surveyId } = useRouter().query as { surveyId: string };

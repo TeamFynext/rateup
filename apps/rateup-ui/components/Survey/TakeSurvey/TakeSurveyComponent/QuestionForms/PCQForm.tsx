@@ -9,6 +9,7 @@ import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
 import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSurveyContext } from "../SurveyContext";
 
 interface PCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -24,6 +25,8 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
   const options: any = selectedQ
     ? choices
@@ -56,7 +59,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
     const selectedEle = scope.current?.querySelector(
       `.mantine-focus-auto[data-value="${value}"]`,
     );
-    if (!isLastQuestion) {
+    if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (selectedEle) {
         await animate(
           selectedEle,

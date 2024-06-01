@@ -22,6 +22,7 @@ interface FormModalLayoutProps {
   size?: string;
   customHeader?: React.ReactNode;
   submitButtonDisabled?: boolean;
+  submitBtnColor?: string;
 }
 export default function FormModalLayout({
   centered,
@@ -39,6 +40,7 @@ export default function FormModalLayout({
   customHeader,
   submitButtonDisabled,
   cancelButtonTitle,
+  submitBtnColor,
 }: FormModalLayoutProps) {
   return (
     <Modal
@@ -90,7 +92,7 @@ export default function FormModalLayout({
           )}
           {buttonTitle && (
             <RateupButtonBlue
-              color="var(--mantine-primary-color-filled)"
+              color={submitBtnColor || "var(--mantine-primary-color-filled)"}
               loading={isLoading}
               type="submit"
               title={buttonTitle}

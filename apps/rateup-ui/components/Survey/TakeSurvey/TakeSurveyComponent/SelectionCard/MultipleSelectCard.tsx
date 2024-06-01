@@ -11,6 +11,8 @@ import {
 import { useHover, useUncontrolled } from "@mantine/hooks";
 import classes from "./ImageCheckboxes.module.css";
 import { IconCheck } from "@tabler/icons-react";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -117,8 +119,17 @@ export function MultipleSelectCard({
       selectedValue={selectedValue}
     />
   ));
+
+  const colsCount = { base: 1, xs: 2, sm: 3, md: 4 };
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const selectedPreview = useSelectedPreview();
+  const surveyThemeMobilePreview =
+    isSurveyThemePreview && selectedPreview === "mobile";
+
+  const columnsCount = surveyThemeMobilePreview ? 1 : colsCount;
+
   return (
-    <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }} spacing={8}>
+    <SimpleGrid cols={columnsCount} spacing={8}>
       {items}
     </SimpleGrid>
   );

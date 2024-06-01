@@ -292,3 +292,29 @@ export async function getInvoicesByPhNo(phoneNumber: string) {
     }
   }
 }
+
+export async function getSurveyVariables(surveyId, isPublic) {
+  return (
+    await axiosClient.get(
+      `${isPublic ? SURVEY_PUBLIC_URL : SURVEYURL}/survey-variables/${surveyId}`,
+    )
+  ).data as Array<SurveyVariable>;
+}
+
+export async function createSurveyVariable({ surveyId, data }) {
+  return (
+    await axiosClient.post(`${SURVEYURL}/survey-variables/${surveyId}`, data)
+  ).data;
+}
+
+export async function updateSurveyVariable({ variableId, data }) {
+  return (
+    await axiosClient.put(`${SURVEYURL}/survey-variables/${variableId}`, data)
+  ).data;
+}
+
+export async function deleteSurveyVariable({ variableId }) {
+  return (
+    await axiosClient.delete(`${SURVEYURL}/survey-variables/${variableId}`)
+  ).data;
+}

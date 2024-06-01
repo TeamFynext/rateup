@@ -18,8 +18,11 @@ function NextPrevFuncsAndLastQuestionContextProvider({
     (obj) => obj.action === "EndSurvey",
   );
   const isLastQuestion =
-    survey?.questions?.indexOf(selectedQ) === survey?.questions?.length - 1 ||
-    endSurveyActions?.length > 0;
+    survey?.questions?.findIndex(
+      (questionObj) => questionObj.id === selectedQ.id,
+    ) ===
+      survey?.questions?.length - 1 || endSurveyActions?.length > 0;
+
   return (
     <NextPrevFuncsAndLastQuestionContext.Provider
       value={{

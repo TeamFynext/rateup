@@ -21,6 +21,8 @@ import { GoogleIcon } from "../../../Button/GoogleIcon";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { questionIcons } from "../QuestionTypeSelection";
 import classes from "./DraggableQuestionCard.module.css";
+import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util";
+import SurveyContext from "../../../../context/SurveyContext";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -46,6 +48,15 @@ export function DraggableQuestionCard({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const theme = useMantineTheme();
+  const questionTitle =
+    getReplacedTitleFromVariable({
+      title:
+        question.title[selectedLanguage] ||
+        question.description[selectedLanguage],
+      surveyId,
+    }) ||
+    question.title[selectedLanguage] ||
+    question.description[selectedLanguage];
 
   const questionDeleteMutation = useQuestionDeleteMutation(surveyId, (qId) => {
     onDelete(qId);
@@ -106,10 +117,7 @@ export function DraggableQuestionCard({
                 </Flex>
               </Badge>
               <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
-                {extractText(
-                  question.title[selectedLanguage] ||
-                    question.description[selectedLanguage],
-                )}
+                {extractText(questionTitle)}
               </Text>
 
               <Group justify={"flex-end"} gap={4} ml={"auto"} miw={70}>

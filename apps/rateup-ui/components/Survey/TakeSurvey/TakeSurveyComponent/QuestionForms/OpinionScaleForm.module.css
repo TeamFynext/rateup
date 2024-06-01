@@ -18,6 +18,13 @@
   gap: 1rem;
 }
 
+.opinion-scale-interval-btn.survey-theme-mobile-preview {
+  width: 42px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
+}
+
 @media (max-width: 480px) {
   .opinion-scale-interval-btn {
     width: 42px;

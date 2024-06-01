@@ -7,11 +7,16 @@ import {
   isLightColor,
   useMantineTheme,
 } from "@mantine/core";
-import styles from "./OpinionScaleForm.module.css";
 import { useAnimate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import styles from "./OpinionScaleForm.module.css";
+import classNames from "classnames/bind";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSurveyContext } from "../SurveyContext";
 
+const cx = classNames.bind(styles);
 interface iProps {
   initValue?: any;
 }
@@ -31,6 +36,8 @@ export function OpinionScaleForm({ initValue }: iProps) {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
+  const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
+
   const handleHover = (index) => {
     setIsHovered(index);
   };
@@ -44,7 +51,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
     const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {
       !initValue && updateResponse(clickedBtnValue);
-      if (!isLastQuestion) {
+      if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
         if (clickedBtn) {
           await animate(
             clickedBtn,
@@ -57,13 +64,20 @@ export function OpinionScaleForm({ initValue }: iProps) {
     }
   };
 
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const selectedPreview = useSelectedPreview();
+  const surveyThemeMobilePreview =
+    isSurveyThemePreview && selectedPreview === "mobile";
+
   const renderButtons = () => {
     const oneToFive = [];
     const fiveToTen = [];
     for (let i = 1; i <= 10; i++) {
       const button = (
         <Button
-          className={styles["opinion-scale-interval-btn"]}
+          className={cx("opinion-scale-interval-btn", {
+            "survey-theme-mobile-preview": surveyThemeMobilePreview,
+          })}
           key={i}
           onMouseEnter={() => handleHover(i)}
           onMouseLeave={handleLeave}
@@ -104,12 +118,12 @@ export function OpinionScaleForm({ initValue }: iProps) {
       }
     }
     const firstFiveBtnsContiner = (
-      <Flex className={styles["opinion-scale-first-five-btns-container"]}>
+      <Flex className={cx("opinion-scale-first-five-btns-container")}>
         {oneToFive}
       </Flex>
     );
     const secondFiveBtnsContainer = (
-      <Flex className={styles["opinion-scale-last-five-btns-container"]}>
+      <Flex className={cx("opinion-scale-last-five-btns-container")}>
         {fiveToTen}
       </Flex>
     );
@@ -122,7 +136,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
   };
 
   return (
-    <Group onClick={handleBtnClick} className={styles["opinion-scale"]}>
+    <Group onClick={handleBtnClick} className={cx("opinion-scale")}>
       {renderButtons()}
     </Group>
   );

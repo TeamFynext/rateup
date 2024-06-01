@@ -206,6 +206,7 @@ function CustomMultiselectForMobile({
               <ActionIcon
                 className={cx("deselect-all-btn")}
                 onClick={handleDeselectAll}
+                color={themePrimaryColor}
               >
                 <IconDeselect />
               </ActionIcon>
@@ -213,6 +214,7 @@ function CustomMultiselectForMobile({
               <Button
                 className={cx("close-btn")}
                 onClick={() => setIsOptionSelectionDivVisible(false)}
+                color={themePrimaryColor}
               >
                 Close
               </Button>

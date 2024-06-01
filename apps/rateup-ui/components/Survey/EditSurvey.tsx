@@ -20,6 +20,7 @@ import { useQuestionCreateMutation } from "../../backend/surveys/questions/quest
 import { createBlankQuestion } from "../../utils/questions";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
 import TicketIssueEditor from "./Question/TicketIssueEditor";
+import SurveyVariableEditor from "./Question/SurveyVariableEditor";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -28,6 +29,7 @@ export enum QuestionTabsEnum {
   GoogleReviewEditor = "GoogleReviewEditor",
   ValidationRulesEditor = "ValidationRulesEditor",
   TicketIssueEditor = "TicketIssueEditor",
+  VariableEditor = "VariableEditor",
   None = "None",
 }
 interface EditSurveyProps {
@@ -161,6 +163,9 @@ export function EditSurvey({
               setActiveTab={setActiveTab}
               activeTab={activeTab}
             />
+          </Tabs.Panel>
+          <Tabs.Panel value={QuestionTabsEnum.VariableEditor}>
+            <SurveyVariableEditor setActiveTab={setActiveTab} />
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.None}>
             <Center style={{ height: "100%" }}>
