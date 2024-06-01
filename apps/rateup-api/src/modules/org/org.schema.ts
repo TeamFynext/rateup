@@ -46,7 +46,7 @@ const updateOrgDetailsSchema = z.object({
     })
     .optional(),
 });
-const byOrgIdParams = z.object({
+export const byOrgIdParams = z.object({
   orgId: z.string(),
 });
 

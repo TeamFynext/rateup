@@ -2,12 +2,12 @@ import { FastifyInstance } from "fastify";
 import { $extContactSchema } from "./contact.external.schema";
 import { extCreateMultipleContactsHandler } from "./contact.external.controller";
 import {
+  deleteContactByIdHandler,
   getAllContactsHandler,
   getContactByIdHandler,
   updateContactByIdHandler,
-  deleteContactByIdHandler,
-} from "../../../contact/contact.controller";
-import { $contactRef } from "../../../contact/contact.schema";
+} from "./internal-copy/contact/contact.controller";
+import { $contactRef } from "./internal-copy/contact/contact.schema";
 
 export async function externalContactRoutes(server: FastifyInstance) {
   server.post(

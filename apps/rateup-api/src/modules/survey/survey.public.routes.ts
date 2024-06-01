@@ -6,6 +6,7 @@ import {
   getInvoicesByPhoneNoHandler,
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
+  getSurveyVariablesHandler,
   giftByPhoneNoHandler,
   giftHandler,
   startedSurveyHandler,
@@ -107,6 +108,16 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
       },
     },
     getInvoicesByPhoneNoHandler,
+  );
+
+  server.get(
+    "/survey-variables/:id",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    getSurveyVariablesHandler,
   );
 
   //MYG
