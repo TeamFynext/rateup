@@ -16,7 +16,13 @@ import {
   IconChevronDown,
   IconSelector,
 } from "@tabler/icons-react";
-import { Table as TableType, flexRender } from "@tanstack/react-table";
+import {
+  Column,
+  ColumnMeta,
+  Header,
+  Table as TableType,
+  flexRender,
+} from "@tanstack/react-table";
 import { PAGE_SIZE } from "../../utils/constants";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { Filter } from "./Filter/Filter";
@@ -29,6 +35,19 @@ type TableLayoutProps = {
   tempVisibleColumnArray: string[];
   enablePagination: boolean;
   topHeight: number;
+};
+
+// Extend the Header to use the new ExtendedColumnMeta
+type ExtendedHeader = Header<any, unknown> & {
+  column: {
+    columnDef: {
+      meta: {
+        filterComponent?: (
+          setFilterValue: (value: any) => void,
+        ) => React.ReactNode;
+      };
+    };
+  };
 };
 const TableLayout = ({
   table,
@@ -46,73 +65,86 @@ const TableLayout = ({
             <Table.Thead bg={"light-dark(white,var(--mantine-color-dark-6))"}>
               {table.getHeaderGroups().map((headerGroup, index) => (
                 <Table.Tr key={index}>
-                  {headerGroup.headers.map((header, headerIndex) => (
-                    <Table.Th
-                      key={headerIndex}
-                      colSpan={header.colSpan}
-                      style={{ width: `${header.getSize()}px` }}
-                    >
-                      {header.isPlaceholder ? null : (
-                        <>
-                          <UnstyledButton
-                            {...{
-                              onClick: header.column.getToggleSortingHandler(),
-                            }}
-                            fz={"md"}
-                            w={"max-content"}
-                          >
-                            <Flex justify="space-between" gap={"md"}>
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                              {header.column.getCanSort() && (
-                                <Center>
-                                  {{
-                                    asc: (
-                                      <IconChevronUp
+                  {headerGroup.headers.map((header, headerIndex) => {
+                    const extendedHeader = header as ExtendedHeader;
+                    return (
+                      <Table.Th
+                        key={headerIndex}
+                        colSpan={header.colSpan}
+                        style={{ width: `${header.getSize()}px` }}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <>
+                            <UnstyledButton
+                              {...{
+                                onClick:
+                                  header.column.getToggleSortingHandler(),
+                              }}
+                              fz={"md"}
+                              w={"max-content"}
+                            >
+                              <Flex justify="space-between" gap={"md"}>
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                                {header.column.getCanSort() && (
+                                  <Center>
+                                    {{
+                                      asc: (
+                                        <IconChevronUp
+                                          style={{
+                                            width: rem(16),
+                                            height: rem(16),
+                                          }}
+                                          stroke={1.5}
+                                        />
+                                      ),
+                                      desc: (
+                                        <IconChevronDown
+                                          style={{
+                                            width: rem(16),
+                                            height: rem(16),
+                                          }}
+                                          stroke={1.5}
+                                        />
+                                      ),
+                                    }[
+                                      header.column.getIsSorted() as string
+                                    ] ?? (
+                                      <IconSelector
                                         style={{
                                           width: rem(16),
                                           height: rem(16),
                                         }}
                                         stroke={1.5}
                                       />
-                                    ),
-                                    desc: (
-                                      <IconChevronDown
-                                        style={{
-                                          width: rem(16),
-                                          height: rem(16),
-                                        }}
-                                        stroke={1.5}
-                                      />
-                                    ),
-                                  }[header.column.getIsSorted() as string] ?? (
-                                    <IconSelector
-                                      style={{
-                                        width: rem(16),
-                                        height: rem(16),
-                                      }}
-                                      stroke={1.5}
-                                    />
-                                  )}
-                                </Center>
-                              )}
-                            </Flex>
-                          </UnstyledButton>
-                          {enableFilter &&
-                          filterVisibility &&
-                          header.column.getCanFilter() ? (
-                            <>
-                              <Filter column={header.column} table={table} />
-                            </>
-                          ) : (
-                            filterVisibility && <Box h={"36px"} />
-                          )}
-                        </>
-                      )}
-                    </Table.Th>
-                  ))}
+                                    )}
+                                  </Center>
+                                )}
+                              </Flex>
+                            </UnstyledButton>
+                            {enableFilter &&
+                            filterVisibility &&
+                            header.column.getCanFilter() ? (
+                              <>
+                                {extendedHeader.column.columnDef?.meta?.filterComponent(
+                                  header.column.setFilterValue,
+                                ) ?? (
+                                  <Filter
+                                    column={header.column}
+                                    table={table}
+                                  />
+                                )}
+                              </>
+                            ) : (
+                              filterVisibility && <Box h={"36px"} />
+                            )}
+                          </>
+                        )}
+                      </Table.Th>
+                    );
+                  })}
                 </Table.Tr>
               ))}
             </Table.Thead>

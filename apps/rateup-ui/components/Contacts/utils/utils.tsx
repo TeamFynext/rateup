@@ -5,12 +5,13 @@ import {
   CheckboxProps,
   HoverCard,
   Image,
+  Select,
   Text,
 } from "@mantine/core";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { IconEye, IconUsersGroup } from "@tabler/icons-react";
+import { IconCheck, IconEye, IconUsersGroup, IconX } from "@tabler/icons-react";
 import { ContactGroupMenu } from "../../Card/ContactCard";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { fallbackImage } from "../../../utils/constants";
@@ -83,6 +84,23 @@ export const contactColumn = (contactTags = []) => {
           {(info.getValue() as string) ?? "NA"}
         </Badge>
       ),
+    },
+    {
+      header: () => "Consent",
+      accessorKey: "consent",
+      cell: (info) =>
+        info.getValue() ? <IconCheck color="green" /> : <IconX color="red" />,
+      meta: {
+        filterComponent: (setFilterValue) => {
+          return (
+            <Select
+              data={["true", "false"]}
+              placeholder="Select"
+              onChange={(e) => setFilterValue(e === null ? null : e === "true")}
+            />
+          );
+        },
+      },
     },
     {
       header: () => "Created",
@@ -181,6 +199,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
       </Badge>
     ),
   },
+
   {
     header: () => "Created",
     accessorKey: "createdAt",
@@ -331,6 +350,23 @@ export const contactParticipentDetailColumn = [
     },
   },
   {
+    header: () => "Consent",
+    accessorKey: "consent",
+    cell: (info) =>
+      info.getValue() ? <IconCheck color="green" /> : <IconX color="red" />,
+    meta: {
+      filterComponent: (setFilterValue) => {
+        return (
+          <Select
+            data={["true", "false"]}
+            placeholder="Select"
+            onChange={(e) => setFilterValue(e === null ? null : e === "true")}
+          />
+        );
+      },
+    },
+  },
+  {
     header: () => "SentAt",
     accessorKey: "sentAt",
     cell: (info) =>
@@ -355,6 +391,7 @@ export const contactParticipentDetailColumn = [
         status={info?.getValue()?.status}
         id={info?.getValue()?.campaignId}
         teamId={info?.getValue()?.teamId}
+        consent={info?.getValue()?.consent}
       />
     ),
   },

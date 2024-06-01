@@ -499,6 +499,7 @@ declare global {
     source: string;
     createdAt: Date;
     tags?: any;
+    consent: boolean;
     org: {
       whatsappSettings: {
         contactTags: string[];

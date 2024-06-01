@@ -310,7 +310,9 @@ const Individual = ({
   return (
     <Group justify="space-between" my={"xs"}>
       <Stack gap={0}>
-        <Title order={5}>{customer?.name}</Title>
+        <Title order={5} lineClamp={1} maw={190}>
+          {customer?.name}
+        </Title>
         <Text c={"dimmed"} size="sm">
           {customer?.phone}
         </Text>
@@ -349,7 +351,9 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
   return (
     <Group justify="space-between">
       <Stack gap={0}>
-        <Title order={5}>{group?.name}</Title>
+        <Title order={5} lineClamp={1} maw={190}>
+          {group?.name}
+        </Title>
         <Text c={"dimmed"} size="sm">
           {group?._count.contacts} members
         </Text>
@@ -390,7 +394,9 @@ const CustomerCampaign = ({
 
   return (
     <Group justify="space-between" py={4}>
-      <Title order={5}>{campaign?.name}</Title>
+      <Title order={5} lineClamp={1} maw={190}>
+        {campaign?.name}
+      </Title>
       {isSelected ? (
         <Button
           variant="outline"

@@ -69,6 +69,7 @@ import { uploadFile } from "../../../../utils/file-upload/upload";
 import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
 import { getErrorMessage } from "../../../../utils";
 import { useRouteParams } from "../../../../context/RouteParamsContext";
+import { LinkCopyElement } from "../../../../components/input/LinkCopyElement";
 
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,7 +91,7 @@ export default function WhatsappTemplateById() {
       header: null,
       language: "en",
       body: "Would you like to start survey?",
-      footer: "",
+      footer: 'Reply "STOP" to unsubscribe',
       category: "MARKETING",
       format: "NONE",
       buttons: [],
@@ -349,7 +350,13 @@ export default function WhatsappTemplateById() {
               {editingItem?.data?.id && value && (
                 <Overlay color="#fff" backgroundOpacity={0} />
               )}
-              <PaperLayout p={"xl"} h={"80dvh"}>
+              <PaperLayout
+                p={"xl"}
+                h={"80dvh"}
+                style={{
+                  overflow: editingItem?.data?.id && value ? "hidden" : "auto",
+                }}
+              >
                 <Stack gap={"xs"}>
                   <Alert
                     variant="filled"
@@ -370,7 +377,19 @@ export default function WhatsappTemplateById() {
                       "Error Saving Changes",
                     )}
                   </Alert>
-                  <WaTemplateStatusBadge status={form.values.status} />
+                  <Group justify="space-between">
+                    <WaTemplateStatusBadge status={form.values.status} />
+                    {editingItem?.data?.id && (
+                      <LinkCopyElement
+                        link={editingItem?.data?.id}
+                        value={editingItem?.data?.id}
+                        label={"Template ID"}
+                        style={{
+                          zIndex: 999,
+                        }}
+                      />
+                    )}
+                  </Group>
                   <ContainedTextField
                     label={
                       <Text fz={14} ff={lexend500.style.fontFamily}>
@@ -586,7 +605,7 @@ export default function WhatsappTemplateById() {
                         </Text>
                         <Text
                           c="dimmed"
-                          fz={"0.9rem"}
+                          fz={"0.7rem"}
                           style={{
                             wordBreak: "break-all",
                           }}
