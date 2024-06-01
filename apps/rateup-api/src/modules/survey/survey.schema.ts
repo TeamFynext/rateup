@@ -141,6 +141,7 @@ const updateSurveyRequestSchema = z.object({
   enableTickets: z.boolean().optional(),
   enableTicketEmailAlerts: z.boolean().optional(),
   uniqueDeviceResponse: z.boolean().optional(),
+  webSurveyAutoTransitionToNextQues: z.boolean().optional(),
   publicKey: z.string().optional(),
   redirect: z
     .object({

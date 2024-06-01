@@ -80,6 +80,17 @@ export async function getContactsByOrgId(
             mode: "insensitive",
           },
         });
+      } else if ("filterGroupName" === key) {
+        let splitValue = [...new Set(value?.split(","))];
+        filterData.push({
+          contactGroups: {
+            some: {
+              contactGroupId: {
+                in: splitValue,
+              },
+            },
+          },
+        });
       } else {
         filterData.push({
           tags: {
@@ -117,6 +128,7 @@ export async function getContactsByOrgId(
         contactGroup: {
           select: {
             name: true,
+            id: true,
           },
         },
       },
@@ -221,6 +233,7 @@ export async function importCSVContacts(
   fileBody: MultipartFile,
   orgId: string,
   tags: string[],
+  updateExisting: boolean = false,
   contactGroupId?: string,
 ) {
   const { mimetype } = fileBody;
@@ -259,6 +272,7 @@ export async function importCSVContacts(
             contacts,
             orgId,
             tags,
+            updateExisting,
             contactGroupId,
           );
           if (errorContact.length > 0) {
@@ -314,6 +328,7 @@ export async function createContactsFromCsv(
   contacts,
   orgId,
   cTags,
+  updateExisting = false,
   contactGroupId,
 ) {
   const tags = (await getContactTag(orgId))?.contactTags ?? [];
@@ -333,16 +348,20 @@ export async function createContactsFromCsv(
       tags: result ?? undefined,
     };
   });
+  if (updateExisting) {
+    await updateMulitplceContacts(data, orgId);
+  } else {
+    const filterNewContacts = await getExistingContactCountByPhno(
+      data.map((item) => item.phone),
+      orgId,
+    );
+    if (filterNewContacts === (data?.length ?? 0))
+      throw new Error("All contacts already exist");
+  }
   if (contactGroupId) {
     const res = await addNewContactsToGroup(contactGroupId, data, orgId);
     return res;
   }
-  const filterNewContacts = await getExistingContactCountByPhno(
-    data.map((item) => item.phone),
-    orgId,
-  );
-  if (filterNewContacts === (data?.length ?? 0))
-    throw new Error("All contacts already exist");
   const res = await createMultipleContacts(data, orgId);
   return res;
 }
@@ -358,5 +377,25 @@ export async function getExistingContactCountByPhno(
       },
       orgId,
     },
+  });
+}
+
+export async function updateMulitplceContacts(
+  contacts: createMultipleContactInput,
+  orgId: string,
+) {
+  return await prisma.$transaction(async (tx) => {
+    for (const contact of contacts) {
+      await tx.contact.updateMany({
+        where: {
+          phone: contact.phone,
+          orgId,
+        },
+        data: {
+          tags: contact.tags,
+          name: contact.name,
+        },
+      });
+    }
   });
 }

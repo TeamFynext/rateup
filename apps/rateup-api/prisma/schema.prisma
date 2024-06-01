@@ -223,44 +223,45 @@ model Invitation {
 }
 
 model Survey {
-  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime?       @updatedAt
-  title                   String
-  description             String?         @default("")
+  id                                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime?         @updatedAt
+  title                             String
+  description                       String?           @default("")
   /// [PQuestion]
-  questions               Json[]          @default([])
-  languages               String[]
-  user                    User            @relation(fields: [createdBy], references: [id])
-  createdBy               String          @db.Uuid
-  teams                   SurveyTeamMap[]
-  active                  Boolean         @default(true)
-  isPublished             Boolean         @default(false)
-  isProtected             Boolean         @default(false)
-  kioskMode               Boolean         @default(false)
-  uniqueDeviceResponse    Boolean         @default(false) //avoid duplicate entry from same IP
-  password                String?
-  type                    String          @default("web")
-  getLocation             Boolean         @default(false)
-  welcomePageEnabled      Boolean         @default(true)
-  tags                    String[]        @default([])
-  skipPreview             Boolean         @default(true)
-  enableNotificationEmail Boolean         @default(false)
-  notificationEmail       String          @default("")
-  enableTickets           Boolean         @default(false)
-  enableTicketEmailAlerts Boolean         @default(false)
-  shareSettings           Json?
-  publicKey               String?
-  isEncrypted             Boolean         @default(false)
-  surveyTheme             SurveyTheme?
-  webSurveyThemeId        String?         @db.Uuid
-  webSurveyTheme          WebSurveyTheme? @relation(fields: [webSurveyThemeId], references: [id])
-  WaFlow                  WaFlow?
-  spreadSheetId           String?
-  redirect                Json            @default("{\"url\": \"/\",\"time\": \"5\" }")
-  org                     Org?            @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                   String?         @db.Uuid
-  surveyVariables         SurveyVariables[]
+  questions                         Json[]            @default([])
+  languages                         String[]
+  user                              User              @relation(fields: [createdBy], references: [id])
+  createdBy                         String            @db.Uuid
+  teams                             SurveyTeamMap[]
+  active                            Boolean           @default(true)
+  isPublished                       Boolean           @default(false)
+  isProtected                       Boolean           @default(false)
+  kioskMode                         Boolean           @default(false)
+  uniqueDeviceResponse              Boolean           @default(false) //avoid duplicate entry from same IP
+  password                          String?
+  type                              String            @default("web")
+  getLocation                       Boolean           @default(false)
+  welcomePageEnabled                Boolean           @default(true)
+  tags                              String[]          @default([])
+  skipPreview                       Boolean           @default(true)
+  enableNotificationEmail           Boolean           @default(false)
+  notificationEmail                 String            @default("")
+  enableTickets                     Boolean           @default(false)
+  enableTicketEmailAlerts           Boolean           @default(false)
+  webSurveyAutoTransitionToNextQues Boolean           @default(true)
+  shareSettings                     Json?
+  publicKey                         String?
+  isEncrypted                       Boolean           @default(false)
+  surveyTheme                       SurveyTheme?
+  webSurveyThemeId                  String?           @db.Uuid
+  webSurveyTheme                    WebSurveyTheme?   @relation(fields: [webSurveyThemeId], references: [id])
+  WaFlow                            WaFlow?
+  spreadSheetId                     String?
+  redirect                          Json              @default("{\"url\": \"/\",\"time\": \"5\" }")
+  org                               Org?              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                             String?           @db.Uuid
+  surveyVariables                   SurveyVariables[]
 }
 
 model SurveyTeamMap {
@@ -1107,12 +1108,12 @@ model Chatbot {
 }
 
 model SurveyVariables {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  value           String
-  type            String
-  surveyId        String   @db.Uuid 
-  survey          Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  value    String
+  type     String
+  surveyId String @db.Uuid
+  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
 
   @@unique([name, surveyId], name: "variable_name_survey_id_unique")
 }
