@@ -43,7 +43,6 @@ import {
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
-import { getOrgIdAndRole } from "../../../../../../user/user.service";
 import {
   SendTemplateToContacts,
   SendTemplateToContactGroups,
@@ -57,7 +56,7 @@ export async function getTemplatesHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const { orgId } = await getOrgIdAndRole({ id: request.userId });
+  const orgId = request.user.orgId;
   const templates = await getTemplatesByOrgId(orgId);
   reply.code(200).send(templates);
 }
@@ -68,7 +67,7 @@ export async function getTemplateByIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { orgId } = await getOrgIdAndRole({ id: request.userId });
+  const orgId = request.user.orgId;
   const templates = await getTemplateByIdAndOrgId(
     request.params.templateId,
     orgId,
@@ -83,7 +82,7 @@ export async function createTemplateHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     // TODO: restrict access to super admin and admin?
 
     const { defaultValues, ...templateData } = request.body;
@@ -115,7 +114,7 @@ export async function saveTemplateAsDraftHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     const { defaultValues, ...templateData } = request.body;
     let formattedTemplate: any = generateTemplate(templateData);
     formattedTemplate.status = WaTemplateStatus.DRAFT;
@@ -149,7 +148,7 @@ export async function updateTemplateHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     const template = await getDbTemplate(request.params.templateId);
 
     if (!template) {
@@ -193,11 +192,6 @@ export async function deleteTemplateHandler(
   const { templateId } = request.params;
   try {
     const { data: template, orgId } = await getDbTemplate(templateId);
-    const { orgId: userOrg } = await getOrgIdAndRole({ id: request.userId });
-    if (userOrg !== orgId) {
-      reply.code(403);
-      return;
-    }
     const { id, name } = template as WaTemplateFormatted;
     if (id) {
       await deleteTemplate(orgId, id, name);
@@ -213,13 +207,7 @@ export async function syncTemplatesHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const { orgId, role } = await getOrgIdAndRole({ id: request.userId });
-
-  if (role !== Role.SUPER_ADMIN && role !== Role.ADMIN) {
-    reply.code(403);
-    return;
-  }
-  const synced = await syncTemplates(orgId);
+  const synced = await syncTemplates(request.user.orgId);
   if (synced) {
     reply.code(200);
   } else {
@@ -232,7 +220,7 @@ export async function getUnregisteredTemplatesHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     const unregisteredTemplates = await getUnregisteredTemplates(orgId);
     reply.code(200).send(unregisteredTemplates);
   } catch (e) {
@@ -248,7 +236,7 @@ export async function registerTemplatesInDbHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     await registerTemplatesInDb(request.body, orgId);
     reply.code(200);
   } catch (e) {
@@ -267,7 +255,7 @@ export async function uploadHandler(
       return reply
         .code(400)
         .send({ message: "This file type is not permitted." });
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     const size: any = data.fields.size;
     const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
       data,
