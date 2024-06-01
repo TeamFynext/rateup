@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { $waTemplateExternalRef } from "./wa_templates.external.schema";
 import {
   getTemplatesHandler,
+  sendTemplateByNameToPhoneHandler,
   sendTemplateToContactHandler,
   sendTemplatesToContactGroupsHandler,
   sendTemplatesToContactsHandler,
@@ -24,6 +25,20 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
       },
     },
     getTemplatesHandler,
+  );
+
+  server.post(
+    "/send",
+    {
+      schema: {
+        body: $waTemplateExternalRef("sendTemplateByNameToPhone"),
+        tags: ["WhatsApp/Template"],
+        description:
+          "Send a template to a phone number. Phone number should contain country code",
+        summary: "Send a template to a phone number",
+      },
+    },
+    sendTemplateByNameToPhoneHandler,
   );
 
   server.post(
