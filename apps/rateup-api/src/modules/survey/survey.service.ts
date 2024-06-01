@@ -9,7 +9,6 @@ import {
 } from "./survey.schema";
 import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
 import { QuestionType, SurveyVariableType } from "../../types/enums";
-import { log } from "../../utils/logger";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
@@ -638,7 +637,11 @@ export async function getSurveyTemplates(surveyType: string) {
       teamId: teamId,
     },
     include: {
-      survey: true,
+      survey: {
+        include: {
+          webSurveyTheme: true,
+        },
+      },
     },
   });
 
