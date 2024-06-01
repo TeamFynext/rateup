@@ -28,7 +28,7 @@ export function generateTemplate(
       type: WaTemplateComponentType.BODY,
       text: input.body,
       example: {
-        body_text: input.example,
+        body_text: [input.example],
       },
     });
   } else {
