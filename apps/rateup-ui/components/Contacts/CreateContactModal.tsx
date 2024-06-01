@@ -11,6 +11,7 @@ import {
   TextInput,
   Blockquote,
   NavLink,
+  Switch,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
@@ -55,6 +56,7 @@ const CreateContactModal = ({
       contactType: cTags ?? [],
       countryCode: "91",
       tags: {},
+      updateExisting: false,
     },
     validate: {
       phone: (value, values) => {
@@ -84,6 +86,7 @@ const CreateContactModal = ({
       if (!csvfile) return;
       const formData = new FormData();
       formData.append("file", csvfile);
+      formData.append("update", form.getValues().updateExisting?.toString());
       for await (const item of form.getValues().contactType) {
         formData.append(
           `tags[${form.getValues().contactType.indexOf(item)}]`,
@@ -101,7 +104,7 @@ const CreateContactModal = ({
       });
     } else {
       const result = {};
-      for (const key of form.getValues().contactType) {
+      for await (const key of form.getValues().contactType) {
         if (form.getValues()?.tags?.hasOwnProperty(key)) {
           result[key] = form.getValues()?.tags?.[key];
         }
@@ -234,6 +237,12 @@ const CreateContactModal = ({
                   target="_blank"
                 />
               </Blockquote>
+              <Switch
+                mx={"lg"}
+                label="Update the existing data while importing"
+                key={form.key("updateExisting")}
+                {...form.getInputProps("updateExisting")}
+              />
               <ContainedFileInput
                 mx={"lg"}
                 label=""

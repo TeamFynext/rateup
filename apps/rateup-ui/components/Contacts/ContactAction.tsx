@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  ActionIcon,
   Box,
   Checkbox,
   Group,
@@ -7,6 +8,7 @@ import {
   ScrollArea,
   Stack,
   Table,
+  Tooltip,
 } from "@mantine/core";
 import { useAddExistingContactToMultipleGroupsMutation } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { SearchInput } from "../../pages/dashboard/campaign";
@@ -20,12 +22,15 @@ import { PAGE_SIZE } from "../../utils/constants";
 import RateupLoader from "../Loaders/RateupLoader";
 import { useDebouncedState } from "@mantine/hooks";
 import ContactPagination from "./ContactPagination";
+import { ColumnFiltersState } from "@tanstack/react-table";
+import { IconRefresh } from "@tabler/icons-react";
 
 const ContactAction = ({ opened, close, allGroups, action }) => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const [filterByTag, setFilterByTag] = useState<string[]>([]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -43,7 +48,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
     isPending,
     data: allContacts,
     refetch,
-  } = useContacts(pagination, searchText);
+  } = useContacts(pagination, searchText, null, columnFilters);
   const isDisabledSubmit = !selectedIds?.length || !selectedGroups?.length;
   const filteredGroups = allGroups?.filter(
     (group) => group?.teamId === selectedTeamId,
@@ -66,48 +71,32 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
     });
   };
 
-  const sourceArray: string[] = Array.from(
-    new Set(allContacts?.users?.map((data) => data?.source)),
-  );
-  const rows = allContacts?.users
-    ?.filter((data) =>
-      sourceArray?.some((data) => filterByTag.includes(data))
-        ? filterByTag?.includes(data.source)
-        : data,
-    )
-    ?.filter((data) =>
-      filterByTag.filter((value) => !sourceArray.includes(value))?.length > 0
-        ? data?.contactGroups?.some((group) =>
-            filterByTag?.includes(group.contactGroup.name),
-          )
-        : data,
-    )
-    ?.map((contact) => (
-      <Table.Tr
-        key={contact?.id}
-        bg={
-          selectedIds.includes(contact?.id)
-            ? "var(--mantine-color-blue-light)"
-            : undefined
-        }
-      >
-        <Table.Td>
-          <Checkbox
-            aria-label="Select row"
-            checked={selectedIds?.includes(contact?.id)}
-            onChange={(event) =>
-              setSelectedIds(
-                event.currentTarget.checked
-                  ? [...selectedIds, contact?.id]
-                  : selectedIds.filter((id) => id !== contact?.id),
-              )
-            }
-          />
-        </Table.Td>
-        <Table.Td>{contact?.name}</Table.Td>
-        <Table.Td>{contact?.phone}</Table.Td>
-      </Table.Tr>
-    ));
+  const rows = allContacts?.users?.map((contact) => (
+    <Table.Tr
+      key={contact?.id}
+      bg={
+        selectedIds.includes(contact?.id)
+          ? "var(--mantine-color-blue-light)"
+          : undefined
+      }
+    >
+      <Table.Td>
+        <Checkbox
+          aria-label="Select row"
+          checked={selectedIds?.includes(contact?.id)}
+          onChange={(event) =>
+            setSelectedIds(
+              event.currentTarget.checked
+                ? [...selectedIds, contact?.id]
+                : selectedIds.filter((id) => id !== contact?.id),
+            )
+          }
+        />
+      </Table.Td>
+      <Table.Td>{contact?.name}</Table.Td>
+      <Table.Td>{contact?.phone}</Table.Td>
+    </Table.Tr>
+  ));
   let totalPageCount = (allContacts?.totalCount ?? 1) / pagination.pageSize;
   return (
     <FormModalLayout
@@ -145,14 +134,16 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
               }}
             />
             <FilterSelect
-              contactArray={filteredGroups?.map((data) => data?.name)}
-              sourceArray={sourceArray}
-              filterByTag={filterByTag}
-              setFilterByTag={setFilterByTag}
+              contactArray={filteredGroups?.map((data) => ({
+                value: data?.id,
+                label: data?.name,
+              }))}
+              setFilterByTag={setColumnFilters}
+              filterByTag={columnFilters}
             />
           </Group>
           <Group justify="space-between">
-            {filterByTag?.length === 0 ? (
+            {columnFilters?.length === 0 ? (
               <Checkbox
                 aria-label="select all"
                 label="Select All"
@@ -187,7 +178,18 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
               <Table stickyHeader>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th />
+                    <Table.Th>
+                      <Tooltip label={"refresh data"}>
+                        <ActionIcon
+                          variant="light"
+                          onClick={() => {
+                            refetch();
+                          }}
+                        >
+                          <IconRefresh />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Table.Th>
                     <Table.Th>Name</Table.Th>
                     <Table.Th>Phone Number</Table.Th>
                   </Table.Tr>
