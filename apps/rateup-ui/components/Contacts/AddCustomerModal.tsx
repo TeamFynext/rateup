@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Checkbox,
@@ -13,13 +13,21 @@ import {
   Text,
   Blockquote,
   NavLink,
+  Switch,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
 import {
   RateupButtonSecondary,
   RateupButtonBlue,
 } from "../Button/RateupButtons";
 import { useForm } from "@mantine/form";
-import { IconDownload, IconInfoCircle, IconSearch } from "@tabler/icons-react";
+import {
+  IconDownload,
+  IconInfoCircle,
+  IconRefresh,
+  IconSearch,
+} from "@tabler/icons-react";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
@@ -41,6 +49,7 @@ import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import { FilterSelect } from "../../pages/dashboard/contacts";
 import RateupLoader from "../Loaders/RateupLoader";
 import ContactPagination from "./ContactPagination";
+import { ColumnFiltersState } from "@tanstack/react-table";
 
 export interface IAddCustomer {
   name: string;
@@ -58,20 +67,25 @@ const AddCustomerModal = ({
   tags = [],
   createNewContactsFromCSV,
 }) => {
-  const [contactType, setContactType] = useState<string[]>([...tags]);
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [isCreating, setIsCreating] = useState(false);
   const [addType, setAddType] = useState(contactAddType.NEW);
   const [customerList, setCustomerList] = useState<string[]>([]);
   const [csvfile, setCsvfile] = useState<File | null>(null);
-  const [filterByTag, setFilterByTag] = useState([]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
   const createNewContactMutation = useAddNewContactMutation(groupId);
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const { isPending, data } = useContacts(pagination, searchTerm);
+  const { isPending, data, refetch } = useContacts(
+    pagination,
+    searchTerm,
+    null,
+    columnFilters,
+  );
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
   let contactData = data?.users;
@@ -80,9 +94,10 @@ const AddCustomerModal = ({
       name: "",
       phone: "",
       importMethod: importMethod.MANUAL,
-      contactType: ["phone"],
+      contactType: tags ?? [],
       countryCode: "91",
       tags: {},
+      updateExisting: false,
     },
     validate: {
       phone: (value) => {
@@ -110,11 +125,7 @@ const AddCustomerModal = ({
     (c) => !existingContactIds?.includes(c),
   );
 
-  useEffect(() => {
-    form.values.contactType = contactType;
-  }, [contactType]);
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validation = form.validate();
     if (validation.hasErrors) {
       if (validation.errors.contactType) {
@@ -127,9 +138,13 @@ const AddCustomerModal = ({
       if (!csvfile) return;
       const formData = new FormData();
       formData.append("file", csvfile);
-      contactType.forEach((item, index) => {
-        formData.append(`tags[${index}]`, item);
-      });
+      formData.append("update", form.getValues().updateExisting?.toString());
+      for await (const item of form.getValues().contactType) {
+        formData.append(
+          `tags[${form.getValues().contactType.indexOf(item)}]`,
+          item,
+        );
+      }
       createNewContactsFromCSV.mutate(
         { data: formData, groupId },
         {
@@ -164,7 +179,7 @@ const AddCustomerModal = ({
         let contactData: IAddCustomer[] = [form.values];
         const phone = form.values.phone.slice(1);
         const result = {};
-        for (const key of contactType) {
+        for await (const key of form.getValues().contactType) {
           if (form.getValues()?.tags?.hasOwnProperty(key)) {
             result[key] = form.getValues()?.tags?.[key];
           }
@@ -209,52 +224,36 @@ const AddCustomerModal = ({
       fontSize: "14px",
     },
   };
-  const sourceArray: string[] = Array.from(
-    new Set(contactData?.map((data) => data?.source)),
-  );
-  const rows = contactData
-    ?.filter((data) =>
-      sourceArray?.some((data) => filterByTag.includes(data))
-        ? filterByTag?.includes(data.source)
-        : data,
-    )
-    ?.filter((data) =>
-      filterByTag.filter((value) => !sourceArray.includes(value))?.length > 0
-        ? data?.contactGroups?.some((group) =>
-            filterByTag?.includes(group.contactGroup.name),
-          )
-        : data,
-    )
-    ?.map((contact) => (
-      <Table.Tr
-        key={contact?.id}
-        bg={
-          customerList.includes(contact?.id)
-            ? "var(--mantine-color-blue-light)"
-            : undefined
-        }
-      >
-        <Table.Td>
-          <Checkbox
-            aria-label="Select row"
-            checked={
-              customerList?.includes(contact?.id) ||
-              existingContactIds?.includes(contact?.id)
-            }
-            disabled={existingContactIds?.includes(contact?.id)}
-            onChange={(event) =>
-              setCustomerList(
-                event.currentTarget.checked
-                  ? [...customerList, contact?.id]
-                  : customerList.filter((id) => id !== contact?.id),
-              )
-            }
-          />
-        </Table.Td>
-        <Table.Td>{contact?.name}</Table.Td>
-        <Table.Td>{contact?.phone}</Table.Td>
-      </Table.Tr>
-    ));
+  const rows = contactData?.map((contact) => (
+    <Table.Tr
+      key={contact?.id}
+      bg={
+        customerList.includes(contact?.id)
+          ? "var(--mantine-color-blue-light)"
+          : undefined
+      }
+    >
+      <Table.Td>
+        <Checkbox
+          aria-label="Select row"
+          checked={
+            customerList?.includes(contact?.id) ||
+            existingContactIds?.includes(contact?.id)
+          }
+          disabled={existingContactIds?.includes(contact?.id)}
+          onChange={(event) =>
+            setCustomerList(
+              event.currentTarget.checked
+                ? [...customerList, contact?.id]
+                : customerList.filter((id) => id !== contact?.id),
+            )
+          }
+        />
+      </Table.Td>
+      <Table.Td>{contact?.name}</Table.Td>
+      <Table.Td>{contact?.phone}</Table.Td>
+    </Table.Tr>
+  ));
   if (isPending) return <RateupLoader />;
   let totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
@@ -305,8 +304,8 @@ const AddCustomerModal = ({
                 {tags?.length > 0 && (
                   <Paper shadow="xl" p="md" px="xl">
                     <Checkbox.Group
-                      value={contactType}
-                      onChange={setContactType}
+                      key={form.key("contactType")}
+                      {...form.getInputProps("contactType")}
                     >
                       <Group>
                         {tags?.map((data) => (
@@ -354,19 +353,21 @@ const AddCustomerModal = ({
                       {form?.errors?.phone}
                     </Text>
                   </Stack>
-                  {contactType?.map(
-                    (data) =>
-                      data !== "phone" && (
-                        <TextInput
-                          label={data}
-                          placeholder={`Enter ${data}`}
-                          {...form.getInputProps(`tags.${data}`)}
-                          radius={"md"}
-                          size="md"
-                          key={data}
-                        />
-                      ),
-                  )}
+                  {form
+                    .getValues()
+                    ?.contactType?.map(
+                      (data) =>
+                        data !== "phone" && (
+                          <TextInput
+                            label={data}
+                            placeholder={`Enter ${data}`}
+                            {...form.getInputProps(`tags.${data}`)}
+                            radius={"md"}
+                            size="md"
+                            key={data}
+                          />
+                        ),
+                    )}
                 </SimpleGrid>
               )}
               {form.values.importMethod == importMethod.CSV && (
@@ -390,6 +391,12 @@ const AddCustomerModal = ({
                       target="_blank"
                     />
                   </Blockquote>
+                  <Switch
+                    mx={"lg"}
+                    label="Update the existing data while importing"
+                    key={form.key("updateExisting")}
+                    {...form.getInputProps("updateExisting")}
+                  />
                   <ContainedFileInput
                     mx={"lg"}
                     label=""
@@ -412,10 +419,12 @@ const AddCustomerModal = ({
           {addType == contactAddType.EXISTING && (
             <Stack justify="center" gap={"md"}>
               <FilterSelect
-                contactArray={contactGroupData?.map((data) => data?.name)}
-                sourceArray={sourceArray}
-                filterByTag={filterByTag}
-                setFilterByTag={setFilterByTag}
+                contactArray={contactGroupData?.map((data) => ({
+                  value: data?.id,
+                  label: data?.name,
+                }))}
+                setFilterByTag={setColumnFilters}
+                filterByTag={columnFilters}
               />
               <Group justify="space-between" px={"md"}>
                 <Checkbox
@@ -449,7 +458,18 @@ const AddCustomerModal = ({
                   <Table stickyHeader>
                     <Table.Thead>
                       <Table.Tr>
-                        <Table.Th />
+                        <Table.Th>
+                          <Tooltip label={"refresh data"}>
+                            <ActionIcon
+                              variant="light"
+                              onClick={() => {
+                                refetch();
+                              }}
+                            >
+                              <IconRefresh />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Table.Th>
                         <Table.Th>Name</Table.Th>
                         <Table.Th>Phone Number</Table.Th>
                       </Table.Tr>
@@ -466,20 +486,13 @@ const AddCustomerModal = ({
             </Stack>
           )}
           <Group justify="flex-end">
-            <RateupButtonSecondary
-              title="cancel"
-              onClick={close}
-            ></RateupButtonSecondary>
+            <RateupButtonSecondary title="cancel" onClick={close} />
             <RateupButtonBlue
               title="Add Member"
               onClick={handleSubmit}
               loading={isCreating}
               disabled={
-                // isUpload ||
-                contactData?.every((customer) =>
-                  existingContactIds.includes(customer?.id),
-                ) ||
-                (form.values.importMethod == importMethod.CSV && !csvfile)
+                form.values.importMethod == importMethod.CSV && !csvfile
               }
             />
           </Group>
