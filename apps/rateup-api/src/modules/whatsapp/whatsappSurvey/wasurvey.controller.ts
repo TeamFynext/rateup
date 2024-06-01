@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
+  WA_SUBSCRIBE_STATUS,
   WaParsedMessage,
   createListMessage,
   createTemplateMessage,
@@ -59,6 +60,8 @@ import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { CampaignParticipant, Contact, WhatsappSettings } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
+import { handleContactConsent } from "../../contact/contact.service";
+import { getOrgById } from "../../org/org.services";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -185,6 +188,8 @@ async function whatsappMessageHandler(
   );
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
+  const messageLowerCase =
+    type === "text" ? message?.trim()?.toLocaleLowerCase() : "";
 
   if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
@@ -192,6 +197,21 @@ async function whatsappMessageHandler(
     await handleRegisterMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
+  } else if (
+    messageLowerCase === WA_SUBSCRIBE_STATUS.STOP ||
+    messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
+  ) {
+    const isSubscribe = messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE;
+    const consent = await handleContactConsent(orgId, from, isSubscribe);
+    if (!consent) return;
+    const org = await getOrgById(orgId);
+    await sendTextMessage(
+      { phone: from, orgId },
+      "",
+      isSubscribe
+        ? `Great! You will now receive notifications from ${org.name}.`
+        : `You have successfully opted out from receiving notifications from ${org.name}.If you wish to re-subscribe to notifications reply "SUBSCRIBE"`,
+    );
   } else {
     let session = await getSession(orgId, from);
     // deleting session after 24hrs
@@ -617,6 +637,10 @@ async function _sendCampaignToParticipants(
   for (const { contact, id, status } of campaign.campaignParticipants) {
     if (!sendToStatuses.includes(status as CampaignParticipantStatus)) {
       log.warn("Campaign already sent to participant %o. Skipping...", contact);
+      continue;
+    }
+    if (!contact.consent) {
+      log.warn("contact has no consent to sent %o. Skipping...", contact);
       continue;
     }
     if (!contact.phone) {
