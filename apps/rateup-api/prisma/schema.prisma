@@ -364,6 +364,7 @@ model Contact {
   campaignParticipants CampaignParticipant[]
   tags                 Json?
   WaMessage            WaMessage[]
+  consent              Boolean               @default(true)
 
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
 }

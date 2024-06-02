@@ -73,6 +73,12 @@ export async function getContactsByOrgId(
             mode: "insensitive",
           },
         });
+      } else if ("consent" === key) {
+        filterData.push({
+          [key]: {
+            equals: value?.toLocaleLowerCase() === "true",
+          },
+        });
       } else if ("createdAt" === key) {
         filterData.push({
           [key]: {
@@ -399,3 +405,26 @@ export async function updateMulitplceContacts(
     }
   });
 }
+
+export const handleContactConsent = async (
+  orgId: string,
+  phone: string,
+  consent: boolean,
+) => {
+  const contact_consent = await prisma.contact.findFirst({
+    where: {
+      phone,
+      orgId,
+    },
+  });
+  if (contact_consent.consent === consent) return false;
+  await prisma.contact.update({
+    where: {
+      id: contact_consent.id,
+    },
+    data: {
+      consent,
+    },
+  });
+  return true;
+};

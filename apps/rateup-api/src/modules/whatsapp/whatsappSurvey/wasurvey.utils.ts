@@ -646,3 +646,7 @@ export function mapStatuses(addStatuses) {
 
   return Array.from(result);
 }
+export enum WA_SUBSCRIBE_STATUS {
+  SUBSCRIBE = "subscribe",
+  STOP = "stop",
+}
