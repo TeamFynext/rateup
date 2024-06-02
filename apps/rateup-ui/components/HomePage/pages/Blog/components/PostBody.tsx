@@ -8,23 +8,11 @@ type Props = {
 
 const PostBody = ({ content }: Props) => {
   return (
-    <div>
+    <div className={styles["footer-space"]}>
       <div
         className={markdownStyles["markdown"]}
         dangerouslySetInnerHTML={{ __html: content }}
       />
-      <Link href="/blog">
-        <h1
-          style={{
-            marginBottom: "1rem",
-            marginTop: "1rem",
-            fontSize: "20px",
-            color: "inherit",
-          }}
-        >
-          Back to Blog page
-        </h1>
-      </Link>
     </div>
   );
 };

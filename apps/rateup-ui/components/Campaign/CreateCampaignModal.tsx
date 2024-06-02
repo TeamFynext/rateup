@@ -138,6 +138,7 @@ const CreateCampaignModal = ({
             {...form.getInputProps("waTemplateId")}
             readOnly={isEdit && campaign?.status === CampaignStatus.ACTIVE}
             data={templatesData}
+            searchable
             styles={{
               input: {
                 cursor:

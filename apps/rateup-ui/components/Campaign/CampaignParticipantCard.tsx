@@ -11,6 +11,7 @@ export const CampaignParticipantMenu = ({
   status,
   participantId,
   teamId,
+  consent,
 }) => {
   const removeCampainPartcipant = useRemoveCampaignParticipant(id);
   const sendMutation = useSendCampaign(id, teamId);
@@ -58,6 +59,7 @@ export const CampaignParticipantMenu = ({
         <Menu.Item
           leftSection={<IconSend size={"16px"} />}
           onClick={handleResendClick}
+          disabled={!consent}
         >
           Resend
         </Menu.Item>

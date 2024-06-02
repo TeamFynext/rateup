@@ -31,18 +31,19 @@ export const CampaignMenu = ({ teamId, id }) => {
     />
   );
 };
-
+const statusColors = {
+  [CampaignStatus.ACTIVE]: { variant: "light", color: "#149A8A" },
+  [CampaignStatus.INACTIVE]: { variant: "light", color: "red" },
+  [CampaignParticipantStatus.SENT]: { variant: "light", color: "#149A8A" },
+  [CampaignParticipantStatus.FAILED]: { variant: "light", color: "red" },
+  [CampaignParticipantStatus.PENDING]: { variant: "light", color: "orange" },
+  [CampaignParticipantStatus.READ]: { variant: "light", color: "#4CAF50" },
+  [CampaignParticipantStatus.DELIVERED]: { variant: "light", color: "#FFC107" },
+  [CampaignParticipantStatus.COMPLETED]: {
+    variant: "filled",
+    color: "#149A8A",
+  },
+};
 export const renderBadge = (badgeType) => {
-  switch (badgeType) {
-    case CampaignStatus.ACTIVE:
-    case CampaignParticipantStatus.SENT:
-      return { variant: "light", color: "#149A8A" };
-    case CampaignStatus.INACTIVE:
-    case CampaignParticipantStatus.FAILED:
-      return { variant: "light", color: "red" };
-    case CampaignStatus.COMPLETED:
-      return { variant: "filled", color: "#149A8A" };
-    default:
-      return { variant: "filled", color: "#149A8A" };
-  }
+  return statusColors[badgeType] || { variant: "filled", color: "#149A8A" };
 };

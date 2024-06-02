@@ -9,10 +9,14 @@ import { IconCheck, IconCopy } from "@tabler/icons-react";
 interface LinkCopyElementProps extends TextInputProps {
   link: string;
 }
-export function LinkCopyElement({ link, ...props }: LinkCopyElementProps) {
+export function LinkCopyElement({
+  link,
+  label,
+  ...props
+}: LinkCopyElementProps) {
   return (
     <TextInput
-      label={"Register URL"}
+      label={label ?? "Register URL"}
       readOnly
       value={link}
       rightSection={
