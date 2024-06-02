@@ -9,7 +9,7 @@ function TermsOfService() {
       <section>
         <h2>The Gist</h2>
         <p>
-          Uprate Technologies operates the RateUp (www.rateup.app) service,
+          RateUp Technologies operates the RateUp (www.rateup.app) service,
           which we hope you use. If you use it, please use it responsibly. If
           you don't, we'll have to terminate your account.
         </p>

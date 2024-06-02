@@ -156,3 +156,7 @@ text.content {
   width: calc(30% - 16px);
   margin: 8px;
 }
+
+.footer-space {
+  margin-bottom: 5rem;
+}

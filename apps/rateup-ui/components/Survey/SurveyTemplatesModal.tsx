@@ -19,6 +19,7 @@ import {
 import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
 import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
 import SurveyTemplates from "../../pages/dashboard/surveys/templates/surveyTemplates";
+import NothingFound from "../NothingFound/NothingFound";
 
 const SurveyTemplatesModal = ({
   opened,
@@ -173,7 +174,7 @@ const SurveyTemplatesModal = ({
                     </ScrollArea>
                   </Tabs>
                 ) : (
-                  <Text m="xl">"No templates available." </Text>
+                  <NothingFound text="No templates available..!!" />
                 )}
               </Group>
             </Stack>

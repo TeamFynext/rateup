@@ -21,7 +21,7 @@ const headerNavLinks = [
     sublinks: [
       {
         id: 1001,
-        link: "/reputation",
+        link: "/reputation-management",
         content: {
           heading: "Reputation Management",
           description:

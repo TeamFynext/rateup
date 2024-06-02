@@ -68,9 +68,9 @@ export const howItWorksTextIllustrations = [
     ),
     description: (
       <DescriptionP>
-        Compatible with all screen sizes, Our digital menus have a built-in
-        responsive engine which allows them to be compatible with all screen
-        sizes, <DescriptionPSpan text="from phones to even PCs." />
+        Our digital menus are simple to access and use, providing an intuitive
+        interface that ensures all your customers can view your menu
+        effortlessly with just a scan.
       </DescriptionP>
     ),
     image: (

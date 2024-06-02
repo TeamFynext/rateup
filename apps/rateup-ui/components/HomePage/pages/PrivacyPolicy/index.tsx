@@ -8,7 +8,7 @@ function PrivacyPolicy() {
       <section>
         <h2>Privacy Policy</h2>
         <p>
-          Uprate Technologies operates the www.rateup.app which provides the
+          RateUp Technologies operates the www.rateup.app which provides the
           RateUp Software as a Service.
         </p>
         <p>

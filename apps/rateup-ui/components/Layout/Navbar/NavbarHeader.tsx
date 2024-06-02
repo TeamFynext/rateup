@@ -3,7 +3,7 @@ import { UserCardInterface } from "./LeftNavbar";
 import styles from "./Navbar.module.css";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { IconChevronLeft } from "@tabler/icons-react";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconChevronRight, IconMenu2 } from "@tabler/icons-react";
 const NavbarHeader = (props: UserCardInterface) => {
   return (
     <UnstyledButton className={styles.user}>
@@ -41,7 +41,7 @@ const NavbarHeader = (props: UserCardInterface) => {
               style={{ cursor: "pointer" }}
             />
           ) : (
-            <IconChevronRight
+            <IconMenu2
               size={20}
               onClick={() => {
                 props?.setOpened((o) => !o);

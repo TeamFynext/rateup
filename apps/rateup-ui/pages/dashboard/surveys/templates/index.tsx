@@ -26,6 +26,7 @@ import Heading from "../../../../components/styled/Heading/Heading";
 import { useUser } from "../../../../context/UserContext";
 import { UserRole } from "../../../../utils/enums";
 import SurveyTemplates from "./surveyTemplates";
+import NothingFound from "../../../../components/NothingFound/NothingFound";
 
 const Templates = ({ survey }) => {
   const { user } = useUser();
@@ -77,11 +78,10 @@ const Templates = ({ survey }) => {
   if (isLoading || teamsLoading) return <RateupLoader />;
 
   return (
-    <>
+    <Stack gap={0}>
       {/* <Modal opened={opened} onClose={close} title="Create Survey from Template" size="auto" centered> */}
 
       <Group
-        p="xl"
         style={{ textAlign: "center", alignItems: "center", margin: "auto" }}
       >
         <FormModalLayout
@@ -186,7 +186,7 @@ const Templates = ({ survey }) => {
       {allTemplates && (
         <Box m="lg" pb="xl">
           {Object?.entries(allTemplates)?.length < 1 && (
-            <Text m="100px">No templates found..!</Text>
+            <NothingFound text="No templates found..!!" />
           )}
 
           {Object?.entries(allTemplates)?.map(
@@ -200,7 +200,7 @@ const Templates = ({ survey }) => {
           )}
         </Box>
       )}
-    </>
+    </Stack>
   );
 };
 
