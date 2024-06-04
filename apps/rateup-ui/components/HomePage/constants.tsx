@@ -31,7 +31,7 @@ const headerNavLinks = [
       },
       {
         id: 1002,
-        link: "/menus",
+        link: "/digital-menu",
         content: {
           heading: "Digital Menu",
           description:
