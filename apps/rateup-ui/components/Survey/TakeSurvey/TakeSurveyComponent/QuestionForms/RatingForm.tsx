@@ -6,7 +6,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 export function RatingForm() {
   const selectedPreview = useSelectedPreview();

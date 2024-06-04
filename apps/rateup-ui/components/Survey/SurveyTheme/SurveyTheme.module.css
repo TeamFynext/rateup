@@ -19,6 +19,10 @@
   justify-content: center;
 }
 
+.tabs-and-other-options-container > div:nth-child(2) {
+  flex-grow: 1.5;
+}
+
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;

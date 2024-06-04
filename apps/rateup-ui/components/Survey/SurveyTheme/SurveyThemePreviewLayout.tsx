@@ -3,6 +3,7 @@ import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
+import LanguagePageThemeView from "./components/previewcomponents/languagePage";
 import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 import styles from "./SurveyTheme.module.css";
 
@@ -29,6 +30,9 @@ function SurveyThemePreviewLayout({ survey }) {
               root: styles["survey-theme-preview-tab-panels-root"],
             }}
           >
+            <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
+              <LanguagePageThemeView survey={survey} />
+            </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.WELCOME}>
               <WelcomePageThemeView survey={survey} />
             </Tabs.Panel>

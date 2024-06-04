@@ -74,6 +74,14 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
         mobileBgImgFile: thankyouMobileBgImgFile,
       },
     },
+    languageTheme: {
+      bg: {
+        desktopBg: { imageUrl: languageDesktopBgImgUrl },
+        mobileBg: { imageUrl: languageMobileBgImgUrl },
+        desktopBgImgFile: languageDesktopBgImgFile,
+        mobileBgImgFile: languageMobileBgImgFile,
+      },
+    },
   } = surveyTheme;
 
   const images = [
@@ -83,6 +91,8 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
     surveyMobileBgImgFile ?? surveyMobileBgImgUrl,
     thankyouDesktopBgImgFile ?? thankyouDesktopBgImgUrl,
     thankyouMobileBgImgFile ?? thankyouMobileBgImgUrl,
+    languageDesktopBgImgFile ?? languageDesktopBgImgUrl,
+    languageMobileBgImgFile ?? languageMobileBgImgUrl,
     logoFile ?? logo,
   ];
 
@@ -104,6 +114,8 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
     delete draft.surveyTheme.bg.mobileBgImgFile;
     delete draft.thankyouTheme.bg.desktopBgImgFile;
     delete draft.thankyouTheme.bg.mobileBgImgFile;
+    delete draft.languageTheme.bg.desktopBgImgFile;
+    delete draft.languageTheme.bg.mobileBgImgFile;
     delete draft.surveyTheme.logo.logoFile;
     [
       draft.welcomeTheme.bg.desktopBg.imageUrl,
@@ -112,6 +124,8 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
       draft.surveyTheme.bg.mobileBg.imageUrl,
       draft.thankyouTheme.bg.desktopBg.imageUrl,
       draft.thankyouTheme.bg.mobileBg.imageUrl,
+      draft.languageTheme.bg.desktopBg.imageUrl,
+      draft.languageTheme.bg.mobileBg.imageUrl,
       draft.surveyTheme.logo.logo,
     ] = urls;
   });
@@ -179,7 +193,7 @@ export const addSurveyThemeLogoObjIfNotPresent = (payloadCopy) => {
   };
 };
 
-const getBgImageUrl = (str) => {
+export const getImgUrl = (str) => {
   let urlStr = str;
   if (!str) urlStr = "";
 
@@ -194,7 +208,7 @@ const getBgImageUrl = (str) => {
 };
 
 const getChooseBgRadioValue = (urlStr) => {
-  const str = getBgImageUrl(urlStr);
+  const str = getImgUrl(urlStr);
   if (str.startsWith("https://") || str.startsWith("http://")) {
     return "image";
   } else {
@@ -214,12 +228,12 @@ export const convertBgObjToReqStructure = (payloadCopy) => {
     const resultBgObj = {
       desktopBg: {
         chooseBgRadioInputValue: desktopChooseBgRadioInputValue,
-        imageUrl: getBgImageUrl(desktopbg),
+        imageUrl: getImgUrl(desktopbg),
         bgColor: desktopbg?.startsWith("#") ? desktopbg : "#f7f7f7",
       },
       mobileBg: {
         chooseBgRadioInputValue: mobileChooseBgRadioInputValue,
-        imageUrl: getBgImageUrl(mobilebg),
+        imageUrl: getImgUrl(mobilebg),
         bgColor: mobilebg?.startsWith("#") ? mobilebg : "#f7f7f7",
       },
     };
@@ -247,10 +261,44 @@ export const verifyAndConvertSurveyThemeObj = (surveyTheme) => {
     }
   }
 
-  if (!surveyTheme["welcomeTheme"].bg.useSurveyBackground) {
+  if (typeof surveyTheme["welcomeTheme"].bg.useSurveyBackground !== "boolean") {
     // use survey background checkbox will be present in webpage theme and thankyou page theme background editor, for that useSurveyBackground is being used.
     surveyThemeCopy["welcomeTheme"].bg.useSurveyBackground = false;
     surveyThemeCopy["thankyouTheme"].bg.useSurveyBackground = false;
+  }
+
+  if (!surveyTheme["languageTheme"]) {
+    surveyThemeCopy["languageTheme"] = {
+      bg: surveyThemeCopy["surveyTheme"].bg,
+      title: {
+        title: "Select a Language",
+        styles: {
+          fontWeight: "300",
+          fontSize: 34,
+          textAlign: "center",
+        },
+      },
+      subtitle: {
+        subtitle: "Let's Begin!",
+        styles: {
+          fontWeight: "600",
+          fontSize: 20,
+          textAlign: "center",
+        },
+      },
+      input: {
+        primaryColor: "#",
+      },
+      button: {
+        label: "Start Survey",
+        styles: {
+          backgroundColor: "#1C518E",
+          color: "#FFFFFF",
+          textAlign: "center",
+        },
+      },
+    };
+    surveyThemeCopy["languageTheme"].bg.useSurveyBackground = true;
   }
 
   return surveyThemeCopy;

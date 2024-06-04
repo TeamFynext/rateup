@@ -7,7 +7,7 @@ import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;

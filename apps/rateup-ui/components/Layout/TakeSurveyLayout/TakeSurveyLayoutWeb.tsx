@@ -34,6 +34,7 @@ import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInpu
 import WelcomePage from "../WelcomePage/WelcomePage";
 import styles from "./TakeSurveyLayoutWeb.module.css";
 import { getBgImgAndBgColor } from "./utils";
+import LanguageSelectionPage from "../LanguageSelectionPage";
 
 export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
@@ -124,6 +125,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const surveyThemeDataPrimaryColor =
     surveyThemeData?.surveyTheme?.input?.primaryColor;
 
+  const isLanguagePageActive =
+    !selectedLanguage && survey?.languages?.length > 1;
   const isWelcomeThemeActive = !startClicked;
   const useSurveyBackground =
     isWelcomeThemeActive &&
@@ -202,7 +205,10 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
           // mih={"100dvh"}
           style={{ backgroundColor }}
         >
-          <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
+          <CreditsCard
+            enableCredits={isUnsplashImage && !isLanguagePageActive}
+            url={backgroundImageSrc}
+          >
             <BackgroundImage
               // mih={"100dvh"}
               h={"100%"}
@@ -217,6 +223,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
             >
               {/* .........Survey Header Section.......... */}
               {(survey?.isPublished == true || isSurveyThemePreview) &&
+                !isLanguagePageActive &&
                 (startClicked || isSurveyThemePreview) && (
                   <Box
                     // align="center"
@@ -254,14 +261,11 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                       style={{ overflow: "hidden" }}
                     >
                       {(startClicked || isSurveyThemePreview) &&
-                        (!selectedLanguage &&
-                        survey?.languages?.length > 1 &&
-                        !isSurveyThemePreview ? (
-                          <SelectLang
+                        (isLanguagePageActive ? (
+                          <LanguageSelectionPage
                             languages={survey?.languages}
-                            selectedLanguage={selectedLanguage}
                             setSelectedLanguage={setSelectedLanguage}
-                            surveyTheme={surveyThemeData?.surveyTheme}
+                            surveyThemeData={surveyThemeData}
                           />
                         ) : (
                           selectedLanguage && (
@@ -313,50 +317,3 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     </MantineProvider>
   );
 };
-
-function SelectLang({
-  languages,
-  selectedLanguage,
-  setSelectedLanguage,
-  surveyTheme,
-}) {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [lang, setLang] = useState(languages[0]);
-  return (
-    <Stack
-      justify="space-between"
-      align="center"
-      style={{ height: isMobile ? "60vh" : "65vh" }}
-    >
-      <Stack align="center">
-        <Title order={isMobile ? 2 : 1} style={surveyTheme?.title?.styles}>
-          Let's begin!
-        </Title>
-        <Title
-          order={isMobile ? 2 : 1}
-          fw={100}
-          style={surveyTheme?.subtitle?.styles}
-        >
-          Select a language
-        </Title>
-      </Stack>
-      <Box miw={200}>
-        <Radio.Group value={lang} onChange={setLang} mr={"sm"} w={"100%"}>
-          <SingleSelectCard data={languages} selectedValue={lang} sizeTrim />
-        </Radio.Group>
-      </Box>
-      <Group justify="center" mt="xl">
-        <Button
-          radius={"xl"}
-          onClick={() => setSelectedLanguage(lang)}
-          size={isMobile ? "sm" : "lg"}
-          color="var(--tertiary-color)"
-          rightSection={<IconChevronRight />}
-          style={surveyTheme?.button?.styles}
-        >
-          Start Survey
-        </Button>
-      </Group>
-    </Stack>
-  );
-}

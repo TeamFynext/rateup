@@ -124,10 +124,18 @@ const thankyouPageEditors = [
   SelectedItemEnum.SUBTITLE,
 ];
 
+const languagePageEditors = [
+  ...commonSupportedPageEditors,
+  SelectedItemEnum.SUBTITLE,
+  SelectedItemEnum.BUTTON,
+  SelectedItemEnum.INPUT,
+];
+
 export const supportedPageEditors = {
   surveyPage: surveyPageEditors,
   welcomePage: welcomePageEditors,
   thankyouPage: thankyouPageEditors,
+  languagePage: languagePageEditors,
 };
 
 export const getSurveyThemeKeyOf = (selectedPageTab) => {
@@ -138,5 +146,7 @@ export const getSurveyThemeKeyOf = (selectedPageTab) => {
       return "welcomeTheme";
     case "thankyouPage":
       return "thankyouTheme";
+    case "languagePage":
+      return "languageTheme";
   }
 };

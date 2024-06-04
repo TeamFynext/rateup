@@ -16,7 +16,7 @@ import classes from "../TakeSurvey.module.css";
 import { useRouter } from "next/router";
 import { animate, AnimatePresence, motion, useAnimate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;

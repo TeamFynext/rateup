@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useImmerReducer } from "use-immer";
 import surveyThemeReducer from "./surveyThemeReducer";
 import { verifyAndConvertSurveyThemeObj } from "./SurveyTheme.utils";

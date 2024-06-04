@@ -28,7 +28,7 @@ function InputStyles() {
       <Stack align="center" w={"100%"}>
         <Group justify="space-between" w={"100%"}>
           <Box className={"custom-color-picker-and-heading-container"}>
-            <h2>Text Color</h2>
+            <h2>Color</h2>
             <CustomColorPicker
               value={input?.primaryColor}
               onChange={handleColorPickerChange}

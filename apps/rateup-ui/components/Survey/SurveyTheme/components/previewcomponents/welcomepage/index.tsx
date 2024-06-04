@@ -14,10 +14,11 @@ import { cordinateStyle } from "../../../../../../utils";
 import { surveyUploadsPath } from "../../../../../../utils/constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
-import { PreviewTypeEnum } from "../../../SurveyTheme.enums";
+import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
+  useSetSelectedEditor,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
@@ -29,6 +30,7 @@ export default function WelcomePageThemeView({ survey }) {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const selectedPreview = useSelectedPreview();
   const isWelcomePageEnabled = survey?.welcomePageEnabled;
+  const setSelectedEditor = useSetSelectedEditor();
 
   const {
     welcomeTheme,
@@ -83,7 +85,7 @@ export default function WelcomePageThemeView({ survey }) {
 
   const handleStartBtnTextChange = useCallback((e) => {
     surveyThemeDispatch({
-      type: "welcome-page-start-button-text-change",
+      type: "wp-lp-start-button-text-change",
       payload: e.target.value,
     });
   }, []);
@@ -153,6 +155,7 @@ export default function WelcomePageThemeView({ survey }) {
                   value={title}
                   onChange={handleTitleInputChange}
                   ref={titleInputRef}
+                  onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
                 />
 
                 <ActionIcon
@@ -185,6 +188,7 @@ export default function WelcomePageThemeView({ survey }) {
                   value={subtitle}
                   onChange={handleSubtitleTextareaChange}
                   ref={subtitleInputRef}
+                  onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
                 />
 
                 <ActionIcon
@@ -233,6 +237,7 @@ export default function WelcomePageThemeView({ survey }) {
                     },
                   }}
                   ref={startBtnInputRef}
+                  onFocus={() => setSelectedEditor(SelectedItemEnum.BUTTON)}
                 />
 
                 <ActionIcon

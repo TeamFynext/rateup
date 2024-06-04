@@ -9,7 +9,7 @@ import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsCont
 import { useAnimate } from "framer-motion";
 import styles from "./LDForm.module.css";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 export function LDForm() {
   const selectedPreview = useSelectedPreview();

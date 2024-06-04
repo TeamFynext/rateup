@@ -41,7 +41,8 @@ function surveyThemeReducer(state, action) {
       surveyTheme[surveyThemeKey].subtitle.subtitle = payload;
       break;
     }
-    case "welcome-page-start-button-text-change": {
+    // wp => welcome page; lp => landing page
+    case "wp-lp-start-button-text-change": {
       surveyTheme[surveyThemeKey].button.label = payload;
       break;
     }

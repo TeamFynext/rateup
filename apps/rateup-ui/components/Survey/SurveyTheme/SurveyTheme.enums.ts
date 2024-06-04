@@ -2,6 +2,7 @@ export enum ThemeTabEnum {
   WELCOME = "welcomePage",
   SURVEY = "surveyPage",
   THANKYOU = "thankyouPage",
+  LANGUAGE = "languagePage",
 }
 
 export enum SelectedItemEnum {

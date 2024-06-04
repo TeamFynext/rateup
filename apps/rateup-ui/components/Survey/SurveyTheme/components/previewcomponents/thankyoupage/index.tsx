@@ -14,10 +14,11 @@ import Confetti from "react-confetti";
 import { surveyUploadsPath } from "../../../../../../utils/constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
-import { PreviewTypeEnum } from "../../../SurveyTheme.enums";
+import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
+  useSetSelectedEditor,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
@@ -28,6 +29,7 @@ export default function ThankyouPageThemeView() {
   const surveyTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const selectedPreview = useSelectedPreview();
+  const setSelectedEditor = useSetSelectedEditor();
 
   const {
     thankyouTheme,
@@ -146,6 +148,7 @@ export default function ThankyouPageThemeView() {
                     value={title}
                     onChange={handleTitleInputChange}
                     ref={titleInputRef}
+                    onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
                   />
 
                   <ActionIcon
@@ -179,6 +182,7 @@ export default function ThankyouPageThemeView() {
                     mt="lg"
                     ta={"center"}
                     ref={subtitleInputRef}
+                    onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
                   />
                   <ActionIcon
                     variant="default"

@@ -34,7 +34,7 @@ function SurveyTheme({ survey }) {
       <Box className={styles["survey-theme-root-div"]}>
         <Group className={styles["tabs-and-other-options-container"]}>
           <Box></Box>
-          <PageSelector />
+          <PageSelector survey={survey} />
           <Box
             className={styles["save-btn-container"]}
             id="save-btn-container-portal"
