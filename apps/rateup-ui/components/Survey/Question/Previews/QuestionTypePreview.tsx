@@ -24,6 +24,7 @@ import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/
 import MultiTextInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MultiTextInputForm";
 import MCQGridForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQGridForm";
 import FileInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/FileInputForm";
+import EmailOTPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailOTPForm";
 
 const QuestionTypePreview = ({ type, choices, features, tnc }) => {
   switch (type) {
@@ -85,6 +86,8 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       );
     case Q.File:
       return <FileInputForm isPreview={true} />;
+    case Q.EmailOtp:
+      return <EmailOTPForm isPreview={true} />;
     default:
       return <div>not implemented</div>;
   }

@@ -44,6 +44,8 @@ export function getResponse(q: any, response: any) {
       return formatMultiTextInput(q, response);
     case QuestionType.MCQGrid:
       return formatMCQGridResponse(q, response);
+    case QuestionType.EmailOtp:
+      return formatEmailOtpResponse(response);
     default:
       return formatDefaultResponse(q, response);
   }
@@ -62,6 +64,9 @@ function formatContactInfo(response) {
     .join(", ");
 }
 
+function formatEmailOtpResponse(response) {
+  return `Verified Email Id: ${response?.email}`;
+}
 function formatMultiTextInput(q, response) {
   if (typeof response === "string") return response;
   const { selectedLanguage, defaultLanguage } = useContext(

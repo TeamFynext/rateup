@@ -3,6 +3,7 @@ import {
   createQuestion,
   deleteQuestion,
   getQuestions,
+  importEmailIds,
   replaceQuestions,
   updateQuestion,
 } from "./questions.api";
@@ -116,4 +117,18 @@ export const useReplaceQuestionsMutation = (surveyId: string) => {
     },
   });
   return replaceMutation;
+};
+
+export const useImportEmailIdsMutation = (surveyId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importEmailIds,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({
+        queryKey: ["surveyVariables", surveyId],
+      });
+    },
+  });
 };

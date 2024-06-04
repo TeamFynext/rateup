@@ -34,6 +34,7 @@ export enum QuestionType {
   MCQGrid = "MCQ Grid",
   File = "File",
   Optin = "OptIn",
+  EmailOtp = "EmailOtp",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",
   Invoice_Id = "invoice_id",

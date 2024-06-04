@@ -59,6 +59,7 @@ export const OtherQuestions = [
   QuestionType.Testimonial,
   QuestionType.TnC,
   QuestionType.InfoMessage,
+  QuestionType.EmailOtp,
 ];
 
 export const WaOtherQuestions = [

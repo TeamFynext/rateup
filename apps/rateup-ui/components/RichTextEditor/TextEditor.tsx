@@ -11,7 +11,7 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import { isHtml } from "../../utils";
-import { Group, Menu } from "@mantine/core";
+import { ActionIcon, Group, Menu } from "@mantine/core";
 import { VariableComponentExtension } from "./MantineComponentExtension";
 import SurveyContext from "../../context/SurveyContext";
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
@@ -156,7 +156,7 @@ const InsertVariableControl = ({ question }) => {
   const variablesData =
     fileteredVariables?.map((val: SurveyVariable) => val?.name) ?? [];
 
-  return variablesData.length ? (
+  return (
     <RichTextEditor.Control aria-label="variables" title="variables">
       <Menu
         position="bottom-start"
@@ -164,7 +164,14 @@ const InsertVariableControl = ({ question }) => {
         shadow="md"
       >
         <Menu.Target>
-          <IconVariable stroke={1.2} size={"1.2rem"} />
+          <ActionIcon
+            variant="subtle"
+            color="black"
+            size={"sm"}
+            disabled={!variablesData.length}
+          >
+            <IconVariable stroke={1.2} size={"1.2rem"} />
+          </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
           {variablesData?.map((value) => (
@@ -182,5 +189,5 @@ const InsertVariableControl = ({ question }) => {
         </Menu.Dropdown>
       </Menu>
     </RichTextEditor.Control>
-  ) : null;
+  );
 };

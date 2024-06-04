@@ -32,6 +32,7 @@ import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
 import MCQGridForm from "./QuestionForms/MCQGridForm";
 import FileInputForm from "./QuestionForms/FileInputForm";
 import { useGetSurveyVariables } from "../../../../backend/surveys/surveys.query";
+import EmailOTPForm from "./QuestionForms/EmailOTPForm";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -197,6 +198,8 @@ export function getQuestionForm(type, selectedQ) {
       return <MCQGridForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.File:
       return <FileInputForm />;
+    case Q.EmailOtp:
+      return <EmailOTPForm key={selectedQ?.id} />;
     default:
       return <div>not implemented</div>;
   }
@@ -246,6 +249,10 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
         selectedQ.required
       )
         errMsg = "All questions are mandatory";
+      break;
+    case QuestionType.EmailOtp:
+      if (selectedQ?.required && response?.isValid == false)
+        errMsg = "Incorrect OTP";
       break;
     default:
       errMsg = "";

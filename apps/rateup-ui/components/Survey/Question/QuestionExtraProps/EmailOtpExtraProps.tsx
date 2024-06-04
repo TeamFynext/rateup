@@ -1,0 +1,223 @@
+import {
+  ActionIcon,
+  Blockquote,
+  Checkbox,
+  Group,
+  Stack,
+  Table,
+  Title,
+} from "@mantine/core";
+import { useContext, useState } from "react";
+import {
+  showErrorToast,
+  showSuccessToast,
+} from "../../../../utils/notifications";
+import { useImportEmailIdsMutation } from "../../../../backend/surveys/questions/questions.query";
+import SurveyContext from "../../../../context/SurveyContext";
+import { IconInfoCircle, IconTrash, IconPlus } from "@tabler/icons-react";
+import {
+  ContainedFileInput,
+  ContainedTextField,
+} from "../../../input/ContainedInput/ContainedInput";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../Button/RateupButtons";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { emailPattern } from "../../../../utils/constants";
+
+const EmailOtpExtraProps = ({ form, qId }) => {
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const allowedEmailIDs =
+    form?.values.features?.[selectedLanguage]?.allowedEmails || [];
+  const [selectedEmailIds, setSelectedEmailIds] = useState([]);
+  const [newEmail, setNewEmail] = useState("");
+  const [inputError, setInputError] = useState("");
+  const allChecked = allowedEmailIDs.every((email) =>
+    selectedEmailIds.includes(email),
+  );
+  const indeterminate =
+    allowedEmailIDs.some((email) => selectedEmailIds.includes(email)) &&
+    !allChecked;
+  const rows = allowedEmailIDs?.map((email) => (
+    <Table.Tr
+      key={email}
+      bg={
+        selectedEmailIds.includes(email)
+          ? "var(--mantine-color-blue-light)"
+          : undefined
+      }
+    >
+      <Table.Td>
+        <Checkbox
+          aria-label="Select email"
+          checked={selectedEmailIds.includes(email)}
+          onChange={(event) =>
+            setSelectedEmailIds(
+              event.currentTarget.checked
+                ? [...selectedEmailIds, email]
+                : selectedEmailIds.filter((em) => em !== email),
+            )
+          }
+          size="xs"
+        />
+      </Table.Td>
+      <Table.Td>{email}</Table.Td>
+    </Table.Tr>
+  ));
+
+  const handleDelete = () => {
+    if (!selectedEmailIds.length) return;
+    const remainingIds = allowedEmailIDs?.filter(
+      (email) => !selectedEmailIds.includes(email),
+    );
+    form.setFieldValue("features", {
+      ...form?.values.features,
+      [selectedLanguage]: {
+        ...form?.values.features?.[selectedLanguage],
+        allowedEmails: remainingIds,
+      },
+    });
+    setSelectedEmailIds([]);
+  };
+
+  const handleAddEmail = () => {
+    if (!newEmail || !emailPattern.test(newEmail)) {
+      setInputError("Invalid Email");
+      return;
+    }
+    if (allowedEmailIDs.includes(newEmail)) {
+      setInputError("Email Already exists");
+      return;
+    }
+    allowedEmailIDs.push(newEmail);
+    form.setFieldValue("features", {
+      ...form?.values.features,
+      [selectedLanguage]: {
+        ...form?.values.features?.[selectedLanguage],
+        allowedEmails: allowedEmailIDs,
+      },
+    });
+    setNewEmail("");
+  };
+
+  return (
+    <Stack w={"100%"}>
+      <ImportAllowedEmailIDs qId={qId} />
+      <PaperLayout display={!allowedEmailIDs?.length ? "none" : "block"}>
+        <Group p={6}>
+          {selectedEmailIds.length && (
+            <ActionIcon
+              size={"sm"}
+              variant="subtle"
+              color="gray"
+              onClick={handleDelete}
+            >
+              <IconTrash />
+            </ActionIcon>
+          )}
+        </Group>
+        <Title order={5} ta={"center"}>
+          Allowed Email IDs
+        </Title>
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>
+                <Checkbox
+                  aria-label="Select email"
+                  indeterminate={indeterminate}
+                  checked={allChecked}
+                  onChange={() => {
+                    if (!allChecked) setSelectedEmailIds(allowedEmailIDs);
+                    else setSelectedEmailIds([]);
+                  }}
+                  size="xs"
+                />
+              </Table.Th>
+              <Table.Th>Email ID</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+      </PaperLayout>
+      <Group>
+        <ContainedTextField
+          value={newEmail}
+          onChange={(e) => {
+            setInputError("");
+            setNewEmail(e.currentTarget.value);
+          }}
+          error={inputError}
+          placeholder="Enter email here"
+          style={{
+            flexGrow: 1,
+          }}
+        />
+        <RateupButtonSecondary
+          title={"Add"}
+          leftIcon={<IconPlus size={"1rem"} />}
+          onClick={handleAddEmail}
+        />
+      </Group>
+    </Stack>
+  );
+};
+
+const ImportAllowedEmailIDs = ({ qId }) => {
+  const [file, setFile] = useState<File | null>(null);
+  const { surveyId } = useContext(SurveyContext);
+  const importEmailIdsMutate = useImportEmailIdsMutation(surveyId);
+
+  const handleUploadFile = () => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    importEmailIdsMutate.mutate(
+      { questionId: qId, data: formData, surveyId },
+      {
+        onSuccess: () => {
+          showSuccessToast("Email Ids imported");
+          setFile(null);
+        },
+        onError: () => {
+          showErrorToast("Error in importing emailIds");
+          setFile(null);
+        },
+      },
+    );
+  };
+
+  return (
+    <Group justify="space-between" w={"100%"}>
+      <Stack>
+        <ContainedFileInput
+          onChange={setFile}
+          accept=".csv, .xlsx"
+          value={file}
+          w={300}
+          placeholder="Click to Select file"
+        />
+        <RateupButtonBlue
+          title="Upload"
+          loading={importEmailIdsMutate.isPending}
+          onClick={handleUploadFile}
+          disabled={!file}
+        />
+      </Stack>
+      <Blockquote
+        color="blue"
+        icon={<IconInfoCircle />}
+        p={"sm"}
+        iconSize={40}
+        w={400}
+      >
+        Utilizing CSV/XLSX file uploads to generate allowed email Ids. required
+        field in the file: email
+      </Blockquote>
+    </Group>
+  );
+};
+
+export default EmailOtpExtraProps;
