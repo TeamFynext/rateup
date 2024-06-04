@@ -9,6 +9,7 @@ import {
 import {
   createQuestion,
   deleteQuestionById,
+  getAllowedEmailsFromFile,
   getQuestionById,
   getQuestionsBySurveyId,
   reorderQuestions,
@@ -16,6 +17,7 @@ import {
   updateQuestionsOnSurvey,
 } from "./question.service";
 import { hasAccessToSurvey } from "../../utils/auth";
+import { getSurveyById } from "../survey/survey.service";
 
 export async function createQuestionHandler(
   request: FastifyRequest<{
@@ -149,5 +151,50 @@ export async function replaceQuestionsHandler(
   } catch (e) {
     console.log(e);
     reply.code(500);
+  }
+}
+
+export async function importAllowedEmailIdsHandler(
+  request: FastifyRequest<{ Params: QuestionRouteParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const surveyId = request.params.surveyId;
+    const id = request.params.id;
+    const question = await getQuestionById(surveyId, id);
+    const languages = (await getSurveyById(surveyId)).languages;
+    if (!question) {
+      reply.code(404).send({ error: "Question not found" });
+    } else {
+      const file = await request.file();
+      const allowedEmails = (await getAllowedEmailsFromFile(
+        file,
+      )) as Array<string>;
+      if (allowedEmails) {
+        for (const lang of languages) {
+          const remainingEmails = question.features?.[
+            lang
+          ]?.allowedEmails.filter((email) => !allowedEmails?.includes(email));
+          question.features = {
+            ...question?.features,
+            [lang]: {
+              ...question?.features?.[lang],
+              allowedEmails: remainingEmails,
+            },
+          };
+        }
+        await updateQuestion(
+          surveyId,
+          id,
+          question as unknown as UpdateQuestionInput,
+        );
+        reply.code(200).send();
+      } else {
+        reply.code(500).send({ error: "Something went wrong" });
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ error: e?.message || "Something went wrong" });
   }
 }

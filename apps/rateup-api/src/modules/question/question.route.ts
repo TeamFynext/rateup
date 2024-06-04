@@ -4,6 +4,7 @@ import {
   deleteQuestionByIdHandler,
   getQuestionByIdHandler,
   getQuestionsBySurveyIdHandler,
+  importAllowedEmailIdsHandler,
   reorderQuestionsHandler,
   replaceQuestionsHandler,
   updateQuestionHandler,
@@ -11,11 +12,18 @@ import {
 import { $Qref } from "./question.schema";
 import { verifySurveyAccess } from "./question.auth";
 import { checkSession } from "../../utils/checkSession";
+import fastifyMultipart from "@fastify/multipart";
 
 // Base route: /api/question/:surveyId
 export async function questionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.addHook("preHandler", verifySurveyAccess);
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 10,
+    },
+    throwFileSizeLimit: true,
+  });
 
   // Create survey
   server.post(
@@ -90,4 +98,15 @@ export async function questionRoutes(server: FastifyInstance) {
   );
 
   server.put("/replace", replaceQuestionsHandler);
+
+  server.post(
+    "/import-emails/:id",
+    {
+      schema: {
+        params: $Qref("questionRouteParamsSchema"),
+        consumes: ["multipart/form-data"],
+      },
+    },
+    importAllowedEmailIdsHandler,
+  );
 }

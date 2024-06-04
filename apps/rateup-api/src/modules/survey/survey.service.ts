@@ -251,7 +251,7 @@ export async function getPublicSurveyById(id: string) {
     },
   });
 
-  let orgLogo = { orgLogo: org?.org?.logo };
+  let orgLogo = { orgLogo: org?.org?.logo, orgName: org?.org?.name };
 
   let publicSurvey = {
     surveyTeamMapId,

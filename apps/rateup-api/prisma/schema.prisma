@@ -1118,3 +1118,11 @@ model SurveyVariables {
 
   @@unique([name, surveyId], name: "variable_name_survey_id_unique")
 }
+
+model OtpStore {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String  @unique
+  otp        String
+  expiryDate String
+  surveyId   String?
+}
