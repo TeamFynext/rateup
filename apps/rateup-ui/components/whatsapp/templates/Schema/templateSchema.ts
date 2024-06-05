@@ -7,12 +7,14 @@ import {
 import { isValidPhoneNumber } from "react-phone-number-input";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
+const FILE_SIZE = 5;
 
 const ACCEPTED_MIME_TYPES = [
   "image/png",
   "image/jpg",
   "image/jpeg",
   "application/pdf",
+  "video/mp4",
 ];
 export const templateSchema = z
   .object({
@@ -39,14 +41,12 @@ export const templateSchema = z
             )}] but was ${f.type}`,
           });
         }
-        if (f.size > 5 * MB_BYTES) {
+        if (f.size > FILE_SIZE * MB_BYTES) {
           ctx.addIssue({
             code: z.ZodIssueCode.too_big,
             type: "array",
-            message: `The file must not be larger than ${5 * MB_BYTES} bytes: ${
-              f.size
-            }`,
-            maximum: 5 * MB_BYTES,
+            message: `The file must not be larger than ${FILE_SIZE} MB`,
+            maximum: FILE_SIZE * MB_BYTES,
             inclusive: true,
           });
         }
