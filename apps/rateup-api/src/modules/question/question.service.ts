@@ -3,6 +3,10 @@ import prisma from "../../utils/prisma";
 import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema";
 import { updateSurveyVariables } from "../survey/survey.service";
 import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils";
+import { MultipartFile } from "@fastify/multipart";
+import Papa from "papaparse";
+import { emailPattern } from "./question.utils";
+import xlsx from "node-xlsx";
 
 export async function createQuestion(
   surveyId: string,
@@ -141,4 +145,66 @@ export async function updateQuestionsOnSurvey(
       }
     }
   }
+}
+
+export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
+  const { mimetype } = fileBody;
+  const csvType = ["text/csv", "application/vnd.ms-excel"];
+  const file = csvType.includes(mimetype)
+    ? fileBody.file
+    : await fileBody.toBuffer();
+  return new Promise(async (resolve, reject) => {
+    let allowedEmails = [];
+
+    const processEmail = (row) => {
+      if (!emailPattern.test(row?.email)) {
+        throw new Error("Invalid Email");
+      } else {
+        allowedEmails.push(row?.email);
+      }
+    };
+
+    const finalizeProcessing = async () => {
+      try {
+        if (allowedEmails.length > 0) resolve(allowedEmails);
+        else reject("No email IDs found");
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    if (csvType.includes(mimetype)) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        chunkSize: 1024 * 1024,
+        transformHeader: (header) => header?.trim()?.toLowerCase(),
+        chunk: (results) => {
+          if (results?.data) {
+            results.data.forEach(processEmail);
+          }
+        },
+        complete: finalizeProcessing,
+        error: (error) => {
+          reject(error);
+        },
+      });
+    } else {
+      const workSheetsFromFile = xlsx.parse(file);
+      const headers =
+        workSheetsFromFile?.[0]?.data?.[0]?.map(
+          (header) => header?.toString().toLowerCase(),
+        ) ?? [];
+      const headerIndices = headers.map((header, index) => ({ header, index }));
+
+      workSheetsFromFile?.[0]?.data?.slice(1).forEach((row) => {
+        let email = {};
+        headerIndices.forEach(({ header, index }) => {
+          email[header] = row[index]?.toString()?.trim();
+        });
+        processEmail(email);
+      });
+      await finalizeProcessing();
+    }
+  });
 }

@@ -3,6 +3,7 @@ import {
   SurveyType,
   SurveyVariableType,
 } from "../../types/enums";
+import { createEmailBodyOTPGeneration } from "../email/emailTemplates/emailTemplateOTPGeneration";
 import prisma from "../../utils/prisma";
 import { createSurveyVariable, getSurveyById } from "./survey.service";
 

@@ -73,6 +73,8 @@ import { orgWsRoutes } from "./modules/org/ws/org.ws.routes";
 import { orgWsSchemas } from "./modules/org/ws/org.ws.schema";
 import { paymentStripeSchemas } from "./modules/payment/stripe/stripe.schema";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route";
+import { emailPublicRoutes } from "./modules/email/email.public.route";
+import { emailSchema } from "./modules/email/email.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -105,6 +107,7 @@ export function registerRoutes(server: FastifyInstance): void {
     orgWsSchemas,
     mygSchemas, //TODO MYG
     campaignParticipantsSchemas,
+    emailSchema,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -161,4 +164,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(mygRoutes, { prefix: "api/myg" }); //TODO  MYG
   server.register(apiAccessTokenRoutes, { prefix: "api/api-access-token" });
   server.register(externalRoutes, { prefix: "api/external" });
+  server.register(emailPublicRoutes, { prefix: "api/email" });
 }

@@ -945,6 +945,9 @@ export function getFormattedResponse(response, qstn, language) {
     case QuestionType.TnC:
       formattedResponse = response == true ? "accepted" : "Not accepted";
       break;
+    case QuestionType.EmailOtp:
+      formattedResponse = `verified email Id: ${response?.email}`;
+      break;
     default:
       formattedResponse = response;
   }
