@@ -318,3 +318,15 @@ export async function deleteSurveyVariable({ variableId }) {
     await axiosClient.delete(`${SURVEYURL}/survey-variables/${variableId}`)
   ).data;
 }
+
+export async function sendEmail(data) {
+  return (await axiosClient.post(`email/send-email`, data)).data;
+}
+
+export async function sendOTPEmail(data) {
+  return (await axiosClient.post(`email/otp/send-email`, data)).data;
+}
+
+export async function validateOTP(data) {
+  return (await axiosClient.post(`email/otp/validate`, data)).data;
+}

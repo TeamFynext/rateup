@@ -6,7 +6,9 @@ import {
   Stack,
   Text,
   UnstyledButton,
+  alpha,
   isLightColor,
+  lighten,
   useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
@@ -51,13 +53,13 @@ export function ImageCheckbox({
   });
   const radioButtonRef = useRef(null);
   const titleTypeString = typeof title === "string";
-  const theme = useMantineTheme();
   const { hovered, ref } = useHover() as {
     hovered: boolean;
     ref: React.RefObject<HTMLButtonElement>;
   };
 
   const mantineTheme = useMantineTheme();
+
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
@@ -70,7 +72,7 @@ export function ImageCheckbox({
     border: `1px solid ${themePrimaryColor}`,
     backgroundColor: !hovered
       ? "transparent"
-      : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
+      : `${alpha(themePrimaryColor, 0.15)}`,
     color: themePrimaryColor,
   };
 

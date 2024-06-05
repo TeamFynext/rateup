@@ -33,3 +33,12 @@ export async function updateQuestion(
 ) {
   return axiosClient.put(`${QUESTION_URL}/${surveyId}/${questionId}`, data);
 }
+
+export async function importEmailIds({ surveyId, questionId, data }) {
+  return (
+    await axiosClient.post(
+      `${QUESTION_URL}/${surveyId}/import-emails/${questionId}`,
+      data,
+    )
+  ).data;
+}

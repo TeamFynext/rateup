@@ -18,6 +18,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import styles from "./TakeSurvey.module.css";
 import { validateResponse } from "./util";
 import { validationSupportedTypes } from "../../../../utils/data";
+import { isEmptyObject } from "@tiptap/react";
 
 function NextPrev({
   prev,
@@ -31,7 +32,7 @@ function NextPrev({
   isSurveyThemePreview = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
-  const { response = {} } = useContext(CurrentResponsesContext);
+  const { response } = useContext(CurrentResponsesContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);

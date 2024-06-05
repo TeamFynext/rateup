@@ -6,7 +6,7 @@ import { YNResponse } from "../../../../../types/enums";
 import styles from "./YNForm.module.css";
 import { animate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 export function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);

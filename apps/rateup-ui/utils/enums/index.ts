@@ -109,6 +109,8 @@ export function getQuestionTypeLabel(
       return "Single Select Grid";
     case QuestionType.File:
       return "File Input";
+    case QuestionType.EmailOtp:
+      return "Email OTP";
     default:
       return false;
   }

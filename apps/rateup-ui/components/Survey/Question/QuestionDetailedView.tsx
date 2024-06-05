@@ -68,6 +68,7 @@ import { hasFeature } from "../../../utils/subscription/subscription";
 import ImportChoices from "./ImportChoices";
 import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
 import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
+import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -554,7 +555,8 @@ function ExtraProps({
       return <MultiTextInputExtraProps form={form} />;
     case QuestionType.MCQGrid:
       return <MCQGridExtraProps form={form} qId={question.id} />;
-    case QuestionType.InfoMessage:
+    case QuestionType.EmailOtp:
+      return <EmailOtpExtraProps form={form} qId={question.id} />;
     default:
       return null;
   }

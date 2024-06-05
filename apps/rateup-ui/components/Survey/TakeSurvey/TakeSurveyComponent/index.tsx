@@ -52,7 +52,7 @@ import { validateQuestion } from "../../../../utils/validation";
 import styles from "./TakeSurvey.module.css";
 import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
 import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
-import { SurveyContextProvider } from "./SurveyContext";
+import { SurveyContextProvider } from "../../../../context/SurveyObjContext";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const isSurveyThemePreview = useIsSurveyThemePreviewContext();

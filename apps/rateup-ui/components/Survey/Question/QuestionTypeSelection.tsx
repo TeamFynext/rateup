@@ -13,7 +13,9 @@ import { useHover } from "@mantine/hooks";
 import {
   IconFileFilled,
   IconGridDots,
+  IconPassword,
   IconScaleOutline,
+  IconSquareAsterisk,
   IconTextPlus,
 } from "@tabler/icons-react";
 import {
@@ -175,6 +177,7 @@ const questionIcons = {
   [QuestionType.MultiTextInput]: IconTextPlus,
   [QuestionType.MCQGrid]: IconGridDots,
   [QuestionType.File]: IconFileFilled,
+  [QuestionType.EmailOtp]: IconSquareAsterisk,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,

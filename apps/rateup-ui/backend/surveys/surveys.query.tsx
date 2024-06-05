@@ -30,6 +30,9 @@ import {
   createSurveyVariable,
   updateSurveyVariable,
   deleteSurveyVariable,
+  sendEmail,
+  sendOTPEmail,
+  validateOTP,
 } from "./survey.api";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -580,5 +583,23 @@ export const useDeleteSurveyVariableMutation = (surveyId) => {
         <IconX />,
       );
     },
+  });
+};
+
+export const useSendEmail = () => {
+  return useMutation({
+    mutationFn: sendEmail,
+  });
+};
+
+export const useSendOTPEmail = () => {
+  return useMutation({
+    mutationFn: sendOTPEmail,
+  });
+};
+
+export const useValidateOtp = () => {
+  return useMutation({
+    mutationFn: validateOTP,
   });
 };

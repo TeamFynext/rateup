@@ -7,7 +7,7 @@ import {
 } from "../../SurveyThemeContext";
 import { useCallback } from "react";
 
-function PageSelector() {
+function PageSelector({ survey }) {
   const selectedPageTab = useSelectedPageTab();
   const stateDispatch = useSurveyThemeStateDispatch();
 
@@ -18,6 +18,8 @@ function PageSelector() {
     });
   }, []);
 
+  const shouldDispalyLanguagePageTab = survey?.languages?.length > 1;
+
   return (
     <Tabs
       classNames={styles}
@@ -26,9 +28,12 @@ function PageSelector() {
       value={selectedPageTab}
     >
       <Tabs.List>
-        <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey</Tabs.Tab>
+        <Tabs.Tab value={ThemeTabEnum.SURVEY}>Survey Page</Tabs.Tab>
         <Tabs.Tab value={ThemeTabEnum.WELCOME}>Welcome Page</Tabs.Tab>
         <Tabs.Tab value={ThemeTabEnum.THANKYOU}>Thankyou Page</Tabs.Tab>
+        {shouldDispalyLanguagePageTab && (
+          <Tabs.Tab value={ThemeTabEnum.LANGUAGE}>Language Page</Tabs.Tab>
+        )}
       </Tabs.List>
     </Tabs>
   );

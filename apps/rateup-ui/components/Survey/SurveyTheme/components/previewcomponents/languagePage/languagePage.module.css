@@ -1,0 +1,75 @@
+.preview-language-page-container {
+  flex-direction: column;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.preview-language-page-container.org-logo-not-present {
+  padding-top: 2.5rem;
+}
+
+.logo-container {
+  justify-content: center;
+}
+
+.header-radio-grp-start-btn-container {
+  flex: 1 1;
+  flex-basis: 0;
+  padding: 2.5rem;
+  padding-top: 0;
+  overflow: hidden;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.header {
+  align-items: stretch;
+  gap: 0.3125rem;
+}
+
+.header > div {
+  padding: 0;
+}
+
+.header input {
+  border: none;
+}
+
+.languages-list-radio-grp-container {
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
+.languages-list-radio-grp-container :global(.mantine-ScrollArea-viewport) {
+  padding-left: 10px;
+}
+
+.start-btn-text-input-wrapper {
+  justify-content: center;
+}
+
+.start-btn-text-input-container {
+  justify-content: center;
+  padding: 10px;
+  border-radius: 1rem;
+}
+
+.start-btn-text-input input {
+  font-size: 18px;
+  text-align: center;
+  font-weight: 600;
+  color: white;
+  padding-right: 1.375rem;
+}
+
+.start-btn-text-input :global(.mantine-Input-section) {
+  width: 1.5rem;
+  height: 1.5rem;
+  top: calc(50% - 0.75rem);
+}

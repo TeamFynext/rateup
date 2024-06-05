@@ -11,7 +11,7 @@ import { SmileyResponse } from "../../../../../types/enums";
 import { getEmptyIcon, getFullIcon, getIconStyle } from "./SmileyRatingStyling";
 import { useAnimate } from "framer-motion";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 const SmileyRating = ({ updateResponse, response }) => {
   const [scope, animate] = useAnimate();

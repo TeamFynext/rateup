@@ -14,7 +14,7 @@ import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import styles from "./OpinionScaleForm.module.css";
 import classNames from "classnames/bind";
 import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
-import { useSurveyContext } from "../SurveyContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 const cx = classNames.bind(styles);
 interface iProps {
