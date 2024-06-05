@@ -172,14 +172,17 @@ export async function importAllowedEmailIdsHandler(
       )) as Array<string>;
       if (allowedEmails) {
         for (const lang of languages) {
-          const remainingEmails = question.features?.[
-            lang
-          ]?.allowedEmails.filter((email) => !allowedEmails?.includes(email));
+          const existingEmails = question.features?.[lang]?.allowedEmails || [];
+          const remainingEmails = allowedEmails.filter(
+            (email) => !existingEmails?.includes(email),
+          );
           question.features = {
             ...question?.features,
             [lang]: {
               ...question?.features?.[lang],
-              allowedEmails: remainingEmails,
+              isRestricted:
+                existingEmails.length || remainingEmails.length ? true : false,
+              allowedEmails: [...existingEmails, ...remainingEmails],
             },
           };
         }
