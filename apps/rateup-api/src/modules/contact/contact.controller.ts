@@ -157,26 +157,16 @@ export async function importCSVContactsHandler(
       return reply
         .code(400)
         .send({ error: "This file type is not permitted." });
-    let updateField = file?.fields?.update;
-    const updateItem = (
-      Array.isArray(updateField) ? updateField[0] : updateField
-    ) as {
-      value: string;
-    };
-    const updateExisting = updateItem?.value === "true";
-    let tags = Object.values(file?.fields ?? {})
-      .slice(1)
-      .reduce((acc, data) => {
-        const item = (Array.isArray(data) ? data[0] : data) as {
-          value: string;
-        };
-        if (item?.value) {
-          acc.push(item.value);
-        }
-        return acc;
-      }, [] as string[]);
-
-    const res: any = await importCSVContacts(file, orgId, tags, updateExisting);
+    const tags = [];
+    let update = false;
+    for (const key in file?.fields) {
+      if (key.startsWith("tags[")) {
+        tags.push(file?.fields?.[key]?.["value"]);
+      } else if (key === "update") {
+        update = file?.fields?.[key]?.["value"] === "true";
+      }
+    }
+    const res: any = await importCSVContacts(file, orgId, tags, update);
     if (res.status === "error") {
       return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
     }
