@@ -438,6 +438,11 @@ export async function sendTemplateByNameToPhoneHandler(
       },
     });
 
+    if (!dbTemplate) {
+      log.error("Template not found with name %s", templateName);
+      return rep.code(404).send("Template not found with name " + templateName);
+    }
+
     const phone = parsePhoneNumber(req.body.phone, "IN");
     if (phone.isValid() === false) {
       return rep.code(400).send("Invalid phone number.");
