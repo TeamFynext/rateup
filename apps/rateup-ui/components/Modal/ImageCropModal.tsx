@@ -19,6 +19,7 @@ interface ImageCropModalProps {
   imageName: string;
   handleCropImageSave: (file: File | string) => void;
   aspect?: number;
+  freeMode?: boolean;
 }
 
 export const ImageCropModal = ({
@@ -28,6 +29,7 @@ export const ImageCropModal = ({
   imageName,
   handleCropImageSave,
   aspect = 4 / 3,
+  freeMode = false,
 }: ImageCropModalProps) => {
   const cropperRef = useRef<ReactCropperElement>();
   const [scale, setScale] = useState(0.4);
@@ -125,7 +127,7 @@ export const ImageCropModal = ({
           ref={cropperRef}
           style={{ height: "100%", width: "100%" }}
           initialAspectRatio={aspect}
-          aspectRatio={aspect}
+          {...(!freeMode && { aspectRatio: aspect })}
           preview=".img-preview"
           src={image}
           viewMode={0}

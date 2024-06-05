@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Link,
   RichTextEditor,
@@ -11,7 +11,14 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import { isHtml } from "../../utils";
-import { ActionIcon, Group, Menu } from "@mantine/core";
+import {
+  ActionIcon,
+  Group,
+  Menu,
+  Popover,
+  Stack,
+  TextInput,
+} from "@mantine/core";
 import { VariableComponentExtension } from "./MantineComponentExtension";
 import SurveyContext from "../../context/SurveyContext";
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
@@ -20,12 +27,17 @@ import {
   getFilteredVariablesForQuestion,
   getFormattedTitleFromVariable,
 } from "../../utils/survey/question/question.utils";
-import { IconVariable } from "@tabler/icons-react";
+import { IconPhoto, IconVariable } from "@tabler/icons-react";
+import Image from "@tiptap/extension-image";
+import { PopoverEmojiPicker } from "../whatsapp/templates/Details/TextFormateToolBar";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
 
 export default function TextEditor({ form, selectedLanguage }) {
+  const { variables } = useContext(SurveyContext);
   const content = getContent(
     form.values?.title?.[selectedLanguage],
     form.values?.description?.[selectedLanguage],
+    variables,
   );
 
   const editor = useEditor({
@@ -35,6 +47,7 @@ export default function TextEditor({ form, selectedLanguage }) {
       TextStyle,
       Color,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Image.configure({ allowBase64: true }),
       VariableComponentExtension,
     ],
     content: content,
@@ -121,7 +134,11 @@ export default function TextEditor({ form, selectedLanguage }) {
             <RichTextEditor.Undo />
             <RichTextEditor.Redo />
           </RichTextEditor.ControlsGroup>
-          <InsertVariableControl question={form?.values} />
+          <RichTextEditor.ControlsGroup>
+            <InsertVariableControl question={form?.values} />
+            <InsertEmoji />
+            <InsertImage />
+          </RichTextEditor.ControlsGroup>
         </Group>
       </RichTextEditor.Toolbar>
       <RichTextEditor.Content mih={120} />
@@ -129,8 +146,7 @@ export default function TextEditor({ form, selectedLanguage }) {
   );
 }
 
-const getContent = (title: string, desc: string) => {
-  const { variables } = useContext(SurveyContext);
+const getContent = (title: string, desc: string, variables) => {
   if (isHtml(title)) {
     return getFormattedTitleFromVariable(title, variables) || title;
   } else if (desc) {
@@ -176,6 +192,7 @@ const InsertVariableControl = ({ question }) => {
         <Menu.Dropdown>
           {variablesData?.map((value) => (
             <Menu.Item
+              key={value}
               onClick={() => {
                 if (!value) return;
                 editor?.commands.insertContent(
@@ -191,3 +208,52 @@ const InsertVariableControl = ({ question }) => {
     </RichTextEditor.Control>
   );
 };
+
+function InsertEmoji() {
+  const { editor } = useRichTextEditorContext();
+  return (
+    <RichTextEditor.Control aria-label="Insert emoji" title="Insert emoji">
+      <PopoverEmojiPicker
+        onEmojiClick={(emoji) => editor?.commands?.insertContent(emoji)}
+      />
+    </RichTextEditor.Control>
+  );
+}
+
+function InsertImage() {
+  const { editor } = useRichTextEditorContext();
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  const handleImageSave = () => {
+    try {
+      new URL(url);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (error) {
+      setError("Enter a valid url");
+    }
+  };
+  return (
+    <Popover position="bottom" withArrow shadow="md">
+      <Popover.Target>
+        <RichTextEditor.Control aria-label="Insert image" title="Insert image">
+          <IconPhoto size={16} />
+        </RichTextEditor.Control>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <Stack justify="center">
+          <TextInput
+            type="url"
+            value={url}
+            placeholder="Enter the url of image"
+            onChange={(event) => {
+              setUrl(event.currentTarget.value);
+              setError("");
+            }}
+            error={error}
+          />
+          <RateupButtonPrimary title="submit" onClick={handleImageSave} />
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
