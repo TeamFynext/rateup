@@ -351,7 +351,8 @@ export const contactParticipentDetailColumn = [
   },
   {
     header: () => "Consent",
-    accessorKey: "consent",
+    accessorKey: "contact.consent",
+    id: "consent",
     cell: (info) =>
       info.getValue() ? <IconCheck color="green" /> : <IconX color="red" />,
     meta: {
