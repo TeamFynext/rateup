@@ -72,7 +72,9 @@ export const getFileUrlFromKey = (
 ) => {
   if (unsplashImage) return `${process.env.UNSPLASH_URL}${key}`;
   const imgUrl = s3Upload
-    ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`
+    ? key?.startsWith("/")
+      ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`
+      : `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}/${key}`
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/${key}`;
   return imgUrl;
 };
