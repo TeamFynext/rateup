@@ -287,7 +287,7 @@ export const verifyAndConvertSurveyThemeObj = (surveyTheme) => {
         },
       },
       input: {
-        primaryColor: "#",
+        primaryColor: "#1C518E",
       },
       button: {
         label: "Start Survey",

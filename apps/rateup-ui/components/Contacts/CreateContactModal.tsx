@@ -85,14 +85,12 @@ const CreateContactModal = ({
     if (form.getValues().source == importMethod.CSV) {
       if (!csvfile) return;
       const formData = new FormData();
-      formData.append("file", csvfile);
       formData.append("update", form.getValues().updateExisting?.toString());
-      for await (const item of form.getValues().contactType) {
-        formData.append(
-          `tags[${form.getValues().contactType.indexOf(item)}]`,
-          item,
-        );
-      }
+      const contactTypes = form.getValues().contactType;
+      contactTypes.forEach((item, index) => {
+        formData.append(`tags[${index}]`, item);
+      });
+      formData.append("file", csvfile);
       importCSVContactMutation.mutate(formData, {
         onSettled: () => {
           setIsCreating(false);
