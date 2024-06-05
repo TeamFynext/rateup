@@ -21,6 +21,7 @@ import { CurrentResponsesContext } from "../../../../../context/ResponseContext"
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
+import { useMediaQuery } from "@mantine/hooks";
 
 const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const survey = !isPreview ? useSurveyContext() : null;
@@ -34,8 +35,9 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const theme = useMantineTheme();
   const [timerComplete, setTimerComplete] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const allowedEmailIDs =
-    selectedQ?.features?.[selectedLanguage]?.allowedEmails || [];
+  const features = selectedQ?.features?.[selectedLanguage];
+  const allowedEmailIDs = features ? features?.allowedEmails : [];
+  const isMobile = useMediaQuery("(max-width: 480px)");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
@@ -60,7 +62,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
     if (
       !email ||
       !emailPattern.test(email) ||
-      !allowedEmailIDs.includes(email)
+      (features?.isRestricted && !allowedEmailIDs?.includes(email))
     ) {
       setError("Invalid Email");
       return;
@@ -123,7 +125,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             onComplete={handleValidateOTP}
             ariaLabel="Enter OTP"
             autoFocus={true}
-            size="lg"
+            size={isMobile ? "md" : "lg"}
             color={`var(--mantine-color-${theme.primaryColor}-filled)`}
           />
           {!timerComplete ? (

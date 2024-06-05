@@ -3,11 +3,13 @@ import {
   Blockquote,
   Checkbox,
   Group,
+  SegmentedControl,
   Stack,
   Table,
   Title,
+  Tooltip,
 } from "@mantine/core";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   showErrorToast,
   showSuccessToast,
@@ -27,18 +29,26 @@ import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { emailPattern } from "../../../../utils/constants";
 
+enum AllowEmailForOTP {
+  allEmail = "All Emails",
+  emailFromList = "Emails from list",
+}
+
 const EmailOtpExtraProps = ({ form, qId }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const allowedEmailIDs =
-    form?.values.features?.[selectedLanguage]?.allowedEmails || [];
+  const features = form.values?.features?.[selectedLanguage] || {
+    allowedEmails: [],
+    isRestricted: false,
+  };
+  const allowedEmailIDs = features?.allowedEmails || [];
   const [selectedEmailIds, setSelectedEmailIds] = useState([]);
   const [newEmail, setNewEmail] = useState("");
   const [inputError, setInputError] = useState("");
-  const allChecked = allowedEmailIDs.every((email) =>
+  const allChecked = allowedEmailIDs?.every((email) =>
     selectedEmailIds.includes(email),
   );
   const indeterminate =
-    allowedEmailIDs.some((email) => selectedEmailIds.includes(email)) &&
+    allowedEmailIDs?.some((email) => selectedEmailIds.includes(email)) &&
     !allChecked;
   const rows = allowedEmailIDs?.map((email) => (
     <Table.Tr
@@ -73,9 +83,9 @@ const EmailOtpExtraProps = ({ form, qId }) => {
       (email) => !selectedEmailIds.includes(email),
     );
     form.setFieldValue("features", {
-      ...form?.values.features,
+      ...form.values?.features,
       [selectedLanguage]: {
-        ...form?.values.features?.[selectedLanguage],
+        ...features,
         allowedEmails: remainingIds,
       },
     });
@@ -87,80 +97,121 @@ const EmailOtpExtraProps = ({ form, qId }) => {
       setInputError("Invalid Email");
       return;
     }
-    if (allowedEmailIDs.includes(newEmail)) {
+    if (allowedEmailIDs?.includes(newEmail)) {
       setInputError("Email Already exists");
       return;
     }
-    allowedEmailIDs.push(newEmail);
+    allowedEmailIDs?.push(newEmail);
     form.setFieldValue("features", {
-      ...form?.values.features,
+      ...form.values?.features,
       [selectedLanguage]: {
-        ...form?.values.features?.[selectedLanguage],
+        ...features,
         allowedEmails: allowedEmailIDs,
+        isRestricted: allowedEmailIDs?.length ? true : false,
       },
     });
     setNewEmail("");
   };
 
+  useEffect(() => {
+    if (features?.allowedEmails?.length) {
+      form.setFieldValue("features", {
+        ...form.values?.features,
+        [selectedLanguage]: {
+          ...features,
+          isRestricted: true,
+        },
+      });
+    }
+  }, [features?.allowedEmails]);
+
   return (
     <Stack w={"100%"}>
-      <ImportAllowedEmailIDs qId={qId} />
-      <PaperLayout display={!allowedEmailIDs?.length ? "none" : "block"}>
-        <Group p={6}>
-          {selectedEmailIds.length && (
-            <ActionIcon
-              size={"sm"}
-              variant="subtle"
-              color="gray"
-              onClick={handleDelete}
-            >
-              <IconTrash />
-            </ActionIcon>
-          )}
-        </Group>
-        <Title order={5} ta={"center"}>
-          Allowed Email IDs
-        </Title>
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>
-                <Checkbox
-                  aria-label="Select email"
-                  indeterminate={indeterminate}
-                  checked={allChecked}
-                  onChange={() => {
-                    if (!allChecked) setSelectedEmailIds(allowedEmailIDs);
-                    else setSelectedEmailIds([]);
-                  }}
-                  size="xs"
-                />
-              </Table.Th>
-              <Table.Th>Email ID</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
-      </PaperLayout>
-      <Group>
-        <ContainedTextField
-          value={newEmail}
-          onChange={(e) => {
-            setInputError("");
-            setNewEmail(e.currentTarget.value);
-          }}
-          error={inputError}
-          placeholder="Enter email here"
-          style={{
-            flexGrow: 1,
-          }}
+      <Tooltip label={"Allowed Emails"}>
+        <SegmentedControl
+          data={Object.values(AllowEmailForOTP)}
+          value={
+            features?.isRestricted
+              ? AllowEmailForOTP.emailFromList
+              : AllowEmailForOTP.allEmail
+          }
+          onChange={(value) =>
+            form.setFieldValue("features", {
+              ...form.values?.features,
+              [selectedLanguage]: {
+                ...features,
+                isRestricted: value == AllowEmailForOTP.emailFromList,
+              },
+            })
+          }
+          w={220}
+          color="var(--tertiary-color)"
+          radius={"md"}
+          defaultValue={AllowEmailForOTP.allEmail}
         />
-        <RateupButtonSecondary
-          title={"Add"}
-          leftIcon={<IconPlus size={"1rem"} />}
-          onClick={handleAddEmail}
-        />
-      </Group>
+      </Tooltip>
+
+      {features.isRestricted && (
+        <Stack>
+          <ImportAllowedEmailIDs qId={qId} />
+          <PaperLayout display={!allowedEmailIDs?.length ? "none" : "block"}>
+            <Group p={6}>
+              {selectedEmailIds.length && (
+                <ActionIcon
+                  size={"sm"}
+                  variant="subtle"
+                  color="gray"
+                  onClick={handleDelete}
+                >
+                  <IconTrash />
+                </ActionIcon>
+              )}
+            </Group>
+            <Title order={5} ta={"center"}>
+              Allowed Email IDs
+            </Title>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>
+                    <Checkbox
+                      aria-label="Select email"
+                      indeterminate={indeterminate}
+                      checked={allChecked}
+                      onChange={() => {
+                        if (!allChecked) setSelectedEmailIds(allowedEmailIDs);
+                        else setSelectedEmailIds([]);
+                      }}
+                      size="xs"
+                    />
+                  </Table.Th>
+                  <Table.Th>Email ID</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>{rows}</Table.Tbody>
+            </Table>
+          </PaperLayout>
+          <Group>
+            <ContainedTextField
+              value={newEmail}
+              onChange={(e) => {
+                setInputError("");
+                setNewEmail(e.currentTarget.value);
+              }}
+              error={inputError}
+              placeholder="Enter email here"
+              style={{
+                flexGrow: 1,
+              }}
+            />
+            <RateupButtonSecondary
+              title={"Add"}
+              leftIcon={<IconPlus size={"1rem"} />}
+              onClick={handleAddEmail}
+            />
+          </Group>
+        </Stack>
+      )}
     </Stack>
   );
 };
