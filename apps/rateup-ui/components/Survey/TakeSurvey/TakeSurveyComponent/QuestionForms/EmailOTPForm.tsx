@@ -15,12 +15,12 @@ import {
   useSendOTPEmail,
   useValidateOtp,
 } from "../../../../../backend/surveys/surveys.query";
-import { useSurveyContext } from "../SurveyContext";
 import { showErrorToast } from "../../../../../utils/notifications";
 import { emailPattern } from "../../../../../utils/constants";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const survey = !isPreview ? useSurveyContext() : null;
