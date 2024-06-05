@@ -391,18 +391,20 @@ export async function updateMulitplceContacts(
   orgId: string,
 ) {
   return await prisma.$transaction(async (tx) => {
-    for (const contact of contacts) {
-      await tx.contact.updateMany({
-        where: {
-          phone: contact.phone,
-          orgId,
-        },
-        data: {
-          tags: contact.tags,
-          name: contact.name,
-        },
-      });
-    }
+    return Promise.all(
+      contacts.map((contact) =>
+        prisma.contact.updateMany({
+          where: {
+            phone: contact.phone,
+            orgId,
+          },
+          data: {
+            tags: contact.tags,
+            name: contact.name,
+          },
+        }),
+      ),
+    );
   });
 }
 
