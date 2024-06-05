@@ -7,7 +7,7 @@ import {
 import { isValidPhoneNumber } from "react-phone-number-input";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
-const FILE_SIZE = 5;
+const FILE_SIZE = 10;
 
 const ACCEPTED_MIME_TYPES = [
   "image/png",
