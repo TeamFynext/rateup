@@ -234,7 +234,11 @@ export async function deleteTemplateFromDb(templateId: string) {
   }
 }
 
-export async function updateTemplateInDb(templateId: string, template: any) {
+export async function updateTemplateInDb(
+  templateId: string,
+  template: any,
+  defaultValues?: WaTemplateDefaultValues,
+) {
   log.trace(`Updating template %o`, { templateId, data: template });
   try {
     const res = await prisma.waTemplate.update({
@@ -243,6 +247,7 @@ export async function updateTemplateInDb(templateId: string, template: any) {
       },
       data: {
         data: template,
+        defaultValues: defaultValues ? defaultValues : undefined,
       },
     });
     return res;
@@ -309,7 +314,11 @@ export async function updateTemplate(
       template.data.name,
       template.orgId,
     );
-    const res = await updateTemplateInDb(templateId, updatedTemplate);
+    const res = await updateTemplateInDb(
+      templateId,
+      updatedTemplate,
+      data.defaultValues as WaTemplateDefaultValues,
+    );
     return res;
   } else {
     return null;
