@@ -165,7 +165,7 @@ export async function importCSVContactsHandler(
     };
     const updateExisting = updateItem?.value === "true";
     let tags = Object.values(file?.fields ?? {})
-      .slice(2)
+      .slice(1)
       .reduce((acc, data) => {
         const item = (Array.isArray(data) ? data[0] : data) as {
           value: string;
