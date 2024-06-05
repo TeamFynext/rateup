@@ -20,6 +20,7 @@ import { getBgImgAndBgColor } from "../TakeSurveyLayout/utils";
 import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
 import { CreditsCard } from "../../Card/CreditsCard";
+import { verifyAndConvertSurveyThemeObj } from "../../Survey/SurveyTheme/SurveyTheme.utils";
 
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
@@ -33,11 +34,20 @@ function LanguageSelectionPage({
   const [lang, setLang] = useState(languages[0]);
   const selectedPreview = useSelectedPreview();
 
-  const surveyThemeObj = surveyThemeData;
+  let orgLogo = null;
+  let orgLogoStyles = null;
+  let orgLogoSrc = null;
+  if (surveyThemeData) {
+    orgLogo = surveyThemeData.surveyTheme?.logo?.logo;
+    orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
+    if (orgLogo && orgLogo.length) {
+      orgLogoSrc = orgLogo;
+    }
+  }
+
+  const surveyThemeObj = verifyAndConvertSurveyThemeObj(surveyThemeData);
+
   const {
-    surveyTheme: {
-      logo: { logo: logoUrl, styles: logoStyles },
-    },
     languageTheme: {
       bg: { useSurveyBackground = false },
       title: { styles: titleStyles, title },
@@ -47,7 +57,7 @@ function LanguageSelectionPage({
     },
   } = surveyThemeObj;
 
-  const isOrgLogoPresent = logoUrl?.length > 0;
+  const isOrgLogoPresent = orgLogoSrc?.length > 0;
   const isMobile =
     useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
@@ -77,8 +87,8 @@ function LanguageSelectionPage({
           <Flex className={cx("logo-container")}>
             <Image
               className={cx("logo")}
-              src={logoUrl}
-              style={logoStyles}
+              src={orgLogoSrc}
+              style={orgLogoStyles}
               fit="contain"
             />
           </Flex>
