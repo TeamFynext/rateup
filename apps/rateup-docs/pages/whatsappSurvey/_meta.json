@@ -1,6 +1,9 @@
 {
-    "index": "Create whatsapp survey",
-    "questions": "Question Details",
-    "template": "WhatsApp Template",
-    "waSettings": "WhatsApp Settings"
+    "index": "Available Features",
+    "flows":"Flows",
+    "template": "Templates",
+    "campaign":"Campaign",
+    "contacts":"Contacts",
+    "waSettings": "Settings"
+
 }

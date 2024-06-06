@@ -7,26 +7,22 @@
         "title" : "Teams and User Roles"
     } ,
     "webSurvey":{
-        "title" : "How to use Web Survey"
+        "title" : "Web Survey"
     },
     "groupSurvey": {
-        "title":"Group Survey"
-    },
-    "whatsappSurvey" : {
-        "title": "How to use WhatsApp Survey"
-    },
-    "menu" : {
-        "title": "How to user Menu",
-        "display": "hidden"
-    },
-    "campaign": {
-        "title": "Campaign",
+        "title":"Group Survey",
         "display":"hidden"
     },
-    "reputaionMg":{
-        "title":" Reputation Management",
-        "display": "hidden"
+    "whatsappSurvey" : {
+        "title": "WhatsApp Features"
     },
+    "menu" : {
+        "title": "Digital Menu"
+    },
+    "landingpage": "Landing Page",
+    "reputationMng" : "Reputation Management",
+    "ticket": "Tickets",
+    "testimonial": "Testimonials",
     "---" : {
         "type":"separator",
         "title":""
