@@ -76,19 +76,6 @@ function ButtonStyles() {
 
         {selectedPageTab === ThemeTabEnum.WELCOME && (
           <Box className={"styles-section-div"}>
-            <h2>Border Radius</h2>
-            <Slider
-              min={0}
-              max={50}
-              defaultValue={18}
-              value={button?.styles?.borderRadius}
-              onChange={handleBorderRadiusChange}
-            />
-          </Box>
-        )}
-
-        {selectedPageTab === ThemeTabEnum.WELCOME && (
-          <Box className={"styles-section-div"}>
             <h2>Button position</h2>
             <Flex gap={"sm"}>
               <ContainedSelection

@@ -33,24 +33,16 @@ import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/Se
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import styles from "./TakeSurveyLayoutWeb.module.css";
-import { getBgImgAndBgColor } from "./utils";
 import LanguageSelectionPage from "../LanguageSelectionPage";
+import { getBgImgAndBgColor } from "./utils";
 
 export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
 
   const isSurveyThemePreview = useIsSurveyThemePreviewContext();
 
-  let orgLogo = null;
-  let orgLogoStyles = null;
-  let orgLogoSrc = null;
-  if (surveyThemeData) {
-    orgLogo = surveyThemeData.surveyTheme?.logo?.logo;
-    orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
-    if (orgLogo && orgLogo.length) {
-      orgLogoSrc = orgLogo;
-    }
-  }
+  const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
+  const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
 
   // This one is being used for preview in surveyTheme editor(TakeSurveyLayoutWeb and TakeSurvey component is also being used in surveyTheme editor).
   const selectedPreview = useSelectedPreview();

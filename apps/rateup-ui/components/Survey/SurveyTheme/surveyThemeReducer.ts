@@ -1,9 +1,5 @@
 import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
 import _ from "lodash";
-import {
-  addWelcomeBtnPositionObjIfNotPresent,
-  verifyAndConvertSurveyThemeObj,
-} from "./SurveyTheme.utils";
 
 function surveyThemeReducer(state, action) {
   const { payload } = action;
@@ -13,9 +9,7 @@ function surveyThemeReducer(state, action) {
 
   switch (action.type) {
     case "set-survey-theme": {
-      const surveyThemeInRequiredStructure =
-        verifyAndConvertSurveyThemeObj(payload);
-      state.surveyTheme = surveyThemeInRequiredStructure;
+      state.surveyTheme = payload;
       break;
     }
 
@@ -126,7 +120,6 @@ function surveyThemeReducer(state, action) {
       break;
     }
     case "button-x-coordinate-change": {
-      addWelcomeBtnPositionObjIfNotPresent(surveyTheme, surveyThemeKey);
       surveyTheme[surveyThemeKey].button.position.x = payload;
       break;
     }

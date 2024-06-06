@@ -152,16 +152,8 @@ export default function ThankYou({
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
 
-  let orgLogo = null;
-  let orgLogoStyles = null;
-  let orgLogoSrc = null;
-  if (surveyThemeData) {
-    orgLogo = surveyThemeData.surveyTheme.logo?.logo;
-    orgLogoStyles = surveyThemeData.surveyTheme.logo?.styles;
-    if (orgLogo && orgLogo.length) {
-      orgLogoSrc = `${surveyUploadsPath}${orgLogo}`;
-    }
-  }
+  const orgLogoSrc = surveyThemeData.surveyTheme.logo?.logo;
+  const orgLogoStyles = surveyThemeData.surveyTheme.logo?.styles;
 
   const imageLoaded = () => {
     setImageLoading(false);
