@@ -242,13 +242,15 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
           "Name - min 3 characters, and \n testimonial - min 5 characters";
       break;
     case QuestionType.MCQGrid:
-      const questions = selectedQ?.features?.[selectedLanguage]?.questions;
-      const responsedQuestions = Object.keys(response);
-      if (
-        !questions.every((q) => responsedQuestions.includes(q)) &&
-        selectedQ.required
-      )
-        errMsg = "All questions are mandatory";
+      if (response) {
+        const questions = selectedQ?.features?.[selectedLanguage]?.questions;
+        const responsedQuestions = Object.keys(response);
+        if (
+          !questions.every((q) => responsedQuestions.includes(q)) &&
+          selectedQ.required
+        )
+          errMsg = "All questions are mandatory";
+      }
       break;
     case QuestionType.EmailOtp:
       if (selectedQ?.required && response?.isValid == false)

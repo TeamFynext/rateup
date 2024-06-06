@@ -19,6 +19,7 @@ import SurveyContext from "../../../../context/SurveyContext";
 import { IconInfoCircle, IconTrash, IconPlus } from "@tabler/icons-react";
 import {
   ContainedFileInput,
+  ContainedSelection,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
 import {
@@ -34,7 +35,12 @@ enum AllowEmailForOTP {
   emailFromList = "Emails from list",
 }
 
-const EmailOtpExtraProps = ({ form, qId }) => {
+enum EmailAddMethod {
+  Manual = "Add Manually",
+  Import = "Import from file",
+}
+
+const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {
     allowedEmails: [],
@@ -42,6 +48,7 @@ const EmailOtpExtraProps = ({ form, qId }) => {
   };
   const allowedEmailIDs = features?.allowedEmails || [];
   const [selectedEmailIds, setSelectedEmailIds] = useState([]);
+  const [emailMethod, setEmailMethod] = useState(EmailAddMethod.Manual);
   const [newEmail, setNewEmail] = useState("");
   const [inputError, setInputError] = useState("");
   const allChecked = allowedEmailIDs?.every((email) =>
@@ -82,12 +89,15 @@ const EmailOtpExtraProps = ({ form, qId }) => {
     const remainingIds = allowedEmailIDs?.filter(
       (email) => !selectedEmailIds.includes(email),
     );
-    form.setFieldValue("features", {
-      ...form.values?.features,
-      [selectedLanguage]: {
-        ...features,
+    let featuresObj = { ...form.values?.features };
+    for (const lang of surveyLanguages) {
+      featuresObj[lang] = {
+        ...form.values.features?.[lang],
         allowedEmails: remainingIds,
-      },
+      };
+    }
+    form.setFieldValue("features", {
+      ...featuresObj,
     });
     setSelectedEmailIds([]);
   };
@@ -102,13 +112,15 @@ const EmailOtpExtraProps = ({ form, qId }) => {
       return;
     }
     allowedEmailIDs?.push(newEmail);
-    form.setFieldValue("features", {
-      ...form.values?.features,
-      [selectedLanguage]: {
-        ...features,
+    let featuresObj = { ...form.values?.features };
+    for (const lang of surveyLanguages) {
+      featuresObj[lang] = {
+        ...form.values.features?.[lang],
         allowedEmails: allowedEmailIDs,
-        isRestricted: allowedEmailIDs?.length ? true : false,
-      },
+      };
+    }
+    form.setFieldValue("features", {
+      ...featuresObj,
     });
     setNewEmail("");
   };
@@ -153,7 +165,6 @@ const EmailOtpExtraProps = ({ form, qId }) => {
 
       {features.isRestricted && (
         <Stack>
-          <ImportAllowedEmailIDs qId={qId} />
           <PaperLayout display={!allowedEmailIDs?.length ? "none" : "block"}>
             <Group p={6}>
               {selectedEmailIds.length && (
@@ -191,25 +202,38 @@ const EmailOtpExtraProps = ({ form, qId }) => {
               <Table.Tbody>{rows}</Table.Tbody>
             </Table>
           </PaperLayout>
-          <Group>
-            <ContainedTextField
-              value={newEmail}
-              onChange={(e) => {
-                setInputError("");
-                setNewEmail(e.currentTarget.value);
-              }}
-              error={inputError}
-              placeholder="Enter email here"
-              style={{
-                flexGrow: 1,
-              }}
-            />
-            <RateupButtonSecondary
-              title={"Add"}
-              leftIcon={<IconPlus size={"1rem"} />}
-              onClick={handleAddEmail}
-            />
-          </Group>
+          <ContainedSelection
+            data={Object.values(EmailAddMethod)}
+            label={"Method"}
+            w={250}
+            placeholder={"Selecte a method to add email"}
+            value={emailMethod}
+            onChange={(value) => setEmailMethod(value as EmailAddMethod)}
+            allowDeselect={false}
+          />
+          {emailMethod == EmailAddMethod.Import ? (
+            <ImportAllowedEmailIDs qId={qId} />
+          ) : (
+            <Group>
+              <ContainedTextField
+                value={newEmail}
+                onChange={(e) => {
+                  setInputError("");
+                  setNewEmail(e.currentTarget.value);
+                }}
+                error={inputError}
+                placeholder="Enter email here"
+                style={{
+                  flexGrow: 1,
+                }}
+              />
+              <RateupButtonSecondary
+                title={"Add"}
+                leftIcon={<IconPlus size={"1rem"} />}
+                onClick={handleAddEmail}
+              />
+            </Group>
+          )}
         </Stack>
       )}
     </Stack>
@@ -242,6 +266,17 @@ const ImportAllowedEmailIDs = ({ qId }) => {
 
   return (
     <Group justify="space-between" w={"100%"}>
+      <Blockquote
+        color="blue"
+        icon={<IconInfoCircle />}
+        p={"sm"}
+        iconSize={40}
+        w={350}
+        ml={10}
+      >
+        Upload CSV/XLSX file to generate allowed email Ids. required field in
+        the file: email
+      </Blockquote>
       <Stack>
         <ContainedFileInput
           onChange={setFile}
@@ -257,16 +292,6 @@ const ImportAllowedEmailIDs = ({ qId }) => {
           disabled={!file}
         />
       </Stack>
-      <Blockquote
-        color="blue"
-        icon={<IconInfoCircle />}
-        p={"sm"}
-        iconSize={40}
-        w={400}
-      >
-        Utilizing CSV/XLSX file uploads to generate allowed email Ids. required
-        field in the file: email
-      </Blockquote>
     </Group>
   );
 };
