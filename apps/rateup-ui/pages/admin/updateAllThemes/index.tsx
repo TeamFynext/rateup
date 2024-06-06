@@ -9,7 +9,11 @@ function UpdateAllThemes() {
   const [isUpdatingThemes, setIsUpdatingThemes] = useState(false);
   const handleUpdateAllThemesBtnClick = useCallback(async () => {
     setIsUpdatingThemes(true);
-    await updateAllThemesMutation.mutateAsync();
+    try {
+      await updateAllThemesMutation.mutateAsync();
+    } catch (err) {
+      console.log(err);
+    }
     setIsUpdatingThemes(false);
   }, []);
 
