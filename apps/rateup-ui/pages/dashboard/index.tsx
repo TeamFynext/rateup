@@ -155,6 +155,26 @@ export default function DashboardHome() {
     },
   ];
 
+  // Filtering surveys based on the filterParam state
+  const filteredSurveys = surveysSummary?.surveys
+    ?.filter((s) => s.active === true && s.isPublished === true)
+    ?.filter((s) => {
+      if (filterParam === SurveyTypeFilters.Web) {
+        return s.type === "web";
+      } else if (filterParam === SurveyTypeFilters.WhatsApp) {
+        return s.type === "whatsapp";
+      } else if (filterParam === SurveyTypeFilters.WhatsAppFlow) {
+        return s.type === "waFlow";
+      } else {
+        return true;
+      }
+    })
+    ?.sort((a, b) =>
+      sort
+        ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
   return (
     <>
       {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
@@ -258,7 +278,7 @@ export default function DashboardHome() {
               </Stack>
             </FormModalLayout>
 
-            <PaperLayout p={"lg"}>
+            <PaperLayout p={"lg"} mt="5rem">
               <Group justify="space-between">
                 <Group align="center">
                   <Heading subtitle="Active Surveys / Flows" />
@@ -299,7 +319,7 @@ export default function DashboardHome() {
               </Group>
             </PaperLayout>
 
-            {surveysSummary?.surveys?.length > 0 ? (
+            {filteredSurveys.length > 0 ? (
               <SimpleGrid
                 spacing="lg"
                 mb="xl"
@@ -307,38 +327,12 @@ export default function DashboardHome() {
                 mx="sm"
                 cols={{ xs: 1, sm: 1, md: 2, lg: 3, xl: 4 }}
               >
-                {Array.isArray(surveysSummary?.surveys) &&
-                  (surveysSummary?.surveys?.length > 0 ? (
-                    surveysSummary?.surveys
-                      ?.filter((s) => s.active === true)
-                      ?.filter((s) => s.isPublished === true)
-                      .sort((a, b) =>
-                        sort
-                          ? new Date(b.createdAt).getTime() -
-                            new Date(a.createdAt).getTime()
-                          : new Date(a.createdAt).getTime() -
-                            new Date(b.createdAt).getTime(),
-                      )
-                      .filter((s) => {
-                        if (filterParam === SurveyTypeFilters.Web) {
-                          return s.type === "web";
-                        } else if (filterParam === SurveyTypeFilters.WhatsApp) {
-                          return s.type === "whatsapp";
-                        } else if (
-                          filterParam === SurveyTypeFilters.WhatsAppFlow
-                        ) {
-                          return s.type === "waFlow";
-                        } else {
-                          return true;
-                        }
-                      })
-                      .map((s) => <ActiveSurveyCard key={s.id} survey={s} />)
-                  ) : (
-                    <NothingFound text="No active surveys at the moment" />
-                  ))}
+                {filteredSurveys.map((s) => (
+                  <ActiveSurveyCard key={s.id} survey={s} />
+                ))}
               </SimpleGrid>
             ) : (
-              <NothingFound text="No active surveys at the moment" />
+              <NothingFound text="No data found" />
             )}
           </Stack>
         </Container>

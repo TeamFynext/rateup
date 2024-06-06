@@ -40,7 +40,7 @@ function Header({ className = "" }) {
           <MobileNavDrawer />
         </nav>
       </Group>
-      {!(currentRoutePath === "/menus") ? (
+      {!(currentRoutePath === "/digital-menu") ? (
         <LoginSignupLinks />
       ) : (
         <Flex className={cx("join-now-btn-container")}>

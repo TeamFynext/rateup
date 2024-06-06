@@ -236,7 +236,8 @@ const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
         mb={20}
         p={"lg"}
         h={"100%"}
-        scrollbarSize={2}
+        scrollbars="y"
+        scrollbarSize={7}
         offsetScrollbars
         styles={{
           scrollbar: {
