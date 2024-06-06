@@ -17,7 +17,7 @@ const addSurveyThemeLogoObjIfNotPresent = (payloadCopy) => {
     logo.length > 0 &&
     (!logo.startsWith("http://") || !logo.startsWith("https://"))
   ) {
-    payloadCopy.surveyTheme.logo.logo = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${logo}`;
+    payloadCopy.surveyTheme.logo.logo = `http://d2uj946b0i8y27.cloudfront.net/${logo}`;
   }
 };
 
@@ -30,7 +30,7 @@ export const getImgUrl = (str) => {
   if (urlStr.startsWith("https://") || urlStr.startsWith("http://")) {
     resultStr = urlStr;
   } else if (urlStr.length > 0 && !urlStr.startsWith("#")) {
-    resultStr = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${urlStr}`;
+    resultStr = `http://d2uj946b0i8y27.cloudfront.net/${urlStr}`;
   }
   return resultStr;
 };
