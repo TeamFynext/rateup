@@ -1,5 +1,7 @@
+import { FastifyReply } from "fastify";
 import prisma from "../../utils/prisma";
 import { defaultTheme } from "./defaultTheme";
+import { verifyAndConvertSurveyThemeObj } from "./utils";
 
 // export async function getSurveyThemeBySurveyId(surveyId: string) {
 //   return await prisma.webSurveyTheme.findUnique({
@@ -100,4 +102,29 @@ export async function deleteThemeInDB(req) {
     },
   });
   return deletedTheme;
+}
+
+export async function updateAllWebSurveyThemesInDB(reply: FastifyReply) {
+  try {
+    const allThemes = await prisma.webSurveyTheme.findMany();
+    await prisma.$transaction(async (tx) => {
+      for (const themeObj of allThemes) {
+        const { id, theme } = themeObj;
+        const newThemeObj = verifyAndConvertSurveyThemeObj(theme);
+        await tx.webSurveyTheme.update({
+          where: {
+            id,
+          },
+          data: {
+            theme: newThemeObj,
+          },
+        });
+      }
+      return;
+    });
+    return allThemes;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 }

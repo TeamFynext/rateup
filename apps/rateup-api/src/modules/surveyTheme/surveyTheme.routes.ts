@@ -8,8 +8,10 @@ import {
   getSurveyThemeByIdHandler,
   updateSurveyThemeHandler,
   renameTheme,
+  updateAllWebSurveyThemesJson,
 } from "./surveyTheme.controller";
 import { CustomRouteShortHandOptions } from "../../types/global";
+import { assertRootOrg } from "../../utils/auth";
 
 const publicRouteOptions: CustomRouteShortHandOptions = {
   config: {
@@ -17,13 +19,22 @@ const publicRouteOptions: CustomRouteShortHandOptions = {
   },
 };
 
+const assertRootOrgRouteOptions: CustomRouteShortHandOptions = {
+  config: {
+    assertRootOrg: true,
+  },
+};
+
 export async function surveyThemeRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    if (routeOptions.config && routeOptions.config["isPublic"] === true) {
+    if (routeOptions.config && routeOptions.config["isPublic"]) {
       routeOptions.preHandler = [];
       return;
     } else {
       routeOptions.preHandler = [checkSession];
+      if (routeOptions.config && routeOptions.config["assertRootOrg"]) {
+        routeOptions.preHandler.push(assertRootOrg);
+      }
     }
   });
 
@@ -44,4 +55,10 @@ export async function surveyThemeRoutes(server: FastifyInstance) {
   server.patch("/:webSurveyThemeId", renameTheme);
 
   server.delete("/:webSurveyThemeId", deleteTheme);
+
+  server.post(
+    "/updateWebSurveyThemes",
+    assertRootOrgRouteOptions,
+    updateAllWebSurveyThemesJson,
+  );
 }
