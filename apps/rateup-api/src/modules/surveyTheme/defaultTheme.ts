@@ -1,11 +1,13 @@
-import { SurveyTheme } from "@prisma/client";
-import { surveyThemeSchemaCore } from "./surveyTheme.schema";
-
 const background = {
-  desktopbg: "",
-  mobilebg: "",
-  styles: {
-    backgroundColor: "#f7f7f7",
+  desktopBg: {
+    chooseBgRadioInputValue: "color",
+    imageUrl: "",
+    bgColor: "#f7f7f7",
+  },
+  mobileBg: {
+    chooseBgRadioInputValue: "color",
+    imageUrl: "",
+    bgColor: "#f7f7f7",
   },
 };
 const logo = {
@@ -37,17 +39,26 @@ const button = {
     backgroundColor: "#1C518E",
     color: "#FFFFFF",
     textAlign: "center",
-    borderRadius: 18,
   },
-  position: { x: "CENTER", y: "DEFAULT" },
+};
+
+const input = {
+  primaryColor: "#1C518E",
 };
 
 export const defaultTheme = {
   welcomeTheme: {
-    bg: background,
+    bg: {
+      ...background,
+      useSurveyBackground: true,
+    },
     title: { ...title, title: "Welcome" },
     subtitle: { ...subtitle, subtitle: "Welcome to the survey" },
-    button: { ...button, label: "Start Survey" },
+    button: {
+      ...button,
+      label: "Start Survey",
+      position: { x: "CENTER", y: "DEFAULT" },
+    },
   },
   surveyTheme: {
     bg: background,
@@ -57,15 +68,40 @@ export const defaultTheme = {
       subtitleFontSize: 16,
     },
     button: button,
-    input: {
-      primaryColor: "#1C518E",
-    },
+    input,
     logo: logo,
   },
   thankyouTheme: {
-    bg: background,
+    bg: {
+      ...background,
+      useSurveyBackground: true,
+    },
     title: { ...title, title: "Thank you" },
     subtitle: { ...subtitle, subtitle: "Thank you for taking the survey" },
     confettiEnabled: false,
+  },
+  languageTheme: {
+    bg: {
+      ...background,
+      useSurveyBackground: true,
+    },
+    title: {
+      title: "Select a Language",
+      styles: {
+        fontWeight: "300",
+        fontSize: 34,
+        textAlign: "center",
+      },
+    },
+    subtitle: {
+      subtitle: "Let's Begin!",
+      styles: {
+        fontWeight: "600",
+        fontSize: 20,
+        textAlign: "center",
+      },
+    },
+    button: { ...button, label: "Start Survey" },
+    input,
   },
 };
