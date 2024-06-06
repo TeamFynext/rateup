@@ -215,7 +215,7 @@ export default function WelcomePageThemeView({ survey }) {
               <Flex
                 justify={"center"}
                 p={10}
-                style={buttonStyles}
+                style={{ ...buttonStyles, borderRadius: "2rem" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <TextInput

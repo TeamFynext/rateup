@@ -3,6 +3,7 @@ import {
   IconBusinessplan,
   IconCreditCard,
   IconDatabasePlus,
+  IconLayoutCards,
   IconListDetails,
   IconPremiumRights,
   IconWallet,
@@ -50,5 +51,10 @@ export const adminNavItems = [
     Icon: IconDatabasePlus,
     label: "Generate data",
     href: "/admin/generate",
+  },
+  {
+    Icon: IconLayoutCards,
+    label: "Update all themes",
+    href: "/admin/updateAllThemes",
   },
 ];

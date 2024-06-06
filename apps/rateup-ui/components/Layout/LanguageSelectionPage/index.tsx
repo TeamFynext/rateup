@@ -20,7 +20,6 @@ import { getBgImgAndBgColor } from "../TakeSurveyLayout/utils";
 import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
 import { CreditsCard } from "../../Card/CreditsCard";
-import { verifyAndConvertSurveyThemeObj } from "../../Survey/SurveyTheme/SurveyTheme.utils";
 
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
@@ -34,18 +33,8 @@ function LanguageSelectionPage({
   const [lang, setLang] = useState(languages[0]);
   const selectedPreview = useSelectedPreview();
 
-  let orgLogo = null;
-  let orgLogoStyles = null;
-  let orgLogoSrc = null;
-  if (surveyThemeData) {
-    orgLogo = surveyThemeData.surveyTheme?.logo?.logo;
-    orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
-    if (orgLogo && orgLogo.length) {
-      orgLogoSrc = orgLogo;
-    }
-  }
-
-  const surveyThemeObj = verifyAndConvertSurveyThemeObj(surveyThemeData);
+  const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
+  const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
 
   const {
     languageTheme: {
@@ -55,13 +44,13 @@ function LanguageSelectionPage({
       button: { styles: buttonStyles, label: startBtnLabel },
       input: { primaryColor: inputPrimaryColor },
     },
-  } = surveyThemeObj;
+  } = surveyThemeData;
 
   const isOrgLogoPresent = orgLogoSrc?.length > 0;
   const isMobile =
     useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyThemeObj,
+    surveyThemeData,
     useSurveyBackground ? "surveyTheme" : "languageTheme",
     isMobile,
   );

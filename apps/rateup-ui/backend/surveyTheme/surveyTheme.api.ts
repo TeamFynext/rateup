@@ -59,3 +59,10 @@ export const deleteTheme = async (surveyThemeId) => {
   );
   return response.data;
 };
+
+export const updateAllThemes = async () => {
+  const response = await axiosClient.post(
+    `${THEME_API_PATH}/updateWebSurveyThemes`,
+  );
+  return response.data;
+};
