@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   Link,
   RichTextEditor,
@@ -47,7 +47,11 @@ export default function TextEditor({ form, selectedLanguage }) {
       TextStyle,
       Color,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Image.configure({ allowBase64: true }),
+      Image.configure({
+        HTMLAttributes: {
+          style: `max-width: 100%;max-height: 100%;`,
+        },
+      }),
       VariableComponentExtension,
     ],
     content: content,
@@ -224,10 +228,13 @@ function InsertImage() {
   const { editor } = useRichTextEditorContext();
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
+  const ref = useRef(null);
   const handleImageSave = () => {
     try {
       new URL(url);
       editor.chain().focus().setImage({ src: url }).run();
+      setUrl("");
+      ref?.current?.click();
     } catch (error) {
       setError("Enter a valid url");
     }
@@ -235,7 +242,11 @@ function InsertImage() {
   return (
     <Popover position="bottom" withArrow shadow="md">
       <Popover.Target>
-        <RichTextEditor.Control aria-label="Insert image" title="Insert image">
+        <RichTextEditor.Control
+          aria-label="Insert image"
+          title="Insert image"
+          ref={ref}
+        >
           <IconPhoto size={16} />
         </RichTextEditor.Control>
       </Popover.Target>
