@@ -44,7 +44,8 @@ const ChatbotMessageContainer = ({
   const messagesEndRef = useRef(null);
   const isMobile = useMediaQuery("(max-width: 480px)");
   const scrollToBottom = () => {
-    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current)
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {

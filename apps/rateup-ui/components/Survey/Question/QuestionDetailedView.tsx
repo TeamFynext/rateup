@@ -556,7 +556,13 @@ function ExtraProps({
     case QuestionType.MCQGrid:
       return <MCQGridExtraProps form={form} qId={question.id} />;
     case QuestionType.EmailOtp:
-      return <EmailOtpExtraProps form={form} qId={question.id} />;
+      return (
+        <EmailOtpExtraProps
+          form={form}
+          qId={question.id}
+          surveyLanguages={surveyLanguages}
+        />
+      );
     default:
       return null;
   }
