@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, Flex, ScrollArea } from "@mantine/core";
+import { Image, Flex, ScrollArea, useMantineColorScheme } from "@mantine/core";
 import { useRouter } from "next/router";
 import {
   useConsumeVerificationCode,
@@ -29,6 +29,8 @@ const AuthForm = ({
   const { token, rid } = router.query;
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
+  const { colorScheme } = useMantineColorScheme();
+  const colorBasedOnLightMode = colorScheme === "light" ? "white" : "gray";
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
       if (token && rid === "emailverification") {
@@ -90,6 +92,7 @@ const AuthForm = ({
           ${styles[`LOGIN-auth-form-container`]}
           ${styles[`${authType ? "auth-type-signup-form" : ""}`]}
         `}
+      bg={colorBasedOnLightMode}
     >
       <ScrollArea h={"100%"} w={"100%"} scrollbarSize={5} type="hover">
         <Flex justify={"center"}>
