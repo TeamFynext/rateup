@@ -2,11 +2,13 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   NewWaMessageBody,
   PaginateQuerySchema,
-  WaChatFilterSchema,
   WaChatFilterQuerySchema,
+  WaChatExportQuerySchema,
+  WaChatExportConstraints,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
+  exportWhatsapChats,
   filterChats,
   generateChatFilterData,
   getContactsWithLastMessage,
@@ -29,7 +31,8 @@ import {
   getOrCreateContactByPhone,
 } from "../../../contact/contact.service";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
-
+import xlsx from "node-xlsx";
+import fs from "fs";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -191,5 +194,40 @@ export async function getFilteredContactsHandler(
   } catch (error) {
     console.log(error);
     reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function exportWhatsappChatsHandler(
+  request: FastifyRequest<{ Querystring: WaChatExportQuerySchema }>,
+  reply: FastifyReply,
+) {
+  const { constraints } = request.query;
+  if (!constraints) {
+    reply.status(400).send("Constraints not provided");
+    return;
+  } else {
+    const orgId = request.user.orgId;
+    const constraintsDecoded: WaChatExportConstraints = JSON.parse(
+      decodeURIComponent(constraints),
+    );
+    const dataToExport = await exportWhatsapChats(orgId, constraintsDecoded);
+    const _excelData = dataToExport.map((chat) => {
+      return [
+        chat.date,
+        chat.from,
+        chat.name,
+        chat.sendbody ?? chat.receivebody ?? chat.templatename ?? "",
+      ];
+    });
+    const excelData = [["Date", "From", "Name", "Message"], ..._excelData];
+    const buffer = xlsx.build([
+      { name: "Chats", data: excelData, options: {} },
+    ]);
+    reply.header(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    reply.header("Content-Disposition", "attachment; filename=export.xlsx");
+    reply.send(buffer);
   }
 }

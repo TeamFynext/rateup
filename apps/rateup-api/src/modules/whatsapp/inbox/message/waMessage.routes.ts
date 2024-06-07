@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  exportWhatsappChatsHandler,
   generateChatFilterDataHandler,
   getContactsWithLastMessageHandler,
   getFilteredContactsHandler,
@@ -35,6 +36,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
 
   server.get("/contacts", getContactsWithLastMessageHandler);
   server.get("/filterdata", generateChatFilterDataHandler);
+
   server.get(
     "/contactsfiltered",
     {
@@ -43,5 +45,13 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     getFilteredContactsHandler,
+  );
+
+  server.post(
+    "/exportmessages",
+    {
+      schema: { querystring: $waMessage("waChatExportQuerySchema") },
+    },
+    exportWhatsappChatsHandler,
   );
 }
