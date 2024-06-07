@@ -5,6 +5,12 @@ enum WaChatLastMessageTypes {
   "usermessages",
   "all",
 }
+export enum DateType {
+  BETWEEN = "between",
+  BEFORE = "before",
+  AFTER = "after",
+  ON = "on",
+}
 
 const WaMessageText = z.object({
   body: z.string(),
@@ -32,12 +38,32 @@ const waChatFilterQuerySchema = PaginateQuerySchema.extend({
   filterData: z.string(),
 });
 
+const waChatExportConstraints = z.object({
+  date: z.object({
+    type: z.nativeEnum(DateType),
+    inclusive: z.boolean().default(false),
+    between: z.object({
+      from: z.string(),
+      to: z.string(),
+    }),
+    before: z.string(),
+    after: z.string(),
+    on: z.string(),
+  }),
+  repliesOnly: z.boolean().default(false),
+});
+const waChatExportQuerySchema = z.object({
+  constraints: z.string(),
+});
+
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
     PaginateQuerySchema,
     WaChatFilterSchema,
     waChatFilterQuerySchema,
+    waChatExportConstraints,
+    waChatExportQuerySchema,
   },
   { $id: "waMessage" },
 );
@@ -46,3 +72,5 @@ export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;
 export type PaginateQuerySchema = z.infer<typeof PaginateQuerySchema>;
 export type WaChatFilterSchema = z.infer<typeof WaChatFilterSchema>;
 export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;
+export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
+export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
