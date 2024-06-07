@@ -5,6 +5,7 @@ import {
   getAllThemes,
   getSurveyTheme,
   renameSurveyTheme,
+  updateAllThemes,
   updateSurveyTheme,
 } from "./surveyTheme.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
@@ -101,6 +102,18 @@ export const useDeleteThemeMutation = () => {
     },
     onError: (err) => {
       showErrorToast("unable to delete theme, please try again later.");
+    },
+  });
+};
+
+export const useUpdateAllThemesMutation = () => {
+  return useMutation({
+    mutationFn: updateAllThemes,
+    onSuccess: () => {
+      showSuccessToast("Updated all the themes Successfully.");
+    },
+    onError: (err) => {
+      showErrorToast("Unable to update themes, please try again later.");
     },
   });
 };

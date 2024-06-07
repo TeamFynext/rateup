@@ -8,8 +8,8 @@ function PrivacyPolicy() {
       <section>
         <h2>Privacy Policy</h2>
         <p>
-          RateUp Technologies operates the www.rateup.app which provides the
-          RateUp Software as a Service.
+          Uprate Technologies Private Limited operates the www.rateup.app which
+          provides the RateUp Software as a Service.
         </p>
         <p>
           This page is used to inform website visitors regarding our policies
@@ -147,7 +147,7 @@ function PrivacyPolicy() {
         <h2>Contact Us</h2>
         <p>
           If you have any questions or suggestions about our Privacy Policy, do
-          not hesitate to contact us at hello@rateup.app
+          not hesitate to contact us at <strong>hello@rateup.app</strong>
         </p>
       </section>
     </div>

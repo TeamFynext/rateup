@@ -113,7 +113,7 @@ export function SurveysPage({
         setSelectedTeamId={setSelectedTeamId}
         filterParam={filterParam}
         setFilterParam={setFilterParam}
-        openCreateSurvey={openSurveyTemplates}
+        openCreateSurvey={openCreateSurvey}
         openMergeSurvey={openMergeSurvey}
         sort={sort}
         setSort={setSort}

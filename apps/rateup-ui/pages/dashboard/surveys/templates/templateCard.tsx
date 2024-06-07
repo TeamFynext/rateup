@@ -8,6 +8,7 @@ import {
   useSurveyThemeContextValue,
 } from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
 import { lexend300 } from "../../../../utils/fonts";
+import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 
 export default function TemplateCard() {
   const surveyTheme = useSurveyThemeContextValue();
@@ -16,18 +17,27 @@ export default function TemplateCard() {
   const { welcomeTheme } = surveyTheme || {};
 
   const {
-    bg: { styles, desktopbg, mobilebg, unsplashImage },
+    bg: { useSurveyBackground },
     // button: { styles: buttonStyles, label, position },
     // logo: { styles: logoStyles, logo },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
-  } = welcomeTheme;
+  } = surveyTheme.welcomeTheme;
 
-  const backgroundImageSrc =
-    selectedPreview === PreviewTypeEnum.DESKTOP ? desktopbg : mobilebg;
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyTheme,
+    useSurveyBackground ? "surveyTheme" : "welcomeTheme",
+    selectedPreview === "mobile",
+  );
 
   return (
-    <Flex align={"center"} h={200} w={300} ff={lexend300.style.fontFamily}>
+    <Flex
+      align={"center"}
+      h={200}
+      w={300}
+      style={{ backgroundColor }}
+      ff={lexend300.style.fontFamily}
+    >
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith(
           "https://images.unsplash.com",
@@ -36,12 +46,7 @@ export default function TemplateCard() {
       >
         <BackgroundImage
           className={classes.parentContainer}
-          style={{
-            height: "100%",
-            width: "100%",
-            objectFit: "fill",
-            backgroundColor: styles?.backgroundColor,
-          }}
+          style={{ height: "100%", width: "100%", objectFit: "contain" }}
           src={backgroundImageSrc}
         >
           <Flex
