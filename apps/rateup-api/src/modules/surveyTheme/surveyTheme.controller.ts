@@ -6,6 +6,7 @@ import {
   getSurveyThemeById,
   updateSurveyThemeActiveSurveyThemeInDB,
   renameThemeInDB,
+  updateAllWebSurveyThemesInDB,
   // getSurveyThemeBySurveyId,
 } from "./surveyTheme.service";
 import { log } from "../../utils/logger";
@@ -95,6 +96,24 @@ export async function deleteTheme(
     success: true,
     message: "theme deleted successfully",
   });
+}
+
+// This function is used only, when there is a change in web survey theme json structure,
+// to update theme json of all rows of webSurveyTheme table to the new Structure.
+export async function updateAllWebSurveyThemesJson(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const allThemes = await updateAllWebSurveyThemesInDB(reply);
+    reply.code(200).send({
+      success: true,
+      message: "Updated all themes successfully.",
+    });
+  } catch (err) {
+    console.log(err);
+    reply.status(500).send({ message: "Something went wrong" });
+  }
 }
 
 export function errorHandler(
