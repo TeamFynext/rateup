@@ -9,7 +9,8 @@ interface ScreenshotProps {
 
 const Screenshot = ( { src, alt, width = "80%", height= "auto" } : ScreenshotProps) => {
   return (
-      <img src={src} alt={alt} width={width} height={height} style={{margin:"auto", marginTop:"20px"}}/>
+      <img src={src} alt={alt} width={width} height={height} style={{margin:"auto", 
+        marginTop:"20px", boxShadow:"10px 10px 20px rgba(0, 0, 0, 0.1)", borderRadius:"5px"}}/>
   )
 }
 

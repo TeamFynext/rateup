@@ -4,6 +4,10 @@
 
 Once your survey is created, you can seamlessly add questions by navigating to the`Edit` tab of the selected survey. Here, you'll find the `Add Question` button, which opens up a list of available question types. Choose any question type from the categories, and it will generate a blank question that you can customize according to your preferences.
 
+import ScreenShot from "../../components/Screenshot";
+
+<ScreenShot src={"/screenshots/question-types.png"} alt="Question Types"/>
+
 ### Steps to Add Questions
 
 1. Click on `Add Question` in the `Edit` tab of your selected survey.
@@ -14,39 +18,48 @@ Once your survey is created, you can seamlessly add questions by navigating to t
 
 For all questions, provide the following details:
 
-1. **Question Title:** Clearly state your question.
-2. **Description (Optional):** Add extra context or details.
-3. **Multiple Languages:** Input the question and description in all selected languages.
-4. Save the changes.
+1. **Question Title:** Clearly state your question in the text edior.
+2. **Multiple Languages:** Input the question and description in all selected languages.
+3. Save the changes.
 
 ### Preview and Categories
 
-Preview your question to ensure it appears as intended. There are three categories of question types available for your survey:
+Preview your question to ensure it appears as intended. There are five categories of question types available for your survey:
 
 ##### Contact Questions
-   - `Email` : Accepts only email responses.
-   - `Phone` : Accepts only phone numbers.
-   - `Email & Phone` : Accepts both email and phone responses.
+   - **Contact** : Accepts only name, phone and email responses.
 
 ##### NPS Questions
-   - `Rating` : Rate out of 5 stars.
-   - `Smiley` : Choose from 5 smileys (very sad, sad, average, happy, very happy).
-   - `Yes or No` : Provide a yes or no response.
-   - `Like or Dislike` : Indicate whether the response is like or dislike.
-   - `Opinion Scale` : Rate on a scale of 10.
-   - `Custom NPS` : Choose from multiple options with assigned weightage (promoter, passive, detractor).
+   - **Rating** : Rate out of 5 stars.
+   - **Smiley** : Choose from 5 smileys (very sad, sad, average, happy, very happy).
+   - **Yes or No** : Provide a yes or no response.
+   - **Like or Dislike** : Indicate whether the response is like or dislike.
+   - **Opinion Scale** : Rate on a scale of 10.
+   - **Custom NPS** : Choose from multiple options with assigned weightage (promoter, passive, detractor).
+
+##### Choice Questions
+   - **Single Select** : Allows selecting one choice from multiple options.
+   - **Multiple Select** : Permits choosing more than one option.
+   - **Dropdown Single Select** : Requires selecting one choice from a dropdown list.
+   - **Dropdown Multiple Select** : Permits choosing multiple options from a dropdown list.
+   - **Picture Choice** : Allows selecting one picture from multiple picture choices
+   - **Single Select Grid** : Provides multiple questions with same choices which allows selecting on choice for each question.
+
+##### Input Question
+   - **Text** : Accepts text responses only.
+   - **Large Text** : Allows multiline responses.
+   - **Number** : Requires a numerical response.
+   - **Date** : Requires a date response.
+   - **Photo** : Allows image uploads.
+   - **Multi Text Input** : Provide multiple text fields which can be customized.
+   - **File Input** : Allows file upload.
 
 ##### Other Questions
-   - `Text` : Accepts text responses only.
-   - `Large Text` : Allows multiline responses.
-   - `Number` : Requires a numerical response.
-   - `Date` : Requires a date response.
-   - `Photo` : Allows image uploads.
-   - `Testimonial` : Gathers testimonial details.
-   - `Single Select` : Allows selecting one choice from multiple options.
-   - `Multiple Select` : Permits choosing more than one option.
-   - `Dropdown Single Select` : Requires selecting one choice from a dropdown list.
-   - `Dropdown Multiple Select` : Permits choosing multiple options from a dropdown list.
+   - **Testimonial** : Gathers testimonial details.
+   - **Terms & Conditions** : Provides a checkbox for accepting Terms & Conditions.
+   - **Info Message** : Allows providing messages without accepting any response.
+   - **Email OTP** : Provide an option to generate otp which will be sent to the provided email.
+
 
 ### Additional Features
 
