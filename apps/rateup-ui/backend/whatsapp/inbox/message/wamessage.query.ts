@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
+  exportWaChats,
   getChatFilterData,
   getContactsWithLastMessage,
   getFilteredContacts,
@@ -57,5 +58,14 @@ export const useFilteredContacts = (
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     placeholderData: { pages: [], pageParams: [] },
     enabled: queryEnabled,
+  });
+};
+
+export const useExportWaChats = () => {
+  return useMutation({
+    mutationFn: (constraints: string) => exportWaChats(constraints),
+    onError: (error) => {
+      console.error("Error exporting chats", error);
+    },
   });
 };

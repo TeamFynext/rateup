@@ -1,0 +1,231 @@
+import {
+  Button,
+  Checkbox,
+  Divider,
+  Group,
+  HoverCard,
+  HoverCardDropdown,
+  HoverCardTarget,
+  Radio,
+  RadioGroup,
+  Stack,
+  Text,
+  ThemeIcon,
+} from "@mantine/core";
+import { IconDownload } from "@tabler/icons-react";
+import classes from "./styles.module.css";
+import { DatePicker, DatePickerProps } from "@mantine/dates";
+import { useForm } from "@mantine/form";
+import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import { useState } from "react";
+import dayjs from "dayjs";
+
+enum DateType {
+  BETWEEN = "between",
+  BEFORE = "before",
+  AFTER = "after",
+  ON = "on",
+}
+export default function WaInboxChatExport() {
+  const [chatsExporting, setChatsExporting] = useState(false);
+  const exportChats = useExportWaChats();
+  const form = useForm({
+    initialValues: {
+      date: {
+        type: DateType.BETWEEN,
+        inclusive: false,
+        between: {
+          from: "",
+          to: "",
+        },
+        before: "",
+        after: "",
+        on: "",
+      },
+      repliesOnly: false,
+    },
+    onValuesChange(values, previous) {
+      if (values.date.type !== previous.date.type) {
+        form.setFieldValue("date.between.from", "");
+        form.setFieldValue("date.between.to", "");
+        form.setFieldValue("date.before", "");
+        form.setFieldValue("date.after", "");
+        form.setFieldValue("date.on", "");
+        form.setFieldValue("date.inclusive", false);
+        form.setFieldValue("repliesOnly", false);
+      }
+    },
+    validate(values) {
+      const errors = {};
+      if (values.date.type === DateType.BETWEEN) {
+        if (!values.date.between.from) {
+          errors["date.between.from"] = "This field is required";
+        }
+        if (!values.date.between.to) {
+          errors["date.between.to"] = "This field is required";
+        }
+      }
+      if (values.date.type === DateType.BEFORE && !values.date.before) {
+        errors["date.before"] = "This field is required";
+      }
+      if (values.date.type === DateType.AFTER && !values.date.after) {
+        errors["date.after"] = "This field is required";
+      }
+      if (values.date.type === DateType.ON && !values.date.on) {
+        errors["date.on"] = "This field is required";
+      }
+      return Object.keys(errors).length > 0 ? errors : false;
+    },
+  });
+  function handleSubmit(values: typeof form.values) {
+    setChatsExporting(true);
+    exportChats.mutate(encodeURIComponent(JSON.stringify(values)), {
+      onSuccess: (data) => {
+        const blob = new Blob([data]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `export.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setChatsExporting(false);
+      },
+      onError: (error) => {
+        console.error(error);
+        setChatsExporting(false);
+      },
+    });
+  }
+  return (
+    <HoverCard position="right-start" withArrow>
+      <HoverCardTarget>
+        <ThemeIcon className={classes.theme_icon} variant="light">
+          <IconDownload />
+        </ThemeIcon>
+      </HoverCardTarget>
+      <HoverCardDropdown className={classes.hovercard_dropdown}>
+        <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+          <Stack className={classes.hovercard_dropdown_inner}>
+            <Text className={classes.hovercard_title}>
+              Export Whatsapp chats
+            </Text>
+            <Divider />
+            <RadioGroup size="xs" {...form.getInputProps("date.type")}>
+              <Group>
+                <Radio label="Between" size="xs" value={DateType.BETWEEN} />
+                <Radio label="Before" size="xs" value={DateType.BEFORE} />
+                <Radio label="After" size="xs" value={DateType.AFTER} />
+                <Radio label="On" size="xs" value={DateType.ON} />
+              </Group>
+            </RadioGroup>
+            <Group justify="center">
+              {form.values.date.type === DateType.ON && (
+                <CustomDatePicker
+                  label="on"
+                  value={new Date(form.values.date.on)}
+                  onChange={(value) =>
+                    form.setFieldValue(
+                      "date.on",
+                      dayjs(value).format("YYYY-MM-DD"),
+                    )
+                  }
+                />
+              )}
+              {form.values.date.type === DateType.BEFORE && (
+                <CustomDatePicker
+                  label="before"
+                  value={new Date(form.values.date.before)}
+                  onChange={(value) =>
+                    form.setFieldValue(
+                      "date.before",
+                      dayjs(value).format("YYYY-MM-DD"),
+                    )
+                  }
+                />
+              )}
+              {form.values.date.type === DateType.AFTER && (
+                <CustomDatePicker
+                  label="after"
+                  value={new Date(form.values.date.after)}
+                  onChange={(value) =>
+                    form.setFieldValue(
+                      "date.after",
+                      dayjs(value).format("YYYY-MM-DD"),
+                    )
+                  }
+                />
+              )}
+              {form.values.date.type === DateType.BETWEEN && (
+                <>
+                  <CustomDatePicker
+                    label="from"
+                    {...form.getInputProps("date.between.from")}
+                    value={new Date(form.values.date.between.from)}
+                    onChange={(value) =>
+                      form.setFieldValue(
+                        "date.between.from",
+                        dayjs(value).format("YYYY-MM-DD"),
+                      )
+                    }
+                  />
+                  <CustomDatePicker
+                    label="to"
+                    {...form.getInputProps("date.between.to")}
+                    value={new Date(form.values.date.between.to)}
+                    onChange={(value) =>
+                      form.setFieldValue(
+                        "date.between.to",
+                        dayjs(value).format("YYYY-MM-DD"),
+                      )
+                    }
+                  />
+                </>
+              )}
+            </Group>
+            <Group justify="space-between">
+              <Checkbox
+                label="Replies Only"
+                size="xs"
+                checked={form.values.repliesOnly}
+                {...form.getInputProps("repliesOnly")}
+              />
+              {form.values.date.type !== "between" &&
+                form.values.date.type !== "on" && (
+                  <Checkbox
+                    label="Inclusive"
+                    size="xs"
+                    checked={form.values.date.inclusive}
+                    {...form.getInputProps("date.inclusive")}
+                  />
+                )}
+              <Button
+                type="submit"
+                variant="light"
+                size="compact-xs"
+                leftSection={<IconDownload size={15} />}
+                ml={"auto"}
+                disabled={chatsExporting || !form.isValid()}
+              >
+                Export
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </HoverCardDropdown>
+    </HoverCard>
+  );
+}
+
+const CustomDatePicker = (props: DatePickerProps & { label: string }) => {
+  const { label, ...others } = props;
+  return (
+    <Stack className={classes.date_picker_wrapper}>
+      <Text size="xs" className={classes.date_picker_label}>
+        {label}
+      </Text>
+      <DatePicker {...others} size="xs" maxDate={new Date()} />
+    </Stack>
+  );
+};
