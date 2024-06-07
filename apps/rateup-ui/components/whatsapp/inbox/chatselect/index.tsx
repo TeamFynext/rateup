@@ -12,6 +12,7 @@ import {
   useContactsWithLastMessage,
   useFilteredContacts,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
+import WaInboxChatExport from "./chatExport";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
   setFilteredContacts: (contacts: ContactsWithLastMessage[]) => void;
@@ -151,7 +152,10 @@ export default function WaInboxChatSelect(props: {
               </ActionIcon>
             </Group>
           </Stack>
-          <WaInboxChatFilter {...{ filter, setFilter: prepareFilters }} />
+          <Group>
+            <WaInboxChatFilter {...{ filter, setFilter: prepareFilters }} />
+            <WaInboxChatExport />
+          </Group>
         </Group>
       </Stack>
       <Divider />

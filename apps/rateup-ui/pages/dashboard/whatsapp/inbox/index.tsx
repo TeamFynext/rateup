@@ -155,8 +155,7 @@ export default function WhatsAppInbox() {
               ) ??
               filteredContactList.find(
                 (contact) => contact.id === searchParams.get("contactId"),
-              ) ??
-              ({} as ContactsWithLastMessage)
+              )
             }
           />
         </Group>
