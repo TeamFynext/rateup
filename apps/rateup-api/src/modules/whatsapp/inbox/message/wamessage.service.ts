@@ -6,7 +6,11 @@ import {
   WaMessage,
 } from "@prisma/client";
 import prisma from "../../../../utils/prisma";
-import { WaChatFilterSchema } from "./wamessage.schema";
+import {
+  DateType,
+  WaChatExportConstraints,
+  WaChatFilterSchema,
+} from "./wamessage.schema";
 import { log } from "../../../../utils/logger";
 
 export async function addNewWaMessage(
@@ -332,4 +336,72 @@ export async function filterChats(
     log.error("Error in inbox chat filter api", error);
     return [];
   }
+}
+
+export async function exportWhatsapChats(
+  orgId: string,
+  constraints: WaChatExportConstraints,
+): Promise<
+  Array<{
+    date: string;
+    from: string;
+    name: string;
+    receivebody: string;
+    sendbody: string;
+    templatename: string;
+  }>
+> {
+  console.log(constraints);
+  function extendedWhereClause() {
+    let extendedWhereClause = "";
+    if (constraints?.date) {
+      switch (constraints.date.type) {
+        case DateType.BETWEEN: {
+          extendedWhereClause += `AND wm."createdAt" BETWEEN '${constraints.date.between.from}' AND '${constraints.date.between.to}'`;
+          break;
+        }
+        case DateType.BEFORE: {
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${
+            constraints.date.inclusive ? "<=" : "<"
+          }'${constraints.date.before}'`;
+          break;
+        }
+        case DateType.AFTER: {
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${
+            constraints.date.inclusive ? ">=" : ">"
+          } '${constraints.date.after}'`;
+          break;
+        }
+        case DateType.ON: {
+          console.log("hello from on clause");
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = '${constraints.date.on}'`;
+          break;
+        }
+      }
+    }
+    if (constraints?.repliesOnly) {
+      extendedWhereClause += `AND wm."messageBody"->'exchangeProcess' = '"receive"'`;
+    }
+    console.log(extendedWhereClause);
+    return extendedWhereClause;
+  }
+  const result = await prisma.$queryRawUnsafe(
+    `SELECT
+      wm."createdAt" AS date,
+      c."phone" AS "from",
+      c."name" AS "name",
+      wm."messageBody"->'receive'->'messages'->0->'text'->>'body' AS receivebody,
+      wm."messageBody"->'send'->'text'->>'body' AS sendbody,
+      wm."messageBody"->'send'->'template'->>'name' AS templatename
+    FROM 
+      "WaMessage" wm 
+    JOIN 
+      "Contact" c ON wm."contactId" = c.id
+    WHERE
+      c."orgId"=$1::uuid ${extendedWhereClause()}
+    ORDER BY 
+      wm."createdAt" ASC`,
+    orgId,
+  );
+  return result as any;
 }
