@@ -114,8 +114,8 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
     <Stack w={"100%"}>
       {isOtpSend && !response?.isValid ? (
         <Stack>
-          <Text>An OTP has been sent to your email</Text>
-          <Text>Enter OTP</Text>
+          <Text fz={"sm"}>An OTP has been sent to your email</Text>
+          <Text fz={"sm"}>Enter OTP</Text>
           <PinInput
             length={6}
             oneTimeCode
@@ -129,17 +129,29 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             color={`var(--mantine-color-${theme.primaryColor}-filled)`}
           />
           {!timerComplete ? (
-            <Text c={`var(--mantine-color-${theme.primaryColor}-filled)`}>
-              Resend in {timeLeft}
+            <Text
+              fz={"sm"}
+              c={`var(--mantine-color-${theme.primaryColor}-filled)`}
+            >
+              Note: * The OTP expires in 10 minutes once it is sent. You can
+              resend in {timeLeft}
             </Text>
           ) : !response?.isValid ? (
-            <Button
-              onClick={handleGetOTP}
-              loading={sendOtpMailMutation.isPending}
-              w={"fit-content"}
-            >
-              Resend OTP
-            </Button>
+            <>
+              <Text
+                fz={"sm"}
+                c={`var(--mantine-color-${theme.primaryColor}-filled)`}
+              >
+                Note: * The OTP expires in 10 minutes once it is sent.
+              </Text>
+              <Button
+                onClick={handleGetOTP}
+                loading={sendOtpMailMutation.isPending}
+                w={"fit-content"}
+              >
+                Resend OTP
+              </Button>
+            </>
           ) : null}
         </Stack>
       ) : (

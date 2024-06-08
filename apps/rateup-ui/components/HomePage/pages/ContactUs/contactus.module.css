@@ -12,6 +12,10 @@
   margin: 1rem 0;
 }
 
+.country-name-h2 {
+  text-align: center;
+}
+
 .contact-details-p span {
   display: block;
   text-align: center;

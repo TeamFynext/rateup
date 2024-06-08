@@ -1,35 +1,35 @@
+import { Box, Stack } from "@mantine/core";
 import styles from "./contactus.module.css";
-import { Group, Stack } from "@mantine/core";
 
 function ContactUs() {
   return (
     <div className={styles["contact-us-container"]}>
-      {/* <h1>Contact Us</h1>
-      <p className={styles["contact-details-p"]}>
-        <span>Uprate Technologies</span>
-        <span>Kerala Startup Mission</span>
-        <span>Kasaragod - 671123 </span>
-        <span>Ph:+91 8547500686</span>
-        <span>E-mail : hello@rateup.app</span>
-      </p> */}
-
-      <Group justify="center">
-        <Stack>
-          <h1>Contact Us</h1>
-
-          <p>
-            <span>
-              Uprate Technologies Pvt Ltd <br />
-              Door No Xii 154, Anish Bh, Mattappalliyil <br />
-              Paduppu, Sankarampady <br /> Kasaragod , Kerala, India - 671541{" "}
-              <br />
-            </span>{" "}
-            <br />
-            <span>Ph:+91 8547500686</span> <br />
+      <h1>Contact Us</h1>
+      <Stack>
+        <Box>
+          <h2 className={styles["country-name-h2"]}>India:</h2>
+          <p className={styles["contact-details-p"]}>
+            {/* <span>Uprate Technologies</span>
+            <span>Kerala Startup Mission</span>
+            <span>Kasaragod - 671123 </span>
+            <span>Ph:+91 8547500686</span>
+            <span>E-mail : hello@rateup.app</span> */}
+            <span>Uprate Technologies Pvt Ltd</span>
+            <span>Door No Xii 154, Anish Bh, Mattappalliyil</span>
+            <span>Paduppu, Sankarampady</span>
+            <span>Kasaragod , Kerala, India - 671541</span>
+            <span>Ph:+91 8547500686</span>
             <span>E-mail : hello@rateup.app</span>
           </p>
-        </Stack>
-      </Group>
+        </Box>
+        <Box>
+          <h2 className={styles["country-name-h2"]}>Germany:</h2>
+          <p className={styles["contact-details-p"]}>
+            <span>Drishya Technlogies UG</span>
+            <span>Saphirweg 11, 41564 Kaarst</span>
+          </p>
+        </Box>
+      </Stack>
     </div>
   );
 }
