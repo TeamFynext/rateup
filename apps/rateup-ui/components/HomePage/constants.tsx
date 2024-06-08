@@ -59,10 +59,18 @@ const headerNavLinks = [
   },
 ];
 
+const ourCompanySectionLinks = [
+  ...headerNavLinks.filter((obj) => obj.linkText !== "Pricing"),
+];
+const blogLink = ourCompanySectionLinks.splice(4, 1, {
+  href: "/contact-us",
+  linkText: "Contact Us",
+});
+
 export const footerNavLinks = {
   "our-company": {
     heading: "Our Company",
-    linksArray: [...headerNavLinks.filter((obj) => obj.linkText !== "Pricing")],
+    linksArray: [...ourCompanySectionLinks, ...blogLink],
   },
   pricing: {
     heading: "Pricing",
