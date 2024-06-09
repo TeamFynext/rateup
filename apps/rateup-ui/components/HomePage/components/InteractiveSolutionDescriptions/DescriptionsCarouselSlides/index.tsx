@@ -1,6 +1,5 @@
-import React, { MutableRefObject } from "react";
-import { Image, Text, Title } from "@mantine/core";
-import { Carousel } from "@mantine/carousel";
+import React from "react";
+import { Box, Image, Text, Title } from "@mantine/core";
 import styles from "./DescriptionsCarouselSlides.module.css";
 import { motion } from "framer-motion";
 import { Solution } from "../../../pages/Reputation/constants";
@@ -9,51 +8,32 @@ import { lexend400 } from "../../../../../utils/fonts";
 type DescriptionsCarouselProps = {
   solutions: Solution[];
   activeSlideIndex: number | null;
-  slidesRef: MutableRefObject<Map<number, HTMLElement>>;
   copySlides?: boolean;
+  copySlides2nd?: boolean;
 };
-
-function getMap(slidesRef: MutableRefObject<Map<number, HTMLElement>>) {
-  if (!slidesRef.current) {
-    // Initialize the Map on first usage.
-    slidesRef.current = new Map();
-  }
-  return slidesRef.current;
-}
 
 function DescriptionsCarouselSlides({
   solutions,
   activeSlideIndex,
-  slidesRef,
   copySlides = false,
+  copySlides2nd = false,
 }: DescriptionsCarouselProps) {
   return (
     <>
-      {solutions.map(({ heading, description, listIcons }, i) => {
+      {solutions.map(({ heading, description, listIcon }, i) => {
         let index = i;
         if (copySlides) {
           index = i + solutions.length;
         }
-        const isSlideActive = activeSlideIndex === index;
-        let listIconEnabledIcon: string | undefined,
-          listIconDisabledIcon: string | undefined;
-        if (listIcons) {
-          listIconEnabledIcon = listIcons.enabledIcon;
-          listIconDisabledIcon = listIcons.disabledIcon;
+        if (copySlides2nd) {
+          index = i + solutions.length + solutions.length;
         }
+        const isSlideActive = activeSlideIndex === index;
 
         return (
-          <Carousel.Slide
-            ref={(node) => {
-              const map = getMap(slidesRef);
-              if (node) {
-                map.set(index, node);
-              } else {
-                map.delete(index);
-              }
-            }}
-            key={heading}
-            className={`${isSlideActive ? styles["active-slide"] : ""}`}
+          <Box
+            key={copySlides ? heading + "_copy" : heading}
+            className={`keen-slider__slide ${styles["slide"]} ${isSlideActive ? styles["active-slide"] : ""}`}
           >
             <motion.div
               layout
@@ -62,25 +42,14 @@ function DescriptionsCarouselSlides({
               }`}
               data-index={index}
               transition={{
-                duration: 1,
+                duration: 0.8,
               }}
             >
               <div className={styles["card-content"]}>
                 <Title order={2}>
-                  {listIcons ? (
-                    <div className={styles["list-icon-container"]}>
-                      {isSlideActive ? (
-                        <Image src={listIconEnabledIcon} alt="list indicator" />
-                      ) : (
-                        <Image
-                          src={listIconDisabledIcon}
-                          alt="list indicator"
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    ""
-                  )}
+                  <div className={styles["list-icon-container"]}>
+                    {listIcon}
+                  </div>
                   <span>{heading}</span>
                 </Title>
                 <Text className={isSlideActive ? lexend400.className : ""}>
@@ -88,7 +57,7 @@ function DescriptionsCarouselSlides({
                 </Text>
               </div>
             </motion.div>
-          </Carousel.Slide>
+          </Box>
         );
       })}
     </>

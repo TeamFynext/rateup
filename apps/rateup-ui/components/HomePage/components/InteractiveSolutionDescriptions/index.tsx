@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Flex } from "@mantine/core";
-import Image from "next/image";
-import { Carousel } from "@mantine/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import { motion, AnimatePresence } from "framer-motion";
+import { Button, Flex } from "@mantine/core";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
-import DescriptionsCarouselSlides from "./DescriptionsCarouselSlides";
-import styles from "./InteractiveSolutionDescriptions.module.css";
+import { AnimatePresence, motion } from "framer-motion";
+import { useKeenSlider } from "keen-slider/react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { Solution } from "../../pages/Reputation/constants";
 import MobileInteractiveSolutionDescriptions from "../MobileInteractiveSolutionDescriptions";
+import DescriptionsCarouselSlides from "./DescriptionsCarouselSlides";
+import styles from "./InteractiveSolutionDescriptions.module.css";
 
 type InteractiveSolutionDescriptionsProps = {
   solutions: Solution[];
@@ -21,68 +20,85 @@ function InteractiveSolutionDescriptions({
   imageContainerAsFirstElement,
   imageContainerImageUrl,
 }: InteractiveSolutionDescriptionsProps) {
-  const slidesRef = useRef<null | Map<number, HTMLElement>>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isCarouselLoaded, setIsCarouselLoaded] = useState(false);
+
+  const [sliderRef, instanceRef] = useKeenSlider(
+    {
+      initial: 0,
+      vertical: true,
+      loop: true,
+      slides: {
+        perView: 3,
+        spacing: 16,
+      },
+      defaultAnimation: {
+        duration: 600,
+        easing: (t) => t,
+      },
+      slideChanged(slider) {
+        setCurrentSlide(slider.track.details.rel);
+      },
+      created() {
+        setIsCarouselLoaded(true);
+        nextTimeout();
+      },
+    },
+    [
+      (slider) => {
+        slider.on("dragStarted", clearNextTimeout);
+        slider.on("animationEnded", nextTimeout);
+        slider.on("updated", nextTimeout);
+      },
+    ],
+  );
+
+  const carouselTimeoutRef = useRef(null);
+  const carouselMouseoverRef = useRef(null);
+  function clearNextTimeout() {
+    clearTimeout(carouselTimeoutRef.current);
+  }
+  function nextTimeout() {
+    clearTimeout(carouselTimeoutRef.current);
+    if (carouselMouseoverRef.current) return;
+    carouselTimeoutRef.current = setTimeout(() => {
+      instanceRef.current?.next();
+    }, 4000);
+  }
+
+  useEffect(() => {
+    if (currentSlide < 8) {
+      setActiveSlideIndex(currentSlide + 1);
+    } else {
+      setActiveSlideIndex(0);
+    }
+  }, [currentSlide]);
 
   const [activeSlideIndex, setActiveSlideIndex] = useState<number | null>(null);
 
   const { ref: intersectionObserverRef, entry } = useIntersection({
-    threshold: 0,
-  });
-
-  const descriptionsCarousalRef = useRef(null);
-
-  const autoplay = useRef(Autoplay({ delay: 4000 }));
-
-  const isViewportLeq768px = useMediaQuery("(max-width: 768px)");
-
-  const variableValues = useRef({
-    activeSlideIndex: null,
-    autoplayInterval: null,
+    threshold: 0.25,
   });
 
   useEffect(() => {
     if (entry?.isIntersecting) {
-      autoplay.current?.play();
+      nextTimeout();
     } else {
-      clearInterval(variableValues.current.autoplayInterval);
-      autoplay.current?.stop();
+      clearNextTimeout();
     }
   }, [entry]);
 
-  const handleDescriptonsCarouselSlideChange = useCallback((index) => {
-    if (index < slidesRef.current.size - 1) {
-      setActiveSlideIndex(index + 1);
-      variableValues.current.activeSlideIndex = index + 1;
+  const isViewportLeq768px = useMediaQuery("(max-width: 768px)");
+
+  useEffect(() => {
+    if (isViewportLeq768px) {
+      clearNextTimeout();
     } else {
-      setActiveSlideIndex(0);
-      variableValues.current.activeSlideIndex = 0;
+      instanceRef.current?.moveToIdx(0);
+      setActiveSlideIndex(1);
+      nextTimeout();
     }
-  }, []);
-
-  useEffect(() => {
-    const descriptionsCarouselRootElement = descriptionsCarousalRef.current;
-    let controls = [];
-    const onControlClick = (e) => {
-      autoplay.current?.stop();
-    };
-    if (descriptionsCarouselRootElement) {
-      controls = descriptionsCarouselRootElement.querySelectorAll(
-        ".mantine-Carousel-control",
-      );
-      controls.forEach((control, index) => {
-        control.addEventListener("click", onControlClick);
-      });
-    }
-    return () => {
-      controls.forEach((control, index) => {
-        control.removeEventListener("click", onControlClick);
-      });
-    };
-  }, [descriptionsCarousalRef.current]);
-
-  useEffect(() => {
-    return () => autoplay.current?.destroy();
-  }, []);
+  }, [isViewportLeq768px]);
 
   return (
     <Flex
@@ -105,39 +121,56 @@ function InteractiveSolutionDescriptions({
             setActiveSlideIndex={setActiveSlideIndex}
           />
         ) : (
-          <Carousel
-            // withIndicators
-            className="descriptions-carousel"
-            orientation="vertical"
-            height={"40rem"}
-            slideSize="33.333333%"
-            slideGap={"md"}
-            loop
-            align="start"
-            slidesToScroll={1}
-            initialSlide={0}
-            onSlideChange={handleDescriptonsCarouselSlideChange}
-            draggable={false}
-            classNames={styles}
-            plugins={[autoplay.current]}
-            onMouseEnter={autoplay.current.stop}
-            onMouseLeave={() => autoplay.current.play()}
-            speed={8}
-            ref={descriptionsCarousalRef}
+          <div
+            className={styles["descriptions-carousel-wrapper"]}
+            onMouseOver={() => {
+              carouselMouseoverRef.current = true;
+              clearNextTimeout();
+            }}
+            onMouseOut={() => {
+              carouselMouseoverRef.current = false;
+              nextTimeout();
+            }}
           >
-            <DescriptionsCarouselSlides
-              solutions={solutions}
-              activeSlideIndex={activeSlideIndex}
-              slidesRef={slidesRef}
-            />
-
-            <DescriptionsCarouselSlides
-              solutions={solutions}
-              activeSlideIndex={activeSlideIndex}
-              slidesRef={slidesRef}
-              copySlides
-            />
-          </Carousel>
+            <div
+              className={`keen-slider ${styles["descriptions-carousel"]}`}
+              ref={sliderRef}
+              style={{ height: "39.5rem" }}
+            >
+              <DescriptionsCarouselSlides
+                solutions={solutions}
+                activeSlideIndex={activeSlideIndex}
+              />
+              <DescriptionsCarouselSlides
+                solutions={solutions}
+                activeSlideIndex={activeSlideIndex}
+                copySlides
+              />
+              <DescriptionsCarouselSlides
+                solutions={solutions}
+                activeSlideIndex={activeSlideIndex}
+                copySlides2nd
+              />
+            </div>
+            {isCarouselLoaded && instanceRef.current && (
+              <div className={styles["hidden-prev-next-btn-container"]}>
+                <Button
+                  className={`${styles["prev-slide-btn"]}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    instanceRef.current?.prev();
+                  }}
+                ></Button>
+                <Button
+                  className={`${styles["next-slide-btn"]}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    instanceRef.current?.next();
+                  }}
+                ></Button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

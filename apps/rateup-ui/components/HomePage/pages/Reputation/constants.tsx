@@ -6,6 +6,9 @@ import {
   imagePath,
   videoClassName,
 } from "../constants";
+import ProactiveIssueResolution from "./WhyChooseRateupSection/descriptionListIcons/ProactiveIssueResolution";
+import DatadrivenDecisionMaking from "./WhyChooseRateupSection/descriptionListIcons/DatadrivenDecisionMaking";
+import EnhancedCredibility from "./WhyChooseRateupSection/descriptionListIcons/EnhancedCredibility";
 
 export type Solution = {
   heading: string;
@@ -15,6 +18,7 @@ export type Solution = {
     enabledIcon: string;
     disabledIcon: string;
   };
+  listIcon?: any;
   id: string;
 };
 
@@ -29,6 +33,7 @@ export const solutionsList: Solution[] = [
       enabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/credibility.png`,
       disabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/credibility-disabled.png`,
     },
+    listIcon: <EnhancedCredibility />,
   },
   {
     id: "10234352",
@@ -40,6 +45,7 @@ export const solutionsList: Solution[] = [
       enabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/decision-making.png`,
       disabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/decision-making-disabled.png`,
     },
+    listIcon: <DatadrivenDecisionMaking />,
   },
   {
     id: "10234353",
@@ -47,10 +53,7 @@ export const solutionsList: Solution[] = [
     description:
       "Identify and resolve customer concerns in real-time, showcasing a commitment to exceptional customer service.",
     imageUrl: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/why-choose-rateup.png`,
-    listIcons: {
-      enabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/issue-resolution.png`,
-      disabledIcon: `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/reputation-page/why-choose-rateup/list-icons/issue-resolution-disabled.png`,
-    },
+    listIcon: <ProactiveIssueResolution />,
   },
 ];
 
