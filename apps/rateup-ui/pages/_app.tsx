@@ -26,6 +26,7 @@ import "@mantine/nprogress/styles.css";
 import "@mantine/dropzone/styles.css";
 import "@mantine/tiptap/styles.css";
 import "../styles/global.css";
+import "keen-slider/keen-slider.min.css";
 import { theme } from "../config/mantineTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/Layout/Layout";

@@ -72,6 +72,7 @@
     "heic2any": "^0.0.4",
     "immer": "^10.0.3",
     "jest-environment-jsdom": "^29.7.0",
+    "keen-slider": "^6.8.6",
     "libsodium-wrappers": "^0.7.13",
     "mantine-form-zod-resolver": "^1.1.0",
     "next": "^14.2.2",

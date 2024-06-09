@@ -32,6 +32,29 @@
   opacity: 0;
 }
 
+.descriptions-carousel-wrapper {
+  position: relative;
+}
+
+.hidden-prev-next-btn-container button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 12rem;
+  background: none;
+  opacity: 0;
+}
+
+.hidden-prev-next-btn-container button.next-slide-btn {
+  top: initial;
+  bottom: 0;
+}
+
+.descriptions-carousel {
+  justify-content: center;
+}
+
 .image-container {
   display: flex;
   justify-content: center;
