@@ -1,0 +1,8 @@
+.card_wrapper {
+  gap: var(--mantine-spacing-md);
+  justify-content: space-between;
+  height: 100%;
+}
+.card_footer {
+  gap: var(--mantine-spacing-xs);
+}

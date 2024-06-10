@@ -899,12 +899,10 @@ export type Testimonial = {
     name: string;
   };
 };
-export type WaAutomatedReplyKeyword = {
-  keyword: string;
-  caseSensitive: boolean;
-};
+
 export type WaAutomatedReplyMatchData = {
-  keywords?: Array<WaAutomatedReplyKeyword>;
+  keywords?: Array<string>;
+  caseSensitive: boolean;
   exactText?: string;
 };
 export type WaAutomatedReply = {

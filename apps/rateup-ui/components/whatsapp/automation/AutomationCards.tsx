@@ -6,26 +6,39 @@ import {
 import { useTimeSince } from "../../../hooks/timeSince";
 import { WaAutomatedReply } from "../../../types/global";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { Stack, Group, Title, Text, Menu, ActionIcon } from "@mantine/core";
+import {
+  Stack,
+  Group,
+  Title,
+  Text,
+  Menu,
+  ActionIcon,
+  SimpleGrid,
+  Badge,
+} from "@mantine/core";
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import classes from "./styles.module.css";
 
 interface WaAutomationCardsProps {
   teamId: string;
 }
 export function WaAutomationCards({ teamId }: WaAutomationCardsProps) {
   const { data: automations } = useWaAutomatedReplies(teamId);
-
-  console.log(automations);
   if (!automations || !Array.isArray(automations)) return null;
 
   return (
-    <>
+    <SimpleGrid
+      p={"0.875rem"}
+      spacing={"lg"}
+      cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
+      style={{ overflow: "auto" }}
+    >
       {automations.map((automation) => (
         <AutomationCard key={automation.id} automation={automation} />
       ))}
-    </>
+    </SimpleGrid>
   );
 }
 
@@ -37,14 +50,17 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
   const router = useRouter();
   return (
     <PaperLayout
-      maw="300px"
-      h="150px"
+      p="md"
+      shadow="lg"
+      radius="lg"
+      mih={"175px"}
+      hoveractive={true}
       style={{
         cursor: "pointer",
       }}
       onClick={() => router.push(`automated-replies/${automation.id}`)}
     >
-      <Stack>
+      <Stack className={classes.card_wrapper}>
         <Group justify={"space-between"}>
           <Title order={3}>{automation.name}</Title>
           <CardMenu>
@@ -54,6 +70,24 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
         <Text fz="sm" c="dimmed">
           {`Created ${timeSince}`}
         </Text>
+        <Group className={classes.card_footer}>
+          <Text fz={"xs"} fw={600}>
+            For
+          </Text>
+
+          {automation?.matchData?.exactText ? (
+            <Badge size="xs" variant="outline">
+              {automation?.matchData?.exactText}
+            </Badge>
+          ) : (
+            ""
+          )}
+          {automation?.matchData?.keywords?.map((kw) => (
+            <Badge size="xs" variant="outline">
+              {kw}
+            </Badge>
+          )) ?? ""}
+        </Group>
       </Stack>
     </PaperLayout>
   );
