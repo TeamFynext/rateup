@@ -9,7 +9,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import {
   showErrorToast,
   showSuccessToast,
@@ -124,18 +124,6 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
     });
     setNewEmail("");
   };
-
-  useEffect(() => {
-    if (features?.allowedEmails?.length) {
-      form.setFieldValue("features", {
-        ...form.values?.features,
-        [selectedLanguage]: {
-          ...features,
-          isRestricted: true,
-        },
-      });
-    }
-  }, [features?.allowedEmails]);
 
   return (
     <Stack w={"100%"}>

@@ -22,9 +22,11 @@ import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 import { useMediaQuery } from "@mantine/hooks";
+import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 
 const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const survey = !isPreview ? useSurveyContext() : null;
+  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
   const { selectedQ } = useContext(SelectedQContext);
   const [otp, setOTP] = useState("");
   const [email, setEmail] = useState("");
@@ -53,7 +55,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   };
 
   const handleGetOTP = () => {
-    if (isPreview) {
+    if (isPreview || isSurveyThemePreview) {
       setIsOtpSend(true);
       setTimerComplete(false);
       return;
@@ -88,7 +90,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   };
 
   const handleValidateOTP = () => {
-    if (!otp || otp.length !== 6 || isPreview) return;
+    if (!otp || otp.length !== 6 || isPreview || isSurveyThemePreview) return;
     validateOTP.mutate(
       { otp, userId: email, surveyId: survey?.id },
       {
@@ -185,7 +187,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             <Button
               onClick={handleGetOTP}
               loading={sendOtpMailMutation.isPending}
-              disabled={isPreview}
+              disabled={isPreview || isSurveyThemePreview}
               w={"fit-content"}
             >
               Generate OTP
