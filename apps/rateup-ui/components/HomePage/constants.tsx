@@ -59,10 +59,17 @@ const headerNavLinks = [
   },
 ];
 
-const ourCompanySectionLinks = [
-  ...headerNavLinks.filter((obj) => obj.linkText !== "Pricing"),
+const excludedOurCompanySectionLinks = [
+  "/pricing",
+  "/#our-features",
+  "/#our-solutions",
 ];
-const blogLink = ourCompanySectionLinks.splice(4, 1, {
+const ourCompanySectionLinks = [
+  ...headerNavLinks.filter(
+    (obj) => !excludedOurCompanySectionLinks.includes(obj.href),
+  ),
+];
+const blogLink = ourCompanySectionLinks.splice(2, 1, {
   href: "/contact-us",
   linkText: "Contact Us",
 });
@@ -72,12 +79,20 @@ export const footerNavLinks = {
     heading: "Our Company",
     linksArray: [...ourCompanySectionLinks, ...blogLink],
   },
-  pricing: {
-    heading: "Pricing",
+  product: {
+    heading: "Product",
     linksArray: [
       {
         href: "/pricing",
         linkText: "Pricing",
+      },
+      {
+        href: "/#our-solutions",
+        linkText: "Solutions",
+      },
+      {
+        href: "/#our-features",
+        linkText: "Features",
       },
     ],
   },
@@ -120,54 +135,75 @@ export const footerNavLinks = {
 //   }
 // ];
 
-export const getNavLinksArray = (className: string) => {
+export const getNavLinksArray = (
+  className: string,
+  currentRoutePath: string,
+) => {
   const navLinks = headerNavLinks;
-  return navLinks.map(({ href, linkText, hasSublinks, sublinks }) =>
-    hasSublinks ? (
+  return navLinks.map(({ href, linkText, hasSublinks, sublinks }) => {
+    const isLinkActive =
+      currentRoutePath === href ||
+      sublinks?.find((obj) => obj.link === currentRoutePath);
+    const linkActiveClassName = isLinkActive ? "link-active" : "";
+    const requiredClassName = `${className} ${linkActiveClassName}`;
+    return hasSublinks ? (
       <LinkWithSublinksPopover
         key={linkText}
-        className={className}
+        className={requiredClassName}
         href={href}
         linkText={linkText}
         sublinks={sublinks}
       />
     ) : (
       <Flex className={headerStyles["header-link-wrapper"]} key={linkText}>
-        <Link className={className} href={href}>
+        <Link className={requiredClassName} href={href}>
           <span>{linkText}</span>
         </Link>
       </Flex>
-    ),
-  );
+    );
+  });
 };
 
-export const getMobileNavLinkMenuItems = (className: string = "") =>
-  headerNavLinks.map(({ href, linkText, hasSublinks, sublinks }) => (
-    <Menu.Item key={linkText} component="div">
-      {hasSublinks ? (
-        <NavLink
-          href={href}
-          label={linkText}
-          className={navLinkStyles["navlink-with-chevron"]}
-          classNames={navLinkStyles}
-        >
-          {sublinks.map(({ id, link, content }) => {
-            return (
-              <NavLink
-                key={id}
-                label={content.heading}
-                href={link}
-                component={Link}
-                classNames={navLinkStyles}
-                className={className}
-              />
-            );
-          })}
-        </NavLink>
-      ) : (
-        <Link className={className} href={href} key={linkText}>
-          {linkText}
-        </Link>
-      )}
-    </Menu.Item>
-  ));
+export const getMobileNavLinkMenuItems = (
+  className: string = "",
+  currentRoutePath: string,
+) =>
+  headerNavLinks.map(({ href, linkText, hasSublinks, sublinks }) => {
+    const isLinkActive =
+      currentRoutePath === href ||
+      sublinks?.find((obj) => obj.link === currentRoutePath);
+    const linkActiveClassName = isLinkActive ? "link-active" : "";
+    const requiredClassName = `${className} ${linkActiveClassName}`;
+
+    return (
+      <Menu.Item key={linkText} component="div">
+        {hasSublinks ? (
+          <NavLink
+            href={href}
+            label={linkText}
+            className={`${navLinkStyles["navlink-with-chevron"]} ${linkActiveClassName}`}
+            classNames={navLinkStyles}
+          >
+            {sublinks.map(({ id, link, content }) => {
+              const linkActiveClassName =
+                currentRoutePath === link ? "link-active" : "";
+              return (
+                <NavLink
+                  key={id}
+                  label={content.heading}
+                  href={link}
+                  component={Link}
+                  classNames={navLinkStyles}
+                  className={`${className} ${linkActiveClassName}`}
+                />
+              );
+            })}
+          </NavLink>
+        ) : (
+          <Link className={requiredClassName} href={href} key={linkText}>
+            {linkText}
+          </Link>
+        )}
+      </Menu.Item>
+    );
+  });

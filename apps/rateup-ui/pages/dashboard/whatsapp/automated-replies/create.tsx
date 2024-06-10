@@ -36,9 +36,7 @@ export default function CreateAutomatedReplyPage() {
   return (
     <Stack>
       <h1>Create Automated Reply</h1>
-      <Stack pl={"md"}>
-        <AutomatedReplyForm />
-      </Stack>
+      <AutomatedReplyForm />
     </Stack>
   );
 }
@@ -106,68 +104,70 @@ export function AutomatedReplyForm({
   }
 
   return (
-    <>
-      <Group>
-        <ContainedTextField
-          label="Name"
-          placeholder="Enter name"
-          required
-          style={{ flex: 4 }}
-          {...rootForm.getInputProps("name")}
-        />
-        <TeamSelector
-          label="Team"
-          required
-          style={{ flex: 3 }}
-          {...rootForm.getInputProps("teamId")}
-        />
-      </Group>
-
-      <Radio.Group
-        label="Match Type"
-        required
-        {...rootForm.getInputProps("matchType")}
-      >
-        <Group pl={"xs"} pt={"xs"}>
-          <Radio
-            value={WaAutomatedReplyMatchType.ContainsAnyOf}
-            label={"Contains Any Of"}
+    <form onSubmit={rootForm.onSubmit((values) => handleSubmitClick())}>
+      <Stack pl={"md"}>
+        <Group>
+          <ContainedTextField
+            label="Name"
+            placeholder="Enter name"
+            required
+            style={{ flex: 4 }}
+            {...rootForm.getInputProps("name")}
           />
-          <Radio
-            value={WaAutomatedReplyMatchType.ContainsAllOf}
-            label={"Contains All Of"}
-          />
-          <Radio
-            value={WaAutomatedReplyMatchType.Exact}
-            label={"Exactly Equals"}
+          <TeamSelector
+            label="Team"
+            required
+            style={{ flex: 3 }}
+            {...rootForm.getInputProps("teamId")}
           />
         </Group>
-      </Radio.Group>
 
-      <MatchDataForm
-        matchDataForm={matchDataForm}
-        type={rootForm.values.matchType}
-      />
-      <ContainedSelection
-        label="Response Type"
-        data={Object.values(WaAutomatedReplyResponseType)}
-        disabled
-        {...rootForm.getInputProps("responseType")}
-      />
-      <ResponseSelector type={rootForm.values.responseType} form={rootForm} />
-
-      <Group justify={"space-between"}>
-        <Button onClick={handleCancelClick} variant="light">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmitClick}
-          loading={createMutation.isPending || updateMutation.isPending}
+        <Radio.Group
+          label="Match Type"
+          required
+          {...rootForm.getInputProps("matchType")}
         >
-          Submit
-        </Button>
-      </Group>
-    </>
+          <Group pl={"xs"} pt={"xs"}>
+            <Radio
+              value={WaAutomatedReplyMatchType.ContainsAnyOf}
+              label={"Contains Any Of"}
+            />
+            <Radio
+              value={WaAutomatedReplyMatchType.ContainsAllOf}
+              label={"Contains All Of"}
+            />
+            <Radio
+              value={WaAutomatedReplyMatchType.Exact}
+              label={"Exactly Equals"}
+            />
+          </Group>
+        </Radio.Group>
+
+        <MatchDataForm
+          matchDataForm={matchDataForm}
+          type={rootForm.values.matchType}
+        />
+        <ContainedSelection
+          label="Response Type"
+          data={Object.values(WaAutomatedReplyResponseType)}
+          disabled
+          {...rootForm.getInputProps("responseType")}
+        />
+        <ResponseSelector type={rootForm.values.responseType} form={rootForm} />
+
+        <Group justify={"space-between"}>
+          <Button onClick={handleCancelClick} variant="light">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            loading={createMutation.isPending || updateMutation.isPending}
+          >
+            Submit
+          </Button>
+        </Group>
+      </Stack>
+    </form>
   );
 }
 
@@ -185,6 +185,7 @@ function MatchDataForm({ matchDataForm, type }: MatchDataFormProps) {
           WaAutomatedReplyMatchType.ContainsAnyOf,
         ].includes(type) && (
           <ContainedTagInput
+            required
             label="Keywords"
             placeholder="Enter keywords"
             {...matchDataForm.getInputProps("keywords")}
@@ -192,6 +193,7 @@ function MatchDataForm({ matchDataForm, type }: MatchDataFormProps) {
         )}
         {type === WaAutomatedReplyMatchType.Exact && (
           <ContainedTextField
+            required
             label="Exact Text"
             placeholder="Enter exact text"
             {...matchDataForm.getInputProps("exactText")}
@@ -216,6 +218,7 @@ function ResponseSelector({ type, form }: ResponseSelectorProps) {
     <>
       {type === WaAutomatedReplyResponseType.Text && (
         <ContainedTextArea
+          required
           label="Response"
           placeholder="Enter response"
           {...form.getInputProps("responseText")}

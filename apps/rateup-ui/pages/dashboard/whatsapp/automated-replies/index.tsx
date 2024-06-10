@@ -1,16 +1,16 @@
 "use client";
 
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { Group, Stack, Title } from "@mantine/core";
 import { useRouter } from "next/router";
-import { useWaAutomatedReplies } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
 import { useState } from "react";
 import { WaAutomationCards } from "../../../../components/whatsapp/automation/AutomationCards";
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import { IconPlus } from "@tabler/icons-react";
 
 export default function AutomatedRepliesPage() {
   const router = useRouter();
   const [teamId, setTeamId] = useState(null);
-  const { data: automations } = useWaAutomatedReplies(teamId);
 
   function handleCreateClick() {
     router.push("automated-replies/create");
@@ -20,9 +20,11 @@ export default function AutomatedRepliesPage() {
       <Group justify={"space-between"}>
         <Group>
           <Title>Automated Replies</Title>
-          <Button onClick={handleCreateClick}>
-            Create New Automated Reply
-          </Button>
+          <RateupButtonBlue
+            title="Create automated reply"
+            rightIcon={<IconPlus size={"1rem"} />}
+            onClick={handleCreateClick}
+          />
         </Group>
         <TeamSelector value={teamId} onChange={setTeamId} />
       </Group>

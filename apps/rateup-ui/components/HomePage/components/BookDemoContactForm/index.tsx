@@ -1,80 +1,79 @@
-import { Flex, LoadingOverlay, Modal } from "@mantine/core";
-import Button from "../Button";
-import { useDisclosure } from "@mantine/hooks";
-import styles from "./BookADemoContactForm.module.css";
-import modalstyles from "./ModalStyles.module.css";
-import { useCallback, useEffect, useState } from "react";
+import { Flex } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { useCallback } from "react";
 import { isProduction } from "../../../../utils/constants";
-import { analyseEvent } from "../../../../utils/gtag";
 import { fbEvent } from "../../../../utils/fbpixel";
+import { analyseEvent } from "../../../../utils/gtag";
+import modalStyles from "../../../Modal/ModalManagerModals/BookDemoModal/ModalStyles.module.css";
+import Button from "../Button";
 
 type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
+  style?: any;
 };
 
 type BookDemoContactFormProps = {
   buttonProps?: ButtonProps;
   className?: string;
+  buttonText?: string;
+  clickedFromPage?: string;
 };
 
 function BookDemoContactForm({
   buttonProps,
   className = "",
+  buttonText,
+  clickedFromPage,
 }: BookDemoContactFormProps) {
-  const [opened, { open, close }] = useDisclosure(false);
-  const [isIframeLoading, setIsIframeLoading] = useState(false);
+  const handleBookDemoButton = useCallback(() => {
+    modals.openContextModal({
+      modal: "bookDemoModal",
+      title: "Book A Demo",
+      classNames: modalStyles,
+      zIndex: 400,
+      centered: true,
+      size: "100vw",
+      closeOnClickOutside: false,
+      innerProps: {},
+    });
+    if (isProduction) {
+      switch (clickedFromPage) {
+        case "digital-menu-page": {
+          analyseEvent({
+            action: "button_click",
+            category: "digital_menu",
+            label:
+              "Clicked on join now button in digital menu section of home page",
+          });
+          fbEvent("DigitalMenuJoinNow", {
+            label:
+              "Clicked on join now button in digital menu section of home page",
+          });
+          break;
+        }
 
-  useEffect(() => {
-    if (opened) setIsIframeLoading(true);
-  }, [opened]);
-
-  const upadateLoadingStateOfIframe = useCallback(() => {
-    setIsIframeLoading(false);
-  }, []);
+        default: {
+          analyseEvent({
+            action: "button_click",
+            category: "book_demo",
+            label: "Clicked on Book demo button in home page",
+          });
+          fbEvent("BookDemo", {
+            label: "Clicked on Book demo button in home page",
+          });
+        }
+      }
+    }
+  }, [modals, clickedFromPage]);
 
   return (
     <Flex className={className}>
-      <Modal
-        classNames={modalstyles}
-        opened={opened}
-        onClose={close}
-        zIndex={400}
-        title={"Book A Demo"}
-        centered
-        size={"100vw"}
-        closeOnClickOutside={false}
-      >
-        <LoadingOverlay
-          visible={isIframeLoading}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-        />
-        {opened && (
-          <iframe
-            onLoad={upadateLoadingStateOfIframe}
-            className={styles["contact-form-iframe"]}
-            src="https://rateup.app/ws/8hKp9bb9"
-          />
-        )}
-      </Modal>
       <Button
         className="book-a-demo-btn"
-        onClick={() => {
-          if (isProduction) {
-            analyseEvent({
-              action: "button_click",
-              category: "book_demo",
-              label: "Clicked on Book demo button in home page",
-            });
-            fbEvent("BookDemo", {
-              label: "Clicked on Book demo button in home page",
-            });
-          }
-          open();
-        }}
+        onClick={handleBookDemoButton}
         {...buttonProps}
       >
-        Book a Demo
+        {buttonText || "Book a Demo"}
       </Button>
     </Flex>
   );

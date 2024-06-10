@@ -19,14 +19,19 @@
   background-color: initial;
   padding: 1rem 0;
   display: block;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 1rem;
   color: var(--grey-color);
 }
 
+.mobile-nav-drawer-link:global(.link-active) {
+  color: var(--homepage-blue);
+  font-weight: 500;
+}
+
 .mobile-nav-drawer-link :global(.mantine-NavLink-body) {
   font-size: 1rem;
-  color: var(--grey-color);
+  /* color: var(--grey-color); */
 }
 
 .login-link {

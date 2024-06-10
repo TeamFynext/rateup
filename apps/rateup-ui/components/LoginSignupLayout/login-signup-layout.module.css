@@ -20,6 +20,10 @@
   padding: 1rem;
 }
 
+.color-scheme-dark {
+  background-color: var(--mantine-color-gray-filled);
+}
+
 /* Media Queries */
 @media screen and (max-width: 768px) {
   .form-wrapper {

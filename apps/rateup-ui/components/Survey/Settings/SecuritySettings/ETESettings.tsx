@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useUser } from "../../../../context/UserContext";
 import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import {
   ActionIcon,
+  Badge,
   Box,
   Group,
   Stack,
@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { updateEndToEndEncryption } from "../updateSettings";
-import { IconInfoCircle, IconKey } from "@tabler/icons-react";
+import { IconKey } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { showErrorToast } from "../../../../utils/notifications";
@@ -65,7 +65,7 @@ export default function ETESettings(props: ETESettingsInterface) {
         <Group justify="space-between">
           <Group>
             <Switch
-              className={`switch ${endtoendencryption ? "on" : "off"}`}
+              className={styles.ete_swicth_enabled_style}
               disabled={
                 (endtoendencryption && !!user?.encryptionKeys) ||
                 responses
@@ -77,7 +77,18 @@ export default function ETESettings(props: ETESettingsInterface) {
               onChange={onSwitched}
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>End-to-End Encryption</h3>
+              <h3>
+                <Group>
+                  End-to-End Encryption
+                  <Badge
+                    size="xs"
+                    variant="light"
+                    color={endtoendencryption ? "lime" : "red"}
+                  >
+                    {endtoendencryption ? "Enabled" : "Disabled"}
+                  </Badge>
+                </Group>
+              </h3>
               <p>Encrypts the response data</p>
             </Box>
           </Group>

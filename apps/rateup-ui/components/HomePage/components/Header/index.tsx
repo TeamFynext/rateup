@@ -14,12 +14,14 @@ import styles from "./Header.module.css";
 import { isProduction } from "../../../../utils/constants";
 import { analyseEvent } from "../../../../utils/gtag";
 import { fbEvent } from "../../../../utils/fbpixel";
+import BookDemoContactForm from "../BookDemoContactForm";
+import { useCheckSession } from "../../../../hooks/checkSession";
 
 const cx = classNames.bind(styles);
 
 function Header({ className = "" }) {
   const router = useRouter();
-  const currentRoutePath = router.pathname;
+  const currentRoutePath = router.asPath;
 
   return (
     <Flex justify="space-between" className={cx(className, "header-container")}>
@@ -35,35 +37,15 @@ function Header({ className = "" }) {
         </Link>
         <nav>
           <Flex className={cx("header-links-container")}>
-            {getNavLinksArray(`${cx("header-link")} header-link`)}
+            {getNavLinksArray(
+              `${cx("header-link")} header-link`,
+              currentRoutePath,
+            )}
           </Flex>
           <MobileNavDrawer />
         </nav>
       </Group>
-      {!(currentRoutePath === "/digital-menu") ? (
-        <LoginSignupLinks />
-      ) : (
-        <Flex className={cx("join-now-btn-container")}>
-          <Button
-            onClick={() => {
-              if (isProduction) {
-                analyseEvent({
-                  action: "button_click",
-                  category: "digital_menu",
-                  label:
-                    "Clicked on join now button in digital menu section of home page",
-                });
-                fbEvent("DigitalMenuJoinNow", {
-                  label:
-                    "Clicked on join now button in digital menu section of home page",
-                });
-              }
-            }}
-          >
-            Join Now
-          </Button>
-        </Flex>
-      )}
+      <LoginSignupLinks />
     </Flex>
   );
 }
