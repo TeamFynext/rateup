@@ -14,12 +14,15 @@ import styles from "./Header.module.css";
 import { isProduction } from "../../../../utils/constants";
 import { analyseEvent } from "../../../../utils/gtag";
 import { fbEvent } from "../../../../utils/fbpixel";
+import BookDemoContactForm from "../BookDemoContactForm";
+import { useCheckSession } from "../../../../hooks/checkSession";
 
 const cx = classNames.bind(styles);
 
 function Header({ className = "" }) {
   const router = useRouter();
   const currentRoutePath = router.pathname;
+  const session = useCheckSession();
 
   return (
     <Flex justify="space-between" className={cx(className, "header-container")}>
@@ -40,30 +43,19 @@ function Header({ className = "" }) {
           <MobileNavDrawer />
         </nav>
       </Group>
-      {!(currentRoutePath === "/digital-menu") ? (
+      {
+        // !(currentRoutePath === "/digital-menu") && !session ? (
         <LoginSignupLinks />
-      ) : (
-        <Flex className={cx("join-now-btn-container")}>
-          <Button
-            onClick={() => {
-              if (isProduction) {
-                analyseEvent({
-                  action: "button_click",
-                  category: "digital_menu",
-                  label:
-                    "Clicked on join now button in digital menu section of home page",
-                });
-                fbEvent("DigitalMenuJoinNow", {
-                  label:
-                    "Clicked on join now button in digital menu section of home page",
-                });
-              }
-            }}
-          >
-            Join Now
-          </Button>
-        </Flex>
-      )}
+        // ) : (
+        //   <Flex className={cx("join-now-btn-container")}>
+        //     <BookDemoContactForm
+        //       buttonText="Join Now"
+        //       clickedFromPage="digital-menu-page"
+        //       buttonProps={{ style: { fontSize: "1rem", padding: "0.625rem 1rem"}}}
+        //     />
+        //   </Flex>
+        // )
+      }
     </Flex>
   );
 }

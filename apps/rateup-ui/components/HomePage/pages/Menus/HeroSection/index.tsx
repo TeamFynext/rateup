@@ -7,6 +7,7 @@ import Image from "next/image";
 import { isProduction } from "../../../../../utils/constants";
 import { analyseEvent } from "../../../../../utils/gtag";
 import { fbEvent } from "../../../../../utils/fbpixel";
+import BookDemoContactForm from "../../../components/BookDemoContactForm";
 
 function HeroSection() {
   return (
@@ -21,25 +22,11 @@ function HeroSection() {
           <span className={styles["para-span"]}>digital menus.</span>
         </Text>
         <Flex className={styles["join-see-sample-btns-container"]}>
-          <CustomMantineButton
-            whiteBackgroundGradientText
-            onClick={() => {
-              if (isProduction) {
-                analyseEvent({
-                  action: "button_click",
-                  category: "digital_menu",
-                  label:
-                    "Clicked on join now button in digital menu section of home page",
-                });
-                fbEvent("DigitalMenuJoinNow", {
-                  label:
-                    "Clicked on join now button in digital menu section of home page",
-                });
-              }
-            }}
-          >
-            Join Now
-          </CustomMantineButton>
+          <BookDemoContactForm
+            buttonProps={{ whiteBackgroundGradientText: true }}
+            buttonText="Join Now"
+            clickedFromPage="digital-menu-page"
+          />
 
           <MotionButtonGesture>
             <Button
@@ -58,6 +45,7 @@ function HeroSection() {
                   label:
                     "Clicked on see now button in digital menu section of home page",
                 });
+                window.open("https://rateup.app/m/KJhnkdGc");
               }}
             >
               See Sample
