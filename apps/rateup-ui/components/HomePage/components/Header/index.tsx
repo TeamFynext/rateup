@@ -43,19 +43,7 @@ function Header({ className = "" }) {
           <MobileNavDrawer />
         </nav>
       </Group>
-      {
-        // !(currentRoutePath === "/digital-menu") && !session ? (
-        <LoginSignupLinks />
-        // ) : (
-        //   <Flex className={cx("join-now-btn-container")}>
-        //     <BookDemoContactForm
-        //       buttonText="Join Now"
-        //       clickedFromPage="digital-menu-page"
-        //       buttonProps={{ style: { fontSize: "1rem", padding: "0.625rem 1rem"}}}
-        //     />
-        //   </Flex>
-        // )
-      }
+      <LoginSignupLinks />
     </Flex>
   );
 }
