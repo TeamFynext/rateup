@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import ErrorPage from "next/error";
-import { Container, Grid } from "@mantine/core";
+import { Container } from "@mantine/core";
 import PostBody from "../../components/HomePage/pages/Blog/components/PostBody";
 import PostHeader from "../../components/HomePage/pages/Blog/components/PostHeader";
 import {
@@ -14,6 +14,9 @@ import PostType from "../../components/HomePage/pages/Blog/interfaces/post";
 import Header from "../../components/HomePage/components/Header";
 import Footer from "../../components/HomePage/components/Footer";
 import BookADemoSection from "../../components/HomePage/components/BookADemoSection";
+
+import styles from "../../components/HomePage/pages/Blog/components/blog.module.css";
+import Link from "next/link";
 
 type Props = {
   post: PostType;
@@ -41,14 +44,21 @@ export default function Post({ post, morePosts, preview }: Props) {
               </Head>
               <PostHeader
                 title={post.title}
-                coverImage={post.coverImage}
+                coverImage={post.coverImage || "/default-cover-image.jpg"}
                 date={post.date}
               />
-              <PostBody content={post.content} />
+              <div className={styles["blog-content"]}>
+                <PostBody content={post.content} />
+              </div>
             </Container>
           </>
         )}
       </Container>
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <Link href="/blog" className={styles["back-to-blog-link"]}>
+          Back to Blog
+        </Link>
+      </div>
       <BookADemoSection />
       <Footer />
     </div>
