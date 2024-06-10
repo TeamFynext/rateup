@@ -21,8 +21,7 @@ const cx = classNames.bind(styles);
 
 function Header({ className = "" }) {
   const router = useRouter();
-  const currentRoutePath = router.pathname;
-  const session = useCheckSession();
+  const currentRoutePath = router.asPath;
 
   return (
     <Flex justify="space-between" className={cx(className, "header-container")}>
@@ -38,7 +37,10 @@ function Header({ className = "" }) {
         </Link>
         <nav>
           <Flex className={cx("header-links-container")}>
-            {getNavLinksArray(`${cx("header-link")} header-link`)}
+            {getNavLinksArray(
+              `${cx("header-link")} header-link`,
+              currentRoutePath,
+            )}
           </Flex>
           <MobileNavDrawer />
         </nav>

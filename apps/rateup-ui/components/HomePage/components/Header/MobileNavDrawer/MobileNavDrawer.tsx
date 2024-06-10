@@ -24,6 +24,8 @@ function MobileNavDrawer() {
   const isViewportLEQ768px = useMediaQuery("(max-width: 768px");
 
   const router = useRouter();
+  const currentRoutePath = router.asPath;
+
   useEffect(() => {
     closeNavDrawer();
   }, [router]);
@@ -61,6 +63,7 @@ function MobileNavDrawer() {
         <Menu classNames={menuStyles}>
           {getMobileNavLinkMenuItems(
             `${headerStyles["header-link"]} ${cx("mobile-nav-drawer-link")}`,
+            currentRoutePath,
           )}
 
           <Menu.Item component="div" className={cx("login-signup-menu-item")}>

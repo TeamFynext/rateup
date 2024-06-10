@@ -64,6 +64,10 @@
   color: inherit;
 }
 
+.heading-description-container:global(.link-active) .heading-span {
+  color: var(--homepage-blue);
+}
+
 /* Media Queries */
 @media screen and (max-width: 1024px) {
   .popover-dropdown {

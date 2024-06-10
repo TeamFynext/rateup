@@ -5,10 +5,13 @@ import styles from "./LinkWithSublinksPopover.module.css";
 import Link from "next/link";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
   const [opened, { close, open }] = useDisclosure(false);
   const isViewportLEQ1024px = useMediaQuery("(max-width: 1024px");
+  const router = useRouter();
+  const currentRoutePath = router.asPath;
   useEffect(() => {
     if (isViewportLEQ1024px && opened) {
       close();
@@ -28,8 +31,8 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
           className={`${headerStyles["header-link-wrapper"]} ${
             opened ? styles["dropdown-active"] : ""
           }`}
-          onMouseEnter={open}
-          onMouseLeave={close}
+          // onMouseEnter={open}
+          // onMouseLeave={close}
         >
           <Link
             className={className}
@@ -53,8 +56,8 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
         </Flex>
       </Popover.Target>
       <Popover.Dropdown
-        onMouseEnter={open}
-        onMouseLeave={close}
+        // onMouseEnter={open}
+        // onMouseLeave={close}
         className={styles["popover-dropdown"]}
       >
         {sublinks.map(({ id, link, content, iconLink }) => {
@@ -69,7 +72,9 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
                     alt="icon"
                   />
                 </Flex>
-                <Stack className={styles["heading-description-container"]}>
+                <Stack
+                  className={`${styles["heading-description-container"]} ${currentRoutePath === link ? "link-active" : ""}`}
+                >
                   <span className={styles["heading-span"]}>{heading}</span>
                   <span className={styles["description-span"]}>
                     {description}
