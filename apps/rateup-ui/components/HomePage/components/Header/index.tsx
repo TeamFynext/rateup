@@ -1,21 +1,11 @@
-import { Flex, Image, Group } from "@mantine/core";
-import {
-  getNavLinksArray,
-  rateupLogoBlueTextUrl,
-  rateupLogoWhiteTextUrl,
-} from "../../constants";
-import LoginSignupLinks from "./LoginSignupLinks";
-import Link from "next/link";
-import Button from "../Button";
-import { useRouter } from "next/router";
-import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
+import { Flex, Group, Image } from "@mantine/core";
 import classNames from "classnames/bind";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { getNavLinksArray, rateupLogoBlueTextUrl } from "../../constants";
 import styles from "./Header.module.css";
-import { isProduction } from "../../../../utils/constants";
-import { analyseEvent } from "../../../../utils/gtag";
-import { fbEvent } from "../../../../utils/fbpixel";
-import BookDemoContactForm from "../BookDemoContactForm";
-import { useCheckSession } from "../../../../hooks/checkSession";
+import LoginSignupLinks from "./LoginSignupLinks";
+import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
 
 const cx = classNames.bind(styles);
 

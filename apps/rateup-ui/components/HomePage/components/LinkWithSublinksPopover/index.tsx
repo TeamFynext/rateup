@@ -31,8 +31,8 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
           className={`${headerStyles["header-link-wrapper"]} ${
             opened ? styles["dropdown-active"] : ""
           }`}
-          // onMouseEnter={open}
-          // onMouseLeave={close}
+          onMouseEnter={open}
+          onMouseLeave={close}
         >
           <Link
             className={className}
@@ -56,8 +56,8 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
         </Flex>
       </Popover.Target>
       <Popover.Dropdown
-        // onMouseEnter={open}
-        // onMouseLeave={close}
+        onMouseEnter={open}
+        onMouseLeave={close}
         className={styles["popover-dropdown"]}
       >
         {sublinks.map(({ id, link, content, iconLink }) => {
