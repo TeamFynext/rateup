@@ -9,6 +9,10 @@
   background-color: white;
 }
 
+.color-scheme-dark {
+  background-color: var(--mantine-color-gray-filled);
+}
+
 .auth-form-container :global(.mantine-ScrollArea-viewport) {
   display: flex;
   align-items: center;
