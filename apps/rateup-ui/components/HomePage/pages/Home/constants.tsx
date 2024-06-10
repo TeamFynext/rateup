@@ -76,7 +76,7 @@ const textIllustrationSections = [
     id: "35353533",
     heading: (
       <Heading
-        gradientBgSpanText={"Build your busines"}
+        gradientBgSpanText={"Build your business"}
         normalText={"with Integrations"}
       />
     ),
