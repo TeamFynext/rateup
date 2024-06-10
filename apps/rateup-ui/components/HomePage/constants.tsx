@@ -59,10 +59,17 @@ const headerNavLinks = [
   },
 ];
 
-const ourCompanySectionLinks = [
-  ...headerNavLinks.filter((obj) => obj.linkText !== "Pricing"),
+const excludedOurCompanySectionLinks = [
+  "/pricing",
+  "/#our-features",
+  "/#our-solutions",
 ];
-const blogLink = ourCompanySectionLinks.splice(4, 1, {
+const ourCompanySectionLinks = [
+  ...headerNavLinks.filter(
+    (obj) => !excludedOurCompanySectionLinks.includes(obj.href),
+  ),
+];
+const blogLink = ourCompanySectionLinks.splice(2, 1, {
   href: "/contact-us",
   linkText: "Contact Us",
 });
@@ -72,12 +79,20 @@ export const footerNavLinks = {
     heading: "Our Company",
     linksArray: [...ourCompanySectionLinks, ...blogLink],
   },
-  pricing: {
-    heading: "Pricing",
+  product: {
+    heading: "Product",
     linksArray: [
       {
         href: "/pricing",
         linkText: "Pricing",
+      },
+      {
+        href: "/#our-solutions",
+        linkText: "Solutions",
+      },
+      {
+        href: "/#our-features",
+        linkText: "Features",
       },
     ],
   },
