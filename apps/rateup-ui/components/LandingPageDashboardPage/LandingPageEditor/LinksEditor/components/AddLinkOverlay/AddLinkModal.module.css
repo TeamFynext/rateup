@@ -21,17 +21,17 @@
 }
 
 .modal-body {
-  padding-top: 1rem;
+  padding: 1.5rem;
 }
 
 .header {
   position: relative;
+  margin-bottom: 1.25rem;
 }
 
 .title {
   font-size: 1.25rem;
   text-align: center;
-  margin-bottom: 1rem;
 }
 
 .close-btn {
@@ -57,10 +57,19 @@
   margin-bottom: 0.3125rem;
 }
 
-.add-btn-container {
-  align-self: flex-end;
+.cancel-save-btns-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
-.add-link-btn {
-  border-radius: 1rem;
+.cancel-save-btns-container button {
+  border-radius: 0.625rem;
+}
+
+.cancel-save-btns-container .cancel-btn {
+  background-color: transparent;
+  border: 1px solid var(--mantine-color-gray-3);
+  color: var(--tertiary-color);
 }

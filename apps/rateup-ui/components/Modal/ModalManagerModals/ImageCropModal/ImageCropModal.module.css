@@ -40,9 +40,7 @@
 }
 
 .save-btn {
-  background-color: initial;
   border: 1px solid var(--tertiary-color);
-  color: var(--tertiary-color);
   border-radius: 0.625rem;
 }
 
