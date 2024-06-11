@@ -17,6 +17,7 @@ export const FlowChatPreview = ({ currentScreen }: FlowChatPreviewProps) => {
 
   const elementsInScreen = getFlowFormElementsFromScreen(currentScreen) ?? [];
   const footerElement = getFlowFooterElementsFromScreen(currentScreen)?.[0];
+  console.log(elementsInScreen);
 
   return (
     <>
