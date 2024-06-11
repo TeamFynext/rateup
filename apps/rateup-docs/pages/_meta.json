@@ -9,10 +9,6 @@
     "webSurvey":{
         "title" : "Web Survey"
     },
-    "groupSurvey": {
-        "title":"Group Survey",
-        "display":"hidden"
-    },
     "whatsappSurvey" : {
         "title": "WhatsApp Features"
     },
@@ -20,7 +16,6 @@
         "title": "Digital Menu"
     },
     "landingpage": "Landing Page",
-    "reputationMng" : "Reputation Management",
     "ticket": "Tickets",
     "testimonial": "Testimonials",
     "---" : {
