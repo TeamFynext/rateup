@@ -35,7 +35,7 @@ const ContactExtraProps = ({ form }) => {
     });
   }
   useEffect(() => {
-    if (!form.values.features) updateFeatures(features);
+    if (!form.values.features?.[selectedLanguage]) updateFeatures(features);
   }, [form]);
 
   return (
