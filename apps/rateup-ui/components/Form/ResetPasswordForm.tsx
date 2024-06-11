@@ -32,8 +32,9 @@ import {
   ContainedPasswordInput,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { SAVE_HOTKEY } from "../../utils/constants";
+import ConfirmationModal from "../Modal/ConfirmationModal";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
@@ -41,6 +42,7 @@ const ResetPasswordForm = ({ mode }) => {
   const [page, setPage] = useState(
     token && rid === "emailpassword" ? ResetSteps.STEP_THREE : mode,
   );
+  const [opened, { open, close }] = useDisclosure(false);
 
   useEffect(() => {
     if (token && rid) {
@@ -100,7 +102,7 @@ const ResetPasswordForm = ({ mode }) => {
   });
 
   const sendResetEmail = useSendResetEmail();
-  const setNewPassword = useSetNewPassword();
+  const setNewPassword = useSetNewPassword(open);
   const checkEmailMutaion = useCheckEmailExistMutation();
   const isEmailPage = page === ResetSteps.STEP_ONE;
   const [isLoading, setIsLoading] = useState(false);
@@ -286,6 +288,15 @@ const ResetPasswordForm = ({ mode }) => {
           </Link>
         </div>
       )}
+      <ConfirmationModal
+        opened={opened}
+        onConfirm={() => router.push("/login")}
+        confirmLabel="Continue"
+        headerLabel="Password reset successfull!"
+        headerTitle="Success"
+        excludeCancelButton={true}
+        onClose={close}
+      />
     </>
   );
 };
