@@ -4,6 +4,8 @@
 
 .modal-header {
   position: relative;
+  padding: 1.5rem;
+  padding-bottom: 1rem;
 }
 
 .modal-header h2 {
@@ -15,14 +17,15 @@
 
 .modal-header :global(.mantine-CloseButton-root) {
   position: absolute;
-  top: 1rem;
-  right: 0.6875rem;
+  right: 1rem;
 }
 
 .modal-body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding: 1.5rem;
+  padding-top: 0;
 }
 
 .modal-body :global(.mantine-InputWrapper-label) {

@@ -1,12 +1,18 @@
-import { ActionIcon, TextInput, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Modal,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import styles from "./ThemeSelector.module.css";
 import { useDisclosure } from "@mantine/hooks";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "@mantine/form";
+import modalStyles from "../../../../LandingPageDashboardPage/CreateLandingPageModal/CreateLandingPageModal.module.css";
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { IconPlus } from "@tabler/icons-react";
-import FormModalLayout from "../../../../Modal/FormModalLayout";
-import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 
 function CreateNewThemeModal() {
   const [opened, { open, close }] = useDisclosure();
@@ -27,6 +33,8 @@ function CreateNewThemeModal() {
   const { mutateAsync: createNewThemeMutationAsync } =
     useCreateNewThemeMutation();
 
+  const submitBtnRef = useRef(null);
+
   const handleFormSubmit = useCallback(async ({ name }) => {
     try {
       await createNewThemeMutationAsync(name);
@@ -34,6 +42,10 @@ function CreateNewThemeModal() {
     } catch (err) {
       console.log(err);
     }
+  }, []);
+
+  const handleCreateLinkBtnClick = useCallback(() => {
+    submitBtnRef?.current.click();
   }, []);
 
   useEffect(() => {
@@ -48,23 +60,36 @@ function CreateNewThemeModal() {
         </ActionIcon>
       </Tooltip>
 
-      <FormModalLayout
+      <Modal
+        title={"Create New Theme"}
         opened={opened}
         onClose={close}
-        title={"Create New Theme"}
         centered
-        onSubmit={form.onSubmit(handleFormSubmit)}
-        buttonTitle="Create"
-        includeCancelButton
+        classNames={{
+          header: modalStyles["modal-header"],
+          body: modalStyles["modal-body"],
+          content: modalStyles["modal-content"],
+        }}
       >
         <form onSubmit={form.onSubmit(handleFormSubmit)}>
-          <ContainedTextField
+          <TextInput
             label="Theme Name"
             placeholder="Enter Theme Name"
             {...form.getInputProps("name")}
           />
+          <Button
+            style={{ display: "none" }}
+            type="submit"
+            ref={submitBtnRef}
+          />
         </form>
-      </FormModalLayout>
+        <Box className={modalStyles["cancel-save-btns-container"]}>
+          <Button onClick={close} className={modalStyles["cancel-btn"]}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreateLinkBtnClick}>Create</Button>
+        </Box>
+      </Modal>
     </>
   );
 }
