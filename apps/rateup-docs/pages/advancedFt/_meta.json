@@ -2,5 +2,6 @@
     "googlereview":"Google Review",
     "logicjump": "Logic Jump",
     "variables":"Variables",
-    "customvalidation" : "Custom Validation"
+    "customvalidation" : "Custom Validation",
+    "resultexport" : "Result Export"
 }
