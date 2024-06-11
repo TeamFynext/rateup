@@ -22,6 +22,7 @@ import {
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { EditFlowContext } from "./EditFlowContext";
+import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
 
 export function FlowEmbeddedLinkDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -39,6 +40,7 @@ export function FlowEmbeddedLinkDetailedView() {
     initialValues: {
       text: selectedFormElement.text || "",
       type: nonInputTextType,
+      embeddedLinkScreenId: "" ?? "",
     },
     validate: {
       text: (value) => {
@@ -70,20 +72,29 @@ export function FlowEmbeddedLinkDetailedView() {
       );
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
+        const footer = formEl.children?.find(
+          (data) => data.type === WaFlowFormElementType.footer,
+        );
+
         formEl.children[index].text = form.values.text;
         formEl.children[index]["on-click-action"] = {
           name: "navigate",
           next: {
             type: "screen",
-            name: "FINISH",
+            name: form.values.embeddedLinkScreenId,
           },
-          payload: {
+          payload: footer?.["on-click-action"]?.payload ?? {
             test_payload: "This is a test_payload",
           },
         };
       });
     }
   }
+  const currentIndex = flowJson.screens.findIndex(
+    (s) => s.id === selectedScreenId,
+  );
+  const nextScreens = flowJson.screens.slice(currentIndex + 1);
+
   return (
     <Stack
       style={{
@@ -116,6 +127,16 @@ export function FlowEmbeddedLinkDetailedView() {
               maxValue={getFlowTextLimit(nonInputTextType)}
               onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSaveElement]])}
               fontNormal={false}
+            />
+            <ContainedSelection
+              data={nextScreens?.map((data) => ({
+                label: data?.title,
+                value: data?.id,
+              }))}
+              {...form.getInputProps("embeddedLinkScreenId")}
+              label={"Next screen"}
+              placeholder="select next screen"
+              w={300}
             />
           </Stack>
         </Group>

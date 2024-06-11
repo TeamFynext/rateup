@@ -104,7 +104,7 @@ const flowNonInputElements = [
   wft.nonInputText,
   wft.image,
   // not currectly working
-  // , wft.embeddedLink,
+  wft.embeddedLink,
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links
