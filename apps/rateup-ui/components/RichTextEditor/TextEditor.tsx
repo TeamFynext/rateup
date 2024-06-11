@@ -52,17 +52,15 @@ export default function TextEditor({ form, selectedLanguage }) {
       Link,
       TextStyle,
       Color,
+      Youtube,
+      Video,
+      VariableComponentExtension,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image.configure({
         HTMLAttributes: {
           style: `max-width: 100%;max-height: 100%;`,
         },
       }),
-      Youtube.configure({
-        inline: false,
-      }),
-      Video,
-      VariableComponentExtension,
     ],
     content: content,
     onUpdate: ({ editor }) => {

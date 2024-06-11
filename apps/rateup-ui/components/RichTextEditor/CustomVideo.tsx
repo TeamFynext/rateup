@@ -18,7 +18,7 @@ declare module "@tiptap/core" {
        * @example
        * editor
        *   .commands
-       *   .setVideo({ src: 'https://tiptap.dev/logo.png', height:'200px',widht:'400px' })
+       *   .setVideo({ src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', height:'200px',widht:'400px' })
        */
       setVideo: (options: {
         src: string;
