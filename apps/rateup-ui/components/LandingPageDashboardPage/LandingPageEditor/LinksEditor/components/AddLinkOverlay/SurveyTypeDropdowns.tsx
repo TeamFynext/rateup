@@ -5,7 +5,6 @@ import {
   Select,
   TextInput,
 } from "@mantine/core";
-import styles from "./AddLinkOverlay.module.css";
 import {
   getLinkTypeLabel,
   getSelectedSurveyTitleOptions,
