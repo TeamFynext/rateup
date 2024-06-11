@@ -25,6 +25,7 @@ import { useRouter } from "next/router";
 import { getLandingPages } from "../../backend/landingPage/landingPage.api";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
+import SortDropdown from "../Dashboard/SortDropDown";
 
 function LandingPageDashboard() {
   const router = useRouter();
@@ -34,7 +35,7 @@ function LandingPageDashboard() {
 
   const { data, isPending, isError } = useLandingPages();
   const [landingPages, setLandingPages] = useState([]);
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortOption, setSortOption] = useState("");
 
   const fetchLandingPages = useCallback(async () => {
     const data = await getLandingPages();
@@ -56,17 +57,30 @@ function LandingPageDashboard() {
     });
     await fetchLandingPages();
   };
-  const handleSortToggle = () => {
-    setSortOrder((prevSortOrder) => (prevSortOrder === "asc" ? "desc" : "asc"));
+
+  const handleSortChange = (value) => {
+    setSortOption(value);
   };
 
   const sortedLandingPages = [...landingPages].sort((a, b) => {
-    if (sortOrder === "asc") {
-      return a.name.localeCompare(b.name);
-    } else {
-      return b.name.localeCompare(a.name);
+    switch (sortOption) {
+      case "latest":
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case "oldest":
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      case "a-z":
+        return a.name.localeCompare(b.name);
+      case "z-a":
+        return b.name.localeCompare(a.name);
+      default:
+        return 0;
     }
   });
+
   let componentToBeRendered = null;
 
   if (isPending) {
@@ -116,12 +130,7 @@ function LandingPageDashboard() {
             </ActionIcon>
           </Tooltip>
         </Group>
-        <RateupButtonPrimary
-          onClick={handleSortToggle}
-          title={"Sort"}
-          variant="subtle"
-          rightIcon={<IconSelector size="1rem" />}
-        />
+        <SortDropdown onSortChange={handleSortChange} />
       </Group>
       <Box className={styles["landingPage-list-container"]}>
         {componentToBeRendered}

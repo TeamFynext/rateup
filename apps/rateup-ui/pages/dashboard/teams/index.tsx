@@ -35,10 +35,11 @@ import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../components/styled/Heading/Heading";
 import styles from "./Teams.module.css";
+import SortDropdown from "../../../components/Dashboard/SortDropDown";
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
-  const [sort, setSort] = useState(false);
+  const [sortOption, setSortOption] = useState("");
   const { action } = useRouter().query;
   const { user } = useUser();
   const [isCreating, setIsCreating] = useState(false);
@@ -104,6 +105,24 @@ export default function Teams() {
       open();
     }
   }, [action]);
+
+  const onSortChange = (value) => {
+    setSortOption(value);
+  };
+
+  const sortedTeams = () => {
+    if (!teamsData?.data) return [];
+
+    switch (sortOption) {
+      case "a-z":
+        return [...teamsData.data].sort((a, b) => a.name.localeCompare(b.name));
+      case "z-a":
+        return [...teamsData.data].sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return teamsData.data;
+    }
+  };
+
   return (
     <div className={styles["teams-container"]}>
       <FormModalLayout
@@ -165,12 +184,7 @@ export default function Teams() {
             />
           )}
         </Group>
-        <RateupButtonPrimary
-          onClick={() => setSort(!sort)}
-          title={"Sort"}
-          variant="subtle"
-          rightIcon={<IconSelector size="1rem" />}
-        />
+        <SortDropdown onSortChange={onSortChange} />
       </Group>
       <Space h="lg" />
       {isLoadingTeamsUser ? (
@@ -178,15 +192,8 @@ export default function Teams() {
       ) : (
         <>
           <Grid columns={9} p={10} className={styles["team-cards-container"]}>
-            {teamsData?.data?.length > 0 ? (
-              (sort
-                ? [...teamsData?.data]?.sort((a, b) =>
-                    b.name.localeCompare(a.name),
-                  )
-                : [...teamsData?.data]?.sort((a, b) =>
-                    a.name.localeCompare(b.name),
-                  )
-              ).map((team, key) => (
+            {sortedTeams().length > 0 ? (
+              sortedTeams().map((team, key) => (
                 <Grid.Col span={{ base: 9, md: 4.5, lg: 3 }} key={key}>
                   <TeamCard key={team.id} team={team} />
                 </Grid.Col>
