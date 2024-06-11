@@ -112,7 +112,10 @@ function AddLinkModal({ title, opened, onClose, links }) {
         // selectedTeam value is shortUrlId of selected team.
         const linkTypeInUrl = selectedLinkType === "web-survey" ? "ws" : "was";
         const linkDisplayName = wsOrWasLinkDisplayName;
-        const linkUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${linkTypeInUrl}/${selectedTeam}`;
+        let linkUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/${linkTypeInUrl}/${selectedTeam}`;
+        if (selectedTeam.length > 8) {
+          linkUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${selectedTeam}`;
+        }
         const reqBody = {
           shortUrlId,
           links: [
@@ -228,7 +231,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
           <Button onClick={onClose} className={styles["cancel-btn"]}>
             Cancel
           </Button>
-          <Button onClick={onAddBtnClick}>Save</Button>
+          <Button onClick={onAddBtnClick}>Add</Button>
         </Box>
       </Box>
     </Modal>
