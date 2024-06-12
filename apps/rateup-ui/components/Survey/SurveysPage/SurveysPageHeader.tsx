@@ -10,6 +10,7 @@ import { TeamSelector } from "../../input/TeamSelector";
 import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 import Heading from "../../styled/Heading/Heading";
 import { notifications } from "@mantine/notifications";
+import SortDropdown from "../../Dashboard/SortDropDown";
 
 export function SurveyHeader({
   selectedTeamId,
@@ -25,6 +26,10 @@ export function SurveyHeader({
   refetch,
 }) {
   const { user } = useUser();
+  const handleSortChange = (value) => {
+    setSort(value);
+  };
+
   return (
     <Group gap="md" justify="space-between">
       <Group gap="md" justify="flex-start">
@@ -75,13 +80,7 @@ export function SurveyHeader({
           filterParam={filterParam}
           setFilterParam={setFilterParam}
         />
-
-        <RateupButtonPrimary
-          onClick={() => setSort(!sort)}
-          title={"Sort"}
-          variant="subtle"
-          rightIcon={<IconSelector size="1rem" />}
-        />
+        <SortDropdown onSortChange={handleSortChange} />
       </Group>
     </Group>
   );

@@ -42,7 +42,7 @@ export function SurveysPage({
     mergeSurveyOpened,
     { open: openMergeSurvey, close: closeMergeSurveyModal },
   ] = useDisclosure(false);
-  const [sort, setSort] = useState(true);
+  const [sortOption, setSortOption] = useState("");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
   const router = useRouter();
@@ -106,6 +106,24 @@ export function SurveysPage({
     return found;
   };
 
+  const sortedSurveys = [...surveys].sort((a, b) => {
+    switch (sortOption) {
+      case "latest":
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case "oldest":
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      case "a-z":
+        return a.title.localeCompare(b.title);
+      case "z-a":
+        return b.title.localeCompare(a.title);
+      default:
+        return 0;
+    }
+  });
   return (
     <Stack h={"100%"} gap={0}>
       <SurveyHeader
@@ -115,8 +133,8 @@ export function SurveysPage({
         setFilterParam={setFilterParam}
         openCreateSurvey={openCreateSurvey}
         openMergeSurvey={openMergeSurvey}
-        sort={sort}
-        setSort={setSort}
+        sort={sortOption}
+        setSort={setSortOption}
         surveyCount={surveyidArray.length}
         surveyType={surveyType}
         refetch={refetch}
@@ -124,14 +142,7 @@ export function SurveysPage({
       <Space h="lg" />
       {surveys?.length > 0 ? (
         <SurveyCardLayout>
-          {surveys
-            ?.sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime(),
-            )
+          {sortedSurveys
             .filter((s) => {
               if (filterParam === "active") {
                 return s.active === true;
