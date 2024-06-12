@@ -2,6 +2,7 @@ import { useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/router";
 import Session from "supertokens-web-js/recipe/session";
 import RateupLoader from "../Loaders/RateupLoader";
+import { checkEmailVerification } from "../../utils/auth/checkEmailVerification";
 
 interface SessionAuthProps {
   children: ReactNode;
@@ -16,6 +17,8 @@ const SessionAuth: React.FC<SessionAuthProps> = ({ children }) => {
       const sessionExists = await Session.doesSessionExist();
       if (!sessionExists) {
         router.push("/login");
+      } else {
+        checkEmailVerification();
       }
       setLoading(false);
     };

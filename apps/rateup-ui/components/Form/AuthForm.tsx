@@ -33,10 +33,10 @@ const AuthForm = ({
 
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
-      if (token && rid === "emailverification") {
+      if (token && token?.length > 0) {
         consumeVerificationCode();
       } else {
-        sendEmail();
+        sendEmail(); //TODO : Add time gaps for resending verification mails
       }
     }
   }, [mode, token, sendEmail, consumeVerificationCode, rid]); // add dependencies here

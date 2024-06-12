@@ -42,6 +42,7 @@ import { isProduction } from "../utils/constants";
 import FacebookPixel from "../components/Analytics/FacebookPixel";
 import { fbPageview } from "../utils/fbpixel";
 import CookieConsentBanner from "../components/Analytics/CookieConsentBanner";
+import { checkEmailVerification } from "../utils/auth/checkEmailVerification";
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -117,6 +118,9 @@ export default function App({
 
   useEffect(() => {
     async function doRefresh() {
+      if (window.location.pathname !== "/login/verify-email") {
+        checkEmailVerification();
+      }
       if (pageProps.fromSupertokens === "needs-refresh") {
         if (await Session.attemptRefreshingSession()) {
           location.reload();

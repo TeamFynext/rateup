@@ -1,7 +1,8 @@
 import Session from "supertokens-web-js/recipe/session";
 import { appInfo } from "./appInfo";
 import Router from "next/router";
-import ThirdPartyEmailPassword from "supertokens-web-js/recipe/thirdpartyemailpassword";
+import ThirdParty from "supertokens-web-js/recipe/thirdparty";
+import EmailPassword from "supertokens-web-js/recipe/emailpassword";
 import EmailVerification from "supertokens-web-js/recipe/emailverification";
 import Passwordless from "supertokens-web-js/recipe/passwordless";
 
@@ -10,7 +11,8 @@ export const frontendConfig = () => {
     appInfo,
     recipeList: [
       Session.init(),
-      ThirdPartyEmailPassword.init(),
+      ThirdParty.init(),
+      EmailPassword.init(),
       Passwordless.init(),
       EmailVerification.init(),
     ],

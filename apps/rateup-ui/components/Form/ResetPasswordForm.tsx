@@ -40,12 +40,12 @@ const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
   const { token, rid, requestStatus, emailTo } = router.query;
   const [page, setPage] = useState(
-    token && rid === "emailpassword" ? ResetSteps.STEP_THREE : mode,
+    token && token.length > 0 ? ResetSteps.STEP_THREE : mode,
   );
   const [opened, { open, close }] = useDisclosure(false);
 
   useEffect(() => {
-    if (token && rid) {
+    if (token && token.length > 0) {
       setPage(ResetSteps.STEP_THREE);
     } else {
       if (requestStatus === "success") {
@@ -162,7 +162,7 @@ const ResetPasswordForm = ({ mode }) => {
               : "Create new password!"}
           </Title>
           <Text
-            color="dimmed"
+            c="dimmed"
             size="sm"
             mt={5}
             mb="xl"
@@ -220,7 +220,7 @@ const ResetPasswordForm = ({ mode }) => {
               fullWidth={true}
               type="submit"
               loading={isLoading || checkEmailMutaion?.isPending}
-              title={isEmailPage ? "Email Reset Link" : "Change Password"}
+              title={isEmailPage ? "Continue" : "Change Password"}
             />
             <Group justify="center" mt="xl" pt="xl">
               <Anchor component="button" size="sm">

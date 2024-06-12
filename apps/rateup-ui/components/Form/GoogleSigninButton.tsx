@@ -1,7 +1,6 @@
 import { Button } from "@mantine/core";
 import { GoogleIcon } from "../Button/GoogleIcon";
-import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdpartyemailpassword";
-import { notifications } from "@mantine/notifications";
+import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdparty";
 import { IconX } from "@tabler/icons-react";
 import { showErrorToast } from "../../utils/notifications";
 
