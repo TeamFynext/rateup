@@ -9,6 +9,7 @@ import {
 } from "supertokens-node/recipe/emailverification";
 import Session from "supertokens-node/recipe/session";
 import { randomUUID } from "crypto";
+import { getAsRecipeUserIdType } from "../supertoken/supertoken";
 
 export const test_user_password = "tester1!";
 export const test_tenantId = process.env.TEST_TENANT_ID || "public";
@@ -27,7 +28,6 @@ export async function createTestUser(fastify: FastifyInstance) {
           { id: "password", value: test_user_password },
           { id: "name", value: "tester" },
           { id: "orgName", value: "testOrg" },
-          { id: "inviteCode", value: process.env.INVITE_CODE },
         ],
       });
 
@@ -55,5 +55,9 @@ export function initTestSupertokens() {
 
 export async function createNewTestSession(email: string) {
   const user = await getUserByEmail(email);
-  return Session.createNewSessionWithoutRequestResponse(test_tenantId, user.id);
+  let recipeUserId = await getAsRecipeUserIdType(user.id);
+  return Session.createNewSessionWithoutRequestResponse(
+    test_tenantId,
+    recipeUserId,
+  );
 }

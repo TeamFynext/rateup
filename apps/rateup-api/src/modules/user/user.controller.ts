@@ -15,11 +15,13 @@ import {
   UpdateProfileSchema,
   userEmailCheckSchemaInput,
 } from "./user.schema";
-import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import supertokens from "supertokens-node";
+
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { log } from "../../utils/logger";
+import EmailPassword from "supertokens-node/recipe/emailpassword";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
@@ -60,50 +62,44 @@ export async function createGoogleUserHandler(
   }>,
   reply: FastifyReply,
 ) {
-  // console.log("enter user signup6777",request?.body)
-  if (request?.body?.inviteCode !== process.env.INVITE_CODE) {
-    let message = "Invite code is not valid.";
+  let session = await Session.getSession(request, reply);
+  let userId = session.getUserId();
+
+  let user;
+  let userInfo;
+  if (request?.body?.type === "google") {
+    userInfo = await supertokens.getUser(userId);
+  } else {
+    // userInfo = await PasswordLess.getUserById({ userId }); //STT
+    userInfo = await supertokens.getUser(userId);
+    userInfo.emails[0] = request?.body?.email;
+  }
+
+  let data = {
+    id: userId,
+    email: userInfo?.emails[0] !== undefined ? userInfo?.emails[0] : "",
+    phone: userInfo?.phoneNumber !== undefined ? userInfo.phoneNumber : "",
+    name: request?.body?.name,
+    orgName: request?.body?.orgName,
+  };
+  try {
+    user = await createUserSignup(data);
+  } catch (e: any) {
+    console.error(e);
+    let message = e.message;
+
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
+    ) {
+      message = "User already exists. Please logout and Login again.";
+    }
+
     reply.code(500).send({ success: false, message });
     return;
-  } else {
-    let session = await Session.getSession(request, reply);
-    let userId = session.getUserId();
-
-    let user;
-    let userInfo;
-    if (request?.body?.type === "google") {
-      userInfo = await ThirdPartyEmailPassword.getUserById(userId);
-    } else {
-      userInfo = await PasswordLess.getUserById({ userId });
-      userInfo.email = request?.body?.email;
-    }
-
-    let data = {
-      id: userId,
-      email: userInfo?.email !== undefined ? userInfo.email : "",
-      phone: userInfo?.phoneNumber !== undefined ? userInfo.phoneNumber : "",
-      name: request?.body?.name,
-      orgName: request?.body?.orgName,
-    };
-    try {
-      user = await createUserSignup(data);
-    } catch (e: any) {
-      console.error(e);
-      let message = e.message;
-
-      if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === "P2002"
-      ) {
-        message = "User already exists. Please logout and Login again.";
-      }
-
-      reply.code(500).send({ success: false, message });
-      return;
-    }
-
-    reply.code(201).send(user);
   }
+
+  reply.code(201).send(user);
 }
 
 export async function changeUserPasswordHandler(
@@ -126,7 +122,7 @@ export async function changeUserPasswordHandler(
   let userId = session!.getUserId();
 
   // get the signed in user's email from the getUserById function
-  let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+  let userInfo = await supertokens.getUser(userId);
 
   if (userInfo === undefined) {
     let message = "Access failed";
@@ -134,10 +130,9 @@ export async function changeUserPasswordHandler(
     throw new Error("Should never come here");
   }
 
-  // call signin to check that input password is correct
-  let isPasswordValid = await ThirdPartyEmailPassword.emailPasswordSignIn(
+  let isPasswordValid = await EmailPassword.verifyCredentials(
     session!.getTenantId(),
-    userInfo?.email,
+    userInfo?.emails[0],
     oldPassword,
   );
 
@@ -149,9 +144,11 @@ export async function changeUserPasswordHandler(
   }
 
   // update the user's password using updateEmailOrPassword
-  let response = await ThirdPartyEmailPassword.updateEmailOrPassword({
-    userId,
+
+  let response = await EmailPassword.updateEmailOrPassword({
+    recipeUserId: session!.getRecipeUserId(),
     password: updatedPassword,
+    tenantIdForPasswordPolicy: session!.getTenantId(),
   });
 
   if (response?.status === "UNKNOWN_USER_ID_ERROR") {

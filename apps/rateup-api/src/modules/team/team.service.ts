@@ -13,7 +13,9 @@ import EmailVerification from "supertokens-node/recipe/emailverification";
 import { createEmailBody } from "../../utils/email/supertoken/inviteEmail";
 import { Role } from "../../utils/enums";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+
+import EmailPassword from "supertokens-node/recipe/emailpassword";
+
 import { FastifyReply, FastifyRequest } from "fastify";
 import { Prisma } from "@prisma/client";
 
@@ -305,7 +307,7 @@ export async function completeInvite(token: string) {
   if (!isUser) {
     //Create new user , verify email
     const FAKE_PASSWORD = "qwerty123";
-    let signUpResult = await ThirdPartyEmailPassword.emailPasswordSignUp(
+    let signUpResult = await EmailPassword.signUp(
       "public",
       updatedInvitation.email,
       FAKE_PASSWORD,
@@ -316,8 +318,9 @@ export async function completeInvite(token: string) {
 
     const tokenRes = await EmailVerification.createEmailVerificationToken(
       "public",
-      signUpResult.user.id,
+      signUpResult.recipeUserId, //TODO VERIFY SUPERTOKEN STT
     );
+
     if (tokenRes.status === "OK") {
       await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
       let id = signUpResult.user.id;
@@ -350,20 +353,21 @@ export async function completeInvite(token: string) {
           signUpResult.user.id,
         );
       }
-      // change password page
-      let passwordResetToken =
-        await ThirdPartyEmailPassword.createResetPasswordToken(
-          "public",
-          signUpResult.user.id,
-        );
 
-      if (passwordResetToken.status === "UNKNOWN_USER_ID_ERROR") {
-        throw new Error("Should never come here");
+      const linkResponse = await EmailPassword.createResetPasswordLink(
+        "public",
+        signUpResult.user.id,
+        updatedInvitation.email,
+      );
+
+      if (linkResponse.status === "OK") {
+        console.log(linkResponse.link);
+        redirectLink = linkResponse.link;
+      } else {
+        console.log("User not exists");
+
+        // user does not exist or is not an email password user
       }
-      redirectLink =
-        `${process.env.FRONTEND_URL}/login/reset-password?token=` +
-        passwordResetToken.token +
-        `&rid=emailpassword`;
     }
   } else {
     //for existing user
