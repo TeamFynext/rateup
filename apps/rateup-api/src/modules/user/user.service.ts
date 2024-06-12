@@ -13,7 +13,6 @@ import supertokens from "supertokens-node";
 import { log } from "../../utils/logger";
 import { createFreePlanSubscription } from "../subscription/subscription.service";
 import PasswordLess from "supertokens-node/recipe/passwordless";
-import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import { cloneSurvey } from "../survey/survey.service";
 import { cloneMenu } from "../menu/menu.service";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
@@ -37,7 +36,7 @@ export async function createUserSignup({
   orgName,
   phone,
 }: CreateUserSignupSchema) {
-  log.info("Creating user");
+  log.info("Creating user....");
   try {
     // Start a transaction
     let team, teamMember;
@@ -154,7 +153,8 @@ export async function getLoggedUserInfo(
     throw Error("No session available");
   }
   let userId = session.getUserId();
-  let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+  //let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
+  let userInfo = await supertokens.getUser(userId);
 
   if (!role) {
     const user = await getOrgIdAndRole({ id: userId });
@@ -177,8 +177,10 @@ export async function getLoggedUserInfo(
     },
   });
 
+  // STT
+
   if (email && !profile) {
-    if (userInfo?.thirdParty?.id) {
+    if (userInfo?.thirdParty && userInfo?.thirdParty[0]?.id) {
       throw Error("Google User missing in Rateup");
     } else {
       throw Error("User missing in Rateup");
@@ -233,7 +235,13 @@ export async function getLoggedUserProfile(
   let profile = await prisma.user.findUnique({
     where: { id: userId },
   });
-  let passwordlessLogin = await PasswordLess.getUserById({ userId });
+  //let passwordlessLogin = await PasswordLess.getUserById({ userId });
+  //STT  update above code
+
+  let passwordlessLogin = null;
+
+  //userInfo = await supertokens.getUser(userId)
+
   let userProfileData = {
     role,
     ...profile,

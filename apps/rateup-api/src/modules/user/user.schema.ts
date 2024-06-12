@@ -23,7 +23,6 @@ const createUserSignupSchema = z.object({
 });
 
 const createUserGoogleSchema = z.object({
-  inviteCode: z.string().min(4),
   name: z.string().min(4),
   orgName: z.string().min(4),
   type: z.string(),
