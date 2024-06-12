@@ -22,7 +22,10 @@ import {
 import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
 import Session from "supertokens-node/recipe/session";
-import { getTeamIdsByUserId } from "../team/team.service";
+import {
+  getTeamIdsBySurveyMapId,
+  getTeamIdsByUserId,
+} from "../team/team.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
@@ -76,7 +79,10 @@ export async function downloadExcelResponseHandler(
   try {
     let session = await Session.getSession(request, reply);
     const userId = session.getUserId();
-    const teamIds = await getTeamIdsByUserId(userId);
+    const teamIds =
+      request.body.filterTeams?.length > 0
+        ? await getTeamIdsBySurveyMapId(request.body.filterTeams)
+        : await getTeamIdsByUserId(userId);
     const surveyId = request.body.surveyId;
     const allResponse = await getAllResponses(surveyId, teamIds);
     const question = await getQuestionsBySurveyId(surveyId);
