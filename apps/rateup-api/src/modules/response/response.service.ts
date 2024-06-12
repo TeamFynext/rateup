@@ -127,7 +127,9 @@ export async function downloadExcelResponse(
   visibleColumn = [],
   tz = "Asia/Calcutta",
 ) {
-  const responses = allResponses && allResponses[0].responses;
+  const responses =
+    (allResponses && allResponses?.flatMap((data) => data?.responses)) || [];
+
   const platform = responses?.[0]?.platform;
   const filteredSecondArray = questions.filter((item) => {
     let qsTitle =

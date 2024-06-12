@@ -594,7 +594,20 @@ export async function getTeamIdsByUserId(userId: string) {
 
   return teams.map(({ teamId }) => teamId);
 }
+export async function getTeamIdsBySurveyMapId(mapId: string[]) {
+  const teams = await prisma.surveyTeamMap.findMany({
+    where: {
+      id: {
+        in: mapId,
+      },
+    },
+    select: {
+      teamId: true,
+    },
+  });
 
+  return teams.map(({ teamId }) => teamId);
+}
 export async function editTeam(
   { name, code, googleLink }: EditTeamInput,
   params: IdParamInput,

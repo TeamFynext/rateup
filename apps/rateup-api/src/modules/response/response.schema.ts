@@ -81,6 +81,7 @@ const generateXlsxSchema = z.object({
   defaultLanguage: z.string().min(1),
   visibleColumn: z.array(z.string()),
   tz: z.string().default("Asia/Calcutta"),
+  filterTeams: z.array(z.string()),
 });
 
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
