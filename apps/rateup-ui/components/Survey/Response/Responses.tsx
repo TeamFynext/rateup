@@ -73,7 +73,7 @@ const Responses = ({
   subscription,
 }) => {
   const surveyId = survey?.id;
-  const { surveyTeamMapId } = useContext(SurveyContext);
+  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const [verifyEmail, setVerifyEmail] = useState("");
@@ -177,6 +177,7 @@ const Responses = ({
       visibleColumn: useVisibleColumnStore.getState().visibleColumn,
       title: survey?.title,
       tz: dayjs.tz.guess(),
+      filterTeams,
     });
   }, [defaultLanguage, downloadExcelResponse, survey?.title, surveyId]);
 
