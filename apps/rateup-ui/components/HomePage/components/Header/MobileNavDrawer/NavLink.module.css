@@ -1,9 +1,11 @@
 /* NavLink styles */
 .root {
+  font-family: var(--font-rubik);
   padding: 1rem 0;
   background-color: transparent;
   color: var(--grey-color);
-  font-weight: bold;
+  /* font-weight: bold; */
+  font-weight: 400;
   font-size: 1rem;
 }
 
@@ -26,4 +28,9 @@
 
 .navlink-with-chevron {
   padding: 1rem 0;
+}
+
+.navlink-with-chevron:global(.link-active) {
+  color: var(--homepage-blue);
+  font-weight: 500;
 }

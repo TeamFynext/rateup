@@ -26,17 +26,31 @@
 .header-link {
   font-family: var(--font-rubik);
   composes: header-footer-link from "../../index.module.css";
-  color: var(--grey-color);
+  /* color: var(--grey-color); */
+  color: var(--mantine-color-gray-7);
   margin-right: 0;
+  font-weight: 400;
+}
+
+.header-link:global(.link-active) {
+  color: var(--homepage-blue);
   font-weight: 500;
 }
 
+.header-link:global(.link-active) + :global(.sublinks-chevron-btn) {
+  color: var(--homepage-blue);
+}
+
 .header-link:active {
-  color: #00397b;
+  color: var(--homepage-blue);
 }
 
 .header-link:hover {
-  color: var(--grey-color);
+  color: var(--homepage-blue);
+}
+
+.header-link:hover + :global(.sublinks-chevron-btn) {
+  color: var(--homepage-blue);
 }
 
 .login-signup-link {

@@ -30,7 +30,6 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       password: "",
       name: "",
       orgName: "",
-      inviteCode: "",
       phoneNumber: "",
     },
 
@@ -66,13 +65,6 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         }
         return null; // Validation passed
       },
-      inviteCode: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (value.length < 5) {
-          return "Invalid invite code";
-        }
-        return null; // Validation passed
-      },
       phoneNumber: (value) => {
         if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
         if (!isValidPhoneNumber(value)) {
@@ -89,7 +81,6 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       values.password,
       values.name,
       values.orgName,
-      values.inviteCode,
       values.phoneNumber,
     ).finally(() => {
       setIsLoading(false);
@@ -161,20 +152,12 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             {...signUpForm.getInputProps("email")}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }}>
+        <Grid.Col>
           <PasswordInput
             classNames={styles}
             placeholder="Enter Password"
             required
             {...signUpForm.getInputProps("password")}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <TextInput
-            classNames={styles}
-            withAsterisk
-            placeholder="Invite Code *"
-            {...signUpForm.getInputProps("inviteCode")}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 2, lg: 1 }}>

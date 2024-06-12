@@ -3,7 +3,6 @@ import { axiosClient } from "../apiClient";
 export interface ICreateGoogleUser {
   name: string;
   orgName: string;
-  inviteCode: string;
   type: string;
   email?: string;
 }

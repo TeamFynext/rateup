@@ -1,3 +1,63 @@
+/* General styles for the blog content */
+.blog-content {
+  line-height: 1.6;
+  margin: 2rem auto;
+  max-width: 800px;
+  padding: 0 1rem;
+  font-size: 18px;
+}
+
+/* Heading styles */
+.blog-content h1 {
+  font-size: 2.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #06429c;
+}
+
+.blog-content h2 {
+  font-size: 2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  color: #06429c;
+}
+
+.blog-content h3 {
+  font-size: 1.75rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  color: #02183b;
+}
+
+/* Paragraph styles */
+.blog-content p {
+  margin-bottom: 1.5rem;
+  text-align: justify;
+}
+
+/* Link styles */
+.blog-content a {
+  color: #3c75b6;
+  text-decoration: none;
+}
+
+.blog-content a:hover {
+  text-decoration: underline;
+}
+
+.back-to-blog-link {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.5rem 1rem;
+  color: blue;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.back-to-blog-link:hover {
+  background-color: #92b2ee;
+}
+
 .main-page-top-title-container {
   margin-top: 2rem;
   margin-bottom: 1rem;

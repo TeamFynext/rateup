@@ -30,6 +30,8 @@ import {
   IconSquareRoundedPlusFilled,
   IconShoppingCart,
   IconCloudExclamation,
+  IconCheck,
+  IconAlertCircle,
 } from "@tabler/icons-react";
 import {
   useAllSurveysSummary,
@@ -79,7 +81,7 @@ export default function DashboardHome() {
   };
   const { data: allSurveysSummary } = useAllSurveysSummary();
   useEffect(() => {
-    if (!isInitialLoading)
+    if (isRefetching) {
       notifications.show({
         id: "refetch-data",
         loading: true,
@@ -88,11 +90,30 @@ export default function DashboardHome() {
         autoClose: 2000,
         withCloseButton: true,
       });
+    }
   }, [isRefetching]);
 
   useEffect(() => {
-    fetchStatus === "idle" && notifications.clean();
-  }, [fetchStatus]);
+    if (fetchStatus === "idle" && !isRefetching) {
+      notifications.update({
+        id: "refetch-data",
+        title: "Data Refreshed",
+        message: "Your data has been successfully updated.",
+        color: "teal",
+        icon: <IconCheck size={16} />,
+        autoClose: 2000,
+      });
+    } else if (isRefetchError) {
+      notifications.update({
+        id: "refetch-data",
+        title: "Error",
+        message: "There was an issue updating your data. Please try again.",
+        color: "red",
+        icon: <IconAlertCircle size={16} />,
+        autoClose: 4000,
+      });
+    }
+  }, [fetchStatus, isRefetching, isRefetchError]);
 
   const allResponses = [];
   allSurveysSummary?.surveys?.forEach((survey) => {

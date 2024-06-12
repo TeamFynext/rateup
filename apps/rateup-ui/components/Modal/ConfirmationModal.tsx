@@ -20,6 +20,7 @@ interface ConfirmationModalProps {
   onConfirm: (e?: any) => void;
   includeEmailConfirmation?: boolean;
   deleteQuotion?: string;
+  excludeCancelButton?: boolean;
 }
 export default function ConfirmationModal({
   opened,
@@ -32,6 +33,7 @@ export default function ConfirmationModal({
   forDeleteFunctionality,
   includeEmailConfirmation = false,
   deleteQuotion,
+  excludeCancelButton = false,
 }: ConfirmationModalProps) {
   const [email, setEmail] = useState("");
   const { user } = useUser();
@@ -63,6 +65,8 @@ export default function ConfirmationModal({
           fontWeight: "bolder",
         },
       }}
+      withCloseButton={!excludeCancelButton}
+      closeOnClickOutside={!excludeCancelButton}
     >
       <Modal.Body>
         <Stack>
@@ -90,10 +94,12 @@ export default function ConfirmationModal({
             </Stack>
           )}
           <Group justify="flex-end" mt="md">
-            <RateupButtonSecondary
-              title={closeLabel || "Cancel"}
-              onClick={onClose}
-            />
+            {!excludeCancelButton && (
+              <RateupButtonSecondary
+                title={closeLabel || "Cancel"}
+                onClick={onClose}
+              />
+            )}
             <RateupButtonBlue
               title={confirmLabel ?? "Submit"}
               onClick={confirmation}

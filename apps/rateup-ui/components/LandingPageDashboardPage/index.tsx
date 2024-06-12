@@ -1,13 +1,30 @@
-import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Center,
+  Group,
+  Loader,
+  Stack,
+  Tooltip,
+} from "@mantine/core";
 import styles from "./landingPageDashboardPage.module.css";
-import { IconPlus } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconPlus,
+  IconRefresh,
+  IconSelector,
+} from "@tabler/icons-react";
 import CreateLandingPageModal from "./CreateLandingPageModal";
 import { useDisclosure } from "@mantine/hooks";
 import NothingFound from "../NothingFound/NothingFound";
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
 import LandingPageCardsList from "./LandingPageCardsList";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { getLandingPages } from "../../backend/landingPage/landingPage.api";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
+import { notifications } from "@mantine/notifications";
 
 function LandingPageDashboard() {
   const router = useRouter();
@@ -16,7 +33,40 @@ function LandingPageDashboard() {
     useDisclosure();
 
   const { data, isPending, isError } = useLandingPages();
+  const [landingPages, setLandingPages] = useState([]);
+  const [sortOrder, setSortOrder] = useState("asc");
 
+  const fetchLandingPages = useCallback(async () => {
+    const data = await getLandingPages();
+    setLandingPages(data);
+  }, []);
+
+  useEffect(() => {
+    fetchLandingPages();
+  }, [fetchLandingPages]);
+
+  const handleRefresh = async () => {
+    notifications.show({
+      color: "teal",
+      title: "Data Refreshed",
+      message: "Landing Page Updated Successfully",
+      autoClose: 1000,
+      loading: false,
+      icon: <IconCheck />,
+    });
+    await fetchLandingPages();
+  };
+  const handleSortToggle = () => {
+    setSortOrder((prevSortOrder) => (prevSortOrder === "asc" ? "desc" : "asc"));
+  };
+
+  const sortedLandingPages = [...landingPages].sort((a, b) => {
+    if (sortOrder === "asc") {
+      return a.name.localeCompare(b.name);
+    } else {
+      return b.name.localeCompare(a.name);
+    }
+  });
   let componentToBeRendered = null;
 
   if (isPending) {
@@ -25,38 +75,53 @@ function LandingPageDashboard() {
         <Loader type="bars" />
       </Center>
     );
-  }
-
-  if (isError) {
+  } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>Unable to get data, Please try again later</p>
+        <p>Unable to get data, please try again later.</p>
       </Center>
+    );
+  } else if (!isPending && !isError && !landingPages.length) {
+    componentToBeRendered = <NothingFound text="No Landing Pages Found." />;
+  } else {
+    componentToBeRendered = (
+      <LandingPageCardsList landingPages={sortedLandingPages} />
     );
   }
 
-  if (!isPending && !isError && !data?.length) {
-    componentToBeRendered = <NothingFound text="No LandingPages Found." />;
-  } else if (data) {
-    componentToBeRendered = <LandingPageCardsList landingPages={data} />;
-  }
-  useEffect(() => {
-    if (action === "create") {
-      createLandingPageModalHandlers.open();
-    }
-  }, [action]);
-
   return (
     <Stack className={`${styles["landingPage-dashboard-page-div"]}`}>
-      <Group className={styles["heading-and-create-landingPage-btn-container"]}>
-        <h1>Landing Pages</h1>
-        <Button
-          className={styles["create-landingPage-btn"]}
-          rightSection={<IconPlus />}
-          onClick={createLandingPageModalHandlers.open}
+      <Group justify="space-between">
+        <Group
+          className={styles["heading-and-create-landingPage-btn-container"]}
         >
-          Create Landing Page
-        </Button>
+          <h1>Landing Pages</h1>
+          <Button
+            className={styles["create-landingPage-btn"]}
+            rightSection={<IconPlus />}
+            onClick={createLandingPageModalHandlers.open}
+          >
+            Create Landing Page
+          </Button>
+          <Tooltip label="Refresh data">
+            <ActionIcon
+              variant="light"
+              aria-label="Refresh"
+              onClick={handleRefresh}
+            >
+              <IconRefresh
+                style={{ width: "90%", height: "90%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+        <RateupButtonPrimary
+          onClick={handleSortToggle}
+          title={"Sort"}
+          variant="subtle"
+          rightIcon={<IconSelector size="1rem" />}
+        />
       </Group>
       <Box className={styles["landingPage-list-container"]}>
         {componentToBeRendered}

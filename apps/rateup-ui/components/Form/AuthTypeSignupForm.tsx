@@ -21,7 +21,6 @@ function AuthTypeSignupForm({
     initialValues: {
       name: "",
       orgName: "",
-      inviteCode: "",
       email: "",
     },
 
@@ -38,12 +37,6 @@ function AuthTypeSignupForm({
         }
         return null; // Validation passed
       },
-      inviteCode: (value) => {
-        if (value.length < 5) {
-          return "Invalid invite code";
-        }
-        return null; // Validation passed
-      },
       email: isPhoneForm && isEmail("Invalid email"),
     },
   });
@@ -53,7 +46,6 @@ function AuthTypeSignupForm({
     const data = {
       name: values?.name,
       orgName: values?.orgName,
-      inviteCode: values?.inviteCode,
       email: values?.email,
       type: authType,
     };
@@ -116,12 +108,6 @@ function AuthTypeSignupForm({
           withAsterisk
           placeholder="Organization Name"
           {...signUpForm.getInputProps("orgName")}
-        />
-        <TextInput
-          classNames={styles}
-          withAsterisk
-          placeholder="Invite Code *"
-          {...signUpForm.getInputProps("inviteCode")}
         />
         {isPhoneForm && (
           <TextInput

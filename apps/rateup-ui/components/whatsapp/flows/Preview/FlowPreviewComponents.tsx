@@ -7,6 +7,7 @@ import {
   Image,
   Radio,
   Stack,
+  Text,
   TextInput,
   Textarea,
 } from "@mantine/core";
@@ -329,7 +330,11 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
     case WaFlowFormElementType.optIn:
       return <FlowOptInPreview label={fe.label} />;
     case WaFlowFormElementType.embeddedLink:
-      return <>slfkjlksd</>;
+      return (
+        <Text c={"blue"} ta={"center"}>
+          {fe?.text}
+        </Text>
+      );
     case WaFlowFormElementType.image:
       return (
         <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />

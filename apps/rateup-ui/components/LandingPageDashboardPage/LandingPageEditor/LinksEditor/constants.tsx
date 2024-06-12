@@ -37,10 +37,10 @@ const getSelectedTeamOptions = (surveysData, selectedSurveyTitle) => {
       (surveyObj) => surveyObj.id === selectedSurveyTitle,
     );
     const options = data?.teams.map(
-      ({ shortUrlId, team: { name: teamName } }) => {
+      ({ id, shortUrlId, team: { name: teamName } }) => {
         return {
           label: teamName,
-          value: shortUrlId,
+          value: shortUrlId || id,
         };
       },
     );
