@@ -129,27 +129,36 @@ export async function downloadExcelResponse(
 ) {
   const responses = allResponses && allResponses[0].responses;
   const platform = responses?.[0]?.platform;
-  const filteredSecondArray = questions.filter((item) =>
-    visibleColumn.includes(
-      getReplacedTitleFromVariable({ title: item.title[defaultLanguage] }) ||
-        item.title[defaultLanguage],
-    ),
-  );
+  const filteredSecondArray = questions.filter((item) => {
+    let qsTitle =
+      item?.title[defaultLanguage] ||
+      item?.description[defaultLanguage] ||
+      item?.label?.[defaultLanguage] ||
+      "";
+    return visibleColumn.includes(
+      getReplacedTitleFromVariable({
+        title: qsTitle,
+      }) || qsTitle,
+    );
+  });
+
   if (filteredSecondArray && responses) {
-    const headerArray = filteredSecondArray.flatMap((question) =>
-      question.type === QuestionType.Contact
+    const headerArray = filteredSecondArray.flatMap((question) => {
+      let qsTitle =
+        question?.title[defaultLanguage] ||
+        question?.description[defaultLanguage] ||
+        question?.label?.[defaultLanguage] ||
+        "";
+      return question.type === QuestionType.Contact
         ? Object.entries(question.features?.[defaultLanguage])
             ?.filter((data: any) => data[1].isEnabled)
-            .map(
-              (data) =>
-                `${getContent(question.title[defaultLanguage])}: ${data[0]}`,
-            ) ?? []
+            .map((data) => `${getContent(qsTitle)}: ${data[0]}`) ?? []
         : question.type === QuestionType.MCQGrid
           ? question.features?.[defaultLanguage]?.questions?.map(
-              (q) => `${getContent(question.title[defaultLanguage])}: ${q}`,
+              (q) => `${getContent(qsTitle)}: ${q}`,
             ) ?? []
-          : [getContent(question.title[defaultLanguage])],
-    );
+          : [getContent(qsTitle)];
+    });
 
     const createdAt = "Date";
     if (visibleColumn.includes("createdAt")) {
