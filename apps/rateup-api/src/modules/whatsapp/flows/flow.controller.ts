@@ -437,7 +437,7 @@ export async function sendFlowHandler(
       phone,
     };
     await sendFlow(serviceParam);
-    orgId && updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppFlow, orgId);
+    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     reply.status(201).send();
   } catch (error) {
     reply.status(500).send(error.message);

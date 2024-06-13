@@ -432,7 +432,7 @@ async function handleStartSurvey({
     });
     sendStatus &&
       orgId &&
-      updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppFlow, orgId);
+      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
   } else {
     // WaSurvey
     if (session.surveyTeamMap.survey.languages.length > 1) {

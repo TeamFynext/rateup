@@ -30,7 +30,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([
-      SubscriptionFeaturePathName.WhatsAppCampaign,
+      SubscriptionFeaturePathName.WhatsAppTemplate,
     ]),
   );
 

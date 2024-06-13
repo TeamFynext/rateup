@@ -13,8 +13,37 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
       googleReview: { active: true },
       emailNotification: { active: true },
     },
-    whatsappSurvey: { count: { max: count }, active: true },
-    whatsappCampaign: { count: { max: count }, active: true },
+    whatsapp: {
+      active: true,
+      count: {
+        max: 0,
+        monthlyMessageLimit: 100,
+      },
+      survey: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+      campaign: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+      flow: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+      template: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+    },
     reputationManagement: { count: { max: count }, active: true },
     ticket: { count: { max: count }, active: true },
   };
@@ -39,8 +68,37 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       googleReview: { active: false },
       emailNotification: { active: false },
     },
-    whatsappSurvey: { count: { max: 0 }, active: false },
-    whatsappCampaign: { count: { max: 0 }, active: false },
+    whatsapp: {
+      active: true,
+      count: {
+        max: 0,
+        monthlyMessageLimit: 100,
+      },
+      survey: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+      campaign: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+      flow: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+      template: {
+        active: true,
+        count: {
+          max: 0,
+        },
+      },
+    },
     reputationManagement: { count: { max: 0 }, active: false },
     ticket: { count: { max: 0 }, active: false },
   };

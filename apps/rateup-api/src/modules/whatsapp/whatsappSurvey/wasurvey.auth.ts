@@ -29,7 +29,7 @@ export async function checkMessageLimitExceeded(orgId: string) {
   });
   return !(
     usage?.monthlyMessagesCount >=
-    subscription.features?.[SubscriptionFeaturePathName.WhatsAppFlow].count
-      ?.monthlyResponseLimit
+    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+      ?.monthlyMessageLimit
   );
 }

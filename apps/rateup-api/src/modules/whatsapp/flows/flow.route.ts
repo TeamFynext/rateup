@@ -23,6 +23,8 @@ import {
 } from "./flow.controller";
 import { log } from "../../../utils/logger";
 import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_templates.auth";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {
@@ -30,7 +32,10 @@ export async function flowRoutes(server: FastifyInstance) {
     done();
   });
   server.addHook("preHandler", checkSession);
-  // TODO: add subscription
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsAppFlow]),
+  );
 
   server.get(
     "/",

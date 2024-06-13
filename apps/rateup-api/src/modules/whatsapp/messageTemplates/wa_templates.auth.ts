@@ -21,8 +21,8 @@ export async function verifyMessageMonthlyLimitRestriction(
 
   if (
     usage?.monthlyMessagesCount >=
-    subscription.features?.[SubscriptionFeaturePathName.WhatsAppFlow].count
-      ?.monthlyResponseLimit
+    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+      ?.monthlyMessageLimit
   ) {
     reply.code(403).send({
       message: "You have reached the maximum monthly limit of messages.",

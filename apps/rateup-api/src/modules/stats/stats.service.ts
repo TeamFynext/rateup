@@ -14,11 +14,11 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
         surveyResponsesCount: stat === "survey" ? { increment: 1 } : undefined,
         menuViewsCount: stat === "menu" ? { increment: 1 } : undefined,
         monthlyMessagesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppFlow
+          stat === SubscriptionFeaturePathName.Whatsapp
             ? { increment: 1 }
             : undefined,
         messagesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppFlow
+          stat === SubscriptionFeaturePathName.Whatsapp
             ? { increment: 1 }
             : undefined,
       },
@@ -30,9 +30,8 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
         surveyResponsesCount: stat === "survey" ? 1 : 0,
         menuViewsCount: stat === "menu" ? 1 : 0,
         monthlyMessagesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppFlow ? 1 : 0,
-        messagesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppFlow ? 1 : 0,
+          stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
+        messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },
