@@ -3,7 +3,7 @@ import { Select } from "@mantine/core";
 import { IconSelector } from "@tabler/icons-react";
 
 const SortDropdown = ({ onSortChange }) => {
-  const [sortOption, setSortOption] = useState("");
+  const [sortOption, setSortOption] = useState("latest");
 
   const handleSortChange = (value) => {
     setSortOption(value);
@@ -21,6 +21,12 @@ const SortDropdown = ({ onSortChange }) => {
         { value: "a-z", label: "A - Z" },
         { value: "z-a", label: "Z - A" },
       ]}
+      styles={{
+        input: {
+          borderRadius: 25,
+          width: "150px",
+        },
+      }}
     />
   );
 };
