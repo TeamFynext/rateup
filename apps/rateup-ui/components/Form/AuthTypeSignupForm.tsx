@@ -54,6 +54,7 @@ function AuthTypeSignupForm({
   return (
     <>
       <FormModalLayout
+        centered={true}
         title={
           authType === "google"
             ? "Google Auth Success"
