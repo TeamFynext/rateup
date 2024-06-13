@@ -16,12 +16,13 @@ import { useUser } from "../../../context/UserContext";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import Heading from "../../../components/styled/Heading/Heading";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
+import SortDropdown from "../../../components/Dashboard/SortDropDown";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
-  const [sort, setSort] = useState(true);
+  const [sortOption, setSortOption] = useState(" ");
   const { user } = useUser();
 
   function handleEditClick(menu: Menu) {
@@ -36,6 +37,9 @@ export default function MenuPage() {
     setEditingItem(null);
     close();
   }
+  const onSortChange = (value) => {
+    setSortOption(value);
+  };
   return (
     <Stack h={"100%"}>
       <Group justify="space-between">
@@ -56,12 +60,7 @@ export default function MenuPage() {
             enableAll={true}
             allowDeselect={false}
           />
-          <RateupButtonPrimary
-            onClick={() => setSort(!sort)}
-            title={"Sort"}
-            variant="subtle"
-            rightIcon={<IconSelector size="1rem" />}
-          />
+          <SortDropdown onSortChange={onSortChange} />
         </Group>
       </Group>
       <Space h="lg" />
@@ -81,14 +80,17 @@ export default function MenuPage() {
               editingItem={editingItem}
             />
           )}
-          <DisplayMenus handleEditClick={handleEditClick} sorthandle={sort} />
+          <DisplayMenus
+            handleEditClick={handleEditClick}
+            sortOption={sortOption}
+          />
         </SelectedTeamContext.Provider>
       </SimpleGrid>
     </Stack>
   );
 }
 
-function DisplayMenus({ handleEditClick, sorthandle }) {
+function DisplayMenus({ handleEditClick, sortOption }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const { isError, isLoading, data: menus } = useAllMenus();
   const smallScreen = useMediaQuery("(max-width: 40em)");
@@ -113,9 +115,22 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
 
   // Sort menus based on `sorthandle`
   const sortedMenus = filteredMenus?.slice()?.sort((a, b) => {
-    const dateA = new Date(a.createdAt).getTime();
-    const dateB = new Date(b.createdAt).getTime();
-    return sorthandle ? dateB - dateA : dateA - dateB;
+    switch (sortOption) {
+      case "latest":
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case "oldest":
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      case "a-z":
+        return a.name.localeCompare(b.name);
+      case "z-a":
+        return b.name.localeCompare(a.name);
+      default:
+        return 0;
+    }
   });
   return (
     <>
