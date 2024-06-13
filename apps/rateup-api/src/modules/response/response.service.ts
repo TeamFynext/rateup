@@ -159,7 +159,23 @@ export async function downloadExcelResponse(
           ? question.features?.[defaultLanguage]?.questions?.map(
               (q) => `${getContent(qsTitle)}: ${q}`,
             ) ?? []
-          : [getContent(qsTitle)];
+          : question.type === QuestionType.MultiTextInput
+            ? question.features?.[defaultLanguage]?.fields?.map(
+                (field) =>
+                  `${getContent(
+                    question.title[defaultLanguage],
+                  )}: ${field?.fieldKey}`,
+              ) ?? []
+            : question.type === QuestionType.Testimonial
+              ? [
+                  `${getContent(question.title[defaultLanguage])}: name`,
+                  `${getContent(question.title[defaultLanguage])}: testimonial`,
+                  ...Object.keys(question.features?.[defaultLanguage])?.map(
+                    (key) =>
+                      `${getContent(question.title[defaultLanguage])}: ${key}`,
+                  ),
+                ] ?? []
+              : [getContent(qsTitle)];
     });
 
     const createdAt = "Date";
@@ -214,17 +230,6 @@ export async function downloadExcelResponse(
               responseValue = responseValue?.toString();
               break;
             }
-            case QuestionType.MultiTextInput:
-              const fields = question?.features?.[defaultLanguage]?.fields;
-              if (fields) {
-                responseValue = fields
-                  ?.map(
-                    (f) =>
-                      `${f.fieldKey}:  ${responseValue?.[f.fieldKey] ?? "NA"}`,
-                  )
-                  .join(", ");
-              }
-              break;
           }
           if (
             QuestionType.Contact === responseType &&
@@ -243,6 +248,34 @@ export async function downloadExcelResponse(
             question?.features?.[defaultLanguage]?.questions?.map((q) =>
               responseValue?.[q]
                 ? bodyArray[answerIndex].push(responseValue?.[q]?.value)
+                : bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          } else if (
+            QuestionType.MultiTextInput === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            question?.features?.[defaultLanguage]?.fields?.map((field) =>
+              responseValue?.[field?.fieldKey]
+                ? bodyArray[answerIndex].push(responseValue?.[field?.fieldKey])
+                : bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          } else if (
+            QuestionType.Testimonial === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            bodyArray[answerIndex].push(responseValue?.name ?? "");
+            bodyArray[answerIndex].push(responseValue?.testimonial ?? "");
+            Object.keys(question?.features?.[defaultLanguage])?.map((key) =>
+              responseValue?.[key]
+                ? bodyArray[answerIndex].push(
+                    key == "photo"
+                      ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
+                      : responseValue?.[key],
+                  )
                 : bodyArray[answerIndex].push(""),
             );
             flag = false;
@@ -660,6 +693,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         subQs.map((qstn) =>
           questionTitles.push((qstnTitle + ":" + qstn).trim()),
         );
+      } else if (q.type === QuestionType.MultiTextInput) {
+        const fields = q.features?.[lang]?.fields;
+        fields?.map((field) =>
+          questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()),
+        );
       } else questionTitles.push(qstnTitle);
     });
 
@@ -717,6 +755,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               Object.entries(res.response[res.type]).map(
                 ([key, value]: [string, Choice]) =>
                   (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+              );
+            else if (qstn.type === QuestionType.MultiTextInput)
+              Object.entries(res.response[res.type]).map(
+                ([key, value]) =>
+                  (resObj[(qstnTitle + ":" + key).trim()] = value),
               );
             else
               resObj[qstnTitle] = getFormattedResponse(
@@ -886,6 +929,10 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
             ([key, value]: [string, Choice]) =>
               (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
           );
+        else if (qstn.type === QuestionType.MultiTextInput)
+          Object.entries(res.response[res.type]).map(
+            ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+          );
         else
           resObj[
             QIndex + "_" + getContent(qstn.title[response.language]).trim()
@@ -914,14 +961,6 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
 export function getFormattedResponse(response, qstn, language) {
   let formattedResponse = "";
   switch (qstn?.type) {
-    case QuestionType.MultiTextInput:
-      const fields = qstn?.features?.[language]?.fields;
-      if (fields) {
-        return fields
-          ?.map((f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`)
-          .join(", ");
-      }
-      break;
     case QuestionType.MCQ:
       formattedResponse =
         response?.value?.trim() ||
