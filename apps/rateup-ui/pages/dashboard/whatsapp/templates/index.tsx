@@ -28,10 +28,11 @@ import { lexend500 } from "../../../../utils/fonts";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import SortDropdown from "../../../../components/Dashboard/SortDropDown";
 
 export default function Template() {
   const { data: templates, isPending } = useWaTemplates();
-  const [sort, setSort] = useState(true);
+  const [sortOption, setSortOption] = useState(" ");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
   const templateDeleteMutation = useDeleteWaTemplateMutation(
@@ -56,10 +57,26 @@ export default function Template() {
   function handleEditClick(template) {
     router.push(`/dashboard/whatsapp/templates/${template.id}`);
   }
-  const sortOrder = sort ? "desc" : "asc";
-  templates.sort((a, b) =>
-    dayjs(a.createdAt).isBefore(b.createdAt) === (sortOrder === "asc") ? -1 : 1,
-  );
+
+  const onSortChange = (value) => {
+    setSortOption(value);
+  };
+
+  const sortedTemplates = [...templates].sort((a, b) => {
+    switch (sortOption) {
+      case "latest":
+        return dayjs(a.createdAt).isBefore(b.createdAt) ? 1 : -1;
+      case "oldest":
+        return dayjs(b.createdAt).isBefore(a.createdAt) ? 1 : -1;
+      case "a-z":
+        return a.data.name.localeCompare(b.data.name);
+      case "z-a":
+        return b.data.name.localeCompare(a.data.name);
+      default:
+        return 0;
+    }
+  });
+
   return (
     <>
       <Flex
@@ -97,12 +114,7 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          <RateupButtonPrimary
-            onClick={() => setSort((prev) => !prev)}
-            title={"Sort"}
-            variant="subtle"
-            rightIcon={<IconSelector size="1rem" />}
-          />
+          <SortDropdown onSortChange={onSortChange} />
           <SyncTemplatesButton />
         </Flex>
       </Flex>
@@ -130,7 +142,7 @@ export default function Template() {
         }}
       />
       <SimpleGrid spacing={"lg"} cols={{ base: 1, sm: 2, lg: 3, xl: 3 }}>
-        {templates?.map((t) => (
+        {sortedTemplates?.map((t) => (
           <TemplateCard
             key={t.id}
             template={t}
