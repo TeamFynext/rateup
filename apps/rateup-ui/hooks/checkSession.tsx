@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-
 import Session from "supertokens-web-js/recipe/session";
 
 export const useCheckSession = () => {
@@ -10,6 +9,13 @@ export const useCheckSession = () => {
   const checkSession = useCallback(async () => {
     try {
       const doesSessionExist = await Session.doesSessionExist();
+      if (
+        !doesSessionExist &&
+        router.asPath?.toLowerCase() === "/signup?auth=google"
+      ) {
+        router.push("/login");
+      }
+
       if (
         doesSessionExist &&
         (router.asPath?.toLowerCase() === "/login" ||
