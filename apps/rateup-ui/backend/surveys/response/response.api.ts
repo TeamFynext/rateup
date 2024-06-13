@@ -71,6 +71,7 @@ export type downloadExcelResponseType = {
   visibleColumn: string[];
   title: string;
   tz: string;
+  filterTeams: string[];
 };
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {

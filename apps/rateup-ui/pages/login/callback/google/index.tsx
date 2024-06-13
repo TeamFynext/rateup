@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { thirdPartySignInAndUp } from "supertokens-web-js/recipe/thirdpartyemailpassword";
+import { signInAndUp } from "supertokens-web-js/recipe/thirdparty";
 import { useRouter } from "next/router";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -9,10 +9,13 @@ const index = () => {
 
   async function handleGoogleCallback() {
     try {
-      const response = await thirdPartySignInAndUp();
+      const response = await signInAndUp();
 
       if (response.status === "OK") {
-        if (response.createdNewUser) {
+        if (
+          response.createdNewRecipeUser &&
+          response.user.loginMethods.length === 1
+        ) {
           // sign up successful
           router.push("/signup?auth=google");
 
@@ -25,7 +28,7 @@ const index = () => {
             autoClose: 3000,
           });
         } else {
-          // sign in successful
+          // login successful
           notifications.show({
             id: "load-data",
             color: "teal",
@@ -34,6 +37,8 @@ const index = () => {
             icon: <IconCheck size="1rem" />,
             autoClose: 3000,
           });
+
+          // router.push("/signup?auth=google");
 
           router.push("/dashboard");
         }
@@ -52,6 +57,7 @@ const index = () => {
       }
     } catch (err: any) {
       if (err.isSuperTokensGeneralError === true) {
+        console.log(err);
         // this may be a custom error message sent from the API by you.
         // window.alert(err.message);
         notifications.show({
@@ -68,7 +74,7 @@ const index = () => {
           id: "load-data",
           color: "red",
           title: "Error",
-          message: "Oops! Something went wrong..." + err,
+          message: "Oops! Something went wrong..." + JSON.stringify(err),
           icon: <IconX size="1rem" />,
           autoClose: 6000,
         });
