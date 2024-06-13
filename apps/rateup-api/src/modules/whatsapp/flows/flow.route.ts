@@ -22,6 +22,7 @@ import {
   updateFlowMetaDataHandler,
 } from "./flow.controller";
 import { log } from "../../../utils/logger";
+import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_templates.auth";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {
@@ -183,6 +184,7 @@ export async function flowRoutes(server: FastifyInstance) {
   server.post(
     "/:dbFlowId/send",
     {
+      preHandler: verifyMessageMonthlyLimitRestriction,
       schema: {
         body: $waFlow("sendFlowBodySchema"),
         params: $waFlow("byDbFlowIdParams"),
