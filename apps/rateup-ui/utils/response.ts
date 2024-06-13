@@ -130,7 +130,7 @@ function formatTestimonialResponse(response) {
   const contentArray = [];
   Object.entries(response).map(([key, value]) => {
     if (key === "photo") return;
-    contentArray.push(`${key}:  ${String(value)}`);
+    contentArray.push(`${key}:  ${value ? String(value) : "NA"}`);
   });
   return {
     content: contentArray.join(", "),
