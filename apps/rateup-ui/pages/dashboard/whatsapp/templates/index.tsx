@@ -23,7 +23,6 @@ import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
 import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/SyncTemplates";
 import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
-import { whatsappOptions } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
@@ -44,10 +43,6 @@ export default function Template() {
   );
 
   const router = useRouter();
-  if (!whatsappOptions?.includes("templates")) {
-    router.push("/dashboard/whatsapp/flows");
-    return;
-  }
   if (isPending) return <RateupLoader h={"90dvh"} />;
   // TODO: handle error
   function handleCreateClick() {
