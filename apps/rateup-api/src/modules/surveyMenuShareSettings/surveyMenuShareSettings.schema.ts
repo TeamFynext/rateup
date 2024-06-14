@@ -3,55 +3,60 @@ const paramsSchema = {
   required: ["id"],
   properties: {
     resourceName: { type: "string" },
-    id: { type: "string"}
-  }
-}
+    id: { type: "string" },
+  },
+};
 
 const bodySchema = {
   type: "object",
-  required: ["logoSize", "logoFillType", "logoBorderRadius", "qrBgColor", "qrColor"],
+  required: [
+    "logoSize",
+    "logoFillType",
+    "logoBorderRadius",
+    "qrBgColor",
+    "qrColor",
+  ],
   properties: {
-    qrBgColor: { type: "string"},
-    qrColor: { type: "string"},
-    logoSize: { type: "number"},
-    logoFillType: { type: "string"},
-    logoBorderRadius:{ type: "number"},
-    logoFile: { 
-      anyOf: [
-        {type: "object"},
-        {type: "string"}
-      ]
-    }
-  }
-}
+    qrBgColor: { type: "string" },
+    qrColor: { type: "string" },
+    logoSize: { type: "number" },
+    logoFillType: { type: "string" },
+    logoBorderRadius: { type: "number" },
+    logoFile: {
+      anyOf: [{ type: "object" }, { type: "string" }],
+    },
+    isLogoEnabled: { type: "boolean" },
+  },
+};
 
 const responseSchema = {
   "2xx": {
     type: "object",
     properties: {
-      qrBgColor: { type: "string"},
-      qrColor: { type: "string"},
-      logoSize: { type: "number"},
-      logoFillType: { type: "string"},
-      logoBorderRadius:{ type: "number"},
-      logoFile: { 
+      qrBgColor: { type: "string" },
+      qrColor: { type: "string" },
+      logoSize: { type: "number" },
+      logoFillType: { type: "string" },
+      logoBorderRadius: { type: "number" },
+      logoFile: {
         type: "string",
-        nullable: true
-      }
+        nullable: true,
+      },
+      isLogoEnabled: { type: "boolean" },
     },
-    nullable: true
-  }
-}
+    nullable: true,
+  },
+};
 
 const getSettingsSchema = {
-  params: paramsSchema, 
-  response: responseSchema
-}
+  params: paramsSchema,
+  response: responseSchema,
+};
 
 const saveAndUpdateSettingsSchema = {
-  consumes: ['multipart/form-data'],
+  consumes: ["multipart/form-data"],
   ...getSettingsSchema,
-  body: bodySchema
-}
+  body: bodySchema,
+};
 
 export { getSettingsSchema, saveAndUpdateSettingsSchema };
