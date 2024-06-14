@@ -2,12 +2,16 @@ import { Center, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { isEmail, useForm } from "@mantine/form";
 import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
 import Link from "next/link";
-import { IconArrowAutofitLeft } from "@tabler/icons-react";
+import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
 import styles from "./AuthForm.module.css";
 import FormModalLayout from "../Modal/FormModalLayout";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconArrowNarrowRight } from "@tabler/icons-react";
 import { SAVE_HOTKEY } from "../../utils/constants";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useUserInfo } from "../../backend/user/user.query";
+import { showSuccessToast } from "../../utils/notifications";
 
 function AuthTypeSignupForm({
   setIsLoading,
@@ -15,7 +19,19 @@ function AuthTypeSignupForm({
   isLoading,
   authType,
 }) {
+  const { data: userInfo, isPending } = useUserInfo();
   const [opened, { close, open }] = useDisclosure(true);
+  const [isUserExist, setIsUserExist] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (userInfo && "data" in userInfo) {
+      if (userInfo?.data && userInfo.data?.userId) {
+        setIsUserExist(true);
+      }
+    }
+  }, [userInfo]);
+
   const isPhoneForm = authType === "phone";
   const signUpForm = useForm({
     initialValues: {
@@ -43,6 +59,15 @@ function AuthTypeSignupForm({
 
   const handleSubmit = (values) => {
     setIsLoading(true);
+    if (isUserExist) {
+      showSuccessToast(
+        "Sign up process is already completed",
+        "",
+        <IconCheck />,
+      );
+      router.push("/dashboard");
+      return;
+    }
     const data = {
       name: values?.name,
       orgName: values?.orgName,
@@ -62,12 +87,15 @@ function AuthTypeSignupForm({
         }
         opened={opened}
         onClose={() => {
+          if (isUserExist) router.push("/dashboard");
           close();
         }}
       >
-        <Text mt="xs" mb="xl">
-          You are successfully authenticated, please fill the information to
-          complete the signup process.
+        <Text mt="xs" mb="xl" display={"inline-block"}>
+          You are successfully authenticated,
+          <Text display={isUserExist ? "none" : "inline-block"}>
+            please fill the information to complete the signup process
+          </Text>
         </Text>
 
         <Center mt="xl">
@@ -76,6 +104,7 @@ function AuthTypeSignupForm({
             rightIcon={<IconArrowNarrowRight />}
             title="Continue"
             onClick={() => {
+              if (isUserExist) router.push("/dashboard");
               close();
             }}
           />
