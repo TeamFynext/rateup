@@ -5,6 +5,7 @@ const initialLogoTabPanelState = {
   logoFillType: "contain",
   logoBorderRadius: 50,
   logoFile: null,
+  isLogoEnabled: true,
 };
 
 const logoTabPanelReducer = (state, action) => {
@@ -12,6 +13,10 @@ const logoTabPanelReducer = (state, action) => {
   switch (action.type) {
     case "file-input": {
       state["logoFile"] = payload;
+      break;
+    }
+    case "logo-image-switch": {
+      state["isLogoEnabled"] = payload;
       break;
     }
     case "logo-size": {
