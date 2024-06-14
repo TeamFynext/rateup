@@ -4,12 +4,11 @@ interface ScreenshotProps {
   alt?: string;
   width?: string | number,
   height?: string | number
-
 }
 
-const Screenshot = ( { src, alt, width = "80%", height= "auto" } : ScreenshotProps) => {
+const Screenshot = ( { src, alt, width , height } : ScreenshotProps) => {
   return (
-      <img src={src} alt={alt} width={width} height={height} style={{margin:"auto", 
+      <img src={src} alt={alt} width={width || "80%"} height={height || "auto"} style={{margin:"auto", 
         marginTop:"20px", boxShadow:"10px 10px 20px rgba(0, 0, 0, 0.1)", borderRadius:"5px"}}/>
   )
 }
