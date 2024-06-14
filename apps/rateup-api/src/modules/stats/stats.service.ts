@@ -195,11 +195,7 @@ export async function updateUsageStats(
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
       menusCount: stats?.menuCount || 0,
       menuViewsCount: stats?.menuViewsCount || 0,
-      org: {
-        connect: {
-          id: orgId,
-        },
-      },
+      orgId,
     },
   });
 
