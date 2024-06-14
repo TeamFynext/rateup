@@ -421,6 +421,11 @@ export async function createResponse(
           },
         },
       },
+      Contact: {
+        select: {
+          phone: true,
+        },
+      },
     },
   });
 
@@ -660,6 +665,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           .map((res) => ({
             createdAt: res.createdAt,
             responses: res.responses,
+            respondentPhone: res?.Contact?.phone,
           }))
           .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
       });
@@ -669,9 +675,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   for (const lang of languages) {
     let questionTitles = [];
     questions.map((q: Question, index: number) => {
-      const qstnTitle =
-        index + 1 + "_" + getContent(q?.title[lang])?.trim() ||
-        index + 1 + "_" + q?.description[lang].trim();
+      let qsTitle =
+        q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
+      const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
       if (
         [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
           q.type,
@@ -705,9 +711,19 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       (await doc.sheetsByTitle[lang]) ??
       (await doc.addSheet({
         title: lang,
-        headerValues: ["Created At", ...questionTitles, "team"],
+        headerValues: [
+          "Created At",
+          ...questionTitles,
+          "team",
+          "Respondent's Mobile Number",
+        ],
       }));
-    await sheet.setHeaderRow(["Created At", ...questionTitles, "team"]);
+    await sheet.setHeaderRow([
+      "Created At",
+      ...questionTitles,
+      "team",
+      "Respondent's Mobile Number",
+    ]);
     await sheet.loadCells();
     const columnCount = await sheet.columnCount;
     for (var i = 0; i < columnCount; i++) {
@@ -731,7 +747,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
             }
           });
           if (qstn) {
-            let qstnTitle = QIndex + "_" + getContent(qstn.title[lang])?.trim();
+            let qsTitle =
+              qstn?.title[lang] ||
+              qstn?.description[lang] ||
+              qstn?.label?.[lang] ||
+              "";
+            let qstnTitle = QIndex + "_" + getContent(qsTitle)?.trim();
             if (
               [
                 QuestionType.Contact,
@@ -769,6 +790,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               );
           }
         });
+        resObj["Respondent's Mobile Number"] = response?.respondentPhone;
         responseForSheet.push(resObj);
       });
     }
@@ -847,9 +869,11 @@ interface IsheetResponse {
   responses: QuestionResponse[];
   language: string;
   createdAt: Date;
+  respondent: string;
 }
-export async function saveResponseToGoogleSheet(response: IsheetResponse) {
+export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
   try {
+    const { respondent, ...response } = responseData;
     const {
       survey: { spreadSheetId, questions, id: surveyId },
       team,
@@ -904,8 +928,12 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
             }
           },
         );
-        let qstnTitle =
-          QIndex + "_" + getContent(qstn.title[response.language]).trim();
+        let qsTitle =
+          qstn?.title[response.language] ||
+          qstn?.description[response.language] ||
+          qstn?.label?.[response.language] ||
+          "";
+        let qstnTitle = QIndex + "_" + getContent(qsTitle).trim();
         if (
           [
             QuestionType.Contact,
@@ -934,14 +962,13 @@ export async function saveResponseToGoogleSheet(response: IsheetResponse) {
             ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
           );
         else
-          resObj[
-            QIndex + "_" + getContent(qstn.title[response.language]).trim()
-          ] = getFormattedResponse(
+          resObj[qstnTitle] = getFormattedResponse(
             res.response[res.type],
             qstn,
             response.language,
           );
       });
+      resObj["Respondent's Mobile Number"] = respondent;
       const newRow = await sheet.addRow(resObj);
       const dateColumnIndex = sheet.headerValues.indexOf("Created At");
       await sheet.loadCells();
