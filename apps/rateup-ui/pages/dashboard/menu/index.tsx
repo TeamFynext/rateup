@@ -16,13 +16,15 @@ import { useUser } from "../../../context/UserContext";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import Heading from "../../../components/styled/Heading/Heading";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
-import SortDropdown from "../../../components/Dashboard/SortDropDown";
+import SortDropdown, {
+  sortData,
+} from "../../../components/Dashboard/SortDropDown";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
-  const [sortOption, setSortOption] = useState(" ");
+  const [sortOption, setSortOption] = useState("latest");
   const { user } = useUser();
 
   function handleEditClick(menu: Menu) {
@@ -60,7 +62,10 @@ export default function MenuPage() {
             enableAll={true}
             allowDeselect={false}
           />
-          <SortDropdown onSortChange={onSortChange} />
+          <SortDropdown
+            onSortChange={onSortChange}
+            defaultSortOption={sortOption}
+          />
         </Group>
       </Group>
       <Space h="lg" />
@@ -114,24 +119,8 @@ function DisplayMenus({ handleEditClick, sortOption }) {
       : menus?.filter((menu) => menu.teamId === selectedTeamId);
 
   // Sort menus based on `sorthandle`
-  const sortedMenus = filteredMenus?.slice()?.sort((a, b) => {
-    switch (sortOption) {
-      case "latest":
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      case "oldest":
-        return (
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      case "a-z":
-        return a.name.localeCompare(b.name);
-      case "z-a":
-        return b.name.localeCompare(a.name);
-      default:
-        return 0;
-    }
-  });
+  const sortedMenus = sortData(filteredMenus, sortOption);
+
   return (
     <>
       {sortedMenus?.length > 0 ? (

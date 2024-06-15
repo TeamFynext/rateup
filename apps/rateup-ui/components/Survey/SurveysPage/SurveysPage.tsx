@@ -10,6 +10,7 @@ import { CreateSurveyModal } from "../CreateSurveyModal";
 import { SurveyHeader } from "./SurveysPageHeader";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
+import { sortData } from "../../Dashboard/SortDropDown";
 
 // USED IN:
 // dashboard/surveys
@@ -42,7 +43,7 @@ export function SurveysPage({
     mergeSurveyOpened,
     { open: openMergeSurvey, close: closeMergeSurveyModal },
   ] = useDisclosure(false);
-  const [sortOption, setSortOption] = useState("");
+  const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
   const router = useRouter();
@@ -106,24 +107,12 @@ export function SurveysPage({
     return found;
   };
 
-  const sortedSurveys = [...surveys].sort((a, b) => {
-    switch (sortOption) {
-      case "latest":
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      case "oldest":
-        return (
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      case "a-z":
-        return a.title.localeCompare(b.title);
-      case "z-a":
-        return b.title.localeCompare(a.title);
-      default:
-        return 0;
-    }
-  });
+  //  const sortedSurveys = sortData(surveys, sortOption);
+  const sortedSurveys = sortData(
+    surveys.map((s) => ({ ...s, data: { name: s.title } })),
+    sortOption,
+  );
+
   return (
     <Stack h={"100%"} gap={0}>
       <SurveyHeader
@@ -133,8 +122,8 @@ export function SurveysPage({
         setFilterParam={setFilterParam}
         openCreateSurvey={openCreateSurvey}
         openMergeSurvey={openMergeSurvey}
-        sort={sortOption}
-        setSort={setSortOption}
+        onSortChange={setSortOption}
+        sortOption={sortOption} //
         surveyCount={surveyidArray.length}
         surveyType={surveyType}
         refetch={refetch}

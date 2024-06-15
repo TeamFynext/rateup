@@ -28,7 +28,9 @@ import { lexend500 } from "../../../../utils/fonts";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import SortDropdown from "../../../../components/Dashboard/SortDropDown";
+import SortDropdown, {
+  sortData,
+} from "../../../../components/Dashboard/SortDropDown";
 
 export default function Template() {
   const { data: templates, isPending } = useWaTemplates();
@@ -62,20 +64,7 @@ export default function Template() {
     setSortOption(value);
   };
 
-  const sortedTemplates = [...templates].sort((a, b) => {
-    switch (sortOption) {
-      case "latest":
-        return dayjs(a.createdAt).isBefore(b.createdAt) ? 1 : -1;
-      case "oldest":
-        return dayjs(b.createdAt).isBefore(a.createdAt) ? 1 : -1;
-      case "a-z":
-        return a.data.name.localeCompare(b.data.name);
-      case "z-a":
-        return b.data.name.localeCompare(a.data.name);
-      default:
-        return 0;
-    }
-  });
+  const sortedTemplates = sortData(templates, sortOption);
 
   return (
     <>
@@ -114,7 +103,10 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          <SortDropdown onSortChange={onSortChange} />
+          <SortDropdown
+            onSortChange={onSortChange}
+            defaultSortOption={sortOption}
+          />
           <SyncTemplatesButton />
         </Flex>
       </Flex>

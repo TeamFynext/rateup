@@ -19,16 +19,13 @@ export function SurveyHeader({
   setFilterParam,
   openCreateSurvey,
   openMergeSurvey,
-  sort,
-  setSort,
+  onSortChange,
+  sortOption,
   surveyCount,
   surveyType,
   refetch,
 }) {
   const { user } = useUser();
-  const handleSortChange = (value) => {
-    setSort(value);
-  };
 
   return (
     <Group gap="md" justify="space-between">
@@ -80,7 +77,10 @@ export function SurveyHeader({
           filterParam={filterParam}
           setFilterParam={setFilterParam}
         />
-        <SortDropdown onSortChange={handleSortChange} />
+        <SortDropdown
+          onSortChange={onSortChange}
+          defaultSortOption={sortOption}
+        />
       </Group>
     </Group>
   );

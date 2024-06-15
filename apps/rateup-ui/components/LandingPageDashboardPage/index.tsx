@@ -25,7 +25,7 @@ import { useRouter } from "next/router";
 import { getLandingPages } from "../../backend/landingPage/landingPage.api";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
-import SortDropdown from "../Dashboard/SortDropDown";
+import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 
 function LandingPageDashboard() {
   const router = useRouter();
@@ -62,24 +62,10 @@ function LandingPageDashboard() {
     setSortOption(value);
   };
 
-  const sortedLandingPages = [...landingPages].sort((a, b) => {
-    switch (sortOption) {
-      case "latest":
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      case "oldest":
-        return (
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      case "a-z":
-        return a.name.localeCompare(b.name);
-      case "z-a":
-        return b.name.localeCompare(a.name);
-      default:
-        return 0;
-    }
-  });
+  const sortedLandingPages = sortData(
+    landingPages.map((s) => ({ ...s, data: { name: s.name } })),
+    sortOption,
+  );
 
   let componentToBeRendered = null;
 
@@ -130,7 +116,10 @@ function LandingPageDashboard() {
             </ActionIcon>
           </Tooltip>
         </Group>
-        <SortDropdown onSortChange={handleSortChange} />
+        <SortDropdown
+          onSortChange={handleSortChange}
+          defaultSortOption={sortOption}
+        />
       </Group>
       <Box className={styles["landingPage-list-container"]}>
         {componentToBeRendered}
