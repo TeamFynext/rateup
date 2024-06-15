@@ -44,7 +44,7 @@ export function createBlankQuestion(
 export function validateAllLanguagesArePopulated(
   question: Question,
   languages: Array<string>,
-  keyToValidate: Array<"title" | "description" | "choices">,
+  keyToValidate: Array<"title" | "description" | "choices" | "features">,
 ) {
   let missingLangs = [];
 

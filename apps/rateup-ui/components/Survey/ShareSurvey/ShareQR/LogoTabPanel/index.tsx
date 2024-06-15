@@ -15,6 +15,7 @@ import ChipGroup from "./ChipGroup";
 import { logoFillTypes } from "./constants";
 import CustomColorPicker from "../../components/CustomColorPicker";
 import { getLogoFileValueForFileInput } from "../utils";
+import CustomSwitch from "../../../SurveyTheme/components/stylescomponent/CustomSwitch";
 
 function LogoTabpanel({ state, dispatch, shareSettings }) {
   const {
@@ -24,6 +25,7 @@ function LogoTabpanel({ state, dispatch, shareSettings }) {
     logoFillType,
     logoBorderRadius,
     logoFile,
+    isLogoEnabled = true,
   } = state;
 
   return (
@@ -38,6 +40,16 @@ function LogoTabpanel({ state, dispatch, shareSettings }) {
             <Title order={4} className={styles["option-heading"]}>
               Image
             </Title>
+            <CustomSwitch
+              checked={isLogoEnabled}
+              onChange={(e) => {
+                dispatch({
+                  type: "logo-image-switch",
+                  payload: e.target.checked,
+                });
+              }}
+              label={isLogoEnabled ? "Enabled" : "Disabled"}
+            />
             <FileInput
               classNames={fileInputStyles}
               placeholder="Select Logo"
