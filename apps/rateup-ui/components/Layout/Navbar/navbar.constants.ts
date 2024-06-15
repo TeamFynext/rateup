@@ -97,13 +97,14 @@ export function getNavTopData(subscription?: Subscription) {
         ]
       : []),
     // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
-    ...(hasFeature(sfpn.WhatsAppSurvey)
+    ...(hasFeature(sfpn.Whatsapp)
       ? [
           {
             Icon: IconBrandWhatsapp,
             label: "WhatsApp",
             submenus: [
-              ...(whatsappOptions.includes("surveys")
+              ...(whatsappOptions.includes("survey") &&
+              hasFeature(sfpn.WhatsAppSurvey)
                 ? [
                     {
                       Icon: IconFileDescription,
@@ -112,7 +113,7 @@ export function getNavTopData(subscription?: Subscription) {
                     },
                   ]
                 : []),
-              ...(whatsappOptions.includes("templates")
+              ...(hasFeature(sfpn.WhatsAppTemplate)
                 ? [
                     {
                       Icon: IconMessage2Code,
@@ -121,20 +122,22 @@ export function getNavTopData(subscription?: Subscription) {
                     },
                   ]
                 : []),
-              {
-                Icon: IconWaveSine,
-                label: "Flows",
-                href: "/dashboard/whatsapp/flows",
-              },
+              ...(hasFeature(sfpn.WhatsAppFlow)
+                ? [
+                    {
+                      Icon: IconWaveSine,
+                      label: "Flows",
+                      href: "/dashboard/whatsapp/flows",
+                    },
+                  ]
+                : []),
               {
                 Icon: IconInbox,
                 label: "Inbox",
                 href: "/dashboard/whatsapp/inbox",
               },
-              ...(hiddenModules.includes("campaign") ||
-              !hasFeature(sfpn.WhatsAppCampaign)
-                ? []
-                : [
+              ...(hasFeature(sfpn.WhatsAppCampaign)
+                ? [
                     {
                       Icon: IconSpeakerphone,
                       label: "Campaign",
@@ -145,7 +148,8 @@ export function getNavTopData(subscription?: Subscription) {
                       label: "Contacts",
                       href: "/dashboard/contacts",
                     },
-                  ]),
+                  ]
+                : []),
               {
                 Icon: IconMessageCog,
                 label: "Automation",

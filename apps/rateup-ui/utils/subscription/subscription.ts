@@ -26,8 +26,37 @@ export function getSampleSubscriptionFeatures(
       googleReview: { active: true },
       emailNotification: { active: true },
     },
-    whatsappSurvey: { count: { max: count }, active: true },
-    whatsappCampaign: { count: { max: count }, active: true },
+    whatsapp: {
+      active: true,
+      count: {
+        max: count,
+        monthlyMessageLimit: 100,
+      },
+      survey: {
+        active: true,
+        count: {
+          max: count,
+        },
+      },
+      campaign: {
+        active: true,
+        count: {
+          max: count,
+        },
+      },
+      flow: {
+        active: true,
+        count: {
+          max: count,
+        },
+      },
+      template: {
+        active: true,
+        count: {
+          max: count,
+        },
+      },
+    },
     reputationManagement: { count: { max: count }, active: true },
     ticket: { count: { max: count }, active: true },
   };
