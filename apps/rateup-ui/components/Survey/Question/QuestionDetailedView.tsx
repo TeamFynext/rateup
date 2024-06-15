@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { UseFormReturnType, useForm } from "@mantine/form";
-import { IconBrandGoogle, IconTicket } from "@tabler/icons-react";
+import { IconBrandGoogle, IconTicket, IconVariable } from "@tabler/icons-react";
 import { IconDeviceSdCard, IconEdit, IconEye } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -121,6 +121,12 @@ export function QuestionDetailedView({
   });
 
   form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+    if (!getIncompleteLanguages()?.length) {
+      handleSave();
+    }
+  });
+
+  form.watch("features", ({ previousValue, value, touched, dirty }) => {
     if (!getIncompleteLanguages()?.length) {
       handleSave();
     }
@@ -351,6 +357,7 @@ export function QuestionDetailedView({
                       title={"Variables"}
                       fullWidth
                       size="sm"
+                      leftIcon={<IconVariable size={"1.5rem"} />}
                       onClick={() =>
                         setActiveTab(QuestionTabsEnum.VariableEditor)
                       }
