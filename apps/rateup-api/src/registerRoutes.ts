@@ -75,6 +75,7 @@ import { paymentStripeSchemas } from "./modules/payment/stripe/stripe.schema";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route";
 import { emailPublicRoutes } from "./modules/email/email.public.route";
 import { emailSchema } from "./modules/email/email.schema";
+import { updatePublicRoutes } from "./modules/update/update.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -114,6 +115,9 @@ export function registerRoutes(server: FastifyInstance): void {
       server.addSchema(schema);
     }
   }
+  server.register(updatePublicRoutes, {
+    prefix: "api/public/update",
+  }); //for db & other temporary updations
   server.register(surveyRoutes, { prefix: "api/survey" });
   server.register(surveyMenuShareSettingsRoutes, {
     prefix: "api/shareSettings",
