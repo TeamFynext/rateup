@@ -1,11 +1,11 @@
 .root {
-  --Title4: clamp(16px, 10.288px + 0.952vw, 24px);
+  /* --Title4: clamp(20px, 10.288px + 0.952vw, 24px); */
 }
 
 .label {
   color: var(--light-grey-color-5);
 
-  padding-inline: clamp(5.008px, -9.28px + 2.381vw, 25.008px);
+  /* padding-inline: clamp(5.008px, -9.28px + 2.381vw, 25.008px); */
   font-size: var(--Title4);
 }
 
