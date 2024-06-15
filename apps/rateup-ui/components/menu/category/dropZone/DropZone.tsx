@@ -15,7 +15,7 @@ export function DropZoneArea(props: Readonly<ExtendedDropzoneProps>) {
       onReject={() =>
         showErrorToast("file format must be csv and select one file")
       }
-      accept={[MIME_TYPES.csv]}
+      accept={[MIME_TYPES.csv, MIME_TYPES.xls]}
       multiple={false}
       {...otherProps}
     >

@@ -17,8 +17,8 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
   );
   const handleCsvFileUpload = () => {
     const formData = new FormData();
-    formData.append("", csvFile);
     formData.append("menuId", menuId);
+    formData.append("file", csvFile);
     createMenuItemUsingCsv.mutate(formData);
   };
   return (
@@ -45,8 +45,8 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
           iconSize={40}
         >
           Utilizing CSV file uploads to generate menu items requires specific
-          fields in the file: "categoryname," "name," "description," and
-          "price."
+          fields in the file: &quot;categoryname,&quot; &quot;name,&quot;
+          &quot;description,&quot; and &quot;price.&quot;
           <NavLink
             href={getFileUrlFromKey("/File/menu/Demo.csv", false)}
             label="Download Demo Csv File"
