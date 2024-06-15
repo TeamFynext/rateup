@@ -1,3 +1,4 @@
+import { SubscriptionFeaturePathName } from "../../types/enums";
 import prisma from "../../utils/prisma";
 
 export async function updateMonthlyStat(stat: string, orgId: string) {
@@ -12,6 +13,14 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
         monthlyMenuViews: stat === "menu" ? { increment: 1 } : undefined,
         surveyResponsesCount: stat === "survey" ? { increment: 1 } : undefined,
         menuViewsCount: stat === "menu" ? { increment: 1 } : undefined,
+        monthlyMessagesCount:
+          stat === SubscriptionFeaturePathName.Whatsapp
+            ? { increment: 1 }
+            : undefined,
+        messagesCount:
+          stat === SubscriptionFeaturePathName.Whatsapp
+            ? { increment: 1 }
+            : undefined,
       },
       create: {
         orgId: orgId,
@@ -20,7 +29,9 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
 
         surveyResponsesCount: stat === "survey" ? 1 : 0,
         menuViewsCount: stat === "menu" ? 1 : 0,
-
+        monthlyMessagesCount:
+          stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
+        messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },
@@ -39,6 +50,7 @@ export async function resetMonthlyCounts() {
       data: {
         monthlyMenuViews: 0,
         monthlySurveyResponses: 0,
+        monthlyMessagesCount: 0,
       },
     });
     return resetMonthlyStats;
@@ -144,6 +156,13 @@ export async function createStats(orgId: string) {
         visited: true,
       },
     });
+    const monthlyMessagesCount = await prisma.waMessage.count({
+      where: {
+        contact: {
+          orgId,
+        },
+      },
+    });
 
     let statsData = {
       teamCount,
@@ -153,6 +172,7 @@ export async function createStats(orgId: string) {
       surveyResponsesCountCurrentMonth,
       menuCount,
       menuViewsCount: menuViewsCount._sum.visited,
+      monthlyMessagesCount,
     };
 
     await updateUsageStats(orgId, statsData);
@@ -174,6 +194,7 @@ export async function updateUsageStats(
     surveyResponsesCountCurrentMonth: number;
     menuCount: number;
     menuViewsCount: number;
+    monthlyMessagesCount: number;
   },
 ) {
   const usageStats = await prisma.usageStats.upsert({
@@ -186,6 +207,7 @@ export async function updateUsageStats(
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
       menusCount: stats?.menuCount || 0,
       menuViewsCount: stats?.menuViewsCount || 0,
+      monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
     },
     create: {
       teamsCount: stats?.teamCount || 0,
@@ -195,6 +217,7 @@ export async function updateUsageStats(
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
       menusCount: stats?.menuCount || 0,
       menuViewsCount: stats?.menuViewsCount || 0,
+      monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
       orgId,
     },
   });

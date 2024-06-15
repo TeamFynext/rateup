@@ -165,6 +165,8 @@ declare global {
   type subscriptionActiveField = {
     active: boolean;
   };
+  type subscriptionWithActiveAndCount = subscriptionCountRestriction &
+    subscriptionActiveField;
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
     [sfpn.Menu]: subscriptionCountRestriction &
@@ -186,10 +188,16 @@ declare global {
           monthlyResponseLimit: number;
         };
       };
-    [sfpn.WhatsAppSurvey]: subscriptionActiveField &
-      subscriptionCountRestriction;
-    [sfpn.WhatsAppCampaign]: subscriptionActiveField &
-      subscriptionCountRestriction;
+    [sfpn.Whatsapp]: subscriptionWithActiveAndCount & {
+      survey: subscriptionWithActiveAndCount;
+      campaign: subscriptionWithActiveAndCount;
+      flow: subscriptionWithActiveAndCount;
+      template: subscriptionWithActiveAndCount;
+      count: {
+        monthlyMessageLimit: number;
+        max: number;
+      };
+    };
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
     [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;

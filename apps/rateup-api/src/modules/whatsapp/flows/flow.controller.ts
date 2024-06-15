@@ -32,17 +32,19 @@ import {
   UpdateFlowMetaInput,
   WaFlowSourceQuery,
 } from "./flow.schema";
-import {
-  createSurveyFromFlow,
-  getFlowJsonWithTitleAndDescription,
-} from "./flow.utils";
+import { createSurveyFromFlow } from "./flow.utils";
 import { log } from "../../../utils/logger";
-import { SurveyType, WaFlowStatus } from "../../../types/enums";
+import {
+  SubscriptionFeaturePathName,
+  SurveyType,
+  WaFlowStatus,
+} from "../../../types/enums";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
 import { Survey } from "@prisma/client";
 import { GraphApiError, callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { getGraphApiErrorMessage } from "../wa_error_handler";
+import { updateMonthlyStat } from "../../stats/stats.service";
 
 /**
  * Get flows from whatsapp api or our database.
@@ -435,6 +437,7 @@ export async function sendFlowHandler(
       phone,
     };
     await sendFlow(serviceParam);
+    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     reply.status(201).send();
   } catch (error) {
     reply.status(500).send(error.message);

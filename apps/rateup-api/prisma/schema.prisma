@@ -120,9 +120,11 @@ model UsageStats {
   surveyResponsesCount Int @default(0)
   menusCount           Int @default(0)
   menuViewsCount       Int @default(0)
+  messagesCount        Int @default(0)
 
   monthlySurveyResponses Int @default(0)
   monthlyMenuViews       Int @default(0)
+  monthlyMessagesCount   Int @default(0)
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
@@ -133,6 +135,7 @@ model UsageStats {
   allowedSurveyResponses Int @default(0)
   allowedMenus           Int @default(0)
   allowedMenuViews       Int @default(0)
+  allowedMessagesCount   Int @default(0)
 }
 
 model WhatsappSettings {

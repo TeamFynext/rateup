@@ -1,6 +1,7 @@
 import { Role } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  SubscriptionFeaturePathName,
   WaTemplateComponentType,
   WaTemplateStatus,
 } from "../../../types/enums";
@@ -53,6 +54,7 @@ import {
   getGraphApiErrorMessage,
   handleWhatsappError,
 } from "../wa_error_handler";
+import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -399,7 +401,10 @@ export async function sendTemplateToUserHandler(
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
 
-    await sendMessage(orgId, templateMessage);
+    const sendStatus = await sendMessage(orgId, templateMessage);
+    sendStatus.status &&
+      orgId &&
+      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     reply.code(200).send("Template send to user successfully");
   } catch (error) {
     log.error("Error sending template to user \n%o", error);
