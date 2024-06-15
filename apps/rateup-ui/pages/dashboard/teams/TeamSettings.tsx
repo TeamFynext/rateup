@@ -31,6 +31,7 @@ import { GoogleIcon } from "../../../components/Button/GoogleIcon";
 import { showErrorToast } from "../../../utils/notifications";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import { SAVE_HOTKEY } from "../../../utils/constants";
+import { useRouter } from "next/router";
 
 export interface ITeamData {
   name: string;
@@ -47,6 +48,7 @@ const TeamSettings = ({
   id: string;
   teamData: ITeamData;
 }) => {
+  const router = useRouter();
   const teamForm = useForm({
     initialValues: {
       name: "",
@@ -85,7 +87,11 @@ const TeamSettings = ({
       name: values.name,
       code: values.code,
     };
-    editTeam.mutate(data);
+    editTeam.mutate(data, {
+      onSuccess: (res) => {
+        router.push(`/dashboard/teams/${res?.data?.data?.code}`);
+      },
+    });
   };
 
   const [opened, { toggle, close }] = useDisclosure(false);

@@ -92,7 +92,6 @@ export function useEditTeamMutation(
       if (surveyId) {
         queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       }
-      router.push(`/dashboard/teams/${res?.data?.data?.code}`);
     },
     onError: (error: any) => {
       console.error("Error Team Update:", error.message);
