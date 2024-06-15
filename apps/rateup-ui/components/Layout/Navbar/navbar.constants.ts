@@ -51,7 +51,7 @@ export interface NavbarLinkProps {
 export function getNavTopData(subscription?: Subscription) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
     if (!subscription) return false;
-    return getNestedProperty(subscription.features, featurePath).active;
+    return getNestedProperty(subscription.features, featurePath)?.active;
   }
 
   const navTopData: Array<NavbarLinkProps> = [
