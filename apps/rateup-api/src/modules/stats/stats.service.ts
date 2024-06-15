@@ -218,11 +218,7 @@ export async function updateUsageStats(
       menusCount: stats?.menuCount || 0,
       menuViewsCount: stats?.menuViewsCount || 0,
       monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
-      org: {
-        connect: {
-          id: orgId,
-        },
-      },
+      orgId,
     },
   });
 

@@ -164,6 +164,7 @@ export async function createResponseHandler(
       responses: responseArray,
       language,
       createdAt,
+      Contact,
     } = response;
     const responses = responseArray as unknown as QuestionResponse[];
     await saveResponseToGoogleSheet({
@@ -171,6 +172,7 @@ export async function createResponseHandler(
       responses,
       language,
       createdAt,
+      respondent: Contact?.phone,
     });
     // checking location information after response is created since we dont
     // want to leave the user waiting
