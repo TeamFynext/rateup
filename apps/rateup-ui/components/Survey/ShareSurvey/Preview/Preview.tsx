@@ -22,6 +22,7 @@ function Preview({
     logoFillType: qrBgImgFillType,
     logoBorderRadius,
     logoFile: qrBgImgLogo,
+    isLogoEnabled = true,
   } = logoTabPanelState;
 
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
@@ -86,19 +87,22 @@ function Preview({
             backgroundColor: `${qrBgColor}`,
           }}
         >
-          <Image
-            className={styles["qr-bg-img"]}
-            src={logoSrc}
-            alt="bg-image"
-            style={{
-              width: logoSize,
-              height: logoSize,
-              top: `calc(50% - ${logoSize / 2}px)`,
-              left: `calc(50% - ${logoSize / 2}px)`,
-              objectFit: qrBgImgFillType as any,
-              borderRadius: `${logoBorderRadius}%`,
-            }}
-          />
+          {isLogoEnabled && (
+            <Image
+              className={styles["qr-bg-img"]}
+              src={logoSrc}
+              alt="bg-image"
+              style={{
+                width: logoSize,
+                height: logoSize,
+                top: `calc(50% - ${logoSize / 2}px)`,
+                left: `calc(50% - ${logoSize / 2}px)`,
+                objectFit: qrBgImgFillType as any,
+                borderRadius: `${logoBorderRadius}%`,
+              }}
+            />
+          )}
+
           {
             <CustomQRCode
               className={styles["qr-svg"]}
