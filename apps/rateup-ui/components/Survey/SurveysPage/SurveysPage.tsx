@@ -10,6 +10,7 @@ import { CreateSurveyModal } from "../CreateSurveyModal";
 import { SurveyHeader } from "./SurveysPageHeader";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
+import { sortData } from "../../Dashboard/SortDropDown";
 
 // USED IN:
 // dashboard/surveys
@@ -42,7 +43,7 @@ export function SurveysPage({
     mergeSurveyOpened,
     { open: openMergeSurvey, close: closeMergeSurveyModal },
   ] = useDisclosure(false);
-  const [sort, setSort] = useState(true);
+  const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
   const router = useRouter();
@@ -106,6 +107,12 @@ export function SurveysPage({
     return found;
   };
 
+  //  const sortedSurveys = sortData(surveys, sortOption);
+  const sortedSurveys = sortData(
+    surveys.map((s) => ({ ...s, data: { name: s.title } })),
+    sortOption,
+  );
+
   return (
     <Stack h={"100%"} gap={0}>
       <SurveyHeader
@@ -115,8 +122,8 @@ export function SurveysPage({
         setFilterParam={setFilterParam}
         openCreateSurvey={openCreateSurvey}
         openMergeSurvey={openMergeSurvey}
-        sort={sort}
-        setSort={setSort}
+        onSortChange={setSortOption}
+        sortOption={sortOption} //
         surveyCount={surveyidArray.length}
         surveyType={surveyType}
         refetch={refetch}
@@ -124,14 +131,7 @@ export function SurveysPage({
       <Space h="lg" />
       {surveys?.length > 0 ? (
         <SurveyCardLayout>
-          {surveys
-            ?.sort((a, b) =>
-              sort
-                ? new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-                : new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime(),
-            )
+          {sortedSurveys
             .filter((s) => {
               if (filterParam === "active") {
                 return s.active === true;

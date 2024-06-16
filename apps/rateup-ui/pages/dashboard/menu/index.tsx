@@ -16,12 +16,15 @@ import { useUser } from "../../../context/UserContext";
 import NothingFound from "../../../components/NothingFound/NothingFound";
 import Heading from "../../../components/styled/Heading/Heading";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
+import SortDropdown, {
+  sortData,
+} from "../../../components/Dashboard/SortDropDown";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
-  const [sort, setSort] = useState(true);
+  const [sortOption, setSortOption] = useState("latest");
   const { user } = useUser();
 
   function handleEditClick(menu: Menu) {
@@ -36,6 +39,9 @@ export default function MenuPage() {
     setEditingItem(null);
     close();
   }
+  const onSortChange = (value) => {
+    setSortOption(value);
+  };
   return (
     <Stack h={"100%"}>
       <Group justify="space-between">
@@ -56,11 +62,9 @@ export default function MenuPage() {
             enableAll={true}
             allowDeselect={false}
           />
-          <RateupButtonPrimary
-            onClick={() => setSort(!sort)}
-            title={"Sort"}
-            variant="subtle"
-            rightIcon={<IconSelector size="1rem" />}
+          <SortDropdown
+            onSortChange={onSortChange}
+            defaultSortOption={sortOption}
           />
         </Group>
       </Group>
@@ -81,14 +85,17 @@ export default function MenuPage() {
               editingItem={editingItem}
             />
           )}
-          <DisplayMenus handleEditClick={handleEditClick} sorthandle={sort} />
+          <DisplayMenus
+            handleEditClick={handleEditClick}
+            sortOption={sortOption}
+          />
         </SelectedTeamContext.Provider>
       </SimpleGrid>
     </Stack>
   );
 }
 
-function DisplayMenus({ handleEditClick, sorthandle }) {
+function DisplayMenus({ handleEditClick, sortOption }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const { isError, isLoading, data: menus } = useAllMenus();
   const smallScreen = useMediaQuery("(max-width: 40em)");
@@ -112,11 +119,8 @@ function DisplayMenus({ handleEditClick, sorthandle }) {
       : menus?.filter((menu) => menu.teamId === selectedTeamId);
 
   // Sort menus based on `sorthandle`
-  const sortedMenus = filteredMenus?.slice()?.sort((a, b) => {
-    const dateA = new Date(a.createdAt).getTime();
-    const dateB = new Date(b.createdAt).getTime();
-    return sorthandle ? dateB - dateA : dateA - dateB;
-  });
+  const sortedMenus = sortData(filteredMenus, sortOption);
+
   return (
     <>
       {sortedMenus?.length > 0 ? (
