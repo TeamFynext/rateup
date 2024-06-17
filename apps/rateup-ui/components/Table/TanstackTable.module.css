@@ -1,0 +1,9 @@
+.tanstack-table-root-div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-and-other-btns-container {
+  padding: 0.625rem;
+}

@@ -1,4 +1,4 @@
-.result-page-tabs-and-filter-btn-container {
+.result-page-tabs-container {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -24,4 +24,9 @@
 
 .filters-popover-dropdown-div > div {
   box-shadow: none !important;
+}
+
+@media screen and (max-width: 768px) {
+  .result-page-tabs-container {
+  }
 }

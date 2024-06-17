@@ -30,6 +30,8 @@ import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import classes from "../../Graph/graph.module.css";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
 import { showSuccessToast } from "../../../utils/notifications";
+import styles from "./SurveyStats.module.css";
+
 enum LocationType {
   City = "city",
   State = "state",
@@ -155,7 +157,7 @@ const SurveyStats = ({ survey, flowId = null }) => {
   return (
     <Stack p={3}>
       <Stack mih="400px" gap={10}>
-        <PaperLayout px="lg" py={"lg"}>
+        <PaperLayout className={styles["user-stats-card-div"]}>
           <Stack gap={0}>
             <Group>
               <Heading subtitle="User Stats" />
@@ -185,21 +187,19 @@ const SurveyStats = ({ survey, flowId = null }) => {
 
             <Group justify="space-between">
               <Text
+                className={styles["responses-text-p"]}
                 c="light-dark(var(--mantine-primary-color-filled),white)"
-                size="28px"
-                fw="700"
-                px="xl"
               >
-                {responseLength ?? 0} &nbsp;{" "}
+                {responseLength ?? 0} &nbsp;
                 {responseLength > 1 ? "Responses" : "Response"}
               </Text>
               {surveyStatsCountArray?.length === 0 ? (
-                <PaperLayout style={{ flex: 1 }}>
+                <PaperLayout className={styles["stats-card"]}>
                   <Text fw="900">Minimum 250+ response for metrics</Text>
                 </PaperLayout>
               ) : (
                 surveyStatsCountArray?.map(({ count, label }) => (
-                  <PaperLayout style={{ flex: 1 }} key={label}>
+                  <PaperLayout className={styles["stats-card"]} key={label}>
                     <Stack align={"center"}>
                       <Text fs={"20px"} fw="900" size={"30px"}>
                         {count}
@@ -216,7 +216,7 @@ const SurveyStats = ({ survey, flowId = null }) => {
           <Grid columns={10} p={2} gutter={"10px"} grow>
             {/* Location-wise response frequency */}
             <Grid.Col span={{ xs: 10, md: 3 }}>
-              <PaperLayout miw={300} h="350px">
+              <PaperLayout h="350px">
                 <Stack>
                   <Group justify="space-between">
                     <Heading subtitle="Top Traffic By:" />

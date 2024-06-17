@@ -1,6 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
-import { Box, Flex, Loader, Stack, Tabs, Text } from "@mantine/core";
+import {
+  Box,
+  Flex,
+  Loader,
+  ScrollArea,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
 import Responses from "../Response/Responses";
 import SurveyStats from "./SurveyStats";
 import ResultsOverview from "./ResultsOverview";
@@ -104,7 +112,6 @@ const Result = ({
       styles={{
         root: {
           flexDirection: "column",
-          flexWrap: "wrap",
         },
         list: {
           position: "sticky",
@@ -119,20 +126,23 @@ const Result = ({
         },
         panel: {
           minWidth: "300px",
-          padding: 2,
+          padding: 5,
+          paddingRight: 10,
           height: "100%",
           width: "100%",
           overflow: "auto",
         },
       }}
     >
-      <Box className={styles["result-page-tabs-and-filter-btn-container"]}>
-        <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
-          {!flowId && <Tabs.Tab value="overview">Overview</Tabs.Tab>}
-          <Tabs.Tab value="responses">Responses</Tabs.Tab>
-          <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
-          <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
-        </Tabs.List>
+      <Box className={styles["result-page-tabs-container"]}>
+        <ScrollArea offsetScrollbars={true}>
+          <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
+            {!flowId && <Tabs.Tab value="overview">Overview</Tabs.Tab>}
+            <Tabs.Tab value="responses">Responses</Tabs.Tab>
+            <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
+            <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
+          </Tabs.List>
+        </ScrollArea>
       </Box>
       <Box className={styles["panels-container"]}>
         <Tabs.Panel value="overview">

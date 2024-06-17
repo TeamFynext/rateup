@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Flex } from "@mantine/core";
+import { Box, Divider, Flex } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -17,6 +17,7 @@ import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
+import styles from "./TanstackTable.module.css";
 
 function TanstackTable({
   data,
@@ -83,16 +84,27 @@ function TanstackTable({
   });
 
   return (
-    <>
-      <Flex gap={"md"} justify={"space-between"} align={"center"} px={"xs"}>
+    <Box className={styles["tanstack-table-root-div"]}>
+      <Flex
+        className={styles["filter-and-other-btns-container"]}
+        gap={"md"}
+        justify={"space-between"}
+        align={"center"}
+        px={"xs"}
+      >
         {toggle ? (
           <RateupButtonBlue
+            className={"create-btn"}
             title={btnTitle}
             rightIcon={<IconPlus />}
             onClick={toggle}
           />
         ) : (
-          <Box w={50} h={50} />
+          <Box
+            className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
+            w={50}
+            h={50}
+          />
         )}
         <FilterToggles
           enableFilter={enableFilter}
@@ -103,6 +115,7 @@ function TanstackTable({
           setFilterVisibility={setFilterVisibility}
         />
       </Flex>
+      <Divider />
       <TableLayout
         enableFilter={enableFilter}
         enablePagination={enablePagination}
@@ -111,7 +124,8 @@ function TanstackTable({
         tempVisibleColumnArray={tempVisibleColumnArray}
         topHeight={topHeight}
       />
-    </>
+    </Box>
   );
 }
+
 export default TanstackTable;

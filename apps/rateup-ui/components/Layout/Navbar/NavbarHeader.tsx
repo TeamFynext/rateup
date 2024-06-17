@@ -1,12 +1,22 @@
-import { Avatar, Group, Text, UnstyledButton } from "@mantine/core";
-import { UserCardInterface } from "./LeftNavbar";
-import styles from "./Navbar.module.css";
+import {
+  ActionIcon,
+  Avatar,
+  Box,
+  Group,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
+import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { IconChevronLeft } from "@tabler/icons-react";
-import { IconChevronRight, IconMenu2 } from "@tabler/icons-react";
+import { UserCardInterface } from "./LeftNavbar";
+
+import classNames from "classnames/bind";
+import styles from "./Navbar.module.css";
+const cx = classNames.bind(styles);
+
 const NavbarHeader = (props: UserCardInterface) => {
   return (
-    <UnstyledButton className={styles.user}>
+    <Box className={styles["avatar-org-name-chevron-burger-btn-container"]}>
       <Group justify="center" wrap="wrap-reverse">
         <Avatar
           src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.orgLogo}`}
@@ -20,38 +30,27 @@ const NavbarHeader = (props: UserCardInterface) => {
             </Text>
           </div>
         )}
-        <PaperLayout
-          w={"fit-content"}
-          p={1}
-          hoveractive
-          radius={"xl"}
-          style={{
-            justifySelf: "flex-end",
-            alignItems: "center",
-            justifyContent: "center",
-            display: "flex",
-          }}
+        <ActionIcon
+          className={cx("chevron-burger-btn", {
+            "navbar-closed": !props.opened,
+          })}
         >
           {props.opened ? (
             <IconChevronLeft
-              size={20}
               onClick={() => {
                 props?.setOpened((o) => !o);
               }}
-              style={{ cursor: "pointer" }}
             />
           ) : (
             <IconMenu2
-              size={20}
               onClick={() => {
                 props?.setOpened((o) => !o);
               }}
-              style={{ cursor: "pointer" }}
             />
           )}
-        </PaperLayout>
+        </ActionIcon>
       </Group>
-    </UnstyledButton>
+    </Box>
   );
 };
 

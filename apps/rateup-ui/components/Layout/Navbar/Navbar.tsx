@@ -46,7 +46,7 @@ export const Navbar = () => {
       </Link>
     ));
   return (
-    <Group justify="space-between" pr={"lg"} h={37}>
+    <Group justify="space-between" h={37}>
       <Breadcrumbs
         separator={
           <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />

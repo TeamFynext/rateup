@@ -1,0 +1,31 @@
+.navbar {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  height: 100vh;
+  height: 100dvh;
+  width: 250px;
+  flex-shrink: 0;
+  z-index: 2;
+  box-shadow:
+    rgba(0, 0, 0, 0.12) 0px 1px 3px,
+    rgba(0, 0, 0, 0.24) 0px 1px 2px;
+}
+
+.navbar.closed {
+  width: 70px;
+}
+
+.navbar.focused {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .navbar {
+    position: absolute;
+  }
+
+  .navbar.closed {
+    left: -500px;
+  }
+}

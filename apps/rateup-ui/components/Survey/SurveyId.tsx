@@ -170,14 +170,14 @@ export default function SurveyID() {
             enableRateUpBlueTheme={survey?.type !== SurveyType.WhatsApp}
           >
             <Grid columns={12} className={styles["title-tabs-container"]}>
-              <Grid.Col span={3}>
+              <Grid.Col span={3} className={styles["title-container"]}>
                 <Title
                   styles={{
                     root: {
                       fontSize: survey?.title?.length > 25 ? "20px " : "25px",
                       width: "100%",
                       // whiteSpace: "nowrap",
-                      whiteSpace: "normal",
+                      whiteSpace: "nowrap",
                       wordWrap: "break-word",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -187,7 +187,7 @@ export default function SurveyID() {
                   {survey?.title}
                 </Title>
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={6} className={styles["survey-editor-tabs-div"]}>
                 {user?.role !== UserRole.MEMBER && (
                   <Tabs.List>
                     <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
@@ -200,7 +200,10 @@ export default function SurveyID() {
                   </Tabs.List>
                 )}
               </Grid.Col>
-              <Grid.Col span={3}>
+              <Grid.Col
+                span={3}
+                className={styles["team-selector-filter-container"]}
+              >
                 {activeTab === TabEnum.Result ? (
                   <MultiSelect
                     radius={"10px"}

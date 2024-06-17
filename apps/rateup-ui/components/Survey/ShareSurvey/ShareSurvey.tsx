@@ -248,7 +248,7 @@ const ShareSurvey = ({
   );
 
   return (
-    <Stack p={"0.625rem"} h={"fit-content"}>
+    <Stack p={"0.3125rem"} pr={"0.625rem"}>
       <PaperLayout>
         <Group justify="space-between">
           <Switch
@@ -499,7 +499,7 @@ const ShareSurvey = ({
       </PaperLayout>
       <ShareQR
         url={shareUrl}
-        sx={{ borderRadius: "0.5rem" }}
+        sx={{ borderRadius: "1rem" }}
         title={survey?.title}
         isPublished={!disableShare}
         id={surveyId}

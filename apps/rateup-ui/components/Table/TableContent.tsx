@@ -10,6 +10,9 @@ import {
   Group,
   Box,
   Text,
+  Divider,
+  ScrollAreaAutosize,
+  ScrollArea,
 } from "@mantine/core";
 import {
   IconChevronUp,
@@ -27,6 +30,7 @@ import { PAGE_SIZE } from "../../utils/constants";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { Filter } from "./Filter/Filter";
 import { lexend600 } from "../../utils/fonts";
+import styles from "./TableContent.module.css";
 
 type TableLayoutProps = {
   table: TableType<any>;
@@ -58,13 +62,17 @@ const TableLayout = ({
   topHeight = 420,
 }: TableLayoutProps) => {
   return (
-    <>
-      <Stack justify="space-between" h={`calc(100dvh - ${topHeight}px`}>
-        <Table.ScrollContainer minWidth={500} type="native" mt={4}>
+    <Stack className={styles["table-and-pagination-container"]}>
+      <Stack justify="space-between" className={styles["table-container"]}>
+        <ScrollArea
+          w={"100%"}
+          h={"100%"}
+          classNames={{ scrollbar: styles["table-scrollbar"] }}
+        >
           <Table stickyHeader striped highlightOnHover>
             <Table.Thead bg={"light-dark(white,var(--mantine-color-dark-6))"}>
               {table.getHeaderGroups().map((headerGroup, index) => (
-                <Table.Tr key={index}>
+                <Table.Tr key={index} className="table-header">
                   {headerGroup.headers.map((header, headerIndex) => {
                     const extendedHeader = header as ExtendedHeader;
                     return (
@@ -76,12 +84,11 @@ const TableLayout = ({
                         {header.isPlaceholder ? null : (
                           <>
                             <UnstyledButton
+                              className={styles["th-button"]}
                               {...{
                                 onClick:
                                   header.column.getToggleSortingHandler(),
                               }}
-                              fz={"md"}
-                              w={"max-content"}
                             >
                               <Flex justify="space-between" gap={"md"}>
                                 {flexRender(
@@ -149,7 +156,7 @@ const TableLayout = ({
               ))}
             </Table.Thead>
 
-            <Table.Tbody>
+            <Table.Tbody className="table-body">
               {table.getRowModel().rows.length === 0 ? (
                 <Table.Tr>
                   <Table.Td colSpan={tempVisibleColumnArray?.length}>
@@ -161,6 +168,7 @@ const TableLayout = ({
                   <Table.Tr key={index}>
                     {row.getVisibleCells().map((cell, indexCell) => (
                       <Table.Td
+                        className={styles["table-td"]}
                         key={indexCell}
                         bg={row.getIsSelected() ? "var(--shade-of-blue-7)" : ""}
                       >
@@ -191,31 +199,40 @@ const TableLayout = ({
               ))}
             </Table.Tfoot>
           </Table>
-        </Table.ScrollContainer>
+        </ScrollArea>
       </Stack>
+      <Divider />
       <Flex
+        className={styles["pagination-container"]}
         gap={"xl"}
-        pt={"xs"}
-        px={"xs"}
         justify={"space-between"}
         align={"center"}
       >
-        <Group>
+        <Group className={styles["pagination-rows-per-page-dd-container"]}>
           {enablePagination && (
             <Pagination.Root
+              className={styles["mantine-pagination-root-div"]}
+              style={{ overflow: "hidden" }}
+              size={"sm"}
               total={table.getPageCount()}
               onChange={(e) => table.setPageIndex(e - 1)}
+              boundaries={1}
+              siblings={1}
             >
-              <Group gap={5} justify="center">
-                <Pagination.First disabled={!table.getCanPreviousPage()} />
-                <Pagination.Previous disabled={!table.getCanPreviousPage()} />
-                <Pagination.Items />
-                <Pagination.Next disabled={!table.getCanNextPage()} />
-                <Pagination.Last disabled={!table.getCanNextPage()} />
-              </Group>
+              <ScrollArea w={"100%"} type="never">
+                <Group
+                  className={styles["pagination-next-prev-page-btns-container"]}
+                >
+                  <Pagination.First disabled={!table.getCanPreviousPage()} />
+                  <Pagination.Previous disabled={!table.getCanPreviousPage()} />
+                  <Pagination.Items />
+                  <Pagination.Next disabled={!table.getCanNextPage()} />
+                  <Pagination.Last disabled={!table.getCanNextPage()} />
+                </Group>
+              </ScrollArea>
             </Pagination.Root>
           )}
-          <Group>
+          <Group className={styles["rows-per-page-text-dd-container"]}>
             <Text fz="sm">Rows Per page</Text>
             <ContainedSelection
               onChange={(value) => {
@@ -233,11 +250,15 @@ const TableLayout = ({
             />
           </Group>
         </Group>
-        <Text pr={"xs"} ff={lexend600.style.fontFamily}>
+        <Text
+          className="pagination-total-rows-text"
+          pr={"xs"}
+          ff={lexend600.style.fontFamily}
+        >
           Total Rows: {table.getRowCount() ?? 0}
         </Text>
       </Flex>
-    </>
+    </Stack>
   );
 };
 

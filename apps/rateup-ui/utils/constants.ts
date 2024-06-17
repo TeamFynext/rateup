@@ -2,6 +2,7 @@ import { QuestionType, WaFlowFormElementType as wft } from "../types/enums";
 import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+export const localImagesPath = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images`;
 export const surveyUploadsPath = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}`;
 export const isProduction =
   process.env.NEXT_PUBLIC_FRONTEND_URL === "https://rateup.app";

@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Box,
   Button,
   Flex,
   Group,
@@ -292,7 +293,7 @@ const Responses = ({
   const responseCount = responses?.length;
 
   return (
-    <Stack>
+    <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         openTicketModal={openTicketModal}
@@ -302,121 +303,120 @@ const Responses = ({
         surveyResponseId={selectedResponseId}
       />
 
-      <PaperLayout>
-        <Group justify="space-between" align="center">
-          <Flex>
-            <Heading subtitle={`Total Responses : ${responseCount}`} />
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                ml="15px"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                  handleRefresh();
-                  notifications.show({
-                    id: "data-reload",
-                    color: "teal",
-                    title: "Refreshing data",
-                    loading: true,
-                    message: "Hold.. your data is getting update...",
-                    autoClose: 2000,
-                  });
-                }}
-              >
-                <IconRefresh
-                  style={{ width: "90%", height: "90%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
-          </Flex>
-          {!survey?.isEncrypted && (
-            <Popover
-              position="bottom-end"
-              withArrow
-              shadow="md"
-              classNames={{
-                dropdown: styles["filters-popover-dropdown-div"],
+      <Group className={styles["total-responses-export-btn-container"]}>
+        <Flex align={"center"}>
+          <Heading subtitle={`Total Responses : ${responseCount}`} />
+          <Tooltip label="Refresh data">
+            <ActionIcon
+              variant="light"
+              ml="15px"
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                handleRefresh();
+                notifications.show({
+                  id: "data-reload",
+                  color: "teal",
+                  title: "Refreshing data",
+                  loading: true,
+                  message: "Hold.. your data is getting update...",
+                  autoClose: 2000,
+                });
               }}
-              opened={openedExport}
             >
-              <Popover.Target>
-                <Button
-                  leftSection={<IconTableExport />}
-                  radius={"lg"}
-                  fw={400}
-                  onClick={toggle}
-                >
-                  Export
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Stack>
-                  {isFetched && (
-                    <RateupButtonSecondary
-                      title={
-                        survey.spreadSheetId
-                          ? "Resync with Google Sheet"
-                          : "Sync with Google Sheet"
-                      }
-                      onClick={() => {
-                        if (survey.spreadSheetId) alertModalOpen();
-                        else handleSyncGoogleSheet();
-                      }}
-                      leftIcon={
-                        <IconRefresh
-                          className={
-                            isSyncing ? styles.rotateInfinitely : undefined
-                          }
-                          style={{ width: "90%", height: "90%" }}
-                          stroke={1.5}
-                        />
-                      }
-                    />
-                  )}
+              <IconRefresh
+                style={{ width: "90%", height: "90%" }}
+                stroke={1.5}
+              />
+            </ActionIcon>
+          </Tooltip>
+        </Flex>
+        {!survey?.isEncrypted && (
+          <Popover
+            position="bottom-end"
+            withArrow
+            shadow="md"
+            classNames={{
+              dropdown: styles["filters-popover-dropdown-div"],
+            }}
+            opened={openedExport}
+          >
+            <Popover.Target>
+              <Button
+                className={styles["export-btn"]}
+                leftSection={<IconTableExport />}
+                radius={"lg"}
+                fw={400}
+                onClick={toggle}
+              >
+                Export
+              </Button>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <Stack>
+                {isFetched && (
                   <RateupButtonSecondary
+                    title={
+                      survey.spreadSheetId
+                        ? "Resync with Google Sheet"
+                        : "Sync with Google Sheet"
+                    }
                     onClick={() => {
-                      handleExcelDownload();
-                      toggle();
+                      if (survey.spreadSheetId) alertModalOpen();
+                      else handleSyncGoogleSheet();
                     }}
-                    title={"Download Excel"}
+                    leftIcon={
+                      <IconRefresh
+                        className={
+                          isSyncing ? styles.rotateInfinitely : undefined
+                        }
+                        style={{ width: "90%", height: "90%" }}
+                        stroke={1.5}
+                      />
+                    }
+                  />
+                )}
+                <RateupButtonSecondary
+                  onClick={() => {
+                    handleExcelDownload();
+                    toggle();
+                  }}
+                  title={"Download Excel"}
+                  radius={"lg"}
+                  leftIcon={<IconFileDownload stroke={1.5} />}
+                />
+                {hasContactQuestion && (
+                  <RateupButtonSecondary
+                    onClick={handleExportContacts}
+                    title={"Import Contacts"}
                     radius={"lg"}
-                    leftIcon={<IconFileDownload stroke={1.5} />}
+                    leftIcon={<IconDatabaseImport stroke={1.5} />}
                   />
-                  {hasContactQuestion && (
-                    <RateupButtonSecondary
-                      onClick={handleExportContacts}
-                      title={"Import Contacts"}
-                      radius={"lg"}
-                      leftIcon={<IconDatabaseImport stroke={1.5} />}
-                    />
-                  )}
-                  <ConfirmationModal
-                    opened={alertModalOpened}
-                    onClose={alertModalClose}
-                    headerTitle="Resync Google Sheet"
-                    headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
-                    confirmLabel="Yes"
-                    onConfirm={handleSyncGoogleSheet}
-                  />
-                  <ConfirmationModal
-                    opened={redirectModalOpened}
-                    onClose={redirectModalClose}
-                    headerTitle="Sync Google Sheet"
-                    headerLabel={alertMsg}
-                    confirmLabel="Go to Settings"
-                    onConfirm={() => {
-                      router.push("/dashboard/settings?activeTab=advanced");
-                    }}
-                  />
-                </Stack>
-              </Popover.Dropdown>
-            </Popover>
-          )}
-        </Group>
-      </PaperLayout>
+                )}
+                <ConfirmationModal
+                  opened={alertModalOpened}
+                  onClose={alertModalClose}
+                  headerTitle="Resync Google Sheet"
+                  headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
+                  confirmLabel="Yes"
+                  onConfirm={handleSyncGoogleSheet}
+                />
+                <ConfirmationModal
+                  opened={redirectModalOpened}
+                  onClose={redirectModalClose}
+                  headerTitle="Sync Google Sheet"
+                  headerLabel={alertMsg}
+                  confirmLabel="Go to Settings"
+                  onConfirm={() => {
+                    router.push("/dashboard/settings?activeTab=advanced");
+                  }}
+                />
+              </Stack>
+            </Popover.Dropdown>
+          </Popover>
+        )}
+      </Group>
 
       {responseCount > 0 ? (
-        <PaperLayout px={0}>
+        <Box className={styles["responses-table-container"]}>
           <TanstackTable data={responses} columns={columns} />
           <FormModalLayout
             opened={opened}
@@ -442,7 +442,7 @@ const Responses = ({
               </Text>
             </Stack>
           </FormModalLayout>
-        </PaperLayout>
+        </Box>
       ) : (
         <NothingFound text="No responses yet" />
       )}
