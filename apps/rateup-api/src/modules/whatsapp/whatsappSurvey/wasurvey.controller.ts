@@ -32,6 +32,7 @@ import {
   WaTemplateStatus,
   QuestionType,
   WaTemplateComponentType,
+  SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import {
@@ -62,6 +63,8 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import { handleContactConsent } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
+import { checkMessageLimitExceeded } from "./wasurvey.auth";
+import { updateMonthlyStat } from "../../stats/stats.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -400,6 +403,16 @@ async function handleStartSurvey({
     ip,
     tag,
   });
+  if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
+    const msgLimit = await checkMessageLimitExceeded(orgId);
+    if (!msgLimit) {
+      log.error(
+        "You have reached the maximum monthly limit of messages.",
+        orgId,
+      );
+      return;
+    }
+  }
   updateVisitedSurvey(session.surveyTeamMap.id)
     .then(() => {})
     .catch((e) => log.error(e)); // increment visited survey count
@@ -412,11 +425,14 @@ async function handleStartSurvey({
       language: session.surveyTeamMap.survey.languages[0],
     });
     // FLOW
-    await sendFlow({
+    const sendStatus = await sendFlow({
       dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
       orgId,
       phone: from,
     });
+    sendStatus &&
+      orgId &&
+      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
   } else {
     // WaSurvey
     if (session.surveyTeamMap.survey.languages.length > 1) {
