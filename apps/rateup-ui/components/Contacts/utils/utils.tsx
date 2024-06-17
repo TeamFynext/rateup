@@ -392,7 +392,7 @@ export const contactParticipentDetailColumn = [
         status={info?.getValue()?.status}
         id={info?.getValue()?.campaignId}
         teamId={info?.getValue()?.teamId}
-        consent={info?.getValue()?.consent}
+        consent={info?.getValue()?.contact?.consent}
       />
     ),
   },

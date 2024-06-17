@@ -25,6 +25,7 @@ import { useRouter } from "next/router";
 import { getLandingPages } from "../../backend/landingPage/landingPage.api";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
+import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 
 function LandingPageDashboard() {
   const router = useRouter();
@@ -34,7 +35,7 @@ function LandingPageDashboard() {
 
   const { data, isPending, isError } = useLandingPages();
   const [landingPages, setLandingPages] = useState([]);
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortOption, setSortOption] = useState("");
 
   const fetchLandingPages = useCallback(async () => {
     const data = await getLandingPages();
@@ -56,17 +57,16 @@ function LandingPageDashboard() {
     });
     await fetchLandingPages();
   };
-  const handleSortToggle = () => {
-    setSortOrder((prevSortOrder) => (prevSortOrder === "asc" ? "desc" : "asc"));
+
+  const handleSortChange = (value) => {
+    setSortOption(value);
   };
 
-  const sortedLandingPages = [...landingPages].sort((a, b) => {
-    if (sortOrder === "asc") {
-      return a.name.localeCompare(b.name);
-    } else {
-      return b.name.localeCompare(a.name);
-    }
-  });
+  const sortedLandingPages = sortData(
+    landingPages.map((s) => ({ ...s, data: { name: s.name } })),
+    sortOption,
+  );
+
   let componentToBeRendered = null;
 
   if (isPending) {
@@ -116,11 +116,9 @@ function LandingPageDashboard() {
             </ActionIcon>
           </Tooltip>
         </Group>
-        <RateupButtonPrimary
-          onClick={handleSortToggle}
-          title={"Sort"}
-          variant="subtle"
-          rightIcon={<IconSelector size="1rem" />}
+        <SortDropdown
+          onSortChange={handleSortChange}
+          defaultSortOption={sortOption}
         />
       </Group>
       <Box className={styles["landingPage-list-container"]}>

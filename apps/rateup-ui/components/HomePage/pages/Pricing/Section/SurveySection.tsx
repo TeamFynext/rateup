@@ -11,7 +11,15 @@ export const SurveySection = ({
   currencySymbol,
 }) => {
   const surveyPlan = plans
-    ?.filter((item) => !item?.name?.includes("Menu"))
+    ?.filter((item) => {
+      const name = item?.name;
+      return (
+        name &&
+        !name.includes("Menu") &&
+        !name.includes("WhatsApp") &&
+        !name.includes("Custom")
+      );
+    })
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
 
   if (surveyPlan?.length > 0) {

@@ -139,18 +139,26 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Email Notification";
     case sfpn.WebSurvey + ".googleReview":
       return "Google Review";
-    case sfpn.WhatsAppSurvey:
-      return "WhatsApp Survey";
     case sfpn.Menu:
       return "Menu";
+    case sfpn.Menu + ".monthlyViewLimit":
+      return "Menu MonthlyViewLimit";
     case sfpn.ReputationManagement:
       return "Reputation Management";
     case sfpn.Team:
       return "Team";
     case sfpn.Team + ".teamMember":
       return "Team Members";
+    case sfpn.Whatsapp:
+      return "Whatsapp";
+    case sfpn.WhatsAppFlow:
+      return "Flow";
+    case sfpn.WhatsAppSurvey:
+      return "Survey";
     case sfpn.WhatsAppCampaign:
-      return "WhatsApp Campaign";
+      return "Campaign";
+    case sfpn.WhatsAppTemplate:
+      return "Template";
     case sfpn.Ticket:
       return "Ticket";
     default:

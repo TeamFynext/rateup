@@ -21,9 +21,11 @@ import RateupLoader from "../../../Loaders/RateupLoader";
 import { useCheckSession } from "../../../../hooks/checkSession";
 import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
 import { MotionTransition } from "../../../animation/MotionTransition";
+import { WhatsAppSection } from "./Section/WhatsAppSection";
+import { CustomSection } from "./Section/CustomSection";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
-  const [value, setValue] = useState("Surveys");
+  const [value, setValue] = useState("WebSurveys");
   const [checked, setChecked] = useState(false);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
@@ -43,6 +45,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   let currencySymbol = "₹";
 
   if (gateway === "stripe") {
+    //temp for stripe testing
     currency = "USD";
     currencySymbol = "$";
   }
@@ -139,8 +142,9 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
           classNames={classes}
           fw={500}
           data={[
-            { label: "Surveys", value: "Surveys" },
-            { label: "Digital Menu", value: "Digital Menu" },
+            { label: "Web Survey", value: "WebSurveys" },
+            { label: "WhatsApp", value: "WhatsApp" },
+            { label: "Custom", value: "Custom" },
           ]}
         />
         {/* <Flex align="center" pos={"relative"} gap={"xs"}>
@@ -175,7 +179,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
       </SimpleGrid>
 
       <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">
-        {value === "Surveys" ? (
+        {value === "WebSurveys" && (
           <SurveySection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
@@ -183,8 +187,29 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
-        ) : (
+        )}
+        {value === "Digital Menu" && (
           <MenuSection
+            largeScreen={largeScreen}
+            handlePlanSelection={handlePlanSelection}
+            plans={updatedPlans}
+            freePlan={freePlan}
+            currencySymbol={currencySymbol}
+          />
+        )}
+
+        {value === "WhatsApp" && (
+          <WhatsAppSection
+            largeScreen={largeScreen}
+            handlePlanSelection={handlePlanSelection}
+            plans={updatedPlans}
+            freePlan={freePlan}
+            currencySymbol={currencySymbol}
+          />
+        )}
+
+        {value === "Custom" && (
+          <CustomSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
             plans={updatedPlans}
