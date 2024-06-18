@@ -82,6 +82,14 @@ export async function verifySurveyMonthlyLimitRestriction(
     },
   });
 
+  if(!surveyTeamMap) {
+    reply.code(404).send({
+      message:
+        "Survey not found...!",
+      displayMessageInClient: true,
+    });
+  }
+
   let orgId = surveyTeamMap.team.orgId;
 
   const usage = await prisma.usageStats.findUnique({
