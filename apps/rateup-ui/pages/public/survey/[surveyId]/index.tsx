@@ -33,7 +33,7 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
 
   const { data: gReview } = usePublicReviewSuggestions(
     !!isReviewPage && !!survey?.surveyTeamMapId,
-    survey.surveyTeamMapId,
+    survey?.surveyTeamMapId,
     isReviewPage,
   );
 
