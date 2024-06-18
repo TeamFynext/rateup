@@ -2,8 +2,13 @@
 
 import { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "../../utils/prisma";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-
+import {
+  CampaignParticipantStatus,
+  SubscriptionFeaturePathName,
+} from "../../types/enums";
+import { ByCampaignIdParams, SendCampaignInput } from "./campaign.schema";
+import { log } from "../../utils/logger";
+//not using
 export async function verifyCampaignMaxCountRestriction(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -21,11 +26,100 @@ export async function verifyCampaignMaxCountRestriction(
     request.subscription.features[SubscriptionFeaturePathName.WhatsAppCampaign]
       .count.max
   ) {
-    reply
-      .code(403)
-      .send({
-        message: "You have reached the maximum limit of Campaigns",
+    reply.code(403).send({
+      message: "You have reached the maximum limit of Campaigns",
+      displayMessageInClient: true,
+    });
+  }
+}
+
+async function getUsageStats(orgId: string) {
+  return prisma.usageStats.findUnique({
+    where: { orgId },
+  });
+}
+
+async function getSubscription(orgId: string) {
+  return prisma.subscription.findUnique({
+    where: { orgId },
+  });
+}
+
+async function getCampaignParticipants(
+  participantId: string | undefined,
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[],
+) {
+  if (participantId) {
+    const participant = await prisma.campaignParticipant.findFirst({
+      where: { id: participantId },
+    });
+    return participant ? [participant] : [];
+  } else {
+    return prisma.campaignParticipant.findMany({
+      where: {
+        campaignId,
+        status: { in: sendToStatuses },
+      },
+    });
+  }
+}
+
+export async function verifyMessageMonthlyLimitRestrictionForCampaign(
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+    Body: SendCampaignInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user.orgId;
+    const {
+      participantId,
+      sendToStatuses = [
+        CampaignParticipantStatus.PENDING,
+        CampaignParticipantStatus.FAILED,
+      ],
+    } = request.body;
+    const { campaignId } = request.params;
+
+    const [usage, subscription] = await Promise.all([
+      getUsageStats(orgId),
+      getSubscription(orgId),
+    ]);
+
+    if (!usage || !subscription) {
+      return reply
+        .code(404)
+        .send({ message: "Usage stats or subscription not found." });
+    }
+
+    const campaignData = await getCampaignParticipants(
+      participantId,
+      campaignId,
+      sendToStatuses,
+    );
+    const newMessagesCount = campaignData.length;
+    const monthlyMessageLimit =
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+        ?.monthlyMessageLimit ?? 0;
+
+    if (
+      (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
+      monthlyMessageLimit
+    ) {
+      return reply.code(403).send({
+        message:
+          usage.monthlyMessagesCount >= monthlyMessageLimit
+            ? "You have reached the maximum monthly limit of messages."
+            : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
+                monthlyMessageLimit - usage.monthlyMessagesCount
+              } to proceed.`,
         displayMessageInClient: true,
       });
+    }
+  } catch (error) {
+    log.error("Error verifying message limit:", error);
+    return reply.code(500).send({ message: "Internal server error." });
   }
 }
