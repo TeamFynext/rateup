@@ -1,0 +1,16 @@
+.whatsapp-inbox-root-div {
+  height: 100%;
+}
+
+.chat-selector-and-chat-container {
+  flex: 1 1 0;
+  padding: 0.3125rem;
+  overflow: hidden;
+}
+
+.chat-selector-and-chat-container > div {
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  border-radius: 1rem;
+}

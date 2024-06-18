@@ -49,7 +49,7 @@ import {
 import { Campaign } from "../../../types/global";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
 import { lexend600 } from "../../../utils/fonts";
-import style from "./campaign.module.css";
+import styles from "./campaign.module.css";
 
 export enum CampaignParticipantsTabs {
   INFO = "info",
@@ -107,7 +107,7 @@ const CampaignById = () => {
             onClick={() => refetchCampaign()}
           >
             <IconRefresh
-              className={isFetching ? style.rotateInfinitely : undefined}
+              className={isFetching ? styles.rotateInfinitely : undefined}
               style={{ width: "90%", height: "90%" }}
               stroke={1.5}
             />
@@ -119,7 +119,7 @@ const CampaignById = () => {
 
   return (
     <MantineProvider theme={whatsappTheme}>
-      <Stack mx={"xl"}>
+      <Stack className={styles["campaign-id-page-root-div"]}>
         <Title order={2} tt={"uppercase"}>
           {campaignData?.name}
         </Title>
@@ -152,7 +152,11 @@ const CampaignById = () => {
           )}
         </Group>
 
-        <Tabs value={activeTab} color="var(--tertiary-color)">
+        <Tabs
+          value={activeTab}
+          color="var(--tertiary-color)"
+          className={styles["tab-panels-container"]}
+        >
           <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
             <StartCampaignCardRightSection
               campaign={campaignData}
@@ -165,8 +169,8 @@ const CampaignById = () => {
               flowId={campaignData?.flowId}
             />
           </Tabs.Panel>
-          <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS}>
-            <PaperLayout px={0}>
+          <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS} h={"100%"}>
+            <PaperLayout p={0} h={"100%"} mah={800}>
               <ContactTable
                 columns={column}
                 data={filteredParticipants}

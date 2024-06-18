@@ -1,22 +1,22 @@
-import { Group, MantineProvider, Title } from "@mantine/core";
-import classes from "./styles.module.css";
-import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect";
-import WaInboxChatDisplay from "../../../../components/whatsapp/inbox/chatdisplay";
-import { whatsappTheme } from "../../../../config/mantineTheme";
+import { Group, MantineProvider, Stack, Title } from "@mantine/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import {
-  useContactsWithLastMessage,
-  useGetMessagesByContactId,
-} from "../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { useCallback, useEffect, useState } from "react";
 import {
   ContactsWithLastMessage,
   WaGetMessagesBody,
   WaMessagePage,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useWsData } from "../../../../context/UserContext";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  useContactsWithLastMessage,
+  useGetMessagesByContactId,
+} from "../../../../backend/whatsapp/inbox/message/wamessage.query";
+import WaInboxChatDisplay from "../../../../components/whatsapp/inbox/chatdisplay";
+import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect";
 import WhatsAppInboxLoader from "../../../../components/whatsapp/inbox/loader";
+import { whatsappTheme } from "../../../../config/mantineTheme";
+import { useWsData } from "../../../../context/UserContext";
+import styles from "./WhatsappInbox.module.css";
 
 export default function WhatsAppInbox() {
   const queryClient = useQueryClient();
@@ -130,9 +130,9 @@ export default function WhatsAppInbox() {
 
   return (
     <MantineProvider theme={whatsappTheme}>
-      <div className={classes.wrapper}>
+      <Stack className={styles["whatsapp-inbox-root-div"]}>
         <Title>Inbox</Title>
-        <Group className={classes.inner}>
+        <Group className={styles["chat-selector-and-chat-container"]}>
           <WaInboxChatSelect
             contacts={contactList}
             setFilteredContacts={setFilteredContactList}
@@ -159,7 +159,7 @@ export default function WhatsAppInbox() {
             }
           />
         </Group>
-      </div>
+      </Stack>
     </MantineProvider>
   );
 }

@@ -95,7 +95,7 @@ export default function CampaignList() {
           )}
         </Center>
 
-        <PaperLayout p={0} h={"100%"}>
+        <PaperLayout p={0} h={"100%"} mah={"800px"}>
           <TanstackTable
             columns={column}
             data={filteredCampaigns}

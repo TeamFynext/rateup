@@ -7,6 +7,7 @@ import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import {
+  Box,
   Button,
   Center,
   Flex,
@@ -45,6 +46,7 @@ import {
   useUpdateContactTagsMutation,
 } from "../../../backend/whatsapp/settings/waSettings.query";
 import { PAGE_SIZE } from "../../../utils/constants";
+import styles from "./contacts.module.css";
 
 export enum ContactTabs {
   GROUPS = "groups",
@@ -128,7 +130,7 @@ export default function Contacts() {
   if (isLoadingContacts || isLoadingContactgroup || isPending)
     return <RateupLoader h={"90dvh"} />;
   return (
-    <>
+    <Stack className={styles["contacts-page-root-div"]}>
       <Flex
         mih={50}
         gap="md"
@@ -136,7 +138,6 @@ export default function Contacts() {
         align="center"
         direction="row"
         wrap="wrap"
-        px="xl"
       >
         <Group gap={"md"}>
           <Heading title="Contacts" titleprops={{ w: "fit-content" }} />
@@ -149,12 +150,7 @@ export default function Contacts() {
           />
         )}
       </Flex>
-      <Tabs
-        value={activeTab}
-        color="var(--tertiary-color)"
-        p="xl"
-        keepMounted={false}
-      >
+      <Tabs value={activeTab} color="var(--tertiary-color)" keepMounted={false}>
         <Flex justify="space-between" align={"center"} wrap={"wrap"} gap={10}>
           <SegmentedControl
             data={Object.values(ContactTabs)}
@@ -198,81 +194,83 @@ export default function Contacts() {
           )}
           <ContactActionMenu groups={contactGroupData} />
         </Flex>
-        <Tabs.Panel value={ContactTabs.CONTACTS}>
-          {isLoadingContacts ? (
-            <Center pt="xl">
-              <Loader type="bars" />
-            </Center>
-          ) : (
-            <PaperLayout mt={"xl"} px={0}>
-              <ContactTable
-                columns={column}
-                data={contactMemoData ?? []}
-                cTags={cTags?.contactTags}
-                topHeight={375}
-                refetch={refetchContacts}
-                pagination={pagination}
-                setPagination={setPagination}
-                totalCount={contactData?.totalCount}
-                setSorting={setSorting}
-                sorting={sorting}
-                columnFilters={columnFilters}
-                setColumnFilters={setColumnFilters}
-              />
+        <Box className={styles["panels-container"]}>
+          <Tabs.Panel value={ContactTabs.CONTACTS} h={"100%"}>
+            {isLoadingContacts ? (
+              <Center pt="xl">
+                <Loader type="bars" />
+              </Center>
+            ) : (
+              <PaperLayout p={0} h={"100%"}>
+                <ContactTable
+                  columns={column}
+                  data={contactMemoData ?? []}
+                  cTags={cTags?.contactTags}
+                  topHeight={375}
+                  refetch={refetchContacts}
+                  pagination={pagination}
+                  setPagination={setPagination}
+                  totalCount={contactData?.totalCount}
+                  setSorting={setSorting}
+                  sorting={sorting}
+                  columnFilters={columnFilters}
+                  setColumnFilters={setColumnFilters}
+                />
+              </PaperLayout>
+            )}
+          </Tabs.Panel>
+          <Tabs.Panel value={ContactTabs.GROUPS} h={"100%"}>
+            {isLoadingContactgroup ? (
+              <Center pt="xl">
+                <Loader type="bars" />
+              </Center>
+            ) : (
+              <PaperLayout p={0} h={"100%"}>
+                <ContactTable
+                  columns={columnGroup}
+                  data={filteredGroups}
+                  cTags={cTags?.contactTags}
+                  tab={activeTab}
+                  topHeight={375}
+                  refetch={refetchGroups}
+                  setSorting={setSortingGroup}
+                  sorting={sortingGroup}
+                  columnFilters={columnFiltersGroup}
+                  setColumnFilters={setColumnFiltersGroup}
+                />
+              </PaperLayout>
+            )}
+          </Tabs.Panel>
+          <Tabs.Panel value={ContactTabs.SETTINGS}>
+            <PaperLayout p="xl">
+              <Stack align="start">
+                <ContainedTagInput
+                  placeholder="Type field name and press enter"
+                  label="Enter the Field name you want to add along with the existing fields in Csv Import."
+                  w={"25rem"}
+                  onChange={setContactTags}
+                  defaultValue={cTags?.contactTags}
+                />
+                <RateupButtonPrimary
+                  title="Update"
+                  onClick={() => {
+                    updateContactTagsMutation.mutate({
+                      tags: contactTags,
+                    });
+                    showLoadingToast(
+                      "Contact tags updated successfully",
+                      "c-tags",
+                      true,
+                      "Loading",
+                    );
+                  }}
+                />
+              </Stack>
             </PaperLayout>
-          )}
-        </Tabs.Panel>
-        <Tabs.Panel value={ContactTabs.GROUPS}>
-          {isLoadingContactgroup ? (
-            <Center pt="xl">
-              <Loader type="bars" />
-            </Center>
-          ) : (
-            <PaperLayout mt={"xl"} px={0}>
-              <ContactTable
-                columns={columnGroup}
-                data={filteredGroups}
-                cTags={cTags?.contactTags}
-                tab={activeTab}
-                topHeight={375}
-                refetch={refetchGroups}
-                setSorting={setSortingGroup}
-                sorting={sortingGroup}
-                columnFilters={columnFiltersGroup}
-                setColumnFilters={setColumnFiltersGroup}
-              />
-            </PaperLayout>
-          )}
-        </Tabs.Panel>
-        <Tabs.Panel value={ContactTabs.SETTINGS}>
-          <PaperLayout mt={"xl"} p="xl">
-            <Stack align="start">
-              <ContainedTagInput
-                placeholder="Type field name and press enter"
-                label="Enter the Field name you want to add along with the existing fields in Csv Import."
-                w={"25rem"}
-                onChange={setContactTags}
-                defaultValue={cTags?.contactTags}
-              />
-              <RateupButtonPrimary
-                title="Update"
-                onClick={() => {
-                  updateContactTagsMutation.mutate({
-                    tags: contactTags,
-                  });
-                  showLoadingToast(
-                    "Contact tags updated successfully",
-                    "c-tags",
-                    true,
-                    "Loading",
-                  );
-                }}
-              />
-            </Stack>
-          </PaperLayout>
-        </Tabs.Panel>
+          </Tabs.Panel>
+        </Box>
       </Tabs>
-    </>
+    </Stack>
   );
 }
 
@@ -306,7 +304,7 @@ const ContactActionMenu = ({ groups }) => {
   ] = useDisclosure(false);
   const [action, setSelectedAction] = useState<ContactAcions>(null);
   return (
-    <Stack px="sm">
+    <Stack px="sm" pr={0}>
       <Menu
         position="bottom-end"
         offset={4}
