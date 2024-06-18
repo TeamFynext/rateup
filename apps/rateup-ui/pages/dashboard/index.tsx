@@ -12,6 +12,8 @@ import {
   SimpleGrid,
   ActionIcon,
   Blockquote,
+  Flex,
+  Box,
 } from "@mantine/core";
 import { Tooltip as MantineTooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -199,107 +201,109 @@ export default function DashboardHome() {
   return (
     <>
       {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
-        <Container fluid w="100%">
-          <Stack gap={"xl"}>
-            <Group>
-              <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
-                <RateupButtonBlue
-                  onClick={open}
-                  title={"Create"}
-                  leftIcon={<IconPlus size="2.2rem" />}
-                  size="xl"
-                  py="xl"
-                  className={lexend500.className}
-                  styles={{
-                    root: {
-                      height: "130px",
-                    },
-                    label: {
-                      fontSize: "32px",
-                      paddingLeft: "5px",
-                      paddingBottom: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                    },
-                    leftIcon: {
-                      display: "flex",
-                      alignItems: "center",
-                    },
-                  }}
-                />
-                {summaryArray.map(
-                  ({ summaryname, summaryvalue, route }, index) => (
-                    <PaperLayout
-                      hoveractive
-                      style={{ height: "105px", cursor: "pointer" }}
-                      py={"xl"}
-                      key={index}
-                      onClick={() => router.push(route)}
-                    >
-                      <Stack gap={0} justify="center" h={"100%"}>
-                        <Title
-                          style={{ textAlign: "center", color: "#1C518E" }}
-                          order={2}
-                          size="36px"
-                        >
-                          {summaryvalue ? summaryvalue : 0}
-                        </Title>
-                        <Text
-                          className={lexend400.className}
-                          style={{ textAlign: "center" }}
-                          fz="xl"
-                          c="#595959"
-                        >
-                          {summaryname}
-                        </Text>
-                      </Stack>
-                    </PaperLayout>
-                  ),
-                )}
-              </Stack>
-              <OverallResponseGraph
-                timePeriod={timePeriod}
-                setTimePeriod={setTimePeriod}
-                data={filteredData}
-                isFetching={isRefetching}
-                refetch={refetch}
+        <Stack gap={"4rem"}>
+          <Group
+            className={classes["summary-cards-and-responses-graph-container"]}
+          >
+            <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
+              <RateupButtonBlue
+                onClick={open}
+                title={"Create"}
+                leftIcon={<IconPlus size="2.2rem" />}
+                size="xl"
+                py="xl"
+                className={lexend500.className}
+                styles={{
+                  root: {
+                    height: "130px",
+                  },
+                  label: {
+                    fontSize: "32px",
+                    paddingLeft: "5px",
+                    paddingBottom: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                  leftIcon: {
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                }}
               />
-            </Group>
-            <FormModalLayout
-              centered
-              opened={opened}
-              onClose={close}
-              title="Create new"
-            >
-              <Stack p={"md"}>
-                {createModalContent.map(({ Icon, routerPath, title }) => (
+              {summaryArray.map(
+                ({ summaryname, summaryvalue, route }, index) => (
                   <PaperLayout
                     hoveractive
-                    key={routerPath}
-                    onClick={() => router.push(routerPath)}
+                    style={{ height: "105px", cursor: "pointer" }}
+                    py={"xl"}
+                    key={index}
+                    onClick={() => router.push(route)}
                   >
-                    <Group align="center" gap="10">
-                      <ActionIcon variant="subtle">
-                        <Icon size={30} color="#595959" />
-                      </ActionIcon>
+                    <Stack gap={0} justify="center" h={"100%"}>
+                      <Title
+                        style={{ textAlign: "center", color: "#1C518E" }}
+                        order={2}
+                        size="36px"
+                      >
+                        {summaryvalue ? summaryvalue : 0}
+                      </Title>
                       <Text
-                        style={{ textAlign: "center" }}
-                        size="20px"
                         className={lexend400.className}
+                        style={{ textAlign: "center" }}
+                        fz="xl"
                         c="#595959"
                       >
-                        {title}
+                        {summaryname}
                       </Text>
-                      <Group ml={"auto"}>
-                        <IconSquareRoundedPlusFilled fillOpacity={0.4} />
-                      </Group>
-                    </Group>
+                    </Stack>
                   </PaperLayout>
-                ))}
-              </Stack>
-            </FormModalLayout>
+                ),
+              )}
+            </Stack>
+            <OverallResponseGraph
+              timePeriod={timePeriod}
+              setTimePeriod={setTimePeriod}
+              data={filteredData}
+              isFetching={isRefetching}
+              refetch={refetch}
+            />
+          </Group>
+          <FormModalLayout
+            centered
+            opened={opened}
+            onClose={close}
+            title="Create new"
+          >
+            <Stack p={"md"}>
+              {createModalContent.map(({ Icon, routerPath, title }) => (
+                <PaperLayout
+                  hoveractive
+                  key={routerPath}
+                  onClick={() => router.push(routerPath)}
+                >
+                  <Group align="center" gap="10">
+                    <ActionIcon variant="subtle">
+                      <Icon size={30} color="#595959" />
+                    </ActionIcon>
+                    <Text
+                      style={{ textAlign: "center" }}
+                      size="20px"
+                      className={lexend400.className}
+                      c="#595959"
+                    >
+                      {title}
+                    </Text>
+                    <Group ml={"auto"}>
+                      <IconSquareRoundedPlusFilled fillOpacity={0.4} />
+                    </Group>
+                  </Group>
+                </PaperLayout>
+              ))}
+            </Stack>
+          </FormModalLayout>
 
-            <PaperLayout p={"lg"} mt="5rem">
+          <Stack className={classes["surveys-filter-and-cards-container"]}>
+            <PaperLayout className={classes["surveys-filter-container"]}>
               <Group justify="space-between">
                 <Group align="center">
                   <Heading subtitle="Active Surveys / Flows" />
@@ -340,23 +344,17 @@ export default function DashboardHome() {
               </Group>
             </PaperLayout>
 
-            {filteredSurveys.length > 0 ? (
-              <SimpleGrid
-                spacing="lg"
-                mb="xl"
-                pb="xl"
-                mx="sm"
-                cols={{ xs: 1, sm: 1, md: 2, lg: 3, xl: 4 }}
-              >
-                {filteredSurveys.map((s) => (
+            <div className={classes["filtered-survey-cards-container"]}>
+              {filteredSurveys.length > 0 ? (
+                filteredSurveys.map((s) => (
                   <ActiveSurveyCard key={s.id} survey={s} />
-                ))}
-              </SimpleGrid>
-            ) : (
-              <NothingFound text="No data found" />
-            )}
+                ))
+              ) : (
+                <NothingFound text="No data found" />
+              )}
+            </div>
           </Stack>
-        </Container>
+        </Stack>
       ) : !summaryError ? (
         <Loading h={300} />
       ) : (

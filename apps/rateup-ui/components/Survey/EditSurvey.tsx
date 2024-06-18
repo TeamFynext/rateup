@@ -81,7 +81,7 @@ export function EditSurvey({
       w={"100%"}
       h={"100%"}
       mah={"100%"}
-      p={2}
+      p={5}
       gap={10}
       style={{ overflow: "auto" }}
       bg={"var(--mantine-color-body)"}

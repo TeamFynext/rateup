@@ -6,5 +6,19 @@
 .tab-panel-container {
   flex: 1 1 0;
   max-height: 100%;
-  overflow: auto;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .title-container {
+    max-width: none;
+    flex-grow: 1;
+    overflow: auto;
+  }
+  .survey-editor-tabs-div {
+    display: none;
+  }
+  .team-selector-filter-container {
+    max-width: 125px;
+  }
 }

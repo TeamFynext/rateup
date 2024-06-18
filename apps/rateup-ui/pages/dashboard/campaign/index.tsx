@@ -64,7 +64,7 @@ export default function CampaignList() {
 
   return (
     <MantineProvider theme={whatsappTheme}>
-      <Stack gap={"sm"}>
+      <Stack gap={"sm"} h={"100%"}>
         <Flex justify={"space-between"}>
           <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
           <SearchInput
@@ -95,7 +95,7 @@ export default function CampaignList() {
           )}
         </Center>
 
-        <PaperLayout px={0}>
+        <PaperLayout p={0} h={"100%"}>
           <TanstackTable
             columns={column}
             data={filteredCampaigns}

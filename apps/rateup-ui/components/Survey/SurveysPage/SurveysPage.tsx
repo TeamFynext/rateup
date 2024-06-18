@@ -1,4 +1,4 @@
-import { Stack, Space } from "@mantine/core";
+import { Stack, Space, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
@@ -10,6 +10,7 @@ import { CreateSurveyModal } from "../CreateSurveyModal";
 import { SurveyHeader } from "./SurveysPageHeader";
 import { useTeamsByUser } from "../../../backend/team/team.query";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
+import styles from "./SurveyPage.module.css";
 import { sortData } from "../../Dashboard/SortDropDown";
 
 // USED IN:
@@ -114,7 +115,7 @@ export function SurveysPage({
   );
 
   return (
-    <Stack h={"100%"} gap={0}>
+    <Stack h={"100%"}>
       <SurveyHeader
         selectedTeamId={selectedTeamId}
         setSelectedTeamId={setSelectedTeamId}
@@ -128,9 +129,9 @@ export function SurveysPage({
         surveyType={surveyType}
         refetch={refetch}
       />
-      <Space h="lg" />
+
       {surveys?.length > 0 ? (
-        <SurveyCardLayout>
+        <Box className={styles["surveys-cards-container"]}>
           {sortedSurveys
             .filter((s) => {
               if (filterParam === "active") {
@@ -152,7 +153,7 @@ export function SurveysPage({
                 refetchSurveys={refetch}
               />
             ))}
-        </SurveyCardLayout>
+        </Box>
       ) : (
         <NothingFound text="No Surveys Found" />
       )}
@@ -164,22 +165,15 @@ export function SurveysPage({
         template={template}
         setTemplate={setTemplate}
       />
-      <SurveyTemplatesModal
-        opened={surveyTemplatesOpened}
-        close={closeSurveyTemplates}
-        openCreateSurvey={openCreateSurvey}
-        setTemplate={setTemplate}
-        surveyType={surveyType}
-      />
-      {/* //---------create landing page modal ------------ */}
-      {/* <CreateSurveyLandingModal
-        open={mergeSurveyOpened}
-        close={closeMergeSurvey}
-        surveyType={"web"}
-        landingPageId={null}
-        surveyIdArray={surveyidArray}
-        mergeSurvey={true}
-      ></CreateSurveyLandingModal> */}
+      {surveyTemplatesOpened && (
+        <SurveyTemplatesModal
+          opened={surveyTemplatesOpened}
+          close={closeSurveyTemplates}
+          openCreateSurvey={openCreateSurvey}
+          setTemplate={setTemplate}
+          surveyType={surveyType}
+        />
+      )}
     </Stack>
   );
 }

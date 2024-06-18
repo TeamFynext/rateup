@@ -67,7 +67,7 @@ export function EditWhatsappSurvey({
   };
 
   return (
-    <Flex w={"100%"} h={"100%"} p={2} gap={10} className={classes.root}>
+    <Flex w={"100%"} h={"100%"} p={5} gap={10} className={classes.root}>
       <PaperLayout
         style={{ flex: 2 }}
         className={classes["wa-que-sidebar-container"]}

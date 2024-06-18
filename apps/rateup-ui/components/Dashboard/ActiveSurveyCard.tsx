@@ -23,7 +23,7 @@ export default function ActiveSurveyCard({
       p={0}
       style={{
         cursor: "pointer",
-        minWidth: "280px",
+        // minWidth: "280px",
       }}
       onClick={(e) => {
         e.stopPropagation();

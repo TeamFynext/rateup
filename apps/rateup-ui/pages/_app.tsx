@@ -199,31 +199,16 @@ export default function App({
               <Notifications />
               <HydrationBoundary state={pageProps.dehydratedState}>
                 <UserProvider>
-                  <LayoutComponent>
-                    <AnimatePresence>
-                      <motion.div
-                        style={{ height: "100%" }}
-                        key={appProps.router.pathname}
-                        initial={
-                          !(
-                            appProps.router.pathname.includes("login") ||
-                            appProps.router.pathname.includes("signup")
-                          ) && { opacity: 0 }
-                        }
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Component {...pageProps} />
-                      </motion.div>
-                    </AnimatePresence>
+                  <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
+                    <Component {...pageProps} />
                   </LayoutComponent>
                 </UserProvider>
-                {showQueryDevTools && (
+                {/* {showQueryDevTools && (
                   <ReactQueryDevtools
                     initialIsOpen={false}
                     buttonPosition="top-right"
                   />
-                )}
+                )} */}
               </HydrationBoundary>
               <Notifications />
             </ModalsProvider>

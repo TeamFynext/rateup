@@ -1,3 +1,12 @@
+.surveys-filter-and-cards-container {
+}
+
+.filtered-survey-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.25rem;
+}
+
 .rotateInfinitely {
   animation: rotate-infinite 1s linear infinite;
 }
@@ -9,5 +18,16 @@
 
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .summary-cards-and-responses-graph-container {
+    display: none;
+  }
+
+  .surveys-filter-container {
+    margin: 0;
+    padding: 1rem;
   }
 }

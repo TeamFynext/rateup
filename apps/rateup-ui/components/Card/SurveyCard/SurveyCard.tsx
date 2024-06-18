@@ -53,8 +53,6 @@ export function SurveyCard({
   return (
     <PaperLayout
       hoveractive
-      mah={200}
-      mih={200}
       p="md"
       shadow="lg"
       radius="lg"
@@ -83,11 +81,6 @@ export function SurveyCard({
               teamsData={teamsData}
               refetchSurveys={refetchSurveys}
             />
-            {/* <Checkbox
-              onClick={(e) => {
-                handleCheckBox(e, survey?.id);
-              }}
-            ></Checkbox> */}
           </Group>
         </Group>
         <Group gap="xs">
@@ -107,8 +100,6 @@ export function SurveyCard({
             </Badge>
           </Group>
           <Group justify={"space-between"} align={"center"}>
-            {/* <Text>Total Responses : #</Text> */}
-            {/* //TODO */}
             <PaperLayout
               p={0}
               radius={5}

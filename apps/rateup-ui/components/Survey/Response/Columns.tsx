@@ -124,8 +124,6 @@ export const useSurveyResponseColumns = ({
               q.type,
             ),
             cell: (info) => {
-              console.log(q.type, info.getValue(), typeof info.getValue());
-
               return (
                 <BadgeorTextorPreview
                   questionType={q?.type}

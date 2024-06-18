@@ -18,6 +18,7 @@ import {
 } from "@mantine/core";
 import { UserRole } from "../../../utils/enums";
 import { IconChevronRight } from "@tabler/icons-react";
+import { surveyUploadsPath } from "../../../utils/constants";
 const NavbarFooter = (props: UserCardInterface) => {
   const router = useRouter();
   const bottomNavData = useNavBottomData();
@@ -35,33 +36,36 @@ const NavbarFooter = (props: UserCardInterface) => {
     <Group>
       <Menu
         onClose={() => setMenuOpen(false)}
-        withArrow
-        position="right-end"
+        position="top-start"
         shadow="xs"
+        offset={20}
       >
-        <MenuTarget>
-          <Box className={styles.user} onClick={() => setMenuOpen(!menuOpen)}>
-            <Group>
-              <Avatar
-                src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.profilePhoto}`}
-                radius="xl"
-                onClick={() => {
-                  props.setOpened((o) => true);
-                }}
-              />
-              {props.opened ? (
-                <div style={{ flex: 1 }}>
-                  <Text size="sm" fw={500}>
-                    {props?.userName}
-                  </Text>
-                  <Badge variant="light" size="xs">
-                    {props?.role === UserRole.SUPADM
-                      ? "Super Admin"
-                      : props?.role === UserRole.ADM
-                        ? "Admin"
-                        : "Member"}
-                  </Badge>
+        <Box
+          className={`${styles.user}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <Group>
+            <Avatar
+              src={`${surveyUploadsPath}${props.profilePhoto}`}
+              radius="xl"
+              onClick={() => {
+                props.setOpened((o) => true);
+              }}
+            />
+            {props.opened ? (
+              <div style={{ flex: 1 }}>
+                <Text size="sm" fw={500}>
+                  {props?.userName}
+                </Text>
+                <Badge variant="light" size="xs">
+                  {props?.role === UserRole.SUPADM
+                    ? "Super Admin"
+                    : props?.role === UserRole.ADM
+                      ? "Admin"
+                      : "Member"}
+                </Badge>
 
+                <Menu.Target>
                   <ActionIcon
                     variant="light"
                     style={{ marginBottom: "1rem", marginLeft: "3rem" }}
@@ -71,12 +75,12 @@ const NavbarFooter = (props: UserCardInterface) => {
                       stroke={2}
                     />
                   </ActionIcon>
-                </div>
-              ) : null}
-            </Group>
-          </Box>
-        </MenuTarget>
-        <Menu.Dropdown style={{ marginTop: "-4rem", marginLeft: "-10px" }}>
+                </Menu.Target>
+              </div>
+            ) : null}
+          </Group>
+        </Box>
+        <Menu.Dropdown>
           <Menu.Item>
             <Group>
               <Avatar

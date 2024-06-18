@@ -1,27 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { UserRole } from "../../../../../../utils/enums";
+import { NavbarLinkProps as NavbarLinkData } from "../../../navbar.constants";
 import {
-  Stack,
   Burger,
+  Divider,
   NavLink,
   Tooltip,
-  Divider,
-  ScrollArea,
-  Anchor,
-  Box,
   useMantineColorScheme,
 } from "@mantine/core";
-import { useRouter } from "next/router";
-import { useMediaQuery } from "@mantine/hooks";
-import { useUser } from "../../../context/UserContext";
-import styles from "./Navbar.module.css";
-import { NavbarLinkProps, getNavTopData } from "./navbar.constants";
-import { UserRole } from "../../../utils/enums";
-import { useSubscription } from "../../../backend/subscription/subscription.query";
-import ExpiryComponent from "../../Premium/ExpiryComponent";
-import NavbarHeader from "./NavbarHeader";
-import NavbarFooter from "./NavbarFooter";
-interface _NavbarLinkProps {
-  data: Array<NavbarLinkProps>;
+import React from "react";
+
+interface NavbarLinkProps {
+  data: Array<NavbarLinkData>;
   opened: boolean;
   currentRole:
     | typeof UserRole.ADM
@@ -32,14 +22,15 @@ interface _NavbarLinkProps {
   active: number;
   setActive?: React.Dispatch<React.SetStateAction<number>>;
 }
-function _NavbarLink({
+
+function NavbarLink({
   data,
   opened,
   currentRole,
   setOpened,
   active,
   setActive,
-}: _NavbarLinkProps) {
+}: NavbarLinkProps) {
   const router = useRouter();
   const { colorScheme } = useMantineColorScheme();
   const colorBasedOnLightMode = colorScheme === "light" ? "gray" : "white";
@@ -168,123 +159,5 @@ function _NavbarLink({
     </>
   );
 }
-interface iProps {
-  opened: boolean;
-  setOpened: React.Dispatch<React.SetStateAction<boolean>>;
-  style?: any;
-}
 
-const LeftNavbar = ({ opened, setOpened, style }: iProps) => {
-  const [active, setActive] = useState(0);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 480px)");
-  const { user } = useUser();
-  const [userProfileAvatar, setUserProfileAvatar] = useState(
-    `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user.png`,
-  );
-  useEffect(() => {
-    if (user?.profilePhoto && user?.profilePhoto !== "REMOVED_PHOTO") {
-      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${user?.profilePhoto}`;
-      setUserProfileAvatar(imgUrl);
-    } else {
-      setUserProfileAvatar(
-        `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
-      );
-    }
-  }, [user]);
-
-  const handlePaperLayoutClick = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-  const userInfo: {
-    name: string;
-    email: string;
-    role:
-      | typeof UserRole.ADM
-      | typeof UserRole.MEMBER
-      | typeof UserRole.SUPADM
-      | "...error...";
-    image: string;
-  } = {
-    name: user?.userName,
-    email: user?.email,
-    role: !user?.role ? "...error..." : user?.role,
-    image: userProfileAvatar,
-  };
-
-  const { data: subscription, isPending } = useSubscription();
-
-  if (isPending) return null;
-  const navTopData = getNavTopData(subscription);
-
-  return (
-    <Stack
-      className={styles["navbar"]}
-      gap={0}
-      style={style}
-      w={"100%"}
-      h={"100%"}
-      miw={opened ? (isMobile ? 360 : 250) : 70}
-      maw={opened ? (isMobile ? 360 : 250) : 70}
-    >
-      <header>
-        <NavbarHeader {...user} {...{ opened, setOpened }} />
-      </header>
-      <Divider />
-      <ScrollArea
-        mt={"xs"}
-        mb={20}
-        p={"lg"}
-        h={"100%"}
-        scrollbars="y"
-        scrollbarSize={7}
-        offsetScrollbars
-        styles={{
-          scrollbar: {
-            opacity: 0.3,
-          },
-        }}
-      >
-        <_NavbarLink
-          data={navTopData}
-          opened={opened}
-          currentRole={userInfo.role}
-          setOpened={setOpened}
-          active={active}
-          setActive={setActive}
-        />
-
-        <ExpiryComponent expiryDate={subscription?.expiresAt}>
-          <Tooltip
-            label={!opened ? "Buy Rateup Premium" : ""}
-            position="right"
-            styles={{ tooltip: { display: opened && "none" } }}
-          >
-            <Box mt="sm" ml="1px">
-              <Anchor href="/dashboard/settings?activeTab=account">
-                <img
-                  src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/${
-                    opened ? "rateup-pro-ad.png" : "premium-icon.svg"
-                  }`}
-                  alt=""
-                  height={opened ? 180 : 20}
-                />
-              </Anchor>
-            </Box>
-          </Tooltip>
-        </ExpiryComponent>
-      </ScrollArea>
-      <Divider />
-      <footer className={styles.navbarfooter}>
-        <NavbarFooter {...user} {...{ opened, setOpened }} />
-      </footer>
-    </Stack>
-  );
-};
-
-export default LeftNavbar;
-
-export interface UserCardInterface extends UserData {
-  opened: boolean;
-  setOpened: React.Dispatch<React.SetStateAction<boolean>>;
-}
+export default NavbarLink;

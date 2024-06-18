@@ -44,16 +44,19 @@ const OverallResponseGraph = ({
   total = allResponses.length;
 
   return (
-    <PaperLayout px="xl" py="sm" style={{ flex: 0.7 }} miw={300} w={"100%"}>
-      <>
+    <PaperLayout className={classes["graph-root-div"]}>
+      <Stack>
         <Stack>
           <Group justify="space-between">
             <Group>
               <Stack align="center" gap={0}>
-                <Text fz={32} c="#595959">
+                <Text className={classes["responses-text-p"]} c="#595959">
                   {total}
                 </Text>
-                <Text className={lexend400.className} fz="xl" c="dimmed">
+                <Text
+                  className={`${lexend400.className} ${classes["overall-responses-text-p"]}`}
+                  c="dimmed"
+                >
                   Overall Responses
                 </Text>
               </Stack>
@@ -72,7 +75,7 @@ const OverallResponseGraph = ({
               </MantineTooltip>
             </Group>
 
-            <Group justify="flex-end">
+            <Group className={classes["hour-daily-weekly-btn-container"]}>
               <RateupButtonBlue
                 variant={timePeriod === "hourly" ? "filled" : "subtle"}
                 radius="lg"
@@ -103,6 +106,7 @@ const OverallResponseGraph = ({
             <AreaChart
               data={data}
               margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+              className={classes["area-chart"]}
             >
               <defs>
                 <linearGradient id="gradientColor" x1="0" y1="0" x2="0" y2="1">
@@ -159,7 +163,7 @@ const OverallResponseGraph = ({
 
           {/* TODO : dots showing only on hover, show dots always in area chart */}
         </ResponsiveContainer>
-      </>
+      </Stack>
     </PaperLayout>
   );
 };

@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
-import { Flex, Transition } from "@mantine/core";
+import { ActionIcon, Box, Flex, Transition } from "@mantine/core";
 import { HeaderTabs } from "./Header/Header";
 import { IUserInfoApiResponse } from "../../backend/user/user.api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,11 +18,20 @@ import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
 import { orgWsMessage } from "../../types/global";
 import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
+import { AnimatePresence, motion } from "framer-motion";
+import classNames from "classnames/bind";
+
+import navBarStyles from "./Navbar/Navbar.module.css";
+import { IconMenu2 } from "@tabler/icons-react";
+import { useMediaQuery } from "@mantine/hooks";
+const navbarCx = classNames.bind(navBarStyles);
+
 // @ts-ignore
-export default function Layout({ children }) {
+export default function Layout({ children, appProps }) {
   const router = useRouter();
   const notifyWsMessages = useNotifyWsMessages();
   const connectionRef = useRef<WebSocket | null>(null);
+  const isViewPortLEQ768px = useMediaQuery("(max-width: 768px)");
   const [navOpened, setNavOpened] = useState(true);
   const [focus, toggleFocus] = useState(false);
   const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
@@ -106,50 +115,88 @@ export default function Layout({ children }) {
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
   }, [userInfo]);
 
+  useEffect(() => {
+    if (isViewPortLEQ768px && navOpened) {
+      setNavOpened(false);
+    } else {
+      setNavOpened(true);
+    }
+  }, [isViewPortLEQ768px]);
+
+  useEffect(() => {
+    const handleRouteChange = (url, { shallow }) => {
+      if (isViewPortLEQ768px && navOpened) {
+        setNavOpened(false);
+      }
+    };
+
+    router.events.on("routeChangeStart", handleRouteChange);
+
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChange);
+    };
+  }, [router, isViewPortLEQ768px, navOpened]);
+
   return (
     <SessionAuth>
       <RouteParamsProvider>
-        <Flex direction={"row"} h={"100vh"}>
-          <Transition mounted={!focus} transition="slide-right">
-            {(transitionStyle) => (
-              <LeftNavbar
-                opened={navOpened}
-                setOpened={setNavOpened}
-                style={transitionStyle}
+        <Flex className={styles["dashboard-layout-root-div"]}>
+          <LeftNavbar
+            opened={navOpened}
+            setOpened={setNavOpened}
+            focus={focus}
+          />
+
+          <Box className={styles["mobile-hamburger-icon-div"]}>
+            <ActionIcon
+              className={navbarCx(
+                "burger-btn-for-mobile",
+                "chevron-burger-btn",
+                { "navbar-closed": !navOpened },
+              )}
+            >
+              <IconMenu2
+                onClick={() => {
+                  setNavOpened((o) => !o);
+                }}
               />
-            )}
-          </Transition>
-          <Flex
-            className={styles["content-container"]}
-            direction={"column"}
-            gap="15px"
-            // if we want to change bg color of /dashboard/ urls
-            // bg={
-            //   router?.pathname?.toLowerCase().startsWith("/dashboard/menu/")
-            //     ? "var(--bg-grey-color)"
-            //     : "initial"
-            // }
-          >
+            </ActionIcon>
+          </Box>
+
+          <motion.div className={styles["content-container"]}>
             <Transition mounted={!focus} transition="slide-down">
               {(transitionStyle) => (
                 <HeaderTabs opened={navOpened} style={transitionStyle} />
               )}
             </Transition>
-            <Flex
-              className={`${styles.notinfocus} ${focus && styles.focus}`}
-              style={{ overflow: "auto" }}
-              px="lg"
-              py="sm"
-              pt={0}
-              direction="column"
-              m="auto"
-            >
+            <Flex className={`${styles["content-wrapper"]}`}>
               <NavControlContext.Provider value={{ navOpened, setNavOpened }}>
-                {children}
+                <AnimatePresence>
+                  <motion.div
+                    className={styles["content-div"]}
+                    key={appProps.router.pathname}
+                    initial={
+                      !(
+                        appProps.router.pathname.includes("login") ||
+                        appProps.router.pathname.includes("signup")
+                      ) && { opacity: 0 }
+                    }
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {children}
+                  </motion.div>
+                </AnimatePresence>
               </NavControlContext.Provider>
             </Flex>
-          </Flex>
-          <FocusMode focus={focus} toggleFocus={toggleFocus} />
+          </motion.div>
+          <FocusMode
+            focus={focus}
+            toggleFocus={(value) => {
+              toggleFocus(value);
+              setNavOpened(!navOpened);
+            }}
+          />
           <ReportBug />
         </Flex>
       </RouteParamsProvider>
