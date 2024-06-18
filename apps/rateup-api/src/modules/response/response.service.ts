@@ -707,6 +707,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       } else questionTitles.push(qstnTitle);
     });
 
+    const totalColumnCount = questionTitles.length + 3;
     const sheet =
       (await doc.sheetsByTitle[lang]) ??
       (await doc.addSheet({
@@ -717,7 +718,19 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           "team",
           "Respondent's Mobile Number",
         ],
+        gridProperties:
+          totalColumnCount > 26
+            ? {
+                columnCount: totalColumnCount,
+              }
+            : undefined,
       }));
+    const initialRowCount = await sheet.rowCount;
+    if (totalColumnCount > sheet.columnCount)
+      await sheet.resize({
+        columnCount: totalColumnCount,
+        rowCount: initialRowCount,
+      });
     await sheet.setHeaderRow([
       "Created At",
       ...questionTitles,
