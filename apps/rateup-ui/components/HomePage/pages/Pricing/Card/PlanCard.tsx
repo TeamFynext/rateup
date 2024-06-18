@@ -91,7 +91,9 @@ const PlanCard = ({
                     {currencySymbol}
                     <NumberAnimate
                       value={
-                        data?.paymentPlan?.amount || data?.stripeProduct?.amount
+                        data?.paymentPlan?.amount ||
+                        data?.stripeProduct?.amount ||
+                        0
                       }
                     />
                     {(
