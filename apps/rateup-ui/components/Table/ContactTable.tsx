@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { ActionIcon, Flex, Group, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Divider, Flex, Group, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
@@ -30,6 +30,7 @@ import ConfirmationModal from "../Modal/ConfirmationModal";
 import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
+import styles from "./TanstackTable.module.css";
 
 function ContactTable({
   data,
@@ -143,8 +144,14 @@ function ContactTable({
   });
   const { headerLabel, headerTitle, tooltipMsg } = tabHeaderLabels[tab] || {};
   return (
-    <>
-      <Flex gap={"md"} justify={"space-between"} align={"center"} px={"xs"}>
+    <Box className={styles["tanstack-table-root-div"]}>
+      <Flex
+        className={styles["filter-and-other-btns-container"]}
+        gap={"md"}
+        justify={"space-between"}
+        align={"center"}
+        px={"xs"}
+      >
         <ConfirmationModal
           forDeleteFunctionality
           opened={dialogOpened}
@@ -264,6 +271,7 @@ function ContactTable({
           setFilterVisibility={setFilterVisibility}
         />
       </Flex>
+      <Divider />
       <TableLayout
         enableFilter={enableFilter}
         enablePagination={enablePagination}
@@ -272,7 +280,7 @@ function ContactTable({
         tempVisibleColumnArray={tempVisibleColumnArray}
         topHeight={topHeight}
       />
-    </>
+    </Box>
   );
 }
 export default ContactTable;
