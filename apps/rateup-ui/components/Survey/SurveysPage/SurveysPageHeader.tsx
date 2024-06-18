@@ -1,5 +1,5 @@
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
-import { IconPlus, IconRefresh, IconSelector } from "@tabler/icons-react";
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
 import { useUser } from "../../../context/UserContext";
 import { UserRole } from "../../../utils/enums";
 import {
@@ -11,6 +11,8 @@ import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 import Heading from "../../styled/Heading/Heading";
 import { notifications } from "@mantine/notifications";
 import SortDropdown from "../../Dashboard/SortDropDown";
+import InfoButton from "../../Button/InfoButton";
+import { docsPath } from "../../../utils/constants";
 
 export function SurveyHeader({
   selectedTeamId,
@@ -30,10 +32,17 @@ export function SurveyHeader({
   return (
     <Group gap="md" justify="space-between">
       <Group gap="md" justify="flex-start">
-        <Heading
-          title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
-          titleprops={{ w: "fit-content" }}
-        />
+        <Group mr="md">
+          <Heading
+            title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
+            titleprops={{ w: "fit-content" }}
+          />
+
+          {surveyType == "web" && (
+            <InfoButton docUrl={`${docsPath}/webSurvey`} />
+          )}
+        </Group>
+
         <Tooltip label="Refresh data">
           <ActionIcon
             variant="light"
