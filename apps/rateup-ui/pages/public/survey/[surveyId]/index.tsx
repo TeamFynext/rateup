@@ -4,8 +4,11 @@ import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import ReviewUsOnGoogle from "./review-us-on-google";
-import { mimeTypesForImage } from "../../../../utils/constants";
+import { imagesPath, mimeTypesForImage } from "../../../../utils/constants";
 import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import Link from "next/link";
+import { Button, Image } from "@mantine/core";
+import errorPageStyles from "../../../ws/[shortId]/ws.module.css";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -73,8 +76,23 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
     }
   }, [error_occured]);
 
-  if (error_occured == true) {
-    return <></>;
+  if (error_occured) {
+    return (
+      <div className={errorPageStyles["error-page"]}>
+        <Link href="/">
+          <Image w={80} src={`${imagesPath}/rateup-logo-blue-text.svg`} />
+        </Link>
+        <p className={errorPageStyles["error-text"]}>
+          Unable to get survey, please try again later
+        </p>
+        <Button
+          className={errorPageStyles["reload-btn"]}
+          onClick={() => window.location.reload()}
+        >
+          Reload the page
+        </Button>
+      </div>
+    );
   }
   const fileExtension =
     survey?.orgLogo?.split(".")?.pop()?.toLowerCase() ?? "png";
