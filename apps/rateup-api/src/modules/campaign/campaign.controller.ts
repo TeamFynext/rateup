@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
   ByCampaignIdParams,
+  ByFlowIdParams,
   CreateCampaignInput,
   GetCampaignsQuery,
   SendCampaignInput,
@@ -10,6 +11,7 @@ import {
   createCampaign,
   deleteCampaign,
   getCampaignById,
+  getCampaignFilterForFlows,
   getCampaignsByOrgId,
   getCampaignsByTeamId,
   sendCampaign,
@@ -18,6 +20,7 @@ import {
 import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
+import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -96,4 +99,15 @@ export async function sendCampaignHandler(
     request.body.participantId,
   );
   return reply.status(204).send();
+}
+
+export async function getCampaignFilterForFlowsHandler(
+  request: FastifyRequest<{ Querystring: bySurveyIdSchema }>,
+  reply: FastifyReply,
+) {
+  if (!request.query.surveyId) {
+    return reply.status(400).send("surveyId is required");
+  }
+  const result = await getCampaignFilterForFlows(request.query.surveyId);
+  return reply.status(200).send(result);
 }
