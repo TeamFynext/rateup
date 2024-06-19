@@ -26,27 +26,26 @@ import { getLandingPages } from "../../backend/landingPage/landingPage.api";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
+import { useQueryClient } from "@tanstack/react-query";
 
 function LandingPageDashboard() {
   const router = useRouter();
   const { action } = router.query;
   const [isCreateLandingPageModalOpen, createLandingPageModalHandlers] =
     useDisclosure();
-
+  const queryClient = useQueryClient();
   const { data, isPending, isError } = useLandingPages();
   const [landingPages, setLandingPages] = useState([]);
   const [sortOption, setSortOption] = useState("");
 
-  const fetchLandingPages = useCallback(async () => {
-    const data = await getLandingPages();
-    setLandingPages(data);
-  }, []);
-
   useEffect(() => {
-    fetchLandingPages();
-  }, [fetchLandingPages]);
+    if (data) {
+      setLandingPages(data);
+    }
+  }, [data]);
 
   const handleRefresh = async () => {
+    queryClient.invalidateQueries({ queryKey: ["landingPages"] });
     notifications.show({
       color: "teal",
       title: "Data Refreshed",
@@ -55,7 +54,6 @@ function LandingPageDashboard() {
       loading: false,
       icon: <IconCheck />,
     });
-    await fetchLandingPages();
   };
 
   const handleSortChange = (value) => {
@@ -96,13 +94,6 @@ function LandingPageDashboard() {
           className={styles["heading-and-create-landingPage-btn-container"]}
         >
           <h1>Landing Pages</h1>
-          <Button
-            className={styles["create-landingPage-btn"]}
-            rightSection={<IconPlus />}
-            onClick={createLandingPageModalHandlers.open}
-          >
-            Create Landing Page
-          </Button>
           <Tooltip label="Refresh data">
             <ActionIcon
               variant="light"
@@ -115,6 +106,13 @@ function LandingPageDashboard() {
               />
             </ActionIcon>
           </Tooltip>
+          <Button
+            className={styles["create-landingPage-btn"]}
+            rightSection={<IconPlus />}
+            onClick={createLandingPageModalHandlers.open}
+          >
+            Create Landing Page
+          </Button>
         </Group>
         <SortDropdown
           onSortChange={handleSortChange}
