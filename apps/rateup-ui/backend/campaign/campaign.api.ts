@@ -42,3 +42,14 @@ export const sendCampaign = async (
   });
   return res;
 };
+
+//this get req is primarily used in flows result page
+export const getCampaignFilterForFlows = async (surveyId: string) => {
+  return (await axiosClient.get(`/campaign/flow/filter?surveyId=${surveyId}`))
+    .data as {
+    campaignName: string;
+    campaignId: string;
+    participantsContactIds: string[];
+  }[];
+};
+//

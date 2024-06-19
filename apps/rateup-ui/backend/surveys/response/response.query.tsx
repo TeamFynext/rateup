@@ -11,7 +11,6 @@ import {
   syncResponseToGoogleSheet,
 } from "./response.api";
 import { notifications } from "@mantine/notifications";
-import { decryptPrivateKey, passwordToKey } from "../../../utils/encryption";
 import { decryptResultResponse } from "../../../utils/response";
 import { useSurvey } from "../surveys.query";
 import { useUser } from "../../../context/UserContext";
