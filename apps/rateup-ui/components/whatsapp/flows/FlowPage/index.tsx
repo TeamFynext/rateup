@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import styles from "./FlowPage.module.css";
-import { Box, MantineProvider, Tabs } from "@mantine/core";
+import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
 import { whatsappTheme } from "../../../../config/mantineTheme";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 import { useEffect, useState } from "react";
@@ -201,7 +201,7 @@ function FlowPage() {
           value={{ selectedLanguage: "en", defaultLanguage: "en" }}
         >
           <Box className={styles["flow-page-container"]}>
-            <Box className={styles["flow-page-content"]}>
+            <Stack className={styles["flow-page-content"]}>
               <SurveyContext.Provider
                 value={{
                   encryptionpassword: "",
@@ -219,7 +219,12 @@ function FlowPage() {
                   tab={tab}
                   setTabState={setTab}
                 />
-                <StyledTabs keepMounted={false} value={tab} h={"100%"}>
+                <StyledTabs
+                  className={styles["flow-page-panels-container"]}
+                  keepMounted={false}
+                  value={tab}
+                  h={"100%"}
+                >
                   <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
                     <EditFlow />
                   </Tabs.Panel>
@@ -247,7 +252,7 @@ function FlowPage() {
                   </Tabs.Panel>
                 </StyledTabs>
               </SurveyContext.Provider>
-            </Box>
+            </Stack>
           </Box>
         </SelectedLanguageContext.Provider>
       </EditFlowContext.Provider>

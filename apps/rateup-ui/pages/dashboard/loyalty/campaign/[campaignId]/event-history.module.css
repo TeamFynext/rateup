@@ -1,0 +1,11 @@
+.campaign-events-page-div {
+  display: block;
+}
+
+.tanstack-table {
+  height: 500px;
+}
+
+.campaign-events-page-div .tanstack-table {
+  height: 100%;
+}

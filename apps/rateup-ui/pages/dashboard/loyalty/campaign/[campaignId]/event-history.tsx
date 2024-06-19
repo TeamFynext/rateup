@@ -1,17 +1,23 @@
-import { Box } from "@mantine/core";
-import { useRouter } from "next/router";
-import TanstackTable from "../../../../../components/Table/TanstackTable";
-import { useRewardEvents } from "../../../../../backend/loyalty/campaign/campaignRewardEvent/care.query";
+import { Box, Title } from "@mantine/core";
 import { createColumnHelper } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { useRouter } from "next/router";
+import { useRewardEvents } from "../../../../../backend/loyalty/campaign/campaignRewardEvent/care.query";
 import { useCampaign } from "../../../../../backend/loyalty/campaign/loyaltyCampaign.query";
+import TanstackTable from "../../../../../components/Table/TanstackTable";
 import { LoyaltyCampaignType } from "../../../../../types/enums";
+import styles from "./event-history.module.css";
+import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 export default function CampaignEventsPage() {
   return (
-    <Box>
+    <PaperLayout
+      className={styles["campaign-events-page-div"]}
+      p={0}
+      h={"100%"}
+    >
       <CampaignEventsTable />
-    </Box>
+    </PaperLayout>
   );
 }
 
@@ -24,7 +30,14 @@ export function CampaignEventsTable() {
   if (!events || !campaign) return;
 
   const defaultColumns = generateColumns(campaign);
-  return <TanstackTable columns={defaultColumns} data={events} />;
+  return (
+    <TanstackTable
+      className={styles["tanstack-table"]}
+      columns={defaultColumns}
+      data={events}
+      toggleOffContent={<Title order={3}>Recent Events</Title>}
+    />
+  );
 }
 
 function generateColumns(campaign: LoyaltyCampaign) {

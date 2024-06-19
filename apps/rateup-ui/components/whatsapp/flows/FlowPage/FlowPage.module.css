@@ -9,6 +9,11 @@
   height: 100%;
 }
 
+.flow-page-panels-container {
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
 /* Tabs Styles */
 .tabs-root-div {
   background-color: transparent;

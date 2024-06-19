@@ -20,6 +20,7 @@ import { IconPlus } from "@tabler/icons-react";
 import styles from "./TanstackTable.module.css";
 
 function TanstackTable({
+  className,
   data,
   columns,
   enableFilter = true,
@@ -29,7 +30,9 @@ function TanstackTable({
   btnTitle,
   toggle,
   disableFuzzyFnCustom = false,
+  toggleOffContent,
 }: Readonly<{
+  className?: string;
   data: any;
   columns: ColumnDef<any, any>[];
   enableFilter?: boolean;
@@ -39,6 +42,7 @@ function TanstackTable({
   topHeight?: number;
   btnTitle?: string;
   toggle?: () => void;
+  toggleOffContent?: React.ReactNode;
   disableFuzzyFnCustom?: boolean;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
@@ -84,7 +88,7 @@ function TanstackTable({
   });
 
   return (
-    <Box className={styles["tanstack-table-root-div"]}>
+    <Box className={`${styles["tanstack-table-root-div"]} ${className}`}>
       <Flex
         className={styles["filter-and-other-btns-container"]}
         gap={"md"}
@@ -102,9 +106,11 @@ function TanstackTable({
         ) : (
           <Box
             className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
-            w={50}
-            h={50}
-          />
+            w={!toggleOffContent ? 50 : "auto"}
+            h={!toggleOffContent ? 50 : "auto"}
+          >
+            {toggleOffContent}
+          </Box>
         )}
         <FilterToggles
           enableFilter={enableFilter}

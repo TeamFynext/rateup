@@ -1,9 +1,10 @@
+import { Stack, Title } from "@mantine/core";
+import { createColumnHelper } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 import { useCampaignParticipants } from "../../../../../backend/loyalty/campaign/loyaltyCampaign.query";
-import { Paper, Title } from "@mantine/core";
 import RateupLoader from "../../../../../components/Loaders/RateupLoader";
-import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 import TanstackTable from "../../../../../components/Table/TanstackTable";
+import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 export default function CampaignParticipantsPage() {
   const router = useRouter();
@@ -29,9 +30,11 @@ export default function CampaignParticipantsPage() {
 
   if (!participants) return <RateupLoader />;
   return (
-    <Paper>
+    <Stack h={"100%"}>
       <Title>Participants</Title>
-      <TanstackTable columns={defaultColumns} data={participants} />
-    </Paper>
+      <PaperLayout p={0} flex={1}>
+        <TanstackTable columns={defaultColumns} data={participants} />
+      </PaperLayout>
+    </Stack>
   );
 }
