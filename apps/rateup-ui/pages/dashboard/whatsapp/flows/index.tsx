@@ -46,7 +46,7 @@ function Flows() {
 
   return (
     <Box className={styles["flows-list-page-container"]}>
-      <Group>
+      <Group justify="space-between">
         <Group>
           <Title className={styles["flows-list-heading-h1"]}>Flows</Title>
           <RateupButtonBlue
