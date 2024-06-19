@@ -90,6 +90,7 @@ export async function createStripePayment(invoiceData) {
           renewedAt: new Date(),
           expiresAt: new Date(subscriptionData.current_period_end * 1000),
           subscriptionRef: subscription,
+          lastLimitAlertSentAt: null
         },
       });
 
@@ -123,10 +124,11 @@ export async function createStripePayment(invoiceData) {
       data: {
         renewedAt: new Date(),
         expiresAt: new Date(subscriptionData.current_period_end * 1000),
+        lastLimitAlertSentAt: null
       },
       include: {
         basePlan: true,
-      },
+      },   
     });
 
     const msg = {
@@ -162,7 +164,6 @@ export async function handleInvoicePaymentFailed(invoiceData) {
       subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
       text: `Subscription Renewal Failed. Please update your payment method.`,
       html: paymentFailed(
-        `${process.env.FRONTEND_URL}/dashboard/settings?activeTab=account`,
         true,
       ),
     };
@@ -181,7 +182,6 @@ export async function handleInvoicePaymentFailed(invoiceData) {
       subject: "Payment Failed - Rateup.app Subscription",
       text: `Subscription Payment Failed. Please update your payment method.`,
       html: paymentFailed(
-        `${process.env.FRONTEND_URL}/dashboard/settings?activeTab=account`,
         false,
       ),
     };
