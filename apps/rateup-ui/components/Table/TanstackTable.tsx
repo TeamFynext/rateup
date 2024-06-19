@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Box, Divider, Flex } from "@mantine/core";
 import {
   ColumnDef,
@@ -18,6 +18,7 @@ import TableLayout from "./TableContent";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
 import styles from "./TanstackTable.module.css";
+import { DETAIL_BTN } from "../Contacts/utils/utils";
 
 function TanstackTable({
   className,
@@ -48,13 +49,15 @@ function TanstackTable({
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [columnVisibility, setColumnVisibility] = React.useState({
+    [DETAIL_BTN]: false,
+  });
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
-  let tempVisibleColumnArray: string[] = [];
+  let tempVisibleColumnArray: string[] = useMemo(() => [], []);
   useEffect(() => {
     if (tempVisibleColumnArray)
       useVisibleColumnStore

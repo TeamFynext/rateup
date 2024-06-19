@@ -57,6 +57,15 @@ type ValidationRules = {
     errorMessage: string;
   } | null;
 };
+export type Wop = {
+  imageSrc?: string;
+  primaryColor: string;
+  primaryColoraround: string;
+  contrastColor: string;
+  size: number;
+  segments: string[];
+  segColors: string[];
+};
 
 export {};
 declare global {
@@ -77,6 +86,7 @@ declare global {
     tnc?: TNC;
     enableNpsAnalytics?: boolean;
     optinScreenId?: string;
+    wop?: Wop;
   }
   type WaSectionsType = Array<{
     title?: string;

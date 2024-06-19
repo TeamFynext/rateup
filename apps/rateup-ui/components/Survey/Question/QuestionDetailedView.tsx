@@ -53,7 +53,6 @@ import { LanguageCompletionView } from "./LanguageCompletionView";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconChevronDown } from "@tabler/icons-react";
-import { useBeforeUnload, useClickAway } from "react-use";
 import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
 import { getQuestionTypeLabel } from "../../../utils/enums";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
@@ -69,6 +68,7 @@ import ImportChoices from "./ImportChoices";
 import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
 import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
 import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
+import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -292,6 +292,7 @@ export function QuestionDetailedView({
                 choices={form.values.choices}
                 features={form.values.features}
                 tnc={form.values.tnc}
+                wop={form.values?.wop}
               />
             </CurrentResponsesContext.Provider>
           </Center>
@@ -570,6 +571,8 @@ function ExtraProps({
           surveyLanguages={surveyLanguages}
         />
       );
+    case QuestionType.WOP:
+      return <WOPExtraProps form={form} />;
     default:
       return null;
   }

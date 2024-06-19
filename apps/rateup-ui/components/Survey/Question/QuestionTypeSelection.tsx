@@ -1,6 +1,5 @@
 import {
   Badge,
-  Box,
   Button,
   Flex,
   Grid,
@@ -13,10 +12,10 @@ import { useHover } from "@mantine/hooks";
 import {
   IconFileFilled,
   IconGridDots,
-  IconPassword,
   IconScaleOutline,
   IconSquareAsterisk,
   IconTextPlus,
+  IconWheel,
 } from "@tabler/icons-react";
 import {
   Icon123,
@@ -35,7 +34,6 @@ import {
   IconListCheck,
   IconListDetails,
   IconMailFilled,
-  IconMapPin,
   IconMessageChatbot,
   IconMoodSmileFilled,
   IconPhoneFilled,
@@ -178,6 +176,7 @@ const questionIcons = {
   [QuestionType.MCQGrid]: IconGridDots,
   [QuestionType.File]: IconFileFilled,
   [QuestionType.EmailOtp]: IconSquareAsterisk,
+  [QuestionType.WOP]: IconWheel,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,

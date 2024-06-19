@@ -11,7 +11,6 @@ import {
   Box,
   Text,
   Divider,
-  ScrollAreaAutosize,
   ScrollArea,
 } from "@mantine/core";
 import {
@@ -19,18 +18,14 @@ import {
   IconChevronDown,
   IconSelector,
 } from "@tabler/icons-react";
-import {
-  Column,
-  ColumnMeta,
-  Header,
-  Table as TableType,
-  flexRender,
-} from "@tanstack/react-table";
+import { Header, Table as TableType, flexRender } from "@tanstack/react-table";
 import { PAGE_SIZE } from "../../utils/constants";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { Filter } from "./Filter/Filter";
 import { lexend600 } from "../../utils/fonts";
 import styles from "./TableContent.module.css";
+import { useRouter } from "next/router";
+import { DETAIL_BTN } from "../Contacts/utils/utils";
 
 type TableLayoutProps = {
   table: TableType<any>;
@@ -61,6 +56,7 @@ const TableLayout = ({
   enablePagination,
   topHeight = 420,
 }: TableLayoutProps) => {
+  const router = useRouter();
   return (
     <Stack className={styles["table-and-pagination-container"]}>
       <Stack justify="space-between" className={styles["table-container"]}>
@@ -165,7 +161,16 @@ const TableLayout = ({
                 </Table.Tr>
               ) : (
                 table.getRowModel().rows.map((row, index) => (
-                  <Table.Tr key={index}>
+                  <Table.Tr
+                    key={index}
+                    className={
+                      row.getValue(DETAIL_BTN) && styles["table-body-row"]
+                    }
+                    onClick={() => {
+                      let detailBtn = row.getValue(DETAIL_BTN);
+                      if (detailBtn) router.push(detailBtn);
+                    }}
+                  >
                     {row.getVisibleCells().map((cell, indexCell) => (
                       <Table.Td
                         className={styles["table-td"]}
