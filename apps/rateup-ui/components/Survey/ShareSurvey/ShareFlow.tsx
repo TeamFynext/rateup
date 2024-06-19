@@ -179,7 +179,7 @@ export const ShareFlow = ({
   }
 
   return (
-    <Stack p={2} h={"fit-content"}>
+    <Stack p={10} pr={16} h={"fit-content"}>
       <PaperLayout
         p="30px"
         style={{

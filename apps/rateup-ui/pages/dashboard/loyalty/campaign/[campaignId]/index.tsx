@@ -19,6 +19,7 @@ import {
   StackProps,
   Box,
   Divider,
+  Portal,
 } from "@mantine/core";
 import { generateWaMessageUrl } from "../../../../../utils/whatsapp/wa_url";
 import styles from "../../styles.module.css";
@@ -39,6 +40,7 @@ import { LCampaignTypeBadge } from "../../../../../components/loyalty/campaign/L
 import { LoyaltyCampaignType } from "../../../../../types/enums";
 import { CampaignEventsTable } from "./event-history";
 import { useWaSettings } from "../../../../../backend/whatsapp/settings/waSettings.query";
+import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 export default function LoyaltyCampaignPage() {
   const router = useRouter();
@@ -74,7 +76,7 @@ export default function LoyaltyCampaignPage() {
     ? generateWaMessageUrl(phone, `/register ${lcampaignId}`)
     : "Configure Whatsapp>Settings to enable registration.";
   return (
-    <Stack gap={"xl"} pb={"md"}>
+    <Stack gap={"xl"}>
       <Group>
         <Title>{campaign.name}</Title>
         <LCampaignTypeBadge type={campaign.type} />
@@ -136,23 +138,9 @@ export default function LoyaltyCampaignPage() {
 
 function RecentEvents() {
   return (
-    <Box
-      style={{
-        position: "relative",
-      }}
-      className={styles["card-container"]}
-    >
-      <Title
-        order={3}
-        style={{
-          position: "absolute",
-          top: "10px",
-        }}
-      >
-        Recent Events
-      </Title>
+    <PaperLayout p={0}>
       <CampaignEventsTable />
-    </Box>
+    </PaperLayout>
   );
 }
 

@@ -54,7 +54,12 @@ export default function ActiveSurveyCard({
           pl={"md"}
           gap={"1rem"}
         >
-          <Text flex={1} lineClamp={2} style={{ wordBreak: "break-all" }}>
+          <Text
+            flex={1}
+            lineClamp={2}
+            style={{ wordBreak: "break-all" }}
+            fw={700}
+          >
             {survey?.title}
           </Text>
 
