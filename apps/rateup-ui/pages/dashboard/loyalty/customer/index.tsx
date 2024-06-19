@@ -1,14 +1,16 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { useLoyaltyCustomers } from "../../../../backend/loyalty/customer/customer.query";
 import TanstackTable from "../../../../components/Table/TanstackTable";
-import { Paper, Title } from "@mantine/core";
+import { Box, Paper, Stack, Title } from "@mantine/core";
+import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
+import styles from "./customer.module.css";
 
 export default function LoyaltyCampaignCustomersPage() {
   return (
-    <Paper>
+    <Stack h={"100%"}>
       <Title>Participants</Title>
       <LoyaltyCampaignCustomers />
-    </Paper>
+    </Stack>
   );
 }
 
@@ -18,7 +20,11 @@ function LoyaltyCampaignCustomers() {
   if (!customers) return;
   const columns = generateColumns();
 
-  return <TanstackTable columns={columns} data={customers} />;
+  return (
+    <PaperLayout p={0} flex={1} mah={800}>
+      <TanstackTable columns={columns} data={customers} />
+    </PaperLayout>
+  );
 }
 
 function generateColumns() {
