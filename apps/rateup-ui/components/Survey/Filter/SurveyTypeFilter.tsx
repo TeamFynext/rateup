@@ -35,12 +35,12 @@ export function SurveyTypeFilter({ filterParam, setFilterParam }) {
           {SurveyTypeFilters.Web}
         </Menu.Item>
 
-        <Menu.Item
+        {/* <Menu.Item
           color={filterParam === SurveyTypeFilters.WhatsApp && "blue"}
           onClick={() => setFilterParam(SurveyTypeFilters.WhatsApp)}
         >
           {SurveyTypeFilters.WhatsApp}
-        </Menu.Item>
+        </Menu.Item> */}
 
         <Menu.Item
           color={filterParam === SurveyTypeFilters.WhatsAppFlow && "green"}
