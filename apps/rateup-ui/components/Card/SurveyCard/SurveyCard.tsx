@@ -68,9 +68,14 @@ export function SurveyCard({
       }}
     >
       <Stack justify="space-between" h={"100%"}>
-        <Group justify={"space-between"} align={"center"}>
+        <Group justify={"space-between"} align={"center"} wrap="nowrap">
           <Tooltip label={survey?.title}>
-            <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
+            <Text
+              style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}
+              truncate="end"
+              size="xl"
+              fw={700}
+            >
               {survey?.title}
             </Text>
           </Tooltip>
