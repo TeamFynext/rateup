@@ -4,6 +4,7 @@ import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { log } from "../../utils/logger";
 import dayjs from "dayjs";
+import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 
 type campaginExtentend = {
   team: {
@@ -233,4 +234,29 @@ export async function sendCampaign(
   log.trace("updated campaign status to active");
   await sendCampaignToParticipants(campaignId, sendToStatuses, participantId);
   // add state indicating survey is sent to all participants?
+}
+
+export async function getCampaignFilterForFlows(surveyId: string) {
+  const flow = await getFlowBySurveyId(surveyId);
+  const result = await prisma.campaign.findMany({
+    where: {
+      flowId: flow.dbFlowId,
+    },
+    select: {
+      id: true,
+      name: true,
+      campaignParticipants: {
+        select: {
+          contactId: true,
+        },
+      },
+    },
+  });
+  return result.map(({ name, id, campaignParticipants }) => ({
+    campaignName: name,
+    campaignId: id,
+    participantsContactIds: campaignParticipants.map(
+      ({ contactId }) => contactId,
+    ),
+  }));
 }

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createCampaignHandler,
   deleteCampaignByIdHandler,
+  getCampaignFilterForFlowsHandler,
   getCampaignsHandler,
   sendCampaignHandler,
   updateCampaignByIdHandler,
@@ -12,6 +13,7 @@ import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth";
+import { $surveyThemeRef } from "../surveyTheme/surveyTheme.schema";
 
 export async function campaignRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -71,5 +73,10 @@ export async function campaignRoutes(server: FastifyInstance) {
       },
     },
     sendCampaignHandler,
+  );
+  server.get(
+    "/flow/filter",
+    { schema: { querystring: $surveyThemeRef("bySurveyIdSchema") } },
+    getCampaignFilterForFlowsHandler,
   );
 }
