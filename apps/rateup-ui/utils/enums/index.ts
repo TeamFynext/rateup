@@ -111,6 +111,8 @@ export function getQuestionTypeLabel(
       return "File Input";
     case QuestionType.EmailOtp:
       return "Email OTP";
+    case QuestionType.WOP:
+      return "Wheel Of Price";
     default:
       return false;
   }

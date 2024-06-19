@@ -25,8 +25,9 @@ import MultiTextInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionFor
 import MCQGridForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQGridForm";
 import FileInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/FileInputForm";
 import EmailOTPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailOTPForm";
+import WOPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/WOPForm";
 
-const QuestionTypePreview = ({ type, choices, features, tnc }) => {
+const QuestionTypePreview = ({ type, choices, features, tnc, wop }) => {
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -88,6 +89,8 @@ const QuestionTypePreview = ({ type, choices, features, tnc }) => {
       return <FileInputForm isPreview={true} />;
     case Q.EmailOtp:
       return <EmailOTPForm isPreview={true} />;
+    case Q.WOP:
+      return <WOPForm isPreview={true} wop={wop} />;
     default:
       return <div>not implemented</div>;
   }

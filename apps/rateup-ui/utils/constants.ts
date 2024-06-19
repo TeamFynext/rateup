@@ -62,6 +62,7 @@ export const OtherQuestions = [
   QuestionType.TnC,
   QuestionType.InfoMessage,
   QuestionType.EmailOtp,
+  QuestionType.WOP,
 ];
 
 export const WaOtherQuestions = [
