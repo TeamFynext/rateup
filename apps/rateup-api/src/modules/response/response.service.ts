@@ -77,6 +77,7 @@ export async function getAllResponses(
       responses: {
         select: {
           id: true,
+          contactId: true,
           language: true,
           tag: true,
           responses: true,

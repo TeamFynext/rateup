@@ -82,10 +82,9 @@ export async function verifySurveyMonthlyLimitRestriction(
     },
   });
 
-  if(!surveyTeamMap) {
+  if (!surveyTeamMap) {
     reply.code(404).send({
-      message:
-        "Survey not found...!",
+      message: "Survey not found...!",
       displayMessageInClient: true,
     });
   }
