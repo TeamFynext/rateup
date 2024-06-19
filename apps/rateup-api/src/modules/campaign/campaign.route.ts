@@ -10,9 +10,8 @@ import { $campaignRef } from "./campaign.schema";
 import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route";
 import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { verifyCampaignMaxCountRestriction } from "./campaign.auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
-import { verifyMessageMonthlyLimitRestriction } from "../whatsapp/messageTemplates/wa_templates.auth";
+import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth";
 
 export async function campaignRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -32,7 +31,6 @@ export async function campaignRoutes(server: FastifyInstance) {
       schema: {
         body: $campaignRef("createCampaignInputSchema"),
       },
-      preHandler: verifyCampaignMaxCountRestriction,
     },
     createCampaignHandler,
   );
@@ -67,7 +65,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/:campaignId/send",
     {
-      preHandler: verifyMessageMonthlyLimitRestriction,
+      preHandler: verifyMessageMonthlyLimitRestrictionForCampaign,
       schema: {
         params: $campaignRef("byCampaignIdParamsSchema"),
       },

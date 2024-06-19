@@ -740,7 +740,9 @@ async function _sendCampaignToParticipants(
       errorMessage: messageSentStatus.status ? "" : messageSentStatus.message,
       ...(messageSentStatus.status && { sentAt: new Date() }),
     });
-    if (messageSentStatus.status)
+    if (messageSentStatus.status) {
       await addWaMessageCampaignParticipantMap(id, messageSentStatus.message);
+      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    }
   }
 }
