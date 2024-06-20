@@ -261,7 +261,7 @@ function EditFlow() {
           style={{
             position: "absolute",
             right: "10px",
-            top: "-60px",
+            top: "0",
             borderRadius: "100px",
             height: "50px",
             width: "50px",

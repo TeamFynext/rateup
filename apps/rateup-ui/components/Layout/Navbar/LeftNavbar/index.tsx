@@ -115,7 +115,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
             styles={{ tooltip: { display: opened && "none" } }}
           >
             <Box mt="sm" ml="1px">
-              <Anchor href="/dashboard/settings?activeTab=account">
+              <Anchor href="/dashboard/settings?activeTab=account&view=billing">
                 <img
                   src={`${localImagesPath}/${
                     opened ? "rateup-pro-ad.png" : "premium-icon.svg"

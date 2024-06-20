@@ -6,6 +6,7 @@ import {
   IconLayoutCards,
   IconListDetails,
   IconPremiumRights,
+  IconUser,
   IconWallet,
   IconWorld,
 } from "@tabler/icons-react";
@@ -56,5 +57,10 @@ export const adminNavItems = [
     Icon: IconLayoutCards,
     label: "Update all themes",
     href: "/admin/updateAllThemes",
+  },
+  {
+    Icon: IconUser,
+    label: "User Stats",
+    href: "/admin/userstats",
   },
 ];

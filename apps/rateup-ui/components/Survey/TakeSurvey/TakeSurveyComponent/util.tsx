@@ -33,6 +33,7 @@ import MCQGridForm from "./QuestionForms/MCQGridForm";
 import FileInputForm from "./QuestionForms/FileInputForm";
 import { useGetSurveyVariables } from "../../../../backend/surveys/surveys.query";
 import EmailOTPForm from "./QuestionForms/EmailOTPForm";
+import WOPForm from "./QuestionForms/WOPForm";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -200,6 +201,8 @@ export function getQuestionForm(type, selectedQ) {
       return <FileInputForm />;
     case Q.EmailOtp:
       return <EmailOTPForm key={selectedQ?.id} />;
+    case Q.WOP:
+      return <WOPForm wop={selectedQ?.wop} isPreview={false} />;
     default:
       return <div>not implemented</div>;
   }
@@ -393,3 +396,12 @@ function getFormattedResponseForVariable(response, questionType, variable) {
       return "";
   }
 }
+export const DEFAULT_WOP = {
+  imageSrc: "",
+  primaryColor: "#ffffff",
+  primaryColoraround: "#000000",
+  contrastColor: "#ffffff",
+  size: 200,
+  segments: ["Happy", "Angry"],
+  segColors: ["#EE4040", "#F0CF50"],
+};

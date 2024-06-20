@@ -36,6 +36,9 @@ import { ContainedTextField } from "../../../components/input/ContainedInput/Con
 import Heading from "../../../components/styled/Heading/Heading";
 import styles from "./Teams.module.css";
 import SortDropdown from "../../../components/Dashboard/SortDropDown";
+import RefreshButton from "../../../components/Button/RefreshButton";
+import InfoButton from "../../../components/Button/InfoButton";
+import { docsPath } from "../../../utils/constants";
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -70,7 +73,7 @@ export default function Teams() {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
     error: errorTeamsDataUser,
-    refetch: reftchTeams,
+    refetch: refetchTeams,
   } = useTeamsByUser() as {
     isLoading: boolean;
     error: any;
@@ -153,29 +156,8 @@ export default function Teams() {
       <Group gap="md" justify="space-between">
         <Group gap={"md"}>
           <Heading title="Teams" titleprops={{ w: "fit-content" }} />
-          <Tooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              ml="xs"
-              mr="50px"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                reftchTeams();
-                notifications.show({
-                  id: "data-reload",
-                  color: "teal",
-                  title: "Refreshing data",
-                  loading: true,
-                  message: "Hold.. your data is getting update...",
-                  autoClose: 2000,
-                });
-              }}
-            >
-              <IconRefresh
-                style={{ width: "90%", height: "90%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+          <InfoButton docUrl={`${docsPath}/teams/team`} />
+          <RefreshButton queryKey="teamsDataUserQuery" />
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
               title="Create Team"
@@ -186,37 +168,35 @@ export default function Teams() {
         </Group>
         <SortDropdown onSortChange={onSortChange} />
       </Group>
-      <Space h="lg" />
+
       {isLoadingTeamsUser ? (
-        <Loader type="bars" />
+        <Center h={"100%"}>
+          <Loader type="bars" />
+        </Center>
+      ) : errorTeamsDataUser ? (
+        <Center h={"100%"}>
+          {teamsData?.message ? (
+            teamsData?.message
+          ) : (
+            <>
+              Error... Try Refreshing...
+              <RateupButtonOutline
+                onClick={refetchTeams}
+                rightIcon={<IconReload size="1rem" />}
+                title="Refresh"
+                size="xs"
+              />
+            </>
+          )}
+        </Center>
       ) : (
-        <>
-          <Grid columns={9} p={10} className={styles["team-cards-container"]}>
-            {sortedTeams().length > 0 ? (
-              sortedTeams().map((team, key) => (
-                <Grid.Col span={{ base: 9, md: 4.5, lg: 3 }} key={key}>
-                  <TeamCard key={team.id} team={team} />
-                </Grid.Col>
-              ))
-            ) : (
-              <Center>
-                {teamsData?.message ? (
-                  teamsData?.message
-                ) : (
-                  <>
-                    Error... Try Refreshing...
-                    <RateupButtonOutline
-                      onClick={reftchTeams}
-                      rightIcon={<IconReload size="1rem" />}
-                      title="Refresh"
-                      size="xs"
-                    />
-                  </>
-                )}
-              </Center>
-            )}
-          </Grid>
-        </>
+        <Box
+          className={`${styles["team-cards-container"]} cards-grid-global-class`}
+        >
+          {sortedTeams().map((team, key) => (
+            <TeamCard key={team.id} team={team} />
+          ))}
+        </Box>
       )}
     </div>
   );

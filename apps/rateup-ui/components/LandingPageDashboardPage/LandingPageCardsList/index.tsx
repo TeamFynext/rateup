@@ -1,17 +1,13 @@
-import { Grid, GridCol } from "@mantine/core";
+import { Box, Grid, GridCol } from "@mantine/core";
 import styles from "./LandingPagesList.module.css";
 import LandingPageCard from "../LandingPageCard";
 
 function LandingPageCardsList({ landingPages }) {
   const jsxElementsArray = landingPages.map((landingPageObj) => {
-    return (
-      <Grid.Col key={landingPageObj?.id} span={{ base: 12, sm: 6, md: 4 }}>
-        <LandingPageCard {...landingPageObj} />
-      </Grid.Col>
-    );
+    return <LandingPageCard {...landingPageObj} />;
   });
 
-  return <Grid>{jsxElementsArray}</Grid>;
+  return <Box className="cards-grid-global-class">{jsxElementsArray}</Box>;
 }
 
 export default LandingPageCardsList;

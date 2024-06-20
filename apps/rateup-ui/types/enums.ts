@@ -35,6 +35,7 @@ export enum QuestionType {
   File = "File",
   Optin = "OptIn",
   EmailOtp = "EmailOtp",
+  WOP = "Wheel of Price",
   //TODO REMOVE LATER: MYG GIFT VISHU
   WinItem = "Win_item",
   Invoice_Id = "invoice_id",

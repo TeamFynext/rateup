@@ -119,7 +119,11 @@ export const ContactGroupMenu = ({ groupId }) => {
   return (
     <Menu shadow="xl" position="bottom-start">
       <Menu.Target>
-        <Box>
+        <Box
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           <RateupButtonPrimary
             title="Select action"
             variant="light"

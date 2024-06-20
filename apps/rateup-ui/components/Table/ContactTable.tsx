@@ -24,7 +24,11 @@ import { PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
-import { WhatsappTableType, tabHeaderLabels } from "../Contacts/utils/utils";
+import {
+  DETAIL_BTN,
+  WhatsappTableType,
+  tabHeaderLabels,
+} from "../Contacts/utils/utils";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import FilterToggles from "./Filter/FilterToggle";
@@ -75,7 +79,9 @@ function ContactTable({
   columnFilters;
   setColumnFilters;
 }>) {
-  const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [columnVisibility, setColumnVisibility] = React.useState({
+    [DETAIL_BTN]: false,
+  });
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
 

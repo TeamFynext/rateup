@@ -1,12 +1,13 @@
-import { Text } from "@mantine/core";
+import { ActionIcon, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { IconTrash } from "@tabler/icons-react";
 import { useDeleteCampaignMutation } from "../../backend/campaign/campaign.query";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
-import { RateupButtonPrimary } from "../Button/RateupButtons";
 
 export const CampaignMenu = ({ teamId, id }) => {
   const deleteCampaignMutation = useDeleteCampaignMutation(teamId);
-  const openDeleteModal = () => {
+  const openDeleteModal = (e) => {
+    e.stopPropagation();
     modals.openConfirmModal({
       title: "Delete Campaign",
       centered: true,
@@ -23,12 +24,14 @@ export const CampaignMenu = ({ teamId, id }) => {
     });
   };
   return (
-    <RateupButtonPrimary
-      title="Delete campaign"
+    <ActionIcon
       variant="light"
-      size="xs"
+      radius={"md"}
       onClick={openDeleteModal}
-    />
+      ml={"md"}
+    >
+      <IconTrash size={18} />
+    </ActionIcon>
   );
 };
 const statusColors = {

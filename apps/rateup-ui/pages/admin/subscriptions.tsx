@@ -14,6 +14,7 @@ import { useRateupPaymentsPlans } from "../../backend/payment/payment.query";
 import { useState } from "react";
 import ConfirmationModal from "../../components/Modal/ConfirmationModal";
 import { IconSearch } from "@tabler/icons-react";
+import RefreshButton from "../../components/Button/RefreshButton";
 
 export default function () {
   const {
@@ -107,7 +108,10 @@ export default function () {
   return (
     <div>
       <Flex justify="space-between">
-        <h1>Subscriptions</h1>
+        <Group>
+          <h1>Subscriptions</h1>
+          <RefreshButton queryKey="landingPages" />
+        </Group>
         <Input
           placeholder="Search by OrgName or orgId"
           value={searchQuery}

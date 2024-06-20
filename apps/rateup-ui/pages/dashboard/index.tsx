@@ -344,7 +344,9 @@ export default function DashboardHome() {
               </Group>
             </PaperLayout>
 
-            <div className={classes["filtered-survey-cards-container"]}>
+            <div
+              className={`${classes["filtered-survey-cards-container"]} cards-grid-global-class`}
+            >
               {filteredSurveys.length > 0 ? (
                 filteredSurveys.map((s) => (
                   <ActiveSurveyCard key={s.id} survey={s} />
@@ -370,7 +372,9 @@ export default function DashboardHome() {
                 leftIcon={<IconShoppingCart />}
                 title="Go to Billing Section"
                 onClick={() => {
-                  router.push("/dashboard/settings?activeTab=account");
+                  router.push(
+                    "/dashboard/settings?activeTab=account&view=billing",
+                  );
                 }}
               />
             </>

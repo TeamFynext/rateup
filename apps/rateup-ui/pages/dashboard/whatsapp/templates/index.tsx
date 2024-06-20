@@ -1,13 +1,20 @@
 import {
   ActionIcon,
+  Box,
   Flex,
   Group,
   SimpleGrid,
   Space,
+  Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { IconPlus, IconSelector, IconTrash } from "@tabler/icons-react";
+import {
+  IconClock,
+  IconPlus,
+  IconSelector,
+  IconTrash,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -30,6 +37,11 @@ import { notifications } from "@mantine/notifications";
 import SortDropdown, {
   sortData,
 } from "../../../../components/Dashboard/SortDropDown";
+import InfoButton from "../../../../components/Button/InfoButton";
+import RefreshButton from "../../../../components/Button/RefreshButton";
+import { docsPath } from "../../../../utils/constants";
+import templateCardStyles from "./TemplateCard.module.css";
+import TimeSinceText from "../../../../components/LandingPageDashboardPage/LandingPageCard/TimeSinceText";
 
 export default function Template() {
   const { data: templates, isPending } = useWaTemplates();
@@ -62,9 +74,8 @@ export default function Template() {
   const sortedTemplates = sortData(templates, sortOption);
 
   return (
-    <>
+    <Stack h={"100%"}>
       <Flex
-        mih={50}
         gap="md"
         justify="space-between"
         align="center"
@@ -78,11 +89,12 @@ export default function Template() {
           align="center"
           direction="row"
           wrap="wrap"
-          mb="md"
         >
           <Title order={1} c={"var(--grey-color)"}>
             All Templates
           </Title>
+          <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
+          <RefreshButton queryKey="watemplates" />
           <RateupButtonBlue
             title="Create Templates"
             rightIcon={<IconPlus size={"1rem"} />}
@@ -92,7 +104,7 @@ export default function Template() {
 
         <Flex
           mih={50}
-          gap="4"
+          gap="0.625rem"
           justify="flex-start"
           align="flex-start"
           direction="row"
@@ -106,7 +118,23 @@ export default function Template() {
         </Flex>
       </Flex>
 
-      <Space h="xl" />
+      <Box
+        className={`cards-grid-global-class`}
+        flex={1}
+        h={"100%"}
+        style={{ overflow: "auto", padding: "5px", paddingRight: "1rem" }}
+      >
+        {sortedTemplates?.map((t) => (
+          <TemplateCard
+            key={t.id}
+            template={t}
+            onClick={() => handleEditClick(t)}
+            toggle={toggle}
+            setSelectedTemplate={setSelectedTemplate}
+          />
+        ))}
+      </Box>
+
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
@@ -128,56 +156,45 @@ export default function Template() {
           }
         }}
       />
-      <SimpleGrid spacing={"lg"} cols={{ base: 1, sm: 2, lg: 3, xl: 3 }}>
-        {sortedTemplates?.map((t) => (
-          <TemplateCard
-            key={t.id}
-            template={t}
-            onClick={() => handleEditClick(t)}
-            toggle={toggle}
-            setSelectedTemplate={setSelectedTemplate}
-          />
-        ))}
-      </SimpleGrid>
-    </>
+    </Stack>
   );
 }
 
 function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
   return (
     <PaperLayout hoveractive={true} onClick={onClick}>
-      <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>
-          {template.data.name}
-        </Text>
-        <Group>
-          {/* <ActionIcon variant="transparent" c={"var(--light-grey-color-5)"}>
-              <IconCopy />
-            </ActionIcon> */}
-          <ActionIcon
-            variant="transparent"
-            c={"var(--light-grey-color-5)"}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedTemplate(template.id);
-              toggle();
-            }}
-          >
-            <IconTrash />
-          </ActionIcon>
+      <Stack>
+        <Flex justify={"space-between"} align={"center"}>
+          <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>
+            {template.data.name}
+          </Text>
+          <Group>
+            <ActionIcon
+              variant="subtle"
+              c={"var(--light-grey-color-5)"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTemplate(template.id);
+                toggle();
+              }}
+            >
+              <IconTrash />
+            </ActionIcon>
+          </Group>
+        </Flex>
+        <Group
+          className={templateCardStyles["creation-time-text-and-icon-div"]}
+        >
+          <Box className={templateCardStyles["clock-icon-container"]}>
+            <IconClock />
+          </Box>
+          <p>Created {<TimeSinceText isoDateString={template.createdAt} />}</p>
         </Group>
-      </Flex>
-      <WaTemplateStatusBadge status={template.data.category} defaultType />
-      <Text c={"var(--light-grey-color-5)"} tt={"capitalize"}>
-        Language: {template.data.language}
-      </Text>
-      <Space h="xl" />
-      <Group justify="space-between">
-        <Text c={"var(--grey-color)"} ff={lexend500.style.fontFamily}>
-          {dayjs(template.createdAt).format("DD/MM/YYYY")}
-        </Text>
-        <WaTemplateStatusBadge status={template.data.status} />
-      </Group>
+        <Group>
+          <WaTemplateStatusBadge status={template.data.status} />
+          <WaTemplateStatusBadge status={template.data.category} defaultType />
+        </Group>
+      </Stack>
     </PaperLayout>
   );
 }

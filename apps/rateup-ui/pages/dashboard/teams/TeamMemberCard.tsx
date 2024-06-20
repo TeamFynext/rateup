@@ -44,8 +44,8 @@ const TeamMemberCard = ({
   const [memberModalOpenId, setMemberModalOpenedId] = useState("");
   return (
     <>
-      <PaperLayout mih={170} mah={170}>
-        <Stack justify="space-between" h={"100%"}>
+      <PaperLayout>
+        <Stack h={"100%"}>
           <Flex justify={"space-between"} align={"center"}>
             <Stack gap={1}>
               <Title order={3}>{member.name}</Title>
@@ -73,15 +73,15 @@ const TeamMemberCard = ({
               </Button>
             )}
           </Flex>
-          <Flex align={"center"} justify={"space-between"}>
+          <Flex>
             {member?.role && (
               <Badge
                 color={
                   member?.role === UserRole.SUPADM
                     ? "red"
                     : member?.role === UserRole.ADM
-                    ? "orange"
-                    : "green"
+                      ? "orange"
+                      : "green"
                 }
                 variant="dot"
                 size="sm"
@@ -93,7 +93,6 @@ const TeamMemberCard = ({
               color={member.status === "PENDING" ? "yellow" : "green"}
               variant="light"
               p={"sm"}
-              ml="auto"
             >
               {member.active ? "ACTIVE" : member?.status}
             </Badge>
@@ -143,18 +142,18 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
         : "Team Invitation Deletion Failed",
       isError ? "load-data-invitaion" : "load-data-deleting",
       "",
-      true
+      true,
     );
   }
   return (
     <Menu width={200}>
       <Menu.Target>
         <ActionIcon
-          color={"var(--tertiary-color)"}
           onClick={(e) => {
             e.stopPropagation();
           }}
-          variant={"transparent"}
+          variant="subtle"
+          color="gray"
         >
           <IconDots />
         </ActionIcon>

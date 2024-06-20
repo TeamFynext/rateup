@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Badge,
+  Box,
   Checkbox,
   CheckboxProps,
   HoverCard,
@@ -20,6 +21,8 @@ import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard"
 import { ColumnDef } from "@tanstack/react-table";
 import { CampaignParticipantStatus } from "../../../types/enums";
 import { rankItem } from "@tanstack/match-sorter-utils";
+
+export const DETAIL_BTN = "detail_btn_link_123";
 
 export const selectCheckBox: ColumnDef<any>[] = [
   {
@@ -147,20 +150,10 @@ export const contactGroupColumn = [
   },
   {
     header: () => "Detail View",
-    id: "Detail",
-    accessorKey: "id",
+    id: DETAIL_BTN,
+    accessorFn: (row) => `contacts/${row.id}`,
     enableSorting: false,
     enableColumnFilter: false,
-    cell: (info) => (
-      <Link href={`contacts/${info.getValue()}`}>
-        <RateupButtonPrimary
-          title="View"
-          rightIcon={<IconEye size={14} />}
-          size="xs"
-          variant="light"
-        />
-      </Link>
-    ),
   },
 
   {
@@ -190,7 +183,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
   {
-    header: () => "participants",
+    header: () => "Participants",
     accessorKey: "_count.campaignParticipants",
     id: "participants",
     cell: (info) => (
@@ -207,38 +200,34 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
       dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
   },
   {
-    header: () => "Flow View",
+    header: () => "Responses",
     id: "flow",
     accessorKey: "flowId",
     enableColumnFilter: false,
     cell: (info) =>
       info.getValue() && (
-        <Link href={`whatsapp/flows/${info.getValue() as string}?tab=Result`}>
-          <RateupButtonPrimary
-            title="View"
-            rightIcon={<IconEye size={14} />}
-            size="xs"
-            variant="light"
-          />
-        </Link>
+        <Box
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Link href={`whatsapp/flows/${info.getValue() as string}?tab=Result`}>
+            <RateupButtonPrimary
+              title="View"
+              rightIcon={<IconEye size={14} />}
+              size="xs"
+              variant="light"
+            />
+          </Link>
+        </Box>
       ),
   },
   {
     header: () => "Detail View",
-    id: "Detail",
-    accessorKey: "id",
+    id: DETAIL_BTN,
+    accessorFn: (row) => `campaign/${row.id}`,
     enableSorting: false,
     enableColumnFilter: false,
-    cell: (info) => (
-      <Link href={`campaign/${info.getValue() as string}`}>
-        <RateupButtonPrimary
-          title="View"
-          rightIcon={<IconEye size={14} />}
-          size="xs"
-          variant="light"
-        />
-      </Link>
-    ),
   },
   {
     header: () => "Action",

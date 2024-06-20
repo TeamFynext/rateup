@@ -131,7 +131,9 @@ export function SurveysPage({
       />
 
       {surveys?.length > 0 ? (
-        <Box className={styles["surveys-cards-container"]}>
+        <Box
+          className={`${styles["surveys-cards-container"]} cards-grid-global-class`}
+        >
           {sortedSurveys
             .filter((s) => {
               if (filterParam === "active") {
