@@ -26,6 +26,8 @@ import {
 import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
 import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
 import TestimonialCard from "../../../components/testimonial/TestimonialCard";
+import InfoButton from "../../../components/Button/InfoButton";
+import { docsPath } from "../../../utils/constants";
 
 enum TestimonailInnerTabEnum {
   TESTIMONIALS = "testimonials",
@@ -63,6 +65,7 @@ const indexPage = () => {
       >
         <Group gap={"md"}>
           <Heading title="Testimonials" titleprops={{ w: "fit-content" }} />
+          <InfoButton docUrl={`${docsPath}/testimonial`} />
           <RateupButtonBlue
             title="Create Collection"
             rightIcon={<IconPlus />}

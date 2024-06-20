@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Box,
   Group,
   Loader,
@@ -10,7 +9,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
@@ -27,6 +26,9 @@ import { useUser } from "../../../../context/UserContext";
 import { UserRole } from "../../../../utils/enums";
 import SurveyTemplates from "./surveyTemplates";
 import NothingFound from "../../../../components/NothingFound/NothingFound";
+import InfoButton from "../../../../components/Button/InfoButton";
+import { docsPath } from "../../../../utils/constants";
+import RefreshButton from "../../../../components/Button/RefreshButton";
 
 const Templates = ({ survey }) => {
   const { user } = useUser();
@@ -134,27 +136,8 @@ const Templates = ({ survey }) => {
       <Group gap="md" justify="space-between">
         <Group ml="md">
           <Heading title={"Survey Templates"} titleprops={{ w: "500px" }} />
-          <MantineTooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                refetch();
-                notifications.show({
-                  id: "data-reload",
-                  color: "teal",
-                  title: "Refreshing data",
-                  loading: true,
-                  message: "Hold.. your data is getting update...",
-                  autoClose: 2000,
-                });
-              }}
-            >
-              <IconRefresh
-                style={{ width: "90%", height: "90%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </MantineTooltip>
+          <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
+          <RefreshButton queryKey="survey-templates" />
         </Group>
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue

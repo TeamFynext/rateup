@@ -19,6 +19,9 @@ import RateupLoader from "../../../components/Loaders/RateupLoader";
 import SortDropdown, {
   sortData,
 } from "../../../components/Dashboard/SortDropDown";
+import InfoButton from "../../../components/Button/InfoButton";
+import { docsPath } from "../../../utils/constants";
+import RefreshButton from "../../../components/Button/RefreshButton";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -47,6 +50,8 @@ export default function MenuPage() {
       <Group justify="space-between">
         <Group>
           <Heading title="Menus" titleprops={{ w: "fit-content" }} />
+          <InfoButton docUrl={`${docsPath}/menu`} />
+          <RefreshButton queryKey="allMenus" />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
               title="Create Menu"

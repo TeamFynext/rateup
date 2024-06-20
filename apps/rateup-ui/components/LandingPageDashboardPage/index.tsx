@@ -1,32 +1,18 @@
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Center,
-  Group,
-  Loader,
-  Stack,
-  Tooltip,
-} from "@mantine/core";
+import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
 import styles from "./landingPageDashboardPage.module.css";
-import {
-  IconCheck,
-  IconPlus,
-  IconRefresh,
-  IconSelector,
-} from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import CreateLandingPageModal from "./CreateLandingPageModal";
 import { useDisclosure } from "@mantine/hooks";
 import NothingFound from "../NothingFound/NothingFound";
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
 import LandingPageCardsList from "./LandingPageCardsList";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { getLandingPages } from "../../backend/landingPage/landingPage.api";
-import { RateupButtonPrimary } from "../Button/RateupButtons";
-import { notifications } from "@mantine/notifications";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 import { useQueryClient } from "@tanstack/react-query";
+import RefreshButton from "../Button/RefreshButton";
+import { docsPath } from "../../utils/constants";
+import InfoButton from "../Button/InfoButton";
 
 function LandingPageDashboard() {
   const router = useRouter();
@@ -43,18 +29,6 @@ function LandingPageDashboard() {
       setLandingPages(data);
     }
   }, [data]);
-
-  const handleRefresh = async () => {
-    queryClient.invalidateQueries({ queryKey: ["landingPages"] });
-    notifications.show({
-      color: "teal",
-      title: "Data Refreshed",
-      message: "Landing Page Updated Successfully",
-      autoClose: 1000,
-      loading: false,
-      icon: <IconCheck />,
-    });
-  };
 
   const handleSortChange = (value) => {
     setSortOption(value);
@@ -94,18 +68,8 @@ function LandingPageDashboard() {
           className={styles["heading-and-create-landingPage-btn-container"]}
         >
           <h1>Landing Pages</h1>
-          <Tooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              aria-label="Refresh"
-              onClick={handleRefresh}
-            >
-              <IconRefresh
-                style={{ width: "90%", height: "90%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+          <InfoButton docUrl={`${docsPath}/landingpage`} />
+          <RefreshButton queryKey="landingPages" />
           <Button
             className={styles["create-landingPage-btn"]}
             rightSection={<IconPlus />}
