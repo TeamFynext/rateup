@@ -13,7 +13,7 @@ const RefreshButton = ({ queryKey }) => {
     notifications.show({
       color: "teal",
       title: "Data Refreshed",
-      message: `${queryKey} Updated Successfully`,
+      message: `Data Updated Successfully`,
       autoClose: 1000,
       loading: false,
       icon: <IconCheck />,
