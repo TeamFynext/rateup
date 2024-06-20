@@ -344,7 +344,9 @@ export default function DashboardHome() {
               </Group>
             </PaperLayout>
 
-            <div className={classes["filtered-survey-cards-container"]}>
+            <div
+              className={`${classes["filtered-survey-cards-container"]} cards-grid-global-class`}
+            >
               {filteredSurveys.length > 0 ? (
                 filteredSurveys.map((s) => (
                   <ActiveSurveyCard key={s.id} survey={s} />

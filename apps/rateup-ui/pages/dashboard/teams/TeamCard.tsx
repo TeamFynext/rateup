@@ -17,7 +17,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
       p="md"
       shadow="md"
       radius="lg"
-      style={{ cursor: "pointer", minWidth: "300px", height: "140px" }}
+      style={{ cursor: "pointer" }}
       onClick={() => {
         user.role === UserRole.SUPADM
           ? router.push(`teams/${team.code}`)
@@ -25,13 +25,13 @@ const TeamCard = ({ team }: TeamCardProps) => {
       }}
     >
       <Flex justify={"space-between"} align={"center"} h={"100%"}>
-        <Stack gap={0}>
-          <Badge color="var(--tertiary-color)" variant="outline">
-            {team.code}{" "}
-          </Badge>
+        <Stack>
           <Text mr={"sm"} truncate size="xl" fw={700}>
             {team.name}
           </Text>
+          <Badge color="var(--tertiary-color)" variant="outline">
+            {team.code}{" "}
+          </Badge>
         </Stack>
         <Stack align={"center"} gap={0}>
           <Text fw={700} fz="xl" color="var(--tertiary-color)">

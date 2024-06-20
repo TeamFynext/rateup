@@ -1,0 +1,6 @@
+.cards-container {
+  height: 100%;
+  padding: 0.3125rem;
+  padding-right: 1rem;
+  overflow: auto;
+}
