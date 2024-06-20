@@ -46,15 +46,22 @@ export async function getResponses(surveyTeamMapId: string) {
 
 export async function getAllResponses(
   surveyId: string,
-  teamIds: Array<string>,
+  teamIds?: Array<string>,
+  contactIds?: Array<string>,
 ) {
+  let whereCondtion =
+    teamIds?.length > 0
+      ? {
+          surveyId: surveyId,
+          teamId: {
+            in: teamIds,
+          },
+        }
+      : {
+          surveyId: surveyId,
+        };
   const responsesQuery = await prisma.surveyTeamMap.findMany({
-    where: {
-      surveyId: surveyId,
-      teamId: {
-        in: teamIds,
-      },
-    },
+    where: whereCondtion,
     select: {
       id: true,
       _count: {
@@ -72,6 +79,7 @@ export async function getAllResponses(
           id: true,
           name: true,
           code: true,
+          campaigns: true,
         },
       },
       responses: {
@@ -110,13 +118,20 @@ export async function getAllResponses(
   let responseData = responsesQuery.map(({ responses, ...rest }) => {
     return {
       ...rest,
-      responses: responses.map(({ surveyTeamMap, ...restD }) => ({
-        ...restD,
-        teamId: surveyTeamMap.teamId,
-      })),
+      responses:
+        contactIds?.length > 0
+          ? responses
+              .filter((data) => contactIds.includes(data.contactId))
+              .map(({ surveyTeamMap, ...restD }) => ({
+                ...restD,
+                teamId: surveyTeamMap.teamId,
+              }))
+          : responses.map(({ surveyTeamMap, ...restD }) => ({
+              ...restD,
+              teamId: surveyTeamMap.teamId,
+            })),
     };
   });
-
   return responseData;
 }
 
@@ -647,10 +662,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       required: true,
     });
   }
-  const allResponses = await getAllResponses(
-    surveyId,
-    survey.teams.map((t) => t.team.id),
-  );
+  const allResponses = await getAllResponses(surveyId);
   const formattedResByTeam = allResponses.map((res) => ({
     team: res.team.name,
     responses: res.responses,
