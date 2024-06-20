@@ -72,6 +72,7 @@ export type downloadExcelResponseType = {
   title: string;
   tz: string;
   filterTeams: string[];
+  campaignIds: string[];
 };
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {

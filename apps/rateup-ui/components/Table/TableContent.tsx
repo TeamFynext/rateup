@@ -34,6 +34,7 @@ type TableLayoutProps = {
   tempVisibleColumnArray: string[];
   enablePagination: boolean;
   topHeight: number;
+  detailBtn?: boolean;
 };
 
 // Extend the Header to use the new ExtendedColumnMeta
@@ -54,6 +55,7 @@ const TableLayout = ({
   filterVisibility,
   tempVisibleColumnArray,
   enablePagination,
+  detailBtn,
   topHeight = 420,
 }: TableLayoutProps) => {
   const router = useRouter();
@@ -163,12 +165,10 @@ const TableLayout = ({
                 table.getRowModel().rows.map((row, index) => (
                   <Table.Tr
                     key={index}
-                    className={
-                      row.getValue(DETAIL_BTN) && styles["table-body-row"]
-                    }
+                    className={detailBtn && styles["table-body-row"]}
                     onClick={() => {
-                      let detailBtn = row.getValue(DETAIL_BTN);
-                      if (detailBtn) router.push(detailBtn);
+                      let routeUrl = detailBtn && row.getValue(DETAIL_BTN);
+                      if (routeUrl) router.push(routeUrl);
                     }}
                   >
                     {row.getVisibleCells().map((cell, indexCell) => (
