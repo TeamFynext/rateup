@@ -12,6 +12,8 @@ import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
 import { useState } from "react";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import InfoButton from "../../../../components/Button/InfoButton";
+import { docsPath } from "../../../../utils/constants";
 
 function Flows() {
   const [
@@ -49,6 +51,7 @@ function Flows() {
       <Group justify="space-between">
         <Group>
           <Title className={styles["flows-list-heading-h1"]}>Flows</Title>
+          <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
           <RateupButtonBlue
             title="Create flow"
             rightIcon={<IconPlus size={"1rem"} />}

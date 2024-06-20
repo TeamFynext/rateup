@@ -37,6 +37,9 @@ import { notifications } from "@mantine/notifications";
 import SortDropdown, {
   sortData,
 } from "../../../../components/Dashboard/SortDropDown";
+import InfoButton from "../../../../components/Button/InfoButton";
+import RefreshButton from "../../../../components/Button/RefreshButton";
+import { docsPath } from "../../../../utils/constants";
 import templateCardStyles from "./TemplateCard.module.css";
 import TimeSinceText from "../../../../components/LandingPageDashboardPage/LandingPageCard/TimeSinceText";
 
@@ -90,6 +93,8 @@ export default function Template() {
           <Title order={1} c={"var(--grey-color)"}>
             All Templates
           </Title>
+          <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
+          <RefreshButton queryKey="watemplates" />
           <RateupButtonBlue
             title="Create Templates"
             rightIcon={<IconPlus size={"1rem"} />}

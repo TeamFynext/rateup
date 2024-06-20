@@ -1,16 +1,7 @@
-import {
-  ActionIcon,
-  Group,
-  Loader,
-  ScrollArea,
-  Stack,
-  Tabs,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { Group, Loader, ScrollArea, Stack, Tabs, Title } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import Heading from "../styled/Heading/Heading";
-import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { notifications } from "@mantine/notifications";
 import {
@@ -29,6 +20,9 @@ import { UserRole } from "../../utils/enums";
 import CreateTicketModal from "./CreateTicketModal";
 import { TicketStatus, TicketType } from "../../utils/enums/ticket";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
+import { docsPath } from "../../utils/constants";
+import InfoButton from "../Button/InfoButton";
+import RefreshButton from "../Button/RefreshButton";
 
 const TicketsHome = () => {
   const [sortOption, setSortOption] = useState("deadline");
@@ -125,30 +119,8 @@ const TicketsHome = () => {
       <Group justify="space-between">
         <Group gap={"md"}>
           <Heading title="Tickets" titleprops={{ w: "fit-content" }} />
-          <Tooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              ml="xs"
-              mr="50px"
-              mt="3px"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                refetch();
-                notifications.show({
-                  id: "data-reload",
-                  color: "teal",
-                  title: "Refreshing data",
-                  loading: true,
-                  message: "Hold.. your data is getting update...",
-                  autoClose: 2000,
-                });
-              }}
-            >
-              <IconRefresh
-                style={{ width: "90%", height: "90%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+          <InfoButton docUrl={`${docsPath}/ticket`} />
+          <RefreshButton queryKey="tickets" />
           {user?.role === UserRole.SUPADM && (
             <RateupButtonPrimary
               rightIcon={<IconPlus />}
