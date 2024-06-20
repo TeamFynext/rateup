@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import {
   IChangePassword,
@@ -11,11 +11,14 @@ import {
   createGoogleUser,
   fetchUserInfo,
   fetchUserProfile,
+  getAllUsers,
   updateActiveStatus,
+  updateRecipeName,
   updateUserProfile,
   updateUserProfilePhoto,
 } from "./user.api";
 import { useRouter } from "next/router";
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export const useGetUserProfile = () =>
   useQuery({
@@ -28,6 +31,12 @@ export const useUserInfo = () =>
     queryKey: ["userInfoQuery"],
     queryFn: fetchUserInfo,
     notifyOnChangeProps: ["data"],
+  });
+
+export const useGetAllUsers = () =>
+  useQuery({
+    queryKey: ["allUsers"],
+    queryFn: getAllUsers,
   });
 
 export function useCreateUserMutation(setIsLoading) {
@@ -204,5 +213,30 @@ export function useUpdateActiveStatusMutation() {
 export function useCheckEmailExistMutation() {
   return useMutation({
     mutationFn: (data: { email: string }) => checkEmailExist(data),
+  });
+}
+
+//one time use function for updating recipename of the existing users
+export function useUpdateRecipeNameMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateRecipeName,
+    onSuccess: () => {
+      showSuccessToast(
+        "updated recipe name",
+        "user-recipe",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+    },
+    onError: () => {
+      showErrorToast(
+        "error in updating recipe name",
+        "user-recipe",
+        <IconX />,
+        true,
+      );
+    },
   });
 }

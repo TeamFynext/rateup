@@ -66,7 +66,9 @@ export const Navbar = () => {
             leftIcon={<IconCrown />}
             gradient={{ from: "#FDBD3A", to: "#F99A21" }}
             radius={"md"}
-            onClick={() => router.push("/dashboard/settings?activeTab=account")}
+            onClick={() =>
+              router.push("/dashboard/settings?activeTab=account&view=billing")
+            }
           />
         </ExpiryComponent>
       )}
