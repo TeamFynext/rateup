@@ -12,7 +12,7 @@ export function handleWhatsappError(
       message: getGraphApiErrorMessage(error),
     });
   } else {
-    throw new Error("Something went wrong!");
+    log.error(error);
   }
 }
 export function getGraphApiErrorMessage(error: GraphApiError) {

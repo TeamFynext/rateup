@@ -1,5 +1,6 @@
+import { billingPage } from "../../constants/constants";
+
 export function paymentFailed(
-  billing_page: string,
   isRenewal: boolean = false,
 ) {
   return `
@@ -127,7 +128,7 @@ export function paymentFailed(
                   
                   <tr>
                   <td><br/>
-                  <a href="${billing_page}" class="verify-btn" style="color: #e5e5ef">
+                  <a href="${billingPage}" class="verify-btn" style="color: #e5e5ef">
                     Go to Billing
                   </a>
                 </td>
