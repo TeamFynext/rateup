@@ -237,6 +237,7 @@ export default function Contacts() {
                   sorting={sortingGroup}
                   columnFilters={columnFiltersGroup}
                   setColumnFilters={setColumnFiltersGroup}
+                  detailBtn
                 />
               </PaperLayout>
             )}

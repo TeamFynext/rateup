@@ -103,6 +103,7 @@ export default function CampaignList() {
             toggle={open}
             disableFuzzyFnCustom={true}
             topHeight={280}
+            detailBtn
           />
         </PaperLayout>
         <Modal
