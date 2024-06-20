@@ -310,6 +310,7 @@ export async function updateSubscription(payload) {
         renewedAt: new Date(),
         expiresAt: new Date(current_end * 1000),
         subscriptionRef: id,
+        lastLimitAlertSentAt: null
       },
     });
 
