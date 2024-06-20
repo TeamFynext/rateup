@@ -202,23 +202,6 @@ function CustomMultiselectForMobile({
                 placeholder="Type in to search"
               />
             </Group>
-            <Group>
-              <ActionIcon
-                className={cx("deselect-all-btn")}
-                onClick={handleDeselectAll}
-                color={themePrimaryColor}
-              >
-                <IconDeselect />
-              </ActionIcon>
-
-              <Button
-                className={cx("close-btn")}
-                onClick={() => setIsOptionSelectionDivVisible(false)}
-                color={themePrimaryColor}
-              >
-                Close
-              </Button>
-            </Group>
 
             <Combobox.Options className={cxCommon("options-container-root")}>
               <ScrollAreaAutosize h={"100%"} scrollbarSize={7} offsetScrollbars>
@@ -231,6 +214,24 @@ function CustomMultiselectForMobile({
                 </Stack>
               </ScrollAreaAutosize>
             </Combobox.Options>
+
+            <Group className={cx("close-deselect-btns-container")}>
+              <ActionIcon
+                className={cx("deselect-all-btn")}
+                onClick={handleDeselectAll}
+                color={themePrimaryColor}
+              >
+                <IconDeselect size={"1.75rem"} />
+              </ActionIcon>
+
+              <Button
+                className={cx("close-btn")}
+                onClick={() => setIsOptionSelectionDivVisible(false)}
+                color={themePrimaryColor}
+              >
+                Done
+              </Button>
+            </Group>
           </Stack>
         </Portal>
       )}

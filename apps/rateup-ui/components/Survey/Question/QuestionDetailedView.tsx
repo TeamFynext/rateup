@@ -222,7 +222,11 @@ export function QuestionDetailedView({
       ])}
     >
       <Stack style={{ height: "100%" }} ref={formRef}>
-        <ScrollArea style={{ flex: "1 1 0" }}>
+        <ScrollArea
+          style={{ flex: "1 1 0" }}
+          offsetScrollbars={"x"}
+          styles={{ viewport: { paddingRight: "1rem" } }}
+        >
           <Badge
             variant={getQuestionTypeLabel(question.type) ? "outline" : "light"}
             size="lg"

@@ -3,6 +3,7 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.625rem;
+  overflow: hidden;
 }
 
 .edit-flow-root-div > div {

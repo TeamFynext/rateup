@@ -4,14 +4,10 @@ import LandingPageCard from "../LandingPageCard";
 
 function LandingPageCardsList({ landingPages }) {
   const jsxElementsArray = landingPages.map((landingPageObj) => {
-    return (
-      <Box>
-        <LandingPageCard {...landingPageObj} />
-      </Box>
-    );
+    return <LandingPageCard {...landingPageObj} />;
   });
 
-  return jsxElementsArray;
+  return <Box className="cards-grid-global-class">{jsxElementsArray}</Box>;
 }
 
 export default LandingPageCardsList;

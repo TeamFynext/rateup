@@ -87,9 +87,7 @@ function LandingPageDashboard() {
           defaultSortOption={sortOption}
         />
       </Group>
-      <Box
-        className={`${styles["landingPage-list-container"]} cards-grid-global-class`}
-      >
+      <Box className={`${styles["landingPage-list-container"]}`}>
         {componentToBeRendered}
       </Box>
       {isCreateLandingPageModalOpen && (

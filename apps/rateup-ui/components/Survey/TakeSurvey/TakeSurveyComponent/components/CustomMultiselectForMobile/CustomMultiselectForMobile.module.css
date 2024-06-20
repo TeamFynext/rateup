@@ -19,7 +19,15 @@
   flex: 1;
 }
 
+.close-deselect-btns-container {
+  justify-content: flex-end;
+  padding-right: 0.3125rem;
+}
+
 .close-btn {
+  font-size: 1rem;
   height: auto;
-  padding: 0.375rem 0.625rem;
+  /* padding: 0.375rem 0.625rem; */
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
 }

@@ -3,12 +3,13 @@ import { useSurveys } from "../../../backend/surveys/surveys.query";
 import { SurveysPage } from "../../../components/Survey/SurveysPage/SurveysPage";
 import { SurveysPageError } from "../../../components/Survey/SurveysPage/SurveyPageError";
 import { useState } from "react";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 
 export default function Surveys() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const { isLoading, error, data: allSurveys, refetch } = useSurveys();
 
-  if (isLoading) return <Loader type="bars" />;
+  if (isLoading) return <RateupLoader />;
   if (error || !Array.isArray(allSurveys)) {
     console.error(allSurveys, error);
     return <SurveysPageError refetch={refetch} />;
