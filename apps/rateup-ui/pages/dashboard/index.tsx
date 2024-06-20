@@ -372,7 +372,9 @@ export default function DashboardHome() {
                 leftIcon={<IconShoppingCart />}
                 title="Go to Billing Section"
                 onClick={() => {
-                  router.push("/dashboard/settings?activeTab=account");
+                  router.push(
+                    "/dashboard/settings?activeTab=account&view=billing",
+                  );
                 }}
               />
             </>

@@ -83,7 +83,9 @@ const Checkout = () => {
               <Group style={{ maxWidth: "300px" }}>
                 <RateupButtonPrimary
                   onClick={() =>
-                    router.push("/dashboard/settings?activeTab=account")
+                    router.push(
+                      "/dashboard/settings?activeTab=account&view=billing",
+                    )
                   }
                   title="Go Back to Start Again"
                   fullWidth={false}

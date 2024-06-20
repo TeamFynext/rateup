@@ -98,10 +98,8 @@ const AccountSettings = () => {
 
   useEffect(() => {
     //route params used in email body & redirecting pages
-
-    if (router?.query?.activeTab === "account")
+    if (router?.query?.view === "billing")
       setActiveTab(AccountSettingsTabs.Billing);
-
     if (router?.query?.view === "myOrders")
       setActiveTab(AccountSettingsTabs.OrderHistory);
     if (router?.query?.view === "stats")
