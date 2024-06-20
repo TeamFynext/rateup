@@ -65,6 +65,7 @@ import { handleContactConsent } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
 import { checkMessageLimitExceeded } from "./wasurvey.auth";
 import { updateMonthlyStat } from "../../stats/stats.service";
+import { logging } from "googleapis/build/src/apis/logging";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -650,6 +651,32 @@ async function _sendCampaignToParticipants(
   orgId: string,
   dbTemplate: WaTemplateWithTypes,
 ) {
+  const teamId = campaign.team.id;
+  if (!teamId) {
+    throw new Error("TeamId not found in campaign");
+  }
+  if (!flowId) {
+    throw new Error("FlowId not found");
+  }
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: {
+      teamId,
+      survey: {
+        WaFlow: {
+          flowId: flowId,
+        },
+      },
+    },
+    select: {
+      id: true,
+      survey: {
+        select: {
+          languages: true,
+        },
+      },
+    },
+  });
+
   for (const { contact, id, status } of campaign.campaignParticipants) {
     if (!sendToStatuses.includes(status as CampaignParticipantStatus)) {
       log.warn("Campaign already sent to participant %o. Skipping...", contact);
@@ -679,25 +706,7 @@ async function _sendCampaignToParticipants(
           continue;
         }
       }
-      const teamId = campaign.team.id;
-      const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
-        where: {
-          teamId,
-          survey: {
-            WaFlow: {
-              flowId: flowId,
-            },
-          },
-        },
-        select: {
-          id: true,
-          survey: {
-            select: {
-              languages: true,
-            },
-          },
-        },
-      });
+
       await createSession({
         phone: contact.phone,
         surveyTeamMapId: surveyTeamMap.id,
@@ -730,19 +739,35 @@ async function _sendCampaignToParticipants(
     };
     const templateMessage = createTemplateMessage(contact.phone, templateQuery);
 
-    const messageSentStatus = await sendMessage(orgId, templateMessage);
-
-    log.trace("Template sent to participant %o", contact);
-    await updateCampaignParticipant(id, {
-      status: messageSentStatus.status
-        ? CampaignParticipantStatus.SENT
-        : CampaignParticipantStatus.FAILED,
-      errorMessage: messageSentStatus.status ? "" : messageSentStatus.message,
-      ...(messageSentStatus.status && { sentAt: new Date() }),
-    });
-    if (messageSentStatus.status) {
-      await addWaMessageCampaignParticipantMap(id, messageSentStatus.message);
-      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    async function sendCampaignCallback(messageSentStatus: {
+      status: boolean;
+      message: any;
+    }) {
+      log.trace("Template sent to participant %o", contact);
+      updateCampaignParticipant(id, {
+        status: messageSentStatus.status
+          ? CampaignParticipantStatus.SENT
+          : CampaignParticipantStatus.FAILED,
+        errorMessage: messageSentStatus.status ? "" : messageSentStatus.message,
+        ...(messageSentStatus.status && { sentAt: new Date() }),
+      });
+      if (messageSentStatus.status) {
+        await addWaMessageCampaignParticipantMap(id, messageSentStatus.message);
+        updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+      }
     }
+
+    await wait(50); // wait 50ms (throughput will be ~20 messages per second)
+    sendMessage(orgId, templateMessage)
+      .then(sendCampaignCallback)
+      .catch((e) => {
+        log.error("Could not send campaign to %s", contact.phone);
+        log.error(e);
+      });
   }
+}
+
+// Temporary rate limiting
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
