@@ -132,13 +132,13 @@ export default function ContactGroup() {
           <Loader type="bars" />
         </Center>
       ) : (
-        <Box mt={4}>
+        <Box h={"100%"}>
           <ContactImportErrorModal
             body={createNewContactsFromCSV?.error?.response?.data}
             isError={createNewContactsFromCSV.isError}
           />
-          <Stack>
-            <PaperLayout>
+          <Stack h={"100%"}>
+            <PaperLayout style={{ overflow: "visible" }}>
               <Group justify="space-between">
                 <Group>
                   <Avatar
@@ -206,7 +206,7 @@ export default function ContactGroup() {
                 </Group>
               </Group>
             </PaperLayout>
-            <Box mt={"xs"}>
+            <Stack mt={"xs"} flex={1}>
               <Group justify="space-between">
                 <Title order={2}>Members</Title>
                 <TextInput
@@ -222,7 +222,7 @@ export default function ContactGroup() {
                 <Box w={50} h={50} />
               </Group>
 
-              <PaperLayout mt={"xs"} px={0}>
+              <PaperLayout p={0} flex={1} mah={800}>
                 <ContactTable
                   columns={column}
                   data={filteredCustomerList}
@@ -238,7 +238,7 @@ export default function ContactGroup() {
                   setColumnFilters={setColumnFilters}
                 />
               </PaperLayout>
-            </Box>
+            </Stack>
           </Stack>
           <FormModalLayout
             onClose={close}

@@ -16,6 +16,13 @@ export default function ActiveSurveyCard({
     ?.map((team) => team.surveyStats?.visited ?? 0)
     ?.reduce((a, b) => a + b, 0);
   const router = useRouter();
+  const responsesVisitedValues = [
+    { title: "Responses", value: responsesCount ? responsesCount : 0 },
+    { title: "Visited", value: visitedCount ? visitedCount : 0 },
+  ];
+
+  if (survey?.type === "waFlow") responsesVisitedValues.pop();
+
   return (
     <PaperLayout
       hoveractive
@@ -39,23 +46,32 @@ export default function ActiveSurveyCard({
         }
       }}
     >
-      <Stack h={"100%"} gap={0}>
-        <Stack justify={"space-between"} pt={"md"} pr={"md"} pl={"md"} gap={10}>
-          <Text mr={"sm"} truncate size="xl" fw={700} maw={"100%"}>
+      <Stack h={"100%"} gap={0} justify="space-between">
+        <Group
+          justify={"space-between"}
+          pt={"md"}
+          pr={"md"}
+          pl={"md"}
+          gap={"1rem"}
+        >
+          <Text
+            flex={1}
+            lineClamp={2}
+            style={{ wordBreak: "break-all" }}
+            fw={700}
+          >
             {survey?.title}
           </Text>
+
           <Badge
             color={survey?.type == "web" ? "blue" : "#149a8a"}
             variant="outline"
           >
-            {survey?.type}
+            {survey?.type === "waFlow" ? "WhatsApp" : survey?.type}
           </Badge>
-        </Stack>
+        </Group>
         <Group justify="space-between" px="lg" align="center" py={"sm"}>
-          {[
-            { title: "Responses", value: responsesCount ? responsesCount : 0 },
-            { title: "Visited", value: visitedCount ? visitedCount : 0 },
-          ].map(({ title, value }, index) => (
+          {responsesVisitedValues.map(({ title, value }, index) => (
             <Stack style={{ flex: 1 }} key={index}>
               <Title
                 style={{
@@ -81,15 +97,6 @@ export default function ActiveSurveyCard({
             </Stack>
           ))}
         </Group>
-        <RateupButtonBlue
-          title={"View"}
-          size="lg"
-          styles={{
-            root: {
-              borderRadius: "0 0 10px 10px",
-            },
-          }}
-        />
       </Stack>
     </PaperLayout>
   );

@@ -195,7 +195,7 @@ const PlanCard = ({
           <iframe
             onLoad={upadateLoadingStateOfIframe}
             className={styles["contact-form-iframe"]}
-            src="https://rateup.app/public/survey/89421698-e6dd-43ee-9b63-757a7614bed3"
+            src="https://rateup.app/ws/8hKp9bb9"
           />
         )}
       </Modal>

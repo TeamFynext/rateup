@@ -56,11 +56,15 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import TanstackTable from "../../Table/TanstackTable";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
+import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -122,6 +126,29 @@ const Responses = ({
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
+
+  //The below filtering should be done in the backend
+  const [campaignFlowFilter, setCampaignFlowFilter] = useState<
+    {
+      campaignId: string;
+      campaignName: string;
+      participantsContactIds: string[];
+    }[]
+  >([]);
+  const {
+    data: CFData,
+    error: CFError,
+    isLoading: CFLoading,
+  } = useCampaignFilterForFlows(surveyId);
+  function handleCampaignFlowFilter(responses) {
+    if (campaignFlowFilter.length === 0) return responses;
+    return responses.filter((response) =>
+      campaignFlowFilter.some((campaign) =>
+        campaign.participantsContactIds.includes(response.contactId),
+      ),
+    );
+  }
+  //
   const downloadExcelResponse = useDownloadExcelResponse();
   function handleExportContacts() {
     const contacts = [];
@@ -329,95 +356,114 @@ const Responses = ({
             </ActionIcon>
           </Tooltip>
         </Flex>
-        {!survey?.isEncrypted && (
-          <Popover
-            position="bottom-end"
-            withArrow
-            shadow="md"
-            classNames={{
-              dropdown: styles["filters-popover-dropdown-div"],
-            }}
-            opened={openedExport}
-          >
-            <Popover.Target>
-              <Button
-                className={styles["export-btn"]}
-                leftSection={<IconTableExport />}
-                radius={"lg"}
-                fw={400}
-                onClick={toggle}
-              >
-                Export
-              </Button>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Stack>
-                {isFetched && (
-                  <RateupButtonSecondary
-                    title={
-                      survey.spreadSheetId
-                        ? "Resync with Google Sheet"
-                        : "Sync with Google Sheet"
-                    }
-                    onClick={() => {
-                      if (survey.spreadSheetId) alertModalOpen();
-                      else handleSyncGoogleSheet();
-                    }}
-                    leftIcon={
-                      <IconRefresh
-                        className={
-                          isSyncing ? styles.rotateInfinitely : undefined
-                        }
-                        style={{ width: "90%", height: "90%" }}
-                        stroke={1.5}
-                      />
-                    }
-                  />
-                )}
-                <RateupButtonSecondary
-                  onClick={() => {
-                    handleExcelDownload();
-                    toggle();
-                  }}
-                  title={"Download Excel"}
+        <Group>
+          {CFData && CFData.length > 0 && (
+            <ContainedMultiSelect
+              placeholder="Filter By Campaign"
+              onChange={(value) =>
+                setCampaignFlowFilter(
+                  CFData.filter((c) => value.includes(c.campaignId)),
+                )
+              }
+              data={CFData.map(({ campaignName, campaignId }) => ({
+                value: campaignId,
+                label: campaignName,
+              }))}
+            />
+          )}
+          {!survey?.isEncrypted && (
+            <Popover
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              classNames={{
+                dropdown: styles["filters-popover-dropdown-div"],
+              }}
+              opened={openedExport}
+            >
+              <Popover.Target>
+                <Button
+                  className={styles["export-btn"]}
+                  leftSection={<IconTableExport />}
                   radius={"lg"}
-                  leftIcon={<IconFileDownload stroke={1.5} />}
-                />
-                {hasContactQuestion && (
+                  fw={400}
+                  onClick={toggle}
+                >
+                  Export
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Stack>
+                  {isFetched && (
+                    <RateupButtonSecondary
+                      title={
+                        survey.spreadSheetId
+                          ? "Resync with Google Sheet"
+                          : "Sync with Google Sheet"
+                      }
+                      onClick={() => {
+                        if (survey.spreadSheetId) alertModalOpen();
+                        else handleSyncGoogleSheet();
+                      }}
+                      leftIcon={
+                        <IconRefresh
+                          className={
+                            isSyncing ? styles.rotateInfinitely : undefined
+                          }
+                          style={{ width: "90%", height: "90%" }}
+                          stroke={1.5}
+                        />
+                      }
+                    />
+                  )}
                   <RateupButtonSecondary
-                    onClick={handleExportContacts}
-                    title={"Import Contacts"}
+                    onClick={() => {
+                      handleExcelDownload();
+                      toggle();
+                    }}
+                    title={"Download Excel"}
                     radius={"lg"}
-                    leftIcon={<IconDatabaseImport stroke={1.5} />}
+                    leftIcon={<IconFileDownload stroke={1.5} />}
                   />
-                )}
-                <ConfirmationModal
-                  opened={alertModalOpened}
-                  onClose={alertModalClose}
-                  headerTitle="Resync Google Sheet"
-                  headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
-                  confirmLabel="Yes"
-                  onConfirm={handleSyncGoogleSheet}
-                />
-                <ConfirmationModal
-                  opened={redirectModalOpened}
-                  onClose={redirectModalClose}
-                  headerTitle="Sync Google Sheet"
-                  headerLabel={alertMsg}
-                  confirmLabel="Go to Settings"
-                  onConfirm={() => {
-                    router.push("/dashboard/settings?activeTab=advanced");
-                  }}
-                />
-              </Stack>
-            </Popover.Dropdown>
-          </Popover>
-        )}
+                  {hasContactQuestion && (
+                    <RateupButtonSecondary
+                      onClick={handleExportContacts}
+                      title={"Import Contacts"}
+                      radius={"lg"}
+                      leftIcon={<IconDatabaseImport stroke={1.5} />}
+                    />
+                  )}
+                  <ConfirmationModal
+                    opened={alertModalOpened}
+                    onClose={alertModalClose}
+                    headerTitle="Resync Google Sheet"
+                    headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
+                    confirmLabel="Yes"
+                    onConfirm={handleSyncGoogleSheet}
+                  />
+                  <ConfirmationModal
+                    opened={redirectModalOpened}
+                    onClose={redirectModalClose}
+                    headerTitle="Sync Google Sheet"
+                    headerLabel={alertMsg}
+                    confirmLabel="Go to Settings"
+                    onConfirm={() => {
+                      router.push("/dashboard/settings?activeTab=advanced");
+                    }}
+                  />
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          )}
+        </Group>
       </Group>
 
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
-          <TanstackTable data={responses} columns={columns} />
+          <TanstackTable
+            data={handleCampaignFlowFilter(responses)}
+            columns={columns}
+          />
           <FormModalLayout
             opened={opened}
             onClose={close}

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Box, Divider, Flex } from "@mantine/core";
 import {
   ColumnDef,
@@ -18,8 +18,10 @@ import TableLayout from "./TableContent";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
 import styles from "./TanstackTable.module.css";
+import { DETAIL_BTN } from "../Contacts/utils/utils";
 
 function TanstackTable({
+  className,
   data,
   columns,
   enableFilter = true,
@@ -29,7 +31,9 @@ function TanstackTable({
   btnTitle,
   toggle,
   disableFuzzyFnCustom = false,
+  toggleOffContent,
 }: Readonly<{
+  className?: string;
   data: any;
   columns: ColumnDef<any, any>[];
   enableFilter?: boolean;
@@ -39,18 +43,21 @@ function TanstackTable({
   topHeight?: number;
   btnTitle?: string;
   toggle?: () => void;
+  toggleOffContent?: React.ReactNode;
   disableFuzzyFnCustom?: boolean;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [columnVisibility, setColumnVisibility] = React.useState({
+    [DETAIL_BTN]: false,
+  });
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
-  let tempVisibleColumnArray: string[] = [];
+  let tempVisibleColumnArray: string[] = useMemo(() => [], []);
   useEffect(() => {
     if (tempVisibleColumnArray)
       useVisibleColumnStore
@@ -84,7 +91,7 @@ function TanstackTable({
   });
 
   return (
-    <Box className={styles["tanstack-table-root-div"]}>
+    <Box className={`${styles["tanstack-table-root-div"]} ${className}`}>
       <Flex
         className={styles["filter-and-other-btns-container"]}
         gap={"md"}
@@ -102,9 +109,11 @@ function TanstackTable({
         ) : (
           <Box
             className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
-            w={50}
-            h={50}
-          />
+            w={!toggleOffContent ? 50 : "auto"}
+            h={!toggleOffContent ? 50 : "auto"}
+          >
+            {toggleOffContent}
+          </Box>
         )}
         <FilterToggles
           enableFilter={enableFilter}

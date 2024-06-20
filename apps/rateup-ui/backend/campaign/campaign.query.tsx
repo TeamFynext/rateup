@@ -3,6 +3,7 @@ import {
   createCampaign,
   deleteCampaign,
   getCampaignById,
+  getCampaignFilterForFlows,
   getCampaigns,
   getCampaignsByTeam,
   sendCampaign,
@@ -136,5 +137,13 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         <IconX />,
       );
     },
+  });
+};
+
+export const useCampaignFilterForFlows = (surveyId: string) => {
+  return useQuery({
+    queryFn: () => getCampaignFilterForFlows(surveyId),
+    queryKey: ["campaignFilterForFlows", surveyId],
+    enabled: !!surveyId,
   });
 };
