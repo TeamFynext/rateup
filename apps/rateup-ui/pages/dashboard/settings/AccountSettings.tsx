@@ -97,11 +97,15 @@ const AccountSettings = () => {
   }, [summaryView, activeTab]);
 
   useEffect(() => {
+    //route params used in email body & redirecting pages
+
     if (router?.query?.activeTab === "account")
       setActiveTab(AccountSettingsTabs.Billing);
 
     if (router?.query?.view === "myOrders")
       setActiveTab(AccountSettingsTabs.OrderHistory);
+    if (router?.query?.view === "stats")
+      setActiveTab(AccountSettingsTabs.UsageStats);
   }, [router.query?.activeTab, router?.query?.view]);
 
   const { cart, reset } = useRouteAndCartStore();
