@@ -1,7 +1,11 @@
 import Session from "supertokens-node/recipe/session";
 import { TypeInput } from "supertokens-node/types";
 import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
+import {
+  createUserSignup,
+  getOrgIdAndRole,
+  getUserRecipeName,
+} from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
@@ -14,6 +18,7 @@ import Passwordless from "supertokens-node/recipe/passwordless";
 import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery";
 import { SwaggerOptions } from "@fastify/swagger";
 import jwt from "supertokens-node/recipe/jwt";
+import { getUserInfo } from "./utils/supertoken/supertoken";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -114,7 +119,7 @@ export const SuperTokensConfig: TypeInput = {
                 const name = getValueByKey(formFields, "name");
                 const orgName = getValueByKey(formFields, "orgName");
 
-                let { id, emails } = response.user;
+                let { id, emails, loginMethods } = response.user;
 
                 let email = emails[0]; // TODO: handle multiple emails
 
@@ -124,6 +129,7 @@ export const SuperTokensConfig: TypeInput = {
                     email,
                     name,
                     orgName,
+                    recipeName: getUserRecipeName(loginMethods[0].recipeId),
                   });
                 }
 
@@ -169,11 +175,9 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             signInUp: async function (input) {
-              let existingUsers = await supertokens.listUsersByAccountInfo(
+              let existingUsers = await getUserInfo(
+                input.email,
                 input.tenantId,
-                {
-                  email: input.email,
-                },
               );
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up

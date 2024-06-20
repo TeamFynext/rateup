@@ -16,14 +16,17 @@ import PasswordLess from "supertokens-node/recipe/passwordless";
 import { cloneSurvey } from "../survey/survey.service";
 import { cloneMenu } from "../menu/menu.service";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
+import { UserRecipes } from "../../types/enums";
+import { getUserInfo } from "../../utils/supertoken/supertoken";
 
 const prisma = new PrismaClient();
 
-async function createUser({ id, email }: CreateUserParams) {
+async function createUser({ id, email, recipeName }: CreateUserParams) {
   const user = await prisma.user.create({
     data: {
       id,
       email,
+      recipeName,
     },
   });
   return user;
@@ -35,6 +38,7 @@ export async function createUserSignup({
   name,
   orgName,
   phone,
+  recipeName,
 }: CreateUserSignupSchema) {
   log.info("Creating user....");
   try {
@@ -47,6 +51,7 @@ export async function createUserSignup({
           email,
           name,
           phone,
+          recipeName,
         },
       });
 
@@ -360,4 +365,51 @@ export async function deleteUser(userId: string) {
     log.error("delete user transaction failed in db %o", error);
   }
   await supertokens.deleteUser(userId);
+}
+
+export async function getAllUsers() {
+  return await prisma.user.findMany({
+    include: {
+      org: {
+        select: {
+          name: true,
+          id: true,
+          logo: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function updateUserRecipe() {
+  const users = await getAllUsers();
+  for (const user of users) {
+    const userInfo = await getUserInfo(user.email);
+    if (userInfo.length) {
+      const recipeId = userInfo[0].loginMethods[0].recipeId;
+      const recipeName = getUserRecipeName(recipeId);
+      await prisma.user.update({
+        where: {
+          email: user.email,
+        },
+        data: {
+          recipeName,
+        },
+      });
+    }
+  }
+}
+
+export function getUserRecipeName(recipeId) {
+  switch (recipeId) {
+    case "thirdparty":
+      return UserRecipes.ThirdPartyGoogle;
+    case "emailpassword":
+      return UserRecipes.EmailPassword;
+    case "passwordless":
+      return UserRecipes.PasswordLess;
+  }
 }

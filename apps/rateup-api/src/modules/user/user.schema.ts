@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
+import { UserRecipes } from "../../types/enums";
 
 const userCore = {
   id: z.string().uuid(),
@@ -8,6 +9,7 @@ const userCore = {
 const createUserSchema = z.object({
   ...userCore,
   email: z.string().email(),
+  recipeName: z.nativeEnum(UserRecipes),
 });
 
 const userInfoSchema = z.object({
@@ -20,6 +22,7 @@ const createUserSignupSchema = z.object({
   name: z.string().min(4),
   orgName: z.string().min(4),
   phone: z.string(),
+  recipeName: z.nativeEnum(UserRecipes),
 });
 
 const createUserGoogleSchema = z.object({

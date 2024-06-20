@@ -3,10 +3,12 @@ import { verifySession } from "supertokens-node/recipe/session/framework/fastify
 import {
   changeUserPasswordHandler,
   createGoogleUserHandler,
+  getAllUsersHandler,
   getLoggedUserInfoHandler,
   getLoggedUserProfileHandler,
   updateProfileHandler,
   updateProfilePhotoHandler,
+  updateRecipeNameHandler,
   updateUserActiveStatusHandler,
 } from "./user.controller";
 import { $UserRef } from "./user.schema";
@@ -18,7 +20,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
     },
-    getLoggedUserInfoHandler
+    getLoggedUserInfoHandler,
   );
 
   server.get(
@@ -26,7 +28,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
     },
-    getLoggedUserProfileHandler
+    getLoggedUserProfileHandler,
   );
 
   server.put(
@@ -37,7 +39,7 @@ export async function userRoutes(server: FastifyInstance) {
         body: $UserRef("updateProfileSchema"),
       },
     },
-    updateProfileHandler
+    updateProfileHandler,
   );
 
   server.put(
@@ -48,7 +50,7 @@ export async function userRoutes(server: FastifyInstance) {
         body: $UserRef("updateProfilePhotoSchema"),
       },
     },
-    updateProfilePhotoHandler
+    updateProfilePhotoHandler,
   );
 
   //this route is dedicated for updating the account-active status of user. Currently used for soft deleting the user.
@@ -57,7 +59,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
     },
-    updateUserActiveStatusHandler
+    updateUserActiveStatusHandler,
   );
 
   server.post(
@@ -68,7 +70,7 @@ export async function userRoutes(server: FastifyInstance) {
         body: $UserRef("changeUserPasswordSchema"),
       },
     },
-    changeUserPasswordHandler
+    changeUserPasswordHandler,
   );
 
   server.post(
@@ -78,6 +80,22 @@ export async function userRoutes(server: FastifyInstance) {
         body: $UserRef("createUserGoogleSchema"),
       },
     },
-    createGoogleUserHandler
+    createGoogleUserHandler,
+  );
+
+  server.get(
+    "/all",
+    {
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+    },
+    getAllUsersHandler,
+  );
+
+  server.post(
+    "/update-recipe",
+    {
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+    },
+    updateRecipeNameHandler,
   );
 }
