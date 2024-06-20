@@ -7,7 +7,7 @@ import {
   Button,
   Tooltip,
 } from "@mantine/core";
-import { IconChartBar } from "@tabler/icons-react";
+import { IconChartBar, IconClock } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getTimeSince } from "../../../utils";
@@ -89,8 +89,8 @@ export function SurveyCard({
           </Group>
         </Group>
         <Group gap="xs">
-          <Avatar radius={"xl"} />
-          <Text size="sm" c="dimmed">
+          <IconClock color="var(--mantine-color-gray-6)" />
+          <Text size="sm" c="dimmed" color="var(--mantine-color-gray-6)">
             Created {timeSince}
           </Text>
         </Group>
@@ -112,6 +112,7 @@ export function SurveyCard({
                 e.stopPropagation();
                 router.push(`${router.pathname}/${survey?.id}?tab=Result`);
               }}
+              style={{ overflow: "hidden" }}
             >
               <RateupButtonSecondary
                 leftIcon={<IconChartBar size={15} />}

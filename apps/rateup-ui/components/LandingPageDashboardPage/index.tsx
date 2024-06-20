@@ -54,7 +54,11 @@ function LandingPageDashboard() {
       </Center>
     );
   } else if (!isPending && !isError && !landingPages.length) {
-    componentToBeRendered = <NothingFound text="No Landing Pages Found." />;
+    componentToBeRendered = (
+      <Center h={"100%"} w={"100%"}>
+        <NothingFound text="No Landing Pages Found." />;
+      </Center>
+    );
   } else {
     componentToBeRendered = (
       <LandingPageCardsList landingPages={sortedLandingPages} />
@@ -83,7 +87,9 @@ function LandingPageDashboard() {
           defaultSortOption={sortOption}
         />
       </Group>
-      <Box className={styles["landingPage-list-container"]}>
+      <Box
+        className={`${styles["landingPage-list-container"]} cards-grid-global-class`}
+      >
         {componentToBeRendered}
       </Box>
       {isCreateLandingPageModalOpen && (

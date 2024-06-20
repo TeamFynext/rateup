@@ -73,7 +73,7 @@ export default function Teams() {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
     error: errorTeamsDataUser,
-    refetch: reftchTeams,
+    refetch: refetchTeams,
   } = useTeamsByUser() as {
     isLoading: boolean;
     error: any;
@@ -168,37 +168,35 @@ export default function Teams() {
         </Group>
         <SortDropdown onSortChange={onSortChange} />
       </Group>
-      <Space h="lg" />
+
       {isLoadingTeamsUser ? (
-        <Loader type="bars" />
+        <Center h={"100%"}>
+          <Loader type="bars" />
+        </Center>
+      ) : errorTeamsDataUser ? (
+        <Center h={"100%"}>
+          {teamsData?.message ? (
+            teamsData?.message
+          ) : (
+            <>
+              Error... Try Refreshing...
+              <RateupButtonOutline
+                onClick={refetchTeams}
+                rightIcon={<IconReload size="1rem" />}
+                title="Refresh"
+                size="xs"
+              />
+            </>
+          )}
+        </Center>
       ) : (
-        <>
-          <Grid columns={9} p={10} className={styles["team-cards-container"]}>
-            {sortedTeams().length > 0 ? (
-              sortedTeams().map((team, key) => (
-                <Grid.Col span={{ base: 9, md: 4.5, lg: 3 }} key={key}>
-                  <TeamCard key={team.id} team={team} />
-                </Grid.Col>
-              ))
-            ) : (
-              <Center>
-                {teamsData?.message ? (
-                  teamsData?.message
-                ) : (
-                  <>
-                    Error... Try Refreshing...
-                    <RateupButtonOutline
-                      onClick={reftchTeams}
-                      rightIcon={<IconReload size="1rem" />}
-                      title="Refresh"
-                      size="xs"
-                    />
-                  </>
-                )}
-              </Center>
-            )}
-          </Grid>
-        </>
+        <Box
+          className={`${styles["team-cards-container"]} cards-grid-global-class`}
+        >
+          {sortedTeams().map((team, key) => (
+            <TeamCard key={team.id} team={team} />
+          ))}
+        </Box>
       )}
     </div>
   );

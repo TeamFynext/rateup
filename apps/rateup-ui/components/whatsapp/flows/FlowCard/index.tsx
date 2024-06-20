@@ -12,7 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCopy, IconDotsVertical, IconTrash } from "@tabler/icons-react";
+import { IconClock, IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import {
   useCloneAndDeprecateFlowsMutation,
@@ -88,7 +88,6 @@ function FlowCard({
       p="md"
       shadow="lg"
       radius="lg"
-      mih={"175px"}
       hoveractive={true}
       onClick={() =>
         router.push(
@@ -96,8 +95,8 @@ function FlowCard({
         )
       }
     >
-      <Stack gap={0} justify="space-between" h={"100%"}>
-        <Flex gap={4} mb={"xs"}>
+      <Stack gap={"1rem"} justify="space-between" h={"100%"}>
+        <Flex gap={"1rem"}>
           <h2 className={styles["flow-name-h2"]}>{name}</h2>
           <Menu offset={0} withArrow>
             <ConfirmationModal
@@ -139,7 +138,7 @@ function FlowCard({
                 }}
                 variant="subtle"
               >
-                <IconDotsVertical size={20} />
+                <IconDots size={20} />
               </ActionIcon>
             </Menu.Target>
             <FormModalLayout
@@ -223,14 +222,18 @@ function FlowCard({
             </Menu.Dropdown>
           </Menu>
         </Flex>
-        <Group justify="space-between">
-          <Text c="dimmed" fz={"sm"} mb={4}>
-            Created {timeSince}
-          </Text>
+
+        <Stack>
+          <Group className={styles["creation-time-text-and-icon-div"]}>
+            <Box className={styles["clock-icon-container"]}>
+              <IconClock />
+            </Box>
+            <p>Created {timeSince}</p>
+          </Group>
           <Badge className={styles[`${status.toLowerCase()}-badge`]}>
             {status}
           </Badge>
-        </Group>
+        </Stack>
       </Stack>
     </PaperLayout>
   );

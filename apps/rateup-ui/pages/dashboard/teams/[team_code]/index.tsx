@@ -9,9 +9,13 @@ import {
   Space,
   Text,
   Group,
+  Center,
 } from "@mantine/core";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
-import { IconCheck } from "@tabler/icons-react";
+import {
+  RateupButtonBlue,
+  RateupButtonOutline,
+} from "../../../../components/Button/RateupButtons";
+import { IconCheck, IconReload } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import validateNameAndEmail from "../validation";
@@ -31,6 +35,8 @@ import {
 import FormModalLayout from "../../../../components/Modal/FormModalLayout";
 import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
 import Heading from "../../../../components/styled/Heading/Heading";
+import styles from "./teams.module.css";
+import TeamCard from "../TeamCard";
 
 const TeamDetails = () => {
   const router = useRouter();
@@ -48,7 +54,7 @@ const TeamDetails = () => {
     isLoading: isLoadingTeamsUser,
     data: teamsDataUser,
     error: errorTeamsDataUser,
-    refetch: reftchTeams,
+    refetch: refetchTeams,
   } = useTeamsByUser() as UseTeamsByUserResult;
   let teamsData = teamsDataUser?.data;
   let teamCode: string = team_code?.toString();
@@ -58,7 +64,8 @@ const TeamDetails = () => {
     isLoading: isLoadingMembers,
     data: teamsMembersData,
     refetch: refetchInvitedTeamMembers,
-  } = useTeamMembersFromInvitation(teamID) as UseTeamResult;
+    error: teamsMembersError,
+  } = useTeamMembersFromInvitation(teamID);
   enum TabEnum {
     Members = "Members",
     Survey = "Survey",
@@ -139,6 +146,11 @@ const TeamDetails = () => {
     setEmail("");
   }, [opened]);
 
+  const teamMembersObjArr = [
+    ...(teamsMembersData?.invitations || []),
+    ...(teamsMembersData?.members || []),
+  ];
+
   return (
     <>
       <FormModalLayout
@@ -179,52 +191,52 @@ const TeamDetails = () => {
             <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
           </Tabs.List>
         </Stack>
-        <Tabs.Panel value={TabEnum.Members}>
-          <Group mih={60}>
-            <Group style={{ marginTop: "auto", marginBottom: "auto" }}>
-              <Heading
-                title={teamsMembersData?.teamName || "Team"}
-                titleprops={{ w: "fit-content" }}
-              />
-            </Group>
-            <Tabs.Panel value={TabEnum.Members} mt={30}>
+        <Tabs.Panel value={TabEnum.Members} h={"100%"}>
+          <Stack h={"100%"} style={{ overflow: "hidden" }}>
+            <Group>
+              <Group style={{ marginTop: "auto", marginBottom: "auto" }}>
+                <Heading
+                  title={teamsMembersData?.teamName || "Team"}
+                  titleprops={{ w: "fit-content" }}
+                />
+              </Group>
               <RateupButtonBlue
                 title="Add Member"
                 rightIcon={<IconPlus />}
                 onClick={open}
               />
-            </Tabs.Panel>
-          </Group>
-          <SimpleGrid
-            p={1}
-            spacing={"lg"}
-            cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}
-            style={{ overflow: "auto" }}
-          >
-            {teamsMembersData?.invitations?.length > 0 &&
-              teamsMembersData?.invitations?.map((member, i) => (
-                <TeamMemberCard key={i} member={member} teamID={teamID} />
-              ))}
-            {teamsMembersData?.members?.length > 0 ? (
-              Array.isArray(teamsMembersData?.members) ? (
-                (sort
-                  ? [...teamsMembersData?.members].sort((a, b) =>
-                      b.name.localeCompare(a.name),
-                    )
-                  : [...teamsMembersData?.members].sort((a, b) =>
-                      a.name.localeCompare(b.name),
-                    )
-                ).map((member, i) => <TeamMemberCard key={i} member={member} />)
-              ) : (
-                <Group p="xl"> {teamsMembersData?.members}</Group>
-              )
-            ) : isLoadingMembers ? (
-              <Loader type="bars" />
+            </Group>
+
+            {isLoadingMembers ? (
+              <Center h={"100%"}>
+                <Loader type="bars" />
+              </Center>
+            ) : teamsMembersError ? (
+              <Center h={"100%"}>
+                <Stack>
+                  <p>Error... Try Refreshing...</p>
+                  <RateupButtonOutline
+                    onClick={refetchInvitedTeamMembers}
+                    rightIcon={<IconReload size="1rem" />}
+                    title="Refresh"
+                    size="xs"
+                  />
+                </Stack>
+              </Center>
+            ) : teamMembersObjArr.length ? (
+              <Box
+                className={`${styles["cards-container"]} cards-grid-global-class`}
+              >
+                {teamMembersObjArr.map((member, i) => {
+                  return (
+                    <TeamMemberCard key={i} member={member} teamID={teamID} />
+                  );
+                })}
+              </Box>
             ) : (
-              // TODO: handle error
-              <Group p="xl">"No other members in this team!"</Group>
+              <Center h={"100%"}></Center>
             )}
-          </SimpleGrid>
+          </Stack>
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <Heading

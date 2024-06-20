@@ -1,4 +1,4 @@
-import { SimpleGrid } from "@mantine/core";
+import { Box } from "@mantine/core";
 import FlowCard from "../FlowCard";
 
 function FlowCardsList({
@@ -6,12 +6,7 @@ function FlowCardsList({
   teamsData,
 }: Readonly<{ flows: DbFlow[]; teamsData }>) {
   return (
-    <SimpleGrid
-      p={"0.875rem"}
-      spacing={"lg"}
-      cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
-      style={{ overflow: "auto" }}
-    >
+    <Box className="cards-grid-global-class">
       {flows.map(({ dbFlowId, name, status, createdAt }) => {
         return (
           <FlowCard
@@ -24,7 +19,7 @@ function FlowCardsList({
           />
         );
       })}
-    </SimpleGrid>
+    </Box>
   );
 }
 
