@@ -118,7 +118,7 @@ export async function updateSubscription(
     where: {
       orgId,
     },
-    data: updatedData,
+    data: {...updatedData,  lastLimitAlertSentAt: null   },
   });
 }
 

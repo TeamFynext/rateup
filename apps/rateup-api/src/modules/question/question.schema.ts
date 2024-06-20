@@ -110,6 +110,17 @@ const questionCore = {
       }),
     )
     .optional(),
+  wop: z
+    .object({
+      imageSrc: z.string().optional(),
+      primaryColor: z.string(),
+      primaryColoraround: z.string(),
+      contrastColor: z.string(),
+      size: z.number(),
+      segments: z.array(z.string()),
+      segColors: z.array(z.string()),
+    })
+    .optional(),
 };
 
 export const questionSchema = z.object({

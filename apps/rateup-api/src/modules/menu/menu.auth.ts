@@ -3,6 +3,7 @@ import { ByMenuIdParams, CreateMenuInput } from "./menu.schema";
 import prisma from "../../utils/prisma";
 import { hasAccessToTeam } from "../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
+import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert";
 
 export async function verifyMenuAccess(
   request: FastifyRequest<{
@@ -52,6 +53,12 @@ export async function verifyMenuMaxCountRestriction(
     count >=
     request.subscription.features[SubscriptionFeaturePathName.Menu].count.max
   ) {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: request.body.teamId,
+      },
+    });
+    await sendUsageLimitMailAlert(team.orgId)
     reply
       .code(403)
       .send({

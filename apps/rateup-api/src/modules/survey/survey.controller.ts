@@ -80,7 +80,7 @@ export async function createSurveyHandler(
     if (typeof survey === "object" && survey !== null) {
       // await createDefaultSurveyTheme(survey.id);
       reply.code(201).send(survey);
-    }else {
+    } else {
       // Handle invalid survey format here
       reply.code(400).send({ error: "Invalid survey format." });
     }

@@ -27,6 +27,9 @@ const updateCampaignInputSchema = z.object({
 const byCampaignIdParamsSchema = z.object({
   campaignId: z.string(),
 });
+const byFlowIdParamsSchema = z.object({
+  flowId: z.string(),
+});
 
 const getCampaignsQuerySchema = z.object({
   campaignId: z.string().optional(),
@@ -57,6 +60,7 @@ export const { schemas: campaignSchemas, $ref: $campaignRef } =
       getCampaignsQuerySchema,
       campaignResponseSchema,
       sendCampaignInputSchema,
+      byFlowIdParamsSchema,
     },
     {
       $id: "campaignSchema",
@@ -68,3 +72,4 @@ export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;
 export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
 export type ByCampaignIdParams = z.infer<typeof byCampaignIdParamsSchema>;
 export type SendCampaignInput = z.infer<typeof sendCampaignInputSchema>;
+export type ByFlowIdParams = z.infer<typeof byFlowIdParamsSchema>;

@@ -636,15 +636,16 @@ model MenuBanner {
 }
 
 model Subscription {
-  org             Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId           String      @unique @db.Uuid
-  features        Json
-  renewedAt       DateTime?
-  expiresAt       DateTime
-  createdAt       DateTime    @default(now())
-  basePlan        RateupPlan? @relation(fields: [basePlanId], references: [id])
-  basePlanId      String?     @db.Uuid
-  subscriptionRef String?     @unique //gateway Subscription id
+  org                  Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                String      @unique @db.Uuid
+  features             Json
+  renewedAt            DateTime?
+  expiresAt            DateTime
+  createdAt            DateTime    @default(now())
+  basePlan             RateupPlan? @relation(fields: [basePlanId], references: [id])
+  basePlanId           String?     @db.Uuid
+  subscriptionRef      String?     @unique //gateway Subscription id
+  lastLimitAlertSentAt DateTime? //Limit reached Email 
 }
 
 // used to tokenize some data
