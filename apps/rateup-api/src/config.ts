@@ -1,7 +1,11 @@
 import Session from "supertokens-node/recipe/session";
 import { TypeInput } from "supertokens-node/types";
 import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createUserSignup, getOrgIdAndRole } from "./modules/user/user.service";
+import {
+  createUserSignup,
+  getOrgIdAndRole,
+  getUserRecipeName,
+} from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
@@ -114,7 +118,7 @@ export const SuperTokensConfig: TypeInput = {
                 const name = getValueByKey(formFields, "name");
                 const orgName = getValueByKey(formFields, "orgName");
 
-                let { id, emails } = response.user;
+                let { id, emails, loginMethods } = response.user;
 
                 let email = emails[0]; // TODO: handle multiple emails
 
@@ -124,6 +128,7 @@ export const SuperTokensConfig: TypeInput = {
                     email,
                     name,
                     orgName,
+                    recipeName: getUserRecipeName(loginMethods[0].recipeId),
                   });
                 }
 

@@ -2,11 +2,14 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   checkEmailExist,
   createUserSignup,
+  getAllUsers,
   getLoggedUserInfo,
   getLoggedUserProfile,
+  getUserRecipeName,
   updateUserActiveStatus,
   updateUserProfile,
   updateUserProfilePhoto,
+  updateUserRecipe,
 } from "./user.service";
 import {
   ChangeUserPasswordSchema,
@@ -22,6 +25,7 @@ import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { log } from "../../utils/logger";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
+import { UserRecipes } from "../../types/enums";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
@@ -81,6 +85,7 @@ export async function createGoogleUserHandler(
     phone: userInfo?.phoneNumber !== undefined ? userInfo.phoneNumber : "",
     name: request?.body?.name,
     orgName: request?.body?.orgName,
+    recipeName: getUserRecipeName(userInfo[0].loginMethods[0].recipeId) ?? null,
   };
   try {
     user = await createUserSignup(data);
@@ -241,5 +246,31 @@ export async function checkEmailExistHandler(
     return reply.code(200).send({ success: !!user });
   } catch (e: any) {
     return reply.code(500).send({ success: false, message: e.message });
+  }
+}
+
+export async function getAllUsersHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const users = await getAllUsers();
+    reply.code(200).send(users);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updateRecipeNameHanlder(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await updateUserRecipe();
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }

@@ -1,6 +1,6 @@
 import Session from "supertokens-node/recipe/session";
 import prisma from "../../utils/prisma";
-import { createUser } from "../user/user.service";
+import { createUser, getUserRecipeName } from "../user/user.service";
 import {
   CreateTeamInput,
   EditTeamInput,
@@ -325,7 +325,10 @@ export async function completeInvite(token: string) {
       await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
       let id = signUpResult.user.id;
       let email = updatedInvitation.email;
-      const user = await createUser({ id, email });
+      let recipeName = getUserRecipeName(
+        signUpResult.user.loginMethods[0].recipeId,
+      );
+      const user = await createUser({ id, email, recipeName });
 
       if (!user) {
         throw new Error("failed user adding");
