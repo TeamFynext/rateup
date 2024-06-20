@@ -262,7 +262,7 @@ export async function getAllUsersHandler(
   }
 }
 
-export async function updateRecipeNameHanlder(
+export async function updateRecipeNameHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {

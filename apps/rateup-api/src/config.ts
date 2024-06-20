@@ -18,6 +18,7 @@ import Passwordless from "supertokens-node/recipe/passwordless";
 import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery";
 import { SwaggerOptions } from "@fastify/swagger";
 import jwt from "supertokens-node/recipe/jwt";
+import { getUserInfo } from "./utils/supertoken/supertoken";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -174,11 +175,9 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             signInUp: async function (input) {
-              let existingUsers = await supertokens.listUsersByAccountInfo(
+              let existingUsers = await getUserInfo(
+                input.email,
                 input.tenantId,
-                {
-                  email: input.email,
-                },
               );
               if (existingUsers.length === 0) {
                 // this means this email is new so we allow sign up

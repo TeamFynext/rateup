@@ -8,7 +8,7 @@ import {
   getLoggedUserProfileHandler,
   updateProfileHandler,
   updateProfilePhotoHandler,
-  updateRecipeNameHanlder,
+  updateRecipeNameHandler,
   updateUserActiveStatusHandler,
 } from "./user.controller";
 import { $UserRef } from "./user.schema";
@@ -96,6 +96,6 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
     },
-    updateRecipeNameHanlder,
+    updateRecipeNameHandler,
   );
 }
