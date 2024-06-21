@@ -31,7 +31,7 @@ const PlanCard = ({
   inversePeriod,
   largeScreen,
   handlePlanSelection,
-  menuPage = false,
+  isPopular = false,
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
@@ -55,11 +55,9 @@ const PlanCard = ({
 
   let marginTop = "xl";
   let title = `Subscribe Now`;
-  let isPopular = false;
 
-  if ((!menuPage && index === 1) || (menuPage && index === 1)) {
+  if (isPopular) {
     marginTop = "-12px";
-    isPopular = true;
     cardMainColor = "linear-gradient(90deg, #004F98, #387ADF)";
   }
 
