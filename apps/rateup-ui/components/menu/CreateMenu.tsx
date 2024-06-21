@@ -71,6 +71,7 @@ export function CreateMenuModal({
   if (!selectedTeamId) {
     return null;
   }
+
   return (
     <FormModalLayout
       opened={opened}

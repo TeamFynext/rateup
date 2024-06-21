@@ -13,13 +13,16 @@ type MotionTransitionProps = {
   duration?: number;
   layout?: boolean;
   children: React.ReactNode;
+  style?: React.CSSProperties;
 };
+
 export const MotionTransition = ({
   keyValue,
   type = "leftSlideIn",
   apEnable = true,
   duration = 0.2,
   layout = false,
+  style,
   children,
 }: MotionTransitionProps) => {
   return apEnable ? (
@@ -29,6 +32,7 @@ export const MotionTransition = ({
         layout={layout}
         {...getAnimationProps(type)}
         transition={{ duration }}
+        style={style}
       >
         {children}
       </motion.div>
@@ -39,6 +43,7 @@ export const MotionTransition = ({
       layout={layout}
       {...getAnimationProps(type)}
       transition={{ duration }}
+      style={style}
     >
       {children}
     </motion.div>

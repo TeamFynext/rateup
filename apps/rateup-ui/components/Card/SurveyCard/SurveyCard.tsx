@@ -1,20 +1,10 @@
-import {
-  Stack,
-  Group,
-  Avatar,
-  Badge,
-  Text,
-  Button,
-  Tooltip,
-} from "@mantine/core";
-import { IconChartBar, IconClock } from "@tabler/icons-react";
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { getTimeSince } from "../../../utils";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { SurveyMenu } from "./SurveyMenu";
+import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { IconChartBar } from "@tabler/icons-react";
 import router from "next/router";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { SurveyMenu } from "./SurveyMenu";
 
 interface SurveyCardProps {
   survey: Survey;
@@ -37,19 +27,6 @@ export function SurveyCard({
   route,
   refetchSurveys,
 }: SurveyCardProps): JSX.Element {
-  const [timeSince, setTimeSince] = useState("");
-  useEffect(() => {
-    if (survey?.createdAt) {
-      setTimeSince(getTimeSince(new Date(survey?.createdAt).toString()));
-      const timeoutID = setInterval(
-        () =>
-          setTimeSince(getTimeSince(new Date(survey?.createdAt).toString())),
-        5000,
-      );
-      return () => clearInterval(timeoutID);
-    }
-  }, []);
-
   return (
     <PaperLayout
       hoveractive
@@ -88,12 +65,9 @@ export function SurveyCard({
             />
           </Group>
         </Group>
-        <Group gap="xs">
-          <IconClock color="var(--mantine-color-gray-6)" />
-          <Text size="sm" c="dimmed" color="var(--mantine-color-gray-6)">
-            Created {timeSince}
-          </Text>
-        </Group>
+
+        <CreatedSinceText createdAt={survey?.createdAt} />
+
         <Group justify="space-between">
           <Group>
             <StatusBadge active={survey?.active} />
