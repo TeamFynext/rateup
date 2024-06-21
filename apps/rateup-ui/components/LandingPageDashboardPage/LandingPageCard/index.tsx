@@ -1,10 +1,9 @@
 import { Badge, Box, Group } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
-import MoreOptionsMenu from "./MoreOptionsMenu";
-import { IconClock } from "@tabler/icons-react";
-import TimeSinceText from "./TimeSinceText";
+import CreatedSinceText from "../../CreatedSinceText";
 import styles from "./LandingPageCard.module.css";
+import MoreOptionsMenu from "./MoreOptionsMenu";
 
 function LandingPageCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
@@ -21,12 +20,7 @@ function LandingPageCard({ name, shortUrlId, id, createdAt, isPublished }) {
         <MoreOptionsMenu shortUrlId={shortUrlId} id={id} name={name} />
       </Group>
 
-      <Group className={styles["creation-time-text-and-icon-div"]}>
-        <Box className={styles["clock-icon-container"]}>
-          <IconClock />
-        </Box>
-        <p>Created {<TimeSinceText isoDateString={createdAt} />}</p>
-      </Group>
+      <CreatedSinceText createdAt={createdAt} />
 
       <Group className={styles["active-inactive-badge-container"]}>
         <Badge

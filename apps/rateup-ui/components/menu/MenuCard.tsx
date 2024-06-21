@@ -1,20 +1,10 @@
-import { Flex, Group, Text, Menu, Box, Badge, Space } from "@mantine/core";
-import {
-  IconDots,
-  IconMapPinFilled,
-  IconPencil,
-  IconShare,
-  IconTrash,
-} from "@tabler/icons-react";
+import { Badge, Box, Flex, Group, Stack, Text } from "@mantine/core";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getTimeSince } from "../../utils";
-
-import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
+import CreatedSinceText from "../CreatedSinceText";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../Modal/ConfirmationModal";
-import { notifications } from "@mantine/notifications";
+import MenuCardMenu from "./MenuCardMenu";
 
 export function MenuCard({
   menu,
@@ -41,122 +31,35 @@ export function MenuCard({
       onClick={() => {
         router.push(`/dashboard/menu/${menu.id}`);
       }}
-      mih={200}
     >
-      <Flex
-        justify={"space-between"}
-        direction={"column"}
-        style={{ height: "100%" }}
-      >
+      <Stack>
         <Box>
           <Flex justify={"space-between"} align={"center"}>
             <Text mr={"sm"} truncate size="xl" fw={700} tt={"capitalize"}>
               {menu.name}
             </Text>
-            <Group align={"center"} mt="sm" gap="xs" miw={50}>
-              <IconPencil
-                size={20}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditClick(menu);
-                }}
-              />
-              <MenuCardMenu menuId={menu.id} teamId={menu.teamId} />
-            </Group>
+            <MenuCardMenu
+              handleEditClick={handleEditClick}
+              menuId={menu.id}
+              teamId={menu.teamId}
+              menu={menu}
+            />
           </Flex>
           <Text size="md" lineClamp={1}>
             {menu.displayName}
           </Text>
         </Box>
-        <Space h="xl" />
-        <Box>
+
+        <CreatedSinceText createdAt={menu?.createdAt} />
+
+        <Group>
           {menu?.team?.code && (
             <Badge color="var(--tertiary-color)" variant="light">
               {menu?.team?.code}
             </Badge>
           )}
-          <Flex align={"center"} justify={"space-between"} c={"dimmed"}>
-            <Flex>
-              <Text size="sm" c="dimmed">
-                Created {timeSince}
-              </Text>
-            </Flex>
-            <Flex align={"center"}>
-              {menu?.locationText && <IconMapPinFilled size={16} />}
-              <Text ml={4} maw={180} lineClamp={2} mih={50}>
-                {menu?.locationText}
-              </Text>
-            </Flex>
-          </Flex>
-        </Box>
-      </Flex>
-    </PaperLayout>
-  );
-}
-
-type MenuCardMenuProps = {
-  readonly menuId: string;
-  readonly teamId: string;
-};
-function MenuCardMenu({ menuId, teamId }: MenuCardMenuProps) {
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-
-  const deleteMutation = useDeleteMenuMutation(
-    teamId,
-    () => {},
-    () => {},
-  );
-  const router = useRouter();
-
-  return (
-    <Menu offset={0} withArrow>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={dialogOpened}
-        onClose={closeDialog}
-        headerLabel="Are you sure to delete this Menu?"
-        headerTitle="Delete Menu?"
-        confirmLabel="Delete"
-        onConfirm={(e) => {
-          notifications.show({
-            id: "delete-data-menu",
-            loading: true,
-            title: "Deleting menu..",
-            message: `Hold on, menu is getting deleted...`,
-            autoClose: false,
-            withCloseButton: false,
-          });
-          deleteMutation.mutate(menuId);
-          closeDialog();
-        }}
-      />
-      <Menu.Target>
-        <Group
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          align="center"
-        >
-          <IconDots size={20} />
         </Group>
-      </Menu.Target>
-      <Menu.Dropdown
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <Menu.Item
-          leftSection={<IconShare size={16} />}
-          onClick={() => {
-            router.push(`/dashboard/menu/${menuId}?tab=Share`);
-          }}
-        >
-          Share
-        </Menu.Item>
-        <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
-          Delete
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+      </Stack>
+    </PaperLayout>
   );
 }

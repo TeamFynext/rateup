@@ -120,7 +120,11 @@ export function CategoryCard({
   ));
 
   return (
-    <Paper>
+    <Paper
+      h={"100%"}
+      style={{ display: "flex", flexDirection: "column" }}
+      pb={"0.3125rem"}
+    >
       <CategoryCardHeader
         handleEdit={handleEdit}
         category={category}
@@ -128,9 +132,25 @@ export function CategoryCard({
         openCreateItem={handleCreateItem}
         toggleSwapOrder={toggleSwapOrderCategory}
       />
-      <PaperLayout p={"0 1rem"}>
-        <Table highlightOnHover horizontalSpacing="sm" verticalSpacing="xs">
-          <Table.Thead>
+      <PaperLayout
+        p={"1rem"}
+        pt={0}
+        style={{
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          flex: 1,
+          height: "100%",
+        }}
+      >
+        <Table
+          highlightOnHover
+          horizontalSpacing="sm"
+          verticalSpacing="xs"
+          style={{ position: "relative" }}
+        >
+          <Table.Thead
+            style={{ position: "sticky", top: 0, backgroundColor: "white" }}
+          >
             <Table.Tr>
               {tableColumns?.map((key) => (
                 <Table.Th key={key} align="left">
