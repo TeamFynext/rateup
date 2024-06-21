@@ -63,7 +63,6 @@ export const CustomSection = ({
                 inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
-                menuPage={true}
               />
             </Stack>
           );

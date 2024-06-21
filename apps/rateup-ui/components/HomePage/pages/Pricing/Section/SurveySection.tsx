@@ -49,6 +49,10 @@ export const SurveySection = ({
   return (
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
       {surveyPlans?.map((data, index) => {
+        let isPopular = false;
+        isPopular =
+          data?.displayName && data?.displayName.toLowerCase().includes("team");
+
         return (
           <Stack align="center" gap={0} pos={"relative"} key={data?.id}>
             <Box
@@ -63,7 +67,7 @@ export const SurveySection = ({
                 zIndex: 2,
               }}
               w={PlanCardWidth}
-              display={index === 1 ? "block" : "none"}
+              display={isPopular ? "block" : "none"}
             >
               <Text pb="xs" mt="-4px" size="sm">
                 {" "}
@@ -78,6 +82,7 @@ export const SurveySection = ({
               totalItems={surveyPlans?.length}
               inversePeriod={inversePeriod}
               largeScreen={largeScreen}
+              isPopular={isPopular}
             />
           </Stack>
         );
