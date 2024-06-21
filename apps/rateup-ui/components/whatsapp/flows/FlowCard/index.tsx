@@ -18,9 +18,8 @@ import {
   useCloneFlowsMutation,
   useDeleteFlowMutation,
 } from "../../../../backend/whatsapp/flow/flow.query";
-import { useTimeSince } from "../../../../hooks/timeSince";
 import { WaFlowStatus } from "../../../../types/enums";
-import CreatedSinceText from "../../../CreatedSinceText";
+import CreatedSinceText from "../../../DateAndTime/CreatedSinceText";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import FormModalLayout from "../../../Modal/FormModalLayout";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";

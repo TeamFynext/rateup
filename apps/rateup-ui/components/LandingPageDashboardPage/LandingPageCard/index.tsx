@@ -1,7 +1,7 @@
 import { Badge, Box, Group } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
-import CreatedSinceText from "../../CreatedSinceText";
+import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
 import styles from "./LandingPageCard.module.css";
 import MoreOptionsMenu from "./MoreOptionsMenu";
 

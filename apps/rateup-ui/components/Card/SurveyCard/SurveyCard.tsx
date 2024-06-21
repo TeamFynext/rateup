@@ -2,7 +2,7 @@ import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
 import router from "next/router";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import CreatedSinceText from "../../CreatedSinceText";
+import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SurveyMenu } from "./SurveyMenu";
 
