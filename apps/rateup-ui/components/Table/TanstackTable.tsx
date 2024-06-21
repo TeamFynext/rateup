@@ -32,6 +32,7 @@ function TanstackTable({
   toggle,
   disableFuzzyFnCustom = false,
   toggleOffContent,
+  detailBtn = false,
 }: Readonly<{
   className?: string;
   data: any;
@@ -45,6 +46,7 @@ function TanstackTable({
   toggle?: () => void;
   toggleOffContent?: React.ReactNode;
   disableFuzzyFnCustom?: boolean;
+  detailBtn?: boolean;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -132,6 +134,7 @@ function TanstackTable({
         table={table}
         tempVisibleColumnArray={tempVisibleColumnArray}
         topHeight={topHeight}
+        detailBtn={detailBtn}
       />
     </Box>
   );

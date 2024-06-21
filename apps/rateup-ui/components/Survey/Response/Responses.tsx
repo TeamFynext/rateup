@@ -206,8 +206,16 @@ const Responses = ({
       title: survey?.title,
       tz: dayjs.tz.guess(),
       filterTeams,
+      campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
     });
-  }, [defaultLanguage, downloadExcelResponse, survey?.title, surveyId]);
+  }, [
+    campaignFlowFilter,
+    defaultLanguage,
+    downloadExcelResponse,
+    filterTeams,
+    survey?.title,
+    surveyId,
+  ]);
 
   useEffect(() => {
     setVerifyEmail("");

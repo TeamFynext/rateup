@@ -57,6 +57,7 @@ function ContactTable({
   totalCount,
   columnFilters,
   setColumnFilters,
+  detailBtn = false,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -78,6 +79,7 @@ function ContactTable({
   totalCount?: number;
   columnFilters;
   setColumnFilters;
+  detailBtn?: boolean;
 }>) {
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
@@ -285,6 +287,7 @@ function ContactTable({
         table={table}
         tempVisibleColumnArray={tempVisibleColumnArray}
         topHeight={topHeight}
+        detailBtn={detailBtn}
       />
     </Box>
   );
