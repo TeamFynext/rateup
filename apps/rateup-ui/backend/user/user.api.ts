@@ -114,6 +114,7 @@ export type Users = {
   gender: "MALE" | "FEMALE" | "OTHER";
   recipeName?: string;
   org: { name: string; id: string; logo?: string }[];
+  orgMember: { role: string; orgId: string }[];
 };
 
 export async function getAllUsers() {

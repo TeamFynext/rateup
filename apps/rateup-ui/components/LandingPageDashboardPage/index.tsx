@@ -73,7 +73,7 @@ function LandingPageDashboard() {
         >
           <h1>Landing Pages</h1>
           <InfoButton docUrl={`${docsPath}/landingpage`} />
-          <RefreshButton queryKey="landingPages" />
+          <RefreshButton queryKeys={["landingPages"]} />
           <Button
             className={styles["create-landingPage-btn"]}
             rightSection={<IconPlus />}

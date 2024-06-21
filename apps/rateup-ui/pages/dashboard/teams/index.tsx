@@ -157,7 +157,7 @@ export default function Teams() {
         <Group gap={"md"}>
           <Heading title="Teams" titleprops={{ w: "fit-content" }} />
           <InfoButton docUrl={`${docsPath}/teams/team`} />
-          <RefreshButton queryKey="teamsDataUserQuery" />
+          <RefreshButton queryKeys={["teamsDataUserQuery"]} />
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
               title="Create Team"

@@ -1,10 +1,10 @@
-import { Stack, Group, Title, ActionIcon, Tooltip, Box } from "@mantine/core";
+import { Stack, Group, Title, Box } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
-import { IconRefresh } from "@tabler/icons-react";
 import { usePaymentOrders } from "../../backend/payment/payment.query";
 import styles from "../../components/adminPanel/admin.module.css";
 import dayjs from "dayjs";
+import RefreshButton from "../../components/Button/RefreshButton";
 
 const Orders = () => {
   const {
@@ -56,26 +56,7 @@ const Orders = () => {
     <Stack mah={"100%"}>
       <Group gap={"md"}>
         <Title order={2}>Orders</Title>
-        <Tooltip label="Refresh data">
-          <ActionIcon
-            variant="light"
-            ml="xs"
-            mr="50px"
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-              refetchOrders();
-              notifications.show({
-                id: "load-data",
-                color: "teal",
-                title: "Refreshing data",
-                loading: true,
-                message: "Hold.. your data is getting update...",
-                autoClose: 2000,
-              });
-            }}
-          >
-            <IconRefresh style={{ width: "80%", height: "80%" }} stroke={1.5} />
-          </ActionIcon>
-        </Tooltip>
+        <RefreshButton queryKeys={["paymentorders"]} />
       </Group>
       <Box h="75vh">
         <DataGrid

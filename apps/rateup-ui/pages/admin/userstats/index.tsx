@@ -7,11 +7,14 @@ import {
   Flex,
   Avatar,
   Divider,
-  ActionIcon,
-  Tooltip,
 } from "@mantine/core";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridToolbar,
+} from "@mui/x-data-grid";
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
   useGetAllUsers,
@@ -25,26 +28,24 @@ import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
 import { Users } from "../../../backend/user/user.api";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
-import {
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
-import classes from "../../../components/Graph/graph.module.css";
+import { showLoadingToast } from "../../../utils/notifications";
+import RefreshButton from "../../../components/Button/RefreshButton";
+import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
 
 const index = () => {
-  const {
-    data: orgs,
-    refetch: refetchOrgs,
-    isRefetching: isOrgRefetching,
-  } = useAllOrgs();
-  const { data: users, refetch, isRefetching } = useGetAllUsers();
+  const { data: orgs } = useAllOrgs();
+  const { data: users } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
   const rows = users
     ? users?.map((user) => ({
         id: user?.email,
         orgNames: user?.org?.map((org) => org.name),
-        signupDate: dayjs(user?.createdAt).format("DD/MM/YYYY hh:mm A"),
+        roles: user?.orgMember?.map((r) => {
+          const orgName = orgs?.find((org) => org?.id == r.orgId)?.name;
+          return `${r.role} at ${orgName}`;
+        }),
+        signupDate: formatIsoDateStringWithTime(user?.createdAt),
+        recipeName: user?.recipeName,
       }))
     : [];
 
@@ -65,19 +66,21 @@ const index = () => {
       headerName: "Organizations",
       renderCell: (params: GridRenderCellParams<any, any>) => {
         const orgs = params.value;
-        return (
-          <Group>
-            {orgs.map((orgName, index) => (
-              <Badge key={index} color={stringToColour(orgName)} p={"xs"}>
-                {orgName}
-              </Badge>
-            ))}
-          </Group>
-        );
+        return <BadgeArrayCell array={orgs} />;
       },
       width: 300,
     },
+    {
+      field: "roles",
+      headerName: "User Roles",
+      renderCell: (params: GridRenderCellParams<any, any>) => {
+        const roles = params.value;
+        return <BadgeArrayCell array={roles} />;
+      },
+      width: 200,
+    },
     { field: "signupDate", headerName: "SignUp Date", width: 200 },
+    { field: "recipeName", headerName: "Recipe", width: 200 },
   ];
   const handleUpdateUserRecipe = () => {
     showLoadingToast(
@@ -110,34 +113,24 @@ const index = () => {
       );
     }
   }, [users]);
+
+  const BadgeArrayCell = ({ array }) => {
+    return (
+      <Group>
+        {array?.map((element, index) => (
+          <Badge key={index} color={stringToColour(element)} p={"xs"}>
+            {element}
+          </Badge>
+        ))}
+      </Group>
+    );
+  };
   return (
-    <Stack>
+    <Stack gap={"xs"}>
       <Flex gap={"xl"} pr={"lg"}>
         <Group flex={1} align="flex-start">
           <Title order={2}>User Stats</Title>
-          <Tooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
-                await Promise.all([refetch(), refetchOrgs()]);
-                showSuccessToast(
-                  "Data updated successfully",
-                  "",
-                  <IconCheck />,
-                );
-              }}
-            >
-              <IconRefresh
-                style={{ width: "80%", height: "80%" }}
-                className={
-                  isRefetching || isOrgRefetching
-                    ? classes.rotateInfinitely
-                    : null
-                }
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+          <RefreshButton queryKeys={["allUsers", "org"]} />
         </Group>
         <RateupButtonBlue
           title="Update User Recipe"
@@ -147,47 +140,23 @@ const index = () => {
         <PaperLayout w={300}>
           <Title order={4}>Total</Title>
           <Group justify="space-between" p={"sm"}>
-            <Stack gap={1} align="center">
-              <Title>{orgs?.length}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Organizations
-              </Text>
-            </Stack>
-            <Stack gap={1} align="center">
-              <Title>{users?.length}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Users
-              </Text>
-            </Stack>
+            <CountStatsCard label={"Organizations"} count={orgs?.length} />
+            <CountStatsCard label={"Users"} count={users?.length} />
           </Group>
         </PaperLayout>
         <PaperLayout w={400}>
           <Title order={4}>User Stats</Title>
           <Group justify="space-between" p={"sm"}>
-            <Stack gap={1} align="center">
-              <Title>{userStats.today}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Today
-              </Text>
-            </Stack>
-            <Stack gap={1} align="center">
-              <Title>{userStats.lastWeek}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Last Week
-              </Text>
-            </Stack>
-            <Stack gap={1} align="center">
-              <Title>{userStats.lastMonth}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Last Month
-              </Text>
-            </Stack>
+            <CountStatsCard label={"Today"} count={userStats.today} />
+            <CountStatsCard label={"Last Week"} count={userStats.lastWeek} />
+            <CountStatsCard label={"Last Month"} count={userStats.lastMonth} />
           </Group>
         </PaperLayout>
       </Flex>
+      <Title order={4}>Most Recent SignUps</Title>
       <Box
         sx={{
-          height: "60vh",
+          height: "57vh",
           width: "100%",
         }}
       >
@@ -195,8 +164,20 @@ const index = () => {
           rows={rows}
           columns={columns}
           onRowClick={(params) => {
-            setSelectedUser(users?.find((user) => user.email === params.id));
+            const user = users?.find((user) => user.email === params.id);
+            const userOrgs = user?.org?.map((org) =>
+              orgs?.find((or) => or.id === org.id),
+            );
+            setSelectedUser({ ...user, org: userOrgs });
             open();
+          }}
+          slots={{
+            toolbar: GridToolbar,
+          }}
+          slotProps={{
+            toolbar: {
+              showQuickFilter: true,
+            },
           }}
         />
       </Box>
@@ -213,43 +194,115 @@ const index = () => {
   );
 };
 
+export const CountStatsCard = ({ label, count }) => {
+  return (
+    <Stack gap={1} align="center">
+      <Title>{count}</Title>
+      <Text fw={600} c={"dimmed"}>
+        {label}
+      </Text>
+    </Stack>
+  );
+};
+
 const UserModal = ({ selectedUser }) => {
   return (
-    <Stack>
-      <Group>
-        <Avatar
-          src={
-            `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}` ??
-            null
-          }
-          size={"lg"}
-        />
+    <Stack gap={"xl"}>
+      <Group justify="space-around">
         <Stack gap={1}>
-          <Title order={3}>{selectedUser?.name}</Title>
-          <Text c={"dimmed"}>{selectedUser?.id}</Text>
+          <Avatar
+            src={
+              `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}` ??
+              null
+            }
+            size={"xl"}
+          />
+          <Title order={4}>{selectedUser?.name}</Title>
+        </Stack>
+        <Stack>
+          <Group gap={1}>
+            <Text fw={600} size="sm" w={110}>
+              Email ID
+            </Text>
+            <Text size="sm" c={"dimmed"}>
+              {selectedUser?.email}
+            </Text>
+          </Group>
+          <Group gap={1}>
+            <Text fw={600} size="sm" w={110}>
+              User ID
+            </Text>
+            <Text size="sm" c={"dimmed"}>
+              {" "}
+              {selectedUser?.id}
+            </Text>
+          </Group>
+          <Group gap={1}>
+            <Text fw={600} size="sm" w={110}>
+              Phone Number
+            </Text>
+            <Text size="sm" c={"dimmed"}>
+              {selectedUser?.phone ?? "---"}
+            </Text>
+          </Group>
         </Stack>
       </Group>
+
       <PaperLayout>
-        <Title order={4}>Organizations</Title>
+        <Title order={3}>Organizations</Title>
         <Divider my={"sm"} />
-        {selectedUser?.org.map((org, index) => (
-          <>
-            <Group key={index}>
-              <Avatar
-                src={
-                  `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${org.logo}` ??
-                  null
-                }
-                size={"md"}
-              />
-              <Stack gap={1}>
-                <Title order={5}>{org?.name}</Title>
-                <Text c={"dimmed"}>{org?.id}</Text>
-              </Stack>
-            </Group>
-            {index !== selectedUser?.org.length - 1 && <Divider my={"sm"} />}
-          </>
-        ))}
+        {selectedUser?.org.map((org, index) => {
+          const role = selectedUser?.orgMember?.find(
+            (or) => or.orgId == org?.id,
+          )?.role;
+          return (
+            <Stack key={index}>
+              <Group justify="space-around">
+                <Stack gap={1}>
+                  <Avatar
+                    src={
+                      `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${org.logo}` ??
+                      null
+                    }
+                    size={"lg"}
+                  />
+                  <Title order={5}>{org?.name}</Title>
+                  <Text size="xs" c={"dimmed"}>
+                    {role}
+                  </Text>
+                </Stack>
+                <Stack>
+                  <Group gap={1}>
+                    <Text fw={600} size="sm" w={110}>
+                      Org ID
+                    </Text>
+                    <Text size="sm" c={"dimmed"}>
+                      {org?.id}
+                    </Text>
+                  </Group>
+                  <Group gap={1}>
+                    <Text fw={600} size="sm" w={110}>
+                      Phone Number
+                    </Text>
+                    <Text size="sm" c={"dimmed"}>
+                      {" "}
+                      {org?.phone ?? "---"}
+                    </Text>
+                  </Group>
+                  <Group gap={1}>
+                    <Text fw={600} size="sm" w={110}>
+                      Address
+                    </Text>
+                    <Text size="sm" c={"dimmed"}>
+                      {org?.address ?? "---"}
+                    </Text>
+                  </Group>
+                </Stack>
+              </Group>
+              {index !== selectedUser?.org.length - 1 && <Divider my={"sm"} />}
+            </Stack>
+          );
+        })}
       </PaperLayout>
     </Stack>
   );
