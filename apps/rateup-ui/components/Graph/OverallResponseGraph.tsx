@@ -23,6 +23,7 @@ import NothingFound from "../NothingFound/NothingFound";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import classes from "./graph.module.css";
 import { useAllSurveysSummary } from "../../backend/surveys/surveys.query";
+import RefreshButton from "../Button/RefreshButton";
 
 const OverallResponseGraph = ({
   data,
@@ -60,19 +61,7 @@ const OverallResponseGraph = ({
                   Overall Responses
                 </Text>
               </Stack>
-              <MantineTooltip label="Refresh data">
-                <ActionIcon
-                  variant="light"
-                  aria-label="Settings"
-                  onClick={refetch}
-                >
-                  <IconRefresh
-                    className={isFetching ? classes.rotateInfinitely : null}
-                    style={{ width: "90%", height: "90%" }}
-                    stroke={1.5}
-                  />
-                </ActionIcon>
-              </MantineTooltip>
+              <RefreshButton queryKey="allSurveysSummary" />
             </Group>
 
             <Group className={classes["hour-daily-weekly-btn-container"]}>
