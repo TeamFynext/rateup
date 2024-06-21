@@ -36,7 +36,7 @@ export default SortDropdown;
 
 // utils/sorting.js
 
-export const sortData = (data, sortOption) => {
+export const sortData = (data: any[] = [], sortOption: string) => {
   return [...data].sort((a, b) => {
     switch (sortOption) {
       case "latest":

@@ -15,7 +15,6 @@ import {
   Flex,
   Box,
 } from "@mantine/core";
-import { Tooltip as MantineTooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
@@ -26,7 +25,6 @@ import {
   IconCheckupList,
   IconPageBreak,
   IconPlus,
-  IconSelector,
   IconSocial,
   IconReload,
   IconSquareRoundedPlusFilled,
@@ -42,9 +40,7 @@ import {
 import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
 import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
 import { SurveyTypeFilters } from "../../types/enums";
-import { IconRefresh } from "@tabler/icons-react";
 import classes from "./dashboard.module.css";
-import { notifications } from "@mantine/notifications";
 import FormModalLayout from "../../components/Modal/FormModalLayout";
 import PaperLayout from "../../components/styled/Layouts/PaperLayout";
 import NothingFound from "../../components/NothingFound/NothingFound";
@@ -52,14 +48,18 @@ import Heading from "../../components/styled/Heading/Heading";
 import { lexend400, lexend500 } from "../../utils/fonts";
 import { getFormattedResponseForAreaGraph } from "../../utils/response";
 import OverallResponseGraph from "../../components/Graph/OverallResponseGraph";
+import RefreshButton from "../../components/Button/RefreshButton";
+import SortDropdown, {
+  sortData,
+} from "../../components/Dashboard/SortDropDown";
 
 export default function DashboardHome() {
   const router = useRouter();
   const { user } = useUser();
-  const [sort, setSort] = useState(true);
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
   const [opened, { open, close }] = useDisclosure(false);
   const [timePeriod, setTimePeriod] = useState("daily");
+  const [sortOption, setSortOption] = useState("latest");
   const {
     isLoading: isLoadingSummary,
     error: summaryError,
@@ -82,40 +82,6 @@ export default function DashboardHome() {
     isRefetchError: boolean;
   };
   const { data: allSurveysSummary } = useAllSurveysSummary();
-  useEffect(() => {
-    if (isRefetching) {
-      notifications.show({
-        id: "refetch-data",
-        loading: true,
-        title: "Refreshing data",
-        message: "Hold on, your data is getting updated..",
-        autoClose: 2000,
-        withCloseButton: true,
-      });
-    }
-  }, [isRefetching]);
-
-  useEffect(() => {
-    if (fetchStatus === "idle" && !isRefetching) {
-      notifications.update({
-        id: "refetch-data",
-        title: "Data Refreshed",
-        message: "Your data has been successfully updated.",
-        color: "teal",
-        icon: <IconCheck size={16} />,
-        autoClose: 2000,
-      });
-    } else if (isRefetchError) {
-      notifications.update({
-        id: "refetch-data",
-        title: "Error",
-        message: "There was an issue updating your data. Please try again.",
-        color: "red",
-        icon: <IconAlertCircle size={16} />,
-        autoClose: 4000,
-      });
-    }
-  }, [fetchStatus, isRefetching, isRefetchError]);
 
   const allResponses = [];
   allSurveysSummary?.surveys?.forEach((survey) => {
@@ -178,25 +144,33 @@ export default function DashboardHome() {
     },
   ];
 
+  const onSortChange = (value) => {
+    setSortOption(value);
+  };
+
   // Filtering surveys based on the filterParam state
-  const filteredSurveys = surveysSummary?.surveys
-    ?.filter((s) => s.active === true && s.isPublished === true)
-    ?.filter((s) => {
-      if (filterParam === SurveyTypeFilters.Web) {
-        return s.type === "web";
-      } else if (filterParam === SurveyTypeFilters.WhatsApp) {
-        return s.type === "whatsapp";
-      } else if (filterParam === SurveyTypeFilters.WhatsAppFlow) {
-        return s.type === "waFlow";
-      } else {
-        return true;
-      }
-    })
-    ?.sort((a, b) =>
-      sort
-        ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
+  const filteredSurveys =
+    surveysSummary?.surveys
+      ?.filter((s) => s.active === true && s.isPublished === true)
+      ?.filter((s) => {
+        if (filterParam === SurveyTypeFilters.Web) {
+          return s.type === "web";
+        } else if (filterParam === SurveyTypeFilters.WhatsApp) {
+          return s.type === "whatsapp";
+        } else if (filterParam === SurveyTypeFilters.WhatsAppFlow) {
+          return s.type === "waFlow";
+        } else {
+          return true;
+        }
+      }) || [];
+
+  // Sort the surveys based on the sortOption
+  const sortedSurveys = sortData(
+    SurveyTypeFilters.Web
+      ? filteredSurveys.map((s) => ({ ...s, data: { name: s.title } }))
+      : filteredSurveys,
+    sortOption,
+  );
 
   return (
     <>
@@ -310,22 +284,7 @@ export default function DashboardHome() {
                   <Text fz="17px" mt="5px" c="gray">
                     ( {filterParam} )
                   </Text>
-                  <MantineTooltip label="Refresh data">
-                    <ActionIcon
-                      variant="light"
-                      aria-label="Settings"
-                      onClick={refetch}
-                    >
-                      <IconRefresh
-                        className={
-                          fetchStatus === "!fetching" &&
-                          classes.rotateInfinitely
-                        }
-                        style={{ width: "90%", height: "90%" }}
-                        stroke={1.5}
-                      />
-                    </ActionIcon>
-                  </MantineTooltip>
+                  <RefreshButton queryKey="surveysSummary" />
                 </Group>
 
                 <Group>
@@ -333,12 +292,9 @@ export default function DashboardHome() {
                     filterParam={filterParam}
                     setFilterParam={setFilterParam}
                   />
-
-                  <RateupButtonPrimary
-                    onClick={() => setSort(!sort)}
-                    title={"Sort"}
-                    variant="subtle"
-                    rightIcon={<IconSelector size="1rem" />}
+                  <SortDropdown
+                    onSortChange={onSortChange}
+                    defaultSortOption={sortOption}
                   />
                 </Group>
               </Group>
@@ -347,8 +303,8 @@ export default function DashboardHome() {
             <div
               className={`${classes["filtered-survey-cards-container"]} cards-grid-global-class`}
             >
-              {filteredSurveys.length > 0 ? (
-                filteredSurveys.map((s) => (
+              {sortedSurveys.length > 0 ? (
+                sortedSurveys.map((s) => (
                   <ActiveSurveyCard key={s.id} survey={s} />
                 ))
               ) : (
