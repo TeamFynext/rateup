@@ -248,3 +248,9 @@ export enum SurveyVariableType {
   DEFAULT = "DEFAULT",
   CUSTOM = "CUSTOM",
 }
+
+export enum UserRecipes {
+  EmailPassword = "EmailPassword",
+  ThirdPartyGoogle = "ThirdPartyGoogle",
+  PasswordLess = "PasswordLess",
+}

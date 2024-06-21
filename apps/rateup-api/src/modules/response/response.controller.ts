@@ -21,17 +21,14 @@ import {
 } from "./response.service";
 import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
-import Session from "supertokens-node/recipe/session";
-import {
-  getTeamIdsBySurveyMapId,
-  getTeamIdsByUserId,
-} from "../team/team.service";
+import { getTeamIdsBySurveyMapId } from "../team/team.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
 import { getQuestionsBySurveyId } from "../question/question.service";
 import { log } from "../../utils/logger";
 import { updateInvoice } from "../survey/survey.service";
+import prisma from "../../utils/prisma";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -56,11 +53,8 @@ export async function getAllResponsesHandler(
   reply: FastifyReply,
 ) {
   try {
-    let session = await Session.getSession(request, reply);
-    const userId = session.getUserId();
-    const teamIds = await getTeamIdsByUserId(userId);
     const surveyId = request.params.surveyId;
-    const responses = await getAllResponses(surveyId, teamIds);
+    const responses = await getAllResponses(surveyId);
     if (responses.length === 0)
       reply.code(404).send({ message: "No responses found" });
     reply.code(200).send(responses);
@@ -77,14 +71,23 @@ export async function downloadExcelResponseHandler(
   reply: FastifyReply,
 ) {
   try {
-    let session = await Session.getSession(request, reply);
-    const userId = session.getUserId();
     const teamIds =
       request.body.filterTeams?.length > 0
         ? await getTeamIdsBySurveyMapId(request.body.filterTeams)
-        : await getTeamIdsByUserId(userId);
+        : [];
+    const campaignParticipantIds = await prisma.campaignParticipant.findMany({
+      where: {
+        campaignId: {
+          in: request.body.campaignIds,
+        },
+      },
+    });
     const surveyId = request.body.surveyId;
-    const allResponse = await getAllResponses(surveyId, teamIds);
+    const allResponse = await getAllResponses(
+      surveyId,
+      teamIds,
+      campaignParticipantIds.map((data) => data.contactId),
+    );
     const question = await getQuestionsBySurveyId(surveyId);
     const [title, data] = await downloadExcelResponse(
       surveyId,
