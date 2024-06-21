@@ -61,7 +61,7 @@ const OverallResponseGraph = ({
                   Overall Responses
                 </Text>
               </Stack>
-              <RefreshButton queryKey="allSurveysSummary" />
+              <RefreshButton queryKeys={["allSurveysSummary"]} />
             </Group>
 
             <Group className={classes["hour-daily-weekly-btn-container"]}>
