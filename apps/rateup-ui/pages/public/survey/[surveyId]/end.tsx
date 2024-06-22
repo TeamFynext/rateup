@@ -152,8 +152,8 @@ export default function ThankYou({
   const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
 
-  const orgLogoSrc = surveyThemeData.surveyTheme.logo?.logo;
-  const orgLogoStyles = surveyThemeData.surveyTheme.logo?.styles;
+  const orgLogoSrc = surveyThemeData?.surveyTheme.logo?.logo;
+  const orgLogoStyles = surveyThemeData?.surveyTheme.logo?.styles;
 
   const imageLoaded = () => {
     setImageLoading(false);

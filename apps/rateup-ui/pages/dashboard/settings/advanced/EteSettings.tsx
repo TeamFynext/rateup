@@ -1,20 +1,20 @@
 import { useSearchParams } from "next/navigation";
-import { useUser } from "../../../context/UserContext";
+import { useUser } from "../../../../context/UserContext";
 import { useState } from "react";
-import { useUpdateOrgDetailsMutation } from "../../../backend/org/org.query";
+import { useUpdateOrgDetailsMutation } from "../../../../backend/org/org.query";
 import { useDisclosure } from "@mantine/hooks";
 import {
   decryptPrivateKey,
   encryptPrivateKey,
   generateKeyPair,
   passwordToKey,
-} from "../../../utils/encryption";
+} from "../../../../utils/encryption";
 import {
   showLoadingToast,
   showSuccessToast,
-} from "../../../utils/notifications";
+} from "../../../../utils/notifications";
 import { useForm } from "@mantine/form";
-import SimpleModalLayout from "../../../components/Modal/SimpleModalLayout";
+import SimpleModalLayout from "../../../../components/Modal/SimpleModalLayout";
 import {
   Badge,
   Blockquote,
@@ -29,9 +29,9 @@ import {
   IconPlus,
   IconRefresh,
 } from "@tabler/icons-react";
-import { ContainedPasswordInput } from "../../../components/input/ContainedInput/ContainedInput";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
-import styles from "./setting.module.css";
+import { ContainedPasswordInput } from "../../../../components/input/ContainedInput/ContainedInput";
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import styles from "../setting.module.css";
 
 export default function ETESettings() {
   const searchParams = useSearchParams();

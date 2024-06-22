@@ -83,3 +83,7 @@ export async function deleteAuthToken() {
   const res = await axiosClient.delete(`org/auth-token`);
   return res.data;
 }
+
+export async function deleteOrg(surveyId: string) {
+  return await axiosClient.delete(`org/${surveyId}`);
+}

@@ -44,7 +44,7 @@ export default function ConfirmationModal({
         onConfirm();
         onClose();
       } else {
-        showErrorToast("Entered email invalid");
+        showErrorToast("Email entered is invalid");
       }
     } else {
       onConfirm();
