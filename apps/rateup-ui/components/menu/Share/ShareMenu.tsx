@@ -27,7 +27,7 @@ const ShareMenu = ({ menu }: ShareMenuProps) => {
     ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${shortUrlId}`
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${id}`;
   return (
-    <Stack mb={"md"}>
+    <Stack style={{ padding: "0.3125rem", paddingRight: "1rem" }}>
       <Grid pos={"relative"}>
         <Grid.Col span={"content"}>
           <PaperLayout>

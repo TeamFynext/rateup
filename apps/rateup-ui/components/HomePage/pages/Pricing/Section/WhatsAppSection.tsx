@@ -44,6 +44,11 @@ export const WhatsAppSection = ({
     <Stack my={"lg"}>
       <Flex justify={"center"} gap={"xl"} wrap={"wrap"}>
         {whatsAppPlans?.map((data, index) => {
+          let isPopular = false;
+          isPopular =
+            data?.displayName &&
+            data?.displayName.toLowerCase().includes("plus");
+
           return (
             <Stack align="center" gap={0} pos={"relative"} key={data?.id}>
               <Box
@@ -58,7 +63,7 @@ export const WhatsAppSection = ({
                   zIndex: 2,
                 }}
                 w={PlanCardWidth}
-                display={index === 1 ? "block" : "none"}
+                display={isPopular ? "block" : "none"}
               >
                 <Text pb="xs" mt="-4px" size="sm">
                   {" "}
@@ -74,7 +79,7 @@ export const WhatsAppSection = ({
                 inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
-                menuPage={true}
+                isPopular={isPopular}
               />
             </Stack>
           );

@@ -3,7 +3,6 @@ import {
   Badge,
   Box,
   Flex,
-  Group,
   Menu,
   Stack,
   Text,
@@ -12,15 +11,15 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconClock, IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
+import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import {
   useCloneAndDeprecateFlowsMutation,
   useCloneFlowsMutation,
   useDeleteFlowMutation,
 } from "../../../../backend/whatsapp/flow/flow.query";
-import { useTimeSince } from "../../../../hooks/timeSince";
 import { WaFlowStatus } from "../../../../types/enums";
+import CreatedSinceText from "../../../DateAndTime/CreatedSinceText";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import FormModalLayout from "../../../Modal/FormModalLayout";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
@@ -68,7 +67,6 @@ function FlowCard({
     },
   });
 
-  const timeSince = useTimeSince(createdAt);
   const onSubmit = (values: typeof cloneForm.values) => {
     notifications.show({
       id: "copy",
@@ -223,17 +221,11 @@ function FlowCard({
           </Menu>
         </Flex>
 
-        <Stack>
-          <Group className={styles["creation-time-text-and-icon-div"]}>
-            <Box className={styles["clock-icon-container"]}>
-              <IconClock />
-            </Box>
-            <p>Created {timeSince}</p>
-          </Group>
-          <Badge className={styles[`${status.toLowerCase()}-badge`]}>
-            {status}
-          </Badge>
-        </Stack>
+        <CreatedSinceText createdAt={createdAt} />
+
+        <Badge className={styles[`${status.toLowerCase()}-badge`]}>
+          {status}
+        </Badge>
       </Stack>
     </PaperLayout>
   );

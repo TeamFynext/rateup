@@ -2,7 +2,7 @@
 title: "Building and Managing Your Online Reputation: A Guide for Success"
 date: "01/16/2024"
 slug: "building-and-managing-online-reputation"
-coverImage: "https://source.unsplash.com/turned-on-acer-laptop-on-table-near-cup-zwsHjakE_iI"
+coverImage: "https://plus.unsplash.com/premium_photo-1682310144714-cb77b1e6d64a?q=80&w=1512&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 ---
 
 In today's digital age, where information is just a click away, the online reputation of your business plays a pivotal role in its success. Customers increasingly turn to the internet to research products and services, making your online presence a critical aspect of your overall brand image. In this article, we'll explore the importance of online reputation and provide actionable strategies to build and manage it effectively.

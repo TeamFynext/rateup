@@ -47,7 +47,7 @@ export const CustomSection = ({
                   zIndex: 2,
                 }}
                 w={PlanCardWidth}
-                display={index === 1 ? "block" : "none"}
+                display={index === 5 ? "block" : "none"}
               >
                 <Text pb="xs" mt="-4px" size="sm">
                   {" "}
@@ -63,7 +63,6 @@ export const CustomSection = ({
                 inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
-                menuPage={true}
               />
             </Stack>
           );

@@ -22,6 +22,10 @@ export function SurveyTypeFilter({ filterParam, setFilterParam }) {
         }}
       >
         <Menu.Item
+          style={{
+            fontWeight:
+              filterParam === SurveyTypeFilters.All ? "bold" : "normal",
+          }}
           color={filterParam === SurveyTypeFilters.All && "blue"}
           onClick={() => setFilterParam(SurveyTypeFilters.All)}
         >
@@ -29,6 +33,10 @@ export function SurveyTypeFilter({ filterParam, setFilterParam }) {
         </Menu.Item>
 
         <Menu.Item
+          style={{
+            fontWeight:
+              filterParam === SurveyTypeFilters.Web ? "bold" : "normal",
+          }}
           color={filterParam === SurveyTypeFilters.Web && "blue"}
           onClick={() => setFilterParam(SurveyTypeFilters.Web)}
         >
@@ -43,6 +51,12 @@ export function SurveyTypeFilter({ filterParam, setFilterParam }) {
         </Menu.Item> */}
 
         <Menu.Item
+          style={{
+            fontWeight:
+              filterParam === SurveyTypeFilters.WhatsAppFlow
+                ? "bold"
+                : "normal",
+          }}
           color={filterParam === SurveyTypeFilters.WhatsAppFlow && "green"}
           onClick={() => setFilterParam(SurveyTypeFilters.WhatsAppFlow)}
         >
