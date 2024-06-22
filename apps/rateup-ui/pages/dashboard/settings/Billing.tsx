@@ -326,7 +326,7 @@ const Billing = ({
               <Group justify="center" mt="xl" mb="-20px">
                 <Text c="dimmed">
                   {" "}
-                  *For... Custom Plans / Support / Assistance
+                  *For Custom Plans / Support / Assistance
                 </Text>
                 <IconMail
                   style={{ width: "20px", height: "20px", color: "gray" }}
