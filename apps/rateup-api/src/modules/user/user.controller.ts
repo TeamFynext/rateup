@@ -5,7 +5,7 @@ import {
   getAllUsers,
   getLoggedUserInfo,
   getLoggedUserProfile,
-  getUserRecipeName,
+  pauseUser,
   updateUserActiveStatus,
   updateUserProfile,
   updateUserProfilePhoto,
@@ -14,18 +14,20 @@ import {
 import {
   ChangeUserPasswordSchema,
   CreateUserGoogleSchema,
+  PauseUserInput,
   UpdateProfilePhotoSchema,
   UpdateProfileSchema,
   userEmailCheckSchemaInput,
 } from "./user.schema";
 import supertokens from "supertokens-node";
-
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { log } from "../../utils/logger";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
 import { UserRecipes } from "../../types/enums";
+import { IdParamInput } from "../survey/survey.schema";
+import { getUserRecipeName } from "../../utils/auth";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
@@ -268,6 +270,20 @@ export async function updateRecipeNameHandler(
 ) {
   try {
     const res = await updateUserRecipe();
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function pauseUserHandler(
+  request: FastifyRequest<{ Body: PauseUserInput; Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const userId = request.params.id;
+    const res = await pauseUser(userId, request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

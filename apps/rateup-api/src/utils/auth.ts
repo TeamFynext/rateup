@@ -3,7 +3,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { Role } from "@prisma/client";
 import { log } from "./logger";
 import { getSubscription } from "../modules/subscription/subscription.service";
-import { SubscriptionFeaturePathName } from "../types/enums";
+import { SubscriptionFeaturePathName, UserRecipes } from "../types/enums";
 import dayjs from "dayjs";
 import { UnlimitedAccess } from "../modules/subscription/subscription.data";
 import { getNestedProperty } from "./misc/obj.utils";
@@ -147,11 +147,9 @@ export function getVerifySubscriptionHandler(
           missingFeatures,
           request.user,
         );
-        reply
-          .code(403)
-          .send({
-            message: "This feature is not included in your subscription",
-          });
+        reply.code(403).send({
+          message: "This feature is not included in your subscription",
+        });
         return;
       }
       request.subscription = subscription;
@@ -176,4 +174,15 @@ export function assertRootOrg(
     reply.code(403).send({ message: "Not authorized" });
   }
   done();
+}
+
+export function getUserRecipeName(recipeId) {
+  switch (recipeId) {
+    case "thirdparty":
+      return UserRecipes.ThirdPartyGoogle;
+    case "emailpassword":
+      return UserRecipes.EmailPassword;
+    case "passwordless":
+      return UserRecipes.PasswordLess;
+  }
 }

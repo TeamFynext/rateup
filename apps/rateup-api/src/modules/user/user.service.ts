@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import {
   CreateUserParams,
   CreateUserSignupSchema,
+  PauseUserInput,
   UpdateProfilePhotoSchema,
   UpdateProfileSchema,
   userInfoParams,
@@ -16,8 +17,8 @@ import PasswordLess from "supertokens-node/recipe/passwordless";
 import { cloneSurvey } from "../survey/survey.service";
 import { cloneMenu } from "../menu/menu.service";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
-import { UserRecipes } from "../../types/enums";
 import { getUserInfo } from "../../utils/supertoken/supertoken";
+import { getUserRecipeName } from "../../utils/auth";
 
 const prisma = new PrismaClient();
 
@@ -368,13 +369,11 @@ export async function deleteUser(userId: string) {
 }
 
 export async function getAllUsers() {
-  return await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     include: {
-      org: {
+      teamMember: {
         select: {
-          name: true,
-          id: true,
-          logo: true,
+          teamId: true,
         },
       },
     },
@@ -382,6 +381,44 @@ export async function getAllUsers() {
       createdAt: "desc",
     },
   });
+
+  const usersData = await Promise.all(
+    users.map(async (user) => {
+      const orgRole = await getOrgIdAndRole({ id: user?.id });
+      let orgData = await prisma.org.findUnique({
+        where: { id: orgRole.orgId },
+        select: {
+          logo: true,
+          name: true,
+          address: true,
+          phone: true,
+          isPaused: true,
+        },
+      });
+      return {
+        userId: user?.id,
+        userName: user?.name,
+        role: orgRole.role,
+        email: user.email,
+        phone: user.phone,
+        profilePhoto: user?.profilePhoto,
+        orgId: orgRole.orgId,
+        orgName: orgData?.name,
+        orgLogo: orgData?.logo,
+        orgPhone: orgData?.phone,
+        orgAddress: orgData?.address,
+        teams: user?.teamMember?.map((team) => team.teamId),
+        recipeName: user?.recipeName,
+        active: user?.active,
+        createdAt: user?.createdAt,
+        isPaused: user?.isPaused,
+        pausedBy: user?.pausedBy,
+        isOrgPaused: orgData?.isPaused,
+      };
+    }),
+  );
+
+  return usersData;
 }
 
 export async function updateUserRecipe() {
@@ -403,13 +440,11 @@ export async function updateUserRecipe() {
   }
 }
 
-export function getUserRecipeName(recipeId) {
-  switch (recipeId) {
-    case "thirdparty":
-      return UserRecipes.ThirdPartyGoogle;
-    case "emailpassword":
-      return UserRecipes.EmailPassword;
-    case "passwordless":
-      return UserRecipes.PasswordLess;
-  }
+export async function pauseUser(id, data: PauseUserInput) {
+  return await prisma.user.update({
+    where: {
+      id,
+    },
+    data,
+  });
 }
