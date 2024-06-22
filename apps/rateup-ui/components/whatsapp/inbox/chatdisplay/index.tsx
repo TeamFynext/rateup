@@ -8,6 +8,7 @@ import {
   WaGetMessagesBody,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { motion } from "framer-motion";
+import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 export default function WaInboxChatDisplay({
   messages,
   contact,
@@ -28,8 +29,12 @@ export default function WaInboxChatDisplay({
     },
   };
 
+  const isChatDisplayOpen = useIsChatDisplayOpen();
+
   return (
-    <div className={classes.wrapper}>
+    <div
+      className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""}`}
+    >
       {messages?.length >= 0 && contact ? (
         <motion.div
           key={contact?.phone} // Add a unique key for the contact
@@ -37,6 +42,7 @@ export default function WaInboxChatDisplay({
           initial="hidden" // Initial state
           animate="show" // State when component is mounted
           className={classes.inner_animated}
+          layout
         >
           <WaInboxChatDisplayHeader contact={contact} />
           <WaInboxChatDisplayBody data={messages} />

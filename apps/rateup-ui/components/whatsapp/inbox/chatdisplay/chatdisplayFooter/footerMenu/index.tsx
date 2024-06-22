@@ -25,8 +25,8 @@ export default function WaInboxFooterMenu(props: Props) {
       onOpen={onOpen}
       onClose={onClose}
       closeOnItemClick={false}
-      closeOnClickOutside={false}
-      zIndex={0}
+      closeOnClickOutside={true}
+      zIndex={10}
     >
       <SessionBasedIndicatorRenderer sessionExpired={props.sessionExpired}>
         <Menu.Target>
