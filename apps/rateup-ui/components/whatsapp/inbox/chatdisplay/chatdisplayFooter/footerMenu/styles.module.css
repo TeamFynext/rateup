@@ -11,3 +11,14 @@
 .menu_dropdown {
   border-radius: var(--mantine-radius-md);
 }
+
+@media screen and (max-width: 1200px) {
+  .wrapper {
+    padding: 1rem !important;
+  }
+
+  .action_icon {
+    width: 35px;
+    height: 35px;
+  }
+}
