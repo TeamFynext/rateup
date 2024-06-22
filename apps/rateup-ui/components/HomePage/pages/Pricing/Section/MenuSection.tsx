@@ -61,7 +61,7 @@ export const MenuSection = ({
                   zIndex: 2,
                 }}
                 w={PlanCardWidth}
-                display={index === 1 ? "block" : "none"}
+                display={isPopular ? "block" : "none"}
               >
                 <Text pb="xs" mt="-4px" size="sm">
                   {" "}
