@@ -292,7 +292,8 @@ const ResetPasswordForm = ({ mode }) => {
         opened={opened}
         onConfirm={() => router.push("/login")}
         confirmLabel="Continue"
-        headerLabel="Password reset successfull!"
+        headerLabel="Password created successfully...!!  <br/>                         
+        Continue to Login with your email and newly created password."
         headerTitle="Success"
         excludeCancelButton={true}
         onClose={close}
