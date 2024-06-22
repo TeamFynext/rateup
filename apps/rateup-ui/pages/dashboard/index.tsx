@@ -238,8 +238,7 @@ export default function DashboardHome() {
               timePeriod={timePeriod}
               setTimePeriod={setTimePeriod}
               data={filteredData}
-              isFetching={isRefetching}
-              refetch={refetch}
+              refreshKeys={["surveysSummary"]}
             />
           </Group>
           <FormModalLayout

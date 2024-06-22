@@ -292,6 +292,7 @@ declare global {
     userId: string;
     userName: string;
     email: string;
+    phone?: string;
     profilePhoto: string;
     orgName: string;
     orgLogo: string;
@@ -299,6 +300,12 @@ declare global {
     orgAddress: string;
     teams: Array<string>;
     encryptionKeys: EncryptionKeys | undefined;
+    createdAt?: Date;
+    recipeName?: string;
+    active?: boolean;
+    isPaused?: boolean;
+    pausedBy?: string;
+    isOrgPaused?: boolean;
   };
 
   interface UserInfoQueryData {
@@ -652,6 +659,7 @@ declare global {
     logo: string;
     phone: string;
     address: string;
+    isPaused?: boolean;
   };
   type WaFlowTemplateMessage = {
     header?: string;

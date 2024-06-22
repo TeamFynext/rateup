@@ -59,14 +59,14 @@ export default function OrgDisplay() {
 
   useEffect(() => {
     if (orgs) {
-      const today = orgs.filter(
-        (user) => dayjs().diff(user.createdAt, "days") == 0,
+      const today = orgs.filter((org) =>
+        dayjs(org.createdAt).isAfter(dayjs().startOf("day")),
       )?.length;
       const lastWeek = orgs.filter(
-        (user) => dayjs().diff(user.createdAt, "week") == 0,
+        (org) => dayjs().diff(org.createdAt, "week") == 0,
       )?.length;
       const lastMonth = orgs.filter(
-        (user) => dayjs().diff(user.createdAt, "month") == 0,
+        (org) => dayjs().diff(org.createdAt, "month") == 0,
       )?.length;
       setOrgStats({
         today,

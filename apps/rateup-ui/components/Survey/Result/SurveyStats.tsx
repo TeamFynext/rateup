@@ -302,8 +302,7 @@ const SurveyStats = ({ survey, flowId = null }) => {
           data={graphResponse}
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
-          isFetching={isFetching}
-          refetch={refetch}
+          refreshKeys={["allresponses"]}
         />
       </Stack>
     </Stack>

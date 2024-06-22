@@ -1,16 +1,8 @@
-import {
-  Group,
-  Stack,
-  Title,
-  Text,
-  Badge,
-  Flex,
-  Avatar,
-  Divider,
-} from "@mantine/core";
+import { Group, Stack, Title, Text, Badge, Flex } from "@mantine/core";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import {
   DataGrid,
+  GridActionsCellItem,
   GridColDef,
   GridRenderCellParams,
   GridToolbar,
@@ -19,33 +11,36 @@ import { useAllOrgs } from "../../../backend/org/org.query";
 import {
   useGetAllUsers,
   useUpdateRecipeNameMutation,
+  useUpdateUserPause,
 } from "../../../backend/user/user.query";
 import dayjs from "dayjs";
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
-import { stringToColour } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
-import { Users } from "../../../backend/user/user.api";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { showLoadingToast } from "../../../utils/notifications";
 import RefreshButton from "../../../components/Button/RefreshButton";
 import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
+import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
+import { getUserRoleColor } from "../../../utils";
+import UserModal from "./UserModal";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 const index = () => {
   const { data: orgs } = useAllOrgs();
   const { data: users } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
+  const updatePauseStatus = useUpdateUserPause();
   const rows = users
     ? users?.map((user) => ({
         id: user?.email,
-        orgNames: user?.org?.map((org) => org.name),
-        roles: user?.orgMember?.map((r) => {
-          const orgName = orgs?.find((org) => org?.id == r.orgId)?.name;
-          return `${r.role} at ${orgName}`;
-        }),
+        orgName: user?.orgName,
+        role: user?.role,
         signupDate: formatIsoDateStringWithTime(user?.createdAt),
         recipeName: user?.recipeName,
+        status: user?.active,
+        isPaused: user?.isPaused ? "YES" : "NO",
       }))
     : [];
 
@@ -56,32 +51,79 @@ const index = () => {
   });
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<Users>(null);
+  const [
+    openedConfirmModal,
+    { open: openConfirmModal, close: closeConfirmModal },
+  ] = useDisclosure(false);
+  const [selectedUser, setSelectedUser] = useState<UserData>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "Email ID", width: 300 },
     {
-      field: "orgNames",
-      headerName: "Organizations",
-      renderCell: (params: GridRenderCellParams<any, any>) => {
-        const orgs = params.value;
-        return <BadgeArrayCell array={orgs} />;
-      },
-      width: 300,
+      field: "orgName",
+      headerName: "Organization",
+      width: 200,
     },
     {
-      field: "roles",
-      headerName: "User Roles",
+      field: "role",
+      headerName: "Role",
       renderCell: (params: GridRenderCellParams<any, any>) => {
-        const roles = params.value;
-        return <BadgeArrayCell array={roles} />;
+        const role = params.value;
+        return <Badge color={getUserRoleColor(role)}>{role}</Badge>;
       },
       width: 200,
     },
     { field: "signupDate", headerName: "SignUp Date", width: 200 },
     { field: "recipeName", headerName: "Recipe", width: 200 },
+    { field: "isPaused", headerName: "Is Paused", width: 200 },
+    {
+      field: "status",
+      headerName: "Status",
+      renderCell: (params) => {
+        const active = params.value;
+        return (
+          <Badge color={active ? "green" : "red"}>
+            {active ? "Active" : "Inactive"}
+          </Badge>
+        );
+      },
+      width: 200,
+    },
+    {
+      field: "action",
+      headerName: "Actions",
+      type: "actions",
+      width: 200,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={
+            params.row.isPaused === "YES" ? (
+              <IconPlayerPause size={"1rem"} />
+            ) : (
+              <IconPlayerPlay size={"1rem"} />
+            )
+          }
+          onClick={() => {
+            const user = users?.find((user) => user.email === params.id);
+            setSelectedUser(user);
+            openConfirmModal();
+          }}
+          label={params.row.isPaused === "YES" ? "Resume" : "Pause"}
+          showInMenu
+        />,
+      ],
+    },
   ];
+
+  const handleUserStatus = () => {
+    const data = {
+      isPaused: !selectedUser.isPaused,
+      pausedBy: "RateUp",
+    };
+    updatePauseStatus.mutate({ userId: selectedUser.userId, data });
+  };
+
   const handleUpdateUserRecipe = () => {
     showLoadingToast(
       "Recipes getting updated",
@@ -91,10 +133,11 @@ const index = () => {
     );
     updateRecipeMutation.mutate();
   };
+
   useEffect(() => {
     if (users) {
-      const today = users.filter(
-        (user) => dayjs().diff(user.createdAt, "days") == 0,
+      const today = users.filter((user) =>
+        dayjs(user.createdAt).isAfter(dayjs().startOf("day")),
       )?.length;
       const lastWeek = users.filter(
         (user) => dayjs().diff(user.createdAt, "week") == 0,
@@ -114,17 +157,6 @@ const index = () => {
     }
   }, [users]);
 
-  const BadgeArrayCell = ({ array }) => {
-    return (
-      <Group>
-        {array?.map((element, index) => (
-          <Badge key={index} color={stringToColour(element)} p={"xs"}>
-            {element}
-          </Badge>
-        ))}
-      </Group>
-    );
-  };
   return (
     <Stack gap={"xs"}>
       <Flex gap={"xl"} pr={"lg"}>
@@ -165,10 +197,7 @@ const index = () => {
           columns={columns}
           onRowClick={(params) => {
             const user = users?.find((user) => user.email === params.id);
-            const userOrgs = user?.org?.map((org) =>
-              orgs?.find((or) => or.id === org.id),
-            );
-            setSelectedUser({ ...user, org: userOrgs });
+            setSelectedUser(user);
             open();
           }}
           slots={{
@@ -186,10 +215,21 @@ const index = () => {
         opened={opened}
         onClose={close}
         title=""
-        size="lg"
+        size="xl"
       >
         <UserModal selectedUser={selectedUser} />
       </FormModalLayout>
+      <ConfirmationModal
+        opened={openedConfirmModal}
+        onClose={closeConfirmModal}
+        confirmLabel="Yes"
+        headerTitle={selectedUser?.isPaused ? "Resume User" : "Pause User"}
+        onConfirm={() => {
+          handleUserStatus();
+        }}
+        headerLabel={`Are you sure to ${selectedUser?.isPaused ? "resume" : "pause"} this user?`}
+        closeLabel="cancel"
+      />
     </Stack>
   );
 };
@@ -201,109 +241,6 @@ export const CountStatsCard = ({ label, count }) => {
       <Text fw={600} c={"dimmed"}>
         {label}
       </Text>
-    </Stack>
-  );
-};
-
-const UserModal = ({ selectedUser }) => {
-  return (
-    <Stack gap={"xl"}>
-      <Group justify="space-around">
-        <Stack gap={1}>
-          <Avatar
-            src={
-              `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}` ??
-              null
-            }
-            size={"xl"}
-          />
-          <Title order={4}>{selectedUser?.name}</Title>
-        </Stack>
-        <Stack>
-          <Group gap={1}>
-            <Text fw={600} size="sm" w={110}>
-              Email ID
-            </Text>
-            <Text size="sm" c={"dimmed"}>
-              {selectedUser?.email}
-            </Text>
-          </Group>
-          <Group gap={1}>
-            <Text fw={600} size="sm" w={110}>
-              User ID
-            </Text>
-            <Text size="sm" c={"dimmed"}>
-              {" "}
-              {selectedUser?.id}
-            </Text>
-          </Group>
-          <Group gap={1}>
-            <Text fw={600} size="sm" w={110}>
-              Phone Number
-            </Text>
-            <Text size="sm" c={"dimmed"}>
-              {selectedUser?.phone ?? "---"}
-            </Text>
-          </Group>
-        </Stack>
-      </Group>
-
-      <PaperLayout>
-        <Title order={3}>Organizations</Title>
-        <Divider my={"sm"} />
-        {selectedUser?.org.map((org, index) => {
-          const role = selectedUser?.orgMember?.find(
-            (or) => or.orgId == org?.id,
-          )?.role;
-          return (
-            <Stack key={index}>
-              <Group justify="space-around">
-                <Stack gap={1}>
-                  <Avatar
-                    src={
-                      `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${org.logo}` ??
-                      null
-                    }
-                    size={"lg"}
-                  />
-                  <Title order={5}>{org?.name}</Title>
-                  <Text size="xs" c={"dimmed"}>
-                    {role}
-                  </Text>
-                </Stack>
-                <Stack>
-                  <Group gap={1}>
-                    <Text fw={600} size="sm" w={110}>
-                      Org ID
-                    </Text>
-                    <Text size="sm" c={"dimmed"}>
-                      {org?.id}
-                    </Text>
-                  </Group>
-                  <Group gap={1}>
-                    <Text fw={600} size="sm" w={110}>
-                      Phone Number
-                    </Text>
-                    <Text size="sm" c={"dimmed"}>
-                      {" "}
-                      {org?.phone ?? "---"}
-                    </Text>
-                  </Group>
-                  <Group gap={1}>
-                    <Text fw={600} size="sm" w={110}>
-                      Address
-                    </Text>
-                    <Text size="sm" c={"dimmed"}>
-                      {org?.address ?? "---"}
-                    </Text>
-                  </Group>
-                </Stack>
-              </Group>
-              {index !== selectedUser?.org.length - 1 && <Divider my={"sm"} />}
-            </Stack>
-          );
-        })}
-      </PaperLayout>
     </Stack>
   );
 };

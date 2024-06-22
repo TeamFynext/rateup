@@ -14,6 +14,7 @@ import {
   getAllUsers,
   updateActiveStatus,
   updateRecipeName,
+  updateUserPause,
   updateUserProfile,
   updateUserProfilePhoto,
 } from "./user.api";
@@ -240,3 +241,17 @@ export function useUpdateRecipeNameMutation() {
     },
   });
 }
+
+export const useUpdateUserPause = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateUserPause,
+    onSuccess: () => {
+      showSuccessToast("Pause status has been updated");
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+    },
+    onError: () => {
+      showErrorToast("Error in updating pause status");
+    },
+  });
+};
