@@ -69,6 +69,8 @@ import TabsCommon from "./Tabs/TabsCommon";
 import { TooltipWithEditIcon } from "./Tooltip/TooltipWithEditIcon";
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 import { CreditsCard } from "../../Card/CreditsCard";
+import styles from "./LandingPage.module.css";
+
 //TODO: refactor and change to multiple files
 const LandingPage = ({ editingItem }: { editingItem: any }) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
@@ -379,7 +381,11 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
     form.setFieldValue(type, "");
   };
   return (
-    <Grid ff={lexend.style.fontFamily} fw={300}>
+    <Grid
+      className={styles["landing-page-root-div"]}
+      ff={lexend.style.fontFamily}
+      fw={300}
+    >
       <Grid.Col span={{ base: 12, lg: 8 }} p={"md"}>
         <PaperLayout>
           <>
@@ -437,7 +443,7 @@ const LandingPage = ({ editingItem }: { editingItem: any }) => {
                     <BackgroundImage
                       src={result}
                       radius="0rem 0rem 1.375rem 1.375rem"
-                      w={isMobileTab && 300}
+                      w={"100%"}
                       bgsz={"cover"}
                       bgp={"center"}
                       mih={300}

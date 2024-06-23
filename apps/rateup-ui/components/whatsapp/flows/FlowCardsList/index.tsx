@@ -13,7 +13,7 @@ function FlowCardsList({
             dbFlowId={dbFlowId}
             name={name}
             status={status}
-            createdAt={new Date(createdAt)}
+            createdAt={createdAt}
             key={dbFlowId}
             teamsData={teamsData}
           />

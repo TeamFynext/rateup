@@ -129,6 +129,7 @@ export default function WaInboxChatFilter(props: Props) {
               width: 15,
               height: 15,
               fontSize: 10,
+              zIndex: 0,
             },
           }}
         >

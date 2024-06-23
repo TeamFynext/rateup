@@ -1,4 +1,4 @@
-import { Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
+import { Box, Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconFileImport,
@@ -32,6 +32,7 @@ import { transformData } from "../../../components/menu/util/transformData";
 import Heading from "../../../components/styled/Heading/Heading";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import { useRouteParams } from "../../../context/RouteParamsContext";
+import styles from "./menuId.module.css";
 
 enum TabEnum {
   Menu = "Menu",
@@ -105,13 +106,14 @@ export default function MenuById({ categories: initialCategories }) {
   }
 
   return (
-    <Group grow mx={"md"}>
+    <Group grow h={"100%"} className={styles["menu-id-container"]}>
       <StyledTabs
         keepMounted={false}
         value={activeTab}
         onChange={(value) => {
           router.push(`${menuId}?tab=${value}`);
         }}
+        h={"100%"}
       >
         <Grid columns={10} mb="md">
           <Grid.Col span={2}>
@@ -132,103 +134,122 @@ export default function MenuById({ categories: initialCategories }) {
           duration={0.6}
           apEnable={false}
           type="fade"
+          style={{ height: "100%", flex: 1, overflow: "auto" }}
         >
-          <Tabs.Panel value={TabEnum.Menu}>
-            <Flex justify={"space-between"} wrap={"wrap"}>
-              <Group>
-                <RateupButtonBlue
-                  title="Add Category"
-                  rightIcon={<IconPlus />}
-                  radius="xl"
-                  size="md"
-                  onClick={handleCreateCategory}
-                />
-                <RateupButtonSecondary
-                  title="Import Menu"
-                  rightIcon={<IconFileImport size={16} />}
-                  radius="xl"
-                  size="md"
-                  onClick={toggle}
-                />
-              </Group>
+          <Tabs.Panel className={styles["menu-id-panel"]} value={TabEnum.Menu}>
+            <Stack h={"100%"}>
+              <Flex justify={"space-between"} wrap={"wrap"} pt={"0.3125rem"}>
+                <Group>
+                  <RateupButtonBlue
+                    title="Add Category"
+                    rightIcon={<IconPlus />}
+                    radius="xl"
+                    size="md"
+                    onClick={handleCreateCategory}
+                  />
+                  <RateupButtonSecondary
+                    title="Import Menu"
+                    rightIcon={<IconFileImport size={16} />}
+                    radius="xl"
+                    size="md"
+                    onClick={toggle}
+                  />
+                </Group>
 
-              <SearchBox
-                searchText={searchText}
-                setSearchText={setSearchText}
-                sx={{
-                  // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
-                  display: "none",
-                }}
-              />
-              <RateupButtonBlue
-                title="Manage Banners"
-                rightIcon={
-                  <IconLayersSubtract
-                    style={{ width: rem(18), height: rem(18) }}
-                    stroke={1.5}
-                  />
-                }
-                radius="xl"
-                size="md"
-                onClick={toggleBannerModal}
-                color={"var(--light-blue-4)"}
-                sx={{
-                  borderColor: "var(--tertiary-color)",
-                  color: "var(--tertiary-color)",
-                }}
-              />
-              <BannerAddAndViewModal
+                <SearchBox
+                  searchText={searchText}
+                  setSearchText={setSearchText}
+                  sx={{
+                    // visibility: activeTab === TabEnum.Menu ? "visible" : "hidden",
+                    display: "none",
+                  }}
+                />
+                <RateupButtonBlue
+                  title="Manage Banners"
+                  rightIcon={
+                    <IconLayersSubtract
+                      style={{ width: rem(18), height: rem(18) }}
+                      stroke={1.5}
+                    />
+                  }
+                  radius="xl"
+                  size="md"
+                  onClick={toggleBannerModal}
+                  color={"var(--light-blue-4)"}
+                  sx={{
+                    borderColor: "var(--tertiary-color)",
+                    color: "var(--tertiary-color)",
+                  }}
+                />
+                <BannerAddAndViewModal
+                  menuId={menuId}
+                  opened={openBanner}
+                  onClose={closeBanner}
+                  currency={menu?.currency}
+                />
+              </Flex>
+              <Stack
+                p={"0.3125rem"}
+                pb={""}
+                h={"100%"}
+                flex={1}
+                style={{ overflow: "auto" }}
+                mah={800}
+              >
+                {filteredCategory?.length === 0 ? (
+                  <NothingFound text="No Category available." />
+                ) : (
+                  filteredCategory?.map((category) => (
+                    <CategoryCard
+                      key={category.id}
+                      category={category}
+                      handleDelete={deleteMutation}
+                      handleEdit={handleEditCategory}
+                      searchText={searchText}
+                      currency={menu?.currency}
+                      headerOrder={filteredCategory?.map(
+                        ({ id, name, image }) => ({
+                          id,
+                          name,
+                          image,
+                        }),
+                      )}
+                    />
+                  ))
+                )}
+              </Stack>
+              <CategoryItemCsvModal
+                opened={openUploadCsv}
+                close={closeUploadCsv}
                 menuId={menuId}
-                opened={openBanner}
-                onClose={closeBanner}
-                currency={menu?.currency}
               />
-            </Flex>
-            <Stack mt="sm">
-              {filteredCategory?.length === 0 ? (
-                <NothingFound text="No Category available." />
-              ) : (
-                filteredCategory?.map((category) => (
-                  <CategoryCard
-                    key={category.id}
-                    category={category}
-                    handleDelete={deleteMutation}
-                    handleEdit={handleEditCategory}
-                    searchText={searchText}
-                    currency={menu?.currency}
-                    headerOrder={filteredCategory?.map(
-                      ({ id, name, image }) => ({
-                        id,
-                        name,
-                        image,
-                      }),
-                    )}
-                  />
-                ))
-              )}
+              <CreateMenuCategoryModal
+                opened={openCreateModal}
+                close={handleClose}
+                menuId={menuId}
+                editingItem={editingCategory}
+              />
             </Stack>
-            <CategoryItemCsvModal
-              opened={openUploadCsv}
-              close={closeUploadCsv}
-              menuId={menuId}
-            />
-            <CreateMenuCategoryModal
-              opened={openCreateModal}
-              close={handleClose}
-              menuId={menuId}
-              editingItem={editingCategory}
-            />
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Settings}>
+          <Tabs.Panel
+            className={styles["menu-id-panel"]}
+            value={TabEnum.Settings}
+          >
             <MenuSettings menu={menu} />
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.LandingPage}>
+          <Tabs.Panel
+            className={styles["menu-id-panel"]}
+            value={TabEnum.LandingPage}
+          >
             <LandingPage editingItem={transformedData} />
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Share}>
+          <Tabs.Panel className={styles["menu-id-panel"]} value={TabEnum.Share}>
             {menu && <ShareMenu menu={menu} />}
           </Tabs.Panel>
-          <Tabs.Panel value={TabEnum.Analytics}>
+          <Tabs.Panel
+            className={styles["menu-id-panel"]}
+            value={TabEnum.Analytics}
+          >
             <MenuAnalytics
               surveyTeamMapId={menuLandingData?.surveyTeamMapId}
               visited={menuLandingData?.visited}

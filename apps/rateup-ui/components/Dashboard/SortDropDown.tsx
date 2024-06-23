@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Select } from "@mantine/core";
+import { Group, Select, Text as MantineText } from "@mantine/core";
 import { IconSelector } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
@@ -12,23 +12,26 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
   };
 
   return (
-    <Select
-      placeholder="Sort by"
-      value={sortOption}
-      onChange={handleSortChange}
-      data={[
-        { value: "latest", label: "Latest First" },
-        { value: "oldest", label: "Old First" },
-        { value: "a-z", label: "A - Z" },
-        { value: "z-a", label: "Z - A" },
-      ]}
-      styles={{
-        input: {
-          borderRadius: 25,
-          width: "150px",
-        },
-      }}
-    />
+    <Group style={{ alignItems: "center", gap: "3px" }}>
+      <MantineText>SORT BY:</MantineText>
+      <Select
+        placeholder="Sort by"
+        value={sortOption}
+        onChange={handleSortChange}
+        data={[
+          { value: "latest", label: "Latest First" },
+          { value: "oldest", label: "Old First" },
+          { value: "a-z", label: "A - Z" },
+          { value: "z-a", label: "Z - A" },
+        ]}
+        styles={{
+          input: {
+            borderRadius: 25,
+            width: "130px",
+          },
+        }}
+      />
+    </Group>
   );
 };
 
