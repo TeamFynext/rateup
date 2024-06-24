@@ -165,9 +165,13 @@ export default function Layout({ children, appProps }) {
 
           <motion.div className={styles["content-container"]}>
             <Transition mounted={!focus} transition="slide-down">
-              {(transitionStyle) => (
-                <HeaderTabs opened={navOpened} style={transitionStyle} />
-              )}
+              {(transitionStyle) =>
+                !isViewPortLEQ768px ? (
+                  <HeaderTabs opened={navOpened} style={transitionStyle} />
+                ) : (
+                  <Box h={60}></Box>
+                )
+              }
             </Transition>
             <Flex className={`${styles["content-wrapper"]}`}>
               <NavControlContext.Provider value={{ navOpened, setNavOpened }}>

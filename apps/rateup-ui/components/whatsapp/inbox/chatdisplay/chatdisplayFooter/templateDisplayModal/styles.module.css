@@ -23,3 +23,7 @@
   color: var(--mantine-color-dimmed);
   font-weight: 600;
 }
+
+.template_card_list_preview_wrapper > div {
+  flex: 1 1 0;
+}

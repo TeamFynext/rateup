@@ -14,14 +14,17 @@ import useTemplatesAvailableForTeam from "../../../../../../hooks/team";
 interface Props {
   sessionExpired: boolean;
   contact: ContactsData;
+  opened: boolean;
+  onClose: any;
 }
 
 export default function WaInboxTemplateDisplayModal({
   sessionExpired,
   contact,
+  opened,
+  onClose,
 }: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [opened, { close: onClose, open }] = useDisclosure(false);
   const sendTemplate = useSendWaTemplateToUser(contact.phone, contact.id);
   const [teamId, setTeamId] = useState<string>("");
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
@@ -38,6 +41,7 @@ export default function WaInboxTemplateDisplayModal({
   const filteredTemplates = searchFilteredTemplates;
 
   const hasTemplates = filteredTemplates && filteredTemplates?.length > 0;
+
   return (
     <>
       <SimpleModalLayout
@@ -100,7 +104,7 @@ export default function WaInboxTemplateDisplayModal({
           <NothingFound text="No templates found" />
         )}
       </SimpleModalLayout>
-      <RateupButtonPrimary
+      {/* <RateupButtonPrimary
         variant="transparent"
         onClick={open}
         title={
@@ -108,7 +112,7 @@ export default function WaInboxTemplateDisplayModal({
             ? "Initiate Conversation by Sending a Template"
             : "Send Template"
         }
-      />
+      /> */}
     </>
   );
 }
