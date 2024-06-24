@@ -58,6 +58,7 @@ enum UserRecipes {
   ThirdPartyGoogle
   PasswordLess
 }
+
 model User {
   id             String          @id @default(uuid()) @db.Uuid
   createdAt      DateTime        @default(now())
@@ -120,17 +121,20 @@ model UsageStats {
   org       Org      @relation(fields: [orgId], references: [id])
   orgId     String   @unique @db.Uuid
 
-  teamsCount           Int @default(0)
-  teamMembersCount     Int @default(0)
-  surveysCount         Int @default(0)
-  surveyResponsesCount Int @default(0)
-  menusCount           Int @default(0)
-  menuViewsCount       Int @default(0)
-  messagesCount        Int @default(0)
+  teamsCount             Int @default(0)
+  teamMembersCount       Int @default(0)
+  surveysCount           Int @default(0)
+  surveyResponsesCount   Int @default(0)
+  waSurveysCount         Int @default(0)
+  waSurveyResponsesCount Int @default(0)
+  menusCount             Int @default(0)
+  menuViewsCount         Int @default(0)
+  messagesCount          Int @default(0)
 
-  monthlySurveyResponses Int @default(0)
-  monthlyMenuViews       Int @default(0)
-  monthlyMessagesCount   Int @default(0)
+  monthlySurveyResponses   Int @default(0)
+  monthlyWaSurveyResponses Int @default(0)
+  monthlyMenuViews         Int @default(0)
+  monthlyMessagesCount     Int @default(0)
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
