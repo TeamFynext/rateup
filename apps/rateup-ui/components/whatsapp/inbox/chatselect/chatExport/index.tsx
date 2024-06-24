@@ -2,6 +2,7 @@ import {
   Button,
   Checkbox,
   Divider,
+  Flex,
   Group,
   HoverCard,
   HoverCardDropdown,
@@ -19,6 +20,7 @@ import { useForm } from "@mantine/form";
 import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { useState } from "react";
 import dayjs from "dayjs";
+import { useMediaQuery } from "@mantine/hooks";
 
 enum DateType {
   BETWEEN = "between",
@@ -98,8 +100,11 @@ export default function WaInboxChatExport() {
       },
     });
   }
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   return (
-    <HoverCard position="right-start" withArrow>
+    <HoverCard position={isMobile ? "bottom-end" : "right-start"} withArrow>
       <HoverCardTarget>
         <ThemeIcon className={classes.theme_icon} variant="light">
           <IconDownload />
@@ -120,7 +125,7 @@ export default function WaInboxChatExport() {
                 <Radio label="On" size="xs" value={DateType.ON} />
               </Group>
             </RadioGroup>
-            <Group justify="center">
+            <Flex justify="center">
               {form.values.date.type === DateType.ON && (
                 <CustomDatePicker
                   label="on"
@@ -183,7 +188,7 @@ export default function WaInboxChatExport() {
                   />
                 </>
               )}
-            </Group>
+            </Flex>
             <Group justify="space-between">
               <Checkbox
                 label="Replies Only"
