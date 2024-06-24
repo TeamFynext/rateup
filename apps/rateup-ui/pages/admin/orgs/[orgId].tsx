@@ -63,26 +63,29 @@ export default function OrgById() {
           <Title order={2}>{stats.name}</Title>
           <RefreshButton queryKeys={["org", "stats"]} />
         </Group>
-
-        <Button
-          style={{ fontSize: "1.2rem", height: "unset" }}
-          leftSection={
-            orgDetails?.isPaused ? (
-              <IconPlayerPause size={"1rem"} />
-            ) : (
-              <IconPlayerPlay size={"1rem"} />
-            )
-          }
-          variant="outline"
-          onClick={openConfirmModal}
-          styles={{
-            inner: {
-              height: "40px",
-            },
-          }}
-        >
-          {orgDetails?.isPaused ? "Resume Organization" : "Pause Organization"}
-        </Button>
+        {orgDetails?.id !== process.env.NEXT_PUBLIC_ROOT_ORG && (
+          <Button
+            style={{ fontSize: "1.2rem", height: "unset" }}
+            leftSection={
+              orgDetails?.isPaused ? (
+                <IconPlayerPause size={"1rem"} />
+              ) : (
+                <IconPlayerPlay size={"1rem"} />
+              )
+            }
+            variant="outline"
+            onClick={openConfirmModal}
+            styles={{
+              inner: {
+                height: "40px",
+              },
+            }}
+          >
+            {orgDetails?.isPaused
+              ? "Resume Organization"
+              : "Pause Organization"}
+          </Button>
+        )}
         <Button
           style={{ fontSize: "1.2rem", height: "unset" }}
           rightSection={<IconPencil />}

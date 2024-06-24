@@ -249,6 +249,7 @@ export const useUpdateUserPause = () => {
     onSuccess: () => {
       showSuccessToast("Pause status has been updated");
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
     },
     onError: () => {
       showErrorToast("Error in updating pause status");

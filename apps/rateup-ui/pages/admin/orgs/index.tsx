@@ -6,7 +6,6 @@ import {
 } from "@mui/x-data-grid";
 import { useAllOrgs } from "../../../backend/org/org.query";
 import { ActionIcon, Box, Group, Stack, Title } from "@mantine/core";
-import dayjs from "dayjs";
 import styles from "../../../components/adminPanel/admin.module.css";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -15,7 +14,13 @@ import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { CountStatsCard } from "../userstats";
 import { useEffect, useState } from "react";
 import RefreshButton from "../../../components/Button/RefreshButton";
-import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
+import {
+  formatIsoDateStringWithTime,
+  isInLastSevenDays,
+  isThisMonth,
+  isToday,
+  isYesterday,
+} from "../../../utils/dateTime";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 220, cellClassName: styles.idCell },
@@ -53,25 +58,28 @@ export default function OrgDisplay() {
   const { data: orgs, isLoading, isError } = useAllOrgs();
   const [orgStats, setOrgStats] = useState({
     today: null,
+    yesterday: null,
     lastWeek: null,
-    lastMonth: null,
+    thisMonth: null,
   });
 
   useEffect(() => {
     if (orgs) {
-      const today = orgs.filter((org) =>
-        dayjs(org.createdAt).isAfter(dayjs().startOf("day")),
+      const today = orgs.filter((org) => isToday(org.createdAt))?.length;
+      const yesterday = orgs.filter((org) =>
+        isYesterday(org.createdAt),
       )?.length;
-      const lastWeek = orgs.filter(
-        (org) => dayjs().diff(org.createdAt, "week") == 0,
+      const lastWeek = orgs.filter((org) =>
+        isInLastSevenDays(org.createdAt),
       )?.length;
-      const lastMonth = orgs.filter(
-        (org) => dayjs().diff(org.createdAt, "month") == 0,
+      const thisMonth = orgs.filter((org) =>
+        isThisMonth(org.createdAt),
       )?.length;
       setOrgStats({
         today,
+        yesterday,
         lastWeek,
-        lastMonth,
+        thisMonth,
       });
     }
   }, [orgs]);
@@ -101,12 +109,13 @@ export default function OrgDisplay() {
         <PaperLayout w={200} py={28}>
           <CountStatsCard label={"Organizations"} count={orgs?.length} />
         </PaperLayout>
-        <PaperLayout w={400}>
+        <PaperLayout w={500}>
           <Title order={5}>Org Stats</Title>
           <Group justify="space-between" px={"sm"}>
             <CountStatsCard label={"Today"} count={orgStats.today} />
+            <CountStatsCard label={"Yesterday"} count={orgStats.yesterday} />
             <CountStatsCard label={"Last Week"} count={orgStats.lastWeek} />
-            <CountStatsCard label={"Last Month"} count={orgStats.lastMonth} />
+            <CountStatsCard label={"This Month"} count={orgStats.thisMonth} />
           </Group>
         </PaperLayout>
       </Group>

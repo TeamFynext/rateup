@@ -13,7 +13,6 @@ import {
   useUpdateRecipeNameMutation,
   useUpdateUserPause,
 } from "../../../backend/user/user.query";
-import dayjs from "dayjs";
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
@@ -21,7 +20,13 @@ import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { showLoadingToast } from "../../../utils/notifications";
 import RefreshButton from "../../../components/Button/RefreshButton";
-import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
+import {
+  formatIsoDateStringWithTime,
+  isInLastSevenDays,
+  isThisMonth,
+  isToday,
+  isYesterday,
+} from "../../../utils/dateTime";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { getUserRoleColor } from "../../../utils";
 import UserModal from "./UserModal";
@@ -46,8 +51,9 @@ const index = () => {
 
   const [userStats, setUserStats] = useState({
     today: null,
+    yesterday: null,
     lastWeek: null,
-    lastMonth: null,
+    thisMonth: null,
   });
 
   const [opened, { open, close }] = useDisclosure(false);
@@ -119,7 +125,7 @@ const index = () => {
   const handleUserStatus = () => {
     const data = {
       isPaused: !selectedUser.isPaused,
-      pausedBy: "RateUp",
+      pausedBy: "rateup",
     };
     updatePauseStatus.mutate({ userId: selectedUser.userId, data });
   };
@@ -136,19 +142,21 @@ const index = () => {
 
   useEffect(() => {
     if (users) {
-      const today = users.filter((user) =>
-        dayjs(user.createdAt).isAfter(dayjs().startOf("day")),
+      const today = users.filter((user) => isToday(user?.createdAt))?.length;
+      const yesterday = users.filter((user) =>
+        isYesterday(user.createdAt),
       )?.length;
-      const lastWeek = users.filter(
-        (user) => dayjs().diff(user.createdAt, "week") == 0,
+      const lastWeek = users.filter((user) =>
+        isInLastSevenDays(user?.createdAt),
       )?.length;
-      const lastMonth = users.filter(
-        (user) => dayjs().diff(user.createdAt, "month") == 0,
+      const thisMonth = users.filter((user) =>
+        isThisMonth(user?.createdAt),
       )?.length;
       setUserStats({
         today,
+        yesterday,
         lastWeek,
-        lastMonth,
+        thisMonth,
       });
       //To check is all users recipe name has updated
       setIsUpdatedRecipe(
@@ -170,25 +178,26 @@ const index = () => {
           disabled={isUpdatedRecipe}
         />
         <PaperLayout w={300}>
-          <Title order={4}>Total</Title>
-          <Group justify="space-between" p={"sm"}>
+          <Title order={5}>Total</Title>
+          <Group justify="space-between" px={"sm"}>
             <CountStatsCard label={"Organizations"} count={orgs?.length} />
             <CountStatsCard label={"Users"} count={users?.length} />
           </Group>
         </PaperLayout>
-        <PaperLayout w={400}>
-          <Title order={4}>User Stats</Title>
-          <Group justify="space-between" p={"sm"}>
+        <PaperLayout w={500}>
+          <Title order={5}>User Stats</Title>
+          <Group justify="space-between" px={"sm"}>
             <CountStatsCard label={"Today"} count={userStats.today} />
-            <CountStatsCard label={"Last Week"} count={userStats.lastWeek} />
-            <CountStatsCard label={"Last Month"} count={userStats.lastMonth} />
+            <CountStatsCard label={"Yesterday"} count={userStats.yesterday} />
+            <CountStatsCard label={"Last 7 days"} count={userStats.lastWeek} />
+            <CountStatsCard label={"This Month"} count={userStats.thisMonth} />
           </Group>
         </PaperLayout>
       </Flex>
       <Title order={4}>Most Recent SignUps</Title>
       <Box
         sx={{
-          height: "57vh",
+          height: "60vh",
           width: "100%",
         }}
       >

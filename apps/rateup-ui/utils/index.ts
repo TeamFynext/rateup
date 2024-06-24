@@ -121,8 +121,8 @@ export function getUserRoleColor(role) {
     case UserRole.SUPADM:
       return "#B22222";
     case UserRole.ADM:
-      return "#1E90FF";
+      return "#FFA500";
     case UserRole.MEMBER:
-      return "#A9A9A9 ";
+      return "#ADD8E6";
   }
 }

@@ -332,6 +332,7 @@ declare global {
     name: string;
     role: string;
     teams: Team[];
+    isPaused?: boolean;
   }
 
   export interface Member {
