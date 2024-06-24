@@ -347,16 +347,19 @@ export async function sendQuestion(
  * -> updates completedSurvey count
  */
 export async function saveResponses(session: WaSessionWithRelations) {
+  let anonymous = session?.surveyTeamMap?.survey?.WaFlow?.anonymous ?? false;
   log.trace("Saving responses for %o", {
     id: session.id,
-    phone: session.phone,
+    phone: anonymous ? "anonynous" : session.phone,
     responses: session.responses,
   });
   const questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
 
   // TODO: save name
-  const contact = await getOrCreateContactByPhone(session.phone, session.orgId);
+  const contact =
+    !anonymous &&
+    (await getOrCreateContactByPhone(session.phone, session.orgId));
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
@@ -374,7 +377,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     responses,
     language,
     createdAt,
-    respondent: Contact?.phone,
+    respondent: !anonymous && Contact?.phone,
   });
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));

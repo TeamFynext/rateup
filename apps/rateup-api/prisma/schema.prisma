@@ -814,10 +814,11 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId    String @db.Uuid
-  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId String @unique @db.Uuid
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String  @db.Uuid
+  survey    Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId  String  @unique @db.Uuid
+  anonymous Boolean @default(false)
 
   @@unique([flowId, orgId])
 }
