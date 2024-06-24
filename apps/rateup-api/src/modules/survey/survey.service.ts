@@ -8,7 +8,11 @@ import {
   UpdateSurveyPassword,
 } from "./survey.schema";
 import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
-import { QuestionType, SurveyVariableType } from "../../types/enums";
+import {
+  QuestionType,
+  SurveyType,
+  SurveyVariableType,
+} from "../../types/enums";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
@@ -69,9 +73,13 @@ export async function createSurvey(
     if (survey) {
       if (data.teamIds.length > 0) {
         let team = await getTeamById(data.teamIds[0]);
+        let incrementCount =
+          survey?.type === SurveyType.Web
+            ? { surveysCount: { increment: 1 } }
+            : { waSurveysCount: { increment: 1 } };
         await prisma.usageStats.update({
           where: { orgId: team.orgId },
-          data: { surveysCount: { increment: 1 } },
+          data: incrementCount,
         });
       }
 
@@ -160,9 +168,13 @@ export async function cloneSurvey(
 
     if (newClonedSurvey && teamIds.length > 0) {
       let team = await getTeamById(teamIds[0]);
+      let incrementCount =
+        survey?.type === SurveyType.Web
+          ? { surveysCount: { increment: 1 } }
+          : { waSurveysCount: { increment: 1 } };
       await prisma.usageStats.update({
         where: { orgId: team.orgId },
-        data: { surveysCount: { increment: 1 } },
+        data: incrementCount,
       });
     }
 
@@ -679,9 +691,13 @@ export async function deleteSurveyById(id: string) {
   });
 
   if (survey && orgId) {
+    let decrementCount =
+      survey?.type === SurveyType.Web
+        ? { surveysCount: { decrement: 1 } }
+        : { waSurveysCount: { decrement: 1 } };
     await prisma.usageStats.update({
       where: { orgId: orgId },
-      data: { surveysCount: { decrement: 1 } },
+      data: decrementCount,
     });
   }
   return survey;
@@ -727,9 +743,13 @@ export async function deleteSurveyFromTeam(
     });
     if (deletedSurvey && surveyTeams.length > 0) {
       let team = await getTeamById(surveyTeams[0].teamId);
+      let decrementCount =
+        deletedSurvey?.type === SurveyType.Web
+          ? { surveysCount: { decrement: 1 } }
+          : { waSurveysCount: { decrement: 1 } };
       await prisma.usageStats.update({
         where: { orgId: team.orgId },
-        data: { surveysCount: { decrement: 1 } },
+        data: decrementCount,
       });
     }
     return deletedSurvey;

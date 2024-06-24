@@ -21,6 +21,14 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.Whatsapp
             ? { increment: 1 }
             : undefined,
+        waSurveysCount:
+          stat === SubscriptionFeaturePathName.WhatsAppSurvey
+            ? { increment: 1 }
+            : undefined,
+        waSurveyResponsesCount:
+          stat === SubscriptionFeaturePathName.WhatsAppSurvey
+            ? { increment: 1 }
+            : undefined,
       },
       create: {
         orgId: orgId,
@@ -32,6 +40,11 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
         monthlyMessagesCount:
           stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
+        waSurveysCount:
+          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
+        waSurveyResponsesCount:
+          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
+
         //TODO: improve
         // Add other fields with default values as needed
       },

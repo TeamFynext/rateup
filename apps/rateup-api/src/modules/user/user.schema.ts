@@ -25,6 +25,11 @@ const createUserSignupSchema = z.object({
   recipeName: z.nativeEnum(UserRecipes),
 });
 
+const pauseUserSchema = z.object({
+  isPaused: z.boolean(),
+  pausedBy: z.string(),
+});
+
 const createUserGoogleSchema = z.object({
   name: z.string().min(4),
   orgName: z.string().min(4),
@@ -64,6 +69,7 @@ export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
     updateProfileSchema,
     updateProfilePhotoSchema,
     userEmailCheckSchema,
+    pauseUserSchema,
   },
   { $id: "userSchema" },
 );
@@ -76,3 +82,4 @@ export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
 export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;
+export type PauseUserInput = z.infer<typeof pauseUserSchema>;
