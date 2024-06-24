@@ -687,6 +687,7 @@ declare global {
     survey: any;
     startMessageConfig: WaFlowStartMessageConfig;
     pendingSave: boolean;
+    anonymous: boolean;
   };
 
   type LoyaltyCampaign = {

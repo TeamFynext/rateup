@@ -3,23 +3,29 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import styles from "./SurveySettings.module.css";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { Stack } from "@mantine/core";
+import { Box, Group, Stack, Switch } from "@mantine/core";
 import { useUpdateFlowMetaDataMutation } from "../../../backend/whatsapp/flow/flow.query";
+import { useForm } from "@mantine/form";
 
-const FlowNameUpdate = ({
+const FlowSettingsUpdate = ({
   name,
   dbFlowId,
+  anonymous,
 }: {
   name: string;
   dbFlowId: string;
+  anonymous: boolean;
 }) => {
-  const [flowName, setFlowName] = useState(name ?? "");
+  const form = useForm({
+    initialValues: {
+      name: name ?? "",
+      anonymous: anonymous ?? false,
+    },
+  });
   const updateFlowMetaDataMutation = useUpdateFlowMetaDataMutation();
   const handleFlowMetaData = () => {
     updateFlowMetaDataMutation.mutate({
-      data: {
-        name: flowName,
-      },
+      data: form.getValues(),
       dbFlowId,
     });
   };
@@ -32,10 +38,26 @@ const FlowNameUpdate = ({
           label={"Flow Name"}
           placeholder="Enter Flow name"
           required
-          onChange={(e) => setFlowName(e?.target?.value)}
-          value={flowName}
           w={"100%"}
+          key={form.key("name")}
+          {...form.getInputProps("name")}
         />
+        <Group w={"100%"}>
+          <Switch
+            className={`switch ${anonymous ?? false ? "on" : "off"}`}
+            size="md"
+            key={form.key("anonymous")}
+            {...form.getInputProps("anonymous", { type: "checkbox" })}
+          />
+          <Box className={"switch-heading-and-desc-container"}>
+            <h3>Anonymous</h3>
+            <p>
+              {form.getValues().anonymous
+                ? "Anonymous Flow is enabled"
+                : "Anonymous Flow is disabled"}
+            </p>
+          </Box>
+        </Group>
         <RateupButtonPrimary
           title="Save Changes"
           onClick={handleFlowMetaData}
@@ -46,4 +68,4 @@ const FlowNameUpdate = ({
   );
 };
 
-export default FlowNameUpdate;
+export default FlowSettingsUpdate;
