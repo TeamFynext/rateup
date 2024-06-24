@@ -1,18 +1,9 @@
-import {
-  Badge,
-  Blockquote,
-  Text,
-  Group,
-  Stack,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Badge, Blockquote, Text, Group, Stack } from "@mantine/core";
 import { GridColDef, DataGrid, GridRenderCellParams } from "@mui/x-data-grid";
 import { useGetAllStripeSubscriptions } from "../../../backend/payment/stripe/stripe.query";
 import dayjs from "dayjs";
-import { IconCheck, IconInfoCircle, IconRefresh } from "@tabler/icons-react";
-import classes from "../../../components/Graph/graph.module.css";
-import { showSuccessToast } from "../../../utils/notifications";
+import { IconInfoCircle } from "@tabler/icons-react";
+import RefreshButton from "../../../components/Button/RefreshButton";
 
 const StripeSubscription = () => {
   const {
@@ -60,25 +51,7 @@ const StripeSubscription = () => {
         <Group justify="space-between">
           <Group gap={"xs"}>
             <Text>List of subscriptions from stripe DB</Text>
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
-                  await refetch();
-                  showSuccessToast(
-                    "Data updated successfully",
-                    "",
-                    <IconCheck />,
-                  );
-                }}
-              >
-                <IconRefresh
-                  style={{ width: "80%", height: "80%" }}
-                  className={isRefetching ? classes.rotateInfinitely : null}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
+            <RefreshButton queryKeys={["stripeSubscriptions"]} />
           </Group>
         </Group>
       </Blockquote>

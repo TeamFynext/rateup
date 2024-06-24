@@ -120,7 +120,7 @@ const TicketsHome = () => {
         <Group gap={"md"}>
           <Heading title="Tickets" titleprops={{ w: "fit-content" }} />
           <InfoButton docUrl={`${docsPath}/ticket`} />
-          <RefreshButton queryKey="tickets" />
+          <RefreshButton queryKeys={["tickets"]} />
           {user?.role === UserRole.SUPADM && (
             <RateupButtonPrimary
               rightIcon={<IconPlus />}

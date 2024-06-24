@@ -9,6 +9,7 @@ import {
 import WaInboxSessionBadge from "./sessionBadge";
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import Link from "next/link";
+import { useSetIsChatDisplayOpen } from "../../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 
 interface WaInboxChatSelectCardProps {
   contact: ContactsWithLastMessage;
@@ -18,11 +19,15 @@ export default function WaInboxChatSelectCard({
 }: WaInboxChatSelectCardProps) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
+
+  const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
+
   return (
     <Card
       component={Link}
       href={`?contactId=${contact?.id}`}
       className={`${classes.wrapper} ${params.get("contactId") === contact?.id && classes.highlighted_wrapper}`}
+      onClick={() => setIsChatDisplayOpen(true)}
     >
       <Stack className={classes.inner}>
         <Group className={classes.chat_card_header}>

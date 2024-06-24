@@ -6,6 +6,7 @@
   align-items: center;
   justify-content: space-between;
 }
+
 .name_phone_wrapper {
   gap: 0;
 }
@@ -15,4 +16,20 @@
 }
 .phone {
   font-size: var(--mantine-font-size-xs);
+}
+
+@media screen and (max-width: 1200px) {
+  .wrapper {
+    padding: 1rem !important;
+  }
+  .wrapper > div {
+    flex-wrap: nowrap;
+    gap: 0.625rem;
+  }
+  .name_phone_wrapper {
+    overflow: hidden;
+  }
+  .name {
+    font-size: 1rem;
+  }
 }

@@ -137,7 +137,7 @@ const Templates = ({ survey }) => {
         <Group ml="md">
           <Heading title={"Survey Templates"} titleprops={{ w: "500px" }} />
           <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
-          <RefreshButton queryKey="survey-templates" />
+          <RefreshButton queryKeys={["survey-templates"]} />
         </Group>
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue

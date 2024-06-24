@@ -1,4 +1,5 @@
 import { COORDINATESX, COORDINATESY } from "./constants";
+import { UserRole } from "./enums";
 
 export function getTimeSince(date: string) {
   //@ts-ignore
@@ -114,3 +115,14 @@ export const getErrorMessage = (error: any, defaultMessage: string) => {
     return defaultMessage;
   }
 };
+
+export function getUserRoleColor(role) {
+  switch (role) {
+    case UserRole.SUPADM:
+      return "#B22222";
+    case UserRole.ADM:
+      return "#FFA500";
+    case UserRole.MEMBER:
+      return "#ADD8E6";
+  }
+}
