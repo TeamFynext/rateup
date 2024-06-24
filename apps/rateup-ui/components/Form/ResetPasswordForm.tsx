@@ -38,7 +38,7 @@ import ConfirmationModal from "../Modal/ConfirmationModal";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
-  const { token, rid, requestStatus, emailTo } = router.query;
+  const { token, rid, requestStatus, emailTo, type } = router.query;
   const [page, setPage] = useState(
     token && token.length > 0 ? ResetSteps.STEP_THREE : mode,
   );
@@ -292,8 +292,11 @@ const ResetPasswordForm = ({ mode }) => {
         opened={opened}
         onConfirm={() => router.push("/login")}
         confirmLabel="Continue"
-        headerLabel="Password created successfully...!!  <br/>                         
-        Continue to Login with your email and newly created password."
+        headerLabel={
+          type === "invite"
+            ? "Password Created successfully!  <br/>  Please login with your email and new password."
+            : "Password Updated Successfully!  <br/>  Login with your new password."
+        }
         headerTitle="Success"
         excludeCancelButton={true}
         onClose={close}
