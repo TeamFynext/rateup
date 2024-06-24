@@ -232,9 +232,10 @@ function FlowPage() {
                     <SurveySettings
                       surveyId={survey.id}
                       survey={survey}
-                      enabledModules={["teams", "name-change"]}
+                      enabledModules={["teams", "flow"]}
                       flowName={flow.name}
                       flowDbId={flow.dbFlowId}
+                      anonymous={flow?.anonymous}
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Result}>

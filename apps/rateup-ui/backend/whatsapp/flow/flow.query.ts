@@ -222,8 +222,10 @@ export const useSendFlowToUser = (phone: string) => {
 export const useUpdateFlowMetaDataMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { dbFlowId: string; data: { name: string } }) =>
-      updateFlowMetaData(data.dbFlowId, data.data),
+    mutationFn: (data: {
+      dbFlowId: string;
+      data: { name: string; anonymous: boolean };
+    }) => updateFlowMetaData(data.dbFlowId, data.data),
     onSuccess: () => {
       showSuccessToast("Saved Changes..", "flow-meta-data-update", "", true);
       qc.invalidateQueries({ queryKey: ["flow"] });

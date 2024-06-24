@@ -128,7 +128,7 @@ export async function sendFlow(dbFlowId: string, phone: string) {
 
 export async function updateFlowMetaData(
   dbFlowId: string,
-  data: { name: string },
+  data: { name: string; anonymous: boolean },
 ) {
   try {
     notifications.show({

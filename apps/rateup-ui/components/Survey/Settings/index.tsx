@@ -10,8 +10,7 @@ import RedirectSettings from "./RedirectSettings";
 import SecuritySettings from "./SecuritySettings";
 import styles from "./SurveySettings.module.css";
 import TicketSettings from "./TicketSettings";
-import UniqueDeviceSettings from "./UniqueDeviceSettings";
-import FlowNameUpdate from "./FlowNameUpdate";
+import FlowSettingsUpdate from "./FlowSettingsUpdate";
 import GoogleSheetSettings from "./GoogleSheetSettings";
 
 const defaultEnabledModules = [
@@ -36,6 +35,7 @@ interface SurveySettingsProps {
   setSelectedLanguage?: (lang: string) => void;
   flowName?: string;
   flowDbId?: string;
+  anonymous?: boolean;
 }
 const SurveySettings = ({
   surveyId,
@@ -44,6 +44,7 @@ const SurveySettings = ({
   setSelectedLanguage = null,
   flowName,
   flowDbId,
+  anonymous,
 }: SurveySettingsProps) => {
   const [kioskMode, setKioskMode] = useState(survey?.kioskMode);
   const [preview, setPreview] = useState(survey?.skipPreview);
@@ -133,8 +134,12 @@ const SurveySettings = ({
               enabledModules={enabledModules}
             />
           )}
-          {enabledModules.includes("name-change") && (
-            <FlowNameUpdate name={flowName} dbFlowId={flowDbId} />
+          {enabledModules.includes("flow") && (
+            <FlowSettingsUpdate
+              name={flowName}
+              dbFlowId={flowDbId}
+              anonymous={anonymous}
+            />
           )}
         </Box>
       </Box>
