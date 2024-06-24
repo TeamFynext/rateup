@@ -103,23 +103,14 @@ export const checkEmailExist = async (data: { email: string }) => {
   return response?.data as { success: boolean };
 };
 
-//user from user table
-export type Users = {
-  id: string;
-  createdAt: Date;
-  email: string;
-  name: string;
-  active: boolean;
-  profilePhoto?: string;
-  gender: "MALE" | "FEMALE" | "OTHER";
-  recipeName?: string;
-  org: { name: string; id: string; logo?: string }[];
-};
-
 export async function getAllUsers() {
-  return (await axiosClient.get(`user/all`)).data as Array<Users>;
+  return (await axiosClient.get(`user/all`)).data as Array<UserData>;
 }
 
 export async function updateRecipeName() {
   return (await axiosClient.post(`user/update-recipe`)).data;
+}
+
+export async function updateUserPause({ userId, data }) {
+  return await axiosClient.put(`user/pause/${userId}`, data);
 }

@@ -1,8 +1,16 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
 import { useRouter } from "next/router";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil } from "@tabler/icons-react";
-import { useOrgStats } from "../../../backend/org/org.query";
+import {
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
+import {
+  useAllOrgs,
+  useOrgStats,
+  useUpdateOrgPause,
+} from "../../../backend/org/org.query";
 import { SubscriptionEditorModal } from "../../../components/adminPanel/Subscription/SubscriptionEditorModal";
 import { useSubscriptionByOrgId } from "../../../backend/subscription/subscription.query";
 import {
@@ -10,9 +18,16 @@ import {
   CountCard,
 } from "../../../components/adminPanel/stats/Count";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { useEffect, useState } from "react";
+import RefreshButton from "../../../components/Button/RefreshButton";
 
 export default function OrgById() {
   const [opened, { close, open }] = useDisclosure(false); // subscription editor
+  const [
+    openedConfirmModal,
+    { open: openConfirmModal, close: closeConfirmModal },
+  ] = useDisclosure(false);
   const router = useRouter();
   const { orgId } = router.query as { orgId: string };
   const {
@@ -20,15 +35,57 @@ export default function OrgById() {
     isLoading: isSubLoading,
     isError: isSubErr,
   } = useSubscriptionByOrgId(orgId);
-
+  const { data: orgs } = useAllOrgs();
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
+  const [orgDetails, setOrgDetails] = useState<Org>(null);
+  const updatePauseStatus = useUpdateOrgPause();
+
+  useEffect(() => {
+    if (orgs) {
+      setOrgDetails(orgs.find((org) => org.id === orgId));
+    }
+  }, [orgs]);
+
+  const handleOrgPauseStatus = () => {
+    updatePauseStatus.mutate({
+      orgId,
+      data: { isPaused: !orgDetails.isPaused },
+    });
+  };
+
   if (isError || isSubErr) return <div>error occured</div>;
   if (isLoading || !stats || isSubLoading) return <RateupLoader h={"100dvh"} />;
 
   return (
     <Stack>
       <Group justify="space-between">
-        <Title order={2}>{stats.name}</Title>
+        <Group flex={1}>
+          <Title order={2}>{stats.name}</Title>
+          <RefreshButton queryKeys={["org", "stats"]} />
+        </Group>
+        {orgDetails?.id !== process.env.NEXT_PUBLIC_ROOT_ORG && (
+          <Button
+            style={{ fontSize: "1.2rem", height: "unset" }}
+            leftSection={
+              orgDetails?.isPaused ? (
+                <IconPlayerPause size={"1rem"} />
+              ) : (
+                <IconPlayerPlay size={"1rem"} />
+              )
+            }
+            variant="outline"
+            onClick={openConfirmModal}
+            styles={{
+              inner: {
+                height: "40px",
+              },
+            }}
+          >
+            {orgDetails?.isPaused
+              ? "Resume Organization"
+              : "Pause Organization"}
+          </Button>
+        )}
         <Button
           style={{ fontSize: "1.2rem", height: "unset" }}
           rightSection={<IconPencil />}
@@ -120,6 +177,19 @@ export default function OrgById() {
           onClose={close}
         />
       )}
+      <ConfirmationModal
+        opened={openedConfirmModal}
+        onClose={closeConfirmModal}
+        confirmLabel="Yes"
+        headerTitle={
+          orgDetails?.isPaused ? "Resume Organization" : "Pause Organization"
+        }
+        onConfirm={() => {
+          handleOrgPauseStatus();
+        }}
+        headerLabel={`Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`}
+        closeLabel="cancel"
+      />
     </Stack>
   );
 }

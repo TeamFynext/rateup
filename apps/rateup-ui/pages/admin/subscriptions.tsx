@@ -110,7 +110,7 @@ export default function () {
       <Flex justify="space-between">
         <Group>
           <h1>Subscriptions</h1>
-          <RefreshButton queryKey="landingPages" />
+          <RefreshButton queryKeys={["subscriptions"]} />
         </Group>
         <Input
           placeholder="Search by OrgName or orgId"

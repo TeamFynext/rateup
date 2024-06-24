@@ -77,3 +77,24 @@ export const isCategoryActive = (item) => {
 };
 
 export const formatDate = (date) => dayjs(date).format("DD/MM/YYYY");
+
+export function isToday(isoDateString) {
+  return dayjs(isoDateString).isAfter(dayjs().startOf("day"));
+}
+
+export function isYesterday(isoDateString) {
+  return dayjs(isoDateString).isBetween(
+    dayjs().subtract(1, "day").startOf("day"),
+    dayjs().subtract(1, "day").endOf("day"),
+    null,
+    "[]",
+  );
+}
+
+export function isThisMonth(isoDateString) {
+  return dayjs(isoDateString).isAfter(dayjs().startOf("month"));
+}
+
+export function isInLastSevenDays(isoDateString) {
+  return dayjs().diff(dayjs(isoDateString), "week") == 0;
+}

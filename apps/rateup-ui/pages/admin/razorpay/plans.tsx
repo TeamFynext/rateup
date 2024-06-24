@@ -1,12 +1,4 @@
-import {
-  Box,
-  Stack,
-  Group,
-  Blockquote,
-  Text,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Box, Stack, Group, Blockquote, Text } from "@mantine/core";
 import React, { useState } from "react";
 import {
   DataGrid,
@@ -25,7 +17,6 @@ import {
 } from "../../../backend/payment/payment.query";
 import dayjs from "dayjs";
 import {
-  IconCheck,
   IconInfoCircle,
   IconRefresh,
   IconTrash,
@@ -35,13 +26,10 @@ import { PaymentPlanStatus } from "../../../types/enums";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import classes from "../../../components/Graph/graph.module.css";
+import RefreshButton from "../../../components/Button/RefreshButton";
 
 const RazorpayPlans = () => {
   const syncPlans = usePlanSyncMutation();
@@ -145,13 +133,7 @@ const RazorpayPlans = () => {
     },
   ];
 
-  const {
-    data: plans,
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-  } = usePaymentsPlans();
+  const { data: plans, isLoading, isError } = usePaymentsPlans();
   if (isError) return <div>error occured</div>;
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
@@ -177,25 +159,7 @@ const RazorpayPlans = () => {
         <Group justify="space-between">
           <Group gap={"xs"}>
             <Text>List of plans from Razorpay DB</Text>
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
-                  await refetch();
-                  showSuccessToast(
-                    "Data updated successfully",
-                    "",
-                    <IconCheck />,
-                  );
-                }}
-              >
-                <IconRefresh
-                  style={{ width: "80%", height: "80%" }}
-                  className={isRefetching ? classes.rotateInfinitely : null}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
+            <RefreshButton queryKeys={["paymentPlansQuery"]} />
           </Group>
 
           <RateupButtonSecondary

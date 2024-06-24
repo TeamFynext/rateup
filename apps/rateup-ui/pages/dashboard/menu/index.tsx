@@ -44,7 +44,7 @@ export default function MenuPage() {
         <Group>
           <Heading title="Menus" titleprops={{ w: "fit-content" }} />
           <InfoButton docUrl={`${docsPath}/menu`} />
-          <RefreshButton queryKey="allMenus" />
+          <RefreshButton queryKeys={["allMenus"]} />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
               title="Create Menu"

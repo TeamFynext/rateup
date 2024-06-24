@@ -14,7 +14,9 @@ import {
   createAuthToken,
   getGoogleAccessToken,
   deleteAuthToken,
+  updateOrgPause,
 } from "./org.api";
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export const useTeamsMembersOfOrg = () => {
   return useQuery({
@@ -188,6 +190,20 @@ export const useDeleteAuthToken = () => {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
+    },
+  });
+};
+
+export const useUpdateOrgPause = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateOrgPause,
+    onSuccess: () => {
+      showSuccessToast("Pause status has been updated");
+      queryClient.invalidateQueries({ queryKey: ["org"] });
+    },
+    onError: () => {
+      showErrorToast("Error in updating pause status");
     },
   });
 };
