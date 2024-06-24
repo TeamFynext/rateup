@@ -50,6 +50,10 @@ export const byOrgIdParams = z.object({
   orgId: z.string(),
 });
 
+export const pauseOrgSchema = z.object({
+  isPaused: z.boolean(),
+});
+
 export const { schemas: orgSchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createOrgRequestSchema,
@@ -59,6 +63,7 @@ export const { schemas: orgSchemas, $ref: $Sref } = buildJsonSchemas(
     updateLogoSchema,
     byOrgIdParams,
     updateOrgDetailsSchema,
+    pauseOrgSchema,
   },
   { $id: "orgSchema" },
 );
@@ -69,3 +74,4 @@ export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
 export type UpdateLogoInput = z.infer<typeof updateLogoSchema>;
 export type UpdateOrgDetailsInput = z.infer<typeof updateOrgDetailsSchema>;
 export type ByOrgIdParams = z.infer<typeof byOrgIdParams>;
+export type PauseOrgInput = z.infer<typeof pauseOrgSchema>;
