@@ -83,3 +83,7 @@ export async function deleteAuthToken() {
   const res = await axiosClient.delete(`org/auth-token`);
   return res.data;
 }
+
+export async function updateOrgPause({ orgId, data }) {
+  return await axiosClient.put(`org/pause/${orgId}`, data);
+}

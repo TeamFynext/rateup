@@ -1,29 +1,14 @@
-import {
-  Stack,
-  Group,
-  Box,
-  Text,
-  Blockquote,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Stack, Group, Box, Text, Blockquote } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
-import { IconCheck, IconInfoCircle, IconRefresh } from "@tabler/icons-react";
+import { IconInfoCircle } from "@tabler/icons-react";
 import React from "react";
 import { usePaymentSubcription } from "../../../backend/payment/payment.query";
 import styles from "../../../components/adminPanel/admin.module.css";
-import { showSuccessToast } from "../../../utils/notifications";
-import classes from "../../../components/Graph/graph.module.css";
+import RefreshButton from "../../../components/Button/RefreshButton";
 
 const RazorpaySubscriptions = () => {
-  const {
-    data: subscriptions,
-    isFetched,
-    refetch: refetchSubscribtions,
-    isLoading,
-    isRefetching,
-  } = usePaymentSubcription();
+  const { data: subscriptions, isFetched, isLoading } = usePaymentSubcription();
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -60,25 +45,7 @@ const RazorpaySubscriptions = () => {
         <Group justify="space-between">
           <Group gap={"xs"}>
             <Text>List of Subscriptions from Razorpay DB</Text>
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
-                  await refetchSubscribtions();
-                  showSuccessToast(
-                    "Data updated successfully",
-                    "",
-                    <IconCheck />,
-                  );
-                }}
-              >
-                <IconRefresh
-                  style={{ width: "80%", height: "80%" }}
-                  className={isRefetching ? classes.rotateInfinitely : null}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
+            <RefreshButton queryKeys={["paymentsubscription"]} />
           </Group>
         </Group>
       </Blockquote>

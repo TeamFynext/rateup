@@ -111,6 +111,13 @@ export default function Layout({ children, appProps }) {
   useEffect(() => {
     setUser(userInfo?.data);
 
+    if (userInfo?.data?.isOrgPaused)
+      router.push(`/login/callback/paused?pausedby=rateup`);
+    if (userInfo?.data?.isPaused)
+      router.push(
+        `/login/callback/paused?pausedby=${userInfo?.data?.pausedBy}`,
+      );
+
     if (userInfo === null)
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
   }, [userInfo]);

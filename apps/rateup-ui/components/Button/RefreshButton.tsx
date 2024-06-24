@@ -1,23 +1,27 @@
-// RefreshButton.jsx
 import React from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconRefresh, IconCheck } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
+import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 
-const RefreshButton = ({ queryKey }) => {
+const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
   const queryClient = useQueryClient();
 
   const handleRefresh = async () => {
-    queryClient.invalidateQueries({ queryKey: [queryKey] });
-    notifications.show({
-      color: "teal",
-      title: "Data Refreshed",
-      message: `Data Updated Successfully`,
-      autoClose: 1000,
-      loading: false,
-      icon: <IconCheck />,
-    });
+    showLoadingToast(
+      "Hold on..Data is refreshing",
+      "refresh",
+      true,
+      "Refreshing",
+    );
+    for (const queryKey of queryKeys)
+      await queryClient.invalidateQueries({ queryKey: [queryKey] });
+    showSuccessToast(
+      "Data Updated Successfully",
+      "refresh",
+      <IconCheck />,
+      true,
+    );
   };
 
   return (

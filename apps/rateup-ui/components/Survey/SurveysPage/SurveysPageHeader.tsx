@@ -43,7 +43,7 @@ export function SurveyHeader({
           )}
         </Group>
 
-        <RefreshButton queryKey="surveys" />
+        <RefreshButton queryKeys={["surveys"]} />
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
             rightIcon={<IconPlus />}
