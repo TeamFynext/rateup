@@ -1,11 +1,4 @@
-import {
-  Center,
-  Group,
-  Loader,
-  ScrollAreaAutosize,
-  Stack,
-  Title,
-} from "@mantine/core";
+import { Center, Group, Loader, Stack, Title } from "@mantine/core";
 import { useUsageStats } from "../../../backend/stats/stats.query";
 import {
   IconCategoryFilled,
@@ -13,6 +6,7 @@ import {
   IconClipboardList,
   IconClockFilled,
   IconEyeFilled,
+  IconMessage,
   IconMessageCircle2Filled,
   IconRefresh,
   IconSocial,
@@ -38,28 +32,26 @@ export const StatsCard = ({
   stats: string;
 }) => {
   return (
-    <>
-      <PaperLayout w={350}>
-        <Group>
-          <Center
-            bg={"var(--tertiary-color)"}
-            p={"sm"}
-            style={{ borderRadius: "5px", color: "white" }}
-          >
-            <Icon />
-          </Center>
-          <Stack gap={1}>
-            <Title order={3}>
-              {count}
-              {totalCount ? `/${totalCount}` : ""}
-            </Title>
-            <Title order={4} fw={400}>
-              {stats}
-            </Title>
-          </Stack>
-        </Group>
-      </PaperLayout>
-    </>
+    <PaperLayout w={350}>
+      <Group>
+        <Center
+          bg={"var(--tertiary-color)"}
+          p={"sm"}
+          style={{ borderRadius: "5px", color: "white" }}
+        >
+          <Icon />
+        </Center>
+        <Stack gap={1}>
+          <Title order={3}>
+            {count}
+            {totalCount ? `/${totalCount}` : ""}
+          </Title>
+          <Title order={4} fw={400}>
+            {stats}
+          </Title>
+        </Stack>
+      </Group>
+    </PaperLayout>
   );
 };
 export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
@@ -118,6 +110,8 @@ export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
 };
 
 export const MenuStats = ({ stats, totalStats }) => {
+  const isActive = totalStats?.menu?.active;
+  if (!isActive) return;
   const statsArray = [
     {
       Icon: IconCategoryFilled as unknown as string,
@@ -149,8 +143,9 @@ export const MenuStats = ({ stats, totalStats }) => {
   );
 };
 export const SurveyStats = ({ stats, totalStats }) => {
-  const totalSurveyCount =
-    totalStats?.webSurvey?.count?.max + totalStats?.whatsappSurvey?.count?.max;
+  const isActive = totalStats?.webSurvey?.active;
+  if (!isActive) return;
+  const totalSurveyCount = totalStats?.webSurvey?.count?.max;
   const statsArray = [
     {
       Icon: IconClipboardList as unknown as string,
@@ -182,6 +177,52 @@ export const SurveyStats = ({ stats, totalStats }) => {
     </Stack>
   );
 };
+export const WhatsappStats = ({ stats, totalStats }) => {
+  const isActive = totalStats?.whatsapp?.active;
+  if (!isActive) return;
+  const statsArray = [
+    {
+      Icon: IconClipboardList as unknown as string,
+      count: stats?.waSurveysCount,
+      totalCount: totalStats?.whatsapp?.flow?.count?.max,
+      stats: "Surveys",
+    },
+    {
+      Icon: IconClockFilled as unknown as string,
+      count: stats?.monthlyWaSurveyResponses,
+      totalCount: totalStats?.whatsapp?.count?.monthlyResponseLimit,
+      stats: "Monthly Responses",
+    },
+    {
+      Icon: IconMessageCircle2Filled as unknown as string,
+      count: stats?.waSurveyResponsesCount,
+      stats: "Total Responses",
+    },
+    {
+      Icon: IconMessage as unknown as string,
+      count: stats?.messagesCount,
+      totalCount: totalStats?.whatsapp?.count?.max,
+      stats: "Message",
+    },
+    {
+      Icon: IconClockFilled as unknown as string,
+      count: stats?.monthlyMessagesCount,
+      totalCount: totalStats?.whatsapp?.count?.monthlyMessageLimit,
+      stats: "Monthly Message",
+    },
+  ];
+
+  return (
+    <Stack gap={"xs"}>
+      <Title order={4}>Whatsapp Stats</Title>
+      <Group>
+        {statsArray.map((item, index) => (
+          <StatsCard {...item} key={index} />
+        ))}
+      </Group>
+    </Stack>
+  );
+};
 const UsageStats = ({ subscription }) => {
   const { data: stats, refetch, isRefetching, isLoading } = useUsageStats();
   return (
@@ -198,6 +239,7 @@ const UsageStats = ({ subscription }) => {
           />
           <SurveyStats stats={stats} totalStats={subscription?.features} />
           <MenuStats stats={stats} totalStats={subscription?.features} />
+          <WhatsappStats stats={stats} totalStats={subscription?.features} />
         </Stack>
       )}
     </>
