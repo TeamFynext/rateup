@@ -86,6 +86,7 @@ export async function getAllMembersWithTeams(orgId: string) {
               team: true,
             },
           },
+          isPaused: true,
         },
       },
     },
@@ -100,6 +101,7 @@ export async function getAllMembersWithTeams(orgId: string) {
       team_name: tm.team.name,
       team_code: tm.team.code,
     })),
+    isPaused: m.user.isPaused,
   }));
 }
 

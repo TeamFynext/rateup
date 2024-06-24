@@ -180,6 +180,8 @@ export async function getLoggedUserInfo(
           teamId: true,
         },
       },
+      isPaused: true,
+      pausedBy: true,
     },
   });
 
@@ -205,6 +207,7 @@ export async function getLoggedUserInfo(
       address: true,
       phone: true,
       encryptionKeys: true,
+      isPaused: true,
     },
   });
   return {
@@ -220,6 +223,9 @@ export async function getLoggedUserInfo(
     orgAddress: orgData?.address,
     teams: profile?.teamMember?.map((team) => team.teamId),
     encryptionKeys: orgData?.encryptionKeys ?? undefined,
+    isPaused: profile?.isPaused,
+    pausedBy: profile?.pausedBy,
+    isOrgPaused: orgData?.isPaused,
   };
 }
 

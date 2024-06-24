@@ -92,7 +92,6 @@ model Org {
   address           String?
   encryptionKeys    Json? //{privateKey:string,publicKey:string}
   isPaused          Boolean?        @default(false)
-  pausedBy          String?
   members           OrgMember[]
   teams             Team[]
   invitations       Invitation[]
