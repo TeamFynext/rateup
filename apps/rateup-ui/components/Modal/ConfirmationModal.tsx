@@ -70,7 +70,7 @@ export default function ConfirmationModal({
     >
       <Modal.Body>
         <Stack>
-          <Text fw={500}>{headerLabel}</Text>
+          <Text fw={500} dangerouslySetInnerHTML={{ __html: headerLabel }} />
           {forDeleteFunctionality && deleteQuotion && (
             <Blockquote
               color="red"
