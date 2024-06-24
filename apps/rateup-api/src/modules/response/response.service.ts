@@ -446,7 +446,12 @@ export async function createResponse(
   });
 
   surveyResponse &&
-    updateMonthlyStat("survey", surveyResponse?.surveyTeamMap?.team.orgId);
+    updateMonthlyStat(
+      surveyResponse.platform === "WHATSAPP"
+        ? SubscriptionFeaturePathName.WhatsAppSurvey
+        : "survey",
+      surveyResponse?.surveyTeamMap?.team.orgId,
+    );
 
   if (shouldRaiseTicket && input?.responses?.length > 0) {
     //generate ticket
