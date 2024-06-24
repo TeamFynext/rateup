@@ -175,14 +175,3 @@ export function assertRootOrg(
   }
   done();
 }
-
-export function getUserRecipeName(recipeId) {
-  switch (recipeId) {
-    case "thirdparty":
-      return UserRecipes.ThirdPartyGoogle;
-    case "emailpassword":
-      return UserRecipes.EmailPassword;
-    case "passwordless":
-      return UserRecipes.PasswordLess;
-  }
-}

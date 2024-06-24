@@ -5,6 +5,7 @@ import {
   getAllUsers,
   getLoggedUserInfo,
   getLoggedUserProfile,
+  getUserRecipeName,
   pauseUser,
   updateUserActiveStatus,
   updateUserProfile,
@@ -25,9 +26,7 @@ import Session from "supertokens-node/recipe/session";
 import { Prisma } from "@prisma/client";
 import { log } from "../../utils/logger";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
-import { UserRecipes } from "../../types/enums";
 import { IdParamInput } from "../survey/survey.schema";
-import { getUserRecipeName } from "../../utils/auth";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,

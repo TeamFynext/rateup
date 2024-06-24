@@ -18,7 +18,7 @@ import { cloneSurvey } from "../survey/survey.service";
 import { cloneMenu } from "../menu/menu.service";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
 import { getUserInfo } from "../../utils/supertoken/supertoken";
-import { getUserRecipeName } from "../../utils/auth";
+import { UserRecipes } from "../../types/enums";
 
 const prisma = new PrismaClient();
 
@@ -453,4 +453,15 @@ export async function pauseUser(id, data: PauseUserInput) {
     },
     data,
   });
+}
+
+export function getUserRecipeName(recipeId) {
+  switch (recipeId) {
+    case "thirdparty":
+      return UserRecipes.ThirdPartyGoogle;
+    case "emailpassword":
+      return UserRecipes.EmailPassword;
+    case "passwordless":
+      return UserRecipes.PasswordLess;
+  }
 }
