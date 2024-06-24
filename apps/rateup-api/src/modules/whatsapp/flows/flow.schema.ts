@@ -32,10 +32,12 @@ const updateFlowInput = z.object({
   templateMessage: z.custom<WaFlowTemplateMessage>().optional(),
   startMessageConfig: z.custom<WaFlowStartMessageConfig>().optional(),
   pendingSave: z.boolean().optional(),
+  anonymous: z.boolean().optional(),
 });
 const updateFlowMetaInput = z.object({
   name: z.string().optional(),
   // categories: z.array(z.string()).optional(),
+  anonymous: z.boolean().optional(),
 });
 
 const cloneFlowSchema = z.object({
