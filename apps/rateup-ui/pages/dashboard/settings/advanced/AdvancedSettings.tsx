@@ -4,13 +4,16 @@ import {
   useGetGoogleAccessToken,
   useDeleteAuthToken,
   useGetAuthorizationUrl,
-} from "../../../backend/org/org.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import useLocalStorage from "../../../hooks/localStorage";
+} from "../../../../backend/org/org.query";
+import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
+import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
+import useLocalStorage from "../../../../hooks/localStorage";
 import { notifications } from "@mantine/notifications";
 import ETESettings from "./EteSettings";
-import ApiAccessKeyPage from "../../../components/ExternalApi/ApiAccessKey";
+import ApiAccessKeyPage from "../../../../components/ExternalApi/ApiAccessKey";
+import PermanentDelete from "./PermanentDelete";
+import { UserRole } from "../../../../utils/enums";
+import { useUser } from "../../../../context/UserContext";
 
 const AdvancedSettings = () => {
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
@@ -18,6 +21,7 @@ const AdvancedSettings = () => {
   const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
   const deleteAuthTokenMutation = useDeleteAuthToken();
   const { data: authUrl } = useGetAuthorizationUrl();
+  const { user } = useUser();
 
   const [callbackRoute, setCallBackRoute] = useLocalStorage(
     "google-callback-route",
@@ -101,6 +105,14 @@ const AdvancedSettings = () => {
       <Divider />
       <ETESettings />
       <Divider />
+
+      {user?.role === UserRole.SUPADM && (
+        <PermanentDelete orgId={user?.orgId} />
+      )}
+
+      <Divider />
+      <Divider />
+
       <ApiAccessKeyPage />
     </Stack>
   );
