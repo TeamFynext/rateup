@@ -23,9 +23,17 @@ import {
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
 import { UserRole } from "../../../utils/enums";
-import { IconTrash, IconUserEdit } from "@tabler/icons-react";
+import {
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconTrash,
+  IconUserEdit,
+} from "@tabler/icons-react";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { useUpdateActiveStatusMutation } from "../../../backend/user/user.query";
+import {
+  useUpdateActiveStatusMutation,
+  useUpdateUserPause,
+} from "../../../backend/user/user.query";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
@@ -63,12 +71,18 @@ const Members = () => {
         ) : (
           <Stack>
             {membersData?.data?.map(
-              ({ email, id, role, teams, name }, i: number) => (
+              ({ email, id, role, teams, name, isPaused }, i: number) => (
                 <>
                   <LongMemberCard
                     key={id}
                     openModal={() => setMemberModalOpenedId(id)}
-                    member={{ id: id, email: email, name: name, role: role }}
+                    member={{
+                      id: id,
+                      email: email,
+                      name: name,
+                      role: role,
+                      isPaused,
+                    }}
                     teams={teams}
                   />
                   {i !== membersData?.data?.length - 1 && <Divider />}
@@ -112,8 +126,8 @@ const SmallMemberCard = ({
           member?.role === UserRole.SUPADM
             ? "red"
             : member?.role === UserRole.ADM
-            ? "orange"
-            : "green"
+              ? "orange"
+              : "green"
         }
         variant="light"
         size="lg"
@@ -190,13 +204,22 @@ const LongMemberCard = ({
   openModal,
   teams,
 }: {
-  member: { id: string; name: string; role: string; email: string };
+  member: {
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    isPaused: boolean;
+  };
   teams: Team[];
   openModal?: () => void;
 }) => {
   const [modalOpened, { close, open, toggle }] = useDisclosure();
+  const [pauseModalOpened, { open: openPauseModal, close: closePauseModal }] =
+    useDisclosure();
   const { user } = useUser();
   const updateStatus = useUpdateActiveStatusMutation();
+  const updatePauseStatus = useUpdateUserPause();
   function onUpdateStatus() {
     updateStatus.mutate(member?.id);
     notifications.show({
@@ -209,6 +232,14 @@ const LongMemberCard = ({
     });
     close();
   }
+
+  const handleUserStatus = () => {
+    const data = {
+      isPaused: !member.isPaused,
+      pausedBy: "org",
+    };
+    updatePauseStatus.mutate({ userId: member.id, data });
+  };
   return (
     <>
       <Group justify="space-between">
@@ -222,8 +253,8 @@ const LongMemberCard = ({
                 member?.role === UserRole.SUPADM
                   ? "red"
                   : member?.role === UserRole.ADM
-                  ? "orange"
-                  : "green"
+                    ? "orange"
+                    : "green"
               }
               variant="dot"
               size="sm"
@@ -234,6 +265,7 @@ const LongMemberCard = ({
           <Text size="xs" c={"dimmed"}>
             {member?.email}
           </Text>
+          {member.isPaused && <Badge color="red">Paused</Badge>}
         </Stack>
         <Stack style={{ flex: 1 }} gap={5}>
           <Text size="xs" fw={400} c={"dimmed"}>
@@ -270,6 +302,17 @@ const LongMemberCard = ({
           >
             <IconTrash size={15} />
           </Button>
+          <Button
+            size="compact-md"
+            onClick={openPauseModal}
+            disabled={user.userId === member.id}
+          >
+            {member.isPaused ? (
+              <IconPlayerPause size={"1rem"} />
+            ) : (
+              <IconPlayerPlay size={"1rem"} />
+            )}
+          </Button>
         </Group>
       </Group>
       <ConfirmationModal
@@ -280,6 +323,14 @@ const LongMemberCard = ({
         headerLabel="Are you sure to delete this team Member?"
         onConfirm={onUpdateStatus}
         onClose={close}
+      />
+      <ConfirmationModal
+        opened={pauseModalOpened}
+        confirmLabel="Yes"
+        headerTitle={member?.isPaused ? "Resume User" : "Pause User"}
+        headerLabel={`Are you sure to ${member?.isPaused ? "resume" : "pause"} this user?`}
+        onConfirm={handleUserStatus}
+        onClose={closePauseModal}
       />
     </>
   );

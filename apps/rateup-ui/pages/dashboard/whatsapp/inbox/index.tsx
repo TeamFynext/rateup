@@ -17,6 +17,8 @@ import WhatsAppInboxLoader from "../../../../components/whatsapp/inbox/loader";
 import { whatsappTheme } from "../../../../config/mantineTheme";
 import { useWsData } from "../../../../context/UserContext";
 import styles from "./WhatsappInbox.module.css";
+import ChatDisplayContext from "./ChatDisplayContext";
+import { useMediaQuery } from "@mantine/hooks";
 
 export default function WhatsAppInbox() {
   const queryClient = useQueryClient();
@@ -123,6 +125,8 @@ export default function WhatsAppInbox() {
     }
   }, [wsData]);
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   if (isContactsFetching)
     return <WhatsAppInboxLoader isLoading={isContactsFetching} />;
   if (error) return <div>Error: {error.message}</div>;
@@ -130,36 +134,38 @@ export default function WhatsAppInbox() {
 
   return (
     <MantineProvider theme={whatsappTheme}>
-      <Stack className={styles["whatsapp-inbox-root-div"]}>
-        <Title>Inbox</Title>
-        <Group className={styles["chat-selector-and-chat-container"]}>
-          <WaInboxChatSelect
-            contacts={contactList}
-            setFilteredContacts={setFilteredContactList}
-          />
-          <WaInboxChatDisplay
-            messages={
-              data?.pages
-                .map((page) =>
-                  page.messages.sort(
-                    (a, b) =>
-                      new Date(a.waCreatedAt).getTime() -
-                      new Date(b.waCreatedAt).getTime(),
-                  ),
+      <ChatDisplayContext>
+        <Stack className={styles["whatsapp-inbox-root-div"]}>
+          {!isMobile && <Title>Inbox</Title>}
+          <Group className={styles["chat-selector-and-chat-container"]}>
+            <WaInboxChatSelect
+              contacts={contactList}
+              setFilteredContacts={setFilteredContactList}
+            />
+            <WaInboxChatDisplay
+              messages={
+                data?.pages
+                  .map((page) =>
+                    page.messages.sort(
+                      (a, b) =>
+                        new Date(a.waCreatedAt).getTime() -
+                        new Date(b.waCreatedAt).getTime(),
+                    ),
+                  )
+                  .flat() || []
+              }
+              contact={
+                contactList.find(
+                  (contact) => contact.id === searchParams.get("contactId"),
+                ) ??
+                filteredContactList.find(
+                  (contact) => contact.id === searchParams.get("contactId"),
                 )
-                .flat() || []
-            }
-            contact={
-              contactList.find(
-                (contact) => contact.id === searchParams.get("contactId"),
-              ) ??
-              filteredContactList.find(
-                (contact) => contact.id === searchParams.get("contactId"),
-              )
-            }
-          />
-        </Group>
-      </Stack>
+              }
+            />
+          </Group>
+        </Stack>
+      </ChatDisplayContext>
     </MantineProvider>
   );
 }

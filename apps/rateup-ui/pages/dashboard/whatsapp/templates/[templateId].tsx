@@ -348,7 +348,7 @@ export default function WhatsappTemplateById() {
           <Grid>
             <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }} pos={"relative"}>
               {editingItem?.data?.id && value && (
-                <Overlay color="#fff" backgroundOpacity={0} />
+                <Overlay color="#fff" backgroundOpacity={0} zIndex={10} />
               )}
               <PaperLayout
                 p={"xl"}
@@ -385,7 +385,7 @@ export default function WhatsappTemplateById() {
                         value={editingItem?.data?.id}
                         label={"Template ID"}
                         style={{
-                          zIndex: 999,
+                          zIndex: 11,
                         }}
                       />
                     )}

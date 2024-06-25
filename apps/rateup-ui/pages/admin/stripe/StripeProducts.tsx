@@ -1,13 +1,4 @@
-import {
-  ActionIcon,
-  Badge,
-  Blockquote,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Badge, Blockquote, Group, Stack, Text } from "@mantine/core";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -25,7 +16,6 @@ import { PaymentPlanStatus } from "../../../types/enums";
 import dayjs from "dayjs";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import {
-  IconCheck,
   IconInfoCircle,
   IconRefresh,
   IconTrash,
@@ -34,13 +24,10 @@ import {
 import classes from "../../../components/Graph/graph.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 import { useState } from "react";
 import { useRateupPaymentsPlans } from "../../../backend/payment/payment.query";
+import RefreshButton from "../../../components/Button/RefreshButton";
 
 const StripeProducts = () => {
   const { data: products, isRefetching, refetch } = useGetStripeProducts();
@@ -175,25 +162,7 @@ const StripeProducts = () => {
         <Group justify="space-between">
           <Group gap={"xs"}>
             <Text>List of products from Stripe DB</Text>
-            <Tooltip label="Refresh data">
-              <ActionIcon
-                variant="light"
-                onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
-                  await refetch();
-                  showSuccessToast(
-                    "Data updated successfully",
-                    "",
-                    <IconCheck />,
-                  );
-                }}
-              >
-                <IconRefresh
-                  style={{ width: "80%", height: "80%" }}
-                  className={isRefetching ? classes.rotateInfinitely : null}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
+            <RefreshButton queryKeys={["stripeProducts"]} />
           </Group>
           <RateupButtonSecondary
             title="Sync"

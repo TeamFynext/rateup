@@ -29,8 +29,7 @@ const OverallResponseGraph = ({
   data,
   timePeriod,
   setTimePeriod,
-  isFetching,
-  refetch,
+  refreshKeys,
 }) => {
   const { data: allSurveysSummary } = useAllSurveysSummary();
   let total = 0;
@@ -61,7 +60,7 @@ const OverallResponseGraph = ({
                   Overall Responses
                 </Text>
               </Stack>
-              <RefreshButton queryKey="allSurveysSummary" />
+              <RefreshButton queryKeys={refreshKeys} />
             </Group>
 
             <Group className={classes["hour-daily-weekly-btn-container"]}>

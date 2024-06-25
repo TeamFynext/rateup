@@ -111,6 +111,13 @@ export default function Layout({ children, appProps }) {
   useEffect(() => {
     setUser(userInfo?.data);
 
+    if (userInfo?.data?.isOrgPaused)
+      router.push(`/login/callback/paused?pausedby=rateup`);
+    if (userInfo?.data?.isPaused)
+      router.push(
+        `/login/callback/paused?pausedby=${userInfo?.data?.pausedBy}`,
+      );
+
     if (userInfo === null)
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
   }, [userInfo]);
@@ -165,9 +172,13 @@ export default function Layout({ children, appProps }) {
 
           <motion.div className={styles["content-container"]}>
             <Transition mounted={!focus} transition="slide-down">
-              {(transitionStyle) => (
-                <HeaderTabs opened={navOpened} style={transitionStyle} />
-              )}
+              {(transitionStyle) =>
+                !isViewPortLEQ768px ? (
+                  <HeaderTabs opened={navOpened} style={transitionStyle} />
+                ) : (
+                  <Box h={60}></Box>
+                )
+              }
             </Transition>
             <Flex className={`${styles["content-wrapper"]}`}>
               <NavControlContext.Provider value={{ navOpened, setNavOpened }}>

@@ -36,3 +36,9 @@
   height: 100%;
   border: 0;
 }
+
+@media screen and (max-width: 768px) {
+  .report-bug-container-wrapper {
+    display: none;
+  }
+}

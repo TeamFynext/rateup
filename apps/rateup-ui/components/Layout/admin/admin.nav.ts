@@ -14,6 +14,11 @@ import { IconQrcode } from "@tabler/icons-react";
 
 export const adminNavItems = [
   {
+    Icon: IconUser,
+    label: "User Stats",
+    href: "/admin/userstats",
+  },
+  {
     Icon: IconWorld,
     label: "Orgs",
     href: "/admin/orgs",
@@ -57,10 +62,5 @@ export const adminNavItems = [
     Icon: IconLayoutCards,
     label: "Update all themes",
     href: "/admin/updateAllThemes",
-  },
-  {
-    Icon: IconUser,
-    label: "User Stats",
-    href: "/admin/userstats",
   },
 ];

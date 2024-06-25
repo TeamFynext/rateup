@@ -1,84 +1,135 @@
-import {
-  Group,
-  Stack,
-  Title,
-  Text,
-  Badge,
-  Flex,
-  Avatar,
-  Divider,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Group, Stack, Title, Text, Badge, Flex } from "@mantine/core";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridActionsCellItem,
+  GridColDef,
+  GridRenderCellParams,
+  GridToolbar,
+} from "@mui/x-data-grid";
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
   useGetAllUsers,
   useUpdateRecipeNameMutation,
+  useUpdateUserPause,
 } from "../../../backend/user/user.query";
-import dayjs from "dayjs";
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
-import { stringToColour } from "../../../utils/essential";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import { useDisclosure } from "@mantine/hooks";
-import { Users } from "../../../backend/user/user.api";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import { showLoadingToast } from "../../../utils/notifications";
+import RefreshButton from "../../../components/Button/RefreshButton";
 import {
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
-import classes from "../../../components/Graph/graph.module.css";
+  formatIsoDateStringWithTime,
+  isInLastSevenDays,
+  isThisMonth,
+  isToday,
+  isYesterday,
+} from "../../../utils/dateTime";
+import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
+import { getUserRoleColor } from "../../../utils";
+import UserModal from "./UserModal";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 const index = () => {
-  const {
-    data: orgs,
-    refetch: refetchOrgs,
-    isRefetching: isOrgRefetching,
-  } = useAllOrgs();
-  const { data: users, refetch, isRefetching } = useGetAllUsers();
+  const { data: orgs } = useAllOrgs();
+  const { data: users } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
+  const updatePauseStatus = useUpdateUserPause();
   const rows = users
     ? users?.map((user) => ({
         id: user?.email,
-        orgNames: user?.org?.map((org) => org.name),
-        signupDate: dayjs(user?.createdAt).format("DD/MM/YYYY hh:mm A"),
+        orgName: user?.orgName,
+        role: user?.role,
+        signupDate: formatIsoDateStringWithTime(user?.createdAt),
+        recipeName: user?.recipeName,
+        status: user?.active,
+        isPaused: user?.isPaused ? "YES" : "NO",
       }))
     : [];
 
   const [userStats, setUserStats] = useState({
     today: null,
+    yesterday: null,
     lastWeek: null,
-    lastMonth: null,
+    thisMonth: null,
   });
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<Users>(null);
+  const [
+    openedConfirmModal,
+    { open: openConfirmModal, close: closeConfirmModal },
+  ] = useDisclosure(false);
+  const [selectedUser, setSelectedUser] = useState<UserData>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "Email ID", width: 300 },
     {
-      field: "orgNames",
-      headerName: "Organizations",
+      field: "orgName",
+      headerName: "Organization",
+      width: 200,
+    },
+    {
+      field: "role",
+      headerName: "Role",
       renderCell: (params: GridRenderCellParams<any, any>) => {
-        const orgs = params.value;
-        return (
-          <Group>
-            {orgs.map((orgName, index) => (
-              <Badge key={index} color={stringToColour(orgName)} p={"xs"}>
-                {orgName}
-              </Badge>
-            ))}
-          </Group>
-        );
+        const role = params.value;
+        return <Badge color={getUserRoleColor(role)}>{role}</Badge>;
       },
-      width: 300,
+      width: 200,
     },
     { field: "signupDate", headerName: "SignUp Date", width: 200 },
+    { field: "recipeName", headerName: "Recipe", width: 200 },
+    { field: "isPaused", headerName: "Is Paused", width: 200 },
+    {
+      field: "status",
+      headerName: "Status",
+      renderCell: (params) => {
+        const active = params.value;
+        return (
+          <Badge color={active ? "green" : "red"}>
+            {active ? "Active" : "Inactive"}
+          </Badge>
+        );
+      },
+      width: 200,
+    },
+    {
+      field: "action",
+      headerName: "Actions",
+      type: "actions",
+      width: 200,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={
+            params.row.isPaused === "YES" ? (
+              <IconPlayerPause size={"1rem"} />
+            ) : (
+              <IconPlayerPlay size={"1rem"} />
+            )
+          }
+          onClick={() => {
+            const user = users?.find((user) => user.email === params.id);
+            setSelectedUser(user);
+            openConfirmModal();
+          }}
+          label={params.row.isPaused === "YES" ? "Resume" : "Pause"}
+          showInMenu
+        />,
+      ],
+    },
   ];
+
+  const handleUserStatus = () => {
+    const data = {
+      isPaused: !selectedUser.isPaused,
+      pausedBy: "rateup",
+    };
+    updatePauseStatus.mutate({ userId: selectedUser.userId, data });
+  };
+
   const handleUpdateUserRecipe = () => {
     showLoadingToast(
       "Recipes getting updated",
@@ -88,21 +139,24 @@ const index = () => {
     );
     updateRecipeMutation.mutate();
   };
+
   useEffect(() => {
     if (users) {
-      const today = users.filter(
-        (user) => dayjs().diff(user.createdAt, "days") == 0,
+      const today = users.filter((user) => isToday(user?.createdAt))?.length;
+      const yesterday = users.filter((user) =>
+        isYesterday(user.createdAt),
       )?.length;
-      const lastWeek = users.filter(
-        (user) => dayjs().diff(user.createdAt, "week") == 0,
+      const lastWeek = users.filter((user) =>
+        isInLastSevenDays(user?.createdAt),
       )?.length;
-      const lastMonth = users.filter(
-        (user) => dayjs().diff(user.createdAt, "month") == 0,
+      const thisMonth = users.filter((user) =>
+        isThisMonth(user?.createdAt),
       )?.length;
       setUserStats({
         today,
+        yesterday,
         lastWeek,
-        lastMonth,
+        thisMonth,
       });
       //To check is all users recipe name has updated
       setIsUpdatedRecipe(
@@ -110,34 +164,13 @@ const index = () => {
       );
     }
   }, [users]);
+
   return (
-    <Stack>
+    <Stack gap={"xs"}>
       <Flex gap={"xl"} pr={"lg"}>
         <Group flex={1} align="flex-start">
           <Title order={2}>User Stats</Title>
-          <Tooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              onClick={async (event: React.MouseEvent<HTMLButtonElement>) => {
-                await Promise.all([refetch(), refetchOrgs()]);
-                showSuccessToast(
-                  "Data updated successfully",
-                  "",
-                  <IconCheck />,
-                );
-              }}
-            >
-              <IconRefresh
-                style={{ width: "80%", height: "80%" }}
-                className={
-                  isRefetching || isOrgRefetching
-                    ? classes.rotateInfinitely
-                    : null
-                }
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+          <RefreshButton queryKeys={["allUsers", "org"]} />
         </Group>
         <RateupButtonBlue
           title="Update User Recipe"
@@ -145,46 +178,23 @@ const index = () => {
           disabled={isUpdatedRecipe}
         />
         <PaperLayout w={300}>
-          <Title order={4}>Total</Title>
-          <Group justify="space-between" p={"sm"}>
-            <Stack gap={1} align="center">
-              <Title>{orgs?.length}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Organizations
-              </Text>
-            </Stack>
-            <Stack gap={1} align="center">
-              <Title>{users?.length}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Users
-              </Text>
-            </Stack>
+          <Title order={5}>Total</Title>
+          <Group justify="space-between" px={"sm"}>
+            <CountStatsCard label={"Organizations"} count={orgs?.length} />
+            <CountStatsCard label={"Users"} count={users?.length} />
           </Group>
         </PaperLayout>
-        <PaperLayout w={400}>
-          <Title order={4}>User Stats</Title>
-          <Group justify="space-between" p={"sm"}>
-            <Stack gap={1} align="center">
-              <Title>{userStats.today}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Today
-              </Text>
-            </Stack>
-            <Stack gap={1} align="center">
-              <Title>{userStats.lastWeek}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Last Week
-              </Text>
-            </Stack>
-            <Stack gap={1} align="center">
-              <Title>{userStats.lastMonth}</Title>
-              <Text fw={600} c={"dimmed"}>
-                Last Month
-              </Text>
-            </Stack>
+        <PaperLayout w={500}>
+          <Title order={5}>User Stats</Title>
+          <Group justify="space-between" px={"sm"}>
+            <CountStatsCard label={"Today"} count={userStats.today} />
+            <CountStatsCard label={"Yesterday"} count={userStats.yesterday} />
+            <CountStatsCard label={"Last 7 days"} count={userStats.lastWeek} />
+            <CountStatsCard label={"This Month"} count={userStats.thisMonth} />
           </Group>
         </PaperLayout>
       </Flex>
+      <Title order={4}>Most Recent SignUps</Title>
       <Box
         sx={{
           height: "60vh",
@@ -195,8 +205,17 @@ const index = () => {
           rows={rows}
           columns={columns}
           onRowClick={(params) => {
-            setSelectedUser(users?.find((user) => user.email === params.id));
+            const user = users?.find((user) => user.email === params.id);
+            setSelectedUser(user);
             open();
+          }}
+          slots={{
+            toolbar: GridToolbar,
+          }}
+          slotProps={{
+            toolbar: {
+              showQuickFilter: true,
+            },
           }}
         />
       </Box>
@@ -205,52 +224,32 @@ const index = () => {
         opened={opened}
         onClose={close}
         title=""
-        size="lg"
+        size="xl"
       >
         <UserModal selectedUser={selectedUser} />
       </FormModalLayout>
+      <ConfirmationModal
+        opened={openedConfirmModal}
+        onClose={closeConfirmModal}
+        confirmLabel="Yes"
+        headerTitle={selectedUser?.isPaused ? "Resume User" : "Pause User"}
+        onConfirm={() => {
+          handleUserStatus();
+        }}
+        headerLabel={`Are you sure to ${selectedUser?.isPaused ? "resume" : "pause"} this user?`}
+        closeLabel="cancel"
+      />
     </Stack>
   );
 };
 
-const UserModal = ({ selectedUser }) => {
+export const CountStatsCard = ({ label, count }) => {
   return (
-    <Stack>
-      <Group>
-        <Avatar
-          src={
-            `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}` ??
-            null
-          }
-          size={"lg"}
-        />
-        <Stack gap={1}>
-          <Title order={3}>{selectedUser?.name}</Title>
-          <Text c={"dimmed"}>{selectedUser?.id}</Text>
-        </Stack>
-      </Group>
-      <PaperLayout>
-        <Title order={4}>Organizations</Title>
-        <Divider my={"sm"} />
-        {selectedUser?.org.map((org, index) => (
-          <>
-            <Group key={index}>
-              <Avatar
-                src={
-                  `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${org.logo}` ??
-                  null
-                }
-                size={"md"}
-              />
-              <Stack gap={1}>
-                <Title order={5}>{org?.name}</Title>
-                <Text c={"dimmed"}>{org?.id}</Text>
-              </Stack>
-            </Group>
-            {index !== selectedUser?.org.length - 1 && <Divider my={"sm"} />}
-          </>
-        ))}
-      </PaperLayout>
+    <Stack gap={1} align="center">
+      <Title>{count}</Title>
+      <Text fw={600} c={"dimmed"}>
+        {label}
+      </Text>
     </Stack>
   );
 };

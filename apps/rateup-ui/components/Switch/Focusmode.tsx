@@ -1,10 +1,13 @@
 import { Paper } from "@mantine/core";
 import { useRouter } from "next/router";
 import { IconMaximize, IconMaximizeOff } from "@tabler/icons-react";
+import styles from "./Focusmode.module.css";
+
 interface focusmodeInterface {
   focus: boolean;
   toggleFocus: (focus: boolean) => void;
 }
+
 export default function FocusMode({ focus, toggleFocus }: focusmodeInterface) {
   const router = useRouter();
   if (
@@ -15,6 +18,7 @@ export default function FocusMode({ focus, toggleFocus }: focusmodeInterface) {
   ) {
     return (
       <Paper
+        className={styles["focus-mode-div"]}
         pos={"fixed"}
         p={10}
         bottom={5}

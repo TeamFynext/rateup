@@ -94,7 +94,7 @@ export default function Template() {
             All Templates
           </Title>
           <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
-          <RefreshButton queryKey="watemplates" />
+          <RefreshButton queryKeys={["watemplates"]} />
           <RateupButtonBlue
             title="Create Templates"
             rightIcon={<IconPlus size={"1rem"} />}
