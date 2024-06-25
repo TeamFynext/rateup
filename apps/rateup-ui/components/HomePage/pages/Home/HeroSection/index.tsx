@@ -8,9 +8,7 @@ import LightBlueGradientBg from "../../../components/LightBlueGradientBg";
 import { imagePath } from "../../constants";
 import styles from "./HeroSection.module.css";
 import TrustedByCompaniesCarousel from "./TrustedByCompaniesCarousel";
-import { analyseEvent } from "../../../../../utils/gtag";
-import { isProduction } from "../../../../../utils/constants";
-import { fbEvent } from "../../../../../utils/fbpixel";
+import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 
 const cx = classNames.bind(styles);
 
@@ -37,16 +35,11 @@ function HeroSection() {
               className={cx("play-video-btn")}
               leftSection={<IconPlayerPlay size={"1em"} />}
               onClick={() => {
-                if (isProduction) {
-                  analyseEvent({
-                    action: "button_click",
-                    category: "play_video",
-                    label: "Clicked on youtube vedio play button in home page",
-                  });
-                  fbEvent("PlayVideoButtonClick", {
-                    label: "Clicked on youtube vedio play button in home page",
-                  });
-                }
+                gAnalyticsAndFbEvent(
+                  "play_video",
+                  "PlayVideoButtonClick",
+                  "Clicked on youtube video play button in home page",
+                );
                 window?.open("https://youtu.be/knlzbNSHTRM", "_blank");
               }}
             >

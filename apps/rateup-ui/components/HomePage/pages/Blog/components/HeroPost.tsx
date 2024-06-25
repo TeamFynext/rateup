@@ -5,7 +5,7 @@ import { Flex, Stack, Title } from "@mantine/core";
 import styles from "./blog.module.css";
 import { useRouter } from "next/router";
 import Button from "../../../components/Button";
-
+import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 type Props = {
   title: string;
   coverImage: string;
@@ -17,6 +17,11 @@ const HeroPost = ({ title, coverImage, date, slug }: Props) => {
   const router = useRouter();
 
   const handleClick = () => {
+    gAnalyticsAndFbEvent(
+      "read_more_blog",
+      "ReadMoreBlogButtonClick",
+      "Clicked on Read More button in the blog page",
+    );
     router.push(`/blog/${encodeURIComponent(slug)}`);
   };
   return (

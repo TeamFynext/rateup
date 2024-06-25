@@ -1,9 +1,7 @@
 import { Flex } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useCallback } from "react";
-import { isProduction } from "../../../../utils/constants";
-import { fbEvent } from "../../../../utils/fbpixel";
-import { analyseEvent } from "../../../../utils/gtag";
+import { gAnalyticsAndFbEvent } from "../../../../utils/gtag";
 import modalStyles from "../../../Modal/ModalManagerModals/BookDemoModal/ModalStyles.module.css";
 import Button from "../Button";
 
@@ -36,33 +34,21 @@ function BookDemoContactForm({
       closeOnClickOutside: false,
       innerProps: {},
     });
-    if (isProduction) {
-      switch (clickedFromPage) {
-        case "digital-menu-page": {
-          analyseEvent({
-            action: "button_click",
-            category: "digital_menu",
-            label:
-              "Clicked on join now button in digital menu section of home page",
-          });
-          fbEvent("DigitalMenuJoinNow", {
-            label:
-              "Clicked on join now button in digital menu section of home page",
-          });
-          break;
-        }
+    switch (clickedFromPage) {
+      case "digital-menu-page":
+        gAnalyticsAndFbEvent(
+          "digital_menu",
+          "DigitalMenuJoinNow",
+          "Clicked on join now button in digital menu section of home page",
+        );
+        break;
 
-        default: {
-          analyseEvent({
-            action: "button_click",
-            category: "book_demo",
-            label: "Clicked on Book demo button in home page",
-          });
-          fbEvent("BookDemo", {
-            label: "Clicked on Book demo button in home page",
-          });
-        }
-      }
+      default:
+        gAnalyticsAndFbEvent(
+          "book_demo",
+          "BookDemo",
+          "Clicked on Book demo button in home page",
+        );
     }
   }, [modals, clickedFromPage]);
 
