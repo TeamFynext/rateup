@@ -9,14 +9,17 @@ import {
   getOrgStats,
   getTeamsMembers,
   initializeAuthClient,
+  pauseOrg,
   saveAuthTokens,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgUserRole,
 } from "./org.services";
 import {
+  ByOrgIdParams,
   CreateOrgInput,
   IdParamInput,
+  PauseOrgInput,
   UpdateLogoInput,
   UpdateOrgDetailsInput,
   UpdateRoleInput,
@@ -268,5 +271,19 @@ export async function deleteGoogleAuthTokenHandler(
   } catch (error) {
     console.error(error);
     reply.code(500).send();
+  }
+}
+
+export async function pauseOrgHandler(
+  request: FastifyRequest<{ Body: PauseOrgInput; Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.params.id;
+    const res = await pauseOrg(orgId, request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
   }
 }

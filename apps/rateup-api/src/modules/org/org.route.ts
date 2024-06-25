@@ -10,6 +10,7 @@ import {
   getAllTeamsAndMembers,
   getGoogleAuthUrl,
   getOrgStatsHandler,
+  pauseOrgHandler,
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
@@ -18,6 +19,7 @@ import { $Sref } from "./org.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { checkSession } from "../../utils/checkSession";
 import { assertRootOrg } from "../../utils/auth";
+import { $UserRef } from "../user/user.schema";
 export async function orgRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
@@ -140,5 +142,17 @@ export async function orgRoutes(server: FastifyInstance) {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     deleteGoogleAuthTokenHandler,
+  );
+
+  server.put(
+    "/pause/:id",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: $Sref("idParamRequestSchema"),
+        body: $Sref("pauseOrgSchema"),
+      },
+    },
+    pauseOrgHandler,
   );
 }

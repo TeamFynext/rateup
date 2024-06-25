@@ -6,6 +6,7 @@ import {
   getAllUsersHandler,
   getLoggedUserInfoHandler,
   getLoggedUserProfileHandler,
+  pauseUserHandler,
   updateProfileHandler,
   updateProfilePhotoHandler,
   updateRecipeNameHandler,
@@ -13,6 +14,7 @@ import {
 } from "./user.controller";
 import { $UserRef } from "./user.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
+import { $Sref } from "../survey/survey.schema";
 
 export async function userRoutes(server: FastifyInstance) {
   server.get(
@@ -97,5 +99,17 @@ export async function userRoutes(server: FastifyInstance) {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
     },
     updateRecipeNameHandler,
+  );
+
+  server.put(
+    "/pause/:id",
+    {
+      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: $Sref("idParamsSchema"),
+        body: $UserRef("pauseUserSchema"),
+      },
+    },
+    pauseUserHandler,
   );
 }

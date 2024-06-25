@@ -68,7 +68,9 @@ model User {
   phone          String?
   active         Boolean         @default(true)
   gender         Gender?
-  recipeName     UserRecipes?
+  recipeName     UserRecipes? 
+  isPaused       Boolean?        @default(false)
+  pausedBy       String?
   org            Org[]
   orgMember      OrgMember[]
   teamMember     TeamMember[]
@@ -90,6 +92,7 @@ model Org {
   phone             String?
   address           String?
   encryptionKeys    Json? //{privateKey:string,publicKey:string}
+  isPaused          Boolean?        @default(false)
   members           OrgMember[]
   teams             Team[]
   invitations       Invitation[]
@@ -121,17 +124,20 @@ model UsageStats {
   org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String   @unique @db.Uuid
 
-  teamsCount           Int @default(0)
-  teamMembersCount     Int @default(0)
-  surveysCount         Int @default(0)
-  surveyResponsesCount Int @default(0)
-  menusCount           Int @default(0)
-  menuViewsCount       Int @default(0)
-  messagesCount        Int @default(0)
+  teamsCount             Int @default(0)
+  teamMembersCount       Int @default(0)
+  surveysCount           Int @default(0)
+  surveyResponsesCount   Int @default(0)
+  waSurveysCount         Int @default(0)
+  waSurveyResponsesCount Int @default(0)
+  menusCount             Int @default(0)
+  menuViewsCount         Int @default(0)
+  messagesCount          Int @default(0)
 
-  monthlySurveyResponses Int @default(0)
-  monthlyMenuViews       Int @default(0)
-  monthlyMessagesCount   Int @default(0)
+  monthlySurveyResponses   Int @default(0)
+  monthlyWaSurveyResponses Int @default(0)
+  monthlyMenuViews         Int @default(0)
+  monthlyMessagesCount     Int @default(0)
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
@@ -808,10 +814,11 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId    String @db.Uuid
-  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId String @unique @db.Uuid
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String  @db.Uuid
+  survey    Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId  String  @unique @db.Uuid
+  anonymous Boolean @default(false)
 
   @@unique([flowId, orgId])
 }

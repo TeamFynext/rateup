@@ -2,6 +2,7 @@ import prisma from "../../utils/prisma";
 import {
   CreateOrgInput,
   IdParamInput,
+  PauseOrgInput,
   UpdateLogoInput,
   UpdateOrgDetailsInput,
 } from "./org.schema";
@@ -85,6 +86,7 @@ export async function getAllMembersWithTeams(orgId: string) {
               team: true,
             },
           },
+          isPaused: true,
         },
       },
     },
@@ -99,6 +101,7 @@ export async function getAllMembersWithTeams(orgId: string) {
       team_name: tm.team.name,
       team_code: tm.team.code,
     })),
+    isPaused: m.user.isPaused,
   }));
 }
 
@@ -216,6 +219,9 @@ export async function getAllOrgs() {
           templates: true,
         },
       },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 }
@@ -570,4 +576,13 @@ export async function deleteGoogleAuthToken(orgId) {
     }),
   ]);
   return res;
+}
+
+export async function pauseOrg(id, data: PauseOrgInput) {
+  return await prisma.org.update({
+    where: {
+      id,
+    },
+    data,
+  });
 }
