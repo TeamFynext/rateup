@@ -158,14 +158,14 @@ export function usageLimitMailBody() {
                     </th>
                   </tr>
                   <tr>
-                    <th class="email-title">Your Rateup Subscription Usage Limit exceeded ❗</th>
+                    <th class="email-title">Your Rateup Subscription Usage Limit Reached ❗</th>
                   </tr>
                 </thead>
                 <tbody>
                  <tr>
                     <td>
                       <p class="email-body">
-                        Kindly upgrade your plan to continue using Rateup premium features.
+                        Kindly upgrade your plan to enjoy more of Rateup premium features.
                       </p>
                     </td>
                   </tr>
