@@ -73,7 +73,7 @@ export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
   return (
     <Stack gap={"xs"}>
       <Group justify="space-between">
-        <Title order={4}>Team Stats</Title>
+        <Title order={4}>Team</Title>
         <RateupButtonSecondary
           title="Refetch Stats"
           onClick={async () => {
@@ -133,7 +133,7 @@ export const MenuStats = ({ stats, totalStats }) => {
   ];
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Menu Stats</Title>
+      <Title order={4}>Menu</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
@@ -168,7 +168,7 @@ export const SurveyStats = ({ stats, totalStats }) => {
 
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Survey Stats</Title>
+      <Title order={4}>Survey</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
@@ -214,7 +214,7 @@ export const WhatsappStats = ({ stats, totalStats }) => {
 
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Whatsapp Stats</Title>
+      <Title order={4}>Whatsapp</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
