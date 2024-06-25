@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
   deleteGoogleAuthToken,
+  deleteOrg,
   getAccessToken,
   getAllMembersWithTeams,
   getAllOrgs,
@@ -178,6 +179,23 @@ export async function getOrgStatsHandler(
 ) {
   const orgStats = await getOrgStats(request.params.orgId);
   reply.send(orgStats);
+}
+
+export async function deleteOrgHandler(
+  request: FastifyRequest<{
+    Params: { orgId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const deleteOrganization = await deleteOrg(request.params.orgId);
+    reply
+      .code(200)
+      .send(deleteOrganization);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+  }
 }
 
 export async function checkGoogleAccessHandler(

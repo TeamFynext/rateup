@@ -58,6 +58,7 @@ enum UserRecipes {
   ThirdPartyGoogle
   PasswordLess
 }
+
 model User {
   id             String          @id @default(uuid()) @db.Uuid
   createdAt      DateTime        @default(now())
@@ -117,7 +118,7 @@ model UsageStats {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  org       Org      @relation(fields: [orgId], references: [id])
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String   @unique @db.Uuid
 
   teamsCount           Int @default(0)
@@ -145,7 +146,7 @@ model UsageStats {
 }
 
 model WhatsappSettings {
-  org   Org    @relation(fields: [orgId], references: [id])
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @unique @db.Uuid
 
   accessToken     String // encrypted
@@ -162,7 +163,7 @@ model WhatsappSettings {
 }
 
 model WaAccountSettings {
-  org         Org      @relation(fields: [orgId], references: [id])
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId       String   @unique @db.Uuid
   contactTags String[] @default([])
 }
@@ -170,9 +171,9 @@ model WaAccountSettings {
 model OrgMember {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
-  org       Org      @relation(fields: [orgId], references: [id])
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String   @db.Uuid
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @db.Uuid
   role      Role
 
@@ -187,7 +188,7 @@ model Team {
   googleLink String?
   tags       String[] @default([])
 
-  org                    Org                     @relation(fields: [orgId], references: [id])
+  org                    Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                  String                  @db.Uuid
   members                TeamMember[]
   surveys                SurveyTeamMap[]
@@ -211,7 +212,7 @@ model TeamMember {
   createdAt DateTime @default(now())
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String   @db.Uuid
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @db.Uuid
 }
 
@@ -220,7 +221,7 @@ model Invitation {
   email     String
   name      String
   type      InviteType
-  org       Org          @relation(fields: [orgId], references: [id])
+  org       Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String       @db.Uuid
   team      Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String?      @db.Uuid
