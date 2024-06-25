@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import BookDemoContactForm from "../BookDemoContactForm";
 import Button from "../Button";
 import styles from "./BookADemoSection.module.css";
+import { gAnalyticsAndFbEvent } from "../../../../utils/gtag";
 
 function BookADemoSection() {
   const router = useRouter();
@@ -25,7 +26,14 @@ function BookADemoSection() {
           />
           <Button
             className={styles["get-pricing-btn"]}
-            onClick={() => router.push("/pricing")}
+            onClick={() => {
+              gAnalyticsAndFbEvent(
+                "pricing",
+                "GetPricingButtonClick",
+                "Clicked on get pricing button in the home page",
+              );
+              router.push("/pricing");
+            }}
             whiteBackgroundGradientText
           >
             Get Pricing

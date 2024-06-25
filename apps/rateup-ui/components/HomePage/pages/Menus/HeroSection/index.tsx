@@ -4,9 +4,7 @@ import CustomMantineButton from "../../../components/Button";
 import { IconArrowRight } from "@tabler/icons-react";
 import styles from "./HeroSection.module.css";
 import Image from "next/image";
-import { isProduction } from "../../../../../utils/constants";
-import { analyseEvent } from "../../../../../utils/gtag";
-import { fbEvent } from "../../../../../utils/fbpixel";
+import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import BookDemoContactForm from "../../../components/BookDemoContactForm";
 
 function HeroSection() {
@@ -34,17 +32,11 @@ function HeroSection() {
               rightSection={<IconArrowRight />}
               classNames={{ section: styles["see-sample-buttton-right-arrow"] }}
               onClick={() => {
-                if (isProduction)
-                  analyseEvent({
-                    action: "button_click",
-                    category: "digital_menu",
-                    label:
-                      "Clicked on see now button in digital menu section of home page",
-                  });
-                fbEvent("DigitalMenuSeeNow", {
-                  label:
-                    "Clicked on see now button in digital menu section of home page",
-                });
+                gAnalyticsAndFbEvent(
+                  "digital_menu",
+                  "DigitalMenuSeeNow",
+                  "Clicked on see now button in digital menu section of home page",
+                );
                 window.open("https://rateup.app/m/KJhnkdGc");
               }}
             >
