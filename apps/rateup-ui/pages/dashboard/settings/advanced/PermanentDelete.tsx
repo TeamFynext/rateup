@@ -5,16 +5,20 @@ import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconCheck } from "@tabler/icons-react";
 import { deleteOrg } from "../../../../backend/org/org.api";
+import { useRouter } from "next/router";
 
 const PermanentDelete = ({ orgId }) => {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const [opened, { open, close }] = useDisclosure(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const orgDeleteMutation = useMutation({
     mutationFn: ({ id }: { id: string }) => deleteOrg(id),
-    onSuccess: () => {
+    onSuccess: (msg) => {
       notifications.update({
         id: "delete-data",
         color: "teal",
@@ -24,10 +28,10 @@ const PermanentDelete = ({ orgId }) => {
         icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
       });
-      //   queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      open();
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
     },
     onError: (error: any) => {
-      //console.error("Error deleting Survey:", error.message);
       notifications.update({
         id: "delete-data",
         loading: false,
@@ -54,11 +58,6 @@ const PermanentDelete = ({ orgId }) => {
             </Text>
           </Stack>
           <Stack>
-            {/* <RateupButtonBlue
-              color="red"
-              title="Delete My Account"
-              onClick={open}
-            /> */}
             <RateupButtonBlue
               color="red"
               title="Delete Organization & All data"
@@ -85,8 +84,17 @@ const PermanentDelete = ({ orgId }) => {
             withCloseButton: false,
           });
           await orgDeleteMutation.mutateAsync({ id: orgId });
-          //   refetchSurveys();
         }}
+      />
+
+      <ConfirmationModal
+        opened={opened}
+        onConfirm={() => router.push("/logout")}
+        confirmLabel="Continue"
+        headerLabel="Your Organization and all its related users, data has been permanently deleted."
+        headerTitle="Delete Success"
+        excludeCancelButton={true}
+        onClose={close}
       />
     </Stack>
   );
