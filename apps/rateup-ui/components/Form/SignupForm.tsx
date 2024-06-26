@@ -1,19 +1,31 @@
-import { Grid, PasswordInput, TextInput, Title } from "@mantine/core";
-import LoginSignupLinks from "./LoginSignupLinks";
+import {
+  Anchor,
+  Box,
+  Checkbox,
+  Grid,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconChevronLeft, IconMail } from "@tabler/icons-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRef, useState } from "react";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import GoogleSignInButton from "./GoogleSigninButton";
 import styles from "./AuthForm.module.css";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import GoogleSignInButton from "./GoogleSigninButton";
+import LoginSignupLinks from "./LoginSignupLinks";
 import PhoneNumberForm from "./phoneNumberForm";
-import { isValidPhoneNumber } from "react-phone-number-input";
-import { IconChevronLeft, IconMail, IconPhone } from "@tabler/icons-react";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
+import Link from "next/link";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
@@ -23,6 +35,10 @@ export const signUpType = {
 
 function SignupForm({ setIsLoading, signUp, isLoading }) {
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
+
+  const phoneInputContainerRef = useRef(null);
+
+  const [termsPrivacyAgreed, setTermsPrivacyAgreed] = useState(true);
 
   const signUpForm = useForm({
     initialValues: {
@@ -36,7 +52,8 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     validate: {
       email: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        return /^\S+@\S+$/.test(value) ? null : "Invalid email";
+        if (!value) return "Email is required";
+        else return /^\S+@\S+$/.test(value) ? null : "Invalid email";
       },
       password: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
@@ -54,19 +71,21 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       name: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
         if (!value.length) {
-          return "Name cannot be blank";
+          return "Name is required";
         }
         return null; // Validation passed
       },
       orgName: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
         if (!value.length) {
-          return "Organization name cannot be blank";
+          return "Organization name is required";
         }
         return null; // Validation passed
       },
       phoneNumber: (value) => {
-        if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
+        // if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
+        if (!value) return null;
+
         if (!isValidPhoneNumber(value)) {
           return "Enter a valid phone number";
         } else return null;
@@ -74,17 +93,21 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     },
   });
 
+  const hasPhoneInputErr = signUpForm.errors?.phoneNumber;
+
   const handleSubmit = (values) => {
-    setIsLoading(true);
-    signUp(
-      values.email,
-      values.password,
-      values.name,
-      values.orgName,
-      values.phoneNumber,
-    ).finally(() => {
-      setIsLoading(false);
-    });
+    if (termsPrivacyAgreed) {
+      setIsLoading(true);
+      signUp(
+        values.email,
+        values.password,
+        values.name,
+        values.orgName,
+        values.phoneNumber,
+      ).finally(() => {
+        setIsLoading(false);
+      });
+    }
   };
 
   let signupPageView = (
@@ -127,7 +150,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     );
   } else if (signUpTypeValue === signUpType.SIGNUP_WITH_EMAIL) {
     signupPageView = (
-      <Grid grow>
+      <Grid grow gutter={"1.25rem"}>
         <Grid.Col span={{ base: 12, md: 6 }}>
           <TextInput
             classNames={styles}
@@ -156,11 +179,59 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <PasswordInput
             classNames={styles}
             placeholder="Enter Password"
-            required
             {...signUpForm.getInputProps("password")}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 2, lg: 1 }}>
+        <Grid.Col>
+          <Box
+            className={`${styles["phone-input-container"]} ${hasPhoneInputErr ? styles["phone-input-error"] : ""}`}
+            ref={phoneInputContainerRef}
+          >
+            <PhoneInputWithCountrySelect
+              defaultCountry="IN"
+              international
+              countryCallingCodeEditable={false}
+              placeholder="Enter phone number"
+              value={signUpForm?.getValues()?.phoneNumber || null}
+              {...signUpForm?.getInputProps("phoneNumber")}
+              className={styles.inputPhone}
+              onFocus={() =>
+                phoneInputContainerRef.current?.classList.add(
+                  styles["phone-input-focused"],
+                )
+              }
+              onBlur={() =>
+                phoneInputContainerRef.current?.classList.remove(
+                  styles["phone-input-focused"],
+                )
+              }
+            />
+          </Box>
+          <Text className={styles["phone-input-err-text"]}>
+            {signUpForm.errors.phoneNumber}
+          </Text>
+        </Grid.Col>
+        <Grid.Col
+          className={styles["terms-of-service-and-privacy-policy-checkbox-div"]}
+        >
+          <Checkbox
+            defaultChecked
+            onChange={(event) =>
+              setTermsPrivacyAgreed(event.currentTarget.checked)
+            }
+            label={
+              <>
+                I accept <Link href="/terms-of-service">terms of service</Link>{" "}
+                and <Link href="/privacy-policy">privacy policy</Link>
+              </>
+            }
+          />
+        </Grid.Col>
+        <Grid.Col
+          span={{ base: 12, md: 6 }}
+          order={{ base: 2, lg: 1 }}
+          className={styles["go-back-btn"]}
+        >
           <RateupButtonSecondary
             type="button"
             title="Go Back"
@@ -169,8 +240,13 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             leftIcon={<IconChevronLeft size={18} />}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }} order={{ base: 1, lg: 2 }}>
+        <Grid.Col
+          span={{ base: 12, md: 6 }}
+          order={{ base: 1, lg: 2 }}
+          className={styles["signup-btn"]}
+        >
           <RateupButtonBlue
+            disabled={!termsPrivacyAgreed}
             type="submit"
             title="Sign Up"
             loading={isLoading}
@@ -180,6 +256,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       </Grid>
     );
   }
+
   return (
     <>
       <Title
