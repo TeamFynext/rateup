@@ -20,7 +20,7 @@ import {
   useRemoveContactsFromGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
-import { PAGE_SIZE } from "../../utils/constants";
+import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
@@ -35,6 +35,7 @@ import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import styles from "./TanstackTable.module.css";
+import InfoButton from "../Button/InfoButton";
 
 function ContactTable({
   data,
@@ -267,6 +268,7 @@ function ContactTable({
                   <IconRefresh stroke={1.5} />
                 </ActionIcon>
               </Tooltip>
+              <InfoButton docUrl={`${docsPath}/whatsappSurvey/contacts`} />
             </Group>
           )}
         </Group>

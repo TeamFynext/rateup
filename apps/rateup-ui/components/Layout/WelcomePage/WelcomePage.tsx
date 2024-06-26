@@ -65,6 +65,7 @@ function WelcomePage({
                   ...surveyThemeData?.button?.styles,
                   height: "45px",
                   fontSize: "1.1rem",
+                  borderRadius: "2rem",
                 }
               : { ..._buttonStyles }
           }

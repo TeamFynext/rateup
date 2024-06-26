@@ -45,7 +45,7 @@ export default function ApiAccessKeyPage() {
   if (!data) return;
 
   return (
-    <Stack>
+    <Stack mt="xl">
       <Title order={3}> API Config </Title>
       <PaperLayout>
         <Stack>

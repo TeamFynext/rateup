@@ -9,7 +9,7 @@ import AccountSettings from "./AccountSettings";
 import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import { useCheckSession } from "../../../hooks/checkSession";
 import { useRouter } from "next/router";
-import AdvancedSettings from "./AdvancedSettings";
+import AdvancedSettings from "./advanced/AdvancedSettings";
 
 const Settings = () => {
   const router = useRouter();

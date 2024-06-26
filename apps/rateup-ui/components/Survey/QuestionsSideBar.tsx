@@ -8,6 +8,7 @@ import {
   Divider,
   ScrollArea,
   Box,
+  Group,
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { useRouter } from "next/router";
@@ -21,6 +22,8 @@ import { QuestionTabsEnum } from "./EditSurvey";
 import { IconPlus } from "@tabler/icons-react";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import styles from "./QuestionsSideBar.module.css";
+import { docsPath } from "../../utils/constants";
+import InfoButton from "../Button/InfoButton";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -99,15 +102,15 @@ export function QuestionsSideBar({
   return (
     <Stack className={styles["add-question-btn-questions-list-container"]}>
       {questionsState?.length > 0 && (
-        <Box className={styles["add-question-btn-more-than-1-que"]}>
+        <Group className={styles["add-question-btn-more-than-1-que"]}>
+          <InfoButton docUrl={`${docsPath}/advancedFt//resultexport`} />
           <RateupButtonBlue
             onClick={handleAddQn}
             title={"Add Question"}
             rightIcon={<IconPlus size="1rem" />}
             size="md"
-            fullWidth
           />
-        </Box>
+        </Group>
       )}
 
       <ScrollArea

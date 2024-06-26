@@ -52,6 +52,8 @@ import TagManager from "./TagManager";
 import { SurveyType } from "../../../types/enums";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
 import { getContent } from "../../../utils";
+import { docsPath } from "../../../utils/constants";
+import InfoButton from "../../Button/InfoButton";
 
 const ShareSurvey = ({
   survey,
@@ -274,6 +276,7 @@ const ShareSurvey = ({
               </Text>
             }
           />
+          <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
           <Group>
             <Text>Current Status: </Text>
             {isPublished ? (

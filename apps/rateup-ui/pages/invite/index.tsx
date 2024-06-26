@@ -191,7 +191,7 @@ const Invite = () => {
                     <RateupButtonPrimary
                       onClick={() => {
                         router.push(
-                          updateInviteMutation.data?.data.data.redirectLink,
+                          `${updateInviteMutation.data?.data.data.redirectLink}&type=invite`,
                         );
                       }}
                       title={"Continue"}

@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { PAGE_SIZE } from "../../utils/constants";
+import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { fuzzyFilter } from "../Survey/Response/Filter";
 import FilterToggles from "./Filter/FilterToggle";
@@ -19,6 +19,7 @@ import { RateupButtonBlue } from "../Button/RateupButtons";
 import { IconPlus } from "@tabler/icons-react";
 import styles from "./TanstackTable.module.css";
 import { DETAIL_BTN } from "../Contacts/utils/utils";
+import InfoButton from "../Button/InfoButton";
 
 function TanstackTable({
   className,
@@ -102,12 +103,15 @@ function TanstackTable({
         px={"xs"}
       >
         {toggle ? (
-          <RateupButtonBlue
-            className={"create-btn"}
-            title={btnTitle}
-            rightIcon={<IconPlus />}
-            onClick={toggle}
-          />
+          <>
+            <RateupButtonBlue
+              className={"create-btn"}
+              title={btnTitle}
+              rightIcon={<IconPlus />}
+              onClick={toggle}
+            />
+            <InfoButton docUrl={`${docsPath}/whatsappSurvey/campaign`} />
+          </>
         ) : (
           <Box
             className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}

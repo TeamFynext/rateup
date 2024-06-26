@@ -18,6 +18,7 @@ import { whatsappTheme } from "../../../../config/mantineTheme";
 import { useWsData } from "../../../../context/UserContext";
 import styles from "./WhatsappInbox.module.css";
 import ChatDisplayContext from "./ChatDisplayContext";
+import { useMediaQuery } from "@mantine/hooks";
 
 export default function WhatsAppInbox() {
   const queryClient = useQueryClient();
@@ -124,6 +125,8 @@ export default function WhatsAppInbox() {
     }
   }, [wsData]);
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   if (isContactsFetching)
     return <WhatsAppInboxLoader isLoading={isContactsFetching} />;
   if (error) return <div>Error: {error.message}</div>;
@@ -133,7 +136,7 @@ export default function WhatsAppInbox() {
     <MantineProvider theme={whatsappTheme}>
       <ChatDisplayContext>
         <Stack className={styles["whatsapp-inbox-root-div"]}>
-          <Title>Inbox</Title>
+          {!isMobile && <Title>Inbox</Title>}
           <Group className={styles["chat-selector-and-chat-container"]}>
             <WaInboxChatSelect
               contacts={contactList}

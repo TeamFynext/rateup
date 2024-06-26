@@ -21,6 +21,7 @@ import ButtonStyles from "./Button.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import styles from "./Modal.module.css";
 import { useRouter } from "next/router";
+import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 
 const PlanCard = ({
   index,
@@ -125,7 +126,14 @@ const PlanCard = ({
             <RateupButtonPrimary
               title="Contact Sales"
               color={cardMainColor}
-              onClick={open}
+              onClick={() => {
+                gAnalyticsAndFbEvent(
+                  "contact_sales",
+                  "ContactSalesButtonClick",
+                  "Clicked on Contact Sales button in the pricing page",
+                );
+                open();
+              }}
               radius={"xl"}
               size="md"
               className={ButtonStyles["button-hover"]}
@@ -146,6 +154,11 @@ const PlanCard = ({
               className={ButtonStyles["button-hover"]}
               size="md"
               onClick={() => {
+                gAnalyticsAndFbEvent(
+                  "subscribe_pricing",
+                  "SubscribeNowButtonClick",
+                  "Clicked on subscribe now button in the pricing page",
+                );
                 if (data?.displayName.includes("FREE")) {
                   router.push("/signup");
                 } else {

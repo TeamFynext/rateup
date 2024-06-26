@@ -16,11 +16,12 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import React, { useEffect, useState } from "react";
 import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
-import { SAVE_HOTKEY } from "../../../../utils/constants";
+import { docsPath, SAVE_HOTKEY } from "../../../../utils/constants";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import styles from "./GeneralSettings.module.css";
+import InfoButton from "../../../Button/InfoButton";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
@@ -67,7 +68,10 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
       className={`${styles["general-settings-root-div"]} section-div`}
     >
       <Box className={styles["heading-and-desc-container"]}>
-        <h2 className={"settings-section-heading"}>Survey Settings</h2>
+        <Grid style={{ marginBottom: "1rem" }}>
+          <h2 className={"settings-section-heading"}>Survey Settings</h2>
+          <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
+        </Grid>
         <p className={"settings-section-description"}>
           Choose the teams to be added
         </p>

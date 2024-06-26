@@ -84,6 +84,10 @@ export async function deleteAuthToken() {
   return res.data;
 }
 
+export async function deleteOrg(orgId: string) {
+  return await axiosClient.delete(`org/${orgId}`);
+}
+
 export async function updateOrgPause({ orgId, data }) {
   return await axiosClient.put(`org/pause/${orgId}`, data);
 }

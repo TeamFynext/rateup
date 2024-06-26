@@ -44,7 +44,7 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
 } from "../../../types/enums";
-import { ContactQuestions } from "../../../utils/constants";
+import { ContactQuestions, docsPath } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
@@ -65,6 +65,8 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
+import InfoButton from "../../Button/InfoButton";
+import RefreshButton from "../../Button/RefreshButton";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -341,28 +343,7 @@ const Responses = ({
       <Group className={styles["total-responses-export-btn-container"]}>
         <Flex align={"center"}>
           <Heading subtitle={`Total Responses : ${responseCount}`} />
-          <Tooltip label="Refresh data">
-            <ActionIcon
-              variant="light"
-              ml="15px"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                handleRefresh();
-                notifications.show({
-                  id: "data-reload",
-                  color: "teal",
-                  title: "Refreshing data",
-                  loading: true,
-                  message: "Hold.. your data is getting update...",
-                  autoClose: 2000,
-                });
-              }}
-            >
-              <IconRefresh
-                style={{ width: "90%", height: "90%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
+          <RefreshButton queryKeys={["allresponses"]} />
         </Flex>
         <Group>
           {CFData && CFData.length > 0 && (
@@ -463,6 +444,7 @@ const Responses = ({
               </Popover.Dropdown>
             </Popover>
           )}
+          <InfoButton docUrl={`${docsPath}/advancedFt//resultexport`} />
         </Group>
       </Group>
 

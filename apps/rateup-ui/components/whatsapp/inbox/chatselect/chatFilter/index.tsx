@@ -15,6 +15,7 @@ import { IconFilter } from "@tabler/icons-react";
 import classes from "./styles.module.css";
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import { useMediaQuery } from "@mantine/hooks";
 
 export type MultiGV = {
   group: string;
@@ -35,6 +36,8 @@ interface Props {
 
 export default function WaInboxChatFilter(props: Props) {
   const { data, isLoading, error } = useChatFilterData();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   if (isLoading) {
     return <Loader size={"xs"} />;
   }
@@ -117,8 +120,9 @@ export default function WaInboxChatFilter(props: Props) {
       strictFilter: false,
     });
   }
+
   return (
-    <HoverCard position="right-start">
+    <HoverCard position={isMobile ? "bottom-end" : "right-start"}>
       <HoverCardTarget>
         <Indicator
           label={getFilterActiveCount()}
