@@ -30,8 +30,9 @@ import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { GoogleIcon } from "../../../components/Button/GoogleIcon";
 import { showErrorToast } from "../../../utils/notifications";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import { SAVE_HOTKEY } from "../../../utils/constants";
+import { docsPath, SAVE_HOTKEY } from "../../../utils/constants";
 import { useRouter } from "next/router";
+import InfoButton from "../../../components/Button/InfoButton";
 
 export interface ITeamData {
   name: string;
@@ -120,10 +121,13 @@ const TeamSettings = ({
   return (
     <>
       <Stack p={10}>
-        <Heading
-          subtitle="Team information"
-          label="Update your team information"
-        />
+        <Group>
+          <Heading
+            subtitle="Team information"
+            label="Update your team information"
+          />
+          <InfoButton docUrl={`${docsPath}/teams/teamSettings`} />
+        </Group>
         <PaperLayout>
           <form
             onSubmit={teamForm.onSubmit(onSubmit)}

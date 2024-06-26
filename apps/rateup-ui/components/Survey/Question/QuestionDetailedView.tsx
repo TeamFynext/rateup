@@ -53,7 +53,7 @@ import { LanguageCompletionView } from "./LanguageCompletionView";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconChevronDown } from "@tabler/icons-react";
-import { NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
+import { docsPath, NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
 import { getQuestionTypeLabel } from "../../../utils/enums";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
@@ -69,6 +69,7 @@ import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraPr
 import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
 import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
+import InfoButton from "../../Button/InfoButton";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -318,6 +319,7 @@ export function QuestionDetailedView({
               }}
               disabled={question.type === QuestionType.InfoMessage}
             />
+            <InfoButton docUrl={`${docsPath}/advancedFt/logicjump`} />
             {NPSQuestions.includes(question?.type) && (
               <Checkbox
                 label="NPS Analytics"

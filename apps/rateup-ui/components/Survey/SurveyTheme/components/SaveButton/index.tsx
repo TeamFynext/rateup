@@ -3,10 +3,11 @@ import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
 import { useCallback, useState } from "react";
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
-import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import { docsPath, SAVE_HOTKEY } from "../../../../../utils/constants";
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
 import { useSurveyThemeContextValue } from "../../SurveyThemeContext";
 import styles from "./SaveButton.module.css";
+import InfoButton from "../../../../Button/InfoButton";
 
 function SaveButton({ survey, themeSelectorState, allThemesArr }) {
   const themeObjBeingEdited = allThemesArr?.find(
@@ -64,6 +65,7 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
 
   return (
     <Group justify="center" w="100%">
+      <InfoButton docUrl={`${docsPath}/webSurvey/surveyTheme/themes`} />
       <Text
         className={styles["save-unsaved-text-p"]}
         style={{ color: hasUnsavedChanges ? "red" : "green" }}
