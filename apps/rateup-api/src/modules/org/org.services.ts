@@ -10,10 +10,10 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { google } from "googleapis";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
+import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
-    //data: input,
     data: {
       name: input.name,
       ownerId: input.owner,
@@ -225,6 +225,58 @@ export async function getAllOrgs() {
     },
   });
 }
+
+//Delete org and everything related
+
+export async function deleteOrg(orgId: string): Promise<string> {
+  console.log("..........................deleting org............." + orgId);
+
+  try {
+    const members = await prisma.orgMember.findMany({
+      where: { orgId: orgId },
+      select: {
+        userId: true
+      }
+    });
+
+    const memberList = members.map(m => m.userId);
+    // Start a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+
+      // Delete the organization
+      await prisma.org.delete({
+        where: {
+          id: orgId
+        }
+      });
+
+      // Delete users (some invited users missing org relation)
+      await prisma.user.deleteMany({
+        where: {
+          id: {
+            in: memberList
+          }
+        }
+      });
+
+      // Return a promise that resolves to null to indicate success within the transaction
+      return null;
+    });
+
+    // Only proceed to delete super tokens if the transaction was successful
+    if (result === null) {
+      for (const m of memberList) {
+        await deleteSuperTokenUserForId(m);
+      }
+    }
+
+    return "Success";
+  } catch (error) {
+    console.error("Error deleting organization:", error);
+    return "Error occurred while deleting organization.";
+  }
+}
+
 
 export async function getOrgStats(orgId: string) {
   const org = await prisma.org.findUnique({

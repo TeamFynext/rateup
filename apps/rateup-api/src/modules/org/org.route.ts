@@ -4,6 +4,7 @@ import {
   createGoogleAuthToken,
   createOrgHandler,
   deleteGoogleAuthTokenHandler,
+  deleteOrgHandler,
   getAllMembersWithTeamsHandler,
   getAllOrgsHandler,
   getAllTeamsAndMembers,
@@ -52,6 +53,17 @@ export async function orgRoutes(server: FastifyInstance) {
       preHandler: assertRootOrg,
     },
     getOrgStatsHandler,
+  );
+
+  server.delete(
+    "/:orgId",
+    {
+      schema: {
+        params: $Sref("byOrgIdParams"),
+      },
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+    },
+    deleteOrgHandler,
   );
 
   server.get(
