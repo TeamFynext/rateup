@@ -314,6 +314,7 @@ export default function WhatsappTemplateById() {
             align="center"
             direction="row"
             wrap="wrap"
+            mb={"1rem"}
           >
             <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
               {editingItem ? editingItem?.data?.name : "Create Template"}
@@ -322,7 +323,7 @@ export default function WhatsappTemplateById() {
               mih={50}
               gap="xs"
               justify="flex-start"
-              align="flex-start"
+              align="center"
               direction="row"
               wrap="wrap"
             >
