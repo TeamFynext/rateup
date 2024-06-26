@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { Image, Flex, ScrollArea, useMantineColorScheme } from "@mantine/core";
+import { Flex, Image, useMantineColorScheme } from "@mantine/core";
+import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { useCreateUserMutation } from "../../backend/user/user.query";
 import {
   useConsumeVerificationCode,
   useEmailSend,
   useSignIn,
   useSignUp,
 } from "../../utils/auth";
-import Link from "next/link";
 import { AuthMode } from "../../utils/enums";
-import { useCreateUserMutation } from "../../backend/user/user.query";
+import { rateupLogoUrl } from "../HomePage/constants";
 import styles from "./AuthForm.module.css";
+import AuthTypeSignupForm from "./AuthTypeSignupForm";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import VerifyEmailPage from "./VerifyEmailPage";
-import AuthTypeSignupForm from "./AuthTypeSignupForm";
-import { rateupLogoUrl } from "../HomePage/constants";
 import VerifyPhoneNumberPage from "./VerifyPhoneNumberPage";
 
 const AuthForm = ({
@@ -94,19 +94,17 @@ const AuthForm = ({
           ${styles[`color-scheme-${colorScheme}`]}
         `}
     >
-      <ScrollArea h={"100%"} w={"100%"} scrollbarSize={5} type="hover">
-        <Flex justify={"center"}>
-          <Link href="/">
-            <Image
-              className={styles["rateup-logo-img"]}
-              src={rateupLogoUrl}
-              alt="RateUp Logo"
-              w={85}
-            />
-          </Link>
-        </Flex>
-        {jsxToReturn}
-      </ScrollArea>
+      <Flex justify={"center"}>
+        <Link href="/">
+          <Image
+            className={styles["rateup-logo-img"]}
+            src={rateupLogoUrl}
+            alt="RateUp Logo"
+            w={85}
+          />
+        </Link>
+      </Flex>
+      {jsxToReturn}
     </Flex>
   );
 };
