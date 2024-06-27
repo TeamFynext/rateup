@@ -18,7 +18,7 @@ interface MCQFormProps {
 export function DDSSForm({ previewChoices }: MCQFormProps) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const choices = selectedQ?.choices[selectedLanguage];
+  const choices = selectedQ?.choices?.[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
   const selectedPreview = useSelectedPreview();
   const isMobile =
