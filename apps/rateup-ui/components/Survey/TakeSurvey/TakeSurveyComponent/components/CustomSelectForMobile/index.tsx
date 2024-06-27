@@ -8,6 +8,7 @@ import {
   Portal,
   ScrollAreaAutosize,
   Stack,
+  isLightColor,
   luminance,
   useCombobox,
   useMantineTheme,
@@ -16,6 +17,8 @@ import classNames from "classnames/bind";
 import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
 import styles from "./CustomSelectForMobile.module.css";
 import { motion, useAnimate } from "framer-motion";
+import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
 const cx = classNames.bind(styles);
 
@@ -36,6 +39,17 @@ function CustomSelectForMobile({
       ? `var(--mantine-color-gray-7)`
       : themePrimaryColor;
 
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
+
+  const surveyThemeData = useSurveyThemeData();
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyThemeData,
+    "surveyTheme",
+    true,
+  );
+
   const [search, setSearch] = useState("");
   const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] =
     useState(false);
@@ -50,17 +64,28 @@ function CustomSelectForMobile({
   const optionsMotionDivRefs = useRef(null);
 
   const options = data
-    .filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()))
+    ?.filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()))
     .map((item) => {
-      const styleObj =
-        item === value
-          ? { backgroundColor: primaryColor, color: "#FFFFFF" }
-          : { backgroundColor: "#FFFFFF", color: "#000000" };
+      const isSelected = item === value;
+      const unSelectedOptionStyleObj = {
+        backgroundColor: "rgba(0,0,0,0)",
+        color: primaryColor,
+        borderColor: primaryColor,
+      };
+      const selectedOptionStyleObj = {
+        backgroundColor: primaryColor,
+        color: foregroundColor,
+        borderColor: primaryColor,
+      };
+      const styleObj = isSelected
+        ? selectedOptionStyleObj
+        : unSelectedOptionStyleObj;
+
       return (
         <Combobox.Option
           value={item}
-          key={item}
-          className={cx("option", { selected: item === value })}
+          key={item + primaryColor}
+          className={cx("option", { selected: isSelected })}
           data-value={item}
         >
           <motion.div
@@ -108,14 +133,22 @@ function CustomSelectForMobile({
         if (prevSelectedEle)
           animate(
             prevSelectedEle,
-            { backgroundColor: "#FFFFFF", color: "#000000" },
+            {
+              backgroundColor: "rgba(0,0,0,0)",
+              color: primaryColor,
+              borderColor: primaryColor,
+            },
             { duration: 0.2 },
           );
 
         if (value !== val) {
           await animate(
             selectedEle,
-            { backgroundColor: primaryColor, color: "#FFFFFF" },
+            {
+              backgroundColor: primaryColor,
+              color: foregroundColor,
+              borderColor: primaryColor,
+            },
             { duration: 0.5 },
           );
         }
@@ -143,6 +176,10 @@ function CustomSelectForMobile({
         <Portal {...portalProps}>
           <Stack
             className={`${cx("search-input-and-options-container")} search-input-and-options-container`}
+            style={{
+              backgroundColor,
+              backgroundImage: `url(${backgroundImageSrc})`,
+            }}
           >
             <Group className={cx("back-btn-and-search-input-container")}>
               <ActionIcon
