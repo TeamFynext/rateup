@@ -96,7 +96,10 @@ export default function WaInboxTemplateDisplayModal({
                   setSelectedTemplateId={setSelectedTemplateId}
                 />
               ) : (
-                <NothingFound text="No templates Selected" />
+                <NothingFound
+                  className={classes.nothing_found}
+                  text="No templates Selected"
+                />
               )}
             </Group>
           </Stack>
