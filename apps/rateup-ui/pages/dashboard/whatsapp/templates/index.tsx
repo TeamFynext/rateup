@@ -44,6 +44,7 @@ import templateCardStyles from "./TemplateCard.module.css";
 import TimeSinceText from "../../../../components/LandingPageDashboardPage/LandingPageCard/TimeSinceText";
 import { TemplatesCardListSkeleton } from "../../../../components/animation/skeleton/wa/TemplatesCardList.skeleton";
 import ErrorComponent from "../../../../components/404/ErrorComponent";
+import CreatedSinceText from "../../../../components/DateAndTime/CreatedSinceText";
 
 export default function Template() {
   const {
@@ -196,14 +197,7 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
             </ActionIcon>
           </Group>
         </Flex>
-        <Group
-          className={templateCardStyles["creation-time-text-and-icon-div"]}
-        >
-          <Box className={templateCardStyles["clock-icon-container"]}>
-            <IconClock />
-          </Box>
-          <p>Created {<TimeSinceText isoDateString={template.createdAt} />}</p>
-        </Group>
+        <CreatedSinceText createdAt={template.createdAt} />
         <Group>
           <WaTemplateStatusBadge status={template.data.status} />
           <WaTemplateStatusBadge status={template.data.category} defaultType />
