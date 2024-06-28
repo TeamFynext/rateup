@@ -1,13 +1,5 @@
-import {
-  ActionIcon,
-  Avatar,
-  Box,
-  Group,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
+import { ActionIcon, Avatar, Box, Group, Text } from "@mantine/core";
 import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { UserCardInterface } from "./LeftNavbar";
 
 import classNames from "classnames/bind";
@@ -22,6 +14,7 @@ const NavbarHeader = (props: UserCardInterface) => {
           src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.orgLogo}`}
           radius="sm"
           style={{ width: "20%", height: "20%", objectFit: "cover" }}
+          mih={"32px"}
         />
         {props.opened && (
           <div style={{ flex: 1 }}>
@@ -34,20 +27,11 @@ const NavbarHeader = (props: UserCardInterface) => {
           className={cx("chevron-burger-btn", {
             "navbar-closed": !props.opened,
           })}
+          onClick={() => {
+            props?.setOpened((o) => !o);
+          }}
         >
-          {props.opened ? (
-            <IconChevronLeft
-              onClick={() => {
-                props?.setOpened((o) => !o);
-              }}
-            />
-          ) : (
-            <IconMenu2
-              onClick={() => {
-                props?.setOpened((o) => !o);
-              }}
-            />
-          )}
+          {props.opened ? <IconChevronLeft /> : <IconMenu2 />}
         </ActionIcon>
       </Group>
     </Box>

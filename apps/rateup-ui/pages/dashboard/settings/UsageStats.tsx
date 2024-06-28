@@ -201,7 +201,6 @@ export const WhatsappStats = ({ stats, totalStats }) => {
     {
       Icon: IconMessage as unknown as string,
       count: stats?.messagesCount,
-      totalCount: totalStats?.whatsapp?.count?.max,
       stats: "Message",
     },
     {

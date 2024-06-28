@@ -85,15 +85,12 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
 export const ContactGroupMenu = ({ groupId }) => {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
-  const {
-    isPending,
-    isError,
-    data: groupDetails,
-  } = useContactGroupById(groupId?.toString());
+  const { data } = useContactGroupById(groupId?.toString(), openedEditModal);
   const deleteGroupMutation = useDeleteGroupMutation();
   const router = useRouter();
 
-  const openDeleteModal = () => {
+  const openDeleteModal = (e) => {
+    e.stopPropagation();
     modals.openConfirmModal({
       title: "Delete Group",
       centered: true,
@@ -129,14 +126,16 @@ export const ContactGroupMenu = ({ groupId }) => {
             variant="light"
             rightIcon={<IconChevronDown size="1rem" />}
             size="xs"
-            loading={isPending && !isError}
           />
         </Box>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          leftSection={<IconEdit size={"1rem"}></IconEdit>}
-          onClick={openEditModal}
+          leftSection={<IconEdit size={"1rem"} />}
+          onClick={(e) => {
+            e.stopPropagation();
+            openEditModal();
+          }}
         >
           Edit
         </Menu.Item>
@@ -160,7 +159,7 @@ export const ContactGroupMenu = ({ groupId }) => {
         <CreateGroupModal
           groupClose={closeEditModal}
           isEdit={true}
-          groupDetails={groupDetails}
+          groupDetails={data}
         />
       </FormModalLayout>
     </Menu>

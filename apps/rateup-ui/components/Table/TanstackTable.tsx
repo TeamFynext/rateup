@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { Box, Divider, Flex } from "@mantine/core";
+import { Box, Divider, Flex, Group } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -20,6 +20,8 @@ import { IconPlus } from "@tabler/icons-react";
 import styles from "./TanstackTable.module.css";
 import { DETAIL_BTN } from "../Contacts/utils/utils";
 import InfoButton from "../Button/InfoButton";
+import { useMediaQuery } from "@mantine/hooks";
+import RefreshButton from "../Button/RefreshButton";
 
 function TanstackTable({
   className,
@@ -28,12 +30,12 @@ function TanstackTable({
   enableFilter = true,
   enablePagination = true,
   enableColumnSelection = true,
-  topHeight,
   btnTitle,
   toggle,
   disableFuzzyFnCustom = false,
   toggleOffContent,
   detailBtn = false,
+  isPending = false,
 }: Readonly<{
   className?: string;
   data: any;
@@ -42,12 +44,12 @@ function TanstackTable({
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
   handleDeletion?: (seletedId: string[]) => void;
-  topHeight?: number;
   btnTitle?: string;
   toggle?: () => void;
   toggleOffContent?: React.ReactNode;
   disableFuzzyFnCustom?: boolean;
   detailBtn?: boolean;
+  isPending?: boolean;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -55,6 +57,7 @@ function TanstackTable({
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
   });
+  const largeScreen = useMediaQuery("(min-width: 40em)");
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -99,28 +102,31 @@ function TanstackTable({
         className={styles["filter-and-other-btns-container"]}
         gap={"md"}
         justify={"space-between"}
-        align={"center"}
         px={"xs"}
+        direction={largeScreen ? "row" : "column"}
       >
-        {toggle ? (
-          <>
-            <RateupButtonBlue
-              className={"create-btn"}
-              title={btnTitle}
-              rightIcon={<IconPlus />}
-              onClick={toggle}
-            />
-            <InfoButton docUrl={`${docsPath}/whatsappSurvey/campaign`} />
-          </>
-        ) : (
-          <Box
-            className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
-            w={!toggleOffContent ? 50 : "auto"}
-            h={!toggleOffContent ? 50 : "auto"}
-          >
-            {toggleOffContent}
-          </Box>
-        )}
+        <Group mr={"auto"}>
+          {toggle ? (
+            <Flex gap={"sm"} align={"center"}>
+              <RateupButtonBlue
+                className={"create-btn"}
+                title={btnTitle}
+                rightIcon={<IconPlus />}
+                onClick={toggle}
+              />
+              <RefreshButton queryKeys={["campaigns"]} />
+              <InfoButton docUrl={`${docsPath}/whatsappSurvey/campaign`} />
+            </Flex>
+          ) : (
+            <Box
+              className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
+              w={!toggleOffContent ? 50 : "auto"}
+              h={!toggleOffContent ? 50 : "auto"}
+            >
+              {toggleOffContent}
+            </Box>
+          )}
+        </Group>
         <FilterToggles
           enableFilter={enableFilter}
           filterVisibility={filterVisibility}
@@ -137,8 +143,8 @@ function TanstackTable({
         filterVisibility={filterVisibility}
         table={table}
         tempVisibleColumnArray={tempVisibleColumnArray}
-        topHeight={topHeight}
         detailBtn={detailBtn}
+        isPending={isPending}
       />
     </Box>
   );
