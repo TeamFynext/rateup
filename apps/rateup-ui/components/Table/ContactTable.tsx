@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { ActionIcon, Box, Divider, Flex, Group, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconCheck,
   IconPlus,
@@ -20,7 +20,7 @@ import {
   useRemoveContactsFromGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
-import { PAGE_SIZE } from "../../utils/constants";
+import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
@@ -35,6 +35,7 @@ import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import styles from "./TanstackTable.module.css";
+import InfoButton from "../Button/InfoButton";
 
 function ContactTable({
   data,
@@ -43,7 +44,6 @@ function ContactTable({
   enablePagination = true,
   enableColumnSelection = true,
   cTags = [],
-  topHeight,
   tab = WhatsappTableType.CONTACTS,
   open = () => {},
   groupId = "",
@@ -58,6 +58,7 @@ function ContactTable({
   columnFilters,
   setColumnFilters,
   detailBtn = false,
+  isPending = false,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -65,7 +66,6 @@ function ContactTable({
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
   cTags?: string[];
-  topHeight?: number;
   tab?: string;
   open?: () => void;
   groupId?: string;
@@ -80,12 +80,14 @@ function ContactTable({
   columnFilters;
   setColumnFilters;
   detailBtn?: boolean;
+  isPending?: boolean;
 }>) {
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
   });
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
+  const largeScreen = useMediaQuery("(min-width: 40em)");
 
   const [
     dialogOpened,
@@ -157,8 +159,8 @@ function ContactTable({
         className={styles["filter-and-other-btns-container"]}
         gap={"md"}
         justify={"space-between"}
-        align={"center"}
         px={"xs"}
+        direction={largeScreen ? "row" : "column"}
       >
         <ConfirmationModal
           forDeleteFunctionality
@@ -219,7 +221,7 @@ function ContactTable({
             }
           }}
         />
-        <Group gap={"xl"}>
+        <Group mr={"auto"}>
           {Object.keys(rowSelection)?.length > 0 ? (
             <Tooltip
               label={`Click to ${tooltipMsg}`}
@@ -267,6 +269,7 @@ function ContactTable({
                   <IconRefresh stroke={1.5} />
                 </ActionIcon>
               </Tooltip>
+              <InfoButton docUrl={`${docsPath}/whatsappSurvey/contacts`} />
             </Group>
           )}
         </Group>
@@ -286,8 +289,8 @@ function ContactTable({
         filterVisibility={filterVisibility}
         table={table}
         tempVisibleColumnArray={tempVisibleColumnArray}
-        topHeight={topHeight}
         detailBtn={detailBtn}
+        isPending={isPending}
       />
     </Box>
   );

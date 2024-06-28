@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-
 import {
   Alert,
   Box,
@@ -64,12 +63,13 @@ import { lexend500 } from "../../../../utils/fonts";
 import { showErrorToast, showWarnToast } from "../../../../utils/notifications";
 import { parseTemplate } from "../../../../utils/whatsapp/templates";
 import ButtonInput from "../../../../components/whatsapp/templates/Details/ButtonInput";
-import styles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
+import buttonInputStyles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
 import { uploadFile } from "../../../../utils/file-upload/upload";
 import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
 import { getErrorMessage } from "../../../../utils";
 import { useRouteParams } from "../../../../context/RouteParamsContext";
 import { LinkCopyElement } from "../../../../components/input/LinkCopyElement";
+import styles from "./templateId.module.css";
 
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -314,6 +314,7 @@ export default function WhatsappTemplateById() {
             align="center"
             direction="row"
             wrap="wrap"
+            mb={"1rem"}
           >
             <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
               {editingItem ? editingItem?.data?.name : "Create Template"}
@@ -322,7 +323,7 @@ export default function WhatsappTemplateById() {
               mih={50}
               gap="xs"
               justify="flex-start"
-              align="flex-start"
+              align="center"
               direction="row"
               wrap="wrap"
             >
@@ -351,7 +352,7 @@ export default function WhatsappTemplateById() {
                 <Overlay color="#fff" backgroundOpacity={0} zIndex={10} />
               )}
               <PaperLayout
-                p={"xl"}
+                className={styles["template-content-container"]}
                 h={"80dvh"}
                 style={{
                   overflow: editingItem?.data?.id && value ? "hidden" : "auto",
@@ -555,7 +556,10 @@ export default function WhatsappTemplateById() {
                   {form.values?.buttons?.length > 0 && (
                     <>
                       {form.values?.buttons?.map((data, index) => (
-                        <Group className={styles.buttonBox} key={index}>
+                        <Group
+                          className={buttonInputStyles.buttonBox}
+                          key={index}
+                        >
                           <ButtonInput
                             form={form}
                             deleteButton={deleteButton}

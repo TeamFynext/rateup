@@ -42,9 +42,18 @@ import RefreshButton from "../../../../components/Button/RefreshButton";
 import { docsPath } from "../../../../utils/constants";
 import templateCardStyles from "./TemplateCard.module.css";
 import TimeSinceText from "../../../../components/LandingPageDashboardPage/LandingPageCard/TimeSinceText";
+import { TemplatesCardListSkeleton } from "../../../../components/animation/skeleton/wa/TemplatesCardList.skeleton";
+import ErrorComponent from "../../../../components/404/ErrorComponent";
+import CreatedSinceText from "../../../../components/DateAndTime/CreatedSinceText";
 
 export default function Template() {
-  const { data: templates, isPending } = useWaTemplates();
+  const {
+    data: templates,
+    isPending,
+    isError,
+    refetch,
+    isRefetching,
+  } = useWaTemplates();
   const [sortOption, setSortOption] = useState(" ");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
@@ -58,7 +67,6 @@ export default function Template() {
   );
 
   const router = useRouter();
-  if (isPending) return <RateupLoader h={"90dvh"} />;
   // TODO: handle error
   function handleCreateClick() {
     router.push(`/dashboard/whatsapp/templates/create`);
@@ -73,6 +81,29 @@ export default function Template() {
 
   const sortedTemplates = sortData(templates, sortOption);
 
+  const TemplateCardList = () => {
+    if (isPending || isRefetching) return <TemplatesCardListSkeleton />;
+    if (isError) return <ErrorComponent refetch={refetch} />;
+
+    return (
+      <Box
+        className={`cards-grid-global-class`}
+        flex={1}
+        h={"100%"}
+        style={{ overflow: "auto", padding: "5px", paddingRight: "1rem" }}
+      >
+        {sortedTemplates?.map((t) => (
+          <TemplateCard
+            key={t.id}
+            template={t}
+            onClick={() => handleEditClick(t)}
+            toggle={toggle}
+            setSelectedTemplate={setSelectedTemplate}
+          />
+        ))}
+      </Box>
+    );
+  };
   return (
     <Stack h={"100%"}>
       <Flex
@@ -99,6 +130,7 @@ export default function Template() {
             title="Create Templates"
             rightIcon={<IconPlus size={"1rem"} />}
             onClick={handleCreateClick}
+            disabled={isPending}
           />
         </Flex>
 
@@ -114,27 +146,10 @@ export default function Template() {
             onSortChange={onSortChange}
             defaultSortOption={sortOption}
           />
-          <SyncTemplatesButton />
+          <SyncTemplatesButton disabled={isPending} />
         </Flex>
       </Flex>
-
-      <Box
-        className={`cards-grid-global-class`}
-        flex={1}
-        h={"100%"}
-        style={{ overflow: "auto", padding: "5px", paddingRight: "1rem" }}
-      >
-        {sortedTemplates?.map((t) => (
-          <TemplateCard
-            key={t.id}
-            template={t}
-            onClick={() => handleEditClick(t)}
-            toggle={toggle}
-            setSelectedTemplate={setSelectedTemplate}
-          />
-        ))}
-      </Box>
-
+      <TemplateCardList />
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
@@ -182,14 +197,7 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
             </ActionIcon>
           </Group>
         </Flex>
-        <Group
-          className={templateCardStyles["creation-time-text-and-icon-div"]}
-        >
-          <Box className={templateCardStyles["clock-icon-container"]}>
-            <IconClock />
-          </Box>
-          <p>Created {<TimeSinceText isoDateString={template.createdAt} />}</p>
-        </Group>
+        <CreatedSinceText createdAt={template.createdAt} />
         <Group>
           <WaTemplateStatusBadge status={template.data.status} />
           <WaTemplateStatusBadge status={template.data.category} defaultType />

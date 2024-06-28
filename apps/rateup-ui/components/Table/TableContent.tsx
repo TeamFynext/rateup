@@ -26,6 +26,10 @@ import { lexend600 } from "../../utils/fonts";
 import styles from "./TableContent.module.css";
 import { useRouter } from "next/router";
 import { DETAIL_BTN } from "../Contacts/utils/utils";
+import {
+  TableBodySkeleton,
+  TableHeadSkeleton,
+} from "../animation/skeleton/Table.Skeleton";
 
 type TableLayoutProps = {
   table: TableType<any>;
@@ -33,8 +37,8 @@ type TableLayoutProps = {
   filterVisibility: boolean;
   tempVisibleColumnArray: string[];
   enablePagination: boolean;
-  topHeight: number;
   detailBtn?: boolean;
+  isPending?: boolean;
 };
 
 // Extend the Header to use the new ExtendedColumnMeta
@@ -56,7 +60,7 @@ const TableLayout = ({
   tempVisibleColumnArray,
   enablePagination,
   detailBtn,
-  topHeight = 420,
+  isPending,
 }: TableLayoutProps) => {
   const router = useRouter();
   return (
@@ -69,93 +73,99 @@ const TableLayout = ({
         >
           <Table stickyHeader striped highlightOnHover>
             <Table.Thead bg={"light-dark(white,var(--mantine-color-dark-6))"}>
-              {table.getHeaderGroups().map((headerGroup, index) => (
-                <Table.Tr key={index} className="table-header">
-                  {headerGroup.headers.map((header, headerIndex) => {
-                    const extendedHeader = header as ExtendedHeader;
-                    return (
-                      <Table.Th
-                        key={headerIndex}
-                        colSpan={header.colSpan}
-                        style={{ width: `${header.getSize()}px` }}
-                      >
-                        {header.isPlaceholder ? null : (
-                          <>
-                            <UnstyledButton
-                              className={styles["th-button"]}
-                              {...{
-                                onClick:
-                                  header.column.getToggleSortingHandler(),
-                              }}
-                            >
-                              <Flex justify="space-between" gap={"md"}>
-                                {flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                                {header.column.getCanSort() && (
-                                  <Center>
-                                    {{
-                                      asc: (
-                                        <IconChevronUp
+              {isPending ? (
+                <TableHeadSkeleton />
+              ) : (
+                table.getHeaderGroups().map((headerGroup, index) => (
+                  <Table.Tr key={index} className="table-header">
+                    {headerGroup.headers.map((header, headerIndex) => {
+                      const extendedHeader = header as ExtendedHeader;
+                      return (
+                        <Table.Th
+                          key={headerIndex}
+                          colSpan={header.colSpan}
+                          style={{ width: `${header.getSize()}px` }}
+                        >
+                          {header.isPlaceholder ? null : (
+                            <>
+                              <UnstyledButton
+                                className={styles["th-button"]}
+                                {...{
+                                  onClick:
+                                    header.column.getToggleSortingHandler(),
+                                }}
+                              >
+                                <Flex justify="space-between" gap={"md"}>
+                                  {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
+                                  )}
+                                  {header.column.getCanSort() && (
+                                    <Center>
+                                      {{
+                                        asc: (
+                                          <IconChevronUp
+                                            style={{
+                                              width: rem(16),
+                                              height: rem(16),
+                                            }}
+                                            stroke={1.5}
+                                          />
+                                        ),
+                                        desc: (
+                                          <IconChevronDown
+                                            style={{
+                                              width: rem(16),
+                                              height: rem(16),
+                                            }}
+                                            stroke={1.5}
+                                          />
+                                        ),
+                                      }[
+                                        header.column.getIsSorted() as string
+                                      ] ?? (
+                                        <IconSelector
                                           style={{
                                             width: rem(16),
                                             height: rem(16),
                                           }}
                                           stroke={1.5}
                                         />
-                                      ),
-                                      desc: (
-                                        <IconChevronDown
-                                          style={{
-                                            width: rem(16),
-                                            height: rem(16),
-                                          }}
-                                          stroke={1.5}
-                                        />
-                                      ),
-                                    }[
-                                      header.column.getIsSorted() as string
-                                    ] ?? (
-                                      <IconSelector
-                                        style={{
-                                          width: rem(16),
-                                          height: rem(16),
-                                        }}
-                                        stroke={1.5}
-                                      />
-                                    )}
-                                  </Center>
-                                )}
-                              </Flex>
-                            </UnstyledButton>
-                            {enableFilter &&
-                            filterVisibility &&
-                            header.column.getCanFilter() ? (
-                              <>
-                                {extendedHeader.column.columnDef?.meta?.filterComponent(
-                                  header.column.setFilterValue,
-                                ) ?? (
-                                  <Filter
-                                    column={header.column}
-                                    table={table}
-                                  />
-                                )}
-                              </>
-                            ) : (
-                              filterVisibility && <Box h={"36px"} />
-                            )}
-                          </>
-                        )}
-                      </Table.Th>
-                    );
-                  })}
-                </Table.Tr>
-              ))}
+                                      )}
+                                    </Center>
+                                  )}
+                                </Flex>
+                              </UnstyledButton>
+                              {enableFilter &&
+                              filterVisibility &&
+                              header.column.getCanFilter() ? (
+                                <>
+                                  {extendedHeader.column.columnDef?.meta?.filterComponent(
+                                    header.column.setFilterValue,
+                                  ) ?? (
+                                    <Filter
+                                      column={header.column}
+                                      table={table}
+                                    />
+                                  )}
+                                </>
+                              ) : (
+                                filterVisibility && <Box h={"36px"} />
+                              )}
+                            </>
+                          )}
+                        </Table.Th>
+                      );
+                    })}
+                  </Table.Tr>
+                ))
+              )}
             </Table.Thead>
 
             <Table.Tbody className="table-body">
-              {table.getRowModel().rows.length === 0 ? (
+              {isPending ? (
+                <TableBodySkeleton />
+              ) : table.getRowModel().rows.length === 0 ? (
                 <Table.Tr>
                   <Table.Td colSpan={tempVisibleColumnArray?.length}>
                     <Text ta="center">Nothing found</Text>
@@ -219,7 +229,7 @@ const TableLayout = ({
               className={styles["mantine-pagination-root-div"]}
               style={{ overflow: "hidden" }}
               size={"sm"}
-              total={table.getPageCount()}
+              total={isPending ? 0 : table.getPageCount()}
               onChange={(e) => table.setPageIndex(e - 1)}
               boundaries={1}
               siblings={1}
@@ -231,8 +241,12 @@ const TableLayout = ({
                   <Pagination.First disabled={!table.getCanPreviousPage()} />
                   <Pagination.Previous disabled={!table.getCanPreviousPage()} />
                   <Pagination.Items />
-                  <Pagination.Next disabled={!table.getCanNextPage()} />
-                  <Pagination.Last disabled={!table.getCanNextPage()} />
+                  <Pagination.Next
+                    disabled={isPending ? true : !table.getCanNextPage()}
+                  />
+                  <Pagination.Last
+                    disabled={isPending ? true : !table.getCanNextPage()}
+                  />
                 </Group>
               </ScrollArea>
             </Pagination.Root>
@@ -260,7 +274,7 @@ const TableLayout = ({
           pr={"xs"}
           ff={lexend600.style.fontFamily}
         >
-          Total Rows: {table.getRowCount() ?? 0}
+          Total Rows: {(isPending ? 0 : table.getRowCount()) ?? 0}
         </Text>
       </Flex>
     </Stack>

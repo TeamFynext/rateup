@@ -1,15 +1,13 @@
 import {
-  Button,
   Center,
   Flex,
   MantineProvider,
   Modal,
   Stack,
-  Text,
   TextInput,
 } from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { IconRefresh, IconSearch } from "@tabler/icons-react";
+import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 import {
@@ -18,13 +16,13 @@ import {
 } from "../../../backend/campaign/campaign.query";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
 import { contactParticipentColumn } from "../../../components/Contacts/utils/utils";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
 import TanstackTable from "../../../components/Table/TanstackTable";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import Heading from "../../../components/styled/Heading/Heading";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import styles from "./campaign.module.css";
+import ErrorComponent from "../../../components/404/ErrorComponent";
 
 export default function CampaignList() {
   const [searchText, setSearchText] = useDebouncedState("", 200);
@@ -36,12 +34,15 @@ export default function CampaignList() {
     isPending,
     isError,
     refetch,
+    isRefetching,
   } = useCampaignDataByTeam(selectedTeam, enabled);
 
   const {
     data: campaignData,
     isPending: isAllCampaignLoading,
     isError: isAllCampaignError,
+    isRefetching: isRefetchingAllCampaign,
+    refetch: refetchAllkCampaign,
   } = useCampaignData();
 
   const filteredCampaignsdata =
@@ -58,8 +59,12 @@ export default function CampaignList() {
       : filteredCampaignsdata
   )?.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // sorting by date
 
-  if (isPending && isAllCampaignLoading) return <RateupLoader h={"90dvh"} />;
-
+  if (isError || isAllCampaignError)
+    return (
+      <Stack h={"90dvh"}>
+        <ErrorComponent refetch={isError ? refetch : refetchAllkCampaign} />
+      </Stack>
+    );
   const column: ColumnDef<any>[] = contactParticipentColumn;
 
   return (
@@ -78,22 +83,7 @@ export default function CampaignList() {
             enableAll={true}
           />
         </Flex>
-        <Center>
-          {isError && isAllCampaignError ? (
-            <Stack>
-              <Text>Something went wrong</Text>
-              <Button
-                variant="outline"
-                leftSection={<IconRefresh />}
-                onClick={() => refetch}
-              >
-                Retry
-              </Button>
-            </Stack>
-          ) : (
-            <></>
-          )}
-        </Center>
+        <Center></Center>
 
         <PaperLayout p={0} h={"100%"} mah={"800px"}>
           <TanstackTable
@@ -102,8 +92,12 @@ export default function CampaignList() {
             btnTitle="Create"
             toggle={open}
             disableFuzzyFnCustom={true}
-            topHeight={280}
             detailBtn
+            isPending={
+              (isPending && isAllCampaignLoading) ||
+              isRefetching ||
+              isRefetchingAllCampaign
+            }
           />
         </PaperLayout>
         <Modal

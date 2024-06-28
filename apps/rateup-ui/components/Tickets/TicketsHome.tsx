@@ -1,4 +1,12 @@
-import { Group, Loader, ScrollArea, Stack, Tabs, Title } from "@mantine/core";
+import {
+  Box,
+  Group,
+  Loader,
+  ScrollArea,
+  Stack,
+  Tabs,
+  Title,
+} from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import Heading from "../styled/Heading/Heading";
 import { IconPlus } from "@tabler/icons-react";
@@ -23,6 +31,7 @@ import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { docsPath } from "../../utils/constants";
 import InfoButton from "../Button/InfoButton";
 import RefreshButton from "../Button/RefreshButton";
+import styles from "./TicketsHome.module.css";
 
 const TicketsHome = () => {
   const [sortOption, setSortOption] = useState("deadline");
@@ -232,9 +241,9 @@ function TicketPanel({
         {" "}
         {filterParam === "all" ? "All Tickets" : `Tickets - ${filterParam}`}
       </Title>
-      <ScrollArea h={"64vh"}>
+      <ScrollArea className={styles["ticket-cards-scroll-area-div"]} h={"64vh"}>
         {sortedTickets?.length > 0 ? (
-          <SurveyCardLayout>
+          <Box className="cards-grid-global-class">
             {sortedTickets.map((ticket) => (
               <TicketCard
                 setDeleteTicketId={setDeleteTicketId}
@@ -242,7 +251,7 @@ function TicketPanel({
                 ticket={ticket}
               />
             ))}
-          </SurveyCardLayout>
+          </Box>
         ) : (
           <Stack mt="xl">
             <NothingFound

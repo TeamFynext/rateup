@@ -1,4 +1,4 @@
-import { Box, Title, LoadingOverlay, Group } from "@mantine/core";
+import { Box, Title, Group } from "@mantine/core";
 import styles from "./flows.module.css";
 import { IconPlus } from "@tabler/icons-react";
 import CreateFlowModal from "../../../../components/whatsapp/flows/CreateFlowModal/CreateFlowModal.tsx";
@@ -11,24 +11,36 @@ import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
 import { useState } from "react";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import InfoButton from "../../../../components/Button/InfoButton";
 import { docsPath } from "../../../../utils/constants";
+import { FlowCardListSkeleton } from "../../../../components/animation/skeleton/wa/FlowCardList.skeleton";
+import ErrorComponent from "../../../../components/404/ErrorComponent";
+import RefreshButton from "../../../../components/Button/RefreshButton";
 
 function Flows() {
   const [
     isCreateFlowModalOpened,
     { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
   ] = useDisclosure(false);
-  let { data: flows, isPending } = useWaFlowsFromDb();
+  let {
+    data: flows,
+    isPending,
+    isError,
+    isRefetching,
+    refetch,
+  } = useWaFlowsFromDb();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const { isPending: isPendingTeamsUser, data: teamsDataUser } =
     useTeamsByUser();
 
   let teamsData = teamsDataUser?.data;
-  if (isPendingTeamsUser || isPending) return <RateupLoader h={"90dvh"} />;
-  let componentToBeRendered = null;
-  if (flows && flows.length) {
+
+  const ComponentToBeRendered = () => {
+    if (isPending || isRefetching || isPendingTeamsUser)
+      return <FlowCardListSkeleton />;
+    if (isError) return <ErrorComponent refetch={refetch} />;
+    if (!(flows && flows.length))
+      return <NothingFound text="No Flows Available" />;
     let filteredMenus =
       selectedTeamId === "all"
         ? flows
@@ -39,23 +51,24 @@ function Flows() {
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-    componentToBeRendered = (
-      <FlowCardsList flows={filteredMenus} teamsData={teamsData} />
+    return (
+      <Box className={styles["flows-list-div"]}>
+        <FlowCardsList flows={filteredMenus} teamsData={teamsData} />
+      </Box>
     );
-  } else if (flows && !flows.length) {
-    componentToBeRendered = <NothingFound text="No Flows Available" />;
-  }
-
+  };
   return (
     <Box className={styles["flows-list-page-container"]}>
       <Group justify="space-between">
         <Group>
           <Title className={styles["flows-list-heading-h1"]}>Flows</Title>
           <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
+          <RefreshButton queryKeys={["flow", "db"]} />
           <RateupButtonBlue
             title="Create flow"
             rightIcon={<IconPlus size={"1rem"} />}
             onClick={handleCreateFlowModalOpen}
+            disabled={isPending || isPendingTeamsUser}
           />
         </Group>
         <Group>
@@ -69,13 +82,7 @@ function Flows() {
         </Group>
       </Group>
 
-      <Box className={styles["flows-list-div"]}>
-        <LoadingOverlay
-          visible={isPending || isPendingTeamsUser}
-          loaderProps={{ type: "bars" }}
-        />
-        {componentToBeRendered}
-      </Box>
+      <ComponentToBeRendered />
 
       <CreateFlowModal
         opened={isCreateFlowModalOpened}

@@ -141,6 +141,7 @@ const Templates = ({ survey }) => {
         </Group>
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
+            miw={"10.9375rem"}
             mr={"200px"}
             rightIcon={<IconPlus />}
             title="Start Blank"

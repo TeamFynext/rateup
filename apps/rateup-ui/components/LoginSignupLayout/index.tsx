@@ -1,4 +1,4 @@
-import { Center, Flex, useMantineColorScheme } from "@mantine/core";
+import { Box, Flex, ScrollArea, useMantineColorScheme } from "@mantine/core";
 import LoginSignupDecorativeImage from "./LoginSignupDecorativeImage";
 import styles from "./login-signup-layout.module.css";
 
@@ -9,13 +9,21 @@ function LoginSignupLayout({ children }) {
     <Flex className={styles["decorative-image-form-container"]}>
       <LoginSignupDecorativeImage />
 
-      <Center className={styles["form-container"]}>
-        <Center
+      <Box className={styles["form-container"]}>
+        <Box
           className={`${styles["form-wrapper"]} ${styles[`color-scheme-${colorScheme}`]}`}
         >
-          {children}
-        </Center>
-      </Center>
+          <ScrollArea
+            className={styles["scroll-area-div"]}
+            h={"100%"}
+            w={"100%"}
+            scrollbarSize={5}
+            type="hover"
+          >
+            {children}
+          </ScrollArea>
+        </Box>
+      </Box>
     </Flex>
   );
 }

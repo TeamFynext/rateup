@@ -27,3 +27,20 @@
 .template_card_list_preview_wrapper > div {
   flex: 1 1 0;
 }
+
+@media screen and (max-width: 768px) {
+  .template_card_list_preview_wrapper {
+    flex-direction: column;
+  }
+  .template_card_list_preview_wrapper > div {
+    width: 100%;
+    flex: initial;
+  }
+  .template_card_list_wrapper {
+    height: auto;
+    border: none;
+  }
+  .modal_inner .nothing_found {
+    display: none;
+  }
+}

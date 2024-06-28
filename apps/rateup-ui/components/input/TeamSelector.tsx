@@ -1,4 +1,4 @@
-import { SelectProps, Loader, Text } from "@mantine/core";
+import { SelectProps, Text, Skeleton, Card, Group } from "@mantine/core";
 import { useEffect } from "react";
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
@@ -19,7 +19,7 @@ export function TeamSelector({
   // TODO: remove some nesting on results of the query?
   const {
     data: teamRes,
-    isLoading: teamsLoading,
+    isPending: teamsLoading,
     isError,
     error,
   } = useTeamsByUser();
@@ -34,11 +34,17 @@ export function TeamSelector({
     }
   }, [teamRes, value]);
   if (isError) {
-    console.error(error);
     return <Text>Something went wrong!</Text>;
   }
   if (teamsLoading) {
-    return <Loader type="bars" />;
+    return (
+      <Card h={46} w={240} radius={"md"} withBorder p={0}>
+        <Group justify="space-between" w={"100%"} my={"auto"}>
+          <Skeleton w={100} h={20} ml={"xs"} />
+          <Skeleton w={20} h={20} mr={"xs"} />
+        </Group>
+      </Card>
+    );
   }
   const teams = teamRes?.data;
   if (!teams) {

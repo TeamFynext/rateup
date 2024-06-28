@@ -8,6 +8,7 @@ import {
   MultiSelect,
   SegmentedControl,
   SimpleGrid,
+  Skeleton,
   Stack,
   Tabs,
   Text,
@@ -37,7 +38,6 @@ import {
   WhatsappTableType,
   contactParticipentDetailColumn,
 } from "../../../components/Contacts/utils/utils";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ContactTable from "../../../components/Table/ContactTable";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { whatsappTheme } from "../../../config/mantineTheme";
@@ -50,6 +50,7 @@ import { Campaign } from "../../../types/global";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
 import { lexend600 } from "../../../utils/fonts";
 import styles from "./campaign.module.css";
+import ErrorComponent from "../../../components/404/ErrorComponent";
 
 export enum CampaignParticipantsTabs {
   INFO = "info",
@@ -95,25 +96,11 @@ const CampaignById = () => {
           p?.contact?.phone.includes(searchText),
       )
     : participants;
-  if (isPending) return <RateupLoader h="90dvh" />;
   if (isError)
     return (
-      <Group>
-        <Text>Error occured refresh data</Text>
-        <Tooltip label="Refresh data">
-          <ActionIcon
-            variant="light"
-            aria-label="refresh"
-            onClick={() => refetchCampaign()}
-          >
-            <IconRefresh
-              className={isFetching ? styles.rotateInfinitely : undefined}
-              style={{ width: "90%", height: "90%" }}
-              stroke={1.5}
-            />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+      <Stack h={"90dvh"}>
+        <ErrorComponent refetch={refetchCampaign} />
+      </Stack>
     );
   const column: ColumnDef<any>[] = contactParticipentDetailColumn;
 
@@ -121,7 +108,11 @@ const CampaignById = () => {
     <MantineProvider theme={whatsappTheme}>
       <Stack className={styles["campaign-id-page-root-div"]}>
         <Title order={2} tt={"uppercase"}>
-          {campaignData?.name}
+          {isPending || isFetching ? (
+            <Skeleton h={35} w={300} />
+          ) : (
+            campaignData?.name
+          )}
         </Title>
         <Group>
           <SegmentedControl
@@ -176,7 +167,6 @@ const CampaignById = () => {
                 data={filteredParticipants}
                 btnTitle="Add"
                 toggle={open}
-                topHeight={310}
                 tab={WhatsappTableType.PARTICIPANTS}
                 groupId={campaignData?.id}
                 refetch={refetchCampaign}
@@ -184,6 +174,7 @@ const CampaignById = () => {
                 sorting={sorting}
                 columnFilters={columnFilters}
                 setColumnFilters={setColumnFilters}
+                isPending={isPending || isFetching}
               />
             </PaperLayout>
             <Modal

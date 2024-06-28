@@ -56,6 +56,8 @@ import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.que
 import { getContent } from "../../../utils";
 import { useForm } from "@mantine/form";
 import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
+import { docsPath } from "../../../utils/constants";
+import InfoButton from "../../Button/InfoButton";
 
 enum PublishEnum {
   NOW = "NOW",

@@ -228,7 +228,6 @@ export default function ContactGroup() {
                   data={filteredCustomerList}
                   cTags={cTags?.contactTags}
                   tab={WhatsappTableType.MEMBERS}
-                  topHeight={420}
                   open={open}
                   groupId={groupDetails?.id}
                   refetch={refetchgroupById}

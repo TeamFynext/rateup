@@ -161,7 +161,7 @@ export const ButtonSelection = ({
           </Tooltip>
         </Menu.Dropdown>
       </Menu>
-      <Group fz={14} gap={"xs"}>
+      <Group fz={14} gap={"xs"} wrap="nowrap">
         <IconBulb size={16} />
         If you add more than three buttons, they will appear in a list.
       </Group>

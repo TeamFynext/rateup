@@ -1,11 +1,4 @@
-import {
-  Anchor,
-  Box,
-  Divider,
-  ScrollArea,
-  Stack,
-  Tooltip,
-} from "@mantine/core";
+import { Anchor, Box, Divider, ScrollArea, Tooltip } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import React, { useEffect, useState } from "react";
 import { useSubscription } from "../../../../backend/subscription/subscription.query";
@@ -25,6 +18,7 @@ import {
   localImagesPath,
   surveyUploadsPath,
 } from "../../../../utils/constants";
+import NavbarSkeleton from "../../../animation/skeleton/Navbar.Skeleton";
 const cx = classNames.bind(styles);
 
 interface iProps {
@@ -68,7 +62,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
 
   const { data: subscription, isPending } = useSubscription();
 
-  if (isPending) return null;
+  if (isPending) return <NavbarSkeleton />;
   const navTopData = getNavTopData(subscription);
 
   return (
