@@ -13,6 +13,7 @@ import {
   Center,
   Image,
   Tooltip,
+  Radio,
 } from "@mantine/core";
 import {
   IconCheck,
@@ -24,6 +25,7 @@ import {
 } from "@tabler/icons-react";
 import React, { useState, useEffect, useCallback } from "react";
 import {
+  ContainedDateTimePickerInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
@@ -52,7 +54,18 @@ import TagManager from "./TagManager";
 import { SurveyType } from "../../../types/enums";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
 import { getContent } from "../../../utils";
+import { useForm } from "@mantine/form";
+import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
 
+enum PublishEnum {
+  NOW = "NOW",
+  LATER = "LATER",
+}
+
+enum ExpiryEnum {
+  NO_EXPIRY = "NO_EXPIRY",
+  CUSTOM_DATE = "CUSTOM_DATE",
+}
 const ShareSurvey = ({
   survey,
   setActiveTab,
@@ -72,21 +85,51 @@ const ShareSurvey = ({
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
   const [tagsToMap, setTagsToMap] = useState<Array<string>>([]);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
+  const [publishChoice, setPublishChoice] = useState<any>(PublishEnum.NOW);
+  const [surveyExpiry, setSurveyExpiry] = useState<any>(ExpiryEnum.NO_EXPIRY);
+  const [isScheduled, setIsScheduled] = useState(
+    !survey?.isPublished && survey?.surveyPublishAt ? true : false,
+  );
 
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
   const [openedIframe, { open: openIframe, close: closeIframe }] =
     useDisclosure(false);
+  const [
+    publishSettings,
+    { open: openPublishSettings, close: closePublishSettings },
+  ] = useDisclosure(false);
+
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
     null,
   );
 
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
 
+  const form = useForm({
+    initialValues: {
+      surveyPublishAt: new Date(new Date().setMinutes(0, 0, 0)),
+      surveyEndAt: new Date(new Date().setMinutes(0, 0, 0)),
+    },
+    validate: {},
+  });
+
   // TODO: since flow has a different share page (ShareFlow.tsx), remove the whatsapp related code
   const isWhatsapp =
     survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow;
   const { data: waSettings } = useWaSettings(isWhatsapp);
+
+  useEffect(() => {
+    setIsScheduled(
+      !survey?.isPublished && survey?.surveyPublishAt ? true : false,
+    );
+  }, [survey]);
+
+  useEffect(() => {
+    form.reset();
+    setPublishChoice(PublishEnum.NOW);
+    setSurveyExpiry(ExpiryEnum.NO_EXPIRY);
+  }, [publishSettings]);
 
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
@@ -247,34 +290,150 @@ const ShareSurvey = ({
     [survey],
   );
 
+  const handlePublish = (event) => {
+    notifications.show({
+      id: "load-data",
+      color: "teal",
+      title: "Publishing",
+      loading: true,
+      message: "Please hold on while publishing your survey",
+      autoClose: 3000,
+    });
+    surveyUpdateMutation.mutate(
+      {
+        isPublished: publishChoice === PublishEnum.NOW ? true : false,
+        surveyPublishAt:
+          publishChoice === PublishEnum.NOW
+            ? new Date()
+            : form.values.surveyPublishAt,
+        surveyEndAt:
+          surveyExpiry === ExpiryEnum.NO_EXPIRY
+            ? null
+            : form.values.surveyEndAt,
+      },
+      {
+        onSuccess: () => {
+          closePublishSettings();
+        },
+      },
+    );
+  };
+
   return (
     <Stack p={"0.3125rem"} pr={"0.625rem"}>
       <PaperLayout>
         <Group justify="space-between">
-          <Switch
-            fw={500}
-            size="lg"
-            checked={isPublished}
-            onChange={(event) => {
-              notifications.show({
-                id: "load-data",
-                color: "teal",
-                title: "Publishing",
-                loading: true,
-                message: "Please hold on while publishing your survey",
-                autoClose: 3000,
-              });
-              surveyUpdateMutation.mutate({
-                isPublished: event.currentTarget.checked,
-              });
-            }}
-            label={
-              <Text fw={700} fz={"lg"}>
-                {isPublished ? "Published" : "Publish Survey"}
-              </Text>
-            }
-          />
+          {isScheduled ? (
+            <Switch
+              fw={500}
+              size="lg"
+              checked={isScheduled}
+              onChange={(event) => {
+                surveyUpdateMutation.mutate({
+                  isPublished: event.currentTarget.checked,
+                  surveyPublishAt: null,
+                });
+              }}
+              label={
+                <Text fw={700} fz={"lg"}>
+                  Scheduled
+                </Text>
+              }
+            />
+          ) : (
+            <Switch
+              fw={500}
+              size="lg"
+              checked={isPublished}
+              onChange={(event) => {
+                if (!isPublished) {
+                  openPublishSettings();
+                } else {
+                  surveyUpdateMutation.mutate({
+                    isPublished: event.currentTarget.checked,
+                    surveyPublishAt: null,
+                  });
+                }
+              }}
+              label={
+                <Text fw={700} fz={"lg"}>
+                  {isPublished ? "Published" : "Publish Survey"}
+                </Text>
+              }
+            />
+          )}
           <Group>
+            <FormModalLayout
+              opened={publishSettings}
+              onClose={closePublishSettings}
+              title={"Publish Settings"}
+              centered
+              onSubmit={handlePublish}
+              buttonTitle={
+                publishChoice === PublishEnum.LATER
+                  ? "Schedule Publish"
+                  : "Publish Now"
+              }
+            >
+              <Stack style={{ minHeight: "250px" }} mt="xl">
+                <Stack mb="xl">
+                  <Radio.Group
+                    value={publishChoice}
+                    onChange={setPublishChoice}
+                    name="selectPublish"
+                    label="Publish"
+                    withAsterisk
+                  >
+                    <Group mt="xs">
+                      <Radio checked label="Now" value={PublishEnum.NOW} />
+                      <Radio label="Schedule Later" value={PublishEnum.LATER} />
+                    </Group>
+                  </Radio.Group>
+                  {publishChoice === PublishEnum.LATER && (
+                    <ContainedDateTimePickerInput
+                      defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
+                      placeholder={"Date"}
+                      label={"Publish Survey At"}
+                      withAsterisk
+                      {...form.getInputProps("surveyPublishAt")}
+                      minDate={new Date()}
+                    />
+                  )}
+                </Stack>
+                <Stack mb="xl">
+                  <Radio.Group
+                    value={surveyExpiry}
+                    onChange={setSurveyExpiry}
+                    name="selectExpiry"
+                    label="Expiry Date"
+                    withAsterisk
+                  >
+                    <Group mt="xs">
+                      <Radio
+                        checked
+                        label="No Expiry"
+                        value={ExpiryEnum.NO_EXPIRY}
+                      />
+                      <Radio
+                        label="Custom Date"
+                        value={ExpiryEnum.CUSTOM_DATE}
+                      />
+                    </Group>
+                  </Radio.Group>
+
+                  {surveyExpiry === ExpiryEnum.CUSTOM_DATE && (
+                    <ContainedDateTimePickerInput
+                      defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
+                      placeholder={"Date"}
+                      label={"End Survey At"}
+                      {...form.getInputProps("surveyEndAt")}
+                      minDate={new Date()}
+                    />
+                  )}
+                </Stack>
+              </Stack>
+            </FormModalLayout>
+
             <Text>Current Status: </Text>
             {isPublished ? (
               <StatusBadge active={survey?.active} />
@@ -282,6 +441,32 @@ const ShareSurvey = ({
               <Text c="dark.1"> Not published! </Text>
             )}
           </Group>
+
+          {(isPublished || survey?.surveyPublishAt) && (
+            <Group>
+              <Text>
+                {isScheduled ? "To be Published On" : "Published On"}:{" "}
+              </Text>
+              {/* <StatusBadge active={survey?.active} /> */}
+              <Text c="dark.1">
+                {" "}
+                {formatIsoDateStringWithTime(survey?.surveyPublishAt)}{" "}
+              </Text>
+            </Group>
+          )}
+
+          {isPublished && (
+            <Group>
+              <Text>End At: </Text>
+              {/* <StatusBadge active={survey?.active} /> */}
+              <Text c="dark.1">
+                {survey?.surveyEndAt
+                  ? formatIsoDateStringWithTime(survey?.surveyEndAt)
+                  : "Nil"}{" "}
+              </Text>
+            </Group>
+          )}
+
           <RateupButtonSecondary
             disabled={disableShare}
             title={survey?.active ? "Pause" : "Resume"}
