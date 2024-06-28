@@ -1,0 +1,13 @@
+name: Hourly API Call Survey PUBLISH JOB
+
+on:
+  schedule:
+    - cron: '* * * * *' # Run every min
+
+jobs:
+  make-api-call:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Make API call
+        run: |
+          curl -X GET "https://dev-api.rateup.app/api/public/services/surveyJob"
