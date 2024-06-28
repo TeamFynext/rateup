@@ -1,4 +1,4 @@
-import { Anchor, Breadcrumbs, Group, Text } from "@mantine/core";
+import { Breadcrumbs, Group, Text } from "@mantine/core";
 import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useRouteParams } from "../../../context/RouteParamsContext";

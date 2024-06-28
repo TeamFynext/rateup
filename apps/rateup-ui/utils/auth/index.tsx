@@ -232,61 +232,65 @@ export function useSignUp() {
     phoneNumber: string,
   ) {
     try {
-      if (phoneNumber) {
-        await handleCreateCode(phoneNumber, router);
-      } else {
-        let response = await signUp({
-          formFields: [
-            {
-              id: "email",
-              value: email,
-            },
-            {
-              id: "password",
-              value: password,
-            },
-            {
-              id: "name",
-              value: name,
-            },
-            {
-              id: "orgName",
-              value: orgName,
-            },
-          ],
-        });
+      // if (phoneNumber) {
+      //   await handleCreateCode(phoneNumber, router);
+      // } else {
+      let response = await signUp({
+        formFields: [
+          {
+            id: "email",
+            value: email,
+          },
+          {
+            id: "password",
+            value: password,
+          },
+          {
+            id: "name",
+            value: name,
+          },
+          {
+            id: "orgName",
+            value: orgName,
+          },
+          {
+            id: "phoneNumber",
+            value: phoneNumber || null,
+          },
+        ],
+      });
 
-        if (response?.status === "FIELD_ERROR") {
-          response?.formFields?.forEach((formField) => {
-            if (formField?.id === "email") {
-              // Email validation failed (for example incorrect email syntax),
-              // or the email is not unique.
-              showNotification(
-                "sign-up-error",
-                "red",
-                "Error",
-                formField?.error,
-                <IconX size="1rem" />,
-              );
-            } else if (formField?.id === "password") {
-              // Password validation failed.
-              // Maybe it didn't match the password strength
-              showNotification(
-                "sign-up-error",
-                "red",
-                "Error",
-                formField?.error,
-                <IconX size="1rem" />,
-              );
-            }
-          });
-        } else {
-          // sign up successful. The session tokens are automatically handled by
-          // the frontend SDK.
-          router.push("/login/verify-email");
-          //consumeVerificationCode()
-        }
+      if (response?.status === "FIELD_ERROR") {
+        response?.formFields?.forEach((formField) => {
+          if (formField?.id === "email") {
+            // Email validation failed (for example incorrect email syntax),
+            // or the email is not unique.
+            showNotification(
+              "sign-up-error",
+              "red",
+              "Error",
+              formField?.error,
+              <IconX size="1rem" />,
+            );
+          } else if (formField?.id === "password") {
+            // Password validation failed.
+            // Maybe it didn't match the password strength
+            showNotification(
+              "sign-up-error",
+              "red",
+              "Error",
+              formField?.error,
+              <IconX size="1rem" />,
+            );
+          }
+        });
+      } else {
+        // sign up successful. The session tokens are automatically handled by
+        // the frontend SDK.
+        router.push("/login/verify-email");
+        //consumeVerificationCode()
       }
+      // }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.

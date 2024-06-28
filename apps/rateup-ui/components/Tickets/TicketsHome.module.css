@@ -1,0 +1,3 @@
+.ticket-cards-scroll-area-div :global(.mantine-ScrollArea-viewport > div) {
+  padding: 0.3125rem;
+}

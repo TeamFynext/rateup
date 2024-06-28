@@ -9,10 +9,8 @@ import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import {
   Box,
   Button,
-  Center,
   Flex,
   Group,
-  Loader,
   Menu,
   rem,
   SegmentedControl,
@@ -24,7 +22,6 @@ import {
 import { showLoadingToast } from "../../../utils/notifications";
 import Heading from "../../../components/styled/Heading/Heading";
 import ContactTable from "../../../components/Table/ContactTable";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import ContactAction from "../../../components/Contacts/ContactAction";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
@@ -47,6 +44,7 @@ import {
 } from "../../../backend/whatsapp/settings/waSettings.query";
 import { PAGE_SIZE } from "../../../utils/constants";
 import styles from "./contacts.module.css";
+import ErrorComponent from "../../../components/404/ErrorComponent";
 
 export enum ContactTabs {
   GROUPS = "groups",
@@ -78,12 +76,16 @@ export default function Contacts() {
     isPending: isLoadingContacts,
     data: contactData,
     refetch: refetchContacts,
+    isRefetching,
+    isError,
   } = useContacts(pagination, searchTerm, sorting?.[0], columnFilters);
 
   const {
     isLoading: isLoadingContactgroup,
     data: contactGroupData,
     refetch: refetchGroups,
+    isRefetching: isRefetchingGroups,
+    isError: isErrorGroup,
   } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
   const updateContactTagsMutation = useUpdateContactTagsMutation();
@@ -126,9 +128,12 @@ export default function Contacts() {
     () => contactData?.users ?? [],
     [contactData?.users],
   );
-
-  if (isLoadingContacts || isLoadingContactgroup || isPending)
-    return <RateupLoader h={"90dvh"} />;
+  if (isError || isErrorGroup)
+    return (
+      <Stack h={"90dvh"}>
+        <ErrorComponent refetch={isError ? refetchContacts : refetchGroups} />
+      </Stack>
+    );
   return (
     <Stack className={styles["contacts-page-root-div"]}>
       <Flex
@@ -196,51 +201,41 @@ export default function Contacts() {
         </Flex>
         <Box className={styles["panels-container"]}>
           <Tabs.Panel value={ContactTabs.CONTACTS} h={"100%"}>
-            {isLoadingContacts ? (
-              <Center pt="xl">
-                <Loader type="bars" />
-              </Center>
-            ) : (
-              <PaperLayout p={0} h={"100%"}>
-                <ContactTable
-                  columns={column}
-                  data={contactMemoData ?? []}
-                  cTags={cTags?.contactTags}
-                  topHeight={375}
-                  refetch={refetchContacts}
-                  pagination={pagination}
-                  setPagination={setPagination}
-                  totalCount={contactData?.totalCount}
-                  setSorting={setSorting}
-                  sorting={sorting}
-                  columnFilters={columnFilters}
-                  setColumnFilters={setColumnFilters}
-                />
-              </PaperLayout>
-            )}
+            <PaperLayout p={0} h={"100%"}>
+              <ContactTable
+                columns={column}
+                data={contactMemoData ?? []}
+                cTags={cTags?.contactTags}
+                refetch={refetchContacts}
+                pagination={pagination}
+                setPagination={setPagination}
+                totalCount={contactData?.totalCount}
+                setSorting={setSorting}
+                sorting={sorting}
+                columnFilters={columnFilters}
+                setColumnFilters={setColumnFilters}
+                isPending={isLoadingContacts || isRefetching || isPending}
+              />
+            </PaperLayout>
           </Tabs.Panel>
           <Tabs.Panel value={ContactTabs.GROUPS} h={"100%"}>
-            {isLoadingContactgroup ? (
-              <Center pt="xl">
-                <Loader type="bars" />
-              </Center>
-            ) : (
-              <PaperLayout p={0} h={"100%"}>
-                <ContactTable
-                  columns={columnGroup}
-                  data={filteredGroups}
-                  cTags={cTags?.contactTags}
-                  tab={activeTab}
-                  topHeight={375}
-                  refetch={refetchGroups}
-                  setSorting={setSortingGroup}
-                  sorting={sortingGroup}
-                  columnFilters={columnFiltersGroup}
-                  setColumnFilters={setColumnFiltersGroup}
-                  detailBtn
-                />
-              </PaperLayout>
-            )}
+            <PaperLayout p={0} h={"100%"}>
+              <ContactTable
+                columns={columnGroup}
+                data={filteredGroups}
+                cTags={cTags?.contactTags}
+                tab={activeTab}
+                refetch={refetchGroups}
+                setSorting={setSortingGroup}
+                sorting={sortingGroup}
+                columnFilters={columnFiltersGroup}
+                setColumnFilters={setColumnFiltersGroup}
+                detailBtn
+                isPending={
+                  isLoadingContactgroup || isRefetchingGroups || isPending
+                }
+              />
+            </PaperLayout>
           </Tabs.Panel>
           <Tabs.Panel value={ContactTabs.SETTINGS}>
             <PaperLayout p="xl">

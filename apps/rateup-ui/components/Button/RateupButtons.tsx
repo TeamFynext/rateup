@@ -27,6 +27,7 @@ interface Props {
   className?: string;
   gradient?: any;
   fw?: string | number;
+  miw?: string | number;
 }
 
 export const RateupButtonPrimary = ({

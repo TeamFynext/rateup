@@ -21,6 +21,8 @@ import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
 import { motion, useAnimate } from "framer-motion";
 import commonStyles from "../CustomSelectForMobile/CustomSelectForMobile.module.css";
 import styles from "./CustomMultiselectForMobile.module.css";
+import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
 const cxCommon = classNames.bind(commonStyles);
 const cx = classNames.bind(styles);
@@ -43,6 +45,17 @@ function CustomMultiselectForMobile({
       : themePrimaryColor;
   const pillTextColor = isLightColor(primaryColor) ? "#000000" : "#FFFFFF";
 
+  const foregroundColor = isLightColor(themePrimaryColor)
+    ? "#000000"
+    : "#FFFFFF";
+
+  const surveyThemeData = useSurveyThemeData();
+  const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
+    surveyThemeData,
+    "surveyTheme",
+    true,
+  );
+
   const [scope, animate] = useAnimate();
   const optionsMotionDivRefs = useRef(null);
 
@@ -64,23 +77,24 @@ function CustomMultiselectForMobile({
     onChange(newValuesArr);
 
     const domEle = getOptionsMotionDivsMap().get(val);
+    const unSelectedOptionStyleObj = {
+      backgroundColor: "rgba(0,0,0,0)",
+      color: primaryColor,
+      borderColor: primaryColor,
+    };
+    const selectedOptionStyleObj = {
+      backgroundColor: primaryColor,
+      color: foregroundColor,
+      borderColor: primaryColor,
+    };
 
     if (valuesArr.includes(val)) {
-      if (domEle)
-        animate(
-          domEle,
-          { backgroundColor: "#FFFFFF", color: "#000000" },
-          { duration: 0.2 },
-        );
+      if (domEle) animate(domEle, unSelectedOptionStyleObj, { duration: 0.2 });
     }
 
     if (!valuesArr.includes(val)) {
       if (domEle) {
-        await animate(
-          domEle,
-          { backgroundColor: primaryColor, color: "#FFFFFF" },
-          { duration: 0.5 },
-        );
+        await animate(domEle, selectedOptionStyleObj, { duration: 0.5 });
       }
     }
   };
@@ -96,7 +110,11 @@ function CustomMultiselectForMobile({
       if (domEle)
         animate(
           domEle,
-          { backgroundColor: "#FFFFFF", color: "#000000" },
+          {
+            backgroundColor: "rgba(0,0,0,0)",
+            color: primaryColor,
+            borderColor: primaryColor,
+          },
           { duration: 0.2 },
         );
     });
@@ -107,13 +125,24 @@ function CustomMultiselectForMobile({
     .filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()))
     .map((item) => {
       const isSelectedItem = value.includes(item);
+      const unSelectedOptionStyleObj = {
+        backgroundColor: "rgba(0,0,0,0)",
+        color: primaryColor,
+        borderColor: primaryColor,
+      };
+      const selectedOptionStyleObj = {
+        backgroundColor: primaryColor,
+        color: foregroundColor,
+        borderColor: primaryColor,
+      };
       const styleObj = isSelectedItem
-        ? { backgroundColor: primaryColor, color: "#FFFFFF" }
-        : { backgroundColor: "#FFFFFF", color: "#000000" };
+        ? selectedOptionStyleObj
+        : unSelectedOptionStyleObj;
+
       return (
         <Combobox.Option
           value={item}
-          key={item}
+          key={item + primaryColor}
           className={cxCommon("option", { selected: item === value })}
           data-value={item}
         >
@@ -187,6 +216,10 @@ function CustomMultiselectForMobile({
         <Portal {...portalProps}>
           <Stack
             className={`${cxCommon("search-input-and-options-container")} search-input-and-options-container`}
+            style={{
+              backgroundColor,
+              backgroundImage: `url(${backgroundImageSrc})`,
+            }}
           >
             <Group className={cxCommon("back-btn-and-search-input-container")}>
               <ActionIcon

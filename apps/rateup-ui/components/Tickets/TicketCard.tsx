@@ -73,7 +73,6 @@ export function TicketCard({
   return (
     <PaperLayout
       hoveractive
-      mah={200}
       mih={200}
       p="md"
       shadow="lg"

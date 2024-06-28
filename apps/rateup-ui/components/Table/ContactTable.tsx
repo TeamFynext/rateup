@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { ActionIcon, Box, Divider, Flex, Group, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconCheck,
   IconPlus,
@@ -44,7 +44,6 @@ function ContactTable({
   enablePagination = true,
   enableColumnSelection = true,
   cTags = [],
-  topHeight,
   tab = WhatsappTableType.CONTACTS,
   open = () => {},
   groupId = "",
@@ -59,6 +58,7 @@ function ContactTable({
   columnFilters,
   setColumnFilters,
   detailBtn = false,
+  isPending = false,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -66,7 +66,6 @@ function ContactTable({
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
   cTags?: string[];
-  topHeight?: number;
   tab?: string;
   open?: () => void;
   groupId?: string;
@@ -81,12 +80,14 @@ function ContactTable({
   columnFilters;
   setColumnFilters;
   detailBtn?: boolean;
+  isPending?: boolean;
 }>) {
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
   });
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
+  const largeScreen = useMediaQuery("(min-width: 40em)");
 
   const [
     dialogOpened,
@@ -158,8 +159,8 @@ function ContactTable({
         className={styles["filter-and-other-btns-container"]}
         gap={"md"}
         justify={"space-between"}
-        align={"center"}
         px={"xs"}
+        direction={largeScreen ? "row" : "column"}
       >
         <ConfirmationModal
           forDeleteFunctionality
@@ -220,7 +221,7 @@ function ContactTable({
             }
           }}
         />
-        <Group gap={"xl"}>
+        <Group mr={"auto"}>
           {Object.keys(rowSelection)?.length > 0 ? (
             <Tooltip
               label={`Click to ${tooltipMsg}`}
@@ -288,8 +289,8 @@ function ContactTable({
         filterVisibility={filterVisibility}
         table={table}
         tempVisibleColumnArray={tempVisibleColumnArray}
-        topHeight={topHeight}
         detailBtn={detailBtn}
+        isPending={isPending}
       />
     </Box>
   );

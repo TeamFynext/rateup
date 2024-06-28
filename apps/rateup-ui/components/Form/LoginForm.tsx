@@ -29,7 +29,8 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
       email: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
 
-        /^\S+@\S+$/.test(value) ? null : "Invalid email";
+        if (!value) return "Email is required";
+        else return /^\S+@\S+$/.test(value) ? null : "Invalid email";
       },
       password: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
@@ -81,7 +82,6 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
         <PasswordInput
           classNames={styles}
           placeholder="Enter Password"
-          required
           {...loginForm.getInputProps("password")}
         />
         <Link

@@ -458,7 +458,7 @@ function DisplayTemplates({
   );
 }
 
-export function SyncFlowsButton() {
+export function SyncFlowsButton({ disabled = false }) {
   const [openModal, { open, close }] = useDisclosure(false);
   const {
     data: unsyncedFlows,
@@ -483,6 +483,7 @@ export function SyncFlowsButton() {
         variant="outline"
         onClick={open}
         radius={"lg"}
+        disabled={disabled}
       >
         Sync
       </Button>

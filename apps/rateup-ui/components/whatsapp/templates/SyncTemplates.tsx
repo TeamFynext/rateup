@@ -349,7 +349,7 @@ export function ImportTemplatesButton() {
   );
 }
 
-export function SyncTemplatesButton() {
+export function SyncTemplatesButton({ disabled = false }) {
   const syncMutation = useSyncTemplatesMutation();
 
   function handleSyncClick() {
@@ -366,6 +366,7 @@ export function SyncTemplatesButton() {
       variant="outline"
       onClick={handleSyncClick}
       radius={"lg"}
+      disabled={disabled}
     >
       Sync
     </Button>
