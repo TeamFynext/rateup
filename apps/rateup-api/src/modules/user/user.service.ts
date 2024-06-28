@@ -39,6 +39,7 @@ export async function createUserSignup({
   name,
   orgName,
   phone,
+  phoneNumber,
   recipeName,
 }: CreateUserSignupSchema) {
   log.info("Creating user....");
@@ -60,6 +61,7 @@ export async function createUserSignup({
         data: {
           name: orgName,
           ownerId: newUser.id,
+          phone: phoneNumber,
           surveyThemes: {
             create: {
               name: "Default Theme",
