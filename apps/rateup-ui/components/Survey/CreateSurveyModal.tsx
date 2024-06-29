@@ -21,7 +21,6 @@ import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
 import { useRouter } from "next/router";
 import { useQueryClient } from "@tanstack/react-query";
-import { showErrorToast } from "../../utils/notifications";
 import { useDisclosure } from "@mantine/hooks";
 
 interface FormValues {

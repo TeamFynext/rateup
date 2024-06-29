@@ -1,4 +1,4 @@
-import { Badge, Group, Stack, Text } from "@mantine/core";
+import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { WaTemplateFetchBody } from "../../../../../../../types/global";
 import WaInboxTemplate from "../../../chatdisplayBody/components/template";
@@ -14,6 +14,7 @@ import { uploadFile } from "../../../../../../../utils/file-upload/upload";
 import { validateInboxTemplateSending } from "../../../../../../../utils/whatsapp/inbox";
 import { useEffect, useState } from "react";
 import { useWaTemplateById } from "../../../../../../../backend/whatsapp/whatsapp.query";
+import { useMediaQuery } from "@mantine/hooks";
 interface Props {
   template: WaTemplateFetchBody;
   sendTemplate: UseMutationResult<
@@ -36,6 +37,8 @@ export default function WaInboxTemplatePreview(props: Props) {
   const [loading, setLoading] = useState(false);
 
   const { data: dbTemplate } = useWaTemplateById(props?.selectedTemplateId);
+
+  const isMobile = useMediaQuery("(max-width: 720px)");
 
   async function handleFilesIfAny(data: Array<any>) {
     const newData = await Promise.all(
@@ -83,17 +86,9 @@ export default function WaInboxTemplatePreview(props: Props) {
     setParameterData(() => []);
   }, [props?.selectedTemplateId]);
 
-  return (
-    <Stack className={classes.wrapper}>
-      <Group className={classes.name_sendbutton_wrapper}>
-        <Group>
-          <Text className={classes.name}>{props?.template?.name}</Text>
-          <Group>
-            <Badge variant="outline">{props?.template?.language}</Badge>
-            <Badge variant="outline">{props?.template?.category}</Badge>
-            <Badge variant="outline">{props?.template?.status}</Badge>
-          </Group>
-        </Group>
+  if (isMobile) {
+    return (
+      <Box pl={"1rem"}>
         <RateupButtonPrimary
           loading={loading}
           disabled={validateInboxTemplateSending(
@@ -106,23 +101,50 @@ export default function WaInboxTemplatePreview(props: Props) {
           title="Send"
           rightIcon={<IconSend />}
         />
-      </Group>
-      <Group className={classes.inner}>
-        <WaTemplateFormElements
-          setParameterData={setParameterData}
-          template={props?.template}
-        />
-        <WaInboxSingleMessageLayout
-          forPreview
-          exchangeProcess="send"
-          messageObject={{} as WaGetMessagesBody}
-        >
-          <WaInboxTemplate
-            parameters={parameterData}
-            templateBody={props?.template}
+      </Box>
+    );
+  } else {
+    return (
+      <Stack className={classes.wrapper}>
+        <Group className={classes.name_sendbutton_wrapper}>
+          <Group>
+            <Text className={classes.name}>{props?.template?.name}</Text>
+            <Group>
+              <Badge variant="outline">{props?.template?.language}</Badge>
+              <Badge variant="outline">{props?.template?.category}</Badge>
+              <Badge variant="outline">{props?.template?.status}</Badge>
+            </Group>
+          </Group>
+          <RateupButtonPrimary
+            loading={loading}
+            disabled={validateInboxTemplateSending(
+              props?.template?.components,
+              parameterData,
+              dbTemplate?.defaultValues,
+            ).includes(false)}
+            ml="auto"
+            onClick={handleSendTemplate}
+            title="Send"
+            rightIcon={<IconSend />}
           />
-        </WaInboxSingleMessageLayout>
-      </Group>
-    </Stack>
-  );
+        </Group>
+        <Group className={classes.inner}>
+          <WaTemplateFormElements
+            setParameterData={setParameterData}
+            template={props?.template}
+          />
+          <WaInboxSingleMessageLayout
+            forPreview
+            exchangeProcess="send"
+            messageObject={{} as WaGetMessagesBody}
+          >
+            <WaInboxTemplate
+              parameters={parameterData}
+              templateBody={props?.template}
+            />
+          </WaInboxSingleMessageLayout>
+        </Group>
+      </Stack>
+    );
+  }
 }

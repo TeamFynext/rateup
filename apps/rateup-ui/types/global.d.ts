@@ -129,6 +129,8 @@ declare global {
       url: string;
       time: string;
     };
+    surveyPublishAt?: string;
+    surveyEndAt?: string;
   };
 
   interface STeam {
