@@ -1416,7 +1416,7 @@ export async function publishSurveyCronAction() {
           });
         }
 
-        console.log(`Published ${surveysToPublish.length} surveys.`);
+        console.log(`Published ${surveysToPublish.length} surveys. At ${currentTime}`);
 }
 
 export async function endSurveyCronAction() {
@@ -1444,5 +1444,5 @@ export async function endSurveyCronAction() {
           });
         }
 
-        console.log(`Unpublished ${surveysToUnpublish.length} surveys.`);
+        console.log(`Unpublished ${surveysToUnpublish.length} surveys. At ${currentTime}`);
 }
