@@ -2,7 +2,7 @@ name: Hourly API Call Survey PUBLISH JOB - Dev
 
 on:
   schedule:
-    - cron: '* * * * *' # Run every minute
+    - cron: '0 * * * *' # Run every hour
   workflow_dispatch: {} # Allows manual triggering from the GitHub UI
 
 jobs:
