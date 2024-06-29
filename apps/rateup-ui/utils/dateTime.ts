@@ -98,3 +98,16 @@ export function isThisMonth(isoDateString) {
 export function isInLastSevenDays(isoDateString) {
   return dayjs().diff(dayjs(isoDateString), "week") == 0;
 }
+
+export function roundOffMinutesAndSeconds(dateString) {
+  const date = new Date(dateString);
+  const roundOffTime = (time) => Math.floor(time / 60) * 60;
+
+  let roundedMinutes = roundOffTime(date.getMinutes() + 30);
+  let roundedSeconds = roundOffTime(date.getSeconds() + 30);
+
+  date.setMinutes(roundedMinutes);
+  date.setSeconds(roundedSeconds);
+
+  return date;
+}
