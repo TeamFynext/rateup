@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Make API call
         run: |
-          curl -X GET "https://dev-api.rateup.app/api/public/services/surveyJob"
+          curl -X GET "https://rateup-api-dev.up.railway.app/api/public/services/surveyJob"
