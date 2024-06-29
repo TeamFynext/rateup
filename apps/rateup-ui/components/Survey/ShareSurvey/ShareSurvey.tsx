@@ -55,7 +55,10 @@ import { SurveyType } from "../../../types/enums";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
 import { getContent } from "../../../utils";
 import { useForm } from "@mantine/form";
-import { formatIsoDateStringWithTime } from "../../../utils/dateTime";
+import {
+  formatIsoDateStringWithTime,
+  roundOffMinutesAndSeconds,
+} from "../../../utils/dateTime";
 import { docsPath } from "../../../utils/constants";
 import InfoButton from "../../Button/InfoButton";
 
@@ -307,11 +310,11 @@ const ShareSurvey = ({
         surveyPublishAt:
           publishChoice === PublishEnum.NOW
             ? new Date()
-            : form.values.surveyPublishAt,
+            : new Date(roundOffMinutesAndSeconds(form.values.surveyPublishAt)),
         surveyEndAt:
           surveyExpiry === ExpiryEnum.NO_EXPIRY
             ? null
-            : form.values.surveyEndAt,
+            : new Date(roundOffMinutesAndSeconds(form.values.surveyEndAt)),
       },
       {
         onSuccess: () => {
@@ -392,14 +395,21 @@ const ShareSurvey = ({
                     </Group>
                   </Radio.Group>
                   {publishChoice === PublishEnum.LATER && (
-                    <ContainedDateTimePickerInput
-                      defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
-                      placeholder={"Date"}
-                      label={"Publish Survey At"}
-                      withAsterisk
-                      {...form.getInputProps("surveyPublishAt")}
-                      minDate={new Date()}
-                    />
+                    <Stack>
+                      <ContainedDateTimePickerInput
+                        valueFormat="DD MMM YYYY - hh mm A"
+                        dropdownType="modal"
+                        defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
+                        placeholder={"Date"}
+                        label={"Publish Survey At"}
+                        withAsterisk
+                        {...form.getInputProps("surveyPublishAt")}
+                        minDate={new Date()}
+                      />
+                      <Text c="red" size="xs">
+                        *Time will be rounded to nearest hours.
+                      </Text>
+                    </Stack>
                   )}
                 </Stack>
                 <Stack mb="xl">
@@ -424,13 +434,20 @@ const ShareSurvey = ({
                   </Radio.Group>
 
                   {surveyExpiry === ExpiryEnum.CUSTOM_DATE && (
-                    <ContainedDateTimePickerInput
-                      defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
-                      placeholder={"Date"}
-                      label={"End Survey At"}
-                      {...form.getInputProps("surveyEndAt")}
-                      minDate={new Date()}
-                    />
+                    <Stack>
+                      <ContainedDateTimePickerInput
+                        dropdownType="modal"
+                        valueFormat="DD MMM YYYY - hh mm A"
+                        defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
+                        placeholder={"Date"}
+                        label={"End Survey At"}
+                        {...form.getInputProps("surveyEndAt")}
+                        minDate={new Date()}
+                      />
+                      <Text c="red" size="xs">
+                        *Time will be rounded to nearest hours.
+                      </Text>
+                    </Stack>
                   )}
                 </Stack>
               </Stack>
@@ -450,9 +467,10 @@ const ShareSurvey = ({
                 {isScheduled ? "To be Published On" : "Published On"}:{" "}
               </Text>
               {/* <StatusBadge active={survey?.active} /> */}
-              <Text c="dark.1">
-                {" "}
-                {formatIsoDateStringWithTime(survey?.surveyPublishAt)}{" "}
+              <Text c={isScheduled ? "blue.7" : "dark.1"}>
+                {survey?.surveyPublishAt
+                  ? formatIsoDateStringWithTime(survey?.surveyPublishAt)
+                  : "Nil"}
               </Text>
             </Group>
           )}
@@ -464,7 +482,7 @@ const ShareSurvey = ({
               <Text c="dark.1">
                 {survey?.surveyEndAt
                   ? formatIsoDateStringWithTime(survey?.surveyEndAt)
-                  : "Nil"}{" "}
+                  : "Nil"}
               </Text>
             </Group>
           )}
