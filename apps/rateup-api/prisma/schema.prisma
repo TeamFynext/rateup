@@ -68,7 +68,7 @@ model User {
   phone          String?
   active         Boolean         @default(true)
   gender         Gender?
-  recipeName     UserRecipes? 
+  recipeName     UserRecipes?
   isPaused       Boolean?        @default(false)
   pausedBy       String?
   org            Org[]
@@ -92,7 +92,7 @@ model Org {
   phone             String?
   address           String?
   encryptionKeys    Json? //{privateKey:string,publicKey:string}
-  isPaused          Boolean?        @default(false)
+  isPaused          Boolean?           @default(false)
   members           OrgMember[]
   teams             Team[]
   invitations       Invitation[]
@@ -278,6 +278,8 @@ model Survey {
   org                               Org?              @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                             String?           @db.Uuid
   surveyVariables                   SurveyVariables[]
+  surveyPublishAt                   DateTime?
+  surveyEndAt                       DateTime?
 }
 
 model SurveyTeamMap {

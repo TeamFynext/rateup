@@ -1390,3 +1390,59 @@ export async function deleteSurveyVariable(variableId) {
     },
   });
 }
+
+export async function publishSurveyCronAction() {
+  const currentTime = new Date();
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS
+  const fiveMinutesEarlier = new Date(currentTime.getTime() - 5 * 60000);
+
+        const surveysToPublish = await prisma.survey.findMany({
+          where: {
+            AND: [
+              { isPublished: false },
+              { surveyPublishAt: {
+                  gte: fiveMinutesEarlier,
+                  lte: fiveMinutesLater
+                } 
+              }
+            ]
+          }
+        });
+
+        for (const survey of surveysToPublish) {
+          await prisma.survey.update({
+            where: { id: survey.id },
+            data: { isPublished: true }
+          });
+        }
+
+        console.log(`Published ${surveysToPublish.length} surveys. At ${currentTime}`);
+}
+
+export async function endSurveyCronAction() {
+  const currentTime = new Date();
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS
+  const fiveMinutesEarlier = new Date(currentTime.getTime() - 5 * 60000);
+
+        const surveysToUnpublish = await prisma.survey.findMany({
+          where: {
+            AND: [
+              { isPublished: true },
+              { surveyEndAt:  {
+                  gte: fiveMinutesEarlier,
+                  lte: fiveMinutesLater
+                } 
+              }
+            ]
+          }
+        });
+
+        for (const survey of surveysToUnpublish) {
+          await prisma.survey.update({
+            where: { id: survey.id },
+            data: { isPublished: false }
+          });
+        }
+
+        console.log(`Unpublished ${surveysToUnpublish.length} surveys. At ${currentTime}`);
+}
