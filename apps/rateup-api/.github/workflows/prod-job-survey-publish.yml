@@ -1,8 +1,9 @@
-name: Hourly API Call Survey PUBLISH JOB
+name: Hourly API Call Survey PUBLISH JOB - Prod
 
 on:
   schedule:
     - cron: '0 * * * *' # Run every hour
+  workflow_dispatch: {} # Allows manual triggering from the GitHub UI
 
 jobs:
   make-api-call:
