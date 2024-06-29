@@ -150,6 +150,8 @@ const updateSurveyRequestSchema = z.object({
       enable: z.boolean().default(false),
     })
     .optional(),
+  surveyPublishAt: z.string().nullable().optional(),
+  surveyEndAt: z.string().nullable().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z
