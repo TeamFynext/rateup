@@ -9,7 +9,7 @@ export async function updateSurveyPublish(
     console.log(".......Running Hourly JOB --> Survey Updations........");
     await publishSurveyCronAction()
     await endSurveyCronAction()
-    reply.code(201).send("Survey Status Updated Successfully");
+    reply.code(200).send("Survey Status Updated Successfully");
   } catch (error) {
     reply.code(500).send(error);
   }
@@ -21,7 +21,7 @@ export async function testServiceRoute(
 ) {
   try {
     console.log(".......Srvice route testing........");
-    reply.code(201).send("Hello World");
+    reply.code(200).send("Hello World");
   } catch (error) {
     reply.code(500).send(error);
   }
