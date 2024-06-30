@@ -622,7 +622,8 @@ export async function sendCampaignToParticipants(
       .then(() => {
         log.trace("Template sent to all participants");
       })
-      .catch(() => {
+      .catch((e) => {
+        log.error(e);
         log.error("Error sending template to participants");
       });
 
@@ -655,27 +656,32 @@ async function _sendCampaignToParticipants(
   if (!teamId) {
     throw new Error("TeamId not found in campaign");
   }
-  if (!flowId) {
-    throw new Error("FlowId not found");
+  let surveyTeamMap;
+  if (flowId) {
+    surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+      where: {
+        teamId,
+        survey: {
+          WaFlow: {
+            flowId: flowId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        survey: {
+          select: {
+            languages: true,
+          },
+        },
+      },
+    });
+    if (!surveyTeamMap) {
+      throw new Error("SurveyTeamMap not found for flowId " + flowId);
+    }
+  } else {
+    log.trace("No flow button identified in template");
   }
-  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
-    where: {
-      teamId,
-      survey: {
-        WaFlow: {
-          flowId: flowId,
-        },
-      },
-    },
-    select: {
-      id: true,
-      survey: {
-        select: {
-          languages: true,
-        },
-      },
-    },
-  });
 
   for (const { contact, id, status } of campaign.campaignParticipants) {
     if (!sendToStatuses.includes(status as CampaignParticipantStatus)) {
@@ -707,6 +713,7 @@ async function _sendCampaignToParticipants(
         }
       }
 
+      // creating session
       await createSession({
         phone: contact.phone,
         surveyTeamMapId: surveyTeamMap.id,
@@ -715,6 +722,7 @@ async function _sendCampaignToParticipants(
         campaignParticipantId: id,
       });
 
+      // adding flow button
       templateComponents.push({
         type: "button",
         sub_type: "flow",

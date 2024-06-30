@@ -2,7 +2,7 @@ name: Hourly API Call Survey PUBLISH JOB - Dev
 
 on:
   schedule:
-    - cron: '* * * * *' # Run every minute
+    - cron: '0 * * * *' # Run every hour
   workflow_dispatch: {} # Allows manual triggering from the GitHub UI
 
 jobs:
@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Make API call
         run: |
-          curl -X GET "https://dev-api.rateup.app/api/public/services/surveyJob"
+          curl -X GET "https://rateup-api-dev.up.railway.app/api/public/services/surveyJob"
