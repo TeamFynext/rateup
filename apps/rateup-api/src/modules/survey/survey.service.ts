@@ -1393,15 +1393,18 @@ export async function deleteSurveyVariable(variableId) {
 
 export async function publishSurveyCronAction() {
   const currentTime = new Date();
-  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS- Buffer Time
   const fiveMinutesEarlier = new Date(currentTime.getTime() - 5 * 60000);
 
         const surveysToPublish = await prisma.survey.findMany({
           where: {
+            NOT: {
+              surveyPublishAt: null
+            },
             AND: [
               { isPublished: false },
               { surveyPublishAt: {
-                  gte: fiveMinutesEarlier,
+                  // gte: fiveMinutesEarlier,
                   lte: fiveMinutesLater
                 } 
               }
@@ -1421,15 +1424,17 @@ export async function publishSurveyCronAction() {
 
 export async function endSurveyCronAction() {
   const currentTime = new Date();
-  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS - Buffer Time
   const fiveMinutesEarlier = new Date(currentTime.getTime() - 5 * 60000);
 
         const surveysToUnpublish = await prisma.survey.findMany({
           where: {
+            NOT: {
+              surveyEndAt: null
+            },
             AND: [
               { isPublished: true },
-              { surveyEndAt:  {
-                  gte: fiveMinutesEarlier,
+              { surveyEndAt: {
                   lte: fiveMinutesLater
                 } 
               }
@@ -1440,7 +1445,7 @@ export async function endSurveyCronAction() {
         for (const survey of surveysToUnpublish) {
           await prisma.survey.update({
             where: { id: survey.id },
-            data: { isPublished: false }
+            data: { isPublished: false, surveyPublishAt: null }
           });
         }
 
