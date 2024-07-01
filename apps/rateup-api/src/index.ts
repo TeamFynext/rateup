@@ -58,6 +58,16 @@ server.get("/api/ping", async (req, reply) => {
 server.register(fastifyCron, {
   jobs: [
     {
+      name: 'publishSurveys',
+      cronTime: '*/30 * * * *', // Every 30 minute
+      onTick: async () => {
+        const currentTime = new Date();
+        console.log("........for....testing buffer Time.CRON JOB...",currentTime)
+      },
+      start: true,
+      timeZone: 'Etc/UTC' // Set to UTC+0
+    },
+    {
       cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
       onTick: async () => {
         try {
