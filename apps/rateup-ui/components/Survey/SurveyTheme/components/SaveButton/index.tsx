@@ -9,11 +9,11 @@ import { useSurveyThemeContextValue } from "../../SurveyThemeContext";
 import styles from "./SaveButton.module.css";
 import InfoButton from "../../../../Button/InfoButton";
 
-function SaveButton({ survey, themeSelectorState, allThemesArr }) {
-  const themeObjBeingEdited = allThemesArr?.find(
-    (obj) => obj.id === themeSelectorState,
-  );
-
+function SaveButton({
+  survey,
+  themeObjBeingEdited,
+  isThemeObjBeingEditedDefaultTheme,
+}) {
   const themeObjState = useSurveyThemeContextValue();
   let themeObjFromApi = themeObjState;
   if (themeObjBeingEdited) {
@@ -21,6 +21,13 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
   }
 
   const hasUnsavedChanges = !_.isEqual(themeObjFromApi, themeObjState);
+  let saveStatusText = "All changes saved";
+  if (hasUnsavedChanges) {
+    saveStatusText = "Unsaved changes";
+  }
+  if (isThemeObjBeingEditedDefaultTheme) {
+    saveStatusText = "Default Theme cannot be edited.";
+  }
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -68,16 +75,21 @@ function SaveButton({ survey, themeSelectorState, allThemesArr }) {
       <InfoButton docUrl={`${docsPath}/webSurvey/surveyTheme/themes`} />
       <Text
         className={styles["save-unsaved-text-p"]}
-        style={{ color: hasUnsavedChanges ? "red" : "green" }}
+        style={{
+          color:
+            hasUnsavedChanges || isThemeObjBeingEditedDefaultTheme
+              ? "red"
+              : "green",
+        }}
       >
-        {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+        {saveStatusText}
       </Text>
       <Button
         className={styles["save-btn"]}
         loading={isSaving}
         onClick={handleSaveTheme}
       >
-        Save
+        {isThemeObjBeingEditedDefaultTheme ? "Apply" : "Save & Apply"}
       </Button>
     </Group>
   );

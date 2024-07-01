@@ -4,6 +4,9 @@ import {
   Radio,
   MultiSelect,
   LoadingOverlay,
+  Select,
+  Loader,
+  ComboboxChevron,
 } from "@mantine/core";
 import {
   PillsInput,
@@ -22,6 +25,7 @@ import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
 import { useRouter } from "next/router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
+import { useAllThemes } from "../../backend/surveyTheme/surveyTheme.query";
 
 interface FormValues {
   title: string;
@@ -61,6 +65,15 @@ export function CreateSurveyModal({
     template?.title || tn || null,
   );
 
+  const { data: allThemesArr, isPending: isAllThemesFetchPending } =
+    useAllThemes();
+  const selectThemeDropdownData = allThemesArr?.map(({ id, name }) => {
+    return {
+      value: id,
+      label: name,
+    };
+  });
+
   const allTeams = teamsData?.map((team) => team?.id);
   const teamOptions = teamsData?.map((team) => ({
     value: team?.id,
@@ -73,6 +86,7 @@ export function CreateSurveyModal({
       languages: languages,
       teamIds: [],
       getLocation: false,
+      selectedTheme: "",
     },
     validate: {
       title: (value) =>
@@ -111,6 +125,15 @@ export function CreateSurveyModal({
   useEffect(() => {
     form.setFieldValue("teamIds", selectedTeams);
   }, [selectedTeams]);
+
+  useEffect(() => {
+    if (!form.getValues().selectedTheme) {
+      const defaultThemeId = allThemesArr?.find(
+        (themeObj) => themeObj.name === "Default Theme",
+      )?.id;
+      form.setFieldValue("selectedTheme", defaultThemeId || "");
+    }
+  }, [allThemesArr, open, form]);
 
   function arraysEqual(a, b) {
     if (a === b) return true;
@@ -249,6 +272,28 @@ export function CreateSurveyModal({
             error={form.errors.teamIds}
           />
         )}
+
+        <Select
+          label="Select Theme"
+          data={selectThemeDropdownData}
+          value={form.getValues().selectedTheme}
+          onChange={(value) => form.setFieldValue("selectedTheme", value)}
+          placeholder="Select Theme"
+          styles={{
+            input: {
+              borderRadius: "0.5rem",
+              paddingTop: "0.23125rem",
+              paddingBottom: "0.23125rem",
+            },
+          }}
+          rightSection={
+            isAllThemesFetchPending ? (
+              <Loader size={"1rem"} />
+            ) : (
+              <ComboboxChevron />
+            )
+          }
+        />
         {/* {form.values.type !== "whatsapp" && (
             <Box>
               <Switch

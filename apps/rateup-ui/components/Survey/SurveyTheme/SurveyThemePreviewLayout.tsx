@@ -7,7 +7,10 @@ import LanguagePageThemeView from "./components/previewcomponents/languagePage";
 import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 import styles from "./SurveyTheme.module.css";
 
-function SurveyThemePreviewLayout({ survey }) {
+function SurveyThemePreviewLayout({
+  survey,
+  isThemeObjBeingEditedDefaultTheme,
+}) {
   const selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
 
@@ -31,16 +34,30 @@ function SurveyThemePreviewLayout({ survey }) {
             }}
           >
             <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
-              <LanguagePageThemeView survey={survey} />
+              <LanguagePageThemeView
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+              />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.WELCOME}>
-              <WelcomePageThemeView survey={survey} />
+              <WelcomePageThemeView
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+              />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.SURVEY}>
               <SurveyThemeView survey={survey} />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
-              <ThankyouPageThemeView />
+              <ThankyouPageThemeView
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+              />
             </Tabs.Panel>
           </Tabs>
         </Box>
