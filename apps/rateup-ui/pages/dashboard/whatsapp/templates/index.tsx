@@ -54,7 +54,7 @@ export default function Template() {
     refetch,
     isRefetching,
   } = useWaTemplates();
-  const [sortOption, setSortOption] = useState(" ");
+  const [sortOption, setSortOption] = useState("latest");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
   const templateDeleteMutation = useDeleteWaTemplateMutation(

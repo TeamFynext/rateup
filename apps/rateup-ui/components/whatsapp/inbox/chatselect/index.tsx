@@ -16,6 +16,7 @@ import WaInboxChatExport from "./chatExport";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
   setFilteredContacts: (contacts: ContactsWithLastMessage[]) => void;
+  messageCount?: number;
 }) {
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "all",
@@ -132,7 +133,7 @@ export default function WaInboxChatSelect(props: {
             <Text className={classes.chat_select_filter_text}>All Chats</Text>
             <Group className={classes.chat_select_filter_indicator_wrapper}>
               <Text className={classes.chat_indicator_text}>
-                {contactsToDisplay?.length || 0} Chats
+                {props?.messageCount || 0} Chats
               </Text>
               {(isFetchingNextPage || isFilteredContactsFetchingNextPage) && (
                 <Loader size={10} />

@@ -11,8 +11,6 @@ const columns = [
   { Header: "Column 6", accessor: "col6" },
   { Header: "Column 7", accessor: "col7" },
   { Header: "Column 8", accessor: "col8" },
-  { Header: "Column 9", accessor: "col9" },
-  { Header: "Column 10", accessor: "col10" },
 ];
 
 export const TableHeadSkeleton = () => {

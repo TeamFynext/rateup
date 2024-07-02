@@ -159,6 +159,24 @@ export const ButtonSelection = ({
               </Menu.Item>
             </Box>
           </Tooltip>
+          <Tooltip
+            label={flowBtn && "Remove flow button to add other buttons"}
+            display={!flowBtn ? "none" : "block"}
+          >
+            <Box>
+              <Menu.Item
+                disabled={flowBtn}
+                leftSection={
+                  <IconPhone style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)
+                }
+              >
+                Add Websurvey
+              </Menu.Item>
+            </Box>
+          </Tooltip>
         </Menu.Dropdown>
       </Menu>
       <Group fz={14} gap={"xs"} wrap="nowrap">

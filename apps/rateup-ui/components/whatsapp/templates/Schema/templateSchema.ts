@@ -24,7 +24,7 @@ export const templateSchema = z
         message: "Name can only have lower-case letters and underscores",
       })
       .trim()
-      .min(1)
+      .min(1, { message: "Template Name required" })
       .max(512),
     body: z.string().trim().min(1).max(1024),
     footer: z.string().trim().max(60),
@@ -59,13 +59,25 @@ export const templateSchema = z
         z.object({
           text: z.string().max(25).optional(),
           type: z.string(),
-          example: z
-            .string()
-            .max(15)
-            .refine((text) => !text.includes(" "), {
-              message: "Name cannot contain spaces",
-            })
-            .optional(),
+          example: z.union([
+            z
+              .string()
+              .max(15)
+              .refine((text) => !text.includes(" "), {
+                message: "Name cannot contain spaces",
+              })
+              .optional(),
+            z.array(
+              z
+                .string()
+                .trim()
+                .min(1)
+                .max(2000)
+                .refine((text) => !text.includes(" "), {
+                  message: "websurvey example cannot contain spaces",
+                }),
+            ),
+          ]),
           phone_number: z
             .string()
             .max(25)

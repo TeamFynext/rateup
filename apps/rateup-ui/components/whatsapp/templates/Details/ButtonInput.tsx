@@ -9,6 +9,7 @@ import "react-phone-number-input/style.css";
 import styles from "./ButtonInput.module.css";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
+import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
 
 const ButtonInput = ({ form, index, deleteButton, data }) => {
   let { data: flows } = useWaFlowsFromDb(
@@ -79,23 +80,38 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             }
             {...form.getInputProps(`buttons.${index}.text`)}
           />
-          <ContainedTextField
-            label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
-                Website Url
-              </Text>
-            }
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
-                maxValue={2000}
-                atStart
-              />
-            }
-            flex={1}
-            {...form.getInputProps(`buttons.${index}.url`)}
-            type="url"
-          />
+          {form?.values?.buttons?.[index]?.example ? (
+            <WebsurveySelector
+              onlyPublished
+              searchable
+              label={
+                <Text fz={14} ff={lexend500.style.fontFamily}>
+                  Web Survey
+                </Text>
+              }
+              comboboxProps={{ position: "top" }}
+              form={form}
+              index={index}
+            />
+          ) : (
+            <ContainedTextField
+              label={
+                <Text fz={14} ff={lexend500.style.fontFamily}>
+                  Website Url
+                </Text>
+              }
+              rightSection={
+                <LengthTracker
+                  length={form.values?.buttons?.[index]?.text?.length}
+                  maxValue={2000}
+                  atStart
+                />
+              }
+              flex={1}
+              {...form.getInputProps(`buttons.${index}.url`)}
+              type="url"
+            />
+          )}
           <ActionIcon
             mt={24}
             variant="transparent"

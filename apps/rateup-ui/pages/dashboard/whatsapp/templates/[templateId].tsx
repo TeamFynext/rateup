@@ -263,7 +263,9 @@ export default function WhatsappTemplateById() {
     const newObject =
       e === WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE
         ? { type: e, example: "" }
-        : { type: e, text: "" };
+        : e === WHATSAPP_BUTTON_TYPE.WEBSURVEY
+          ? { type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE, text: "", example: [] }
+          : { type: e, text: "" };
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
       const btn = form.values?.buttons?.filter(
         (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),

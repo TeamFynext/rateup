@@ -5,7 +5,7 @@ import {
   Button,
   Center,
   Group,
-  Loader,
+  Skeleton,
   Stack,
   Text,
   TextInput,
@@ -46,6 +46,7 @@ import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import ContactImportErrorModal from "../../../components/Contacts/ContactImportErrorModal";
+import ErrorComponent from "../../../components/404/ErrorComponent";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -68,7 +69,8 @@ export default function ContactGroup() {
     data: groupDetails,
     error: groupByIderror,
     refetch: refetchgroupById,
-  } = useContactGroupById(groupId?.toString());
+    isRefetching,
+  } = useContactGroupById(groupId?.toString(), true);
 
   const deleteGroupMutation = useDeleteGroupMutation();
 
@@ -124,139 +126,150 @@ export default function ContactGroup() {
       ),
     },
   ];
+  const loadingState = isLoading || isPending || isRefetching;
+  if (groupByIderror)
+    return (
+      <Stack h={"90dvh"}>
+        <ErrorComponent refetch={refetchgroupById} />
+      </Stack>
+    );
 
   return (
-    <>
-      {isLoading || isPending ? (
-        <Center>
-          <Loader type="bars" />
-        </Center>
-      ) : (
-        <Box h={"100%"}>
-          <ContactImportErrorModal
-            body={createNewContactsFromCSV?.error?.response?.data}
-            isError={createNewContactsFromCSV.isError}
-          />
-          <Stack h={"100%"}>
-            <PaperLayout style={{ overflow: "visible" }}>
-              <Group justify="space-between">
+    <Box h={"100%"}>
+      <ContactImportErrorModal
+        body={createNewContactsFromCSV?.error?.response?.data}
+        isError={createNewContactsFromCSV.isError}
+      />
+      <Stack h={"100%"}>
+        <PaperLayout style={{ overflow: "visible" }}>
+          <Group justify="space-between">
+            <Group>
+              <Avatar
+                src={
+                  groupDetails?.icon && getFileUrlFromKey(groupDetails?.icon)
+                }
+                alt="profile pic"
+                size={"xl"}
+                radius={"md"}
+              >
+                <IconUsersGroup size={40} />
+              </Avatar>
+              <Stack gap={0}>
+                <Title>
+                  {loadingState ? (
+                    <Skeleton width={"60%"} h={38} my={4} />
+                  ) : (
+                    groupDetails?.name
+                  )}
+                </Title>
                 <Group>
-                  <Avatar
-                    src={
-                      groupDetails?.icon &&
-                      getFileUrlFromKey(groupDetails?.icon)
-                    }
-                    alt="profile pic"
-                    size={"xl"}
-                    radius={"md"}
+                  <Button
+                    leftSection={<IconEdit></IconEdit>}
+                    onClick={openEditModal}
+                    variant="default"
+                    disabled={loadingState}
                   >
-                    <IconUsersGroup size={40} />
-                  </Avatar>
-                  <Stack gap={0}>
-                    <Title>{groupDetails?.name}</Title>
-                    <Group>
-                      <Button
-                        leftSection={<IconEdit></IconEdit>}
-                        onClick={openEditModal}
-                        variant="default"
-                      >
-                        Edit Profile
-                      </Button>
-                      <FormModalLayout
-                        centered
-                        title="Edit Group"
-                        opened={openedEditModal}
-                        onClose={closeEditModal}
-                        size="lg"
-                      >
-                        <CreateGroupModal
-                          groupClose={closeEditModal}
-                          isEdit={true}
-                          groupDetails={groupDetails}
-                        />
-                      </FormModalLayout>
-
-                      <Button
-                        variant="light"
-                        leftSection={<IconTrash></IconTrash>}
-                        color="red"
-                        onClick={openDeleteModal}
-                      >
-                        Delete this Group
-                      </Button>
-                    </Group>
-                  </Stack>
-                </Group>
-                <Group gap={"xl"}>
-                  <Badge
-                    color="var(--tertiary-color)"
-                    variant="outline"
-                    size="xl"
+                    Edit Profile
+                  </Button>
+                  <FormModalLayout
+                    centered
+                    title="Edit Group"
+                    opened={openedEditModal}
+                    onClose={closeEditModal}
+                    size="lg"
                   >
-                    {groupDetails?.team?.name}
-                  </Badge>
-                  <Stack gap={0}>
-                    <Center>
-                      <Title c="var(--tertiary-color)" order={3}>
-                        {groupDetails?.contacts?.length}
-                      </Title>
-                    </Center>
-                    <Text>members</Text>
-                  </Stack>
-                </Group>
-              </Group>
-            </PaperLayout>
-            <Stack mt={"xs"} flex={1}>
-              <Group justify="space-between">
-                <Title order={2}>Members</Title>
-                <TextInput
-                  leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
-                  radius="xl"
-                  size="md"
-                  placeholder={"Search member"}
-                  rightSectionWidth={60}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  w={500}
-                />
-                <Box w={50} h={50} />
-              </Group>
+                    <CreateGroupModal
+                      groupClose={closeEditModal}
+                      isEdit={true}
+                      groupDetails={groupDetails}
+                    />
+                  </FormModalLayout>
 
-              <PaperLayout p={0} flex={1} mah={800}>
-                <ContactTable
-                  columns={column}
-                  data={filteredCustomerList}
-                  cTags={cTags?.contactTags}
-                  tab={WhatsappTableType.MEMBERS}
-                  open={open}
-                  groupId={groupDetails?.id}
-                  refetch={refetchgroupById}
-                  setSorting={setSorting}
-                  sorting={sorting}
-                  columnFilters={columnFilters}
-                  setColumnFilters={setColumnFilters}
-                />
-              </PaperLayout>
-            </Stack>
-          </Stack>
-          <FormModalLayout
-            onClose={close}
-            opened={opened}
-            title={`Add members`}
-            size="xl"
-            centered
-          >
-            <AddCustomerModal
-              groupId={groupDetails?.id}
-              close={close}
-              teamId={groupDetails?.teamId}
-              existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
-              tags={cTags?.contactTags}
-              createNewContactsFromCSV={createNewContactsFromCSV}
+                  <Button
+                    variant="light"
+                    leftSection={<IconTrash></IconTrash>}
+                    color="red"
+                    onClick={openDeleteModal}
+                    disabled={loadingState}
+                  >
+                    Delete this Group
+                  </Button>
+                </Group>
+              </Stack>
+            </Group>
+            <Group gap={"xl"}>
+              {loadingState ? (
+                <Skeleton width={50} h={30} radius={"lg"} />
+              ) : (
+                <Badge
+                  color="var(--tertiary-color)"
+                  variant="outline"
+                  size="xl"
+                >
+                  {groupDetails?.team?.name}
+                </Badge>
+              )}
+              <Stack gap={0}>
+                <Center>
+                  <Title c="var(--tertiary-color)" order={3}>
+                    {groupDetails?.contacts?.length ?? 0}
+                  </Title>
+                </Center>
+                <Text>members</Text>
+              </Stack>
+            </Group>
+          </Group>
+        </PaperLayout>
+        <Stack mt={"xs"} flex={1}>
+          <Group justify="space-between">
+            <Title order={2}>Members</Title>
+            <TextInput
+              leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
+              radius="xl"
+              size="md"
+              placeholder={"Search member"}
+              rightSectionWidth={60}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              w={500}
             />
-          </FormModalLayout>
-        </Box>
-      )}
-    </>
+            <Box w={50} h={50} />
+          </Group>
+
+          <PaperLayout p={0} flex={1} mah={800}>
+            <ContactTable
+              columns={column}
+              data={filteredCustomerList}
+              cTags={cTags?.contactTags}
+              tab={WhatsappTableType.MEMBERS}
+              open={open}
+              groupId={groupDetails?.id}
+              refetch={refetchgroupById}
+              setSorting={setSorting}
+              sorting={sorting}
+              columnFilters={columnFilters}
+              setColumnFilters={setColumnFilters}
+              isPending={loadingState}
+            />
+          </PaperLayout>
+        </Stack>
+      </Stack>
+      <FormModalLayout
+        onClose={close}
+        opened={opened}
+        title={`Add members`}
+        size="xl"
+        centered
+      >
+        <AddCustomerModal
+          groupId={groupDetails?.id}
+          close={close}
+          teamId={groupDetails?.teamId}
+          existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
+          tags={cTags?.contactTags}
+          createNewContactsFromCSV={createNewContactsFromCSV}
+        />
+      </FormModalLayout>
+    </Box>
   );
 }

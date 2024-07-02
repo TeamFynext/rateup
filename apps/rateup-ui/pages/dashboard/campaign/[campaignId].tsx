@@ -222,6 +222,9 @@ const StartCampaignCard = ({
   const updateCampaign = useUpdateCampaignMutation(
     campaign?.id,
     campaign?.teamId,
+    () => {
+      refetchCampaign();
+    },
   );
   const startCampMutation = useSendCampaign(campaign?.id, campaign?.teamId);
   const handleStartCampaign = (newStartCampaign) => {
@@ -231,13 +234,10 @@ const StartCampaignCard = ({
         sendToStatuses: Object.values(CampaignParticipantStatus),
       });
     } else {
-      updateCampaign.mutate(
-        {
-          data: { status: CampaignStatus.INACTIVE },
-          campaignId: campaign?.id,
-        },
-        { onSuccess: () => refetchCampaign() },
-      );
+      updateCampaign.mutate({
+        data: { status: CampaignStatus.INACTIVE },
+        campaignId: campaign?.id,
+      });
     }
   };
 
