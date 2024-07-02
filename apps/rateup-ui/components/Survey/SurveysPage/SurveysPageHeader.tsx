@@ -11,8 +11,11 @@ import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 import Heading from "../../styled/Heading/Heading";
 import SortDropdown from "../../Dashboard/SortDropDown";
 import InfoButton from "../../Button/InfoButton";
+import styles from "./SurveyPage.module.css";
 import { docsPath } from "../../../utils/constants";
 import RefreshButton from "../../Button/RefreshButton";
+import WelcomeTour from "../../WelcomeTour/WelcomeTour";
+import WebSurveyTourSteps from "../../WelcomeTour/components/WebSurveyTourSteps";
 
 export function SurveyHeader({
   selectedTeamId,
@@ -29,15 +32,19 @@ export function SurveyHeader({
 }) {
   const { user } = useUser();
 
+  const tourSteps = WebSurveyTourSteps({ styles });
+
   return (
     <Group gap="md" justify="space-between">
+      <WelcomeTour steps={tourSteps} />
       <Group gap="md" justify="flex-start">
         <Group mr="md">
-          <Heading
-            title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
-            titleprops={{ w: "fit-content" }}
-          />
-
+          <div className={styles["heading-container"]}>
+            <Heading
+              title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
+              titleprops={{ w: "fit-content" }}
+            />
+          </div>
           {surveyType == "web" && (
             <InfoButton docUrl={`${docsPath}/webSurvey`} />
           )}
@@ -46,6 +53,7 @@ export function SurveyHeader({
         <RefreshButton queryKeys={["surveys"]} />
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
+            className={styles["create-survey-button"]}
             rightIcon={<IconPlus />}
             title="Create Survey"
             onClick={openCreateSurvey}
@@ -61,6 +69,7 @@ export function SurveyHeader({
           />
         )}
         <TeamSelector
+          className={styles["team-select-option"]}
           value={selectedTeamId}
           onChange={(teamId) => setSelectedTeamId(teamId)}
           enableAll={true}
@@ -69,10 +78,12 @@ export function SurveyHeader({
           filterParam={filterParam}
           setFilterParam={setFilterParam}
         />
-        <SortDropdown
-          onSortChange={onSortChange}
-          defaultSortOption={sortOption}
-        />
+        <div className={styles["sort-dropdown"]}>
+          <SortDropdown
+            onSortChange={onSortChange}
+            defaultSortOption={sortOption}
+          />
+        </div>
       </Group>
     </Group>
   );

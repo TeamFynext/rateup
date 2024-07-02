@@ -39,6 +39,8 @@ import SortDropdown from "../../../components/Dashboard/SortDropDown";
 import RefreshButton from "../../../components/Button/RefreshButton";
 import InfoButton from "../../../components/Button/InfoButton";
 import { docsPath } from "../../../utils/constants";
+import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
+import TeamTourSteps from "../../../components/WelcomeTour/components/TeamTourSteps";
 
 export default function Teams() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -46,6 +48,8 @@ export default function Teams() {
   const { action } = useRouter().query;
   const { user } = useUser();
   const [isCreating, setIsCreating] = useState(false);
+
+  const tourSteps = TeamTourSteps({ styles });
 
   const createTeamForm = useForm({
     initialValues: {
@@ -128,6 +132,7 @@ export default function Teams() {
 
   return (
     <div className={styles["teams-container"]}>
+      <WelcomeTour steps={tourSteps} />
       <FormModalLayout
         centered
         onClose={close}
@@ -155,18 +160,23 @@ export default function Teams() {
       </FormModalLayout>
       <Group gap="md" justify="space-between">
         <Group gap={"md"}>
-          <Heading title="Teams" titleprops={{ w: "fit-content" }} />
+          <div className={styles["heading-container"]}>
+            <Heading title="Teams" titleprops={{ w: "fit-content" }} />
+          </div>
           <InfoButton docUrl={`${docsPath}/teams/team`} />
           <RefreshButton queryKeys={["teamsDataUserQuery"]} />
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
+              className={styles["create-team-button"]}
               title="Create Team"
               rightIcon={<IconPlus />}
               onClick={open}
             />
           )}
         </Group>
-        <SortDropdown onSortChange={onSortChange} />
+        <Group className={styles["sort-dropdown"]}>
+          <SortDropdown onSortChange={onSortChange} />
+        </Group>
       </Group>
 
       {isLoadingTeamsUser ? (
