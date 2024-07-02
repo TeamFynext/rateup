@@ -4,6 +4,7 @@ import {
   generateChatFilterDataHandler,
   getContactsWithLastMessageHandler,
   getFilteredContactsHandler,
+  getMessageCountHandler,
   getWaMessagesByContactIdHandler,
   sendNewWaMessageHandler,
 } from "./wamessage.controller";
@@ -35,6 +36,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.get("/contacts", getContactsWithLastMessageHandler);
+  server.get("/messagecount", getMessageCountHandler);
   server.get("/filterdata", generateChatFilterDataHandler);
 
   server.get(
