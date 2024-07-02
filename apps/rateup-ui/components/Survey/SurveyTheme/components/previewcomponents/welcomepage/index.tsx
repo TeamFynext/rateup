@@ -25,7 +25,10 @@ import {
 import { IconEdit } from "@tabler/icons-react";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
-export default function WelcomePageThemeView({ survey }) {
+export default function WelcomePageThemeView({
+  survey,
+  isThemeObjBeingEditedDefaultTheme,
+}) {
   const surveyTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const selectedPreview = useSelectedPreview();
@@ -34,7 +37,7 @@ export default function WelcomePageThemeView({ survey }) {
 
   const {
     welcomeTheme,
-    surveyTheme: { logo: orgLogoStylesObj },
+    surveyTheme: { logo },
   } = surveyTheme;
 
   const {
@@ -44,51 +47,41 @@ export default function WelcomePageThemeView({ survey }) {
     title: { styles: titleStyles, title },
   } = welcomeTheme;
 
-  let orgLogoStylesObject = orgLogoStylesObj;
-  if (!orgLogoStylesObject) {
-    orgLogoStylesObject = {
-      logo: "",
-      styles: {
-        width: 50,
-        height: 50,
-      },
-    };
-  }
-  const { logo: orgLogo, styles: orgLogoStyles } = orgLogoStylesObject;
-  const [orgLogoSrc, setOrgLogoSrc] = useState("");
-  useEffect(() => {
-    let src = null;
-    if ((orgLogo as any) instanceof File) {
-      src = URL.createObjectURL(orgLogo as any);
-    } else if (typeof orgLogo === "string" && orgLogo.length) {
-      src = `${surveyUploadsPath}${orgLogo}`;
-    }
-    setOrgLogoSrc(src);
-    () => {
-      URL.revokeObjectURL(orgLogoSrc);
-    };
-  }, [orgLogo]);
+  const orgLogoSrc = logo?.logo;
+  const orgLogoStyles = logo?.styles;
 
-  const handleTitleInputChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "title-text-change",
-      payload: e.target.value,
-    });
-  }, []);
+  const handleTitleInputChange = useCallback(
+    (e) => {
+      if (!isThemeObjBeingEditedDefaultTheme)
+        surveyThemeDispatch({
+          type: "title-text-change",
+          payload: e.target.value,
+        });
+    },
+    [isThemeObjBeingEditedDefaultTheme],
+  );
 
-  const handleSubtitleTextareaChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "subtitle-text-change",
-      payload: e.target.value,
-    });
-  }, []);
+  const handleSubtitleTextareaChange = useCallback(
+    (e) => {
+      if (!isThemeObjBeingEditedDefaultTheme)
+        surveyThemeDispatch({
+          type: "subtitle-text-change",
+          payload: e.target.value,
+        });
+    },
+    [isThemeObjBeingEditedDefaultTheme],
+  );
 
-  const handleStartBtnTextChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "wp-lp-start-button-text-change",
-      payload: e.target.value,
-    });
-  }, []);
+  const handleStartBtnTextChange = useCallback(
+    (e) => {
+      if (!isThemeObjBeingEditedDefaultTheme)
+        surveyThemeDispatch({
+          type: "wp-lp-start-button-text-change",
+          payload: e.target.value,
+        });
+    },
+    [isThemeObjBeingEditedDefaultTheme],
+  );
 
   const titleInputRef = useRef(null);
   const subtitleInputRef = useRef(null);
