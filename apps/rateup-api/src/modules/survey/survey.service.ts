@@ -32,7 +32,7 @@ export async function createSurvey(
 ) {
   const { userId: createdBy, email: notificationEmail, orgId } = req?.user;
 
-  const { templateId, ...input } = data;
+  const { templateId, selectedTheme, ...input } = data;
   delete input.teamIds;
 
   if (templateId) {
@@ -63,7 +63,7 @@ export async function createSurvey(
           teams: {
             create: teamIds,
           },
-          webSurveyThemeId: defaultThemeId,
+          webSurveyThemeId: selectedTheme || defaultThemeId,
         },
       });
       return survey;

@@ -17,6 +17,7 @@ const surveyCore = {
 const createSurveyRequestSchema = z.object({
   ...surveyCore,
   templateId: z.string().optional(),
+  selectedTheme: z.string().optional(),
 });
 const createSurveyLandingRequestSchema = z.object({
   title: z.string({

@@ -75,14 +75,28 @@ export async function renameThemeInDB(req) {
 export async function updateSurveyThemeActiveSurveyThemeInDB(req) {
   const { webSurveyThemeId } = req.params;
   const { surveyId, theme } = req.body;
-  const updatedTheme = await prisma.webSurveyTheme.update({
+
+  const themeObj = await prisma.webSurveyTheme.findFirst({
     where: {
       id: webSurveyThemeId,
     },
-    data: {
-      theme,
+    select: {
+      name: true,
     },
   });
+
+  let updatedTheme = null;
+  if (themeObj && themeObj.name !== "Default Theme") {
+    updatedTheme = await prisma.webSurveyTheme.update({
+      where: {
+        id: webSurveyThemeId,
+      },
+      data: {
+        theme,
+      },
+    });
+  }
+
   const updatedSurvey = await prisma.survey.update({
     where: {
       id: surveyId,
@@ -91,7 +105,15 @@ export async function updateSurveyThemeActiveSurveyThemeInDB(req) {
       webSurveyThemeId,
     },
   });
-  return updatedTheme;
+
+  if (updatedTheme) {
+    return updatedTheme;
+  } else {
+    return {
+      success: true,
+      message: "Applied theme succesfully.",
+    };
+  }
 }
 
 export async function deleteThemeInDB(req) {
