@@ -60,10 +60,10 @@ server.register(fastifyCron, {
   jobs: [
     {
       name: 'publishSurveys',
-      cronTime: '0 * * * *', // Every hour at minute 0
+      cronTime: '0/15 * * * *', // Every 15 min
       onTick: async () => {
         const currentTime = new Date();
-        console.log(".......Running Hourly JOB --> Survey Publish Updations........", currentTime);
+        console.log(".......Running every 15min JOB --> Survey Publish Updations........", currentTime);
         await publishSurveyCronAction()
         await endSurveyCronAction()
       },
