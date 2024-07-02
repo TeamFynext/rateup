@@ -401,10 +401,8 @@ export async function sendTemplateToUserHandler(
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
 
-    const sendStatus = await sendMessage(orgId, templateMessage);
-    sendStatus.status &&
-      orgId &&
-      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    await sendMessage(orgId, templateMessage);
     reply.code(200).send("Template send to user successfully");
   } catch (error) {
     log.error("Error sending template to user \n%o", error);

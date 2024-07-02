@@ -65,7 +65,7 @@ import { handleContactConsent } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
 import { checkMessageLimitExceeded } from "./wasurvey.auth";
 import { updateMonthlyStat } from "../../stats/stats.service";
-import { logging } from "googleapis/build/src/apis/logging";
+import { getLatestStatus } from "../../campaign/campaign.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -426,14 +426,12 @@ async function handleStartSurvey({
       language: session.surveyTeamMap.survey.languages[0],
     });
     // FLOW
-    const sendStatus = await sendFlow({
+    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    await sendFlow({
       dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
       orgId,
       phone: from,
     });
-    sendStatus &&
-      orgId &&
-      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
   } else {
     // WaSurvey
     if (session.surveyTeamMap.survey.languages.length > 1) {
@@ -558,6 +556,21 @@ export async function sendCampaignToParticipants(
         campaignParticipants: {
           include: {
             contact: true,
+            WaMessageCampaginParticipantMap: {
+              include: {
+                waMessage: {
+                  select: {
+                    stats: true,
+                    waCreatedAt: true,
+                  },
+                },
+              },
+              orderBy: {
+                waMessage: {
+                  waCreatedAt: "desc",
+                },
+              },
+            },
           },
         },
         team: {
@@ -574,32 +587,7 @@ export async function sendCampaignToParticipants(
     if (!dbTemplate) {
       throw new Error(`Template with id ${campaign.waTemplateId} not found`);
     }
-    const components: any = [];
-    const containsImage =
-      dbTemplate.data.components.find(
-        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-      )?.format === `IMAGE`;
-
-    if (containsImage) {
-      if (!dbTemplate.defaultValues?.image?.link) {
-        log.error("Image not found in template %o", dbTemplate);
-        throw new Error(
-          "Image not found in template. Please delete & create a new template.",
-        );
-      }
-      components.push({
-        type: "header",
-        parameters: [
-          {
-            type: "image",
-            image: {
-              link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
-            },
-          },
-        ],
-      });
-    }
-
+    const components = convertComponentForSenting(dbTemplate);
     // check if template has a flow button
     const flowId = getFlowIdFromTemplateComponents(dbTemplate.data.components);
     let _campaignData = campaign;
@@ -618,6 +606,7 @@ export async function sendCampaignToParticipants(
       flowId,
       orgId,
       dbTemplate,
+      participantId,
     )
       .then(() => {
         log.trace("Template sent to all participants");
@@ -633,7 +622,80 @@ export async function sendCampaignToParticipants(
     return false;
   }
 }
+function convertComponentForSenting(dbTemplate) {
+  const containsImage =
+    dbTemplate.data.components.find(
+      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+    )?.format === "IMAGE";
 
+  const components = [];
+
+  if (containsImage) {
+    if (!dbTemplate.defaultValues?.image?.link) {
+      console.error("Image not found in template %o", dbTemplate);
+      throw new Error(
+        "Image not found in template. Please delete & create a new template.",
+      );
+    }
+    components.push({
+      type: "header",
+      parameters: [
+        {
+          type: "image",
+          image: {
+            link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+          },
+        },
+      ],
+    });
+  }
+
+  dbTemplate.data.components.forEach((item) => {
+    if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+      item?.buttons.forEach((button, idx) => {
+        if (button.type === "URL") {
+          components.push({
+            type: "button",
+            sub_type: "url",
+            index: idx,
+            parameters: [
+              {
+                type: "text",
+                text: "9999",
+              },
+            ],
+          });
+        }
+      });
+    } else {
+      // components.push(item);
+      //skiping for now
+    }
+  });
+
+  return components;
+}
+function updateButtonText(array, newText) {
+  return (
+    array.map((item) => {
+      if (item.type === "button" && item.sub_type === "url") {
+        return {
+          ...item,
+          parameters: item.parameters.map((param) => {
+            if (param.type === "text") {
+              return {
+                ...param,
+                text: newText,
+              };
+            }
+            return param;
+          }),
+        };
+      }
+      return item;
+    }) ?? []
+  );
+}
 type _campaign = {
   team: {
     id: string;
@@ -651,6 +713,7 @@ async function _sendCampaignToParticipants(
   flowId: string,
   orgId: string,
   dbTemplate: WaTemplateWithTypes,
+  individualParticipantId?: string,
 ) {
   const teamId = campaign.team.id;
   if (!teamId) {
@@ -683,8 +746,15 @@ async function _sendCampaignToParticipants(
     log.trace("No flow button identified in template");
   }
 
-  for (const { contact, id, status } of campaign.campaignParticipants) {
-    if (!sendToStatuses.includes(status as CampaignParticipantStatus)) {
+  for (const participant of campaign.campaignParticipants) {
+    const { contact, id } = participant;
+
+    if (
+      !individualParticipantId &&
+      !sendToStatuses.includes(
+        getStatusData(participant) as CampaignParticipantStatus,
+      )
+    ) {
       log.warn("Campaign already sent to participant %o. Skipping...", contact);
       continue;
     }
@@ -697,9 +767,11 @@ async function _sendCampaignToParticipants(
       // TODO: handle this case. maybe send email?
       continue;
     }
+    const updatedComponent = updateButtonText(components, contact.phone);
+
     // TODO: add rate limiting
     // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
-    const templateComponents = [...components];
+    const templateComponents = [...updatedComponent];
 
     if (flowId) {
       log.trace("Flow button identified. handling session...");
@@ -761,10 +833,10 @@ async function _sendCampaignToParticipants(
       });
       if (messageSentStatus.status) {
         await addWaMessageCampaignParticipantMap(id, messageSentStatus.message);
-        updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
       }
     }
 
+    updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50); // wait 50ms (throughput will be ~20 messages per second)
     sendMessage(orgId, templateMessage)
       .then(sendCampaignCallback)
@@ -779,3 +851,16 @@ async function _sendCampaignToParticipants(
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const getStatusData = (info) => {
+  let statusData: string = (getLatestStatus(info) || "").toUpperCase();
+  const FlowId = info?.campaign?.flowId;
+  const participantStatus = info.status?.toUpperCase();
+  const errorMessage = info.errorMessage;
+  if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED) {
+    statusData = CampaignParticipantStatus.COMPLETED;
+  } else if (!statusData || errorMessage) {
+    statusData = participantStatus;
+  }
+  return statusData ?? "";
+};

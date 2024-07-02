@@ -24,6 +24,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { updateMonthlyStat } from "../stats/stats.service";
 import { hasFeature } from "../subscription/subscription.service";
+import { log } from "../../utils/logger";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -412,15 +413,38 @@ export async function createResponse(
       throw new Error("ALREADY_RESPONDED");
     }
   }
-
+  const { phone, contactId: contact, ...rest } = input;
+  let contactId = contact;
+  if (phone) {
+    const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+      where: {
+        id: input.surveyTeamMapId,
+      },
+      include: {
+        team: {
+          select: {
+            orgId: true,
+          },
+        },
+      },
+    });
+    const contact = await prisma.contact.findFirst({
+      where: { phone: phone, orgId: surveyTeamMap.team.orgId },
+      select: { id: true },
+    });
+    if (!contact)
+      log.error("no contact found", phone, surveyTeamMap?.team?.orgId);
+    contactId = contact?.id;
+  }
   const surveyResponse = await prisma.surveyResponse.create({
     data: {
-      ...input,
-      tag: input.tag,
-      surveyTeamMapId: input.surveyTeamMapId,
-      language: input.language,
-      responses: input.responses as QuestionResponse[],
-      encryptedResponses: input.encryptedResponses,
+      ...rest,
+      tag: rest.tag,
+      surveyTeamMapId: rest.surveyTeamMapId,
+      language: rest.language,
+      responses: rest.responses as QuestionResponse[],
+      encryptedResponses: rest.encryptedResponses,
+      contactId,
     },
     include: {
       surveyTeamMap: {
