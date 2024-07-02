@@ -392,6 +392,28 @@ export async function sendTemplateToUserHandler(
         }
       }
     }
+    dbTemplate.data.components.forEach((item) => {
+      if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+        item?.buttons.forEach((button, idx) => {
+          if (button.type === "URL") {
+            components.push({
+              type: "button",
+              sub_type: "url",
+              index: idx,
+              parameters: [
+                {
+                  type: "text",
+                  text: phone,
+                },
+              ],
+            });
+          }
+        });
+      } else {
+        // components.push(item);
+        //skiping for now
+      }
+    });
     const templateQuery = {
       name: data?.name,
       language: {
