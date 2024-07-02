@@ -61,7 +61,10 @@ export const useCampaignParticipants = (campaignId) => {
   });
 };
 
-export const useAddCampaignParticipants = (campaignId) => {
+export const useAddCampaignParticipants = (
+  campaignId,
+  onSuccess = () => {},
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addCampaignParticipants,
@@ -71,12 +74,14 @@ export const useAddCampaignParticipants = (campaignId) => {
         queryKey: ["campaigns"],
       });
       showSuccessToast("Campaign particiants added successfully.");
+      onSuccess();
     },
     onError: (error: any) => {
       showErrorToast(
         `Error on adding participants: 
         ${error?.response?.data.error}`,
       );
+      onSuccess();
     },
   });
 };

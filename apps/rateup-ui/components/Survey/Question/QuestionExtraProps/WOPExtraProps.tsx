@@ -2,9 +2,8 @@ import { z } from "zod";
 import { zodResolver } from "mantine-form-zod-resolver";
 
 import { useForm } from "@mantine/form";
-import { Box, SimpleGrid } from "@mantine/core";
+import { CloseButton, SimpleGrid } from "@mantine/core";
 
-import { RateupButtonPrimary } from "../../../Button/RateupButtons";
 import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util";
 import {
   ContainedColorInput,
@@ -12,6 +11,7 @@ import {
   ContainedTagInput,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
+import { useDebouncedCallback } from "@mantine/hooks";
 
 const WOPExtraProps = ({ form }) => {
   const schema = z
@@ -49,18 +49,18 @@ const WOPExtraProps = ({ form }) => {
         });
       }
     });
+  const handleWop = useDebouncedCallback(async () => {
+    const { hasErrors } = wopForm.validate();
+    if (hasErrors) return;
+    form.setFieldValue("wop", wopForm.values);
+    wopForm.resetDirty();
+  }, 500);
+
   const wopForm = useForm({
     initialValues: form.values.wop || DEFAULT_WOP,
     validate: zodResolver(schema),
+    onValuesChange: handleWop,
   });
-
-  function handleWop() {
-    const { hasErrors } = wopForm.validate();
-    if (hasErrors) return;
-
-    form.setFieldValue("wop", wopForm.values);
-    wopForm.resetDirty();
-  }
 
   return (
     <SimpleGrid cols={2}>
@@ -69,6 +69,15 @@ const WOPExtraProps = ({ form }) => {
         label={"Image src"}
         type="url"
         placeholder="Enter the url of image"
+        rightSection={
+          <CloseButton
+            aria-label="Clear input"
+            onClick={() => wopForm.setFieldValue("imageSrc", "")}
+            style={{
+              display: wopForm.getValues().imageSrc ? undefined : "none",
+            }}
+          />
+        }
       />
       <ContainedColorInput
         {...wopForm.getInputProps("primaryColor")}
@@ -103,13 +112,13 @@ const WOPExtraProps = ({ form }) => {
         required
         placeholder="Enter the segColor and press enter "
       />
-      <Box mt={28}>
+      {/* <Box mt={28}>
         <RateupButtonPrimary
           title="update the options"
           onClick={handleWop}
           disabled={!wopForm.isDirty()}
         />
-      </Box>
+      </Box> */}
     </SimpleGrid>
   );
 };

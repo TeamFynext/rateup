@@ -54,7 +54,12 @@ const AddParticipantModal = ({ close, campaign }) => {
     useContactGroupsByTeamId(campaign?.teamId);
   const { data: campaignData, isPending: isAllCampaignLoading } =
     useCampaignData();
-  const addCampaignParticipants = useAddCampaignParticipants(campaign?.id);
+  const addCampaignParticipants = useAddCampaignParticipants(
+    campaign?.id,
+    () => {
+      close();
+    },
+  );
   if (isPending) return <RateupLoader />;
   let contacts = data?.users;
   const isSelectedAll =
@@ -81,12 +86,10 @@ const AddParticipantModal = ({ close, campaign }) => {
       campaignIds,
       status: selectedStatus,
     };
-    addCampaignParticipants.mutate(
-      { data: participants, campaignId: campaign?.id },
-      {
-        onSuccess: () => close(),
-      },
-    );
+    addCampaignParticipants.mutate({
+      data: participants,
+      campaignId: campaign?.id,
+    });
   };
 
   function handleSelectAll(e) {

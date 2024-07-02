@@ -134,25 +134,21 @@ export const useSurveyResponseColumns = ({
           };
         })
       : []),
-    ...(typeWa
-      ? [
-          {
-            header: () => (
-              <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-                Respondent&apos;s Mobile Number
-              </Text>
-            ),
-            filterFn: fuzzyFilter,
-            accessorFn: (row) => row?.Contact?.phone,
-            id: "respondentsMobileNumber",
-            cell: (info) => (
-              <Text p={10} miw={200}>
-                {info.getValue()?.toString()}
-              </Text>
-            ),
-          },
-        ]
-      : []),
+    {
+      header: () => (
+        <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+          Respondent&apos;s Mobile Number
+        </Text>
+      ),
+      filterFn: fuzzyFilter,
+      accessorFn: (row) => row?.Contact?.phone,
+      id: "respondentsMobileNumber",
+      cell: (info) => (
+        <Text p={10} miw={200}>
+          {info.getValue()?.toString()}
+        </Text>
+      ),
+    },
     ,
     ...(enableTicket
       ? [

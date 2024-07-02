@@ -9,7 +9,12 @@ import { WhatsappTableType } from "./utils/utils";
 import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import ContactImportErrorModal from "./ContactImportErrorModal";
 
-const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
+const OpenCreateMenu = ({
+  tags = [],
+  tab,
+  toggle = () => {},
+  isPending = false,
+}) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
     useDisclosure(false);
   const [groupOpened, { open: groupOpen, close: groupClose }] =
@@ -25,6 +30,7 @@ const OpenCreateMenu = ({ tags = [], tab, toggle = () => {} }) => {
       <RateupButtonBlue
         title={tab === WhatsappTableType.MEMBERS ? "Add Members" : "Create"}
         rightIcon={<IconPlus size={20} />}
+        disabled={isPending}
         onClick={() => {
           if (tab === ContactTabs.CONTACTS) {
             contactOpen();

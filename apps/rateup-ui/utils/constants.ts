@@ -169,6 +169,7 @@ export enum WHATSAPP_BUTTON_TYPE {
   CALL_PHONE_NUMBER = "PHONE_NUMBER",
   VISIT_WEBSITE = "URL",
   FLOW = "FLOW",
+  WEBSURVEY = "WEBSURVEY",
 }
 
 export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";

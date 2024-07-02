@@ -61,6 +61,7 @@ import {
 } from "../../../utils/dateTime";
 import { docsPath } from "../../../utils/constants";
 import InfoButton from "../../Button/InfoButton";
+import { showLoadingToast } from "../../../utils/notifications";
 
 enum PublishEnum {
   NOW = "NOW",
@@ -113,10 +114,20 @@ const ShareSurvey = ({
 
   const form = useForm({
     initialValues: {
-      surveyPublishAt: new Date(new Date().setMinutes(0, 0, 0)),
-      surveyEndAt: new Date(new Date().setMinutes(0, 0, 0)),
+      surveyPublishAt: new Date(
+        new Date(new Date().setMinutes(0, 0, 0)).setDate(
+          new Date().getDate() + 1,
+        ),
+      ),
+      surveyEndAt: new Date(
+        new Date(new Date().setMinutes(0, 0, 0)).setDate(
+          new Date().getDate() + 5,
+        ),
+      ),
     },
-    validate: {},
+    validate: {
+      //TODO validate edge case: time selected should be 1hr ahead
+    },
   });
 
   // TODO: since flow has a different share page (ShareFlow.tsx), remove the whatsapp related code
@@ -334,9 +345,16 @@ const ShareSurvey = ({
               size="lg"
               checked={isScheduled}
               onChange={(event) => {
+                showLoadingToast(
+                  "Hold.. your survey is getting unpublished...",
+                  "load-data",
+                  true,
+                  "Unpublishing...",
+                );
                 surveyUpdateMutation.mutate({
                   isPublished: event.currentTarget.checked,
                   surveyPublishAt: null,
+                  surveyEndAt: null,
                 });
               }}
               label={
@@ -354,9 +372,16 @@ const ShareSurvey = ({
                 if (!isPublished) {
                   openPublishSettings();
                 } else {
+                  showLoadingToast(
+                    "Hold.. your survey is getting UnPublished...",
+                    "load-data",
+                    true,
+                    "Unpublishing...",
+                  );
                   surveyUpdateMutation.mutate({
                     isPublished: event.currentTarget.checked,
                     surveyPublishAt: null,
+                    surveyEndAt: null,
                   });
                 }
               }}
@@ -399,7 +424,6 @@ const ShareSurvey = ({
                       <ContainedDateTimePickerInput
                         valueFormat="DD MMM YYYY - hh mm A"
                         dropdownType="modal"
-                        defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
                         placeholder={"Date"}
                         label={"Publish Survey At"}
                         withAsterisk
@@ -438,7 +462,6 @@ const ShareSurvey = ({
                       <ContainedDateTimePickerInput
                         dropdownType="modal"
                         valueFormat="DD MMM YYYY - hh mm A"
-                        defaultValue={new Date(new Date().setMinutes(0, 0, 0))}
                         placeholder={"Date"}
                         label={"End Survey At"}
                         {...form.getInputProps("surveyEndAt")}
@@ -466,7 +489,6 @@ const ShareSurvey = ({
               <Text>
                 {isScheduled ? "To be Published On" : "Published On"}:{" "}
               </Text>
-              {/* <StatusBadge active={survey?.active} /> */}
               <Text c={isScheduled ? "blue.7" : "dark.1"}>
                 {survey?.surveyPublishAt
                   ? formatIsoDateStringWithTime(survey?.surveyPublishAt)
@@ -475,10 +497,12 @@ const ShareSurvey = ({
             </Group>
           )}
 
-          {isPublished && (
+          {survey?.surveyEndAt && (
             <Group>
               <Text>End At: </Text>
-              {/* <StatusBadge active={survey?.active} /> */}
+              {/* TODO : Highligh ended time */}
+              {/* <Text>{(survey?.surveyEndAt && !isPublished && !isScheduled) ? 'Ended at:' : 'End at' }</Text> */}
+
               <Text c="dark.1">
                 {survey?.surveyEndAt
                   ? formatIsoDateStringWithTime(survey?.surveyEndAt)

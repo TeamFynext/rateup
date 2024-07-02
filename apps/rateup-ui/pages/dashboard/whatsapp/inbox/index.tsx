@@ -10,6 +10,7 @@ import {
 import {
   useContactsWithLastMessage,
   useGetMessagesByContactId,
+  useMessageCount,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
 import WaInboxChatDisplay from "../../../../components/whatsapp/inbox/chatdisplay";
 import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect";
@@ -40,6 +41,7 @@ export default function WhatsAppInbox() {
     isLoading: isContactsFetching,
     error: isContactsError,
   } = useContactsWithLastMessage();
+  const { data: messageCount, isPending } = useMessageCount();
 
   function findAndReturnTheIndexOfTheContact(
     list: ContactsWithLastMessage[],
@@ -127,8 +129,8 @@ export default function WhatsAppInbox() {
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  if (isContactsFetching)
-    return <WhatsAppInboxLoader isLoading={isContactsFetching} />;
+  if (isContactsFetching || isPending)
+    return <WhatsAppInboxLoader isLoading={isContactsFetching || isPending} />;
   if (error) return <div>Error: {error.message}</div>;
   if (isContactsError) return <div>Error: {isContactsError.message}</div>;
 
@@ -141,6 +143,7 @@ export default function WhatsAppInbox() {
             <WaInboxChatSelect
               contacts={contactList}
               setFilteredContacts={setFilteredContactList}
+              messageCount={messageCount}
             />
             <WaInboxChatDisplay
               messages={

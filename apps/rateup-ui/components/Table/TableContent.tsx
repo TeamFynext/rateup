@@ -76,13 +76,13 @@ const TableLayout = ({
               {isPending ? (
                 <TableHeadSkeleton />
               ) : (
-                table.getHeaderGroups().map((headerGroup, index) => (
-                  <Table.Tr key={index} className="table-header">
-                    {headerGroup.headers.map((header, headerIndex) => {
+                table.getHeaderGroups().map((headerGroup) => (
+                  <Table.Tr key={headerGroup.id} className="table-header">
+                    {headerGroup.headers.map((header) => {
                       const extendedHeader = header as ExtendedHeader;
                       return (
                         <Table.Th
-                          key={headerIndex}
+                          key={header.id}
                           colSpan={header.colSpan}
                           style={{ width: `${header.getSize()}px` }}
                         >
@@ -172,9 +172,9 @@ const TableLayout = ({
                   </Table.Td>
                 </Table.Tr>
               ) : (
-                table.getRowModel().rows.map((row, index) => (
+                table.getRowModel().rows.map((row) => (
                   <Table.Tr
-                    key={index}
+                    key={row.id}
                     className={detailBtn && styles["table-body-row"]}
                     onClick={() => {
                       let routeUrl = detailBtn && row.getValue(DETAIL_BTN);

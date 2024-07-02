@@ -246,7 +246,12 @@ function ContactTable({
             />
           ) : (
             <Group gap={"sm"}>
-              <OpenCreateMenu tags={cTags ?? []} tab={tab} toggle={open} />
+              <OpenCreateMenu
+                tags={cTags ?? []}
+                tab={tab}
+                toggle={open}
+                isPending={isPending}
+              />
               <Tooltip label={"Refresh"}>
                 <ActionIcon
                   variant="light"

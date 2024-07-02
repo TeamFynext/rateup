@@ -3,7 +3,6 @@ import {
   Divider,
   Group,
   Checkbox,
-  Textarea,
   useMantineTheme,
   Badge,
   Image,
@@ -59,7 +58,7 @@ import { useRouter } from "next/router";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../../../utils/constants";
+import { SAVE_HOTKEY, WaNPSQuestions } from "../../../../../utils/constants";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { notifications } from "@mantine/notifications";
 import _ from "lodash";
@@ -407,11 +406,24 @@ function ElementEditor({
       <Stack>
         <Divider />
         <Group justify="space-between" p="xs" px={"sm"}>
-          <Checkbox
-            label="Required"
-            fw={600}
-            {...form.getInputProps("required", { type: "checkbox" })}
-          />
+          <Group>
+            <Checkbox
+              label="Required"
+              fw={600}
+              {...form.getInputProps("required", { type: "checkbox" })}
+            />
+            {WaNPSQuestions.includes(question?.type) && (
+              <Checkbox
+                label="NPS Analytics"
+                fw={600}
+                checked={form.values?.enableNpsAnalytics}
+                onChange={(e) => {
+                  const checked = e.currentTarget.checked;
+                  form.setFieldValue("enableNpsAnalytics", checked);
+                }}
+              />
+            )}
+          </Group>
           <Group>
             {logicSupportedTypes.includes(question?.type) && (
               <RateupButtonSecondary

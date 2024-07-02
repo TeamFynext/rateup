@@ -4,6 +4,7 @@ import {
   getChatFilterData,
   getContactsWithLastMessage,
   getFilteredContacts,
+  getMessageCount,
   getMessagesByContactId as getMessagesByContactId,
   sendNewWaMessage,
 } from "./wamessage.api";
@@ -44,6 +45,13 @@ export const useChatFilterData = () => {
   return useQuery({
     queryKey: ["contacts", "filter-data"],
     queryFn: getChatFilterData,
+  });
+};
+
+export const useMessageCount = () => {
+  return useQuery({
+    queryKey: ["contacts", "message-count"],
+    queryFn: getMessageCount,
   });
 };
 

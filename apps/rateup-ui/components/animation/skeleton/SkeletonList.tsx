@@ -13,8 +13,8 @@ const SkeletonList = ({ children }) => {
         "cards-grid-global-class",
       )}
     >
-      {Array.from({ length: cardCount ?? 20 }).map(() => (
-        <>{children}</>
+      {Array.from({ length: cardCount ?? 20 }).map((_, i) => (
+        <div key={i}>{children}</div>
       ))}
     </Box>
   );

@@ -243,7 +243,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
 ];
-const getStatusData = (info) => {
+export const getStatusData = (info) => {
   let statusData: string = (info?.waStatus || "").toUpperCase();
   const FlowId = info?.campaign?.flowId;
   const participantStatus = info.status?.toUpperCase();

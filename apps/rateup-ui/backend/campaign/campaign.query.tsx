@@ -60,7 +60,11 @@ export const useCampaignById = (campaignId) => {
   });
 };
 
-export const useUpdateCampaignMutation = (campaignId, teamId) => {
+export const useUpdateCampaignMutation = (
+  campaignId,
+  teamId,
+  complete = () => {},
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateCampaign,
@@ -73,6 +77,7 @@ export const useUpdateCampaignMutation = (campaignId, teamId) => {
         "campaign-update",
         <IconCheck />,
       );
+      complete();
     },
     onError: (error: any) => {
       showErrorToast(
@@ -80,6 +85,7 @@ export const useUpdateCampaignMutation = (campaignId, teamId) => {
         "campaign-delete",
         <IconX />,
       );
+      complete();
     },
   });
 };

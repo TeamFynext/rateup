@@ -52,7 +52,9 @@ export async function getContactsWithLastMessage(page: number) {
 export async function getChatFilterData() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/filterdata`)).data;
 }
-
+export async function getMessageCount() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/messagecount`)).data;
+}
 export async function getFilteredContacts(filterData: string, page: number) {
   return (
     await axiosClient.get(

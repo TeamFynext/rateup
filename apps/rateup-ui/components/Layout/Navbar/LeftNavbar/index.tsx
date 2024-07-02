@@ -61,8 +61,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
   };
 
   const { data: subscription, isPending } = useSubscription();
-
-  if (isPending) return <NavbarSkeleton />;
+  if (isPending && opened) return <NavbarSkeleton />;
   const navTopData = getNavTopData(subscription);
 
   return (

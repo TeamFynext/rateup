@@ -148,16 +148,16 @@ export const SurveyStats = ({ stats, totalStats }) => {
   const totalSurveyCount = totalStats?.webSurvey?.count?.max;
   const statsArray = [
     {
-      Icon: IconClipboardList as unknown as string,
-      count: stats?.surveysCount,
-      totalCount: totalSurveyCount,
-      stats: "Surveys",
-    },
-    {
       Icon: IconClockFilled as unknown as string,
       count: stats?.monthlySurveyResponses,
       totalCount: totalStats?.webSurvey?.count?.monthlyResponseLimit,
       stats: "Monthly Responses",
+    },
+    {
+      Icon: IconClipboardList as unknown as string,
+      count: stats?.surveysCount,
+      totalCount: totalSurveyCount,
+      stats: "Surveys",
     },
     {
       Icon: IconMessageCircle2Filled as unknown as string,
@@ -168,7 +168,7 @@ export const SurveyStats = ({ stats, totalStats }) => {
 
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Survey</Title>
+      <Title order={4}>Web Survey</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
@@ -182,33 +182,33 @@ export const WhatsappStats = ({ stats, totalStats }) => {
   if (!isActive) return;
   const statsArray = [
     {
-      Icon: IconClipboardList as unknown as string,
-      count: stats?.waSurveysCount,
-      totalCount: totalStats?.whatsapp?.flow?.count?.max,
-      stats: "Surveys",
-    },
-    {
-      Icon: IconClockFilled as unknown as string,
-      count: stats?.monthlyWaSurveyResponses,
-      totalCount: totalStats?.whatsapp?.count?.monthlyResponseLimit,
-      stats: "Monthly Responses",
-    },
-    {
-      Icon: IconMessageCircle2Filled as unknown as string,
-      count: stats?.waSurveyResponsesCount,
-      stats: "Total Responses",
-    },
-    {
-      Icon: IconMessage as unknown as string,
-      count: stats?.messagesCount,
-      stats: "Message",
-    },
-    {
       Icon: IconClockFilled as unknown as string,
       count: stats?.monthlyMessagesCount,
       totalCount: totalStats?.whatsapp?.count?.monthlyMessageLimit,
       stats: "Monthly Message",
     },
+    {
+      Icon: IconMessage as unknown as string,
+      count: stats?.messagesCount,
+      stats: "Total Message",
+    },
+    {
+      Icon: IconClipboardList as unknown as string,
+      count: stats?.waSurveysCount,
+      totalCount: totalStats?.whatsapp?.flow?.count?.max,
+      stats: "Flow Surveys",
+    },
+    // {
+    //   Icon: IconClockFilled as unknown as string,
+    //   count: stats?.monthlyWaSurveyResponses,
+    //   totalCount: totalStats?.whatsapp?.count?.monthlyResponseLimit,
+    //   stats: "Monthly Flow Responses",
+    // },
+    // {
+    //   Icon: IconMessageCircle2Filled as unknown as string,
+    //   count: stats?.waSurveyResponsesCount,
+    //   stats: "Total Flow Responses",
+    // },
   ];
 
   return (
