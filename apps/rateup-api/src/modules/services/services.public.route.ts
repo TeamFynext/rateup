@@ -1,11 +1,8 @@
-//THIS is for CRON JOB services
-//Github work flow triggers
+//THIS is for Services / API Triggers etc
 
 import { FastifyInstance } from "fastify";
-import { testServiceRoute, updateSurveyPublish } from "./services.controller";
+import { testServiceRoute } from "./services.controller";
 
 export async function servicePublicRoutes(server: FastifyInstance) {
   server.get("/", testServiceRoute);
-
-  server.get("/surveyJob", updateSurveyPublish);
 }
