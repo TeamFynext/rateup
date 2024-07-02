@@ -137,7 +137,41 @@ export async function getContactsWithLastMessage(
     }),
   );
 }
+export async function getMessageCount(orgId: string) {
+  const count = await prisma.$queryRaw`WITH LatestMessages AS (
+    SELECT DISTINCT ON (w."contactId")
+        w."contactId",
+        w."messageBody",
+        w."waCreatedAt"
+    FROM
+        "WaMessage" w
+    ORDER BY
+        w."contactId", w."waCreatedAt" DESC
+),
+LatestReceiveMessages AS (
+    SELECT DISTINCT ON (w."contactId")
+        w."contactId",
+        w."messageBody" AS receiveMessageBody,
+        w."waCreatedAt" AS receiveCreatedAt
+    FROM
+        "WaMessage" w
+    WHERE
+        w."messageBody"->'exchangeProcess' = '"receive"'
+    ORDER BY
+        w."contactId", w."waCreatedAt" DESC
+)
+SELECT COUNT(*)::int
+FROM
+    "Contact" c
+LEFT JOIN
+    LatestMessages lm ON c.id = lm."contactId"
+LEFT JOIN
+    LatestReceiveMessages lrm ON c.id = lrm."contactId"
+WHERE
+    c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL`;
 
+  return count?.[0]?.count ?? 0;
+}
 export async function generateChatFilterData(orgId: string) {
   try {
     const [contactTags, tagsFromContacts, cGroups, campaigns] =

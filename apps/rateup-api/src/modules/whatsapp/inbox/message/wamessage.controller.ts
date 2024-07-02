@@ -12,6 +12,7 @@ import {
   filterChats,
   generateChatFilterData,
   getContactsWithLastMessage,
+  getMessageCount,
   getWaMessagesByContactId,
 } from "./wamessage.service";
 import {
@@ -162,7 +163,18 @@ export async function getContactsWithLastMessageHandler(
     reply.status(500).send("Internal Server Error");
   }
 }
-
+export async function getMessageCountHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const contacts = await getMessageCount(orgId);
+    reply.status(200).send(contacts);
+  } catch (error) {
+    reply.status(500).send("Error while getting message count");
+  }
+}
 export async function generateChatFilterDataHandler(
   request: FastifyRequest,
   reply: FastifyReply,
