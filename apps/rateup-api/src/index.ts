@@ -14,6 +14,7 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import fastifyCron from "fastify-cron";
 import { resetMonthlyCounts } from "./modules/stats/stats.service";
+import { endSurveyCronAction, publishSurveyCronAction } from "./modules/survey/survey.service";
 
 const server = Fastify({
   logger: logOptions,
@@ -59,10 +60,12 @@ server.register(fastifyCron, {
   jobs: [
     {
       name: 'publishSurveys',
-      cronTime: '*/30 * * * *', // Every 30 minute
+      cronTime: '0 * * * *', // Every hour at minute 0
       onTick: async () => {
         const currentTime = new Date();
-        console.log("........for....testing buffer Time.CRON JOB...",currentTime)
+        console.log(".......Running Hourly JOB --> Survey Publish Updations........", currentTime);
+        await publishSurveyCronAction()
+        await endSurveyCronAction()
       },
       start: true,
       timeZone: 'Etc/UTC' // Set to UTC+0
@@ -70,15 +73,17 @@ server.register(fastifyCron, {
     {
       cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
       onTick: async () => {
+        const currentTime = new Date();
+        console.log("......Monthly Stats Reset JOB --> .....", currentTime);
         try {
           await resetMonthlyCounts();
-          // console.log("Monthly Stats reset successfully");
         } catch (error) {
           console.error("Failed to reset monthly counts:", error);
         }
       },
       start: true, // Start the job immediately
-      timeZone: "Asia/Kolkata", // UTC India
+      timeZone: 'Etc/UTC' // Set to UTC+0
+      //timeZone: "Asia/Kolkata", // UTC India
 
       // timeZone: 'UTC', // Specify the timezone if necessary
       //  cronTime: '* * * * *', // Every minute - for testing purpose
