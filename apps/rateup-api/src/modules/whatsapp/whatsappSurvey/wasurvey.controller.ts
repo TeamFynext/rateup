@@ -556,6 +556,11 @@ export async function sendCampaignToParticipants(
         campaignParticipants: {
           include: {
             contact: true,
+            campaign: {
+              select: {
+                flowId: true,
+              },
+            },
             WaMessageCampaginParticipantMap: {
               include: {
                 waMessage: {
