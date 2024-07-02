@@ -62,7 +62,11 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
                 Type of action
               </Text>
             }
-            value={"Visit a Website"}
+            value={
+              form?.values?.buttons?.[index]?.example
+                ? "RateUp Web Survey"
+                : "Visit a Website"
+            }
             readOnly
           />
           <ContainedTextField

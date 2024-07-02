@@ -31,7 +31,7 @@ import { CreditsCard } from "../../../../../Card/CreditsCard";
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
 
-function LanguagePage({ survey }) {
+function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
   const selectedPreview = useSelectedPreview();
   const setSelectedEditor = useSetSelectedEditor();
 
@@ -66,26 +66,38 @@ function LanguagePage({ survey }) {
     isMobile,
   );
 
-  const handleSubtitleInputChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "subtitle-text-change",
-      payload: e.target.value,
-    });
-  }, []);
+  const handleSubtitleInputChange = useCallback(
+    (e) => {
+      if (!isThemeObjBeingEditedDefaultTheme)
+        surveyThemeDispatch({
+          type: "subtitle-text-change",
+          payload: e.target.value,
+        });
+    },
+    [isThemeObjBeingEditedDefaultTheme],
+  );
 
-  const handleTitleInputChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "title-text-change",
-      payload: e.target.value,
-    });
-  }, []);
+  const handleTitleInputChange = useCallback(
+    (e) => {
+      if (!isThemeObjBeingEditedDefaultTheme)
+        surveyThemeDispatch({
+          type: "title-text-change",
+          payload: e.target.value,
+        });
+    },
+    [isThemeObjBeingEditedDefaultTheme],
+  );
 
-  const handleStartBtnTextChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "wp-lp-start-button-text-change",
-      payload: e.target.value,
-    });
-  }, []);
+  const handleStartBtnTextChange = useCallback(
+    (e) => {
+      if (!isThemeObjBeingEditedDefaultTheme)
+        surveyThemeDispatch({
+          type: "wp-lp-start-button-text-change",
+          payload: e.target.value,
+        });
+    },
+    [isThemeObjBeingEditedDefaultTheme],
+  );
 
   useEffect(() => {
     startBtnInputRef.current.setAttribute("size", startBtnLabel.length - 1);

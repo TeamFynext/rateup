@@ -29,7 +29,7 @@ function RenderOption({ option, checked }) {
   return <Box>{option.label}</Box>;
 }
 
-function StylesComponent({ survey }) {
+function StylesComponent({ survey, isThemeObjBeingEditedDefaultTheme }) {
   const selectedPageTab = useSelectedPageTab();
   const selectedEditor = useSelectedEditor();
   const setSelectedEditor = useSetSelectedEditor();
@@ -39,6 +39,9 @@ function StylesComponent({ survey }) {
   return (
     <MantineProvider theme={theme}>
       <ScrollArea type="hover" className={styles["styles-component-div"]}>
+        {isThemeObjBeingEditedDefaultTheme && (
+          <Overlay className={surveyThemeStyles["overlay"]} />
+        )}
         {selectedPageTab === ThemeTabEnum.WELCOME && !isWelcomePageEnabled && (
           <Overlay className={surveyThemeStyles["overlay"]} />
         )}

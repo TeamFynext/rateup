@@ -159,14 +159,17 @@ export function SurveysPage({
       ) : (
         <NothingFound text="No Surveys Found" />
       )}
-      <CreateSurveyModal
-        open={createSurveyOpened}
-        close={closeCreateSurvey}
-        surveyType={surveyType}
-        teamsData={teamRes?.data}
-        template={template}
-        setTemplate={setTemplate}
-      />
+      {createSurveyOpened && (
+        <CreateSurveyModal
+          open={createSurveyOpened}
+          close={closeCreateSurvey}
+          surveyType={surveyType}
+          teamsData={teamRes?.data}
+          template={template}
+          setTemplate={setTemplate}
+        />
+      )}
+
       {surveyTemplatesOpened && (
         <SurveyTemplatesModal
           opened={surveyTemplatesOpened}

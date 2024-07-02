@@ -4,6 +4,7 @@
 
 .save-btn {
   height: auto;
-  padding: 0.625rem 1rem;
+  line-height: normal;
+  padding: 0.5rem 1rem;
   border-radius: 2rem;
 }

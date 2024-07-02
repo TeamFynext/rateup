@@ -22,6 +22,12 @@ function SurveyTheme({ survey }) {
   const { data: allThemesArr, isPending: isAllThemesFetchPending } =
     useAllThemes();
 
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj) => obj.id === themeSelectorState,
+  );
+  const isThemeObjBeingEditedDefaultTheme =
+    themeObjBeingEdited?.name === "Default Theme";
+
   if (!surveyTheme)
     return (
       <Center h={"100%"}>
@@ -40,9 +46,11 @@ function SurveyTheme({ survey }) {
             id="save-btn-container-portal"
           >
             <SaveButton
-              allThemesArr={allThemesArr}
-              themeSelectorState={themeSelectorState}
               survey={survey}
+              isThemeObjBeingEditedDefaultTheme={
+                isThemeObjBeingEditedDefaultTheme
+              }
+              themeObjBeingEdited={themeObjBeingEdited}
             />
           </Box>
         </Group>
@@ -55,7 +63,12 @@ function SurveyTheme({ survey }) {
           <Box className={`${styles["theme-preview-container"]}`}>
             <PreviewDeviceButtons />
             <WelcomePageSwitch survey={survey} />
-            <SurveyThemePreviewLayout survey={survey} />
+            <SurveyThemePreviewLayout
+              survey={survey}
+              isThemeObjBeingEditedDefaultTheme={
+                isThemeObjBeingEditedDefaultTheme
+              }
+            />
           </Box>
 
           <Box
@@ -70,7 +83,12 @@ function SurveyTheme({ survey }) {
               survey={survey}
             />
             <Box className={styles["styles-component-container"]}>
-              <StylesComponent survey={survey} />
+              <StylesComponent
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+              />
             </Box>
           </Box>
         </Box>

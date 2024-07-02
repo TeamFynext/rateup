@@ -18,6 +18,7 @@ import {
   IconPhone,
   IconLink,
   IconWaveSine,
+  IconWorld,
 } from "@tabler/icons-react";
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
@@ -48,19 +49,19 @@ export const ButtonSelection = ({
       <Menu shadow="md" width={200} {...restProps}>
         <Menu.Target>
           <Button
-            maw={180}
+            maw={"min-content"}
             variant="outline"
             radius={12}
             leftSection={<IconPlus size={16} />}
             rightSection={<IconChevronDown size={16} />}
             disabled={disabled}
           >
-            Add a button
+            Add Action Button
           </Button>
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Label>Flow Button</Menu.Label>
+          <Menu.Label>Rateup Interactive Buttons</Menu.Label>
           <Tooltip
             label={
               (btnLen > 0 || flowBtn) &&
@@ -76,7 +77,25 @@ export const ButtonSelection = ({
                 }
                 onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
               >
-                Add a flow
+                Flow Button
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={flowBtn && "Remove flow button to add other buttons"}
+            display={!flowBtn ? "none" : "block"}
+          >
+            <Box>
+              <Menu.Item
+                disabled={flowBtn}
+                leftSection={
+                  <IconWorld style={{ width: rem(14), height: rem(14) }} />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)
+                }
+              >
+                Rateup Web Survey
               </Menu.Item>
             </Box>
           </Tooltip>
@@ -104,7 +123,7 @@ export const ButtonSelection = ({
           </Tooltip>
           <Menu.Divider />
 
-          <Menu.Label>Call-to-action buttons</Menu.Label>
+          <Menu.Label>Call-To-Action Buttons</Menu.Label>
           <Tooltip
             label={flowBtn && "Remove flow button to add other buttons"}
             display={!flowBtn ? "none" : "block"}
@@ -156,24 +175,6 @@ export const ButtonSelection = ({
                 }
               >
                 Visit website
-              </Menu.Item>
-            </Box>
-          </Tooltip>
-          <Tooltip
-            label={flowBtn && "Remove flow button to add other buttons"}
-            display={!flowBtn ? "none" : "block"}
-          >
-            <Box>
-              <Menu.Item
-                disabled={flowBtn}
-                leftSection={
-                  <IconPhone style={{ width: rem(14), height: rem(14) }} />
-                }
-                onClick={() =>
-                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)
-                }
-              >
-                Add Websurvey
               </Menu.Item>
             </Box>
           </Tooltip>
