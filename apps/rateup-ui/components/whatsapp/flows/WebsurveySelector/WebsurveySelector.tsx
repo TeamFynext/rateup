@@ -1,6 +1,7 @@
 import { SelectProps, Skeleton } from "@mantine/core";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import { useSurveys } from "../../../../backend/surveys/surveys.query";
+import { SurveyType } from "../../../../types/enums";
 
 interface WebsurveySelectorProps extends SelectProps {
   value?: string;
@@ -26,8 +27,10 @@ export function WebsurveySelector({
 
   const filteredWebSurvey = Array.isArray(data)
     ? onlyPublished
-      ? data.filter((survey) => survey.isPublished)
-      : data
+      ? data.filter(
+          (survey) => survey.isPublished && survey.type === SurveyType.Web,
+        )
+      : data.filter((survey) => survey.type === SurveyType.Web)
     : [];
 
   const selectOptions = filteredWebSurvey.map((survey) => ({
@@ -41,7 +44,7 @@ export function WebsurveySelector({
     form.setFieldValue(`buttons.${index}.url`, url);
     form.insertListItem(
       `buttons.${index}.example`,
-      Math.floor(1000000000 + Math.random() * 9000000000),
+      Math.floor(1000000000 + Math.random() * 9000000000)?.toString(),
     );
   };
   return (
