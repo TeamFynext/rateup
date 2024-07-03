@@ -76,6 +76,7 @@ import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route
 import { emailPublicRoutes } from "./modules/email/email.public.route";
 import { emailSchema } from "./modules/email/email.schema";
 import { updatePublicRoutes } from "./modules/update/update.public.route";
+import { shopifyRoutes } from "./modules/shopify/shopify.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -169,4 +170,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(apiAccessTokenRoutes, { prefix: "api/api-access-token" });
   server.register(externalRoutes, { prefix: "api/external" });
   server.register(emailPublicRoutes, { prefix: "api/email" });
+  server.register(shopifyRoutes, { prefix: "api/shopify" });
 }
