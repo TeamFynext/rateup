@@ -95,6 +95,7 @@ export async function createSurveyDefaultVariableForQuestion(
     case QuestionType.Smiley:
     case QuestionType.TextArea:
     case QuestionType.TnC:
+    case QuestionType.WOP:
       variable = {
         name: `Q${position + 1}_response`,
         value: question?.id,
