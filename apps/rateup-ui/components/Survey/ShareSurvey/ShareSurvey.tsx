@@ -59,9 +59,8 @@ import {
   formatIsoDateStringWithTime,
   roundOffMinutesAndSeconds,
 } from "../../../utils/dateTime";
-import { docsPath } from "../../../utils/constants";
-import InfoButton from "../../Button/InfoButton";
 import { showLoadingToast } from "../../../utils/notifications";
+import GenerateTags from "./GenerateTags";
 
 enum PublishEnum {
   NOW = "NOW",
@@ -83,20 +82,18 @@ const ShareSurvey = ({
 }) => {
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
-  const [tag, setTag] = useState("");
+  const [tag, setTag] = useState([]);
   const [surveyTeamMapId, setSurveyTeamMapId] = useState(
     survey?.teams[0]?.mapId,
   );
 
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
-  const [tagsToMap, setTagsToMap] = useState<Array<string>>([]);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
   const [publishChoice, setPublishChoice] = useState<any>(PublishEnum.NOW);
   const [surveyExpiry, setSurveyExpiry] = useState<any>(ExpiryEnum.NO_EXPIRY);
   const [isScheduled, setIsScheduled] = useState(
-    !survey?.isPublished && survey?.surveyPublishAt ? true : false,
+    !!(!survey?.isPublished && survey?.surveyPublishAt),
   );
-
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
   const [openedIframe, { open: openIframe, close: closeIframe }] =
@@ -149,6 +146,7 @@ const ShareSurvey = ({
 
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
+    const tagString = tag?.length > 0 ? `?tag=${tag.join(",")}` : "";
     if (
       survey.type === SurveyType.WhatsApp ||
       survey.type === SurveyType.WaFlow
@@ -159,7 +157,7 @@ const ShareSurvey = ({
       if (shortUrlId) {
         // TODO: get phone number from phone id (add phone number field)
         setShareUrl(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/was/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/was/${shortUrlId}${tagString}`,
         );
       } else {
         // TODO: get phone number from phone id (add phone number field)
@@ -173,13 +171,11 @@ const ShareSurvey = ({
     } else {
       if (shortUrlId) {
         setShareUrl(
-          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${shortUrlId}${tag ? `?tag=${tag}` : ""}`,
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${shortUrlId}${tagString}`,
         );
       } else {
         setShareUrl(
-          `${
-            process.env.NEXT_PUBLIC_FRONTEND_URL
-          }/public/survey/${surveyTeamMapId}${tag ? `?tag=${tag}` : ""}`,
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${surveyTeamMapId}${tagString}`,
         );
       }
     }
@@ -265,24 +261,6 @@ const ShareSurvey = ({
     label: team?.code,
   }));
 
-  // let tagSelectData = survey?.teams
-  //   ?.filter((ft) => ft?.mapId === surveyTeamMapId)
-  //   ?.map((team) => team.tags)
-  //   .reduce((acc, val) => acc.concat(val), []);
-  // useEffect(() => {
-  //   setTagsToMap(tagSelectData);
-  // }, [survey, surveyTeamMapId]);
-
-  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map(
-    (tag) => {
-      return tag;
-    },
-  );
-
-  useEffect(() => {
-    setTag(null);
-  }, [selectTeamDropdownState]);
-
   const getSelectedRowsToExport = ({
     apiRef,
   }: GridPrintGetRowsToExportParams): GridRowId[] => {
@@ -317,7 +295,7 @@ const ShareSurvey = ({
     });
     surveyUpdateMutation.mutate(
       {
-        isPublished: publishChoice === PublishEnum.NOW ? true : false,
+        isPublished: publishChoice === PublishEnum.NOW,
         surveyPublishAt:
           publishChoice === PublishEnum.NOW
             ? new Date()
@@ -548,10 +526,8 @@ const ShareSurvey = ({
                   </Title>
                   <ul>
                     {item?.errors?.map((error, index) => (
-                      <li>
-                        <Text key={index} c="#fa5252">
-                          {error}
-                        </Text>
+                      <li key={index}>
+                        <Text c="#fa5252">{error}</Text>
                       </li>
                     ))}
                   </ul>
@@ -592,28 +568,26 @@ const ShareSurvey = ({
                 onChange={handleContainedSelectionChange}
               />
 
-              <Group gap={2} align="flex-start" style={{ flex: 1 }}>
-                <ContainedSelection
-                  disabled={disableShare || tagSelectData.length === 0}
-                  label="Select Tag"
-                  placeholder="select a single Tag"
-                  miw={150}
-                  data={tagSelectData}
-                  value={tag}
-                  onChange={(value) => setTag(value)}
+              <Group gap={2} align="flex-start">
+                <GenerateTags
+                  disabled={disableShare}
+                  tagSelectData={tag}
+                  setTagSelectData={setTag}
                 />
-                <TagManager
-                  isPublished={isPublished}
-                  selectTeamDropdownValue={selectTeamDropdownState}
-                  teamSelectData={teamSelectData}
-                  onSelectTeamDropdownChange={handleContainedSelectionChange}
-                  nothingFound={NothingFound}
-                  getSelectedRowsToExport={getSelectedRowsToExport}
-                  tagsToMap={survey.teams[selectTeamDropdownState].tags}
-                  surveyTitle={survey?.title}
-                  surveyId={surveyId}
-                  shareUrl={shareUrl}
-                />
+                <Group gap={"xs"}>
+                  <TagManager
+                    isPublished={isPublished}
+                    selectTeamDropdownValue={selectTeamDropdownState}
+                    teamSelectData={teamSelectData}
+                    onSelectTeamDropdownChange={handleContainedSelectionChange}
+                    nothingFound={NothingFound}
+                    getSelectedRowsToExport={getSelectedRowsToExport}
+                    tagsToMap={tag}
+                    surveyTitle={survey?.title}
+                    surveyId={surveyId}
+                    shareUrl={shareUrl}
+                  />
+                </Group>
               </Group>
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={disableShare} />
