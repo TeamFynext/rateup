@@ -1,5 +1,5 @@
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconInfoSquareRounded } from "@tabler/icons-react";
+import { IconBook } from "@tabler/icons-react";
 import React from "react";
 
 const InfoButton = ({ docUrl }) => {
@@ -11,10 +11,7 @@ const InfoButton = ({ docUrl }) => {
           window.open(docUrl, "_blank");
         }}
       >
-        <IconInfoSquareRounded
-          style={{ width: "100%", height: "100%" }}
-          stroke={1.5}
-        />
+        <IconBook style={{ width: "100%", height: "100%" }} stroke={1.5} />
       </ActionIcon>
     </Tooltip>
   );

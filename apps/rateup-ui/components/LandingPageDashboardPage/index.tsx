@@ -1,4 +1,12 @@
-import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Center,
+  Group,
+  Loader,
+  Stack,
+  Title,
+} from "@mantine/core";
 import styles from "./landingPageDashboardPage.module.css";
 import { IconPlus } from "@tabler/icons-react";
 import CreateLandingPageModal from "./CreateLandingPageModal";
@@ -13,6 +21,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import RefreshButton from "../Button/RefreshButton";
 import { docsPath } from "../../utils/constants";
 import InfoButton from "../Button/InfoButton";
+import WelcomeTour from "../WelcomeTour/WelcomeTour";
+import LPTourSteps from "../WelcomeTour/components/LPTourSteps";
 
 function LandingPageDashboard() {
   const router = useRouter();
@@ -23,6 +33,8 @@ function LandingPageDashboard() {
   const { data, isPending, isError } = useLandingPages();
   const [landingPages, setLandingPages] = useState([]);
   const [sortOption, setSortOption] = useState("");
+
+  const tourSteps = LPTourSteps({ styles });
 
   useEffect(() => {
     if (data) {
@@ -71,8 +83,9 @@ function LandingPageDashboard() {
         <Group
           className={styles["heading-and-create-landingPage-btn-container"]}
         >
-          <h1>Landing Pages</h1>
+          <Title className={styles["heading-container"]}>Landing Pages</Title>
           <InfoButton docUrl={`${docsPath}/landingpage`} />
+          <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["landingPages"]} />
           <Button
             className={styles["create-landingPage-btn"]}
@@ -82,10 +95,12 @@ function LandingPageDashboard() {
             Create Landing Page
           </Button>
         </Group>
-        <SortDropdown
-          onSortChange={handleSortChange}
-          defaultSortOption={sortOption}
-        />
+        <div className={styles["sort-dropdown"]}>
+          <SortDropdown
+            onSortChange={handleSortChange}
+            defaultSortOption={sortOption}
+          />
+        </div>
       </Group>
       <Box className={`${styles["landingPage-list-container"]}`}>
         {componentToBeRendered}

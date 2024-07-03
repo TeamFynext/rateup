@@ -23,7 +23,8 @@ const WebSurveyTourSteps = ({ styles }) => {
       element: `.${styles["team-select-option"]}`,
       popover: {
         title: "Select Team",
-        description: "Click here to select the team.",
+        description:
+          "Click here to select the team to view team based list of surveys.",
         side: "bottom",
         align: "center",
       },

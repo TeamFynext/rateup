@@ -14,6 +14,9 @@ import { UserRole } from "../../../utils/enums";
 import MenuCardsList from "./MenuCardsList/MenuCardsList";
 import SelectedTeamContext from "../../../context/SelectedTeam";
 import { CreateMenuModal } from "../../../components/menu/CreateMenu";
+import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
+import DigitalMenuTourSteps from "../../../components/WelcomeTour/components/DigitalMenuTourSteps";
+import styles from "../../../components/WelcomeTour/components/Tour.module.css";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -21,6 +24,7 @@ export default function MenuPage() {
   const [editingItem, setEditingItem] = useState<Menu | null>(null);
   const [sortOption, setSortOption] = useState("latest");
   const { user } = useUser();
+  const tourSteps = DigitalMenuTourSteps({ styles });
 
   function handleEditClick(menu: Menu) {
     setEditingItem(menu);
@@ -42,11 +46,15 @@ export default function MenuPage() {
     <Stack h={"100%"}>
       <Group justify="space-between">
         <Group>
-          <Heading title="Menus" titleprops={{ w: "fit-content" }} />
+          <Group className={styles["heading-container"]}>
+            <Heading title="Menus" titleprops={{ w: "fit-content" }} />
+          </Group>
           <InfoButton docUrl={`${docsPath}/menu`} />
+          <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["allMenus"]} />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
+              className={styles["create-menu-button"]}
               title="Create Menu"
               rightIcon={<IconPlus />}
               onClick={handleCreateClick}
@@ -55,15 +63,18 @@ export default function MenuPage() {
         </Group>
         <Group>
           <TeamSelector
+            className={styles["team-select-option"]}
             value={selectedTeamId}
             onChange={(teamId) => setSelectedTeamId(teamId)}
             enableAll={true}
             allowDeselect={false}
           />
-          <SortDropdown
-            onSortChange={onSortChange}
-            defaultSortOption={sortOption}
-          />
+          <Group className={styles["sort-dropdown"]}>
+            <SortDropdown
+              onSortChange={onSortChange}
+              defaultSortOption={sortOption}
+            />
+          </Group>
         </Group>
       </Group>
 
