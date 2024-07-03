@@ -1,11 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconInfoCircle } from "@tabler/icons-react";
 
 const WelcomeTour = ({ steps }) => {
   const tourInstance = useRef(null);
 
-  useEffect(() => {
+  const startTour = () => {
     tourInstance.current = driver({
       showProgress: true,
       steps: steps,
@@ -20,9 +22,15 @@ const WelcomeTour = ({ steps }) => {
         tourInstance.current.destroy();
       }
     };
-  }, [steps]);
+  };
 
-  return null;
+  return (
+    <Tooltip label="Start Tour" position="right" withArrow>
+      <ActionIcon onClick={startTour} variant="light" color="blue">
+        <IconInfoCircle size={24} />
+      </ActionIcon>
+    </Tooltip>
+  );
 };
 
 export default WelcomeTour;

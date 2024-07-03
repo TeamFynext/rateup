@@ -11,9 +11,9 @@ import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 import Heading from "../../styled/Heading/Heading";
 import SortDropdown from "../../Dashboard/SortDropDown";
 import InfoButton from "../../Button/InfoButton";
-import styles from "./SurveyPage.module.css";
 import { docsPath } from "../../../utils/constants";
 import RefreshButton from "../../Button/RefreshButton";
+import styles from "../../WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../WelcomeTour/WelcomeTour";
 import WebSurveyTourSteps from "../../WelcomeTour/components/WebSurveyTourSteps";
 
@@ -35,10 +35,9 @@ export function SurveyHeader({
   const tourSteps = WebSurveyTourSteps({ styles });
 
   return (
-    <Group gap="md" justify="space-between">
-      <WelcomeTour steps={tourSteps} />
-      <Group gap="md" justify="flex-start">
-        <Group mr="md">
+    <Group gap="sm" justify="space-between">
+      <Group gap="sm" justify="flex-start">
+        <Group mr="sm">
           <div className={styles["heading-container"]}>
             <Heading
               title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
@@ -49,7 +48,7 @@ export function SurveyHeader({
             <InfoButton docUrl={`${docsPath}/webSurvey`} />
           )}
         </Group>
-
+        <WelcomeTour steps={tourSteps} />
         <RefreshButton queryKeys={["surveys"]} />
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
@@ -78,12 +77,12 @@ export function SurveyHeader({
           filterParam={filterParam}
           setFilterParam={setFilterParam}
         />
-        <div className={styles["sort-dropdown"]}>
+        <Group className={styles["sort-dropdown"]}>
           <SortDropdown
             onSortChange={onSortChange}
             defaultSortOption={sortOption}
           />
-        </div>
+        </Group>
       </Group>
     </Group>
   );
