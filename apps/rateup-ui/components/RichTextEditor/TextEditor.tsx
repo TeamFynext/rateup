@@ -37,6 +37,7 @@ import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { Youtube } from "@tiptap/extension-youtube";
 import { Video } from "./CustomVideo";
 import { useForm } from "@mantine/form";
+import Placeholder from "@tiptap/extension-placeholder";
 
 export default function TextEditor({ form, selectedLanguage }) {
   const { variables } = useContext(SurveyContext);
@@ -55,6 +56,9 @@ export default function TextEditor({ form, selectedLanguage }) {
       Youtube,
       Video,
       VariableComponentExtension,
+      Placeholder.configure({
+        placeholder: "Enter your question",
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image.configure({
         HTMLAttributes: {
@@ -67,6 +71,10 @@ export default function TextEditor({ form, selectedLanguage }) {
       form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
       if (form.values?.description?.[selectedLanguage]) {
         form.setFieldValue(`description.${selectedLanguage}`, "");
+      }
+      const content = editor.getHTML();
+      if (content?.length === 8 && content.startsWith("<p>")) {
+        editor.commands.setHeading({ level: 3 });
       }
     },
   });
@@ -164,7 +172,7 @@ const getContent = (title: string, desc: string, variables) => {
     return getFormattedTitleFromVariable(title, variables) || title;
   } else if (desc) {
     return `<h3>${title}</h3><p> ${desc}</p>`;
-  } else {
+  } else if (title) {
     return `<h3>${title}</h3>`;
   }
 };

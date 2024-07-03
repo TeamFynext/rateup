@@ -77,7 +77,7 @@ export const ButtonSelection = ({
                 }
                 onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
               >
-                Flow Button
+                Whatsapp Flow
               </Menu.Item>
             </Box>
           </Tooltip>

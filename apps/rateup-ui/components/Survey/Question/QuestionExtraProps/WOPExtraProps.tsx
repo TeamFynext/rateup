@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zodResolver } from "mantine-form-zod-resolver";
 
 import { useForm } from "@mantine/form";
-import { CloseButton, SimpleGrid } from "@mantine/core";
+import { Box, CloseButton, SimpleGrid } from "@mantine/core";
 
 import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util";
 import {
@@ -64,6 +64,17 @@ const WOPExtraProps = ({ form }) => {
 
   return (
     <SimpleGrid cols={2}>
+      <ContainedTagInput
+        {...wopForm.getInputProps("segments")}
+        label={"Segment of array"}
+        required
+        placeholder="Enter the Segment and press enter"
+      />
+      <ContainedTagInput
+        {...wopForm.getInputProps("segColors")}
+        label={"segColors"}
+        placeholder="Enter the segColor and press enter "
+      />
       <ContainedTextField
         {...wopForm.getInputProps("imageSrc")}
         label={"Image src"}
@@ -84,41 +95,23 @@ const WOPExtraProps = ({ form }) => {
         label={"Primary color"}
         required
       />
+      <ContainedNumberInput
+        {...wopForm.getInputProps("size")}
+        label={"Wheel Size"}
+        required
+        placeholder="Enter the size of wheel"
+      />
       <ContainedColorInput
         {...wopForm.getInputProps("primaryColoraround")}
         label={"Primary color around"}
         required
       />
+      <Box w={10} h={10} />
       <ContainedColorInput
         {...wopForm.getInputProps("contrastColor")}
         label={"Contrast color"}
         required
       />
-      <ContainedNumberInput
-        {...wopForm.getInputProps("size")}
-        label={"Size"}
-        required
-        placeholder="Enter the size of wheel"
-      />
-      <ContainedTagInput
-        {...wopForm.getInputProps("segments")}
-        label={"Segment of array"}
-        required
-        placeholder="Enter the Segment and press enter"
-      />
-      <ContainedTagInput
-        {...wopForm.getInputProps("segColors")}
-        label={"segColors"}
-        required
-        placeholder="Enter the segColor and press enter "
-      />
-      {/* <Box mt={28}>
-        <RateupButtonPrimary
-          title="update the options"
-          onClick={handleWop}
-          disabled={!wopForm.isDirty()}
-        />
-      </Box> */}
     </SimpleGrid>
   );
 };
