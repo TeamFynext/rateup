@@ -238,7 +238,7 @@ export default function DashboardHome() {
               timePeriod={timePeriod}
               setTimePeriod={setTimePeriod}
               data={filteredData}
-              refreshKeys={["surveysSummary"]}
+              refreshKeys={["surveysSummary", "allSurveysSummary"]}
             />
           </Group>
           <FormModalLayout

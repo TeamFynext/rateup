@@ -31,17 +31,9 @@ const OverallResponseGraph = ({
   setTimePeriod,
   refreshKeys,
 }) => {
-  const { data: allSurveysSummary } = useAllSurveysSummary();
   let total = 0;
 
-  const allResponses = [];
-  allSurveysSummary?.surveys?.forEach((survey) => {
-    survey?.teams?.forEach((team) => {
-      allResponses.push(...team?.responses);
-    });
-  });
-
-  total = allResponses.length;
+  data?.map((item) => (total += item?.responses));
 
   return (
     <PaperLayout className={classes["graph-root-div"]}>
