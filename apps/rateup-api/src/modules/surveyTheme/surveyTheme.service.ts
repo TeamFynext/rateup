@@ -51,6 +51,47 @@ export async function createNewThemeInDB(req) {
   });
 }
 
+export async function applyThemeToSurvey(surveyId: string, themeId) {
+  console.log(
+    { surveyId, themeId },
+    "From survey theme service eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  );
+
+  await prisma.survey.update({
+    where: {
+      id: surveyId,
+    },
+    data: {
+      webSurveyThemeId: themeId,
+    },
+  });
+}
+
+export async function createAndApplyThemeToSurvey(req) {
+  const { orgId } = req?.user;
+  const { themeName } = req.body;
+  const surveyId = req.body.surveyId;
+  return prisma.$transaction(async (tx) => {
+    const newTheme = await tx.webSurveyTheme.create({
+      data: {
+        orgId,
+        name: themeName,
+        theme: defaultTheme,
+      },
+    });
+    await tx.survey.update({
+      where: {
+        id: surveyId,
+      },
+      data: {
+        webSurveyThemeId: newTheme.id,
+      },
+    });
+
+    return newTheme;
+  });
+}
+
 // export async function createDefaultSurveyTheme(surveyId: string) {
 //   console.log("surveyId", surveyId);
 //   return await prisma.webSurveyTheme.create({
