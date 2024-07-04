@@ -68,15 +68,18 @@ export const useRenameSurveyThemeMutation = () => {
   });
 };
 
-export const useCreateNewThemeMutation = () => {
+export const useCreateNewThemeMutation = (surveyId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createNewTheme,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["allThemes"],
       });
-      showSuccessToast("Created new theme successfully");
+      await queryClient.invalidateQueries({
+        queryKey: ["survey", surveyId],
+      });
+      showSuccessToast("Created and applied new theme successfully");
     },
     onError: (err: AxiosError) => {
       // @ts-ignore
