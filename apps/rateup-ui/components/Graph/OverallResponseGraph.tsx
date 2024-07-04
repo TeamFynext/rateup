@@ -30,13 +30,14 @@ const OverallResponseGraph = ({
   timePeriod,
   setTimePeriod,
   refreshKeys,
+  className,
 }) => {
   let total = 0;
 
   data?.map((item) => (total += item?.responses));
 
   return (
-    <PaperLayout className={classes["graph-root-div"]}>
+    <PaperLayout className={`${classes["graph-root-div"]} ${className}`}>
       <Stack>
         <Stack>
           <Group justify="space-between">
