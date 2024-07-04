@@ -16,6 +16,8 @@ import { docsPath } from "../../../../utils/constants";
 import { FlowCardListSkeleton } from "../../../../components/animation/skeleton/wa/FlowCardList.skeleton";
 import ErrorComponent from "../../../../components/404/ErrorComponent";
 import RefreshButton from "../../../../components/Button/RefreshButton";
+import WelcomeTour from "../../../../components/WelcomeTour/WelcomeTour";
+import WaFlowTourSteps from "../../../../components/WelcomeTour/components/FlowTourSteps";
 
 function Flows() {
   const [
@@ -33,6 +35,7 @@ function Flows() {
   const { isPending: isPendingTeamsUser, data: teamsDataUser } =
     useTeamsByUser();
 
+  const tourSteps = WaFlowTourSteps({ styles });
   let teamsData = teamsDataUser?.data;
 
   const ComponentToBeRendered = () => {
@@ -61,10 +64,12 @@ function Flows() {
     <Box className={styles["flows-list-page-container"]}>
       <Group justify="space-between">
         <Group>
-          <Title className={styles["flows-list-heading-h1"]}>Flows</Title>
+          <Title className={styles["heading-container"]}>Flows</Title>
           <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
+          <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["flow", "db"]} />
           <RateupButtonBlue
+            className={styles["create-button"]}
             title="Create flow"
             rightIcon={<IconPlus size={"1rem"} />}
             onClick={handleCreateFlowModalOpen}
@@ -73,6 +78,7 @@ function Flows() {
         </Group>
         <Group>
           <TeamSelector
+            className={styles["team-select-option"]}
             value={selectedTeamId}
             onChange={(teamId) => setSelectedTeamId(teamId)}
             enableAll={true}

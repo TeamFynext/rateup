@@ -175,7 +175,6 @@ const TeamSettings = ({
           </form>
         </PaperLayout>
         <GoogleReviewSettings googleLink={teamData.googleLink} teamId={id} />
-        <TagSettings tags={teamData?.tags} teamId={id} />
         <DangerZone
           title={"Delete Team"}
           message="Are you sure to delete this team?"

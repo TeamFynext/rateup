@@ -105,7 +105,6 @@ export function submitSurvey({
   encryptedResponses,
   shouldRaiseTicket,
   checkUniqueDevice,
-  phone,
 }) {
   return createResponsePublic({
     surveyTeamMapId,
@@ -116,7 +115,6 @@ export function submitSurvey({
     tag: tag || null,
     shouldRaiseTicket,
     checkUniqueDevice,
-    phone: phone ?? null,
   })
     .then(() => {
       // notifications.show({
@@ -393,6 +391,7 @@ function getFormattedResponseForVariable(response, questionType, variable) {
     case QuestionType.Smiley:
     case QuestionType.TextArea:
     case QuestionType.TnC:
+    case QuestionType.WOP:
       return response;
     default:
       return "";
@@ -404,6 +403,6 @@ export const DEFAULT_WOP = {
   primaryColoraround: "#000000",
   contrastColor: "#ffffff",
   size: 200,
-  segments: ["Happy", "Angry"],
-  segColors: ["#EE4040", "#F0CF50"],
+  segments: ["$200 Gift Card", "$100 Gift Card"],
+  segColors: ["#1c518e", "#06ac6e"],
 };

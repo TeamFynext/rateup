@@ -319,7 +319,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       tag: searchParams.get("tag"),
       shouldRaiseTicket,
       checkUniqueDevice,
-      phone: searchParams.get("phone"),
     })
       .then(() => {
         updateCompleted.mutate(surveyTeamMapId);

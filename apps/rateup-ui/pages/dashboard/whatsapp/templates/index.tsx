@@ -45,6 +45,9 @@ import TimeSinceText from "../../../../components/LandingPageDashboardPage/Landi
 import { TemplatesCardListSkeleton } from "../../../../components/animation/skeleton/wa/TemplatesCardList.skeleton";
 import ErrorComponent from "../../../../components/404/ErrorComponent";
 import CreatedSinceText from "../../../../components/DateAndTime/CreatedSinceText";
+import styles from "../../../../components/WelcomeTour/components/Tour.module.css";
+import WelcomeTour from "../../../../components/WelcomeTour/WelcomeTour";
+import WaPageTourSteps from "../../../../components/WelcomeTour/components/WaPageTourSteps";
 
 export default function Template() {
   const {
@@ -80,6 +83,8 @@ export default function Template() {
   };
 
   const sortedTemplates = sortData(templates, sortOption);
+
+  const tourSteps = WaPageTourSteps({ styles });
 
   const TemplateCardList = () => {
     if (isPending || isRefetching) return <TemplatesCardListSkeleton />;
@@ -121,12 +126,18 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          <Title order={1} c={"var(--grey-color)"}>
+          <Title
+            order={1}
+            c={"var(--grey-color)"}
+            className={styles["heading-container"]}
+          >
             All Templates
           </Title>
           <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
+          <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["watemplates"]} />
           <RateupButtonBlue
+            className={styles["create-template-button"]}
             title="Create Templates"
             rightIcon={<IconPlus size={"1rem"} />}
             onClick={handleCreateClick}
@@ -142,10 +153,12 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          <SortDropdown
-            onSortChange={onSortChange}
-            defaultSortOption={sortOption}
-          />
+          <div className={styles["sort-dropdown"]}>
+            <SortDropdown
+              onSortChange={onSortChange}
+              defaultSortOption={sortOption}
+            />
+          </div>
           <SyncTemplatesButton disabled={isPending} />
         </Flex>
       </Flex>

@@ -18,7 +18,7 @@ export function WebsurveySelector({
   form,
   index,
   ...props
-}: WebsurveySelectorProps) {
+}: Readonly<WebsurveySelectorProps>) {
   const { isPending, data } = useSurveys();
 
   if (isPending || !data) {
@@ -35,8 +35,8 @@ export function WebsurveySelector({
 
   const selectOptions = filteredWebSurvey.map((survey) => ({
     value: survey.teams?.[0]?.shortUrlId
-      ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${survey.teams?.[0]?.shortUrlId}?phone={{1}}`
-      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${survey.teams?.[0]?.mapId}?phone={{1}}`,
+      ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${survey.teams?.[0]?.shortUrlId}?tag={{1}}`
+      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${survey.teams?.[0]?.mapId}?tag={{1}}`,
     label: survey?.title,
   }));
 
