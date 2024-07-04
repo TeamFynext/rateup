@@ -52,6 +52,9 @@ import RefreshButton from "../../components/Button/RefreshButton";
 import SortDropdown, {
   sortData,
 } from "../../components/Dashboard/SortDropDown";
+import styles from "../../components/WelcomeTour/components/Tour.module.css";
+import WelcomeTour from "../../components/WelcomeTour/WelcomeTour";
+import DashboardTourSteps from "../../components/WelcomeTour/components/DashboardTourSteps";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -147,6 +150,7 @@ export default function DashboardHome() {
   const onSortChange = (value) => {
     setSortOption(value);
   };
+  const tourSteps = DashboardTourSteps({ styles });
 
   // Filtering surveys based on the filterParam state
   const filteredSurveys =
@@ -172,6 +176,18 @@ export default function DashboardHome() {
     sortOption,
   );
 
+  // Function to get class name based on summaryname
+  const getClassName = (summaryname) => {
+    if (summaryname === "Active Surveys") {
+      return styles["active-survey-count"];
+    } else if (summaryname === "Total Surveys") {
+      return styles["total-survey-count"];
+    } else if (summaryname === "Total Teams") {
+      return styles["total-team-count"];
+    }
+    return "";
+  };
+
   return (
     <>
       {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
@@ -180,13 +196,14 @@ export default function DashboardHome() {
             className={classes["summary-cards-and-responses-graph-container"]}
           >
             <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
+              <WelcomeTour steps={tourSteps} />
               <RateupButtonBlue
                 onClick={open}
                 title={"Create"}
                 leftIcon={<IconPlus size="2.2rem" />}
                 size="xl"
                 py="xl"
-                className={lexend500.className}
+                className={`${styles["create-button"]} ${lexend400.className} `}
                 styles={{
                   root: {
                     height: "130px",
@@ -207,6 +224,7 @@ export default function DashboardHome() {
               {summaryArray.map(
                 ({ summaryname, summaryvalue, route }, index) => (
                   <PaperLayout
+                    className={getClassName(summaryname)}
                     hoveractive
                     style={{ height: "105px", cursor: "pointer" }}
                     py={"xl"}
@@ -234,12 +252,14 @@ export default function DashboardHome() {
                 ),
               )}
             </Stack>
-            <OverallResponseGraph
-              timePeriod={timePeriod}
-              setTimePeriod={setTimePeriod}
-              data={filteredData}
-              refreshKeys={["surveysSummary", "allSurveysSummary"]}
-            />
+            <div className={styles["overall-responses-graph"]}>
+              <OverallResponseGraph
+                timePeriod={timePeriod}
+                setTimePeriod={setTimePeriod}
+                data={filteredData}
+                refreshKeys={["surveysSummary", "allSurveysSummary"]}
+              />
+            </div>
           </Group>
           <FormModalLayout
             centered
@@ -279,7 +299,9 @@ export default function DashboardHome() {
             <PaperLayout className={classes["surveys-filter-container"]}>
               <Group justify="space-between">
                 <Group align="center">
-                  <Heading subtitle="Active Surveys / Flows" />
+                  <div className={styles["active-flow-page"]}>
+                    <Heading subtitle="Active Surveys / Flows" />{" "}
+                  </div>
                   <Text fz="17px" mt="5px" c="gray">
                     ( {filterParam} )
                   </Text>
@@ -287,14 +309,18 @@ export default function DashboardHome() {
                 </Group>
 
                 <Group>
-                  <SurveyTypeFilter
-                    filterParam={filterParam}
-                    setFilterParam={setFilterParam}
-                  />
-                  <SortDropdown
-                    onSortChange={onSortChange}
-                    defaultSortOption={sortOption}
-                  />
+                  <Group className={styles["survey-type-filter-button"]}>
+                    <SurveyTypeFilter
+                      filterParam={filterParam}
+                      setFilterParam={setFilterParam}
+                    />{" "}
+                  </Group>
+                  <Group className={styles["sort-dropdown"]}>
+                    <SortDropdown
+                      onSortChange={onSortChange}
+                      defaultSortOption={sortOption}
+                    />
+                  </Group>
                 </Group>
               </Group>
             </PaperLayout>
