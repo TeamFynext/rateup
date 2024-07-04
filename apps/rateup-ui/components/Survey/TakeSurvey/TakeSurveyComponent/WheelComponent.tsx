@@ -19,6 +19,7 @@ type WheelComponentProps = {
   height?: number; // Optional height for the canvas
   outerCircleWidth?: number; // Optional width of outer circle
   imageSrc?: string; // Optional background image src
+  disable: boolean;
 };
 
 const WheelComponent = ({
@@ -40,6 +41,7 @@ const WheelComponent = ({
   height = 600,
   outerCircleWidth = 10,
   imageSrc,
+  disable = false,
 }: WheelComponentProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -348,7 +350,7 @@ const WheelComponent = ({
     if (!ctx) return;
     ctx.scale(ratio, ratio);
     canvasContextRef.current = ctx;
-    canvas.addEventListener("click", spin, false);
+    !disable && canvas.addEventListener("click", spin, false);
   }, [height, spin, width]);
 
   const wheelInit = useCallback(() => {
