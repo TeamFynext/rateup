@@ -77,6 +77,7 @@ import { emailPublicRoutes } from "./modules/email/email.public.route";
 import { emailSchema } from "./modules/email/email.schema";
 import { updatePublicRoutes } from "./modules/update/update.public.route";
 import { shopifyRoutes } from "./modules/shopify/shopify.route";
+import { shopifySchema } from "./modules/shopify/shopify.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -110,6 +111,7 @@ export function registerRoutes(server: FastifyInstance): void {
     mygSchemas, //TODO MYG
     campaignParticipantsSchemas,
     emailSchema,
+    shopifySchema,
   ];
   for (const module of modules) {
     for (const schema of module) {

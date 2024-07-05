@@ -1,12 +1,15 @@
 import { FastifyInstance } from "fastify";
 import {
+  createShopifySurveyScheduleHandler,
   deleteAllWebhookHandler,
   getProductsHandler,
   getShopifyAuthCallbackHandler,
   getShopifyAuthHandler,
+  getShopifySurveyScheduleHandler,
   shopifyWebhooksHandler,
 } from "./shopify.controller";
 import fastifyRawBody from "fastify-raw-body";
+import { ShopifyRef } from "./shopify.schema";
 
 export async function shopifyRoutes(server: FastifyInstance) {
   //Is it necessary?
@@ -37,4 +40,15 @@ export async function shopifyRoutes(server: FastifyInstance) {
   );
 
   server.get("/products", {}, getProductsHandler);
+
+  server.post(
+    "/scheduled-survey",
+    {
+      schema: {
+        body: ShopifyRef("shopifySurveySchema"),
+      },
+    },
+    createShopifySurveyScheduleHandler,
+  );
+  server.get("/shopify-surveys", {}, getShopifySurveyScheduleHandler);
 }

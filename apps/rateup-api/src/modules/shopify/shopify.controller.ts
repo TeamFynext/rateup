@@ -1,9 +1,13 @@
 import shopify from "./shopify.config";
+import { shopifySurveyInput } from "./shopify.schema";
 import {
   createShopifySession,
+  createShopifySurveySchedule,
   deleteShopifySession,
   getShopifyAuthUrl,
   getShopifySession,
+  getShopifySessionByOrgId,
+  getShopifySurveysByOrgId,
   handleShopifyAuthCallback,
   registerShopifyWebhook,
 } from "./shopify.service";
@@ -76,11 +80,6 @@ export async function shopifyWebhooksHandler(
 ) {
   try {
     console.log("in shopifyWebhooksHandler");
-    console.log("request.body", request.body);
-    console.log(
-      "handler",
-      await shopify.webhooks.getHandlers("DRAFT_ORDERS_CREATE"),
-    );
     await shopify.webhooks.process({
       rawBody: request.rawBody as string, // is a string
       rawRequest: request.raw,
@@ -111,6 +110,43 @@ export async function getProductsHandler(
 
     console.log("products", products);
     reply.code(200).send(webhooks);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function createShopifySurveyScheduleHandler(
+  request: FastifyRequest<{ Body: shopifySurveyInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user.orgId;
+    let shop = request.body.shop;
+    if (!shop) {
+      const session = await getShopifySessionByOrgId(orgId);
+      if (!session) throw new Error("You have n't configured your shop access");
+    }
+    const res = await createShopifySurveySchedule({
+      ...request.body,
+      shop,
+      orgId,
+    });
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getShopifySurveyScheduleHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user.orgId;
+    const res = await getShopifySurveysByOrgId(orgId);
+    reply.code(200).send(res);
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);

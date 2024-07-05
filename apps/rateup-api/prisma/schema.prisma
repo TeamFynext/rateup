@@ -116,6 +116,7 @@ model Org {
   Survey            Survey[]
   WaAccountSettings WaAccountSettings?
   shopifySessions   ShopifySession[]
+  shopifySurveys    ShopifySurvey[]
 }
 
 model UsageStats {
@@ -279,6 +280,7 @@ model Survey {
   org                               Org?              @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                             String?           @db.Uuid
   surveyVariables                   SurveyVariables[]
+  shopifySurvey                     ShopifySurvey[]
 }
 
 model SurveyTeamMap {
@@ -1155,4 +1157,20 @@ model ShopifySession {
   accessToken  String
   orgId        String?   @db.Uuid
   org          Org?      @relation(fields: [orgId], references: [id], onDelete: Cascade) 
+  createdAt    DateTime  @default(now())
+}
+
+model ShopifySurvey {
+  surveyId    String     @db.Uuid
+  survey      Survey     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  orgId       String     @db.Uuid
+  org         Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt   DateTime
+  active      Boolean    @default(true)
+  isProductSpecific  Boolean @default(false)
+  productId   String?
+  event       String
+  shop        String   
+
+  @@unique([orgId,event, shop], name: "orgid_event_shop_unique")
 }

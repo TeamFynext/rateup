@@ -3,6 +3,7 @@ import prisma from "../../utils/prisma";
 import shopify from "./shopify.config";
 import { Session, SessionParams } from "@shopify/shopify-api";
 import { isEmpty } from "lodash";
+import { shopifySurveyInput } from "./shopify.schema";
 
 export async function getShopifyAuthUrl(rawRequest, reply: FastifyReply, shop) {
   console.log(" in getShopifyAuthUrl");
@@ -53,15 +54,36 @@ export async function getShopifySession(shop) {
       shop,
     },
   });
-  return {
-    ...session,
-    isActive: undefined,
-    isScopeChanged: undefined,
-    isExpired: undefined,
-    toObject: undefined,
-    equals: undefined,
-    toPropertyArray: undefined,
-  };
+  if (session)
+    return {
+      ...session,
+      isActive: undefined,
+      isScopeChanged: undefined,
+      isExpired: undefined,
+      toObject: undefined,
+      equals: undefined,
+      toPropertyArray: undefined,
+    };
+  return null;
+}
+
+export async function getShopifySessionByOrgId(orgId) {
+  const session = await prisma.shopifySession.findFirst({
+    where: {
+      orgId,
+    },
+  });
+  if (session)
+    return {
+      ...session,
+      isActive: undefined,
+      isScopeChanged: undefined,
+      isExpired: undefined,
+      toObject: undefined,
+      equals: undefined,
+      toPropertyArray: undefined,
+    };
+  return null;
 }
 
 export async function deleteShopifySession(shop) {
@@ -90,4 +112,37 @@ export async function registerShopifyWebhook(session: Session) {
       throw new Error(`Error registering webhook with topic ${hook}`);
     }
   }
+}
+
+export async function createShopifySurveySchedule(data) {
+  return await prisma.shopifySurvey.create({
+    data,
+  });
+}
+
+export async function getShopipfySurveyByEvent(orgId, event, shop) {
+  return await prisma.shopifySurvey.findUnique({
+    where: {
+      orgid_event_shop_unique: {
+        orgId,
+        event,
+        shop,
+      },
+    },
+    include: {
+      survey: {
+        include: {
+          WaFlow: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getShopifySurveysByOrgId(orgId) {
+  return await prisma.shopifySurvey.findMany({
+    where: {
+      orgId,
+    },
+  });
 }
