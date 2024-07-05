@@ -392,6 +392,28 @@ export async function sendTemplateToUserHandler(
         }
       }
     }
+    dbTemplate.data.components.forEach((item) => {
+      if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+        item?.buttons.forEach((button, idx) => {
+          if (button.type === "URL") {
+            components.push({
+              type: "button",
+              sub_type: "url",
+              index: idx,
+              parameters: [
+                {
+                  type: "text",
+                  text: phone,
+                },
+              ],
+            });
+          }
+        });
+      } else {
+        // components.push(item);
+        //skiping for now
+      }
+    });
     const templateQuery = {
       name: data?.name,
       language: {
@@ -401,10 +423,8 @@ export async function sendTemplateToUserHandler(
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
 
-    const sendStatus = await sendMessage(orgId, templateMessage);
-    sendStatus.status &&
-      orgId &&
-      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    await sendMessage(orgId, templateMessage);
     reply.code(200).send("Template send to user successfully");
   } catch (error) {
     log.error("Error sending template to user \n%o", error);

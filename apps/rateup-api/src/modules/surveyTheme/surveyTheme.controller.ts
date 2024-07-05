@@ -1,15 +1,14 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyReply, FastifyRequest } from "fastify";
+import { log } from "../../utils/logger";
 import {
-  createNewThemeInDB,
+  createAndApplyThemeToSurvey,
   deleteThemeInDB,
   getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
-  updateSurveyThemeActiveSurveyThemeInDB,
   renameThemeInDB,
   updateAllWebSurveyThemesInDB,
-  // getSurveyThemeBySurveyId,
+  updateSurveyThemeActiveSurveyThemeInDB,
 } from "./surveyTheme.service";
-import { log } from "../../utils/logger";
 
 export async function getSurveyThemeByIdHandler(
   request: FastifyRequest<{ Params: { webSurveyThemeId: string } }>,
@@ -54,13 +53,19 @@ export async function updateSurveyThemeHandler(
 }
 
 export async function createNewTheme(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Body: {
+      surveyId?: string;
+      themeName: string;
+    };
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const newThemeObj = await createNewThemeInDB(request);
+    const newThemeObj = await createAndApplyThemeToSurvey(request);
     reply.code(201).send(newThemeObj);
   } catch (err) {
+    console.log(err);
     if (err.code === "P2002") {
       reply.code(400).send({
         success: false,

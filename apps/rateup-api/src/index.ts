@@ -14,9 +14,14 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import fastifyCron from "fastify-cron";
 import { resetMonthlyCounts } from "./modules/stats/stats.service";
+import {
+  endSurveyCronAction,
+  publishSurveyCronAction,
+} from "./modules/survey/survey.service";
 
 const server = Fastify({
   logger: logOptions,
+  disableRequestLogging: true,
   //TODO this is a temporary fix for the large payload error issue
   bodyLimit: 30971520,
 });
@@ -26,7 +31,7 @@ const server = Fastify({
 server.addHook("preHandler", async (req, _rep) => {
   // log body
   if (req.body) {
-    log.trace("Request body for id %s: %o", req.id, req.body);
+    //log.trace("Request body for id %s: %o", req.id, req.body);
   }
 });
 
@@ -58,17 +63,34 @@ server.get("/api/ping", async (req, reply) => {
 server.register(fastifyCron, {
   jobs: [
     {
+      name: "publishSurveys",
+      cronTime: "0/15 * * * *", // Every 15 min
+      onTick: async () => {
+        const currentTime = new Date();
+        console.log(
+          ".......Running every 15min JOB --> Survey Publish Updations........",
+          currentTime,
+        );
+        await publishSurveyCronAction();
+        await endSurveyCronAction();
+      },
+      start: true,
+      timeZone: "Etc/UTC", // Set to UTC+0
+    },
+    {
       cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
       onTick: async () => {
+        const currentTime = new Date();
+        console.log("......Monthly Stats Reset JOB --> .....", currentTime);
         try {
           await resetMonthlyCounts();
-          // console.log("Monthly Stats reset successfully");
         } catch (error) {
           console.error("Failed to reset monthly counts:", error);
         }
       },
       start: true, // Start the job immediately
-      timeZone: "Asia/Kolkata", // UTC India
+      timeZone: "Etc/UTC", // Set to UTC+0
+      //timeZone: "Asia/Kolkata", // UTC India
 
       // timeZone: 'UTC', // Specify the timezone if necessary
       //  cronTime: '* * * * *', // Every minute - for testing purpose

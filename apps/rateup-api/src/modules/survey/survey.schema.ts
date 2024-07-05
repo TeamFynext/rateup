@@ -17,6 +17,7 @@ const surveyCore = {
 const createSurveyRequestSchema = z.object({
   ...surveyCore,
   templateId: z.string().optional(),
+  selectedTheme: z.string().optional(),
 });
 const createSurveyLandingRequestSchema = z.object({
   title: z.string({
@@ -150,6 +151,8 @@ const updateSurveyRequestSchema = z.object({
       enable: z.boolean().default(false),
     })
     .optional(),
+  surveyPublishAt: z.string().nullable().optional(),
+  surveyEndAt: z.string().nullable().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

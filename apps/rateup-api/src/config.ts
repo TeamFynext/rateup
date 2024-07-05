@@ -19,6 +19,7 @@ import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdeli
 import { SwaggerOptions } from "@fastify/swagger";
 import jwt from "supertokens-node/recipe/jwt";
 import { getUserInfo } from "./utils/supertoken/supertoken";
+import util from "util";
 
 const frontendUrl = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL
@@ -54,6 +55,10 @@ export const SuperTokensConfig: TypeInput = {
           {
             id: "orgName",
           },
+          {
+            id: "phoneNumber",
+            optional: true,
+          },
         ],
       },
       override: {
@@ -61,8 +66,8 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             signUp: async function (input) {
-              if (process.env.NODE_ENV === 'development') {
-                if(!input.email.includes("999")) {
+              if (process.env.NODE_ENV === "development") {
+                if (!input.email.includes("999")) {
                   throw new Error("Not a RATEUP EMPLOYEE");
                 }
               }
@@ -123,6 +128,7 @@ export const SuperTokensConfig: TypeInput = {
                 //custom fields
                 const name = getValueByKey(formFields, "name");
                 const orgName = getValueByKey(formFields, "orgName");
+                const phoneNumber = getValueByKey(formFields, "phoneNumber");
 
                 let { id, emails, loginMethods } = response.user;
 
@@ -134,6 +140,7 @@ export const SuperTokensConfig: TypeInput = {
                     email,
                     name,
                     orgName,
+                    phoneNumber,
                     recipeName: getUserRecipeName(loginMethods[0].recipeId),
                   });
                 }

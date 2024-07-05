@@ -51,6 +51,47 @@ export async function createNewThemeInDB(req) {
   });
 }
 
+export async function applyThemeToSurvey(surveyId: string, themeId) {
+  console.log(
+    { surveyId, themeId },
+    "From survey theme service eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  );
+
+  await prisma.survey.update({
+    where: {
+      id: surveyId,
+    },
+    data: {
+      webSurveyThemeId: themeId,
+    },
+  });
+}
+
+export async function createAndApplyThemeToSurvey(req) {
+  const { orgId } = req?.user;
+  const { themeName } = req.body;
+  const surveyId = req.body.surveyId;
+  return prisma.$transaction(async (tx) => {
+    const newTheme = await tx.webSurveyTheme.create({
+      data: {
+        orgId,
+        name: themeName,
+        theme: defaultTheme,
+      },
+    });
+    await tx.survey.update({
+      where: {
+        id: surveyId,
+      },
+      data: {
+        webSurveyThemeId: newTheme.id,
+      },
+    });
+
+    return newTheme;
+  });
+}
+
 // export async function createDefaultSurveyTheme(surveyId: string) {
 //   console.log("surveyId", surveyId);
 //   return await prisma.webSurveyTheme.create({
@@ -75,14 +116,28 @@ export async function renameThemeInDB(req) {
 export async function updateSurveyThemeActiveSurveyThemeInDB(req) {
   const { webSurveyThemeId } = req.params;
   const { surveyId, theme } = req.body;
-  const updatedTheme = await prisma.webSurveyTheme.update({
+
+  const themeObj = await prisma.webSurveyTheme.findFirst({
     where: {
       id: webSurveyThemeId,
     },
-    data: {
-      theme,
+    select: {
+      name: true,
     },
   });
+
+  let updatedTheme = null;
+  if (themeObj && themeObj.name !== "Default Theme") {
+    updatedTheme = await prisma.webSurveyTheme.update({
+      where: {
+        id: webSurveyThemeId,
+      },
+      data: {
+        theme,
+      },
+    });
+  }
+
   const updatedSurvey = await prisma.survey.update({
     where: {
       id: surveyId,
@@ -91,7 +146,15 @@ export async function updateSurveyThemeActiveSurveyThemeInDB(req) {
       webSurveyThemeId,
     },
   });
-  return updatedTheme;
+
+  if (updatedTheme) {
+    return updatedTheme;
+  } else {
+    return {
+      success: true,
+      message: "Applied theme succesfully.",
+    };
+  }
 }
 
 export async function deleteThemeInDB(req) {
