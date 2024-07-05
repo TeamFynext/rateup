@@ -13,9 +13,10 @@ export const getAllThemes = async () => {
   return response.data;
 };
 
-export const createNewTheme = async (themeName) => {
+export const createNewTheme = async ({ name: themeName, surveyId = null }) => {
   const response = await axiosClient.post(`${THEME_API_PATH}`, {
     themeName,
+    surveyId: surveyId,
   });
   return response.data;
 };
