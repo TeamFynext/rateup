@@ -13,8 +13,12 @@ import { useForm } from "@mantine/form";
 import modalStyles from "../../../../LandingPageDashboardPage/CreateLandingPageModal/CreateLandingPageModal.module.css";
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { IconPlus } from "@tabler/icons-react";
+import { useRouter } from "next/router";
 
-function CreateNewThemeModal() {
+function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
+  const router = useRouter();
+  const surveyId = router.query.surveyId;
+
   const [opened, { open, close }] = useDisclosure();
 
   const form = useForm({
@@ -31,16 +35,22 @@ function CreateNewThemeModal() {
   });
 
   const { mutateAsync: createNewThemeMutationAsync } =
-    useCreateNewThemeMutation();
+    useCreateNewThemeMutation(surveyId);
 
   const submitBtnRef = useRef(null);
 
   const handleFormSubmit = useCallback(async ({ name }) => {
     try {
-      await createNewThemeMutationAsync(name);
+      const themeData = await createNewThemeMutationAsync({ name, surveyId });
+      setThemeSelectorState(themeData.id);
+      surveyThemeDispatch({
+        type: "set-survey-theme",
+        payload: themeData.theme,
+      });
       close();
     } catch (err) {
       console.log(err);
+      close();
     }
   }, []);
 

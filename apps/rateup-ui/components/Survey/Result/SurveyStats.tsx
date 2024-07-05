@@ -299,6 +299,7 @@ const SurveyStats = ({ survey, flowId = null }) => {
           </Grid>
         )}
         <OverallResponseGraph
+          className={styles["overall-responses-graph"]}
           data={graphResponse}
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}

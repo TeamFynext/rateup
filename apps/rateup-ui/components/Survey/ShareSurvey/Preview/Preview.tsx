@@ -1,12 +1,12 @@
-import { Title, Stack, Text, Image, Box } from "@mantine/core";
-import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
-import styles from "./Preview.module.css";
-import { RateupButtonBlue } from "../../../Button/RateupButtons";
+import { Box, Image, Stack } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
 import domtoimage from "dom-to-image-more";
-import { getLogoSrc } from "../ShareQR/utils";
+import { useEffect, useRef, useState } from "react";
 import { showErrorToast } from "../../../../utils/notifications";
+import { RateupButtonBlue } from "../../../Button/RateupButtons";
+import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
+import { getLogoSrc } from "../ShareQR/utils";
+import styles from "./Preview.module.css";
 
 function Preview({
   url,
@@ -78,13 +78,16 @@ function Preview({
         className={styles["preview-container"]}
         ref={previewContainerRef}
         data-tagname={customAttrForDownloadedQrFileName}
+        style={{
+          padding: 10,
+          backgroundColor: `${qrBgColor}`,
+        }}
       >
         <Box
           className={styles["qr-svg-bg-img-container"]}
           style={{
             width: "100%",
             height: "100%",
-            backgroundColor: `${qrBgColor}`,
           }}
         >
           {isLogoEnabled && (

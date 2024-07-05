@@ -15,7 +15,7 @@ const WOPForm = ({
   wop: Wop;
 }) => {
   const [price, setPrice] = useState("");
-  const { updateResponse } = useContext(CurrentResponsesContext);
+  const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   let wopData = wop
     ? wop?.segments?.length === 0
@@ -37,8 +37,11 @@ const WOPForm = ({
         imageSrc={wopData?.imageSrc}
         size={wopData?.size}
         isOnlyOnce={!isPreview}
+        disable={!!response}
+        winningSegment={response}
       />
       {!isPreview && price && `You have won ${price}`}
+      {!isPreview && response && !price && `You have won ${response}`}
     </Group>
   );
 };

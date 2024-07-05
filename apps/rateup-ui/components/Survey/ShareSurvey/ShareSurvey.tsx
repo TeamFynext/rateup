@@ -574,7 +574,7 @@ const ShareSurvey = ({
                   tagSelectData={tag}
                   setTagSelectData={setTag}
                 />
-                <Group gap={"xs"}>
+                {/* <Group gap={"xs"}>
                   <TagManager
                     isPublished={isPublished}
                     selectTeamDropdownValue={selectTeamDropdownState}
@@ -587,7 +587,7 @@ const ShareSurvey = ({
                     surveyId={surveyId}
                     shareUrl={shareUrl}
                   />
-                </Group>
+                </Group> */}
               </Group>
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={disableShare} />

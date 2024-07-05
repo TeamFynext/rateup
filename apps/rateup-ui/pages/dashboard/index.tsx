@@ -52,6 +52,9 @@ import RefreshButton from "../../components/Button/RefreshButton";
 import SortDropdown, {
   sortData,
 } from "../../components/Dashboard/SortDropDown";
+import styles from "../../components/WelcomeTour/components/Tour.module.css";
+import WelcomeTour from "../../components/WelcomeTour/WelcomeTour";
+import DashboardTourSteps from "../../components/WelcomeTour/components/DashboardTourSteps";
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -147,6 +150,7 @@ export default function DashboardHome() {
   const onSortChange = (value) => {
     setSortOption(value);
   };
+  const tourSteps = DashboardTourSteps({ styles });
 
   // Filtering surveys based on the filterParam state
   const filteredSurveys =
@@ -172,144 +176,169 @@ export default function DashboardHome() {
     sortOption,
   );
 
+  // Function to get class name based on summaryname
+  const getClassName = (summaryname) => {
+    if (summaryname === "Active Surveys") {
+      return styles["active-survey-count"];
+    } else if (summaryname === "Total Surveys") {
+      return styles["total-survey-count"];
+    } else if (summaryname === "Total Teams") {
+      return styles["total-team-count"];
+    }
+    return "";
+  };
+
   return (
     <>
       {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
-        <Stack gap={"4rem"}>
-          <Group
-            className={classes["summary-cards-and-responses-graph-container"]}
-          >
-            <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
-              <RateupButtonBlue
-                onClick={open}
-                title={"Create"}
-                leftIcon={<IconPlus size="2.2rem" />}
-                size="xl"
-                py="xl"
-                className={lexend500.className}
-                styles={{
-                  root: {
-                    height: "130px",
-                  },
-                  label: {
-                    fontSize: "32px",
-                    paddingLeft: "5px",
-                    paddingBottom: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                  },
-                  leftIcon: {
-                    display: "flex",
-                    alignItems: "center",
-                  },
-                }}
+        <Stack>
+          <Group style={{ justifyContent: "flex-end" }}>
+            <WelcomeTour steps={tourSteps} />
+          </Group>
+          <Stack gap={"4rem"}>
+            <Group
+              className={classes["summary-cards-and-responses-graph-container"]}
+            >
+              <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
+                <RateupButtonBlue
+                  onClick={open}
+                  title={"Create"}
+                  leftIcon={<IconPlus size="2.2rem" />}
+                  size="xl"
+                  py="xl"
+                  className={`${styles["create-button"]} ${lexend400.className} `}
+                  styles={{
+                    root: {
+                      height: "130px",
+                    },
+                    label: {
+                      fontSize: "32px",
+                      paddingLeft: "5px",
+                      paddingBottom: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                    },
+                    leftIcon: {
+                      display: "flex",
+                      alignItems: "center",
+                    },
+                  }}
+                />
+                {summaryArray.map(
+                  ({ summaryname, summaryvalue, route }, index) => (
+                    <PaperLayout
+                      className={getClassName(summaryname)}
+                      hoveractive
+                      style={{ height: "105px", cursor: "pointer" }}
+                      py={"xl"}
+                      key={index}
+                      onClick={() => router.push(route)}
+                    >
+                      <Stack gap={0} justify="center" h={"100%"}>
+                        <Title
+                          style={{ textAlign: "center", color: "#1C518E" }}
+                          order={2}
+                          size="36px"
+                        >
+                          {summaryvalue ? summaryvalue : 0}
+                        </Title>
+                        <Text
+                          className={lexend400.className}
+                          style={{ textAlign: "center" }}
+                          fz="xl"
+                          c="#595959"
+                        >
+                          {summaryname}
+                        </Text>
+                      </Stack>
+                    </PaperLayout>
+                  ),
+                )}
+              </Stack>
+              <OverallResponseGraph
+                className={styles["overall-responses-graph"]}
+                timePeriod={timePeriod}
+                setTimePeriod={setTimePeriod}
+                data={filteredData}
+                refreshKeys={["surveysSummary", "allSurveysSummary"]}
               />
-              {summaryArray.map(
-                ({ summaryname, summaryvalue, route }, index) => (
+            </Group>
+            <FormModalLayout
+              centered
+              opened={opened}
+              onClose={close}
+              title="Create new"
+            >
+              <Stack p={"md"}>
+                {createModalContent.map(({ Icon, routerPath, title }) => (
                   <PaperLayout
                     hoveractive
-                    style={{ height: "105px", cursor: "pointer" }}
-                    py={"xl"}
-                    key={index}
-                    onClick={() => router.push(route)}
+                    key={routerPath}
+                    onClick={() => router.push(routerPath)}
                   >
-                    <Stack gap={0} justify="center" h={"100%"}>
-                      <Title
-                        style={{ textAlign: "center", color: "#1C518E" }}
-                        order={2}
-                        size="36px"
-                      >
-                        {summaryvalue ? summaryvalue : 0}
-                      </Title>
+                    <Group align="center" gap="10">
+                      <ActionIcon variant="subtle">
+                        <Icon size={30} color="#595959" />
+                      </ActionIcon>
                       <Text
-                        className={lexend400.className}
                         style={{ textAlign: "center" }}
-                        fz="xl"
+                        size="20px"
+                        className={lexend400.className}
                         c="#595959"
                       >
-                        {summaryname}
+                        {title}
                       </Text>
-                    </Stack>
+                      <Group ml={"auto"}>
+                        <IconSquareRoundedPlusFilled fillOpacity={0.4} />
+                      </Group>
+                    </Group>
                   </PaperLayout>
-                ),
-              )}
-            </Stack>
-            <OverallResponseGraph
-              timePeriod={timePeriod}
-              setTimePeriod={setTimePeriod}
-              data={filteredData}
-              refreshKeys={["surveysSummary", "allSurveysSummary"]}
-            />
-          </Group>
-          <FormModalLayout
-            centered
-            opened={opened}
-            onClose={close}
-            title="Create new"
-          >
-            <Stack p={"md"}>
-              {createModalContent.map(({ Icon, routerPath, title }) => (
-                <PaperLayout
-                  hoveractive
-                  key={routerPath}
-                  onClick={() => router.push(routerPath)}
-                >
-                  <Group align="center" gap="10">
-                    <ActionIcon variant="subtle">
-                      <Icon size={30} color="#595959" />
-                    </ActionIcon>
-                    <Text
-                      style={{ textAlign: "center" }}
-                      size="20px"
-                      className={lexend400.className}
-                      c="#595959"
-                    >
-                      {title}
+                ))}
+              </Stack>
+            </FormModalLayout>
+
+            <Stack className={classes["surveys-filter-and-cards-container"]}>
+              <PaperLayout className={classes["surveys-filter-container"]}>
+                <Group justify="space-between">
+                  <Group align="center">
+                    <div className={styles["active-flow-page"]}>
+                      <Heading subtitle="Active Surveys / Flows" />{" "}
+                    </div>
+                    <Text fz="17px" mt="5px" c="gray">
+                      ( {filterParam} )
                     </Text>
-                    <Group ml={"auto"}>
-                      <IconSquareRoundedPlusFilled fillOpacity={0.4} />
+                    <RefreshButton queryKeys={["surveysSummary"]} />
+                  </Group>
+
+                  <Group>
+                    <Group className={styles["survey-type-filter-button"]}>
+                      <SurveyTypeFilter
+                        filterParam={filterParam}
+                        setFilterParam={setFilterParam}
+                      />{" "}
+                    </Group>
+                    <Group className={styles["sort-dropdown"]}>
+                      <SortDropdown
+                        onSortChange={onSortChange}
+                        defaultSortOption={sortOption}
+                      />
                     </Group>
                   </Group>
-                </PaperLayout>
-              ))}
+                </Group>
+              </PaperLayout>
+
+              <div
+                className={`${classes["filtered-survey-cards-container"]} cards-grid-global-class`}
+              >
+                {sortedSurveys.length > 0 ? (
+                  sortedSurveys.map((s) => (
+                    <ActiveSurveyCard key={s.id} survey={s} />
+                  ))
+                ) : (
+                  <NothingFound text="No data found" />
+                )}
+              </div>
             </Stack>
-          </FormModalLayout>
-
-          <Stack className={classes["surveys-filter-and-cards-container"]}>
-            <PaperLayout className={classes["surveys-filter-container"]}>
-              <Group justify="space-between">
-                <Group align="center">
-                  <Heading subtitle="Active Surveys / Flows" />
-                  <Text fz="17px" mt="5px" c="gray">
-                    ( {filterParam} )
-                  </Text>
-                  <RefreshButton queryKeys={["surveysSummary"]} />
-                </Group>
-
-                <Group>
-                  <SurveyTypeFilter
-                    filterParam={filterParam}
-                    setFilterParam={setFilterParam}
-                  />
-                  <SortDropdown
-                    onSortChange={onSortChange}
-                    defaultSortOption={sortOption}
-                  />
-                </Group>
-              </Group>
-            </PaperLayout>
-
-            <div
-              className={`${classes["filtered-survey-cards-container"]} cards-grid-global-class`}
-            >
-              {sortedSurveys.length > 0 ? (
-                sortedSurveys.map((s) => (
-                  <ActiveSurveyCard key={s.id} survey={s} />
-                ))
-              ) : (
-                <NothingFound text="No data found" />
-              )}
-            </div>
           </Stack>
         </Stack>
       ) : !summaryError ? (

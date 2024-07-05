@@ -421,6 +421,10 @@ function Choice({
     }
   }, [isSubmited]);
 
+  useEffect(() => {
+    setChoiceValue(choice?.value);
+  }, [choice?.value]);
+
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {

@@ -77,7 +77,10 @@ function ThemeSelector({
         isLoading={isAllThemesFetchPending}
       />
 
-      <CreateNewThemeModal />
+      <CreateNewThemeModal
+        setThemeSelectorState={setThemeSelectorState}
+        surveyThemeDispatch={surveyThemeDispatch}
+      />
       {isRenameThemeModalOpened && (
         <RenameThemeModal
           opened={isRenameThemeModalOpened}
