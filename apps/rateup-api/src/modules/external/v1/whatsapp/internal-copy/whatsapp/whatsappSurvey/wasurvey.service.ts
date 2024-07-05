@@ -366,13 +366,14 @@ export async function saveResponses(session: WaSessionWithRelations) {
   const res = await createResponse(surveyResponse);
   await updateResponse(res.id, { ip: session.ip, location: undefined });
   log.info("Responses saved \n%o\n", surveyResponse);
-  const { surveyTeamMapId, responses, language, createdAt, Contact } = res;
+  const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
   await saveResponseToGoogleSheet({
     surveyTeamMapId,
     responses,
     language,
     createdAt,
     respondent: !anonymous && Contact?.phone,
+    tag,
   });
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));

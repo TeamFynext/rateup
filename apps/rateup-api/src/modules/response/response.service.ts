@@ -196,18 +196,27 @@ export async function downloadExcelResponse(
     });
 
     const createdAt = "Date";
+    const responseTag = "tag";
+    let whatsappRespondentNumber = "Respondent's Mobile Number";
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
     }
-    if (platform === "WHATSAPP") {
-      headerArray.push("Respondent's Mobile Number");
-      filteredSecondArray.push("Respondent's Mobile Number");
+    if (
+      platform === "WHATSAPP" &&
+      visibleColumn.includes(whatsappRespondentNumber)
+    ) {
+      headerArray.push(whatsappRespondentNumber);
+      filteredSecondArray.push(whatsappRespondentNumber);
     }
     //TODO REMOVE LATER: MYG GIFT VISHU
     if (process.env.VISHU_SURVEY === surveyId) {
       headerArray.push("Gift won");
       filteredSecondArray.push({ id: "win_item", type: QuestionType.WinItem });
+    }
+    if (visibleColumn.includes(responseTag)) {
+      headerArray.push(responseTag);
+      filteredSecondArray.push(responseTag);
     }
 
     const bodyArray = [];
@@ -323,6 +332,8 @@ export async function downloadExcelResponse(
           responseValue = createdAtFormatted;
         } else if (question === "Respondent's Mobile Number") {
           responseValue = response?.Contact?.phone;
+        } else if (question === responseTag) {
+          responseValue = response.tag;
         } else {
           if (question.type === QuestionType.MCQGrid) {
             question?.features?.[defaultLanguage]?.questions?.map((q) =>
@@ -708,6 +719,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
             createdAt: res.createdAt,
             responses: res.responses,
             respondentPhone: res?.Contact?.phone,
+            tag: res?.tag,
           }))
           .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
       });
@@ -759,6 +771,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           ...questionTitles,
           "team",
           "Respondent's Mobile Number",
+          "tag",
         ],
         gridProperties:
           totalColumnCount > 26
@@ -778,6 +791,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       ...questionTitles,
       "team",
       "Respondent's Mobile Number",
+      "tag",
     ]);
     await sheet.loadCells();
     const columnCount = await sheet.columnCount;
@@ -846,6 +860,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           }
         });
         resObj["Respondent's Mobile Number"] = response?.respondentPhone;
+        resObj["tag"] = response?.tag;
         responseForSheet.push(resObj);
       });
     }
@@ -925,10 +940,11 @@ interface IsheetResponse {
   language: string;
   createdAt: Date;
   respondent: string;
+  tag: string;
 }
 export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
   try {
-    const { respondent, ...response } = responseData;
+    const { respondent, tag, ...response } = responseData;
     const {
       survey: { spreadSheetId, questions, id: surveyId },
       team,
@@ -1024,6 +1040,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
           );
       });
       resObj["Respondent's Mobile Number"] = respondent;
+      resObj["tag"] = tag;
       const newRow = await sheet.addRow(resObj);
       const dateColumnIndex = sheet.headerValues.indexOf("Created At");
       await sheet.loadCells();
