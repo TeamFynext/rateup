@@ -15,7 +15,8 @@
     "strict": false,
     "typeRoots": ["./types", "node_modules/@types"],
     "types": ["gtag.js"],
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "baseUrl": "."
   },
   "include": [
     "next-env.d.ts",
