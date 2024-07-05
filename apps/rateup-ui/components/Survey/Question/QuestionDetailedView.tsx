@@ -319,7 +319,7 @@ export function QuestionDetailedView({
               }}
               disabled={question.type === QuestionType.InfoMessage}
             />
-            <InfoButton docUrl={`${docsPath}/advancedFt/logicjump`} />
+            <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
             {NPSQuestions.includes(question?.type) && (
               <Checkbox
                 label="NPS Analytics"

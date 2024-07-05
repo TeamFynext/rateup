@@ -103,7 +103,7 @@ export function QuestionsSideBar({
     <Stack className={styles["add-question-btn-questions-list-container"]}>
       {questionsState?.length > 0 && (
         <Group className={styles["add-question-btn-more-than-1-que"]}>
-          <InfoButton docUrl={`${docsPath}/advancedFt//resultexport`} />
+          <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
           <RateupButtonBlue
             onClick={handleAddQn}
             title={"Add Question"}
