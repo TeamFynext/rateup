@@ -56,13 +56,9 @@ async function getLandingPageWithShortIdFromDB(req) {
 
 async function getPublicLandingPageWithShortIdFromDB(req) {
   const { shortUrlId } = req.params;
-  const {
-    user: { orgId },
-  } = req;
   const landingPage = await prisma.landingPage.findFirst({
     where: {
       shortUrlId,
-      ownerOrgId: orgId,
     },
     select: {
       name: true,

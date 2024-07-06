@@ -42,13 +42,9 @@ async function getGenerateQrRecordWithShortIdFromDB(req) {
 
 async function getPublicGenerateQrRecordWithShortIdFromDB(req) {
   const { shortUrlId } = req.params;
-  const {
-    user: { orgId },
-  } = req;
   const generateQrRecord = await prisma.generateQr.findFirst({
     where: {
       shortUrlId,
-      ownerOrgId: orgId,
     },
     select: {
       name: true,
