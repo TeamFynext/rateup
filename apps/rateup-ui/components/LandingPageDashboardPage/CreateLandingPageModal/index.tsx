@@ -24,7 +24,7 @@ function CreateLandingPageModal({
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, length sould be greater than 2 characters",
+          : "Name should be alphanumeric, length should be greater than 2 characters",
     },
   });
 

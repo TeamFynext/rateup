@@ -12,6 +12,7 @@ import styles from "./GenerateQr.module.css";
 import GeneratedQrCardsList from "./GeneratedQrCardsList";
 
 import { data as tempdata } from "./tempdata";
+import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
 
 function GenerateQr() {
   const router = useRouter();
@@ -19,25 +20,33 @@ function GenerateQr() {
   const [isCreateQrModalOpen, createQrModalHandlers] = useDisclosure();
   const queryClient = useQueryClient();
 
-  // const { data, isPending, isError } = useLandingPages();
-  // const [generatedQrs, setLandingPages] = useState([]);
-
   const {
     data: generatedQrs,
     isPending,
     isError,
-  } = { data: tempdata, isPending: false, isError: false };
+  } = useGetAllGeneratedQrsQuery();
+  // const [generatedQrs, setLandingPages] = useState([]);
 
-  const [sortOption, setSortOption] = useState("");
+  console.log(generatedQrs, "Generate Qrssssssss");
+
+  // const {
+  //   data: generatedQrs,
+  //   isPending,
+  //   isError,
+  // } = { data: tempdata, isPending: false, isError: false };
+
+  const [sortOption, setSortOption] = useState("latest-first");
 
   const handleSortChange = (value) => {
     setSortOption(value);
   };
 
   const sortedGeneratedQrs = sortData(
-    generatedQrs.map((s) => ({ ...s, data: { name: s.name } })),
+    generatedQrs?.map((s) => ({ ...s, data: { name: s.name } })),
     sortOption,
   );
+
+  console.log(sortedGeneratedQrs, "Sorted Generated Qrs");
 
   let componentToBeRendered = null;
 

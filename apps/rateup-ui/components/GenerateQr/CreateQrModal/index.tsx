@@ -3,31 +3,47 @@ import { useCallback, useRef } from "react";
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 import styles from "./CreateQrModal.module.css";
+import { useCreateQrMutation } from "backend/generateQr/generateQr.query";
 
 function CreateQrModal({ opened, onClose, mode, shortId, initialName }) {
   const form = useForm({
     initialValues: {
       name: initialName || "",
+      url: "",
     },
     validate: {
       // must start with a letter, can contain underscores, numbers, spaces, length must be 3 or more characters.
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, length sould be greater than 2 characters",
+          : "Name should be alphanumeric, length should be greater than 2 characters",
+      url: (value) => {
+        if (mode === "create") {
+          if (value) {
+            let url;
+            try {
+              url = new URL(value);
+            } catch (_) {
+              return "Please enter a valid url.";
+            }
+          } else {
+            return "URL is required.";
+          }
+        }
+      },
     },
   });
 
-  // const createShortUrlMutation = useCreateShortUrlMutation();
-  // const updateShortUrlMutation = useUpdateShortUrlMutation(shortUrlId);
-
-  const createQrMutation = () => {};
+  const createQrMutation = useCreateQrMutation();
   const updateQrMutation = (shortUrlId) => {};
 
   const formSubmitBtnRef = useRef(null);
 
   const handleCreateQrFormSubmit = useCallback(async (values) => {
-    // await createShortUrlMutation.mutateAsync(values);
+    await createQrMutation.mutateAsync({
+      name: values.name,
+      link: values.url,
+    });
     form.reset();
     onClose();
   }, []);
@@ -73,10 +89,21 @@ function CreateQrModal({ opened, onClose, mode, shortId, initialName }) {
           <TextInput
             className={styles["name-text-input"]}
             label="Name"
-            placeholder="Enter name of Short Url"
+            placeholder="Enter name QR"
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
+            withAsterisk
           />
+          {mode === "create" && (
+            <TextInput
+              className={styles["url-text-input"]}
+              label="URL"
+              placeholder="Enter URL"
+              onClick={(e) => e.stopPropagation()}
+              {...form.getInputProps("url")}
+              withAsterisk
+            />
+          )}
           <Button
             style={{ display: "none" }}
             type="submit"

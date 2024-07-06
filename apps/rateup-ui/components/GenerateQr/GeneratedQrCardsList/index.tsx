@@ -4,7 +4,7 @@ import GeneratedQrCard from "../GeneratedQrCard";
 function GenerateQrCardsList({ generatedQrs }) {
   console.log(generatedQrs, "from generate Qr cards list");
   const jsxElementsArray = generatedQrs.map((generateQrObj) => {
-    return <GeneratedQrCard {...generateQrObj} />;
+    return <GeneratedQrCard key={generateQrObj.id} {...generateQrObj} />;
   });
 
   return <Box className="cards-grid-global-class">{jsxElementsArray}</Box>;
