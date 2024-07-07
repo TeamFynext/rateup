@@ -1,4 +1,11 @@
-import { Anchor, Box, Divider, ScrollArea, Tooltip } from "@mantine/core";
+import {
+  Anchor,
+  Box,
+  Divider,
+  Image,
+  ScrollArea,
+  Tooltip,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import React, { useEffect, useState } from "react";
 import { useSubscription } from "../../../../backend/subscription/subscription.query";
@@ -29,7 +36,6 @@ interface iProps {
 
 const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
   const [active, setActive] = useState(0);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { user } = useUser();
   const [userProfileAvatar, setUserProfileAvatar] = useState(
@@ -109,7 +115,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
           >
             <Box mt="sm" ml="1px">
               <Anchor href="/dashboard/settings?activeTab=account&view=billing">
-                <img
+                <Image
                   src={`${localImagesPath}/${
                     opened ? "rateup-pro-ad.png" : "premium-icon.svg"
                   }`}

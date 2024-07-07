@@ -1,4 +1,11 @@
-import { createContext, useContext, useReducer, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from "react";
 
 interface RouteParamsState {
   team_code: string;
@@ -17,25 +24,27 @@ interface RouteParamsContextData {
   update: (values: Partial<RouteParamsState>) => void;
 }
 
+const initialState: RouteParamsState = {
+  team_code: "",
+  surveyId: "",
+  groupId: "",
+  campaignId: "",
+  collectionId: "",
+  shortUrlId: "",
+  menuId: "",
+  templateId: "",
+  dbFlowId: "",
+};
+
 const RouteParamsContext = createContext<RouteParamsContextData>({
-  state: {
-    team_code: "",
-    surveyId: "",
-    groupId: "",
-    campaignId: "",
-    collectionId: "",
-    shortUrlId: "",
-    menuId: "",
-    templateId: "",
-    dbFlowId: "",
-  },
+  state: initialState,
   update: () => {},
 });
 
 const reducer = (
   state: RouteParamsState,
   values: Partial<RouteParamsState>,
-) => ({
+): RouteParamsState => ({
   ...state,
   ...values,
 });
@@ -47,20 +56,16 @@ interface RouteParamsProviderProps {
 export const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({
   children,
 }) => {
-  const [state, update] = useReducer(reducer, {
-    team_code: "Team Name",
-    surveyId: "Survey Name",
-    groupId: "Group Name",
-    campaignId: "Campaign Name",
-    collectionId: "Collection Name",
-    shortUrlId: "LandingPage Name",
-    menuId: "Menu Name",
-    templateId: "Template Name",
-    dbFlowId: "Flow Name",
-  });
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const update = useCallback((values: Partial<RouteParamsState>) => {
+    dispatch(values);
+  }, []);
+
+  const value = useMemo(() => ({ state, update }), [state, update]);
 
   return (
-    <RouteParamsContext.Provider value={{ state, update }}>
+    <RouteParamsContext.Provider value={value}>
       {children}
     </RouteParamsContext.Provider>
   );

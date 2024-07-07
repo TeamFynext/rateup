@@ -19,7 +19,8 @@ export const CampaignParticipantMenu = ({
   function handleResendClick() {
     sendMutation.mutate({
       participantId,
-      sendToStatuses: [CampaignParticipantStatus.FAILED],
+      statuses: [CampaignParticipantStatus.FAILED],
+      sentCampaignChoice: "NOW",
     });
   }
   const openDeleteModal = () => {

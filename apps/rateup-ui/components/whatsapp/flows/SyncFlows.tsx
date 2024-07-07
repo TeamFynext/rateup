@@ -39,8 +39,7 @@ import {
   validateOptions,
   waFlowFormToQuestionTypeMaps,
 } from "../../../utils/whatsapp/flow.utils";
-import { useForm } from "@mantine/form";
-import { UseFormReturnType } from "@mantine/form/lib/types";
+import { useForm, UseFormReturnType } from "@mantine/form";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { WaFlowFormElementType } from "../../../types/enums";
 import { TeamSelector } from "../../input/TeamSelector";
