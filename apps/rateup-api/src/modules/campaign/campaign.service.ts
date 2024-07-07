@@ -1,10 +1,15 @@
 import prisma from "../../utils/prisma";
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
-import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+  SubscriptionFeaturePathName,
+} from "../../types/enums";
 import { log } from "../../utils/logger";
 import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
+import { getSubscription, getUsageStats } from "./campaign.auth";
 
 type campaginExtentend = {
   team: {
@@ -230,6 +235,9 @@ export async function sendCampaign(
   await updateCampaign(campaignId, {
     status: CampaignStatus.ACTIVE,
     startedAt: new Date(),
+    campaignSentAt: null,
+    errorMessage: null,
+    scheduledStatuses: [],
   });
   log.trace("updated campaign status to active");
   await sendCampaignToParticipants(campaignId, sendToStatuses, participantId);
@@ -259,4 +267,82 @@ export async function getCampaignFilterForFlows(surveyId: string) {
       ({ contactId }) => contactId,
     ),
   }));
+}
+
+export async function sendCampaignCronAction() {
+  const currentTime = new Date();
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000);
+
+  const campaignsToBeSent = await prisma.campaign.findMany({
+    where: {
+      NOT: {
+        campaignSentAt: null,
+      },
+      AND: [
+        { status: CampaignStatus.SCHEDULED },
+        {
+          campaignSentAt: {
+            lte: fiveMinutesLater,
+          },
+        },
+      ],
+    },
+    include: {
+      team: {
+        select: {
+          orgId: true,
+        },
+      },
+    },
+  });
+  if (campaignsToBeSent?.length === 0) return;
+
+  const orgId = campaignsToBeSent?.[0].team.orgId;
+
+  const [usage, subscription] = await Promise.all([
+    getUsageStats(orgId),
+    getSubscription(orgId),
+  ]);
+
+  if (!usage || !subscription) {
+    let errorMessage = "Usage stats or subscription not found";
+    await updateCampaign(campaignsToBeSent?.[0].id, {
+      status: CampaignStatus.INACTIVE,
+      errorMessage: errorMessage,
+    });
+    log.error(errorMessage, "in schedule", orgId);
+    return;
+  }
+
+  const newMessagesCount = campaignsToBeSent.length;
+
+  const monthlyMessageLimit =
+    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+      ?.monthlyMessageLimit ?? 0;
+
+  if (
+    (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
+    monthlyMessageLimit
+  ) {
+    let errorMessage =
+      usage.monthlyMessagesCount >= monthlyMessageLimit
+        ? "You have reached the maximum monthly limit of messages."
+        : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
+            monthlyMessageLimit - usage.monthlyMessagesCount
+          } to proceed.`;
+    await updateCampaign(campaignsToBeSent?.[0].id, {
+      status: CampaignStatus.INACTIVE,
+      errorMessage: errorMessage,
+    });
+    log.error(errorMessage, "in schedule", orgId);
+    return;
+  }
+  for await (const campaign of campaignsToBeSent) {
+    await sendCampaign(
+      campaign.id,
+      campaign.scheduledStatuses as CampaignParticipantStatus[],
+    );
+  }
+
+  log.info(`sent ${campaignsToBeSent.length} campaings. At ${currentTime}`);
 }
