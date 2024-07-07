@@ -18,6 +18,7 @@ import {
   endSurveyCronAction,
   publishSurveyCronAction,
 } from "./modules/survey/survey.service";
+import { sendCampaignCronAction } from "./modules/campaign/campaign.service";
 
 const server = Fastify({
   logger: logOptions,
@@ -72,7 +73,10 @@ server.register(fastifyCron, {
           currentTime,
         );
         await publishSurveyCronAction();
+
         await endSurveyCronAction();
+
+        await sendCampaignCronAction();
       },
       start: true,
       timeZone: "Etc/UTC", // Set to UTC+0

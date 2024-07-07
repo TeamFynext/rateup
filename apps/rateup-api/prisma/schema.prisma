@@ -428,6 +428,9 @@ model Campaign {
   flowId               String?
   // TODO: add email template?
   campaignParticipants CampaignParticipant[]
+  campaignSentAt       DateTime?
+  scheduledStatuses    String[]              @default([])
+  errorMessage          String?
 }
 
 model CampaignParticipant {
