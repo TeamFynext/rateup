@@ -123,7 +123,7 @@ const CreateCampaignModal = ({
             />
           </Group>
         )}
-        <SimpleGrid cols={isEdit ? 3 : 2} p={"lg"}>
+        <SimpleGrid cols={{ base: 2, lg: isEdit ? 3 : 2 }} p={"lg"}>
           <ContainedTextField
             label="Campaign Name"
             placeholder="Enter campaign name"
@@ -154,6 +154,7 @@ const CreateCampaignModal = ({
                 loading={updateCampaignMutation.isPending}
                 title="Update"
                 disabled={!form.isDirty()}
+                type={"submit"}
               />
             </Box>
           )}
