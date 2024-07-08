@@ -3,9 +3,12 @@ import { useCallback, useRef } from "react";
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 import styles from "./CreateQrModal.module.css";
-import { useCreateQrMutation } from "backend/generateQr/generateQr.query";
+import {
+  useCreateQrMutation,
+  useUpdateQrMutation,
+} from "backend/generateQr/generateQr.query";
 
-function CreateQrModal({ opened, onClose, mode, shortId, initialName }) {
+function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const form = useForm({
     initialValues: {
       name: initialName || "",
@@ -35,7 +38,7 @@ function CreateQrModal({ opened, onClose, mode, shortId, initialName }) {
   });
 
   const createQrMutation = useCreateQrMutation();
-  const updateQrMutation = (shortUrlId) => {};
+  const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
   const formSubmitBtnRef = useRef(null);
 
@@ -48,12 +51,18 @@ function CreateQrModal({ opened, onClose, mode, shortId, initialName }) {
     onClose();
   }, []);
 
-  const handleUpdateQrFormSubmit = useCallback(async (values) => {
-    const name = values.name;
-    // await updateShortUrlMutation.mutateAsync({ shortUrlId, name });
-    form.reset();
-    onClose();
-  }, []);
+  const handleUpdateQrFormSubmit = useCallback(
+    async (values) => {
+      const name = values.name;
+      await updateQrMutation.mutateAsync({
+        shortUrlId: shortUrlId,
+        name,
+      });
+      form.reset();
+      onClose();
+    },
+    [shortUrlId],
+  );
 
   const handleCreateBtnClick = useCallback(() => {
     formSubmitBtnRef?.current.click();
@@ -124,6 +133,7 @@ function CreateQrModal({ opened, onClose, mode, shortId, initialName }) {
       </Box>
     </Modal>
   );
+  ``;
 }
 
 export default CreateQrModal;

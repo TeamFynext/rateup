@@ -1,9 +1,8 @@
 import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
+import { useState } from "react";
 import RefreshButton from "../Button/RefreshButton";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 import NothingFound from "../NothingFound/NothingFound";
@@ -11,31 +10,15 @@ import CreateQrModal from "./CreateQrModal";
 import styles from "./GenerateQr.module.css";
 import GeneratedQrCardsList from "./GeneratedQrCardsList";
 
-import { data as tempdata } from "./tempdata";
-import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
-
 function GenerateQr() {
-  const router = useRouter();
-
   const [isCreateQrModalOpen, createQrModalHandlers] = useDisclosure();
-  const queryClient = useQueryClient();
-
   const {
     data: generatedQrs,
     isPending,
     isError,
   } = useGetAllGeneratedQrsQuery();
-  // const [generatedQrs, setLandingPages] = useState([]);
 
-  console.log(generatedQrs, "Generate Qrssssssss");
-
-  // const {
-  //   data: generatedQrs,
-  //   isPending,
-  //   isError,
-  // } = { data: tempdata, isPending: false, isError: false };
-
-  const [sortOption, setSortOption] = useState("latest-first");
+  const [sortOption, setSortOption] = useState("latest");
 
   const handleSortChange = (value) => {
     setSortOption(value);
@@ -45,8 +28,6 @@ function GenerateQr() {
     generatedQrs?.map((s) => ({ ...s, data: { name: s.name } })),
     sortOption,
   );
-
-  console.log(sortedGeneratedQrs, "Sorted Generated Qrs");
 
   let componentToBeRendered = null;
 
@@ -101,7 +82,7 @@ function GenerateQr() {
           opened={isCreateQrModalOpen}
           onClose={createQrModalHandlers.close}
           mode="create"
-          shortId={""}
+          shortUrlId={""}
           initialName={""}
         />
       )}

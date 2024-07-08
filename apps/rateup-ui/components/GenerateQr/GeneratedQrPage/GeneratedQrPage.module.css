@@ -13,10 +13,6 @@
 .copy-link-comp-container-div {
   width: 37.5rem;
   flex: 1;
-  /* box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 0px,
-    rgba(0, 0, 0, 0.11) 0px 0px 8px;
-  padding: 1rem;
-  border-radius: 1rem; */
 }
 
 .copy-link-comp-container-div > div {
@@ -31,11 +27,12 @@
   width: 8.3125rem;
 }
 
-/* .stats-container {
+.stats-container {
   flex-direction: column;
   align-self: stretch;
   flex: 1;
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 0px,
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
     rgba(0, 0, 0, 0.11) 0px 0px 8px;
   padding: 1rem;
   border-radius: 1rem;
@@ -53,7 +50,7 @@
 
 .no-of-scans-value-p {
   font-size: 1.125rem;
-} */
+}
 
 .qr-container {
   margin-top: 0.625rem;

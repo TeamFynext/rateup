@@ -9,28 +9,27 @@ import {
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useCallback } from "react";
 import { useRouter } from "next/router";
-import { useDeleteLandingPageMutation } from "../../../backend/landingPage/landingPage.query";
+
 import { useDisclosure } from "@mantine/hooks";
 import CreateShortUrlModal from "../CreateQrModal";
 import { modals } from "@mantine/modals";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 import styles from "./GeneratedQrCard.module.css";
+import { useDeleteQrMutation } from "backend/generateQr/generateQr.query";
 
-function MoreOptionsMenu({ shortUrlId, id, name }) {
-  const router = useRouter();
-
+function MoreOptionsMenu({ shortUrlId, name }) {
   const [isEditLandingPageModalOpen, editLandingPageModalHandlers] =
     useDisclosure();
 
-  const deleteLandingPageMutation = useDeleteLandingPageMutation(id);
+  const deleteQrMutation = useDeleteQrMutation();
 
   const handleDeleteClick = useCallback(async () => {
     // deleteLandingPageMutation.mutateAsync();
     modals.openConfirmModal({
-      title: "Delete Landing Page?",
+      title: "Delete QR?",
       children: (
         <Text className={styles["are-you-sure-text"]}>
-          Are you sure to delete this Landing Page?
+          Are you sure to delete this QR?
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },
@@ -41,9 +40,9 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
         body: modalStyles["modal-body"],
         content: modalStyles["modal-content"],
       },
-      onConfirm: () => deleteLandingPageMutation.mutateAsync(),
+      onConfirm: () => deleteQrMutation.mutateAsync(shortUrlId),
     });
-  }, [deleteLandingPageMutation]);
+  }, [deleteQrMutation]);
 
   const handleRenameClick = useCallback((e) => {
     editLandingPageModalHandlers.open();

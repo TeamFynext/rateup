@@ -5,19 +5,19 @@ import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
 import styles from "./GeneratedQrCard.module.css";
 import MoreOptionsMenu from "./MoreOptionsMenu";
 
-function GeneratedQrCard({ name, shortId, id, createdAt, isPublished }) {
+function GeneratedQrCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
   const handleCardClick = useCallback(() => {
     router.push({
-      pathname: `/dashboard/generateQr/${shortId}`,
+      pathname: `/dashboard/generateQr/${shortUrlId}`,
     });
-  }, [shortId, router]);
+  }, [shortUrlId, router]);
 
   return (
     <Box className={styles["generated-qr-card"]} onClick={handleCardClick}>
       <Group className={styles["heading-and-more-options-div"]}>
         <h2>{name}</h2>
-        <MoreOptionsMenu shortUrlId={shortId} id={id} name={name} />
+        <MoreOptionsMenu shortUrlId={shortUrlId} name={name} />
       </Group>
 
       <CreatedSinceText createdAt={createdAt} />
