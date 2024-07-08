@@ -7,7 +7,7 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
       <Menu.Target>
         <Button
           variant="outline"
-          color="rgba(13, 13, 13, 1)"
+          color="#3F5BA9"
           radius="xl"
           rightSection={<IconChevronDown size="1rem" />}
           tt={"capitalize"}

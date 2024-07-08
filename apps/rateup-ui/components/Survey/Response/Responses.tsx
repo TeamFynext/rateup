@@ -444,7 +444,7 @@ const Responses = ({
               </Popover.Dropdown>
             </Popover>
           )}
-          <InfoButton docUrl={`${docsPath}/advancedFt//resultexport`} />
+          <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
         </Group>
       </Group>
 

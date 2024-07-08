@@ -8,7 +8,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
@@ -16,12 +16,18 @@
     "typeRoots": ["./types", "node_modules/@types"],
     "types": ["gtag.js"],
     "jsx": "preserve",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    ".next/types/**/*.ts",
     "postcss.config.ts",
     "utils/encryption/index.ts",
     "fake-data.js"

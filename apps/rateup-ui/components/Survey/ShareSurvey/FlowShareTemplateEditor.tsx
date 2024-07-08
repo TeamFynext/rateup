@@ -34,7 +34,6 @@ import {
   uploadFile,
 } from "../../../utils/file-upload/upload";
 import { WaFlowStartMessageConfig } from "../../../types/global";
-import { FormValidateInput } from "@mantine/form/lib/types";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
 import { generateWaSurveyIdentifier_byName } from "../../../utils/whatsapp/wa_url";
 
@@ -478,7 +477,7 @@ function generateStartMessageInitialValues(
   };
 }
 
-const templateFormValidation: FormValidateInput<DbFlow["templateMessage"]> = {
+const templateFormValidation = {
   header: (h) => h.length > 60 && exceed(60),
   body: (b) => {
     if (b.length === 0) {

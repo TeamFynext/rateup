@@ -62,7 +62,7 @@ export default function App({
 }: AppPropsWithLayout) {
   const router = useRouter();
   const isLayoutNeeded = appProps.router.pathname.includes("/dashboard");
-  let showQueryDevTools = true;
+  let showQueryDevTools = process.env.NEXT_PUBLIC_SHOW_DEV_TOOLS === "TRUE";
   let LayoutComponent;
   // page has pre defined layout
   if (Component.getLayout !== undefined) {
@@ -203,12 +203,12 @@ export default function App({
                     <Component {...pageProps} />
                   </LayoutComponent>
                 </UserProvider>
-                {/* {showQueryDevTools && (
+                {showQueryDevTools && (
                   <ReactQueryDevtools
                     initialIsOpen={false}
                     buttonPosition="top-right"
                   />
-                )} */}
+                )}
               </HydrationBoundary>
               <Notifications />
             </ModalsProvider>
