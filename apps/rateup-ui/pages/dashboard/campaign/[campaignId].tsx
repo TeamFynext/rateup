@@ -1,11 +1,13 @@
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Group,
   MantineProvider,
   Modal,
   MultiSelect,
+  Radio,
   SegmentedControl,
   SimpleGrid,
   Skeleton,
@@ -15,9 +17,9 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { IconRefresh, IconSend } from "@tabler/icons-react";
+import { IconInfoCircle, IconRefresh, IconSend } from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -29,7 +31,6 @@ import { SearchInput } from ".";
 import {
   useCampaignById,
   useSendCampaign,
-  useUpdateCampaignMutation,
 } from "../../../backend/campaign/campaign.query";
 import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
@@ -51,6 +52,12 @@ import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
 import { lexend600 } from "../../../utils/fonts";
 import styles from "./campaign.module.css";
 import ErrorComponent from "../../../components/404/ErrorComponent";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { ContainedDateTimePickerInput } from "../../../components/input/ContainedInput/ContainedInput";
+import { z } from "zod";
+import { showErrorToast } from "../../../utils/notifications";
+import { renderBadge } from "../../../components/Card/CampaignCard";
+import { getErrorMessage } from "../../../utils";
 
 export enum CampaignParticipantsTabs {
   INFO = "info",
@@ -74,8 +81,8 @@ const CampaignById = () => {
   const {
     data: campaignData,
     isPending,
-    isFetching,
     isError,
+    isRefetching,
     refetch: refetchCampaign,
   } = useCampaignById(campaignId);
 
@@ -83,10 +90,6 @@ const CampaignById = () => {
     template: campaignData?.waTemplate?.data.name,
     team: campaignData?.team.name,
   };
-
-  useEffect(() => {
-    update({ campaignId: campaignData?.name });
-  }, [campaignData?.name]);
 
   const participants = campaignData?.campaignParticipants;
   const filteredParticipants = searchText
@@ -96,25 +99,31 @@ const CampaignById = () => {
           p?.contact?.phone.includes(searchText),
       )
     : participants;
+
+  const column: ColumnDef<any>[] = contactParticipentDetailColumn;
+  const sendMutation = useSendCampaign(campaignData?.id, campaignData?.teamId);
+
+  useEffect(() => {
+    if (campaignData) update({ campaignId: campaignData?.name });
+  }, [campaignData, update]);
+
   if (isError)
     return (
       <Stack h={"90dvh"}>
         <ErrorComponent refetch={refetchCampaign} />
       </Stack>
     );
-  const column: ColumnDef<any>[] = contactParticipentDetailColumn;
-
   return (
     <MantineProvider theme={whatsappTheme}>
       <Stack className={styles["campaign-id-page-root-div"]}>
         <Title order={2} tt={"uppercase"}>
-          {isPending || isFetching ? (
+          {isPending || isRefetching ? (
             <Skeleton h={35} w={300} />
           ) : (
             campaignData?.name
           )}
         </Title>
-        <Group>
+        <Group mih={42}>
           <SegmentedControl
             data={Object.values(CampaignParticipantsTabs)}
             value={activeTab}
@@ -131,8 +140,8 @@ const CampaignById = () => {
           />
           <StartCampaignCard
             campaign={campaignData}
-            refetchCampaign={refetchCampaign}
             participantCount={campaignData?.campaignParticipants.length}
+            sendMutation={sendMutation}
           />
           {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
             <SearchInput
@@ -142,6 +151,21 @@ const CampaignById = () => {
             />
           )}
         </Group>
+        <Alert
+          variant="filled"
+          color="red"
+          icon={<IconInfoCircle />}
+          display={
+            campaignData?.errorMessage || sendMutation.isError
+              ? "block"
+              : "none"
+          }
+        >
+          {getErrorMessage(
+            sendMutation.error?.response,
+            campaignData?.errorMessage ?? "Error Sending campaign",
+          )}
+        </Alert>
 
         <Tabs
           value={activeTab}
@@ -153,11 +177,13 @@ const CampaignById = () => {
               campaign={campaignData}
               refetchCampaign={refetchCampaign}
               campaignInfo={campaignInfo}
+              isPending={isPending}
             />
             <CampaignInfoCard
               participantCount={campaignData?.campaignParticipants.length}
               stats={campaignData?.stats}
               flowId={campaignData?.flowId}
+              isPending={isPending || isRefetching}
             />
           </Tabs.Panel>
           <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS} h={"100%"}>
@@ -174,7 +200,7 @@ const CampaignById = () => {
                 sorting={sorting}
                 columnFilters={columnFilters}
                 setColumnFilters={setColumnFilters}
-                isPending={isPending || isFetching}
+                isPending={isPending || isRefetching}
               />
             </PaperLayout>
             <Modal
@@ -201,56 +227,87 @@ export default CampaignById;
 
 interface StartCampaignCardProps {
   campaign: Campaign;
-  refetchCampaign: () => void;
   participantCount: number;
+  sendMutation;
+}
+enum SentCampaignEnum {
+  NOW = "NOW",
+  LATER = "LATER",
 }
 const StartCampaignCard = ({
   campaign,
-  refetchCampaign,
   participantCount,
+  sendMutation,
 }: StartCampaignCardProps) => {
-  const [startCampaign, setStartCampaign] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [resendModalOpened, { open, close }] = useDisclosure(false);
-
-  useEffect(() => {
-    if (campaign) {
-      setStartCampaign(campaign?.status === CampaignStatus.ACTIVE);
-    }
-  }, [campaign]);
-
-  const updateCampaign = useUpdateCampaignMutation(
-    campaign?.id,
-    campaign?.teamId,
-    () => {
-      refetchCampaign();
+  const [opened, { toggle, close }] = useDisclosure(false);
+  const startCampaign = campaign?.status === CampaignStatus.ACTIVE || false;
+  const schema = z
+    .object({
+      campaignSentAt: z.date().nullable(),
+      sentCampaignChoice: z.nativeEnum(SentCampaignEnum),
+      statuses: z.array(z.nativeEnum(CampaignParticipantStatus)).optional(),
+    })
+    .superRefine((values, ctx) => {
+      if (startCampaign && values.statuses?.length === 0) {
+        ctx.addIssue({
+          path: ["statuses"],
+          code: z.ZodIssueCode.custom,
+          message: "Select at least one status",
+        });
+      }
+    });
+  const form = useForm({
+    initialValues: {
+      campaignSentAt: null,
+      statuses: [CampaignParticipantStatus.FAILED],
+      sentCampaignChoice: SentCampaignEnum.NOW,
     },
-  );
-  const startCampMutation = useSendCampaign(campaign?.id, campaign?.teamId);
-  const handleStartCampaign = (newStartCampaign) => {
-    if (newStartCampaign === true) {
-      // sending to all participants
-      startCampMutation.mutate({
-        sendToStatuses: Object.values(CampaignParticipantStatus),
-      });
-    } else {
-      updateCampaign.mutate({
-        data: { status: CampaignStatus.INACTIVE },
-        campaignId: campaign?.id,
-      });
-    }
-  };
+    validate: zodResolver(schema),
+    onValuesChange: (values) => {
+      if (
+        values.sentCampaignChoice === SentCampaignEnum.NOW &&
+        values.campaignSentAt
+      ) {
+        form.setFieldValue("campaignSentAt", null);
+      } else if (
+        values.sentCampaignChoice === SentCampaignEnum.LATER &&
+        !values.campaignSentAt
+      ) {
+        form.setFieldValue(
+          "campaignSentAt",
+          new Date(
+            new Date(new Date().setMinutes(0, 0, 0)).setDate(
+              new Date().getDate() + 1,
+            ),
+          ),
+        );
+      }
+    },
+  });
 
-  const handleChange = () => {
+  const handleCampaign = () => {
+    const { hasErrors, errors } = form.validate();
+    if (hasErrors) {
+      showErrorToast(
+        (Object.values(errors)?.[0] as string) ??
+          "Error in campaign senting data",
+      );
+      return;
+    }
     if (!participantCount && !startCampaign) {
       setErrorMsg("No participants found");
       return;
     }
     if (errorMsg) setErrorMsg("");
-    setStartCampaign((prev) => {
-      const newStartCampaign = !prev;
-      handleStartCampaign(newStartCampaign);
-      return newStartCampaign;
+    let values = form.getValues();
+    if (!startCampaign) {
+      values.statuses = Object.values(CampaignParticipantStatus);
+    }
+    sendMutation.mutate(values, {
+      onSettled: () => {
+        close();
+      },
     });
   };
 
@@ -266,15 +323,25 @@ const StartCampaignCard = ({
         variant="outline"
         radius={"xl"}
         disabled={!participantCount}
-        onClick={startCampaign ? open : handleChange}
+        onClick={toggle}
         rightSection={<IconSend size={16} />}
       >
         {startCampaign ? "Resend" : "Send"}
       </Button>
-      <ResendCampaignModal
-        campaign={campaign}
+      <Badge
+        variant="light"
+        p={"md"}
+        color={renderBadge(campaign?.status).color}
+      >
+        {campaign?.status}
+      </Badge>
+
+      <SendCampaignModal
         close={close}
-        opened={resendModalOpened}
+        opened={opened}
+        startCampaign={startCampaign}
+        form={form}
+        handleCampaign={handleCampaign}
       />
     </>
   );
@@ -283,7 +350,9 @@ const StartCampaignCardRightSection = ({
   campaign,
   refetchCampaign,
   campaignInfo,
+  isPending,
 }) => {
+  if (isPending) return <Skeleton w={"100%"} h={147} />;
   if (!campaign) return null;
   return (
     <PaperLayout radius={"md"}>
@@ -314,7 +383,7 @@ const StartCampaignCardRightSection = ({
     </PaperLayout>
   );
 };
-const CampaignInfoCard = ({ participantCount, stats, flowId }) => {
+const CampaignInfoCard = ({ participantCount, stats, flowId, isPending }) => {
   const statsArray = [
     { label: "Participants", count: participantCount },
     { label: "Pending", count: stats?.countPending },
@@ -328,12 +397,17 @@ const CampaignInfoCard = ({ participantCount, stats, flowId }) => {
     statsArray.push({ label: "Completed", count: stats?.countCompleted });
   }
   return (
-    <SimpleGrid cols={3} m={"xl"}>
+    <SimpleGrid cols={{ base: 2, lg: 3 }} m={"xl"}>
       {statsArray.map((item) => (
         <Stack key={item.label} gap={0} align="center">
-          <Text ff={lexend600.style.fontFamily} fz={30}>
-            {item.count}
-          </Text>
+          {isPending ? (
+            <Skeleton w={20} h={25} my={"xs"} />
+          ) : (
+            <Text ff={lexend600.style.fontFamily} fz={30}>
+              {item.count}
+            </Text>
+          )}
+
           <Badge
             variant="light"
             radius={"md"}
@@ -349,62 +423,75 @@ const CampaignInfoCard = ({ participantCount, stats, flowId }) => {
   );
 };
 
-interface ResendCampaignModalProps {
-  campaign: Campaign;
+interface SendCampaignModalProps {
   close: () => void;
   opened: boolean;
+  startCampaign;
+  form;
+  handleCampaign;
 }
-function ResendCampaignModal({
-  campaign,
+function SendCampaignModal({
   close,
   opened,
-}: Readonly<ResendCampaignModalProps>) {
-  const form = useForm({
-    initialValues: {
-      statuses: [CampaignParticipantStatus.FAILED],
-    },
-    validate: {
-      statuses: (value) => {
-        if (!value.length) {
-          return "Select at least one status";
-        }
-        return true;
-      },
-    },
-  });
-  const sendMutation = useSendCampaign(campaign.id, campaign.teamId);
-
-  function handleResendClick() {
-    sendMutation.mutate(
-      { sendToStatuses: form.values.statuses },
-      {
-        onSuccess: () => {
-          close();
-        },
-      },
-    );
-  }
-
+  startCampaign,
+  form,
+  handleCampaign,
+}: Readonly<SendCampaignModalProps>) {
   return (
-    <Modal
+    <FormModalLayout
       opened={opened}
       onClose={close}
-      size={"lg"}
+      title={"Campaign Sent Settings"}
       centered
-      title="Resend Campaign To"
+      onSubmit={handleCampaign}
+      buttonTitle={
+        form.getValues()?.sentCampaignChoice === SentCampaignEnum.LATER
+          ? "Schedule Campaign"
+          : "Sent Campaign Now"
+      }
     >
-      <Stack gap={"xl"} mt={"xl"}>
-        <MultiSelect
-          label="Select status of participants to resend campaign to"
-          placeholder="Select statuses"
-          data={Object.values(CampaignParticipantStatus).map((status) => ({
-            value: status,
-            label: getCampaignParticipantStatusLabel(status),
-          }))}
-          {...form.getInputProps("statuses")}
-        />
-        <Button onClick={handleResendClick}>Resend</Button>
+      <Stack style={{ minHeight: "200px" }}>
+        <Radio.Group
+          label={startCampaign ? "Resent" : "Sent"}
+          withAsterisk
+          {...form.getInputProps("sentCampaignChoice", {
+            type: "radio",
+          })}
+        >
+          <Group>
+            <Radio checked label="Now" value={SentCampaignEnum.NOW} />
+            <Radio label="Schedule Later" value={SentCampaignEnum.LATER} />
+          </Group>
+        </Radio.Group>
+
+        {form.getValues()?.sentCampaignChoice === SentCampaignEnum.LATER && (
+          <Stack>
+            <ContainedDateTimePickerInput
+              valueFormat="DD MMM YYYY - hh mm A"
+              dropdownType="modal"
+              placeholder={"Date"}
+              label={"Sent Campaign At"}
+              withAsterisk
+              {...form.getInputProps("campaignSentAt")}
+              minDate={new Date()}
+            />
+            <Text c="red" size="xs">
+              *Time will be rounded to nearest hours.
+            </Text>
+          </Stack>
+        )}
+        {startCampaign && (
+          <MultiSelect
+            label="Select status of participants to resend campaign to"
+            placeholder="Select statuses"
+            data={Object.values(CampaignParticipantStatus).map((status) => ({
+              value: status,
+              label: getCampaignParticipantStatusLabel(status),
+            }))}
+            {...form.getInputProps("statuses")}
+          />
+        )}
       </Stack>
-    </Modal>
+    </FormModalLayout>
   );
 }

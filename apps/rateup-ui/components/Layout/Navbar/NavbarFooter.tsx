@@ -10,8 +10,6 @@ import {
   Box,
   Group,
   Menu,
-  UnstyledButton,
-  MenuTarget,
   Text,
   ThemeIcon,
   rem,
@@ -32,6 +30,8 @@ const NavbarFooter = (props: UserCardInterface) => {
       router.push(`/logout`);
     }
   };
+  let isProfilePhotoAvailable =
+    props?.profilePhoto && props?.profilePhoto !== "REMOVED_PHOTO";
   return (
     <Group>
       <Menu
@@ -46,11 +46,16 @@ const NavbarFooter = (props: UserCardInterface) => {
         >
           <Group>
             <Avatar
-              src={`${surveyUploadsPath}${props.profilePhoto}`}
+              src={
+                isProfilePhotoAvailable &&
+                `${surveyUploadsPath}${props.profilePhoto}`
+              }
               radius="xl"
               onClick={() => {
                 props.setOpened((o) => true);
               }}
+              name={props?.userName}
+              color="initials"
             />
             {props.opened ? (
               <div style={{ flex: 1 }}>
@@ -84,8 +89,13 @@ const NavbarFooter = (props: UserCardInterface) => {
           <Menu.Item>
             <Group>
               <Avatar
-                src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.profilePhoto}`}
+                src={
+                  isProfilePhotoAvailable &&
+                  `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.profilePhoto}`
+                }
                 radius="xl"
+                name={props?.userName}
+                color="initials"
               />
               <div style={{ flex: 1 }}>
                 <Text size="xs" fw={500}>
