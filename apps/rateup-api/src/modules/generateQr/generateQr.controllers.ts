@@ -32,7 +32,10 @@ async function getGenerateQrRecordWithShortId(
   if (generateQrRecord) {
     rep.code(200).send(generateQrRecord);
   } else {
-    rep.code(404).send("Generate Qr Record with requested shortId not found.");
+    rep.code(404).send({
+      success: false,
+      message: "Generate Qr Record with requested shortId not found.",
+    });
   }
 }
 
@@ -72,12 +75,10 @@ async function incrementGenerateQrNoOfScans(
   rep: FastifyReply,
 ) {
   await incrementNoOfScansInDB(req);
-  rep
-    .code(200)
-    .send({
-      success: true,
-      message: "Successfully incremented number of scan value.",
-    });
+  rep.code(200).send({
+    success: true,
+    message: "Successfully incremented number of scan value.",
+  });
 }
 
 export {

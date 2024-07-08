@@ -103,13 +103,9 @@ async function deleteGenerateQrRecordInDB(req) {
 }
 
 async function incrementNoOfScansInDB(req) {
-  const {
-    user: { orgId },
-  } = req;
   await prisma.generateQr.update({
     where: {
       shortUrlId: req.params.shortUrlId,
-      ownerOrgId: orgId,
     },
     data: {
       noOfScans: {

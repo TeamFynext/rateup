@@ -20,21 +20,22 @@ export async function linkRoutes(server: FastifyInstance) {
     }
   });
 
+  // Public Routes
   server.get(
     "/public/:shortUrlId",
     getPublicGenerateQrRecordWithShortIdRouteOptions,
   );
+  server.post(
+    "/noOfScans/:shortUrlId",
+    incrementGenerateQrNoOfScansRouteOptions,
+  );
 
+  // Private Routes
   server.post("/", createGenerateQrRecordRouteOptions);
   server.get("/:shortUrlId", getGenerateQrRecordWithShortIdRouteOptions);
   server.get("/", getAllGenerateQrRecordsRouteOptions);
   server.put("/", updateGenerateQrRecordWithShortIdRouteOptions);
   server.delete("/:shortUrlId", deleteGenerateQrRecordWithShortIdRouteOptions);
-
-  server.post(
-    "/noOfScans/:shortUrlId",
-    incrementGenerateQrNoOfScansRouteOptions,
-  );
 }
 
 export default linkRoutes;

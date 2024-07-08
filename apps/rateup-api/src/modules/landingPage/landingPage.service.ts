@@ -174,7 +174,6 @@ async function updatePageVisitOrLinkClickInDB(req) {
     const updatedRecord = await prisma.landingPage.update({
       where: {
         shortUrlId,
-        ownerOrgId: orgId,
       },
       data: {
         visitorsCount: {
@@ -190,7 +189,6 @@ async function updatePageVisitOrLinkClickInDB(req) {
     const { links }: { links: any } = await prisma.landingPage.findFirst({
       where: {
         shortUrlId,
-        ownerOrgId: orgId,
       },
       select: {
         links: true,
@@ -216,7 +214,6 @@ async function updatePageVisitOrLinkClickInDB(req) {
       const updatedLandingPageObj = await prisma.landingPage.update({
         where: {
           shortUrlId,
-          ownerOrgId: orgId,
         },
         data: {
           links: newLinks,

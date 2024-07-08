@@ -68,11 +68,12 @@ const deleteGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHa
     handler: asyncErrHandler(deleteGenerateQrRecordWithShortId),
   };
 
-const incrementGenerateQrNoOfScansRouteOptions: RouteShorthandOptionsWithHandler =
+const incrementGenerateQrNoOfScansRouteOptions: CustomRouteShortHandOptionsWithHandler =
   {
     schema: {
       params: generateQrSchemaRef("getGenerateQrRecordWithShortIdParams"),
     },
+    config: { isPublic: true },
     handler: asyncErrHandler(incrementGenerateQrNoOfScans),
   };
 
