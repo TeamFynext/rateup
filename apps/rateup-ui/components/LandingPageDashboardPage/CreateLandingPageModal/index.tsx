@@ -1,11 +1,12 @@
 import { Box, Button, Modal, TextInput } from "@mantine/core";
-import styles from "./CreateLandingPageModal.module.css";
 import { useForm } from "@mantine/form";
 import { useCallback, useRef } from "react";
 import {
   useCreateLandingPageMutation,
   useUpdateLandingPageMutation,
 } from "../../../backend/landingPage/landingPage.query";
+import modalStyles from "../../../styles/commonCssModules/modal.module.css";
+import styles from "./CreateLandingPageModal.module.css";
 
 function CreateLandingPageModal({
   opened,
@@ -23,7 +24,7 @@ function CreateLandingPageModal({
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, length sould be greater than 2 characters",
+          : "Name should be alphanumeric, length should be greater than 2 characters",
     },
   });
 
@@ -63,13 +64,13 @@ function CreateLandingPageModal({
       }
       centered
       classNames={{
-        header: styles["modal-header"],
-        body: styles["modal-body"],
-        content: styles["modal-content"],
+        header: modalStyles["modal-header"],
+        body: modalStyles["modal-body"],
+        content: modalStyles["modal-content"],
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Box className={styles["modal-content-container"]}>
+      <Box className={modalStyles["modal-content-container"]}>
         <form
           className={styles["create-landingPage-form"]}
           onSubmit={
@@ -92,8 +93,11 @@ function CreateLandingPageModal({
           />
         </form>
       </Box>
-      <Box className={styles["cancel-save-btns-container"]}>
-        <Button onClick={handleCancelBtnClick} className={styles["cancel-btn"]}>
+      <Box className={modalStyles["cancel-save-btns-container"]}>
+        <Button
+          onClick={handleCancelBtnClick}
+          className={modalStyles["cancel-btn"]}
+        >
           Cancel
         </Button>
         <Button onClick={handleCreateLinkBtnClick}>

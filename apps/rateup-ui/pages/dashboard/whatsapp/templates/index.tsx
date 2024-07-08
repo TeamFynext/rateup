@@ -40,8 +40,6 @@ import SortDropdown, {
 import InfoButton from "../../../../components/Button/InfoButton";
 import RefreshButton from "../../../../components/Button/RefreshButton";
 import { docsPath } from "../../../../utils/constants";
-import templateCardStyles from "./TemplateCard.module.css";
-import TimeSinceText from "../../../../components/LandingPageDashboardPage/LandingPageCard/TimeSinceText";
 import { TemplatesCardListSkeleton } from "../../../../components/animation/skeleton/wa/TemplatesCardList.skeleton";
 import ErrorComponent from "../../../../components/404/ErrorComponent";
 import CreatedSinceText from "../../../../components/DateAndTime/CreatedSinceText";

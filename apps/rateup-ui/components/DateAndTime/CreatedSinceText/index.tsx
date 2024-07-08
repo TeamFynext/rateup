@@ -1,7 +1,7 @@
 import { Box, Group } from "@mantine/core";
 import styles from "./CreatedSinceText.module.css";
 import { IconClock } from "@tabler/icons-react";
-import TimeSinceText from "../../LandingPageDashboardPage/LandingPageCard/TimeSinceText";
+import TimeSinceText from "../TimeSinceText";
 
 function CreatedSinceText({ createdAt }) {
   return (
