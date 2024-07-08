@@ -35,7 +35,7 @@ import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSugges
 import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route";
 import { userPublicRoutes } from "./modules/user/user.public.routes";
 import { reputationManagementRoutes } from "./modules/reputation_management/registerRMRoutes";
-import surveyMenuShareSettingsRoutes from "./modules/surveyMenuShareSettings/surveyMenuShareSettings.route";
+import shareSettingsRoutes from "./modules/shareSettings/shareSettings.route";
 import { menuBannerRoutes } from "./modules/menu/banner/banner.route";
 import { menuBannerSchemas } from "./modules/menu/banner/banner.schema";
 import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.route";
@@ -77,6 +77,8 @@ import { emailPublicRoutes } from "./modules/email/email.public.route";
 import { emailSchema } from "./modules/email/email.schema";
 import { updatePublicRoutes } from "./modules/update/update.public.route";
 import { servicePublicRoutes } from "./modules/services/services.public.route";
+import generateQrRoutes from "./modules/generateQr/generateQr.routes";
+import { generateQrSchemas } from "./modules/generateQr/generateQr.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -110,6 +112,7 @@ export function registerRoutes(server: FastifyInstance): void {
     mygSchemas, //TODO MYG
     campaignParticipantsSchemas,
     emailSchema,
+    generateQrSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -125,7 +128,7 @@ export function registerRoutes(server: FastifyInstance): void {
   }); //for JOBS api triggers
 
   server.register(surveyRoutes, { prefix: "api/survey" });
-  server.register(surveyMenuShareSettingsRoutes, {
+  server.register(shareSettingsRoutes, {
     prefix: "api/shareSettings",
   });
   server.register(questionRoutes, { prefix: "api/question/:surveyId" });
@@ -175,4 +178,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(apiAccessTokenRoutes, { prefix: "api/api-access-token" });
   server.register(externalRoutes, { prefix: "api/external" });
   server.register(emailPublicRoutes, { prefix: "api/email" });
+  server.register(generateQrRoutes, { prefix: "/api/generateQr" });
 }

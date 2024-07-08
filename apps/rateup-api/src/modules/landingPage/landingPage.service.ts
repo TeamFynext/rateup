@@ -75,9 +75,13 @@ async function updateLandingPageWithShortIdInDB(req) {
   const {
     body: { shortUrlId, ...rest },
   } = req;
+  const {
+    user: { orgId },
+  } = req;
   const updatedLandingPage = await prisma.landingPage.update({
     where: {
       shortUrlId,
+      ownerOrgId: orgId,
     },
     data: {
       ...rest,
@@ -87,9 +91,13 @@ async function updateLandingPageWithShortIdInDB(req) {
 }
 
 async function deleteLandingPageInDB(req) {
+  const {
+    user: { orgId },
+  } = req;
   const deletedLandingPage = await prisma.landingPage.delete({
     where: {
       id: req.params.id,
+      ownerOrgId: orgId,
     },
   });
   return deletedLandingPage;
@@ -158,6 +166,9 @@ async function updatePageVisitOrLinkClickInDB(req) {
   const {
     params: { shortUrlId },
     body: { resourceToBeUpdated, linkId },
+  } = req;
+  const {
+    user: { orgId },
   } = req;
   if (resourceToBeUpdated === "page-visit") {
     const updatedRecord = await prisma.landingPage.update({
