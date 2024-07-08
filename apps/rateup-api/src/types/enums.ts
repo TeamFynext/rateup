@@ -128,6 +128,7 @@ export enum WaEvent {
 export enum CampaignStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
+  SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
 }
 export enum CampaignType {
@@ -152,6 +153,10 @@ export enum CampaignParticipantAddStatus {
   NOTCOMPLETED = "NOT COMPLETED",
   PENDING = "PENDING",
   FAILED = "FAILED",
+}
+export enum SentCampaignEnum {
+  NOW = "NOW",
+  LATER = "LATER",
 }
 
 export enum NPSWeightage {

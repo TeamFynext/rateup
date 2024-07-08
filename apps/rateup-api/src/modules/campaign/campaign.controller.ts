@@ -21,6 +21,7 @@ import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
+import { CampaignStatus, SentCampaignEnum } from "../../types/enums";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -92,6 +93,19 @@ export async function sendCampaignHandler(
     request.body.sendToStatuses.length === 0
   ) {
     return reply.status(400).send({ message: "sendToStatuses is required" });
+  }
+  if (
+    request.body.campaignSentAt &&
+    request.body.sentCampaignChoice === SentCampaignEnum.LATER
+  ) {
+    await updateCampaign(request.params.campaignId, {
+      status: CampaignStatus.SCHEDULED,
+      campaignSentAt: request.body.campaignSentAt,
+      scheduledStatuses: request.body.sendToStatuses,
+    });
+    return reply
+      .status(200)
+      .send({ message: "campaign scheduled", code: "MSG_SCHEDULED" });
   }
   await sendCampaign(
     request.params.campaignId,
