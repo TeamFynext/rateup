@@ -10,8 +10,8 @@ async function onFile(part) {
     filename,
     fieldname,
     mimetype,
-    fileExtension
-  }
+    fileExtension,
+  };
 }
 
 async function uploadFileToS3(fileBuffer, mimetype, fileExtension) {
@@ -23,7 +23,7 @@ async function uploadFileToS3(fileBuffer, mimetype, fileExtension) {
   };
 
   const resultObj = await uploadFile(s3Params);
-  const key = resultObj? resultObj["Key"]: null;
+  const key = resultObj ? resultObj["Key"] : null;
   return key;
 }
 
