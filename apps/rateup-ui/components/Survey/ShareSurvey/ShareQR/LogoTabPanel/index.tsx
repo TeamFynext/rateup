@@ -28,8 +28,6 @@ function LogoTabpanel({ state, dispatch }) {
     isLogoEnabled = true,
   } = state;
 
-  console.log(isLogoEnabled, logoFile, "From LogoTabpanel");
-
   return (
     <Stack className={styles["panel-container"]}>
       <Title order={3} className={styles["panel-heading"]}>
@@ -55,7 +53,7 @@ function LogoTabpanel({ state, dispatch }) {
               />
             </Group>
 
-            {!isLogoEnabled && (
+            {isLogoEnabled && (
               <FileInput
                 classNames={fileInputStyles}
                 placeholder="Upload Logo"

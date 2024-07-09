@@ -20,7 +20,7 @@ const logoTabPanelReducer = (state, action) => {
     }
     case "logo-image-switch": {
       state["isLogoEnabled"] = payload;
-      if (!payload) {
+      if (!payload && !state["logoFile"]) {
         state["logoFile"] = null;
       }
       break;
