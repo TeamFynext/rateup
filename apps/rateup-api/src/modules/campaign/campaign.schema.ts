@@ -4,6 +4,7 @@ import {
   CampaignParticipantStatus,
   CampaignStatus,
   CampaignType,
+  SentCampaignEnum,
 } from "../../types/enums";
 
 const coreCampaignSchema = z.object({
@@ -22,6 +23,12 @@ const updateCampaignInputSchema = z.object({
   waTemplateId: z.string().optional(),
   status: z.nativeEnum(CampaignStatus).optional(),
   startedAt: z.coerce.date().optional(),
+  campaignSentAt: z.date().optional().nullable(),
+  scheduledStatuses: z
+    .array(z.nativeEnum(CampaignParticipantStatus))
+    .optional()
+    .nullable(),
+  errorMessage: z.string().optional(),
 });
 
 const byCampaignIdParamsSchema = z.object({
@@ -50,6 +57,8 @@ const campaignResponseSchema = z.object({
 const sendCampaignInputSchema = z.object({
   sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)),
   participantId: z.string().optional(),
+  campaignSentAt: z.date().optional().nullable(),
+  sentCampaignChoice: z.nativeEnum(SentCampaignEnum),
 });
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(

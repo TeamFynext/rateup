@@ -33,13 +33,13 @@ export async function verifyCampaignMaxCountRestriction(
   }
 }
 
-async function getUsageStats(orgId: string) {
+export async function getUsageStats(orgId: string) {
   return prisma.usageStats.findUnique({
     where: { orgId },
   });
 }
 
-async function getSubscription(orgId: string) {
+export async function getSubscription(orgId: string) {
   return prisma.subscription.findUnique({
     where: { orgId },
   });

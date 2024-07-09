@@ -59,7 +59,7 @@ async function deleteLandingPageById(
 ) {
   const deletedLandingPage = await deleteLandingPageInDB(req);
   rep
-    .send(200)
+    .code(200)
     .send({ success: true, message: "Deleted LandingPage sucessfully." });
 }
 

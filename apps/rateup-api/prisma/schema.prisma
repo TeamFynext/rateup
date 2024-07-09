@@ -80,6 +80,7 @@ model User {
   createdTicket  Ticket[]        @relation("CreatedTicket")
   TicketComment  TicketComment[]
   landingPage    LandingPage[]
+  generateQr     GenerateQr[]
 }
 
 model Org {
@@ -115,8 +116,6 @@ model Org {
   chatbot           Chatbot?
   Survey            Survey[]
   WaAccountSettings WaAccountSettings?
-  shopifySessions   ShopifySession[]
-  shopifySurveys    ShopifySurvey[]
 }
 
 model UsageStats {
@@ -431,6 +430,9 @@ model Campaign {
   flowId               String?
   // TODO: add email template?
   campaignParticipants CampaignParticipant[]
+  campaignSentAt       DateTime?
+  scheduledStatuses    String[]              @default([])
+  errorMessage          String?
 }
 
 model CampaignParticipant {

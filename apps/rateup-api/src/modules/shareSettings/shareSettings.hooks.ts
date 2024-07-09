@@ -1,10 +1,13 @@
 import { checkSession } from "../../utils/checkSession";
 import { verifyMenuAccess } from "../menu/menu.auth";
 import { verifySurveyAccess } from "../survey/survey.auth";
-import { getSettingsSchema, saveAndUpdateSettingsSchema } from "./surveyMenuShareSettings.schema";
+import {
+  getSettingsSchema,
+  saveAndUpdateSettingsSchema,
+} from "./shareSettings.schema";
 
 const onRouteHookHandler = (routeOptions) => {
-  switch(routeOptions.method) {
+  switch (routeOptions.method) {
     case "GET": {
       routeOptions.schema = getSettingsSchema;
       break;
@@ -13,14 +16,14 @@ const onRouteHookHandler = (routeOptions) => {
       routeOptions.schema = saveAndUpdateSettingsSchema;
     }
   }
-}
+};
 
 const preHandlerHook = async (req, rep) => {
   const { resourceName } = req.params;
   await checkSession(req, rep);
-  switch(resourceName) {
+  switch (resourceName) {
     case "survey": {
-      await verifySurveyAccess(req, rep)
+      await verifySurveyAccess(req, rep);
       break;
     }
     case "menu": {
@@ -29,6 +32,6 @@ const preHandlerHook = async (req, rep) => {
       break;
     }
   }
-}
+};
 
 export { onRouteHookHandler, preHandlerHook };
