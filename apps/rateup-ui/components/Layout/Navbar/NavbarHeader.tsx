@@ -11,7 +11,10 @@ const NavbarHeader = (props: UserCardInterface) => {
     <Box className={styles["avatar-org-name-chevron-burger-btn-container"]}>
       <Group justify="center" wrap="wrap-reverse">
         <Avatar
-          src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.orgLogo}`}
+          src={
+            props.orgLogo &&
+            `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.orgLogo}`
+          }
           radius="sm"
           style={{ width: "20%", height: "20%", objectFit: "cover" }}
           mih={"32px"}

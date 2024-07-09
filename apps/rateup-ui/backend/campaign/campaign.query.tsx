@@ -112,36 +112,55 @@ export const useDeleteCampaignMutation = (teamId) => {
     },
   });
 };
+type sendCampaignProps = {
+  campaignSentAt?: Date;
+  statuses: CampaignParticipantStatus[];
+  sentCampaignChoice: string;
+  participantId?: string;
+};
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      sendToStatuses,
+      statuses,
       participantId,
-    }: {
-      sendToStatuses: CampaignParticipantStatus[];
-      participantId?: string;
-    }) => sendCampaign(campaignId, sendToStatuses, participantId),
-    onSuccess: () => {
+      campaignSentAt,
+      sentCampaignChoice,
+    }: sendCampaignProps) =>
+      sendCampaign(
+        campaignId,
+        statuses,
+        sentCampaignChoice,
+        participantId,
+        campaignSentAt,
+      ),
+    onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
       notifications.show({
         color: "teal",
-        title: "Campaign started successfully",
-        message: "It may take a few minutes to send to all participants.",
+        title:
+          res?.data?.code === "MSG_SCHEDULED"
+            ? "Sucess"
+            : "Campaign started successfully",
+        message:
+          res?.data?.code === "MSG_SCHEDULED"
+            ? "Campaign scheduled successfully"
+            : "It may take a few minutes to send to all participants.",
         autoClose: 5000,
         loading: false,
         icon: <IconCheck />,
       });
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error starting campaign: ${error?.response?.data.error}`,
-        "campaign-start",
-        <IconX />,
-      );
+      if (!(error?.response?.data?.displayMessageInClient ?? false))
+        showErrorToast(
+          `Error starting campaign: ${error?.response?.data.error}`,
+          "campaign-start",
+          <IconX />,
+        );
     },
   });
 };

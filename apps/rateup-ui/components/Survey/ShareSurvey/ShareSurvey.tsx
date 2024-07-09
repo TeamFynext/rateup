@@ -123,7 +123,18 @@ const ShareSurvey = ({
       ),
     },
     validate: {
-      //TODO validate edge case: time selected should be 1hr ahead
+      surveyPublishAt: (value) => {
+        const minPublishDate = new Date(new Date().getTime() + 60 * 60 * 1000);
+        return value < minPublishDate
+          ? "Publish date must be at least 1 hour ahead of current time."
+          : null;
+      },
+      surveyEndAt: (value) => {
+        const minEndDate = new Date(new Date().getTime() + 2 * 60 * 60 * 1000);
+        return surveyExpiry === ExpiryEnum.CUSTOM_DATE && value < minEndDate
+          ? "End date must be at least 2 hours ahead of current time."
+          : null;
+      },
     },
   });
 
@@ -406,10 +417,16 @@ const ShareSurvey = ({
                         label={"Publish Survey At"}
                         withAsterisk
                         {...form.getInputProps("surveyPublishAt")}
-                        minDate={new Date()}
+                        minDate={
+                          new Date(
+                            new Date().setMinutes(new Date().getMinutes() + 60),
+                          )
+                        }
                       />
                       <Text c="red" size="xs">
-                        *Time will be rounded to nearest hours.
+                        *Time will be rounded to nearest hours. <br />
+                        Note: Publish date must be at least 1 hour ahead of
+                        current time.
                       </Text>
                     </Stack>
                   )}
@@ -443,10 +460,17 @@ const ShareSurvey = ({
                         placeholder={"Date"}
                         label={"End Survey At"}
                         {...form.getInputProps("surveyEndAt")}
-                        minDate={new Date()}
+                        minDate={
+                          new Date(
+                            new Date().setMinutes(
+                              new Date().getMinutes() + 120,
+                            ),
+                          )
+                        }
                       />
                       <Text c="red" size="xs">
-                        *Time will be rounded to nearest hours.
+                        Note: End date must be at least 2 hours ahead of current
+                        time.
                       </Text>
                     </Stack>
                   )}

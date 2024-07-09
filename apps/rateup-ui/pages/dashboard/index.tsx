@@ -14,6 +14,7 @@ import {
   Blockquote,
   Flex,
   Box,
+  Portal,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
@@ -192,9 +193,9 @@ export default function DashboardHome() {
     <>
       {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
         <Stack>
-          <Group style={{ justifyContent: "flex-end" }}>
+          <Portal target={"#navbar"}>
             <WelcomeTour steps={tourSteps} />
-          </Group>
+          </Portal>
           <Stack gap={"4rem"}>
             <Group
               className={classes["summary-cards-and-responses-graph-container"]}

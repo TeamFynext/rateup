@@ -1,21 +1,17 @@
 import {
   BackgroundImage,
   Box,
-  Button,
   Center,
   Group,
   Image,
   MantineProvider,
   Paper,
-  Radio,
   Space,
   Stack,
   Text,
-  Title,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconChevronRight } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import {
@@ -29,11 +25,10 @@ import { CreditsCard } from "../../Card/CreditsCard";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
 import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
-import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
+import LanguageSelectionPage from "../LanguageSelectionPage";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import styles from "./TakeSurveyLayoutWeb.module.css";
-import LanguageSelectionPage from "../LanguageSelectionPage";
 import { getBgImgAndBgColor } from "./utils";
 
 export const TakeSurveyLayoutWeb = ({ survey, children }) => {

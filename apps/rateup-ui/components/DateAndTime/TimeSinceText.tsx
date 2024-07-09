@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getTimeSince } from "../../../utils/index";
+import { getTimeSince } from "../../utils/index";
 
 function TimeSinceText({ isoDateString }) {
   const [timeSinceStr, setTimeSinceStr] = useState("");

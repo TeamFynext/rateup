@@ -1,41 +1,41 @@
 //icon imports
 import {
-  IconSettings,
+  IconAddressBook,
+  IconApi,
+  IconBrandWhatsapp,
+  IconBrowser,
+  IconClipboardList,
+  IconComet,
+  IconFileDescription,
+  IconFileInfo,
+  IconGift,
+  IconHome,
+  IconInbox,
+  IconKeyframes,
   IconLogout,
-  IconUsers,
+  IconMessage2Code,
+  IconMessageChatbot,
+  IconMessageCog,
+  IconPigMoney,
+  IconQrcode,
+  IconSettings,
   IconSocial,
   IconSpeakerphone,
-  IconPageBreak,
-  IconClipboardList,
-  IconBrowser,
-  IconMessage2Code,
-  IconBrandWhatsapp,
-  IconFileDescription,
-  IconAddressBook,
-  IconKeyframes,
-  IconComet,
   IconTerminal2,
-  IconFileInfo,
-  IconHome,
-  IconWaveSine,
-  IconMessageChatbot,
   IconTicket,
-  IconGift,
-  IconPigMoney,
-  IconMessageCog,
-  IconInbox,
-  IconApi,
+  IconUsers,
+  IconWaveSine,
 } from "@tabler/icons-react";
 
-import { UserRole } from "../../../utils/enums";
+import { IconAppWindow } from "@tabler/icons-react";
 import { useUserInfo } from "../../../backend/user/user.query";
 import {
   SubscriptionFeaturePathName,
   SubscriptionFeaturePathName as sfpn,
 } from "../../../types/enums";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { whatsappOptions } from "../../../utils/constants";
-import { IconAppWindow } from "@tabler/icons-react";
+import { UserRole } from "../../../utils/enums";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -238,6 +238,11 @@ export function getNavTopData(subscription?: Subscription) {
             ],
           },
         ]),
+    {
+      Icon: IconQrcode,
+      label: "Generate QR",
+      href: "/dashboard/generateQr",
+    },
   ];
   return navTopData;
 }

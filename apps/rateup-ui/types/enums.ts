@@ -108,6 +108,7 @@ export enum SurveyTypeFilters {
 export enum CampaignStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
+  SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
 }
 export enum CampaignType {

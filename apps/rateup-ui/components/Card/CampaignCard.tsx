@@ -46,6 +46,7 @@ const statusColors = {
     variant: "filled",
     color: "#149A8A",
   },
+  [CampaignStatus.SCHEDULED]: { variant: "light", color: "orange" },
 };
 export const renderBadge = (badgeType) => {
   return statusColors[badgeType] || { variant: "filled", color: "#149A8A" };

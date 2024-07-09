@@ -34,13 +34,16 @@ export const deleteCampaign = async (campaignId) => {
 export const sendCampaign = async (
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
+  sentCampaignChoice: string,
   participantId?: string,
+  campaignSentAt?: Date,
 ) => {
-  let res = await axiosClient.post(`/campaign/${campaignId}/send`, {
+  return axiosClient.post(`/campaign/${campaignId}/send`, {
     sendToStatuses,
     participantId,
+    campaignSentAt,
+    sentCampaignChoice,
   });
-  return res;
 };
 
 //this get req is primarily used in flows result page
