@@ -1,4 +1,4 @@
-import { Center, Text, Tabs, Flex } from "@mantine/core";
+import { Center, Text, Tabs, Flex, Stack } from "@mantine/core";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import { QuestionsSideBar } from "./QuestionsSideBar";
@@ -21,6 +21,7 @@ import { createBlankQuestion } from "../../utils/questions";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
 import TicketIssueEditor from "./Question/TicketIssueEditor";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor";
+import PageTypeSelection from "./Question/PageTypeSelection";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -124,14 +125,20 @@ export function EditSurvey({
             )}
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
-            <QuestionTypeSelection
-              questionTypeGroups={
-                survey?.type === SurveyType.WhatsApp
-                  ? WaSurveyQuestionTypes
-                  : QuestionTypesGroup
-              }
-              handleTypeSelection={handleTypeSelection}
-            />
+            <Stack>
+              {survey?.type === SurveyType.Web && (
+                <PageTypeSelection handleTypeSelection={handleTypeSelection} />
+              )}
+
+              <QuestionTypeSelection
+                questionTypeGroups={
+                  survey?.type === SurveyType.WhatsApp
+                    ? WaSurveyQuestionTypes
+                    : QuestionTypesGroup
+                }
+                handleTypeSelection={handleTypeSelection}
+              />
+            </Stack>
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
             {selectedQ && (

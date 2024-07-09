@@ -6,6 +6,13 @@ export enum SurveyType {
   WhatsApp = "whatsapp",
   WaFlow = "waFlow",
 }
+
+export enum PageType {
+  Welcome = "Welcome",
+  ThankYou = "ThankYou",
+  Custom = "Custom",
+}
+
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",

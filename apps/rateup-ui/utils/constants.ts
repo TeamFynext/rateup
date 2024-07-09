@@ -1,4 +1,8 @@
-import { QuestionType, WaFlowFormElementType as wft } from "../types/enums";
+import {
+  PageType,
+  QuestionType,
+  WaFlowFormElementType as wft,
+} from "../types/enums";
 import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 export const docsPath = "https://docs.rateup.app";
@@ -87,9 +91,17 @@ const FlowInputQuestions = [
   QuestionType.Optin,
 ];
 
+export const BasicPages = [
+  PageType.Welcome,
+  PageType.ThankYou,
+  PageType.Custom,
+];
+
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
 export const QuestionTypesGroup = [
+  // { title: "Basic Pages", questionTypes: BasicPages },
+
   { title: "Contact Questions", questionTypes: ContactQuestions },
   { title: "NPS Questions", questionTypes: NPSQuestions },
   { title: "Choice Questions", questionTypes: ChoiceQuestions },

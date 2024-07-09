@@ -106,7 +106,7 @@ export function QuestionsSideBar({
           <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
           <RateupButtonBlue
             onClick={handleAddQn}
-            title={"Add Question"}
+            title={"Add New Page"}
             rightIcon={<IconPlus size="1rem" />}
             size="md"
           />
