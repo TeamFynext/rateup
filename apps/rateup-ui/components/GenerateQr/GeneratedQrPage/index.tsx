@@ -1,20 +1,10 @@
-import {
-  ActionIcon,
-  Box,
-  Center,
-  Flex,
-  Group,
-  Loader,
-  Stack,
-} from "@mantine/core";
-import styles from "./GeneratedQrPage.module.css";
-import { useRouter } from "next/router";
-import { CopyLinkComponent } from "components/Survey/ShareSurvey/ShareSurvey";
-import ShareQR from "components/Survey/ShareSurvey/ShareQR";
+import { Box, Center, Flex, Group, Loader, Stack } from "@mantine/core";
 import { useGetQrWithShortUrlId } from "backend/generateQr/generateQr.query";
-import { IconRefresh } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import RefreshButton from "components/Button/RefreshButton";
+import ShareQR from "components/Survey/ShareSurvey/ShareQR";
+import { CopyLinkComponent } from "components/Survey/ShareSurvey/ShareSurvey";
+import { useRouter } from "next/router";
+import styles from "./GeneratedQrPage.module.css";
 
 function GeneratedQrPage({}) {
   const router = useRouter();
