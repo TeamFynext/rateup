@@ -116,6 +116,9 @@ model Org {
   chatbot           Chatbot?
   Survey            Survey[]
   WaAccountSettings WaAccountSettings?
+  generateQr        GenerateQr[]
+  shopifySurveys    ShopifySurvey[]
+  shopifySessions   ShopifySession[]
 }
 
 model UsageStats {
@@ -1150,6 +1153,20 @@ model OtpStore {
   otp        String
   expiryDate String
   surveyId   String?
+}
+
+model GenerateQr {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  createdAt     DateTime @default(now())
+  createdById   String   @db.Uuid
+  ownerOrgId    String   @db.Uuid
+  shortUrlId    String   @unique
+  shareSettings Json?
+  owner         Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  link          String
+  noOfScans     Int      @default(0)
 }
 
 model ShopifySession {
