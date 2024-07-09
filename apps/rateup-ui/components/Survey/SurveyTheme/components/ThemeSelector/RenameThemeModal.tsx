@@ -14,7 +14,7 @@ function RenameThemeModal({ opened, onClose, themeId, oldName }) {
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, should start with a letter, length sould be greater than 5 characters",
+          : "Name should be alphanumeric, should start with a letter, length should be greater than 5 characters",
     },
   });
 
