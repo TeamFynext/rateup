@@ -10,6 +10,7 @@ import {
   Badge,
   ScrollArea,
   Divider,
+  Tooltip,
 } from "@mantine/core";
 import {
   useTeamsMembersOfOrg,
@@ -287,32 +288,42 @@ const LongMemberCard = ({
           </ScrollArea>
         </Stack>
         <Group>
-          <Button
-            size="compact-md"
-            onClick={openModal}
-            disabled={user.userId === member.id}
+          <Tooltip label="Edit member role" position="top" withArrow>
+            <Button
+              size="compact-md"
+              onClick={openModal}
+              disabled={user.userId === member.id}
+            >
+              <IconUserEdit size={15} />
+            </Button>
+          </Tooltip>
+          <Tooltip label="Delete member" position="top" withArrow>
+            <Button
+              size="compact-md"
+              color="red"
+              disabled={user.userId === member.id}
+              onClick={open}
+            >
+              <IconTrash size={15} />
+            </Button>
+          </Tooltip>
+          <Tooltip
+            label={member.isPaused ? "Resume member" : "Pause member"}
+            position="top"
+            withArrow
           >
-            <IconUserEdit size={15} />
-          </Button>
-          <Button
-            size="compact-md"
-            color="red"
-            disabled={user.userId === member.id}
-            onClick={open}
-          >
-            <IconTrash size={15} />
-          </Button>
-          <Button
-            size="compact-md"
-            onClick={openPauseModal}
-            disabled={user.userId === member.id}
-          >
-            {member.isPaused ? (
-              <IconPlayerPause size={"1rem"} />
-            ) : (
-              <IconPlayerPlay size={"1rem"} />
-            )}
-          </Button>
+            <Button
+              size="compact-md"
+              onClick={openPauseModal}
+              disabled={user.userId === member.id}
+            >
+              {member.isPaused ? (
+                <IconPlayerPause size={"1rem"} />
+              ) : (
+                <IconPlayerPlay size={"1rem"} />
+              )}
+            </Button>
+          </Tooltip>
         </Group>
       </Group>
       <ConfirmationModal

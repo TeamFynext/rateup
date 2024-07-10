@@ -25,7 +25,7 @@ const WelcomeTour = ({ steps }) => {
   };
 
   return (
-    <Tooltip label="Start Tour" position="right" withArrow>
+    <Tooltip label="Start Tour" position="top" withArrow>
       <ActionIcon onClick={startTour} variant="light" color="blue">
         <IconInfoCircle size={24} />
       </ActionIcon>
