@@ -1,18 +1,16 @@
-import React, { useRef } from "react";
 import {
-  UnstyledButton,
+  Box,
   Checkbox,
-  Text,
-  SimpleGrid,
-  useMantineTheme,
-  Button,
   isLightColor,
+  SimpleGrid,
+  Text,
+  useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
-import classes from "./ImageCheckboxes.module.css";
-import { IconCheck } from "@tabler/icons-react";
+import React, { useRef } from "react";
 import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import classes from "./ImageCheckboxes.module.css";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -31,7 +29,6 @@ export function ImageCheckbox({
   checkBoxEnable,
   selectedValue,
   className,
-  ...others
 }: ImageCheckboxProps &
   Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
   const [value, handleChange] = useUncontrolled({
@@ -44,7 +41,7 @@ export function ImageCheckbox({
   const theme = useMantineTheme();
   const { hovered, ref } = useHover() as {
     hovered: boolean;
-    ref: React.RefObject<HTMLButtonElement>;
+    ref: React.RefObject<HTMLDivElement>;
   };
 
   const mantineTheme = useMantineTheme();
@@ -74,12 +71,15 @@ export function ImageCheckbox({
     : {};
 
   return (
-    <Button
-      {...others}
+    <Box
       ref={ref}
       style={{
         ...optionStylesObj,
         ...selectedOptionStylesObj,
+        display: "flex",
+        gap: "0.625rem",
+        alignItems: "center",
+        userSelect: "none",
       }}
       onClick={() => {
         handleChange(!value);
@@ -87,7 +87,6 @@ export function ImageCheckbox({
       }}
       data-checked={selectedValue.includes(title) || undefined}
       className={classes.button}
-      leftSection={isSelected ? <IconCheck size={"1rem"} /> : null}
     >
       <Checkbox
         ref={checkBoxRef}
@@ -95,14 +94,16 @@ export function ImageCheckbox({
         checked={value}
         onChange={() => {}}
         tabIndex={-1}
-        style={{ visibility: "hidden", width: 0, height: 0 }}
         styles={{ input: { cursor: "pointer" } }}
         display={checkBoxEnable ? "block" : "none"}
+        color={themePrimaryColor}
+        iconColor={foregroundColor}
+        size="1rem"
       />
       <Text size="sm" lh={1.5}>
         {title}
       </Text>
-    </Button>
+    </Box>
   );
 }
 
@@ -129,7 +130,7 @@ export function MultipleSelectCard({
   const columnsCount = surveyThemeMobilePreview ? 1 : colsCount;
 
   return (
-    <SimpleGrid cols={columnsCount} spacing={8}>
+    <SimpleGrid cols={columnsCount} spacing={16}>
       {items}
     </SimpleGrid>
   );

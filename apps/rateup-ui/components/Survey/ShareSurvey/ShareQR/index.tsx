@@ -1,21 +1,20 @@
-import { Group, Title, Tabs, Stack } from "@mantine/core";
-import React, { useState, useEffect, useCallback } from "react";
-import Preview from "../Preview/Preview";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
-import LogoTabpanel from "./LogoTabPanel";
-import styles from "./ShareQR.module.css";
-import { RateupButtonBlue } from "../../../Button/RateupButtons";
+import { Group, Stack, Title } from "@mantine/core";
+import { useCallback, useEffect } from "react";
+import { useImmerReducer } from "use-immer";
 import {
   useGetShareSettings,
   useUpdateShareSettingsMutation,
 } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
-import { getLogoFileValueForFileInput, getLogoSrc } from "./utils";
 import { showErrorToast } from "../../../../utils/notifications";
-import { useImmerReducer } from "use-immer";
+import { RateupButtonBlue } from "../../../Button/RateupButtons";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import Preview from "../Preview/Preview";
+import LogoTabpanel from "./LogoTabPanel";
 import {
   initialLogoTabPanelState,
   logoTabPanelReducer,
 } from "./LogoTabPanel/LogoTabPanelReducer";
+import styles from "./ShareQR.module.css";
 
 interface ShareQRProps {
   url: string;
@@ -101,7 +100,6 @@ const ShareQR = ({
           <LogoTabpanel
             state={logoTabPanelState}
             dispatch={logoTabPanelDispatch}
-            shareSettings={shareSettings}
           />
 
           {/*..... QR Editor - Preview ........ */}
