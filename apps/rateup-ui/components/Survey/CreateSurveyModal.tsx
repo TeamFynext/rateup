@@ -273,27 +273,30 @@ export function CreateSurveyModal({
           />
         )}
 
-        <Select
-          label="Select Theme"
-          data={selectThemeDropdownData}
-          value={form.getValues().selectedTheme}
-          onChange={(value) => form.setFieldValue("selectedTheme", value)}
-          placeholder="Select Theme"
-          styles={{
-            input: {
-              borderRadius: "0.5rem",
-              paddingTop: "0.23125rem",
-              paddingBottom: "0.23125rem",
-            },
-          }}
-          rightSection={
-            isAllThemesFetchPending ? (
-              <Loader size={"1rem"} />
-            ) : (
-              <ComboboxChevron />
-            )
-          }
-        />
+        {!template && (
+          <Select
+            label="Select Theme"
+            data={selectThemeDropdownData}
+            value={form.getValues().selectedTheme}
+            onChange={(value) => form.setFieldValue("selectedTheme", value)}
+            placeholder="Select Theme"
+            styles={{
+              input: {
+                borderRadius: "0.5rem",
+                paddingTop: "0.23125rem",
+                paddingBottom: "0.23125rem",
+              },
+            }}
+            rightSection={
+              isAllThemesFetchPending ? (
+                <Loader size={"1rem"} />
+              ) : (
+                <ComboboxChevron />
+              )
+            }
+          />
+        )}
+
         {/* {form.values.type !== "whatsapp" && (
             <Box>
               <Switch
