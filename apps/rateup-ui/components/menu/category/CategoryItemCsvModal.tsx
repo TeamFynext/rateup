@@ -38,12 +38,7 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
           overlayProps={{ radius: "sm", blur: 2 }}
           loaderProps={{ type: "bars" }}
         />
-        <Blockquote
-          color="blue"
-          icon={<IconInfoCircle />}
-          p={"sm"}
-          iconSize={40}
-        >
+        <Blockquote icon={<IconInfoCircle />} p={"sm"} iconSize={40}>
           Utilizing CSV file uploads to generate menu items requires specific
           fields in the file: &quot;categoryname,&quot; &quot;name,&quot;
           &quot;description,&quot; and &quot;price.&quot;

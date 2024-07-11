@@ -10,12 +10,12 @@ export const theme = createTheme({
       "#8ea8c7",
       "#7797bb",
       "#6085b0",
-      "#4974a5",
+      "#5A8FD0",
       "#336299",
       "#1c518e", // Primary
       "#194980",
       "#164172",
-      "#143963",
+      "#2C4E86",
       "#113155",
     ],
   },
@@ -23,6 +23,8 @@ export const theme = createTheme({
 
 export const whatsappTheme = createTheme({
   primaryColor: "whatsapp-green",
+  fontFamily:
+    lexend300.style.fontFamily + "," + notoColorEmogi.style.fontFamily,
   colors: {
     "whatsapp-green": [
       "#96d2cb",
@@ -35,6 +37,27 @@ export const whatsappTheme = createTheme({
       "#0f776b",
       "#0d665c",
       "#0b554c",
+    ],
+  },
+});
+
+export const menuTheme = createTheme({
+  autoContrast: true,
+  fontFamily:
+    lexend300.style.fontFamily + "," + notoColorEmogi.style.fontFamily,
+  primaryColor: "pale-purple",
+  colors: {
+    "pale-purple": [
+      "#f2f0ff",
+      "#e0dff2",
+      "#bfbdde",
+      "#9b98ca",
+      "#7d79ba",
+      "#6a65b0",
+      "#605bac",
+      "#504c97",
+      "#464388",
+      "#3b3979",
     ],
   },
 });

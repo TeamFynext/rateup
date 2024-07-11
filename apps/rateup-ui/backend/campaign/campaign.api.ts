@@ -1,4 +1,4 @@
-import { CampaignParticipantStatus } from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 export const getCampaigns = async () => {
@@ -37,12 +37,14 @@ export const sendCampaign = async (
   sentCampaignChoice: string,
   participantId?: string,
   campaignSentAt?: Date,
+  status?: CampaignStatus,
 ) => {
   return axiosClient.post(`/campaign/${campaignId}/send`, {
     sendToStatuses,
     participantId,
     campaignSentAt,
     sentCampaignChoice,
+    status,
   });
 };
 

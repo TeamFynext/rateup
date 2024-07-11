@@ -1,5 +1,10 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useRouter } from "next/router";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useRef,
+} from "react";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import QuestionPieChart from "./Charts/QuestionPieChart";
@@ -11,7 +16,7 @@ import {
   SmileyResponse,
   YNResponse,
 } from "../../../types/enums";
-import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
+import { Badge, Button, Divider, Flex, Stack, Text } from "@mantine/core";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import Heading from "../../styled/Heading/Heading";
 import SurveyContext from "../../../context/SurveyContext";
@@ -30,6 +35,8 @@ import { stringToColour } from "../../../utils/essential";
 import RateupLoader from "../../Loaders/RateupLoader";
 import { getContent } from "../../../utils";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
+import { IconTableExport } from "@tabler/icons-react";
+import styles from "./ResultsOverview.module.css";
 
 const ResultsOverview = ({ surveyId }) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
@@ -48,6 +55,9 @@ const ResultsOverview = ({ surveyId }) => {
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
+
+  const contentDivRef = useRef(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (questions) {
@@ -95,6 +105,22 @@ const ResultsOverview = ({ surveyId }) => {
       setIsAllowedQnsPresent(hasAllowedQuestions);
     }
   }, [questions]);
+
+  const handleExportToPdf = useCallback(async () => {
+    const reactToPdf = await import("react-to-pdf");
+    const generatePDF = reactToPdf.default;
+    const options = {
+      page: {
+        // margin is in MM, default is Margin.NONE = 0
+        margin: reactToPdf.Margin.MEDIUM,
+      },
+    };
+    if (contentDivRef.current) {
+      setIsExporting(true);
+      await generatePDF(contentDivRef, options);
+      setIsExporting(false);
+    }
+  }, [contentDivRef]);
 
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
@@ -245,10 +271,18 @@ const ResultsOverview = ({ surveyId }) => {
     chartData?.filter((item) => item.enableNpsAnalytics === true)?.length > 0;
 
   return (
-    <>
-      <Stack h={"100%"} p={3}>
-        {chartData?.length > 0 ? (
-          <Stack>
+    <Stack className={styles["results-overview-root-div"]} h={"100%"} p={3}>
+      {chartData?.length > 0 ? (
+        <>
+          <Button
+            className={styles["export-to-pdf-btn"]}
+            leftSection={<IconTableExport size={"0.875rem"} />}
+            onClick={handleExportToPdf}
+            loading={isExporting}
+          >
+            Export
+          </Button>
+          <Stack p={5} ref={contentDivRef}>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
                 <Heading subtitle="NPS Overview" />
@@ -376,11 +410,11 @@ const ResultsOverview = ({ surveyId }) => {
                 )}
             </PaperLayout>
           </Stack>
-        ) : (
-          <NothingFound text="No responses yet" />
-        )}
-      </Stack>
-    </>
+        </>
+      ) : (
+        <NothingFound text="No responses yet" />
+      )}
+    </Stack>
   );
 };
 

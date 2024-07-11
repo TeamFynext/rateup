@@ -3,6 +3,7 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
+import styles from "./Welcome.module.css";
 
 const WelcomeTour = ({ steps }) => {
   const tourInstance = useRef(null);
@@ -11,6 +12,7 @@ const WelcomeTour = ({ steps }) => {
     tourInstance.current = driver({
       showProgress: true,
       steps: steps,
+      popoverClass: styles["driverjs-theme"],
     });
 
     // Start the tour
@@ -25,8 +27,8 @@ const WelcomeTour = ({ steps }) => {
   };
 
   return (
-    <Tooltip label="Start Tour" position="right" withArrow>
-      <ActionIcon onClick={startTour} variant="light" color="blue">
+    <Tooltip label="Start Tour" position="top" withArrow>
+      <ActionIcon onClick={startTour} variant="light">
         <IconInfoCircle size={24} />
       </ActionIcon>
     </Tooltip>

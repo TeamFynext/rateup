@@ -8,6 +8,7 @@
   border-radius: 1rem;
   background-color: var(--mantine-primary-color-filled);
   color: white;
+  text-align: center;
 }
 
 .input :global(.mantine-InputPlaceholder-placeholder) {

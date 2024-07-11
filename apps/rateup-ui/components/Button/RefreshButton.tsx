@@ -25,7 +25,7 @@ const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
   };
 
   return (
-    <Tooltip label="Refresh data">
+    <Tooltip label="Refresh data" position="top" withArrow>
       <ActionIcon variant="light" aria-label="Refresh" onClick={handleRefresh}>
         <IconRefresh style={{ width: "90%", height: "90%" }} stroke={1.5} />
       </ActionIcon>

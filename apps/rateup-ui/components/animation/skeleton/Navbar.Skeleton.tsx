@@ -1,14 +1,14 @@
 import React from "react";
 import { Box, Card, Divider, Group, Skeleton, Stack } from "@mantine/core";
 
-const NavbarSkeleton = () => {
+const NavbarSkeleton = ({ className }) => {
   return (
-    <Card w={250} withBorder px={0}>
+    <Card w={250} withBorder px={0} className={className}>
       <Stack justify="space-between" h={"100%"}>
         <Box>
-          <Group px={"xs"}>
-            <Skeleton h={30} w={35} />
-            <Skeleton h={20} w={"60%"} />
+          <Group px={"sm"}>
+            <Skeleton h={37} w={44} />
+            <Skeleton h={20} w={"50%"} />
             <Skeleton h={20} w={20} />
           </Group>
           <Divider mt={17} />

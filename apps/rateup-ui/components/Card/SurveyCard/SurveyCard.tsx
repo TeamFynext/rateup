@@ -46,7 +46,7 @@ export function SurveyCard({
     >
       <Stack justify="space-between" h={"100%"}>
         <Group justify={"space-between"} align={"center"} wrap="nowrap">
-          <Tooltip label={survey?.title}>
+          <Tooltip label={survey?.title} withArrow>
             <Text
               style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}
               truncate="end"

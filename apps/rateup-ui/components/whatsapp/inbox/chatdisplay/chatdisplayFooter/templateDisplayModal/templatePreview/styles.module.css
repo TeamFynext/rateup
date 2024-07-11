@@ -12,12 +12,20 @@
   position: sticky;
   border-radius: var(--mantine-radius-md);
 }
+
+.name-badges-container {
+  width: 100%;
+}
+
 .name {
   font-size: var(--mantine-font-size-xl);
   font-weight: 700;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .inner {
   height: 100%;
-  align-items: start;
-  overflow-y: auto;
+  overflow: auto;
+  flex: 1 0 0;
+  padding: 0.3125rem;
 }

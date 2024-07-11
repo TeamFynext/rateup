@@ -66,6 +66,8 @@
 }
 
 .login-link {
+  composes: header-footer-link from "../../index.module.css";
+  composes: gradient-image-1 from "../../index.module.css";
   composes: login-signup-link;
   position: relative;
   margin-right: 0;
@@ -79,12 +81,17 @@
 }
 
 .signup-link {
+  composes: header-footer-link from "../../index.module.css";
+  composes: gradient-image-1 from "../../index.module.css";
   composes: login-signup-link;
   color: white;
 }
 
 .go-to-dashboard-link {
-  composes: signup-link;
+  composes: header-footer-link from "../../index.module.css";
+  composes: gradient-image-1 from "../../index.module.css";
+  composes: login-signup-link;
+  color: white;
 }
 
 .mobile-nav-burger-btn-container {

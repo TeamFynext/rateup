@@ -206,6 +206,11 @@ export function getNavTopData(subscription?: Subscription) {
           },
         ]
       : []),
+    {
+      Icon: IconQrcode,
+      label: "Generate QR",
+      href: "/dashboard/generateQr",
+    },
     { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
     ...(hiddenModules.includes("loyalty") || !true
       ? []
@@ -238,11 +243,6 @@ export function getNavTopData(subscription?: Subscription) {
             ],
           },
         ]),
-    {
-      Icon: IconQrcode,
-      label: "Generate QR",
-      href: "/dashboard/generateQr",
-    },
   ];
   return navTopData;
 }

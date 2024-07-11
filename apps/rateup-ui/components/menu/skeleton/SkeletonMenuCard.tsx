@@ -1,4 +1,4 @@
-import { Box, Flex, Stack } from "@mantine/core";
+import { Box, Flex, Skeleton, Stack } from "@mantine/core";
 import React from "react";
 
 export const SkeletonMenuCard = ({ isMobile }) => {
@@ -31,7 +31,7 @@ export const SkeletonMenuCard = ({ isMobile }) => {
 
         <Stack gap={"6px"}>
           {boxes?.map((box, index) => (
-            <Box
+            <Skeleton
               key={index}
               h={box?.h}
               w={box?.w}
