@@ -4,7 +4,7 @@ import React from "react";
 
 const InfoButton = ({ docUrl }) => {
   return (
-    <Tooltip label="Visit documentation">
+    <Tooltip label="Visit documentation" position="top" withArrow>
       <ActionIcon
         variant="light"
         onClick={(event: React.MouseEvent<HTMLButtonElement>) => {

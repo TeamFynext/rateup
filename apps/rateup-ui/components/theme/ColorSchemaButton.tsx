@@ -2,6 +2,7 @@ import {
   ActionIcon,
   useMantineColorScheme,
   useComputedColorScheme,
+  Tooltip,
 } from "@mantine/core";
 import { IconSun, IconMoon } from "@tabler/icons-react";
 import cx from "clsx";
@@ -14,20 +15,26 @@ export default function ColorSchemaButton() {
   });
 
   return (
-    <ActionIcon
-      onClick={() =>
-        setColorScheme(computedColorScheme === "light" ? "dark" : "light")
-      }
-      variant="default"
-      size="xl"
-      aria-label="Toggle color scheme"
-      mr={"xl"}
+    <Tooltip
+      label={computedColorScheme === "light" ? "dark mode" : "light mode"}
+      position="top"
+      withArrow
     >
-      {computedColorScheme === "light" ? (
-        <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
-      ) : (
-        <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
-      )}
-    </ActionIcon>
+      <ActionIcon
+        onClick={() =>
+          setColorScheme(computedColorScheme === "light" ? "dark" : "light")
+        }
+        variant="default"
+        size="xl"
+        aria-label="Toggle color scheme"
+        mr={"xl"}
+      >
+        {computedColorScheme === "light" ? (
+          <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
+        ) : (
+          <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
+        )}
+      </ActionIcon>
+    </Tooltip>
   );
 }
