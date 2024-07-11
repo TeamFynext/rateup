@@ -11,13 +11,13 @@ import { MotionTransition } from "../animation/MotionTransition";
 import styles from "./EditSurvey.module.css";
 import { useSurvey } from "../../backend/surveys/surveys.query";
 import SurveyContext from "../../context/SurveyContext";
-import { QuestionType, SurveyType } from "../../types/enums";
+import { PageType, QuestionType, SurveyType } from "../../types/enums";
 import {
   QuestionTypesGroup,
   WaSurveyQuestionTypes,
 } from "../../utils/constants";
 import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
-import { createBlankQuestion } from "../../utils/questions";
+import { createBlankQuestion, createPage } from "../../utils/questions";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
 import TicketIssueEditor from "./Question/TicketIssueEditor";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor";
@@ -68,8 +68,13 @@ export function EditSurvey({
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
   });
-  const handleTypeSelection = (type: QuestionType) => {
-    const newQ = createBlankQuestion(type, surveyLanguages);
+  const handleTypeSelection = (type: QuestionType | PageType) => {
+    let newQ;
+    if (type in PageType) {
+      newQ = createPage(type as PageType, surveyLanguages);
+    } else {
+      newQ = createBlankQuestion(type as QuestionType, surveyLanguages);
+    }
     const { id, ...restData } = newQ;
     const saveQ = { ...restData };
     questionCreateMutation.mutateAsync(saveQ).then((r) => {
@@ -127,7 +132,10 @@ export function EditSurvey({
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
             <Stack>
               {survey?.type === SurveyType.Web && (
-                <PageTypeSelection handleTypeSelection={handleTypeSelection} />
+                <PageTypeSelection
+                  questions={questions}
+                  handleTypeSelection={handleTypeSelection}
+                />
               )}
 
               <QuestionTypeSelection

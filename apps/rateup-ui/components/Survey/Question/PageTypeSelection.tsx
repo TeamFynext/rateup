@@ -6,10 +6,17 @@ import classes from "./QuestionDetailedView.module.css";
 import { getPageTypeLabel } from "../../../utils/enums";
 import { BasicPages } from "../../../utils/constants";
 
-const PageTypeSelection = ({ handleTypeSelection }) => {
+interface iProps {
+  questions: Question[];
+  handleTypeSelection: (type: PageType) => void;
+}
+const PageTypeSelection = ({ handleTypeSelection, questions }) => {
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);
   };
+
+  const uniquePages = [PageType.Welcome, PageType.ThankYou];
+
   const QuestionButton = ({ type }) => {
     const Icon = questionIcons[type];
     return (
@@ -21,6 +28,10 @@ const PageTypeSelection = ({ handleTypeSelection }) => {
         className={classes.questionTypeButton}
         p={15}
         onClick={() => handleQuestionTypeClick(type as PageType)}
+        disabled={
+          questions?.filter((q) => q.type === type).length > 0 &&
+          uniquePages.includes(type)
+        }
       >
         <Text fz={14}>{getPageTypeLabel(type)}</Text>
       </Button>

@@ -42,6 +42,14 @@ export const importMethod = {
   CSV: "CSV IMPORT",
 };
 
+export function getTypeLabel(type: QuestionType | PageType) {
+  if (type in PageType) {
+    return getPageTypeLabel(type as PageType);
+  } else {
+    return getQuestionTypeLabel(type as QuestionType);
+  }
+}
+
 export function getPageTypeLabel(type: PageType) {
   switch (type) {
     case PageType.Welcome:

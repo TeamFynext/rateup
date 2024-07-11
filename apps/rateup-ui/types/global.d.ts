@@ -21,6 +21,7 @@ import {
   StripeProductType,
   PaymentPlanStatus,
   SurveyVariableType,
+  PageType,
 } from "./enums";
 
 type GoogleReview = {
@@ -73,7 +74,7 @@ declare global {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
     required: boolean;
-    type: QuestionType;
+    type: QuestionType | PageType;
     choices?: Zod.RecordType<string, Array<Choice>>;
     features?: Zod.RecordType<string, Zod.RecordType<string, any>>;
     sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys

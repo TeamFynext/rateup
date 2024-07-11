@@ -79,7 +79,12 @@ export function DraggableQuestionCard({
           handleDelete(e, question.id);
         }}
       />
-      <Draggable key={question.id} index={index} draggableId={question.id}>
+      <Draggable
+        key={question.id}
+        index={index}
+        draggableId={question.id}
+        //isDragDisabled={question.type in PageType}
+      >
         {(provided, snapshot) => (
           <div ref={hoverRef}>
             <Box

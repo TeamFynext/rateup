@@ -13,6 +13,12 @@ export enum PageType {
   Custom = "Custom",
 }
 
+export enum PageTitle {
+  Welcome = "Welcome Page",
+  ThankYou = "ThankYou Page",
+  Custom = "Custom Page",
+}
+
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",

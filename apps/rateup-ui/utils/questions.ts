@@ -1,15 +1,69 @@
-import { QuestionType, SurveyType } from "../types/enums";
+import { PageTitle, PageType, QuestionType, SurveyType } from "../types/enums";
 import { ChoiceTypeQuestions } from "./constants";
 
-export function reorder<T>(
+interface Reorderable {
+  type?: string;
+}
+export function reorder<T extends Reorderable>(
   array: Array<T>,
   from: number,
   to: number,
 ): Array<T> {
-  const newArray = [...array];
+  let newArray = [...array];
   const item = newArray.splice(from, 1)[0];
   newArray.splice(to, 0, item);
+
+  let reOrderedList = reOrderPages(newArray);
+
+  return reOrderedList;
+}
+
+export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
+  if (!pages?.length) {
+    return pages;
+  }
+
+  let newArray = [...pages];
+  const thankYouItem = newArray.filter((item) => item.type === "ThankYou");
+  newArray = newArray.filter((item) => item.type !== "ThankYou");
+
+  newArray = [...newArray, ...thankYouItem];
+
+  const welcomeItem = newArray.filter((item) => item.type === "Welcome");
+  newArray = newArray.filter((item) => item.type !== "Welcome");
+
+  newArray = [...welcomeItem, ...newArray];
+
   return newArray;
+}
+
+export function createPage(
+  type: PageType,
+  languages: string[],
+  surveyType = SurveyType.Web,
+): Question {
+  const isWaFlow = surveyType === SurveyType.WaFlow;
+  const title = {};
+  const description = {};
+  const label = isWaFlow ? {} : undefined;
+
+  for (const language of languages) {
+    title[language] = PageTitle[type];
+    description[language] = "Page";
+    if (label) {
+      label[language] = "";
+    }
+  }
+
+  return {
+    // TODO: only set id when saving to db?
+    id: "",
+    title,
+    description,
+    label,
+    required: true,
+    type,
+  };
 }
 
 export function createBlankQuestion(
@@ -116,7 +170,7 @@ export function validateChoices(
   question: Question,
   languages: Array<string>,
 ): Array<string> {
-  if (!ChoiceTypeQuestions.includes(question.type)) {
+  if (!ChoiceTypeQuestions.includes(question.type as QuestionType)) {
     return [];
   } else if (languages.length === 1) {
     return [];
