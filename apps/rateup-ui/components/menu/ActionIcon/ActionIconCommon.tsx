@@ -1,35 +1,32 @@
 import { ActionIcon, Stack, Tooltip } from "@mantine/core";
-import { IconTrash } from "@tabler/icons-react";
 
 type ActionIconCommonProps = {
-  handleClick: () => void;
+  handleClick: (e: any) => void;
   disabled?: boolean;
+  label: string;
+  children: JSX.Element;
 };
 export const ActionIconCommon = ({
   handleClick,
-  disabled = false,
+  label,
+  children,
+  disabled,
 }: ActionIconCommonProps) => {
   return (
     <Stack
       bg={"white"}
-      h={"min-content"}
       style={{
-        borderRadius: "var(--mantine-radius-md)",
+        borderRadius: "100%",
       }}
+      w={"min-content"}
     >
       <ActionIcon
-        radius={"md"}
+        variant="light"
         onClick={handleClick}
-        variant="subtle"
+        radius={"lg"}
         disabled={disabled}
-        style={{
-          border:
-            "calc(0.0625rem * var(--mantine-scale)) solid var(--mantine-color-default-border)",
-        }}
       >
-        <Tooltip label="Delete">
-          <IconTrash stroke={1.5} />
-        </Tooltip>
+        <Tooltip label={label}>{children}</Tooltip>
       </ActionIcon>
     </Stack>
   );

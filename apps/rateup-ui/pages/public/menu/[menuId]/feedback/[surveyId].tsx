@@ -1,31 +1,38 @@
-import {
-  Center,
-  Group,
-  Stack,
-  Text,
-  Image,
-  BackgroundImage,
-  Flex,
-  SimpleGrid,
-} from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
-import { useRouter } from "next/router";
-import { IconMapPin, IconWorld } from "@tabler/icons-react";
-import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
-import classes from "./Feedback.module.css";
-import {
-  getMenuPublicById,
-  updateMenuVisitedMutation,
-} from "../../../../../backend/menu/menu.api";
-import { Data } from "../../../../../types/global";
-import Link from "next/link";
-import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
-import { lexend } from "../../../../../utils/fonts";
-import Head from "next/head";
-import { fallbackImage } from "../../../../../utils/constants";
-import { CreditsCard } from "../../../../../components/Card/CreditsCard";
+import { useRef, useState } from "react";
+
+import Autoplay from "embla-carousel-autoplay";
 import { getCookie, setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
+import { Carousel } from "@mantine/carousel";
+import { IconMenu2 } from "@tabler/icons-react";
+import { isCategoryActive } from "utils/dateTime";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { CategoryChip } from "components/menu/category/CategoryChip";
+import { getMenuBannerByMenuId } from "backend/menu/Banner/banner.api";
+import { CategoryDisplay } from "components/menu/category/CategoryDisplay";
+import { CategoriesDrawer } from "components/menu/category/CategoriesDrawer";
+import { ItemDetailedViewModal } from "components/menu/item/ItemDetailedViewModal";
+import {
+  ActionIcon,
+  BackgroundImage,
+  Box,
+  Group,
+  Image,
+  Paper,
+  ScrollArea,
+  ScrollAreaAutosize,
+  Stack,
+  Text,
+} from "@mantine/core";
+
+import { lexend } from "../../../../../utils/fonts";
+import { CreditsCard } from "../../../../../components/Card/CreditsCard";
+import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
+import {
+  getFullMenuPublicById,
+  updateMenuVisitedMutation,
+} from "../../../../../backend/menu/menu.api";
+import FloatingMenu from "./FloatingMenu";
 
 interface ServerSidePropsContext {
   req: NextApiRequest;
@@ -41,10 +48,11 @@ export const getServerSideProps = async ({
   res,
   params,
 }: ServerSidePropsContext) => {
-  const menuLanding = await getMenuPublicById(params.menuId);
+  const fullMenu = await getFullMenuPublicById(params.menuId);
+  const menuBanner = await getMenuBannerByMenuId(params.menuId);
   const pageVisited = getCookie("pageVisited", { req, res });
 
-  if (!pageVisited && !menuLanding?.expiry) {
+  if (!pageVisited && !fullMenu?.expiry) {
     setCookie("pageVisited", "true", {
       req,
       res,
@@ -53,330 +61,238 @@ export const getServerSideProps = async ({
     });
     await updateMenuVisitedMutation(params.menuId);
   }
-  return { props: { menuLanding: menuLanding } };
+  return { props: { fullMenu: fullMenu, menuBanner: menuBanner } };
 };
 
-export default function MenuLandingPage({
-  menuLanding,
-  fromShortUrl = false,
-}: {
-  menuLanding: Data;
-  fromShortUrl?: boolean;
-}) {
+export default function MenuLandingPage({ fullMenu, menuBanner }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  if (!menuLanding || !menuLanding?.menu?.isPublished || menuLanding?.expiry) {
+  const autoplay = useRef(Autoplay({ delay: 2000, stopOnInteraction: false }));
+  let categoryChipLabel = [{ id: "1", name: "all" }].concat(
+    fullMenu?.categories,
+  );
+  const [catagories, setCatagories] = useState(fullMenu?.categories);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    categoryChipLabel[0]?.id,
+  );
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [drawerOpen, { open, close }] = useDisclosure();
+
+  if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
     return (
       <Stack align="center" h="50vh" justify="space-around">
         <Text size="xl" c="red" fw="600">
-          {menuLanding?.expiry
-            ? menuLanding?.expiry
-            : "Menu is not available..!"}
+          {fullMenu?.expiry ? fullMenu?.expiry : "Menu is not available..!"}
         </Text>
       </Stack>
     );
+  function handleCategoryChipClick(categoryId: string) {
+    setCatagories(
+      categoryId === "1"
+        ? categoryChipLabel.filter((category) => category.id !== categoryId)
+        : categoryChipLabel.filter((category) => category.id === categoryId),
+    );
+    setSelectedCategory(categoryId);
   }
-  const backgroundImageBorderRadius = largeScreen ? "47px" : "22px";
-  const fallbackImageBackround = largeScreen
+
+  const backgroundImageBorderRadius = "22px";
+  const backgroundImage = largeScreen
+    ? fullMenu?.menuLanding?.backgroundImage
+    : fullMenu?.menuLanding?.mobileBackgroundImage;
+  const backgroundImageFallback = largeScreen
     ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
-  const backgroundImage = largeScreen
-    ? menuLanding?.backgroundImage
-    : menuLanding?.mobileBackgroundImage;
+  const hideUnavailableCategory = fullMenu?.menuLanding?.menu
+    ?.hideUnavailableCategory as boolean;
 
-  const bgSrc = backgroundImage
-    ? getFileUrlFromKey(
-        encodeURI(backgroundImage),
-        true,
-        !!menuLanding?.unsplashImage?.[
-          largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-        ],
-      )
-    : fallbackImageBackround;
+  let fullCategory = fullMenu?.categories;
+
+  const { successData, failedData } = catagories.reduce(
+    (acc, item) => {
+      if (isCategoryActive(item)) {
+        acc.successData.push(item);
+      } else {
+        acc.failedData.push(item);
+      }
+      return acc;
+    },
+    { successData: [], failedData: [] },
+  );
+
+  const filteredData = hideUnavailableCategory
+    ? successData
+    : [...successData, ...failedData];
+
+  if (hideUnavailableCategory) {
+    fullCategory = fullCategory?.filter(isCategoryActive);
+    categoryChipLabel = [{ id: "1", name: "all" }].concat(fullCategory);
+  }
 
   return (
-    <Stack
-      gap={0}
-      maw={largeScreen ? "2440px" : "768px"}
-      ff={lexend.style.fontFamily}
-    >
-      <Head>
-        <title>{`Rateup - Welcome to ${menuLanding?.menu?.displayName}`}</title>
-
-        <meta
-          name="description"
-          content={`This is the menu of ${menuLanding?.menu?.displayName}`}
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Rateup" />
-        <meta
-          property="og:url"
-          content={`https://rateup.app/public/menu/${menuLanding?.menu?.id}`}
-        />
-        <meta
-          property="og:title"
-          content={`Rateup - Welcome to ${menuLanding?.menu?.displayName}`}
-        />
-        <meta
-          property="og:description"
-          content={`This is the menu of ${menuLanding?.menu?.displayName}`}
-        />
-        <meta
-          property="og:image"
-          content="https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png"
-        />
-        <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:width" content="1086" />
-        <meta property="og:image:height" content="832" />
-        <meta property="og:image:alt" content="Star Icon" />
-      </Head>
-      <CreditsCard
-        // enableCredits={
-        //   !!menuLanding?.unsplashImage?.[
-        //     largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-        //   ]
-        // }
-        // disabled for now
-        enableCredits={false}
-        url={bgSrc}
-        pl={largeScreen && 30}
+    <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={0}>
+      <Paper
+        mih={"100dvh"}
+        ff={lexend.style.fontFamily}
+        maw={largeScreen ? "2440px" : "768px"}
+        w={"100vw"}
       >
-        <BackgroundImage
-          src={bgSrc}
-          radius="sm"
-          h={"45dvh"}
-          maw={largeScreen ? "2440px" : "768px"}
-          bgsz={"cover"}
-          bgp={"center"}
-          style={{
-            borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-            backgroundColor: "var(--orange-400)",
-            aspectRatio: "8 / 3",
-          }}
-        >
-          <Stack
-            align="center"
-            justify={largeScreen ? "space-around" : "center"}
-            h={"100%"}
-            style={{
-              padding: largeScreen ? "0 20px 0 20px" : "0",
-            }}
+        {menuBanner?.length > 0 ? (
+          <Carousel
+            withIndicators
+            plugins={[autoplay.current]}
+            onMouseEnter={autoplay.current.stop}
+            onMouseLeave={autoplay.current.reset}
+            controlsOffset="lg"
+            loop
           >
-            <div></div>
-            <Stack align="center" gap={0} px={"50px"}>
-              {menuLanding?.menu?.logo && (
-                <Image
-                  src={getFileUrlFromKey(menuLanding?.menu?.logo)}
-                  w={largeScreen ? 100 : 63}
-                  maw={100}
-                  radius={"md"}
-                  fallbackSrc={fallbackImage}
-                  alt="menuLanding logo"
+            {menuBanner?.map((value) => (
+              <Carousel.Slide
+                key={value.id}
+                onClick={() => {
+                  setSelectedItem({
+                    images: [value?.image],
+                    description: value?.description,
+                    name: value?.name,
+                    id: value?.id,
+                    price: value?.price,
+                    videoUrl: value?.videoUrl,
+                    categoryId: value?.menuId,
+                    createdAt: value?.createdAt,
+                    foodLabels: value?.foodLabels,
+                  });
+                }}
+                style={{
+                  cursor: "pointer",
+                }}
+              >
+                <BackgroundImage
+                  px={largeScreen ? "10vw" : "1vw"}
+                  py="3vh"
+                  src={
+                    value?.image
+                      ? encodeURI(getFileUrlFromKey(value?.image))
+                      : backgroundImageFallback
+                  }
+                  style={{
+                    borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+                    backgroundColor: "var(--orange-400)",
+                  }}
+                  bgp={"center"}
+                  bgsz={"cover"}
+                  c={"white"}
+                  h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
+                  maw={largeScreen ? "2440px" : "768px"}
                 />
-              )}
-              <Text
-                fz={
-                  menuLanding?.headerStyle?.fontSize
-                    ? `clamp(15.008px, 5.008px + 1.667vw, ${menuLanding?.headerStyle?.fontSize}px)`
-                    : "clamp(15.008px, 5.008px + 1.667vw, 29.008px)"
-                }
-                fw={menuLanding?.headerStyle?.fontWeight ?? "bold"}
-                c={menuLanding?.headerStyle?.color ?? "white"}
-                truncate
-                mt={10}
-              >
-                {menuLanding?.headerText ?? "Welcome To"}
-              </Text>
-              <Text
-                fz={
-                  menuLanding?.titleStyle?.fontSize
-                    ? `clamp(27.008px, -10.864px + 6.31vw,${menuLanding?.titleStyle?.fontSize}px )`
-                    : "clamp(27.008px, -10.864px + 6.31vw,52px )"
-                }
-                fw={menuLanding?.titleStyle?.fontWeight ?? "bold"}
-                c={menuLanding?.titleStyle?.color ?? "white"}
-                ta={"center"}
-              >
-                {menuLanding?.menu?.displayName}
-              </Text>
-            </Stack>
-            <Center p={0} w={largeScreen && "100%"}>
-              <Flex
-                align={largeScreen ? "center" : "start"}
-                justify={"space-between"}
-                direction={largeScreen ? "row" : "column"}
-                w={"100%"}
-                px={largeScreen && "100"}
-                pb={"lg"}
-              >
-                {menuLanding?.menu?.websiteText && (
-                  <Link
-                    className={classes.base1}
-                    href={
-                      menuLanding?.menu?.websiteUrl
-                        ? menuLanding?.menu?.websiteUrl
-                        : "#"
-                    }
-                    style={{
-                      textDecoration: "none",
-                      color: "inherit",
-                      ...menuLanding?.otherStyle,
-                      cursor: !menuLanding?.menu?.websiteUrl && "default",
-                    }}
-                    target={menuLanding?.menu?.websiteUrl && "_blank"}
-                  >
-                    <Group>
-                      <IconWorld
-                        size={"clamp(21.008px, 7.424px + 2.262vw, 40px)"}
-                      />
-                      <Text
-                        maw={largeScreen ? "350px" : "188px"}
-                        miw={!largeScreen && 188}
-                        tt={"capitalize"}
-                        ta={largeScreen ? "center" : "start"}
-                        fz={"clamp(13.008px, 8px + 0.833vw, 20px)"}
-                      >
-                        {menuLanding?.menu?.websiteText}
-                      </Text>
-                    </Group>
-                  </Link>
-                )}
-                {menuLanding?.menu?.locationText && (
-                  <Link
-                    className={classes.hoverEffect}
-                    href={
-                      menuLanding?.menu?.locationUrl
-                        ? menuLanding?.menu?.locationUrl
-                        : "#"
-                    }
-                    style={{
-                      textDecoration: "none",
-                      color: "inherit",
-                      ...menuLanding?.otherStyle,
-                      cursor: !menuLanding?.menu?.locationUrl && "default",
-                    }}
-                    target={menuLanding?.menu?.locationUrl && "_blank"}
-                  >
-                    <Group>
-                      <IconMapPin
-                        size={"clamp(21.008px, 7.424px + 2.262vw, 40px)"}
-                      />
-                      <Text
-                        maw={largeScreen ? "350px" : "188px"}
-                        miw={!largeScreen && 188}
-                        tt={"capitalize"}
-                        ta={largeScreen ? "center" : "start"}
-                        fz={"clamp(13.008px, 8px + 0.833vw, 20px)"}
-                      >
-                        {menuLanding?.menu?.locationText}
-                      </Text>
-                    </Group>
-                  </Link>
-                )}
-              </Flex>
-            </Center>
-          </Stack>
-        </BackgroundImage>
-      </CreditsCard>
-      <Stack align="center" justify={"space-between"} h={"55vh"} py={"xl"}>
-        <Center>
-          <SimpleGrid cols={{ base: 1, md: 2 }}>
-            {(menuLanding?.menuPageEnabled === true ||
-              menuLanding?.menuPageEnabled === undefined) && (
-              <PaperLayout
-                p={"xl"}
-                mah={"200px"}
-                hoveractive
-                c={"var(--grey-color-3)"}
-              >
-                {MenuButton(largeScreen, menuLanding?.catalogue, fromShortUrl)}
-              </PaperLayout>
-            )}
-            {menuLanding?.feedbackPageEnabled === true && (
-              <PaperLayout
-                p={"xl"}
-                mah={"200px"}
-                hoveractive
-                c={"var(--grey-color-3)"}
-              >
-                {FeedbackButton(
-                  largeScreen,
-                  menuLanding?.catalogue,
-                  menuLanding?.surveyTeamMap?.shortUrlId ??
-                    menuLanding?.surveyTeamMapId,
-                )}
-              </PaperLayout>
-            )}
-          </SimpleGrid>
-        </Center>
-        <Group>
-          <Image
-            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/rateup-credits.svg`}
-            w={"clamp(137px, 65.568px + 11.905vw, 237px)"}
-            alt="rate-up logo"
-          />
+              </Carousel.Slide>
+            ))}
+          </Carousel>
+        ) : (
+          <CreditsCard
+            // enableCredits={
+            //   !!fullMenu.menuLanding?.unsplashImage?.[
+            //     largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+            //   ]
+            // }
+            // disabled for now
+            enableCredits={false}
+            url={backgroundImage}
+            pl={largeScreen && 30}
+          >
+            <Image
+              src={
+                backgroundImage &&
+                getFileUrlFromKey(
+                  encodeURI(backgroundImage),
+                  true,
+                  !!fullMenu.menuLanding?.unsplashImage?.[
+                    largeScreen ? "backgroundImage" : "mobileBackgroundImage"
+                  ],
+                )
+              }
+              style={{
+                borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+                backgroundColor: "var(--orange-400)",
+              }}
+              fallbackSrc={backgroundImageFallback}
+              alt="banner image of menu"
+              h={largeScreen ? "33dvh" : "25dvh"}
+              maw={largeScreen ? "2440px" : "768px"}
+            />
+          </CreditsCard>
+        )}
+        <Group
+          px={largeScreen ? "xl" : "xs"}
+          m="sm"
+          wrap="nowrap"
+          pos={"sticky"}
+          top={0}
+          bg={"var(--mantine-color-body)"}
+          style={{ zIndex: 10 }}
+        >
+          <ActionIcon onClick={open} variant="transparent">
+            <IconMenu2 color="var(--grey-color)" />
+          </ActionIcon>
+          <ScrollArea
+            h={"min-content"}
+            w={"100vw"}
+            scrollbarSize={largeScreen ? 10 : 0}
+          >
+            <Box w={"max-content"}>
+              {categoryChipLabel?.map((c) => (
+                <CategoryChip
+                  key={c.id}
+                  categoryId={c.id}
+                  name={c.name}
+                  selected={selectedCategory === c.id}
+                  onClick={handleCategoryChipClick}
+                  largeScreen={largeScreen}
+                />
+              ))}
+            </Box>
+          </ScrollArea>
         </Group>
-      </Stack>
-    </Stack>
-  );
-}
 
-function FeedbackButton(
-  largeScreen: boolean,
-  catalogue: boolean,
-  surveyId?: string,
-) {
-  return (
-    <Stack align="center" gap={0}>
-      <Link
-        href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${surveyId}`}
-        style={{ textDecoration: "none", color: "inherit" }}
-      >
-        <Stack justify={"space-between"} align={"center"} gap={0}>
-          <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/feedback.png`}
-            w={largeScreen ? "79px" : "40px"}
-            maw={"104px"}
-            h={"auto"}
-            alt="feedback image"
-          />
-          <Text fw={"600"} mt={catalogue ? "20px" : "0"}>
-            Feedback
-          </Text>
+        <Stack px={"5.8vw"} mih={"45vh"}>
+          {filteredData?.length > 0
+            ? filteredData?.map((c) => (
+                <CategoryDisplay
+                  key={c.id}
+                  setSelectedItem={setSelectedItem}
+                  category={c}
+                  currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
+                  hideUnavailableCategory={
+                    fullMenu?.menuLanding?.menu?.hideUnavailableCategory
+                  }
+                />
+              ))
+            : "No Categories Found"}
         </Stack>
-      </Link>
-    </Stack>
-  );
-}
-
-function MenuButton(
-  largeScreen: boolean,
-  catalogue: boolean,
-  fromShortUrl: boolean,
-) {
-  const router = useRouter();
-  let imageSrc = catalogue
-    ? "/images/menu/catalogue.png"
-    : "/images/menu/menu.png";
-  const menuId = fromShortUrl ? router.query.shortId : router.query.menuId;
-  return (
-    <Stack align="center" gap={0}>
-      <Link
-        href={`/m/${menuId}/view`}
-        style={{ textDecoration: "none", color: "inherit" }}
-      >
-        <Stack justify={"center"} align={"center"} gap={0}>
-          <Image
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}${imageSrc}`}
-            w={largeScreen ? (catalogue ? "100%" : "104px") : "52px"}
-            h={"auto"}
-            mah={"80px"}
-            alt="menu image"
+        <CategoriesDrawer
+          opened={drawerOpen}
+          close={close}
+          categories={fullCategory}
+          handleCategoryChipClick={handleCategoryChipClick}
+        />
+        {selectedItem && (
+          <ItemDetailedViewModal
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
           />
-          <Text fw={"600"} mt={largeScreen && 18}>
-            {catalogue ? "Catalogue" : "Menu"}
-          </Text>
-        </Stack>
-      </Link>
-    </Stack>
+        )}
+        <FloatingMenu
+          dynamicVariables={[
+            ...(fullMenu?.menuLanding?.surveyTeamMapId
+              ? [
+                  {
+                    name: "Feedback",
+                    link: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${fullMenu?.menuLanding?.surveyTeamMap?.shortUrlId ?? fullMenu?.menuLanding?.surveyTeamMapId}`,
+                  },
+                ]
+              : []),
+            ...fullMenu.menuLanding.dynamicVariables,
+          ]}
+        />
+      </Paper>
+    </ScrollAreaAutosize>
   );
 }

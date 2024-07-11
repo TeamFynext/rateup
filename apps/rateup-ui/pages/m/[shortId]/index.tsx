@@ -5,10 +5,11 @@ import Link from "next/link";
 import { imagePath } from "../../../components/HomePage/pages/constants";
 import { getCookie, setCookie } from "cookies-next";
 import {
-  getMenuPublicById,
+  getFullMenuPublicById,
   updateMenuVisitedMutation,
 } from "../../../backend/menu/menu.api";
 import { NextApiRequest, NextApiResponse } from "next";
+import { getMenuBannerByMenuId } from "backend/menu/Banner/banner.api";
 
 interface ServerSidePropsContext {
   req: NextApiRequest;
@@ -25,27 +26,28 @@ export const getServerSideProps = async ({
 }: ServerSidePropsContext) => {
   try {
     const { shortId } = params;
-    const menuLanding = await getMenuPublicById(shortId);
+    const fullMenu = await getFullMenuPublicById(shortId);
+    const menuBanner = await getMenuBannerByMenuId(shortId);
     const pageVisited = getCookie("pageVisited", { req, res });
-    if (!pageVisited && !menuLanding?.expiry) {
+    if (!pageVisited && !fullMenu?.expiry) {
       setCookie("pageVisited", "true", {
         req,
         res,
         maxAge: 60 * 60,
         httpOnly: true,
       });
-      await updateMenuVisitedMutation(menuLanding.menu.id);
+      await updateMenuVisitedMutation(fullMenu.id);
     }
-    return { props: { menuLanding: menuLanding } };
+    return { props: { fullMenu: fullMenu, menuBanner: menuBanner } };
   } catch (error) {
     console.error("error in getServerSideProps");
     return {
-      props: { menuLanding: null, error_occured: true },
+      props: { fullMenu: null, menuBanner: null, error_occured: true },
     };
   }
 };
 
-function MenuRedirect({ menuLanding, error_occured }) {
+function MenuRedirect({ fullMenu, menuBanner, error_occured }) {
   if (error_occured) {
     return (
       <div className={styles["error-page"]}>
@@ -68,7 +70,7 @@ function MenuRedirect({ menuLanding, error_occured }) {
       </div>
     );
   }
-  return <PublicMenu menuLanding={menuLanding} fromShortUrl />;
+  return <PublicMenu fullMenu={fullMenu} menuBanner={menuBanner} />;
 }
 
 export default MenuRedirect;

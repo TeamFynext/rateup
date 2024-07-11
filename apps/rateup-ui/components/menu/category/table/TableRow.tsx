@@ -15,6 +15,7 @@ import {
   IconCircleCheckFilled,
   IconEdit,
   IconReplace,
+  IconTrash,
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
 import { fallbackImage } from "../../../../utils/constants";
@@ -126,24 +127,20 @@ const TableRow = ({
               close();
             }}
           />
-          <ActionIcon
-            c={"var(--tertiary-color)"}
-            bg={"white"}
-            radius={"md"}
+          <ActionIconCommon
             disabled={item?.disabled}
-            onClick={(e) => {
+            handleClick={(e) => {
               e.preventDefault();
               setEditingItem(item);
               open();
             }}
+            label="Edit"
           >
-            <Tooltip label="Edit">
-              <IconEdit />
-            </Tooltip>
-          </ActionIcon>
+            <IconEdit size={18} />
+          </ActionIconCommon>
           <ActionIcon
             variant={"transparent"}
-            c={"var(--tertiary-color)"}
+            c={"var(--mantine-primary-color-filled)"}
             radius={"md"}
             onClick={(e) => {
               e.preventDefault();
@@ -165,20 +162,16 @@ const TableRow = ({
               </Tooltip>
             )}
           </ActionIcon>
-          <ActionIconCommon handleClick={toggle} />
+          <ActionIconCommon handleClick={toggle} label="Delete">
+            <IconTrash />
+          </ActionIconCommon>
         </Flex>
       </Table.Td>
       <Table.Td>
         <Stack pr={"sm"}>
-          <ActionIcon
-            variant={"transparent"}
-            onClick={toggleSwapOrder}
-            c={"var(--grey-color)"}
-          >
-            <Tooltip label="Swap Order">
-              <IconReplace />
-            </Tooltip>
-          </ActionIcon>
+          <ActionIconCommon handleClick={toggleSwapOrder} label="Swap Order">
+            <IconReplace size={18} />
+          </ActionIconCommon>
         </Stack>
       </Table.Td>
     </Table.Tr>

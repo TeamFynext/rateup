@@ -8,6 +8,8 @@ import {
   Image,
   Modal,
   Popover,
+  ScrollArea,
+  ScrollAreaAutosize,
   Stack,
   Text,
   Title,
@@ -26,7 +28,11 @@ import PaperLayout from "../styled/Layouts/PaperLayout";
 import RateupLoader from "../Loaders/RateupLoader";
 import { showErrorToast } from "../../utils/notifications";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import { RateupButtonBlue, RateupIconButton } from "../Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+  RateupIconButton,
+} from "../Button/RateupButtons";
 import {
   useCreateMenuBannerMutation,
   useDeleteMenuBannerMutation,
@@ -49,7 +55,7 @@ export const BannerAddAndViewModal = ({
 }: BannerAddAndViewModalProps) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const carouselRef = useRef(null);
-  const [_, { increment, decrement }] = useCounter(0, {
+  const [page, { increment, decrement }] = useCounter(0, {
     min: 0,
   });
   const createMenuBannerMutation = useCreateMenuBannerMutation(menuId);
@@ -149,6 +155,7 @@ export const BannerAddAndViewModal = ({
       opened={opened}
       onClose={onClose}
       size={largeScreen ? "min(70vw , 1000px)" : "90vw"}
+      scrollAreaComponent={ScrollAreaAutosize}
       radius={"lg"}
       title={
         <Stack pl={"xl"} gap={0}>
@@ -190,7 +197,7 @@ export const BannerAddAndViewModal = ({
             <Text fz={"lg"} c={"var(--grey-color-4)"}>
               No Banners are added
             </Text>
-            <RateupButtonBlue
+            <RateupButtonPrimary
               title="Add Banner"
               rightIcon={<IconPlus />}
               radius="xl"
@@ -204,8 +211,8 @@ export const BannerAddAndViewModal = ({
         ) : (
           <>
             <Group justify="space-between" mt={2}>
-              <RateupButtonBlue
-                title="Add Bannerss"
+              <RateupButtonPrimary
+                title="Add Banner"
                 rightIcon={<IconPlus />}
                 radius="xl"
                 size="md"
@@ -228,12 +235,6 @@ export const BannerAddAndViewModal = ({
                   radius="md"
                   size="md"
                   onClick={() => handleCarouselControl(0)}
-                  color={"var(--light-blue-4)"}
-                  sx={{
-                    borderColor: "var(--tertiary-color)",
-                    color: "var(----tertiary-color)",
-                    padding: "0px",
-                  }}
                 />
                 <RateupIconButton
                   title=""
@@ -241,12 +242,6 @@ export const BannerAddAndViewModal = ({
                   radius="md"
                   size="md"
                   onClick={() => handleCarouselControl(1)}
-                  color={"var(--light-blue-4)"}
-                  sx={{
-                    borderColor: "var(--tertiary-color)",
-                    color: "var(----tertiary-color)",
-                    padding: "0px",
-                  }}
                 />
               </Group>
             </Group>
