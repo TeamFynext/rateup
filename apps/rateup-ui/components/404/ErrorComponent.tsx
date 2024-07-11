@@ -1,8 +1,8 @@
-import { Image, Stack } from "@mantine/core";
+import { Image, Stack, Container, Text, Title, Box } from "@mantine/core";
 import { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
 import React from "react";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
-import { Container, Text, Title, Box } from "@mantine/core";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 
 type ErrorComponentProps = {
   refetch: (
@@ -13,7 +13,12 @@ const ErrorComponent = ({ refetch }: ErrorComponentProps) => {
   return (
     <Container flex={1}>
       <Stack ta={"center"} gap={4} h={"100%"} justify="center">
-        <Image src={"/images/error-img.svg"} alt="image for error" />
+        <Image
+          src={getFileUrlFromKey("/images/error-img.svg", false)}
+          alt="image for error"
+          h={220}
+          w={300}
+        />
         <Title
           order={1}
           style={{

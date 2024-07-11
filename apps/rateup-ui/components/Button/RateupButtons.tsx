@@ -218,7 +218,7 @@ export const RateupIconButton = ({
     <Button
       radius={radius || "xs"}
       px={"xs"}
-      variant={variant ? variant : "filled"}
+      variant={variant ?? "light"}
       style={sx}
       {...other}
     >

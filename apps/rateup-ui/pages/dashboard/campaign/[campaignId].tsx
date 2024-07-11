@@ -19,7 +19,12 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { IconInfoCircle, IconRefresh, IconSend } from "@tabler/icons-react";
+import {
+  IconInfoCircle,
+  IconRefresh,
+  IconSend,
+  IconX,
+} from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -58,6 +63,9 @@ import { z } from "zod";
 import { showErrorToast } from "../../../utils/notifications";
 import { renderBadge } from "../../../components/Card/CampaignCard";
 import { getErrorMessage } from "../../../utils";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(timezone);
 
 export enum CampaignParticipantsTabs {
   INFO = "info",
@@ -333,8 +341,31 @@ const StartCampaignCard = ({
         p={"md"}
         color={renderBadge(campaign?.status).color}
       >
-        {campaign?.status}
+        {campaign?.status}{" "}
+        {campaign?.campaignSentAt && (
+          <>
+            {dayjs(campaign?.campaignSentAt).format("YYYY-MM-DD hh:mm A")}{" "}
+            {dayjs.tz.guess()}
+          </>
+        )}{" "}
       </Badge>
+
+      {campaign?.status === CampaignStatus.SCHEDULED && (
+        <Tooltip label={"cancel schedule"}>
+          <ActionIcon
+            size={"sm"}
+            variant="light"
+            onClick={() => {
+              sendMutation.mutate({
+                status: CampaignStatus.INACTIVE,
+                statuses: [CampaignParticipantStatus.FAILED],
+              });
+            }}
+          >
+            <IconX size={18} />
+          </ActionIcon>
+        </Tooltip>
+      )}
 
       <SendCampaignModal
         close={close}

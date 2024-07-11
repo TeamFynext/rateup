@@ -2,10 +2,10 @@ import React from "react";
 import { Stack } from "@mantine/core";
 import GeneralSettings from "./GeneralSettings";
 
-const MenuSettings = ({ menu }) => {
+const MenuSettings = ({ menuLandingData }) => {
   return (
     <Stack p={"sm"}>
-      <GeneralSettings editingItem={menu} />
+      <GeneralSettings editingItem={menuLandingData} />
     </Stack>
   );
 };

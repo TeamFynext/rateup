@@ -434,6 +434,7 @@ declare global {
     menu?: {
       id?: string;
     };
+    currency?: string;
   };
 
   type MenuCategory = {
@@ -1204,6 +1205,7 @@ export type Campaign = {
   type: string;
   teamId: string;
   waTemplateId: string;
+  campaignSentAt?: Date;
 };
 
 //type for org websocket messages

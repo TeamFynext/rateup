@@ -98,7 +98,6 @@ function CustomColorPicker({
               leftSection={<IconColorPicker />}
               onClick={pickEyeDropperColor}
               classNames={buttonStyles}
-              color="#1C518E"
             >
               {"Eye Dropper"}
             </Button>

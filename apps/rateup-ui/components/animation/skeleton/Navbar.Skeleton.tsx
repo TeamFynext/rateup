@@ -6,9 +6,9 @@ const NavbarSkeleton = () => {
     <Card w={250} withBorder px={0}>
       <Stack justify="space-between" h={"100%"}>
         <Box>
-          <Group px={"xs"}>
-            <Skeleton h={30} w={35} />
-            <Skeleton h={20} w={"60%"} />
+          <Group px={"sm"}>
+            <Skeleton h={37} w={44} />
+            <Skeleton h={20} w={"50%"} />
             <Skeleton h={20} w={20} />
           </Group>
           <Divider mt={17} />

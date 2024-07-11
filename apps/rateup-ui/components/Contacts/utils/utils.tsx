@@ -47,6 +47,7 @@ export const selectCheckBox: ColumnDef<any>[] = [
             indeterminate: row.getIsSomeSelected(),
             onChange: row.getToggleSelectedHandler(),
           }}
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
     ),
@@ -179,6 +180,15 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     cell: (info) => (
       <Badge size="md" variant="light" color="green" mt={"auto"}>
         {(info.getValue() as string) ?? "NA"}
+      </Badge>
+    ),
+  },
+  {
+    header: () => "Status",
+    accessorKey: "status",
+    cell: (info) => (
+      <Badge variant="light" color={renderBadge(info.getValue()).color}>
+        {info.getValue() as string}
       </Badge>
     ),
   },
