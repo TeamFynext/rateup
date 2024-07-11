@@ -3,8 +3,6 @@ import {
   CreateMenuInput,
   ByMenuIdParams,
   UpdateMenuInput,
-  updateMenuLandingInput,
-  updateLandingPageOption,
 } from "./menu.schema";
 import {
   createMenu,
@@ -13,9 +11,7 @@ import {
   getFullMenu,
   getMenuLanding,
   getMenus,
-  updateLandingPage,
   updateMenu,
-  updateMenuLanding,
   updateVisitedMenuLanding,
 } from "./menu.service";
 import { ByTeamIdParams } from "../team/team.schema";
@@ -24,7 +20,7 @@ import { getLoggedUserInfo } from "../user/user.service";
 
 export async function createMenuHandler(
   request: FastifyRequest<{ Body: CreateMenuInput }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   if (!hasAccessToTeam(request.body.teamId, request.userId)) {
     reply.code(403).send({ message: "You don't have access to this team" });
@@ -37,7 +33,7 @@ export async function createMenuHandler(
 
 export async function getAllMenusHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const userData = await getLoggedUserInfo(request, reply);
 
@@ -47,14 +43,14 @@ export async function getAllMenusHandler(
 
 export async function getAllMenusByTeamIdHandler(
   request: FastifyRequest<{ Params: ByTeamIdParams }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const menus = await getMenus(request.params.teamId);
   reply.send(menus);
 }
 export async function getMenuByIdHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const menu = await getMenuLanding(request.params.menuId);
@@ -65,14 +61,14 @@ export async function getMenuByIdHandler(
 }
 export async function getFullMenuByIdHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const menu = await getFullMenu(request.params.menuId);
   reply.send(menu);
 }
 export async function updateMenuHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams; Body: UpdateMenuInput }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const menuId = request.params.menuId;
   const data = request.body;
@@ -82,7 +78,7 @@ export async function updateMenuHandler(
 
 export async function deleteMenuHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const menu = await deleteMenu(request.params.menuId);
   reply.send(menu);
@@ -90,7 +86,7 @@ export async function deleteMenuHandler(
 
 export async function getMenuLandingHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const menu = await getMenuLanding(request.params.menuId);
@@ -100,40 +96,11 @@ export async function getMenuLandingHandler(
   }
 }
 
-export async function updateMenuLandingHandler(
-  request: FastifyRequest<{
-    Params: ByMenuIdParams;
-    body: updateMenuLandingInput;
-  }>,
-  reply: FastifyReply
-) {
-  try {
-    const menu = await updateMenuLanding(request.params.menuId, request.body);
-    reply.code(200).send(menu?.data);
-  } catch (error) {
-    reply.code(500).send(error);
-  }
-}
-export async function updateLandingPageOptionHandler(
-  request: FastifyRequest<{
-    Params: ByMenuIdParams;
-    body: updateLandingPageOption;
-  }>,
-  reply: FastifyReply
-) {
-  try {
-    await updateLandingPage(request.params.menuId, request.body);
-    reply.code(200).send("landing page options updated");
-  } catch (error) {
-    reply.code(500).send(error);
-  }
-}
-
 export async function visitedMenuLandingHandler(
   request: FastifyRequest<{
-    Params: ByMenuIdParams ;
+    Params: ByMenuIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const updateVisited = await updateVisitedMenuLanding(request.params.menuId);

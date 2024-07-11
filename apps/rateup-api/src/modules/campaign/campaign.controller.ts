@@ -94,6 +94,17 @@ export async function sendCampaignHandler(
   ) {
     return reply.status(400).send({ message: "sendToStatuses is required" });
   }
+  if (request.body.status === CampaignStatus.INACTIVE) {
+    await updateCampaign(request.params.campaignId, {
+      status: CampaignStatus.ACTIVE,
+      campaignSentAt: null,
+      scheduledStatuses: [],
+    });
+    return reply.status(200).send({
+      message: "Campaign schedule cancelled",
+      code: "MSG_SCHEDULED",
+    });
+  }
   if (
     request.body.campaignSentAt &&
     request.body.sentCampaignChoice === SentCampaignEnum.LATER
@@ -103,9 +114,10 @@ export async function sendCampaignHandler(
       campaignSentAt: request.body.campaignSentAt,
       scheduledStatuses: request.body.sendToStatuses,
     });
-    return reply
-      .status(200)
-      .send({ message: "campaign scheduled", code: "MSG_SCHEDULED" });
+    return reply.status(200).send({
+      message: "Campaign scheduled successfully",
+      code: "MSG_SCHEDULED",
+    });
   }
   await sendCampaign(
     request.params.campaignId,
