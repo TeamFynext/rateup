@@ -40,7 +40,11 @@ const MenuAnalytics = ({
         <Heading subtitle="Menu Insights" />
         <PaperLayout w={300} h={120} mb={"xl"} mt={"sm"} ml={"xs"}>
           <Stack align={"center"} justify="center" h={"100%"}>
-            <Text fz={"30px"} fw="700" c={"var(--tertiary-color)"}>
+            <Text
+              fz={"30px"}
+              fw="700"
+              c={"var(--mantine-primary-color-filled)"}
+            >
               {visited ?? 0} visited
             </Text>
           </Stack>
@@ -50,10 +54,18 @@ const MenuAnalytics = ({
             <Heading subtitle="Your Free Quota" />
             <RingProgress
               sections={[
-                { value: visited ?? 0, color: "var(--tertiary-color)" },
+                {
+                  value: visited ?? 0,
+                  color: "var(--mantine-primary-color-filled)",
+                },
               ]}
               label={
-                <Text c="var(--tertiary-color)" fw={700} ta="center" size="sm">
+                <Text
+                  c="var(--mantine-primary-color-filled)"
+                  fw={700}
+                  ta="center"
+                  size="sm"
+                >
                   {Math.round(((visited ?? 0) / 100) * 100)}% Used
                 </Text>
               }
@@ -77,9 +89,7 @@ const MenuAnalytics = ({
                     <Text fs={"20px"} fw="900" size={"30px"}>
                       {count}
                     </Text>
-                    <Badge color="blue" variant="light">
-                      {label}
-                    </Badge>
+                    <Badge variant="light">{label}</Badge>
                   </Stack>
                 </PaperLayout>
               ))}

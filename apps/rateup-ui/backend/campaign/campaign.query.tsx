@@ -11,7 +11,7 @@ import {
 } from "./campaign.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { CampaignParticipantStatus } from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { notifications } from "@mantine/notifications";
 
 export const useCampaignData = () => {
@@ -117,6 +117,7 @@ type sendCampaignProps = {
   statuses: CampaignParticipantStatus[];
   sentCampaignChoice: string;
   participantId?: string;
+  status?: CampaignStatus;
 };
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
@@ -127,6 +128,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       participantId,
       campaignSentAt,
       sentCampaignChoice,
+      status,
     }: sendCampaignProps) =>
       sendCampaign(
         campaignId,
@@ -134,6 +136,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         sentCampaignChoice,
         participantId,
         campaignSentAt,
+        status,
       ),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
@@ -147,7 +150,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
             : "Campaign started successfully",
         message:
           res?.data?.code === "MSG_SCHEDULED"
-            ? "Campaign scheduled successfully"
+            ? res?.data?.message ?? "Campaign scheduled successfully"
             : "It may take a few minutes to send to all participants.",
         autoClose: 5000,
         loading: false,

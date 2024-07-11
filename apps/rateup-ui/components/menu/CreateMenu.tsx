@@ -95,6 +95,11 @@ export function CreateMenuModal({
           allowDeselect={false}
           value={form?.getInputProps("teamId")?.value || ""}
           {...form.getInputProps("teamId")}
+          styles={{
+            input: {
+              width: "100%",
+            },
+          }}
         />
         <ContainedTextField
           label="Menu Name"

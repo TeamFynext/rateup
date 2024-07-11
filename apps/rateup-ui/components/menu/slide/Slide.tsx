@@ -1,13 +1,13 @@
 import {
   ActionIcon,
   BackgroundImage,
-  Box,
   Center,
   FileButton,
   Flex,
   Group,
   LoadingOverlay,
   SimpleGrid,
+  Skeleton,
   Stack,
   Text,
 } from "@mantine/core";
@@ -24,10 +24,7 @@ import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 import { useForm } from "@mantine/form";
 import { MenuItemPriceType } from "../../../types/enums";
 import { getHotkeyHandler, useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
@@ -311,7 +308,7 @@ export const Slide = ({
                     {Array(3)
                       .fill(0)
                       .map((_, index) => (
-                        <Box
+                        <Skeleton
                           h={13}
                           w={!isMobile && 50}
                           key={index}
@@ -324,7 +321,7 @@ export const Slide = ({
                       ))}
                   </Group>
 
-                  <Box
+                  <Skeleton
                     h={9}
                     w={57}
                     style={{
@@ -348,8 +345,7 @@ export const Slide = ({
           </Stack>
         </SimpleGrid>
         <Group justify="flex-end">
-          <RateupButtonSecondary
-            color="var(--tertiary-color)"
+          <RateupButtonPrimary
             loading={
               createMenuBannerMutation?.isPending ||
               updateMenuBannerMutation?.isPending
@@ -359,8 +355,7 @@ export const Slide = ({
             onClick={onClose}
             title={"Cancel"}
           />
-          <RateupButtonBlue
-            color="var(--tertiary-color)"
+          <RateupButtonPrimary
             loading={
               createMenuBannerMutation?.isPending ||
               updateMenuBannerMutation?.isPending

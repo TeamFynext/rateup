@@ -5,6 +5,7 @@ import { getTimeSince } from "../../utils";
 import CreatedSinceText from "../DateAndTime/CreatedSinceText";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import MenuCardMenu from "./MenuCardMenu";
+import { currencyLabel } from "./util/currencyData";
 
 export function MenuCard({
   menu,
@@ -35,7 +36,7 @@ export function MenuCard({
       <Stack>
         <Box>
           <Flex justify={"space-between"} align={"center"}>
-            <Text mr={"sm"} truncate size="xl" fw={700} tt={"capitalize"}>
+            <Text mr={"sm"} truncate fz="lg" fw={700} tt={"capitalize"}>
               {menu.name}
             </Text>
             <MenuCardMenu
@@ -54,8 +55,16 @@ export function MenuCard({
 
         <Group>
           {menu?.team?.code && (
-            <Badge color="var(--tertiary-color)" variant="light">
+            <Badge variant="light" color="green">
               {menu?.team?.code}
+            </Badge>
+          )}
+          {menu?.currency && (
+            <Badge variant="light">
+              {
+                currencyLabel.find((data) => data.value === menu?.currency)
+                  .label
+              }
             </Badge>
           )}
         </Group>
