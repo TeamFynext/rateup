@@ -1,12 +1,7 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { deleteFile } from "../../utils/upload/s3Upload";
-import {
-  CreateMenuInput,
-  UpdateMenuInput,
-  updateLandingPageOption,
-  updateMenuLandingInput,
-} from "./menu.schema";
+import { CreateMenuInput, UpdateMenuInput } from "./menu.schema";
 import { getShortUrlId } from "../../utils/commnUtils";
 import { updateMonthlyStat } from "../stats/stats.service";
 import { createMenuBanner } from "./banner/banner.service";
@@ -164,16 +159,12 @@ export async function getFullMenu(menuId: string) {
       },
       menuLanding: {
         select: {
-          headerStyle: true,
-          titleStyle: true,
-          otherStyle: true,
-          feedbackPageEnabled: true,
-          headerText: true,
           backgroundImage: true,
           mobileBackgroundImage: true,
           surveyTeamMapId: true,
           unsplashImage: true,
           visited: true,
+          dynamicVariables: true,
           menu: {
             select: {
               currency: true,
@@ -254,7 +245,16 @@ export async function getMenus(teamId: string) {
 }
 
 export async function updateMenu(id: string, data: UpdateMenuInput) {
-  const { surveyTeamMapId, teamId, ...newObject } = data;
+  const {
+    surveyTeamMapId,
+    teamId,
+    backgroundImage,
+    mobileBackgroundImage,
+    unsplashImage,
+    primaryColor,
+    dynamicVariables,
+    ...newObject
+  } = data;
   const teamData = teamId && { team: { connect: { id: teamId } } };
   const menu = await prisma.menu.update({
     where: {
@@ -266,7 +266,14 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
     menu: { connect: { id: id } },
   };
   if (surveyTeamMapId) {
-    let surveyId = { surveyTeamMap: { connect: { id: data.surveyTeamMapId } } };
+    let surveyId = {
+      surveyTeamMap: { connect: { id: data.surveyTeamMapId } },
+      backgroundImage,
+      mobileBackgroundImage,
+      unsplashImage,
+      primaryColor,
+      dynamicVariables,
+    };
     await prisma.menuLanding.upsert({
       where: {
         menuId: id,
@@ -285,7 +292,14 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
       create: {
         ...createMenuLandingData,
       },
-      update: { surveyTeamMapId: null },
+      update: {
+        surveyTeamMapId: null,
+        backgroundImage,
+        mobileBackgroundImage,
+        unsplashImage,
+        primaryColor,
+        dynamicVariables,
+      },
     });
   }
   return menu;
@@ -442,74 +456,6 @@ export async function getMenuLanding(id: string) {
       message: "Menu data not found",
     };
   }
-}
-
-export async function updateMenuLanding(
-  id: string,
-  body: updateMenuLandingInput,
-) {
-  let updatedMenuData = {
-    displayName: body.titleText,
-    locationText: body.locationText,
-    websiteText: body.websiteText,
-    logo: body.logo,
-  };
-  await prisma.menu.update({
-    where: { id: id },
-    data: updatedMenuData,
-  });
-  const updateMenuLandingData = {
-    headerText: body.headerText,
-    headerStyle: body.headerStyle,
-    titleStyle: body.titleStyle,
-    otherStyle: body.otherStyle,
-    backgroundImage: body.backgroundImage,
-    mobileBackgroundImage: body.mobileBackgroundImage,
-    catalogue: body.catalogue,
-    menu: { connect: { id: id } },
-    unsplashImage: body.unsplashImage,
-  };
-  const menuLanding = await prisma.menuLanding.findFirst({
-    where: {
-      menu: {
-        id: id,
-      },
-    },
-  });
-  let menu: any;
-
-  if (menuLanding?.id) {
-    menu = await prisma.menuLanding.update({
-      where: { id: menuLanding?.id },
-      data: updateMenuLandingData,
-    });
-  } else {
-    menu = await prisma.menuLanding.create({
-      data: updateMenuLandingData,
-    });
-  }
-  return menu;
-}
-
-export async function updateLandingPage(
-  id: string,
-  data: updateLandingPageOption,
-) {
-  const createMenuLandingData = {
-    menu: { connect: { id: id } },
-  };
-
-  const menuLanding = await prisma.menuLanding.upsert({
-    where: {
-      menuId: id,
-    },
-    create: {
-      ...createMenuLandingData,
-      ...data?.option,
-    },
-    update: data?.option,
-  });
-  return menuLanding;
 }
 
 export async function updateVisitedMenuLanding(id: string) {
