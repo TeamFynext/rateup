@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Card, Divider, Group, Skeleton, Stack } from "@mantine/core";
 
-const NavbarSkeleton = () => {
+const NavbarSkeleton = ({ className }) => {
   return (
-    <Card w={250} withBorder px={0}>
+    <Card w={250} withBorder px={0} className={className}>
       <Stack justify="space-between" h={"100%"}>
         <Box>
           <Group px={"sm"}>
