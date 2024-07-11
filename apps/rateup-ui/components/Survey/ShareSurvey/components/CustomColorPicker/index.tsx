@@ -14,7 +14,6 @@ type CustomColorPickerProps = {
   className?: string;
   value: string;
   onChange: any;
-  optionalDataObj?: any;
   size?: string;
 };
 
@@ -22,7 +21,6 @@ function CustomColorPicker({
   className = "",
   value,
   onChange,
-  optionalDataObj,
   size = "md",
 }: CustomColorPickerProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -42,23 +40,10 @@ function CustomColorPicker({
   }, []);
 
   const handleInputChange = useCallback(
-    (eventOrValue) => {
-      let value =
-        typeof eventOrValue === "object"
-          ? eventOrValue.target.value
-          : eventOrValue;
-      if (!value.length) value = "#000000";
-
-      if (optionalDataObj) {
-        onChange({
-          ...optionalDataObj,
-          value,
-        });
-      } else {
-        onChange(value);
-      }
+    (value) => {
+      onChange(value);
     },
-    [optionalDataObj],
+    [onChange],
   );
 
   const pickEyeDropperColor = async () => {
