@@ -1,16 +1,14 @@
-import { useDisclosure } from "@mantine/hooks";
-import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
-import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
 import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
-import classes from "./styles.module.css";
-import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
-import NothingFound from "../../../../../NothingFound/NothingFound";
-import WaInboxTemplateSelectCard from "./templateSelectCard";
 import { useState } from "react";
-import WaInboxTemplatePreview from "./templatePreview";
-import WaTemplateSF from "./templateSF";
-import { TeamSelector } from "../../../../../input/TeamSelector";
+import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
 import useTemplatesAvailableForTeam from "../../../../../../hooks/team";
+import { TeamSelector } from "../../../../../input/TeamSelector";
+import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
+import NothingFound from "../../../../../NothingFound/NothingFound";
+import classes from "./styles.module.css";
+import WaInboxTemplatePreview from "./templatePreview";
+import WaInboxTemplateSelectCard from "./templateSelectCard";
+import WaTemplateSF from "./templateSF";
 interface Props {
   sessionExpired: boolean;
   contact: ContactsData;
@@ -69,7 +67,11 @@ export default function WaInboxTemplateDisplayModal({
                   <div>
                     {" "}
                     {/* Adding a div since Tooltip isn't working on <Select /> */}
-                    <TeamSelector value={teamId} onChange={setTeamId} />
+                    <TeamSelector
+                      value={teamId}
+                      onChange={setTeamId}
+                      className={classes["team-selector-contained-input-field"]}
+                    />
                   </div>
                 </Tooltip>
                 <WaTemplateSF
@@ -107,15 +109,6 @@ export default function WaInboxTemplateDisplayModal({
           <NothingFound text="No templates found" />
         )}
       </SimpleModalLayout>
-      {/* <RateupButtonPrimary
-        variant="transparent"
-        onClick={open}
-        title={
-          sessionExpired
-            ? "Initiate Conversation by Sending a Template"
-            : "Send Template"
-        }
-      /> */}
     </>
   );
 }
