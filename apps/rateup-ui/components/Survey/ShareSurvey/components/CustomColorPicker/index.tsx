@@ -40,8 +40,15 @@ function CustomColorPicker({
   }, []);
 
   const handleInputChange = useCallback(
-    (value) => {
-      onChange(value);
+    (eventOrvalue) => {
+      let resultValue = eventOrvalue;
+      if (typeof eventOrvalue === "object") {
+        resultValue = eventOrvalue.target.value;
+      }
+      if (!resultValue.length) {
+        resultValue = "#000000";
+      }
+      onChange(resultValue);
     },
     [onChange],
   );
@@ -71,6 +78,7 @@ function CustomColorPicker({
             type="text"
             className={`${styles["text-input-for-picking-color"]} text-input-for-picking-color`}
             size={7}
+            maxLength={7}
             value={!value?.length ? "#000000" : value}
             onBlur={handleBlur}
             onFocus={handleFocus}
