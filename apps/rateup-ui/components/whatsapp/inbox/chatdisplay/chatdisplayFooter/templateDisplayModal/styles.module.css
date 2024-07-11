@@ -28,6 +28,10 @@
   flex: 1 1 0;
 }
 
+.team-selector-contained-input-field input {
+  width: 100% !important;
+}
+
 @media screen and (max-width: 768px) {
   .template_card_list_preview_wrapper {
     flex-direction: column;
@@ -39,6 +43,9 @@
   .template_card_list_wrapper {
     height: auto;
     border: none;
+  }
+  .modal_inner {
+    padding: 0;
   }
   .modal_inner .nothing_found {
     display: none;
