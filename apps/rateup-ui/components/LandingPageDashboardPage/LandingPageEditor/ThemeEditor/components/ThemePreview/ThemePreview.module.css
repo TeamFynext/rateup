@@ -74,4 +74,5 @@
   position: relative;
   font-family: var(--font-lexend);
   font-weight: 400;
+  text-decoration: none;
 }

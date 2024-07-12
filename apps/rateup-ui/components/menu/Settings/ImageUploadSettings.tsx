@@ -1,14 +1,16 @@
 import React, { useRef, useState } from "react";
-import { Group, FileButton, Button, Text, Box } from "@mantine/core";
-import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { RateupButtonPrimary } from "components/Button/RateupButtons";
-import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
+
 import { useDisclosure } from "@mantine/hooks";
+import { showErrorToast } from "utils/notifications";
+import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { UnsplashModal } from "components/Modal/UnsplashModal";
 import { ImageCropModal } from "components/Modal/ImageCropModal";
+import { RateupButtonPrimary } from "components/Button/RateupButtons";
+import { Box, Button, FileButton, Group, Stack, Text } from "@mantine/core";
 import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "utils/constants";
-import { showErrorToast } from "utils/notifications";
 import { ImageUploadMethodModal } from "components/Modal/ImageUploadMethodModal";
+
+import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
 const ImageUploadSettings = ({
   form,
@@ -16,11 +18,15 @@ const ImageUploadSettings = ({
   setBackgroundImage,
   mobileBackgroundImage,
   setMobileBackgroundImage,
+  logo,
+  setLogo,
   setImageToDelete,
 }) => {
   const [aspectRatio, setAspectRatio] = useState(16 / 9);
   const [imageType, setImageType] = useState("");
   const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
+  const logoRef = useRef<HTMLButtonElement>(null);
+  const resetLogoRef = useRef(null);
 
   const [
     openedMethodSelectionDialog,
@@ -49,6 +55,9 @@ const ImageUploadSettings = ({
     });
     toggleCropDialog();
   };
+  let labelColor =
+    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))";
+
   const handleCropImageSave = (cropedImage) => {
     let imageUrl =
       typeof cropedImage === "string"
@@ -83,6 +92,9 @@ const ImageUploadSettings = ({
         });
         setMobileBackgroundImage(cropedImage);
       }
+    } else if (imageType === "logo") {
+      form?.setFieldValue("logo", imageUrl);
+      setLogo(cropedImage);
     }
   };
   const handlePictureBackground = () => {
@@ -95,6 +107,22 @@ const ImageUploadSettings = ({
     toggleMethodSelectionDialog();
     setImageType("mobileBackgroundImage");
   };
+  const onChangeLogo = (event: File) => {
+    if (!event) return;
+    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return;
+    }
+    setSelectedUnslashImage({
+      url: URL.createObjectURL(event),
+      name: event.name,
+    });
+    toggleCropDialog();
+    setAspectRatio(4 / 3);
+    setImageType("logo");
+    resetLogoRef?.current?.();
+  };
+
   const handleBgPick = (e: File | null) => {
     if (!e) return;
     if (e.size > MAX_FILE_SIZE_IN_BYTE) {
@@ -114,6 +142,8 @@ const ImageUploadSettings = ({
       setBackgroundImage(null);
     } else if (type === "mobileBackgroundImage") {
       setMobileBackgroundImage(null);
+    } else if (type === "logo") {
+      setLogo(null);
     }
     if (!form?.values?.unsplashImage[type]) {
       if (!form?.values?.[type]?.startsWith("blob:")) {
@@ -128,7 +158,7 @@ const ImageUploadSettings = ({
     form.setFieldValue(type, "");
   };
   return (
-    <Group mt={"md"}>
+    <>
       <UnsplashModal
         handleUnsplashImageSave={handleUnsplashImageSave}
         opened={openedUnsplashDialog}
@@ -147,20 +177,16 @@ const ImageUploadSettings = ({
         opened={openedMethodSelectionDialog}
         handleUploadMethod={handleUploadMethod}
       />
-      <Box mt={-12}>
-        <Text size="xs" lineClamp={1} h={17}>
-          {getFileNameFromUrl(
-            mobileBackgroundImage
-              ? mobileBackgroundImage?.name
-              : form?.values?.mobileBackgroundImage,
-            !!mobileBackgroundImage,
-          )}
+      <Box>
+        <Text size="xs" lineClamp={1} h={17} c={labelColor}>
+          Default Banner Image
         </Text>
         <Group>
           <RateupButtonPrimary
             leftIcon={<IconUpload size={16} />}
             title="Upload Mobile Image"
             size="sm"
+            variant="light"
             onClick={handlePictureMobileBackground}
           />
           <ActionIconCommon
@@ -171,21 +197,25 @@ const ImageUploadSettings = ({
             <IconTrash />
           </ActionIconCommon>
         </Group>
-      </Box>
-      <Box mt={-12}>
         <Text size="xs" lineClamp={1} h={17}>
           {getFileNameFromUrl(
-            backgroundImage
-              ? backgroundImage?.name
-              : form?.values?.backgroundImage,
-            !!backgroundImage,
+            mobileBackgroundImage
+              ? mobileBackgroundImage?.name
+              : form?.values?.mobileBackgroundImage,
+            !!mobileBackgroundImage,
           )}
+        </Text>
+      </Box>
+      <Box>
+        <Text size="xs" lineClamp={1} h={17} c={labelColor}>
+          Default Banner Image
         </Text>
         <Group>
           <RateupButtonPrimary
             leftIcon={<IconUpload size={16} />}
             title="Upload Tablet Image"
             size="sm"
+            variant="light"
             onClick={handlePictureBackground}
           />
           <ActionIconCommon
@@ -196,6 +226,46 @@ const ImageUploadSettings = ({
             <IconTrash />
           </ActionIconCommon>
         </Group>
+        <Text size="xs" lineClamp={1} h={17}>
+          {getFileNameFromUrl(
+            backgroundImage
+              ? backgroundImage?.name
+              : form?.values?.backgroundImage,
+            !!backgroundImage,
+          )}
+        </Text>
+      </Box>
+      <Box>
+        <Text size="xs" lineClamp={1} h={17} c={labelColor}>
+          Logo
+        </Text>
+        <Group>
+          <FileButton
+            onChange={onChangeLogo}
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            resetRef={resetLogoRef}
+          >
+            {(props) => (
+              <RateupButtonPrimary
+                leftIcon={<IconUpload size={16} />}
+                title="Upload Logo"
+                size="sm"
+                variant="light"
+                {...props}
+              />
+            )}
+          </FileButton>
+          <ActionIconCommon
+            handleClick={() => resetImage("logo")}
+            disabled={!form?.values?.logo}
+            label="Delete"
+          >
+            <IconTrash />
+          </ActionIconCommon>
+        </Group>
+        <Text size="xs" lineClamp={1} h={17}>
+          {getFileNameFromUrl(logo ? logo?.name : form?.values?.logo, !!logo)}
+        </Text>
       </Box>
       <FileButton
         onChange={handleBgPick}
@@ -205,7 +275,7 @@ const ImageUploadSettings = ({
           <Button ref={imageUploadBtnRef} display={"none"} {...props} />
         )}
       </FileButton>
-    </Group>
+    </>
   );
 };
 
