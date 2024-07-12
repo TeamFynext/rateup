@@ -1,82 +1,56 @@
 import React, { useState } from "react";
+
+import { zodResolver } from "mantine-form-zod-resolver";
+
+import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { showErrorToast } from "utils/notifications";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { deleteUploadedFiles, uploadFile } from "utils/file-upload/upload";
 import {
   ActionIcon,
-  Grid,
+  Container,
   Group,
   SimpleGrid,
   Stack,
   Text,
 } from "@mantine/core";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { useForm } from "@mantine/form";
+
+import Heading from "../../styled/Heading/Heading";
+import { currencyLabel } from "../util/currencyData";
+import RateupLoader from "../../Loaders/RateupLoader";
+import { SAVE_HOTKEY } from "../../../utils/constants";
+import { TeamSelector } from "../../input/TeamSelector";
+import ImageUploadSettings from "./ImageUploadSettings";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
+import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
 import {
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
-import { TeamSelector } from "../../input/TeamSelector";
-import Heading from "../../styled/Heading/Heading";
-import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
-import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
-import RateupLoader from "../../Loaders/RateupLoader";
-import { currencyLabel } from "../util/currencyData";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
-import ImageUploadSettings from "./ImageUploadSettings";
-import { uploadFile, deleteUploadedFiles } from "utils/file-upload/upload";
-import { showErrorToast } from "utils/notifications";
-import { IconPlus, IconMinus } from "@tabler/icons-react";
-import { z } from "zod";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { schema } from "./GeneralFormSchema";
 
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = {
     ...editingItem?.menu,
     backkgroundImage: editingItem?.backgroundImage,
     mobileBackgroundImage: editingItem?.mobileBackgroundImage,
+    logo: editingItem?.logo,
     unsplashImage: editingItem?.unsplashImage,
     surveyTeamMapId: editingItem?.surveyTeamMapId?.id,
     hideUnavailableCategory:
       editingItem?.menu?.hideUnavailableCategory?.toString(),
-    dynamicVariables: editingItem?.dynamicVariables ?? [],
+    menuButtons: editingItem?.menuButtons ?? [],
   };
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [mobileBackgroundImage, setMobileBackgroundImage] =
     useState<File | null>(null);
+  const [logo, setLogo] = useState<File | null>(null);
   const [imageToDelete, setImageToDelete] = useState([]);
   const [updatingLoading, setUpdatingLoading] = useState(false);
-  const schema = z.object({
-    name: z.string().trim().min(1),
-    displayName: z.string().trim().min(1),
-    teamId: z.string().min(1),
-    surveyTeamMapId: z.string().optional(),
-    currency: z.string(),
-    unsplashImage: z
-      .object({
-        mobileBackgroundImage: z.boolean().optional(),
-        backgroundImage: z.boolean().optional(),
-      })
-      .optional()
-      .nullable(),
-    dynamicVariables: z.array(
-      z.object({
-        name: z.string().trim().min(1),
-        link: z.string().refine(
-          (value) => {
-            try {
-              new URL(value);
-              return true;
-            } catch {
-              return false;
-            }
-          },
-          {
-            message: "URL should be valid",
-          },
-        ),
-      }),
-    ),
-  });
+
   const form = useForm({
     initialValues: formatedItemValue || {
       name: "",
@@ -87,8 +61,11 @@ const GeneralSettings = ({ editingItem }) => {
       hideUnavailableCategory: "false",
       backgroundImage: "",
       mobileBackgroundImage: "",
+      logo: "",
       unsplashImage: "",
-      dynamicVariables: [],
+      menuButtons: [],
+      locationUrl: "",
+      locationText: "",
     },
     validate: zodResolver(schema),
   });
@@ -130,6 +107,10 @@ const GeneralSettings = ({ editingItem }) => {
         mobileBackgroundImage &&
         deleteImageArray.push({ Key: formatedItemValue.mobileBackgroundImage });
 
+      logo && imageArray.push(logo);
+      formatedItemValue?.logo &&
+        logo &&
+        deleteImageArray.push({ Key: formatedItemValue.logo });
       let errors = [];
       if (imageArray?.length > 0) {
         const imageResponse = imageArray.map((data) => uploadFile(data));
@@ -151,6 +132,7 @@ const GeneralSettings = ({ editingItem }) => {
         if (deleteImageArray?.length > 0) {
           successes?.pop();
         }
+        if (logo) values.logo = successes.pop();
         if (mobileBackgroundImage)
           values.mobileBackgroundImage = successes.pop();
         if (backgroundImage) values.backgroundImage = successes.pop();
@@ -173,6 +155,7 @@ const GeneralSettings = ({ editingItem }) => {
       setUpdatingLoading(false);
       setBackgroundImage(null);
       setMobileBackgroundImage(null);
+      setLogo(null);
       setImageToDelete([]);
     }
   };
@@ -186,147 +169,170 @@ const GeneralSettings = ({ editingItem }) => {
         ])}
       >
         <Heading subtitle="General settings" />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <SimpleGrid cols={2} spacing="md">
-            <TeamSelector
-              placeholder="Select Team"
-              label="Team"
-              withAsterisk
-              defaultValue={formatedItemValue?.teamId}
-              allowDeselect={false}
-              disabled={isPending}
-              value={form?.getInputProps("teamId")?.value || ""}
-              {...form.getInputProps("teamId")}
-              onChange={(value) => {
-                form.setFieldValue("surveyTeamMapId", "");
-                form.setFieldValue("teamId", value);
-              }}
-              styles={{
-                input: {
-                  width: "100%",
-                },
-              }}
-            />
-            <ContainedTextField
-              label="Menu Name"
-              placeholder="Menu 1"
-              withAsterisk
-              {...form.getInputProps("name")}
-            />
-          </SimpleGrid>
-          <ImageUploadSettings
-            form={form}
-            backgroundImage={backgroundImage}
-            setBackgroundImage={setBackgroundImage}
-            mobileBackgroundImage={mobileBackgroundImage}
-            setMobileBackgroundImage={setMobileBackgroundImage}
-            setImageToDelete={setImageToDelete}
-          />
-          <SimpleGrid cols={2} spacing="md">
-            <ContainedTextField
-              label="Display Name"
-              placeholder="Hotel Name"
-              withAsterisk
-              {...form.getInputProps("displayName")}
-            />
-            <ContainedSelection
-              allowDeselect={false}
-              withAsterisk
-              data={[
-                { value: "false", label: "Disable" },
-                { value: "true", label: "Hide" },
-              ]}
-              defaultValue={form?.values?.hideUnavailableCategory}
-              {...form.getInputProps("hideUnavailableCategory")}
-              label={" Hide or Disable category outside its scheduled time"}
-            />
-          </SimpleGrid>
+        <Container my="md" size={"xl"}>
+          <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
+            <Stack>
+              <ContainedTextField
+                label="Menu Name"
+                placeholder="Menu 1"
+                withAsterisk
+                {...form.getInputProps("name")}
+              />
+              <TeamSelector
+                placeholder="Select Team"
+                label="Team"
+                withAsterisk
+                defaultValue={formatedItemValue?.teamId}
+                allowDeselect={false}
+                disabled={isPending}
+                value={form?.getInputProps("teamId")?.value || ""}
+                {...form.getInputProps("teamId")}
+                onChange={(value) => {
+                  form.setFieldValue("surveyTeamMapId", "");
+                  form.setFieldValue("teamId", value);
+                }}
+                styles={{
+                  input: {
+                    width: "100%",
+                  },
+                }}
+              />
+            </Stack>
 
-          <SimpleGrid cols={2} spacing="md">
-            <ContainedSelection
-              label="Choose a survey to display in the menu page"
-              placeholder={
-                surveyFormatedData?.length === 0
-                  ? "There is no published survay"
-                  : "Select survey"
-              }
-              disabled={surveyFormatedData?.length === 0}
-              required
-              data={surveyFormatedData}
-              {...form.getInputProps("surveyTeamMapId")}
-            />
-            <ContainedSelection
-              allowDeselect={false}
-              data={currencyLabel}
-              defaultValue={currencyLabel[0].value}
-              {...form.getInputProps("currency")}
-              label={"Currency"}
+            <Stack>
+              <ContainedTextField
+                label="Display Name"
+                placeholder="Hotel Name"
+                withAsterisk
+                {...form.getInputProps("displayName")}
+              />
+              <ContainedSelection
+                allowDeselect={false}
+                data={currencyLabel}
+                defaultValue={currencyLabel[0].value}
+                {...form.getInputProps("currency")}
+                label={"Currency"}
+              />
+            </Stack>
+            <Stack>
+              <ContainedSelection
+                label="Choose a survey to display in the menu page"
+                placeholder={
+                  surveyFormatedData?.length === 0
+                    ? "There is no published survay"
+                    : "Select survey"
+                }
+                disabled={surveyFormatedData?.length === 0}
+                required
+                data={surveyFormatedData}
+                {...form.getInputProps("surveyTeamMapId")}
+              />
+              <ContainedTextField
+                label="Location Label"
+                placeholder="Kannur Rd, near CH Over bridge"
+                {...form.getInputProps("locationText")}
+              />
+            </Stack>
+            <Stack>
+              <ContainedSelection
+                allowDeselect={false}
+                withAsterisk
+                data={[
+                  { value: "false", label: "Disable" },
+                  { value: "true", label: "Hide" },
+                ]}
+                defaultValue={form?.values?.hideUnavailableCategory}
+                {...form.getInputProps("hideUnavailableCategory")}
+                label={"Disable category outside its scheduled time"}
+              />
+              <ContainedTextField
+                label="Location URL"
+                placeholder="https://goo.gl/maps/xyz1234"
+                {...form.getInputProps("locationUrl")}
+                type="url"
+              />
+            </Stack>
+            <ImageUploadSettings
+              form={form}
+              backgroundImage={backgroundImage}
+              setBackgroundImage={setBackgroundImage}
+              mobileBackgroundImage={mobileBackgroundImage}
+              setMobileBackgroundImage={setMobileBackgroundImage}
+              logo={logo}
+              setLogo={setLogo}
+              setImageToDelete={setImageToDelete}
             />
           </SimpleGrid>
-        </SimpleGrid>
-        <Group>
-          {form.values?.dynamicVariables?.map((_, i) => (
-            <Group key={form.key(`dynamicVariables.${i}`)}>
-              <ContainedTextField
-                label="dynamic variable name"
-                placeholder="other"
-                {...form.getInputProps(`dynamicVariables.${i}.name`)}
-              />
-              <ContainedTextField
-                label="dynamic link"
-                placeholder="url"
-                type="url"
-                {...form.getInputProps(`dynamicVariables.${i}.link`)}
-              />
-            </Group>
-          ))}
-          <Stack gap={4}>
-            <Text fz={"xs"}>Dynamic variable</Text>
-            <Group>
-              {form.values?.dynamicVariables?.length < 3 && (
-                <ActionIcon
-                  variant="filled"
-                  size={"lg"}
-                  onClick={() =>
-                    form.insertListItem(
-                      "dynamicVariables",
-                      form.values?.dynamicVariables?.length === 0
-                        ? { name: "contact" }
-                        : {},
-                    )
-                  }
-                >
-                  <IconPlus size={16} />
-                </ActionIcon>
-              )}
-              {form.values?.dynamicVariables?.length >= 1 && (
-                <ActionIcon
-                  variant="filled"
-                  size={"lg"}
-                  onClick={() => {
-                    const newVariants = form.values?.dynamicVariables?.slice(
-                      0,
-                      -1,
-                    );
-                    form.setFieldValue("dynamicVariables", newVariants);
-                  }}
-                >
-                  <IconMinus size={16} />
-                </ActionIcon>
-              )}
-            </Group>
-          </Stack>
-        </Group>
-        <Grid justify="flex-end" mt={"md"}>
-          <Grid.Col span={2}>
+          <Group mt={"xs"}>
+            {form.values?.menuButtons?.map((_, i) => (
+              <SimpleGrid
+                cols={{ base: 2, sm: 1 }}
+                key={form.key(`menuButtons.${i}`)}
+              >
+                <ContainedTextField
+                  label={`Menu Button Name ${i + 1}`}
+                  placeholder="other"
+                  {...form.getInputProps(`menuButtons.${i}.name`)}
+                />
+                <ContainedTextField
+                  label={`Menu Button Value ${i + 1}`}
+                  placeholder={i === 0 ? "+919876543210" : "link"}
+                  {...form.getInputProps(`menuButtons.${i}.link`)}
+                />
+              </SimpleGrid>
+            ))}
+            <Stack gap={4}>
+              <Text
+                fz={"xs"}
+                c={
+                  "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))"
+                }
+              >
+                Menu Buttons
+              </Text>
+              <Group>
+                {form.values?.menuButtons?.length < 3 && (
+                  <ActionIcon
+                    variant="filled"
+                    size={"lg"}
+                    onClick={() =>
+                      form.insertListItem(
+                        "menuButtons",
+                        form.values?.menuButtons?.length === 0
+                          ? { name: "contact" }
+                          : {},
+                      )
+                    }
+                  >
+                    <IconPlus size={16} />
+                  </ActionIcon>
+                )}
+                {form.values?.menuButtons?.length >= 1 && (
+                  <ActionIcon
+                    variant="filled"
+                    size={"lg"}
+                    onClick={() => {
+                      const newVariants = form.values?.menuButtons?.slice(
+                        0,
+                        -1,
+                      );
+                      form.setFieldValue("menuButtons", newVariants);
+                    }}
+                  >
+                    <IconMinus size={16} />
+                  </ActionIcon>
+                )}
+              </Group>
+            </Stack>
+          </Group>
+          <Stack align="center" mt={"xs"}>
             <RateupButtonPrimary
               type="submit"
               loading={isPending || updatingLoading}
               title="Save Changes"
             />
-          </Grid.Col>
-          <Grid.Col span={5}></Grid.Col>
-        </Grid>
+          </Stack>
+        </Container>
       </form>
     </PaperLayout>
   );

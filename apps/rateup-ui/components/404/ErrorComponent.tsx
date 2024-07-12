@@ -15,7 +15,7 @@ const ErrorComponent = ({ refetch }: ErrorComponentProps) => {
       <Stack ta={"center"} gap={4} h={"100%"} justify="center">
         <Image
           src={getFileUrlFromKey("/images/error-img.svg", false)}
-          alt="image for error"
+          alt="Error Image"
           h={220}
           w={300}
         />
