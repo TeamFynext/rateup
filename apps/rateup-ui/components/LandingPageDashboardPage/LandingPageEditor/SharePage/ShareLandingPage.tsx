@@ -66,11 +66,7 @@ function ShareLandingPage({ url, isPublished, title }) {
 
   return (
     <Group className={styles["logo-tab-panel-and-qr-container"]}>
-      <LogoTabpanel
-        state={logoTabPanelState}
-        dispatch={logoTabPanelDispatch}
-        shareSettings={shareSettings}
-      />
+      <LogoTabpanel state={logoTabPanelState} dispatch={logoTabPanelDispatch} />
 
       {url && (
         <Stack align="center">

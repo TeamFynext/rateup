@@ -103,3 +103,8 @@ p {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
+/* Added to prevent using the system theme when an error occurs in a component and is caught by the error boundary */
+body {
+  background: light-dark(white, var(--mantine-color-body)) !important;
+  color: light-dark(black, white) !important;
+}

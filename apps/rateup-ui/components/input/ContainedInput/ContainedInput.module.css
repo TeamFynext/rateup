@@ -8,6 +8,6 @@
 .label {
   pointer-events: none;
   font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-gray-7);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4));
   z-index: 1;
 }

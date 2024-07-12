@@ -17,7 +17,7 @@ import CustomColorPicker from "../../components/CustomColorPicker";
 import { getLogoFileValueForFileInput } from "../utils";
 import CustomSwitch from "../../../SurveyTheme/components/stylescomponent/CustomSwitch";
 
-function LogoTabpanel({ state, dispatch, shareSettings }) {
+function LogoTabpanel({ state, dispatch }) {
   const {
     qrBgColor,
     qrColor,
@@ -37,43 +37,36 @@ function LogoTabpanel({ state, dispatch, shareSettings }) {
       <Flex className={styles["logo-tab-options-container"]}>
         <Box>
           <Stack className={styles["option-container"]}>
-            <Title order={4} className={styles["option-heading"]}>
-              Image
-            </Title>
-            <CustomSwitch
-              checked={isLogoEnabled}
-              onChange={(e) => {
-                dispatch({
-                  type: "logo-image-switch",
-                  payload: e.target.checked,
-                });
-              }}
-              label={isLogoEnabled ? "Enabled" : "Disabled"}
-            />
-            <FileInput
-              classNames={fileInputStyles}
-              placeholder="Select Logo"
-              accept="image/png,image/jpeg,image/svg+xml"
-              onChange={(value) => {
-                let resultValue = null;
-                if (value) {
-                  resultValue = value;
-                } else {
-                  const logoLink = shareSettings?.data?.logoFile;
-                  if (logoLink) {
-                    resultValue = logoLink;
-                  } else {
-                    resultValue = `/images/rateup-star.svg`;
-                  }
-                }
-                dispatch({
-                  type: "file-input",
-                  payload: resultValue,
-                });
-              }}
-              value={getLogoFileValueForFileInput(logoFile)}
-              clearable
-            />
+            <Group>
+              <Title order={4} className={styles["option-heading"]}>
+                Logo:
+              </Title>
+              <CustomSwitch
+                checked={isLogoEnabled}
+                onChange={(e) => {
+                  dispatch({
+                    type: "logo-image-switch",
+                    payload: e.target.checked,
+                  });
+                }}
+                label={isLogoEnabled ? "Enabled" : "Disabled"}
+              />
+            </Group>
+
+            {isLogoEnabled && (
+              <FileInput
+                classNames={fileInputStyles}
+                placeholder="Upload Logo"
+                accept="image/png,image/jpeg,image/svg+xml"
+                onChange={(value) => {
+                  dispatch({
+                    type: "file-input",
+                    payload: value,
+                  });
+                }}
+                value={getLogoFileValueForFileInput(logoFile)}
+              />
+            )}
           </Stack>
 
           <Stack className={styles["option-container"]}>

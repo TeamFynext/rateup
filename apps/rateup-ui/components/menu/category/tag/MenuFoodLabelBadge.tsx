@@ -15,7 +15,7 @@ const MenuFoodLabelBadge = ({
   fz = 11,
 }: MenuFoodLabelBadgeProps) => {
   const response = foodLabels?.map((data: string) => (
-    <Badge variant="light" color="blue" key={data} p={p}>
+    <Badge variant="light" key={data} p={p}>
       <Flex align={"center"} h={"100%"} columnGap={5} fz={fz}>
         <Image
           src={menuLabelWithText?.find((gr) => gr.label === data)?.image}

@@ -146,11 +146,9 @@ export function CategoryCard({
           highlightOnHover
           horizontalSpacing="sm"
           verticalSpacing="xs"
-          style={{ position: "relative" }}
+          stickyHeader
         >
-          <Table.Thead
-            style={{ position: "sticky", top: 0, backgroundColor: "white" }}
-          >
+          <Table.Thead bg={"light-dark(white,var(--mantine-color-dark-6))"}>
             <Table.Tr>
               {tableColumns?.map((key) => (
                 <Table.Th key={key} align="left">

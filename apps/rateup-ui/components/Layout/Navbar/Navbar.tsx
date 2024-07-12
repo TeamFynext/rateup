@@ -57,7 +57,10 @@ export const Navbar = () => {
         </Link>
         {items}
       </Breadcrumbs>
-      {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
+      <Group>
+        <div id="navbar" style={{ justifyItems: "flex-end" }}></div>
+        {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
+      </Group>
       {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
         <ExpiryComponent expiryDate={subscription?.expiresAt}>
           <RateupButtonPrimary

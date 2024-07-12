@@ -1,4 +1,4 @@
-import { CampaignParticipantStatus } from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 export const getCampaigns = async () => {
@@ -34,13 +34,18 @@ export const deleteCampaign = async (campaignId) => {
 export const sendCampaign = async (
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
+  sentCampaignChoice: string,
   participantId?: string,
+  campaignSentAt?: Date,
+  status?: CampaignStatus,
 ) => {
-  let res = await axiosClient.post(`/campaign/${campaignId}/send`, {
+  return axiosClient.post(`/campaign/${campaignId}/send`, {
     sendToStatuses,
     participantId,
+    campaignSentAt,
+    sentCampaignChoice,
+    status,
   });
-  return res;
 };
 
 //this get req is primarily used in flows result page

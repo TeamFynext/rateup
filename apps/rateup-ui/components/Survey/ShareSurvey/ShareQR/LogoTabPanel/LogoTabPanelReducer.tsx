@@ -13,10 +13,16 @@ const logoTabPanelReducer = (state, action) => {
   switch (action.type) {
     case "file-input": {
       state["logoFile"] = payload;
+      if (payload instanceof File) {
+        state["isLogoEnabled"] = true;
+      }
       break;
     }
     case "logo-image-switch": {
       state["isLogoEnabled"] = payload;
+      if (!payload && !state["logoFile"]) {
+        state["logoFile"] = null;
+      }
       break;
     }
     case "logo-size": {

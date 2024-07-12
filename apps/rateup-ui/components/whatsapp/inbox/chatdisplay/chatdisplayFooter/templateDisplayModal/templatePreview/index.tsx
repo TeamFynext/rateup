@@ -107,7 +107,7 @@ export default function WaInboxTemplatePreview(props: Props) {
     return (
       <Stack className={classes.wrapper}>
         <Group className={classes.name_sendbutton_wrapper}>
-          <Group>
+          <Group className={classes["name-badges-container"]}>
             <Text className={classes.name}>{props?.template?.name}</Text>
             <Group>
               <Badge variant="outline">{props?.template?.language}</Badge>
@@ -128,11 +128,7 @@ export default function WaInboxTemplatePreview(props: Props) {
             rightIcon={<IconSend />}
           />
         </Group>
-        <Group className={classes.inner}>
-          <WaTemplateFormElements
-            setParameterData={setParameterData}
-            template={props?.template}
-          />
+        <Stack className={classes.inner}>
           <WaInboxSingleMessageLayout
             forPreview
             exchangeProcess="send"
@@ -143,7 +139,11 @@ export default function WaInboxTemplatePreview(props: Props) {
               templateBody={props?.template}
             />
           </WaInboxSingleMessageLayout>
-        </Group>
+          <WaTemplateFormElements
+            setParameterData={setParameterData}
+            template={props?.template}
+          />
+        </Stack>
       </Stack>
     );
   }

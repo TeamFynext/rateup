@@ -10,8 +10,14 @@
   min-width: 200px;
   height: 100%;
   border-radius: 1rem;
-  box-shadow: 0 0 10px 5px rgba(135, 135, 135, 0.1);
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
   padding: 1rem;
+  background-color: light-dark(
+    var(--mantine-color-body),
+    var(--mantine-color-dark-6)
+  );
 }
 
 .edit-flow-tabs-root {

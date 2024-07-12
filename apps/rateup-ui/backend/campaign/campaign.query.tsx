@@ -11,7 +11,7 @@ import {
 } from "./campaign.api";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { CampaignParticipantStatus } from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { notifications } from "@mantine/notifications";
 
 export const useCampaignData = () => {
@@ -112,36 +112,58 @@ export const useDeleteCampaignMutation = (teamId) => {
     },
   });
 };
+type sendCampaignProps = {
+  campaignSentAt?: Date;
+  statuses: CampaignParticipantStatus[];
+  sentCampaignChoice: string;
+  participantId?: string;
+  status?: CampaignStatus;
+};
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      sendToStatuses,
+      statuses,
       participantId,
-    }: {
-      sendToStatuses: CampaignParticipantStatus[];
-      participantId?: string;
-    }) => sendCampaign(campaignId, sendToStatuses, participantId),
-    onSuccess: () => {
+      campaignSentAt,
+      sentCampaignChoice,
+      status,
+    }: sendCampaignProps) =>
+      sendCampaign(
+        campaignId,
+        statuses,
+        sentCampaignChoice,
+        participantId,
+        campaignSentAt,
+        status,
+      ),
+    onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
       notifications.show({
         color: "teal",
-        title: "Campaign started successfully",
-        message: "It may take a few minutes to send to all participants.",
+        title:
+          res?.data?.code === "MSG_SCHEDULED"
+            ? "Sucess"
+            : "Campaign started successfully",
+        message:
+          res?.data?.code === "MSG_SCHEDULED"
+            ? res?.data?.message ?? "Campaign scheduled successfully"
+            : "It may take a few minutes to send to all participants.",
         autoClose: 5000,
         loading: false,
         icon: <IconCheck />,
       });
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error starting campaign: ${error?.response?.data.error}`,
-        "campaign-start",
-        <IconX />,
-      );
+      if (!(error?.response?.data?.displayMessageInClient ?? false))
+        showErrorToast(
+          `Error starting campaign: ${error?.response?.data.error}`,
+          "campaign-start",
+          <IconX />,
+        );
     },
   });
 };

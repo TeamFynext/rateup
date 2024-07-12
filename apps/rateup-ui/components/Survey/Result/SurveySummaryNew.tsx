@@ -21,7 +21,10 @@ const SurveySummaryNew = ({
 
   const responseArray = choiceCounts?.map((choice) => {
     const count = choice?.count;
-    const percentage = ((count / totalResponses) * 100)?.toFixed(2);
+    const percentage =
+      totalResponses > 0
+        ? ((count / totalResponses) * 100)?.toFixed(2)
+        : "0.00";
     const voteText = count > 1 ? "votes" : "vote";
     return {
       response: choice?.name,

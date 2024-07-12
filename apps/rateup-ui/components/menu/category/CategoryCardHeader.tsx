@@ -1,7 +1,12 @@
-import { ActionIcon, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconPlus, IconReplace } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconPlus,
+  IconReplace,
+  IconTrash,
+} from "@tabler/icons-react";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
@@ -26,9 +31,10 @@ export function CategoryCardHeader({
       justify="space-between"
       p="xs"
       style={{
-        backgroundColor: "var(--tertiary-color)",
+        // backgroundColor: "var(--mantine-primary-color-filled)",
         borderRadius: "0.9375rem 0.9375rem 0rem 0rem",
       }}
+      bg={"var(--mantine-primary-color-filled)"}
     >
       <div></div>
       <Text fz="1.5rem" c="white" fw={700} tt={"capitalize"}>
@@ -56,7 +62,7 @@ export function CategoryCardHeader({
           }}
         />
         <Button
-          c={"var(--tertiary-color)"}
+          c={"var(--mantine-primary-color-filled)"}
           bg={"white"}
           rightSection={<IconPlus />}
           onClick={openCreateItem}
@@ -64,28 +70,16 @@ export function CategoryCardHeader({
         >
           Add
         </Button>
-        <ActionIcon
-          c={"var(--tertiary-color)"}
-          bg={"white"}
-          radius={"md"}
-          onClick={() => handleEdit(category)}
-        >
-          <Tooltip label="Edit">
-            <IconEdit />
-          </Tooltip>
-        </ActionIcon>
-        <ActionIconCommon handleClick={toggle} />
-
+        <ActionIconCommon handleClick={() => handleEdit(category)} label="Edit">
+          <IconEdit size={18} />
+        </ActionIconCommon>
+        <ActionIconCommon handleClick={toggle} label="Delete">
+          <IconTrash size={18} />
+        </ActionIconCommon>
         <Stack pr={"sm"}>
-          <ActionIcon
-            variant={"transparent"}
-            c={"white"}
-            onClick={toggleSwapOrder}
-          >
-            <Tooltip label="Swap Order">
-              <IconReplace />
-            </Tooltip>
-          </ActionIcon>
+          <ActionIconCommon handleClick={toggleSwapOrder} label="Swap Order">
+            <IconReplace size={18} />
+          </ActionIconCommon>
         </Stack>
       </Group>
     </Group>

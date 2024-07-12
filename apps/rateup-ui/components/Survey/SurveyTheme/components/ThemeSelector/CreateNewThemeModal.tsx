@@ -10,7 +10,7 @@ import styles from "./ThemeSelector.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "@mantine/form";
-import modalStyles from "../../../../LandingPageDashboardPage/CreateLandingPageModal/CreateLandingPageModal.module.css";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -30,7 +30,7 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, should start with a letter, length sould be greater than 5 characters",
+          : "Name should be alphanumeric, should start with a letter, length should be greater than 5 characters",
     },
   });
 

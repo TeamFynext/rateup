@@ -1,9 +1,10 @@
 .wrapper {
-  flex: 1;
+  /* flex: 1; */
   height: 100%;
-  padding: 0px var(--mantine-spacing-md);
-  overflow-y: auto;
-  border-right: 1px solid var(--mantine-color-gray-2);
+  width: 100%;
+  /* padding: 0px var(--mantine-spacing-md); */
+  /* overflow-y: auto; */
+  /* border-right: 1px solid var(--mantine-color-gray-2); */
 }
 .wrapper::-webkit-scrollbar {
   width: 1.5px;

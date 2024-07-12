@@ -8,16 +8,15 @@ import {
   UnstyledButton,
   alpha,
   isLightColor,
-  lighten,
   useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
 import cx from "clsx";
 import React, { useRef } from "react";
 import { getImageValue } from "../../../../../utils/file-upload/upload";
-import classes from "./ImageCheckboxes.module.css";
 import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import classes from "./ImageCheckboxes.module.css";
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -186,7 +185,7 @@ export function SingleSelectCard({
     : colsCount;
 
   return (
-    <SimpleGrid cols={sizeTrim ? 1 : columnsCount} spacing={10}>
+    <SimpleGrid cols={sizeTrim ? 1 : columnsCount} spacing={16}>
       {items}
     </SimpleGrid>
   );
