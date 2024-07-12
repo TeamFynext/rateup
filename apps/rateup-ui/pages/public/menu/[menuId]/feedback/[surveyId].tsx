@@ -4,7 +4,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { getCookie, setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Carousel } from "@mantine/carousel";
-import { IconMenu2 } from "@tabler/icons-react";
+import { IconDots, IconMenu2 } from "@tabler/icons-react";
 import { isCategoryActive } from "utils/dateTime";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { CategoryChip } from "components/menu/category/CategoryChip";
@@ -32,7 +32,6 @@ import {
   getFullMenuPublicById,
   updateMenuVisitedMutation,
 } from "../../../../../backend/menu/menu.api";
-import FloatingMenu from "./FloatingMenu";
 
 interface ServerSidePropsContext {
   req: NextApiRequest;
@@ -271,16 +270,9 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
           close={close}
           categories={fullCategory}
           handleCategoryChipClick={handleCategoryChipClick}
-        />
-        {selectedItem && (
-          <ItemDetailedViewModal
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
-          />
-        )}
-        <FloatingMenu
-          dynamicVariables={[
+          displayName={fullMenu?.displayName}
+          logo={fullMenu?.menuLanding?.logo}
+          menuButtons={[
             ...(fullMenu?.menuLanding?.surveyTeamMapId
               ? [
                   {
@@ -289,9 +281,21 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   },
                 ]
               : []),
-            ...fullMenu.menuLanding.dynamicVariables,
+            ...fullMenu.menuLanding.menuButtons,
           ]}
         />
+        {selectedItem && (
+          <ItemDetailedViewModal
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
+          />
+        )}
+        <Stack pos={"fixed"} bottom={40} right={30}>
+          <ActionIcon bg={"var(--orange-400)"} onClick={open} size={"lg"}>
+            <IconDots />
+          </ActionIcon>
+        </Stack>
       </Paper>
     </ScrollAreaAutosize>
   );
