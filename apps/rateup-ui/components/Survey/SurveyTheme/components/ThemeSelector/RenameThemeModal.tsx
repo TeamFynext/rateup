@@ -1,7 +1,7 @@
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useCallback, useEffect, useRef, useState } from "react";
-import modalStyles from "../../../../LandingPageDashboardPage/CreateLandingPageModal/CreateLandingPageModal.module.css";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 import { useRenameSurveyThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 
 function RenameThemeModal({ opened, onClose, themeId, oldName }) {
@@ -61,6 +61,7 @@ function RenameThemeModal({ opened, onClose, themeId, oldName }) {
       classNames={{
         header: modalStyles["modal-header"],
         body: modalStyles["modal-body"],
+        content: modalStyles["modal-content"],
       }}
     >
       <form onSubmit={form.onSubmit(handleFormSubmit)}>
