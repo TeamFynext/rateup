@@ -21,6 +21,7 @@ function NoLinksFoundModal({ opened, onClose }) {
         header: styles["modal-header"],
         body: styles["modal-body"],
       }}
+      styles={{ content: { borderRadius: "1rem" } }}
     >
       <Center
         style={{ padding: "1.5rem", flexDirection: "column", gap: "1.5rem" }}

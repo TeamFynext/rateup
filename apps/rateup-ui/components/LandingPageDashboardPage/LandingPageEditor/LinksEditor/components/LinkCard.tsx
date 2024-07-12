@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import { useUpdateLandingPageMutation } from "../../../../../backend/landingPage/landingPage.query";
 import { useLandingPageObj } from "../../LandingPageContext/LandingPageContext";
 import { modals } from "@mantine/modals";
-import modalStyles from "../../../CreateLandingPageModal/CreateLandingPageModal.module.css";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 import restOfModalStyles from "../../../LandingPageCard/LandingPageCard.module.css";
 
 function LinkCard({ linkObj, onDelete }) {

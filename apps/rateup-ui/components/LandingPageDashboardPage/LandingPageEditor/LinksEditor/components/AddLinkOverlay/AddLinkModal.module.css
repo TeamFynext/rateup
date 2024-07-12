@@ -24,6 +24,10 @@
   padding: 1.5rem;
 }
 
+.modal-body :global(.mantine-Input-input) {
+  border-radius: 0.625rem;
+}
+
 .header {
   position: relative;
   margin-bottom: 1.25rem;

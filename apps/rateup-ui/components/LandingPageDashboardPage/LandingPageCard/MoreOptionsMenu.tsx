@@ -14,7 +14,7 @@ import { useDeleteLandingPageMutation } from "../../../backend/landingPage/landi
 import { useDisclosure } from "@mantine/hooks";
 import CreateLandingPageModal from "../CreateLandingPageModal";
 import { modals } from "@mantine/modals";
-import modalStyles from "../CreateLandingPageModal/CreateLandingPageModal.module.css";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 
 function MoreOptionsMenu({ shortUrlId, id, name }) {
   const router = useRouter();
