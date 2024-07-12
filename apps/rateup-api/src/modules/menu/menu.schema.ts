@@ -26,6 +26,7 @@ const updateMenuInputSchema = z.object({
   teamId: z.string().optional(),
   hideUnavailableCategory: z.boolean().optional(),
   mobileBackgroundImage: z.string().optional(),
+  logo: z.string().optional(),
   unsplashImage: z
     .object({
       mobileBackgroundImage: z.boolean().optional(),
@@ -33,7 +34,7 @@ const updateMenuInputSchema = z.object({
     })
     .optional()
     .nullable(),
-  dynamicVariables: z
+  menuButtons: z
     .array(
       z
         .object({
@@ -43,7 +44,13 @@ const updateMenuInputSchema = z.object({
         .optional(),
     )
     .optional(),
-  primaryColor: z.string().optional(),
+  colors: z
+    .object({
+      primary: z.string(),
+      seconday: z.string(),
+    })
+    .optional()
+    .nullable(),
 });
 const menuInputSchema = z.object(menuInput);
 const menuCore = {
@@ -94,8 +101,9 @@ const fullMenuPublicResponseSchema = z.object({
     .object({
       backgroundImage: z.string().optional().nullable(),
       mobileBackgroundImage: z.string().optional().nullable(),
+      logo: z.string().optional().nullable(),
       surveyTeamMapId: z.string().optional().nullable(),
-      dynamicVariables: z.array(
+      menuButtons: z.array(
         z
           .object({
             name: z.string(),
