@@ -435,7 +435,7 @@ model Campaign {
   campaignParticipants CampaignParticipant[]
   campaignSentAt       DateTime?
   scheduledStatuses    String[]              @default([])
-  errorMessage          String?
+  errorMessage         String?
 }
 
 model CampaignParticipant {
@@ -493,9 +493,6 @@ model Menu {
   displayName             String // name displayed to clients (eg: Restaurant's Name)
   locationText            String? // location of the restaurant
   locationUrl             String? // google maps url
-  websiteUrl              String? // website url
-  websiteText             String? // text to display for website url
-  logo                    String? // logo url
   isPublished             Boolean        @default(false)
   categories              MenuCategory[]
   team                    Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -575,22 +572,16 @@ model MenuLanding {
   id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt             DateTime       @default(now())
   updatedAt             DateTime?      @updatedAt
-  headerText            String?
-  headerStyle           Json?
-  titleStyle            Json?
-  otherStyle            Json?
-  logoStyles            Json?
   backgroundImage       String?
   mobileBackgroundImage String?
-  menuPageEnabled       Boolean        @default(true)
-  feedbackPageEnabled   Boolean        @default(false)
-  catalogue             Boolean        @default(false)
   visited               Int            @default(0)
   menu                  Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId                String         @unique @db.Uuid
   surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId       String?        @db.Uuid
   unsplashImage         Json?
+  dynamicVariables      Json[]         @default([])
+  primaryColor          String?
 }
 
 model ReviewSuggestion {
