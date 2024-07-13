@@ -136,16 +136,18 @@ function ApiCopyButton({ value }) {
   return (
     <CopyButton value={value}>
       {({ copy, copied }) => (
-        <ActionIcon
-          onClick={copy}
-          variant={"subtle"}
-          h={"100%"}
-          w={"46px"}
-          px={8}
-          radius={0}
-        >
-          <IconCopy />
-        </ActionIcon>
+        <Tooltip label="Copy" position="top" withArrow>
+          <ActionIcon
+            onClick={copy}
+            variant={"subtle"}
+            h={"100%"}
+            w={"46px"}
+            px={8}
+            radius={0}
+          >
+            <IconCopy />
+          </ActionIcon>
+        </Tooltip>
       )}
     </CopyButton>
   );
@@ -165,16 +167,18 @@ function ApiRegenerateButton({ onRegenerate }: ApiRegenerateButtonProps) {
     });
   }
   return (
-    <ActionIcon
-      onClick={handleRegenerate}
-      variant={"subtle"}
-      h={"100%"}
-      w={"46px"}
-      px={8}
-      radius={0}
-    >
-      <IconReload />
-    </ActionIcon>
+    <Tooltip label="Regenerate" position="top" withArrow>
+      <ActionIcon
+        onClick={handleRegenerate}
+        variant={"subtle"}
+        h={"100%"}
+        w={"46px"}
+        px={8}
+        radius={0}
+      >
+        <IconReload />
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
@@ -191,16 +195,18 @@ function ApiDeleteButton({ onDelete }: ApiDeleteButtonProps) {
     });
   }
   return (
-    <ActionIcon
-      onClick={handleDelete}
-      variant={"subtle"}
-      h={"100%"}
-      w={"46px"}
-      px={8}
-      color={"red"}
-      radius={0}
-    >
-      <IconTrash />
-    </ActionIcon>
+    <Tooltip label="Delete" position="top" withArrow>
+      <ActionIcon
+        onClick={handleDelete}
+        variant={"subtle"}
+        h={"100%"}
+        w={"46px"}
+        px={8}
+        color={"red"}
+        radius={0}
+      >
+        <IconTrash />
+      </ActionIcon>
+    </Tooltip>
   );
 }

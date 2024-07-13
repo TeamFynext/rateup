@@ -69,8 +69,15 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
     >
       <Box className={styles["heading-and-desc-container"]}>
         <Grid style={{ marginBottom: "1rem" }}>
-          <h2 className={"settings-section-heading"}>Survey Settings</h2>
-          <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <h2
+              className={"settings-section-heading"}
+              style={{ marginRight: "1rem" }}
+            >
+              Survey Settings
+            </h2>
+            <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
+          </div>
         </Grid>
         <p className={"settings-section-description"}>
           Choose the teams to be added
