@@ -1,21 +1,15 @@
 import "@shopify/shopify-api/adapters/node";
-import {
-  ApiVersion,
-  LogSeverity,
-  Session,
-  SessionParams,
-  shopifyApi,
-} from "@shopify/shopify-api";
-import { getShopifyAuthUrl, getShopifySession } from "./shopify.service";
+import { ApiVersion, LogSeverity, shopifyApi } from "@shopify/shopify-api";
 import webhookHandlers from "./shopify.handler";
 import { restResources } from "@shopify/shopify-api/rest/admin/2024-04";
+import { envConstants } from "../../utils/constants/constants";
 
-const apiUrl = new URL(process.env.API_URL);
+const apiUrl = new URL(envConstants.API_URL);
 
 const shopify = shopifyApi({
-  apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY,
-  scopes: process.env.SHOPIFY_SCOPES.split(","),
+  apiKey: envConstants.SHOPIFY_API_KEY,
+  apiSecretKey: envConstants.SHOPIFY_API_SECRET,
+  scopes: envConstants.SHOPIFY_SCOPES.split(","),
   hostName: apiUrl.hostname,
   hostScheme: "https",
   apiVersion: ApiVersion.April24,

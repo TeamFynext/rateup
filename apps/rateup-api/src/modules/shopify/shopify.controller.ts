@@ -20,6 +20,7 @@ import {
 } from "./shopify.service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger";
+import { envConstants } from "../../utils/constants/constants";
 
 export async function getShopifyAuthHandler(
   request: FastifyRequest<{ Querystring: { shop: string } }>,
@@ -29,11 +30,11 @@ export async function getShopifyAuthHandler(
     const session = await getShopifySession(request.query.shop);
     if (!session || !session.active) {
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
-    } else reply.redirect(`${process.env.FRONTEND_URL}/dashboard/settings`);
+    } else reply.redirect(`${envConstants.FRONTEND_URL}/apps&services/shopify`);
   } catch (e) {
     console.error(e);
     reply.redirect(
-      `${process.env.FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
+      `${envConstants.FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
     );
   }
 }
@@ -46,12 +47,12 @@ export async function getShopifyAuthCallbackHandler(
     const callbackResponse = await handleShopifyAuthCallback(request, reply);
     const session = await createShopifySession(callbackResponse.session);
     reply.redirect(
-      `${process.env.FRONTEND_URL}/auth/shopify?shop=${session.shop}`,
+      `${envConstants.FRONTEND_URL}/auth/shopify?shop=${session.shop}`,
     );
   } catch (e) {
     console.error(e);
     reply.redirect(
-      `${process.env.FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
+      `${envConstants.FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
     );
   }
 }
