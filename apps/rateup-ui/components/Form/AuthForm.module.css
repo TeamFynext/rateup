@@ -57,13 +57,17 @@
 }
 
 .login-form-forgot-password-link {
-  display: block;
-  text-align: right;
+  display: inline;
   margin-bottom: 1rem;
   text-decoration: none;
   color: var(--tertiary-color);
 }
 
+.forgot-password-container {
+  text-align: end;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
 .login-signup-form-submit-btn {
   display: block;
   width: 100%;

@@ -35,11 +35,19 @@
   outline: 0;
   zoom: 1;
   line-height: 2;
-  border-radius: 10px;
+  border-radius: 15px;
 }
-.driverjs-theme :global(.driver-popover-footer button:hover) {
-  background-color: var(--tertiary-color);
+.driverjs-theme :global(.driver-popover-footer .driver-popover-next-btn) {
+  background-color: var(--shade-of-blue-4); /* Blue background */
+  color: white; /* White text */
+  border: none; /* No border */
 }
+.driverjs-theme :global(.driver-popover-footer .driver-popover-prev-btn) {
+  background-color: white;
+  color: var(--tertiary-color);
+  border: 1px solid var(--tertiary-color);
+}
+.driverjs-theme :global(.driver-popover-footer button:hover),
 .driverjs-theme :global(.driver-popover-footer button:focus) {
-  background-color: var(--tertiary-color);
+  background-color: none;
 }

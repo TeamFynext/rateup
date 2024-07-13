@@ -285,7 +285,7 @@ const ProfileSettings = () => {
             ])}
           >
             <Grid columns={10} grow>
-              <Grid.Col span={{ xs: 10, lg: 2 }} bg="white">
+              <Grid.Col span={{ xs: 10, lg: 2 }}>
                 <ContainedSelection
                   label="Title"
                   placeholder="Select"
