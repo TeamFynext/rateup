@@ -1,4 +1,4 @@
-import { Group, MantineProvider, Stack } from "@mantine/core";
+import { Group, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import React, { useState } from "react";
@@ -17,7 +17,6 @@ import { CreateMenuModal } from "../../../components/menu/CreateMenu";
 import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
 import DigitalMenuTourSteps from "../../../components/WelcomeTour/components/DigitalMenuTourSteps";
 import styles from "../../../components/WelcomeTour/components/Tour.module.css";
-import { menuTheme } from "config/mantineTheme";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -44,58 +43,56 @@ export default function MenuPage() {
   };
 
   return (
-    <MantineProvider theme={menuTheme}>
-      <Stack h={"100%"}>
-        <Group justify="space-between">
-          <Group>
-            <Group className={styles["heading-container"]}>
-              <Heading title="Menus" titleprops={{ w: "fit-content" }} />
-            </Group>
-            <InfoButton docUrl={`${docsPath}/menu`} />
-            <WelcomeTour steps={tourSteps} />
-            <RefreshButton queryKeys={["allMenus"]} />
-            {user?.role !== UserRole.MEMBER && (
-              <RateupButtonBlue
-                className={styles["create-menu-button"]}
-                title="Create Menu"
-                rightIcon={<IconPlus />}
-                onClick={handleCreateClick}
-              />
-            )}
+    <Stack h={"100%"}>
+      <Group justify="space-between">
+        <Group>
+          <Group className={styles["heading-container"]}>
+            <Heading title="Menus" titleprops={{ w: "fit-content" }} />
           </Group>
-          <Group>
-            <TeamSelector
-              className={styles["team-select-option"]}
-              value={selectedTeamId}
-              onChange={(teamId) => setSelectedTeamId(teamId)}
-              enableAll={true}
-              allowDeselect={false}
-            />
-            <Group className={styles["sort-dropdown"]}>
-              <SortDropdown
-                onSortChange={onSortChange}
-                defaultSortOption={sortOption}
-              />
-            </Group>
-          </Group>
-        </Group>
-
-        <SelectedTeamContext.Provider
-          value={React.useMemo(() => ({ selectedTeamId }), [selectedTeamId])}
-        >
-          <MenuCardsList
-            handleEditClick={handleEditClick}
-            sortOption={sortOption}
-          />
-          {selectedTeamId && (
-            <CreateMenuModal
-              opened={openCreateModal}
-              close={handleCreateEditClose}
-              editingItem={editingItem}
+          <InfoButton docUrl={`${docsPath}/menu`} />
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["allMenus"]} />
+          {user?.role !== UserRole.MEMBER && (
+            <RateupButtonBlue
+              className={styles["create-menu-button"]}
+              title="Create Menu"
+              rightIcon={<IconPlus />}
+              onClick={handleCreateClick}
             />
           )}
-        </SelectedTeamContext.Provider>
-      </Stack>
-    </MantineProvider>
+        </Group>
+        <Group>
+          <TeamSelector
+            className={styles["team-select-option"]}
+            value={selectedTeamId}
+            onChange={(teamId) => setSelectedTeamId(teamId)}
+            enableAll={true}
+            allowDeselect={false}
+          />
+          <Group className={styles["sort-dropdown"]}>
+            <SortDropdown
+              onSortChange={onSortChange}
+              defaultSortOption={sortOption}
+            />
+          </Group>
+        </Group>
+      </Group>
+
+      <SelectedTeamContext.Provider
+        value={React.useMemo(() => ({ selectedTeamId }), [selectedTeamId])}
+      >
+        <MenuCardsList
+          handleEditClick={handleEditClick}
+          sortOption={sortOption}
+        />
+        {selectedTeamId && (
+          <CreateMenuModal
+            opened={openCreateModal}
+            close={handleCreateEditClose}
+            editingItem={editingItem}
+          />
+        )}
+      </SelectedTeamContext.Provider>
+    </Stack>
   );
 }

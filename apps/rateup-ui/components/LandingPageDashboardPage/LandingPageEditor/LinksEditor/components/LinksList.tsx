@@ -1,5 +1,5 @@
 import { Box, Stack } from "@mantine/core";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useUpdateLandingPageMutation } from "../../../../../backend/landingPage/landingPage.query";
 import Reorder from "./Reorder";
@@ -12,6 +12,8 @@ function LinksList({ links }) {
     query: { shortUrlId },
   } = useRouter();
   const updateLandingPageMutation = useUpdateLandingPageMutation(shortUrlId);
+  const { mutateAsync: landingPageUpdateMutateAsync } =
+    useUpdateLandingPageMutation(shortUrlId);
 
   const handleDragEnd = useCallback(
     async (reorderedLinks) => {
@@ -30,6 +32,12 @@ function LinksList({ links }) {
         shortUrlId,
         links: filteredLinks,
       });
+      if (!filteredLinks.length) {
+        landingPageUpdateMutateAsync({
+          shortUrlId,
+          isPublished: false,
+        });
+      }
     },
     [shortUrlId, links],
   );

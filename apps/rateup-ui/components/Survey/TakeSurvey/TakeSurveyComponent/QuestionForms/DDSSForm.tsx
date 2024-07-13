@@ -91,7 +91,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
       placeholder="Select one"
       onChange={handleSelectedOp}
       portalProps={{
-        target: isSurveyThemePreview && takeSurveyLayoutWebDomNodeRef.current,
+        target: takeSurveyLayoutWebDomNodeRef.current,
       }}
     />
   );

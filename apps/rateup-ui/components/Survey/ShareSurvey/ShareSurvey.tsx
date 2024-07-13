@@ -283,7 +283,7 @@ const ShareSurvey = ({
     return gridFilteredSortedRowIdsSelector(apiRef);
   };
 
-  const disableShare = !(isPublished || allowUnpublishedShare);
+  const disableShare = !(isPublished || isScheduled || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
     (value) => {
@@ -425,7 +425,7 @@ const ShareSurvey = ({
                       />
                       <Text c="red" size="xs">
                         *Time will be rounded to nearest hours. <br />
-                        Note: Publish date must be at least 1 hour ahead of
+                        Note: Publish time must be at least 1 hour ahead of
                         current time.
                       </Text>
                     </Stack>
@@ -491,7 +491,7 @@ const ShareSurvey = ({
               <Text>
                 {isScheduled ? "To be Published On" : "Published On"}:{" "}
               </Text>
-              <Text c={isScheduled ? "blue.7" : "dark.1"}>
+              <Text c={isScheduled ? "orange.6" : "dark.1"}>
                 {survey?.surveyPublishAt
                   ? formatIsoDateStringWithTime(survey?.surveyPublishAt)
                   : "Nil"}

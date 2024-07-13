@@ -1,4 +1,4 @@
-import { Box, Image, Textarea } from "@mantine/core";
+import { Box, Center, Image, Textarea } from "@mantine/core";
 import { useCallback, useRef } from "react";
 import { imagesPath } from "../../../../../HomePage/constants";
 import PreviewDeviceSelector from "../../../../../Survey/SurveyTheme/components/PreviewDeviceSelector";
@@ -10,6 +10,7 @@ import {
 } from "../../ThemeContext/ThemeContext";
 import UnsplashCreditText from "../UnsplashCreditText";
 import styles from "./ThemePreview.module.css";
+import { useLandingPageObj } from "components/LandingPageDashboardPage/LandingPageEditor/LandingPageContext/LandingPageContext";
 
 function ThemePreview() {
   const selectedPreviewDevice = useSelectedPreviewDevice();
@@ -21,6 +22,10 @@ function ThemePreview() {
     subtitle: { styles: subtitleStyles, text: subtitleText },
     linkListItem: { styles: linkListItemStyles },
   } = useThemeObj();
+
+  const landingPageObj = useLandingPageObj();
+  const links = landingPageObj?.links || [];
+  console.log("From ThemePreveiw", "Frdlfsokmfs thee", links);
 
   const themeDispatch = useThemeDispatch();
 
@@ -68,63 +73,74 @@ function ThemePreview() {
         style={backgroundStylesObj}
         ref={previewDivRef}
       >
-        <Box className={styles["logo-img-container"]}>
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt="logo"
-              style={{ ...logoStyles, objectFit: "contain" }}
-            />
-          ) : (
-            <Image
-              src={`${imagesPath}/camera-off.svg`}
-              alt="logo"
-              style={{ ...logoStyles, objectFit: "contain" }}
-            />
-          )}
-        </Box>
+        {!links.length ? (
+          <Center h={"100%"} w={"100%"}>
+            <p>
+              <span>Add Links</span>
+              <span> to view the preview</span>
+            </p>
+          </Center>
+        ) : (
+          <>
+            <Box className={styles["logo-img-container"]}>
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt="logo"
+                  style={{ ...logoStyles, objectFit: "contain" }}
+                />
+              ) : (
+                <Image
+                  src={`${imagesPath}/camera-off.svg`}
+                  alt="logo"
+                  style={{ ...logoStyles, objectFit: "contain" }}
+                />
+              )}
+            </Box>
 
-        <Box className={styles["title-textarea-div-container"]}>
-          <Textarea
-            className={styles["title-textarea-div"]}
-            style={titleStyles}
-            value={titleText}
-            onChange={handleTitleTextChange}
-            autosize
-            styles={{
-              input: titleStyles,
-            }}
-          />
-        </Box>
+            <Box className={styles["title-textarea-div-container"]}>
+              <Textarea
+                className={styles["title-textarea-div"]}
+                style={titleStyles}
+                value={titleText}
+                onChange={handleTitleTextChange}
+                autosize
+                styles={{
+                  input: titleStyles,
+                }}
+              />
+            </Box>
 
-        <Box className={styles["subtitle-textarea-div-container"]}>
-          <Textarea
-            className={styles["subtitle-textarea-div"]}
-            style={titleStyles}
-            value={subtitleText}
-            onChange={handleSubtitleTextChange}
-            autosize
-            styles={{
-              input: subtitleStyles,
-            }}
-          />
-        </Box>
+            <Box className={styles["subtitle-textarea-div-container"]}>
+              <Textarea
+                className={styles["subtitle-textarea-div"]}
+                style={titleStyles}
+                value={subtitleText}
+                onChange={handleSubtitleTextChange}
+                autosize
+                styles={{
+                  input: subtitleStyles,
+                }}
+              />
+            </Box>
 
-        <Box className={styles["links-list-container"]}>
-          {Array(3)
-            .fill(3)
-            .map((ele, i) => {
-              return (
-                <a
-                  key={i}
-                  className={styles["link-list-item"]}
-                  style={linkListItemStyles}
-                >
-                  <span>This is Link{i + 1} Title</span>
-                </a>
-              );
-            })}
-        </Box>
+            <Box className={styles["links-list-container"]}>
+              {links.map(({ id, linkDisplayName, linkUrl }) => {
+                return (
+                  <a
+                    target="_blank"
+                    key={id}
+                    className={styles["link-list-item"]}
+                    style={linkListItemStyles}
+                    href={linkUrl}
+                  >
+                    <span>{linkDisplayName}</span>
+                  </a>
+                );
+              })}
+            </Box>
+          </>
+        )}
 
         <UnsplashCreditText url={backgroundImageUrl} />
       </Box>
