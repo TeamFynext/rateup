@@ -3,7 +3,27 @@ import prisma from "../../utils/prisma";
 import shopify from "./shopify.config";
 import { Session, SessionParams } from "@shopify/shopify-api";
 import { isEmpty } from "lodash";
-import { shopifySurveyInput } from "./shopify.schema";
+import { log } from "../../utils/logger";
+import {
+  createSession,
+  deleteSession,
+  getSession,
+  sendMessage,
+} from "../whatsapp/whatsappSurvey/wasurvey.service";
+import {
+  convertComponentForSenting,
+  updateButtonText,
+  wait,
+} from "../whatsapp/whatsappSurvey/wasurvey.controller";
+import { updateMonthlyStat } from "../stats/stats.service";
+import { ShopifyEvents, SubscriptionFeaturePathName } from "../../types/enums";
+import {
+  createTemplateMessage,
+  validateSession,
+} from "../whatsapp/whatsappSurvey/wasurvey.utils";
+import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
+import { getFlowIdFromTemplateComponents } from "../whatsapp/messageTemplates/wa_templates.utils";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 export async function getShopifyAuthUrl(rawRequest, reply: FastifyReply, shop) {
   console.log(" in getShopifyAuthUrl");
@@ -25,7 +45,7 @@ export async function handleShopifyAuthCallback(request, reply) {
 
 export async function createShopifySession(session: Session) {
   // TODO: create shopifySession model
-  await prisma.shopifySession.upsert({
+  return await prisma.shopifySession.upsert({
     where: {
       shop: session.shop,
     },
@@ -35,6 +55,8 @@ export async function createShopifySession(session: Session) {
       isOnline: session.isOnline,
       accessToken: session.accessToken,
       scope: session.scope,
+      active: true,
+      isWebhookRegistered: false,
     },
     create: {
       id: session.id,
@@ -45,7 +67,6 @@ export async function createShopifySession(session: Session) {
       scope: session.scope,
     },
   });
-  console.log("session", session);
 }
 
 export async function getShopifySession(shop) {
@@ -86,6 +107,17 @@ export async function getShopifySessionByOrgId(orgId) {
   return null;
 }
 
+export async function updateShopifySession(shop, data) {
+  const session = await getShopifySession(shop);
+  if (session)
+    await prisma.shopifySession.update({
+      where: {
+        shop,
+      },
+      data,
+    });
+}
+
 export async function deleteShopifySession(shop) {
   return await prisma.shopifySession.delete({
     where: {
@@ -95,11 +127,6 @@ export async function deleteShopifySession(shop) {
 }
 
 export async function registerShopifyWebhook(session: Session) {
-  console.log("shopify topics", await shopify.webhooks.getTopicsAdded());
-  console.log(
-    "shopify handlers",
-    await shopify.webhooks.getHandlers("ORDERS_CREATE"),
-  );
   const response = await shopify.webhooks.register({
     session,
   });
@@ -129,13 +156,6 @@ export async function getShopipfySurveyByEvent(orgId, event, shop) {
         shop,
       },
     },
-    include: {
-      survey: {
-        include: {
-          WaFlow: true,
-        },
-      },
-    },
   });
 }
 
@@ -144,5 +164,177 @@ export async function getShopifySurveysByOrgId(orgId) {
     where: {
       orgId,
     },
+    include: {
+      team: {
+        select: {
+          name: true,
+        },
+      },
+      waTemplate: {
+        select: {
+          data: true,
+        },
+      },
+    },
+  });
+}
+
+export async function sendTemplateOnShopifyEvent(
+  customerPhone: string,
+  event: ShopifyEvents,
+  session,
+  productIds: string[],
+) {
+  const phone = parsePhoneNumber(customerPhone, "IN");
+  if (phone.isValid() === false) {
+    log.trace("Invalid phone number");
+    return;
+  }
+  const shopifySurvey = await getShopipfySurveyByEvent(
+    session.orgId,
+    event,
+    session.shop,
+  );
+
+  const phoneWithoutPlus = phone.countryCallingCode + phone.nationalNumber;
+  if (shopifySurvey && phoneWithoutPlus) {
+    if (shopifySurvey.isProductSpecific) {
+      if (productIds.includes(shopifySurvey.productId))
+        await sendWhatsAppTemplateToCustomer(
+          session.orgId,
+          phoneWithoutPlus,
+          shopifySurvey.waTemplateId,
+          shopifySurvey.teamId,
+        );
+      else return null;
+    } else
+      await sendWhatsAppTemplateToCustomer(
+        session.orgId,
+        phoneWithoutPlus,
+        shopifySurvey.waTemplateId,
+        shopifySurvey.teamId,
+      );
+  }
+}
+
+export async function sendWhatsAppTemplateToCustomer(
+  orgId,
+  phone,
+  waTemplateId,
+  teamId,
+) {
+  try {
+    console.log("phone", phone);
+    if (!teamId) {
+      throw new Error("TeamId not found");
+    }
+    const dbTemplate = await getDbTemplate(waTemplateId);
+    if (!dbTemplate) {
+      throw new Error(`Template with id ${waTemplateId} not found`);
+    }
+    const flowId = getFlowIdFromTemplateComponents(dbTemplate.data.components);
+    let surveyTeamMap;
+    if (flowId) {
+      surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+        where: {
+          teamId,
+          survey: {
+            WaFlow: {
+              flowId: flowId,
+            },
+          },
+        },
+        select: {
+          id: true,
+          survey: {
+            select: {
+              languages: true,
+            },
+          },
+        },
+      });
+      if (!surveyTeamMap) {
+        throw new Error("SurveyTeamMap not found for flowId " + flowId);
+      }
+    } else {
+      log.trace("No flow button identified in template");
+    }
+    const components = convertComponentForSenting(dbTemplate);
+    const updatedComponent = updateButtonText(components, phone);
+    const templateComponents = [...updatedComponent];
+    if (flowId) {
+      const existingSession = await getSession(orgId, phone);
+
+      if (existingSession) {
+        if (validateSession(existingSession)) {
+          await deleteSession(orgId, phone);
+        } else {
+          log.warn("Session already exists for %o. Skipping...", phone);
+        }
+      }
+      // creating session
+      const newSession = await createSession({
+        phone,
+        surveyTeamMapId: surveyTeamMap.id,
+        orgId: orgId,
+        language: surveyTeamMap.survey.languages[0],
+      });
+      console.log("newSession", newSession);
+      // adding flow button
+      templateComponents.push({
+        type: "button",
+        sub_type: "flow",
+        index: 0,
+        parameters: [
+          {
+            type: "action",
+            action: {
+              flow_token: phone,
+            },
+          },
+        ],
+      });
+    }
+    const templateQuery = {
+      name: dbTemplate.data.name,
+      language: {
+        code: dbTemplate.data?.language,
+      },
+      components: templateComponents,
+    };
+
+    const templateMessage = createTemplateMessage(phone, templateQuery);
+    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    await wait(50);
+    sendMessage(orgId, templateMessage)
+      .then(() => {
+        log.trace("Template sent to customer");
+      })
+      .catch((e) => {
+        log.error(e);
+        log.error("Error sending template to customer");
+      });
+    return true;
+  } catch (e) {
+    console.error(e);
+    // log.error(e);
+    return false;
+  }
+}
+
+export async function deleteShopifySurveySchedule(id) {
+  return await prisma.shopifySurvey.delete({
+    where: {
+      id,
+    },
+  });
+}
+
+export async function updateShopifySurveySchedule(id, data) {
+  return await prisma.shopifySurvey.update({
+    where: {
+      id,
+    },
+    data,
   });
 }

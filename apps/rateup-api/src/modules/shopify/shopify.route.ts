@@ -2,21 +2,23 @@ import { FastifyInstance } from "fastify";
 import {
   createShopifySurveyScheduleHandler,
   deleteAllWebhookHandler,
+  deleteShopifySurveyScheduleHandler,
   getProductsHandler,
+  getRegisteredWebhooksHandler,
   getShopifyAuthCallbackHandler,
   getShopifyAuthHandler,
+  getShopifySessionHandler,
   getShopifySurveyScheduleHandler,
+  registerWebhookHandler,
   shopifyWebhooksHandler,
+  updateShopifySessionHandler,
+  updateShopifySurveyScheduleHandler,
 } from "./shopify.controller";
 import fastifyRawBody from "fastify-raw-body";
 import { ShopifyRef } from "./shopify.schema";
+import { checkSession } from "../../utils/checkSession";
 
 export async function shopifyRoutes(server: FastifyInstance) {
-  //Is it necessary?
-  // server.addHook("preHandler", checkSession);
-
-  // server.addHook("preHandler", checkShopifySession)
-
   await server.register(fastifyRawBody, {
     field: "rawBody",
     global: false,
@@ -25,9 +27,8 @@ export async function shopifyRoutes(server: FastifyInstance) {
   });
 
   server.get("/", getShopifyAuthHandler);
-  server.get("/auth/callback", getShopifyAuthCallbackHandler);
 
-  server.delete("/delete-webhooks", {}, deleteAllWebhookHandler);
+  server.get("/auth/callback", getShopifyAuthCallbackHandler);
 
   server.post(
     "/webhooks",
@@ -39,16 +40,90 @@ export async function shopifyRoutes(server: FastifyInstance) {
     shopifyWebhooksHandler,
   );
 
-  server.get("/products", {}, getProductsHandler);
+  server.get(
+    "/session",
+    { preHandler: [checkSession] },
+    getShopifySessionHandler,
+  );
+  server.put(
+    "/session/:shop",
+    {
+      preHandler: [checkSession],
+      schema: {
+        params: ShopifyRef("byShopParamsSchema"),
+      },
+    },
+    updateShopifySessionHandler,
+  );
+
+  server.delete(
+    "/delete-webhooks",
+    {
+      preHandler: [checkSession],
+    },
+    deleteAllWebhookHandler,
+  );
+
+  server.get(
+    "/products",
+    {
+      preHandler: [checkSession],
+    },
+    getProductsHandler,
+  );
 
   server.post(
-    "/scheduled-survey",
+    "/shopify-survey",
     {
+      preHandler: [checkSession],
       schema: {
         body: ShopifyRef("shopifySurveySchema"),
       },
     },
     createShopifySurveyScheduleHandler,
   );
-  server.get("/shopify-surveys", {}, getShopifySurveyScheduleHandler);
+
+  server.put(
+    "/shopify-survey/:id",
+    {
+      preHandler: [checkSession],
+      schema: {
+        body: ShopifyRef("shopifySurveyUpdateSchema"),
+        params: ShopifyRef("byIdParamsSchema"),
+      },
+    },
+    updateShopifySurveyScheduleHandler,
+  );
+  server.get(
+    "/shopify-surveys",
+    {
+      preHandler: [checkSession],
+    },
+    getShopifySurveyScheduleHandler,
+  );
+
+  server.delete(
+    "/shopify-survey/:id",
+    {
+      preHandler: [checkSession],
+      schema: {
+        params: ShopifyRef("byIdParamsSchema"),
+      },
+    },
+    deleteShopifySurveyScheduleHandler,
+  );
+
+  server.get(
+    "/registered-webhooks",
+    { preHandler: [checkSession] },
+    getRegisteredWebhooksHandler,
+  );
+
+  server.post(
+    "/register-webhooks",
+    {
+      preHandler: [checkSession],
+    },
+    registerWebhookHandler,
+  );
 }

@@ -1,13 +1,14 @@
 import "@shopify/shopify-api/adapters/node";
 import {
   ApiVersion,
+  LogSeverity,
   Session,
   SessionParams,
   shopifyApi,
 } from "@shopify/shopify-api";
 import { getShopifyAuthUrl, getShopifySession } from "./shopify.service";
-import { restResources } from "@shopify/shopify-api/rest/admin/2024-04";
 import webhookHandlers from "./shopify.handler";
+import { restResources } from "@shopify/shopify-api/rest/admin/2024-04";
 
 const shopify = shopifyApi({
   // The next 4 values are typically read from environment variables for added security
@@ -17,22 +18,27 @@ const shopify = shopifyApi({
     "read_products",
     "read_cart_transforms",
     "read_checkouts",
-    "read_content",
-    "write_content",
     "read_orders",
     "read_draft_orders",
     "read_fulfillments",
     "write_customers",
     "read_customers",
+    "unauthenticated_read_customers",
+    "unauthenticated_write_customers",
   ],
-  hostName: "5807-103-153-104-191.ngrok-free.app",
+  hostName: "d754-103-153-105-63.ngrok-free.app",
   hostScheme: "https",
   apiVersion: ApiVersion.April24,
-  isEmbeddedApp: false,
   restResources,
+  isEmbeddedApp: false,
   future: {
     customerAddressDefaultFix: true,
     lineItemBilling: true,
+  },
+  logger: {
+    level: LogSeverity.Debug,
+    timestamps: true,
+    httpRequests: true,
   },
 });
 
