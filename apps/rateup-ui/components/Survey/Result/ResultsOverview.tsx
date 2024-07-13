@@ -280,7 +280,7 @@ const ResultsOverview = ({ surveyId }) => {
             onClick={handleExportToPdf}
             loading={isExporting}
           >
-            Export
+            Export to Pdf
           </Button>
           <Stack p={5} ref={contentDivRef}>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
