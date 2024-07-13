@@ -167,9 +167,6 @@ async function updatePageVisitOrLinkClickInDB(req) {
     params: { shortUrlId },
     body: { resourceToBeUpdated, linkId },
   } = req;
-  const {
-    user: { orgId },
-  } = req;
   if (resourceToBeUpdated === "page-visit") {
     const updatedRecord = await prisma.landingPage.update({
       where: {
