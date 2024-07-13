@@ -24,7 +24,6 @@ const ShopifyAuthCallback = () => {
       }
       router.push("/login");
     }
-    console.log("shop", shop);
     updateShopifySession.mutate(
       { shop, data: null },
       {

@@ -11,7 +11,7 @@ export async function createShopifySurveySchedule(data) {
   return await axiosClient.post(`${SHOPIFY_BASE_URL}/shopify-survey`, data);
 }
 
-export async function getShopifySurveyShedulesByOrg() {
+export async function getShopifySurveySchedulesByOrg() {
   return (await axiosClient.get(`${SHOPIFY_BASE_URL}/shopify-surveys`)).data;
 }
 

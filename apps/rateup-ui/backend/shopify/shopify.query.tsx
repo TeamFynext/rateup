@@ -4,7 +4,7 @@ import {
   deleteShopifySurveySchedule,
   getProductsFromShopify,
   getShopifySession,
-  getShopifySurveyShedulesByOrg,
+  getShopifySurveySchedulesByOrg,
   registerShopifyWebhooks,
   updateShopifySession,
   updateShopifySurveySchedule,
@@ -31,7 +31,7 @@ export const useGetShopifySession = () => {
 export const useGetShopifySurveySchedules = () => {
   return useQuery({
     queryKey: ["shopifySurveySchedules"],
-    queryFn: getShopifySurveyShedulesByOrg,
+    queryFn: getShopifySurveySchedulesByOrg,
   });
 };
 
@@ -44,7 +44,6 @@ export const useCreateShopifySurveySchedule = () => {
       queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
     },
     onError: (error: AxiosError | any) => {
-      console.log(error);
       showErrorToast(
         `error in creating schedule: ${error?.response?.data?.error}`,
         "shopify-survey",
@@ -64,7 +63,6 @@ export const useUpdateShopifySurveySchedule = () => {
       queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
     },
     onError: (error: AxiosError | any) => {
-      console.log(error);
       showErrorToast(
         `survey schedule updation failed: ${error?.response?.data?.error}`,
         "shopify-survey",
@@ -89,7 +87,6 @@ export const useDeleteShopifySurveySchedule = () => {
       queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
     },
     onError: (error: AxiosError | any) => {
-      console.log(error);
       showErrorToast(
         `error in deleting schedule: ${error?.response?.data?.error}`,
         "shopify-survey",

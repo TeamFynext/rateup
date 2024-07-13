@@ -45,8 +45,6 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
   const { data: products } = useGetProductsFromShopify(loadProducts);
   const createShopifySurveySchedule = useCreateShopifySurveySchedule();
 
-  console.log("products", products);
-
   //get wa templates from db
   const templates = useTemplatesAvailableForTeam(form.values.teamId);
   if (

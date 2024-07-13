@@ -4,6 +4,7 @@ import { RateupButtonBlue } from "components/Button/RateupButtons";
 import PaperLayout from "components/styled/Layouts/PaperLayout";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { envConstants } from "utils/constants";
 
 const ShopifyCallbackRetry = () => {
   const router = useRouter();
@@ -17,9 +18,7 @@ const ShopifyCallbackRetry = () => {
           <RateupButtonBlue
             title="Retry"
             onClick={() =>
-              window.open(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/shopify?shop=${shop}`,
-              )
+              window.open(`${envConstants.API_URL}/api/shopify?shop=${shop}`)
             }
             fullWidth
             leftIcon={<IconReload size={"1rem"} />}
