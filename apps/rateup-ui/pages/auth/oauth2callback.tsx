@@ -15,6 +15,7 @@ import { showSuccessToast } from "../../utils/notifications";
 import { useEffect, useState } from "react";
 import { useCreateAuthToken } from "../../backend/org/org.query";
 import { RateupButtonBlue } from "../../components/Button/RateupButtons";
+import { useCheckSession } from "../../hooks/checkSession";
 
 export default function AuthCallBack() {
   const router = useRouter();
@@ -23,8 +24,12 @@ export default function AuthCallBack() {
 
   const [isLoading, setIsLoading] = useState(true);
   const mut = useCreateAuthToken();
+  const session = useCheckSession();
 
   useEffect(() => {
+    if (!session) {
+      router.push("/login");
+    }
     setCallBackRoute(
       JSON.parse(localStorage?.getItem("google-callback-route")),
     );
@@ -43,7 +48,7 @@ export default function AuthCallBack() {
         },
       );
     }
-  }, [code, error]);
+  }, [code, error, session]);
 
   return (
     <>

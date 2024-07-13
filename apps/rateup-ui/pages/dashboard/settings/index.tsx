@@ -10,7 +10,6 @@ import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing
 import { useCheckSession } from "../../../hooks/checkSession";
 import { useRouter } from "next/router";
 import AdvancedSettings from "./advanced/AdvancedSettings";
-import IntegratedApps from "./apps";
 
 const Settings = () => {
   const router = useRouter();
@@ -31,7 +30,6 @@ const Settings = () => {
           <Tabs.Tab value="organization">Organization</Tabs.Tab>
           <Tabs.Tab value="account">Account</Tabs.Tab>
           <Tabs.Tab value="advanced">Advanced Settings</Tabs.Tab>
-          <Tabs.Tab value="apps">Apps</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="user">
           <ProfileSettings />
@@ -44,9 +42,6 @@ const Settings = () => {
         </Tabs.Panel>
         <Tabs.Panel value="advanced">
           <AdvancedSettings />
-        </Tabs.Panel>
-        <Tabs.Panel value="apps">
-          <IntegratedApps />
         </Tabs.Panel>
       </StyledTabs>
     );
