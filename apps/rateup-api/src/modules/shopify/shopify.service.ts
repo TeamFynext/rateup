@@ -25,14 +25,13 @@ import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service
 import { getFlowIdFromTemplateComponents } from "../whatsapp/messageTemplates/wa_templates.utils";
 import { parsePhoneNumber } from "libphonenumber-js";
 
-export async function getShopifyAuthUrl(rawRequest, reply: FastifyReply, shop) {
-  console.log(" in getShopifyAuthUrl");
+export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
     shop: shopify.utils.sanitizeShop(shop, true),
     callbackPath: "/api/shopify/auth/callback",
     isOnline: false,
     rawRequest,
-    rawResponse: reply.raw,
+    rawResponse,
   });
 }
 
@@ -44,7 +43,6 @@ export async function handleShopifyAuthCallback(request, reply) {
 }
 
 export async function createShopifySession(session: Session) {
-  // TODO: create shopifySession model
   return await prisma.shopifySession.upsert({
     where: {
       shop: session.shop,
@@ -75,7 +73,7 @@ export async function getShopifySession(shop) {
       shop,
     },
   });
-  if (session)
+  if (session) {
     return {
       ...session,
       isActive: undefined,
@@ -85,6 +83,7 @@ export async function getShopifySession(shop) {
       equals: undefined,
       toPropertyArray: undefined,
     };
+  }
   return null;
 }
 
@@ -224,7 +223,6 @@ export async function sendWhatsAppTemplateToCustomer(
   teamId,
 ) {
   try {
-    console.log("phone", phone);
     if (!teamId) {
       throw new Error("TeamId not found");
     }
@@ -279,7 +277,6 @@ export async function sendWhatsAppTemplateToCustomer(
         orgId: orgId,
         language: surveyTeamMap.survey.languages[0],
       });
-      console.log("newSession", newSession);
       // adding flow button
       templateComponents.push({
         type: "button",

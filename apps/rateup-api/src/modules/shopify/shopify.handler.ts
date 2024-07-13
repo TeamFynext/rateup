@@ -1,9 +1,5 @@
 import "@shopify/shopify-api/adapters/node";
-import {
-  ApiVersion,
-  DeliveryMethod,
-  WebhookHandler,
-} from "@shopify/shopify-api";
+import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
 import {
   getShopifySession,
   sendTemplateOnShopifyEvent,
@@ -11,7 +7,6 @@ import {
 } from "./shopify.service";
 import { ShopifyEvents } from "../../types/enums";
 import { log } from "../../utils/logger";
-import shopify from "./shopify.config";
 
 //callbackhandlers only working if added in same file. find out why?
 async function draftOrderCreateHandler(

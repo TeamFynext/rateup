@@ -1,4 +1,3 @@
-import { GoogleSpreadsheet } from "google-spreadsheet";
 import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunction";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail";
@@ -628,6 +627,7 @@ export const generateResponse = async (body: GenerateBodyInput) => {
 };
 
 export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
+  const { GoogleSpreadsheet } = await import("google-spreadsheet");
   const survey = await prisma.survey.findUnique({
     where: {
       id: surveyId,
@@ -944,6 +944,7 @@ interface IsheetResponse {
 }
 export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
   try {
+    const { GoogleSpreadsheet } = await import("google-spreadsheet");
     const { respondent, tag, ...response } = responseData;
     const {
       survey: { spreadSheetId, questions, id: surveyId },

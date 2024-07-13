@@ -8,7 +8,6 @@ import {
 import {
   createShopifySession,
   createShopifySurveySchedule,
-  deleteShopifySession,
   deleteShopifySurveySchedule,
   getShopifyAuthUrl,
   getShopifySession,
@@ -20,7 +19,7 @@ import {
   updateShopifySurveySchedule,
 } from "./shopify.service";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { CookieNotFound } from "@shopify/shopify-api";
+import { log } from "../../utils/logger";
 
 export async function getShopifyAuthHandler(
   request: FastifyRequest<{ Querystring: { shop: string } }>,
@@ -28,13 +27,14 @@ export async function getShopifyAuthHandler(
 ) {
   try {
     const session = await getShopifySession(request.query.shop);
-    console.log("session", session);
     if (!session || !session.active) {
-      await getShopifyAuthUrl(request.raw, reply, request.query.shop);
+      await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
     } else reply.redirect(`${process.env.FRONTEND_URL}/dashboard/settings`);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    reply.redirect(
+      `${process.env.FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
+    );
   }
 }
 
@@ -43,19 +43,16 @@ export async function getShopifyAuthCallbackHandler(
   reply: FastifyReply,
 ) {
   try {
-    console.log("in getShopifyAuthCallbackHandler");
     const callbackResponse = await handleShopifyAuthCallback(request, reply);
-    console.log("callbackResponse", callbackResponse);
     const session = await createShopifySession(callbackResponse.session);
-    console.log("session", session);
-
     reply.redirect(
       `${process.env.FRONTEND_URL}/auth/shopify?shop=${session.shop}`,
     );
   } catch (e) {
     console.error(e);
-    if (e instanceof CookieNotFound)
-      await getShopifyAuthUrl(request.raw, reply, request.query.shop);
+    reply.redirect(
+      `${process.env.FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
+    );
   }
 }
 
@@ -66,8 +63,6 @@ export async function updateShopifySessionHandler(
   try {
     const shop = request.params.shop;
     const orgId = request.user.orgId;
-    console.log("shop", shop);
-    console.log("orgId", orgId);
     await updateShopifySession(shop, { orgId });
     reply.code(200).send({ message: "success" });
   } catch (e) {
@@ -97,7 +92,9 @@ export async function getShopifySessionHandler(
 ) {
   try {
     const session = await getShopifySessionByOrgId(request.user.orgId);
-    reply.code(200).send(session);
+    if (!shopify.config.scopes.equals(session.scope)) {
+      await getShopifyAuthUrl(request.raw, reply.raw, session.shop);
+    } else reply.code(200).send(session);
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
@@ -111,14 +108,12 @@ export async function deleteAllWebhookHandler(
   try {
     const session = await getShopifySession(request.query.shop);
     const webhookslist = await shopify.rest.Webhook.all({ session });
-    console.log("webhookslist", webhookslist);
     await Promise.all(
       webhookslist.data.map(async (webhook) => {
         const response = await shopify.rest.Webhook.delete({
           session,
           id: webhook.id,
         });
-        console.log("response", response);
       }),
     );
 
@@ -134,7 +129,7 @@ export async function shopifyWebhooksHandler(
   reply: FastifyReply,
 ) {
   try {
-    console.log("in shopifyWebhooksHandler");
+    log.info("Processing webhook");
     await shopify.webhooks.process({
       rawBody: request.rawBody as string, // is a string
       rawRequest: request.raw,
@@ -239,7 +234,6 @@ export async function updateShopifySurveyScheduleHandler(
   try {
     const scheduleId = request.params.id;
     const res = await updateShopifySurveySchedule(scheduleId, request.body);
-    console.log("res", res);
     reply.code(200).send(res);
   } catch (e) {
     console.error(e);
