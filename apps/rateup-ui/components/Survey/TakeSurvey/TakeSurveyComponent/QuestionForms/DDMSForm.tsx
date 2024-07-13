@@ -113,7 +113,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       onChange={handleSelectedOp}
       placeholder="Select one or more"
       portalProps={{
-        target: isSurveyThemePreview && takeSurveyLayoutWebDomNodeRef.current,
+        target: takeSurveyLayoutWebDomNodeRef.current,
       }}
     />
   );
