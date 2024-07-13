@@ -1,19 +1,22 @@
 import { IconChevronDown } from "@tabler/icons-react";
-import { Menu, Button } from "@mantine/core";
+import { Menu, Button, Tooltip } from "@mantine/core";
 
 export function StatusFilterMenu({ filterParam, setFilterParam }) {
   return (
     <Menu shadow="md" width={120}>
       <Menu.Target>
-        <Button
-          variant="outline"
-          color="#3F5BA9"
-          radius="xl"
-          rightSection={<IconChevronDown size="1rem" />}
-          tt={"capitalize"}
-        >
-          {filterParam ?? "Status"}
-        </Button>
+        <Tooltip label="Filter survey" withArrow position="top">
+          <Button
+            variant="outline"
+            color="#3F5BA9"
+            radius="xl"
+            rightSection={<IconChevronDown size="1rem" />}
+            tt={"capitalize"}
+            style={{ minWidth: 110 }}
+          >
+            {filterParam ?? "Status"}
+          </Button>
+        </Tooltip>
       </Menu.Target>
 
       <Menu.Dropdown
@@ -29,14 +32,14 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
         </Menu.Item>
 
         <Menu.Item
-          color={filterParam === "active" && "blue"}
+          color={filterParam === "active" && "green"}
           onClick={() => setFilterParam("active")}
         >
           Active
         </Menu.Item>
 
         <Menu.Item
-          color={filterParam === "paused" && "blue"}
+          color={filterParam === "paused" && "yellow"}
           onClick={() => setFilterParam("paused")}
         >
           Paused

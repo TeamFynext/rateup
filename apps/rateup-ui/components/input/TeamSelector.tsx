@@ -63,13 +63,6 @@ export function TeamSelector({
       defaultValue={teamOptions[0].value}
       onChange={onChange}
       label={label}
-      styles={{
-        input: {
-          borderRadius: 25,
-          width: "180px",
-          height: "35px",
-        },
-      }}
       {...props}
     />
   );

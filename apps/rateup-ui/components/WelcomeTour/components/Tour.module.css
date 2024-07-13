@@ -10,7 +10,9 @@
 }
 
 .team-select-option {
-  /* intentionally empty */
+  border-radius: 25px;
+  width: 170px;
+  min-width: 140;
 }
 
 .sort-dropdown {
