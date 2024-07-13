@@ -97,11 +97,11 @@ export const BasicPages = [
   PageType.Custom,
 ];
 
+export const uniquePages = [PageType.Welcome, PageType.ThankYou];
+
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
 export const QuestionTypesGroup = [
-  // { title: "Basic Pages", questionTypes: BasicPages },
-
   { title: "Contact Questions", questionTypes: ContactQuestions },
   { title: "NPS Questions", questionTypes: NPSQuestions },
   { title: "Choice Questions", questionTypes: ChoiceQuestions },

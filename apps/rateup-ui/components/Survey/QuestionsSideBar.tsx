@@ -44,7 +44,7 @@ export function QuestionsSideBar({
     handlers.setState(questions);
 
     let newOrder = reOrderPages(questions);
-    surveyId && questionsReorderMutation.mutate(newOrder); //TODO optimize: api call only when new qn count changes
+    surveyId && questionsReorderMutation.mutate(newOrder); //TODO-SE optimize: do api call only when new qn count changes
   }, [questions]);
 
   useEffect(() => {

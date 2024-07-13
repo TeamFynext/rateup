@@ -4,7 +4,7 @@ import { PageType } from "../../../types/enums";
 import { IconFileInfo, IconNotebook, IconPageBreak } from "@tabler/icons-react";
 import classes from "./QuestionDetailedView.module.css";
 import { getPageTypeLabel } from "../../../utils/enums";
-import { BasicPages } from "../../../utils/constants";
+import { BasicPages, uniquePages } from "../../../utils/constants";
 
 interface iProps {
   questions: Question[];
@@ -14,9 +14,6 @@ const PageTypeSelection = ({ handleTypeSelection, questions }) => {
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);
   };
-
-  const uniquePages = [PageType.Welcome, PageType.ThankYou];
-
   const QuestionButton = ({ type }) => {
     const Icon = questionIcons[type];
     return (

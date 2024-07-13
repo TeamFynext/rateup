@@ -55,6 +55,8 @@ function SurveyTheme({ survey }) {
           </Box>
         </Group>
 
+        {/* <Box></Box>   */}
+
         <Box
           className={
             styles["selected-page-tab-panels-and-styles-div-container"]

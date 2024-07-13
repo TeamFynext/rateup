@@ -119,6 +119,7 @@ export function EditSurvey({
             {selectedQ && (
               <MotionTransition keyValue={selectedQ}>
                 <QuestionDetailedView
+                  survey={survey}
                   question={selectedQ}
                   setSelectedQ={setSelectedQ}
                   setActiveTab={setActiveTab}

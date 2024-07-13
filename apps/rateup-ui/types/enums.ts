@@ -19,6 +19,12 @@ export enum PageTitle {
   Custom = "Custom Page",
 }
 
+export enum PageDescription {
+  Welcome = "This is the first page to welcome",
+  ThankYou = "This is the End Page of the survey",
+  Custom = "Custom Page",
+}
+
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",

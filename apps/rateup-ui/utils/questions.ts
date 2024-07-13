@@ -1,4 +1,10 @@
-import { PageTitle, PageType, QuestionType, SurveyType } from "../types/enums";
+import {
+  PageDescription,
+  PageTitle,
+  PageType,
+  QuestionType,
+  SurveyType,
+} from "../types/enums";
 import { ChoiceTypeQuestions } from "./constants";
 
 interface Reorderable {
@@ -49,7 +55,7 @@ export function createPage(
 
   for (const language of languages) {
     title[language] = PageTitle[type];
-    description[language] = "Page";
+    description[language] = PageDescription[type];
     if (label) {
       label[language] = "";
     }

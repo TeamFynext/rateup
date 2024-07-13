@@ -26,6 +26,7 @@ import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
   NPSWeightage,
+  PageType,
   QuestionType,
   SubscriptionFeaturePathName,
   SurveyType,
@@ -53,7 +54,12 @@ import { LanguageCompletionView } from "./LanguageCompletionView";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconChevronDown } from "@tabler/icons-react";
-import { docsPath, NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
+import {
+  docsPath,
+  NPSQuestions,
+  SAVE_HOTKEY,
+  uniquePages,
+} from "../../../utils/constants";
 import { getTypeLabel } from "../../../utils/enums";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
@@ -70,6 +76,7 @@ import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
 import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
 import InfoButton from "../../Button/InfoButton";
+import FullPageEditor from "../Page/FullPageEditor";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -80,6 +87,7 @@ interface QuestionDetailedViewProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   surveyId?: string;
+  survey: Survey;
 }
 export function QuestionDetailedView({
   question,
@@ -88,6 +96,7 @@ export function QuestionDetailedView({
   surveyLanguages,
   setSelectedLanguage,
   surveyId,
+  survey,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   surveyId = surveyId || (router.query?.surveyId as string);
@@ -287,17 +296,21 @@ export function QuestionDetailedView({
             }
           />
           <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
-            <CurrentResponsesContext.Provider
-              value={{ response: currentResponse, updateResponse }}
-            >
-              <QuestionTypePreview
-                type={question?.type}
-                choices={form.values.choices}
-                features={form.values.features}
-                tnc={form.values.tnc}
-                wop={form.values?.wop}
-              />
-            </CurrentResponsesContext.Provider>
+            {uniquePages.includes(question?.type as PageType) ? (
+              <FullPageEditor survey={survey} page={question?.type} />
+            ) : (
+              <CurrentResponsesContext.Provider
+                value={{ response: currentResponse, updateResponse }}
+              >
+                <QuestionTypePreview
+                  type={question?.type}
+                  choices={form.values.choices}
+                  features={form.values.features}
+                  tnc={form.values.tnc}
+                  wop={form.values?.wop}
+                />
+              </CurrentResponsesContext.Provider>
+            )}
           </Center>
         </ScrollArea>
 
