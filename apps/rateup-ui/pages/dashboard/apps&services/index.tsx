@@ -6,8 +6,15 @@ import {
   Divider,
   SimpleGrid,
   Text,
+  Group,
 } from "@mantine/core";
-import { IconApi, IconChevronRight, IconLock } from "@tabler/icons-react";
+import {
+  IconApi,
+  IconChevronRight,
+  IconCloudLock,
+  IconLock,
+  IconShieldLockFilled,
+} from "@tabler/icons-react";
 import PaperLayout from "components/styled/Layouts/PaperLayout";
 import router from "next/router";
 import { IntegratedApps } from "types/enums";
@@ -60,18 +67,24 @@ const index = () => {
       </PaperLayout>
       <PaperLayout>
         <Title order={4}>Services</Title>
-        <SimpleGrid cols={3}>
+        <SimpleGrid cols={3} p={"xl"} spacing={"xl"}>
           <PaperLayout
             onClick={() => router.push("/dashboard/apps&services/encryption")}
             hoveractive
           >
-            <Text>End-to-End Enryption</Text>
+            <Group>
+              <IconCloudLock color="gray" />
+              <Text>End-to-End Enryption</Text>
+            </Group>
           </PaperLayout>
           <PaperLayout
             onClick={() => router.push("/dashboard/apps&services/apiservice")}
             hoveractive
           >
-            <Text>API Service</Text>
+            <Group>
+              <IconApi color="gray" />
+              <Text>API Service</Text>
+            </Group>
           </PaperLayout>
         </SimpleGrid>
       </PaperLayout>
