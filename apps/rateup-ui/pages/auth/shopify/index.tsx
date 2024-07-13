@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { Center, Stack, Text } from "@mantine/core";
 import { IconLoader } from "@tabler/icons-react";
-import style from "../../components/Graph/graph.module.css";
+import style from "../../../components/Graph/graph.module.css";
 import { useUpdateShopifySession } from "backend/shopify/shopify.query";
 import { useCheckSession } from "hooks/checkSession";
 import { useRouteAndCartStore } from "components/HomePage/pages/Pricing/store/RouteAndCartStore";
