@@ -576,14 +576,15 @@ model MenuLanding {
   updatedAt             DateTime?      @updatedAt
   backgroundImage       String?
   mobileBackgroundImage String?
+  logo                  String?
   visited               Int            @default(0)
   menu                  Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
   menuId                String         @unique @db.Uuid
   surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
   surveyTeamMapId       String?        @db.Uuid
   unsplashImage         Json?
-  dynamicVariables      Json[]         @default([])
-  primaryColor          String?
+  menuButtons           Json[]         @default([])
+  colors                Json?
 }
 
 model ReviewSuggestion {
