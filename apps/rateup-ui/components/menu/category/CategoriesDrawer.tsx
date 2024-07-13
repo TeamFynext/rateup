@@ -1,25 +1,40 @@
-import { Box, Drawer, Image, Stack, Text } from "@mantine/core";
+import { Avatar, Box, Drawer, Image, Stack, Text } from "@mantine/core";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import classes from "./CategoriesDrawerStyles.module.css";
 import { fallbackImage } from "../../../utils/constants";
+import FloatingMenu from "pages/public/menu/[menuId]/feedback/FloatingMenu";
 
 interface CategoriesDrawerProps {
   opened: boolean;
   close: () => void;
   categories: FullCategory[];
   handleCategoryChipClick: any;
+  displayName?: string;
+  logo?: string;
+  menuButtons: any;
 }
 export function CategoriesDrawer({
   opened,
   close,
   categories,
   handleCategoryChipClick,
+  displayName,
+  logo,
+  menuButtons,
 }: CategoriesDrawerProps) {
   return (
     <Drawer
       opened={opened}
       onClose={close}
-      title="Categories"
+      title={
+        <Avatar
+          src={logo && getFileUrlFromKey(logo)}
+          radius={"sm"}
+          alt="logo of brand"
+          name={displayName}
+          color="initials"
+        />
+      }
       size={"xs"}
       classNames={{
         title: classes.title,
@@ -28,7 +43,13 @@ export function CategoriesDrawer({
       }}
       closeButtonProps={{ iconSize: "30px" }}
     >
-      <Stack align="center" mt={"lg"}>
+      <Stack align="center">
+        {displayName && (
+          <Text ta={"center"} tt={"uppercase"}>
+            {displayName}
+          </Text>
+        )}
+        <FloatingMenu dynamicVariables={menuButtons} />
         {categories?.length === 0 ? (
           <Text>No Categories Found</Text>
         ) : (
@@ -53,7 +74,12 @@ export function CategoriesDrawer({
                   handleCategoryChipClick(c.id);
                 }}
               >
-                <Image src={imageSrc} width={"100%"} maw={"240px"} />
+                <Image
+                  src={imageSrc}
+                  width={"100%"}
+                  maw={"240px"}
+                  alt="image of category"
+                />
                 <Box
                   px="sm"
                   py="2px"

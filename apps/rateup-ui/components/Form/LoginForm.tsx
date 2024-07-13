@@ -84,13 +84,14 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           placeholder="Enter Password"
           {...loginForm.getInputProps("password")}
         />
-        <Link
-          className={styles["login-form-forgot-password-link"]}
-          href="/login/reset-password"
-        >
-          Forgot password?
-        </Link>
-
+        <div className={styles["forgot-password-container"]}>
+          <Link
+            className={styles["login-form-forgot-password-link"]}
+            href="/login/reset-password"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <RateupButtonBlue
           type="submit"
           title="Login"
