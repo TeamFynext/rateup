@@ -161,10 +161,11 @@ export async function getFullMenu(menuId: string) {
         select: {
           backgroundImage: true,
           mobileBackgroundImage: true,
+          logo: true,
           surveyTeamMapId: true,
           unsplashImage: true,
           visited: true,
-          dynamicVariables: true,
+          menuButtons: true,
           menu: {
             select: {
               currency: true,
@@ -250,9 +251,10 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
     teamId,
     backgroundImage,
     mobileBackgroundImage,
+    logo,
     unsplashImage,
-    primaryColor,
-    dynamicVariables,
+    colors,
+    menuButtons,
     ...newObject
   } = data;
   const teamData = teamId && { team: { connect: { id: teamId } } };
@@ -270,9 +272,10 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
       surveyTeamMap: { connect: { id: data.surveyTeamMapId } },
       backgroundImage,
       mobileBackgroundImage,
+      logo,
       unsplashImage,
-      primaryColor,
-      dynamicVariables,
+      colors,
+      menuButtons,
     };
     await prisma.menuLanding.upsert({
       where: {
@@ -296,9 +299,10 @@ export async function updateMenu(id: string, data: UpdateMenuInput) {
         surveyTeamMapId: null,
         backgroundImage,
         mobileBackgroundImage,
+        logo,
         unsplashImage,
-        primaryColor,
-        dynamicVariables,
+        colors,
+        menuButtons,
       },
     });
   }
