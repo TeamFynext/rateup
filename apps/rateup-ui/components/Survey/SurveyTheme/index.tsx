@@ -11,7 +11,7 @@ import WelcomePageSwitch from "./components/WelcomePageSwitch";
 import StylesComponent from "./components/stylescomponent";
 import styles from "./SurveyTheme.module.css";
 
-function SurveyTheme({ survey }) {
+function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
   // selected surveyThemeId.
@@ -36,11 +36,20 @@ function SurveyTheme({ survey }) {
     );
 
   return (
-    <SurveyThemeContextProvider surveyTheme={surveyTheme}>
+    <SurveyThemeContextProvider
+      surveyTheme={surveyTheme}
+      selectedPageTab={initialSelectedPageTab}
+    >
       <Box className={styles["survey-theme-root-div"]}>
         <Group className={styles["tabs-and-other-options-container"]}>
           <Box></Box>
-          <PageSelector survey={survey} />
+
+          {!initialSelectedPageTab ? (
+            <PageSelector survey={survey} />
+          ) : (
+            <Box></Box>
+          )}
+
           <Box
             className={styles["save-btn-container"]}
             id="save-btn-container-portal"
@@ -54,8 +63,6 @@ function SurveyTheme({ survey }) {
             />
           </Box>
         </Group>
-
-        {/* <Box></Box>   */}
 
         <Box
           className={

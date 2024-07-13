@@ -82,16 +82,9 @@ export function EditSurvey({
       setActiveTab(QuestionTabsEnum.Edit);
     });
   };
+
   return (
-    <Flex
-      w={"100%"}
-      h={"100%"}
-      mah={"100%"}
-      p={5}
-      gap={10}
-      style={{ overflow: "auto" }}
-      bg={"var(--mantine-color-body)"}
-    >
+    <Flex className={styles["edit-survey-div"]}>
       <PaperLayout className={styles["question-sidebar-container"]}>
         <QuestionsSideBar
           questions={questions}
@@ -131,7 +124,7 @@ export function EditSurvey({
             )}
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
-            <Stack>
+            <Stack className={styles["type-selection-panel-child-div"]}>
               {survey?.type === SurveyType.Web && (
                 <PageTypeSelection
                   questions={questions}

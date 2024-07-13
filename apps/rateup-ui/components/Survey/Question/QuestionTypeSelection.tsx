@@ -98,13 +98,7 @@ export function QuestionTypeSelection({
   };
   return (
     <Flex direction={"column"} h={"100%"}>
-      <Stack
-        gap={"md"}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-        }}
-      >
+      <Stack gap={"md"}>
         {questionTypeGroups?.map((qtype, i) => {
           return (
             <Stack gap={"sm"} key={i}>

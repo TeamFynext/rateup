@@ -23,7 +23,6 @@ const PageTypeSelection = ({ handleTypeSelection, questions }) => {
         leftSection={<Icon size={"1rem"} />}
         variant={"default"}
         className={classes.questionTypeButton}
-        p={15}
         onClick={() => handleQuestionTypeClick(type as PageType)}
         disabled={
           questions?.filter((q) => q.type === type).length > 0 &&
@@ -35,14 +34,8 @@ const PageTypeSelection = ({ handleTypeSelection, questions }) => {
     );
   };
   return (
-    <Flex direction={"column"} h={"100%"}>
-      <Stack
-        gap={"md"}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-        }}
-      >
+    <Flex direction={"column"}>
+      <Stack gap={"md"}>
         <Stack gap={"sm"}>
           <Group justify="space-between">
             <Title order={4} c="dimmed">
