@@ -2,6 +2,7 @@
 import {
   IconAddressBook,
   IconApi,
+  IconApps,
   IconBrandWhatsapp,
   IconBrowser,
   IconClipboardList,
@@ -241,6 +242,15 @@ export function getNavTopData(subscription?: Subscription) {
                 href: "/dashboard/loyalty/api",
               },
             ],
+          },
+        ]),
+    ...(hiddenModules.includes("appsAndServices")
+      ? []
+      : [
+          {
+            Icon: IconApps,
+            label: "Apps & Services",
+            href: "/dashboard/apps&services",
           },
         ]),
   ];
