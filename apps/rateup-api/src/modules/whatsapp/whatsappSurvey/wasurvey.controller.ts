@@ -627,7 +627,7 @@ export async function sendCampaignToParticipants(
     return false;
   }
 }
-function convertComponentForSenting(dbTemplate) {
+export function convertComponentForSenting(dbTemplate) {
   const containsImage =
     dbTemplate.data.components.find(
       (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
@@ -680,7 +680,7 @@ function convertComponentForSenting(dbTemplate) {
 
   return components;
 }
-function updateButtonText(array, newText) {
+export function updateButtonText(array, newText) {
   return (
     array.map((item) => {
       if (item.type === "button" && item.sub_type === "url") {
@@ -853,7 +853,7 @@ async function _sendCampaignToParticipants(
 }
 
 // Temporary rate limiting
-function wait(ms: number) {
+export function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
