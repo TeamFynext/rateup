@@ -1,26 +1,26 @@
 // Any modification to this file should be reflected in the backend
 import { WaGetMessagesBody } from "../backend/whatsapp/inbox/message/wamessage.api";
 import {
-  QuestionType,
+  CampaignStatus,
+  LogicAction,
+  LogicCondition,
+  LoyaltyCampaignType,
   MenuItemPriceType,
   NPSWeightage,
-  LogicCondition,
-  LogicAction,
-  WaFlowLayoutType,
-  WaFlowFormElementType,
-  WaFlowStatus,
+  PaymentPlanStatus,
+  QuestionType,
+  StripeProductType,
   SurveyType,
-  LoyaltyCampaignType,
+  SurveyVariableType,
   WaAutomatedReplyMatchType,
   WaAutomatedReplyResponseType,
+  WaFlowFormElementType,
+  WaFlowLayoutType,
+  WaFlowStatus,
   WaMessageTypes,
+  WaTemplateCategory,
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
-  WaTemplateCategory,
-  CampaignStatus,
-  StripeProductType,
-  PaymentPlanStatus,
-  SurveyVariableType,
 } from "./enums";
 
 type GoogleReview = {
@@ -421,8 +421,6 @@ declare global {
     displayName: string;
     locationUrl?: string;
     locationText?: string;
-    websiteUrl?: string;
-    websiteText?: string;
     teamId: string;
     logo?: string;
     backgroundImage?: string;
@@ -442,7 +440,6 @@ declare global {
     createdAt: string;
     name: string;
     menuId: string;
-    image: string;
     itemOrder?: number;
     scheduleEnabled?: boolean;
     startTime?: string;

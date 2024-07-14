@@ -1,42 +1,25 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  FileButton,
-  LoadingOverlay,
-  Stack,
-  Image,
-  SimpleGrid,
-  Title,
-  Switch,
-  Group,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { useEffect, useState } from "react";
+
 import {
   useCreateMenuCategoryMutation,
   useUpdateMenuCategoryMutation,
-} from "../../backend/menu/category/mCategory.query";
+} from "@/backend/menu/category/mCategory.query";
+import { createCustomTimestamp, formatToCustomTime } from "@/utils/dateTime";
 import {
-  deleteUploadedFiles,
-  getImageValue,
-  uploadFile,
-} from "../../utils/file-upload/upload";
-import FormModalLayout from "../Modal/FormModalLayout";
+  Group,
+  LoadingOverlay,
+  SimpleGrid,
+  Stack,
+  Switch,
+  Title,
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+
 import {
   ContainedTextField,
   ContainedTimeInput,
 } from "../input/ContainedInput/ContainedInput";
-import { RateupButtonSecondary } from "../Button/RateupButtons";
-import {
-  createCustomTimestamp,
-  formatToCustomTime,
-} from "../../utils/dateTime";
-import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-  fallbackImage,
-  mmImageCropModalClassnames,
-} from "../../utils/constants";
-import { showErrorToast } from "../../utils/notifications";
-import { modals } from "@mantine/modals";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 interface CreateMenuCategoryModalProps {
   readonly opened: boolean;
@@ -51,14 +34,11 @@ export function CreateMenuCategoryModal({
   editingItem,
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
-  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-  const resetRef = useRef<() => void>(null);
 
   const form = useForm({
     initialValues: editingItem ?? {
       name: "",
       menuId: menuId,
-      image: "",
       scheduleEnabled: false,
       startTime: "",
       endTime: "",
@@ -78,7 +58,6 @@ export function CreateMenuCategoryModal({
       form.setValues(updatedEditingItem);
     } else {
       form.reset();
-      setImageToUpload(null);
     }
     //if form add then infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,7 +69,6 @@ export function CreateMenuCategoryModal({
       form.reset();
       close();
       setIsCreating(false);
-      setImageToUpload(null);
     },
     () => {
       setIsCreating(false);
@@ -103,7 +81,6 @@ export function CreateMenuCategoryModal({
       form.reset();
       close();
       setIsCreating(false);
-      setImageToUpload(null);
     },
     () => {
       setIsCreating(false);
@@ -112,15 +89,8 @@ export function CreateMenuCategoryModal({
 
   const onSubmit = (values: typeof form.values) => {
     setIsCreating(true);
-    let temp = "";
     const formatedData: any = values;
     const processSubmit = async () => {
-      if (imageToUpload) {
-        const fileKey = await uploadFile(imageToUpload);
-        if (typeof fileKey === "string") {
-          temp = fileKey;
-        }
-      }
       if (values?.scheduleEnabled) {
         formatedData.startTime =
           values.startTime && createCustomTimestamp(values.startTime);
@@ -134,18 +104,11 @@ export function CreateMenuCategoryModal({
       }
 
       if (editingItem) {
-        if (editingItem?.image && editingItem?.image !== values?.image) {
-          await deleteUploadedFiles({
-            fileKeyArray: [{ Key: editingItem?.image }],
-          });
-        }
-        formatedData.image = temp;
         editMenuCategoryMutation.mutate({
           categoryId: editingItem.id,
           menuCategory: formatedData,
         });
       } else {
-        formatedData.image = temp;
         createMenuCategoryMutation.mutate(formatedData);
       }
       setIsCreating(false);
@@ -156,39 +119,6 @@ export function CreateMenuCategoryModal({
   if (!menuId) {
     return null;
   }
-
-  const handleCropImageSave = (croppedImageObj) => {
-    if (croppedImageObj) {
-      const { file, url } = croppedImageObj;
-      form.setFieldValue("image", url);
-      setImageToUpload(file);
-    }
-  };
-
-  const onChangePicture = (event: File | null) => {
-    if (!event) return;
-    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
-      return;
-    }
-    const imageBlobUrl = URL.createObjectURL(event);
-    const imageName = event.name;
-
-    modals.openContextModal({
-      modal: "imageCropModal",
-      title: "Crop Image",
-      centered: true,
-      classNames: mmImageCropModalClassnames,
-      innerProps: {
-        imageUrl: imageBlobUrl,
-        imageName: imageName,
-        onSaveClick: handleCropImageSave,
-        aspectRatio: 4 / 3,
-      },
-    });
-    resetRef?.current?.();
-  };
-
   return (
     <FormModalLayout
       opened={opened}
@@ -197,7 +127,6 @@ export function CreateMenuCategoryModal({
       centered
       onSubmit={form.onSubmit(onSubmit)}
       buttonTitle={editingItem ? "Save Category" : "Create Category"}
-      size="55rem"
     >
       <Stack>
         <LoadingOverlay
@@ -210,62 +139,26 @@ export function CreateMenuCategoryModal({
           overlayProps={{ radius: "sm", blur: 2 }}
           loaderProps={{ type: "bars" }}
         />
-        <SimpleGrid cols={{ base: 1, md: 2 }}>
-          <Stack>
+        <Stack>
+          <Title order={3} c={"var(--grey-color)"}>
+            Category Details
+          </Title>
+          <ContainedTextField
+            label="Name"
+            placeholder="Name"
+            withAsterisk
+            {...form.getInputProps("name")}
+          />
+          <Group>
             <Title order={3} c={"var(--grey-color)"}>
-              Category Details
+              Timed Menu
             </Title>
-            <ContainedTextField
-              label="Name"
-              placeholder="Name"
-              withAsterisk
-              {...form.getInputProps("name")}
+            <Switch
+              {...form.getInputProps("scheduleEnabled")}
+              checked={form?.values?.scheduleEnabled}
             />
-            <SimpleGrid cols={{ base: 1, md: 2 }}>
-              {form.values.image && (
-                <Image
-                  w={186}
-                  h={125}
-                  mah={125}
-                  fallbackSrc={fallbackImage}
-                  src={getImageValue(form.values?.image)}
-                  alt="image of menu category"
-                />
-              )}
-              <Stack justify="center">
-                <FileButton
-                  onChange={onChangePicture}
-                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                  disabled={isCreating}
-                  resetRef={resetRef}
-                >
-                  {(props) => {
-                    let buttonText = form.values.image
-                      ? "Replace Image"
-                      : "Add Image";
-                    return (
-                      <RateupButtonSecondary
-                        title={buttonText}
-                        {...props}
-                        loading={isCreating}
-                        disabled={isCreating}
-                      />
-                    );
-                  }}
-                </FileButton>
-              </Stack>
-            </SimpleGrid>
-          </Stack>
-          <Stack>
-            <Group>
-              <Title order={3} c={"var(--grey-color)"}>
-                Timed Menu
-              </Title>
-              <Switch
-                {...form.getInputProps("scheduleEnabled")}
-                checked={form?.values?.scheduleEnabled}
-              />
-            </Group>
+          </Group>
+          <SimpleGrid cols={2}>
             <ContainedTimeInput
               label={"Start Time:"}
               disabled={!form?.values?.scheduleEnabled}
@@ -276,8 +169,8 @@ export function CreateMenuCategoryModal({
               disabled={!form?.values?.scheduleEnabled}
               {...form.getInputProps("endTime")}
             />
-          </Stack>
-        </SimpleGrid>
+          </SimpleGrid>
+        </Stack>
       </Stack>
     </FormModalLayout>
   );

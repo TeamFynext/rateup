@@ -1,0 +1,181 @@
+import React from "react";
+import Link from "next/link";
+
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import {
+  ActionIcon,
+  Avatar,
+  Group,
+  HoverCard,
+  Menu,
+  ScrollAreaAutosize,
+  Stack,
+  Text,
+} from "@mantine/core";
+import {
+  IconCategory,
+  IconChevronUp,
+  IconMessage,
+  IconPhone,
+  IconSettings,
+} from "@tabler/icons-react";
+
+import styles from "./FloatingMenu.module.css";
+
+type FloatingMenuMainProps = {
+  dynamicVariables: any;
+  categories: FullCategory[];
+  displayName: string;
+  logo: string;
+  largeScreen: boolean;
+};
+const FloatingMenuMain = ({
+  dynamicVariables,
+  categories,
+  displayName,
+  logo,
+  largeScreen,
+}: FloatingMenuMainProps) => {
+  let mainColor = "var(--orange-400)";
+  const firstTwoItems = dynamicVariables?.slice(0, 2);
+  const remainingItems = dynamicVariables?.slice(2);
+  return (
+    <Stack
+      pos={"fixed"}
+      bottom={20}
+      left={"50%"}
+      style={{ transform: "translateX(-50%)" }}
+      w={"max-content"}
+    >
+      <Group
+        py={largeScreen ? "xs" : 8}
+        px={largeScreen ? "lg" : 8}
+        style={{
+          borderRadius: "10px",
+        }}
+        bg={mainColor}
+        gap={largeScreen ? "xl" : "md"}
+        justify="space-evenly"
+      >
+        <HoverCard shadow="md" withArrow>
+          <HoverCard.Target>
+            <Avatar
+              src={logo && getFileUrlFromKey(logo)}
+              radius={"sm"}
+              name={displayName}
+              color="initials"
+            />
+          </HoverCard.Target>
+          <HoverCard.Dropdown className={styles.hoverCard}>
+            <Text fz={"sm"}>{displayName ?? "Brand"}</Text>
+          </HoverCard.Dropdown>
+        </HoverCard>
+
+        {categories?.length && (
+          <Menu
+            shadow="md"
+            width={largeScreen ? 500 : 200}
+            offset={15}
+            withArrow
+            classNames={styles}
+          >
+            <Menu.Target>
+              <Stack gap={0} align="center">
+                <ActionIcon size={"lg"} variant="transparent">
+                  <IconCategory color={"white"} />
+                </ActionIcon>
+                <Text fz={"xs"} lh={0.8} c={"white"}>
+                  Category
+                </Text>
+              </Stack>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Categories</Menu.Label>
+              <ScrollAreaAutosize mah={"50dvh"}>
+                {categories?.map((category) => (
+                  <Menu.Item
+                    key={category.id}
+                    rightSection={<Text>{category.items?.length ?? 0}</Text>}
+                    component="a"
+                    href={`#${category.id}`}
+                  >
+                    {category.name}
+                  </Menu.Item>
+                ))}
+              </ScrollAreaAutosize>
+            </Menu.Dropdown>
+          </Menu>
+        )}
+        {firstTwoItems?.map((data) => (
+          <Link
+            key={data.name}
+            href={
+              data.name?.toLowerCase() === "contact"
+                ? `tel:${data.link}`
+                : data.link
+            }
+            target="_blank"
+            style={{ textDecoration: "none" }}
+            className={styles.menuLink}
+          >
+            <Stack gap={0} align="center">
+              <ActionIcon size={"lg"} variant="transparent">
+                {customButton(data.name)}
+              </ActionIcon>
+              <Text fz={"xs"}>{data.name}</Text>
+            </Stack>
+          </Link>
+        ))}
+        {remainingItems?.length && (
+          <Menu shadow="md" offset={15} withArrow classNames={styles}>
+            <Menu.Target>
+              <Stack gap={0} align="center">
+                <ActionIcon size={"lg"} variant="transparent">
+                  <IconChevronUp color={"white"} />
+                </ActionIcon>
+              </Stack>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              {remainingItems?.map((data) => (
+                <Menu.Item key={data.name} className={styles.menuBtn}>
+                  <Link
+                    href={
+                      data.name?.toLowerCase() === "contact"
+                        ? `tel:${data.link}`
+                        : data.link
+                    }
+                    target="_blank"
+                  >
+                    <Group gap={0}>
+                      <ActionIcon size={"lg"} variant="transparent">
+                        {customButton(data.name)}
+                      </ActionIcon>
+                      <Text fz={"xs"} lineClamp={1} maw={200}>
+                        {data.name}
+                      </Text>
+                    </Group>
+                  </Link>
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+        )}
+      </Group>
+    </Stack>
+  );
+};
+
+export default FloatingMenuMain;
+
+const customButton = (name) => {
+  switch (name?.toLowerCase()) {
+    case "contact":
+      return <IconPhone />;
+    case "feedback":
+      return <IconMessage />;
+    default:
+      return <IconSettings />;
+  }
+};
