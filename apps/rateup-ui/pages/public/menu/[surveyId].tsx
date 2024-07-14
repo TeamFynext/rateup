@@ -1,37 +1,26 @@
 import { useRef, useState } from "react";
-
-import Autoplay from "embla-carousel-autoplay";
-import { getCookie, setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
-import { Carousel } from "@mantine/carousel";
-import { IconDots, IconMenu2 } from "@tabler/icons-react";
-import { isCategoryActive } from "utils/dateTime";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { CategoryChip } from "components/menu/category/CategoryChip";
-import { getMenuBannerByMenuId } from "backend/menu/Banner/banner.api";
-import { CategoryDisplay } from "components/menu/category/CategoryDisplay";
-import { CategoriesDrawer } from "components/menu/category/CategoriesDrawer";
-import { ItemDetailedViewModal } from "components/menu/item/ItemDetailedViewModal";
-import {
-  ActionIcon,
-  BackgroundImage,
-  Box,
-  Group,
-  Image,
-  Paper,
-  ScrollArea,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
 
-import { lexend } from "../../../../../utils/fonts";
-import { CreditsCard } from "../../../../../components/Card/CreditsCard";
-import { getFileUrlFromKey } from "../../../../../utils/file-upload/upload";
+import { getMenuBannerByMenuId } from "@/backend/menu/Banner/banner.api";
 import {
   getFullMenuPublicById,
   updateMenuVisitedMutation,
-} from "../../../../../backend/menu/menu.api";
+} from "@/backend/menu/menu.api";
+import { isCategoryActive } from "@/utils/dateTime";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { lexend } from "@/utils/fonts";
+import { Carousel } from "@mantine/carousel";
+import { Image, Paper, ScrollAreaAutosize, Stack, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { getCookie, setCookie } from "cookies-next";
+import Autoplay from "embla-carousel-autoplay";
+
+import { CreditsCard } from "@/components/Card/CreditsCard";
+import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay";
+import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewModal";
+import NothingFound from "@/components/NothingFound/NothingFound";
+
+import FloatingMenuMain from "./FloatingMenu";
 
 interface ServerSidePropsContext {
   req: NextApiRequest;
@@ -66,15 +55,7 @@ export const getServerSideProps = async ({
 export default function MenuLandingPage({ fullMenu, menuBanner }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const autoplay = useRef(Autoplay({ delay: 2000, stopOnInteraction: false }));
-  let categoryChipLabel = [{ id: "1", name: "all" }].concat(
-    fullMenu?.categories,
-  );
-  const [catagories, setCatagories] = useState(fullMenu?.categories);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    categoryChipLabel[0]?.id,
-  );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [drawerOpen, { open, close }] = useDisclosure();
 
   if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
     return (
@@ -84,15 +65,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
         </Text>
       </Stack>
     );
-  function handleCategoryChipClick(categoryId: string) {
-    setCatagories(
-      categoryId === "1"
-        ? categoryChipLabel.filter((category) => category.id !== categoryId)
-        : categoryChipLabel.filter((category) => category.id === categoryId),
-    );
-    setSelectedCategory(categoryId);
-  }
-
   const backgroundImageBorderRadius = "22px";
   const backgroundImage = largeScreen
     ? fullMenu?.menuLanding?.backgroundImage
@@ -105,7 +77,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
 
   let fullCategory = fullMenu?.categories;
 
-  const { successData, failedData } = catagories.reduce(
+  const { successData, failedData } = fullCategory?.reduce(
     (acc, item) => {
       if (isCategoryActive(item)) {
         acc.successData.push(item);
@@ -123,11 +95,18 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
 
   if (hideUnavailableCategory) {
     fullCategory = fullCategory?.filter(isCategoryActive);
-    categoryChipLabel = [{ id: "1", name: "all" }].concat(fullCategory);
   }
 
   return (
-    <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={0}>
+    <ScrollAreaAutosize
+      mah={"100dvh"}
+      scrollbarSize={0}
+      styles={{
+        viewport: {
+          scrollBehavior: "smooth",
+        },
+      }}
+    >
       <Paper
         mih={"100dvh"}
         ff={lexend.style.fontFamily}
@@ -163,13 +142,11 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   cursor: "pointer",
                 }}
               >
-                <BackgroundImage
+                <Image
                   px={largeScreen ? "10vw" : "1vw"}
                   py="3vh"
                   src={
-                    value?.image
-                      ? encodeURI(getFileUrlFromKey(value?.image))
-                      : backgroundImageFallback
+                    value?.image && encodeURI(getFileUrlFromKey(value?.image))
                   }
                   style={{
                     borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
@@ -180,6 +157,8 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   c={"white"}
                   h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
                   maw={largeScreen ? "2440px" : "768px"}
+                  alt="menu banner image"
+                  fallbackSrc={backgroundImageFallback}
                 />
               </Carousel.Slide>
             ))}
@@ -218,61 +197,33 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             />
           </CreditsCard>
         )}
-        <Group
-          px={largeScreen ? "xl" : "xs"}
-          m="sm"
-          wrap="nowrap"
-          pos={"sticky"}
-          top={0}
-          bg={"var(--mantine-color-body)"}
-          style={{ zIndex: 10 }}
-        >
-          <ActionIcon onClick={open} variant="transparent">
-            <IconMenu2 color="var(--grey-color)" />
-          </ActionIcon>
-          <ScrollArea
-            h={"min-content"}
-            w={"100vw"}
-            scrollbarSize={largeScreen ? 10 : 0}
-          >
-            <Box w={"max-content"}>
-              {categoryChipLabel?.map((c) => (
-                <CategoryChip
-                  key={c.id}
-                  categoryId={c.id}
-                  name={c.name}
-                  selected={selectedCategory === c.id}
-                  onClick={handleCategoryChipClick}
-                  largeScreen={largeScreen}
-                />
-              ))}
-            </Box>
-          </ScrollArea>
-        </Group>
-
-        <Stack px={"5.8vw"} mih={"45vh"}>
-          {filteredData?.length > 0
-            ? filteredData?.map((c) => (
-                <CategoryDisplay
-                  key={c.id}
-                  setSelectedItem={setSelectedItem}
-                  category={c}
-                  currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
-                  hideUnavailableCategory={
-                    fullMenu?.menuLanding?.menu?.hideUnavailableCategory
-                  }
-                />
-              ))
-            : "No Categories Found"}
+        <Stack px={"5.8vw"} mih={"45vh"} mt={"sm"}>
+          {filteredData?.length > 0 ? (
+            filteredData?.map((c) => (
+              <CategoryDisplay
+                key={c.id}
+                setSelectedItem={setSelectedItem}
+                category={c}
+                currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
+                hideUnavailableCategory={
+                  fullMenu?.menuLanding?.menu?.hideUnavailableCategory
+                }
+              />
+            ))
+          ) : (
+            <NothingFound text="No Categories Found" />
+          )}
         </Stack>
-        <CategoriesDrawer
-          opened={drawerOpen}
-          close={close}
-          categories={fullCategory}
-          handleCategoryChipClick={handleCategoryChipClick}
-          displayName={fullMenu?.displayName}
-          logo={fullMenu?.menuLanding?.logo}
-          menuButtons={[
+        {selectedItem && (
+          <ItemDetailedViewModal
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
+          />
+        )}
+
+        <FloatingMenuMain
+          dynamicVariables={[
             ...(fullMenu?.menuLanding?.surveyTeamMapId
               ? [
                   {
@@ -283,19 +234,11 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
               : []),
             ...fullMenu.menuLanding.menuButtons,
           ]}
+          categories={fullCategory}
+          displayName={fullMenu?.displayName}
+          logo={fullMenu?.menuLanding?.logo}
+          largeScreen={largeScreen}
         />
-        {selectedItem && (
-          <ItemDetailedViewModal
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
-          />
-        )}
-        <Stack pos={"fixed"} bottom={40} right={30}>
-          <ActionIcon bg={"var(--orange-400)"} onClick={open} size={"lg"}>
-            <IconDots />
-          </ActionIcon>
-        </Stack>
       </Paper>
     </ScrollAreaAutosize>
   );

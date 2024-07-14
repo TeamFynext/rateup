@@ -21,7 +21,10 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -30,7 +33,8 @@
     ".next/types/**/*.ts",
     "postcss.config.ts",
     "utils/encryption/index.ts",
-    "fake-data.js"
+    "fake-data.js",
+    "prettier.config.js"
   ],
   "exclude": ["node_modules"]
 }

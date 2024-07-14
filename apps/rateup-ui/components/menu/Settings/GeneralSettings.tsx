@@ -1,12 +1,5 @@
 import React, { useState } from "react";
 
-import { zodResolver } from "mantine-form-zod-resolver";
-
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { showErrorToast } from "utils/notifications";
-import { IconMinus, IconPlus } from "@tabler/icons-react";
-import { deleteUploadedFiles, uploadFile } from "utils/file-upload/upload";
 import {
   ActionIcon,
   Container,
@@ -15,22 +8,28 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { deleteUploadedFiles, uploadFile } from "utils/file-upload/upload";
+import { showErrorToast } from "utils/notifications";
 
-import Heading from "../../styled/Heading/Heading";
-import { currencyLabel } from "../util/currencyData";
-import RateupLoader from "../../Loaders/RateupLoader";
-import { SAVE_HOTKEY } from "../../../utils/constants";
-import { TeamSelector } from "../../input/TeamSelector";
-import ImageUploadSettings from "./ImageUploadSettings";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
 import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
+import { SAVE_HOTKEY } from "../../../utils/constants";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import {
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
+import { TeamSelector } from "../../input/TeamSelector";
+import RateupLoader from "../../Loaders/RateupLoader";
+import Heading from "../../styled/Heading/Heading";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { currencyLabel } from "../util/currencyData";
 import { schema } from "./GeneralFormSchema";
+import ImageUploadSettings from "./ImageUploadSettings";
 
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = {
@@ -39,7 +38,7 @@ const GeneralSettings = ({ editingItem }) => {
     mobileBackgroundImage: editingItem?.mobileBackgroundImage,
     logo: editingItem?.logo,
     unsplashImage: editingItem?.unsplashImage,
-    surveyTeamMapId: editingItem?.surveyTeamMapId?.id,
+    surveyTeamMapId: editingItem?.surveyTeamMapId,
     hideUnavailableCategory:
       editingItem?.menu?.hideUnavailableCategory?.toString(),
     menuButtons: editingItem?.menuButtons ?? [],
