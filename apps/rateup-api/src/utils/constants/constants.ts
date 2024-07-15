@@ -3,10 +3,5 @@ export const statsPage = `${process.env.FRONTEND_URL}/dashboard/settings?activeT
 export const billingPage = `${process.env.FRONTEND_URL}/dashboard/settings?activeTab=account&view=billing`;
 export const ordersPage = `${process.env.FRONTEND_URL}/dashboard/settings?activeTab=account&view=myOrders`;
 
-export const envConstants = {
-  API_URL: process.env.API_URL,
-  FRONTEND_URL: process.env.FRONTEND_URL,
-  SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
-  SHOPIFY_API_SECRET: process.env.SHOPIFY_API_SECRET,
-  SHOPIFY_SCOPES: process.env.SHOPIFY_SCOPES,
-};
+export const API_URL = process.env.API_URL || "http://localhost:3001";
+export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
