@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useMediaQuery } from "@mantine/hooks";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Flex,
@@ -10,19 +11,20 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+
+import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
+import { useCheckSession } from "../../../../hooks/checkSession";
+import { lexend300, lexend500 } from "../../../../utils/fonts";
+import { MotionTransition } from "../../../animation/MotionTransition";
+import RateupLoader from "../../../Loaders/RateupLoader";
 import classes from "./Pricing.module.css";
+import { CustomSection } from "./Section/CustomSection";
 import { MenuSection } from "./Section/MenuSection";
 import { SurveySection } from "./Section/SurveySection";
-import { lexend300, lexend500 } from "../../../../utils/fonts";
-import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
-import { useRouter } from "next/router";
-import { useRouteAndCartStore } from "./store/RouteAndCartStore";
-import RateupLoader from "../../../Loaders/RateupLoader";
-import { useCheckSession } from "../../../../hooks/checkSession";
-import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
-import { MotionTransition } from "../../../animation/MotionTransition";
 import { WhatsAppSection } from "./Section/WhatsAppSection";
-import { CustomSection } from "./Section/CustomSection";
+import { useRouteAndCartStore } from "./store/RouteAndCartStore";
+import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const [value, setValue] = useState("WebSurveys");
@@ -34,20 +36,26 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   const { data, isPending, isError } = useRateupPaymentsPlans();
   const { gateway } = router.query;
 
-  //const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
-  // const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
 
   // const currency = "USD";
   // const currencySymbol = "$";
 
-  let currency = "INR";
-  let currencySymbol = "₹";
+  // let currency = "INR";
+  // let currencySymbol = "₹";
 
   if (gateway === "stripe") {
     //temp for stripe testing
     currency = "USD";
     currencySymbol = "$";
+  }
+
+  if (gateway === "razorpay") {
+    //for optional switching of gateway for NRIs
+    currency = "INR";
+    currencySymbol = "₹";
   }
 
   const session = useCheckSession();
