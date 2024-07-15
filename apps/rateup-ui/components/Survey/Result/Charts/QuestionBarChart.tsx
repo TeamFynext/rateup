@@ -1,23 +1,26 @@
 import React, { useContext } from "react";
+
+import { Badge, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
 } from "recharts";
-import { Paper, Text, Group, Stack, Title, Badge, Flex } from "@mantine/core";
-import { QuestionType } from "../../../../types/enums";
-import { getResponseArrayByQuestionType } from "../../../../utils/response";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
-import Heading from "../../../styled/Heading/Heading";
-import { ChoiceTypeQuestions } from "../../../../utils/constants";
-import SurveySummaryNew from "../SurveySummaryNew";
+
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { stringToColour } from "../../../../utils/essential";
+import { QuestionType } from "../../../../types/enums";
 import { getContent } from "../../../../utils";
+import { ChoiceTypeQuestions } from "../../../../utils/constants";
+import { stringToColour } from "../../../../utils/essential";
+import { getResponseArrayByQuestionType } from "../../../../utils/response";
+import Heading from "../../../styled/Heading/Heading";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import SurveySummaryNew from "../SurveySummaryNew";
+
 interface QuestionBarChartProps {
   question: string;
   data: any[];
@@ -122,7 +125,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     fill: choice?.color,
   }));
 
-  if (mcqOtherFeature && mcqOtherFeature.isEnabled) {
+  if (mcqOtherFeature?.isEnabled) {
     let otherValueCount = data?.filter((item) => {
       const response = item?.response[questionType];
       return Array.isArray(response)

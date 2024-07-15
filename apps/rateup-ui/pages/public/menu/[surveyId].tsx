@@ -237,7 +237,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             ...(fullMenu?.menuLanding?.surveyTeamMapId
               ? [
                   {
-                    name: "Feedback",
+                    name: "feedback",
                     link: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${fullMenu?.menuLanding?.surveyTeamMap?.shortUrlId ?? fullMenu?.menuLanding?.surveyTeamMapId}`,
                   },
                 ]

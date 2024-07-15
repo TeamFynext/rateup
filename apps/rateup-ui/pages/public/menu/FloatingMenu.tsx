@@ -163,7 +163,7 @@ const FloatingMenuMain = ({
 export default FloatingMenuMain;
 
 const customButton = (name) => {
-  switch (name?.toLowerCase()) {
+  switch (name) {
     case MenuButtons.CONTACT:
       return <IconPhone />;
     case MenuButtons.WHATSAPP:
@@ -176,7 +176,7 @@ const customButton = (name) => {
 };
 
 const getMenuBtnLink = (data) => {
-  switch (data?.name?.toLowerCase()) {
+  switch (data?.name) {
     case MenuButtons.CONTACT:
       return `tel:${data.link}`;
     case MenuButtons.WHATSAPP:
