@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createShopifySurveyScheduleHandler,
   deleteAllWebhookHandler,
+  deleteShopifySessionHandler,
   deleteShopifySurveyScheduleHandler,
   getProductsHandler,
   getRegisteredWebhooksHandler,
@@ -57,8 +58,22 @@ export async function shopifyRoutes(server: FastifyInstance) {
   );
 
   server.delete(
-    "/delete-webhooks",
+    "/session/:shop",
     {
+      preHandler: [checkSession],
+      schema: {
+        params: ShopifyRef("byShopParamsSchema"),
+      },
+    },
+    deleteShopifySessionHandler,
+  );
+
+  server.delete(
+    "/delete-webhooks/:shop",
+    {
+      schema: {
+        params: ShopifyRef("byShopParamsSchema"),
+      },
       preHandler: [checkSession],
     },
     deleteAllWebhookHandler,
