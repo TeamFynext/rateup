@@ -289,6 +289,14 @@ const GeneralSettings = ({ editingItem }) => {
                         : MenuButtons.OTHER
                     }
                     flex={1}
+                    styles={{
+                      option: {
+                        textTransform: "capitalize",
+                      },
+                      input: {
+                        textTransform: "capitalize",
+                      },
+                    }}
                   />
                   {![MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(
                     form.values.menuButtons?.[i]?.name as any,
