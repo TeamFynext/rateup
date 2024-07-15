@@ -1,6 +1,12 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createShopifySurveySchedule,
+  deleteAllShopifyWebhooks,
+  deleteShopifySession,
   deleteShopifySurveySchedule,
   getProductsFromShopify,
   getShopifySession,
@@ -9,9 +15,6 @@ import {
   updateShopifySession,
   updateShopifySurveySchedule,
 } from "./shopify.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import { AxiosError } from "axios";
 
 export const useGetProductsFromShopify = (enabled) => {
   return useQuery({
@@ -123,6 +126,51 @@ export const useRegisterWebhooks = () => {
         <IconX />,
         true,
       );
+    },
+  });
+};
+
+export const useDeleteAllWebhooks = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllShopifyWebhooks,
+    onSuccess: () => {
+      showSuccessToast(
+        "Webhooks subscription deletion succesfull",
+        "webhooks",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopifySession"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+    },
+    onError: () => {
+      showErrorToast(
+        "Webhook subscription deletion failed",
+        "webhooks",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useDeleteShopifySession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteShopifySession,
+    onSuccess: () => {
+      showSuccessToast(
+        "connection deletion succesfull",
+        "session",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopifySession"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+    },
+    onError: () => {
+      showErrorToast("connection deletion failed", "session", <IconX />, true);
     },
   });
 };
