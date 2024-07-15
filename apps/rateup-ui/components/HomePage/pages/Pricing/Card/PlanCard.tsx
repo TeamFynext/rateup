@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { IconCircleCheck, IconX } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Card,
@@ -13,15 +14,16 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconCircleCheck, IconX } from "@tabler/icons-react";
+
 import { lexend300 } from "../../../../../utils/fonts";
-import { NumberAnimate } from "../Animate/NumberAnimate";
+import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { NumberAnimate } from "../Animate/NumberAnimate";
 import { PlanCardWidth, Title4 } from "../Utils/constants";
 import ButtonStyles from "./Button.module.css";
-import { useDisclosure } from "@mantine/hooks";
 import styles from "./Modal.module.css";
-import { useRouter } from "next/router";
-import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 
 const PlanCard = ({
   index,
@@ -147,42 +149,62 @@ const PlanCard = ({
           </Stack>
 
           <Center mb="lg">
-            <RateupButtonPrimary
-              title={title}
-              color={cardMainColor}
-              radius={"xl"}
-              className={ButtonStyles["button-hover"]}
-              size="md"
-              onClick={() => {
-                gAnalyticsAndFbEvent(
-                  "subscribe_pricing",
-                  "SubscribeNowButtonClick",
-                  "Clicked on subscribe now button in the pricing page",
-                );
-                if (data?.displayName.includes("FREE")) {
-                  router.push("/signup");
-                } else {
-                  handlePlanSelection({
-                    id: data?.id,
-                    name: data?.displayName,
-                    currency: data?.currency,
-                    description: data?.description,
-                    amount: data?.paymentPlan
-                      ? data?.paymentPlan?.amount
-                      : data?.stripeProduct?.amount,
-                    currencySymbol: currencySymbol,
-                    period: data?.paymentPlan
-                      ? data?.paymentPlan?.period
-                      : data?.stripeProduct?.interval,
-                    gateway: data?.paymentPlan ? "RAZORPAY" : "STRIPE",
-                    planId: data?.paymentPlan ? data?.paymentPlan?.planId : "",
-                    priceId: data?.paymentPlan
-                      ? ""
-                      : data?.stripeProduct?.priceId,
-                  });
-                }
-              }}
-            />
+            {currencySymbol === "$" ? (
+              <RateupButtonPrimary
+                title="Contact Sales"
+                color={cardMainColor}
+                onClick={() => {
+                  gAnalyticsAndFbEvent(
+                    "contact_sales",
+                    "ContactSalesButtonClick",
+                    "Clicked on Contact Sales button ($) in the pricing page",
+                  );
+                  open();
+                }}
+                radius={"xl"}
+                size="md"
+                className={ButtonStyles["button-hover"]}
+              />
+            ) : (
+              <RateupButtonPrimary
+                title={title}
+                color={cardMainColor}
+                radius={"xl"}
+                className={ButtonStyles["button-hover"]}
+                size="md"
+                onClick={() => {
+                  gAnalyticsAndFbEvent(
+                    "subscribe_pricing",
+                    "SubscribeNowButtonClick",
+                    "Clicked on subscribe now button in the pricing page",
+                  );
+                  if (data?.displayName.includes("FREE")) {
+                    router.push("/signup");
+                  } else {
+                    handlePlanSelection({
+                      id: data?.id,
+                      name: data?.displayName,
+                      currency: data?.currency,
+                      description: data?.description,
+                      amount: data?.paymentPlan
+                        ? data?.paymentPlan?.amount
+                        : data?.stripeProduct?.amount,
+                      currencySymbol: currencySymbol,
+                      period: data?.paymentPlan
+                        ? data?.paymentPlan?.period
+                        : data?.stripeProduct?.interval,
+                      gateway: data?.paymentPlan ? "RAZORPAY" : "STRIPE",
+                      planId: data?.paymentPlan
+                        ? data?.paymentPlan?.planId
+                        : "",
+                      priceId: data?.paymentPlan
+                        ? ""
+                        : data?.stripeProduct?.priceId,
+                    });
+                  }
+                }}
+              />
+            )}
           </Center>
         </Stack>
       )}
