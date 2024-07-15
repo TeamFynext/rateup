@@ -13,12 +13,15 @@ import {
   Text,
 } from "@mantine/core";
 import {
+  IconBrandWhatsapp,
   IconCategory,
   IconChevronUp,
   IconMessage,
   IconPhone,
   IconSettings,
 } from "@tabler/icons-react";
+
+import { MenuButtons } from "@/types/enums";
 
 import styles from "./FloatingMenu.module.css";
 
@@ -36,7 +39,7 @@ const FloatingMenuMain = ({
   logo,
   largeScreen,
 }: FloatingMenuMainProps) => {
-  let mainColor = "var(--orange-400)";
+  let mainColor = "black";
   const firstTwoItems = dynamicVariables?.slice(0, 2);
   const remainingItems = dynamicVariables?.slice(2);
   return (
@@ -110,11 +113,7 @@ const FloatingMenuMain = ({
         {firstTwoItems?.map((data) => (
           <Link
             key={data.name}
-            href={
-              data.name?.toLowerCase() === "contact"
-                ? `tel:${data.link}`
-                : data.link
-            }
+            href={getMenuBtnLink(data)}
             target="_blank"
             style={{ textDecoration: "none" }}
             className={styles.menuLink}
@@ -140,14 +139,7 @@ const FloatingMenuMain = ({
             <Menu.Dropdown>
               {remainingItems?.map((data) => (
                 <Menu.Item key={data.name} className={styles.menuBtn}>
-                  <Link
-                    href={
-                      data.name?.toLowerCase() === "contact"
-                        ? `tel:${data.link}`
-                        : data.link
-                    }
-                    target="_blank"
-                  >
+                  <Link href={getMenuBtnLink(data)} target="_blank">
                     <Group gap={0}>
                       <ActionIcon size={"lg"} variant="transparent">
                         {customButton(data.name)}
@@ -171,11 +163,24 @@ export default FloatingMenuMain;
 
 const customButton = (name) => {
   switch (name?.toLowerCase()) {
-    case "contact":
+    case MenuButtons.CONTACT:
       return <IconPhone />;
+    case MenuButtons.WHATSAPP:
+      return <IconBrandWhatsapp />;
     case "feedback":
       return <IconMessage />;
     default:
       return <IconSettings />;
+  }
+};
+
+const getMenuBtnLink = (data) => {
+  switch (data?.name?.toLowerCase()) {
+    case MenuButtons.CONTACT:
+      return `tel:${data.link}`;
+    case MenuButtons.WHATSAPP:
+      return `http://wa.me/${data.link}`;
+    default:
+      return data.link;
   }
 };

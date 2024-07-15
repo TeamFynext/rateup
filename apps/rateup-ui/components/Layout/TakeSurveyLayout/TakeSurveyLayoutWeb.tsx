@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   BackgroundImage,
   Box,
@@ -12,8 +15,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
@@ -22,10 +24,10 @@ import {
 import QuestionCountContext from "../../../context/QuestionCountContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { CreditsCard } from "../../Card/CreditsCard";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
-import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
 import LanguageSelectionPage from "../LanguageSelectionPage";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import styles from "./TakeSurveyLayoutWeb.module.css";
@@ -267,15 +269,17 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                           )
                         ))}
 
-                      {!startClicked && !isSurveyThemePreview && (
-                        <WelcomePage
-                          surveyThemeData={surveyThemeData?.welcomeTheme}
-                          onStart={handleStartClick}
-                          largeScreen={largeScreen}
-                          orgLogoSrc={orgLogoSrc}
-                          orgLogoStyles={orgLogoStyles}
-                        />
-                      )}
+                      {survey?.welcomePageEnabled &&
+                        !startClicked &&
+                        !isSurveyThemePreview && (
+                          <WelcomePage
+                            surveyThemeData={surveyThemeData?.welcomeTheme}
+                            onStart={handleStartClick}
+                            largeScreen={largeScreen}
+                            orgLogoSrc={orgLogoSrc}
+                            orgLogoStyles={orgLogoStyles}
+                          />
+                        )}
                     </Paper>
                   )
                 ) : (

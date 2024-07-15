@@ -1,0 +1,20 @@
+.inputBox {
+  background-color: var(--input-background-color, white);
+  color: var(--input-text-color, black);
+  border-radius: 12px;
+  padding: 6px var(--input-padding, 12px);
+  border-color: var(--mantine-color-gray-4);
+  border-width: 1px;
+  border-style: solid;
+  height: 46px;
+}
+.inputPhone {
+  font-size: 16px;
+}
+
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
+  border-radius: 12px;
+}

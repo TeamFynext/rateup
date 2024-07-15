@@ -1,3 +1,7 @@
+import { useContext, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/dist/client/components/navigation";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Center,
@@ -10,29 +14,36 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSearchParams } from "next/dist/client/components/navigation";
-import { useRouter } from "next/router";
-import { useContext, useEffect, useRef, useState } from "react";
 import { useBeforeUnload } from "react-use";
+
 import {
-  Invoice,
   getInvoicesByPhNo,
+  Invoice,
 } from "../../../../backend/surveys/survey.api";
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
+import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
 import QuestionCountContext from "../../../../context/QuestionCountContext";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
-import { LogicAction, QuestionType } from "../../../../types/enums";
+import { SurveyContextProvider } from "../../../../context/SurveyObjContext";
+import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
+import {
+  LogicAction,
+  QuestionType as Q,
+  QuestionType,
+} from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
 import { INTERNAL_ERROR2 } from "../../../../utils/constants";
 import { encryptResponse } from "../../../../utils/encryption";
 import { lexend } from "../../../../utils/fonts";
 import { showErrorToast } from "../../../../utils/notifications";
-import { MIN_GIFT_AMOUNT, getRandomGift } from "../../../../utils/survey/gift";
+import { getRandomGift, MIN_GIFT_AMOUNT } from "../../../../utils/survey/gift";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
+import { validateQuestion } from "../../../../utils/validation";
 import RateupLoader from "../../../Loaders/RateupLoader";
 import GiftModal from "../../Gift/GiftModal";
+import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
 import NextBtn from "./NextBtn";
@@ -40,19 +51,13 @@ import NextPrev from "./NextPrev";
 import QuestionDesc from "./QuestionDesc";
 import QuestionForm from "./QuestionForm";
 import QuestionTitle from "./QuestionTitle";
-import { QuestionType as Q } from "../../../../types/enums";
+import styles from "./TakeSurvey.module.css";
 import {
   checkGoogleReviewForQuestion,
   checkRaiseTicketIssueQuestion,
   submitSurvey,
   validateResponse,
 } from "./util";
-import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
-import { validateQuestion } from "../../../../utils/validation";
-import styles from "./TakeSurvey.module.css";
-import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
-import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
-import { SurveyContextProvider } from "../../../../context/SurveyObjContext";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const isSurveyThemePreview = useIsSurveyThemePreviewContext();
@@ -178,21 +183,16 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const errorTextDivRef = useRef(null);
 
-  if (!survey) {
+  if (!survey?.questions?.length) {
     return (
       <Center style={{ height: "100vh" }}>
-        <Loader type="bars" />
+        <Text fw={500}>No Questions found!</Text>
       </Center>
     );
   }
+
   if (!selectedQ) {
-    return (
-      <Center style={{ height: "100vh" }}>
-        <Text fw={500}>
-          {questionCount == 0 ? "No Questions found!" : "Something went wrong!"}
-        </Text>
-      </Center>
-    );
+    return null;
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
