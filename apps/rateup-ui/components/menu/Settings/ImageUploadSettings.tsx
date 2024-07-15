@@ -1,14 +1,14 @@
 import React, { useRef, useState } from "react";
 
+import { Box, Button, FileButton, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { showErrorToast } from "utils/notifications";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { UnsplashModal } from "components/Modal/UnsplashModal";
-import { ImageCropModal } from "components/Modal/ImageCropModal";
 import { RateupButtonPrimary } from "components/Button/RateupButtons";
-import { Box, Button, FileButton, Group, Stack, Text } from "@mantine/core";
-import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "utils/constants";
+import { ImageCropModal } from "components/Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "components/Modal/ImageUploadMethodModal";
+import { UnsplashModal } from "components/Modal/UnsplashModal";
+import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "utils/constants";
+import { showErrorToast } from "utils/notifications";
 
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
@@ -25,7 +25,6 @@ const ImageUploadSettings = ({
   const [aspectRatio, setAspectRatio] = useState(16 / 9);
   const [imageType, setImageType] = useState("");
   const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
-  const logoRef = useRef<HTMLButtonElement>(null);
   const resetLogoRef = useRef(null);
 
   const [
@@ -145,7 +144,7 @@ const ImageUploadSettings = ({
     } else if (type === "logo") {
       setLogo(null);
     }
-    if (!form?.values?.unsplashImage[type]) {
+    if (!form?.values?.unsplashImage?.[type]) {
       if (!form?.values?.[type]?.startsWith("blob:")) {
         setImageToDelete((prev) => [...prev, { Key: form?.values?.[type] }]);
       }
