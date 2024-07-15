@@ -1,14 +1,19 @@
 import React, {
-  useState,
-  useEffect,
-  useContext,
   useCallback,
+  useContext,
+  useEffect,
   useRef,
+  useState,
 } from "react";
-import { useAllResponses } from "../../../backend/surveys/response/response.query";
+
+import { Badge, Button, Divider, Flex, Stack, Text } from "@mantine/core";
+import { IconTableExport } from "@tabler/icons-react";
+
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import QuestionPieChart from "./Charts/QuestionPieChart";
-import QuestionBarChart from "./Charts/QuestionBarChart";
+import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
+import { useAllResponses } from "../../../backend/surveys/response/response.query";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SurveyContext from "../../../context/SurveyContext";
 import {
   LDResponse,
   NPSWeightage,
@@ -16,26 +21,23 @@ import {
   SmileyResponse,
   YNResponse,
 } from "../../../types/enums";
-import { Badge, Button, Divider, Flex, Stack, Text } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import Heading from "../../styled/Heading/Heading";
-import SurveyContext from "../../../context/SurveyContext";
-import NothingFound from "../../NothingFound/NothingFound";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
+import { getContent } from "../../../utils";
+import { stringToColour } from "../../../utils/essential";
+import {
+  getfilteredResponseUsingLanguage,
+  getFilteredResponseUsingTags,
+} from "../../../utils/response";
 import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
-import {
-  getFilteredResponseUsingTags,
-  getfilteredResponseUsingLanguage,
-} from "../../../utils/response";
-import { stringToColour } from "../../../utils/essential";
 import RateupLoader from "../../Loaders/RateupLoader";
-import { getContent } from "../../../utils";
+import NothingFound from "../../NothingFound/NothingFound";
+import Heading from "../../styled/Heading/Heading";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
-import { IconTableExport } from "@tabler/icons-react";
+import QuestionBarChart from "./Charts/QuestionBarChart";
+import QuestionPieChart from "./Charts/QuestionPieChart";
 import styles from "./ResultsOverview.module.css";
 
 const ResultsOverview = ({ surveyId }) => {
@@ -211,36 +213,23 @@ const ResultsOverview = ({ surveyId }) => {
       const total = promoters + passives + detractors;
       const nps = total ? ((promoters - detractors) / total) * 100 : null;
       const csatScore = Math.round((csat / noofResponses) * 100);
-      let localizedTitle = question?.title[defaultLanguage];
-      if (
-        question?.title &&
-        question?.title[selectedLanguage ? selectedLanguage : defaultLanguage]
-      ) {
-        localizedTitle =
-          question?.title[
-            selectedLanguage ? selectedLanguage : defaultLanguage
-          ];
-      }
+      let lang = selectedLanguage || defaultLanguage;
+      let localizedTitle =
+        question?.title?.[lang] ||
+        question?.description?.[lang] ||
+        question?.label?.[lang];
+
       let choices = null;
       let choicesInAllLang = question?.choices;
-      if (
-        question?.choices &&
-        question?.choices[selectedLanguage ? selectedLanguage : defaultLanguage]
-      ) {
-        choices =
-          question?.choices[
-            selectedLanguage ? selectedLanguage : defaultLanguage
-          ];
+      if (question?.choices?.[lang]) {
+        choices = question?.choices[lang];
       }
       return {
         question:
           getReplacedTitleFromVariable({
-            title: question?.title[selectedLanguage || defaultLanguage],
+            title: localizedTitle,
             surveyId,
-          }) ||
-          question?.title[
-            selectedLanguage ? selectedLanguage : defaultLanguage
-          ],
+          }) || localizedTitle,
         choices: choices,
         type: question?.type,
         responses: responsesForQuestion,
@@ -257,11 +246,9 @@ const ResultsOverview = ({ surveyId }) => {
         mcqOtherFeature: [QuestionType.MCQ, QuestionType.MSQ].includes(
           question?.type,
         )
-          ? question?.features?.[
-              selectedLanguage ? selectedLanguage : defaultLanguage
-            ]?.other
+          ? question?.features?.[lang]?.other
           : false,
-        features: question?.features?.[selectedLanguage || defaultLanguage],
+        features: question?.features?.[lang],
       };
     });
   };
@@ -336,57 +323,55 @@ const ResultsOverview = ({ surveyId }) => {
                 )
                 ?.map((item, index) =>
                   item.type === QuestionType.MCQGrid ? (
-                    <>
-                      <React.Fragment key={index}>
-                        <Flex justify="space-between">
-                          <Flex gap={"xs"} w={"85%"}>
-                            <Text fw={800} c={"dark.3"}>
-                              {index + 1}.{" "}
-                            </Text>
-                            <Text fw={800} c={"dark.3"}>
-                              {getContent(item.question)}
-                            </Text>
-                          </Flex>
-                          <Badge variant="dot">{item.type}</Badge>
+                    <React.Fragment key={index}>
+                      <Flex justify="space-between">
+                        <Flex gap={"xs"} w={"85%"}>
+                          <Text fw={800} c={"dark.3"}>
+                            {index + 1}.{" "}
+                          </Text>
+                          <Text fw={800} c={"dark.3"}>
+                            {getContent(item.question)}
+                          </Text>
                         </Flex>
-                        <Stack px={"lg"} py={"lg"}>
-                          {item?.features?.questions.map((question, qindex) => (
-                            <QuestionBarChart
-                              key={qindex}
-                              question={question}
-                              no={qindex + 1}
-                              choices={item?.choices?.map((choice) => {
+                        <Badge variant="dot">{item.type}</Badge>
+                      </Flex>
+                      <Stack px={"lg"} py={"lg"}>
+                        {item?.features?.questions.map((question, qindex) => (
+                          <QuestionBarChart
+                            key={qindex}
+                            question={question}
+                            no={qindex + 1}
+                            choices={item?.choices?.map((choice) => {
+                              return {
+                                value: choice.value,
+                                color: stringToColour(choice.value),
+                              };
+                            })}
+                            data={item?.responses
+                              ?.filter((res) => {
+                                const formattedResponse =
+                                  res.response?.[item?.type]?.[question];
+                                if (!formattedResponse) return false;
+                                return true;
+                              })
+                              ?.map((res) => {
+                                const formattedResponse =
+                                  res.response?.[item?.type]?.[question];
                                 return {
-                                  value: choice.value,
-                                  color: stringToColour(choice.value),
+                                  ...res,
+                                  response: {
+                                    [item?.type]: formattedResponse,
+                                  },
                                 };
                               })}
-                              data={item?.responses
-                                ?.filter((res) => {
-                                  const formattedResponse =
-                                    res.response?.[item?.type]?.[question];
-                                  if (!formattedResponse) return false;
-                                  return true;
-                                })
-                                ?.map((res) => {
-                                  const formattedResponse =
-                                    res.response?.[item?.type]?.[question];
-                                  return {
-                                    ...res,
-                                    response: {
-                                      [item?.type]: formattedResponse,
-                                    },
-                                  };
-                                })}
-                              questionType={item?.type}
-                              choicesInAllLang={item?.choicesInAllLang}
-                              mcqOtherFeature={item?.mcqOtherFeature}
-                            />
-                          ))}
-                        </Stack>
-                        {index < chartData?.length - 1 && <Divider my="md" />}
-                      </React.Fragment>
-                    </>
+                            questionType={item?.type}
+                            choicesInAllLang={item?.choicesInAllLang}
+                            mcqOtherFeature={item?.mcqOtherFeature}
+                          />
+                        ))}
+                      </Stack>
+                      {index < chartData?.length - 1 && <Divider my="md" />}
+                    </React.Fragment>
                   ) : (
                     <React.Fragment key={index}>
                       <QuestionBarChart

@@ -1,18 +1,28 @@
+import { useRouter } from "next/router";
+
 import { Box, Group, Stack } from "@mantine/core";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
-import styles from "./Stats.module.css";
-import { useLandingPageObj } from "../LandingPageContext/LandingPageContext";
+
+import RefreshButton from "@/components/Button/RefreshButton";
+
 import NothingFound from "../../../NothingFound/NothingFound";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import { useLandingPageObj } from "../LandingPageContext/LandingPageContext";
+import styles from "./Stats.module.css";
 
 function Stats() {
   const landingPageObj = useLandingPageObj();
   const { links, visitorsCount = 0 } = landingPageObj;
+  const router = useRouter();
+  const { shortUrlId } = router.query;
   return (
     <PaperLayout className={styles["stats-page-root-div"]}>
       <Stack className={styles["stats-container"]}>
         <Group className={styles["visited-div"]}>
-          <h1 className={styles["visited-text-h1"]}>Visited: </h1>
-          <p className={styles["visited-count-p"]}>{visitorsCount}</p>
+          <Group>
+            <h1 className={styles["visited-text-h1"]}>Visited: </h1>
+            <p className={styles["visited-count-p"]}>{visitorsCount}</p>
+            <RefreshButton queryKeys={["landingPage", shortUrlId as string]} />
+          </Group>
         </Group>
         <Stack className={styles["links-container"]}>
           {!links || !links.length ? (

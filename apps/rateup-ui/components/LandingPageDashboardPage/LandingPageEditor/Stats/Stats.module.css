@@ -16,6 +16,7 @@
 
 .visited-div {
   gap: 0.625rem;
+  justify-content: space-between;
 }
 
 .visited-text-h1 {

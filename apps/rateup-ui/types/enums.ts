@@ -318,3 +318,9 @@ export enum IntegratedApps {
   shopify = "Shopify",
   googlesheet = "Google Sheet",
 }
+
+export enum MenuButtons {
+  CONTACT = "contact",
+  WHATSAPP = "whatsApp",
+  OTHER = "other",
+}
