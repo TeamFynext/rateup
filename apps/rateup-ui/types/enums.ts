@@ -321,6 +321,6 @@ export enum IntegratedApps {
 
 export enum MenuButtons {
   CONTACT = "contact",
-  WHATSAPP = "whatsapp",
+  WHATSAPP = "whatsApp",
   OTHER = "other",
 }

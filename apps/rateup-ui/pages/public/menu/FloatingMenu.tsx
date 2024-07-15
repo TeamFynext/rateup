@@ -100,8 +100,9 @@ const FloatingMenuMain = ({
                   <Menu.Item
                     key={category.id}
                     rightSection={<Text>{category.items?.length ?? 0}</Text>}
-                    component="a"
-                    href={`#${category.id}`}
+                    onClick={() =>
+                      document.getElementById(category.id)?.scrollIntoView()
+                    }
                   >
                     {category.name}
                   </Menu.Item>
