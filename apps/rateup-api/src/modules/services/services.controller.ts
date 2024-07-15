@@ -1,5 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { endSurveyCronAction, publishSurveyCronAction } from "../survey/survey.service";
+import {
+  endSurveyCronAction,
+  publishSurveyCronAction,
+} from "../survey/survey.service";
 
 export async function testServiceRoute(
   request: FastifyRequest,
