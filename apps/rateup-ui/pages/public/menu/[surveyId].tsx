@@ -143,8 +143,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                 }}
               >
                 <Image
-                  px={largeScreen ? "10vw" : "1vw"}
-                  py="3vh"
                   src={
                     value?.image && encodeURI(getFileUrlFromKey(value?.image))
                   }
@@ -154,7 +152,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   }}
                   bgp={"center"}
                   bgsz={"cover"}
-                  c={"white"}
                   h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
                   maw={largeScreen ? "2440px" : "768px"}
                   alt="menu banner image"
@@ -175,26 +172,39 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             url={backgroundImage}
             pl={largeScreen && 30}
           >
-            <Image
-              src={
-                backgroundImage &&
-                getFileUrlFromKey(
-                  encodeURI(backgroundImage),
-                  true,
-                  !!fullMenu.menuLanding?.unsplashImage?.[
-                    largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-                  ],
-                )
-              }
-              style={{
-                borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-                backgroundColor: "var(--orange-400)",
-              }}
-              fallbackSrc={backgroundImageFallback}
-              alt="banner image of menu"
-              h={largeScreen ? "33dvh" : "25dvh"}
-              maw={largeScreen ? "2440px" : "768px"}
-            />
+            <picture>
+              <source
+                media="(min-width:40em)"
+                srcSet={
+                  fullMenu?.menuLanding?.backgroundImage &&
+                  getFileUrlFromKey(
+                    encodeURI(fullMenu?.menuLanding?.backgroundImage),
+                    true,
+                    !!fullMenu.menuLanding?.unsplashImage?.["backgroundImage"],
+                  )
+                }
+              />
+              <Image
+                src={
+                  fullMenu?.menuLanding?.mobileBackgroundImage &&
+                  getFileUrlFromKey(
+                    encodeURI(fullMenu?.menuLanding?.mobileBackgroundImage),
+                    true,
+                    !!fullMenu.menuLanding?.unsplashImage?.[
+                      "mobileBackgroundImage"
+                    ],
+                  )
+                }
+                style={{
+                  borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
+                  backgroundColor: "var(--orange-400)",
+                }}
+                fallbackSrc={backgroundImageFallback}
+                alt="banner image of menu"
+                h={largeScreen ? "33dvh" : "25dvh"}
+                maw={largeScreen ? "2440px" : "768px"}
+              />
+            </picture>
           </CreditsCard>
         )}
         <Stack px={"5.8vw"} mih={"45vh"} mt={"sm"}>
