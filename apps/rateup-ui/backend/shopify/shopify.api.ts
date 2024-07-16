@@ -30,7 +30,15 @@ export async function updateShopifySession({ shop, data }) {
 }
 
 export async function registerShopifyWebhooks() {
-  return await axiosClient.post(`${SHOPIFY_BASE_URL}/register-webhooks`);
+  return await axiosClient.post(`${SHOPIFY_BASE_URL}/register-webhooks`, null, {
+    timeout: 0,
+  });
+}
+
+export async function deleteAllShopifyWebhooks(shop) {
+  return await axiosClient.delete(
+    `${SHOPIFY_BASE_URL}/delete-webhooks/${shop}`,
+  );
 }
 
 export async function updateShopifySurveySchedule({ scheduleId, data }) {
@@ -38,4 +46,8 @@ export async function updateShopifySurveySchedule({ scheduleId, data }) {
     `${SHOPIFY_BASE_URL}/shopify-survey/${scheduleId}`,
     data,
   );
+}
+
+export async function deleteShopifySession(shop) {
+  return await axiosClient.delete(`${SHOPIFY_BASE_URL}/session/${shop}`);
 }

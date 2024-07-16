@@ -1,8 +1,10 @@
+import { useState } from "react";
+
 import { Stack } from "@mantine/core";
+import { API_URL } from "utils/constants";
+
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../Modal/FormModalLayout";
-import { useState } from "react";
-import { envConstants } from "utils/constants";
 
 const ConnectShopifyModal = ({ opened, close }) => {
   const [shop, setShop] = useState("");
@@ -15,7 +17,7 @@ const ConnectShopifyModal = ({ opened, close }) => {
     const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
     if (regex.test(shop)) {
       close();
-      window.open(`${envConstants.API_URL}/api/shopify?shop=${shop}`);
+      window.open(`${API_URL}/api/shopify?shop=${shop}`);
       setShop("");
     } else {
       setError("Invalid shop name");

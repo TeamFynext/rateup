@@ -1,21 +1,25 @@
-import { Badge, Group, Stack, Text, Center, Image } from "@mantine/core";
-import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
+import { useState } from "react";
+
 import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "../../../../components/Button/RateupButtons";
+  ActionIcon,
+  Badge,
+  Center,
+  Group,
+  Image,
+  Stack,
+  Tooltip,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  useGetShopifySession,
-  useRegisterWebhooks,
-} from "../../../../backend/shopify/shopify.query";
-import {
-  IconBuildingStore,
+  IconHomeFilled,
   IconPlus,
-  IconRefresh,
-  IconTrash,
+  IconSettingsFilled,
 } from "@tabler/icons-react";
-import { showLoadingToast } from "../../../../utils/notifications";
+
+import ShopifySettings from "@/components/shopify/ShopifySettings";
+
+import { useGetShopifySession } from "../../../../backend/shopify/shopify.query";
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import ConnectShopifyModal from "../../../../components/shopify/ConnectShopifyModal";
 import ShopifySurveySchedules from "../../../../components/shopify/ShopifySurveySchedules";
 
@@ -27,24 +31,19 @@ export const ActiveStatusBadge = ({ active }) => {
   );
 };
 
+enum ShopifyActivePanel {
+  Home = "Home",
+  Settings = "Settings",
+}
 const Shopify = () => {
   const [connectOpened, { open: openConnect, close: closeConnect }] =
     useDisclosure(false);
   const { data: session } = useGetShopifySession();
 
-  const registerWebhooksmutate = useRegisterWebhooks();
+  const [activePanel, setActivePanel] = useState<ShopifyActivePanel>(
+    ShopifyActivePanel.Home,
+  );
 
-  const registerWebhooks = () => {
-    showLoadingToast(
-      "Hold On..Registering webhooks",
-      "webhooks",
-      true,
-      "Loading",
-      "",
-      10000,
-    );
-    registerWebhooksmutate.mutate();
-  };
   if (!session || !session?.active)
     return (
       <Center h={"100%"}>
@@ -63,26 +62,43 @@ const Shopify = () => {
   return (
     <Stack>
       <Group justify="flex-end">
-        <PaperLayout p={"sm"} w={"fit-content"}>
-          <Stack gap={"lg"}>
-            <Group>
-              <IconBuildingStore color="#95bf47" />
-              <Text fw={"bold"} size="md">
-                {session?.shop}
-              </Text>
-            </Group>
-            {!session.isWebhookRegistered && (
-              <RateupButtonPrimary
-                color="#95bf47"
-                title="Register webhooks"
-                disabled={registerWebhooksmutate.isPending}
-                onClick={registerWebhooks}
-              />
+        <Tooltip
+          label={
+            activePanel === ShopifyActivePanel.Settings
+              ? ShopifyActivePanel.Home
+              : ShopifyActivePanel.Settings
+          }
+        >
+          <ActionIcon
+            onClick={() =>
+              setActivePanel(
+                activePanel === ShopifyActivePanel.Settings
+                  ? ShopifyActivePanel.Home
+                  : ShopifyActivePanel.Settings,
+              )
+            }
+            variant="subtle"
+            size={"lg"}
+            color="gray"
+          >
+            {activePanel === ShopifyActivePanel.Settings ? (
+              <IconHomeFilled size={"1.5rem"} />
+            ) : (
+              <IconSettingsFilled size={"1.5rem"} />
             )}
-          </Stack>
-        </PaperLayout>
+          </ActionIcon>
+        </Tooltip>
       </Group>
-      <ShopifySurveySchedules session={session} />
+      <Stack
+        display={activePanel == ShopifyActivePanel.Home ? "block" : "none"}
+      >
+        <ShopifySurveySchedules session={session} />
+      </Stack>
+      <Stack
+        display={activePanel == ShopifyActivePanel.Settings ? "block" : "none"}
+      >
+        <ShopifySettings session={session} />
+      </Stack>
     </Stack>
   );
 };

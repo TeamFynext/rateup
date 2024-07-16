@@ -1,9 +1,9 @@
+import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 import {
   QuestionType,
   ShopifyEvents,
   WaFlowFormElementType as wft,
 } from "../types/enums";
-import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 export const docsPath = "https://docs.rateup.app";
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
@@ -281,7 +281,5 @@ export const shopifyEventData = [
   },
 ];
 
-export const envConstants = {
-  API_URL: process.env.NEXT_PUBLIC_API_URL,
-  FRONTEND_URL: process.env.NEXT_PUBLIC_FRONTEND_URL,
-};
+export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
