@@ -1,20 +1,22 @@
+import { useCallback, useRef } from "react";
+
 import {
   ActionIcon,
   BackgroundImage,
   Box,
   Flex,
-  Image,
-  TextInput,
   Textarea,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { IconEdit } from "@tabler/icons-react";
 import Confetti from "react-confetti";
-import { surveyUploadsPath } from "../../../../../../utils/constants";
+
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
-import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
+import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
@@ -22,8 +24,6 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
-import { IconEdit } from "@tabler/icons-react";
-import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
 export default function ThankyouPageThemeView({
   isThemeObjBeingEditedDefaultTheme,
@@ -33,20 +33,13 @@ export default function ThankyouPageThemeView({
   const selectedPreview = useSelectedPreview();
   const setSelectedEditor = useSetSelectedEditor();
 
-  const {
-    thankyouTheme,
-    surveyTheme: { logo },
-  } = surveyTheme;
+  const { thankyouTheme } = surveyTheme;
   const { ref, width, height } = useElementSize();
   const {
-    bg: { styles, desktopbg, mobilebg, unsplashImage },
     subtitle: { styles: subtitleStyles, subtitle },
     title: { styles: titleStyles, title },
     confettiEnabled,
   } = thankyouTheme;
-
-  const orgLogoSrc = logo?.logo;
-  const orgLogoStyles = logo?.styles;
 
   const useSurveyBackground =
     surveyTheme["thankyouTheme"].bg.useSurveyBackground;
@@ -109,14 +102,6 @@ export default function ThankyouPageThemeView({
               h={"100%"}
               direction={"column"}
             >
-              {orgLogoSrc && (
-                <Image
-                  src={orgLogoSrc}
-                  style={{ ...orgLogoStyles, alignSelf: "center" }}
-                  alt="logo"
-                />
-              )}
-
               <Tooltip label="Edit title">
                 <Box className={classes.titleBox} mt={20} w={"50%"}>
                   <TextInput
