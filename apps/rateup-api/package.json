@@ -21,7 +21,7 @@
     "@google-cloud/language": "^6.1.1",
     "@prisma/client": "^5.15.0",
     "@sendgrid/mail": "^7.7.0",
-    "@shopify/shopify-api": "^11.0.1",
+    "@shopify/shopify-api": "^11.1.0",
     "axios": "^1.4.0",
     "bcrypt": "^5.1.1",
     "cheerio": "^1.0.0-rc.12",

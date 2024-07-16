@@ -24,6 +24,7 @@ import {
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { getFlowIdFromTemplateComponents } from "../whatsapp/messageTemplates/wa_templates.utils";
 import { parsePhoneNumber } from "libphonenumber-js";
+import webhookHandlers from "./shopify.handler";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -93,16 +94,16 @@ export async function getShopifySessionByOrgId(orgId) {
       orgId,
     },
   });
-  if (session)
-    return {
-      ...session,
-      isActive: undefined,
-      isScopeChanged: undefined,
-      isExpired: undefined,
-      toObject: undefined,
-      equals: undefined,
-      toPropertyArray: undefined,
-    };
+  if (session) if (!shopify.config.scopes.equals(session?.scope)) return null;
+  return {
+    ...session,
+    isActive: undefined,
+    isScopeChanged: undefined,
+    isExpired: undefined,
+    toObject: undefined,
+    equals: undefined,
+    toPropertyArray: undefined,
+  };
   return null;
 }
 
@@ -126,6 +127,7 @@ export async function deleteShopifySession(shop) {
 }
 
 export async function registerShopifyWebhook(session: Session) {
+  shopify.webhooks.addHandlers(webhookHandlers);
   const response = await shopify.webhooks.register({
     session,
   });
@@ -184,6 +186,7 @@ export async function sendTemplateOnShopifyEvent(
   session,
   productIds: string[],
 ) {
+  log.info(`checking survey for shopify event ${event}`);
   const phone = parsePhoneNumber(customerPhone, "IN");
   if (phone.isValid() === false) {
     log.trace("Invalid phone number");
@@ -213,6 +216,9 @@ export async function sendTemplateOnShopifyEvent(
         shopifySurvey.waTemplateId,
         shopifySurvey.teamId,
       );
+  } else {
+    if (!shopifySurvey) log.trace(`No Survey schedule found`);
+    else if (!phoneWithoutPlus) log.trace(`No customer phone number found`);
   }
 }
 
@@ -226,6 +232,8 @@ export async function sendWhatsAppTemplateToCustomer(
     if (!teamId) {
       throw new Error("TeamId not found");
     }
+
+    log.info(`checking for db template`);
     const dbTemplate = await getDbTemplate(waTemplateId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${waTemplateId} not found`);
@@ -299,10 +307,12 @@ export async function sendWhatsAppTemplateToCustomer(
       },
       components: templateComponents,
     };
-
+    log.info(`creating template message`);
     const templateMessage = createTemplateMessage(phone, templateQuery);
+    log.info(`updating monthly stat`);
     await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50);
+    log.info(`senting template`);
     sendMessage(orgId, templateMessage)
       .then(() => {
         log.trace("Template sent to customer");
@@ -334,4 +344,24 @@ export async function updateShopifySurveySchedule(id, data) {
     },
     data,
   });
+}
+
+export async function deleteMultipleSurveySchedules(shop) {
+  return await prisma.shopifySurvey.deleteMany({
+    where: {
+      shop,
+    },
+  });
+}
+
+export async function deleteAllWebhooks(session) {
+  const webhookslist = await shopify.rest.Webhook.all({ session });
+  await Promise.all(
+    webhookslist.data.map(async (webhook) => {
+      const response = await shopify.rest.Webhook.delete({
+        session,
+        id: webhook.id,
+      });
+    }),
+  );
 }
