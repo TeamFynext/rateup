@@ -79,6 +79,8 @@ import { updatePublicRoutes } from "./modules/update/update.public.route";
 import { servicePublicRoutes } from "./modules/services/services.public.route";
 import generateQrRoutes from "./modules/generateQr/generateQr.routes";
 import { generateQrSchemas } from "./modules/generateQr/generateQr.schema";
+import { shopifyRoutes } from "./modules/shopify/shopify.route";
+import { shopifySchema } from "./modules/shopify/shopify.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -113,6 +115,7 @@ export function registerRoutes(server: FastifyInstance): void {
     campaignParticipantsSchemas,
     emailSchema,
     generateQrSchemas,
+    shopifySchema,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -179,4 +182,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(externalRoutes, { prefix: "api/external" });
   server.register(emailPublicRoutes, { prefix: "api/email" });
   server.register(generateQrRoutes, { prefix: "/api/generateQr" });
+  server.register(shopifyRoutes, { prefix: "api/shopify" });
 }

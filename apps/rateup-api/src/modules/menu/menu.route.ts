@@ -8,9 +8,7 @@ import {
   getFullMenuByIdHandler,
   getMenuByIdHandler,
   getMenuLandingHandler,
-  updateLandingPageOptionHandler,
   updateMenuHandler,
-  updateMenuLandingHandler,
 } from "./menu.controller";
 import { $Tref } from "../team/team.schema";
 import { verifyTeamAccess } from "../team/team.auth";
@@ -101,27 +99,5 @@ export async function menuRoutes(server: FastifyInstance) {
       preHandler: verifyMenuAccess,
     },
     getMenuLandingHandler,
-  );
-  server.put(
-    "/updateLanding/:menuId",
-    {
-      schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
-        body: $Mref("updateMenuLandingInputSchema"),
-      },
-      preHandler: verifyMenuAccess,
-    },
-    updateMenuLandingHandler,
-  );
-  server.put(
-    "/updateLandingPageOption/:menuId",
-    {
-      schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
-        body: $Mref("updateLandingPageOptionSchema"),
-      },
-      preHandler: verifyMenuAccess,
-    },
-    updateLandingPageOptionHandler,
   );
 }

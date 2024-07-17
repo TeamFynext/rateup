@@ -331,7 +331,7 @@ export async function sendCampaignCronAction() {
             monthlyMessageLimit - usage.monthlyMessagesCount
           } to proceed.`;
     await updateCampaign(campaignsToBeSent?.[0].id, {
-      status: CampaignStatus.INACTIVE,
+      status: CampaignStatus.ACTIVE,
       errorMessage: errorMessage,
     });
     log.error(errorMessage, "in schedule", orgId);

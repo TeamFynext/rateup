@@ -86,8 +86,7 @@ export async function createGoogleUserHandler(
     phone: userInfo?.phoneNumber !== undefined ? userInfo.phoneNumber : "",
     name: request?.body?.name,
     orgName: request?.body?.orgName,
-    recipeName: getUserRecipeName('thirdparty') ?? null,
-
+    recipeName: getUserRecipeName("thirdparty") ?? null,
   };
   try {
     user = await createUserSignup(data);
