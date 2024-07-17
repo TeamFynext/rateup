@@ -1,36 +1,42 @@
 import React, { useState } from "react";
 
-import { zodResolver } from "mantine-form-zod-resolver";
-
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { showErrorToast } from "utils/notifications";
-import { IconMinus, IconPlus } from "@tabler/icons-react";
-import { deleteUploadedFiles, uploadFile } from "utils/file-upload/upload";
+import { useUpdateMenuMutation } from "@/backend/menu/menu.query";
+import { useSurveysByTeam } from "@/backend/surveys/surveys.query";
+import { SAVE_HOTKEY } from "@/utils/constants";
+import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
 import {
   ActionIcon,
+  Box,
   Container,
   Group,
   SimpleGrid,
   Stack,
   Text,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { zodResolver } from "mantine-form-zod-resolver";
+import PhoneInputWithCountrySelect from "react-phone-number-input";
 
-import Heading from "../../styled/Heading/Heading";
-import { currencyLabel } from "../util/currencyData";
-import RateupLoader from "../../Loaders/RateupLoader";
-import { SAVE_HOTKEY } from "../../../utils/constants";
-import { TeamSelector } from "../../input/TeamSelector";
-import ImageUploadSettings from "./ImageUploadSettings";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
-import { useSurveysByTeam } from "../../../backend/surveys/surveys.query";
+import { MenuButtons } from "@/types/enums";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
   ContainedSelection,
   ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
+} from "@/components/input/ContainedInput/ContainedInput";
+import { TeamSelector } from "@/components/input/TeamSelector";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import Heading from "@/components/styled/Heading/Heading";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+
+import { currencyLabel } from "../util/currencyData";
 import { schema } from "./GeneralFormSchema";
+import styles from "./GeneralSettings.module.css";
+import ImageUploadSettings from "./ImageUploadSettings";
+
+import "react-phone-number-input/style.css";
 
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = {
@@ -39,7 +45,7 @@ const GeneralSettings = ({ editingItem }) => {
     mobileBackgroundImage: editingItem?.mobileBackgroundImage,
     logo: editingItem?.logo,
     unsplashImage: editingItem?.unsplashImage,
-    surveyTeamMapId: editingItem?.surveyTeamMapId?.id,
+    surveyTeamMapId: editingItem?.surveyTeamMapId,
     hideUnavailableCategory:
       editingItem?.menu?.hideUnavailableCategory?.toString(),
     menuButtons: editingItem?.menuButtons ?? [],
@@ -269,16 +275,72 @@ const GeneralSettings = ({ editingItem }) => {
                 cols={{ base: 2, sm: 1 }}
                 key={form.key(`menuButtons.${i}`)}
               >
-                <ContainedTextField
-                  label={`Menu Button Name ${i + 1}`}
-                  placeholder="other"
-                  {...form.getInputProps(`menuButtons.${i}.name`)}
-                />
-                <ContainedTextField
-                  label={`Menu Button Value ${i + 1}`}
-                  placeholder={i === 0 ? "+919876543210" : "link"}
-                  {...form.getInputProps(`menuButtons.${i}.link`)}
-                />
+                <Group>
+                  <ContainedSelection
+                    label={`Menu Button Type ${i + 1}`}
+                    data={Object.values(MenuButtons)}
+                    placeholder="select button type"
+                    {...form.getInputProps(`menuButtons.${i}.name`)}
+                    value={
+                      Object.values(MenuButtons)?.includes(
+                        form.values.menuButtons?.[i]?.name,
+                      )
+                        ? form.values.menuButtons?.[i]?.name
+                        : MenuButtons.OTHER
+                    }
+                    flex={1}
+                    styles={{
+                      option: {
+                        textTransform: "capitalize",
+                      },
+                      input: {
+                        textTransform: "capitalize",
+                      },
+                    }}
+                  />
+                  {![MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(
+                    form.values.menuButtons?.[i]?.name as any,
+                  ) && (
+                    <ContainedTextField
+                      label={`Menu Button Name ${i + 1}`}
+                      placeholder="other"
+                      {...form.getInputProps(`menuButtons.${i}.name`)}
+                    />
+                  )}
+                </Group>
+                {[MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(
+                  form.values.menuButtons?.[i]?.name as any,
+                ) ? (
+                  <Box mt={5}>
+                    <Text fz={"xs"}>Menu Button Value {i + 1}</Text>
+                    <Box
+                      py={"xs"}
+                      className={styles.inputBox}
+                      style={{
+                        borderColor:
+                          form?.errors?.[`menuButtons.${i}.link`] && "red",
+                      }}
+                    >
+                      <PhoneInputWithCountrySelect
+                        defaultCountry="IN"
+                        international
+                        countryCallingCodeEditable={false}
+                        placeholder="Enter phone number"
+                        className={styles.inputPhone}
+                        {...form.getInputProps(`menuButtons.${i}.link`)}
+                      />
+                    </Box>
+                    <Text size="sm" c={"red"}>
+                      {form?.errors?.[`menuButtons.${i}.link`]}
+                    </Text>
+                  </Box>
+                ) : (
+                  <ContainedTextField
+                    label={`Menu Button Value ${i + 1}`}
+                    placeholder={i === 0 ? "+919876543210" : "link"}
+                    {...form.getInputProps(`menuButtons.${i}.link`)}
+                  />
+                )}
               </SimpleGrid>
             ))}
             <Stack gap={4}>

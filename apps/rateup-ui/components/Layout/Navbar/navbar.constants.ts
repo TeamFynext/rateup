@@ -2,6 +2,8 @@
 import {
   IconAddressBook,
   IconApi,
+  IconApps,
+  IconAppWindow,
   IconBrandWhatsapp,
   IconBrowser,
   IconClipboardList,
@@ -27,11 +29,10 @@ import {
   IconWaveSine,
 } from "@tabler/icons-react";
 
-import { IconAppWindow } from "@tabler/icons-react";
 import { useUserInfo } from "../../../backend/user/user.query";
 import {
-  SubscriptionFeaturePathName,
   SubscriptionFeaturePathName as sfpn,
+  SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { whatsappOptions } from "../../../utils/constants";
 import { UserRole } from "../../../utils/enums";
@@ -241,6 +242,15 @@ export function getNavTopData(subscription?: Subscription) {
                 href: "/dashboard/loyalty/api",
               },
             ],
+          },
+        ]),
+    ...(hiddenModules.includes("appsAndServices")
+      ? []
+      : [
+          {
+            Icon: IconApps,
+            label: "Apps & Services",
+            href: "/dashboard/apps&services",
           },
         ]),
   ];

@@ -1,20 +1,31 @@
+import React, { useCallback, useEffect, useState } from "react";
+
 import {
-  Stack,
+  ActionIcon,
+  Box,
   Button,
+  Center,
   CopyButton,
   Group,
-  Title,
-  ActionIcon,
-  Switch,
-  Paper,
-  Box,
-  Text,
-  ScrollArea,
-  Center,
   Image,
-  Tooltip,
+  Paper,
   Radio,
+  ScrollArea,
+  Stack,
+  Switch,
+  Text,
+  Title,
+  Tooltip,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import {
+  gridFilteredSortedRowIdsSelector,
+  GridPrintGetRowsToExportParams,
+  GridRowId,
+  selectedGridRowsSelector,
+} from "@mui/x-data-grid";
 import {
   IconCheck,
   IconChevronLeft,
@@ -23,44 +34,35 @@ import {
   IconPlayerPlay,
   IconX,
 } from "@tabler/icons-react";
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  ContainedDateTimePickerInput,
-  ContainedSelection,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
-import {
-  GridPrintGetRowsToExportParams,
-  GridRowId,
-  gridFilteredSortedRowIdsSelector,
-  selectedGridRowsSelector,
-} from "@mui/x-data-grid";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import ShareQR from "./ShareQR";
-import { updateSurvey } from "../../../backend/surveys/survey.api";
-import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import { TabEnum } from "../SurveyId";
-import { StatusBadge } from "../SurveyCardList";
-import IFrameModal from "./IFrameModal";
-import NothingFound from "../../NothingFound/NothingFound";
-import TagManager from "./TagManager";
-import { SurveyType } from "../../../types/enums";
+
+import { updateSurvey } from "../../../backend/surveys/survey.api";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
+import { SurveyType } from "../../../types/enums";
 import { getContent } from "../../../utils";
-import { useForm } from "@mantine/form";
 import {
   formatIsoDateStringWithTime,
   roundOffMinutesAndSeconds,
 } from "../../../utils/dateTime";
 import { showLoadingToast } from "../../../utils/notifications";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
+import {
+  ContainedDateTimePickerInput,
+  ContainedSelection,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import NothingFound from "../../NothingFound/NothingFound";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { StatusBadge } from "../SurveyCardList";
+import { TabEnum } from "../SurveyId";
 import GenerateTags from "./GenerateTags";
+import IFrameModal from "./IFrameModal";
+import ShareQR from "./ShareQR";
+import TagManager from "./TagManager";
 
 enum PublishEnum {
   NOW = "NOW",
@@ -125,8 +127,9 @@ const ShareSurvey = ({
     validate: {
       surveyPublishAt: (value) => {
         const minPublishDate = new Date(new Date().getTime() + 60 * 60 * 1000);
-        return value < minPublishDate
-          ? "Publish date must be at least 1 hour ahead of current time."
+        const publishDate = form.values.surveyPublishAt;
+        return value < publishDate
+          ? "End date must be after the publish date."
           : null;
       },
       surveyEndAt: (value) => {
@@ -424,9 +427,8 @@ const ShareSurvey = ({
                         }
                       />
                       <Text c="red" size="xs">
-                        *Time will be rounded to nearest hours. <br />
-                        Note: Publish time must be at least 1 hour ahead of
-                        current time.
+                        * Time will be rounded to nearest hours. <br />* Publish
+                        time must be at least 1 hour ahead of current time.
                       </Text>
                     </Stack>
                   )}
@@ -461,16 +463,22 @@ const ShareSurvey = ({
                         label={"End Survey At"}
                         {...form.getInputProps("surveyEndAt")}
                         minDate={
-                          new Date(
-                            new Date().setMinutes(
-                              new Date().getMinutes() + 120,
-                            ),
-                          )
+                          publishChoice === PublishEnum.LATER
+                            ? new Date(
+                                new Date(
+                                  form.values.surveyPublishAt,
+                                ).getTime() +
+                                  60 * 60 * 1000,
+                              )
+                            : new Date(
+                                new Date().setMinutes(
+                                  new Date().getMinutes() + 120,
+                                ),
+                              )
                         }
                       />
                       <Text c="red" size="xs">
-                        Note: End date must be at least 2 hours ahead of current
-                        time.
+                        * End date must be after the publish date.
                       </Text>
                     </Stack>
                   )}

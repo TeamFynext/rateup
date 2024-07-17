@@ -1,9 +1,10 @@
+import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 import {
   PageType,
   QuestionType,
+  ShopifyEvents,
   WaFlowFormElementType as wft,
 } from "../types/enums";
-import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 export const docsPath = "https://docs.rateup.app";
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
@@ -269,3 +270,25 @@ export const mmImageCropModalClassnames = {
   header: MMImageCropModalStyles["modal-header"],
   body: MMImageCropModalStyles["modal-body"],
 };
+
+export const shopifyEventData = [
+  { label: "On Orders create", value: ShopifyEvents.ORDERS_CREATE },
+  { label: "On Orders fulfilled", value: ShopifyEvents.ORDERS_FULFILLED },
+  { label: "On Orders paid", value: ShopifyEvents.ORDERS_PAID },
+  { label: "On Orders cancelled", value: ShopifyEvents.ORDERS_CANCELLED },
+  {
+    label: "On Draft Orders created",
+    value: ShopifyEvents.DRAFT_ORDERS_CREATE,
+  },
+  {
+    label: "On orders partially fulfilled",
+    value: ShopifyEvents.ORDERS_PARTIALLY_FULFILLED,
+  },
+  {
+    label: "On fulfilled orders canceled",
+    value: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
+  },
+];
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;

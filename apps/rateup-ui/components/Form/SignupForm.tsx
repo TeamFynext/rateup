@@ -1,3 +1,6 @@
+import { useRef, useState } from "react";
+import Link from "next/link";
+
 import {
   Anchor,
   Box,
@@ -12,10 +15,10 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconChevronLeft, IconMail } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState } from "react";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
@@ -25,7 +28,6 @@ import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
 import LoginSignupLinks from "./LoginSignupLinks";
 import PhoneNumberForm from "./phoneNumberForm";
-import Link from "next/link";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
@@ -189,9 +191,9 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           >
             <PhoneInputWithCountrySelect
               defaultCountry="IN"
-              international
+              // international
               countryCallingCodeEditable={false}
-              placeholder="Enter phone number"
+              placeholder="Enter Mobile Number (Optional)"
               value={signUpForm?.getValues()?.phoneNumber || null}
               {...signUpForm?.getInputProps("phoneNumber")}
               className={styles.inputPhone}

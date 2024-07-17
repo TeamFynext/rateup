@@ -1,20 +1,22 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import {
-  MultiSelect,
   isLightColor,
   luminance,
+  MultiSelect,
   useMantineTheme,
 } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import { sampleChoices } from "../../../../../utils/constants/forms";
-import FormPaperLayout from "./layout/FormPaperLayout";
 import { useMediaQuery } from "@mantine/hooks";
-import CustomMultiselectForMobile from "../components/CustomMultiselectForMobile";
-import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
+import { sampleChoices } from "../../../../../utils/constants/forms";
 import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import CustomMultiselectForMobile from "../components/CustomMultiselectForMobile";
+import classes from "../TakeSurvey.module.css";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -113,7 +115,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       onChange={handleSelectedOp}
       placeholder="Select one or more"
       portalProps={{
-        target: isSurveyThemePreview && takeSurveyLayoutWebDomNodeRef.current,
+        target: takeSurveyLayoutWebDomNodeRef.current,
       }}
     />
   );

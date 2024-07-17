@@ -1,10 +1,12 @@
 //import start
 import { useContext, useState } from "react";
-import { useRouter } from "next/router";
+
 import { Badge, Divider, Flex, Group, Stack, Tabs, Text } from "@mantine/core";
-import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import { useAllResponses } from "../../../backend/surveys/response/response.query";
-import NothingFound from "../../NothingFound/NothingFound";
+import {
+  IconAntennaBars4,
+  IconChartPieFilled,
+  IconChartRadar,
+} from "@tabler/icons-react";
 import {
   Bar,
   BarChart,
@@ -20,25 +22,25 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import Heading from "../../styled/Heading/Heading";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import {
-  IconAntennaBars4,
-  IconChartPieFilled,
-  IconChartRadar,
-} from "@tabler/icons-react";
-import { QuestionType } from "../../../types/enums";
+
+import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
+import { useAllResponses } from "../../../backend/surveys/response/response.query";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SurveyContext from "../../../context/SurveyContext";
+import { QuestionType } from "../../../types/enums";
+import { getContent } from "../../../utils";
 import {
   getResponseArrayByQuestionType,
   getResponseObjectByQuestionType,
 } from "../../../utils/response";
-import SurveyContext from "../../../context/SurveyContext";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 import RateupLoader from "../../Loaders/RateupLoader";
-import { getContent } from "../../../utils";
+import NothingFound from "../../NothingFound/NothingFound";
+import Heading from "../../styled/Heading/Heading";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
+
 //import end
 //.............................................................................
 // default export component start
@@ -109,6 +111,9 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
                 }
               }
             }
+            let lang = selectedLanguage || defaultLanguage;
+            let localizedTitle =
+              q?.title?.[lang] || q?.description?.[lang] || q?.label?.[lang];
             return (
               <PaperLayout mih={500} key={i}>
                 <Stack>
@@ -116,19 +121,9 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
                     <Text c="dark.3" fw={900} w={"85%"}>
                       {getContent(
                         getReplacedTitleFromVariable({
-                          title:
-                            q.title[
-                              selectedLanguage
-                                ? selectedLanguage
-                                : defaultLanguage
-                            ],
+                          title: localizedTitle,
                           surveyId,
-                        }) ||
-                          q.title[
-                            selectedLanguage
-                              ? selectedLanguage
-                              : defaultLanguage
-                          ],
+                        }) || localizedTitle,
                       )}
                     </Text>
                     <Badge variant="dot">{q.type}</Badge>

@@ -1,15 +1,18 @@
-import { Button, Image } from "@mantine/core";
-import PublicMenu from "../../public/menu/[menuId]/feedback/[surveyId]";
-import styles from "../../ws/[shortId]/ws.module.css";
+import { NextApiRequest, NextApiResponse } from "next";
 import Link from "next/link";
-import { imagePath } from "../../../components/HomePage/pages/constants";
-import { getCookie, setCookie } from "cookies-next";
+
+import { getMenuBannerByMenuId } from "@/backend/menu/Banner/banner.api";
 import {
   getFullMenuPublicById,
   updateMenuVisitedMutation,
-} from "../../../backend/menu/menu.api";
-import { NextApiRequest, NextApiResponse } from "next";
-import { getMenuBannerByMenuId } from "backend/menu/Banner/banner.api";
+} from "@/backend/menu/menu.api";
+import MenuLandingPage from "@/pages/public/menu/[surveyId]";
+import { Button, Image } from "@mantine/core";
+import { getCookie, setCookie } from "cookies-next";
+
+import { imagePath } from "@/components/HomePage/pages/constants";
+
+import styles from "../../ws/[shortId]/ws.module.css";
 
 interface ServerSidePropsContext {
   req: NextApiRequest;
@@ -70,7 +73,7 @@ function MenuRedirect({ fullMenu, menuBanner, error_occured }) {
       </div>
     );
   }
-  return <PublicMenu fullMenu={fullMenu} menuBanner={menuBanner} />;
+  return <MenuLandingPage fullMenu={fullMenu} menuBanner={menuBanner} />;
 }
 
 export default MenuRedirect;

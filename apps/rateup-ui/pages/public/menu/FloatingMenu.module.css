@@ -1,0 +1,27 @@
+.dropdown {
+  background-color: var(--secondary-color);
+  border-radius: 12px;
+}
+
+.itemLabel,
+.itemSection * {
+  color: white;
+}
+.menuBtn:hover *,
+.item:hover > *,
+.item:hover .itemSection > * {
+  color: black;
+}
+.menuBtn *,
+.menuLink *,
+.menu * {
+  color: white;
+  text-decoration: none;
+  line-height: 0.8;
+  text-transform: capitalize;
+}
+
+.hoverCard {
+  color: white;
+  background: var(--secondary-color);
+}

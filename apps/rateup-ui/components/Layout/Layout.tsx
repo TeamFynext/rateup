@@ -1,29 +1,31 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
-import { ActionIcon, Box, Flex, Transition } from "@mantine/core";
-import { HeaderTabs } from "./Header/Header";
-import { IUserInfoApiResponse } from "../../backend/user/user.api";
-import { useQueryClient } from "@tanstack/react-query";
-import { useUser, useWsData } from "../../context/UserContext";
-import { RouteParamsProvider } from "../../context/RouteParamsContext";
-import SessionAuth from "../SuperToken/SessionAuth";
 import { useRouter } from "next/router";
-import useLocalStorage from "../../hooks/localStorage";
-import LeftNavbar from "./Navbar/LeftNavbar";
-import FocusMode from "../Switch/Focusmode";
-import ReportBug from "../ReportBug";
-import styles from "./Layout.module.css";
+
+import { ActionIcon, Box, Flex, Transition } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { IconMenu2 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
+import classNames from "classnames/bind";
+import { AnimatePresence, motion } from "framer-motion";
+
+import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
+import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
+import { IUserInfoApiResponse } from "../../backend/user/user.api";
 import { useUserInfo } from "../../backend/user/user.query";
 import { NavControlContext } from "../../context/NavControlContext";
-import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
-import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
-import { orgWsMessage } from "../../types/global";
+import { RouteParamsProvider } from "../../context/RouteParamsContext";
+import { useUser, useWsData } from "../../context/UserContext";
+import useLocalStorage from "../../hooks/localStorage";
 import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
-import { AnimatePresence, motion } from "framer-motion";
-import classNames from "classnames/bind";
-
+import { orgWsMessage } from "../../types/global";
+import ReportBug from "../ReportBug";
+import SessionAuth from "../SuperToken/SessionAuth";
+import FocusMode from "../Switch/Focusmode";
+import { HeaderTabs } from "./Header/Header";
+import styles from "./Layout.module.css";
+import LeftNavbar from "./Navbar/LeftNavbar";
 import navBarStyles from "./Navbar/Navbar.module.css";
-import { IconMenu2 } from "@tabler/icons-react";
-import { useMediaQuery } from "@mantine/hooks";
+
 const navbarCx = classNames.bind(navBarStyles);
 
 // @ts-ignore
@@ -117,7 +119,10 @@ export default function Layout({ children, appProps }) {
       router.push(
         `/login/callback/paused?pausedby=${userInfo?.data?.pausedBy}`,
       );
-
+    const shopifySetUpFinishRoute = JSON.parse(
+      localStorage.getItem("shopify-auth-callback"),
+    );
+    if (shopifySetUpFinishRoute) router.push(shopifySetUpFinishRoute);
     if (userInfo === null)
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
   }, [userInfo]);

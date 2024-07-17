@@ -1,9 +1,11 @@
-import { Text, Stack, Image, Button } from "@mantine/core";
 import React from "react";
-import { lexend } from "../../../utils/fonts";
-import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
+
+import { Button, Image, Stack, Text } from "@mantine/core";
+
 import { cordinateStyle } from "../../../utils";
 import { surveyUploadsPath } from "../../../utils/constants";
+import { lexend } from "../../../utils/fonts";
+import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 
 const _buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -34,7 +36,8 @@ function WelcomePage({
       h={"100%"}
       p={"lg"}
       className={lexend.className}
-      gap={largeScreen ? "xl" : "sm"}
+      // gap={largeScreen ? "xl" : "sm"}
+      gap={"xl"}
     >
       {orgLogoSrc && (
         <Image
