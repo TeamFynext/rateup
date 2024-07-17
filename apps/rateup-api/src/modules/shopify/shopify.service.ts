@@ -16,7 +16,11 @@ import {
   wait,
 } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { updateMonthlyStat } from "../stats/stats.service";
-import { ShopifyEvents, SubscriptionFeaturePathName } from "../../types/enums";
+import {
+  ShopifyEvents,
+  ShopifySendAfter,
+  SubscriptionFeaturePathName,
+} from "../../types/enums";
 import {
   createTemplateMessage,
   validateSession,
@@ -25,6 +29,7 @@ import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service
 import { getFlowIdFromTemplateComponents } from "../whatsapp/messageTemplates/wa_templates.utils";
 import { parsePhoneNumber } from "libphonenumber-js";
 import webhookHandlers from "./shopify.handler";
+import dayjs from "dayjs";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -142,7 +147,7 @@ export async function registerShopifyWebhook(session: Session) {
   }
 }
 
-export async function createShopifySurveySchedule(data) {
+export async function createShopifySurvey(data) {
   return await prisma.shopifySurvey.create({
     data,
   });
@@ -155,6 +160,30 @@ export async function getShopipfySurveyByEvent(orgId, event, shop) {
         orgId,
         event,
         shop,
+      },
+      active: true,
+    },
+  });
+}
+
+export async function getShopifySchedules(orgId) {
+  return await prisma.shopifySurveySchedule.findMany({
+    where: {
+      shopifySurvey: {
+        orgId,
+      },
+    },
+    include: {
+      shopifySurvey: {
+        include: {
+          waTemplate: true,
+          team: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       },
     },
   });
@@ -180,11 +209,12 @@ export async function getShopifySurveysByOrgId(orgId) {
   });
 }
 
-export async function sendTemplateOnShopifyEvent(
+export async function createScheduleOnShopifyEvent(
   customerPhone: string,
   event: ShopifyEvents,
   session,
   productIds: string[],
+  webhookId: string,
 ) {
   log.info(`checking survey for shopify event ${event}`);
   const phone = parsePhoneNumber(customerPhone, "IN");
@@ -200,25 +230,56 @@ export async function sendTemplateOnShopifyEvent(
 
   const phoneWithoutPlus = phone.countryCallingCode + phone.nationalNumber;
   if (shopifySurvey && phoneWithoutPlus) {
+    const data = {
+      scheduleTime: getScheduledTime(shopifySurvey.sendAfter),
+      phone: phoneWithoutPlus,
+      shopifySurveyId: shopifySurvey.id,
+      webhookId,
+    };
     if (shopifySurvey.isProductSpecific) {
       if (productIds.includes(shopifySurvey.productId))
-        await sendWhatsAppTemplateToCustomer(
-          session.orgId,
-          phoneWithoutPlus,
-          shopifySurvey.waTemplateId,
-          shopifySurvey.teamId,
-        );
-      else return null;
-    } else
-      await sendWhatsAppTemplateToCustomer(
-        session.orgId,
-        phoneWithoutPlus,
-        shopifySurvey.waTemplateId,
-        shopifySurvey.teamId,
-      );
+        await createShopifySurveySchedule(data);
+    } else await createShopifySurveySchedule(data);
   } else {
     if (!shopifySurvey) log.trace(`No Survey schedule found`);
     else if (!phoneWithoutPlus) log.trace(`No customer phone number found`);
+  }
+}
+
+export async function sendShopifySurveyCronAction() {
+  const currentTime = new Date();
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000);
+
+  const shopifySchedules = await prisma.shopifySurveySchedule.findMany({
+    where: {
+      scheduledTime: {
+        lte: fiveMinutesLater,
+      },
+      status: "SCHEDULED",
+    },
+    include: {
+      shopifySurvey: true,
+    },
+  });
+
+  if (shopifySchedules?.length) {
+    for (const schedule of shopifySchedules) {
+      const shop = schedule.shopifySurvey.shop;
+      const session = await getShopifySession(shop);
+      const res = await sendWhatsAppTemplateToCustomer(
+        session.orgId,
+        schedule.phone,
+        schedule.shopifySurvey.waTemplateId,
+        schedule.shopifySurvey.teamId,
+      );
+      await updateShopifySurveySchedule(schedule.id, {
+        status: res
+          ? res.status
+            ? "SENT"
+            : `FAILED: ${res?.message}`
+          : "FAILED",
+      });
+    }
   }
 }
 
@@ -232,8 +293,6 @@ export async function sendWhatsAppTemplateToCustomer(
     if (!teamId) {
       throw new Error("TeamId not found");
     }
-
-    log.info(`checking for db template`);
     const dbTemplate = await getDbTemplate(waTemplateId);
     if (!dbTemplate) {
       throw new Error(`Template with id ${waTemplateId} not found`);
@@ -307,21 +366,10 @@ export async function sendWhatsAppTemplateToCustomer(
       },
       components: templateComponents,
     };
-    log.info(`creating template message`);
     const templateMessage = createTemplateMessage(phone, templateQuery);
-    log.info(`updating monthly stat`);
     await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50);
-    log.info(`senting template`);
-    sendMessage(orgId, templateMessage)
-      .then(() => {
-        log.trace("Template sent to customer");
-      })
-      .catch((e) => {
-        log.error(e);
-        log.error("Error sending template to customer");
-      });
-    return true;
+    return await sendMessage(orgId, templateMessage);
   } catch (e) {
     console.error(e);
     // log.error(e);
@@ -337,7 +385,7 @@ export async function deleteShopifySurveySchedule(id) {
   });
 }
 
-export async function updateShopifySurveySchedule(id, data) {
+export async function updateShopifySurvey(id, data) {
   return await prisma.shopifySurvey.update({
     where: {
       id,
@@ -364,4 +412,58 @@ export async function deleteAllWebhooks(session) {
       });
     }),
   );
+}
+
+export async function createShopifySurveySchedule(data: {
+  scheduleTime: string;
+  phone: string;
+  shopifySurveyId: string;
+  webhookId: string;
+}) {
+  try {
+    console.log("data", data);
+    await prisma.shopifySurveySchedule.create({
+      data: {
+        scheduledTime: data.scheduleTime,
+        phone: data.phone,
+        shopifySurveyId: data.shopifySurveyId,
+        webhookId: data.webhookId,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+
+export async function updateShopifySurveySchedule(id, data) {
+  await prisma.shopifySurveySchedule.update({
+    where: {
+      id,
+    },
+    data,
+  });
+}
+
+function getScheduledTime(sendAfter) {
+  const currentTime = dayjs();
+  let scheduledTime = dayjs();
+  switch (sendAfter) {
+    case ShopifySendAfter.TwoHour:
+      scheduledTime = currentTime.add(2, "hour");
+      break;
+    case ShopifySendAfter.FiveHour:
+      scheduledTime = currentTime.add(5, "hour");
+      break;
+    case ShopifySendAfter.TenHour:
+      scheduledTime = currentTime.add(10, "hour");
+      break;
+    case ShopifySendAfter.OneDay:
+      scheduledTime = currentTime.add(1, "day");
+      break;
+    case ShopifySendAfter.OneDay:
+      scheduledTime = currentTime.add(2, "days");
+      break;
+  }
+  return scheduledTime.toISOString();
 }

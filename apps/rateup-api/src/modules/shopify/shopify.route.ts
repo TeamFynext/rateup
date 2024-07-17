@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
-  createShopifySurveyScheduleHandler,
+  createShopifySurveyHandler,
   deleteAllWebhookHandler,
   deleteShopifySessionHandler,
   deleteShopifySurveyScheduleHandler,
@@ -8,12 +8,13 @@ import {
   getRegisteredWebhooksHandler,
   getShopifyAuthCallbackHandler,
   getShopifyAuthHandler,
+  getShopifySchedulesHandler,
   getShopifySessionHandler,
-  getShopifySurveyScheduleHandler,
+  getShopifySurveysHandler,
   registerWebhookHandler,
   shopifyWebhooksHandler,
   updateShopifySessionHandler,
-  updateShopifySurveyScheduleHandler,
+  updateShopifySurveyHandler,
 } from "./shopify.controller";
 import fastifyRawBody from "fastify-raw-body";
 import { ShopifyRef } from "./shopify.schema";
@@ -46,6 +47,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
     { preHandler: [checkSession] },
     getShopifySessionHandler,
   );
+
   server.put(
     "/session/:shop",
     {
@@ -95,7 +97,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
         body: ShopifyRef("shopifySurveySchema"),
       },
     },
-    createShopifySurveyScheduleHandler,
+    createShopifySurveyHandler,
   );
 
   server.put(
@@ -107,14 +109,22 @@ export async function shopifyRoutes(server: FastifyInstance) {
         params: ShopifyRef("byIdParamsSchema"),
       },
     },
-    updateShopifySurveyScheduleHandler,
+    updateShopifySurveyHandler,
   );
   server.get(
     "/shopify-surveys",
     {
       preHandler: [checkSession],
     },
-    getShopifySurveyScheduleHandler,
+    getShopifySurveysHandler,
+  );
+
+  server.get(
+    "/shopify-schedules",
+    {
+      preHandler: [checkSession],
+    },
+    getShopifySchedulesHandler,
   );
 
   server.delete(
