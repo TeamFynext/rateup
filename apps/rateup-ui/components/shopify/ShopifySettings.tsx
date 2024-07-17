@@ -43,25 +43,7 @@ const ShopifySettings = ({ session }) => {
     );
     registerWebhooksmutate.mutate();
   };
-  function getLabelsforConfirmModal(deletionCase) {
-    switch (deletionCase) {
-      case "webhooks":
-        return {
-          headerTitle: "Delete All Webhook Subcriptions",
-          headerLabel: "Are you sure to delete all webhooks?",
-          deleteQuotion: "All survey schedules will be deleted",
-          confirmFunction: handleDeleteWehooks,
-        };
-      case "session":
-        return {
-          headerTitle: "Delete Connection with Shopify",
-          headerLabel:
-            "Are you sure to delete your shopify store connection with RateUp?",
-          deleteQuotion: "All survey schedules and webhooks will be deleted",
-          confirmFunction: handleDeleteSession,
-        };
-    }
-  }
+
   return (
     <Stack>
       <SimpleGrid cols={2}>
@@ -75,7 +57,9 @@ const ShopifySettings = ({ session }) => {
                 leftIcon={<IconTrash size={"1rem"} />}
                 title="Delete connection"
                 onClick={() => {
-                  setDeleteCase(getLabelsforConfirmModal("session"));
+                  setDeleteCase(
+                    getLabelsforConfirmModal("session", handleDeleteSession),
+                  );
                   openConfirm();
                 }}
               />
@@ -93,7 +77,9 @@ const ShopifySettings = ({ session }) => {
                   leftIcon={<IconTrash size={"1rem"} />}
                   title="Delete All Webhooks"
                   onClick={() => {
-                    setDeleteCase(getLabelsforConfirmModal("webhooks"));
+                    setDeleteCase(
+                      getLabelsforConfirmModal("webhooks", handleDeleteWehooks),
+                    );
                     openConfirm();
                   }}
                 />
@@ -128,5 +114,32 @@ const ShopifySettings = ({ session }) => {
     </Stack>
   );
 };
+
+export function getLabelsforConfirmModal(deletionCase, confirmFunc) {
+  switch (deletionCase) {
+    case "webhooks":
+      return {
+        headerTitle: "Delete All Webhook Subcriptions",
+        headerLabel: "Are you sure to delete all webhooks?",
+        deleteQuotion: "All survey schedules will be deleted",
+        confirmFunction: confirmFunc,
+      };
+    case "session":
+      return {
+        headerTitle: "Delete Connection with Shopify",
+        headerLabel:
+          "Are you sure to delete your shopify store connection with RateUp?",
+        deleteQuotion: "All survey schedules and webhooks will be deleted",
+        confirmFunction: confirmFunc,
+      };
+    case "ShopifySurvey":
+      return {
+        headerTitle: "Delete Scheduled Event",
+        headerLabel: "Are you sure to delete?",
+        deleteQuotion: "All upcoming schedules with this event will be deleted",
+        confirmFunction: confirmFunc,
+      };
+  }
+}
 
 export default ShopifySettings;

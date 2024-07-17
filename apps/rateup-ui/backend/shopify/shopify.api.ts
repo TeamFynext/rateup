@@ -51,3 +51,6 @@ export async function updateShopifySurveySchedule({ scheduleId, data }) {
 export async function deleteShopifySession(shop) {
   return await axiosClient.delete(`${SHOPIFY_BASE_URL}/session/${shop}`);
 }
+export async function getShopifySchedules() {
+  return (await axiosClient.get(`${SHOPIFY_BASE_URL}/shopify-schedules`)).data;
+}

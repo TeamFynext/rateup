@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { getProductsFromShopify } from "@/backend/shopify/shopify.api";
 import {
   ActionIcon,
   Badge,
@@ -16,10 +17,14 @@ import {
   IconSettingsFilled,
 } from "@tabler/icons-react";
 
+import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
 
 import { useGetShopifySession } from "../../../../backend/shopify/shopify.query";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../../components/Button/RateupButtons";
 import ConnectShopifyModal from "../../../../components/shopify/ConnectShopifyModal";
 import ShopifySurveySchedules from "../../../../components/shopify/ShopifySurveySchedules";
 
@@ -39,10 +44,16 @@ const Shopify = () => {
   const [connectOpened, { open: openConnect, close: closeConnect }] =
     useDisclosure(false);
   const { data: session } = useGetShopifySession();
+  const [shopifyProducts, setShopifyProducts] = useState([]);
 
   const [activePanel, setActivePanel] = useState<ShopifyActivePanel>(
     ShopifyActivePanel.Home,
   );
+
+  const handleLoadProducts = async () => {
+    const products = await getProductsFromShopify();
+    setShopifyProducts(products ?? []);
+  };
 
   if (!session || !session?.active)
     return (
@@ -62,6 +73,10 @@ const Shopify = () => {
   return (
     <Stack>
       <Group justify="flex-end">
+        <RateupButtonSecondary
+          title="Sync products"
+          onClick={handleLoadProducts}
+        />
         <Tooltip
           label={
             activePanel === ShopifyActivePanel.Settings
@@ -91,8 +106,14 @@ const Shopify = () => {
       </Group>
       <Stack
         display={activePanel == ShopifyActivePanel.Home ? "block" : "none"}
+        gap={"xl"}
       >
-        <ShopifySurveySchedules session={session} />
+        <ShopifySurveySchedules
+          session={session}
+          shopifyProducts={shopifyProducts}
+          setShopifyProducts={setShopifyProducts}
+        />
+        <ShopifySchedules shopifyProducts={shopifyProducts} />
       </Stack>
       <Stack
         display={activePanel == ShopifyActivePanel.Settings ? "block" : "none"}

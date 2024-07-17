@@ -9,6 +9,7 @@ import {
   deleteShopifySession,
   deleteShopifySurveySchedule,
   getProductsFromShopify,
+  getShopifySchedules,
   getShopifySession,
   getShopifySurveySchedulesByOrg,
   registerShopifyWebhooks,
@@ -35,6 +36,13 @@ export const useGetShopifySurveySchedules = () => {
   return useQuery({
     queryKey: ["shopifySurveySchedules"],
     queryFn: getShopifySurveySchedulesByOrg,
+  });
+};
+
+export const useGetShopifySchedules = () => {
+  return useQuery({
+    queryKey: ["shopifySchedules"],
+    queryFn: getShopifySchedules,
   });
 };
 
