@@ -6,18 +6,21 @@ import {
 } from "./shopify.schema";
 import {
   createShopifySession,
-  createShopifySurveySchedule,
+  createShopifySurvey,
   deleteAllWebhooks,
+  deleteMultipleSchedules,
   deleteMultipleSurveySchedules,
   deleteShopifySession,
   deleteShopifySurveySchedule,
   getShopifyAuthUrl,
+  getShopifySchedules,
   getShopifySession,
   getShopifySessionByOrgId,
   getShopifySurveysByOrgId,
   handleShopifyAuthCallback,
   registerShopifyWebhook,
   updateShopifySession,
+  updateShopifySurvey,
   updateShopifySurveySchedule,
 } from "./shopify.service";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -168,7 +171,7 @@ export async function getProductsHandler(
   }
 }
 
-export async function createShopifySurveyScheduleHandler(
+export async function createShopifySurveyHandler(
   request: FastifyRequest<{ Body: shopifySurveyInput }>,
   reply: FastifyReply,
 ) {
@@ -180,7 +183,7 @@ export async function createShopifySurveyScheduleHandler(
       if (!session) throw new Error("You have n't configured your shop access");
       else shop = session.shop;
     }
-    const res = await createShopifySurveySchedule({
+    const res = await createShopifySurvey({
       ...request.body,
       shop,
       orgId,
@@ -196,7 +199,7 @@ export async function createShopifySurveyScheduleHandler(
   }
 }
 
-export async function getShopifySurveyScheduleHandler(
+export async function getShopifySurveysHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -207,6 +210,19 @@ export async function getShopifySurveyScheduleHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function getShopifySchedulesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getShopifySchedules(request.user.orgId);
+    reply.code(200).send(res);
+  } catch (err) {
+    console.error(err);
+    reply.code(500).send(err);
   }
 }
 
@@ -223,7 +239,7 @@ export async function deleteShopifySurveyScheduleHandler(
   }
 }
 
-export async function updateShopifySurveyScheduleHandler(
+export async function updateShopifySurveyHandler(
   request: FastifyRequest<{
     Params: IdParamInput;
     Body: shopifySurveyUpdateInput;
@@ -231,8 +247,7 @@ export async function updateShopifySurveyScheduleHandler(
   reply: FastifyReply,
 ) {
   try {
-    const scheduleId = request.params.id;
-    const res = await updateShopifySurveySchedule(scheduleId, request.body);
+    const res = await updateShopifySurvey(request.params.id, request.body);
     reply.code(200).send(res);
   } catch (e) {
     console.error(e);
@@ -250,5 +265,32 @@ export async function deleteShopifySessionHandler(
   } catch (err) {
     console.error(err);
     reply.code(500).send(err);
+  }
+}
+
+export async function deleteAllShopifySurveyScheduleHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await getShopifySessionByOrgId(request.user.orgId);
+    const res = await deleteMultipleSurveySchedules(session.shop);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteAllShopifyScheduleHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await deleteMultipleSchedules(request.user.orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
   }
 }
