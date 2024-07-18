@@ -5,10 +5,13 @@ import { AxiosError } from "axios";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createShopifySurveySchedule,
+  deleteAllShopifySchedule,
+  deleteAllShopifySurveySchedule,
   deleteAllShopifyWebhooks,
   deleteShopifySession,
   deleteShopifySurveySchedule,
   getProductsFromShopify,
+  getShopifySchedules,
   getShopifySession,
   getShopifySurveySchedulesByOrg,
   registerShopifyWebhooks,
@@ -35,6 +38,13 @@ export const useGetShopifySurveySchedules = () => {
   return useQuery({
     queryKey: ["shopifySurveySchedules"],
     queryFn: getShopifySurveySchedulesByOrg,
+  });
+};
+
+export const useGetShopifySchedules = () => {
+  return useQuery({
+    queryKey: ["shopifySchedules"],
+    queryFn: getShopifySchedules,
   });
 };
 
@@ -88,11 +98,62 @@ export const useDeleteShopifySurveySchedule = () => {
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifySchedules"] });
     },
     onError: (error: AxiosError | any) => {
       showErrorToast(
         `error in deleting schedule: ${error?.response?.data?.error}`,
         "shopify-survey",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useDeleteAllShopifySurveySchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllShopifySurveySchedule,
+    onSuccess: () => {
+      showSuccessToast(
+        "Deleted Succesfully",
+        "shopify-survey",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifySchedules"] });
+    },
+    onError: (error: AxiosError | any) => {
+      showErrorToast(
+        `error in deleting schedule: ${error?.response?.data?.error}`,
+        "shopify-survey",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useDeleteAllShopifySchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAllShopifySchedule,
+    onSuccess: () => {
+      showSuccessToast(
+        "Deleted Succesfully",
+        "shopify-schedule",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifySchedules"] });
+    },
+    onError: (error: AxiosError | any) => {
+      showErrorToast(
+        `error in deleting schedule: ${error?.response?.data?.error}`,
+        "shopify-schedule",
         <IconX />,
         true,
       );
