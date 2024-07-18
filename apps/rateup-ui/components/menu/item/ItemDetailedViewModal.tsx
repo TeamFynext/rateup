@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
 import {
   Box,
@@ -12,17 +14,18 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useState } from "react";
+
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { lexend } from "../../../utils/fonts";
 import { extractVideoId } from "../../../utils/youtube/url";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import { CreditsCard } from "../../Card/CreditsCard";
 import YoutubeEmbed from "../../youtube/YoutubeEmbed";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
 import classes from "./itemDetailedViewModal.module.css";
-import { CreditsCard } from "../../Card/CreditsCard";
+
 interface ItemDetailedViewModalProps {
   item: MenuItem;
   onClose: () => void;
@@ -162,7 +165,12 @@ export function ItemDetailedViewModal({
               {item.name}
             </Text>
             <ScrollAreaAutosize mah={150}>
-              <Text maw={"350px"} px={smallScreen ? "xs" : "lg"}>
+              <Text
+                maw={"350px"}
+                px={smallScreen ? "xs" : "lg"}
+                component="pre"
+                ff={lexend.style.fontFamily}
+              >
                 {item.description}
               </Text>
             </ScrollAreaAutosize>
