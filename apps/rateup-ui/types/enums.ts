@@ -333,6 +333,14 @@ export enum ShopifyEvents {
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
 }
 
+export enum ShopifySendAfter {
+  TwoHour = "2 Hour",
+  FiveHour = "5 Hour",
+  TenHour = "10 hour",
+  OneDay = "1 day",
+  TwoDays = "2 Days",
+}
+
 export enum IntegratedApps {
   shopify = "Shopify",
   googlesheet = "Google Sheet",

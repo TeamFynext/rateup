@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { getProductsFromShopify } from "@/backend/shopify/shopify.api";
 import {
   ActionIcon,
   Alert,
@@ -12,6 +13,8 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
+import { ShopifySendAfter } from "@/types/enums";
+
 import {
   useCreateShopifySurveySchedule,
   useGetProductsFromShopify,
@@ -23,8 +26,12 @@ import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
 import FormModalLayout from "../Modal/FormModalLayout";
 
-const ScheduleSurveyModal = ({ opened, close, session }) => {
-  const [loadProducts, setLoadProducts] = useState(false);
+const ScheduleSurveyModal = ({
+  opened,
+  close,
+  session,
+  setShopifyProducts,
+}) => {
   const [productData, setProductData] = useState([]);
 
   const form = useForm({
@@ -34,6 +41,7 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
       isProductSpecific: false,
       productId: "",
       teamId: "",
+      sendAfter: ShopifySendAfter.TwoHour,
     },
     validate: {
       waTemplateId: isNotEmpty("Template is required"),
@@ -41,10 +49,10 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
       teamId: isNotEmpty("Team is required"),
       productId: (value, values) =>
         values.isProductSpecific && !value ? "Product is required" : null,
+      sendAfter: isNotEmpty("send After is required"),
     },
   });
-  //get product id list
-  const { data: products } = useGetProductsFromShopify(loadProducts);
+
   const createShopifySurveySchedule = useCreateShopifySurveySchedule();
 
   //get wa templates from db
@@ -74,14 +82,14 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
     createShopifySurveySchedule.mutate(form.values, {
       onSuccess: () => {
         form.reset();
-        setLoadProducts(false);
-        setProductData([]);
         close();
       },
     });
   };
 
-  useEffect(() => {
+  const loadShopifyProducts = async () => {
+    const products = await getProductsFromShopify();
+    setShopifyProducts(products ?? []);
     setProductData(
       products
         ? products?.map((product) => ({
@@ -90,9 +98,7 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
           }))
         : [],
     );
-    setLoadProducts(false);
-  }, [products]);
-
+  };
   return (
     <FormModalLayout
       opened={opened}
@@ -138,6 +144,12 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
           data={templatesData}
           {...form.getInputProps("waTemplateId")}
         />
+        <ContainedSelection
+          label={"Send After"}
+          placeholder="Select"
+          data={Object.values(ShopifySendAfter)}
+          {...form.getInputProps("sendAfter")}
+        />
         <Checkbox
           label={"Product Specific"}
           {...form.getInputProps("isProductSpecific")}
@@ -153,7 +165,7 @@ const ScheduleSurveyModal = ({ opened, close, session }) => {
             />
             <TooltipFloating label={"Load products"}>
               <ActionIcon
-                onClick={() => setLoadProducts(true)}
+                onClick={loadShopifyProducts}
                 variant="subtle"
                 mt={"lg"}
               >

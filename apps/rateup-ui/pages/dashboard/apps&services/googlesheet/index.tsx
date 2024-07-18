@@ -1,6 +1,7 @@
-import { Badge, Divider, Group, Stack, Text, Title } from "@mantine/core";
+import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { IconBrandGoogleDrive } from "@tabler/icons-react";
 import {
   useDeleteAuthToken,
   useGetAuthorizationUrl,
@@ -9,6 +10,9 @@ import {
 import { RateupButtonPrimary } from "components/Button/RateupButtons";
 import ConfirmationModal from "components/Modal/ConfirmationModal";
 import { useLocalStorage } from "react-use";
+
+import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const index = () => {
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
@@ -32,65 +36,52 @@ const index = () => {
     });
     deleteAuthTokenMutation.mutate(null, {});
   };
+  if (!googleAuthAccessToken || !googleAuthAccessToken?.isExist)
+    return (
+      <Center h={"80vh"}>
+        <Stack align="center" justify="center">
+          <Image src={"../../images/googlesheeticon.png"} h={100} w={80} />
+          <RateupButtonPrimary
+            title="Sync Google Account"
+            onClick={() => {
+              setCallBackRoute("/dashboard/apps&services/googlesheet");
+              window.open(authUrl);
+            }}
+            leftIcon={<IconBrandGoogleDrive />}
+            size="md"
+          />
+        </Stack>
+      </Center>
+    );
   return (
-    <Stack>
-      {isFetched ? (
-        <>
-          <Title order={3}>Sync with Google Sheet</Title>
-          <Divider />
-          <Stack pb={"md"}>
-            <Group>
-              <Text size="lg" fw={500}>
-                Current Status:
-              </Text>
-              <Badge
-                color={googleAuthAccessToken.isExist ? "green" : "red"}
-                fw={"bold"}
-                variant="light"
-              >
-                {googleAuthAccessToken?.isExist ? "Active" : "Inactive"}
-              </Badge>
-            </Group>
-            <Stack>
-              {!googleAuthAccessToken?.isExist ? (
-                <Stack w={250}>
-                  <RateupButtonPrimary
-                    title="Sync Account"
-                    onClick={() => {
-                      setCallBackRoute("/dashboard/apps&services/googlesheet");
-                      window.open(authUrl);
-                    }}
-                  />
-                </Stack>
-              ) : (
-                <Stack w={320}>
-                  {googleAuthAccessToken?.auth?.userEmail ? (
-                    <>
-                      <Title order={4}> Synced account info</Title>
-                      <Group justify="space-between">
-                        <Text>Email Address:</Text>
-                        <Text>{googleAuthAccessToken.auth.userEmail}</Text>
-                      </Group>
-                    </>
-                  ) : null}
-                  <RateupButtonPrimary
-                    title="Sign out of google synced account"
-                    onClick={alertModalOpen}
-                  />
-                </Stack>
-              )}
-              <ConfirmationModal
-                opened={alertModalOpened}
-                onClose={alertModalClose}
-                headerTitle="Sign out"
-                headerLabel="Are you sure you want to sign out from the synced account?"
-                confirmLabel="Yes"
-                onConfirm={handleSignOutGoogleSync}
+    <Stack p={"xl"}>
+      <Title order={3}>Google Sheet Config</Title>
+      <PaperLayout>
+        <Flex justify="space-between">
+          {googleAuthAccessToken?.auth?.userEmail && (
+            <Stack w={"40%"}>
+              <Title order={4}> Synced account info</Title>
+              <ContainedTextField
+                value={googleAuthAccessToken.auth.userEmail}
+                disabled
+                label={"Email Address"}
               />
             </Stack>
-          </Stack>
-        </>
-      ) : null}
+          )}
+          <RateupButtonPrimary
+            title="Sign out of google synced account"
+            onClick={alertModalOpen}
+          />
+        </Flex>
+        <ConfirmationModal
+          opened={alertModalOpened}
+          onClose={alertModalClose}
+          headerTitle="Sign out"
+          headerLabel="Are you sure you want to sign out from the synced account?"
+          confirmLabel="Yes"
+          onConfirm={handleSignOutGoogleSync}
+        />
+      </PaperLayout>
     </Stack>
   );
 };

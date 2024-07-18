@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import { Tabs } from "@mantine/core";
+
+import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import ProfileSettings from "./UserSettings";
-import OrgSettings from "./OrgSettings";
 import { useUser } from "../../../context/UserContext";
+import { useCheckSession } from "../../../hooks/checkSession";
 import { retrieveRole } from "../../../utils/essential";
 import AccountSettings from "./AccountSettings";
-import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
-import { useCheckSession } from "../../../hooks/checkSession";
-import { useRouter } from "next/router";
-import AdvancedSettings from "./advanced/AdvancedSettings";
+import OrgSettings from "./OrgSettings";
+import ProfileSettings from "./UserSettings";
 
 const Settings = () => {
   const router = useRouter();
@@ -29,7 +30,6 @@ const Settings = () => {
           <Tabs.Tab value="user">User</Tabs.Tab>
           <Tabs.Tab value="organization">Organization</Tabs.Tab>
           <Tabs.Tab value="account">Account</Tabs.Tab>
-          <Tabs.Tab value="advanced">Advanced Settings</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="user">
           <ProfileSettings />
@@ -39,9 +39,6 @@ const Settings = () => {
         </Tabs.Panel>
         <Tabs.Panel value="account">
           <AccountSettings />
-        </Tabs.Panel>
-        <Tabs.Panel value="advanced">
-          <AdvancedSettings />
         </Tabs.Panel>
       </StyledTabs>
     );
