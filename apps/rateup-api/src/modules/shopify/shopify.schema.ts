@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { ShopifyEvents } from "../../types/enums";
+import { ShopifyEvents, ShopifySendAfter } from "../../types/enums";
 
 const shopifySurveySchema = z.object({
   waTemplateId: z.string().uuid(),
@@ -11,6 +11,7 @@ const shopifySurveySchema = z.object({
   event: z.nativeEnum(ShopifyEvents),
   //in case an org have multiple shops
   shop: z.string().optional(),
+  sendAfter: z.nativeEnum(ShopifySendAfter),
 });
 
 const shopifySurveyUpdateSchema = z.object({
@@ -22,6 +23,7 @@ const shopifySurveyUpdateSchema = z.object({
   active: z.boolean().optional(),
   //in case an org have multiple shops
   shop: z.string().optional(),
+  sendAfter: z.nativeEnum(ShopifySendAfter).optional(),
 });
 
 const byIdParamsSchema = z.object({

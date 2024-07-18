@@ -16,7 +16,11 @@ import {
   wait,
 } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { updateMonthlyStat } from "../stats/stats.service";
-import { ShopifyEvents, SubscriptionFeaturePathName } from "../../types/enums";
+import {
+  ShopifyEvents,
+  ShopifySendAfter,
+  SubscriptionFeaturePathName,
+} from "../../types/enums";
 import {
   createTemplateMessage,
   validateSession,
@@ -24,6 +28,8 @@ import {
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { getFlowIdFromTemplateComponents } from "../whatsapp/messageTemplates/wa_templates.utils";
 import { parsePhoneNumber } from "libphonenumber-js";
+import webhookHandlers from "./shopify.handler";
+import dayjs from "dayjs";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -93,16 +99,16 @@ export async function getShopifySessionByOrgId(orgId) {
       orgId,
     },
   });
-  if (session)
-    return {
-      ...session,
-      isActive: undefined,
-      isScopeChanged: undefined,
-      isExpired: undefined,
-      toObject: undefined,
-      equals: undefined,
-      toPropertyArray: undefined,
-    };
+  if (session) if (!shopify.config.scopes.equals(session?.scope)) return null;
+  return {
+    ...session,
+    isActive: undefined,
+    isScopeChanged: undefined,
+    isExpired: undefined,
+    toObject: undefined,
+    equals: undefined,
+    toPropertyArray: undefined,
+  };
   return null;
 }
 
@@ -126,6 +132,7 @@ export async function deleteShopifySession(shop) {
 }
 
 export async function registerShopifyWebhook(session: Session) {
+  shopify.webhooks.addHandlers(webhookHandlers);
   const response = await shopify.webhooks.register({
     session,
   });
@@ -140,7 +147,7 @@ export async function registerShopifyWebhook(session: Session) {
   }
 }
 
-export async function createShopifySurveySchedule(data) {
+export async function createShopifySurvey(data) {
   return await prisma.shopifySurvey.create({
     data,
   });
@@ -153,6 +160,30 @@ export async function getShopipfySurveyByEvent(orgId, event, shop) {
         orgId,
         event,
         shop,
+      },
+      active: true,
+    },
+  });
+}
+
+export async function getShopifySchedules(orgId) {
+  return await prisma.shopifySurveySchedule.findMany({
+    where: {
+      shopifySurvey: {
+        orgId,
+      },
+    },
+    include: {
+      shopifySurvey: {
+        include: {
+          waTemplate: true,
+          team: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       },
     },
   });
@@ -178,12 +209,14 @@ export async function getShopifySurveysByOrgId(orgId) {
   });
 }
 
-export async function sendTemplateOnShopifyEvent(
+export async function createScheduleOnShopifyEvent(
   customerPhone: string,
   event: ShopifyEvents,
   session,
   productIds: string[],
+  webhookId: string,
 ) {
+  log.info(`checking survey for shopify event ${event}`);
   const phone = parsePhoneNumber(customerPhone, "IN");
   if (phone.isValid() === false) {
     log.trace("Invalid phone number");
@@ -197,22 +230,56 @@ export async function sendTemplateOnShopifyEvent(
 
   const phoneWithoutPlus = phone.countryCallingCode + phone.nationalNumber;
   if (shopifySurvey && phoneWithoutPlus) {
+    const data = {
+      scheduleTime: getScheduledTime(shopifySurvey.sendAfter),
+      phone: phoneWithoutPlus,
+      shopifySurveyId: shopifySurvey.id,
+      webhookId,
+    };
     if (shopifySurvey.isProductSpecific) {
       if (productIds.includes(shopifySurvey.productId))
-        await sendWhatsAppTemplateToCustomer(
-          session.orgId,
-          phoneWithoutPlus,
-          shopifySurvey.waTemplateId,
-          shopifySurvey.teamId,
-        );
-      else return null;
-    } else
-      await sendWhatsAppTemplateToCustomer(
+        await createShopifySurveySchedule(data);
+    } else await createShopifySurveySchedule(data);
+  } else {
+    if (!shopifySurvey) log.trace(`No Survey schedule found`);
+    else if (!phoneWithoutPlus) log.trace(`No customer phone number found`);
+  }
+}
+
+export async function sendShopifySurveyCronAction() {
+  const currentTime = new Date();
+  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000);
+
+  const shopifySchedules = await prisma.shopifySurveySchedule.findMany({
+    where: {
+      scheduledTime: {
+        lte: fiveMinutesLater,
+      },
+      status: "SCHEDULED",
+    },
+    include: {
+      shopifySurvey: true,
+    },
+  });
+
+  if (shopifySchedules?.length) {
+    for (const schedule of shopifySchedules) {
+      const shop = schedule.shopifySurvey.shop;
+      const session = await getShopifySession(shop);
+      const res = await sendWhatsAppTemplateToCustomer(
         session.orgId,
-        phoneWithoutPlus,
-        shopifySurvey.waTemplateId,
-        shopifySurvey.teamId,
+        schedule.phone,
+        schedule.shopifySurvey.waTemplateId,
+        schedule.shopifySurvey.teamId,
       );
+      await updateShopifySurveySchedule(schedule.id, {
+        status: res
+          ? res.status
+            ? "SENT"
+            : `FAILED: ${res?.message}`
+          : "FAILED",
+      });
+    }
   }
 }
 
@@ -299,19 +366,10 @@ export async function sendWhatsAppTemplateToCustomer(
       },
       components: templateComponents,
     };
-
     const templateMessage = createTemplateMessage(phone, templateQuery);
     await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50);
-    sendMessage(orgId, templateMessage)
-      .then(() => {
-        log.trace("Template sent to customer");
-      })
-      .catch((e) => {
-        log.error(e);
-        log.error("Error sending template to customer");
-      });
-    return true;
+    return await sendMessage(orgId, templateMessage);
   } catch (e) {
     console.error(e);
     // log.error(e);
@@ -327,11 +385,94 @@ export async function deleteShopifySurveySchedule(id) {
   });
 }
 
-export async function updateShopifySurveySchedule(id, data) {
+export async function updateShopifySurvey(id, data) {
   return await prisma.shopifySurvey.update({
     where: {
       id,
     },
     data,
   });
+}
+
+export async function deleteMultipleSurveySchedules(shop) {
+  return await prisma.shopifySurvey.deleteMany({
+    where: {
+      shop,
+    },
+  });
+}
+
+export async function deleteMultipleSchedules(orgId) {
+  return await prisma.shopifySurveySchedule.deleteMany({
+    where: {
+      shopifySurvey: {
+        orgId,
+      },
+    },
+  });
+}
+
+export async function deleteAllWebhooks(session) {
+  const webhookslist = await shopify.rest.Webhook.all({ session });
+  await Promise.all(
+    webhookslist.data.map(async (webhook) => {
+      const response = await shopify.rest.Webhook.delete({
+        session,
+        id: webhook.id,
+      });
+    }),
+  );
+}
+
+export async function createShopifySurveySchedule(data: {
+  scheduleTime: string;
+  phone: string;
+  shopifySurveyId: string;
+  webhookId: string;
+}) {
+  try {
+    await prisma.shopifySurveySchedule.create({
+      data: {
+        scheduledTime: data.scheduleTime,
+        phone: data.phone,
+        shopifySurveyId: data.shopifySurveyId,
+        webhookId: data.webhookId,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+
+export async function updateShopifySurveySchedule(id, data) {
+  await prisma.shopifySurveySchedule.update({
+    where: {
+      id,
+    },
+    data,
+  });
+}
+
+function getScheduledTime(sendAfter) {
+  const currentTime = dayjs();
+  let scheduledTime = dayjs();
+  switch (sendAfter) {
+    case ShopifySendAfter.TwoHour:
+      scheduledTime = currentTime.add(2, "hour");
+      break;
+    case ShopifySendAfter.FiveHour:
+      scheduledTime = currentTime.add(5, "hour");
+      break;
+    case ShopifySendAfter.TenHour:
+      scheduledTime = currentTime.add(10, "hour");
+      break;
+    case ShopifySendAfter.OneDay:
+      scheduledTime = currentTime.add(1, "day");
+      break;
+    case ShopifySendAfter.OneDay:
+      scheduledTime = currentTime.add(2, "days");
+      break;
+  }
+  return scheduledTime.toISOString();
 }

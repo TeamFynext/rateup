@@ -1193,6 +1193,19 @@ model ShopifySurvey {
   teamId            String      @db.Uuid
   waTemplate        WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   waTemplateId      String?     @db.Uuid
+  sendAfter         String?
+  schedules         ShopifySurveySchedule[]
 
   @@unique([orgId, event, shop], name: "orgid_event_shop_unique")
+}
+
+model ShopifySurveySchedule {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduledTime    DateTime
+  phone            String
+  shopifySurveyId  String     @db.Uuid
+  shopifySurvey    ShopifySurvey  @relation(fields: [shopifySurveyId], references: [id], onDelete: Cascade)
+  webhookId        String?    @unique
+  status           String?    @default("SCHEDULED")
+  createdAt        DateTime   @default(now())  
 }
