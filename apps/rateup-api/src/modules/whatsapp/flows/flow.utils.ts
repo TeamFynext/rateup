@@ -137,7 +137,11 @@ export function generateQuestionResponsesFromFlowResponse({
   );
   let responses = [];
   for (const [payloadName, value] of Object.entries(flowResponses)) {
-    if (payloadName === "flow_token") continue;
+    if (
+      payloadName === "flow_token" ||
+      payloadName === "wa_flow_response_params"
+    )
+      continue;
     if (!value) {
       log.trace(
         "Empty value for payload %s. Question must have been skipped",

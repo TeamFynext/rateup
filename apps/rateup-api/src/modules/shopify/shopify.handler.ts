@@ -1,8 +1,8 @@
 import "@shopify/shopify-api/adapters/node";
 import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
 import {
+  createScheduleOnShopifyEvent,
   getShopifySession,
-  sendTemplateOnShopifyEvent,
   updateShopifySession,
 } from "./shopify.service";
 import { ShopifyEvents } from "../../types/enums";
@@ -28,12 +28,14 @@ async function draftOrderCreateHandler(
   const productIds = webhookRequestBodyJson.line_items?.map(
     (products) => products?.product_id?.toString(),
   );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.DRAFT_ORDERS_CREATE,
-    session,
-    productIds,
-  );
+  if (customerPhone)
+    await createScheduleOnShopifyEvent(
+      customerPhone,
+      ShopifyEvents.DRAFT_ORDERS_CREATE,
+      session,
+      productIds,
+      webhookId,
+    );
 }
 
 export async function orderCreateHandler(
@@ -55,12 +57,14 @@ export async function orderCreateHandler(
   const productIds = webhookRequestBodyJson.line_items?.map(
     (products) => products?.product_id?.toString(),
   );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.ORDERS_CREATE,
-    session,
-    productIds,
-  );
+  if (customerPhone)
+    await createScheduleOnShopifyEvent(
+      customerPhone,
+      ShopifyEvents.ORDERS_CREATE,
+      session,
+      productIds,
+      webhookId,
+    );
 }
 
 export async function appUninstalledHandler(
@@ -94,12 +98,14 @@ export async function orderCancelledHandler(
   const productIds = webhookRequestBodyJson.line_items?.map(
     (products) => products?.product_id?.toString(),
   );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.ORDERS_CANCELLED,
-    session,
-    productIds,
-  );
+  if (customerPhone)
+    await createScheduleOnShopifyEvent(
+      customerPhone,
+      ShopifyEvents.ORDERS_CREATE,
+      session,
+      productIds,
+      webhookId,
+    );
 }
 
 export async function orderFulFilledHandler(
@@ -121,12 +127,14 @@ export async function orderFulFilledHandler(
   const productIds = webhookRequestBodyJson.line_items?.map(
     (products) => products?.product_id?.toString(),
   );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.ORDERS_FULFILLED,
-    session,
-    productIds,
-  );
+  if (customerPhone)
+    await createScheduleOnShopifyEvent(
+      customerPhone,
+      ShopifyEvents.ORDERS_CREATE,
+      session,
+      productIds,
+      webhookId,
+    );
 }
 
 export async function orderPaidHandler(
@@ -148,12 +156,14 @@ export async function orderPaidHandler(
   const productIds = webhookRequestBodyJson.line_items?.map(
     (products) => products?.product_id?.toString(),
   );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.ORDERS_PAID,
-    session,
-    productIds,
-  );
+  if (customerPhone)
+    await createScheduleOnShopifyEvent(
+      customerPhone,
+      ShopifyEvents.ORDERS_CREATE,
+      session,
+      productIds,
+      webhookId,
+    );
 }
 export async function orderPartiallyFulfilledHandler(
   topic: string,
@@ -174,12 +184,14 @@ export async function orderPartiallyFulfilledHandler(
   const productIds = webhookRequestBodyJson.line_items?.map(
     (products) => products?.product_id?.toString(),
   );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.ORDERS_PARTIALLY_FULFILLED,
-    session,
-    productIds,
-  );
+  if (customerPhone)
+    await createScheduleOnShopifyEvent(
+      customerPhone,
+      ShopifyEvents.ORDERS_CREATE,
+      session,
+      productIds,
+      webhookId,
+    );
 }
 export async function fulfillmentOrderCancelledHandler(
   topic: string,
@@ -192,20 +204,6 @@ export async function fulfillmentOrderCancelledHandler(
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const session = await getShopifySession(shop);
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
-  );
-  await sendTemplateOnShopifyEvent(
-    customerPhone,
-    ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
-    session,
-    productIds,
-  );
 }
 
 //callbackroutes
