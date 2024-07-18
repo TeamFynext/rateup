@@ -8,6 +8,7 @@ import {
   createShopifySession,
   createShopifySurvey,
   deleteAllWebhooks,
+  deleteMultipleSchedules,
   deleteMultipleSurveySchedules,
   deleteShopifySession,
   deleteShopifySurveySchedule,
@@ -264,5 +265,32 @@ export async function deleteShopifySessionHandler(
   } catch (err) {
     console.error(err);
     reply.code(500).send(err);
+  }
+}
+
+export async function deleteAllShopifySurveyScheduleHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await getShopifySessionByOrgId(request.user.orgId);
+    const res = await deleteMultipleSurveySchedules(session.shop);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteAllShopifyScheduleHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await deleteMultipleSchedules(request.user.orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
   }
 }

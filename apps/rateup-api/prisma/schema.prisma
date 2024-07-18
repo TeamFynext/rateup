@@ -1207,5 +1207,5 @@ model ShopifySurveySchedule {
   shopifySurvey    ShopifySurvey  @relation(fields: [shopifySurveyId], references: [id], onDelete: Cascade)
   webhookId        String?    @unique
   status           String?    @default("SCHEDULED")
-  createdAt        DateTime   @default(now())    
+  createdAt        DateTime   @default(now())  
 }

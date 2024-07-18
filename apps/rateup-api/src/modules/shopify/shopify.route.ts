@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 import {
   createShopifySurveyHandler,
+  deleteAllShopifyScheduleHandler,
+  deleteAllShopifySurveyScheduleHandler,
   deleteAllWebhookHandler,
   deleteShopifySessionHandler,
   deleteShopifySurveyScheduleHandler,
@@ -136,6 +138,22 @@ export async function shopifyRoutes(server: FastifyInstance) {
       },
     },
     deleteShopifySurveyScheduleHandler,
+  );
+
+  server.delete(
+    "/shopify-survey/all",
+    {
+      preHandler: [checkSession],
+    },
+    deleteAllShopifySurveyScheduleHandler,
+  );
+
+  server.delete(
+    "/shopify-schedules/all",
+    {
+      preHandler: [checkSession],
+    },
+    deleteAllShopifyScheduleHandler,
   );
 
   server.get(

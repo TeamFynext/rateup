@@ -402,6 +402,16 @@ export async function deleteMultipleSurveySchedules(shop) {
   });
 }
 
+export async function deleteMultipleSchedules(orgId) {
+  return await prisma.shopifySurveySchedule.deleteMany({
+    where: {
+      shopifySurvey: {
+        orgId,
+      },
+    },
+  });
+}
+
 export async function deleteAllWebhooks(session) {
   const webhookslist = await shopify.rest.Webhook.all({ session });
   await Promise.all(
@@ -421,7 +431,6 @@ export async function createShopifySurveySchedule(data: {
   webhookId: string;
 }) {
   try {
-    console.log("data", data);
     await prisma.shopifySurveySchedule.create({
       data: {
         scheduledTime: data.scheduleTime,
