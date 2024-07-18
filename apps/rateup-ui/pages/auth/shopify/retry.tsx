@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -9,7 +10,14 @@ import { API_URL } from "utils/constants";
 
 const ShopifyCallbackRetry = () => {
   const router = useRouter();
-  const { shop } = router.query;
+  const { shop } = router.query as { shop: string };
+
+  useEffect(() => {
+    const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
+    if (!shop || !regex.test(shop)) {
+      router.push("/login");
+    }
+  }, [shop]);
   return (
     <Center h={"100vh"}>
       <PaperLayout w={400} p={"xl"}>

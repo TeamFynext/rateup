@@ -2,6 +2,11 @@ import { useState } from "react";
 
 import { getProductsFromShopify } from "@/backend/shopify/shopify.api";
 import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "@/utils/notifications";
+import {
   ActionIcon,
   Badge,
   Center,
@@ -12,9 +17,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+  IconCheck,
   IconHomeFilled,
   IconPlus,
   IconSettingsFilled,
+  IconX,
 } from "@tabler/icons-react";
 
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
@@ -51,8 +58,24 @@ const Shopify = () => {
   );
 
   const handleLoadProducts = async () => {
-    const products = await getProductsFromShopify();
-    setShopifyProducts(products ?? []);
+    try {
+      showLoadingToast("Syncing Shopify products", "shopify-products", true);
+      const products = await getProductsFromShopify();
+      setShopifyProducts(products ?? []);
+      showSuccessToast(
+        "Products loaded successfully",
+        "shopify-products",
+        <IconCheck />,
+        true,
+      );
+    } catch (e) {
+      showErrorToast(
+        "Product syncing failed",
+        "shopify-products",
+        <IconX />,
+        true,
+      );
+    }
   };
 
   if (!session || !session?.active)

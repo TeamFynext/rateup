@@ -161,12 +161,12 @@ const ActionMenu = ({ selectedRow }) => {
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
-        confirmLabel="Delete"
+        confirmLabel={"Delete"}
         headerTitle={deleteCase?.headerTitle}
         headerLabel={deleteCase?.headerLabel}
         onClose={close}
         opened={opened}
-        onConfirm={deleteCase?.confirmFunction}
+        onConfirm={() => deleteCase?.confirmFunction(selectedRow)}
         closeLabel="Cancel"
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}

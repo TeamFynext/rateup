@@ -1,3 +1,6 @@
+import { useCallback, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Box,
@@ -23,8 +26,8 @@ import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { useRouter } from "next/router";
-import { useCallback, useContext, useEffect, useState } from "react";
+
+import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import {
@@ -48,25 +51,24 @@ import { ContactQuestions, docsPath } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
+import InfoButton from "../../Button/InfoButton";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import RefreshButton from "../../Button/RefreshButton";
 import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import RateupLoader from "../../Loaders/RateupLoader";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import NothingFound from "../../NothingFound/NothingFound";
-import TanstackTable from "../../Table/TanstackTable";
-import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import {
   ContainedMultiSelect,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
+import RateupLoader from "../../Loaders/RateupLoader";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import NothingFound from "../../NothingFound/NothingFound";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import TanstackTable from "../../Table/TanstackTable";
+import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
-import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
-import InfoButton from "../../Button/InfoButton";
-import RefreshButton from "../../Button/RefreshButton";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -276,7 +278,7 @@ const Responses = ({
     setIsSyncing(true);
     if (!googleAuthAccessToken.isExist) {
       setIsSyncing(false);
-      setAlertMsg("Please sync your Google account in the settings.");
+      setAlertMsg("Please sync your Google account in the App & Services.");
       redirectModalOpen();
     } else {
       syncResponseToGoogleSheet.mutate(
@@ -296,7 +298,7 @@ const Responses = ({
             console.log(error);
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
-                "Your access has been revoked. Please sign out and sign in again in the settings",
+                "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
               );
               redirectModalOpen();
             } else {
@@ -435,9 +437,9 @@ const Responses = ({
                     onClose={redirectModalClose}
                     headerTitle="Sync Google Sheet"
                     headerLabel={alertMsg}
-                    confirmLabel="Go to Settings"
+                    confirmLabel="Continue"
                     onConfirm={() => {
-                      router.push("/dashboard/settings?activeTab=advanced");
+                      router.push("/dashboard/apps&services/googlesheet");
                     }}
                   />
                 </Stack>
