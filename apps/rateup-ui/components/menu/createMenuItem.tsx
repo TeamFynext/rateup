@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import {
   Box,
   Button,
@@ -12,35 +13,37 @@ import {
   Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+
 import {
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
 } from "../../backend/menu/item/mItem.query";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { MenuItemPriceType } from "../../types/enums";
+import {
+  fallbackImage,
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+} from "../../utils/constants";
 import {
   deleteUploadedFiles,
   getImageValue,
   uploadFile,
 } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
-import { MenuItemPriceType } from "../../types/enums";
-import FormModalLayout from "../Modal/FormModalLayout";
+import { CreditsCard } from "../Card/CreditsCard";
 import {
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { useDisclosure } from "@mantine/hooks";
+import FormModalLayout from "../Modal/FormModalLayout";
 import { ImageCropModal } from "../Modal/ImageCropModal";
-import { UnsplashModal } from "../Modal/UnsplashModal";
 import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal";
-import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-  fallbackImage,
-} from "../../utils/constants";
-import { PriceSection } from "./item/PriceSection";
+import { UnsplashModal } from "../Modal/UnsplashModal";
 import { FoodLabelSelector } from "./combobox/foodLabelSelector";
-import { CreditsCard } from "../Card/CreditsCard";
+import { PriceSection } from "./item/PriceSection";
+
 interface CreateMenuItemModalProps {
   readonly opened: boolean;
   readonly close: () => void;
@@ -328,7 +331,7 @@ export function CreateMenuItemModal({
           imageName={selectedInputImage.name}
           handleCropImageSave={handleCropImageSave}
           image={selectedInputImage.url}
-          aspect={4 / 3}
+          aspect={3 / 2}
         />
         <LoadingOverlay
           visible={
@@ -341,7 +344,7 @@ export function CreateMenuItemModal({
           loaderProps={{ type: "bars" }}
         />
         <Stack style={{ flex: 1 }}>
-          <Group>
+          <Group mr={"xs"}>
             <Text>Add Images (max 3)</Text>
             {form?.values?.images?.length > 0 ? (
               <Box>
@@ -364,7 +367,7 @@ export function CreateMenuItemModal({
                     {...imageProps}
                     alt="image of menu"
                     style={{
-                      aspectRatio: 4 / 3,
+                      aspectRatio: 3 / 2,
                     }}
                     w={"100%"}
                   />
@@ -387,7 +390,7 @@ export function CreateMenuItemModal({
                 {...imageProps}
                 alt="placholder image of menu"
                 style={{
-                  aspectRatio: 4 / 3,
+                  aspectRatio: 3 / 2,
                 }}
               />
             )}

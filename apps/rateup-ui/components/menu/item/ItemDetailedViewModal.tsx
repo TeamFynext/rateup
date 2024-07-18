@@ -1,8 +1,13 @@
 import { useState } from "react";
 
+import { fallbackImage } from "@/utils/constants";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { lexend } from "@/utils/fonts";
+import { extractVideoId } from "@/utils/youtube/url";
 import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
 import {
   Box,
+  Card,
   Flex,
   Group,
   Image,
@@ -12,19 +17,16 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
-import { fallbackImage } from "../../../utils/constants";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { lexend } from "../../../utils/fonts";
-import { extractVideoId } from "../../../utils/youtube/url";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import { CreditsCard } from "../../Card/CreditsCard";
-import YoutubeEmbed from "../../youtube/YoutubeEmbed";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { CreditsCard } from "@/components/Card/CreditsCard";
+import YoutubeEmbed from "@/components/youtube/YoutubeEmbed";
+
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
-import classes from "./itemDetailedViewModal.module.css";
+import classes from "./BadgeCard.module.css";
+import styles from "./itemDetailedViewModal.module.css";
 
 interface ItemDetailedViewModalProps {
   item: MenuItem;
@@ -37,12 +39,18 @@ export function ItemDetailedViewModal({
   currency = "0",
 }: Readonly<ItemDetailedViewModalProps>) {
   const TRANSITION_DURATION = 200;
-  const smallScreen = useMediaQuery("(max-width: 30em)");
   const [alleryView, setAlleryView] = useState(false);
   const [embla, setEmbla] = useState<Embla | null>(null);
+  let foodLabelLength = item?.foodLabels?.length;
 
   useAnimationOffsetEffect(embla, TRANSITION_DURATION);
 
+  const imageStyle = {
+    aspectRatio: 3 / 2,
+    borderRadius: "12px",
+    border: "unset",
+    width: "100%",
+  };
   const imageSlides = item?.images?.map((url: string) => (
     <Carousel.Slide key={url}>
       <CreditsCard
@@ -59,7 +67,7 @@ export function ItemDetailedViewModal({
             true,
             item?.unsplashImage?.find((data) => data === url)?.length > 0,
           )}
-          h={"clamp(220px, 162.864px + 9.524vw, 300px)"}
+          className={styles.image}
           alt="menu item image"
         />
       </CreditsCard>
@@ -68,16 +76,7 @@ export function ItemDetailedViewModal({
 
   const videoSlides = item?.videoUrl && (
     <Carousel.Slide>
-      <YoutubeEmbed
-        embedId={extractVideoId(item?.videoUrl)}
-        sx={{
-          aspectRatio: "4 / 3",
-          borderRadius: "12px",
-          border: "unset",
-          height: "100%",
-          width: "100%",
-        }}
-      />
+      <YoutubeEmbed embedId={extractVideoId(item?.videoUrl)} sx={imageStyle} />
     </Carousel.Slide>
   );
   const count = item?.images?.length + (item?.videoUrl ? 1 : 0);
@@ -87,98 +86,76 @@ export function ItemDetailedViewModal({
       centered
       opened={!!item}
       onClose={onClose}
-      size={"auto"}
-      classNames={{
-        content: classes.content,
-        title: classes.title,
-        close: classes.close,
-      }}
-      closeButtonProps={{ iconSize: "22px" }}
+      size={"sm"}
+      classNames={styles}
       ff={lexend.style.fontFamily}
-      title={
-        alleryView && (
-          <IconArrowLeft
-            size={22}
-            color="var(--grey-color-4)"
-            onClick={() => setAlleryView(false)}
-          />
-        )
-      }
       scrollAreaComponent={ScrollArea.Autosize}
+      radius={"lg"}
     >
-      {alleryView ? (
-        <Box w={"clamp(220px, 163.6624px + 15.0235vw, 380px)"} h={"500px"}>
-          {item?.foodLabels?.length > 0 && (
-            <>
-              <Text>Allergen Info</Text>
-              <Flex gap={"sm"} wrap={"wrap"} mt={"sm"}>
-                <MenuFoodLabelBadge
-                  foodLabels={item?.foodLabels ?? []}
-                  fz={9}
-                />
-              </Flex>
-            </>
-          )}
-        </Box>
-      ) : (
-        <Stack align="center" c={"var(--text-color-sp)"} gap={0}>
-          <Box
-            style={{
-              maxWidth: smallScreen
-                ? "80vw"
-                : "clamp(220px, 163.6624px + 15.0235vw, 380px)",
-              height: "clamp(220px, 162.864px + 9.524vw, 300px)",
-              overflow: "clip",
-            }}
-          >
-            {item?.images?.length > 0 || item?.videoUrl ? (
-              <Carousel
-                withIndicators={count > 1}
-                withControls={count > 1}
-                getEmblaApi={setEmbla}
-              >
-                {videoSlides}
-                {imageSlides}
-              </Carousel>
-            ) : (
-              <Image
-                style={{
-                  aspectRatio: "4 / 3",
-                }}
-                mih={220}
-                radius={"sm"}
-                src={fallbackImage}
-                fallbackSrc={fallbackImage}
-                alt="Menu Item Images"
-              />
-            )}
-          </Box>
-
-          <Box maw={"350px"} w={"100%"}>
-            <Text
-              fz="clamp(18px, -268px + 20vw, 20px)"
-              fw={600}
-              tt={"capitalize"}
-              ta={"center"}
-              my={"xs"}
+      <Card radius="md" className={classes.card}>
+        <Card.Section>
+          {item?.images?.length > 0 || item?.videoUrl ? (
+            <Carousel
+              withIndicators={count > 1}
+              withControls={count > 1}
+              getEmblaApi={setEmbla}
+              slideGap={"lg"}
             >
-              {item.name}
-            </Text>
-            <ScrollAreaAutosize mah={150}>
-              <Text
-                maw={"350px"}
-                px={smallScreen ? "xs" : "lg"}
-                component="pre"
-                ff={lexend.style.fontFamily}
-              >
-                {item.description}
+              {videoSlides}
+              {imageSlides}
+            </Carousel>
+          ) : (
+            <Image
+              className={styles.image}
+              radius={"sm"}
+              src={fallbackImage}
+              alt="Menu Item Images"
+            />
+          )}
+        </Card.Section>
+        {alleryView ? (
+          item?.foodLabels?.length > 0 && (
+            <Card.Section className={classes.section} mt="md">
+              <Text className={classes.label} c="dimmed">
+                Allergen Info
               </Text>
-            </ScrollAreaAutosize>
-            <Stack gap={0} px={smallScreen ? "xs" : "lg"} py={"sm"}>
-              {item?.foodLabels?.length > 0 && (
-                <>
-                  <Text>Allergen Info</Text>
-                  <Flex align={"center"} gap={0} w={"100%"}>
+              <Stack gap={0} justify="space-between" mih={230}>
+                <Flex gap={"sm"} wrap={"wrap"} my={"sm"}>
+                  <MenuFoodLabelBadge
+                    foodLabels={item?.foodLabels ?? []}
+                    fz={9}
+                  />
+                </Flex>
+                <RateupButtonPrimary
+                  fullWidth
+                  onClick={() => setAlleryView(false)}
+                  title="Go Back"
+                  leftIcon={<IconArrowLeft />}
+                />
+              </Stack>
+            </Card.Section>
+          )
+        ) : (
+          <>
+            <Card.Section className={classes.section} mt="sm">
+              <Text className={styles.title}>{item.name}</Text>
+              <ScrollAreaAutosize mah={150} my="xs">
+                <Text
+                  fz="sm"
+                  component="pre"
+                  className={styles.preWrap}
+                  ff={lexend.style.fontFamily}
+                >
+                  {item.description}
+                </Text>
+              </ScrollAreaAutosize>
+              {foodLabelLength > 0 && (
+                <Box>
+                  <Text className={classes.label} c="dimmed">
+                    Allergen Info
+                  </Text>
+
+                  <Flex align={"center"} gap={0} w={"100%"} mt={5}>
                     <Group
                       maw={"calc(100% - 80px"}
                       style={{
@@ -192,7 +169,7 @@ export function ItemDetailedViewModal({
                         fz={9}
                       />
                     </Group>
-                    {item?.foodLabels?.length > 1 && (
+                    {foodLabelLength > 1 && (
                       <RateupButtonPrimary
                         title="Show All"
                         sx={{
@@ -204,44 +181,46 @@ export function ItemDetailedViewModal({
                       />
                     )}
                   </Flex>
-                </>
+                </Box>
               )}
-            </Stack>
-          </Box>
-          <Group justify="space-evenly" gap={"sm"}>
-            {item.price.variants?.length > 0 ? (
-              item.price.variants.map((varient, index) => (
-                <Stack align="center" gap={"0px"} key={index}>
-                  <Text
-                    fz={"clamp(14px, -415.008px + 30vw, 17.008px)"}
-                    tt={"capitalize"}
-                    fw={500}
-                  >
-                    {varient.name}
-                  </Text>
-                  <Text fz="clamp(16px, -270px + 20vw, 18px)" fw={500}>
-                    {varient?.price && (
+            </Card.Section>
+            <Group justify="space-evenly">
+              {item.price.variants?.length > 0 ? (
+                item.price.variants.map((varient, index) => (
+                  <Stack align="center" gap={"0px"} key={index}>
+                    <Text
+                      fz={"clamp(14px, -415.008px + 30vw, 17.008px)"}
+                      tt={"capitalize"}
+                      fw={500}
+                    >
+                      {varient.name}
+                    </Text>
+                    <Text className={styles.h1}>
+                      {varient?.price && (
+                        <>
+                          {currencyLabel[currency]?.symbol}
+                          {varient.price}
+                        </>
+                      )}
+                    </Text>
+                  </Stack>
+                ))
+              ) : (
+                <Stack align="center" gap={"0px"}>
+                  <Text className={styles.h1}>
+                    {item?.price?.price && (
                       <>
                         {currencyLabel[currency]?.symbol}
-                        {varient.price}
+                        {item?.price?.price}
                       </>
                     )}
                   </Text>
                 </Stack>
-              ))
-            ) : (
-              <Text fz="clamp(16px, -270px + 20vw, 18px)" mt={"md"} fw={500}>
-                {item?.price?.price && (
-                  <>
-                    {currencyLabel[currency]?.symbol}
-                    {item?.price?.price}
-                  </>
-                )}
-              </Text>
-            )}
-          </Group>
-        </Stack>
-      )}
+              )}
+            </Group>
+          </>
+        )}
+      </Card>
     </Modal>
   );
 }

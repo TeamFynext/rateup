@@ -16,9 +16,9 @@ import {
   IconBrandWhatsapp,
   IconCategory,
   IconChevronUp,
+  IconLink,
   IconMessage,
   IconPhone,
-  IconSettings,
 } from "@tabler/icons-react";
 
 import { MenuButtons } from "@/types/enums";
@@ -171,7 +171,7 @@ const customButton = (name) => {
     case "feedback":
       return <IconMessage />;
     default:
-      return <IconSettings />;
+      return <IconLink />;
   }
 };
 

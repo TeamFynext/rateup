@@ -10,10 +10,19 @@ import { isCategoryActive } from "@/utils/dateTime";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import { lexend } from "@/utils/fonts";
 import { Carousel } from "@mantine/carousel";
-import { Image, Paper, ScrollAreaAutosize, Stack, Text } from "@mantine/core";
+import {
+  Container,
+  Image,
+  Paper,
+  ScrollAreaAutosize,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { getCookie, setCookie } from "cookies-next";
 import Autoplay from "embla-carousel-autoplay";
+import AutoSizer from "react-virtualized-auto-sizer";
+import { FixedSizeList } from "react-window";
 
 import { CreditsCard } from "@/components/Card/CreditsCard";
 import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay";
@@ -21,6 +30,7 @@ import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewMo
 import NothingFound from "@/components/NothingFound/NothingFound";
 
 import FloatingMenuMain from "./FloatingMenu";
+import styles from "./gradientAnimation.module.css";
 
 interface ServerSidePropsContext {
   req: NextApiRequest;
@@ -65,7 +75,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
         </Text>
       </Stack>
     );
-  const backgroundImageBorderRadius = "22px";
   const backgroundImage = largeScreen
     ? fullMenu?.menuLanding?.backgroundImage
     : fullMenu?.menuLanding?.mobileBackgroundImage;
@@ -112,6 +121,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
         ff={lexend.style.fontFamily}
         maw={largeScreen ? "2440px" : "768px"}
         w={"100vw"}
+        mx={"auto"}
       >
         {menuBanner?.length > 0 ? (
           <Carousel
@@ -146,10 +156,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   src={
                     value?.image && encodeURI(getFileUrlFromKey(value?.image))
                   }
-                  style={{
-                    borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-                    backgroundColor: "var(--orange-400)",
-                  }}
+                  className={styles.gradient}
                   bgp={"center"}
                   bgsz={"cover"}
                   h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
@@ -195,10 +202,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                     ],
                   )
                 }
-                style={{
-                  borderRadius: `0 0 ${backgroundImageBorderRadius} ${backgroundImageBorderRadius}`,
-                  backgroundColor: "var(--orange-400)",
-                }}
+                className={styles.gradient}
                 fallbackSrc={backgroundImageFallback}
                 alt="banner image of menu"
                 h={largeScreen ? "33dvh" : "25dvh"}
@@ -207,7 +211,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             </picture>
           </CreditsCard>
         )}
-        <Stack px={"5.8vw"} mih={"45vh"} mt={"sm"}>
+        <Container size={"90vw"} mih={"45vh"} mt={"sm"} mb={70}>
           {filteredData?.length > 0 ? (
             filteredData?.map((c) => (
               <CategoryDisplay
@@ -223,7 +227,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
           ) : (
             <NothingFound text="No Categories Found" />
           )}
-        </Stack>
+        </Container>
         {selectedItem && (
           <ItemDetailedViewModal
             item={selectedItem}
