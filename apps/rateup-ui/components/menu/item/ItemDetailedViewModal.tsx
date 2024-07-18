@@ -139,7 +139,7 @@ export function ItemDetailedViewModal({
           <>
             <Card.Section className={classes.section} mt="sm">
               <Text className={styles.title}>{item.name}</Text>
-              <ScrollAreaAutosize mah={150} my="xs">
+              <ScrollAreaAutosize mah={150} my="xs" type="always">
                 <Text
                   fz="sm"
                   component="pre"

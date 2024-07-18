@@ -66,6 +66,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const autoplay = useRef(Autoplay({ delay: 2000, stopOnInteraction: false }));
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const categoryRefs = useRef({});
 
   if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
     return (
@@ -107,15 +108,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
   }
 
   return (
-    <ScrollAreaAutosize
-      mah={"100dvh"}
-      scrollbarSize={0}
-      styles={{
-        viewport: {
-          scrollBehavior: "smooth",
-        },
-      }}
-    >
+    <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={0}>
       <Paper
         mih={"100dvh"}
         ff={lexend.style.fontFamily}
@@ -211,7 +204,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             </picture>
           </CreditsCard>
         )}
-        <Container size={"90vw"} mih={"45vh"} mt={"sm"} mb={70}>
+        <Container size={"95vw"} mih={"45vh"} mt={"sm"} mb={70}>
           {filteredData?.length > 0 ? (
             filteredData?.map((c) => (
               <CategoryDisplay
@@ -222,6 +215,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                 hideUnavailableCategory={
                   fullMenu?.menuLanding?.menu?.hideUnavailableCategory
                 }
+                categoryRefs={categoryRefs}
               />
             ))
           ) : (
@@ -252,6 +246,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
           displayName={fullMenu?.displayName}
           logo={fullMenu?.menuLanding?.logo}
           largeScreen={largeScreen}
+          categoryRefs={categoryRefs}
         />
       </Paper>
     </ScrollAreaAutosize>
