@@ -1,39 +1,45 @@
-import React, { useState, useEffect, useContext } from "react";
-import { QuestionTabsEnum } from "../EditSurvey";
+import React, { useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Paper,
-  Divider,
-  TextInput,
-  Select,
-  useMantineTheme,
-  Group,
-  Title,
-  Stack,
-  ScrollArea,
-  Text,
   ActionIcon,
+  Divider,
+  Group,
+  Paper,
+  ScrollArea,
   ScrollAreaAutosize,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  useMantineTheme,
 } from "@mantine/core";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { isEmptyObject } from "@tiptap/react";
+
+import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import {
+  QuestionType as Q,
+  QuestionType,
+  SmileyResponse,
+} from "../../../types/enums";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
-import { notifications } from "@mantine/notifications";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
-import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
-import { useRouter } from "next/router";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../../utils/constants";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { isEmptyObject } from "@tiptap/react";
 import {
   ContainedNumberInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
+import { QuestionTabsEnum } from "../EditSurvey";
 
 interface IProps {
   selectedQ: Question;
@@ -148,7 +154,7 @@ const ValidationRulesEditor = ({
 
   useEffect(() => {
     if (
-      [Q.MultiTextInput].includes(selectedQ?.type) &&
+      [Q.MultiTextInput].includes(selectedQ?.type as QuestionType) &&
       selectedQ?.validationRules
     ) {
       setMultiInputRules(selectedQ?.validationRules);
@@ -161,7 +167,7 @@ const ValidationRulesEditor = ({
   };
 
   useEffect(() => {
-    if (![Q.MultiTextInput].includes(selectedQ?.type)) {
+    if (![Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
       let validationResult = form.validate();
 
       if (validationResult?.hasErrors) {
@@ -179,14 +185,14 @@ const ValidationRulesEditor = ({
     if (
       selectedQ?.hasOwnProperty("validationRules") &&
       selectedQ?.validationRules !== null &&
-      ![Q.MultiTextInput].includes(selectedQ?.type)
+      ![Q.MultiTextInput].includes(selectedQ?.type as QuestionType)
     ) {
       const updatedValues = { ...selectedQ?.validationRules };
       form.reset();
       setValues(updatedValues);
     } else {
       if (
-        [Q.MultiTextInput].includes(selectedQ?.type) &&
+        [Q.MultiTextInput].includes(selectedQ?.type as QuestionType) &&
         selectedQ?.validationRules !== null
       ) {
         setMultiInputRules(selectedQ?.validationRules);
@@ -198,7 +204,7 @@ const ValidationRulesEditor = ({
   }, [selectedQ?.id]);
 
   const addRule = (ruleType: string) => {
-    if ([Q.MultiTextInput].includes(selectedQ?.type)) {
+    if ([Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
       let newRule;
       if (ruleType === "length") {
         newRule = {
@@ -262,7 +268,7 @@ const ValidationRulesEditor = ({
   };
 
   const handleSave = async () => {
-    if (![Q.MultiTextInput].includes(selectedQ?.type)) {
+    if (![Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
       const validationResult = form.validate();
       if (validationResult?.hasErrors) {
         // There are validation errors, do not save the form
@@ -279,7 +285,9 @@ const ValidationRulesEditor = ({
     });
 
     const data = {
-      validationRules: [Q.MultiTextInput].includes(selectedQ?.type)
+      validationRules: [Q.MultiTextInput].includes(
+        selectedQ?.type as QuestionType,
+      )
         ? multiInputRules
         : { ...form.values },
     };
@@ -496,7 +504,7 @@ const ValidationRulesEditor = ({
           Add validation rules to the user input for this question.
         </Text>
         <Divider />
-        {[Q.MultiTextInput].includes(selectedQ?.type) ? (
+        {[Q.MultiTextInput].includes(selectedQ?.type as QuestionType) ? (
           <MultiInputValidationRules />
         ) : (
           <Paper
