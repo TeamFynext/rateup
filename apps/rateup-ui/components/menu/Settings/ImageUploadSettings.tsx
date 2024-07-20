@@ -22,7 +22,7 @@ const ImageUploadSettings = ({
   setLogo,
   setImageToDelete,
 }) => {
-  const [aspectRatio, setAspectRatio] = useState(16 / 9);
+  const [aspectRatio, setAspectRatio] = useState(5 / 1);
   const [imageType, setImageType] = useState("");
   const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
   const resetLogoRef = useRef(null);
@@ -97,12 +97,12 @@ const ImageUploadSettings = ({
     }
   };
   const handlePictureBackground = () => {
-    setAspectRatio(8 / 3);
+    setAspectRatio(5 / 1);
     toggleMethodSelectionDialog();
     setImageType("backgroundImage");
   };
   const handlePictureMobileBackground = () => {
-    setAspectRatio(3 / 4);
+    setAspectRatio(3 / 2);
     toggleMethodSelectionDialog();
     setImageType("mobileBackgroundImage");
   };

@@ -29,3 +29,20 @@
 .thumb {
   background-color: white;
 }
+.root {
+  width: 500;
+}
+.floatingMenu {
+  border-radius: 10px;
+  gap: var(--mantine-spacing-xl);
+}
+
+@media only screen and (max-width: 600px) {
+  .root {
+    width: 200;
+  }
+  .floatingMenu {
+    border-radius: 10px;
+    gap: var(--mantine-spacing-md);
+  }
+}
