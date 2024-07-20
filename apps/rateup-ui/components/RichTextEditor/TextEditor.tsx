@@ -1,16 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import {
-  Link,
-  RichTextEditor,
-  useRichTextEditorContext,
-} from "@mantine/tiptap";
-import { Color } from "@tiptap/extension-color";
-import TextAlign from "@tiptap/extension-text-align";
-import TextStyle from "@tiptap/extension-text-style";
-import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 
-import { isHtml } from "../../utils";
 import {
   ActionIcon,
   Group,
@@ -22,22 +11,34 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { VariableComponentExtension } from "./MantineComponentExtension";
-import SurveyContext from "../../context/SurveyContext";
+import { useForm } from "@mantine/form";
+import {
+  Link,
+  RichTextEditor,
+  useRichTextEditorContext,
+} from "@mantine/tiptap";
+import { IconPhoto, IconVariable, IconVideo } from "@tabler/icons-react";
+import { Color } from "@tiptap/extension-color";
+import Image from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
+import { Youtube } from "@tiptap/extension-youtube";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
+import SurveyContext from "../../context/SurveyContext";
+import { isHtml } from "../../utils";
 import {
   getFilteredVariablesForQuestion,
   getFormattedTitleFromVariable,
 } from "../../utils/survey/question/question.utils";
-import { IconPhoto, IconVariable, IconVideo } from "@tabler/icons-react";
-import Image from "@tiptap/extension-image";
-import { PopoverEmojiPicker } from "../whatsapp/templates/Details/TextFormateToolBar";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
-import { Youtube } from "@tiptap/extension-youtube";
+import { PopoverEmojiPicker } from "../whatsapp/templates/Details/TextFormateToolBar";
 import { Video } from "./CustomVideo";
-import { useForm } from "@mantine/form";
-import Placeholder from "@tiptap/extension-placeholder";
+import { VariableComponentExtension } from "./MantineComponentExtension";
 
 export default function TextEditor({ form, selectedLanguage }) {
   const { variables } = useContext(SurveyContext);
@@ -177,7 +178,7 @@ const getContent = (title: string, desc: string, variables) => {
   }
 };
 
-const InsertVariableControl = ({ question }) => {
+export const InsertVariableControl = ({ question }) => {
   const { editor } = useRichTextEditorContext();
   const { variables, surveyId } = useContext(SurveyContext);
   const { data: questions } = useQuestions(surveyId);
@@ -230,10 +231,14 @@ const InsertVariableControl = ({ question }) => {
   );
 };
 
-function InsertEmoji() {
+export function InsertEmoji() {
   const { editor } = useRichTextEditorContext();
   return (
-    <RichTextEditor.Control aria-label="Insert emoji" title="Insert emoji">
+    <RichTextEditor.Control
+      component={"div"}
+      aria-label="Insert emoji"
+      title="Insert emoji"
+    >
       <PopoverEmojiPicker
         onEmojiClick={(emoji) => editor?.commands?.insertContent(emoji)}
       />
@@ -241,7 +246,7 @@ function InsertEmoji() {
   );
 }
 
-function InsertImage() {
+export function InsertImage() {
   const { editor } = useRichTextEditorContext();
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -286,12 +291,12 @@ function InsertImage() {
   );
 }
 
-function isYouTubeLink(url) {
+export function isYouTubeLink(url) {
   const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
   return youtubeRegex.test(url);
 }
 
-function InsertVideo() {
+export function InsertVideo() {
   const { editor } = useRichTextEditorContext();
   const form = useForm({
     initialValues: {

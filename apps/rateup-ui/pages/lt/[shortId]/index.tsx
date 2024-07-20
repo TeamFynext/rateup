@@ -1,52 +1,54 @@
+import { useCallback, useEffect } from "react";
+
 import { Box, Group, Image, Textarea } from "@mantine/core";
-import { getPublicLandingPageWithShortId } from "../../../backend/landingPage/landingPage.api";
-import { initialState as defaultTheme } from "../../../components/LandingPageDashboardPage/LandingPageEditor/ThemeEditor/ThemeContext/constants";
-import styles from "./lt.module.css";
 import { useMediaQuery } from "@mantine/hooks";
+import { produce } from "immer";
+
+import { getPublicLinktreeWithShortId } from "../../../backend/linktree/linktree.api";
+import { usePageVisitsOrLinkClicksUpdateMutation } from "../../../backend/linktree/linktree.query";
+import UnsplashCreditText from "../../../components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText";
+import { initialState as defaultTheme } from "../../../components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/constants";
 import { imagesPath } from "../../../utils/constants";
 import { lexend } from "../../../utils/fonts";
-import UnsplashCreditText from "../../../components/LandingPageDashboardPage/LandingPageEditor/ThemeEditor/components/UnsplashCreditText";
-import { useCallback, useEffect } from "react";
-import { produce } from "immer";
-import { usePageVisitsOrLinkClicksUpdateMutation } from "../../../backend/landingPage/landingPage.query";
+import styles from "./lt.module.css";
 
 export const getServerSideProps = async (context) => {
   const { shortId } = context.params;
-  const landingPageObj = await getPublicLandingPageWithShortId(shortId);
-  if (landingPageObj?.isPublished) {
+  const linktreeObj = await getPublicLinktreeWithShortId(shortId);
+  if (linktreeObj?.isPublished) {
     return {
       props: {
-        landingPageObj,
+        linktreeObj,
       },
     };
   } else {
     return {
       props: {
-        landingPageObj: null,
+        linktreeObj: null,
       },
     };
   }
 };
 
-// LandingPage Public Page
-function Lt({ landingPageObj }) {
-  if (!landingPageObj) {
+// Linktree Public Page
+function Lt({ linktreeObj }) {
+  if (!linktreeObj) {
     return (
       <Group className={styles["not-available-div"]}>
         <Image src={"/images/bw-logo.png"} alt="logo" width={70} height={70} />
-        <p className={styles["not-available-p"]}>LandingPage Not available</p>
+        <p className={styles["not-available-p"]}>Linktree Not available</p>
       </Group>
     );
   }
 
-  const shortUrlId = landingPageObj?.shortUrlId;
+  const shortUrlId = linktreeObj?.shortUrlId;
   const pageVisitsOrLinkClicksMutation =
     usePageVisitsOrLinkClicksUpdateMutation(shortUrlId);
 
   const isMobile = useMediaQuery("(max-width: 425px)");
 
-  const theme = landingPageObj?.theme ?? defaultTheme;
-  const links = landingPageObj?.links ?? [];
+  const theme = linktreeObj?.theme ?? defaultTheme;
+  const links = linktreeObj?.links ?? [];
   const {
     background: { styles: backgroundStyles, desktopBgImgUrl, mobileBgImgUrl },
     logo: { styles: logoStyles, logoUrl },
@@ -70,10 +72,10 @@ function Lt({ landingPageObj }) {
   };
 
   useEffect(() => {
-    const landingPageVisitsData = localStorage.getItem("landingPageVisitsData");
-    if (!landingPageVisitsData) {
+    const linktreeVisitsData = localStorage.getItem("linktreeVisitsData");
+    if (!linktreeVisitsData) {
       localStorage.setItem(
-        "landingPageVisitsData",
+        "linktreeVisitsData",
         JSON.stringify({
           [shortUrlId]: {
             lastVisitedAt: new Date().toISOString(),
@@ -84,13 +86,13 @@ function Lt({ landingPageObj }) {
       pageVisitsOrLinkClicksMutation.mutate({
         resourceToBeUpdated: "page-visit",
       });
-    } else if (landingPageVisitsData) {
+    } else if (linktreeVisitsData) {
       const parsedVisitsDataObj = JSON.parse(
-        localStorage.getItem("landingPageVisitsData"),
+        localStorage.getItem("linktreeVisitsData"),
       );
-      const currentLandingPageLastVisited =
+      const currentLinktreeLastVisited =
         parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
-      if (!currentLandingPageLastVisited) {
+      if (!currentLinktreeLastVisited) {
         const updatedParsedVisitsDataObj = produce(
           parsedVisitsDataObj,
           (draft) => {
@@ -101,7 +103,7 @@ function Lt({ landingPageObj }) {
           },
         );
         localStorage.setItem(
-          "landingPageVisitsData",
+          "linktreeVisitsData",
           JSON.stringify(updatedParsedVisitsDataObj),
         );
         pageVisitsOrLinkClicksMutation.mutate({
@@ -111,8 +113,8 @@ function Lt({ landingPageObj }) {
       }
 
       const newDateObj = new Date();
-      // currentLandingPageLastVisited is an ISO time string.
-      const lastVisitedDateObj = new Date(currentLandingPageLastVisited);
+      // currentLinktreeLastVisited is an ISO time string.
+      const lastVisitedDateObj = new Date(currentLinktreeLastVisited);
 
       const differenceInMinutes =
         (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
@@ -125,7 +127,7 @@ function Lt({ landingPageObj }) {
           },
         );
         localStorage.setItem(
-          "landingPageVisitsData",
+          "linktreeVisitsData",
           JSON.stringify(updatedParsedVisitsDataObj),
         );
         pageVisitsOrLinkClicksMutation.mutate({
@@ -136,9 +138,9 @@ function Lt({ landingPageObj }) {
   }, []);
 
   const handleLinkClick = useCallback((linkId) => {
-    const shortUrlId = landingPageObj.shortUrlId;
+    const shortUrlId = linktreeObj.shortUrlId;
     const parsedVisitsDataObj = JSON.parse(
-      localStorage.getItem("landingPageVisitsData"),
+      localStorage.getItem("linktreeVisitsData"),
     );
     const linkClicksObj = parsedVisitsDataObj[shortUrlId]["linkClicks"][linkId];
     if (!linkClicksObj) {
@@ -151,7 +153,7 @@ function Lt({ landingPageObj }) {
         },
       );
       localStorage.setItem(
-        "landingPageVisitsData",
+        "linktreeVisitsData",
         JSON.stringify(updatedParsedVisitsDataObj),
       );
       pageVisitsOrLinkClicksMutation.mutate({
@@ -174,7 +176,7 @@ function Lt({ landingPageObj }) {
           },
         );
         localStorage.setItem(
-          "landingPageVisitsData",
+          "linktreeVisitsData",
           JSON.stringify(updatedParsedVisitsDataObj),
         );
         pageVisitsOrLinkClicksMutation.mutate({

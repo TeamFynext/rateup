@@ -1,0 +1,29 @@
+.root-div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 1rem;
+}
+
+.toolbar-div {
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  padding: 1rem;
+  justify-content: space-between;
+}
+
+.editor-content {
+  height: 100%;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.editor-content :global(.mantine-RichTextEditor-content) {
+  height: 100%;
+  overflow: auto;
+}
+
+.editor-content :global(.tiptap) {
+  height: 100%;
+  padding: 0;
+}

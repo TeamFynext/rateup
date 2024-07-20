@@ -3,6 +3,7 @@ import {
   IconAddressBook,
   IconApi,
   IconApps,
+  IconAppWindow,
   IconBrandWhatsapp,
   IconBrowser,
   IconClipboardList,
@@ -24,15 +25,16 @@ import {
   IconSpeakerphone,
   IconTerminal2,
   IconTicket,
+  IconTools,
+  IconTree,
   IconUsers,
   IconWaveSine,
 } from "@tabler/icons-react";
 
-import { IconAppWindow } from "@tabler/icons-react";
 import { useUserInfo } from "../../../backend/user/user.query";
 import {
-  SubscriptionFeaturePathName,
   SubscriptionFeaturePathName as sfpn,
+  SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { whatsappOptions } from "../../../utils/constants";
 import { UserRole } from "../../../utils/enums";
@@ -165,11 +167,6 @@ export function getNavTopData(subscription?: Subscription) {
           },
         ]
       : []),
-    {
-      Icon: IconAppWindow,
-      label: "Landing Pages",
-      href: "/dashboard/landingPages",
-    },
     ...(hiddenModules.includes("reputation_management") ||
     !hasFeature(sfpn.ReputationManagement)
       ? []
@@ -207,11 +204,29 @@ export function getNavTopData(subscription?: Subscription) {
           },
         ]
       : []),
-    {
-      Icon: IconQrcode,
-      label: "Generate QR",
-      href: "/dashboard/generateQr",
-    },
+    ...[
+      {
+        Icon: IconTools,
+        label: "Builder",
+        submenus: [
+          {
+            Icon: IconQrcode,
+            label: "Generate QR",
+            href: "/dashboard/generateQr",
+          },
+          {
+            Icon: IconTree,
+            label: "Linktree",
+            href: "/dashboard/linktree",
+          },
+          {
+            Icon: IconAppWindow,
+            label: "Landing Pages",
+            href: "/dashboard/landingPages",
+          },
+        ],
+      },
+    ],
     { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
     ...(hiddenModules.includes("loyalty") || !true
       ? []

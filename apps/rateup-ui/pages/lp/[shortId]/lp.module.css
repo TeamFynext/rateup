@@ -1,0 +1,18 @@
+.not-available-div {
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.not-available-p {
+  font-weight: bold;
+  font-size: 2rem;
+  color: var(--mantine-color-gray-4);
+}
+
+.root-div {
+  justify-content: center;
+  height: 100vh;
+  overflow: auto;
+}

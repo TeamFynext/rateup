@@ -1,7 +1,7 @@
-import LandingPageDashboardPage from "../../../components/LandingPageDashboardPage";
+import LandingPageComp from "@/components/LandingPage";
 
 function LandingPage() {
-  return <LandingPageDashboardPage />;
+  return <LandingPageComp />;
 }
 
 export default LandingPage;
