@@ -3,6 +3,11 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 module.exports = withBundleAnalyzer({
+  i18n: {
+    locales: ["en", "de", "fr", "ar", "hi"], // Languages we can add here
+    defaultLocale: "en",
+  },
+
   reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
