@@ -1,38 +1,40 @@
-import { useRouter } from "next/router";
-import styles from "./FlowPage.module.css";
-import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
-import { whatsappTheme } from "../../../../config/mantineTheme";
-import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
+import { useImmer } from "use-immer";
+
+import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
+import { useSurvey } from "../../../../backend/surveys/surveys.query";
 import {
   useUpdateFlowMutation,
   useWaFlowFromDb,
 } from "../../../../backend/whatsapp/flow/flow.query";
-import EditFlow from "./EditFlow/EditFlow";
-import { useImmer } from "use-immer";
-import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
-import { useSurvey } from "../../../../backend/surveys/surveys.query";
-import { WaFlowStatus } from "../../../../types/enums";
-import { WaFlowJson, WaFlowMap } from "../../../../types/global";
-import SurveySettings from "../../../Survey/Settings";
-import {
-  getFlowElementJsonFromQuestion,
-  updateFlowJsonNavigationAndDataPassing,
-  getQuestionFromFlowFormElementName,
-} from "../../../../utils/whatsapp/flow.utils";
-import { EditFlowContext } from "./EditFlow/EditFlowContext";
+import { whatsappTheme } from "../../../../config/mantineTheme";
+import { useRouteParams } from "../../../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import Result from "../../../Survey/Result/Result";
 import SurveyContext from "../../../../context/SurveyContext";
 import { useUser } from "../../../../context/UserContext";
+import { WaFlowStatus } from "../../../../types/enums";
+import { WaFlowJson, WaFlowMap } from "../../../../types/global";
 import { UserRole } from "../../../../utils/enums";
 import { showErrorToast } from "../../../../utils/notifications";
-import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
-import StyledTabs from "../../../styled/StyledTabs/StyledTabs";
+import {
+  getFlowElementJsonFromQuestion,
+  getQuestionFromFlowFormElementName,
+  updateFlowJsonNavigationAndDataPassing,
+} from "../../../../utils/whatsapp/flow.utils";
 import RateupLoader from "../../../Loaders/RateupLoader";
-import { useRouteParams } from "../../../../context/RouteParamsContext";
+import StyledTabs from "../../../styled/StyledTabs/StyledTabs";
+import Result from "../../../Survey/Result/Result";
+import SurveySettings from "../../../Survey/Settings";
+import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
+import EditFlow from "./EditFlow/EditFlow";
+import { EditFlowContext } from "./EditFlow/EditFlowContext";
+import styles from "./FlowPage.module.css";
+import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 
-function FlowPage() {
+function FlowPage(translations) {
   const router = useRouter();
   const { tab: tabView } = router.query;
   const { dbFlowId } = router.query as { dbFlowId: string };
@@ -246,6 +248,7 @@ function FlowPage() {
                       setSelectedLanguage={setSelectedLanguage}
                       setFilterTags={setFilterTags}
                       flowId={flow.flowId}
+                      translations={translations}
                     />
                   </Tabs.Panel>
                   <Tabs.Panel value={FlowTabEnum.Share}>
