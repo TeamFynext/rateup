@@ -1,64 +1,80 @@
-﻿import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../components/Button/RateupButtons";
+﻿import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Group,
-  Title,
-  Text,
-  Container,
-  Stack,
-  SimpleGrid,
   ActionIcon,
   Blockquote,
-  Flex,
   Box,
+  Container,
+  Flex,
+  Group,
   Portal,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import Loading from "../../components/Page/Loading";
-import { useUser } from "../../context/UserContext";
 import {
+  IconAlertCircle,
   IconBrandWhatsapp,
+  IconCheck,
   IconCheckupList,
+  IconCloudExclamation,
   IconPageBreak,
   IconPlus,
-  IconSocial,
   IconReload,
-  IconSquareRoundedPlusFilled,
   IconShoppingCart,
-  IconCloudExclamation,
-  IconCheck,
-  IconAlertCircle,
+  IconSocial,
+  IconSquareRoundedPlusFilled,
 } from "@tabler/icons-react";
+
 import {
   useAllSurveysSummary,
   useSurveysSummary,
 } from "../../backend/surveys/surveys.query";
-import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
-import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
-import { SurveyTypeFilters } from "../../types/enums";
-import classes from "./dashboard.module.css";
-import FormModalLayout from "../../components/Modal/FormModalLayout";
-import PaperLayout from "../../components/styled/Layouts/PaperLayout";
-import NothingFound from "../../components/NothingFound/NothingFound";
-import Heading from "../../components/styled/Heading/Heading";
-import { lexend400, lexend500 } from "../../utils/fonts";
-import { getFormattedResponseForAreaGraph } from "../../utils/response";
-import OverallResponseGraph from "../../components/Graph/OverallResponseGraph";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../components/Button/RateupButtons";
 import RefreshButton from "../../components/Button/RefreshButton";
+import ActiveSurveyCard from "../../components/Dashboard/ActiveSurveyCard";
 import SortDropdown, {
   sortData,
 } from "../../components/Dashboard/SortDropDown";
+import OverallResponseGraph from "../../components/Graph/OverallResponseGraph";
+import FormModalLayout from "../../components/Modal/FormModalLayout";
+import NothingFound from "../../components/NothingFound/NothingFound";
+import Loading from "../../components/Page/Loading";
+import Heading from "../../components/styled/Heading/Heading";
+import PaperLayout from "../../components/styled/Layouts/PaperLayout";
+import { SurveyTypeFilter } from "../../components/Survey/Filter/SurveyTypeFilter";
+import DashboardTourSteps from "../../components/WelcomeTour/components/DashboardTourSteps";
 import styles from "../../components/WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../components/WelcomeTour/WelcomeTour";
-import DashboardTourSteps from "../../components/WelcomeTour/components/DashboardTourSteps";
+import { useUser } from "../../context/UserContext";
+import { getDictionary } from "../../dictionaries/dictionaries";
+import { SurveyTypeFilters } from "../../types/enums";
+import { lexend400, lexend500 } from "../../utils/fonts";
+import { getFormattedResponseForAreaGraph } from "../../utils/response";
+import classes from "./dashboard.module.css";
 
 export default function DashboardHome() {
   const router = useRouter();
+  const [translations, setTranslations] = useState({});
+  const [loadingTranslations, setLoadingTranslations] = useState(true);
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const lang = await getDictionary(router.locale);
+      setTranslations(lang);
+      setLoadingTranslations(false);
+    };
+
+    loadTranslations();
+  }, [router.locale]);
+
   const { user } = useUser();
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
   const [opened, { open, close }] = useDisclosure(false);
@@ -188,10 +204,13 @@ export default function DashboardHome() {
     }
     return "";
   };
+  if (loadingTranslations || isLoadingSummary) {
+    return <Loading h={300} />;
+  }
 
   return (
     <>
-      {user && !isLoadingSummary && !isError && !surveysSummary?.error ? (
+      {user && !isError && !surveysSummary?.error ? (
         <Stack>
           <Portal target={"#navbar"}>
             <WelcomeTour steps={tourSteps} />
@@ -203,7 +222,7 @@ export default function DashboardHome() {
               <Stack style={{ flex: 0.3 }} miw={300} w={"100%"}>
                 <RateupButtonBlue
                   onClick={open}
-                  title={"Create"}
+                  title={translations["Create"]}
                   leftIcon={<IconPlus size="2.2rem" />}
                   size="xl"
                   py="xl"
@@ -249,7 +268,7 @@ export default function DashboardHome() {
                           fz="xl"
                           c="#595959"
                         >
-                          {summaryname}
+                          {translations[summaryname]}
                         </Text>
                       </Stack>
                     </PaperLayout>
@@ -262,13 +281,14 @@ export default function DashboardHome() {
                 setTimePeriod={setTimePeriod}
                 data={filteredData}
                 refreshKeys={["surveysSummary", "allSurveysSummary"]}
+                translations={translations}
               />
             </Group>
             <FormModalLayout
               centered
               opened={opened}
               onClose={close}
-              title="Create new"
+              title={translations["Create new"]}
             >
               <Stack p={"md"}>
                 {createModalContent.map(({ Icon, routerPath, title }) => (
@@ -303,7 +323,9 @@ export default function DashboardHome() {
                 <Group justify="space-between">
                   <Group align="center">
                     <div className={styles["active-flow-page"]}>
-                      <Heading subtitle="Active Surveys / Flows" />{" "}
+                      <Heading
+                        subtitle={translations["Active Surveys / Flows"]}
+                      />
                     </div>
                     <Text fz="17px" mt="5px" c="gray">
                       ( {filterParam} )
@@ -336,7 +358,7 @@ export default function DashboardHome() {
                     <ActiveSurveyCard key={s.id} survey={s} />
                   ))
                 ) : (
-                  <NothingFound text="No data found" />
+                  <NothingFound text={translations["No data found"]} />
                 )}
               </div>
             </Stack>
@@ -349,13 +371,13 @@ export default function DashboardHome() {
           {summaryError?.response?.data?.message === "Subscription expired" ? (
             <>
               <Blockquote color="red" icon={<IconCloudExclamation />}>
-                Your don't have an active Subscription..!
+                {translations["You don't have an active Subscription..!"]}
               </Blockquote>
               <Text mb="lg"> </Text>
               <RateupButtonSecondary
                 size="md"
                 leftIcon={<IconShoppingCart />}
-                title="Go to Billing Section"
+                title={translations["Go to Billing Section"]}
                 onClick={() => {
                   router.push(
                     "/dashboard/settings?activeTab=account&view=billing",
@@ -365,11 +387,11 @@ export default function DashboardHome() {
             </>
           ) : (
             <>
-              <Text mb="lg"> An error occured..!</Text>
+              <Text mb="lg"> {translations["An error occured..!"]}</Text>
               <RateupButtonSecondary
                 size="md"
                 leftIcon={<IconReload />}
-                title="Try again"
+                title={translations["Try again"]}
                 onClick={refetch}
               />
             </>
