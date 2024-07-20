@@ -19,6 +19,7 @@ async function createLandingPageInDB(
       ownerOrgId: orgId,
       createdById: userId,
       shortUrlId: newShortUrlId,
+      tiptapEditorContent: "",
     },
   });
 
@@ -63,9 +64,8 @@ async function getPublicLandingPageWithShortIdFromDB(req) {
     select: {
       name: true,
       shortUrlId: true,
-      theme: true,
-      links: true,
       isPublished: true,
+      tiptapEditorContent: true,
     },
   });
   return landingPage;
@@ -103,125 +103,24 @@ async function deleteLandingPageInDB(req) {
   return deletedLandingPage;
 }
 
-async function generateAndGetOptionsFromDB(
-  req: FastifyRequest<{ Params: { linkType: string } }>,
-) {
-  const {
-    params: { linkType },
-    user: { orgId: requestedUserOrgId },
-  } = req;
-
-  const data = await prisma.org.findFirst({
-    where: {
-      id: requestedUserOrgId,
-    },
-    include: {
-      members: {
-        include: {
-          user: {
-            include: {
-              surveys: {
-                include: {
-                  teams: {
-                    include: {
-                      team: {
-                        select: {
-                          name: true,
-                          tags: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const arrayOfArrayOfSurveysCreatedByUser = data.members.map(({ user }) => {
-    return user.surveys;
-  });
-
-  // resultArr is survey title and type, SurveyTeamMap table's shortUrlId and team name,
-  const resultArr = [];
-  arrayOfArrayOfSurveysCreatedByUser.forEach((surveysCreatedByUsrArr) => {
-    let linkTypeInDB;
-    if (linkType === "web-survey") linkTypeInDB = "web";
-    else if (linkType === "whatsapp-survey") linkTypeInDB = "waFlow";
-
-    surveysCreatedByUsrArr.forEach((surveyObj) => {
-      const { id, title, teams, type } = surveyObj;
-      if (type === linkTypeInDB)
-        resultArr.push({ id, title, teams, type: linkType });
-    });
-  });
-
-  return resultArr;
-}
-
-async function updatePageVisitOrLinkClickInDB(req) {
+async function updatePageVisitInDB(req) {
   const {
     params: { shortUrlId },
-    body: { resourceToBeUpdated, linkId },
   } = req;
-  if (resourceToBeUpdated === "page-visit") {
-    const updatedRecord = await prisma.landingPage.update({
-      where: {
-        shortUrlId,
+  const updatedRecord = await prisma.landingPage.update({
+    where: {
+      shortUrlId,
+    },
+    data: {
+      visitorsCount: {
+        increment: 1,
       },
-      data: {
-        visitorsCount: {
-          increment: 1,
-        },
-      },
-    });
-    return {
-      success: true,
-      message: "Updated visitor count successfully",
-    };
-  } else if (resourceToBeUpdated === "link-click") {
-    const { links }: { links: any } = await prisma.landingPage.findFirst({
-      where: {
-        shortUrlId,
-      },
-      select: {
-        links: true,
-      },
-    });
-    if (
-      links &&
-      links.length &&
-      links.find((linkObj) => linkObj.id === linkId)
-    ) {
-      const newLinks = links.map((linkObj, index) => {
-        const { noOfClicks = 0 } = linkObj;
-        if (linkObj.id === linkId) {
-          return {
-            ...linkObj,
-            noOfClicks: noOfClicks + 1,
-          };
-        } else {
-          return linkObj;
-        }
-      });
-
-      const updatedLandingPageObj = await prisma.landingPage.update({
-        where: {
-          shortUrlId,
-        },
-        data: {
-          links: newLinks,
-        },
-      });
-
-      return updatedLandingPageObj;
-    } else {
-      return null;
-    }
-  }
+    },
+  });
+  return {
+    success: true,
+    message: "Updated visitor count successfully",
+  };
 }
 
 export {
@@ -231,6 +130,5 @@ export {
   getPublicLandingPageWithShortIdFromDB,
   updateLandingPageWithShortIdInDB,
   deleteLandingPageInDB,
-  generateAndGetOptionsFromDB,
-  updatePageVisitOrLinkClickInDB,
+  updatePageVisitInDB,
 };
