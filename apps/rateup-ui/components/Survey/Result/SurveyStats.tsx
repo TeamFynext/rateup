@@ -1,35 +1,37 @@
 import React, { useContext, useState } from "react";
+
 import {
-  Group,
-  Text,
+  ActionIcon,
   Badge,
-  Stack,
   Box,
   Grid,
-  ActionIcon,
+  Group,
+  Stack,
+  Text,
   Tooltip,
 } from "@mantine/core";
+import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
+
 import {
   useAllResponses,
   useResponses,
 } from "../../../backend/surveys/response/response.query";
-import Heading from "../../styled/Heading/Heading";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { useWaFlowMetrics } from "../../../backend/whatsapp/flow/flow.query";
 import SurveyContext from "../../../context/SurveyContext";
+import { findCentroid } from "../../../utils/location";
+import { showSuccessToast } from "../../../utils/notifications";
+import { getFormattedResponseForAreaGraph } from "../../../utils/response";
 import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
 } from "../../../utils/team/surveyTeam";
-import { findCentroid } from "../../../utils/location";
-import { getFormattedResponseForAreaGraph } from "../../../utils/response";
-import OverallResponseGraph from "../../Graph/OverallResponseGraph";
-import { useWaFlowMetrics } from "../../../backend/whatsapp/flow/flow.query";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import classes from "../../Graph/graph.module.css";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
-import { showSuccessToast } from "../../../utils/notifications";
+import OverallResponseGraph from "../../Graph/OverallResponseGraph";
+import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import Heading from "../../styled/Heading/Heading";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import styles from "./SurveyStats.module.css";
 
 enum LocationType {
@@ -40,7 +42,7 @@ enum LocationType {
 const maxZoom = 15;
 const minZoom = 2;
 
-const SurveyStats = ({ survey, flowId = null }) => {
+const SurveyStats = ({ survey, flowId = null, translations }) => {
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const {
     data: responses,
@@ -304,6 +306,7 @@ const SurveyStats = ({ survey, flowId = null }) => {
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
           refreshKeys={["allresponses"]}
+          translations={translations}
         />
       </Stack>
     </Stack>
