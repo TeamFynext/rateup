@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   ActionIcon,
   Badge,
@@ -15,27 +17,27 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
-import {
-  useCreateReviewSuggestionsMutation,
-  useDeleteReviewSuggestionMutation,
-  useReviewSuggestions,
-  useUpdateReviewSuggestionMutation,
-} from "../../backend/team/reviewSuggestion/reviewSuggestion.query";
-import { showErrorToast } from "../../utils/notifications";
-import { ReviewSuggestion } from "../../types/global";
-import {
-  ContainedSelection,
-  ContainedTextArea,
-} from "../input/ContainedInput/ContainedInput";
+import { useForm } from "@mantine/form";
 import {
   IconCheck,
   IconPencil,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { useForm } from "@mantine/form";
+
+import {
+  useCreateReviewSuggestionsMutation,
+  useDeleteReviewSuggestionMutation,
+  useReviewSuggestions,
+  useUpdateReviewSuggestionMutation,
+} from "../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { useSurveyLanguagesFromTeam } from "../../backend/team/team.query";
+import { ReviewSuggestion } from "../../types/global";
+import { showErrorToast } from "../../utils/notifications";
+import {
+  ContainedSelection,
+  ContainedTextArea,
+} from "../input/ContainedInput/ContainedInput";
 
 enum ReviewSuggestionTab {
   Custom = "custom",
@@ -281,7 +283,7 @@ function ReviewCard({
           {index}
         </Badge>
         {isEditing ? (
-          <>
+          <Group flex={1} align="center">
             <Textarea
               value={value}
               onChange={(e) => setValue(e.currentTarget.value)}
@@ -289,6 +291,7 @@ function ReviewCard({
               style={{
                 flexGrow: 1,
               }}
+              flex={1}
             />
             <TeamSurveyLanguageSelector
               value={language}
@@ -309,9 +312,9 @@ function ReviewCard({
             >
               <IconCheck />
             </ActionIcon>
-          </>
+          </Group>
         ) : (
-          <>
+          <Group flex={1} align="center">
             <Text
               style={{
                 flexGrow: 1,
@@ -320,6 +323,7 @@ function ReviewCard({
               }}
               onDoubleClick={() => setEditingItem(id)}
               p="md"
+              flex={1}
             >
               {review}
             </Text>
@@ -329,7 +333,7 @@ function ReviewCard({
             >
               <IconPencil />
             </ActionIcon>
-          </>
+          </Group>
         )}
         <ActionIcon
           variant="transparent"
