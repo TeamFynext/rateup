@@ -1,17 +1,18 @@
-import { Stack, Space, Box } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
-// import CreateSurveyLandingModal from "../../../pages/dashboard/groupsurveys/CreateSurveyLandingModal";
-import { SurveyCard } from "../../Card/SurveyCard/SurveyCard";
-import { SurveyCardLayout } from "../../Card/SurveyCard/SurveyCardLayout";
-import NothingFound from "../../NothingFound/NothingFound";
+
+import { Box, Stack } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+
+import { useTeamsByUser } from "@/backend/team/team.query";
+import { SurveyCard } from "@/components/Card/SurveyCard/SurveyCard";
+import { sortData } from "@/components/Dashboard/SortDropDown";
+import NothingFound from "@/components/NothingFound/NothingFound";
+
 import { CreateSurveyModal } from "../CreateSurveyModal";
-import { SurveyHeader } from "./SurveysPageHeader";
-import { useTeamsByUser } from "../../../backend/team/team.query";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
 import styles from "./SurveyPage.module.css";
-import { sortData } from "../../Dashboard/SortDropDown";
+import { SurveyHeader } from "./SurveysPageHeader";
 
 // USED IN:
 // dashboard/surveys
@@ -31,7 +32,7 @@ export function SurveysPage({
   setSelectedTeamId,
   surveyType = "web",
   refetch,
-}: SurveysPageProps) {
+}: Readonly<SurveysPageProps>) {
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },
@@ -99,8 +100,8 @@ export function SurveysPage({
   const isChecked = (surveyid) => {
     let surveysarray = surveyidArray;
     let found = false;
-    for (let i = 0; i < surveysarray.length; i++) {
-      if (surveyid == surveysarray[i]) {
+    for (const element of surveysarray) {
+      if (surveyid == element) {
         found = true;
         break;
       }
@@ -108,7 +109,6 @@ export function SurveysPage({
     return found;
   };
 
-  //  const sortedSurveys = sortData(surveys, sortOption);
   const sortedSurveys = sortData(
     surveys.map((s) => ({ ...s, data: { name: s.title } })),
     sortOption,

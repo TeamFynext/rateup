@@ -1,7 +1,6 @@
 import React, { MutableRefObject } from "react";
 import Link from "next/link";
 
-import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import {
   ActionIcon,
   Avatar,
@@ -22,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 
 import { MenuButtons } from "@/types/enums";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import styles from "./FloatingMenu.module.css";
 

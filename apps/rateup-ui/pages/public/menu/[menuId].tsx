@@ -1,14 +1,6 @@
 import { useRef, useState } from "react";
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { getMenuBannerByMenuId } from "@/backend/menu/Banner/banner.api";
-import {
-  getFullMenuPublicById,
-  updateMenuVisitedMutation,
-} from "@/backend/menu/menu.api";
-import { isCategoryActive } from "@/utils/dateTime";
-import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { lexend } from "@/utils/fonts";
 import { Carousel } from "@mantine/carousel";
 import {
   Container,
@@ -22,10 +14,18 @@ import { useMediaQuery } from "@mantine/hooks";
 import { getCookie, setCookie } from "cookies-next";
 import Autoplay from "embla-carousel-autoplay";
 
+import { getMenuBannerByMenuId } from "@/backend/menu/Banner/banner.api";
+import {
+  getFullMenuPublicById,
+  updateMenuVisitedMutation,
+} from "@/backend/menu/menu.api";
 import { CreditsCard } from "@/components/Card/CreditsCard";
 import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay";
 import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewModal";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import { isCategoryActive } from "@/utils/dateTime";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { lexend } from "@/utils/fonts";
 
 import FloatingMenuMain from "./FloatingMenu";
 import styles from "./gradientAnimation.module.css";

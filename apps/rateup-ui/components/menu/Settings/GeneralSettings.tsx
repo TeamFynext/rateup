@@ -1,10 +1,5 @@
 import React, { useState } from "react";
 
-import { useUpdateMenuMutation } from "@/backend/menu/menu.query";
-import { useSurveysByTeam } from "@/backend/surveys/surveys.query";
-import { SAVE_HOTKEY } from "@/utils/constants";
-import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 import {
   ActionIcon,
   Box,
@@ -21,6 +16,8 @@ import { zodResolver } from "mantine-form-zod-resolver";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { MenuButtons } from "@/types/enums";
+import { useUpdateMenuMutation } from "@/backend/menu/menu.query";
+import { useSurveysByTeam } from "@/backend/surveys/surveys.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
   ContainedSelection,
@@ -30,6 +27,9 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { SAVE_HOTKEY } from "@/utils/constants";
+import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
 
 import { currencyLabel } from "../util/currencyData";
 import { schema } from "./GeneralFormSchema";
@@ -41,7 +41,7 @@ import "react-phone-number-input/style.css";
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = {
     ...editingItem?.menu,
-    backkgroundImage: editingItem?.backgroundImage,
+    backgroundImage: editingItem?.backgroundImage,
     mobileBackgroundImage: editingItem?.mobileBackgroundImage,
     logo: editingItem?.logo,
     unsplashImage: editingItem?.unsplashImage,

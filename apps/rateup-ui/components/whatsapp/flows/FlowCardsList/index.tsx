@@ -1,4 +1,5 @@
 import { Box } from "@mantine/core";
+
 import FlowCard from "../FlowCard";
 
 function FlowCardsList({
@@ -7,7 +8,7 @@ function FlowCardsList({
 }: Readonly<{ flows: DbFlow[]; teamsData }>) {
   return (
     <Box className="cards-grid-global-class">
-      {flows.map(({ dbFlowId, name, status, createdAt }) => {
+      {flows?.map(({ dbFlowId, name, status, createdAt }) => {
         return (
           <FlowCard
             dbFlowId={dbFlowId}
