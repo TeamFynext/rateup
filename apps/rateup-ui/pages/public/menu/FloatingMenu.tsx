@@ -30,7 +30,6 @@ type FloatingMenuMainProps = {
   categories: FullCategory[];
   displayName: string;
   logo: string;
-  largeScreen: boolean;
   categoryRefs: MutableRefObject<{}>;
 };
 const FloatingMenuMain = ({
@@ -38,7 +37,6 @@ const FloatingMenuMain = ({
   categories,
   displayName,
   logo,
-  largeScreen,
   categoryRefs,
 }: FloatingMenuMainProps) => {
   let mainColor = "black";
@@ -61,14 +59,11 @@ const FloatingMenuMain = ({
       w={"max-content"}
     >
       <Group
-        py={largeScreen ? "xs" : 8}
-        px={largeScreen ? "lg" : 8}
-        style={{
-          borderRadius: "10px",
-        }}
+        py={{ base: 8, lg: "xs" }}
+        px={{ base: 8, lg: "lg" }}
         bg={mainColor}
-        gap={largeScreen ? "xl" : "md"}
         justify="space-evenly"
+        className={styles.floatingMenu}
       >
         <HoverCard shadow="md" withArrow>
           <HoverCard.Target>
@@ -85,13 +80,7 @@ const FloatingMenuMain = ({
         </HoverCard>
 
         {categories?.length && (
-          <Menu
-            shadow="md"
-            width={largeScreen ? 500 : 200}
-            offset={15}
-            withArrow
-            classNames={styles}
-          >
+          <Menu shadow="md" offset={15} withArrow classNames={styles}>
             <Menu.Target>
               <Stack gap={0} align="center">
                 <ActionIcon size={"lg"} variant="transparent">

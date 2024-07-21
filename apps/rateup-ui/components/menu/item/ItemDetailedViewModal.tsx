@@ -184,7 +184,7 @@ export function ItemDetailedViewModal({
                 </Box>
               )}
             </Card.Section>
-            <Group justify="space-evenly">
+            <Group justify="space-evenly" c="var(--text-color-sp)">
               {item.price.variants?.length > 0 ? (
                 item.price.variants.map((varient, index) => (
                   <Stack align="center" gap={"0px"} key={index}>

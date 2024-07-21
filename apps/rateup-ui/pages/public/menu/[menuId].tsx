@@ -21,8 +21,6 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { getCookie, setCookie } from "cookies-next";
 import Autoplay from "embla-carousel-autoplay";
-import AutoSizer from "react-virtualized-auto-sizer";
-import { FixedSizeList } from "react-window";
 
 import { CreditsCard } from "@/components/Card/CreditsCard";
 import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay";
@@ -108,14 +106,8 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
   }
 
   return (
-    <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={0}>
-      <Paper
-        mih={"100dvh"}
-        ff={lexend.style.fontFamily}
-        maw={largeScreen ? "2440px" : "768px"}
-        w={"100vw"}
-        mx={"auto"}
-      >
+    <ScrollAreaAutosize scrollbarSize={0} className={styles.scrollArea}>
+      <Paper ff={lexend.style.fontFamily} className={styles.paper}>
         {menuBanner?.length > 0 ? (
           <Carousel
             withIndicators
@@ -152,8 +144,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   className={styles.gradient}
                   bgp={"center"}
                   bgsz={"cover"}
-                  h={"clamp(224px, 161.136px + 10.476vw, 312px)"}
-                  maw={largeScreen ? "2440px" : "768px"}
                   alt="menu banner image"
                   fallbackSrc={backgroundImageFallback}
                 />
@@ -170,7 +160,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             // disabled for now
             enableCredits={false}
             url={backgroundImage}
-            pl={largeScreen && 30}
           >
             <picture>
               <source
@@ -198,8 +187,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                 className={styles.gradient}
                 fallbackSrc={backgroundImageFallback}
                 alt="banner image of menu"
-                h={largeScreen ? "33dvh" : "25dvh"}
-                maw={largeScreen ? "2440px" : "768px"}
               />
             </picture>
           </CreditsCard>
@@ -245,7 +232,6 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
           categories={fullCategory}
           displayName={fullMenu?.displayName}
           logo={fullMenu?.menuLanding?.logo}
-          largeScreen={largeScreen}
           categoryRefs={categoryRefs}
         />
       </Paper>

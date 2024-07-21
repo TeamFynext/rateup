@@ -1,3 +1,4 @@
+import classes2 from "@/pages/public/menu/gradientAnimation.module.css";
 import {
   Box,
   Card,
@@ -10,7 +11,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { lexend } from "../../../utils/fonts";
@@ -18,6 +19,8 @@ import { CreditsCard } from "../../Card/CreditsCard";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
+import classes from "./ItemDisplay.module.css";
+
 interface ItemDisplayProps {
   readonly item: any;
   readonly setSelectedItem: (item: MenuItem) => void;
@@ -30,20 +33,13 @@ export function ItemDisplay({
   categoryDisabled = false,
   currency = "0",
 }: ItemDisplayProps) {
-  const smallScreen = useMediaQuery("(max-width: 40em)");
-  let descriptionLineClamp = 3;
-  if (smallScreen) {
-    if (item?.price?.variants?.length > 0 || item?.name?.length > 21) {
-      descriptionLineClamp = 2;
-    }
-  }
   return (
     <PaperLayout
       p="0"
       shadow="lg"
       radius="lg"
-      mx={smallScreen ? "auto" : "sm"}
-      w={smallScreen ? "100%" : "clamp(300px, 228.576px + 11.905vw, 400px)"}
+      mx={{ base: "auto", sm: "sm" }}
+      w={{ base: "100%", sm: "clamp(300px, 228.576px + 11.905vw, 400px)" }}
       maw={400}
       hoveractive={!(item?.disabled || categoryDisabled)}
       onClick={() =>
@@ -66,40 +62,35 @@ export function ItemDisplay({
               }}
             >
               <Image
-                w={"100%"}
-                mih={smallScreen ? 165 : 215}
-                maw={"164px"}
-                alt="image of menu item"
                 src={
-                  item?.images?.length > 0
-                    ? encodeURI(
-                        getFileUrlFromKey(
-                          item?.images[0],
-                          true,
-                          item?.unsplashImage?.find(
-                            (data) => data === item?.images[0],
-                          )?.length > 0,
-                        ),
-                      )
-                    : fallbackImage
+                  item?.images?.length > 0 &&
+                  encodeURI(
+                    getFileUrlFromKey(
+                      item?.images[0],
+                      true,
+                      item?.unsplashImage?.find(
+                        (data) => data === item?.images[0],
+                      )?.length > 0,
+                    ),
+                  )
                 }
+                mih={{ base: "165", sm: "215" }}
+                alt="image of menu item"
+                opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
+                className={classes2.gradient2}
                 style={{
-                  backgroundColor: "var(--orange-400)",
-                  gridArea: "1 / 1 / 4 / 2",
                   filter:
                     item?.disabled || categoryDisabled
                       ? "grayscale(1)"
                       : "grayscale(0)",
-                  aspectRatio: 4 / 3,
                 }}
-                opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
                 fallbackSrc={fallbackImage}
               />
             </CreditsCard>
             {(item?.disabled || categoryDisabled) && (
               <Center h={"100%"} style={{ gridArea: "1 / 1 / 4" }}>
                 <Paper
-                  fz={smallScreen ? "xs" : "md"}
+                  fz={{ base: "xs", sm: "md" }}
                   c={"var(--orange-400)"}
                   fw={600}
                   w={"max-content"}
@@ -117,7 +108,6 @@ export function ItemDisplay({
           <Grid.Col span={7}>
             <Box
               c="var(--text-color-sp)"
-              fw={"600"}
               w={"100%"}
               opacity={item?.disabled || categoryDisabled ? 0.5 : 1}
               style={{
@@ -131,11 +121,9 @@ export function ItemDisplay({
               <Stack gap={0} h={"100%"}>
                 <Box>
                   <Text
-                    fz="clamp(14px, 9.712px + 0.714vw, 20px)"
                     lineClamp={2}
-                    tt={"capitalize"}
-                    fw={500}
-                    mih={smallScreen ? "auto" : 40}
+                    className={classes.title}
+                    mih={{ base: "auto", sm: 40 }}
                   >
                     {item?.name}
                   </Text>
@@ -150,7 +138,7 @@ export function ItemDisplay({
                   </ScrollArea>
                 </Box>
                 <Stack h={"100%"} justify="space-between" gap={0}>
-                  <Text fz={14} lineClamp={descriptionLineClamp}>
+                  <Text fz={14} className={classes.description} lineClamp={2}>
                     {item?.description}
                   </Text>
                   <Flex justify="space-evenly" gap={"sm"} mt={4}>
