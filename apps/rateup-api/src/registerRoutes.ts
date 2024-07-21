@@ -58,6 +58,8 @@ import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic
 import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes";
 import landingPageRoutes from "./modules/landingPage/landingPage.routes";
 import { landingPageSchemas } from "./modules/landingPage/landingPage.schema";
+import linktreeRoutes from "./modules/linktree/linktree.routes";
+import { linktreeSchemas } from "./modules/linktree/linktree.schema";
 import { statsSchemas } from "./modules/stats/stats.schema";
 import { statsRoutes } from "./modules/stats/stats.route";
 import { chatbotRoutes } from "./modules/chatbot/chatbot.rout";
@@ -108,6 +110,7 @@ export function registerRoutes(server: FastifyInstance): void {
     ticketSchemas,
     subscriptionSchemas,
     landingPageSchemas,
+    linktreeSchemas,
     statsSchemas,
     chatbotSchemas,
     orgWsSchemas,
@@ -173,6 +176,7 @@ export function registerRoutes(server: FastifyInstance): void {
   });
   server.register(loyaltyRoutes, { prefix: "api/loyalty/" });
   server.register(landingPageRoutes, { prefix: "/api/landingPages" });
+  server.register(linktreeRoutes, { prefix: "/api/linktrees" });
   server.register(statsRoutes, { prefix: "/api/stats" });
   server.register(chatbotRoutes, { prefix: "api/chatbot" });
   server.register(chatbotPublicRoute, { prefix: "api/public/chatbot" });
