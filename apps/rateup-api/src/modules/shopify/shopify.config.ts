@@ -37,6 +37,5 @@ function initializeShopify() {
 }
 
 const shopify = initializeShopify();
-if (shopify) shopify.webhooks.addHandlers(webhookHandlers);
 
 export default shopify;

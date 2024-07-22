@@ -1,7 +1,6 @@
-import { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../../utils/prisma";
 import shopify from "./shopify.config";
-import { Session, SessionParams } from "@shopify/shopify-api";
+import { Session } from "@shopify/shopify-api";
 import { isEmpty } from "lodash";
 import { log } from "../../utils/logger";
 import {
@@ -16,11 +15,7 @@ import {
   wait,
 } from "../whatsapp/whatsappSurvey/wasurvey.controller";
 import { updateMonthlyStat } from "../stats/stats.service";
-import {
-  ShopifyEvents,
-  ShopifySendAfter,
-  SubscriptionFeaturePathName,
-} from "../../types/enums";
+import { ShopifyEvents, SubscriptionFeaturePathName } from "../../types/enums";
 import {
   createTemplateMessage,
   validateSession,
@@ -28,8 +23,7 @@ import {
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { getFlowIdFromTemplateComponents } from "../whatsapp/messageTemplates/wa_templates.utils";
 import { parsePhoneNumber } from "libphonenumber-js";
-import webhookHandlers from "./shopify.handler";
-import dayjs from "dayjs";
+import { getScheduledTime } from "./shopify.util";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -132,7 +126,6 @@ export async function deleteShopifySession(shop) {
 }
 
 export async function registerShopifyWebhook(session: Session) {
-  shopify.webhooks.addHandlers(webhookHandlers);
   const response = await shopify.webhooks.register({
     session,
   });
@@ -452,27 +445,4 @@ export async function updateShopifySurveySchedule(id, data) {
     },
     data,
   });
-}
-
-function getScheduledTime(sendAfter) {
-  const currentTime = dayjs();
-  let scheduledTime = dayjs();
-  switch (sendAfter) {
-    case ShopifySendAfter.TwoHour:
-      scheduledTime = currentTime.add(2, "hour");
-      break;
-    case ShopifySendAfter.FiveHour:
-      scheduledTime = currentTime.add(5, "hour");
-      break;
-    case ShopifySendAfter.TenHour:
-      scheduledTime = currentTime.add(10, "hour");
-      break;
-    case ShopifySendAfter.OneDay:
-      scheduledTime = currentTime.add(1, "day");
-      break;
-    case ShopifySendAfter.OneDay:
-      scheduledTime = currentTime.add(2, "days");
-      break;
-  }
-  return scheduledTime.toISOString();
 }

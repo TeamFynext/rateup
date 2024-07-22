@@ -6,6 +6,7 @@ import {
   deleteAllWebhookHandler,
   deleteShopifySessionHandler,
   deleteShopifySurveyScheduleHandler,
+  deleteWebhookByTopicHandler,
   getProductsHandler,
   getRegisteredWebhooksHandler,
   getShopifyAuthCallbackHandler,
@@ -13,6 +14,7 @@ import {
   getShopifySchedulesHandler,
   getShopifySessionHandler,
   getShopifySurveysHandler,
+  registerWebhookByTopicHandler,
   registerWebhookHandler,
   shopifyWebhooksHandler,
   updateShopifySessionHandler,
@@ -168,5 +170,27 @@ export async function shopifyRoutes(server: FastifyInstance) {
       preHandler: [checkSession],
     },
     registerWebhookHandler,
+  );
+
+  server.post(
+    "/webhooks/topic",
+    {
+      schema: {
+        body: ShopifyRef("registerWebhookbyTopicSchema"),
+      },
+      preHandler: [checkSession],
+    },
+    registerWebhookByTopicHandler,
+  );
+
+  server.delete(
+    "/webhooks/topic",
+    {
+      schema: {
+        body: ShopifyRef("registerWebhookbyTopicSchema"),
+      },
+      preHandler: [checkSession],
+    },
+    deleteWebhookByTopicHandler,
   );
 }
