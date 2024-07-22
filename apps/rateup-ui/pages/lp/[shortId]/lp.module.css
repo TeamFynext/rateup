@@ -15,4 +15,16 @@
   justify-content: center;
   height: 100vh;
   overflow: auto;
+  padding: 0 1rem;
+}
+
+.root-div .tiptap table,
+.root-div .tiptap > h1,
+.root-div .tiptap > h2,
+.root-div .tiptap > h3,
+.root-div .tiptap > h4,
+.root-div .tiptap > h5,
+.root-div .tiptap > h6,
+.root-div .tiptap > p {
+  margin: 1rem 0;
 }

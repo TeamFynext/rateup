@@ -2,6 +2,8 @@ import { getPublicLandingPageWithShortId } from "@/backend/landingPage/landingPa
 import { Box, Flex, Group, Image } from "@mantine/core";
 import parse from "html-react-parser";
 
+import tiptapDivStyles from "@/components/LandingPage/LandingPageEditor/Editor/RichTextEditor/RichTextEditor.module.css";
+
 import styles from "./lp.module.css";
 
 export const getServerSideProps = async (context) => {
@@ -36,7 +38,9 @@ function PublicLandingPageComp({ landingPageObj }) {
 
   return (
     <Flex className={styles["root-div"]}>
-      <Box>{parse(tiptapEditorContent)}</Box>
+      <Box className={`${tiptapDivStyles["tiptap-div"]} ${styles["tiptap"]}`}>
+        {parse(tiptapEditorContent)}
+      </Box>
     </Flex>
   );
 }

@@ -7,14 +7,21 @@ import { Link } from "@mantine/tiptap";
 import Color from "@tiptap/extension-color";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import Table from "@tiptap/extension-table";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import TableRow from "@tiptap/extension-table-row";
 import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
 import Youtube from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import { Video } from "@/components/RichTextEditor/CustomVideo";
 import { VariableComponentExtension } from "@/components/RichTextEditor/MantineComponentExtension";
+
+import tiptapDivStyles from "../Editor/RichTextEditor/RichTextEditor.module.css";
 
 const LandingPageContext = createContext(null);
 const LandingPageEditorTabContext = createContext(null);
@@ -46,6 +53,7 @@ function LandingPageContextProvider({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Underline,
       Link,
       TextStyle,
       Color,
@@ -61,11 +69,22 @@ function LandingPageContextProvider({
           style: `max-width: 100%;max-height: 100%;`,
         },
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: tiptapEditorContent,
     onUpdate: ({ editor }) => {
       //  console.log(editor);
       handleEditorContentSave(editor);
+    },
+    editorProps: {
+      attributes: {
+        class: tiptapDivStyles["tiptap-div"],
+      },
     },
   });
 

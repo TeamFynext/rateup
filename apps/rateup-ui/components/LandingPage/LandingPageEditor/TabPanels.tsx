@@ -3,6 +3,7 @@ import { Tabs, TabsPanel } from "@mantine/core";
 import Editor from "./Editor";
 import styles from "./LandingPageEditor.module.css";
 import SharePage from "./SharePage";
+import Stats from "./Stats";
 
 function TabPanelsComp({ value }) {
   return (
@@ -19,6 +20,9 @@ function TabPanelsComp({ value }) {
       </TabsPanel>
       <TabsPanel value="share">
         <SharePage />
+      </TabsPanel>
+      <TabsPanel className={styles["stats-tab-panel"]} value="stats">
+        <Stats />
       </TabsPanel>
     </Tabs>
   );
