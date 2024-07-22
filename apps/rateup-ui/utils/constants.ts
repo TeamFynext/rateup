@@ -275,10 +275,10 @@ export const shopifyEventData = [
     label: "On orders partially fulfilled",
     value: ShopifyEvents.ORDERS_PARTIALLY_FULFILLED,
   },
-  // {
-  //   label: "On fulfilled orders canceled",
-  //   value: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
-  // },
+  {
+    label: "On fulfilled orders cancelled",
+    value: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
+  },
 ];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
