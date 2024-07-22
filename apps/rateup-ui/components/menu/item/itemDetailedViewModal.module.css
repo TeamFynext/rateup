@@ -5,6 +5,7 @@
   font-size: clamp(16px, -270px + 20vw, 18px);
   font-weight: 700;
   line-height: 1;
+  color: var(--text-color-sp);
 }
 .image {
   aspect-ratio: 3 / 2;
@@ -16,8 +17,10 @@
   line-clamp: 2;
   text-align: center;
   text-transform: capitalize;
+  color: var(--text-color-sp);
 }
 .preWrap {
   white-space: pre-wrap;
   word-wrap: break-word;
+  color: var(--text-color-sp);
 }

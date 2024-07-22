@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   Alert,
   Box,
@@ -16,59 +18,59 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useToggle } from "@mantine/hooks";
-import { useRouter } from "next/router";
-
+import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
-import { uploadTemplateMedia } from "../../../../backend/whatsapp/whatsapp.api";
+
+import { WaTemplateStatus } from "@/types/enums";
+import { whatsappTheme } from "@/config/mantineTheme";
+import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
 import {
   useCreateTemplateMutation,
   useSaveTemplateAsDraftMutation,
   useUpdateTemplateMutation,
   useWaTemplateById,
-} from "../../../../backend/whatsapp/whatsapp.query";
-import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
+} from "@/backend/whatsapp/whatsapp.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
   ContainedSelection,
   ContainedTextField,
-} from "../../../../components/input/ContainedInput/ContainedInput";
-import { LengthTracker } from "../../../../components/input/LengthTracker";
-import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
+} from "@/components/input/ContainedInput/ContainedInput";
+import { LengthTracker } from "@/components/input/LengthTracker";
+import { LinkCopyElement } from "@/components/input/LinkCopyElement";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import {
   QuickReplyButton,
   ResponseMessageContainer,
-} from "../../../../components/whatsapp/MessageComponents";
-import { BroadCastTypeValue } from "../../../../components/whatsapp/templates/Details/BroadCastTypeValue";
-import { ButtonSelection } from "../../../../components/whatsapp/templates/Details/ButtonSelectionMenu";
-import { HeaderWithFormatting } from "../../../../components/whatsapp/templates/Details/HeaderWithFormating";
-import { TextFormateToolBar } from "../../../../components/whatsapp/templates/Details/TextFormateToolBar";
-import TextWithFormatting from "../../../../components/whatsapp/templates/Details/TextWithFormating";
+} from "@/components/whatsapp/MessageComponents";
+import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/BroadCastTypeValue";
+import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput";
+import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
+import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu";
+import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating";
+import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
+import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating";
 import {
-  WaTemplateDefaultValues,
   templateSchema,
-} from "../../../../components/whatsapp/templates/Schema/templateSchema";
-import WaChatPreview from "../../../../components/whatsapp/templates/WaChatPreview";
-import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
-import { whatsappTheme } from "../../../../config/mantineTheme";
-import { WaTemplateStatus } from "../../../../types/enums";
+  WaTemplateDefaultValues,
+} from "@/components/whatsapp/templates/Schema/templateSchema";
+import WaChatPreview from "@/components/whatsapp/templates/WaChatPreview";
+import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
+import { useRouteParams } from "@/context/RouteParamsContext";
+import { getErrorMessage } from "@/utils";
 import {
   SAVE_HOTKEY,
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
   WHATSAPP_TEMPLATE_CATEGORY,
   WHATSAPP_TEMPLATE_LANGUAGE,
-} from "../../../../utils/constants";
-import { lexend500 } from "../../../../utils/fonts";
-import { showErrorToast, showWarnToast } from "../../../../utils/notifications";
-import { parseTemplate } from "../../../../utils/whatsapp/templates";
-import ButtonInput from "../../../../components/whatsapp/templates/Details/ButtonInput";
-import buttonInputStyles from "../../../../components/whatsapp/templates/Details/ButtonInput.module.css";
-import { uploadFile } from "../../../../utils/file-upload/upload";
-import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
-import { getErrorMessage } from "../../../../utils";
-import { useRouteParams } from "../../../../context/RouteParamsContext";
-import { LinkCopyElement } from "../../../../components/input/LinkCopyElement";
+} from "@/utils/constants";
+import { uploadFile } from "@/utils/file-upload/upload";
+import { lexend500 } from "@/utils/fonts";
+import { showErrorToast, showWarnToast } from "@/utils/notifications";
+import { parseTemplate } from "@/utils/whatsapp/templates";
+
 import styles from "./templateId.module.css";
 
 export default function WhatsappTemplateById() {

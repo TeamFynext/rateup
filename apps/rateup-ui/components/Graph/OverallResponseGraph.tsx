@@ -1,29 +1,30 @@
 import {
-  Stack,
-  Group,
   ActionIcon,
-  Text,
+  Group,
   Tooltip as MantineTooltip,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import {
-  ResponsiveContainer,
+  Area,
   AreaChart,
+  Brush,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Area,
-  Brush,
-  Tooltip,
 } from "recharts";
+
+import { useAllSurveysSummary } from "../../backend/surveys/surveys.query";
 import { lexend400 } from "../../utils/fonts";
 import { RateupButtonBlue } from "../Button/RateupButtons";
+import RefreshButton from "../Button/RefreshButton";
 import NothingFound from "../NothingFound/NothingFound";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import classes from "./graph.module.css";
-import { useAllSurveysSummary } from "../../backend/surveys/surveys.query";
-import RefreshButton from "../Button/RefreshButton";
 
 const OverallResponseGraph = ({
   data,
@@ -31,6 +32,7 @@ const OverallResponseGraph = ({
   setTimePeriod,
   refreshKeys,
   className,
+  translations,
 }) => {
   let total = 0;
 
@@ -50,7 +52,7 @@ const OverallResponseGraph = ({
                   className={`${lexend400.className} ${classes["overall-responses-text-p"]}`}
                   c="dimmed"
                 >
-                  Overall Responses
+                  {translations["Overall Responses"]}
                 </Text>
               </Stack>
               <RefreshButton queryKeys={refreshKeys} />
@@ -62,7 +64,7 @@ const OverallResponseGraph = ({
                 radius="lg"
                 color={timePeriod !== "hourly" ? "gray" : "black"}
                 onClick={() => setTimePeriod("hourly")}
-                title="Hourly"
+                title={translations["Hourly"]}
               />
 
               <RateupButtonBlue
@@ -70,14 +72,14 @@ const OverallResponseGraph = ({
                 radius="lg"
                 color={timePeriod !== "daily" ? "gray" : "black"}
                 onClick={() => setTimePeriod("daily")}
-                title="Daily"
+                title={translations["Daily"]}
               />
               <RateupButtonBlue
                 variant={timePeriod === "weekly" ? "filled" : "subtle"}
                 radius="lg"
                 color={timePeriod !== "weekly" ? "gray" : "black"}
                 onClick={() => setTimePeriod("weekly")}
-                title="Weekly"
+                title={translations["Weekly"]}
               />
             </Group>
           </Group>
@@ -114,7 +116,14 @@ const OverallResponseGraph = ({
                 }
               />
               <YAxis allowDecimals={false} />
-              <Tooltip content={<CustomTooltip timePeriod={timePeriod} />} />
+              <Tooltip
+                content={
+                  <CustomTooltip
+                    timePeriod={timePeriod}
+                    translations={translations}
+                  />
+                }
+              />
               {/* <Legend /> */}
               <CartesianGrid stroke="#f5f5f5" />
               <Area
@@ -139,7 +148,7 @@ const OverallResponseGraph = ({
               />
             </AreaChart>
           ) : (
-            <NothingFound text="No data to display" />
+            <NothingFound text={translations["No data to display"]} />
           )}
 
           {/* TODO : dots showing only on hover, show dots always in area chart */}
@@ -154,8 +163,15 @@ interface iProps {
   payload?: any;
   label?: any;
   timePeriod?: any;
+  translations?: any;
 }
-const CustomTooltip = ({ active, payload, label, timePeriod }: iProps) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  timePeriod,
+  translations,
+}: iProps) => {
   if (active && payload && payload?.length) {
     label =
       timePeriod === "hourly"
@@ -175,7 +191,7 @@ const CustomTooltip = ({ active, payload, label, timePeriod }: iProps) => {
         }}
       >
         <p className="label">{label}</p>
-        <p className="intro">{`Responses: ${payload[0].value}`}</p>
+        <p className="intro">{`${translations["Responses"]}: ${payload[0].value}`}</p>
       </div>
     );
   }

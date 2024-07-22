@@ -1,7 +1,10 @@
-import { Badge, Box, Flex, Group, Stack, Text } from "@mantine/core";
-import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { getTimeSince } from "../../utils";
+import { useRouter } from "next/router";
+
+import { Badge, Box, Flex, Group, Stack, Text } from "@mantine/core";
+
+import { getTimeSince } from "@/utils";
+
 import CreatedSinceText from "../DateAndTime/CreatedSinceText";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import MenuCardMenu from "./MenuCardMenu";
@@ -32,6 +35,7 @@ export function MenuCard({
       onClick={() => {
         router.push(`/dashboard/menu/${menu.id}`);
       }}
+      layoutAnimation
     >
       <Stack>
         <Box>

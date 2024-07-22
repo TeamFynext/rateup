@@ -1,9 +1,12 @@
+import router from "next/router";
+
 import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
-import router from "next/router";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
+
+import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+
 import { SurveyMenu } from "./SurveyMenu";
 
 interface SurveyCardProps {
@@ -26,14 +29,11 @@ export function SurveyCard({
   teamsData,
   route,
   refetchSurveys,
-}: SurveyCardProps): JSX.Element {
+}: Readonly<SurveyCardProps>) {
   return (
     <PaperLayout
       hoveractive
-      p="md"
-      shadow="lg"
-      radius="lg"
-      style={{ cursor: "pointer" }}
+      layoutAnimation
       onClick={(e) => {
         e.stopPropagation();
         router.push(

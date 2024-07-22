@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import StyledTabs from "../../styled/StyledTabs/StyledTabs";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Flex,
@@ -9,17 +10,20 @@ import {
   Tabs,
   Text,
 } from "@mantine/core";
-import Responses from "../Response/Responses";
-import SurveyStats from "./SurveyStats";
-import ResultsOverview from "./ResultsOverview";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowLeft } from "@tabler/icons-react";
+
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
-import {
-  getFilteredResponseUsingTags,
-  getfilteredResponseUsingLanguage,
-} from "../../../utils/response";
-import SurveyContext from "../../../context/SurveyContext";
-import ResultComparison from "./ResultComparison";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SurveyContext from "../../../context/SurveyContext";
+import { useUser } from "../../../context/UserContext";
+import { decryptPrivateKey } from "../../../utils/encryption";
+import { pushToSessionStorage } from "../../../utils/essential";
+import { showErrorToast } from "../../../utils/notifications";
+import {
+  getfilteredResponseUsingLanguage,
+  getFilteredResponseUsingTags,
+} from "../../../utils/response";
 import {
   getFilteredResponsesUsingTeam,
   mergeResponsesFromTeams,
@@ -29,15 +33,13 @@ import {
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
-import { useDisclosure } from "@mantine/hooks";
 import SimpleModalLayout from "../../Modal/SimpleModalLayout";
+import StyledTabs from "../../styled/StyledTabs/StyledTabs";
+import Responses from "../Response/Responses";
 import styles from "./Result.module.css";
-import { pushToSessionStorage } from "../../../utils/essential";
-import { useUser } from "../../../context/UserContext";
-import { decryptPrivateKey } from "../../../utils/encryption";
-import { showErrorToast } from "../../../utils/notifications";
-import { useRouter } from "next/router";
-import { IconArrowLeft } from "@tabler/icons-react";
+import ResultComparison from "./ResultComparison";
+import ResultsOverview from "./ResultsOverview";
+import SurveyStats from "./SurveyStats";
 
 enum ResultTab {
   OverView = "overview",
@@ -54,6 +56,7 @@ const Result = ({
   setEncryptionPassword,
   subscription = null,
   flowId = null,
+  translations,
 }) => {
   const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -146,7 +149,11 @@ const Result = ({
       </Box>
       <Box className={styles["panels-container"]}>
         <Tabs.Panel value="overview">
-          <SurveyStats survey={survey} flowId={flowId} />
+          <SurveyStats
+            survey={survey}
+            flowId={flowId}
+            translations={translations}
+          />
         </Tabs.Panel>
         <Tabs.Panel value="responses">
           <Responses
