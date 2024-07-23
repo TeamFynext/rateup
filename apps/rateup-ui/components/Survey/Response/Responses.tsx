@@ -26,6 +26,9 @@ import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { Range } from "react-date-range";
+
+import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
@@ -108,6 +111,11 @@ const Responses = ({
   ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ]);
+  const [ranges, setRange] = useState<Range[]>([]);
   const router = useRouter();
   const hasContactQuestion =
     responses &&
@@ -326,10 +334,40 @@ const Responses = ({
     }
   }, [refreshing]);
 
+  useEffect(() => {
+    if (ranges.length === 0) {
+      const endDate = dayjs();
+      let startDate = dayjs();
+      responses
+        .map((res) => dayjs(res.createdAt))
+        .forEach((responseDate) => {
+          if (responseDate.isBefore(startDate)) startDate = responseDate;
+        });
+      setRange([
+        {
+          startDate: startDate?.toDate(),
+          endDate: endDate.toDate(),
+          key: "selection",
+        },
+      ]);
+    }
+  }, [ranges, responses]);
+
   if (isQLoading || isLoading) return <RateupLoader />;
   if (QError) return <Text>An error has occurred</Text>;
 
   const responseCount = responses?.length;
+
+  const filteredResponses = ranges[0]
+    ? responses.filter((response) =>
+        dayjs(response.createdAt).isBetween(
+          ranges[0].startDate,
+          ranges[0].endDate,
+          "day",
+          "[]",
+        ),
+      )
+    : responses;
 
   return (
     <Stack className={styles["responses-root-div"]}>
@@ -347,6 +385,12 @@ const Responses = ({
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <RefreshButton queryKeys={["allresponses"]} />
         </Flex>
+
+        <DateRangePickerButton
+          onChange={(r) => setRange(r ? [r["selection"]] : [])}
+          ranges={ranges}
+        />
+
         <Group>
           {CFData && CFData.length > 0 && (
             <ContainedMultiSelect
@@ -453,7 +497,7 @@ const Responses = ({
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
           <TanstackTable
-            data={handleCampaignFlowFilter(responses)}
+            data={handleCampaignFlowFilter(filteredResponses)}
             columns={columns}
           />
           <FormModalLayout
