@@ -2,7 +2,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
-  ActionIcon,
   Box,
   Button,
   Flex,
@@ -22,7 +21,6 @@ import {
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
-import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
@@ -33,10 +31,7 @@ import { DateRangePickerButton } from "@/components/reputationManagement/misc/Da
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
-import {
-  useGetAuthorizationUrl,
-  useGetGoogleAccessToken,
-} from "../../../backend/org/org.query";
+import { useGetGoogleAccessToken } from "../../../backend/org/org.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
@@ -67,7 +62,6 @@ import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import Heading from "../../styled/Heading/Heading";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TanstackTable from "../../Table/TanstackTable";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
@@ -92,7 +86,6 @@ const Responses = ({
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const queryClient = useQueryClient();
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -101,7 +94,6 @@ const Responses = ({
   const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
-  const { data: authUrl } = useGetAuthorizationUrl();
   const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
     useDisclosure(false);
@@ -111,10 +103,6 @@ const Responses = ({
   ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ]);
   const [ranges, setRange] = useState<Range[]>([]);
   const router = useRouter();
   const hasContactQuestion =
@@ -317,15 +305,6 @@ const Responses = ({
         },
       );
     }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    queryClient.invalidateQueries([
-      "allresponses",
-      surveyId,
-    ] as InvalidateQueryFilters);
-    // or use queryClient.refetchQueries("responseQueryKey") for refetching
   };
 
   useEffect(() => {
