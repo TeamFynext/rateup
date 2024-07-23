@@ -3,10 +3,13 @@ import { useCallback, useState } from "react";
 import { Blockquote, Button, Loader, Stack, Title } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 
+import { useUpdateSurveyEditorMutation } from "@/backend/updations/update.query";
+
 import { useUpdateAllThemesMutation } from "../../../backend/surveyTheme/surveyTheme.query";
 
 function UpdateAllThemes() {
   const updateAllThemesMutation = useUpdateAllThemesMutation();
+  const updateSurveyEditorMutation = useUpdateSurveyEditorMutation();
 
   const [isUpdatingThemes, setIsUpdatingThemes] = useState(false);
   const handleUpdateAllThemesBtnClick = useCallback(async () => {
@@ -56,7 +59,9 @@ function UpdateAllThemes() {
         <Title order={2}>Survey Editor Updations</Title>
         <Button
           style={{ alignSelf: "center" }}
-          onClick={handleUpdateAllThemesBtnClick}
+          onClick={() => {
+            updateSurveyEditorMutation.mutate();
+          }}
         >
           Update Editor Structure
         </Button>
