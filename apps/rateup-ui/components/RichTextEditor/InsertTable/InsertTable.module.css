@@ -1,0 +1,10 @@
+.table-options-dropdown-div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  border-radius: 1rem;
+}
+
+.table-options-dropdown-div button {
+  border-radius: 2rem;
+}

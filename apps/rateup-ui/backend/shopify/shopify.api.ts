@@ -25,6 +25,11 @@ export async function getShopifySession() {
   return (await axiosClient.get(`${SHOPIFY_BASE_URL}/session`)).data;
 }
 
+export async function getRegisteredWebhooks() {
+  return (await axiosClient.get(`${SHOPIFY_BASE_URL}/registered-webhooks`))
+    .data as ShopifyEvents[];
+}
+
 export async function updateShopifySession({ shop, data }) {
   return await axiosClient.put(`${SHOPIFY_BASE_URL}/session/${shop}`, data);
 }
@@ -35,10 +40,26 @@ export async function registerShopifyWebhooks() {
   });
 }
 
+export async function registerShopifyWebhookbyTopic(data: {
+  topic: ShopifyEvents;
+}) {
+  return await axiosClient.post(`${SHOPIFY_BASE_URL}/webhooks/topic`, data, {
+    timeout: 0,
+  });
+}
+
 export async function deleteAllShopifyWebhooks(shop) {
   return await axiosClient.delete(
     `${SHOPIFY_BASE_URL}/delete-webhooks/${shop}`,
   );
+}
+
+export async function deleteShopifyWebhookByTopic(data: {
+  topic: ShopifyEvents;
+}) {
+  return await axiosClient.delete(`${SHOPIFY_BASE_URL}/webhooks/topic`, {
+    data,
+  });
 }
 
 export async function updateShopifySurveySchedule({ scheduleId, data }) {

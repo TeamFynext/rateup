@@ -5,6 +5,9 @@ import {
   useDeleteAllShopifySurveySchedule,
   useDeleteAllWebhooks,
   useDeleteShopifySession,
+  useDeleteWebhookByTopic,
+  useGetRegisteredWebhooks,
+  useRegisterWebhookByTopic,
   useRegisterWebhooks,
 } from "@/backend/shopify/shopify.query";
 import { shopifyEventData } from "@/utils/constants";
@@ -19,6 +22,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
+
+import { ShopifyEvents } from "@/types/enums";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
@@ -38,6 +43,9 @@ const ShopifySettings = ({ session }) => {
   const deleteAllSchedulemt = useDeleteAllShopifySchedule();
   const deleteSessionmt = useDeleteShopifySession();
   const registerWebhooksmutate = useRegisterWebhooks();
+  const registerWebhookByTopicMt = useRegisterWebhookByTopic();
+  const deleteWebhookbyTopicMt = useDeleteWebhookByTopic();
+  const { data: webhooks } = useGetRegisteredWebhooks(showEvents);
   const handleDeleteWehooks = () => {
     if (!session) return;
     showLoadingToast("hold on..deleting webhooks", "webhooks", true);
@@ -89,6 +97,35 @@ const ShopifySettings = ({ session }) => {
   const handleDeleteAllSchedules = () => {
     showLoadingToast("hold on..deleting schedules", "shopify-schedules", true);
     deleteAllSchedulemt.mutate();
+  };
+
+  const handleChangeWebhookByTopic = (event, isEnabled) => {
+    if (isEnabled) {
+      showLoadingToast(
+        "Hold On..Registering webhooks",
+        "webhooks",
+        true,
+        "Loading",
+        "",
+        false,
+      );
+      registerWebhookByTopicMt.mutate({ topic: event.value });
+    } else {
+      setDeleteCase(
+        getLabelsforConfirmModal(
+          "ShopifyWebhookTopic",
+          handleDeleteWebhookByTopic,
+          [event.value],
+          { event: event.label },
+        ),
+      );
+      openConfirm();
+    }
+  };
+
+  const handleDeleteWebhookByTopic = (topic) => {
+    showLoadingToast("hold on..deleting webhooks", "webhooks", true);
+    deleteWebhookbyTopicMt.mutate({ topic: topic });
   };
 
   return (
@@ -183,9 +220,16 @@ const ShopifySettings = ({ session }) => {
                   <Switch
                     key={event.value}
                     label={event.label}
-                    checked={isWebhookEnabled}
-                    disabled
+                    checked={webhooks?.includes(event.value)}
                     size="md"
+                    styles={{
+                      label: {
+                        color: "dimgray",
+                      },
+                    }}
+                    onChange={(e) =>
+                      handleChangeWebhookByTopic(event, e.currentTarget.checked)
+                    }
                   />
                 ))}
               </Stack>
@@ -201,7 +245,9 @@ const ShopifySettings = ({ session }) => {
           closeConfirm();
         }}
         opened={openedConfirm}
-        onConfirm={() => deleteCase?.confirmFunction()}
+        onConfirm={() =>
+          deleteCase?.confirmFunction(...deleteCase.confirmFuncArgs)
+        }
         closeLabel="Cancel"
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}
@@ -210,7 +256,12 @@ const ShopifySettings = ({ session }) => {
   );
 };
 
-export function getLabelsforConfirmModal(deletionCase, confirmFunc) {
+export function getLabelsforConfirmModal(
+  deletionCase,
+  confirmFunc,
+  confirmFuncArgs?,
+  data?,
+) {
   switch (deletionCase) {
     case "webhooks":
       return {
@@ -248,6 +299,14 @@ export function getLabelsforConfirmModal(deletionCase, confirmFunc) {
         headerLabel: "Are you sure to delete?",
         deleteQuotion: "All undelivered schedules will also be deleted",
         confirmFunction: confirmFunc,
+      };
+    case "ShopifyWebhookTopic":
+      return {
+        headerTitle: `Disable ${data.event} event`,
+        headerLabel: "Are you sure to disable this webhook?",
+        confirmFunction: confirmFunc,
+        confirmFuncArgs,
+        confirmLabel: "Disable",
       };
   }
 }

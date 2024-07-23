@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Badge,
@@ -12,18 +14,19 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
-import { useRouter } from "next/router";
+
+import { WaFlowStatus } from "@/types/enums";
 import {
   useCloneAndDeprecateFlowsMutation,
   useCloneFlowsMutation,
   useDeleteFlowMutation,
-} from "../../../../backend/whatsapp/flow/flow.query";
-import { WaFlowStatus } from "../../../../types/enums";
-import CreatedSinceText from "../../../DateAndTime/CreatedSinceText";
-import ConfirmationModal from "../../../Modal/ConfirmationModal";
-import FormModalLayout from "../../../Modal/FormModalLayout";
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
+} from "@/backend/whatsapp/flow/flow.query";
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+
 import styles from "./FlowCard.module.css";
 
 interface FlowCardProps {
@@ -39,7 +42,7 @@ function FlowCard({
   dbFlowId,
   createdAt,
   teamsData,
-}: FlowCardProps) {
+}: Readonly<FlowCardProps>) {
   const router = useRouter();
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [
@@ -87,6 +90,7 @@ function FlowCard({
       shadow="lg"
       radius="lg"
       hoveractive={true}
+      layoutAnimation
       onClick={() =>
         router.push(
           `/dashboard/whatsapp/flows/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,

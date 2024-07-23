@@ -10,10 +10,13 @@ import {
   deleteAllShopifyWebhooks,
   deleteShopifySession,
   deleteShopifySurveySchedule,
+  deleteShopifyWebhookByTopic,
   getProductsFromShopify,
+  getRegisteredWebhooks,
   getShopifySchedules,
   getShopifySession,
   getShopifySurveySchedulesByOrg,
+  registerShopifyWebhookbyTopic,
   registerShopifyWebhooks,
   updateShopifySession,
   updateShopifySurveySchedule,
@@ -45,6 +48,14 @@ export const useGetShopifySchedules = () => {
   return useQuery({
     queryKey: ["shopifySchedules"],
     queryFn: getShopifySchedules,
+  });
+};
+
+export const useGetRegisteredWebhooks = (enabled) => {
+  return useQuery({
+    queryKey: ["shopifyWebhooks"],
+    queryFn: getRegisteredWebhooks,
+    enabled,
   });
 };
 
@@ -179,6 +190,32 @@ export const useRegisterWebhooks = () => {
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["shopifySession"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
+    },
+    onError: () => {
+      showErrorToast(
+        "Webhook registration failed",
+        "webhooks",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useRegisterWebhookByTopic = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: registerShopifyWebhookbyTopic,
+    onSuccess: () => {
+      showSuccessToast(
+        "Webhooks registration succesfull",
+        "webhooks",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopifySession"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
     onError: () => {
       showErrorToast(
@@ -204,6 +241,33 @@ export const useDeleteAllWebhooks = () => {
       );
       queryClient.invalidateQueries({ queryKey: ["shopifySession"] });
       queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
+    },
+    onError: () => {
+      showErrorToast(
+        "Webhook subscription deletion failed",
+        "webhooks",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useDeleteWebhookByTopic = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteShopifyWebhookByTopic,
+    onSuccess: () => {
+      showSuccessToast(
+        "Webhooks subscription deletion succesfull",
+        "webhooks",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["shopifySession"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifySurveySchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
     onError: () => {
       showErrorToast(

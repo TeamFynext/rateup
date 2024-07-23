@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-import { useCounter, useMediaQuery } from "@mantine/hooks";
 import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
 import {
   ActionIcon,
@@ -8,12 +7,12 @@ import {
   Image,
   Modal,
   Popover,
-  ScrollArea,
   ScrollAreaAutosize,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
+import { useCounter, useMediaQuery } from "@mantine/hooks";
 import {
   IconBookmark,
   IconChevronLeft,
@@ -22,23 +21,20 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 
-import { Slide } from "../menu/slide/Slide";
-import { MenuItemPriceType } from "../../types/enums";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import RateupLoader from "../Loaders/RateupLoader";
-import { showErrorToast } from "../../utils/notifications";
-import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-  RateupIconButton,
-} from "../Button/RateupButtons";
+import { MenuItemPriceType } from "@/types/enums";
 import {
   useCreateMenuBannerMutation,
   useDeleteMenuBannerMutation,
   useMenuBannerQuery,
   useUpdateMenuBannerMutation,
-} from "../../backend/menu/Banner/banner.query";
+} from "@/backend/menu/Banner/banner.query";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
+
+import { RateupButtonPrimary, RateupIconButton } from "../Button/RateupButtons";
+import RateupLoader from "../Loaders/RateupLoader";
+import { Slide } from "../menu/slide/Slide";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 type BannerAddAndViewModalProps = {
   opened: boolean;

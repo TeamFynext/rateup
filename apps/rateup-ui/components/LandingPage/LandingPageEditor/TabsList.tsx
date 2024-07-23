@@ -13,6 +13,7 @@ function TabsListComp({ value, onChange }) {
       <TabsList>
         <TabsTab value="edit">Edit</TabsTab>
         <TabsTab value="share">Share</TabsTab>
+        <TabsTab value="stats">Stats</TabsTab>
       </TabsList>
     </Tabs>
   );

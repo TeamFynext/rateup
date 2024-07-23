@@ -1,6 +1,7 @@
-import { Button, Flex, Group } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 
+import InsertTable from "@/components/RichTextEditor/InsertTable";
 import {
   InsertEmoji,
   InsertImage,
@@ -49,6 +50,7 @@ function RichTextEditorComp() {
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.Bold />
             <RichTextEditor.Italic />
+            <RichTextEditor.Underline />
             <RichTextEditor.Strikethrough />
             <RichTextEditor.ClearFormatting />
             <RichTextEditor.Code />
@@ -86,6 +88,7 @@ function RichTextEditorComp() {
             <InsertEmoji />
             <InsertImage />
             <InsertVideo />
+            <InsertTable />
           </RichTextEditor.ControlsGroup>
         </Group>
 
