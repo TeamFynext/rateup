@@ -2,7 +2,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
-  ActionIcon,
   Box,
   Button,
   Flex,
@@ -22,18 +21,17 @@ import {
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
-import { InvalidateQueryFilters, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { Range } from "react-date-range";
+
+import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
-import {
-  useGetAuthorizationUrl,
-  useGetGoogleAccessToken,
-} from "../../../backend/org/org.query";
+import { useGetGoogleAccessToken } from "../../../backend/org/org.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
@@ -64,7 +62,6 @@ import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import NothingFound from "../../NothingFound/NothingFound";
 import Heading from "../../styled/Heading/Heading";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import TanstackTable from "../../Table/TanstackTable";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
@@ -89,7 +86,6 @@ const Responses = ({
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const queryClient = useQueryClient();
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -98,7 +94,6 @@ const Responses = ({
   const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
-  const { data: authUrl } = useGetAuthorizationUrl();
   const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
     useDisclosure(false);
@@ -108,6 +103,7 @@ const Responses = ({
   ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
+  const [ranges, setRange] = useState<Range[]>([]);
   const router = useRouter();
   const hasContactQuestion =
     responses &&
@@ -311,25 +307,46 @@ const Responses = ({
     }
   };
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    queryClient.invalidateQueries([
-      "allresponses",
-      surveyId,
-    ] as InvalidateQueryFilters);
-    // or use queryClient.refetchQueries("responseQueryKey") for refetching
-  };
-
   useEffect(() => {
     if (refreshing) {
       setRefreshing(false);
     }
   }, [refreshing]);
 
+  useEffect(() => {
+    if (ranges.length === 0) {
+      const endDate = dayjs();
+      let startDate = dayjs();
+      responses
+        .map((res) => dayjs(res.createdAt))
+        .forEach((responseDate) => {
+          if (responseDate.isBefore(startDate)) startDate = responseDate;
+        });
+      setRange([
+        {
+          startDate: startDate?.toDate(),
+          endDate: endDate.toDate(),
+          key: "selection",
+        },
+      ]);
+    }
+  }, [ranges, responses]);
+
   if (isQLoading || isLoading) return <RateupLoader />;
   if (QError) return <Text>An error has occurred</Text>;
 
   const responseCount = responses?.length;
+
+  const filteredResponses = ranges[0]
+    ? responses.filter((response) =>
+        dayjs(response.createdAt).isBetween(
+          ranges[0].startDate,
+          ranges[0].endDate,
+          "day",
+          "[]",
+        ),
+      )
+    : responses;
 
   return (
     <Stack className={styles["responses-root-div"]}>
@@ -347,6 +364,12 @@ const Responses = ({
           <Heading subtitle={`Total Responses : ${responseCount}`} />
           <RefreshButton queryKeys={["allresponses"]} />
         </Flex>
+
+        <DateRangePickerButton
+          onChange={(r) => setRange(r ? [r["selection"]] : [])}
+          ranges={ranges}
+        />
+
         <Group>
           {CFData && CFData.length > 0 && (
             <ContainedMultiSelect
@@ -453,7 +476,7 @@ const Responses = ({
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
           <TanstackTable
-            data={handleCampaignFlowFilter(responses)}
+            data={handleCampaignFlowFilter(filteredResponses)}
             columns={columns}
           />
           <FormModalLayout

@@ -1,8 +1,12 @@
-import { Group, TextInput, Modal, Button } from "@mantine/core";
+import { Button, Group, Modal, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import dayjs from "dayjs";
 import { DateRangePicker, Range } from "react-date-range";
+
 import classes from "./InsideLabel.module.css";
+
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 
 export function DateRangePickerButton({
   onChange,
