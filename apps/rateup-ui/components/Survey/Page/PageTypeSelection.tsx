@@ -1,10 +1,12 @@
-import { Button, Flex, Grid, Group, Stack, Text, Title } from "@mantine/core";
 import React from "react";
+
+import { Button, Flex, Grid, Group, Stack, Text, Title } from "@mantine/core";
+
 import { PageType } from "../../../types/enums";
-import { IconFileInfo, IconNotebook, IconPageBreak } from "@tabler/icons-react";
-import classes from "./QuestionDetailedView.module.css";
-import { getPageTypeLabel } from "../../../utils/enums";
 import { BasicPages, uniquePages } from "../../../utils/constants";
+import { getPageTypeLabel } from "../../../utils/enums";
+import { pageIcons } from "../Page/PageIcons";
+import classes from "../Question/QuestionDetailedView.module.css";
 
 interface iProps {
   questions: Question[];
@@ -15,7 +17,7 @@ const PageTypeSelection = ({ handleTypeSelection, questions }) => {
     handleTypeSelection(type);
   };
   const QuestionButton = ({ type }) => {
-    const Icon = questionIcons[type];
+    const Icon = pageIcons[type];
     return (
       <Button
         key={type}
@@ -59,9 +61,3 @@ const PageTypeSelection = ({ handleTypeSelection, questions }) => {
 };
 
 export default PageTypeSelection;
-
-const questionIcons = {
-  [PageType.Welcome]: IconNotebook,
-  [PageType.Custom]: IconFileInfo,
-  [PageType.ThankYou]: IconPageBreak,
-};

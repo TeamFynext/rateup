@@ -1,27 +1,29 @@
-import { Center, Text, Tabs, Flex, Stack } from "@mantine/core";
-import { QuestionDetailedView } from "./Question/QuestionDetailedView";
-import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
-import { QuestionsSideBar } from "./QuestionsSideBar";
 import { useContext, useEffect, useState } from "react";
-import LogicEditor from "./Question/LogicEditor";
-import GoogleReviewEditor from "./Question/GoogleReviewEditor";
-import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { MotionTransition } from "../animation/MotionTransition";
-import styles from "./EditSurvey.module.css";
+
+import { Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+
+import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../backend/surveys/surveys.query";
+import SelectedLanguageContext from "../../context/SelectedLanguage";
 import SurveyContext from "../../context/SurveyContext";
 import { PageType, QuestionType, SurveyType } from "../../types/enums";
 import {
   QuestionTypesGroup,
   WaSurveyQuestionTypes,
 } from "../../utils/constants";
-import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
 import { createBlankQuestion, createPage } from "../../utils/questions";
-import SelectedLanguageContext from "../../context/SelectedLanguage";
-import TicketIssueEditor from "./Question/TicketIssueEditor";
+import { MotionTransition } from "../animation/MotionTransition";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import styles from "./EditSurvey.module.css";
+import PageTypeSelection from "./Page/PageTypeSelection";
+import GoogleReviewEditor from "./Question/GoogleReviewEditor";
+import LogicEditor from "./Question/LogicEditor";
+import { QuestionDetailedView } from "./Question/QuestionDetailedView";
+import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor";
-import PageTypeSelection from "./Question/PageTypeSelection";
+import TicketIssueEditor from "./Question/TicketIssueEditor";
+import ValidationRulesEditor from "./Question/ValidationRulesEditor";
+import { QuestionsSideBar } from "./QuestionsSideBar";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
