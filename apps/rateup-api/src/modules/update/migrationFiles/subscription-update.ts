@@ -1,4 +1,4 @@
-import prisma from "./src/utils/prisma";
+import prisma from "../../../utils/prisma";
 
 export async function updateSubscriptionFeatures() {
   console.log("Updating subscription........whatsapp......");
