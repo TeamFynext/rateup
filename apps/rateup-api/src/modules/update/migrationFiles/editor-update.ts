@@ -24,7 +24,7 @@ export async function updateEditorStructure() {
         languages,
         survey.welcomePageEnabled,
       );
-      console.log(updatedJsonData);
+      //console.log(updatedJsonData);
 
       let surveyQns = await prisma.survey.update({
         where: {
@@ -35,11 +35,13 @@ export async function updateEditorStructure() {
         },
       });
 
-      console.log("Updated.....");
+      // console.log(surveyQns);
     } catch (error) {
       throw error;
     }
   }
+
+  console.log("Updated.....");
 }
 
 function updateQuestionsJson(questions, languages, welcomePageEnabled) {
