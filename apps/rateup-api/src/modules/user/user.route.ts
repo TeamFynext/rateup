@@ -11,6 +11,7 @@ import {
   updateProfilePhotoHandler,
   updateRecipeNameHandler,
   updateUserActiveStatusHandler,
+  updateUserPrefLanguageHandler,
 } from "./user.controller";
 import { $UserRef } from "./user.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -42,6 +43,17 @@ export async function userRoutes(server: FastifyInstance) {
       },
     },
     updateProfileHandler,
+  );
+
+  server.put(
+    "/update-language",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        body: $UserRef("updateUserLanguageSchema"),
+      },
+    },
+    updateUserPrefLanguageHandler,
   );
 
   server.put(
