@@ -9,7 +9,7 @@ import {
   getLandingPages,
   getLandingPageWithShortId,
   updateLandingPage,
-  updatePageVisitsOrLinkClicks,
+  updatePageVisits,
 } from "./landingPage.api";
 
 //get all landingPages
@@ -110,13 +110,10 @@ function useLinkTypeOptions(linkType) {
   });
 }
 
-function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId) {
+function usePageVisitsUpdateMutation(shortUrlId) {
   return useMutation({
-    mutationFn: (bodyData: {
-      resourceToBeUpdated: string;
-      linkId?: string;
-    }) => {
-      return updatePageVisitsOrLinkClicks(shortUrlId, bodyData);
+    mutationFn: () => {
+      return updatePageVisits(shortUrlId);
     },
     onSuccess: () => {},
     onError: () => {},
@@ -130,5 +127,5 @@ export {
   useGetLandingPageWithShortId,
   useDeleteLandingPageMutation,
   useLinkTypeOptions,
-  usePageVisitsOrLinkClicksUpdateMutation,
+  usePageVisitsUpdateMutation,
 };
