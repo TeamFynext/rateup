@@ -8,6 +8,7 @@ import {
   getUserRecipeName,
   pauseUser,
   updateUserActiveStatus,
+  updateUserPrefLanguage,
   updateUserProfile,
   updateUserProfilePhoto,
   updateUserRecipe,
@@ -18,6 +19,7 @@ import {
   PauseUserInput,
   UpdateProfilePhotoSchema,
   UpdateProfileSchema,
+  updateUserLanguageSchema,
   userEmailCheckSchemaInput,
 } from "./user.schema";
 import supertokens from "supertokens-node";
@@ -196,6 +198,21 @@ export async function updateProfileHandler(
   }
 
   reply.code(201).send({ success: true, data: user });
+}
+
+export async function updateUserPrefLanguageHandler(
+  request: FastifyRequest<{
+    Body: updateUserLanguageSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const user = await updateUserPrefLanguage(request.body, request, reply);
+    reply.code(200).send({ success: true, data: user });
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+  }
 }
 
 export async function updateProfilePhotoHandler(

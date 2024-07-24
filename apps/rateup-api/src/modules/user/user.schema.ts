@@ -4,6 +4,7 @@ import { UserRecipes } from "../../types/enums";
 
 const userCore = {
   id: z.string().uuid(),
+  prefLanguage: z.string().optional(),
 };
 
 const createUserSchema = z.object({
@@ -49,6 +50,10 @@ const updateProfileSchema = z.object({
   phone: z.string(),
 });
 
+const updateUserLanguageSchema = z.object({
+  prefLanguage: z.string().optional(),
+});
+
 const updateProfilePhotoSchema = z.object({
   profilePhoto: z
     .string()
@@ -69,6 +74,7 @@ export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
     changeUserPasswordSchema,
     updateProfileSchema,
     updateProfilePhotoSchema,
+    updateUserLanguageSchema,
     userEmailCheckSchema,
     pauseUserSchema,
   },
@@ -80,6 +86,7 @@ export type userInfoParams = z.infer<typeof userInfoSchema>;
 export type CreateUserSignupSchema = z.infer<typeof createUserSignupSchema>;
 export type CreateUserGoogleSchema = z.infer<typeof createUserGoogleSchema>;
 export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
+export type updateUserLanguageSchema = z.infer<typeof updateUserLanguageSchema>;
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
 export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;

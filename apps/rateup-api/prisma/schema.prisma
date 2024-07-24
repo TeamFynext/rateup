@@ -71,6 +71,7 @@ model User {
   recipeName     UserRecipes?
   isPaused       Boolean?        @default(false)
   pausedBy       String?
+  prefLanguage       String?    @default("English")
   org            Org[]
   orgMember      OrgMember[]
   teamMember     TeamMember[]

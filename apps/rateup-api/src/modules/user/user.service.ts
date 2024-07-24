@@ -4,6 +4,7 @@ import {
   CreateUserSignupSchema,
   PauseUserInput,
   UpdateProfilePhotoSchema,
+  updateUserLanguageSchema,
   UpdateProfileSchema,
   userInfoParams,
 } from "./user.schema";
@@ -22,12 +23,18 @@ import { UserRecipes } from "../../types/enums";
 
 const prisma = new PrismaClient();
 
-async function createUser({ id, email, recipeName }: CreateUserParams) {
+async function createUser({
+  id,
+  email,
+  recipeName,
+  prefLanguage,
+}: CreateUserParams) {
   const user = await prisma.user.create({
     data: {
       id,
       email,
       recipeName,
+      prefLanguage,
     },
   });
   return user;
@@ -41,6 +48,7 @@ export async function createUserSignup({
   phone,
   phoneNumber,
   recipeName,
+  prefLanguage,
 }: CreateUserSignupSchema) {
   log.info("Creating user....");
   try {
@@ -54,6 +62,7 @@ export async function createUserSignup({
           name,
           phone,
           recipeName,
+          prefLanguage,
         },
       });
 
@@ -184,6 +193,7 @@ export async function getLoggedUserInfo(
       },
       isPaused: true,
       pausedBy: true,
+      prefLanguage: true,
     },
   });
 
@@ -228,6 +238,7 @@ export async function getLoggedUserInfo(
     isPaused: profile?.isPaused,
     pausedBy: profile?.pausedBy,
     isOrgPaused: orgData?.isPaused,
+    prefLanguage: profile?.prefLanguage,
   };
 }
 
@@ -285,6 +296,24 @@ export async function updateUserProfile(
       gender: title as Gender,
       name,
       phone,
+    },
+  });
+
+  return result;
+}
+
+export async function updateUserPrefLanguage(
+  { prefLanguage }: updateUserLanguageSchema,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  let session = await Session.getSession(request, reply);
+  let userId = session.getUserId();
+
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      prefLanguage,
     },
   });
 
