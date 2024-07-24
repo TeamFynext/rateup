@@ -1,21 +1,23 @@
-import { PasswordInput, TextInput, Title } from "@mantine/core";
-import LoginSignupLInks from "./LoginSignupLinks";
-import { useForm } from "@mantine/form";
+import { useState } from "react";
 import Link from "next/link";
+
+import { PasswordInput, TextInput, Title } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconPhone } from "@tabler/icons-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { isValidPhoneNumber } from "react-phone-number-input";
+
+import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import GoogleSignInButton from "./GoogleSigninButton";
 import styles from "./AuthForm.module.css";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { signUpType } from "./SignupForm";
+import GoogleSignInButton from "./GoogleSigninButton";
+import LoginSignupLInks from "./LoginSignupLinks";
 import PhoneNumberForm from "./phoneNumberForm";
-import { isValidPhoneNumber } from "react-phone-number-input";
-import { IconPhone } from "@tabler/icons-react";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
+import { signUpType } from "./SignupForm";
 
 function LoginForm({ setIsLoading, signIn, isLoading }) {
   const loginForm = useForm({
@@ -57,7 +59,12 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
 
   const handleSubmit = (values) => {
     setIsLoading(true);
-    signIn(values.email, values.password, values.phoneNumber).finally(() => {
+    signIn(
+      values.email,
+      values.password,
+      values.phoneNumber,
+      values.prefLanguage,
+    ).finally(() => {
       setIsLoading(false);
     });
   };

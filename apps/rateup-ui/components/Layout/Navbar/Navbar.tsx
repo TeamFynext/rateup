@@ -1,13 +1,16 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import { Breadcrumbs, Group, Text } from "@mantine/core";
 import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useRouteParams } from "../../../context/RouteParamsContext";
-import styles from "./Navbar.module.css";
+
 import { useSubscription } from "../../../backend/subscription/subscription.query";
+import { useRouteParams } from "../../../context/RouteParamsContext";
+import LanguageSelector from "../../Button/LanguageSelector";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import ExpiryComponent from "../../Premium/ExpiryComponent";
 import ColorSchemaButton from "../../theme/ColorSchemaButton";
-import Link from "next/link";
+import styles from "./Navbar.module.css";
 
 export const Navbar = () => {
   const router = useRouter();
@@ -60,6 +63,9 @@ export const Navbar = () => {
       <Group>
         <div id="navbar" style={{ justifyItems: "flex-end" }}></div>
         {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
+        <div className={styles["navbar-top"]}>
+          <LanguageSelector /> {/* Add LanguageSelector component */}
+        </div>
       </Group>
       {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
         <ExpiryComponent expiryDate={subscription?.expiresAt}>
