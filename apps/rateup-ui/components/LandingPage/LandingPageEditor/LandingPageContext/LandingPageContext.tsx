@@ -1,11 +1,9 @@
 import { createContext, useContext, useEffect } from "react";
 import { useRouter } from "next/router";
 
-import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { Link } from "@mantine/tiptap";
 import Color from "@tiptap/extension-color";
-import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import Table from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
@@ -18,7 +16,9 @@ import Youtube from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-import { Video } from "@/components/RichTextEditor/CustomVideo";
+import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
+import CustomImageExtension from "@/components/RichTextEditor/InsertImage/CustomImageExtenstion";
+import { Video } from "@/components/RichTextEditor/InsertVideo/CustomVideo";
 import { VariableComponentExtension } from "@/components/RichTextEditor/MantineComponentExtension";
 
 import tiptapDivStyles from "../Editor/RichTextEditor/RichTextEditor.module.css";
@@ -48,7 +48,7 @@ function LandingPageContextProvider({
         tiptapEditorContent: editor.getHTML(),
       });
     } catch (err) {}
-  }, 500);
+  }, 2000);
 
   const editor = useEditor({
     extensions: [
@@ -64,10 +64,8 @@ function LandingPageContextProvider({
         placeholder: "Enter your content here",
       }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Image.configure({
-        HTMLAttributes: {
-          style: `max-width: 100%;max-height: 100%;`,
-        },
+      CustomImageExtension.configure({
+        inline: false,
       }),
       Table.configure({
         resizable: true,
