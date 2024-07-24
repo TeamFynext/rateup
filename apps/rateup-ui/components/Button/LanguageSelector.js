@@ -23,7 +23,9 @@ const LanguageSelector = () => {
       { prefLanguage: selectedLanguage },
       {
         onSuccess: () => {
-          router.push(newPath);
+          router.push(router.asPath, router.asPath, {
+            locale: selectedLanguage,
+          });
         },
       },
     );
