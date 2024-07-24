@@ -1,5 +1,6 @@
-import { notifications } from "@mantine/notifications";
 import React from "react";
+
+import { notifications } from "@mantine/notifications";
 
 export function showInfoToast(
   title: string,

@@ -106,7 +106,7 @@ const ResultsOverview = ({ surveyId }) => {
       ];
       // Check if any of the allowed question types are present in the survey
       const hasAllowedQuestions = questions.some((question) =>
-        allowedQuestionTypes.includes(question.type),
+        allowedQuestionTypes.includes(question.type as QuestionType),
       );
 
       setIsAllowedQnsPresent(hasAllowedQuestions);

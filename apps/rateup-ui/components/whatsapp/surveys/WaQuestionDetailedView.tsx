@@ -1,27 +1,30 @@
+import { useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Stack,
+  ActionIcon,
+  Badge,
+  Box,
+  Checkbox,
   Divider,
   Group,
-  Checkbox,
-  Textarea,
-  Popover,
-  ActionIcon,
-  Box,
-  useMantineTheme,
-  Switch,
-  Badge,
   Image,
+  Popover,
   ScrollArea,
+  Stack,
+  Switch,
+  Textarea,
+  useMantineTheme,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import {
-  IconX,
-  IconEye,
   IconBrandGoogle,
   IconDeviceSdCard,
+  IconEye,
+  IconX,
 } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useState, useContext, useEffect } from "react";
+
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
@@ -32,24 +35,23 @@ import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
 } from "../../../utils/data";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import { QuestionTabsEnum } from "./WaEditSurvey";
-import { LengthTracker } from "../../input/LengthTracker";
-import { WA_BODY_CHAR_LIMIT, WA_HEADER_CHAR_LIMIT } from "../whatsappConfig";
-import { WaListMessageItemsCreator } from "./WaListMessageItemsCreator";
-import { ChoicesCreator } from "../../Survey/Question/QuestionExtraProps/ChoicesCreator";
 import { showErrorToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
-import { WhatsappChatPreview } from "./WaChatPreview";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
+import { LengthTracker } from "../../input/LengthTracker";
 import { LanguageCompletionView } from "../../Survey/Question/LanguageCompletionView";
+import { ChoicesCreator } from "../../Survey/Question/QuestionExtraProps/ChoicesCreator";
 import TestimonialExtraProps from "../../Survey/Question/QuestionExtraProps/TestimonialExtraProps";
-import { notifications } from "@mantine/notifications";
+import { WA_BODY_CHAR_LIMIT, WA_HEADER_CHAR_LIMIT } from "../whatsappConfig";
+import { WhatsappChatPreview } from "./WaChatPreview";
+import { QuestionTabsEnum } from "./WaEditSurvey";
+import { WaListMessageItemsCreator } from "./WaListMessageItemsCreator";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -278,7 +280,7 @@ export function WaQuestionDetailedView({
             {...form.getInputProps("required", { type: "checkbox" })}
           />
           <Group>
-            {logicSupportedTypes.includes(question?.type) && (
+            {logicSupportedTypes.includes(question?.type as QuestionType) && (
               <RateupButtonSecondary
                 title={"Logic Jump"}
                 leftIcon={
@@ -299,7 +301,9 @@ export function WaQuestionDetailedView({
               />
             )}
             {/* TODO: Implement Custom Validation*/}
-            {googleReviewSupportedTypes.includes(question?.type) && (
+            {googleReviewSupportedTypes.includes(
+              question?.type as QuestionType,
+            ) && (
               <RateupButtonSecondary
                 title={"Google Review"}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}

@@ -1,12 +1,14 @@
+import router from "next/router";
+
 import {
-  Stack,
-  Title,
-  NavLink,
-  Image,
   Divider,
-  SimpleGrid,
-  Text,
   Group,
+  Image,
+  NavLink,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
 import {
   IconApi,
@@ -16,7 +18,6 @@ import {
   IconShieldLockFilled,
 } from "@tabler/icons-react";
 import PaperLayout from "components/styled/Layouts/PaperLayout";
-import router from "next/router";
 import { IntegratedApps } from "types/enums";
 
 const index = () => {

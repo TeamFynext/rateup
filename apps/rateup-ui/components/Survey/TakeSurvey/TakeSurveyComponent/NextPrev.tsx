@@ -1,9 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { SelectedQContext } from "../../../../context/SelectedQ";
-import { CurrentResponsesContext } from "../../../../context/ResponseContext";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { useMediaQuery } from "@mantine/hooks";
-import { QuestionType as Q } from "../../../../types/enums";
+
 import {
   ActionIcon,
   Button,
@@ -13,12 +9,18 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { validateQuestion } from "../../../../utils/validation";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { isEmptyObject } from "@tiptap/react";
+
+import { CurrentResponsesContext } from "../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../context/SelectedQ";
+import { QuestionType as Q, QuestionType } from "../../../../types/enums";
+import { validationSupportedTypes } from "../../../../utils/data";
+import { validateQuestion } from "../../../../utils/validation";
 import styles from "./TakeSurvey.module.css";
 import { validateResponse } from "./util";
-import { validationSupportedTypes } from "../../../../utils/data";
-import { isEmptyObject } from "@tiptap/react";
 
 function NextPrev({
   prev,
@@ -30,6 +32,8 @@ function NextPrev({
   surveyThemeData,
   errorTextDivRef,
   isSurveyThemePreview = false,
+  isWelcomePageEnabled = false,
+  isThankYouPageEnabled = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -54,7 +58,7 @@ function NextPrev({
     if (
       selectedQ?.validationRules &&
       response &&
-      validationSupportedTypes.includes(selectedQ?.type)
+      validationSupportedTypes.includes(selectedQ?.type as QuestionType)
     ) {
       let error = validateQuestion(selectedQ, response, selectedLanguage);
       if (error?.length > 0) {
@@ -91,11 +95,15 @@ function NextPrev({
   }
 
   if (!survey) return null;
-  const isFirstQuestion =
-    survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 0;
-  const isLastQuestion =
-    survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
-    survey?.questions?.length - 1;
+  const isFirstQuestion = isWelcomePageEnabled
+    ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 1
+    : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 0;
+
+  const isLastQuestion = isThankYouPageEnabled
+    ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
+      survey?.questions?.length - 2
+    : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
+      survey?.questions?.length - 1;
 
   return (
     <Stack

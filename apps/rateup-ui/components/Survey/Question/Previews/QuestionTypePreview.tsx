@@ -1,5 +1,6 @@
 import React from "react";
 import { QuestionType as Q } from "../../../../types/enums";
+import { PageType as Page } from "../../../../types/enums";
 import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextForm";
 import { NumberForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/NumberForm";
 import { TextAreaForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextAreaForm";
@@ -91,8 +92,14 @@ const QuestionTypePreview = ({ type, choices, features, tnc, wop }) => {
       return <EmailOTPForm isPreview={true} />;
     case Q.WOP:
       return <WOPForm isPreview={true} wop={wop} />;
+    // case Page.Welcome:
+    //   return <WOPForm isPreview={true} wop={wop} />;
+    // case Page.ThankYou:
+    //   return <WOPForm isPreview={true} wop={wop} />;
+    // case Page.Custom:
+    //   return <WOPForm isPreview={true} wop={wop} />;
     default:
-      return <div>not implemented</div>;
+      return <div>not previews</div>;
   }
 };
 

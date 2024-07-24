@@ -254,7 +254,9 @@ const Responses = ({
   };
   const columns = useSurveyResponseColumns({
     questions: !isQLoading
-      ? questions.filter((q) => q.type !== QuestionType.InfoMessage)
+      ? questions.filter(
+          (q) => q.type !== QuestionType.InfoMessage && q.type in QuestionType,
+        )
       : [],
     defaultLanguage,
     setSelectedRowId,

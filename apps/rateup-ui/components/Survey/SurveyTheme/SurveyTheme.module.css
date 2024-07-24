@@ -23,6 +23,13 @@
   flex-grow: 1.5;
 }
 
+.page-selector-tabs-root {
+  display: block;
+}
+.page-selector-tabs-root-hidden {
+  display: none;
+}
+
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;

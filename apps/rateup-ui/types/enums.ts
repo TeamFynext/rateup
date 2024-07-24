@@ -6,6 +6,25 @@ export enum SurveyType {
   WhatsApp = "whatsapp",
   WaFlow = "waFlow",
 }
+
+export enum PageType {
+  Welcome = "Welcome",
+  ThankYou = "ThankYou",
+  Custom = "Custom",
+}
+
+export enum PageTitle {
+  Welcome = "Welcome Page",
+  ThankYou = "ThankYou Page",
+  Custom = "Custom Page",
+}
+
+export enum PageDescription {
+  Welcome = "This is the first page to welcome",
+  ThankYou = "This is the End Page of the survey",
+  Custom = "Custom Page",
+}
+
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",

@@ -1,24 +1,31 @@
+import { useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Stack,
+  Badge,
+  Box,
+  Checkbox,
   Divider,
   Group,
-  Checkbox,
-  useMantineTheme,
-  Badge,
   Image,
   ScrollArea,
+  Stack,
   Text,
   TextInput,
   TextInputProps,
-  Box,
+  useMantineTheme,
 } from "@mantine/core";
-import { UseFormReturnType, useForm } from "@mantine/form";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
-import { useState, useContext, useEffect } from "react";
+import _ from "lodash";
+
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "../../../../../backend/surveys/questions/questions.query";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import {
   QuestionType,
@@ -26,9 +33,10 @@ import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
+import { SAVE_HOTKEY, WaNPSQuestions } from "../../../../../utils/constants";
 import {
-  logicSupportedTypes,
   googleReviewSupportedTypes,
+  logicSupportedTypes,
 } from "../../../../../utils/data";
 import { showErrorToast } from "../../../../../utils/notifications";
 import {
@@ -36,33 +44,27 @@ import {
   validateAllLanguagesArePopulated,
 } from "../../../../../utils/questions";
 import {
-  RateupButtonSecondary,
-  RateupButtonPrimary,
-} from "../../../../Button/RateupButtons";
-import {
-  WA_FLOW_HEADING_CHAR_LIMIT,
-  WA_FLOW_BODY_CHAR_LIMIT,
-  getFlowLabelLimit,
-  getFlowOptionsLimit,
-} from "../../../whatsappConfig";
-import { EditFlowContext } from "./EditFlowContext";
-import { FlowLogicEditor } from "./FlowLogicEditor";
-import { LengthTracker } from "../../../../input/LengthTracker";
-import {
   getFlowTextLimit,
   getFormObjFromScreenId,
   questionTypeToFlowFormElementType,
 } from "../../../../../utils/whatsapp/flow.utils";
-import { ChoicesCreator } from "../../../../Survey/Question/QuestionExtraProps/ChoicesCreator";
-import { useRouter } from "next/router";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, WaNPSQuestions } from "../../../../../utils/constants";
-import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
-import { notifications } from "@mantine/notifications";
-import _ from "lodash";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../../../Button/RateupButtons";
 import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
+import { LengthTracker } from "../../../../input/LengthTracker";
+import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
+import { ChoicesCreator } from "../../../../Survey/Question/QuestionExtraProps/ChoicesCreator";
+import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
+import {
+  getFlowLabelLimit,
+  getFlowOptionsLimit,
+  WA_FLOW_BODY_CHAR_LIMIT,
+  WA_FLOW_HEADING_CHAR_LIMIT,
+} from "../../../whatsappConfig";
+import { EditFlowContext } from "./EditFlowContext";
+import { FlowLogicEditor } from "./FlowLogicEditor";
 
 interface QuestionDetailedViewProps {
   question: Question;
@@ -166,7 +168,7 @@ function ElementEditor({
   const nextScreens = flowJson.screens.slice(currentIndex + 1);
 
   const labelMaxLength = getFlowLabelLimit(
-    questionTypeToFlowFormElementType(question.type),
+    questionTypeToFlowFormElementType(question.type as QuestionType),
   );
 
   function validateLabel(value: string) {
@@ -412,7 +414,7 @@ function ElementEditor({
               fw={600}
               {...form.getInputProps("required", { type: "checkbox" })}
             />
-            {WaNPSQuestions.includes(question?.type) && (
+            {WaNPSQuestions.includes(question?.type as QuestionType) && (
               <Checkbox
                 label="NPS Analytics"
                 fw={600}
@@ -425,7 +427,7 @@ function ElementEditor({
             )}
           </Group>
           <Group>
-            {logicSupportedTypes.includes(question?.type) && (
+            {logicSupportedTypes.includes(question?.type as QuestionType) && (
               <RateupButtonSecondary
                 title={"Logic Jump"}
                 leftIcon={
@@ -445,7 +447,9 @@ function ElementEditor({
               />
             )}
             {/* TODO: Implement Custom Validation*/}
-            {googleReviewSupportedTypes.includes(question?.type) && (
+            {googleReviewSupportedTypes.includes(
+              question?.type as QuestionType,
+            ) && (
               <RateupButtonSecondary
                 title={"Google Review"}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}

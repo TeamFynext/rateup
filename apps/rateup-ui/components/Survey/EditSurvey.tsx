@@ -1,26 +1,29 @@
-import { Center, Text, Tabs, Flex } from "@mantine/core";
-import { QuestionDetailedView } from "./Question/QuestionDetailedView";
-import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
-import { QuestionsSideBar } from "./QuestionsSideBar";
 import { useContext, useEffect, useState } from "react";
-import LogicEditor from "./Question/LogicEditor";
-import GoogleReviewEditor from "./Question/GoogleReviewEditor";
-import ValidationRulesEditor from "./Question/ValidationRulesEditor";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { MotionTransition } from "../animation/MotionTransition";
-import styles from "./EditSurvey.module.css";
+
+import { Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+
+import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../backend/surveys/surveys.query";
+import SelectedLanguageContext from "../../context/SelectedLanguage";
 import SurveyContext from "../../context/SurveyContext";
-import { QuestionType, SurveyType } from "../../types/enums";
+import { PageType, QuestionType, SurveyType } from "../../types/enums";
 import {
   QuestionTypesGroup,
   WaSurveyQuestionTypes,
 } from "../../utils/constants";
-import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
-import { createBlankQuestion } from "../../utils/questions";
-import SelectedLanguageContext from "../../context/SelectedLanguage";
-import TicketIssueEditor from "./Question/TicketIssueEditor";
+import { createBlankQuestion, createPage } from "../../utils/questions";
+import { MotionTransition } from "../animation/MotionTransition";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import styles from "./EditSurvey.module.css";
+import PageTypeSelection from "./Page/PageTypeSelection";
+import GoogleReviewEditor from "./Question/GoogleReviewEditor";
+import LogicEditor from "./Question/LogicEditor";
+import { QuestionDetailedView } from "./Question/QuestionDetailedView";
+import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor";
+import TicketIssueEditor from "./Question/TicketIssueEditor";
+import ValidationRulesEditor from "./Question/ValidationRulesEditor";
+import { QuestionsSideBar } from "./QuestionsSideBar";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -67,8 +70,13 @@ export function EditSurvey({
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
   });
-  const handleTypeSelection = (type: QuestionType) => {
-    const newQ = createBlankQuestion(type, surveyLanguages);
+  const handleTypeSelection = (type: QuestionType | PageType) => {
+    let newQ;
+    if (type in PageType) {
+      newQ = createPage(type as PageType, surveyLanguages);
+    } else {
+      newQ = createBlankQuestion(type as QuestionType, surveyLanguages);
+    }
     const { id, ...restData } = newQ;
     const saveQ = { ...restData };
     questionCreateMutation.mutateAsync(saveQ).then((r) => {
@@ -76,16 +84,9 @@ export function EditSurvey({
       setActiveTab(QuestionTabsEnum.Edit);
     });
   };
+
   return (
-    <Flex
-      w={"100%"}
-      h={"100%"}
-      mah={"100%"}
-      p={5}
-      gap={10}
-      style={{ overflow: "auto" }}
-      bg={"var(--mantine-color-body)"}
-    >
+    <Flex className={styles["edit-survey-div"]}>
       <PaperLayout className={styles["question-sidebar-container"]}>
         <QuestionsSideBar
           questions={questions}
@@ -113,6 +114,7 @@ export function EditSurvey({
             {selectedQ && (
               <MotionTransition keyValue={selectedQ}>
                 <QuestionDetailedView
+                  survey={survey}
                   question={selectedQ}
                   setSelectedQ={setSelectedQ}
                   setActiveTab={setActiveTab}
@@ -124,14 +126,23 @@ export function EditSurvey({
             )}
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
-            <QuestionTypeSelection
-              questionTypeGroups={
-                survey?.type === SurveyType.WhatsApp
-                  ? WaSurveyQuestionTypes
-                  : QuestionTypesGroup
-              }
-              handleTypeSelection={handleTypeSelection}
-            />
+            <Stack className={styles["type-selection-panel-child-div"]}>
+              {survey?.type === SurveyType.Web && (
+                <PageTypeSelection
+                  questions={questions}
+                  handleTypeSelection={handleTypeSelection}
+                />
+              )}
+
+              <QuestionTypeSelection
+                questionTypeGroups={
+                  survey?.type === SurveyType.WhatsApp
+                    ? WaSurveyQuestionTypes
+                    : QuestionTypesGroup
+                }
+                handleTypeSelection={handleTypeSelection}
+              />
+            </Stack>
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
             {selectedQ && (

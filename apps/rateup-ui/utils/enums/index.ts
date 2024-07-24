@@ -1,6 +1,7 @@
 import {
   CampaignParticipantStatus,
   LoyaltyCampaignType,
+  PageType,
   QuestionType,
   SentimentClass,
   WaFlowFormElementType,
@@ -41,6 +42,26 @@ export const importMethod = {
   CSV: "CSV IMPORT",
 };
 
+export function getTypeLabel(type: QuestionType | PageType) {
+  if (type in PageType) {
+    return getPageTypeLabel(type as PageType);
+  } else {
+    return getQuestionTypeLabel(type as QuestionType);
+  }
+}
+
+export function getPageTypeLabel(type: PageType) {
+  switch (type) {
+    case PageType.Welcome:
+      return "Welcome Page";
+    case PageType.Custom:
+      return "Custom HTML Page";
+    case PageType.ThankYou:
+      return "Thank You Page";
+    default:
+      return false;
+  }
+}
 export function getQuestionTypeLabel(
   type: QuestionType | WaFlowFormNonInputElementType,
 ) {
