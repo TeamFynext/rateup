@@ -6,5 +6,8 @@
 }
 
 .table-options-dropdown-div button {
-  border-radius: 2rem;
+  height: auto;
+  width: auto;
+  padding: 0.3125rem;
+  border-radius: 0.625rem;
 }

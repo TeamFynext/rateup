@@ -2,51 +2,54 @@
 
 import { Fragment, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
+
 import {
+  ActionIcon,
+  Box,
+  Button,
   Center,
+  Flex,
   Group,
+  MultiSelect,
+  ScrollAreaAutosize,
   Select,
   Stack,
-  Button,
   Text,
-  MultiSelect,
-  useMantineTheme,
-  ActionIcon,
   Title,
-  Flex,
-  Box,
-  ScrollAreaAutosize,
+  useMantineTheme,
 } from "@mantine/core";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { Updater, useImmer } from "use-immer";
+
+import {
+  useUpdateFlowMutation,
+  useWaFlowFromDb,
+} from "../../../../../backend/whatsapp/flow/flow.query";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import {
   LogicAction,
   LogicCondition,
   QuestionType as Q,
+  QuestionType,
 } from "../../../../../types/enums";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { FlowLogicCondition, FlowLogicJump } from "../../../../../types/global";
 import { logicSupportedTypes } from "../../../../../utils/data";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import {
-  RateupButtonSecondary,
-  RateupButtonBlue,
-} from "../../../../Button/RateupButtons";
+import { lexend500 } from "../../../../../utils/fonts";
 import {
   getConditions,
   getResponses,
 } from "../../../../../utils/survey/logic/logic.utils";
-import { EditFlowContext } from "./EditFlowContext";
+import { getQuestionLabel } from "../../../../../utils/survey/question/question.utils";
 import {
   getQuestionFromFlowElementId,
   getQuestionsFromScreen,
   getScreenObjById,
 } from "../../../../../utils/whatsapp/flow.utils";
-import { getQuestionLabel } from "../../../../../utils/survey/question/question.utils";
-import { Updater, useImmer } from "use-immer";
-import { lexend500 } from "../../../../../utils/fonts";
 import {
-  useUpdateFlowMutation,
-  useWaFlowFromDb,
-} from "../../../../../backend/whatsapp/flow/flow.query";
-import { FlowLogicJump, FlowLogicCondition } from "../../../../../types/global";
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../../Button/RateupButtons";
+import { EditFlowContext } from "./EditFlowContext";
 
 interface LogicEditorProps {
   afterSave: () => void;
@@ -213,7 +216,7 @@ function AtomicConditionBlock({
   const selectedScreen = getScreenObjById(flowJson.screens, selectedScreenId);
   const questionsInScreen = getQuestionsFromScreen(selectedScreen, survey, map);
   const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
-    logicSupportedTypes.includes(q.type),
+    logicSupportedTypes.includes(q.type as QuestionType),
   );
 
   const [selectedQId, setSelectedQId] = useState(
@@ -259,7 +262,7 @@ function AtomicConditionBlock({
         />
         {/* Condition Selector */}
         <Select
-          data={getConditions(selectedQ.type)}
+          data={getConditions(selectedQ.type as QuestionType)}
           value={selectedCondition}
           onChange={setSelectedCondition as any}
           label="If answer"

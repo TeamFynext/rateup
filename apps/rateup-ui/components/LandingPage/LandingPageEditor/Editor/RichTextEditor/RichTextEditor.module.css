@@ -24,8 +24,8 @@
 }
 
 .editor-content :global(.tiptap) {
-  height: 100%;
-  padding: 0 0.625rem;
+  min-height: 100%;
+  padding: 1rem 0.625rem;
 }
 
 .tiptap-div :global(.tableWrapper) {
@@ -36,6 +36,10 @@
 
 .tiptap-div :first-child {
   margin-top: 0;
+}
+
+.tiptap-div :global(img) {
+  display: block;
 }
 
 .tiptap-div :global(table .column-resize-handle) {

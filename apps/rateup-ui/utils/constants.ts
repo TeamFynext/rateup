@@ -1,5 +1,6 @@
 import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 import {
+  PageType,
   QuestionType,
   ShopifyEvents,
   WaFlowFormElementType as wft,
@@ -90,6 +91,14 @@ const FlowInputQuestions = [
   QuestionType.Date,
   QuestionType.Optin,
 ];
+
+export const BasicPages = [
+  PageType.Welcome,
+  PageType.ThankYou,
+  PageType.Custom,
+];
+
+export const uniquePages = [PageType.Welcome, PageType.ThankYou];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 

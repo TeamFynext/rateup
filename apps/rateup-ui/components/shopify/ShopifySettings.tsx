@@ -1,18 +1,6 @@
 import { useState } from "react";
 
 import {
-  useDeleteAllShopifySchedule,
-  useDeleteAllShopifySurveySchedule,
-  useDeleteAllWebhooks,
-  useDeleteShopifySession,
-  useDeleteWebhookByTopic,
-  useGetRegisteredWebhooks,
-  useRegisterWebhookByTopic,
-  useRegisterWebhooks,
-} from "@/backend/shopify/shopify.query";
-import { shopifyEventData } from "@/utils/constants";
-import { showLoadingToast } from "@/utils/notifications";
-import {
   Group,
   SimpleGrid,
   Stack,
@@ -24,6 +12,18 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 
 import { ShopifyEvents } from "@/types/enums";
+import {
+  useDeleteAllShopifySchedule,
+  useDeleteAllShopifySurveySchedule,
+  useDeleteAllWebhooks,
+  useDeleteShopifySession,
+  useDeleteWebhookByTopic,
+  useGetRegisteredWebhooks,
+  useRegisterWebhookByTopic,
+  useRegisterWebhooks,
+} from "@/backend/shopify/shopify.query";
+import { shopifyEventData } from "@/utils/constants";
+import { showLoadingToast } from "@/utils/notifications";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";

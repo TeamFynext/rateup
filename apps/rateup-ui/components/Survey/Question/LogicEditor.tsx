@@ -1,17 +1,14 @@
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 
 import { useContext, useEffect, useState } from "react";
-
 import { useRouter } from "next/router";
-import { useListState } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+
 import {
   ActionIcon,
   Button,
-  Grid,
-  Flex,
   Center,
+  Flex,
+  Grid,
   Group,
   MultiSelect,
   ScrollAreaAutosize,
@@ -20,28 +17,32 @@ import {
   Text,
   useMantineTheme,
 } from "@mantine/core";
+import { useListState } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 
-import { getContent } from "../../../utils";
-import { QuestionTabsEnum } from "../EditSurvey";
-import { logicSupportedTypes } from "../../../utils/data";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
+  useQuestions,
+  useQuestionUpdateMutation,
+} from "../../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
   LogicAction,
   LogicCondition,
   QuestionType as Q,
+  QuestionType,
 } from "../../../types/enums";
+import { getContent } from "../../../utils";
+import { logicSupportedTypes } from "../../../utils/data";
 import {
   getConditions,
   getResponses,
 } from "../../../utils/survey/logic/logic.utils";
 import {
-  useQuestions,
-  useQuestionUpdateMutation,
-} from "../../../backend/surveys/questions/questions.query";
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
+import { QuestionTabsEnum } from "../EditSurvey";
 
 interface LogicEditorProps {
   selectedQ: Question;
@@ -92,7 +93,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
       });
   };
 
-  if (!logicSupportedTypes.includes(selectedQ.type)) {
+  if (!logicSupportedTypes.includes(selectedQ.type as QuestionType)) {
     return (
       <Center style={{ height: "100%" }}>
         <Stack>
@@ -222,7 +223,7 @@ function ConditionBlock({
         <Text style={{ marginLeft: "10px" }}>If answer</Text>
         {/* Condition Selector */}
         <Select
-          data={getConditions(selectedQ.type)}
+          data={getConditions(selectedQ.type as QuestionType)}
           value={selectedCondition}
           onChange={setSelectedCondition as any}
           maw={150}

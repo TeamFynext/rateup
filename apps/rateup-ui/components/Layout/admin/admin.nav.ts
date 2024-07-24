@@ -6,11 +6,11 @@ import {
   IconLayoutCards,
   IconListDetails,
   IconPremiumRights,
+  IconQrcode,
   IconUser,
   IconWallet,
   IconWorld,
 } from "@tabler/icons-react";
-import { IconQrcode } from "@tabler/icons-react";
 
 export const adminNavItems = [
   {
@@ -60,7 +60,7 @@ export const adminNavItems = [
   },
   {
     Icon: IconLayoutCards,
-    label: "Update all themes",
-    href: "/admin/updateAllThemes",
+    label: "Update Center",
+    href: "/admin/updateCenter",
   },
 ];

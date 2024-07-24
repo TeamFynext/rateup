@@ -1,29 +1,22 @@
 //TODO: refactor drag and drop
 
-import {
-  Center,
-  Paper,
-  Stack,
-  Text,
-  Divider,
-  ScrollArea,
-  Box,
-  Group,
-} from "@mantine/core";
-import { useListState } from "@mantine/hooks";
-import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { reorder } from "../../utils/questions";
-import { QuestionTabsEnum } from "./EditSurvey";
+import { useRouter } from "next/router";
+
+import { Center, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import { useListState } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { RateupButtonBlue } from "../Button/RateupButtons";
-import styles from "./QuestionsSideBar.module.css";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+
+import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
 import { docsPath } from "../../utils/constants";
+import { reorder, reOrderPages } from "../../utils/questions";
 import InfoButton from "../Button/InfoButton";
+import { RateupButtonBlue } from "../Button/RateupButtons";
+import { QuestionTabsEnum } from "./EditSurvey";
+import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
+import styles from "./QuestionsSideBar.module.css";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -51,6 +44,9 @@ export function QuestionsSideBar({
 
   useEffect(() => {
     handlers.setState(questions);
+
+    let newOrder = reOrderPages(questions);
+    surveyId && questionsReorderMutation.mutate(newOrder); //TODO-SE optimize: do api call only when new qn count changes
   }, [questions]);
 
   useEffect(() => {
@@ -106,7 +102,7 @@ export function QuestionsSideBar({
           <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
           <RateupButtonBlue
             onClick={handleAddQn}
-            title={"Add Question"}
+            title={"Add Page"}
             rightIcon={<IconPlus size="1rem" />}
             size="md"
           />
@@ -138,7 +134,7 @@ export function QuestionsSideBar({
                 <Stack align="center">
                   <IconPlus size={36} />
                   <Text size="xl" fw={700}>
-                    Add Question
+                    Add Page
                   </Text>
                 </Stack>
               </Center>

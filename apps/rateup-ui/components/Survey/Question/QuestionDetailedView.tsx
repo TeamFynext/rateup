@@ -26,6 +26,7 @@ import { CurrentResponsesContext } from "../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
   NPSWeightage,
+  PageType,
   QuestionType,
   SubscriptionFeaturePathName,
   SurveyType,
@@ -53,8 +54,13 @@ import { LanguageCompletionView } from "./LanguageCompletionView";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconChevronDown } from "@tabler/icons-react";
-import { docsPath, NPSQuestions, SAVE_HOTKEY } from "../../../utils/constants";
-import { getQuestionTypeLabel } from "../../../utils/enums";
+import {
+  docsPath,
+  NPSQuestions,
+  SAVE_HOTKEY,
+  uniquePages,
+} from "../../../utils/constants";
+import { getTypeLabel } from "../../../utils/enums";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import TextEditor from "../../RichTextEditor/TextEditor";
@@ -70,6 +76,7 @@ import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
 import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
 import InfoButton from "../../Button/InfoButton";
+import FullPageEditor from "../Page/FullPageEditor";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -80,6 +87,7 @@ interface QuestionDetailedViewProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   surveyId?: string;
+  survey: Survey;
 }
 export function QuestionDetailedView({
   question,
@@ -88,6 +96,7 @@ export function QuestionDetailedView({
   surveyLanguages,
   setSelectedLanguage,
   surveyId,
+  survey,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   surveyId = surveyId || (router.query?.surveyId as string);
@@ -229,17 +238,15 @@ export function QuestionDetailedView({
           styles={{ viewport: { paddingRight: "1rem" } }}
         >
           <Badge
-            variant={getQuestionTypeLabel(question.type) ? "outline" : "light"}
+            variant={getTypeLabel(question.type) ? "outline" : "light"}
             size="lg"
             style={{ overflow: "visible" }}
             color={
-              getQuestionTypeLabel(question.type)
-                ? "var(--tertiary-color)"
-                : "red"
+              getTypeLabel(question.type) ? "var(--tertiary-color)" : "red"
             }
           >
-            {getQuestionTypeLabel(question.type)
-              ? getQuestionTypeLabel(question.type)
+            {getTypeLabel(question.type)
+              ? getTypeLabel(question.type)
               : "Not Available"}
           </Badge>
           <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
@@ -289,17 +296,21 @@ export function QuestionDetailedView({
             }
           />
           <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
-            <CurrentResponsesContext.Provider
-              value={{ response: currentResponse, updateResponse }}
-            >
-              <QuestionTypePreview
-                type={question?.type}
-                choices={form.values.choices}
-                features={form.values.features}
-                tnc={form.values.tnc}
-                wop={form.values?.wop}
-              />
-            </CurrentResponsesContext.Provider>
+            {uniquePages.includes(question?.type as PageType) ? (
+              <FullPageEditor survey={survey} page={question?.type} />
+            ) : (
+              <CurrentResponsesContext.Provider
+                value={{ response: currentResponse, updateResponse }}
+              >
+                <QuestionTypePreview
+                  type={question?.type}
+                  choices={form.values.choices}
+                  features={form.values.features}
+                  tnc={form.values.tnc}
+                  wop={form.values?.wop}
+                />
+              </CurrentResponsesContext.Provider>
+            )}
           </Center>
         </ScrollArea>
 
@@ -311,7 +322,10 @@ export function QuestionDetailedView({
               label="Required"
               color="var(--tertiary-color)"
               fw={600}
-              mr={!NPSQuestions.includes(question?.type) && "100px"}
+              mr={
+                !NPSQuestions.includes(question?.type as QuestionType) &&
+                "100px"
+              }
               checked={form.values.required}
               onChange={(e) => {
                 const checked = e.currentTarget.checked;
@@ -320,7 +334,7 @@ export function QuestionDetailedView({
               disabled={question.type === QuestionType.InfoMessage}
             />
             <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
-            {NPSQuestions.includes(question?.type) && (
+            {NPSQuestions.includes(question?.type as QuestionType) && (
               <Checkbox
                 label="NPS Analytics"
                 color="var(--tertiary-color)"
@@ -370,7 +384,9 @@ export function QuestionDetailedView({
                       }
                     />
                   </Menu.Item>
-                  {logicSupportedTypes.includes(question?.type) && (
+                  {logicSupportedTypes.includes(
+                    question?.type as QuestionType,
+                  ) && (
                     <Menu.Item>
                       <RateupButtonSecondary
                         title={"Logic Jump"}
@@ -392,7 +408,9 @@ export function QuestionDetailedView({
                     </Menu.Item>
                   )}
 
-                  {googleReviewSupportedTypes.includes(question?.type) && (
+                  {googleReviewSupportedTypes.includes(
+                    question?.type as QuestionType,
+                  ) && (
                     <Menu.Item>
                       {isGoogleReviewFeatureActive ? (
                         <RateupButtonSecondary
@@ -429,7 +447,9 @@ export function QuestionDetailedView({
                     </Menu.Item>
                   )}
 
-                  {validationSupportedTypes.includes(question?.type) && (
+                  {validationSupportedTypes.includes(
+                    question?.type as QuestionType,
+                  ) && (
                     <Menu.Item>
                       <RateupButtonSecondary
                         title={"Custom Validation"}
@@ -446,7 +466,9 @@ export function QuestionDetailedView({
                       />
                     </Menu.Item>
                   )}
-                  {ticketIssueSupportedTypes.includes(question?.type) && (
+                  {ticketIssueSupportedTypes.includes(
+                    question?.type as QuestionType,
+                  ) && (
                     <Menu.Item>
                       {isTicketFeatureActive ? (
                         <RateupButtonSecondary

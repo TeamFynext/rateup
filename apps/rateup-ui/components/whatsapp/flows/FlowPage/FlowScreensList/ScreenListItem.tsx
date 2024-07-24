@@ -1,3 +1,6 @@
+import { useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   ActionIcon,
@@ -23,18 +26,20 @@ import {
   IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useContext, useEffect, useRef, useState } from "react";
+import classNames from "classnames/bind";
+
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
 import {
   usePushToWaMutation,
   useWaFlowFromDb,
 } from "../../../../../backend/whatsapp/flow/flow.query";
 import {
+  QuestionType,
   WaFlowFormElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
 import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
+import { FlowChoiceQuestions } from "../../../../../utils/constants";
 import { showErrorToast } from "../../../../../utils/notifications";
 import {
   getFlowElementText,
@@ -45,19 +50,17 @@ import {
   getScreenObjById,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
+import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { EditableText } from "../../../../input/EditableText";
 import ConfirmationModal from "../../../../Modal/ConfirmationModal";
 import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
-import { EditableText } from "../../../../input/EditableText";
 import {
   FlowMaxElementsPerScreen,
   FlowMaxScreens,
 } from "../../../whatsappConfig";
-import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import classNames from "classnames/bind";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import styles from "./ScreenListIem.module.css";
-import { FlowChoiceQuestions } from "../../../../../utils/constants";
 
 const cx = classNames.bind(styles);
 
@@ -212,7 +215,7 @@ function ScreenListItem({
     for (const flScreen of flowJson?.screens) {
       const questions = getQuestionsFromScreen(flScreen, survey, map);
       for (const qs of questions) {
-        if (FlowChoiceQuestions.includes(qs.type)) {
+        if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
           let choice = Object.values(qs?.choices ?? {})?.[0];
           if (!choice || choice?.length === 0) {
             let title = Object.values(qs?.title ?? {})?.[0];

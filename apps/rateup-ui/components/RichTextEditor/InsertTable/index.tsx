@@ -1,140 +1,61 @@
-import { Button, Popover, Text } from "@mantine/core";
-import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
-import { IconTable } from "@tabler/icons-react";
+import { useCallback, useState } from "react";
 
+import { ActionIcon, Button, Popover, Tooltip } from "@mantine/core";
+import { RichTextEditor } from "@mantine/tiptap";
+import { IconTable, IconTablePlus } from "@tabler/icons-react";
+
+import { useTiptopTableBtnHandlersObj } from "./HandlersObjHook";
 import styles from "./InsertTable.module.css";
+import { tableActionsBtnsData } from "./TableActionBtnsList";
+import TableActionButton from "./TableActionButton";
 
 function TiptapEditorInsertTable() {
-  const { editor } = useRichTextEditorContext();
-  console.log(editor, "From Tiptap editor insert table");
+  const [isPopoverOpened, setIsPopoverOpened] = useState(false);
+
+  const actionHandlersObj = useTiptopTableBtnHandlersObj();
+
+  const handleTableActionBtnClick = useCallback(
+    (e) => {
+      const action = e.currentTarget.value;
+      const handler = actionHandlersObj[action];
+      handler();
+      setIsPopoverOpened(!isPopoverOpened);
+    },
+    [isPopoverOpened, actionHandlersObj],
+  );
+
   return (
-    <Popover width={400} position="bottom" withArrow shadow="md">
+    <Popover
+      opened={isPopoverOpened}
+      width={"18.75rem"}
+      position="bottom"
+      withArrow
+      shadow="md"
+      onClose={() => {
+        setIsPopoverOpened(false);
+      }}
+    >
       <Popover.Target>
         <RichTextEditor.Control
-          onClick={() => editor?.commands.insertContent("⭐")}
-          aria-label="Insert star emoji"
+          onClick={() => setIsPopoverOpened(!isPopoverOpened)}
+          aria-label="Insert Table"
           title="Insert Table"
         >
           <IconTable stroke={1.5} size="1rem" />
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown className={styles["table-options-dropdown-div"]}>
-        <Button
-          variant="light"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-              .run()
-          }
-        >
-          Insert table
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().deleteTable().run()}
-        >
-          Delete table
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().addColumnBefore().run()}
-        >
-          Add column before
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().addColumnAfter().run()}
-        >
-          Add column after
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().deleteColumn().run()}
-        >
-          Delete column
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().addRowBefore().run()}
-        >
-          Add row before
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().addRowAfter().run()}
-        >
-          Add row after
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().deleteRow().run()}
-        >
-          Delete row
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().mergeCells().run()}
-        >
-          Merge cells
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().splitCell().run()}
-        >
-          Split cell
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().toggleHeaderColumn().run()}
-        >
-          Toggle header column
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().toggleHeaderRow().run()}
-        >
-          Toggle header row
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().toggleHeaderCell().run()}
-        >
-          Toggle header cell
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().mergeOrSplit().run()}
-        >
-          Merge or split
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() =>
-            editor.chain().focus().setCellAttribute("colspan", 2).run()
-          }
-        >
-          Set cell attribute
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().fixTables().run()}
-        >
-          Fix tables
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().goToNextCell().run()}
-        >
-          Go to next cell
-        </Button>
-        <Button
-          variant={"light"}
-          onClick={() => editor.chain().focus().goToPreviousCell().run()}
-        >
-          Go to previous cell
-        </Button>
+        {tableActionsBtnsData.map(({ icon, label, value }) => {
+          return (
+            <TableActionButton
+              key={value}
+              label={label}
+              icon={icon}
+              value={value}
+              onClick={handleTableActionBtnClick}
+            />
+          );
+        })}
       </Popover.Dropdown>
     </Popover>
   );
