@@ -182,6 +182,8 @@ const updateQuestionRequestSchema = z.object({
     .union([z.null(), validationRulesSchema, z.any()])
     .optional(),
   optinScreenId: z.string().optional(),
+  onSelectAction: z.boolean().optional(),
+  waAppName: z.string().optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());

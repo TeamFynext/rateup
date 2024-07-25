@@ -122,6 +122,7 @@ model Org {
   shopifySurveys    ShopifySurvey[]
   shopifySessions   ShopifySession[]
   landingPage       LandingPage[]
+  Integration       Integration[]
 }
 
 model UsageStats {
@@ -1226,4 +1227,12 @@ model LandingPage {
   isPublished         Boolean  @default(false)
   owner               Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
   createdBy           User     @relation(fields: [createdById], references: [id])
+}
+
+model Integration {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  credential Json
+  org        Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId      String @db.Uuid
 }

@@ -78,6 +78,7 @@ declare global {
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules | any;
     tnc?: TNC;
+    waAppName?: string;
   }
   type WaSectionsType = Array<{
     title?: string;
@@ -230,6 +231,8 @@ declare global {
   type WaFlowJson = {
     version: string;
     screens: Array<WaFlowScreen>;
+    data_api_version: string;
+    routing_model: Json;
   };
   type WaFlowScreen = {
     id: string;

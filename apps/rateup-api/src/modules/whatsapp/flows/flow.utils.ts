@@ -399,7 +399,7 @@ export function getFlowJsonWithTitleAndDescription(
   map: any,
   survey: Survey,
 ): WaFlowJson {
-  let fj = JSON.parse(JSON.stringify(flowJson));
+  let fj: WaFlowJson = JSON.parse(JSON.stringify(flowJson));
   for (const screen of fj.screens) {
     for (const screenElement of screen.layout.children) {
       if (screenElement.type === "Form") {
@@ -424,6 +424,37 @@ export function getFlowJsonWithTitleAndDescription(
                 `Question not found for formElement ${formElement.name}`,
               );
             }
+            if (
+              formElement.type === WaFlowFormElementType.datePicker &&
+              formElement["min-date"]
+            ) {
+              screen.data = {
+                available_slots: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: {
+                        type: "string",
+                      },
+                      title: {
+                        type: "string",
+                      },
+                    },
+                  },
+                  __example__: [
+                    {
+                      id: "1",
+                      title: "08:00",
+                    },
+                    {
+                      id: "2",
+                      title: "09:00",
+                    },
+                  ],
+                },
+              };
+            }
             const {
               formElements: { titleElement, descriptionElement },
             } = getFlowElementJsonFromQuestion(question);
@@ -440,6 +471,8 @@ export function getFlowJsonWithTitleAndDescription(
       }
     }
   }
+  fj.data_api_version = "3.0";
+  fj.routing_model = {};
   return fj;
 }
 const lang = "en";
@@ -539,6 +572,7 @@ export function questionTypeToFlowFormElementType(
     case qt.Date:
       return WaFlowFormElementType.datePicker;
     case qt.DDSS:
+    case qt.WaTimeSlot:
       return WaFlowFormElementType.dropDown;
     case qt.MCQ:
     case qt.YN:
