@@ -596,6 +596,8 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.checkboxGroup;
     case qt.Optin:
       return WaFlowFormElementType.optIn;
+    case qt.WaTimeSlot:
+      return WaFlowFormElementType.dropDown;
     default:
       throw Error(qtype + "Not implemented");
   }

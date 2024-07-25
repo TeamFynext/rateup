@@ -2,6 +2,7 @@
 import { WaGetMessagesBody } from "../backend/whatsapp/inbox/message/wamessage.api";
 import {
   CampaignStatus,
+  IntegratedApps,
   LogicAction,
   LogicCondition,
   LoyaltyCampaignType,
@@ -88,6 +89,8 @@ declare global {
     enableNpsAnalytics?: boolean;
     optinScreenId?: string;
     wop?: Wop;
+    onSelectAction?: boolean;
+    waAppName?: IntegratedApps;
   }
   type WaSectionsType = Array<{
     title?: string;
@@ -819,7 +822,7 @@ export type WaFlowFormElement = {
   required?: boolean;
   "input-type"?: string; // add types
   "on-click-action"?: WaFlowOnClickAction;
-  "data-source"?: Array<WaFlowFormChoice>;
+  "data-source"?: Array<WaFlowFormChoice> | string;
   src?: string; // base64 of an image (required for Image type)
   width?: number;
   height?: number;

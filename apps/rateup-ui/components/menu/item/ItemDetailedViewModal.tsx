@@ -1,9 +1,5 @@
 import { useState } from "react";
 
-import { fallbackImage } from "@/utils/constants";
-import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { lexend } from "@/utils/fonts";
-import { extractVideoId } from "@/utils/youtube/url";
 import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
 import {
   Box,
@@ -22,6 +18,10 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { CreditsCard } from "@/components/Card/CreditsCard";
 import YoutubeEmbed from "@/components/youtube/YoutubeEmbed";
+import { fallbackImage } from "@/utils/constants";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { lexend } from "@/utils/fonts";
+import { extractVideoId } from "@/utils/youtube/url";
 
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";

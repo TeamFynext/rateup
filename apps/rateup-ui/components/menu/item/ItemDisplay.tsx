@@ -1,4 +1,3 @@
-import classes2 from "@/pages/public/menu/gradientAnimation.module.css";
 import {
   Box,
   Card,
@@ -11,6 +10,8 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+
+import classes2 from "@/pages/public/menu/gradientAnimation.module.css";
 
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
