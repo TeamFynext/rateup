@@ -29,6 +29,7 @@ const updateCampaignInputSchema = z.object({
     .optional()
     .nullable(),
   errorMessage: z.string().optional(),
+  dynamicTags: z.array(z.string().nullable()).optional(),
 });
 
 const byCampaignIdParamsSchema = z.object({
