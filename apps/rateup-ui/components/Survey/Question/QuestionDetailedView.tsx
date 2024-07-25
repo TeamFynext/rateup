@@ -344,7 +344,10 @@ export function QuestionDetailedView({
                 const checked = e.currentTarget.checked;
                 form.setFieldValue("required", checked);
               }}
-              disabled={question.type === QuestionType.InfoMessage}
+              disabled={
+                question.type === QuestionType.InfoMessage ||
+                question.type in PageType
+              }
             />
             <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
             {NPSQuestions.includes(question?.type as QuestionType) && (

@@ -2,6 +2,7 @@ import {
   LDResponse,
   LogicAction,
   LogicCondition,
+  PageType,
   QuestionType as Q,
   QuestionType,
   SmileyResponse,
@@ -23,7 +24,7 @@ export function parseLogicAction(
       userResponse = userResponse.toString();
     }
     const { type, logic: logicJumps = [] } = question;
-    if (type === Q.InfoMessage) userResponse = true;
+    if (type === Q.InfoMessage || type in PageType) userResponse = true;
     if (!logicSupportedTypes.includes(type as QuestionType) || !userResponse) {
       return LogicAction.NextQ;
     }
