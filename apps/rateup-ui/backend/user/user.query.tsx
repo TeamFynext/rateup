@@ -1,25 +1,29 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+
 import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
-  IChangePassword,
-  ICreateGoogleUser,
-  IUpdateProfile,
-  IUpdateProfilePhoto,
   changeUserPassword,
   checkEmailExist,
   createGoogleUser,
   fetchUserInfo,
   fetchUserProfile,
   getAllUsers,
+  IChangePassword,
+  ICreateGoogleUser,
+  IUpdateProfile,
+  IUpdateProfilePhoto,
+  IUpdateUserLanguage,
   updateActiveStatus,
   updateRecipeName,
+  updateUserLanguage,
   updateUserPause,
   updateUserProfile,
   updateUserProfilePhoto,
 } from "./user.api";
-import { useRouter } from "next/router";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export const useGetUserProfile = () =>
   useQuery({
@@ -137,6 +141,39 @@ export function useUpdateProfileMutation(setIsLoading) {
         autoClose: 3000,
       });
 
+      setIsLoading(false);
+    },
+  });
+}
+
+export function useUpdateUserLanguageMutation(setIsLoading) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),
+    onSuccess: () => {
+      notifications.show({
+        id: "load-data",
+        color: "teal",
+        title: "Success",
+        message: "Language Updated Successfully!",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
+      setIsLoading(false);
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+    onError: (error: any) => {
+      console.error("Error updating language:", error.message);
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: "Failed",
+        message: error?.response?.data?.message,
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
       setIsLoading(false);
     },
   });

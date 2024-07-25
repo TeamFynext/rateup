@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Badge,
   Button,
@@ -10,14 +12,6 @@ import {
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import {
-  IconFileFilled,
-  IconGridDots,
-  IconScaleOutline,
-  IconSquareAsterisk,
-  IconTextPlus,
-  IconWheel,
-} from "@tabler/icons-react";
-import {
   Icon123,
   IconAddressBook,
   IconAdjustmentsQuestion,
@@ -29,6 +23,8 @@ import {
   IconCheckbox,
   IconCircuitPushbutton,
   IconClick,
+  IconFileFilled,
+  IconGridDots,
   IconLink,
   IconList,
   IconListCheck,
@@ -38,11 +34,15 @@ import {
   IconMoodSmileFilled,
   IconPhoneFilled,
   IconPhoto,
+  IconScaleOutline,
+  IconSquareAsterisk,
   IconStarsFilled,
+  IconTextPlus,
   IconTextSize,
   IconThumbUpFilled,
+  IconWheel,
 } from "@tabler/icons-react";
-import { useState } from "react";
+
 import {
   QuestionType,
   WaFlowFormNonInputElementType,
@@ -173,6 +173,7 @@ const questionIcons = {
   [QuestionType.WOP]: IconWheel,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
+  [QuestionType.WaTimeSlot]: IconCalendarTime,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,
   [WaFlowFormNonInputElementType.image]: IconPhoto,
   [WaFlowFormNonInputElementType.embeddedLink]: IconLink,

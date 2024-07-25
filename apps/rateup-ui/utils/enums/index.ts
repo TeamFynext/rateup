@@ -4,9 +4,9 @@ import {
   PageType,
   QuestionType,
   SentimentClass,
+  SubscriptionFeaturePathName as sfpn,
   WaFlowFormElementType,
   WaFlowFormNonInputElementType,
-  SubscriptionFeaturePathName as sfpn,
 } from "../../types/enums";
 
 export const AuthMode = {
@@ -134,6 +134,8 @@ export function getQuestionTypeLabel(
       return "Email OTP";
     case QuestionType.WOP:
       return "Wheel Of Price";
+    case QuestionType.WaTimeSlot:
+      return "TimeSlot";
     default:
       return false;
   }

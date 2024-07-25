@@ -161,6 +161,8 @@ export const getInitialQuestionValues = (
     wop: question?.wop,
     sections:
       type === SurveyType.WhatsApp ? question?.sections || {} : undefined,
+    onSelectAction: question?.onSelectAction,
+    waAppName: question?.waAppName,
   };
 };
 
