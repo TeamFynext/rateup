@@ -71,7 +71,7 @@ model User {
   recipeName     UserRecipes?
   isPaused       Boolean?        @default(false)
   pausedBy       String?
-  prefLanguage       String?    @default("English")
+  prefLanguage   String?         @default("English")
   org            Org[]
   orgMember      OrgMember[]
   teamMember     TeamMember[]
@@ -441,6 +441,7 @@ model Campaign {
   campaignSentAt       DateTime?
   scheduledStatuses    String[]              @default([])
   errorMessage         String?
+  dynamicTags          String[]              @default([])
 }
 
 model CampaignParticipant {

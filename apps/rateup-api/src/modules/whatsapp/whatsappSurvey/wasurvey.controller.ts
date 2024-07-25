@@ -611,6 +611,7 @@ export async function sendCampaignToParticipants(
       flowId,
       orgId,
       dbTemplate,
+      campaign.dynamicTags,
       participantId,
     )
       .then(() => {
@@ -718,6 +719,7 @@ async function _sendCampaignToParticipants(
   flowId: string,
   orgId: string,
   dbTemplate: WaTemplateWithTypes,
+  contactTags: string[],
   individualParticipantId?: string,
 ) {
   const teamId = campaign.team.id;
@@ -772,6 +774,23 @@ async function _sendCampaignToParticipants(
       // TODO: handle this case. maybe send email?
       continue;
     }
+    const defaultValue = dbTemplate?.data?.components?.find(
+      (data) => data.example?.body_text,
+    )?.example?.body_text?.[0];
+    if (defaultValue?.length > 0) {
+      const parameters = contactTags?.map((tag, i) => {
+        const textValue =
+          tag === "name"
+            ? contact?.name || defaultValue[i]
+            : contact.tags?.[tag] || defaultValue[i];
+        return { type: "text", text: textValue };
+      });
+      components.push({
+        type: "body",
+        parameters,
+      });
+    }
+
     const updatedComponent = updateButtonText(components, contact.phone);
 
     // TODO: add rate limiting
