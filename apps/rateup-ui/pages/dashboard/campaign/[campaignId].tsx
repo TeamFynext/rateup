@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -118,6 +118,14 @@ const CampaignById = () => {
     if (campaignData) update({ campaignId: campaignData?.name });
   }, [campaignData, update]);
 
+  const dynamicVariables = useMemo(
+    () =>
+      campaignData?.waTemplate?.data?.components?.find(
+        (data) => data.example?.body_text,
+      )?.example?.body_text?.[0],
+    [campaignData?.waTemplate?.data?.components],
+  );
+
   if (isError)
     return (
       <Stack h={"90dvh"}>
@@ -189,6 +197,7 @@ const CampaignById = () => {
               refetchCampaign={refetchCampaign}
               campaignInfo={campaignInfo}
               isPending={isPending}
+              dynamicVariables={dynamicVariables}
             />
             <CampaignInfoCard
               participantCount={campaignData?.campaignParticipants.length}
@@ -384,6 +393,7 @@ const StartCampaignCardRightSection = ({
   refetchCampaign,
   campaignInfo,
   isPending,
+  dynamicVariables,
 }) => {
   if (isPending) return <Skeleton w={"100%"} h={147} />;
   if (!campaign) return null;
@@ -394,6 +404,7 @@ const StartCampaignCardRightSection = ({
           isEdit={true}
           campaign={campaign}
           close={() => {}}
+          dynamicVariables={dynamicVariables}
         />
         <Group>
           <Tooltip label="Refresh data">
