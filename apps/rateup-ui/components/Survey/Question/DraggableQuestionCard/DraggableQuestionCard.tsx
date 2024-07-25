@@ -16,6 +16,8 @@ import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import cx from "clsx";
 import { Draggable } from "react-beautiful-dnd";
 
+import { PageType } from "@/types/enums";
+
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { extractText } from "../../../../utils";
@@ -73,8 +75,8 @@ export function DraggableQuestionCard({
       <ConfirmationModal
         forDeleteFunctionality
         confirmLabel="Delete"
-        headerLabel="Are you sure to delete this question?"
-        headerTitle="Delete question?"
+        headerLabel={`Are you sure to delete this ${question.type in PageType ? "page" : "question"}?`}
+        headerTitle={`Delete ${question.type in PageType ? "page" : "question"}?`}
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {

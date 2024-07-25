@@ -1,3 +1,6 @@
+import { useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   Badge,
   Box,
@@ -13,11 +16,22 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { UseFormReturnType, useForm } from "@mantine/form";
-import { IconBrandGoogle, IconTicket, IconVariable } from "@tabler/icons-react";
-import { IconDeviceSdCard, IconEdit, IconEye } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import {
+  IconBrandGoogle,
+  IconChevronDown,
+  IconDeviceSdCard,
+  IconEdit,
+  IconEye,
+  IconTicket,
+  IconVariable,
+} from "@tabler/icons-react";
+
+import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
+
+import { useSubscription } from "../../../backend/subscription/subscription.query";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
@@ -32,51 +46,45 @@ import {
   SurveyType,
 } from "../../../types/enums";
 import {
-  googleReviewSupportedTypes,
-  logicSupportedTypes,
-  ticketIssueSupportedTypes,
-  validationSupportedTypes,
-} from "../../../utils/data";
-import { showErrorToast } from "../../../utils/notifications";
-import {
-  getInitialQuestionValues,
-  validateAllLanguagesArePopulated,
-} from "../../../utils/questions";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import { QuestionTabsEnum } from "../EditSurvey";
-import QuestionTypePreview from "./Previews/QuestionTypePreview";
-
-import { LanguageCompletionView } from "./LanguageCompletionView";
-
-import { getHotkeyHandler } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import { IconChevronDown } from "@tabler/icons-react";
-import {
   docsPath,
   NPSQuestions,
   SAVE_HOTKEY,
   uniquePages,
 } from "../../../utils/constants";
+import {
+  googleReviewSupportedTypes,
+  logicSupportedTypes,
+  ticketIssueSupportedTypes,
+  validationSupportedTypes,
+} from "../../../utils/data";
 import { getTypeLabel } from "../../../utils/enums";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
+import { showErrorToast } from "../../../utils/notifications";
+import {
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+} from "../../../utils/questions";
+import { hasFeature } from "../../../utils/subscription/subscription";
+import InfoButton from "../../Button/InfoButton";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import TextEditor from "../../RichTextEditor/TextEditor";
+import { QuestionTabsEnum } from "../EditSurvey";
+import FullPageEditor from "../Page/FullPageEditor";
+import ImportChoices from "./ImportChoices";
+import { LanguageCompletionView } from "./LanguageCompletionView";
+import QuestionTypePreview from "./Previews/QuestionTypePreview";
 import { ChoicesCreator } from "./QuestionExtraProps/ChoicesCreator";
 import ContactExtraProps from "./QuestionExtraProps/ContactExtraProps";
+import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
+import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
+import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
 import TestimonialExtraProps from "./QuestionExtraProps/TestimonialExtraProps";
 import TncExtraProps from "./QuestionExtraProps/TncExtraProps";
-import { useSubscription } from "../../../backend/subscription/subscription.query";
-import { hasFeature } from "../../../utils/subscription/subscription";
-import ImportChoices from "./ImportChoices";
-import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
-import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
-import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
-import InfoButton from "../../Button/InfoButton";
-import FullPageEditor from "../Page/FullPageEditor";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -266,7 +274,11 @@ export function QuestionDetailedView({
                   }
                 }}
               >
-                <TextEditor form={form} selectedLanguage={selectedLanguage} />
+                {question?.type === PageType.Custom ? (
+                  <HTMLEditor form={form} selectedLanguage={selectedLanguage} />
+                ) : (
+                  <TextEditor form={form} selectedLanguage={selectedLanguage} />
+                )}
               </Group>
 
               <ExtraProps
@@ -308,6 +320,7 @@ export function QuestionDetailedView({
                   features={form.values.features}
                   tnc={form.values.tnc}
                   wop={form.values?.wop}
+                  htmlContent={form?.values?.description[selectedLanguage]}
                 />
               </CurrentResponsesContext.Provider>
             )}
