@@ -1,0 +1,98 @@
+import { useContext, useEffect } from "react";
+
+import { Group, Stack, Text } from "@mantine/core";
+import { Link, RichTextEditor } from "@mantine/tiptap";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+
+import SurveyContext from "../../context/SurveyContext";
+import CustomImageExtension from "./InsertImage/CustomImageExtenstion";
+
+function HTMLEditor({ form, selectedLanguage }) {
+  const content = form.values?.title?.[selectedLanguage];
+  const htmlContent = form.values?.description?.[selectedLanguage];
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: "Enter your question",
+      }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      CustomImageExtension,
+    ],
+    content: content,
+    onUpdate: ({ editor }) => {
+      form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
+    },
+  });
+
+  const codeEditor = useEditor({
+    extensions: [
+      StarterKit,
+      Link,
+      Placeholder.configure({
+        placeholder: "Enter HTML Code here",
+      }),
+    ],
+    content: htmlContent,
+    onUpdate: ({ editor }) => {
+      form.setFieldValue(`description.${selectedLanguage}`, editor.getHTML());
+    },
+  });
+
+  useEffect(() => {
+    if (editor) {
+      const selection = editor.state.selection;
+      editor.commands.setContent(content, null, {
+        preserveWhitespace: "full",
+      });
+      editor.commands.setTextSelection(selection);
+      form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
+    }
+  }, [content, editor]);
+
+  useEffect(() => {
+    if (codeEditor) {
+      const selection = codeEditor.state.selection;
+      codeEditor.commands.setContent(htmlContent, null, {
+        preserveWhitespace: "full",
+      });
+      codeEditor.commands.setTextSelection(selection);
+      form.setFieldValue(
+        `description.${selectedLanguage}`,
+        codeEditor.getHTML(),
+      );
+    }
+  }, [htmlContent, codeEditor]);
+
+  return (
+    <Stack style={{ width: "100%" }}>
+      <RichTextEditor editor={editor}>
+        <RichTextEditor.Toolbar sticky tabIndex={-1}>
+          <Group gap={"xs"} style={{ width: "100%" }}>
+            <Text c="blue" size="xs" fw={600}>
+              Page Title:
+            </Text>
+          </Group>
+        </RichTextEditor.Toolbar>
+        <RichTextEditor.Content mih={20} miw={500} style={{ width: "100%" }} />
+      </RichTextEditor>
+
+      <RichTextEditor editor={codeEditor}>
+        <RichTextEditor.Toolbar sticky tabIndex={-1}>
+          <Group gap={"xs"}>
+            <Text c="blue" size="xs" fw={600}>
+              HTML CODE:
+            </Text>
+          </Group>
+        </RichTextEditor.Toolbar>
+        <RichTextEditor.Content mih={120} miw={500} style={{ width: "100%" }} />
+      </RichTextEditor>
+    </Stack>
+  );
+}
+
+export default HTMLEditor;

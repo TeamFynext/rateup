@@ -139,7 +139,9 @@ export const getInitialQuestionValues = (
   });
 
   const required =
-    question.type !== QuestionType.InfoMessage ? question?.required : false;
+    question.type !== QuestionType.InfoMessage && !(question.type in PageType)
+      ? question?.required
+      : false;
 
   return {
     id: question?.id ?? undefined,

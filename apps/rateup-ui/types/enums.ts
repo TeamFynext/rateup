@@ -16,13 +16,13 @@ export enum PageType {
 export enum PageTitle {
   Welcome = "Welcome Page",
   ThankYou = "ThankYou Page",
-  Custom = "Custom Page",
+  Custom = "Custom HTML Page",
 }
 
 export enum PageDescription {
   Welcome = "This is the first page to welcome",
   ThankYou = "This is the End Page of the survey",
-  Custom = "Custom Page",
+  Custom = "",
 }
 
 export enum QuestionType {
