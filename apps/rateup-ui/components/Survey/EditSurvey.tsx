@@ -9,6 +9,7 @@ import SurveyContext from "../../context/SurveyContext";
 import { PageType, QuestionType, SurveyType } from "../../types/enums";
 import {
   QuestionTypesGroup,
+  uniquePages,
   WaSurveyQuestionTypes,
 } from "../../utils/constants";
 import { createBlankQuestion, createPage } from "../../utils/questions";
@@ -24,6 +25,8 @@ import SurveyVariableEditor from "./Question/SurveyVariableEditor";
 import TicketIssueEditor from "./Question/TicketIssueEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "./QuestionsSideBar";
+import SurveyTheme from "./SurveyTheme";
+import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -34,6 +37,7 @@ export enum QuestionTabsEnum {
   TicketIssueEditor = "TicketIssueEditor",
   VariableEditor = "VariableEditor",
   None = "None",
+  SurveyPreview = "SurveyPreview",
 }
 interface EditSurveyProps {
   questions: Array<Question>;
@@ -48,7 +52,7 @@ export function EditSurvey({
   setSelectedLanguage,
 }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
-    QuestionTabsEnum.None,
+    QuestionTabsEnum.SurveyPreview,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const { surveyId } = useContext(SurveyContext);
@@ -85,6 +89,13 @@ export function EditSurvey({
     });
   };
 
+  let intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.SURVEY;
+  if (selectedQ?.type === PageType.Welcome) {
+    intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.WELCOME;
+  } else if (selectedQ?.type === PageType.ThankYou) {
+    intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.THANKYOU;
+  }
+
   return (
     <Flex className={styles["edit-survey-div"]}>
       <PaperLayout className={styles["question-sidebar-container"]}>
@@ -96,9 +107,12 @@ export function EditSurvey({
           surveyLanguages={surveyLanguages}
           setSelectedLanguage={setSelectedLanguage}
           addQnTrigger={addQnTrigger}
+          survey={survey}
         />
       </PaperLayout>
-      <PaperLayout className={styles["question-editor-container"]}>
+      <PaperLayout
+        className={`${styles["question-editor-container"]} ${activeTab ? activeTab + "-QDV" : ""} ${selectedQ?.type ? selectedQ.type + "-QDV" : ""}`}
+      >
         <Tabs
           value={activeTab}
           onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
@@ -112,16 +126,29 @@ export function EditSurvey({
             className={styles["question-detailed-view-panel"]}
           >
             {selectedQ && (
-              <MotionTransition keyValue={selectedQ}>
-                <QuestionDetailedView
-                  survey={survey}
-                  question={selectedQ}
-                  setSelectedQ={setSelectedQ}
-                  setActiveTab={setActiveTab}
-                  surveyLanguages={surveyLanguages}
-                  setSelectedLanguage={setSelectedLanguage}
-                  key={selectedQ.id}
-                />
+              <MotionTransition keyValue={selectedQ} style={{ height: "100%" }}>
+                {uniquePages.includes(selectedQ?.type as PageType) ? (
+                  <Stack gap={"xs"} h={"100%"}>
+                    {survey && (
+                      <SurveyTheme
+                        survey={survey}
+                        initialSelectedPageTab={
+                          intitalSelectedTabForSurveyThemeComp
+                        }
+                      />
+                    )}
+                  </Stack>
+                ) : (
+                  <QuestionDetailedView
+                    survey={survey}
+                    question={selectedQ}
+                    setSelectedQ={setSelectedQ}
+                    setActiveTab={setActiveTab}
+                    surveyLanguages={surveyLanguages}
+                    setSelectedLanguage={setSelectedLanguage}
+                    key={selectedQ.id}
+                  />
+                )}
               </MotionTransition>
             )}
           </Tabs.Panel>
@@ -182,6 +209,17 @@ export function EditSurvey({
             <Center style={{ height: "100%" }}>
               <Text c="dimmed">Select a question to edit</Text>
             </Center>
+          </Tabs.Panel>
+          <Tabs.Panel
+            className={styles["survey-preview-panel"]}
+            value={QuestionTabsEnum.SurveyPreview}
+          >
+            {survey && (
+              <SurveyTheme
+                initialSelectedPageTab={ThemeTabEnum.SURVEY}
+                survey={survey}
+              />
+            )}
           </Tabs.Panel>
         </Tabs>
       </PaperLayout>

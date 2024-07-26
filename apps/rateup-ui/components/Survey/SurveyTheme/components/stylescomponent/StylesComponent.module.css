@@ -5,7 +5,15 @@
   height: 100%;
 }
 
+.styles-component-div :global(.custom-color-picker-container) {
+  max-width: 18.75rem;
+}
+
 .editor-select-dropdown {
+  margin-bottom: 1rem;
+}
+
+.tabs-list-tabs-comp {
   margin-bottom: 1rem;
 }
 

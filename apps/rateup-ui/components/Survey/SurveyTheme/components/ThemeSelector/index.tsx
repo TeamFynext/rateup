@@ -1,12 +1,14 @@
+import { useCallback, useState } from "react";
+
 import { Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useCallback, useState } from "react";
+
 import { useSurveyThemeStateDispatch } from "../../SurveyThemeContext";
 import ComboBoxComponent from "./ComboBoxComponent";
+import { getOptions } from "./constants";
 import CreateNewThemeModal from "./CreateNewThemeModal";
 import RenameThemeModal from "./RenameThemeModal";
 import styles from "./ThemeSelector.module.css";
-import { getOptions } from "./constants";
 
 function ThemeSelector({
   className = "",
@@ -62,7 +64,7 @@ function ThemeSelector({
   return (
     <Group className={className}>
       <ComboBoxComponent
-        className={styles["choose-theme-dropdown"]}
+        className={`${styles["choose-theme-dropdown"]} choose-theme-dropdown`}
         classNames={{
           option: styles["choose-theme-dropdown-option"],
         }}

@@ -14,7 +14,6 @@
 
 .dropdown {
   overflow: hidden;
-  z-index: 200 !important;
 }
 
 .options-scroll-area-viewport > div {

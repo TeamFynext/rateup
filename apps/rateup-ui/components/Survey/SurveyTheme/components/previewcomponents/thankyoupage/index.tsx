@@ -122,6 +122,7 @@ export default function ThankyouPageThemeView({
                     onChange={handleTitleInputChange}
                     ref={titleInputRef}
                     onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
+                    autoComplete="off"
                   />
 
                   <ActionIcon
@@ -156,6 +157,7 @@ export default function ThankyouPageThemeView({
                     ta={"center"}
                     ref={subtitleInputRef}
                     onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
+                    autoComplete="off"
                   />
                   <ActionIcon
                     variant="default"
