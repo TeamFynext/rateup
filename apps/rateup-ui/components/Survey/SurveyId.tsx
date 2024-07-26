@@ -11,6 +11,8 @@ import {
   Title,
 } from "@mantine/core";
 
+import { useNavControlContext } from "@/context/NavControlContext";
+
 import { useSubscription } from "../../backend/subscription/subscription.query";
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
@@ -81,6 +83,9 @@ export default function SurveyID(translations) {
   const [filterTags, setFilterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
+
+  const { navOpened, setNavOpened } = useNavControlContext();
+
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
@@ -139,6 +144,10 @@ export default function SurveyID(translations) {
   useEffect(() => {
     setVariables(surveyVariables ?? []);
   }, [surveyVariables]);
+
+  useEffect(() => {
+    setNavOpened(false);
+  }, []);
 
   if (isLoading || isSurveyLoading || !activeTab)
     return <RateupLoader h={"80dvh"} />;

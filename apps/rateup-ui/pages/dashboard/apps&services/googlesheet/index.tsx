@@ -14,7 +14,7 @@ import { useLocalStorage } from "react-use";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
-const index = () => {
+const GoogleSheet = () => {
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
     useDisclosure(false);
   const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
@@ -86,4 +86,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default GoogleSheet;

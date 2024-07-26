@@ -8,6 +8,11 @@
   padding: 1rem;
 }
 
+.survey-preview-btn {
+  height: 100%;
+  padding: 0.3125rem 1rem;
+}
+
 .questions-list-container {
   flex: 1 1 0;
   overflow: auto;

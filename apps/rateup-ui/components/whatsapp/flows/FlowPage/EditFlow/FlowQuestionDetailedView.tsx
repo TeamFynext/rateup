@@ -10,6 +10,7 @@ import {
   Image,
   ScrollArea,
   Stack,
+  Switch,
   Text,
   TextInput,
   TextInputProps,
@@ -19,53 +20,57 @@ import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
 import _ from "lodash";
 
 import {
-  useQuestionCreateMutation,
-  useQuestionUpdateMutation,
-} from "../../../../../backend/surveys/questions/questions.query";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import {
+  IntegratedApps,
   QuestionType,
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
-} from "../../../../../types/enums";
-import { SAVE_HOTKEY, WaNPSQuestions } from "../../../../../utils/constants";
+} from "@/types/enums";
 import {
-  googleReviewSupportedTypes,
-  logicSupportedTypes,
-} from "../../../../../utils/data";
-import { showErrorToast } from "../../../../../utils/notifications";
-import {
-  getInitialQuestionValues,
-  validateAllLanguagesArePopulated,
-} from "../../../../../utils/questions";
-import {
-  getFlowTextLimit,
-  getFormObjFromScreenId,
-  questionTypeToFlowFormElementType,
-} from "../../../../../utils/whatsapp/flow.utils";
+  useQuestionCreateMutation,
+  useQuestionUpdateMutation,
+} from "@/backend/surveys/questions/questions.query";
+import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import {
   RateupButtonPrimary,
   RateupButtonSecondary,
-} from "../../../../Button/RateupButtons";
-import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
-import { LengthTracker } from "../../../../input/LengthTracker";
-import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
-import { ChoicesCreator } from "../../../../Survey/Question/QuestionExtraProps/ChoicesCreator";
-import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
+} from "@/components/Button/RateupButtons";
+import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import { LengthTracker } from "@/components/input/LengthTracker";
+import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor";
+import { ChoicesCreator } from "@/components/Survey/Question/QuestionExtraProps/ChoicesCreator";
+import { TextareaWithLengthTracker } from "@/components/Survey/ShareSurvey/FlowShareTemplateEditor";
 import {
   getFlowLabelLimit,
   getFlowOptionsLimit,
   WA_FLOW_BODY_CHAR_LIMIT,
   WA_FLOW_HEADING_CHAR_LIMIT,
-} from "../../../whatsappConfig";
+} from "@/components/whatsapp/whatsappConfig";
+import SelectedLanguageContext from "@/context/SelectedLanguage";
+import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants";
+import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data";
+import { showErrorToast } from "@/utils/notifications";
+import {
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+} from "@/utils/questions";
+import {
+  getFlowTextLimit,
+  getFormObjFromScreenId,
+  questionTypeToFlowFormElementType,
+} from "@/utils/whatsapp/flow.utils";
+
 import { EditFlowContext } from "./EditFlowContext";
 import { FlowLogicEditor } from "./FlowLogicEditor";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 interface QuestionDetailedViewProps {
   question: Question;
   surveyLanguages: string[];
@@ -85,7 +90,7 @@ export function FlowQuestionDetailedView({
   setSelectedLanguage,
   surveyId,
   onCreated,
-}: QuestionDetailedViewProps) {
+}: Readonly<QuestionDetailedViewProps>) {
   const [activeEditor, setActiveEditor] = useState<EditorType>(
     EditorType.ElementEditor,
   );
@@ -146,7 +151,7 @@ function ElementEditor({
   surveyId,
   onCreated,
   setActiveTab,
-}: ElementEditorProps) {
+}: Readonly<ElementEditorProps>) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { selectedScreenId, flowJson, updateFlowJson } =
@@ -231,13 +236,21 @@ function ElementEditor({
         setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
       }
-      if (question.type === QuestionType.Optin) {
+      if (
+        question.type === QuestionType.Optin ||
+        question.type === QuestionType.Date ||
+        question.type === QuestionType.WaTimeSlot
+      ) {
         updateFlowJson((draft) => {
           const formEl = getFormObjFromScreenId(
             draft.screens,
             selectedScreenId,
           );
-          if (form.values.optinScreenId) {
+
+          if (
+            form.values.optinScreenId &&
+            question.type === QuestionType.Optin
+          ) {
             formEl.children[currentIndex + 1]["on-click-action"] = {
               name: "navigate",
               next: {
@@ -246,6 +259,29 @@ function ElementEditor({
               },
               payload: {},
             };
+          } else if (form.values.onSelectAction) {
+            const dateForm = formEl.children.find(
+              (data) => data.type === WaFlowFormElementType.datePicker,
+            );
+            let now = dayjs().tz("Asia/Kolkata").startOf("day");
+            let afterSixMonth = dayjs().add(6, "M").startOf("day");
+            dateForm["min-date"] = now.utc().valueOf().toString();
+            dateForm["max-date"] = afterSixMonth.utc().valueOf().toString();
+
+            dateForm["on-select-action"] = {
+              name: "data_exchange",
+              payload: {
+                date: "${form" + "." + dateForm.name + "}",
+                component_action: "update_date",
+              },
+            };
+          } else if (question.type === QuestionType.WaTimeSlot) {
+            const timeForm = formEl.children.find(
+              (data) => data.type === "Dropdown",
+            );
+            if (timeForm) {
+              timeForm["data-source"] = "${data.available_slots}";
+            }
           }
         });
       }
@@ -395,6 +431,26 @@ function ElementEditor({
                 w={300}
               />
             )}
+            {question.type === QuestionType.Date && (
+              <Stack mt={"xs"}>
+                <Switch
+                  size="md"
+                  label={"Enable dynamic datepicker"}
+                  {...form.getInputProps("onSelectAction", {
+                    type: "checkbox",
+                  })}
+                />
+                {form.values.onSelectAction && (
+                  <ContainedSelection
+                    label={"Integration App Name"}
+                    placeholder="Select Integration App Name"
+                    data={[IntegratedApps.waAmelia]}
+                    {...form.getInputProps("waAppName")}
+                    w={400}
+                  />
+                )}
+              </Stack>
+            )}
 
             <FlowQuestionExtraProps
               form={form}
@@ -436,6 +492,7 @@ function ElementEditor({
                     w={30}
                     h={30}
                     fit={"contain"}
+                    alt="image of logic jump"
                   />
                 }
                 size="sm"

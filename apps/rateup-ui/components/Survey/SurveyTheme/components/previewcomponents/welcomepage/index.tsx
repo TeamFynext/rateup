@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   BackgroundImage,
@@ -5,15 +7,17 @@ import {
   Flex,
   Image,
   Overlay,
-  TextInput,
   Textarea,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { IconEdit } from "@tabler/icons-react";
+
 import { cordinateStyle } from "../../../../../../utils";
 import { surveyUploadsPath } from "../../../../../../utils/constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
@@ -22,8 +26,6 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
-import { IconEdit } from "@tabler/icons-react";
-import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 
 export default function WelcomePageThemeView({
   survey,
@@ -120,6 +122,7 @@ export default function WelcomePageThemeView({
             h={"100%"}
             direction={"column"}
             pos={"relative"}
+            gap={"1.5rem"}
           >
             {orgLogoSrc && (
               <Image
@@ -130,7 +133,7 @@ export default function WelcomePageThemeView({
             )}
 
             <Tooltip label="Edit title">
-              <Box className={classes.titleBox} mt={20} w={"50%"}>
+              <Box className={classes.titleBox} w={"50%"}>
                 <TextInput
                   className={lexend.className}
                   placeholder={"Welcome"}
@@ -149,6 +152,7 @@ export default function WelcomePageThemeView({
                   onChange={handleTitleInputChange}
                   ref={titleInputRef}
                   onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
+                  autoComplete="off"
                 />
 
                 <ActionIcon
@@ -164,7 +168,7 @@ export default function WelcomePageThemeView({
             </Tooltip>
             {/* //--------------------------- */}
             <Tooltip label="Edit subtitle">
-              <Box className={classes.titleBox} mt={20} w={"50%"}>
+              <Box className={classes.titleBox} w={"50%"}>
                 <Textarea
                   className={lexend.className}
                   placeholder={"Please fill the survey"}
@@ -182,6 +186,7 @@ export default function WelcomePageThemeView({
                   onChange={handleSubtitleTextareaChange}
                   ref={subtitleInputRef}
                   onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
+                  autoComplete="off"
                 />
 
                 <ActionIcon
@@ -231,6 +236,7 @@ export default function WelcomePageThemeView({
                   }}
                   ref={startBtnInputRef}
                   onFocus={() => setSelectedEditor(SelectedItemEnum.BUTTON)}
+                  autoComplete="off"
                 />
 
                 <ActionIcon

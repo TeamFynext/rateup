@@ -44,6 +44,7 @@ import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { validateQuestion } from "../../../../utils/validation";
 import RateupLoader from "../../../Loaders/RateupLoader";
 import GiftModal from "../../Gift/GiftModal";
+import CustomHTML from "../../Page/Previews/CustomHTML";
 import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
@@ -508,30 +509,43 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                             type="never"
                             className={styles["question-div"]}
                           >
-                            <Box
-                              className={`${styles["title-desc-container"]} ${lexend.className}`}
-                            >
-                              <QuestionTitle
-                                largeScreen={largeScreen}
-                                themeStyles={
-                                  surveyThemeData?.surveyTheme?.title?.styles
+                            {selectedQ.type in PageType ? (
+                              <CustomHTML
+                                content={
+                                  selectedQ?.description[selectedLanguage]
                                 }
-                                smallScreen={smallScreen}
-                                responses={responses}
-                                surveyId={survey?.id}
                               />
-                              {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                                <QuestionDesc
-                                  largeScreen={largeScreen}
-                                  themeStyles={
-                                    surveyThemeData?.surveyTheme?.subtitle
-                                      ?.styles
-                                  }
-                                />
-                              )}
-                            </Box>
+                            ) : (
+                              <>
+                                <Box
+                                  className={`${styles["title-desc-container"]} ${lexend.className}`}
+                                >
+                                  <QuestionTitle
+                                    largeScreen={largeScreen}
+                                    themeStyles={
+                                      surveyThemeData?.surveyTheme?.title
+                                        ?.styles
+                                    }
+                                    smallScreen={smallScreen}
+                                    responses={responses}
+                                    surveyId={survey?.id}
+                                  />
+                                  {!isHtml(
+                                    selectedQ?.title[selectedLanguage],
+                                  ) && (
+                                    <QuestionDesc
+                                      largeScreen={largeScreen}
+                                      themeStyles={
+                                        surveyThemeData?.surveyTheme?.subtitle
+                                          ?.styles
+                                      }
+                                    />
+                                  )}
+                                </Box>
 
-                            <QuestionForm />
+                                <QuestionForm />
+                              </>
+                            )}
                           </ScrollArea.Autosize>
 
                           <Box

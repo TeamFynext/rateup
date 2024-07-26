@@ -1,13 +1,19 @@
+import { useEffect } from "react";
+
 import { Box, Flex, Group, SimpleGrid, Title } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { z } from "zod";
+
+import { CampaignStatus, CampaignType } from "@/types/enums";
+import useTemplatesAvailableForTeam from "@/hooks/team";
 import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
-} from "../../backend/campaign/campaign.query";
-import useTemplatesAvailableForTeam from "../../hooks/team";
-import { CampaignStatus, CampaignType } from "../../types/enums";
-import { SAVE_HOTKEY } from "../../utils/constants";
+} from "@/backend/campaign/campaign.query";
+import { SAVE_HOTKEY } from "@/utils/constants";
+
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import {
   ContainedSelection,
@@ -19,28 +25,62 @@ interface CreateCampaignProps {
   close: () => void;
   isEdit?: boolean;
   campaign?;
+  dynamicVariables?: string[];
 }
 
 const CreateCampaignModal = ({
   close,
   isEdit,
   campaign,
+  dynamicVariables,
 }: CreateCampaignProps) => {
-  const form = useForm({
+  const schema = z
+    .object({
+      teamId: z.string().min(1, { message: "Must select a team" }),
+      name: z.string().trim().min(1, { message: "Name cannot be empty" }),
+      waTemplateId: z.string().min(1, { message: "Must select a template" }),
+      type: z.nativeEnum(CampaignType),
+      surveyTeamMapId: z.string().optional(),
+      flowId: z.string().optional(),
+      dynamicTags: z.array(z.string().trim().nullable()),
+    })
+    .superRefine((values, ctx) => {
+      dynamicVariables?.map((_, i) => {
+        if (!values.dynamicTags?.[i]) {
+          ctx.addIssue({
+            path: [`dynamicTags.${i}`],
+            code: z.ZodIssueCode.custom,
+            message: "Select a tag",
+          });
+        }
+      });
+    });
+  const form = useForm<z.infer<typeof schema>>({
     initialValues: {
+      name: "",
+      type: CampaignType.WHATSAPP,
+      teamId: "",
+      surveyTeamMapId: "",
+      waTemplateId: "",
+      flowId: "",
+      dynamicTags: [],
+    },
+    validate: zodResolver(schema),
+  });
+
+  useEffect(() => {
+    form.setValues({
       name: campaign?.name || "",
       type: campaign?.type || CampaignType.WHATSAPP,
       teamId: campaign?.teamId || "",
       surveyTeamMapId: campaign?.surveyTeamMapId || "",
       waTemplateId: campaign?.waTemplateId || "",
       flowId: campaign?.flowId || "",
-    },
-    validate: {
-      name: isNotEmpty("Name cannot be empty"),
-      teamId: isNotEmpty("Must select a team"),
-      waTemplateId: isNotEmpty("Must select a template"),
-    },
-  });
+      dynamicTags: campaign?.dynamicTags || [],
+    });
+  }, [campaign]);
+
+  let dynamicVariableData = ["name", ...(campaign?.contactTags || [])];
 
   const templates = useTemplatesAvailableForTeam(form.values.teamId);
   if (
@@ -72,6 +112,12 @@ const CreateCampaignModal = ({
         ?.buttons?.find((b) => b?.type === "FLOW")?.flow_id ?? null;
     values.flowId = flowId;
     values.waTemplateId = values.waTemplateId;
+    if (values.dynamicTags?.length !== dynamicVariables?.length) {
+      values.dynamicTags = values.dynamicTags?.slice(
+        0,
+        dynamicVariables?.length,
+      );
+    }
     if (isEdit) {
       updateCampaignMutation.mutate(
         { data: values, campaignId: campaign?.id },
@@ -158,6 +204,17 @@ const CreateCampaignModal = ({
               />
             </Box>
           )}
+        </SimpleGrid>
+        <SimpleGrid cols={{ base: 2, lg: 4 }} pl={"lg"}>
+          {dynamicVariables?.map((_, i) => (
+            <ContainedSelection
+              key={i}
+              label={`{{${i + 1}}}`}
+              data={dynamicVariableData}
+              placeholder="select a dynamic tag value"
+              {...form.getInputProps(`dynamicTags.${i}`)}
+            />
+          ))}
         </SimpleGrid>
         {!isEdit && (
           <Flex justify={"flex-end"} gap={"md"} mt={"md"}>

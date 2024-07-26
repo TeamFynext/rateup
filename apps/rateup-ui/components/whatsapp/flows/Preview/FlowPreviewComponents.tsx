@@ -8,8 +8,8 @@ import {
   Radio,
   Stack,
   Text,
-  TextInput,
   Textarea,
+  TextInput,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import {
@@ -18,6 +18,7 @@ import {
   IconDotsVertical,
   IconX,
 } from "@tabler/icons-react";
+
 import {
   WaFlowFormElementType,
   WaFlowFormNonInputElementType,
@@ -310,21 +311,30 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return (
         <FlowRadioPreview
           label={fe.label}
-          options={fe["data-source"]?.map((ds) => ds.title)}
+          options={
+            typeof fe["data-source"] !== "string" &&
+            fe["data-source"]?.map((ds) => ds.title)
+          }
         />
       );
     case WaFlowFormElementType.checkboxGroup:
       return (
         <FlowCheckBoxPreview
           label={fe.label}
-          options={fe["data-source"]?.map((ds) => ds.title)}
+          options={
+            typeof fe["data-source"] !== "string" &&
+            fe["data-source"]?.map((ds) => ds.title)
+          }
         />
       );
     case WaFlowFormElementType.dropDown:
       return (
         <DropDownPreview
           label={fe.label}
-          options={fe["data-source"]?.map((ds) => ds.title)}
+          options={
+            typeof fe["data-source"] !== "string" &&
+            fe["data-source"]?.map((ds) => ds.title)
+          }
         />
       );
     case WaFlowFormElementType.optIn:

@@ -1,23 +1,15 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Center,
-  Checkbox,
-  Divider,
-  Group,
-  Image,
-  Menu,
-  ScrollArea,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { UseFormReturnType, useForm } from "@mantine/form";
-import { IconBrandGoogle, IconTicket, IconVariable } from "@tabler/icons-react";
-import { IconDeviceSdCard, IconEdit, IconEye } from "@tabler/icons-react";
-import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+
+import { Box, Divider, Group, ScrollArea, Stack } from "@mantine/core";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconEye } from "@tabler/icons-react";
+
+import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
+
+import { useSubscription } from "../../../backend/subscription/subscription.query";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
@@ -31,52 +23,30 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
 } from "../../../types/enums";
-import {
-  googleReviewSupportedTypes,
-  logicSupportedTypes,
-  ticketIssueSupportedTypes,
-  validationSupportedTypes,
-} from "../../../utils/data";
+import { SAVE_HOTKEY } from "../../../utils/constants";
+import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
 import { showErrorToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
 } from "../../../utils/questions";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import { QuestionTabsEnum } from "../EditSurvey";
-import QuestionTypePreview from "./Previews/QuestionTypePreview";
-
-import { LanguageCompletionView } from "./LanguageCompletionView";
-
-import { getHotkeyHandler } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import { IconChevronDown } from "@tabler/icons-react";
-import {
-  docsPath,
-  NPSQuestions,
-  SAVE_HOTKEY,
-  uniquePages,
-} from "../../../utils/constants";
-import { getTypeLabel } from "../../../utils/enums";
-import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
+import { hasFeature } from "../../../utils/subscription/subscription";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import TextEditor from "../../RichTextEditor/TextEditor";
+import { QuestionTabsEnum } from "../EditSurvey";
+import ImportChoices from "./ImportChoices";
+import { LanguageCompletionView } from "./LanguageCompletionView";
+import QuestionTypePreview from "./Previews/QuestionTypePreview";
+import QuestionDetailedViewBadge from "./QuestionDetailedViewBadge";
+import QuestionDetailedViewFooter from "./QuestionDetailedViewFooter";
 import { ChoicesCreator } from "./QuestionExtraProps/ChoicesCreator";
 import ContactExtraProps from "./QuestionExtraProps/ContactExtraProps";
+import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
+import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
+import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
 import TestimonialExtraProps from "./QuestionExtraProps/TestimonialExtraProps";
 import TncExtraProps from "./QuestionExtraProps/TncExtraProps";
-import { useSubscription } from "../../../backend/subscription/subscription.query";
-import { hasFeature } from "../../../utils/subscription/subscription";
-import ImportChoices from "./ImportChoices";
-import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
-import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
-import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
-import InfoButton from "../../Button/InfoButton";
-import FullPageEditor from "../Page/FullPageEditor";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -237,18 +207,7 @@ export function QuestionDetailedView({
           offsetScrollbars={"x"}
           styles={{ viewport: { paddingRight: "1rem" } }}
         >
-          <Badge
-            variant={getTypeLabel(question.type) ? "outline" : "light"}
-            size="lg"
-            style={{ overflow: "visible" }}
-            color={
-              getTypeLabel(question.type) ? "var(--tertiary-color)" : "red"
-            }
-          >
-            {getTypeLabel(question.type)
-              ? getTypeLabel(question.type)
-              : "Not Available"}
-          </Badge>
+          <QuestionDetailedViewBadge question={question} />
           <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
             <Stack
               style={{ minHeight: "150px", height: "100%", flex: 1 }}
@@ -266,7 +225,11 @@ export function QuestionDetailedView({
                   }
                 }}
               >
-                <TextEditor form={form} selectedLanguage={selectedLanguage} />
+                {question?.type === PageType.Custom ? (
+                  <HTMLEditor form={form} selectedLanguage={selectedLanguage} />
+                ) : (
+                  <TextEditor form={form} selectedLanguage={selectedLanguage} />
+                )}
               </Group>
 
               <ExtraProps
@@ -295,234 +258,33 @@ export function QuestionDetailedView({
               </>
             }
           />
-          <Center pb="xl" mb="lg" pl="xl" ml="xl" mt="4rem">
-            {uniquePages.includes(question?.type as PageType) ? (
-              <FullPageEditor survey={survey} page={question?.type} />
-            ) : (
-              <CurrentResponsesContext.Provider
-                value={{ response: currentResponse, updateResponse }}
-              >
-                <QuestionTypePreview
-                  type={question?.type}
-                  choices={form.values.choices}
-                  features={form.values.features}
-                  tnc={form.values.tnc}
-                  wop={form.values?.wop}
-                />
-              </CurrentResponsesContext.Provider>
-            )}
-          </Center>
+
+          <CurrentResponsesContext.Provider
+            value={{ response: currentResponse, updateResponse }}
+          >
+            <QuestionTypePreview
+              type={question?.type}
+              choices={form.values.choices}
+              features={form.values.features}
+              tnc={form.values.tnc}
+              wop={form.values?.wop}
+            />
+          </CurrentResponsesContext.Provider>
         </ScrollArea>
 
         <Divider />
 
-        <Group mt="sm" justify="space-between" gap="sm">
-          <Group justify="flex-start" gap="md">
-            <Checkbox
-              label="Required"
-              color="var(--tertiary-color)"
-              fw={600}
-              mr={
-                !NPSQuestions.includes(question?.type as QuestionType) &&
-                "100px"
-              }
-              checked={form.values.required}
-              onChange={(e) => {
-                const checked = e.currentTarget.checked;
-                form.setFieldValue("required", checked);
-              }}
-              disabled={question.type === QuestionType.InfoMessage}
-            />
-            <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
-            {NPSQuestions.includes(question?.type as QuestionType) && (
-              <Checkbox
-                label="NPS Analytics"
-                color="var(--tertiary-color)"
-                fw={600}
-                checked={form.values.enableNpsAnalytics}
-                onChange={(e) => {
-                  const checked = e.currentTarget.checked;
-                  form.setFieldValue("enableNpsAnalytics", checked);
-                }}
-              />
-            )}
-
-            <Stack px="sm">
-              <Menu
-                position="bottom-end"
-                offset={4}
-                withArrow
-                arrowPosition="side"
-                transitionProps={{
-                  transition: "rotate-right",
-                  duration: 150,
-                }}
-              >
-                <Menu.Target>
-                  <Button
-                    variant="outline"
-                    color="dark.2"
-                    radius="lg"
-                    size="sm"
-                    rightSection={<IconChevronDown size="1rem" />}
-                  >
-                    <Text size="sm" c={"var(--text-color-sp)"} fw="700">
-                      Actions
-                    </Text>
-                  </Button>
-                </Menu.Target>
-
-                <Menu.Dropdown>
-                  <Menu.Item>
-                    <RateupButtonSecondary
-                      title={"Variables"}
-                      fullWidth
-                      size="sm"
-                      leftIcon={<IconVariable size={"1.5rem"} />}
-                      onClick={() =>
-                        setActiveTab(QuestionTabsEnum.VariableEditor)
-                      }
-                    />
-                  </Menu.Item>
-                  {logicSupportedTypes.includes(
-                    question?.type as QuestionType,
-                  ) && (
-                    <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Logic Jump"}
-                        fullWidth
-                        leftIcon={
-                          <Image
-                            src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                            h={30}
-                            w={30}
-                            fit="contain"
-                            alt="icon of login jump"
-                          />
-                        }
-                        size="sm"
-                        onClick={async () => {
-                          setActiveTab(QuestionTabsEnum.LogicEditor);
-                        }}
-                      />
-                    </Menu.Item>
-                  )}
-
-                  {googleReviewSupportedTypes.includes(
-                    question?.type as QuestionType,
-                  ) && (
-                    <Menu.Item>
-                      {isGoogleReviewFeatureActive ? (
-                        <RateupButtonSecondary
-                          title={"Google Review"}
-                          leftIcon={
-                            <IconBrandGoogle stroke={4} size={"1rem"} />
-                          }
-                          size="sm"
-                          fullWidth
-                          onClick={async () => {
-                            let save = await handleSave();
-                            save === "saved" &&
-                              setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
-                          }}
-                        />
-                      ) : (
-                        <Tooltip
-                          label="Upgrade your Plan for this feature."
-                          disabled={isGoogleReviewFeatureActive}
-                          color="yellow"
-                        >
-                          <Button
-                            data-disabled
-                            radius="lg"
-                            onClick={(event) => event.preventDefault()}
-                            leftSection={
-                              <IconBrandGoogle stroke={4} size={"1rem"} />
-                            }
-                          >
-                            Google Review
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </Menu.Item>
-                  )}
-
-                  {validationSupportedTypes.includes(
-                    question?.type as QuestionType,
-                  ) && (
-                    <Menu.Item>
-                      <RateupButtonSecondary
-                        title={"Custom Validation"}
-                        leftIcon={<IconEdit />}
-                        size="sm"
-                        fullWidth
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(
-                              QuestionTabsEnum.ValidationRulesEditor,
-                            );
-                        }}
-                      />
-                    </Menu.Item>
-                  )}
-                  {ticketIssueSupportedTypes.includes(
-                    question?.type as QuestionType,
-                  ) && (
-                    <Menu.Item>
-                      {isTicketFeatureActive ? (
-                        <RateupButtonSecondary
-                          title={"Create Tickets"}
-                          leftIcon={<IconTicket stroke={4} size={"1rem"} />}
-                          size="sm"
-                          fullWidth
-                          onClick={async () => {
-                            let save = await handleSave();
-                            save === "saved" &&
-                              setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-                          }}
-                        />
-                      ) : (
-                        <Tooltip
-                          label="Upgrade your Plan for this feature."
-                          disabled={isTicketFeatureActive}
-                          color="yellow"
-                        >
-                          <Button
-                            data-disabled
-                            radius="lg"
-                            onClick={(event) => event.preventDefault()}
-                            leftSection={
-                              <IconBrandGoogle stroke={4} size={"1rem"} />
-                            }
-                          >
-                            Create Tickets
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </Menu.Item>
-                  )}
-                </Menu.Dropdown>
-              </Menu>
-            </Stack>
-          </Group>
-
-          <Group>
-            <RateupButtonBlue
-              title={
-                getIncompleteLanguages().length > 1 ||
-                (getIncompleteLanguages().length > 0 &&
-                  getIncompleteLanguages()[0] !== selectedLanguage)
-                  ? "Fill Next Language"
-                  : "Save"
-              }
-              size="md"
-              onClick={handleSave}
-              leftIcon={<IconDeviceSdCard />}
-              loading={isSaving}
-            />
-          </Group>
-        </Group>
+        <QuestionDetailedViewFooter
+          question={question}
+          form={form}
+          setActiveTab={setActiveTab}
+          isGoogleReviewFeatureActive={isGoogleReviewFeatureActive}
+          handleSave={handleSave}
+          isTicketFeatureActive={isTicketFeatureActive}
+          getIncompleteLanguages={getIncompleteLanguages}
+          selectedLanguage={selectedLanguage}
+          isSaving={isSaving}
+        />
       </Stack>
     </form>
   );

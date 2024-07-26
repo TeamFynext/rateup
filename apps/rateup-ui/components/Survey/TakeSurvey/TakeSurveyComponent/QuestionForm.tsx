@@ -1,9 +1,11 @@
-import { Group } from "@mantine/core";
 import { useContext } from "react";
-import { QuestionType as Q } from "../../../../types/enums";
+
+import { Group } from "@mantine/core";
+
 import { SelectedQContext } from "../../../../context/SelectedQ";
-import { getQuestionForm } from "./util";
+import { PageType, QuestionType as Q } from "../../../../types/enums";
 import classes from "./TakeSurvey.module.css";
+import { getQuestionForm } from "./util";
 
 function QuestionForm() {
   const { selectedQ } = useContext(SelectedQContext);
@@ -12,6 +14,9 @@ function QuestionForm() {
   return (
     <Group className={classes[className]}>
       {(() => {
+        if (type in PageType) {
+          return <></>;
+        }
         switch (type) {
           case Q.Date:
             return getQuestionForm(type, selectedQ);

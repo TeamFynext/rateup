@@ -90,6 +90,7 @@ const FlowInputQuestions = [
   QuestionType.TextArea,
   QuestionType.Date,
   QuestionType.Optin,
+  QuestionType.WaTimeSlot,
 ];
 
 export const BasicPages = [

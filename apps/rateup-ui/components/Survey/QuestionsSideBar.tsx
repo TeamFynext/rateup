@@ -9,12 +9,15 @@ import { IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
+import { PageType } from "@/types/enums";
+
 import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
-import { docsPath } from "../../utils/constants";
+import { docsPath, uniquePages } from "../../utils/constants";
 import { reorder, reOrderPages } from "../../utils/questions";
 import InfoButton from "../Button/InfoButton";
-import { RateupButtonBlue } from "../Button/RateupButtons";
+import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
 import { QuestionTabsEnum } from "./EditSurvey";
+import FullPageEditor from "./Page/FullPageEditor";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import styles from "./QuestionsSideBar.module.css";
 
@@ -27,6 +30,7 @@ interface QuestionsSideBarProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   isWaSurvey?: boolean;
+  survey?: Survey;
 }
 export function QuestionsSideBar({
   questions,
@@ -37,6 +41,7 @@ export function QuestionsSideBar({
   isWaSurvey,
   surveyLanguages,
   setSelectedLanguage,
+  survey,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -98,13 +103,24 @@ export function QuestionsSideBar({
   return (
     <Stack className={styles["add-question-btn-questions-list-container"]}>
       {questionsState?.length > 0 && (
-        <Group className={styles["add-question-btn-more-than-1-que"]}>
-          <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
-          <RateupButtonBlue
-            onClick={handleAddQn}
-            title={"Add Page"}
-            rightIcon={<IconPlus size="1rem" />}
-            size="md"
+        <Group
+          className={styles["add-question-btn-more-than-1-que"]}
+          justify="space-between"
+        >
+          <Group>
+            <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
+            <RateupButtonBlue
+              onClick={handleAddQn}
+              title={"Add Page"}
+              rightIcon={<IconPlus size="1rem" />}
+              size="md"
+            />
+          </Group>
+
+          <RateupButtonPrimary
+            className={styles["survey-preview-btn"]}
+            title="Survey Preview"
+            onClick={() => setActiveTab(QuestionTabsEnum.SurveyPreview)}
           />
         </Group>
       )}

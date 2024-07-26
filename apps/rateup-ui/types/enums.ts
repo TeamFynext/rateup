@@ -16,13 +16,13 @@ export enum PageType {
 export enum PageTitle {
   Welcome = "Welcome Page",
   ThankYou = "ThankYou Page",
-  Custom = "Custom Page",
+  Custom = "Custom HTML Page",
 }
 
 export enum PageDescription {
   Welcome = "This is the first page to welcome",
   ThankYou = "This is the End Page of the survey",
-  Custom = "Custom Page",
+  Custom = "",
 }
 
 export enum QuestionType {
@@ -52,7 +52,6 @@ export enum QuestionType {
   MultiTextInput = "MultiTextInput",
   MCQGrid = "MCQ Grid",
   File = "File",
-  Optin = "OptIn",
   EmailOtp = "EmailOtp",
   WOP = "Wheel of Price",
   //TODO REMOVE LATER: MYG GIFT VISHU
@@ -60,8 +59,10 @@ export enum QuestionType {
   Invoice_Id = "invoice_id",
 
   // WhatsApp exclusive
+  Optin = "OptIn",
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
+  WaTimeSlot = "Dropdown",
 }
 
 export enum LDResponse {
@@ -344,6 +345,7 @@ export enum ShopifySendAfter {
 export enum IntegratedApps {
   shopify = "Shopify",
   googlesheet = "Google Sheet",
+  waAmelia = "WaAmelia",
 }
 
 export enum MenuButtons {

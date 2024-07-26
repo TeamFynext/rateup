@@ -1,7 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   ActionIcon,
   Badge,
@@ -9,6 +8,7 @@ import {
   Button,
   Flex,
   Group,
+  Image,
   ScrollAreaAutosize,
   Stack,
   Text,
@@ -26,6 +26,7 @@ import {
   IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
+import { Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
 
 import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
@@ -411,6 +412,7 @@ function ScreenListItem({
                             survey.questions,
                             map,
                           )}
+                          screen={screen.id}
                           selected={selectedFormElementId === element.id}
                           index={index}
                           handleOpen={handleElementClick}
@@ -483,6 +485,7 @@ interface FormElementCardProps {
   handleOpen: (index: number) => void;
   handleDelete: (index: number) => void;
   dragHandleProps?: any;
+  screen: string;
 }
 function DraggableFormElementCard(
   props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>,
@@ -508,6 +511,7 @@ function FormElementCard({
   index,
   handleOpen,
   handleDelete,
+  screen,
   dragHandleProps,
 }: Readonly<FormElementCardProps>) {
   const router = useRouter();
@@ -540,6 +544,15 @@ function FormElementCard({
       <Text px="xs" fw={500} style={{ flex: 1 }} lineClamp={2}>
         {text}
       </Text>
+      {Object.keys(dbFlow.logicJumps).includes(screen) && (
+        <Image
+          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
+          w={30}
+          h={30}
+          fit="contain"
+          alt="image of logic jump"
+        />
+      )}
       {flowEditable && (
         <ActionIcon
           onClick={(e) => {

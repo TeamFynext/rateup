@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   CheckIcon,
   Combobox,
@@ -9,6 +10,7 @@ import {
   ScrollArea,
   useCombobox,
 } from "@mantine/core";
+
 import RenderOption from "../RenderOption";
 import styles from "./ComboBoxComponent.module.css";
 
@@ -64,10 +66,11 @@ function ComboBoxComponent({
         onChange(val);
         combobox.closeDropdown();
       }}
+      zIndex={202}
     >
       <Combobox.Target targetType="button">
         <InputBase
-          label={"Select Theme"}
+          label={"Select Theme: "}
           component="button"
           type="button"
           pointer
