@@ -118,7 +118,7 @@ export default function Template() {
         </Flex>
       </Flex>
       <TemplateCardList
-        handleEditClick={handleCreateClick}
+        handleEditClick={handleEditClick}
         isError={isError}
         isPending={isPending}
         refetch={refetch}
