@@ -1,49 +1,53 @@
-﻿import {
-  RateupButtonBlue,
-  RateupButtonOutline,
-  RateupButtonPrimary,
-} from "../../../components/Button/RateupButtons";
+﻿import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
+  ActionIcon,
+  Box,
+  Center,
+  Grid,
+  Group,
   Loader,
   Space,
-  Grid,
-  Center,
-  Group,
-  ActionIcon,
   Tooltip,
 } from "@mantine/core";
-import { Box } from "@mantine/core";
-import { useEffect, useState } from "react";
-import { notifications } from "@mantine/notifications";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconPlus,
   IconRefresh,
   IconReload,
   IconSelector,
 } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useUser } from "../../../context/UserContext";
-import { useForm } from "@mantine/form";
+
 import {
   useCreateTeamMutation,
   useTeamsByUser,
 } from "../../../backend/team/team.query";
-import TeamCard from "./TeamCard";
-import { retrieveRole } from "../../../utils/essential";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
-import Heading from "../../../components/styled/Heading/Heading";
-import style from "./Teams.module.css";
-import SortDropdown from "../../../components/Dashboard/SortDropDown";
-import RefreshButton from "../../../components/Button/RefreshButton";
 import InfoButton from "../../../components/Button/InfoButton";
-import { docsPath } from "../../../utils/constants";
+import {
+  RateupButtonBlue,
+  RateupButtonOutline,
+  RateupButtonPrimary,
+} from "../../../components/Button/RateupButtons";
+import RefreshButton from "../../../components/Button/RefreshButton";
+import SortDropdown from "../../../components/Dashboard/SortDropDown";
+import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import Heading from "../../../components/styled/Heading/Heading";
+import TeamTourSteps from "../../../components/WelcomeTour/components/TeamTourSteps";
 import styles from "../../../components/WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
-import TeamTourSteps from "../../../components/WelcomeTour/components/TeamTourSteps";
+import { useUser } from "../../../context/UserContext";
+import useTranslations from "../../../dictionaries/useTranslation"; // Import the getDictionary function
+import { docsPath } from "../../../utils/constants";
+import { retrieveRole } from "../../../utils/essential";
+import TeamCard from "./TeamCard";
+import style from "./Teams.module.css";
 
 export default function Teams() {
+  const { translations, loadingTranslations } = useTranslations();
   const [opened, { open, close }] = useDisclosure(false);
   const [sortOption, setSortOption] = useState("");
   const { action } = useRouter().query;
@@ -61,13 +65,13 @@ export default function Teams() {
     validate: {
       name: (value) => {
         if (value.length < 3) {
-          return "Team Name should be at least 3 characters long";
+          return translations["Team Name should be at least 3 characters long"];
         }
         return null; // Validation passed
       },
       code: (value) => {
         if (value.length < 2) {
-          return "Team Code should be at least 2 characters long";
+          return translations["Team Code should be at least 2 characters long"];
         }
         return null; // Validation passed
       },
@@ -101,8 +105,8 @@ export default function Teams() {
     notifications.show({
       id: "load-data",
       loading: true,
-      title: "Creating Team..",
-      message: `Hold on, Your team '${values?.name}' is getting created.`,
+      title: translations["Creating Team.."],
+      message: `${translations["Hold on, Your team"]} '${values?.name}' ${translations["is getting created."]}`,
       autoClose: false,
       withCloseButton: false,
     });
@@ -131,29 +135,33 @@ export default function Teams() {
     }
   };
 
+  if (loadingTranslations) {
+    return <Loader type="bars" />;
+  }
+
   return (
     <div className={style["teams-container"]}>
       <FormModalLayout
         centered
         onClose={close}
         opened={opened}
-        title="Add Team"
-        buttonTitle="Add Team"
+        title={translations["Add Team"]}
+        buttonTitle={translations["Add Team"]}
         isLoading={isCreating}
         onSubmit={createTeamForm.onSubmit(onSubmit)}
       >
         <Box>
           <ContainedTextField
             withAsterisk
-            label="Team Name"
-            placeholder="Enter team name"
+            label={translations["Team Name"]}
+            placeholder={translations["Enter team name"]}
             {...createTeamForm.getInputProps("name")}
           />
           <Space h="lg" />
           <ContainedTextField
             withAsterisk
-            label="Team Code"
-            placeholder="Enter team code"
+            label={translations["Team Code"]}
+            placeholder={translations["Enter team code"]}
             {...createTeamForm.getInputProps("code")}
           />
         </Box>
@@ -161,7 +169,10 @@ export default function Teams() {
       <Group gap="md" justify="space-between">
         <Group gap={"md"}>
           <div className={styles["heading-container"]}>
-            <Heading title="Teams" titleprops={{ w: "fit-content" }} />
+            <Heading
+              title={translations["Teams"]}
+              titleprops={{ w: "fit-content" }}
+            />
           </div>
           <InfoButton docUrl={`${docsPath}/teams/team`} />
           <WelcomeTour steps={tourSteps} />
@@ -169,7 +180,7 @@ export default function Teams() {
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
               className={styles["create-team-button"]}
-              title="Create Team"
+              title={translations["Create Team"]}
               rightIcon={<IconPlus />}
               onClick={open}
             />
@@ -190,11 +201,11 @@ export default function Teams() {
             teamsData?.message
           ) : (
             <>
-              Error... Try Refreshing...
+              {translations["Error... Try Refreshing..."]}
               <RateupButtonOutline
                 onClick={refetchTeams}
                 rightIcon={<IconReload size="1rem" />}
-                title="Refresh"
+                title={translations["Refresh"]}
                 size="xs"
               />
             </>

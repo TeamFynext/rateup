@@ -8,6 +8,7 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { SurveyCard } from "@/components/Card/SurveyCard/SurveyCard";
 import { sortData } from "@/components/Dashboard/SortDropDown";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { CreateSurveyModal } from "../CreateSurveyModal";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
@@ -49,6 +50,7 @@ export function SurveysPage({
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
   const router = useRouter();
+  const { translations, loadingTranslations } = useTranslations();
 
   const { action } = router.query;
   const [template, setTemplate] = useState(null);
@@ -157,7 +159,7 @@ export function SurveysPage({
             ))}
         </Box>
       ) : (
-        <NothingFound text="No Surveys Found" />
+        <NothingFound text={translations["No Surveys Found"]} />
       )}
       {createSurveyOpened && (
         <CreateSurveyModal

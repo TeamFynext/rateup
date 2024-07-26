@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 
-import { Select } from "@mantine/core";
+import { Grid, Menu, Text } from "@mantine/core";
+import { FaGlobeAmericas } from "react-icons/fa";
 
 import { useUpdateUserLanguageMutation } from "../../backend/user/user.query";
 
@@ -23,7 +24,7 @@ const LanguageSelector = () => {
       { prefLanguage: selectedLanguage },
       {
         onSuccess: () => {
-          router.push(router.asPath, router.asPath, {
+          router.push(newPath, newPath, {
             locale: selectedLanguage,
           });
         },
@@ -32,22 +33,35 @@ const LanguageSelector = () => {
   };
 
   return (
-    <Select
-      data={[
-        { value: "en", label: "English" },
-        { value: "de", label: "Deutsch" },
-        { value: "hi", label: "Hindi" }, //not yet started
-        { value: "ar", label: "Arabic" }, // not yet started
-      ]}
-      value={language}
-      onChange={handleLanguageChange}
-      placeholder="Select Language"
-      sx={{
-        width: 80,
-        marginRight: "10px",
-      }}
-      disabled={isLoading}
-    />
+    <Menu width={200}>
+      <Menu.Target>
+        <Grid
+          align="center" // Align items vertically in the center
+          style={{
+            cursor: "pointer",
+            padding: "15px",
+            border: "1px solid lightgrey",
+            borderRadius: "4px",
+          }}
+        >
+          <FaGlobeAmericas style={{ width: 20, height: 20, marginRight: 8 }} />
+          <Text size="sm" weight={500} color="#333">
+            {language || "Select Language"}
+          </Text>
+        </Grid>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item leftSection="🇺🇸" onClick={() => handleLanguageChange("en")}>
+          English
+        </Menu.Item>
+        <Menu.Item leftSection="🇩🇪" onClick={() => handleLanguageChange("de")}>
+          Deutsch
+        </Menu.Item>
+        <Menu.Item leftSection="🇮🇳" onClick={() => handleLanguageChange("hi")}>
+          Hindi
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 };
 
