@@ -18,6 +18,7 @@ type integrationSchemaProps = {
   credential: {
     apiKey: string;
     baseUrl: string;
+    serviceId: number;
   };
   name: string;
 };

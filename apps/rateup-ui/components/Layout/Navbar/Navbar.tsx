@@ -60,27 +60,26 @@ export const Navbar = () => {
         </Link>
         {items}
       </Breadcrumbs>
-      <Group>
-        <div id="navbar" style={{ justifyItems: "flex-end" }}></div>
+      <Group justify="flex-end">
+        {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
+          <ExpiryComponent expiryDate={subscription?.expiresAt}>
+            <RateupButtonPrimary
+              title="Upgrade Now"
+              variant="gradient"
+              leftIcon={<IconCrown />}
+              gradient={{ from: "#FDBD3A", to: "#F99A21" }}
+              radius={"md"}
+              onClick={() =>
+                router.push(
+                  "/dashboard/settings?activeTab=account&view=billing",
+                )
+              }
+            />
+          </ExpiryComponent>
+        )}
+        <LanguageSelector />
         {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
-        <div className={styles["navbar-top"]}>
-          <LanguageSelector /> {/* Add LanguageSelector component */}
-        </div>
       </Group>
-      {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
-        <ExpiryComponent expiryDate={subscription?.expiresAt}>
-          <RateupButtonPrimary
-            title="Upgrade Now"
-            variant="gradient"
-            leftIcon={<IconCrown />}
-            gradient={{ from: "#FDBD3A", to: "#F99A21" }}
-            radius={"md"}
-            onClick={() =>
-              router.push("/dashboard/settings?activeTab=account&view=billing")
-            }
-          />
-        </ExpiryComponent>
-      )}
     </Group>
   );
 };

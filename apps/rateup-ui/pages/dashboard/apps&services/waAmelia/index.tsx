@@ -13,7 +13,10 @@ import {
   useUpdateIntegrationMutation,
 } from "@/backend/appsIntegration/integration.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import {
+  ContainedNumberInput,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const WaAmelia = () => {
@@ -34,10 +37,12 @@ const WaAmelia = () => {
   const schema = z.object({
     apiKey: z.string(),
     baseUrl: z.string().trim().url(),
+    serviceId: z.number(),
   });
   const initialValues = {
     apiKey: "",
     baseUrl: "",
+    serviceId: 3,
   };
   const form = useForm<z.infer<typeof schema>>({
     initialValues: initialValues,
@@ -59,6 +64,7 @@ const WaAmelia = () => {
         credential: {
           apiKey: form.getValues().apiKey,
           baseUrl: form.getValues().baseUrl,
+          serviceId: form.getValues().serviceId,
         },
         name: IntegratedApps.waAmelia,
       });
@@ -67,6 +73,7 @@ const WaAmelia = () => {
         credential: {
           apiKey: form.getValues().apiKey,
           baseUrl: form.getValues().baseUrl,
+          serviceId: form.getValues().serviceId,
         },
         name: IntegratedApps.waAmelia,
       });
@@ -81,16 +88,32 @@ const WaAmelia = () => {
         updateIntegrationMutation?.isPending ? (
           <Skeleton w={500} h={30} />
         ) : (
-          <>
-            <Group w={"100%"}>
-              <ContainedTextField
-                label={"Wa Amelia"}
-                placeholder="Enter you api key"
-                w={500}
-                {...form.getInputProps("apiKey")}
+          <Stack w={500}>
+            <ContainedTextField
+              label={"Wa Amelia"}
+              placeholder="Enter you api key"
+              {...form.getInputProps("apiKey")}
+            />
+
+            <ContainedTextField
+              label={"Wa Amelia base url"}
+              placeholder="Enter you base url"
+              type="url"
+              {...form.getInputProps("baseUrl")}
+            />
+            <ContainedNumberInput
+              label={"serviceId"}
+              placeholder="Enter serviceId"
+              {...form.getInputProps("serviceId")}
+              min={0}
+            />
+            <Group justify="space-between">
+              <RateupButtonPrimary
+                title="save"
+                onClick={handleSave}
+                disabled={!form.isDirty()}
               />
               <ActionIcon
-                mt={"lg"}
                 loading={deleteIntegrationMutation?.isPending}
                 disabled={!data?.credential?.apiKey && !data?.credential?.base}
                 onClick={() => {
@@ -100,22 +123,7 @@ const WaAmelia = () => {
                 <IconTrash />
               </ActionIcon>
             </Group>
-            <Box mt={"lg"}>
-              <ContainedTextField
-                label={"Wa Amelia base url"}
-                placeholder="Enter you base url"
-                type="url"
-                w={500}
-                {...form.getInputProps("baseUrl")}
-                mb={"lg"}
-              />
-              <RateupButtonPrimary
-                title="save"
-                onClick={handleSave}
-                disabled={!form.isDirty()}
-              />
-            </Box>
-          </>
+          </Stack>
         )}
       </PaperLayout>
     </Stack>
