@@ -686,6 +686,7 @@ export const handleDecryptedFlowRequest = async (
         const response = await getWaAmeliaTimeSlot({
           url: integration?.[0]?.credential?.baseUrl,
           acessToken: integration?.[0]?.credential?.apiKey,
+          serviceId: integration?.[0]?.credential?.serviceId,
           method: "get",
           startDateTime: dayjs(Number(data?.date))
             .tz("Asia/Kolkata")

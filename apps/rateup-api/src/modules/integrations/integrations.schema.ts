@@ -13,6 +13,7 @@ export const integrationSchema = z.object({
   credential: z.object({
     apiKey: z.string(),
     baseUrl: z.string().url(),
+    serviceId: z.number(),
   }),
   name: z.string(),
 });
