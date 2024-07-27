@@ -1,29 +1,34 @@
 import {
   IdParamInput,
+  registerWebhookbyTopicInput,
   shopifySurveyInput,
   shopifySurveyUpdateInput,
   ShopParamInput,
 } from "./shopify.schema";
 import {
   createShopifySession,
-  createShopifySurveySchedule,
+  createShopifySurvey,
   deleteAllWebhooks,
+  deleteMultipleSchedules,
   deleteMultipleSurveySchedules,
   deleteShopifySession,
   deleteShopifySurveySchedule,
   getShopifyAuthUrl,
+  getShopifySchedules,
   getShopifySession,
   getShopifySessionByOrgId,
   getShopifySurveysByOrgId,
   handleShopifyAuthCallback,
   registerShopifyWebhook,
   updateShopifySession,
-  updateShopifySurveySchedule,
+  updateShopifySurvey,
 } from "./shopify.service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger";
 import shopify from "./shopify.config";
-import { FRONTEND_URL } from "../../utils/constants/constants";
+import { API_URL, FRONTEND_URL } from "../../utils/constants/constants";
+import webhookHandlers, { defaultWebhookHandlers } from "./shopify.handler";
+import { ShopifyWebhookTopicEventMap } from "./shopify.util";
 
 export async function getShopifyAuthHandler(
   request: FastifyRequest<{ Querystring: { shop: string } }>,
@@ -83,8 +88,55 @@ export async function registerWebhookHandler(
 ) {
   try {
     const session = await getShopifySessionByOrgId(request.user.orgId);
+    shopify.webhooks.addHandlers(defaultWebhookHandlers);
     await registerShopifyWebhook(session);
     await updateShopifySession(session.shop, { isWebhookRegistered: true });
+    reply.code(200).send();
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function registerWebhookByTopicHandler(
+  request: FastifyRequest<{ Body: registerWebhookbyTopicInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await getShopifySessionByOrgId(request.user.orgId);
+    const { topic } = request.body;
+
+    const webhook = new shopify.rest.Webhook({ session });
+    webhook.address = `${API_URL}/api/shopify/webhooks`;
+    (webhook.topic = ShopifyWebhookTopicEventMap.find(
+      (webhookTopic) => webhookTopic.key == topic,
+    ).value),
+      (webhook.format = "json");
+    await webhook.save({ update: true });
+    reply.code(200).send();
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteWebhookByTopicHandler(
+  request: FastifyRequest<{ Body: registerWebhookbyTopicInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await getShopifySessionByOrgId(request.user.orgId);
+    const { topic } = request.body;
+    const webhooks = await shopify.rest.Webhook.all({ session });
+    const webhookId = webhooks.data.find(
+      (webhook) =>
+        webhook.topic ===
+        ShopifyWebhookTopicEventMap.find((t) => t.key == topic).value,
+    ).id;
+    await shopify.rest.Webhook.delete({
+      session: session,
+      id: webhookId,
+    });
     reply.code(200).send();
   } catch (e) {
     console.error(e);
@@ -128,6 +180,7 @@ export async function shopifyWebhooksHandler(
   reply: FastifyReply,
 ) {
   try {
+    shopify.webhooks.addHandlers(webhookHandlers);
     log.info("Processing webhook");
     await shopify.webhooks.process({
       rawBody: request.rawBody as string, // is a string
@@ -136,18 +189,23 @@ export async function shopifyWebhooksHandler(
     });
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
   }
 }
 
 export async function getRegisteredWebhooksHandler(
-  request: FastifyRequest<{ Params: { orgId: string } }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
     const session = await getShopifySessionByOrgId(request.user.orgId);
     const webhooks = await shopify.rest.Webhook.all({ session });
-    reply.code(200).send(webhooks.data);
+    const formattedWebhooks = webhooks.data.map(
+      (webhook) =>
+        ShopifyWebhookTopicEventMap.find(
+          (topic) => topic.value == webhook.topic,
+        ).key,
+    );
+    reply.code(200).send(formattedWebhooks);
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
@@ -168,7 +226,7 @@ export async function getProductsHandler(
   }
 }
 
-export async function createShopifySurveyScheduleHandler(
+export async function createShopifySurveyHandler(
   request: FastifyRequest<{ Body: shopifySurveyInput }>,
   reply: FastifyReply,
 ) {
@@ -180,7 +238,7 @@ export async function createShopifySurveyScheduleHandler(
       if (!session) throw new Error("You have n't configured your shop access");
       else shop = session.shop;
     }
-    const res = await createShopifySurveySchedule({
+    const res = await createShopifySurvey({
       ...request.body,
       shop,
       orgId,
@@ -196,7 +254,7 @@ export async function createShopifySurveyScheduleHandler(
   }
 }
 
-export async function getShopifySurveyScheduleHandler(
+export async function getShopifySurveysHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -207,6 +265,19 @@ export async function getShopifySurveyScheduleHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function getShopifySchedulesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getShopifySchedules(request.user.orgId);
+    reply.code(200).send(res);
+  } catch (err) {
+    console.error(err);
+    reply.code(500).send(err);
   }
 }
 
@@ -223,7 +294,7 @@ export async function deleteShopifySurveyScheduleHandler(
   }
 }
 
-export async function updateShopifySurveyScheduleHandler(
+export async function updateShopifySurveyHandler(
   request: FastifyRequest<{
     Params: IdParamInput;
     Body: shopifySurveyUpdateInput;
@@ -231,8 +302,7 @@ export async function updateShopifySurveyScheduleHandler(
   reply: FastifyReply,
 ) {
   try {
-    const scheduleId = request.params.id;
-    const res = await updateShopifySurveySchedule(scheduleId, request.body);
+    const res = await updateShopifySurvey(request.params.id, request.body);
     reply.code(200).send(res);
   } catch (e) {
     console.error(e);
@@ -250,5 +320,32 @@ export async function deleteShopifySessionHandler(
   } catch (err) {
     console.error(err);
     reply.code(500).send(err);
+  }
+}
+
+export async function deleteAllShopifySurveyScheduleHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const session = await getShopifySessionByOrgId(request.user.orgId);
+    const res = await deleteMultipleSurveySchedules(session.shop);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteAllShopifyScheduleHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await deleteMultipleSchedules(request.user.orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
   }
 }

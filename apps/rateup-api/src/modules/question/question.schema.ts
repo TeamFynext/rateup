@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { LogicCondition, NPSWeightage, QuestionType } from "../../types/enums";
+import { LogicCondition, NPSWeightage, PageType, QuestionType } from "../../types/enums";
 
 export const logicConditionSchema = z.nativeEnum(LogicCondition);
 
@@ -42,7 +42,7 @@ const questionCore = {
   label: z.record(z.string(), z.string()).optional(),
   required: z.boolean().default(false),
   enableNpsAnalytics: z.boolean().default(false),
-  type: z.nativeEnum(QuestionType),
+  type: z.nativeEnum(QuestionType).or(z.nativeEnum(PageType)),
   choices: z
     .record(
       z.string(),
@@ -182,6 +182,8 @@ const updateQuestionRequestSchema = z.object({
     .union([z.null(), validationRulesSchema, z.any()])
     .optional(),
   optinScreenId: z.string().optional(),
+  onSelectAction: z.boolean().optional(),
+  waAppName: z.string().optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());

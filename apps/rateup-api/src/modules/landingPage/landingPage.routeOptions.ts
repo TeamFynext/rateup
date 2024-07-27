@@ -5,10 +5,9 @@ import {
   deleteLandingPageById,
   getLandingPages,
   getLandingPageWithShortId,
-  getLinkTypeDropdownOptions,
   getPublicLandingPageWithShortId,
   updateLandingPageWithShortId,
-  updatePageVisitsOrLinkClicks,
+  updatePageVisits,
 } from "./landingPage.controllers";
 import { landingPageSchemaRef } from "./landingPage.schema";
 import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
@@ -55,15 +54,11 @@ const updateLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler
   };
 
 const deleteLandingPageByIdRouteOptions: RouteShorthandOptionsWithHandler = {
-  schema: {},
+  schema: {
+    params: landingPageSchemaRef("deleteLandingPageWithIddParams"),
+  },
   handler: asyncErrHandler(deleteLandingPageById),
 };
-
-const getLinkTypeDropdownOptionsRouteOptions: RouteShorthandOptionsWithHandler =
-  {
-    schema: {},
-    handler: asyncErrHandler(getLinkTypeDropdownOptions),
-  };
 
 const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
   {
@@ -72,14 +67,13 @@ const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWi
     handler: asyncErrHandler(getPublicLandingPageWithShortId),
   };
 
-const updatePageVisitsOrLinkClicksOptions: CustomRouteShortHandOptionsWithHandler =
+const updatePageVisitsWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
   {
     schema: {
-      body: landingPageSchemaRef("updatePageVisitsOrLinkClicksReqBody"),
-      params: landingPageSchemaRef("updatePageVisitsOrLinkClicksReqParams"),
+      params: landingPageSchemaRef("updatePageVisitsReqParams"),
     },
     config: { isPublic: true },
-    handler: asyncErrHandler(updatePageVisitsOrLinkClicks),
+    handler: asyncErrHandler(updatePageVisits),
   };
 
 export {
@@ -87,8 +81,7 @@ export {
   deleteLandingPageByIdRouteOptions,
   getLandingPagesRouteOptions,
   getLandingPageWithShortIdRouteOptions,
-  getLinkTypeDropdownOptionsRouteOptions,
   getPublicLandingPageWithShortIdRouteOptions,
   updateLandingPageWithShortIdRouteOptions,
-  updatePageVisitsOrLinkClicksOptions,
+  updatePageVisitsWithShortIdRouteOptions,
 };

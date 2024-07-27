@@ -6,10 +6,9 @@ const landingPageBaseSchema = z.object({
   name: z.string(),
   createdAt: z.date(),
   shortUrlId: z.string(),
-  theme: z.any(),
-  links: z.any(),
   shareSettings: z.any(),
   isPublished: z.boolean(),
+  tiptapEditorContent: z.string(),
   visitorsCount: z.number(),
 });
 
@@ -26,19 +25,17 @@ const getLandingPagesResponse = z.array(landingPageBaseSchema);
 const updateLandingPageReqBody = z.object({
   shortUrlId: z.string(),
   name: z.string().optional(),
-  theme: z.any().optional(),
-  links: z.any().optional(),
   shareSettings: z.any().optional(),
+  tiptapEditorContent: z.string().optional(),
   isPublished: z.boolean().optional(),
 });
 
-const updatePageVisitsOrLinkClicksReqParams = z.object({
+const updatePageVisitsReqParams = z.object({
   shortUrlId: z.string(),
 });
 
-const updatePageVisitsOrLinkClicksReqBody = z.object({
-  resourceToBeUpdated: z.enum(["page-visit", "link-click"]),
-  linkId: z.string().optional(),
+const deleteLandingPageWithIddParams = z.object({
+  id: z.string(),
 });
 
 const models = {
@@ -47,8 +44,8 @@ const models = {
   getLandingPagesResponse,
   getLandingPageWithShortIdParams,
   updateLandingPageReqBody,
-  updatePageVisitsOrLinkClicksReqBody,
-  updatePageVisitsOrLinkClicksReqParams,
+  deleteLandingPageWithIddParams,
+  updatePageVisitsReqParams,
 };
 
 type CreateLandingPageReqBody = z.infer<typeof createLandingPageReqBody>;

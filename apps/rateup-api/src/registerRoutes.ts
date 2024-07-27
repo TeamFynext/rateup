@@ -58,6 +58,8 @@ import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic
 import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes";
 import landingPageRoutes from "./modules/landingPage/landingPage.routes";
 import { landingPageSchemas } from "./modules/landingPage/landingPage.schema";
+import linktreeRoutes from "./modules/linktree/linktree.routes";
+import { linktreeSchemas } from "./modules/linktree/linktree.schema";
 import { statsSchemas } from "./modules/stats/stats.schema";
 import { statsRoutes } from "./modules/stats/stats.route";
 import { chatbotRoutes } from "./modules/chatbot/chatbot.rout";
@@ -81,6 +83,8 @@ import generateQrRoutes from "./modules/generateQr/generateQr.routes";
 import { generateQrSchemas } from "./modules/generateQr/generateQr.schema";
 import { shopifyRoutes } from "./modules/shopify/shopify.route";
 import { shopifySchema } from "./modules/shopify/shopify.schema";
+import { integrationSchemas } from "./modules/integrations/integrations.schema";
+import { integrationsRoutes } from "./modules/integrations/integrations.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -108,6 +112,7 @@ export function registerRoutes(server: FastifyInstance): void {
     ticketSchemas,
     subscriptionSchemas,
     landingPageSchemas,
+    linktreeSchemas,
     statsSchemas,
     chatbotSchemas,
     orgWsSchemas,
@@ -116,6 +121,7 @@ export function registerRoutes(server: FastifyInstance): void {
     emailSchema,
     generateQrSchemas,
     shopifySchema,
+    integrationSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -173,6 +179,7 @@ export function registerRoutes(server: FastifyInstance): void {
   });
   server.register(loyaltyRoutes, { prefix: "api/loyalty/" });
   server.register(landingPageRoutes, { prefix: "/api/landingPages" });
+  server.register(linktreeRoutes, { prefix: "/api/linktrees" });
   server.register(statsRoutes, { prefix: "/api/stats" });
   server.register(chatbotRoutes, { prefix: "api/chatbot" });
   server.register(chatbotPublicRoute, { prefix: "api/public/chatbot" });
@@ -183,4 +190,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(emailPublicRoutes, { prefix: "api/email" });
   server.register(generateQrRoutes, { prefix: "/api/generateQr" });
   server.register(shopifyRoutes, { prefix: "api/shopify" });
+  server.register(integrationsRoutes, { prefix: "api/integrations" });
 }

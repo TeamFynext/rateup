@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { ShopifyEvents } from "../../types/enums";
+import { ShopifyEvents, ShopifySendAfter } from "../../types/enums";
 
 const shopifySurveySchema = z.object({
   waTemplateId: z.string().uuid(),
@@ -11,6 +11,7 @@ const shopifySurveySchema = z.object({
   event: z.nativeEnum(ShopifyEvents),
   //in case an org have multiple shops
   shop: z.string().optional(),
+  sendAfter: z.nativeEnum(ShopifySendAfter),
 });
 
 const shopifySurveyUpdateSchema = z.object({
@@ -22,6 +23,7 @@ const shopifySurveyUpdateSchema = z.object({
   active: z.boolean().optional(),
   //in case an org have multiple shops
   shop: z.string().optional(),
+  sendAfter: z.nativeEnum(ShopifySendAfter).optional(),
 });
 
 const byIdParamsSchema = z.object({
@@ -31,12 +33,17 @@ const byShopParamsSchema = z.object({
   shop: z.string(),
 });
 
+const registerWebhookbyTopicSchema = z.object({
+  topic: z.nativeEnum(ShopifyEvents),
+});
+
 export const { schemas: shopifySchema, $ref: ShopifyRef } = buildJsonSchemas(
   {
     shopifySurveySchema,
     byIdParamsSchema,
     byShopParamsSchema,
     shopifySurveyUpdateSchema,
+    registerWebhookbyTopicSchema,
   },
   { $id: "shopifySchema" },
 );
@@ -46,4 +53,7 @@ export type IdParamInput = z.infer<typeof byIdParamsSchema>;
 export type ShopParamInput = z.infer<typeof byShopParamsSchema>;
 export type shopifySurveyUpdateInput = z.infer<
   typeof shopifySurveyUpdateSchema
+>;
+export type registerWebhookbyTopicInput = z.infer<
+  typeof registerWebhookbyTopicSchema
 >;

@@ -5,10 +5,9 @@ import {
   deleteLandingPageByIdRouteOptions,
   getLandingPagesRouteOptions,
   getLandingPageWithShortIdRouteOptions,
-  getLinkTypeDropdownOptionsRouteOptions,
   getPublicLandingPageWithShortIdRouteOptions,
   updateLandingPageWithShortIdRouteOptions,
-  updatePageVisitsOrLinkClicksOptions,
+  updatePageVisitsWithShortIdRouteOptions,
 } from "./landingPage.routeOptions";
 
 export async function linkRoutes(server: FastifyInstance) {
@@ -21,26 +20,22 @@ export async function linkRoutes(server: FastifyInstance) {
     }
   });
 
+  // public routes
   server.get(
     "/public/:shortUrlId",
     getPublicLandingPageWithShortIdRouteOptions,
   );
+  server.patch(
+    "/pageVisits/:shortUrlId",
+    updatePageVisitsWithShortIdRouteOptions,
+  );
 
+  // private routes
   server.get("/:shortUrlId", getLandingPageWithShortIdRouteOptions);
   server.get("/", getLandingPagesRouteOptions);
   server.post("/", createLandingPageRouteOptions);
   server.put("/", updateLandingPageWithShortIdRouteOptions);
   server.delete("/:id", deleteLandingPageByIdRouteOptions);
-
-  server.get(
-    "/linkTypeDropdownOptions/:linkType",
-    getLinkTypeDropdownOptionsRouteOptions,
-  );
-
-  server.patch(
-    "/pageVisitsOrLinkClicks/:shortUrlId",
-    updatePageVisitsOrLinkClicksOptions,
-  );
 }
 
 export default linkRoutes;

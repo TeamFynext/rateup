@@ -2,12 +2,11 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createLandingPageInDB,
   deleteLandingPageInDB,
-  generateAndGetOptionsFromDB,
   getAllLandingPagesFromDB,
   getLandingPageWithShortIdFromDB,
   getPublicLandingPageWithShortIdFromDB,
   updateLandingPageWithShortIdInDB,
-  updatePageVisitOrLinkClickInDB,
+  updatePageVisitInDB,
 } from "./landingPage.service";
 import { shortIdUniqueConstraintErrHandler } from "../../utils/commnUtils";
 
@@ -63,47 +62,14 @@ async function deleteLandingPageById(
     .send({ success: true, message: "Deleted LandingPage sucessfully." });
 }
 
-async function getLinkTypeDropdownOptions(
-  req: FastifyRequest<{ Params: { linkType: string } }>,
-  rep: FastifyReply,
-) {
-  // create array of dropdown options data from surveys for LandingPage in frontend.
-  const optionsArray = await generateAndGetOptionsFromDB(req);
-  rep.code(200).send(optionsArray);
-}
-
-enum ResourceToBeUpdated {
-  LinkClick = "link-click",
-  PageVisit = "page-visit",
-}
-// resourceToBeUpdated value will be "page-visit" or "link-click".
-async function updatePageVisitsOrLinkClicks(
+async function updatePageVisits(
   req: FastifyRequest<{
     Params: { shortUrlId: string };
-    Body: { resourceToBeUpdated: ResourceToBeUpdated; linkId?: string };
   }>,
   rep: FastifyReply,
 ) {
-  const { resourceToBeUpdated, linkId = null } = req.body;
-  if (resourceToBeUpdated === ResourceToBeUpdated.LinkClick && !linkId) {
-    rep.code(400).send({
-      success: false,
-      message: "linkId field is required in the request body.",
-    });
-  } else {
-    const resultObj = await updatePageVisitOrLinkClickInDB(req);
-    if (resultObj) {
-      rep.code(200).send({
-        success: true,
-        message: "Updated button click successfully.",
-      });
-    } else {
-      rep.code(400).send({
-        success: false,
-        message: "Link with given linkId not found.",
-      });
-    }
-  }
+  const resultObj = await updatePageVisitInDB(req);
+  rep.code(200).send(resultObj);
 }
 
 export {
@@ -113,6 +79,5 @@ export {
   createLandingPage,
   updateLandingPageWithShortId,
   deleteLandingPageById,
-  getLinkTypeDropdownOptions,
-  updatePageVisitsOrLinkClicks,
+  updatePageVisits,
 };

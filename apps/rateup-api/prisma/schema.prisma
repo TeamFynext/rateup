@@ -71,6 +71,7 @@ model User {
   recipeName     UserRecipes?
   isPaused       Boolean?        @default(false)
   pausedBy       String?
+  prefLanguage   String?         @default("English")
   org            Org[]
   orgMember      OrgMember[]
   teamMember     TeamMember[]
@@ -79,8 +80,9 @@ model User {
   assignedTicket Ticket[]        @relation("AssignedTicket")
   createdTicket  Ticket[]        @relation("CreatedTicket")
   TicketComment  TicketComment[]
-  landingPage    LandingPage[]
+  linktree       Linktree[]
   generateQr     GenerateQr[]
+  landingPage    LandingPage[]
 }
 
 model Org {
@@ -109,7 +111,7 @@ model Org {
   loyaltyCustomers  LoyaltyCustomer[]
   LcReward          LcReward[]
   LcReferralCode    LcReferralCode[]
-  landingPage       LandingPage[]
+  linktree          Linktree[]
   ApiAccessToken    ApiAccessToken?
   surveyThemes      WebSurveyTheme[]
   UsageStats        UsageStats?
@@ -119,6 +121,8 @@ model Org {
   generateQr        GenerateQr[]
   shopifySurveys    ShopifySurvey[]
   shopifySessions   ShopifySession[]
+  landingPage       LandingPage[]
+  Integration       Integration[]
 }
 
 model UsageStats {
@@ -437,6 +441,7 @@ model Campaign {
   campaignSentAt       DateTime?
   scheduledStatuses    String[]              @default([])
   errorMessage         String?
+  dynamicTags          String[]              @default([])
 }
 
 model CampaignParticipant {
@@ -1037,7 +1042,7 @@ model LCustomerRewardEvent {
   pointsEarned Int
 }
 
-model LandingPage {
+model Linktree {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name           String
   createdAt      DateTime @default(now())
@@ -1178,21 +1183,57 @@ model ShopifySession {
 }
 
 model ShopifySurvey {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyId          String?     @db.Uuid
-  survey            Survey?     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  orgId             String      @db.Uuid
-  org               Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  createdAt         DateTime    @default(now())
-  active            Boolean     @default(true)
-  isProductSpecific Boolean     @default(false)
+  id                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  surveyId          String?                 @db.Uuid
+  survey            Survey?                 @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  orgId             String                  @db.Uuid
+  org               Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt         DateTime                @default(now())
+  active            Boolean                 @default(true)
+  isProductSpecific Boolean                 @default(false)
   productId         String?
   event             String
   shop              String
-  team              Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId            String      @db.Uuid
-  waTemplate        WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
-  waTemplateId      String?     @db.Uuid
+  team              Team                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId            String                  @db.Uuid
+  waTemplate        WaTemplate?             @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  waTemplateId      String?                 @db.Uuid
+  sendAfter         String?
+  schedules         ShopifySurveySchedule[]
 
   @@unique([orgId, event, shop], name: "orgid_event_shop_unique")
+}
+
+model ShopifySurveySchedule {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduledTime   DateTime
+  phone           String
+  shopifySurveyId String        @db.Uuid
+  shopifySurvey   ShopifySurvey @relation(fields: [shopifySurveyId], references: [id], onDelete: Cascade)
+  webhookId       String?       @unique
+  status          String?       @default("SCHEDULED")
+  createdAt       DateTime      @default(now())
+}
+
+model LandingPage {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String
+  createdAt           DateTime @default(now())
+  createdById         String   @db.Uuid
+  ownerOrgId          String   @db.Uuid
+  shortUrlId          String   @unique
+  tiptapEditorContent String
+  visitorsCount       Int      @default(0)
+  shareSettings       Json?
+  isPublished         Boolean  @default(false)
+  owner               Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
+  createdBy           User     @relation(fields: [createdById], references: [id])
+}
+
+model Integration {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  credential Json
+  org        Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId      String @db.Uuid
 }

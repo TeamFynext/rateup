@@ -20,6 +20,12 @@ type campaginExtentend = {
     googleLink: string;
     tags: string[];
     orgId: string;
+    org: {
+      WaAccountSettings: {
+        orgId: string;
+        contactTags: string[];
+      };
+    };
   };
   waTemplate: {
     data: {};
@@ -31,6 +37,7 @@ type campaginExtentend = {
   }[];
   flowId?: string;
   stats?: {};
+  contactTags?: string[];
 };
 export function getLatestStatus(participant) {
   let latestStatus = null;
@@ -58,7 +65,15 @@ export async function getCampaignById(campaignId: string) {
       id: campaignId,
     },
     include: {
-      team: true,
+      team: {
+        include: {
+          org: {
+            select: {
+              WaAccountSettings: true,
+            },
+          },
+        },
+      },
       waTemplate: {
         select: {
           data: true,
@@ -126,6 +141,8 @@ export async function getCampaignById(campaignId: string) {
     participant.waStatus = latestStatus;
     delete participant.WaMessageCampaginParticipantMap;
   });
+  campaign.contactTags = campaign.team.org.WaAccountSettings.contactTags;
+  delete campaign.team.org;
 
   campaign.stats = {
     countRead,

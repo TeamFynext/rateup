@@ -16,7 +16,7 @@ import { WaFlow } from "@prisma/client";
 import { UpdateFlowInput } from "./flow.schema";
 import FormData from "form-data";
 import { log } from "../../../utils/logger";
-import { LogicAction, WaFlowStatus } from "../../../types/enums";
+import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums";
 import { FlowLogicJump } from "../../../types/global";
 import { getSurveyById } from "../../survey/survey.service";
 import {
@@ -37,7 +37,16 @@ import {
   shortIdUniqueConstraintErrHandler,
 } from "../../../utils/commnUtils";
 import { WaMessageBody } from "../../../types/whatsapp.types";
+import {
+  getIntegrationByName,
+  getWaAmeliaTimeSlot,
+} from "../../integrations/integrations.service";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 /**
  * Get flows from whatsapp
  * @param orgId
@@ -655,6 +664,49 @@ export const handleDecryptedFlowRequest = async (
         questions,
         data,
       );
+      let noSlot = {
+        version,
+        screen,
+        data: {
+          available_slots: [{ id: "1", title: "no slot" }],
+        },
+      };
+      if (data.component_action === "update_date") {
+        if (!data?.date) return noSlot;
+
+        let question = questions.find(
+          (data) => data.type === QuestionType.Date,
+        );
+        const integration: any = await getIntegrationByName(
+          session.orgId,
+          question?.waAppName,
+        );
+        if (integration?.length <= 0) return noSlot;
+
+        const response = await getWaAmeliaTimeSlot({
+          url: integration?.[0]?.credential?.baseUrl,
+          acessToken: integration?.[0]?.credential?.apiKey,
+          serviceId: integration?.[0]?.credential?.serviceId,
+          method: "get",
+          startDateTime: dayjs(Number(data?.date))
+            .tz("Asia/Kolkata")
+            .format("YYYY-MM-DD"),
+        });
+        const slots = transformSlots(
+          dayjs(Number(data?.date))
+            .tz("Asia/Kolkata")
+            .format("YYYY-MM-DD"),
+          response,
+        );
+
+        return {
+          version,
+          screen,
+          data: {
+            available_slots: slots,
+          },
+        };
+      }
       log.trace("Current screen responses: %o", currentScreenResponses);
       session = await updateSession(session.orgId, session.phone, {
         responses: [...session.responses, ...currentScreenResponses],
@@ -750,7 +802,22 @@ export const handleDecryptedFlowRequest = async (
     );
   }
 };
+interface Slot {
+  id: string;
+  title: string;
+}
 
+function transformSlots(date: string, response): Slot[] {
+  const slots = response?.data?.slots?.[date];
+  if (!slots) {
+    return [{ id: "1", title: "no slot" }];
+  }
+
+  return Object.keys(slots).map((time, index) => ({
+    id: (index + 1).toString(),
+    title: time,
+  }));
+}
 interface handleFlowEndProps {
   session: WaSessionWithRelations;
   decryptedBody: any;

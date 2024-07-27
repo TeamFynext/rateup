@@ -4,6 +4,13 @@ export enum SurveyType {
   WhatsApp = "whatsapp",
   WaFlow = "waFlow",
 }
+
+export enum PageType {
+  Welcome = "Welcome",
+  ThankYou = "ThankYou",
+  Custom = "Custom",
+}
+
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",
@@ -41,6 +48,7 @@ export enum QuestionType {
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
+  WaTimeSlot = "Dropdown",
 }
 
 export enum LDResponse {
@@ -267,8 +275,17 @@ export enum ShopifyEvents {
   ORDERS_PAID = "ORDERS_PAID",
   ORDERS_CANCELLED = "ORDERS_CANCELLED",
   FULFILLMENT_ORDERS_CANCELLED = "FULFILLMENT_ORDERS_CANCELLED",
-  ORDERS_PARTIALLY_FULFILLED = " ORDERS_PARTIALLY_FULFILLED",
+  ORDERS_PARTIALLY_FULFILLED = "ORDERS_PARTIALLY_FULFILLED",
+  APP_UNINSTALLED = "APP_UNINSTALLED",
   // VARIANTS_IN_STOCK
   // VARIANTS_OUT_OF_STOCK
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
+}
+
+export enum ShopifySendAfter {
+  TwoHour = "2 Hour",
+  FiveHour = "5 Hour",
+  TenHour = "10 hour",
+  OneDay = "1 day",
+  TwoDays = "2 Days",
 }

@@ -2,10 +2,16 @@
 //Temporary and will be removed later
 
 import { FastifyInstance } from "fastify";
-import { testUpdateRoute, updateDatabase } from "./update.controller";
+import {
+  testUpdateRoute,
+  updateDatabase,
+  updateSurveyEditor,
+} from "./update.controller";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
   server.get("/", testUpdateRoute);
 
   server.get("/db", updateDatabase);
+
+  server.get("/survey-editor", updateSurveyEditor);
 }

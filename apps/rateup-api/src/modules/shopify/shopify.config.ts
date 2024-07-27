@@ -3,6 +3,7 @@ import { ApiVersion, LogSeverity, shopifyApi } from "@shopify/shopify-api";
 import { restResources } from "@shopify/shopify-api/rest/admin/2024-07";
 import { log } from "../../utils/logger";
 import { API_URL } from "../../utils/constants/constants";
+import webhookHandlers from "./shopify.handler";
 
 const apiUrl = new URL(API_URL);
 const protocol = apiUrl.protocol.replace(":", "");
@@ -35,4 +36,6 @@ function initializeShopify() {
   });
 }
 
-export default initializeShopify();
+const shopify = initializeShopify();
+
+export default shopify;
