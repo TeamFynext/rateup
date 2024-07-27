@@ -1,3 +1,12 @@
+.edit-survey-div {
+  width: 100%;
+  height: 100%;
+  padding: 0.3125rem;
+  gap: 0.625rem;
+  overflow: auto;
+  background: var(--mantine-color-body);
+}
+
 .panel {
   height: 100%;
 }
@@ -12,6 +21,48 @@
   padding: 1rem;
 }
 
+/* .question-editor-container:global(.Welcome-QDV),
+.question-editor-container:global(.ThankYou-QDV),
+.question-editor-container:global(.SurveyPreview-QDV) {
+  padding: 0.625rem;
+} */
+
 .question-detailed-view-panel > div {
   height: 100%;
+}
+
+.type-selection-panel-child-div {
+  height: 100%;
+  overflow: auto;
+}
+
+.edit-survey-div :global(.tabs-and-other-options-container),
+.edit-survey-div :global(.theme-selector-org-logo-styles-component-container) {
+  display: none;
+}
+
+.edit-survey-div :global(.survey-theme-root-div) {
+  overflow: auto;
+  padding: 0.625rem;
+}
+
+.edit-survey-div
+  :global(
+    .survey-theme-root-div .selected-page-tab-panels-and-styles-div-container
+  ) {
+  height: 100%;
+  flex: initial;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.edit-survey-div :global(.theme-preview-container) {
+  flex: initial;
+  box-shadow: none;
+  padding: 0;
+  width: 100%;
+}
+
+.edit-survey-div :global(.survey-theme-preview-layout-div) {
+  padding: 0;
 }

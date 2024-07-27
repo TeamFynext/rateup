@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Badge,
   Button,
@@ -10,14 +12,6 @@ import {
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import {
-  IconFileFilled,
-  IconGridDots,
-  IconScaleOutline,
-  IconSquareAsterisk,
-  IconTextPlus,
-  IconWheel,
-} from "@tabler/icons-react";
-import {
   Icon123,
   IconAddressBook,
   IconAdjustmentsQuestion,
@@ -29,6 +23,8 @@ import {
   IconCheckbox,
   IconCircuitPushbutton,
   IconClick,
+  IconFileFilled,
+  IconGridDots,
   IconLink,
   IconList,
   IconListCheck,
@@ -38,11 +34,15 @@ import {
   IconMoodSmileFilled,
   IconPhoneFilled,
   IconPhoto,
+  IconScaleOutline,
+  IconSquareAsterisk,
   IconStarsFilled,
+  IconTextPlus,
   IconTextSize,
   IconThumbUpFilled,
+  IconWheel,
 } from "@tabler/icons-react";
-import { useState } from "react";
+
 import {
   QuestionType,
   WaFlowFormNonInputElementType,
@@ -98,13 +98,7 @@ export function QuestionTypeSelection({
   };
   return (
     <Flex direction={"column"} h={"100%"}>
-      <Stack
-        gap={"md"}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-        }}
-      >
+      <Stack gap={"md"}>
         {questionTypeGroups?.map((qtype, i) => {
           return (
             <Stack gap={"sm"} key={i}>
@@ -179,6 +173,7 @@ const questionIcons = {
   [QuestionType.WOP]: IconWheel,
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
+  [QuestionType.WaTimeSlot]: IconCalendarTime,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,
   [WaFlowFormNonInputElementType.image]: IconPhoto,
   [WaFlowFormNonInputElementType.embeddedLink]: IconLink,

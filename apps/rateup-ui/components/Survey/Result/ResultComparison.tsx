@@ -84,7 +84,7 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
         />
         <Heading subtitle="Team Question Activity" />
         {questions?.map((q, i) => {
-          if (questionTypesForComparison.includes(q?.type)) {
+          if (questionTypesForComparison.includes(q?.type as QuestionType)) {
             let questionResponses = [];
             for (const teamResponse of filteredResponsesByTeam) {
               for (const surveyResponse of teamResponse?.responses) {
@@ -248,7 +248,9 @@ const CombinedChart = ({
   question,
 }: CombinedChartProps) => {
   const data = teams.map(({ code, id }) => {
-    const responses = getResponseObjectByQuestionType(question.type);
+    const responses = getResponseObjectByQuestionType(
+      question.type as QuestionType,
+    );
     questionResponses
       ?.filter((response) => response.team.id === id)
       ?.map(({ response }) =>
@@ -281,7 +283,7 @@ const CombinedChart = ({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          {getResponseArrayByQuestionType(question.type)?.map(
+          {getResponseArrayByQuestionType(question.type as QuestionType)?.map(
             ({ color, value }, index) => (
               <Bar
                 dataKey={`responses['${value}']`}

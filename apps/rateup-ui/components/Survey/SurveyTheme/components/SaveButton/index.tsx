@@ -1,19 +1,28 @@
+import { useCallback, useState } from "react";
+
 import { Button, Group, Text } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
-import { useCallback, useState } from "react";
+
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { docsPath, SAVE_HOTKEY } from "../../../../../utils/constants";
-import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
-import { useSurveyThemeContextValue } from "../../SurveyThemeContext";
-import styles from "./SaveButton.module.css";
 import InfoButton from "../../../../Button/InfoButton";
+import { ThemeTabEnum } from "../../SurveyTheme.enums";
+import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+} from "../../SurveyThemeContext";
+import styles from "./SaveButton.module.css";
 
 function SaveButton({
+  className = "",
   survey,
   themeObjBeingEdited,
   isThemeObjBeingEditedDefaultTheme,
 }) {
+  const selectedPageTab = useSelectedPageTab();
+
   const themeObjState = useSurveyThemeContextValue();
   let themeObjFromApi = themeObjState;
   if (themeObjBeingEdited) {
@@ -71,7 +80,10 @@ function SaveButton({
   useHotkeys([[SAVE_HOTKEY, handleSaveTheme]]);
 
   return (
-    <Group justify="center" w="100%">
+    <Group
+      justify="center"
+      className={`${styles["save-button-root-div"]} save-button-root-div ${className}`}
+    >
       <InfoButton docUrl={`${docsPath}/webSurvey/surveyTheme/themes`} />
       <Text
         className={styles["save-unsaved-text-p"]}
@@ -89,7 +101,11 @@ function SaveButton({
         loading={isSaving}
         onClick={handleSaveTheme}
       >
-        {isThemeObjBeingEditedDefaultTheme ? "Apply" : "Save & Apply"}
+        {isThemeObjBeingEditedDefaultTheme
+          ? "Apply"
+          : selectedPageTab === ThemeTabEnum.SURVEY
+            ? "Save & Apply"
+            : "Save"}
       </Button>
     </Group>
   );

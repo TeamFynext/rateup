@@ -18,6 +18,7 @@ import {
   IconTrash,
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
+
 import { fallbackImage } from "../../../../utils/constants";
 import { getImageValue } from "../../../../utils/file-upload/upload";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
@@ -42,7 +43,7 @@ const TableRow = ({
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
         <Image
-          style={{ borderRadius: "4px", aspectRatio: "4/3" }}
+          style={{ borderRadius: "4px", aspectRatio: 3 / 2 }}
           src={
             item?.images?.length > 0
               ? getImageValue(

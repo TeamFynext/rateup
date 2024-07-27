@@ -1,15 +1,16 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLandingPage,
   deleteLandingPage,
   getDropdownOptionsOfLinkType,
-  getLandingPageWithShortId,
   getLandingPages,
+  getLandingPageWithShortId,
   updateLandingPage,
-  updatePageVisitsOrLinkClicks,
+  updatePageVisits,
 } from "./landingPage.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 //get all landingPages
 function useLandingPages() {
@@ -56,6 +57,7 @@ function useUpdateLandingPageMutation(shortUrlId) {
       return updateLandingPage(data);
     },
     onSuccess: () => {
+      console.log("onSucess from landingpage query");
       showSuccessToast(
         "Updated landingPage successfully.",
         "UpdateLandingPage",
@@ -65,6 +67,7 @@ function useUpdateLandingPageMutation(shortUrlId) {
       queryClient.invalidateQueries({ queryKey: ["landingPage", shortUrlId] });
     },
     onError: () => {
+      console.log("onError from landingpage query");
       showErrorToast(
         "Unable to update Landing Page, please try again later",
         "CreateLandingPage",
@@ -107,13 +110,10 @@ function useLinkTypeOptions(linkType) {
   });
 }
 
-function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId) {
+function usePageVisitsUpdateMutation(shortUrlId) {
   return useMutation({
-    mutationFn: (bodyData: {
-      resourceToBeUpdated: string;
-      linkId?: string;
-    }) => {
-      return updatePageVisitsOrLinkClicks(shortUrlId, bodyData);
+    mutationFn: () => {
+      return updatePageVisits(shortUrlId);
     },
     onSuccess: () => {},
     onError: () => {},
@@ -127,5 +127,5 @@ export {
   useGetLandingPageWithShortId,
   useDeleteLandingPageMutation,
   useLinkTypeOptions,
-  usePageVisitsOrLinkClicksUpdateMutation,
+  usePageVisitsUpdateMutation,
 };

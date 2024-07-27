@@ -8,6 +8,10 @@ import React, {
 
 import { Badge, Button, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { Range } from "react-date-range";
+
+import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
@@ -46,6 +50,7 @@ const ResultsOverview = ({ surveyId }) => {
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
+  const [ranges, setRange] = useState<Range[]>([]);
   let chartData;
   const {
     isLoading,
@@ -101,7 +106,7 @@ const ResultsOverview = ({ surveyId }) => {
       ];
       // Check if any of the allowed question types are present in the survey
       const hasAllowedQuestions = questions.some((question) =>
-        allowedQuestionTypes.includes(question.type),
+        allowedQuestionTypes.includes(question.type as QuestionType),
       );
 
       setIsAllowedQnsPresent(hasAllowedQuestions);
@@ -135,6 +140,25 @@ const ResultsOverview = ({ surveyId }) => {
   );
   const { filteredResponsesByTags, noofResponses } =
     getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags);
+
+  useEffect(() => {
+    if (ranges.length === 0) {
+      const endDate = dayjs();
+      let startDate = dayjs();
+      filteredResponsesByTags
+        .map((res) => dayjs(res.createdAt))
+        .forEach((responseDate) => {
+          if (responseDate.isBefore(startDate)) startDate = responseDate;
+        });
+      setRange([
+        {
+          startDate: startDate?.toDate(),
+          endDate: endDate.toDate(),
+          key: "selection",
+        },
+      ]);
+    }
+  }, [ranges, filteredResponsesByTags]);
   if (isLoading || isQLoading) {
     return <RateupLoader h={"100dvh"} />;
   }
@@ -151,12 +175,21 @@ const ResultsOverview = ({ surveyId }) => {
     questions: any[],
     surveyResponses: Array<TeamWiseResponses>,
   ) => {
-    return questions?.map((question) => {
-      const responsesForQuestion = filteredResponsesByTags?.flatMap(
-        (response) =>
-          response?.responses?.filter(
-            (item: any) => item?.questionId === question?.id,
+    const filteredResponses = ranges[0]
+      ? filteredResponsesByTags.filter((response) =>
+          dayjs(response.createdAt).isBetween(
+            ranges[0].startDate,
+            ranges[0].endDate,
+            "day",
+            "[]",
           ),
+        )
+      : filteredResponsesByTags;
+    return questions?.map((question) => {
+      const responsesForQuestion = filteredResponses?.flatMap((response) =>
+        response?.responses?.filter(
+          (item: any) => item?.questionId === question?.id,
+        ),
       );
       let promoters = 0;
       let passives = 0;
@@ -270,6 +303,12 @@ const ResultsOverview = ({ surveyId }) => {
             Export to Pdf
           </Button>
           <Stack p={5} ref={contentDivRef}>
+            <Flex justify={"flex-end"}>
+              <DateRangePickerButton
+                onChange={(r) => setRange(r ? [r["selection"]] : [])}
+                ranges={ranges}
+              />
+            </Flex>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
                 <Heading subtitle="NPS Overview" />

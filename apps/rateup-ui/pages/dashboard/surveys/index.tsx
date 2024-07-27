@@ -1,9 +1,9 @@
-import { Loader } from "@mantine/core";
-import { useSurveys } from "../../../backend/surveys/surveys.query";
-import { SurveysPage } from "../../../components/Survey/SurveysPage/SurveysPage";
-import { SurveysPageError } from "../../../components/Survey/SurveysPage/SurveyPageError";
 import { useState } from "react";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
+
+import { useSurveys } from "@/backend/surveys/surveys.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import { SurveysPageError } from "@/components/Survey/SurveysPage/SurveyPageError";
+import { SurveysPage } from "@/components/Survey/SurveysPage/SurveysPage";
 
 export default function Surveys() {
   const [selectedTeamId, setSelectedTeamId] = useState(null);

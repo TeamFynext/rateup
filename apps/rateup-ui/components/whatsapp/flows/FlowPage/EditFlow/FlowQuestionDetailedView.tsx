@@ -1,69 +1,76 @@
+import { useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Stack,
+  Badge,
+  Box,
+  Checkbox,
   Divider,
   Group,
-  Checkbox,
-  useMantineTheme,
-  Badge,
   Image,
   ScrollArea,
+  Stack,
+  Switch,
   Text,
   TextInput,
   TextInputProps,
-  Box,
+  useMantineTheme,
 } from "@mantine/core";
-import { UseFormReturnType, useForm } from "@mantine/form";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
-import { useState, useContext, useEffect } from "react";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
+import _ from "lodash";
+
 import {
-  useQuestionCreateMutation,
-  useQuestionUpdateMutation,
-} from "../../../../../backend/surveys/questions/questions.query";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import {
+  IntegratedApps,
   QuestionType,
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
-} from "../../../../../types/enums";
+} from "@/types/enums";
 import {
-  logicSupportedTypes,
-  googleReviewSupportedTypes,
-} from "../../../../../utils/data";
-import { showErrorToast } from "../../../../../utils/notifications";
+  useQuestionCreateMutation,
+  useQuestionUpdateMutation,
+} from "@/backend/surveys/questions/questions.query";
+import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
+import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import { LengthTracker } from "@/components/input/LengthTracker";
+import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor";
+import { ChoicesCreator } from "@/components/Survey/Question/QuestionExtraProps/ChoicesCreator";
+import { TextareaWithLengthTracker } from "@/components/Survey/ShareSurvey/FlowShareTemplateEditor";
+import {
+  getFlowLabelLimit,
+  getFlowOptionsLimit,
+  WA_FLOW_BODY_CHAR_LIMIT,
+  WA_FLOW_HEADING_CHAR_LIMIT,
+} from "@/components/whatsapp/whatsappConfig";
+import SelectedLanguageContext from "@/context/SelectedLanguage";
+import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants";
+import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data";
+import { showErrorToast } from "@/utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
-} from "../../../../../utils/questions";
-import {
-  RateupButtonSecondary,
-  RateupButtonPrimary,
-} from "../../../../Button/RateupButtons";
-import {
-  WA_FLOW_HEADING_CHAR_LIMIT,
-  WA_FLOW_BODY_CHAR_LIMIT,
-  getFlowLabelLimit,
-  getFlowOptionsLimit,
-} from "../../../whatsappConfig";
-import { EditFlowContext } from "./EditFlowContext";
-import { FlowLogicEditor } from "./FlowLogicEditor";
-import { LengthTracker } from "../../../../input/LengthTracker";
+} from "@/utils/questions";
 import {
   getFlowTextLimit,
   getFormObjFromScreenId,
   questionTypeToFlowFormElementType,
-} from "../../../../../utils/whatsapp/flow.utils";
-import { ChoicesCreator } from "../../../../Survey/Question/QuestionExtraProps/ChoicesCreator";
-import { useRouter } from "next/router";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import GoogleReviewEditor from "../../../../Survey/Question/GoogleReviewEditor";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY, WaNPSQuestions } from "../../../../../utils/constants";
-import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
-import { notifications } from "@mantine/notifications";
-import _ from "lodash";
-import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
+} from "@/utils/whatsapp/flow.utils";
 
+import { EditFlowContext } from "./EditFlowContext";
+import { FlowLogicEditor } from "./FlowLogicEditor";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 interface QuestionDetailedViewProps {
   question: Question;
   surveyLanguages: string[];
@@ -83,7 +90,7 @@ export function FlowQuestionDetailedView({
   setSelectedLanguage,
   surveyId,
   onCreated,
-}: QuestionDetailedViewProps) {
+}: Readonly<QuestionDetailedViewProps>) {
   const [activeEditor, setActiveEditor] = useState<EditorType>(
     EditorType.ElementEditor,
   );
@@ -144,7 +151,7 @@ function ElementEditor({
   surveyId,
   onCreated,
   setActiveTab,
-}: ElementEditorProps) {
+}: Readonly<ElementEditorProps>) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { selectedScreenId, flowJson, updateFlowJson } =
@@ -166,7 +173,7 @@ function ElementEditor({
   const nextScreens = flowJson.screens.slice(currentIndex + 1);
 
   const labelMaxLength = getFlowLabelLimit(
-    questionTypeToFlowFormElementType(question.type),
+    questionTypeToFlowFormElementType(question.type as QuestionType),
   );
 
   function validateLabel(value: string) {
@@ -229,13 +236,21 @@ function ElementEditor({
         setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
       }
-      if (question.type === QuestionType.Optin) {
+      if (
+        question.type === QuestionType.Optin ||
+        question.type === QuestionType.Date ||
+        question.type === QuestionType.WaTimeSlot
+      ) {
         updateFlowJson((draft) => {
           const formEl = getFormObjFromScreenId(
             draft.screens,
             selectedScreenId,
           );
-          if (form.values.optinScreenId) {
+
+          if (
+            form.values.optinScreenId &&
+            question.type === QuestionType.Optin
+          ) {
             formEl.children[currentIndex + 1]["on-click-action"] = {
               name: "navigate",
               next: {
@@ -244,6 +259,29 @@ function ElementEditor({
               },
               payload: {},
             };
+          } else if (form.values.onSelectAction) {
+            const dateForm = formEl.children.find(
+              (data) => data.type === WaFlowFormElementType.datePicker,
+            );
+            let now = dayjs().tz("Asia/Kolkata").startOf("day");
+            let afterSixMonth = dayjs().add(6, "M").startOf("day");
+            dateForm["min-date"] = now.utc().valueOf().toString();
+            dateForm["max-date"] = afterSixMonth.utc().valueOf().toString();
+
+            dateForm["on-select-action"] = {
+              name: "data_exchange",
+              payload: {
+                date: "${form" + "." + dateForm.name + "}",
+                component_action: "update_date",
+              },
+            };
+          } else if (question.type === QuestionType.WaTimeSlot) {
+            const timeForm = formEl.children.find(
+              (data) => data.type === "Dropdown",
+            );
+            if (timeForm) {
+              timeForm["data-source"] = "${data.available_slots}";
+            }
           }
         });
       }
@@ -393,6 +431,26 @@ function ElementEditor({
                 w={300}
               />
             )}
+            {question.type === QuestionType.Date && (
+              <Stack mt={"xs"}>
+                <Switch
+                  size="md"
+                  label={"Enable dynamic datepicker"}
+                  {...form.getInputProps("onSelectAction", {
+                    type: "checkbox",
+                  })}
+                />
+                {form.values.onSelectAction && (
+                  <ContainedSelection
+                    label={"Integration App Name"}
+                    placeholder="Select Integration App Name"
+                    data={[IntegratedApps.waAmelia]}
+                    {...form.getInputProps("waAppName")}
+                    w={400}
+                  />
+                )}
+              </Stack>
+            )}
 
             <FlowQuestionExtraProps
               form={form}
@@ -412,7 +470,7 @@ function ElementEditor({
               fw={600}
               {...form.getInputProps("required", { type: "checkbox" })}
             />
-            {WaNPSQuestions.includes(question?.type) && (
+            {WaNPSQuestions.includes(question?.type as QuestionType) && (
               <Checkbox
                 label="NPS Analytics"
                 fw={600}
@@ -425,7 +483,7 @@ function ElementEditor({
             )}
           </Group>
           <Group>
-            {logicSupportedTypes.includes(question?.type) && (
+            {logicSupportedTypes.includes(question?.type as QuestionType) && (
               <RateupButtonSecondary
                 title={"Logic Jump"}
                 leftIcon={
@@ -434,6 +492,7 @@ function ElementEditor({
                     w={30}
                     h={30}
                     fit={"contain"}
+                    alt="image of logic jump"
                   />
                 }
                 size="sm"
@@ -445,7 +504,9 @@ function ElementEditor({
               />
             )}
             {/* TODO: Implement Custom Validation*/}
-            {googleReviewSupportedTypes.includes(question?.type) && (
+            {googleReviewSupportedTypes.includes(
+              question?.type as QuestionType,
+            ) && (
               <RateupButtonSecondary
                 title={"Google Review"}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}

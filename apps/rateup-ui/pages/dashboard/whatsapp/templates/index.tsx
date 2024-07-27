@@ -1,60 +1,41 @@
+import { useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Box,
   Flex,
   Group,
-  SimpleGrid,
-  Space,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconClock,
-  IconPlus,
-  IconSelector,
-  IconTrash,
-} from "@tabler/icons-react";
-import dayjs from "dayjs";
-import { useRouter } from "next/router";
-import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+
 import {
   useDeleteWaTemplateMutation,
   useWaTemplates,
-} from "../../../../backend/whatsapp/whatsapp.query";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "../../../../components/Button/RateupButtons";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
-import { SyncTemplatesButton } from "../../../../components/whatsapp/templates/SyncTemplates";
-import WaTemplateStatusBadge from "../../../../components/whatsapp/templates/WaTemplateStatusBadge";
-import { lexend500 } from "../../../../utils/fonts";
-import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
-import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import SortDropdown, {
-  sortData,
-} from "../../../../components/Dashboard/SortDropDown";
-import InfoButton from "../../../../components/Button/InfoButton";
-import RefreshButton from "../../../../components/Button/RefreshButton";
-import { docsPath } from "../../../../utils/constants";
-import { TemplatesCardListSkeleton } from "../../../../components/animation/skeleton/wa/TemplatesCardList.skeleton";
-import ErrorComponent from "../../../../components/404/ErrorComponent";
-import CreatedSinceText from "../../../../components/DateAndTime/CreatedSinceText";
-import styles from "../../../../components/WelcomeTour/components/Tour.module.css";
-import WelcomeTour from "../../../../components/WelcomeTour/WelcomeTour";
-import WaPageTourSteps from "../../../../components/WelcomeTour/components/WaPageTourSteps";
+} from "@/backend/whatsapp/whatsapp.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { TemplatesCardListSkeleton } from "@/components/animation/skeleton/wa/TemplatesCardList.skeleton";
+import InfoButton from "@/components/Button/InfoButton";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import RefreshButton from "@/components/Button/RefreshButton";
+import SortDropdown, { sortData } from "@/components/Dashboard/SortDropDown";
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import styles from "@/components/WelcomeTour/components/Tour.module.css";
+import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps";
+import WelcomeTour from "@/components/WelcomeTour/WelcomeTour";
+import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates";
+import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
+import { docsPath } from "@/utils/constants";
 
 export default function Template() {
-  const {
-    data: templates,
-    isPending,
-    isError,
-    refetch,
-    isRefetching,
-  } = useWaTemplates();
+  const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const [sortOption, setSortOption] = useState("latest");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
@@ -68,7 +49,6 @@ export default function Template() {
   );
 
   const router = useRouter();
-  // TODO: handle error
   function handleCreateClick() {
     router.push(`/dashboard/whatsapp/templates/create`);
   }
@@ -84,29 +64,6 @@ export default function Template() {
 
   const tourSteps = WaPageTourSteps({ styles });
 
-  const TemplateCardList = () => {
-    if (isPending || isRefetching) return <TemplatesCardListSkeleton />;
-    if (isError) return <ErrorComponent refetch={refetch} />;
-
-    return (
-      <Box
-        className={`cards-grid-global-class`}
-        flex={1}
-        h={"100%"}
-        style={{ overflow: "auto", padding: "5px", paddingRight: "1rem" }}
-      >
-        {sortedTemplates?.map((t) => (
-          <TemplateCard
-            key={t.id}
-            template={t}
-            onClick={() => handleEditClick(t)}
-            toggle={toggle}
-            setSelectedTemplate={setSelectedTemplate}
-          />
-        ))}
-      </Box>
-    );
-  };
   return (
     <Stack h={"100%"}>
       <Flex
@@ -160,7 +117,15 @@ export default function Template() {
           <SyncTemplatesButton disabled={isPending} />
         </Flex>
       </Flex>
-      <TemplateCardList />
+      <TemplateCardList
+        handleEditClick={handleEditClick}
+        isError={isError}
+        isPending={isPending}
+        refetch={refetch}
+        setSelectedTemplate={setSelectedTemplate}
+        sortedTemplates={sortedTemplates}
+        toggle={toggle}
+      />
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
@@ -186,9 +151,40 @@ export default function Template() {
   );
 }
 
+const TemplateCardList = ({
+  isPending,
+  isError,
+  refetch,
+  sortedTemplates,
+  toggle,
+  handleEditClick,
+  setSelectedTemplate,
+}) => {
+  if (isPending) return <TemplatesCardListSkeleton />;
+  if (isError) return <ErrorComponent refetch={refetch} />;
+
+  return (
+    <Box
+      className={`cards-grid-global-class`}
+      flex={1}
+      h={"100%"}
+      style={{ overflow: "auto", padding: "5px", paddingRight: "1rem" }}
+    >
+      {sortedTemplates?.map((t) => (
+        <TemplateCard
+          key={t.id}
+          template={t}
+          onClick={() => handleEditClick(t)}
+          toggle={toggle}
+          setSelectedTemplate={setSelectedTemplate}
+        />
+      ))}
+    </Box>
+  );
+};
 function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
   return (
-    <PaperLayout hoveractive={true} onClick={onClick}>
+    <PaperLayout hoveractive={true} onClick={onClick} layoutAnimation>
       <Stack>
         <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>

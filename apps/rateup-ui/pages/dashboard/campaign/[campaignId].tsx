@@ -1,3 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Alert,
@@ -30,22 +33,28 @@ import {
   ColumnFiltersState,
   SortingState,
 } from "@tanstack/react-table";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import { z } from "zod";
+
 import { SearchInput } from ".";
 import {
   useCampaignById,
   useSendCampaign,
 } from "../../../backend/campaign/campaign.query";
+import ErrorComponent from "../../../components/404/ErrorComponent";
 import AddParticipantModal from "../../../components/Campaign/AddParticipantModal";
 import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
+import { renderBadge } from "../../../components/Card/CampaignCard";
 import {
   CONTACT_SORT,
-  WhatsappTableType,
   contactParticipentDetailColumn,
+  WhatsappTableType,
 } from "../../../components/Contacts/utils/utils";
-import ContactTable from "../../../components/Table/ContactTable";
+import { ContainedDateTimePickerInput } from "../../../components/input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import ContactTable from "../../../components/Table/ContactTable";
 import { whatsappTheme } from "../../../config/mantineTheme";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import {
@@ -53,18 +62,12 @@ import {
   CampaignStatus,
 } from "../../../types/enums";
 import { Campaign } from "../../../types/global";
+import { getErrorMessage } from "../../../utils";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
 import { lexend600 } from "../../../utils/fonts";
-import styles from "./campaign.module.css";
-import ErrorComponent from "../../../components/404/ErrorComponent";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { ContainedDateTimePickerInput } from "../../../components/input/ContainedInput/ContainedInput";
-import { z } from "zod";
 import { showErrorToast } from "../../../utils/notifications";
-import { renderBadge } from "../../../components/Card/CampaignCard";
-import { getErrorMessage } from "../../../utils";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
+import styles from "./campaign.module.css";
+
 dayjs.extend(timezone);
 
 export enum CampaignParticipantsTabs {
@@ -114,6 +117,14 @@ const CampaignById = () => {
   useEffect(() => {
     if (campaignData) update({ campaignId: campaignData?.name });
   }, [campaignData, update]);
+
+  const dynamicVariables = useMemo(
+    () =>
+      campaignData?.waTemplate?.data?.components?.find(
+        (data) => data.example?.body_text,
+      )?.example?.body_text?.[0],
+    [campaignData?.waTemplate?.data?.components],
+  );
 
   if (isError)
     return (
@@ -186,6 +197,7 @@ const CampaignById = () => {
               refetchCampaign={refetchCampaign}
               campaignInfo={campaignInfo}
               isPending={isPending}
+              dynamicVariables={dynamicVariables}
             />
             <CampaignInfoCard
               participantCount={campaignData?.campaignParticipants.length}
@@ -366,7 +378,6 @@ const StartCampaignCard = ({
           </ActionIcon>
         </Tooltip>
       )}
-
       <SendCampaignModal
         close={close}
         opened={opened}
@@ -382,6 +393,7 @@ const StartCampaignCardRightSection = ({
   refetchCampaign,
   campaignInfo,
   isPending,
+  dynamicVariables,
 }) => {
   if (isPending) return <Skeleton w={"100%"} h={147} />;
   if (!campaign) return null;
@@ -392,6 +404,7 @@ const StartCampaignCardRightSection = ({
           isEdit={true}
           campaign={campaign}
           close={() => {}}
+          dynamicVariables={dynamicVariables}
         />
         <Group>
           <Tooltip label="Refresh data">

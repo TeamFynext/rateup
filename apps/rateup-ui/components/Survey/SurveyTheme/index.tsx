@@ -1,17 +1,24 @@
-import { Box, Center, Group } from "@mantine/core";
 import { useState } from "react";
+
+import { Box, Button, Center, Group, Stack } from "@mantine/core";
+import { IconEdit, IconPencil } from "@tabler/icons-react";
+import classNames from "classnames/bind";
+
 import { useAllThemes } from "../../../backend/surveyTheme/surveyTheme.query";
-import { SurveyThemeContextProvider } from "./SurveyThemeContext";
-import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 import PageSelector from "./components/PageSelector";
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
 import SaveButton from "./components/SaveButton";
+import StylesComponent from "./components/stylescomponent";
 import ThemeSelector from "./components/ThemeSelector";
 import WelcomePageSwitch from "./components/WelcomePageSwitch";
-import StylesComponent from "./components/stylescomponent";
+import { ThemeTabEnum } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
+import { SurveyThemeContextProvider } from "./SurveyThemeContext";
+import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 
-function SurveyTheme({ survey }) {
+const cx = classNames.bind(styles);
+
+function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
   // selected surveyThemeId.
@@ -28,6 +35,8 @@ function SurveyTheme({ survey }) {
   const isThemeObjBeingEditedDefaultTheme =
     themeObjBeingEdited?.name === "Default Theme";
 
+  const [isSurveyThemeEditorOpen, setIsSurveyThemeEditorOpen] = useState(false);
+
   if (!surveyTheme)
     return (
       <Center h={"100%"}>
@@ -36,31 +45,103 @@ function SurveyTheme({ survey }) {
     );
 
   return (
-    <SurveyThemeContextProvider surveyTheme={surveyTheme}>
-      <Box className={styles["survey-theme-root-div"]}>
-        <Group className={styles["tabs-and-other-options-container"]}>
-          <Box></Box>
-          <PageSelector survey={survey} />
-          <Box
-            className={styles["save-btn-container"]}
-            id="save-btn-container-portal"
+    <SurveyThemeContextProvider
+      surveyTheme={surveyTheme}
+      selectedPageTab={initialSelectedPageTab}
+    >
+      <Box className={`${cx("survey-theme-root-div")} survey-theme-root-div`}>
+        {!initialSelectedPageTab && (
+          <Group
+            className={`${cx("tabs-and-other-options-container")} tabs-and-other-options-container`}
           >
-            <SaveButton
-              survey={survey}
-              isThemeObjBeingEditedDefaultTheme={
-                isThemeObjBeingEditedDefaultTheme
-              }
-              themeObjBeingEdited={themeObjBeingEdited}
-            />
-          </Box>
-        </Group>
+            <Box></Box>
+
+            {!initialSelectedPageTab ? (
+              <PageSelector survey={survey} />
+            ) : (
+              <Box></Box>
+            )}
+
+            <Box
+              className={cx("save-btn-container")}
+              id="save-btn-container-portal"
+            >
+              <SaveButton
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+              />
+            </Box>
+          </Group>
+        )}
+
+        {initialSelectedPageTab === ThemeTabEnum.SURVEY && (
+          // This Will be dispayed only in the survey editor page to edit welcome and thankyou pages.
+          <Stack className={styles["survey-editor-page-header"]}>
+            <Group justify="space-between">
+              <ThemeSelector
+                className={cx("theme-selector-div")}
+                allThemesArr={allThemesArr}
+                themeSelectorState={themeSelectorState}
+                setThemeSelectorState={setThemeSelectorState}
+                isAllThemesFetchPending={isAllThemesFetchPending}
+                survey={survey}
+              />
+              <Button
+                className={styles["open-close-survey-editor-btn"]}
+                leftSection={<IconEdit size={"1rem"} />}
+                onClick={() =>
+                  setIsSurveyThemeEditorOpen(!isSurveyThemeEditorOpen)
+                }
+              >
+                {isSurveyThemeEditorOpen ? "Close Editor" : "Open Editor"}
+              </Button>
+              <SaveButton
+                className={styles["survey-editor-page-header-save-btn"]}
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+              />
+            </Group>
+
+            {isSurveyThemeEditorOpen && (
+              <StylesComponent
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+                useTabsForEditorSelection
+              />
+            )}
+          </Stack>
+        )}
+
+        {initialSelectedPageTab &&
+          !(initialSelectedPageTab === ThemeTabEnum.SURVEY) && (
+            <Stack className={styles["survey-editor-page-header"]}>
+              <StylesComponent
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+                useTabsForEditorSelection
+                displaySaveBtn
+              />
+            </Stack>
+          )}
 
         <Box
-          className={
-            styles["selected-page-tab-panels-and-styles-div-container"]
-          }
+          className={`${cx("selected-page-tab-panels-and-styles-div-container")} selected-page-tab-panels-and-styles-div-container`}
         >
-          <Box className={`${styles["theme-preview-container"]}`}>
+          <Box
+            className={`${cx("theme-preview-container")} theme-preview-container`}
+          >
             <PreviewDeviceButtons />
             <WelcomePageSwitch survey={survey} />
             <SurveyThemePreviewLayout
@@ -71,26 +152,29 @@ function SurveyTheme({ survey }) {
             />
           </Box>
 
-          <Box
-            className={`${styles["theme-selector-org-logo-styles-component-container"]}`}
-          >
-            <ThemeSelector
-              className={styles["theme-selector-div"]}
-              allThemesArr={allThemesArr}
-              themeSelectorState={themeSelectorState}
-              setThemeSelectorState={setThemeSelectorState}
-              isAllThemesFetchPending={isAllThemesFetchPending}
-              survey={survey}
-            />
-            <Box className={styles["styles-component-container"]}>
-              <StylesComponent
+          {!initialSelectedPageTab && (
+            <Box
+              className={`${cx("theme-selector-org-logo-styles-component-container")} theme-selector-org-logo-styles-component-container`}
+            >
+              <ThemeSelector
+                className={cx("theme-selector-div")}
+                allThemesArr={allThemesArr}
+                themeSelectorState={themeSelectorState}
+                setThemeSelectorState={setThemeSelectorState}
+                isAllThemesFetchPending={isAllThemesFetchPending}
                 survey={survey}
-                isThemeObjBeingEditedDefaultTheme={
-                  isThemeObjBeingEditedDefaultTheme
-                }
               />
+              <Box className={cx("styles-component-container")}>
+                <StylesComponent
+                  survey={survey}
+                  isThemeObjBeingEditedDefaultTheme={
+                    isThemeObjBeingEditedDefaultTheme
+                  }
+                  themeObjBeingEdited={themeObjBeingEdited}
+                />
+              </Box>
             </Box>
-          </Box>
+          )}
         </Box>
       </Box>
     </SurveyThemeContextProvider>

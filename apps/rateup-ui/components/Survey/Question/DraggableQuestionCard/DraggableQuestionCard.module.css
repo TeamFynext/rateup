@@ -5,6 +5,7 @@
   border: 1px solid var(--item-border-color, #ccc);
   padding: var(--item-padding, 8px 0px 8px 10px);
   background-color: var(--item-background-color, white);
+  background-color: white;
   margin-bottom: var(--item-margin-bottom, 8px);
   cursor: pointer;
   position: relative;
@@ -23,10 +24,6 @@
 }
 .transition {
   transition: all 0.2s;
-}
-
-.item[data-select="false"] {
-  background-color: var(--mantine-body-color);
 }
 
 [data-mantine-color-scheme="dark"] .item[data-select="true"] {

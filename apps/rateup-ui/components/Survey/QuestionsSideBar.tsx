@@ -1,29 +1,23 @@
 //TODO: refactor drag and drop
 
-import {
-  Center,
-  Paper,
-  Stack,
-  Text,
-  Divider,
-  ScrollArea,
-  Box,
-  Group,
-} from "@mantine/core";
-import { useListState } from "@mantine/hooks";
-import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { reorder } from "../../utils/questions";
-import { QuestionTabsEnum } from "./EditSurvey";
+import { useRouter } from "next/router";
+
+import { Center, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import { useListState, useThrottledCallback } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { RateupButtonBlue } from "../Button/RateupButtons";
-import styles from "./QuestionsSideBar.module.css";
-import { docsPath } from "../../utils/constants";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+
+import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
+import { docsPath, uniquePages } from "../../utils/constants";
+import { reorder, reOrderPages } from "../../utils/questions";
 import InfoButton from "../Button/InfoButton";
+import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
+import { QuestionTabsEnum } from "./EditSurvey";
+import FullPageEditor from "./Page/FullPageEditor";
+import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
+import styles from "./QuestionsSideBar.module.css";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -34,6 +28,7 @@ interface QuestionsSideBarProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   isWaSurvey?: boolean;
+  survey?: Survey;
 }
 export function QuestionsSideBar({
   questions,
@@ -44,6 +39,7 @@ export function QuestionsSideBar({
   isWaSurvey,
   surveyLanguages,
   setSelectedLanguage,
+  survey,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -51,6 +47,9 @@ export function QuestionsSideBar({
 
   useEffect(() => {
     handlers.setState(questions);
+
+    let newOrder = reOrderPages(questions);
+    surveyId && questionsReorderMutation.mutate(newOrder); //TODO-SE optimize: do api call only when new qn count changes
   }, [questions]);
 
   useEffect(() => {
@@ -73,6 +72,7 @@ export function QuestionsSideBar({
     if (questionId === selectedQ?.id) {
       setSelectedQ(null);
     }
+    setActiveTab(QuestionTabsEnum.SurveyPreview);
   };
 
   const items = questionsState?.map((question, index) => (
@@ -87,6 +87,16 @@ export function QuestionsSideBar({
     />
   ));
 
+  const handleDragEnd = ({ destination, source }) => {
+    const reorderedQuestions = reorder(
+      questionsState,
+      source.index,
+      destination?.index || 0,
+    );
+    handlers.setState(reorderedQuestions);
+    questionsReorderMutation.mutate(reorderedQuestions);
+  };
+
   const queryClient = useQueryClient();
   const questionsReorderMutation = useMutation({
     mutationFn: (reorderedQuestions: Question[]) =>
@@ -96,19 +106,35 @@ export function QuestionsSideBar({
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
   });
 
   return (
     <Stack className={styles["add-question-btn-questions-list-container"]}>
       {questionsState?.length > 0 && (
-        <Group className={styles["add-question-btn-more-than-1-que"]}>
-          <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
-          <RateupButtonBlue
-            onClick={handleAddQn}
-            title={"Add Question"}
-            rightIcon={<IconPlus size="1rem" />}
-            size="md"
+        <Group
+          className={styles["add-question-btn-more-than-1-que"]}
+          justify="space-between"
+        >
+          <Group>
+            <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
+            <RateupButtonBlue
+              onClick={handleAddQn}
+              title={"Add Page"}
+              rightIcon={<IconPlus size="1rem" />}
+              size="md"
+            />
+          </Group>
+
+          <RateupButtonPrimary
+            className={styles["survey-preview-btn"]}
+            title="Survey Preview"
+            onClick={() => {
+              setSelectedQ(null);
+              setActiveTab(QuestionTabsEnum.SurveyPreview);
+            }}
+            fw={"bold"}
           />
         </Group>
       )}
@@ -118,17 +144,7 @@ export function QuestionsSideBar({
         scrollbarSize={10}
         scrollbars={"y"}
       >
-        <DragDropContext
-          onDragEnd={({ destination, source }) => {
-            const reorderedQuestions = reorder(
-              questionsState,
-              source.index,
-              destination?.index || 0,
-            );
-            handlers.setState(reorderedQuestions);
-            questionsReorderMutation.mutate(reorderedQuestions);
-          }}
-        >
+        <DragDropContext onDragEnd={handleDragEnd}>
           {!questionsState?.length && (
             <Paper
               style={{ cursor: "pointer", marginTop: "200px" }}
@@ -138,7 +154,7 @@ export function QuestionsSideBar({
                 <Stack align="center">
                   <IconPlus size={36} />
                   <Text size="xl" fw={700}>
-                    Add Question
+                    Add Page
                   </Text>
                 </Stack>
               </Center>

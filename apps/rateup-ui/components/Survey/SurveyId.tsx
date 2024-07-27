@@ -1,38 +1,42 @@
-import {
-  Tabs,
-  Grid,
-  MultiSelect,
-  Title,
-  MantineProvider,
-  Box,
-  ScrollAreaAutosize,
-} from "@mantine/core";
 import { useEffect, useState } from "react";
-import SelectedLanguageContext from "../../context/SelectedLanguage";
 import { useRouter } from "next/router";
-import { EditSurvey } from "./EditSurvey";
+
+import {
+  Box,
+  Grid,
+  MantineProvider,
+  MultiSelect,
+  ScrollAreaAutosize,
+  Tabs,
+  Title,
+} from "@mantine/core";
+
+import { useNavControlContext } from "@/context/NavControlContext";
+
+import { useSubscription } from "../../backend/subscription/subscription.query";
+import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
   useGetSurveyVariables,
   useSurvey,
 } from "../../backend/surveys/surveys.query";
-import { useQuestions } from "../../backend/surveys/questions/questions.query";
-import ShareSurvey from "./ShareSurvey/ShareSurvey";
 import StyledTabs from "../../components/styled/StyledTabs/StyledTabs";
-import { useRouteParams } from "../../context/RouteParamsContext";
-import SurveySettings from "./Settings";
-import Result from "./Result/Result";
-import { useUser } from "../../context/UserContext";
-import SurveyTheme from "./SurveyTheme";
-import SurveyContext from "../../context/SurveyContext";
-import { UserRole } from "../../utils/enums";
-import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";
-import { EditWhatsappSurvey } from "../whatsapp/surveys/WaEditSurvey";
 import { whatsappTheme } from "../../config/mantineTheme";
-import styles from "./SurveyId.module.css";
+import { useRouteParams } from "../../context/RouteParamsContext";
+import SelectedLanguageContext from "../../context/SelectedLanguage";
+import SurveyContext from "../../context/SurveyContext";
+import { useUser } from "../../context/UserContext";
+import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";
+import { UserRole } from "../../utils/enums";
 import { getFromSessionStorage } from "../../utils/essential";
-import RateupLoader from "../Loaders/RateupLoader";
-import { useSubscription } from "../../backend/subscription/subscription.query";
 import { hasFeature } from "../../utils/subscription/subscription";
+import RateupLoader from "../Loaders/RateupLoader";
+import { EditWhatsappSurvey } from "../whatsapp/surveys/WaEditSurvey";
+import { EditSurvey } from "./EditSurvey";
+import Result from "./Result/Result";
+import SurveySettings from "./Settings";
+import ShareSurvey from "./ShareSurvey/ShareSurvey";
+import styles from "./SurveyId.module.css";
+import SurveyTheme from "./SurveyTheme";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -42,7 +46,7 @@ export enum TabEnum {
   Theme = "Theme",
 }
 
-export default function SurveyID() {
+export default function SurveyID(translations) {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
@@ -79,6 +83,9 @@ export default function SurveyID() {
   const [filterTags, setFilterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
+
+  const { navOpened, setNavOpened } = useNavControlContext();
+
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
@@ -137,6 +144,10 @@ export default function SurveyID() {
   useEffect(() => {
     setVariables(surveyVariables ?? []);
   }, [surveyVariables]);
+
+  useEffect(() => {
+    setNavOpened(false);
+  }, []);
 
   if (isLoading || isSurveyLoading || !activeTab)
     return <RateupLoader h={"80dvh"} />;
@@ -280,6 +291,7 @@ export default function SurveyID() {
                   encryptionpassword={encryptionpassword}
                   setEncryptionPassword={setEncryptionPassword}
                   subscription={subscription}
+                  translations={translations}
                 />
               </Tabs.Panel>
               <Tabs.Panel value={TabEnum.Share}>

@@ -1,12 +1,14 @@
 import { Flex, Stack, Text } from "@mantine/core";
-import { ItemDisplay } from "../item/ItemDisplay";
+
 import { formatedTime } from "../../../utils/dateTime";
+import { ItemDisplay } from "../item/ItemDisplay";
 
 export function CategoryDisplay({
   category,
   setSelectedItem,
   currency,
   hideUnavailableCategory,
+  categoryRefs,
 }) {
   const {
     categoryDisabled,
@@ -14,7 +16,11 @@ export function CategoryDisplay({
     formattedEndTimeWithAmPm,
   } = formatedTime(category);
   return (
-    <Stack id={category?.id} fw={300} pb={"lg"}>
+    <Stack
+      ref={(el) => (categoryRefs.current[category.id] = el)}
+      fw={300}
+      pb={"lg"}
+    >
       <Stack gap={0}>
         <Text
           c="var(--text-color-sp)"

@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Group, Select, Text as MantineText } from "@mantine/core";
+
+import { Group, Text as MantineText, Select } from "@mantine/core";
 import { IconSelector } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
   const [sortOption, setSortOption] = useState(defaultSortOption);
-
+  const { translations } = useTranslations();
   const handleSortChange = (value) => {
     setSortOption(value);
     onSortChange(value);
@@ -13,16 +16,16 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
 
   return (
     <Group style={{ alignItems: "center", gap: "3px" }}>
-      <MantineText>SORT BY:</MantineText>
+      <MantineText>{translations["SORT BY"]}:</MantineText>
       <Select
-        placeholder="Sort by"
+        placeholder={translations["Sort by"]}
         value={sortOption}
         onChange={handleSortChange}
         data={[
-          { value: "latest", label: "Latest First" },
-          { value: "oldest", label: "Old First" },
-          { value: "a-z", label: "A - Z" },
-          { value: "z-a", label: "Z - A" },
+          { value: "latest", label: translations["Latest First"] },
+          { value: "oldest", label: translations["Old First"] },
+          { value: "a-z", label: translations["A - Z"] },
+          { value: "z-a", label: translations["Z - A"] },
         ]}
         styles={{
           input: {

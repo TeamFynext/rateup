@@ -6,7 +6,7 @@ import {
   getFullMenuPublicById,
   updateMenuVisitedMutation,
 } from "@/backend/menu/menu.api";
-import MenuLandingPage from "@/pages/public/menu/[surveyId]";
+import MenuLandingPage from "@/pages/public/menu/[menuId]";
 import { Button, Image } from "@mantine/core";
 import { getCookie, setCookie } from "cookies-next";
 

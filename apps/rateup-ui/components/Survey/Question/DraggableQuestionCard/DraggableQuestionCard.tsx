@@ -1,3 +1,6 @@
+import React, { useContext } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Badge,
@@ -11,18 +14,19 @@ import {
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import cx from "clsx";
-import { useRouter } from "next/router";
-import React, { useContext } from "react";
 import { Draggable } from "react-beautiful-dnd";
+
+import { PageType } from "@/types/enums";
+
 import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { extractText } from "../../../../utils";
 import { GoogleIcon } from "../../../Button/GoogleIcon";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import { pageIcons } from "../../Page/PageIcons";
+import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util";
 import { questionIcons } from "../QuestionTypeSelection";
 import classes from "./DraggableQuestionCard.module.css";
-import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util";
-import SurveyContext from "../../../../context/SurveyContext";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -66,20 +70,26 @@ export function DraggableQuestionCard({
     e?.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
+
   return (
     <>
       <ConfirmationModal
         forDeleteFunctionality
         confirmLabel="Delete"
-        headerLabel="Are you sure to delete this question?"
-        headerTitle="Delete question?"
+        headerLabel={`Are you sure to delete this ${question.type in PageType ? "page" : "question"}?`}
+        headerTitle={`Delete ${question.type in PageType ? "page" : "question"}?`}
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {
           handleDelete(e, question.id);
         }}
       />
-      <Draggable key={question.id} index={index} draggableId={question.id}>
+      <Draggable
+        key={question.id}
+        index={index}
+        draggableId={question.id}
+        //isDragDisabled={question.type in PageType}
+      >
         {(provided, snapshot) => (
           <div ref={hoverRef}>
             <Box
@@ -107,6 +117,13 @@ export function DraggableQuestionCard({
                 variant={selected ? "filled" : "filled"}
               >
                 <Flex style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
+                  {pageIcons[question.type] &&
+                    React.createElement(pageIcons[question.type], {
+                      size: 15,
+                      strokeWidth: 2,
+                      style: { marginRight: "0.5rem" },
+                    })}
+
                   {questionIcons[question.type] &&
                     React.createElement(questionIcons[question.type], {
                       size: 15,

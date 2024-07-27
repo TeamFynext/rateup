@@ -25,9 +25,11 @@ export function parseTemplate(template) {
         parsedTemplate[component.type.toLowerCase()] =
           component?.example?.header_handle?.[0];
       }
-    } else if (["footer", "body"].includes(component.type.toLowerCase())) {
+    } else if ("body" === component.type.toLowerCase()) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
-      parsedTemplate["example"] = component.example?.body_text ?? [];
+      parsedTemplate["example"] = component.example?.body_text?.[0] ?? [];
+    } else if ("footer" === component.type.toLowerCase()) {
+      parsedTemplate[component.type.toLowerCase()] = component.text;
     } else if (component.type.toLowerCase() == "buttons") {
       component.buttons.map((data) => {
         if (data?.example && Array.isArray(data.example)) {

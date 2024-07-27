@@ -4,16 +4,19 @@
 
 .input {
   height: rem(54px);
-  padding-top: 18px;
+  padding: 15px;
   font-size: 12px;
   cursor: pointer !important;
 }
 
 .label {
   position: absolute;
+  left: 10px;
+  top: 0;
+  transform: translateY(-50%);
   pointer-events: none;
   font-size: 10px;
-  padding-left: var(--mantine-spacing-sm);
-  padding-top: 4px;
   z-index: 1;
+  font-weight: 600;
+  background-color: white;
 }

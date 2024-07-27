@@ -1,38 +1,45 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
 import {
-  Title,
+  Avatar,
   Divider,
-  Stack,
-  Group,
   FileButton,
   Flex,
-  Paper,
-  Avatar,
   Grid,
+  Group,
+  Paper,
+  Stack,
   Text,
+  Title,
 } from "@mantine/core";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+
 import {
   useDeleteAuthToken,
   useUpdateOrgDetailsMutation,
   useUpdateOrgLogoMutation,
 } from "../../../backend/org/org.query";
-import { uploadFile } from "../../../utils/file-upload/upload";
-import { notifications } from "@mantine/notifications";
-import { useUser } from "../../../context/UserContext";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import { ContainedTextField } from "../../../components/input/ContainedInput/ContainedInput";
-import { isNotEmpty, useForm } from "@mantine/form";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import { useUser } from "../../../context/UserContext";
+import { uploadFile } from "../../../utils/file-upload/upload";
+
 import "react-phone-number-input/style.css";
-import styles from "./setting.module.css";
+
+import { UserRole } from "@/utils/enums";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+
 import { SAVE_HOTKEY } from "../../../utils/constants";
+import PermanentDelete from "./advanced/PermanentDelete";
+import styles from "./setting.module.css";
 
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -267,6 +274,9 @@ const OrgSettings = () => {
               />
             </Flex>
           </form>
+          {user?.role === UserRole.SUPADM && (
+            <PermanentDelete orgId={user?.orgId} />
+          )}
         </Flex>
       </Flex>
     </Flex>

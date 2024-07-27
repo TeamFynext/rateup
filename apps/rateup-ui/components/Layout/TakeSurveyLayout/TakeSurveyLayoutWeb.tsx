@@ -16,6 +16,8 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 
+import { PageType } from "@/types/enums";
+
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
@@ -41,7 +43,9 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
   const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
 
-  // This one is being used for preview in surveyTheme editor(TakeSurveyLayoutWeb and TakeSurvey component is also being used in surveyTheme editor).
+  // This one is being used for preview in surveyTheme editor
+  //(TakeSurveyLayoutWeb and TakeSurvey component is also being used in surveyTheme editor).
+
   const selectedPreview = useSelectedPreview();
 
   const surveyTeamMapId = survey?.surveyTeamMapId;
@@ -51,6 +55,9 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const isMobile =
     useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
+  const [isWelcomePageEnabled, setIsWelcomePageEnabled] = useState(
+    survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
+  );
   const [startClicked, setStartClicked] = useState<boolean>(start || false);
   const [questionCount, setQuestionCount] = useState(0);
   const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
@@ -80,7 +87,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   }, [start]);
 
   useEffect(() => {
-    if (survey?.welcomePageEnabled) {
+    if (isWelcomePageEnabled) {
       setStartClicked(false);
       surveyTeamMapId && updateVisited.mutate(surveyTeamMapId);
     } else {
@@ -93,7 +100,13 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
         });
       }
     }
-  }, [survey?.welcomePageEnabled]);
+  }, [isWelcomePageEnabled]);
+
+  useEffect(() => {
+    setIsWelcomePageEnabled(
+      survey?.questions?.some((q) => q.type === PageType.Welcome),
+    );
+  }, [survey?.questions]);
 
   const handleStartClick = () => {
     surveyTeamMapId && updateStarted.mutate(surveyTeamMapId);
@@ -133,8 +146,16 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     "https://images.unsplash.com",
   );
 
+  const getRootElementForMantineProvider: () => HTMLElement = () => {
+    return typeof window === "undefined"
+      ? undefined
+      : document.querySelector(`.${styles["take-survey-layout-web-root-div"]}`);
+  };
+
   return (
     <MantineProvider
+      cssVariablesSelector={`.${styles["take-survey-layout-web-root-div"]}`}
+      getRootElement={getRootElementForMantineProvider}
       theme={{
         colors: {
           // @ts-ignore
@@ -269,7 +290,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                           )
                         ))}
 
-                      {survey?.welcomePageEnabled &&
+                      {isWelcomePageEnabled &&
                         !startClicked &&
                         !isSurveyThemePreview && (
                           <WelcomePage

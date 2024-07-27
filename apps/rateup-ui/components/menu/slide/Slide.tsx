@@ -1,3 +1,5 @@
+import React, { useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   BackgroundImage,
@@ -11,35 +13,36 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { IconUpload, IconMenu2, IconTrash } from "@tabler/icons-react";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  ContainedTextField,
-  ContainedTextArea,
-} from "../../input/ContainedInput/ContainedInput";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { PriceSection } from "../item/PriceSection";
-import TabsCommon from "../landingPage/Tabs/TabsCommon";
-import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 import { useForm } from "@mantine/form";
-import { MenuItemPriceType } from "../../../types/enums";
 import { getHotkeyHandler, useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
-import {
-  deleteUploadedFiles,
-  getFileUrlFromKey,
-  uploadFile,
-} from "../../../utils/file-upload/upload";
 import { notifications } from "@mantine/notifications";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
-import { ImageCropModal } from "../../Modal/ImageCropModal";
+import { IconMenu2, IconTrash, IconUpload } from "@tabler/icons-react";
+
+import { MenuItemPriceType } from "@/types/enums";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import {
+  ContainedTextArea,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { ImageCropModal } from "@/components/Modal/ImageCropModal";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
   SAVE_HOTKEY,
-} from "../../../utils/constants";
-import { showErrorToast } from "../../../utils/notifications";
+} from "@/utils/constants";
+import {
+  deleteUploadedFiles,
+  getFileUrlFromKey,
+  uploadFile,
+} from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
+
 import { FoodLabelSelector } from "../combobox/foodLabelSelector";
+import { PriceSection } from "../item/PriceSection";
+import TabsCommon from "../landingPage/Tabs/TabsCommon";
+import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 
 export const Slide = ({
   menuId,

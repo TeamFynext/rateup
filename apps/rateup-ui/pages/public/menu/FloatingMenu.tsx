@@ -1,7 +1,6 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 import Link from "next/link";
 
-import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import {
   ActionIcon,
   Avatar,
@@ -16,12 +15,13 @@ import {
   IconBrandWhatsapp,
   IconCategory,
   IconChevronUp,
+  IconLink,
   IconMessage,
   IconPhone,
-  IconSettings,
 } from "@tabler/icons-react";
 
 import { MenuButtons } from "@/types/enums";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import styles from "./FloatingMenu.module.css";
 
@@ -30,35 +30,40 @@ type FloatingMenuMainProps = {
   categories: FullCategory[];
   displayName: string;
   logo: string;
-  largeScreen: boolean;
+  categoryRefs: MutableRefObject<{}>;
 };
 const FloatingMenuMain = ({
   dynamicVariables,
   categories,
   displayName,
   logo,
-  largeScreen,
+  categoryRefs,
 }: FloatingMenuMainProps) => {
   let mainColor = "black";
   const firstTwoItems = dynamicVariables?.slice(0, 2);
   const remainingItems = dynamicVariables?.slice(2);
+
+  const handleScrollToCategory = (categoryId: string) => {
+    const categoryElement = categoryRefs.current[categoryId];
+    if (categoryElement) {
+      categoryElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <Stack
       pos={"fixed"}
       bottom={20}
       left={"50%"}
-      style={{ transform: "translateX(-50%)" }}
+      style={{ transform: "translateX(-50%)", zIndex: 999 }}
       w={"max-content"}
     >
       <Group
-        py={largeScreen ? "xs" : 8}
-        px={largeScreen ? "lg" : 8}
-        style={{
-          borderRadius: "10px",
-        }}
+        py={{ base: 8, lg: "xs" }}
+        px={{ base: 8, lg: "lg" }}
         bg={mainColor}
-        gap={largeScreen ? "xl" : "md"}
         justify="space-evenly"
+        className={styles.floatingMenu}
       >
         <HoverCard shadow="md" withArrow>
           <HoverCard.Target>
@@ -75,13 +80,7 @@ const FloatingMenuMain = ({
         </HoverCard>
 
         {categories?.length && (
-          <Menu
-            shadow="md"
-            width={largeScreen ? 500 : 200}
-            offset={15}
-            withArrow
-            classNames={styles}
-          >
+          <Menu shadow="md" offset={15} withArrow classNames={styles}>
             <Menu.Target>
               <Stack gap={0} align="center">
                 <ActionIcon size={"lg"} variant="transparent">
@@ -95,14 +94,16 @@ const FloatingMenuMain = ({
 
             <Menu.Dropdown>
               <Menu.Label>Categories</Menu.Label>
-              <ScrollAreaAutosize mah={"50dvh"}>
+              <ScrollAreaAutosize
+                mah={"50dvh"}
+                type="always"
+                classNames={styles}
+              >
                 {categories?.map((category) => (
                   <Menu.Item
                     key={category.id}
                     rightSection={<Text>{category.items?.length ?? 0}</Text>}
-                    onClick={() =>
-                      document.getElementById(category.id)?.scrollIntoView()
-                    }
+                    onClick={() => handleScrollToCategory(category.id)}
                   >
                     {category.name}
                   </Menu.Item>
@@ -171,7 +172,7 @@ const customButton = (name) => {
     case "feedback":
       return <IconMessage />;
     default:
-      return <IconSettings />;
+      return <IconLink />;
   }
 };
 

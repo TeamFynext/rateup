@@ -2,7 +2,9 @@ import {
   LDResponse,
   LogicAction,
   LogicCondition,
+  PageType,
   QuestionType as Q,
+  QuestionType,
   SmileyResponse,
   YNResponse,
 } from "../../../types/enums";
@@ -22,8 +24,8 @@ export function parseLogicAction(
       userResponse = userResponse.toString();
     }
     const { type, logic: logicJumps = [] } = question;
-    if (type === Q.InfoMessage) userResponse = true;
-    if (!logicSupportedTypes.includes(type) || !userResponse) {
+    if (type === Q.InfoMessage || type in PageType) userResponse = true;
+    if (!logicSupportedTypes.includes(type as QuestionType) || !userResponse) {
       return LogicAction.NextQ;
     }
 
@@ -32,7 +34,7 @@ export function parseLogicAction(
       let iterator: "map" | "some" | "every";
       let comparator: (value: string) => boolean;
 
-      if (ChoiceTypeQuestions.includes(type)) {
+      if (ChoiceTypeQuestions.includes(type as QuestionType)) {
         let userResponseIndices: string[];
         if (Array.isArray(userResponse)) {
           userResponseIndices = userResponse.map((choice) =>

@@ -1,21 +1,24 @@
 import { Group } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useUser } from "../../../context/UserContext";
+import { docsPath } from "../../../utils/constants";
 import { UserRole } from "../../../utils/enums";
+import InfoButton from "../../Button/InfoButton";
 import {
   RateupButtonBlue,
   RateupButtonPrimary,
 } from "../../Button/RateupButtons";
-import { TeamSelector } from "../../input/TeamSelector";
-import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
-import Heading from "../../styled/Heading/Heading";
-import SortDropdown from "../../Dashboard/SortDropDown";
-import InfoButton from "../../Button/InfoButton";
-import { docsPath } from "../../../utils/constants";
 import RefreshButton from "../../Button/RefreshButton";
+import SortDropdown from "../../Dashboard/SortDropDown";
+import { TeamSelector } from "../../input/TeamSelector";
+import Heading from "../../styled/Heading/Heading";
 import styles from "../../WelcomeTour/components/Tour.module.css";
-import WelcomeTour from "../../WelcomeTour/WelcomeTour";
 import WebSurveyTourSteps from "../../WelcomeTour/components/WebSurveyTourSteps";
+import WelcomeTour from "../../WelcomeTour/WelcomeTour";
+import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 
 export function SurveyHeader({
   selectedTeamId,
@@ -31,7 +34,7 @@ export function SurveyHeader({
   refetch,
 }) {
   const { user } = useUser();
-
+  const { translations } = useTranslations();
   const tourSteps = WebSurveyTourSteps({ styles });
 
   return (
@@ -40,7 +43,11 @@ export function SurveyHeader({
         <Group mr="sm">
           <div className={styles["heading-container"]}>
             <Heading
-              title={surveyType == "web" ? "Web Surveys" : "WhatsApp Surveys"}
+              title={
+                surveyType == "web"
+                  ? translations["Web Surveys"]
+                  : translations["WhatsApp Surveys"]
+              }
               titleprops={{ w: "fit-content" }}
             />
           </div>
@@ -54,7 +61,7 @@ export function SurveyHeader({
           <RateupButtonBlue
             className={styles["create-survey-button"]}
             rightIcon={<IconPlus />}
-            title="Create Survey"
+            title={translations["Create Survey"]}
             onClick={openCreateSurvey}
           />
         )}
@@ -63,7 +70,7 @@ export function SurveyHeader({
       <Group gap="md" justify="flex-start">
         {surveyCount > 0 && (
           <RateupButtonPrimary
-            title="Group survey"
+            title={translations["Group survey"]}
             onClick={() => openMergeSurvey()}
           />
         )}

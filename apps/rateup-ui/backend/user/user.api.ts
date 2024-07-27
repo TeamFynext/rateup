@@ -18,6 +18,10 @@ export interface IUpdateProfile {
   phone: string;
 }
 
+export interface IUpdateUserLanguage {
+  prefLanguage: string;
+}
+
 export interface IUpdateProfilePhoto {
   profilePhoto: string;
 }
@@ -35,6 +39,7 @@ export interface IUserData {
   orgAddress: string;
   teams: Array<string>;
   encryptionKeys: EncryptionKeys | undefined;
+  prefLanguage: string;
 }
 
 export interface IUserInfoApiResponse {
@@ -62,6 +67,13 @@ export const fetchUserProfile = () =>
 export const updateUserProfile = (data: IUpdateProfile) =>
   axiosClient({
     url: `/user/update-profile`,
+    method: "PUT",
+    data: data,
+  });
+
+export const updateUserLanguage = (data: IUpdateUserLanguage) =>
+  axiosClient({
+    url: `/user/update-language`,
     method: "PUT",
     data: data,
   });

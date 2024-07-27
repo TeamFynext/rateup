@@ -1,11 +1,12 @@
 import { Box, Overlay, Stack, Tabs } from "@mantine/core";
-import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
-import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
+
+import LanguagePageThemeView from "./components/previewcomponents/languagePage";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
-import LanguagePageThemeView from "./components/previewcomponents/languagePage";
-import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
+import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
+import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
+import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 
 function SurveyThemePreviewLayout({
   survey,
@@ -15,7 +16,9 @@ function SurveyThemePreviewLayout({
   const selectedPreview = useSelectedPreview();
 
   return (
-    <Stack className={styles["survey-theme-preview-layout-div"]}>
+    <Stack
+      className={`${styles["survey-theme-preview-layout-div"]} survey-theme-preview-layout-div`}
+    >
       <Box
         style={{
           display: "flex",

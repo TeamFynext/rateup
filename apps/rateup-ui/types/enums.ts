@@ -6,6 +6,25 @@ export enum SurveyType {
   WhatsApp = "whatsapp",
   WaFlow = "waFlow",
 }
+
+export enum PageType {
+  Welcome = "Welcome",
+  ThankYou = "ThankYou",
+  Custom = "Custom",
+}
+
+export enum PageTitle {
+  Welcome = "Welcome Page",
+  ThankYou = "ThankYou Page",
+  Custom = "Custom HTML Page",
+}
+
+export enum PageDescription {
+  Welcome = "This is the first page to welcome",
+  ThankYou = "This is the End Page of the survey",
+  Custom = "",
+}
+
 export enum QuestionType {
   Rating = "Rating",
   Smiley = "Smiley",
@@ -33,7 +52,6 @@ export enum QuestionType {
   MultiTextInput = "MultiTextInput",
   MCQGrid = "MCQ Grid",
   File = "File",
-  Optin = "OptIn",
   EmailOtp = "EmailOtp",
   WOP = "Wheel of Price",
   //TODO REMOVE LATER: MYG GIFT VISHU
@@ -41,8 +59,10 @@ export enum QuestionType {
   Invoice_Id = "invoice_id",
 
   // WhatsApp exclusive
+  Optin = "OptIn",
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
+  WaTimeSlot = "Dropdown",
 }
 
 export enum LDResponse {
@@ -314,9 +334,18 @@ export enum ShopifyEvents {
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
 }
 
+export enum ShopifySendAfter {
+  TwoHour = "2 Hour",
+  FiveHour = "5 Hour",
+  TenHour = "10 hour",
+  OneDay = "1 day",
+  TwoDays = "2 Days",
+}
+
 export enum IntegratedApps {
   shopify = "Shopify",
   googlesheet = "Google Sheet",
+  waAmelia = "WaAmelia",
 }
 
 export enum MenuButtons {

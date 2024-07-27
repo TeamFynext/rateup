@@ -30,6 +30,7 @@ import { SurveyContextProvider } from "../../../../context/SurveyObjContext";
 import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
 import {
   LogicAction,
+  PageType,
   QuestionType as Q,
   QuestionType,
 } from "../../../../types/enums";
@@ -43,6 +44,7 @@ import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import { validateQuestion } from "../../../../utils/validation";
 import RateupLoader from "../../../Loaders/RateupLoader";
 import GiftModal from "../../Gift/GiftModal";
+import CustomHTML from "../../Page/Previews/CustomHTML";
 import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
@@ -73,6 +75,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   useBeforeUnload(true, "Your inputs are not submitted yet, are you sure?");
 
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
+  const [isWelcomePageEnabled, setIsWelcomePageEnabled] = useState(
+    survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
+  );
+  const [isThankYouPageEnabled, setIsThankYouPageEnabled] = useState(
+    survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
+  );
 
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
@@ -109,12 +117,26 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const formMaxHeight = smallScreen ? "calc(100dvh - 10.9375rem)" : `70dvh`;
 
   useEffect(() => {
-    if (survey?.questions?.length > 0 && selectedQ === null) {
-      setSelectedQ(survey.questions[0]);
-      questionsHistoryHandlers.append(survey.questions[0].id);
-    }
+    setIsWelcomePageEnabled(
+      survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
+    );
+    setIsThankYouPageEnabled(
+      survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
+    );
     setQuestionCount(survey?.questions?.length);
-  }, [survey]);
+  }, [survey?.questions]);
+
+  useEffect(() => {
+    if (survey?.questions?.length > 0 && selectedQ === null) {
+      if (isWelcomePageEnabled) {
+        setSelectedQ(survey.questions[1]);
+        questionsHistoryHandlers.append(survey.questions[1]?.id);
+      } else {
+        setSelectedQ(survey.questions[0]);
+        questionsHistoryHandlers.append(survey.questions[0]?.id);
+      }
+    }
+  }, [isWelcomePageEnabled, survey?.questions]);
 
   useEffect(() => {
     const index = survey?.questions?.indexOf(selectedQ);
@@ -215,10 +237,13 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const handleNext = (response: any) => {
     const currentResponse_ = response ? response : currentResponse;
+    const questionsLength = isThankYouPageEnabled
+      ? survey.questions.length - 2
+      : survey.questions.length - 1;
     const index = survey.questions.findIndex((Q) => selectedQ.id === Q.id);
     if (index === -1) throw new Error("Question not found"); // this should never happen
 
-    if (index < survey.questions.length - 1) {
+    if (index < questionsLength) {
       // Not last question
       // Checking for logic jump
       const action = parseLogicAction(
@@ -368,7 +393,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         [selectedQ.type]: response,
       },
       questionId: selectedQ.id,
-      type: selectedQ.type,
+      type: selectedQ.type as QuestionType,
     };
     if (index === -1) {
       handlers.append(formattedResponse);
@@ -484,30 +509,43 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                             type="never"
                             className={styles["question-div"]}
                           >
-                            <Box
-                              className={`${styles["title-desc-container"]} ${lexend.className}`}
-                            >
-                              <QuestionTitle
-                                largeScreen={largeScreen}
-                                themeStyles={
-                                  surveyThemeData?.surveyTheme?.title?.styles
+                            {selectedQ.type in PageType ? (
+                              <CustomHTML
+                                content={
+                                  selectedQ?.description[selectedLanguage]
                                 }
-                                smallScreen={smallScreen}
-                                responses={responses}
-                                surveyId={survey?.id}
                               />
-                              {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                                <QuestionDesc
-                                  largeScreen={largeScreen}
-                                  themeStyles={
-                                    surveyThemeData?.surveyTheme?.subtitle
-                                      ?.styles
-                                  }
-                                />
-                              )}
-                            </Box>
+                            ) : (
+                              <>
+                                <Box
+                                  className={`${styles["title-desc-container"]} ${lexend.className}`}
+                                >
+                                  <QuestionTitle
+                                    largeScreen={largeScreen}
+                                    themeStyles={
+                                      surveyThemeData?.surveyTheme?.title
+                                        ?.styles
+                                    }
+                                    smallScreen={smallScreen}
+                                    responses={responses}
+                                    surveyId={survey?.id}
+                                  />
+                                  {!isHtml(
+                                    selectedQ?.title[selectedLanguage],
+                                  ) && (
+                                    <QuestionDesc
+                                      largeScreen={largeScreen}
+                                      themeStyles={
+                                        surveyThemeData?.surveyTheme?.subtitle
+                                          ?.styles
+                                      }
+                                    />
+                                  )}
+                                </Box>
 
-                            <QuestionForm />
+                                <QuestionForm />
+                              </>
+                            )}
                           </ScrollArea.Autosize>
 
                           <Box
@@ -531,6 +569,8 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     isSavingResponses={isSavingResponses || giftLoading}
                     errorTextDivRef={errorTextDivRef}
                     isSurveyThemePreview={isSurveyThemePreview}
+                    isWelcomePageEnabled={isWelcomePageEnabled}
+                    isThankYouPageEnabled={isThankYouPageEnabled}
                   />
                 </Stack>
               </Container>

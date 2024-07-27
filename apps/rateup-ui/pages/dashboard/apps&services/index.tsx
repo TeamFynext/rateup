@@ -1,70 +1,33 @@
-import {
-  Stack,
-  Title,
-  NavLink,
-  Image,
-  Divider,
-  SimpleGrid,
-  Text,
-  Group,
-} from "@mantine/core";
-import {
-  IconApi,
-  IconChevronRight,
-  IconCloudLock,
-  IconLock,
-  IconShieldLockFilled,
-} from "@tabler/icons-react";
-import PaperLayout from "components/styled/Layouts/PaperLayout";
 import router from "next/router";
+
+import { Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { IconApi, IconCloudLock } from "@tabler/icons-react";
+import PaperLayout from "components/styled/Layouts/PaperLayout";
 import { IntegratedApps } from "types/enums";
+
+import { ActionsGrid } from "@/components/Card/ActionGrid";
 
 const index = () => {
   function getAppIconImageUrl(app) {
     switch (app) {
       case IntegratedApps.shopify:
         return {
-          url: "../../images/shopifyicon.png",
-          height: 80,
-          width: 80,
-          radius: "50%",
+          src: "/images/shopifyicon.png",
         };
       case IntegratedApps.googlesheet:
         return {
-          url: "../../images/googlesheeticon.png",
-          height: 50,
-          width: 80,
-          radius: 0,
+          src: "/images/googlesheeticon.png",
+        };
+      case IntegratedApps.waAmelia:
+        return {
+          src: "/images/amelia.png",
         };
     }
   }
 
   return (
     <Stack p={"xl"}>
-      <PaperLayout>
-        <Title order={4}>Apps</Title>
-        <Stack>
-          {Object.entries(IntegratedApps).map(([key, value], index) => {
-            const { url, height, width, radius } = getAppIconImageUrl(value);
-            return (
-              <>
-                <NavLink
-                  key={key}
-                  label={value}
-                  leftSection={
-                    <Image src={url} h={height} w={width} radius={radius} />
-                  }
-                  rightSection={
-                    <IconChevronRight size={"2rem"} color="gray" stroke={1.2} />
-                  }
-                  m={"sm"}
-                  onClick={() => router.push(`/dashboard/apps&services/${key}`)}
-                />
-              </>
-            );
-          })}
-        </Stack>
-      </PaperLayout>
+      <ActionsGrid getAppIconImageUrl={getAppIconImageUrl} />
       <PaperLayout>
         <Title order={4}>Services</Title>
         <SimpleGrid cols={3} p={"xl"} spacing={"xl"}>

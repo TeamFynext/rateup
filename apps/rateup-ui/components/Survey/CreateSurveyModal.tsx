@@ -1,31 +1,33 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Group,
-  Stack,
-  Radio,
-  MultiSelect,
-  LoadingOverlay,
-  Select,
-  Loader,
-  ComboboxChevron,
-} from "@mantine/core";
-import {
-  PillsInput,
-  Pill,
-  Combobox,
   CheckIcon,
+  Combobox,
+  ComboboxChevron,
+  Group,
+  Loader,
+  LoadingOverlay,
+  MultiSelect,
+  Pill,
+  PillsInput,
+  Radio,
+  Select,
+  Stack,
   useCombobox,
 } from "@mantine/core";
-import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
-import { notifications } from "@mantine/notifications";
-import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
-import FormModalLayout from "../Modal/FormModalLayout";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
-import { useRouter } from "next/router";
-import { useQueryClient } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { useQueryClient } from "@tanstack/react-query";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
+import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
 import { useAllThemes } from "../../backend/surveyTheme/surveyTheme.query";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 interface FormValues {
   title: string;
@@ -57,6 +59,7 @@ export function CreateSurveyModal({
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const router = useRouter();
+  const { translations } = useTranslations();
   const [prevOpen, setPrevOpen] = useState(false);
   const { tmp, tn } = router?.query;
 
@@ -92,9 +95,11 @@ export function CreateSurveyModal({
       title: (value) =>
         templateName || value?.length ? null : "Cannot be empty",
       languages: (values) =>
-        values?.length ? null : "Must contain atleast one language",
+        values?.length
+          ? null
+          : translations["Must contain at least one language"],
       teamIds: (values) =>
-        values?.length ? null : "Must contain atleast one team",
+        values?.length ? null : translations["Must contain atleast one team"],
     },
   });
 
@@ -187,8 +192,8 @@ export function CreateSurveyModal({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: "Creating survey..",
-      message: `Hold on, your survey is getting created...`,
+      title: translations["Creating survey.."],
+      message: translations["Hold on, your survey is getting created..."],
       autoClose: false,
       withCloseButton: true,
     });
@@ -225,15 +230,21 @@ export function CreateSurveyModal({
     <FormModalLayout
       opened={open}
       onClose={handleClose}
-      title={"Create Survey"}
+      title={translations["Create Survey"]}
       centered
       onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={"Submit"}
+      buttonTitle={translations["Submit"]}
     >
       <Stack style={{ minHeight: "300px" }} mt="xl">
         <ContainedTextField
-          placeholder={templateName === null ? "Enter title" : templateName}
-          label={templateName === null ? "Title" : "Template Selected"}
+          placeholder={
+            templateName === null ? translations["Enter title"] : templateName
+          }
+          label={
+            templateName === null
+              ? translations["Title"]
+              : translations["Template Selected"]
+          }
           withAsterisk
           {...form.getInputProps("title")}
           disabled={templateName !== null}
@@ -252,12 +263,12 @@ export function CreateSurveyModal({
           value={teamChoice}
           onChange={setTeamChoice}
           name="selectTeams"
-          label="Select teams"
+          label={translations["Select teams"]}
           withAsterisk
         >
           <Group mt="xs">
-            <Radio checked label="All teams" value="all" />
-            <Radio label="Select Manually" value="manual" />
+            <Radio checked label={translations["All Teams"]} value="all" />
+            <Radio label={translations["Select Manually"]} value="manual" />
           </Group>
         </Radio.Group>
 
@@ -266,7 +277,7 @@ export function CreateSurveyModal({
             radius="md"
             value={selectedTeams}
             onChange={setSelectedTeams}
-            placeholder="Select teams (type in to search)"
+            placeholder={translations["Select teams (type in to search)"]}
             data={teamOptions}
             searchable
             error={form.errors.teamIds}
@@ -275,11 +286,11 @@ export function CreateSurveyModal({
 
         {!template && (
           <Select
-            label="Select Theme"
+            label={translations["Select Theme"]}
             data={selectThemeDropdownData}
             value={form.getValues().selectedTheme}
             onChange={(value) => form.setFieldValue("selectedTheme", value)}
-            placeholder="Select Theme"
+            placeholder={translations["Select Theme"]}
             styles={{
               input: {
                 borderRadius: "0.5rem",
@@ -324,7 +335,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     onDropdownClose: () => combobox.resetSelectedOption(),
     onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
   });
-
+  const { translations } = useTranslations();
   useEffect(() => {
     console.log(errors);
   }, [errors]);
@@ -362,7 +373,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
     .map((item) => (
       <Combobox.Option
-        title="Language"
+        title={translations["Language"]}
         value={item}
         key={item}
         active={value?.includes(item)}
@@ -384,8 +395,8 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
         <PillsInput
           radius="md"
           error={errors ? errors : false}
-          label="Select Languages"
-          description={"*Type to add new languages"}
+          label={translations["Select Languages"]}
+          description={translations["*Type to add new languages"]}
           styles={{ description: { color: "var(--tertiary-color)" } }}
           withAsterisk
           onClick={() => combobox.openDropdown()}
@@ -398,7 +409,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
                 onFocus={() => combobox.openDropdown()}
                 onBlur={() => combobox.closeDropdown()}
                 value={search}
-                placeholder="Select languages"
+                placeholder={translations["Select languages"]}
                 onChange={(event) => {
                   combobox.updateSelectedOptionIndex();
                   setSearch(event.currentTarget.value);

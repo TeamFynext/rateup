@@ -1,13 +1,21 @@
 import { UseFormReturnType } from "@mantine/form";
+
+import {
+  WA_FLOW_BODY_CHAR_LIMIT,
+  WA_FLOW_CAPTION_CHAR_LIMIT,
+  WA_FLOW_EMBEDDED_LINK_LIMIT,
+  WA_FLOW_HEADING_CHAR_LIMIT,
+  WA_FLOW_SUBHEADING_CHAR_LIMIT,
+} from "../../components/whatsapp/whatsappConfig";
 import {
   LDResponse,
+  QuestionType as qt,
   QuestionType,
   SmileyResponse,
   WaFlowFormElementType,
   WaFlowLayoutType,
-  YNResponse,
-  QuestionType as qt,
   WaFlowFormElementType as wft,
+  YNResponse,
 } from "../../types/enums";
 import {
   WaFlowFormChoice,
@@ -17,14 +25,7 @@ import {
   WaFlowScreen,
 } from "../../types/global";
 import { getNestedProperty } from "../misc/obj.utils";
-import {
-  WA_FLOW_BODY_CHAR_LIMIT,
-  WA_FLOW_CAPTION_CHAR_LIMIT,
-  WA_FLOW_EMBEDDED_LINK_LIMIT,
-  WA_FLOW_HEADING_CHAR_LIMIT,
-  WA_FLOW_SUBHEADING_CHAR_LIMIT,
-} from "../../components/whatsapp/whatsappConfig";
-import { RatingResponses, ratingEmoji, OpinionResponses } from "../questions";
+import { OpinionResponses, ratingEmoji, RatingResponses } from "../questions";
 
 // Since flow doesn't support multiple languages, we will use 'en' as the default language.
 const lang = "en";
@@ -511,7 +512,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
     throw new Error("Question not found");
   }
   const { dataSource, mapData } = generateDataSourceFromQuestion(question);
-  const type = questionTypeToFlowFormElementType(question.type);
+  const type = questionTypeToFlowFormElementType(question.type as QuestionType);
   const questionElement: WaFlowFormElement = {
     label: question.label?.[lang] || "",
     name: question.id,
@@ -595,6 +596,8 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.checkboxGroup;
     case qt.Optin:
       return WaFlowFormElementType.optIn;
+    case qt.WaTimeSlot:
+      return WaFlowFormElementType.dropDown;
     default:
       throw Error(qtype + "Not implemented");
   }

@@ -1,5 +1,6 @@
 import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 import {
+  PageType,
   QuestionType,
   ShopifyEvents,
   WaFlowFormElementType as wft,
@@ -89,7 +90,16 @@ const FlowInputQuestions = [
   QuestionType.TextArea,
   QuestionType.Date,
   QuestionType.Optin,
+  QuestionType.WaTimeSlot,
 ];
+
+export const BasicPages = [
+  PageType.Welcome,
+  PageType.ThankYou,
+  PageType.Custom,
+];
+
+export const uniquePages = [PageType.Welcome, PageType.ThankYou];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
@@ -276,7 +286,7 @@ export const shopifyEventData = [
     value: ShopifyEvents.ORDERS_PARTIALLY_FULFILLED,
   },
   {
-    label: "On fulfilled orders canceled",
+    label: "On fulfilled orders cancelled",
     value: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
   },
 ];

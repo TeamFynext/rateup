@@ -23,6 +23,13 @@
   flex-grow: 1.5;
 }
 
+.page-selector-tabs-root {
+  display: block;
+}
+.page-selector-tabs-root-hidden {
+  display: none;
+}
+
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;
@@ -145,8 +152,8 @@
 
 .actionIcon {
   position: absolute;
-  top: 3px;
-  right: -21px;
+  top: calc(50% - 11px);
+  right: -35px;
   color: var(--grey-color-4);
   z-index: 1;
 }
@@ -173,4 +180,67 @@
 
 .overlay {
   background-color: light-dark(#ffffff8e, #2e2e2ec0);
+}
+
+/* Survey Editor Header styles which contains options for editing welcome theme and thankyou theme */
+.survey-editor-page-header {
+  margin-bottom: 1rem;
+}
+
+.open-close-survey-editor-btn {
+  border-radius: 1rem;
+}
+
+.survey-editor-page-header .theme-selector-div {
+  box-shadow: none;
+  padding-left: 0;
+}
+
+.survey-editor-page-header :global(.styles-component-div) {
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.survey-editor-page-header .theme-selector-div :global(.choose-theme-dropdown) {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.survey-editor-page-header .theme-selector-div label {
+  font-size: 1rem;
+}
+
+.survey-editor-page-header .theme-selector-div :global(.mantine-Input-input) {
+  min-width: 18.75rem;
+}
+
+.survey-editor-page-header :global(.save-button-root-div) {
+  width: auto;
+}
+
+.survey-editor-page-header :global(.style-inputs-container) {
+  gap: 2rem;
+  flex-direction: row;
+}
+
+.survey-editor-page-header :global(.background-style-inputs-div) {
+  align-items: center;
+}
+
+.survey-editor-page-header :global(.header-style-inputs-container),
+.survey-editor-page-header :global(.desc-style-inputs-container) {
+  align-items: flex-end;
+}
+
+.survey-editor-page-header :global(.logo-style-inputs-container) {
+  align-items: flex-end;
+}
+
+.survey-editor-page-header
+  :global(.logo-style-inputs-container .upload-logo-divider) {
+  display: none;
 }

@@ -1,33 +1,42 @@
 import React from "react";
-import { QuestionType as Q } from "../../../../types/enums";
-import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextForm";
-import { NumberForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/NumberForm";
-import { TextAreaForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextAreaForm";
-import { RatingForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/RatingForm";
-import { LDForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/LDForm";
-import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm";
-import { OpinionScaleForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
-import { SmileyForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/SmileyForm";
-import { ImageForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ImageForm";
-import { MCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQForm";
-import { MSQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MSQForm";
-import { DDSSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DDSSForm";
-import { DDMSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DDMSForm";
-import { TestimonialForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TestimonialForm";
-import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailPhoneForm";
-import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
-import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
-import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQForm";
-import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
-import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
-import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/InfoMessageForm";
-import MultiTextInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MultiTextInputForm";
-import MCQGridForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQGridForm";
-import FileInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/FileInputForm";
-import EmailOTPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailOTPForm";
-import WOPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/WOPForm";
 
-const QuestionTypePreview = ({ type, choices, features, tnc, wop }) => {
+import { PageType as Page, QuestionType as Q } from "../../../../types/enums";
+import CustomHTML from "../../Page/Previews/CustomHTML";
+import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
+import { CustomNPSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/CustomNPSForm";
+import { DateForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DateForm";
+import { DDMSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DDMSForm";
+import { DDSSForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/DDSSForm";
+import EmailOTPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailOTPForm";
+import { EmailPhoneForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/EmailPhoneForm";
+import FileInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/FileInputForm";
+import { ImageForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ImageForm";
+import { InfoMessage } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/InfoMessageForm";
+import { LDForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/LDForm";
+import { MCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQForm";
+import MCQGridForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MCQGridForm";
+import { MSQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MSQForm";
+import MultiTextInputForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/MultiTextInputForm";
+import { NumberForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/NumberForm";
+import { OpinionScaleForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
+import { PCQForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/PCQForm";
+import { RatingForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/RatingForm";
+import { SmileyForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/SmileyForm";
+import { TermsNConditionsForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TermsNConditionsForm";
+import { TestimonialForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TestimonialForm";
+import { TextAreaForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextAreaForm";
+import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/TextForm";
+import WOPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/WOPForm";
+import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm";
+
+const QuestionTypePreview = ({
+  type,
+  choices,
+  features,
+  tnc,
+  wop,
+  htmlContent = null,
+}) => {
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -91,8 +100,14 @@ const QuestionTypePreview = ({ type, choices, features, tnc, wop }) => {
       return <EmailOTPForm isPreview={true} />;
     case Q.WOP:
       return <WOPForm isPreview={true} wop={wop} />;
+    // case Page.Welcome:
+    //   return <WOPForm isPreview={true} wop={wop} />;
+    // case Page.ThankYou:
+    //   return <WOPForm isPreview={true} wop={wop} />;
+    case Page.Custom:
+      return <CustomHTML content={htmlContent} />;
     default:
-      return <div>not implemented</div>;
+      return <div>not previews</div>;
   }
 };
 

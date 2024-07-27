@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { fallbackImage } from "../constants";
 
 export const uploadFile = async (
@@ -49,7 +50,11 @@ export const getFileUrlFromKey = (
   unsplashImage = false,
 ) => {
   if (!key) return;
-  if (unsplashImage) return `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${key}`;
+  if (unsplashImage)
+    return key?.startsWith("https")
+      ? key
+      : `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${key}`;
+
   const imgUrl = s3Upload
     ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`
     : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}${key}`;
@@ -79,7 +84,9 @@ export const getImageValue = (
   if (typeof image === "object") {
     return URL.createObjectURL(image);
   } else if (unsplashImage) {
-    return `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${image}`;
+    return image?.startsWith("http")
+      ? image
+      : `${process.env.NEXT_PUBLIC_UNSPLASH_URL}${image}`;
   } else if (fallback || (image && image.startsWith("blob:"))) {
     return image;
   } else if (image) {

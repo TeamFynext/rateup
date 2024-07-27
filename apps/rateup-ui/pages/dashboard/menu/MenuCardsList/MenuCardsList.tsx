@@ -1,27 +1,24 @@
 import React, { useContext } from "react";
-import SelectedTeamContext from "../../../../context/SelectedTeam";
-import { useAllMenus } from "../../../../backend/menu/menu.query";
-import { useMediaQuery } from "@mantine/hooks";
+
 import { Box, Stack } from "@mantine/core";
-import { sortData } from "../../../../components/Dashboard/SortDropDown";
-import { MenuCard } from "../../../../components/menu/MenuCard";
-import NothingFound from "../../../../components/NothingFound/NothingFound";
-import styles from "./MenuCardsList.module.css";
-import ErrorComponent from "../../../../components/404/ErrorComponent";
-import { MenuCardListSkeleton } from "../../../../components/animation/skeleton/menu/MenuCardList.skeleton";
+import { useMediaQuery } from "@mantine/hooks";
 import clsx from "clsx";
+
+import { useAllMenus } from "@/backend/menu/menu.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { MenuCardListSkeleton } from "@/components/animation/skeleton/menu/MenuCardList.skeleton";
+import { sortData } from "@/components/Dashboard/SortDropDown";
+import { MenuCard } from "@/components/menu/MenuCard";
+import NothingFound from "@/components/NothingFound/NothingFound";
+import SelectedTeamContext from "@/context/SelectedTeam";
+
+import styles from "./MenuCardsList.module.css";
 
 function MenuCardsList({ handleEditClick, sortOption }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-  const {
-    isError,
-    isPending,
-    data: menus,
-    refetch,
-    isRefetching,
-  } = useAllMenus();
+  const { isError, isPending, data: menus, refetch } = useAllMenus();
   const smallScreen = useMediaQuery("(max-width: 40em)");
-  if (isPending || isRefetching) return <MenuCardListSkeleton />;
+  if (isPending) return <MenuCardListSkeleton />;
   if (isError) return <ErrorComponent refetch={refetch} />;
   // Filter menus based on `selectedTeamId`
   const filteredMenus =

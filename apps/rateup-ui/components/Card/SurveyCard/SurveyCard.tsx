@@ -1,9 +1,13 @@
+import router from "next/router";
+
 import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
-import router from "next/router";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
+
+import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SurveyMenu } from "./SurveyMenu";
 
 interface SurveyCardProps {
@@ -26,14 +30,12 @@ export function SurveyCard({
   teamsData,
   route,
   refetchSurveys,
-}: SurveyCardProps): JSX.Element {
+}: Readonly<SurveyCardProps>) {
+  const { translations, loadingTranslations } = useTranslations();
   return (
     <PaperLayout
       hoveractive
-      p="md"
-      shadow="lg"
-      radius="lg"
-      style={{ cursor: "pointer" }}
+      layoutAnimation
       onClick={(e) => {
         e.stopPropagation();
         router.push(
@@ -75,7 +77,7 @@ export function SurveyCard({
               variant="outline"
               color={survey?.type == "web" ? "blue" : "#149a8a"}
             >
-              {survey?.type}
+              {translations[survey?.type]}
             </Badge>
           </Group>
           <Group justify={"space-between"} align={"center"}>
@@ -90,7 +92,7 @@ export function SurveyCard({
             >
               <RateupButtonSecondary
                 leftIcon={<IconChartBar size={15} />}
-                title="Responses"
+                title={translations["Responses"]}
                 variant="subtle"
                 size="xs"
                 radius={5}
@@ -105,9 +107,10 @@ export function SurveyCard({
 }
 
 function StatusBadge({ active }) {
+  const { translations } = useTranslations();
   return (
     <Badge color={active ? "green" : "yellow"} variant="light">
-      {active ? "Active" : "Paused"}
+      {active ? translations["Active"] : translations["Paused"]}
     </Badge>
   );
 }

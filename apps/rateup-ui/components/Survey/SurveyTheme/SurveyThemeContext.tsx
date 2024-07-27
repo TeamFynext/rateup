@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect } from "react";
 import { useImmerReducer } from "use-immer";
 import surveyThemeReducer from "./surveyThemeReducer";
 import { useIsFirstRender } from "@mantine/hooks";
+import { ThemeTabEnum } from "./SurveyTheme.enums";
 
 const SurveyThemeContext = createContext(null);
 const SelectedPageTabContext = createContext(null);
@@ -14,11 +15,15 @@ const SetSelectedEditorContext = createContext(null);
 const SelectedPreviewContext = createContext("desktop");
 const SetSelectedPreviewContext = createContext(null);
 
-function SurveyThemeContextProvider({ surveyTheme, children }) {
+function SurveyThemeContextProvider({
+  surveyTheme,
+  children,
+  selectedPageTab = ThemeTabEnum.SURVEY,
+}) {
   const isFirstRender = useIsFirstRender();
 
   const [state, dispatch] = useImmerReducer(surveyThemeReducer, {
-    selectedPageTab: "surveyPage",
+    selectedPageTab,
     surveyTheme,
     selectedEditor: "Background",
     selectedPreview: "desktop",
