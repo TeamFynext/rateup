@@ -3,17 +3,28 @@
 }
 
 .add-question-btn-more-than-1-que {
+  position: relative;
   border-bottom: 1px solid var(--mantine-color-gray-4);
   padding-bottom: 1rem;
   padding: 1rem;
+  padding-bottom: 3rem;
 }
 
 .survey-preview-btn {
-  height: 100%;
-  padding: 0.3125rem 1rem;
+  height: auto;
+  padding: 1rem;
+  padding-bottom: 2rem;
+  box-sizing: content-box;
+  position: absolute;
+  bottom: -30%;
+  overflow: visible;
+  z-index: 2;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .questions-list-container {
+  z-index: 5;
   flex: 1 1 0;
   overflow: auto;
   padding: 1rem;

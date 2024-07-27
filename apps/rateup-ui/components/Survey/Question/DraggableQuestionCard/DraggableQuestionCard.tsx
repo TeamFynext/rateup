@@ -70,6 +70,7 @@ export function DraggableQuestionCard({
     e?.stopPropagation();
     questionDeleteMutation.mutate(qId);
   };
+
   return (
     <>
       <ConfirmationModal

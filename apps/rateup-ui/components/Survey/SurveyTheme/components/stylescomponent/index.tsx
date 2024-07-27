@@ -1,5 +1,6 @@
 import {
   Box,
+  Group,
   MantineProvider,
   Overlay,
   ScrollArea,
@@ -24,6 +25,7 @@ import DescStyles from "../DescStyles";
 import HeaderStyles from "../HeaderStyles";
 import InputStyles from "../InputStyles";
 import LogoStyles from "../LogoStyles";
+import SaveButton from "../SaveButton";
 import EditorSelectionTabs from "./EditorSelectionTabs";
 import styles from "./StylesComponent.module.css";
 
@@ -34,7 +36,9 @@ function RenderOption({ option, checked }) {
 function StylesComponent({
   survey,
   isThemeObjBeingEditedDefaultTheme,
-  tabsForEditorSelection = false,
+  themeObjBeingEdited,
+  useTabsForEditorSelection = false,
+  displaySaveBtn = false,
 }) {
   const selectedPageTab = useSelectedPageTab();
   const selectedEditor = useSelectedEditor();
@@ -55,13 +59,23 @@ function StylesComponent({
           <Overlay className={surveyThemeStyles["overlay"]} />
         )}
 
-        {tabsForEditorSelection ? (
-          <EditorSelectionTabs
-            className={styles["tabs-list-tabs-comp"]}
-            data={supportedPageEditors[selectedPageTab]}
-            value={selectedEditor}
-            onChange={setSelectedEditor}
-          />
+        {useTabsForEditorSelection ? (
+          <Group className={styles["tabs-list-tabs-comp-container"]}>
+            <EditorSelectionTabs
+              data={supportedPageEditors[selectedPageTab]}
+              value={selectedEditor}
+              onChange={setSelectedEditor}
+            />
+            {displaySaveBtn && (
+              <SaveButton
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+              />
+            )}
+          </Group>
         ) : (
           <Select
             className={styles["editor-select-dropdown"]}

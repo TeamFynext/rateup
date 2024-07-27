@@ -4,12 +4,10 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 
 import { Center, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
-import { useListState } from "@mantine/hooks";
+import { useListState, useThrottledCallback } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
-
-import { PageType } from "@/types/enums";
 
 import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
 import { docsPath, uniquePages } from "../../utils/constants";
@@ -74,6 +72,7 @@ export function QuestionsSideBar({
     if (questionId === selectedQ?.id) {
       setSelectedQ(null);
     }
+    setActiveTab(QuestionTabsEnum.SurveyPreview);
   };
 
   const items = questionsState?.map((question, index) => (
@@ -88,6 +87,16 @@ export function QuestionsSideBar({
     />
   ));
 
+  const handleDragEnd = ({ destination, source }) => {
+    const reorderedQuestions = reorder(
+      questionsState,
+      source.index,
+      destination?.index || 0,
+    );
+    handlers.setState(reorderedQuestions);
+    questionsReorderMutation.mutate(reorderedQuestions);
+  };
+
   const queryClient = useQueryClient();
   const questionsReorderMutation = useMutation({
     mutationFn: (reorderedQuestions: Question[]) =>
@@ -97,6 +106,7 @@ export function QuestionsSideBar({
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
   });
 
@@ -120,7 +130,11 @@ export function QuestionsSideBar({
           <RateupButtonPrimary
             className={styles["survey-preview-btn"]}
             title="Survey Preview"
-            onClick={() => setActiveTab(QuestionTabsEnum.SurveyPreview)}
+            onClick={() => {
+              setSelectedQ(null);
+              setActiveTab(QuestionTabsEnum.SurveyPreview);
+            }}
+            fw={"bold"}
           />
         </Group>
       )}
@@ -130,17 +144,7 @@ export function QuestionsSideBar({
         scrollbarSize={10}
         scrollbars={"y"}
       >
-        <DragDropContext
-          onDragEnd={({ destination, source }) => {
-            const reorderedQuestions = reorder(
-              questionsState,
-              source.index,
-              destination?.index || 0,
-            );
-            handlers.setState(reorderedQuestions);
-            questionsReorderMutation.mutate(reorderedQuestions);
-          }}
-        >
+        <DragDropContext onDragEnd={handleDragEnd}>
           {!questionsState?.length && (
             <Paper
               style={{ cursor: "pointer", marginTop: "200px" }}

@@ -130,10 +130,10 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       if (isWelcomePageEnabled) {
         setSelectedQ(survey.questions[1]);
-        questionsHistoryHandlers.append(survey.questions[1].id);
+        questionsHistoryHandlers.append(survey.questions[1]?.id);
       } else {
         setSelectedQ(survey.questions[0]);
-        questionsHistoryHandlers.append(survey.questions[0].id);
+        questionsHistoryHandlers.append(survey.questions[0]?.id);
       }
     }
   }, [isWelcomePageEnabled, survey?.questions]);

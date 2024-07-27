@@ -10,10 +10,11 @@
 }
 
 .editor-select-dropdown {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.tabs-list-tabs-comp {
+.tabs-list-tabs-comp-container {
+  justify-content: space-between;
   margin-bottom: 1rem;
 }
 
@@ -69,10 +70,6 @@
   background-color: var(--mantine-color-gray-5);
 }
 
-.styles-component-div :global(.custom-color-picker-and-heading-container) {
-  width: 100%;
-}
-
 .styles-component-div :global(.custom-color-picker-and-heading-container) h2 {
   font-size: 1rem;
   margin-bottom: 1rem;
@@ -87,4 +84,26 @@
   font-size: 1rem;
   margin-bottom: 1rem;
   font-weight: 500;
+}
+
+.styles-component-div :global(.button-position-styles-div h2) {
+  margin-bottom: 0.3125rem;
+}
+
+/* Individual Styles components like BackgrounsStyles,ButtonStyles, others styles */
+.style-inputs-container {
+  width: 100%;
+  gap: 1.5rem;
+}
+
+.logo-styles-number-inputs-container {
+  justify-content: center;
+}
+
+.logo-styles-number-inputs-container > div {
+  flex: 1 1 0;
+}
+
+.logo-styles-logo-upload-file-input-container {
+  justify-content: center;
 }

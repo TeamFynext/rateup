@@ -1,3 +1,5 @@
+import { useCallback, useRef } from "react";
+
 import {
   ActionIcon,
   Button,
@@ -11,7 +13,8 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconStar, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useCallback, useRef } from "react";
+
+import { mmImageCropModalClassnames } from "../../../../utils/constants";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import {
   useSelectedPageTab,
@@ -19,7 +22,6 @@ import {
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext";
 import styles from "./stylescomponent/StylesComponent.module.css";
-import { mmImageCropModalClassnames } from "../../../../utils/constants";
 
 function LogoStyles() {
   const selectedPageTab = useSelectedPageTab();
@@ -96,15 +98,20 @@ function LogoStyles() {
   }, []);
 
   return (
-    <Stack align="center" w={"100%"} gap={"1.5rem"}>
-      <Group wrap="nowrap" gap="xs" w={"100%"}>
+    <Stack
+      className={`${styles["style-inputs-container"]} style-inputs-container ${styles["logo-styles-div"]} logo-style-inputs-container`}
+    >
+      <Group
+        wrap="nowrap"
+        gap="xs"
+        className={styles["logo-styles-number-inputs-container"]}
+      >
         <NumberInput
           min={10}
           max={100}
           placeholder="Height"
           label="Height (px)"
           name="height"
-          style={{ flex: 1 }}
           classNames={{ label: styles["label"] }}
           value={logo?.styles.height}
           onChange={handleHeightInputChange}
@@ -115,7 +122,6 @@ function LogoStyles() {
           placeholder="Width"
           label="Width (px)"
           name="Width"
-          style={{ flex: 1 }}
           classNames={{ label: styles["label"] }}
           value={logo?.styles.width}
           onChange={handleWidthInputChange}
@@ -123,8 +129,15 @@ function LogoStyles() {
       </Group>
 
       <Stack>
-        <Divider label="Upload Logo" variant="dashed" w={"100%"} />
-        <Group justify="space-between" w={"100%"}>
+        <Divider
+          className="upload-logo-divider"
+          label="Upload Logo"
+          variant="dashed"
+          w={"100%"}
+        />
+        <Group
+          className={styles["logo-styles-logo-upload-file-input-container"]}
+        >
           <Group gap={"xs"}>
             <ThemeIcon>
               <IconStar size={15} />

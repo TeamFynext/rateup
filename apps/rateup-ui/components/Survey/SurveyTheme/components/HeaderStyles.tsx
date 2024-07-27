@@ -1,5 +1,7 @@
-import { Box, Group, NumberInput, Select, Stack } from "@mantine/core";
 import { useCallback } from "react";
+
+import { Box, Group, NumberInput, Select, Stack } from "@mantine/core";
+
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 import { FontWeights, getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import {
@@ -38,38 +40,38 @@ function HeaderStyles() {
   }, []);
 
   return (
-    <>
-      <Stack align="start" w={"100%"} gap={"1rem"}>
-        <Group wrap="nowrap" gap={"xs"}>
-          <Select
-            label="Font weight"
-            name="fontWeight"
-            data={FontWeights}
-            value={title.styles.fontWeight}
-            classNames={{ label: styles["label"] }}
-            onChange={handleFontWeightChange}
-          />
-          <NumberInput
-            min={10}
-            max={100}
-            defaultValue={18}
-            placeholder="size"
-            label="Font Size"
-            name="fontSize"
-            classNames={{ label: styles["label"] }}
-            value={title.styles.fontSize}
-            onChange={handleFontSizeChange}
-          />
-        </Group>
-        <Box className={"custom-color-picker-and-heading-container"}>
-          <h2>Text Color</h2>
-          <CustomColorPicker
-            value={title.styles.color}
-            onChange={handleColorChange}
-          />
-        </Box>
-      </Stack>
-    </>
+    <Stack
+      className={`${styles["style-inputs-container"]} style-inputs-container header-style-inputs-container`}
+    >
+      <Box className={"custom-color-picker-and-heading-container"}>
+        <h2>Text Color</h2>
+        <CustomColorPicker
+          value={title.styles.color}
+          onChange={handleColorChange}
+        />
+      </Box>
+      <Group wrap="nowrap" gap={"xs"}>
+        <Select
+          label="Font weight"
+          name="fontWeight"
+          data={FontWeights}
+          value={title.styles.fontWeight}
+          classNames={{ label: styles["label"] }}
+          onChange={handleFontWeightChange}
+        />
+        <NumberInput
+          min={10}
+          max={100}
+          defaultValue={18}
+          placeholder="size"
+          label="Font Size"
+          name="fontSize"
+          classNames={{ label: styles["label"] }}
+          value={title.styles.fontSize}
+          onChange={handleFontSizeChange}
+        />
+      </Group>
+    </Stack>
   );
 }
 

@@ -4,7 +4,7 @@ import tabsStyles from "@/components/Survey/SurveyTheme/components/PageSelector/
 
 import styles from "./StylesComponent.module.css";
 
-function EditorSelectionTabs({ data, value, onChange, className }) {
+function EditorSelectionTabs({ data, value, onChange, className = "" }) {
   return (
     <Tabs
       value={value}

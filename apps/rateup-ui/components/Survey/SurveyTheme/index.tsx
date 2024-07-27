@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { Box, Center, Group, Stack } from "@mantine/core";
+import { Box, Button, Center, Group, Stack } from "@mantine/core";
+import { IconEdit, IconPencil } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import { useAllThemes } from "../../../backend/surveyTheme/surveyTheme.query";
@@ -33,6 +34,8 @@ function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
   );
   const isThemeObjBeingEditedDefaultTheme =
     themeObjBeingEdited?.name === "Default Theme";
+
+  const [isSurveyThemeEditorOpen, setIsSurveyThemeEditorOpen] = useState(false);
 
   if (!surveyTheme)
     return (
@@ -74,34 +77,61 @@ function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
           </Group>
         )}
 
-        {initialSelectedPageTab &&
-          !(initialSelectedPageTab === ThemeTabEnum.SURVEY) && (
-            // This Will be dispayed only in the survey editor page to edit welcome and thankyou pages.
-            <Stack className={styles["survey-editor-page-header"]}>
-              <Group justify="space-between">
-                <ThemeSelector
-                  className={cx("theme-selector-div")}
-                  allThemesArr={allThemesArr}
-                  themeSelectorState={themeSelectorState}
-                  setThemeSelectorState={setThemeSelectorState}
-                  isAllThemesFetchPending={isAllThemesFetchPending}
-                  survey={survey}
-                />
-                <SaveButton
-                  className={styles["survey-editor-page-header-save-btn"]}
-                  survey={survey}
-                  isThemeObjBeingEditedDefaultTheme={
-                    isThemeObjBeingEditedDefaultTheme
-                  }
-                  themeObjBeingEdited={themeObjBeingEdited}
-                />
-              </Group>
+        {initialSelectedPageTab === ThemeTabEnum.SURVEY && (
+          // This Will be dispayed only in the survey editor page to edit welcome and thankyou pages.
+          <Stack className={styles["survey-editor-page-header"]}>
+            <Group justify="space-between">
+              <ThemeSelector
+                className={cx("theme-selector-div")}
+                allThemesArr={allThemesArr}
+                themeSelectorState={themeSelectorState}
+                setThemeSelectorState={setThemeSelectorState}
+                isAllThemesFetchPending={isAllThemesFetchPending}
+                survey={survey}
+              />
+              <Button
+                className={styles["open-close-survey-editor-btn"]}
+                leftSection={<IconEdit size={"1rem"} />}
+                onClick={() =>
+                  setIsSurveyThemeEditorOpen(!isSurveyThemeEditorOpen)
+                }
+              >
+                {isSurveyThemeEditorOpen ? "Close Editor" : "Open Editor"}
+              </Button>
+              <SaveButton
+                className={styles["survey-editor-page-header-save-btn"]}
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+              />
+            </Group>
+
+            {isSurveyThemeEditorOpen && (
               <StylesComponent
                 survey={survey}
                 isThemeObjBeingEditedDefaultTheme={
                   isThemeObjBeingEditedDefaultTheme
                 }
-                tabsForEditorSelection
+                themeObjBeingEdited={themeObjBeingEdited}
+                useTabsForEditorSelection
+              />
+            )}
+          </Stack>
+        )}
+
+        {initialSelectedPageTab &&
+          !(initialSelectedPageTab === ThemeTabEnum.SURVEY) && (
+            <Stack className={styles["survey-editor-page-header"]}>
+              <StylesComponent
+                survey={survey}
+                isThemeObjBeingEditedDefaultTheme={
+                  isThemeObjBeingEditedDefaultTheme
+                }
+                themeObjBeingEdited={themeObjBeingEdited}
+                useTabsForEditorSelection
+                displaySaveBtn
               />
             </Stack>
           )}
@@ -140,6 +170,7 @@ function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
                   isThemeObjBeingEditedDefaultTheme={
                     isThemeObjBeingEditedDefaultTheme
                   }
+                  themeObjBeingEdited={themeObjBeingEdited}
                 />
               </Box>
             </Box>

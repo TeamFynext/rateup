@@ -1,17 +1,19 @@
-import { Box, Flex, Slider, Stack } from "@mantine/core";
 import { useCallback } from "react";
-import { Button as ButtonType } from "../surveyTheme.types";
+
+import { Box, Flex, Slider, Stack } from "@mantine/core";
 
 import { COORDINATESX, COORDINATESY } from "../../../../utils/constants";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
+import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import { ThemeTabEnum } from "../SurveyTheme.enums";
+import { Button as ButtonType } from "../surveyTheme.types";
 import {
   useSelectedPageTab,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext";
-import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
+import styles from "./stylescomponent/StylesComponent.module.css";
 
 function ButtonStyles() {
   const selectedPageTab = useSelectedPageTab();
@@ -56,49 +58,49 @@ function ButtonStyles() {
   }, []);
 
   return (
-    <>
-      <Stack align="start" w={"100%"} gap={"1rem"}>
-        <Box className={"custom-color-picker-and-heading-container"}>
-          <h2>Background Color</h2>
-          <CustomColorPicker
-            value={button?.styles?.backgroundColor}
-            onChange={handleBackgroundColorChange}
-          />
-        </Box>
+    <Stack
+      className={`${styles["style-inputs-container"]} style-inputs-container ${styles["button-styles-div"]}`}
+    >
+      <Box className={"custom-color-picker-and-heading-container"}>
+        <h2>Background Color</h2>
+        <CustomColorPicker
+          value={button?.styles?.backgroundColor}
+          onChange={handleBackgroundColorChange}
+        />
+      </Box>
 
-        <Box className={"custom-color-picker-and-heading-container"}>
-          <h2>Text Color</h2>
-          <CustomColorPicker
-            value={button?.styles?.color}
-            onChange={handleTextColorChange}
-          />
-        </Box>
+      <Box className={"custom-color-picker-and-heading-container"}>
+        <h2>Text Color</h2>
+        <CustomColorPicker
+          value={button?.styles?.color}
+          onChange={handleTextColorChange}
+        />
+      </Box>
 
-        {selectedPageTab === ThemeTabEnum.WELCOME && (
-          <Box className={"styles-section-div"}>
-            <h2>Button position</h2>
-            <Flex gap={"sm"}>
-              <ContainedSelection
-                data={COORDINATESX}
-                placeholder="X axis"
-                defaultValue={button?.position?.x ?? COORDINATESX?.[1]}
-                onChange={handleXCoOrdinateChange}
-                allowDeselect={false}
-                label={"x axis"}
-              />
-              <ContainedSelection
-                data={COORDINATESY}
-                placeholder="Y axis"
-                defaultValue={button?.position?.y ?? COORDINATESY?.[3]}
-                onChange={handleYCoOrdinateChange}
-                allowDeselect={false}
-                label={"y axis"}
-              />
-            </Flex>
-          </Box>
-        )}
-      </Stack>
-    </>
+      {selectedPageTab === ThemeTabEnum.WELCOME && (
+        <Box className={"styles-section-div button-position-styles-div"}>
+          <h2>Button position</h2>
+          <Flex gap={"sm"}>
+            <ContainedSelection
+              data={COORDINATESX}
+              placeholder="X axis"
+              defaultValue={button?.position?.x ?? COORDINATESX?.[1]}
+              onChange={handleXCoOrdinateChange}
+              allowDeselect={false}
+              label={"x axis"}
+            />
+            <ContainedSelection
+              data={COORDINATESY}
+              placeholder="Y axis"
+              defaultValue={button?.position?.y ?? COORDINATESY?.[3]}
+              onChange={handleYCoOrdinateChange}
+              allowDeselect={false}
+              label={"y axis"}
+            />
+          </Flex>
+        </Box>
+      )}
+    </Stack>
   );
 }
 
