@@ -22,7 +22,7 @@ export async function callWaAmeliaApi(
     ...otherConfig,
   };
   log.trace(
-    "Calling wa amelia API with config: %s %s \n%o",
+    "Calling amelia API with config: %s %s \n%o",
     config.method,
     config.url,
     config.data,
