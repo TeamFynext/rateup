@@ -348,7 +348,7 @@ export enum ShopifySendAfter {
 export enum IntegratedApps {
   shopify = "Shopify",
   googlesheet = "Google Sheet",
-  waAmelia = "WaAmelia",
+  amelia = "amelia",
 }
 
 export enum MenuButtons {
