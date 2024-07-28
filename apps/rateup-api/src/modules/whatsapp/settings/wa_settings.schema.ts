@@ -17,6 +17,7 @@ const updateWaSettingsInputSchema = z.object({
     .object({
       publicKey: z.string().optional(),
       privateKey: z.string().optional(),
+      passphrase: z.string().optional(),
     })
     .optional()
     .nullable(),

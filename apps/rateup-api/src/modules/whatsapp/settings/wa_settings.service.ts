@@ -13,7 +13,11 @@ export async function createWaSettings(
   data: Omit<
     WhatsappSettings,
     "accessToken_iv" | "encryption" | "orgId" | "phone" | "webhookPassword"
-  > & { phone?: string; webhookPassword?: string },
+  > & {
+    phone?: string;
+    webhookPassword?: string;
+    encryption?: WaEncryptionKeys;
+  },
 ) {
   const accessToken = data.accessToken;
   if (!data.phone) {
