@@ -261,6 +261,11 @@ export async function deleteOrg(orgId: string): Promise<string> {
         },
       });
 
+      await prisma.order.updateMany({
+        where: { createdById: { in: memberList } },
+        data: { createdById: null },
+      });
+
       // Delete the organization
       await prisma.org.delete({
         where: {
