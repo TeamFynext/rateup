@@ -18,7 +18,7 @@ const index = () => {
         return {
           src: "/images/googlesheeticon.png",
         };
-      case IntegratedApps.waAmelia:
+      case IntegratedApps.amelia:
         return {
           src: "/images/amelia.png",
         };
