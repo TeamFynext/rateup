@@ -12,7 +12,9 @@ import {
 } from "../flows/flow.service";
 import { WhatsappSettings } from "@prisma/client";
 
-export function generateKeyPairsForWaEncryption(passphrase: string) {
+export function generateKeyPairsForWaEncryption(
+  passphrase: string,
+): WaEncryptionKeys {
   const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
     publicKeyEncoding: {
@@ -118,14 +120,10 @@ export const FlowEndpointException = class FlowEndpointException extends Error {
   }
 };
 
-async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
+export async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
   const { phoneId, accessToken, orgId } = waSettings;
-  const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
-  log.trace("Passphrase: %s", passphrase);
-
-  if (!passphrase) {
-    throw new Error("WA_ENCRYPTION_PASSPHRASE is not set in .env file");
-  }
+  const passphrase = crypto.randomBytes(16).toString("hex");
+  log.trace("Passphrase generated");
 
   log.trace("Generating new key pairs for encryption");
   const encryption = generateKeyPairsForWaEncryption(passphrase);
@@ -136,12 +134,6 @@ async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
   log.trace("Updating encryption keys in database");
   await updateWaSettings(orgId, { encryption });
   log.trace("Encryption keys updated successfully");
-}
-
-interface WaEncryptionKeys {
-  publicKey: string;
-  privateKey: string;
-  passphrase: string;
 }
 
 export async function handleFlowResponse(

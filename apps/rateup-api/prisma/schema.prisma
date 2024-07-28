@@ -172,7 +172,7 @@ model WhatsappSettings {
   webhookPassword String?
 
   type String // enums.ts: WaConfigType
-
+  /// [PWaEncryptionKeys]
   encryption Json? // for flow {publicKey: string, privateKey: string}
 }
 

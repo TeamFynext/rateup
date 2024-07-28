@@ -53,7 +53,9 @@ export async function getWaSettingsHandler(
 }
 
 export async function updateWaSettingsHandler(
-  req: FastifyRequest<{ Body: updateWaSettingsInput }>,
+  req: FastifyRequest<{
+    Body: updateWaSettingsInput & { encryption?: WaEncryptionKeys };
+  }>,
   res: FastifyReply,
 ) {
   const org = await getOrgIdAndRole({ id: req.userId });

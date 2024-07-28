@@ -305,7 +305,11 @@ declare global {
     prefix: string;
     suffix: string;
   };
-
+  type WaEncryptionKeys = {
+    publicKey: string;
+    privateKey: string;
+    passphrase: string;
+  };
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
@@ -321,6 +325,7 @@ declare global {
     type PWaTemplateComponentParams = WaTemplateSendComponent;
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
+    type PWaEncryptionKeys = WaEncryptionKeys;
   }
 }
 export interface FlowLogicCondition {
