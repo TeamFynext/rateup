@@ -256,7 +256,7 @@ model Survey {
   /// [PQuestion]
   questions                         Json[]            @default([])
   languages                         String[]
-  user                              User              @relation(fields: [createdBy], references: [id])
+  user                              User              @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   createdBy                         String            @db.Uuid
   teams                             SurveyTeamMap[]
   active                            Boolean           @default(true)
