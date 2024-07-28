@@ -766,8 +766,8 @@ model Order {
   id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String
   createdAt            DateTime            @default(now())
-  createdBy            User                @relation(fields: [createdById], references: [id])
-  createdById          String              @db.Uuid
+  createdBy            User?                @relation(fields: [createdById], references: [id])
+  createdById          String?              @db.Uuid
   org                  Org?                 @relation(fields: [orgId], references: [id])
   orgId                String?              @db.Uuid
   deletedOrgInfo       String?
