@@ -232,31 +232,49 @@ export async function deleteOrg(orgId: string): Promise<string> {
   console.log("..........................deleting org............." + orgId);
 
   try {
+    const org = await prisma.org.findUnique({
+      where: { id: orgId },
+      select: { name: true },
+    });
+
+    if (!org) {
+      throw new Error(`Organization with ID ${orgId} not found.`);
+    }
+
+    const orgName = org.name;
+
     const members = await prisma.orgMember.findMany({
       where: { orgId: orgId },
       select: {
-        userId: true
-      }
+        userId: true,
+      },
     });
 
-    const memberList = members.map(m => m.userId);
+    const memberList = members.map((m) => m.userId);
     // Start a transaction
     const result = await prisma.$transaction(async (prisma) => {
+      await prisma.order.updateMany({
+        where: { orgId: orgId },
+        data: {
+          orgId: null,
+          deletedOrgInfo: orgName,
+        },
+      });
 
       // Delete the organization
       await prisma.org.delete({
         where: {
-          id: orgId
-        }
+          id: orgId,
+        },
       });
 
       // Delete users (some invited users missing org relation)
       await prisma.user.deleteMany({
         where: {
           id: {
-            in: memberList
-          }
-        }
+            in: memberList,
+          },
+        },
       });
 
       // Return a promise that resolves to null to indicate success within the transaction
@@ -276,7 +294,6 @@ export async function deleteOrg(orgId: string): Promise<string> {
     return "Error occurred while deleting organization.";
   }
 }
-
 
 export async function getOrgStats(orgId: string) {
   const org = await prisma.org.findUnique({

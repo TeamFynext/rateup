@@ -768,8 +768,9 @@ model Order {
   createdAt            DateTime            @default(now())
   createdBy            User                @relation(fields: [createdById], references: [id])
   createdById          String              @db.Uuid
-  org                  Org                 @relation(fields: [orgId], references: [id])
-  orgId                String              @db.Uuid
+  org                  Org?                 @relation(fields: [orgId], references: [id])
+  orgId                String?              @db.Uuid
+  deletedOrgInfo       String?
   status               OrderStatus         @default(PENDING)
   priceId              String? // stripe price
   planId               String? // razorpay plan
