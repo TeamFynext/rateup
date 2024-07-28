@@ -202,9 +202,9 @@ export default function SurveyID(translations) {
                 {user?.role !== UserRole.MEMBER && (
                   <Tabs.List>
                     <Tabs.Tab value={TabEnum.Edit}>Edit</Tabs.Tab>
-                    {survey?.type !== SurveyType.WhatsApp && (
+                    {/* {survey?.type !== SurveyType.WhatsApp && (
                       <Tabs.Tab value={TabEnum.Theme}>Theme</Tabs.Tab>
-                    )}
+                    )} */}
                     <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
                     <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
                     <Tabs.Tab value={TabEnum.Result}>Result</Tabs.Tab>
@@ -297,11 +297,11 @@ export default function SurveyID(translations) {
               <Tabs.Panel value={TabEnum.Share}>
                 <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
               </Tabs.Panel>
-              {survey?.type !== SurveyType.WhatsApp && (
+              {/* {survey?.type !== SurveyType.WhatsApp && (
                 <Tabs.Panel value={TabEnum.Theme}>
                   <SurveyTheme survey={survey} />
                 </Tabs.Panel>
-              )}
+              )} */}
             </Box>
           </StyledTabs>
         </SurveyContext.Provider>

@@ -9,18 +9,21 @@ export enum SurveyType {
 
 export enum PageType {
   Welcome = "Welcome",
+  Language = "Language",
   ThankYou = "ThankYou",
   Custom = "Custom",
 }
 
 export enum PageTitle {
   Welcome = "Welcome Page",
+  Language = "Language Page",
   ThankYou = "ThankYou Page",
   Custom = "Custom HTML Page",
 }
 
 export enum PageDescription {
   Welcome = "This is the first page to welcome",
+  Language = "This is the second page for language selection",
   ThankYou = "This is the End Page of the survey",
   Custom = "",
 }
