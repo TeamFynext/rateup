@@ -9,6 +9,7 @@ export enum PageType {
   Welcome = "Welcome",
   ThankYou = "ThankYou",
   Custom = "Custom",
+  Language = "Language",
 }
 
 export enum QuestionType {
