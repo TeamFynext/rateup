@@ -60,15 +60,15 @@ export async function registerBusinessClientHandler(
     const subRes = await subscribeWABAToWebhook(wabaId, accessToken);
     log.trace("App subscription response: %o", subRes);
 
+    // Registering phone number
+    const registerRes = await registerPhoneNumber(phone.id, accessToken);
+    log.trace("Phone registration response: %o", registerRes);
+
     // Setting up encryption keys
     const keys: WaEncryptionKeys = await generateKeyPairsForWaEncryption(
       crypto.randomBytes(16).toString("hex"),
     );
     await setBusinessPublicKey(keys.publicKey, phone.id, accessToken);
-
-    // Registering phone number
-    const registerRes = await registerPhoneNumber(phone.id, accessToken);
-    log.trace("Phone registration response: %o", registerRes);
     // Saving settings
     await createWaSettings(orgId, {
       wabaId,
