@@ -72,6 +72,7 @@ model User {
   isPaused       Boolean?        @default(false)
   pausedBy       String?
   prefLanguage   String?         @default("English")
+  deletedAt      DateTime?
   org            Org[]
   orgMember      OrgMember[]
   teamMember     TeamMember[]
