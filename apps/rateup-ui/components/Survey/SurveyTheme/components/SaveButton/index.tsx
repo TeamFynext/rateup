@@ -4,6 +4,8 @@ import { Button, Group, Text } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { docsPath, SAVE_HOTKEY } from "../../../../../utils/constants";
 import InfoButton from "../../../../Button/InfoButton";
@@ -39,7 +41,7 @@ function SaveButton({
   }
 
   const [isSaving, setIsSaving] = useState(false);
-
+  const { translations } = useTranslations();
   const updateSurveyTheme = useUpdateSurveyTheme(
     themeObjBeingEdited?.id,
     survey?.id,
@@ -102,10 +104,10 @@ function SaveButton({
         onClick={handleSaveTheme}
       >
         {isThemeObjBeingEditedDefaultTheme
-          ? "Apply"
+          ? translations["Apply"]
           : selectedPageTab === ThemeTabEnum.SURVEY
-            ? "Save & Apply"
-            : "Save"}
+            ? translations["Save & Apply"]
+            : translations["Save"]}
       </Button>
     </Group>
   );

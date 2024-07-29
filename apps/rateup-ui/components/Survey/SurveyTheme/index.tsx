@@ -4,6 +4,8 @@ import { Box, Button, Center, Group, Stack } from "@mantine/core";
 import { IconEdit, IconPencil } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useAllThemes } from "../../../backend/surveyTheme/surveyTheme.query";
 import PageSelector from "./components/PageSelector";
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
@@ -20,7 +22,7 @@ const cx = classNames.bind(styles);
 
 function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
-
+  const { translations, loadingTranslations } = useTranslations();
   // selected surveyThemeId.
   const [themeSelectorState, setThemeSelectorState] = useState(
     survey?.webSurveyThemeId,
@@ -40,7 +42,7 @@ function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
   if (!surveyTheme)
     return (
       <Center h={"100%"}>
-        <p>Unable to get theme, please try again later</p>
+        <p>{translations["Unable to get theme, please try again later"]}</p>
       </Center>
     );
 
