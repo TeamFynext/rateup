@@ -142,6 +142,8 @@ model UsageStats {
   menusCount             Int @default(0)
   menuViewsCount         Int @default(0)
   messagesCount          Int @default(0)
+  aiPromptTokensCount     Int @default(0)
+  aiCompletionTokensCount    Int @default(0)
 
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)

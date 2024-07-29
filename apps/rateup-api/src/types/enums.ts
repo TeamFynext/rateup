@@ -49,7 +49,7 @@ export enum QuestionType {
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
-  WaTimeSlot = "Dropdown",
+  WaTimeSlot = "WaTimeSlot",
 }
 
 export enum LDResponse {
@@ -192,6 +192,7 @@ export enum SubscriptionFeaturePathName {
   Team = "team",
   TeamMember = "team.teamMember",
   Ticket = "ticket",
+  AI = "ai",
 }
 export enum WaFlowLayoutType {
   scl = "SingleColumnLayout",
@@ -289,4 +290,9 @@ export enum ShopifySendAfter {
   TenHour = "10 hour",
   OneDay = "1 day",
   TwoDays = "2 Days",
+}
+
+export enum ResponseSummaryType {
+  All = "all",
+  Team = "team",
 }
