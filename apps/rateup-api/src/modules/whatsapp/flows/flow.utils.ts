@@ -399,7 +399,7 @@ export function getFlowJsonWithTitleAndDescription(
   map: any,
   survey: Survey,
 ): WaFlowJson {
-  let fj: WaFlowJson = JSON.parse(JSON.stringify(flowJson));
+  let fj = JSON.parse(JSON.stringify(flowJson));
   for (const screen of fj.screens) {
     for (const screenElement of screen.layout.children) {
       if (screenElement.type === "Form") {
@@ -471,8 +471,6 @@ export function getFlowJsonWithTitleAndDescription(
       }
     }
   }
-  fj.data_api_version = "3.0";
-  fj.routing_model = {};
   return fj;
 }
 const lang = "en";

@@ -35,6 +35,7 @@ import {
 import { createSurveyFromFlow } from "./flow.utils";
 import { log } from "../../../utils/logger";
 import {
+  QuestionType,
   SubscriptionFeaturePathName,
   SurveyType,
   WaFlowStatus,
@@ -223,11 +224,16 @@ export async function updateFlowHandler(
     ...req.body,
     pendingSave: true,
   });
+  const updatedWaAppIntegration = updatedFlow?.survey?.questions?.some(
+    (qs: any) =>
+      qs.type === QuestionType.Date && qs?.onSelectAction && qs?.waAppName,
+  );
 
   // add data_channel_uri if logic jumps are updated
   if (
-    Object.keys(previousFlow.logicJumps).length === 0 &&
-    Object.keys(updatedFlow.logicJumps).length > 0
+    (Object.keys(previousFlow.logicJumps).length === 0 &&
+      Object.keys(updatedFlow.logicJumps).length > 0) ||
+    updatedWaAppIntegration
   ) {
     log.trace("updating data_channel_uri in wa %s", updatedFlow.flowId);
 
