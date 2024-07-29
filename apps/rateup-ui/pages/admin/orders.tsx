@@ -1,9 +1,10 @@
-import { Stack, Group, Title, Box } from "@mantine/core";
+import { Box, Group, Stack, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
+import dayjs from "dayjs";
+
 import { usePaymentOrders } from "../../backend/payment/payment.query";
 import styles from "../../components/adminPanel/admin.module.css";
-import dayjs from "dayjs";
 import RefreshButton from "../../components/Button/RefreshButton";
 
 const Orders = () => {
@@ -34,11 +35,12 @@ const Orders = () => {
   const rows = isFetched
     ? allOrders?.map((order) => ({
         id: order.id,
-        name: order.name,
-        orgname: order.org.name,
+        name: order?.name,
+        orgname: order?.org?.name || "DELETED ORG",
         subId: order.subscriptionId,
-        status: order.status,
-        createdBy: order.createdBy.name || order.createdBy.email,
+        status: order?.status,
+        createdBy:
+          order?.createdBy?.name || order?.createdBy?.email || "DELETED",
         createdAt: dayjs(order.createdAt).format("DD/MM/YYYY HH:mm:ss"),
       }))
     : [];
