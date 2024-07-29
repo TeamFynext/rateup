@@ -145,6 +145,7 @@ const ResultsOverview = ({ surveyId }) => {
     getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags);
 
   useEffect(() => {
+    if (!filteredResponsesByTags || !filteredResponsesByTags?.length) return;
     if (ranges.length === 0) {
       const endDate = dayjs();
       let startDate = dayjs();
