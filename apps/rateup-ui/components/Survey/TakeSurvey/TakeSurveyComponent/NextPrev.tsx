@@ -34,6 +34,7 @@ function NextPrev({
   isSurveyThemePreview = false,
   isWelcomePageEnabled = false,
   isThankYouPageEnabled = false,
+  isLanguagePageEnabled = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -96,7 +97,9 @@ function NextPrev({
 
   if (!survey) return null;
   const isFirstQuestion = isWelcomePageEnabled
-    ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 1
+    ? isLanguagePageEnabled
+      ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 2
+      : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 1
     : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 0;
 
   const isLastQuestion = isThankYouPageEnabled

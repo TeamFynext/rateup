@@ -55,9 +55,6 @@ function StylesComponent({
         {isThemeObjBeingEditedDefaultTheme && (
           <Overlay className={surveyThemeStyles["overlay"]} />
         )}
-        {selectedPageTab === ThemeTabEnum.WELCOME && !isWelcomePageEnabled && (
-          <Overlay className={surveyThemeStyles["overlay"]} />
-        )}
 
         {useTabsForEditorSelection ? (
           <Group className={styles["tabs-list-tabs-comp-container"]}>

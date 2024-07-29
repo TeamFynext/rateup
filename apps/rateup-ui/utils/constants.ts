@@ -97,9 +97,14 @@ export const BasicPages = [
   PageType.Welcome,
   PageType.ThankYou,
   PageType.Custom,
+  PageType.Language,
 ];
 
-export const uniquePages = [PageType.Welcome, PageType.ThankYou];
+export const uniquePages = [
+  PageType.Welcome,
+  PageType.Language,
+  PageType.ThankYou,
+];
 
 export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 

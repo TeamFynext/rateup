@@ -58,6 +58,8 @@ export function getPageTypeLabel(type: PageType) {
       return "Custom HTML Page";
     case PageType.ThankYou:
       return "Thank You Page";
+    case PageType.Language:
+      return "Language Page";
     default:
       return false;
   }

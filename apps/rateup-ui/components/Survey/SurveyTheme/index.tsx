@@ -143,7 +143,6 @@ function SurveyTheme({ survey, initialSelectedPageTab = undefined }) {
             className={`${cx("theme-preview-container")} theme-preview-container`}
           >
             <PreviewDeviceButtons />
-            <WelcomePageSwitch survey={survey} />
             <SurveyThemePreviewLayout
               survey={survey}
               isThemeObjBeingEditedDefaultTheme={
