@@ -146,8 +146,16 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     "https://images.unsplash.com",
   );
 
+  const getRootElementForMantineProvider: () => HTMLElement = () => {
+    return typeof window === "undefined"
+      ? undefined
+      : document.querySelector(`.${styles["take-survey-layout-web-root-div"]}`);
+  };
+
   return (
     <MantineProvider
+      cssVariablesSelector={`.${styles["take-survey-layout-web-root-div"]}`}
+      getRootElement={getRootElementForMantineProvider}
       theme={{
         colors: {
           // @ts-ignore

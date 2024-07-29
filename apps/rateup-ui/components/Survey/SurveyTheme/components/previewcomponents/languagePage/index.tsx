@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   Box,
@@ -11,22 +13,22 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
+import { IconChevronRight, IconEdit } from "@tabler/icons-react";
+import classNames from "classnames/bind";
+
 import { lexend } from "../../../../../../utils/fonts";
+import { CreditsCard } from "../../../../../Card/CreditsCard";
+import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
+import { SingleSelectCard } from "../../../../TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
+import { SelectedItemEnum } from "../../../SurveyTheme.enums";
+import surveyThemeStyles from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
   useSetSelectedEditor,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
-import { SelectedItemEnum } from "../../../SurveyTheme.enums";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { IconChevronRight, IconEdit } from "@tabler/icons-react";
 import styles from "./languagePage.module.css";
-import surveyThemeStyles from "../../../SurveyTheme.module.css";
-import classNames from "classnames/bind";
-import { SingleSelectCard } from "../../../../TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
-import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
-import { CreditsCard } from "../../../../../Card/CreditsCard";
 
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
@@ -151,6 +153,7 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
                   onChange={handleSubtitleInputChange}
                   ref={subtitleInputRef}
                   onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
+                  autoComplete="off"
                 />
 
                 <ActionIcon
@@ -184,6 +187,7 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
                   onChange={handleTitleInputChange}
                   ref={titleInputRef}
                   onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
+                  autoComplete="off"
                 />
 
                 <ActionIcon
@@ -258,6 +262,7 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
                     color: buttonStyles.color,
                   },
                 }}
+                autoComplete="off"
               />
 
               <ActionIcon

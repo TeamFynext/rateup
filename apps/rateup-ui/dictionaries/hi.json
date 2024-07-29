@@ -80,7 +80,6 @@
   "web": "वेब",
   "whatsapp": "व्हाट्सएप",
   "Members": "सदस्य",
-
   "An error occurred!": "एक त्रुटि हुई!",
   "Unable to get theme, please try again later": "थीम प्राप्त करने में असमर्थ, कृपया बाद में पुनः प्रयास करें",
   "Apply": "लागू करें",
@@ -88,5 +87,6 @@
   "Survey Page": "सर्वेक्षण पृष्ठ",
   "Welcome Page": "स्वागत पृष्ठ",
   "Thankyou Page": "धन्यवाद पृष्ठ",
-  "Language Page": "भाषा पृष्ठ"
+  "Language Page": "भाषा पृष्ठ",
+  "Save": "सहेजें"
 }

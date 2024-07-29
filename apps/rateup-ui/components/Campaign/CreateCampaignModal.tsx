@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 import { Box, Flex, Group, SimpleGrid, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
@@ -57,19 +55,6 @@ const CreateCampaignModal = ({
     });
   const form = useForm<z.infer<typeof schema>>({
     initialValues: {
-      name: "",
-      type: CampaignType.WHATSAPP,
-      teamId: "",
-      surveyTeamMapId: "",
-      waTemplateId: "",
-      flowId: "",
-      dynamicTags: [],
-    },
-    validate: zodResolver(schema),
-  });
-
-  useEffect(() => {
-    form.setValues({
       name: campaign?.name || "",
       type: campaign?.type || CampaignType.WHATSAPP,
       teamId: campaign?.teamId || "",
@@ -77,8 +62,9 @@ const CreateCampaignModal = ({
       waTemplateId: campaign?.waTemplateId || "",
       flowId: campaign?.flowId || "",
       dynamicTags: campaign?.dynamicTags || [],
-    });
-  }, [campaign]);
+    },
+    validate: zodResolver(schema),
+  });
 
   let dynamicVariableData = ["name", ...(campaign?.contactTags || [])];
 

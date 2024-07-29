@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 
 import {
   ActionIcon,
@@ -6,7 +6,6 @@ import {
   Box,
   Flex,
   Image,
-  Overlay,
   Textarea,
   TextInput,
   Tooltip,
@@ -14,11 +13,10 @@ import {
 import { IconEdit } from "@tabler/icons-react";
 
 import { cordinateStyle } from "../../../../../../utils";
-import { surveyUploadsPath } from "../../../../../../utils/constants";
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
-import { PreviewTypeEnum, SelectedItemEnum } from "../../../SurveyTheme.enums";
+import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
@@ -104,7 +102,6 @@ export default function WelcomePageThemeView({
       style={{ backgroundColor }}
       ff={lexend300.style.fontFamily}
     >
-      {!isWelcomePageEnabled && <Overlay className={classes["overlay"]} />}
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith(
           "https://images.unsplash.com",

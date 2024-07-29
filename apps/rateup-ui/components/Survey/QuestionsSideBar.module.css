@@ -3,17 +3,14 @@
 }
 
 .add-question-btn-more-than-1-que {
+  position: relative;
   border-bottom: 1px solid var(--mantine-color-gray-4);
   padding-bottom: 1rem;
   padding: 1rem;
 }
 
-.survey-preview-btn {
-  height: 100%;
-  padding: 0.3125rem 1rem;
-}
-
 .questions-list-container {
+  z-index: 5;
   flex: 1 1 0;
   overflow: auto;
   padding: 1rem;

@@ -9,8 +9,12 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { docsPath, SAVE_HOTKEY } from "../../../../../utils/constants";
 import InfoButton from "../../../../Button/InfoButton";
+import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
-import { useSurveyThemeContextValue } from "../../SurveyThemeContext";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+} from "../../SurveyThemeContext";
 import styles from "./SaveButton.module.css";
 
 function SaveButton({
@@ -19,6 +23,8 @@ function SaveButton({
   themeObjBeingEdited,
   isThemeObjBeingEditedDefaultTheme,
 }) {
+  const selectedPageTab = useSelectedPageTab();
+
   const themeObjState = useSurveyThemeContextValue();
   let themeObjFromApi = themeObjState;
   if (themeObjBeingEdited) {
@@ -78,7 +84,7 @@ function SaveButton({
   return (
     <Group
       justify="center"
-      className={`${styles["save-button-root-div"]} ${className}`}
+      className={`${styles["save-button-root-div"]} save-button-root-div ${className}`}
     >
       <InfoButton docUrl={`${docsPath}/webSurvey/surveyTheme/themes`} />
       <Text
@@ -99,7 +105,9 @@ function SaveButton({
       >
         {isThemeObjBeingEditedDefaultTheme
           ? translations["Apply"]
-          : translations["Save & Apply"]}
+          : selectedPageTab === ThemeTabEnum.SURVEY
+            ? translations["Save & Apply"]
+            : translations["Save"]}
       </Button>
     </Group>
   );

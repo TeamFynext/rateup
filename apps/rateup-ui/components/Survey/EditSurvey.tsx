@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 import { Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+import { v4 as uuidv4 } from "uuid";
 
 import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../backend/surveys/surveys.query";
@@ -56,8 +57,16 @@ export function EditSurvey({
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const { surveyId } = useContext(SurveyContext);
-  const { data: survey } = useSurvey(surveyId);
+  const { data: survey, dataUpdatedAt } = useSurvey(surveyId);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  console.log({ activeTab });
+  // used to rerender survey theme preview, when questions reoredered or deleted and when survey changes.
+  const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
+
+  useEffect(() => {
+    const newKey = uuidv4();
+    setSurveyPreveiwCompKey(newKey);
+  }, [survey, questions]);
 
   useEffect(() => {
     if (!selectedQ) return;
@@ -94,6 +103,8 @@ export function EditSurvey({
     intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.WELCOME;
   } else if (selectedQ?.type === PageType.ThankYou) {
     intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.THANKYOU;
+  } else if (selectedQ?.type === PageType.Language) {
+    intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.LANGUAGE;
   }
 
   return (
@@ -216,6 +227,7 @@ export function EditSurvey({
           >
             {survey && (
               <SurveyTheme
+                key={surveyPreviewCompKey}
                 initialSelectedPageTab={ThemeTabEnum.SURVEY}
                 survey={survey}
               />

@@ -187,8 +187,13 @@
   margin-bottom: 1rem;
 }
 
+.open-close-survey-editor-btn {
+  border-radius: 1rem;
+}
+
 .survey-editor-page-header .theme-selector-div {
   box-shadow: none;
+  padding-left: 0;
 }
 
 .survey-editor-page-header :global(.styles-component-div) {
@@ -213,6 +218,29 @@
   min-width: 18.75rem;
 }
 
-.survey-editor-page-header .survey-editor-page-header-save-btn {
+.survey-editor-page-header :global(.save-button-root-div) {
   width: auto;
+}
+
+.survey-editor-page-header :global(.style-inputs-container) {
+  gap: 2rem;
+  flex-direction: row;
+}
+
+.survey-editor-page-header :global(.background-style-inputs-div) {
+  align-items: center;
+}
+
+.survey-editor-page-header :global(.header-style-inputs-container),
+.survey-editor-page-header :global(.desc-style-inputs-container) {
+  align-items: flex-end;
+}
+
+.survey-editor-page-header :global(.logo-style-inputs-container) {
+  align-items: flex-end;
+}
+
+.survey-editor-page-header
+  :global(.logo-style-inputs-container .upload-logo-divider) {
+  display: none;
 }

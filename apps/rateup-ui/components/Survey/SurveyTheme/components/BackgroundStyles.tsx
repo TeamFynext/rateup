@@ -1,3 +1,5 @@
+import { ReactNode, useCallback } from "react";
+
 import {
   Box,
   Checkbox,
@@ -7,10 +9,11 @@ import {
   RadioGroup,
   Stack,
 } from "@mantine/core";
-import { ReactNode, useCallback } from "react";
+
 import LocalOrUnsplashImagePicker from "../../../LocalOrUnsplashImagePicker";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
+import { ThemeTabEnum } from "../SurveyTheme.enums";
 import {
   useSelectedPageTab,
   useSelectedPreview,
@@ -18,7 +21,6 @@ import {
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext";
 import CustomSwitch from "./stylescomponent/CustomSwitch";
-import { ThemeTabEnum } from "../SurveyTheme.enums";
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function BackgroundStyles() {
@@ -93,7 +95,9 @@ function BackgroundStyles() {
   const useSurveyBackground = !isSurveyPageTab && bg.useSurveyBackground;
 
   return (
-    <Stack align="start" w={"100%"} gap={"1rem"}>
+    <Stack
+      className={`${styles["style-inputs-container"]} style-inputs-container background-style-inputs-div`}
+    >
       {selectedPageTab === ThemeTabEnum.THANKYOU && (
         <CustomSwitch
           checked={confettiEnabled}
