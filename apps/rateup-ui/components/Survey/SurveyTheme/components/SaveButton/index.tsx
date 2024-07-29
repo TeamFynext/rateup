@@ -5,6 +5,7 @@ import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { showErrorToast } from "@/utils/notifications";
 
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import { docsPath, SAVE_HOTKEY } from "../../../../../utils/constants";
@@ -48,6 +49,10 @@ function SaveButton({
   );
 
   const handleSaveTheme = useCallback(async () => {
+    if (!themeObjBeingEdited?.id) {
+      showErrorToast("Please select a theme.", "theme-not-selected-error");
+      return;
+    }
     setIsSaving(true);
 
     const {
