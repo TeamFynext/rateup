@@ -18,8 +18,12 @@ import PasswordLess from "supertokens-node/recipe/passwordless";
 import { cloneSurvey } from "../survey/survey.service";
 import { cloneMenu } from "../menu/menu.service";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
-import { getUserInfo } from "../../utils/supertoken/supertoken";
+import {
+  deleteSuperTokenUserForId,
+  getUserInfo,
+} from "../../utils/supertoken/supertoken";
 import { UserRecipes } from "../../types/enums";
+import dayjs from "dayjs";
 
 const prisma = new PrismaClient();
 
@@ -359,13 +363,36 @@ export async function getUserByEmail(email: string) {
 export { createUser, getOrgIdAndRole };
 
 //this service is for updating the account-active status of user. Currently used for soft deleting the user.
+//email id also invalidated & removed from supertoken
+
 export async function updateUserActiveStatus(userId: string) {
+  const userData = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  const formattedDate = dayjs().format("ms");
+  const deletedUserEmail = "deleted" + formattedDate + "#" + userData?.email;
+
+  console.log("Soft Deleted User: ", deletedUserEmail);
+
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
+      email: deletedUserEmail,
       active: false,
+      deletedAt: new Date(),
     },
   });
+
+  if (user.id) {
+    await deleteSuperTokenUserForId(user.id); // REMOVE FROM SUPERTOKEN
+  }
+
   return user;
 }
 
