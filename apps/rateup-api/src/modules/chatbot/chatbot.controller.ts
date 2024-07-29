@@ -10,6 +10,7 @@ import {
   UserIdInput,
 } from "./chatbot.schema";
 import {
+  AI_API_URL,
   createChatbot,
   deleteChatHistory,
   deleteEmbeddedSource,
@@ -25,6 +26,7 @@ import {
   uploadSourceForEmbed,
 } from "./chatbot.service";
 import { createJWT } from "../../utils/jwt";
+import axios from "axios";
 
 export async function uploadSourceForEmbedHandler(
   request: FastifyRequest<{
@@ -226,5 +228,22 @@ export async function updateChatbotDetailsHanlder(
   } catch (error) {
     console.error(error);
     reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function getAxiosAIClient(request: FastifyRequest) {
+  try {
+    const jwtToken = await createJWT(request.user);
+    const axiosAIClient = axios.create({
+      baseURL: AI_API_URL,
+      timeout: 60000,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
+    return axiosAIClient;
+  } catch (e) {
+    console.error("Error getting axios ai client", e);
   }
 }

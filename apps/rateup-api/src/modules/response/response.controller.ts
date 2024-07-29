@@ -5,6 +5,7 @@ import {
   DeleteResponseParamsSchema,
   GenerateBodyInput,
   generateXlsxBody,
+  SummarizeInput,
 } from "./response.schema";
 import {
   createResponse,
@@ -13,6 +14,7 @@ import {
   generateResponse,
   getAllResponses,
   getResponses,
+  getResponseSummary,
   resetResponsesStats,
   saveResponseToGoogleSheet,
   sendEmailOnResponseCreation,
@@ -29,6 +31,7 @@ import { getQuestionsBySurveyId } from "../question/question.service";
 import { log } from "../../utils/logger";
 import { updateInvoice } from "../survey/survey.service";
 import prisma from "../../utils/prisma";
+import { getSubscription } from "../subscription/subscription.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -238,5 +241,33 @@ export async function syncResponseToGoogleSheetHandler(
     else if (e.response.data.error)
       reply.code(500).send({ error: e.response.data.error });
     else reply.code(500).send(e);
+  }
+}
+
+export async function summarizeResponseHandler(
+  request: FastifyRequest<{ Params: GetResponsesParams; Body: SummarizeInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { surveyId } = request.params;
+    const { type, questionId } = request.body;
+    const teamId = request.body.teamId;
+    const subscription = await getSubscription(request.user.orgId);
+    if (!subscription) return reply.code(403).send("Subscription not found");
+    const aiFeature = subscription.features.ai;
+    if (!aiFeature || !aiFeature.active)
+      return reply.code(403).send("You are not subscribed to AI Features");
+    const res = await getResponseSummary(
+      surveyId,
+      request,
+      aiFeature.count,
+      type,
+      questionId,
+      teamId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
   }
 }

@@ -2,9 +2,12 @@ import axios from "axios";
 import { dataSourceUploadInput } from "./chatbot.schema";
 import { getShortUrlId } from "../../utils/commnUtils";
 import prisma from "../../utils/prisma";
+import { FastifyRequest } from "fastify";
+import { getAxiosAIClient } from "./chatbot.controller";
 
 const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
 const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;
+export const AI_API_URL = `${process.env.CHATBOT_API_URL}/api`;
 
 export async function uploadSourceForEmbed(
   data: dataSourceUploadInput,
@@ -127,4 +130,24 @@ export async function getChatbotDetailsByShortUrlId(shortUrlId: string) {
       shortUrlId,
     },
   });
+}
+
+export async function getTextSummaryByAI(
+  texts,
+  request: FastifyRequest,
+  allowedTokens,
+) {
+  try {
+    const axiosAIClient = await getAxiosAIClient(request);
+    const res = await axiosAIClient.post(`/chatbot/summarize`, {
+      texts,
+      allowedTokens,
+    });
+    return res.data as {
+      summary: string;
+      tokenUsage: { completionTokens: number; promptTokens: number };
+    };
+  } catch (err) {
+    throw `Error in getting text summary, ${err?.response?.data ?? err}`;
+  }
 }

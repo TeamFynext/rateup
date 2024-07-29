@@ -7,6 +7,7 @@ import {
   getAllResponsesHandler,
   getResponsesHandler,
   resetResponsesHandler,
+  summarizeResponseHandler,
   syncResponseToGoogleSheetHandler,
 } from "./response.controller";
 import { verifyAccess } from "./response.auth";
@@ -82,5 +83,15 @@ export async function responseRoutes(server: FastifyInstance) {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     syncResponseToGoogleSheetHandler,
+  );
+
+  server.post(
+    "/summarize/:surveyId",
+    {
+      schema: {
+        body: $Rref("summarizeSchema"),
+      },
+    },
+    summarizeResponseHandler,
   );
 }

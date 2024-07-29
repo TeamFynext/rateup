@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
-import { QuestionType } from "../../types/enums";
+import { QuestionType, ResponseSummaryType } from "../../types/enums";
 import { ResponsePlatform } from "@prisma/client";
 
 // Individual question response
@@ -85,6 +85,12 @@ const generateXlsxSchema = z.object({
   campaignIds: z.array(z.string()),
 });
 
+export const summarizeSchema = z.object({
+  type: z.nativeEnum(ResponseSummaryType),
+  questionId: z.string(),
+  teamId: z.string().optional(),
+});
+
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   createResponseInputSchema,
   getResponsesParamsSchema,
@@ -93,6 +99,7 @@ export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   generateBodySchema,
   getResponsesBodySchema,
   generateXlsxSchema,
+  summarizeSchema,
 });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
@@ -104,3 +111,4 @@ export type DeleteResponseParamsSchema = z.infer<
 export type GenerateBodyInput = z.infer<typeof generateBodySchema>;
 export type getResponsesBody = z.infer<typeof getResponsesBodySchema>;
 export type generateXlsxBody = z.infer<typeof generateXlsxSchema>;
+export type SummarizeInput = z.infer<typeof summarizeSchema>;

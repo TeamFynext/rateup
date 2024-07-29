@@ -79,7 +79,21 @@ declare global {
     validationRules?: ValidationRules | any;
     tnc?: TNC;
     waAppName?: string;
+    responseSummary?: ResponseSummary;
   }
+
+  type ResponseSummary = {
+    all: {
+      summary: string;
+      responseIds: string[];
+    };
+    team: {
+      teamId: string;
+      summary: string;
+      responseIds: string[];
+    }[];
+  };
+
   type WaSectionsType = Array<{
     title?: string;
     rows: Array<{ id?: string; title: string; description?: string }>;
@@ -202,6 +216,12 @@ declare global {
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
     [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.AI]: subscriptionActiveField & {
+      count: {
+        completionTokens: number;
+        promptTokens: number;
+      };
+    };
   }
 
   interface SPlan {
