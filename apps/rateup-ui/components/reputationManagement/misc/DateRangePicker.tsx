@@ -8,6 +8,8 @@ import classes from "./InsideLabel.module.css";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+import { IconCalendar } from "@tabler/icons-react";
+
 export function DateRangePickerButton({
   onChange,
   ranges,
@@ -26,18 +28,20 @@ export function DateRangePickerButton({
           }
           onClick={open}
           readOnly
-          w="100px"
+          w="120px"
           label="Start date"
           classNames={classes}
+          leftSection={<IconCalendar size={"1rem"} />}
         />
         -
         <TextInput
-          w="100px"
+          w="120px"
           value={ranges[0] ? dayjs(ranges[0].endDate).format("DD/MM/YYYY") : ""}
           onClick={open}
           readOnly
           label="End date"
           classNames={classes}
+          leftSection={<IconCalendar size={"1rem"} />}
         />
       </Group>
       <Modal

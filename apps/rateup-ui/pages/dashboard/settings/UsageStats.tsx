@@ -1,6 +1,6 @@
 import { Center, Group, Loader, Stack, Title } from "@mantine/core";
-import { useUsageStats } from "../../../backend/stats/stats.query";
 import {
+  IconBrandOpenai,
   IconCategoryFilled,
   IconCheck,
   IconClipboardList,
@@ -12,13 +12,15 @@ import {
   IconSocial,
   IconUsers,
 } from "@tabler/icons-react";
+
+import { useUsageStats } from "../../../backend/stats/stats.query";
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import classes from "./setting.module.css";
 import {
   showLoadingToast,
   showSuccessToast,
 } from "../../../utils/notifications";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import classes from "./setting.module.css";
 
 export const StatsCard = ({
   Icon,
@@ -222,6 +224,35 @@ export const WhatsappStats = ({ stats, totalStats }) => {
     </Stack>
   );
 };
+
+const AIStats = ({ stats, totalStats }) => {
+  const isActive = totalStats.ai.active;
+  if (!isActive) return;
+  const statsArray = [
+    {
+      Icon: IconBrandOpenai as unknown as string,
+      count: stats?.aiPromptTokensCount,
+      totalCount: totalStats?.ai.count.promptTokens,
+      stats: "Input Tokens",
+    },
+    {
+      Icon: IconBrandOpenai as unknown as string,
+      count: stats?.aiCompletionTokensCount,
+      totalCount: totalStats?.ai.count.completionTokens,
+      stats: "Output Tokens",
+    },
+  ];
+  return (
+    <Stack gap={"xs"}>
+      <Title order={4}>AI</Title>
+      <Group>
+        {statsArray.map((item, index) => (
+          <StatsCard {...item} key={index} />
+        ))}
+      </Group>
+    </Stack>
+  );
+};
 const UsageStats = ({ subscription }) => {
   const { data: stats, refetch, isRefetching, isLoading } = useUsageStats();
   return (
@@ -239,6 +270,7 @@ const UsageStats = ({ subscription }) => {
           <SurveyStats stats={stats} totalStats={subscription?.features} />
           <MenuStats stats={stats} totalStats={subscription?.features} />
           <WhatsappStats stats={stats} totalStats={subscription?.features} />
+          <AIStats stats={stats} totalStats={subscription?.features} />
         </Stack>
       )}
     </>

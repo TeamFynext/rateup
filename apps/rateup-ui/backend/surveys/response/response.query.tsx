@@ -1,21 +1,24 @@
+import { useContext } from "react";
+
+import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import SurveyContext from "../../../context/SurveyContext";
+import { useUser } from "../../../context/UserContext";
+import { decryptResultResponse } from "../../../utils/response";
+import { useSurvey } from "../surveys.query";
 import {
   deleteResponse,
   downloadExcelResponse,
   downloadExcelResponseType,
   generateResponse,
   getAllResponses,
+  getLargeTextResponseSummaryByAI,
   getResponses,
   resetResponsesStats,
   syncResponseToGoogleSheet,
 } from "./response.api";
-import { notifications } from "@mantine/notifications";
-import { decryptResultResponse } from "../../../utils/response";
-import { useSurvey } from "../surveys.query";
-import { useUser } from "../../../context/UserContext";
-import { useContext } from "react";
-import SurveyContext from "../../../context/SurveyContext";
 
 export const useResponses = (surveyTeamMapId: string) =>
   useQuery({
@@ -215,6 +218,17 @@ export function useDownloadExcelResponse() {
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
+    },
+  });
+}
+
+export function useGetLargeTextResponseSummaryByAI(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: getLargeTextResponseSummaryByAI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
     },
   });
 }

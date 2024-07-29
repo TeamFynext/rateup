@@ -59,5 +59,9 @@ export function getSampleSubscriptionFeatures(
     },
     reputationManagement: { count: { max: count }, active: true },
     ticket: { count: { max: count }, active: true },
+    ai: {
+      count: { completionTokens: 120000, promptTokens: 120000 },
+      active: false,
+    },
   };
 }
