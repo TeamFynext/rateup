@@ -316,6 +316,7 @@ const Responses = ({
   }, [refreshing]);
 
   useEffect(() => {
+    if (!responses || !responses?.length) return;
     if (ranges.length === 0) {
       const endDate = dayjs();
       let startDate = dayjs();
