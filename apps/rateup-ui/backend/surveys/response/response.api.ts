@@ -1,5 +1,6 @@
-import { axiosClient } from "../../apiClient";
 import { saveAs } from "file-saver";
+
+import { axiosClient } from "../../apiClient";
 
 const RESPONSE_URL = "/response";
 
@@ -88,4 +89,12 @@ export async function downloadExcelResponse(data: downloadExcelResponseType) {
   });
 
   return saveAs(blob, `${data.title}.xlsx`);
+}
+
+export async function getLargeTextResponseSummaryByAI({ surveyId, data }) {
+  return (
+    await axiosClient.post(`${RESPONSE_URL}/summarize/${surveyId}`, data, {
+      timeout: 60000,
+    })
+  ).data;
 }

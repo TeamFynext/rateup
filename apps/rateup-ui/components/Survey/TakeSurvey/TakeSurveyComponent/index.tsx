@@ -16,6 +16,8 @@ import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useBeforeUnload } from "react-use";
 
+import Page from "@/pages/admin";
+
 import {
   getInvoicesByPhNo,
   Invoice,
@@ -81,6 +83,9 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const [isThankYouPageEnabled, setIsThankYouPageEnabled] = useState(
     survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
   );
+  const [isLanguagePageEnabled, setIsLanguagePageEnabled] = useState(
+    survey?.questions?.some((q) => q.type === PageType.Language) || false,
+  );
 
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
@@ -123,14 +128,20 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     setIsThankYouPageEnabled(
       survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
     );
+    setIsLanguagePageEnabled(survey?.languages?.length > 1 || false);
     setQuestionCount(survey?.questions?.length);
   }, [survey?.questions]);
 
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
       if (isWelcomePageEnabled) {
-        setSelectedQ(survey.questions[1]);
-        questionsHistoryHandlers.append(survey.questions[1]?.id);
+        if (isLanguagePageEnabled) {
+          setSelectedQ(survey.questions[2]);
+          questionsHistoryHandlers.append(survey.questions[2]?.id);
+        } else {
+          setSelectedQ(survey.questions[1]);
+          questionsHistoryHandlers.append(survey.questions[1]?.id);
+        }
       } else {
         setSelectedQ(survey.questions[0]);
         questionsHistoryHandlers.append(survey.questions[0]?.id);
@@ -446,6 +457,9 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               nextFn={handleNext}
               prevFn={handlePrev}
               survey={survey}
+              isWelcomePageEnabled={isWelcomePageEnabled}
+              isLanguagePageEnabled={isLanguagePageEnabled}
+              isThankYouPageEnabled={isThankYouPageEnabled}
             >
               <Container
                 size={"md"}
@@ -569,8 +583,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     isSavingResponses={isSavingResponses || giftLoading}
                     errorTextDivRef={errorTextDivRef}
                     isSurveyThemePreview={isSurveyThemePreview}
-                    isWelcomePageEnabled={isWelcomePageEnabled}
-                    isThankYouPageEnabled={isThankYouPageEnabled}
                   />
                 </Stack>
               </Container>

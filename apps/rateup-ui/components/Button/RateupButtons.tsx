@@ -1,4 +1,5 @@
 import { Button } from "@mantine/core";
+
 interface Props {
   title: string;
   disabled?: boolean;
@@ -28,6 +29,7 @@ interface Props {
   gradient?: any;
   fw?: string | number;
   miw?: string | number;
+  w?: string | number;
 }
 
 export const RateupButtonPrimary = ({
@@ -83,6 +85,7 @@ export const RateupButtonBlue = ({
   rightIcon = null,
   variant,
   size,
+  w,
   ...other
 }: Props) => {
   return (
@@ -99,6 +102,7 @@ export const RateupButtonBlue = ({
       loading={loading}
       fw={400}
       {...other}
+      w={w ?? undefined}
     >
       {title}
     </Button>
@@ -121,6 +125,7 @@ export const RateupButtonSecondary = ({
   size,
   color,
   fw = 400,
+  w,
   ...other
 }: Props) => {
   return (
@@ -140,6 +145,7 @@ export const RateupButtonSecondary = ({
       mt={mt}
       fw={fw}
       variant={variant || "outline"}
+      w={w ?? undefined}
       {...other}
     >
       {title}

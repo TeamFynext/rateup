@@ -29,16 +29,22 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
     return pages;
   }
 
-  let newArray = [...pages];
-  const thankYouItem = newArray.filter((item) => item.type === "ThankYou");
-  newArray = newArray.filter((item) => item.type !== "ThankYou");
+  let newArray = [];
+  const welcomeItem = pages.find((item) => item.type === "Welcome");
+  const languageItem = pages.find((item) => item.type === "Language");
+  const thankYouItem = pages.find((item) => item.type === "ThankYou");
 
-  newArray = [...newArray, ...thankYouItem];
-
-  const welcomeItem = newArray.filter((item) => item.type === "Welcome");
-  newArray = newArray.filter((item) => item.type !== "Welcome");
-
-  newArray = [...welcomeItem, ...newArray];
+  const pagesTypeStrsArr = ["Welcome", "Language", "ThankYou"];
+  // PagesObjs means objects with type key value as Welcome, Language, ThankYou.
+  const arrWithoutPagesObjs = pages.filter(
+    (obj) => !pagesTypeStrsArr.includes(obj.type),
+  );
+  if (welcomeItem) newArray.push({ ...welcomeItem });
+  if (languageItem) newArray.push({ ...languageItem });
+  for (const pageObj of arrWithoutPagesObjs) {
+    newArray.push(pageObj);
+  }
+  if (thankYouItem) newArray.push({ ...thankYouItem });
 
   return newArray;
 }

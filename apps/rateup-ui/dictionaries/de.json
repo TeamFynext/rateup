@@ -72,5 +72,17 @@
   "Latest First": "Neueste zuerst",
   "Old First": "Älteste zuerst",
   "A - Z": "A - Z",
-  "Z - A": "Z - A"
+  "Z - A": "Z - A",
+  "web": "web",
+  "whatsapp": "whatsapp",
+  "Members": "Mitglieder",
+  "An error occurred!": "Ein Fehler ist aufgetreten!",
+  "Unable to get theme, please try again later": "Thema kann nicht abgerufen werden, bitte versuchen Sie es später erneut",
+  "Apply": "Anwenden",
+  "Save & Apply": "Speichern & Anwenden",
+  "Survey Page": "Umfrageseite",
+  "Welcome Page": "Willkommensseite",
+  "Thankyou Page": "Dankeschön-Seite",
+  "Language Page": "Sprachseite",
+  "Save": "Speichern"
 }

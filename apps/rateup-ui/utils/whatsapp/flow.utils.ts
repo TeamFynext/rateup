@@ -1,4 +1,7 @@
 import { UseFormReturnType } from "@mantine/form";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
 
 import {
   WA_FLOW_BODY_CHAR_LIMIT,
@@ -27,6 +30,8 @@ import {
 import { getNestedProperty } from "../misc/obj.utils";
 import { OpinionResponses, ratingEmoji, RatingResponses } from "../questions";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 // Since flow doesn't support multiple languages, we will use 'en' as the default language.
 const lang = "en";
 
@@ -338,6 +343,7 @@ export const updateFlowJsonNavigationAndDataPassing = (
   let previousPayloadData = null;
 
   let routing_model = {};
+  let datePickerDynamicFlag = false;
 
   const screens = draft.screens;
   const flowHasLogic = screens.some((screen) => !!dbFlow.logicJumps[screen.id]);
@@ -425,9 +431,22 @@ export const updateFlowJsonNavigationAndDataPassing = (
             },
           };
     }
+    if (
+      !datePickerDynamicFlag &&
+      formElements.some(
+        (formElement) =>
+          formElement.type === WaFlowFormElementType.datePicker &&
+          formElement["on-select-action"],
+      )
+    ) {
+      datePickerDynamicFlag = true;
+    }
   });
-  draft.routing_model = flowHasLogic ? routing_model : undefined;
-  draft.data_api_version = flowHasLogic ? "3.0" : undefined;
+
+  draft.routing_model =
+    flowHasLogic || datePickerDynamicFlag ? routing_model : undefined;
+  draft.data_api_version =
+    flowHasLogic || datePickerDynamicFlag ? "3.0" : undefined;
 };
 function getScreenDataForFormElement(fe: WaFlowFormElement): {
   type: string;
@@ -539,7 +558,22 @@ export function getFlowElementJsonFromQuestion(question: Question) {
       type: WaFlowFormElementType.textBody,
     };
   }
-
+  if (question.type === QuestionType.WaTimeSlot) {
+    questionElement["data-source"] = "${data.available_slots}";
+  }
+  if (question?.onSelectAction && question.waAppName) {
+    let now = dayjs().tz("Asia/Kolkata").startOf("day");
+    let afterSixMonth = dayjs().add(6, "M").startOf("day");
+    questionElement["min-date"] = now.utc().valueOf().toString();
+    questionElement["max-date"] = afterSixMonth.utc().valueOf().toString();
+    questionElement["on-select-action"] = {
+      name: "data_exchange",
+      payload: {
+        date: "${form" + "." + questionElement.name + "}",
+        component_action: "update_date",
+      },
+    };
+  }
   mapData.type = question.type;
   mapData.questionId = question.id;
 

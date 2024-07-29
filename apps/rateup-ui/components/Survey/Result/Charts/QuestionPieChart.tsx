@@ -1,23 +1,25 @@
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  Stack,
-  Text,
+  Badge,
+  Flex,
   Group,
   Paper,
-  Badge,
   RingProgress,
-  Flex,
+  Stack,
+  Text,
 } from "@mantine/core";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
-import Heading from "../../../styled/Heading/Heading";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+
 import { getContent } from "../../../../utils";
+import Heading from "../../../styled/Heading/Heading";
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+
 interface DataItem {
   name: string;
   value: number;
@@ -71,10 +73,10 @@ const CustomLegend: React.FC<CustomTooltipProps> = ({
   }
   return (
     <Group style={{ transform: "translateY(10px)" }}>
-      {payload?.map((entry) => {
+      {payload?.map((entry, index) => {
         const { payload: myPayload } = entry;
         return (
-          <Stack style={{ flex: 1 }} gap={0} align="center">
+          <Stack style={{ flex: 1 }} gap={0} align="center" key={index}>
             <Text c={returnColor(myPayload?.name)} fw={900}>
               {myPayload?.value}
             </Text>

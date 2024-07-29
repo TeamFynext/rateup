@@ -1,7 +1,8 @@
 //For New Migrations and Updations
 
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 import { useMutation } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import { updateAllSurveys } from "./update.api";
 

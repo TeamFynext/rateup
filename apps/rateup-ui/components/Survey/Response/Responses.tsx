@@ -316,11 +316,12 @@ const Responses = ({
   }, [refreshing]);
 
   useEffect(() => {
+    if (!responses || !responses?.length) return;
     if (ranges.length === 0) {
       const endDate = dayjs();
       let startDate = dayjs();
       responses
-        .map((res) => dayjs(res.createdAt))
+        ?.map((res) => dayjs(res.createdAt))
         .forEach((responseDate) => {
           if (responseDate.isBefore(startDate)) startDate = responseDate;
         });

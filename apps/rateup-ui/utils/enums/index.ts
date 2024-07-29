@@ -58,6 +58,8 @@ export function getPageTypeLabel(type: PageType) {
       return "Custom HTML Page";
     case PageType.ThankYou:
       return "Thank You Page";
+    case PageType.Language:
+      return "Language Page";
     default:
       return false;
   }
@@ -186,6 +188,8 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Template";
     case sfpn.Ticket:
       return "Ticket";
+    case sfpn.AI:
+      return "AI";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
   }

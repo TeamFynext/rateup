@@ -20,9 +20,6 @@ import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone.js";
-import utc from "dayjs/plugin/utc.js";
 import _ from "lodash";
 
 import {
@@ -69,8 +66,6 @@ import {
 import { EditFlowContext } from "./EditFlowContext";
 import { FlowLogicEditor } from "./FlowLogicEditor";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
 interface QuestionDetailedViewProps {
   question: Question;
   surveyLanguages: string[];
@@ -236,11 +231,7 @@ function ElementEditor({
         setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
       }
-      if (
-        question.type === QuestionType.Optin ||
-        question.type === QuestionType.Date ||
-        question.type === QuestionType.WaTimeSlot
-      ) {
+      if (question.type === QuestionType.Optin) {
         updateFlowJson((draft) => {
           const formEl = getFormObjFromScreenId(
             draft.screens,
@@ -259,29 +250,6 @@ function ElementEditor({
               },
               payload: {},
             };
-          } else if (form.values.onSelectAction) {
-            const dateForm = formEl.children.find(
-              (data) => data.type === WaFlowFormElementType.datePicker,
-            );
-            let now = dayjs().tz("Asia/Kolkata").startOf("day");
-            let afterSixMonth = dayjs().add(6, "M").startOf("day");
-            dateForm["min-date"] = now.utc().valueOf().toString();
-            dateForm["max-date"] = afterSixMonth.utc().valueOf().toString();
-
-            dateForm["on-select-action"] = {
-              name: "data_exchange",
-              payload: {
-                date: "${form" + "." + dateForm.name + "}",
-                component_action: "update_date",
-              },
-            };
-          } else if (question.type === QuestionType.WaTimeSlot) {
-            const timeForm = formEl.children.find(
-              (data) => data.type === "Dropdown",
-            );
-            if (timeForm) {
-              timeForm["data-source"] = "${data.available_slots}";
-            }
           }
         });
       }
@@ -444,7 +412,7 @@ function ElementEditor({
                   <ContainedSelection
                     label={"Integration App Name"}
                     placeholder="Select Integration App Name"
-                    data={[IntegratedApps.waAmelia]}
+                    data={[IntegratedApps.amelia]}
                     {...form.getInputProps("waAppName")}
                     w={400}
                   />

@@ -214,6 +214,7 @@ function FlowPage(translations) {
                   setFilterTeams,
                   filterTags,
                   surveyId: survey?.id,
+                  teams: teamOptions,
                 }}
               >
                 <FlowPageHeader

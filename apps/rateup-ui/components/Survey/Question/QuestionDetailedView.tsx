@@ -71,7 +71,7 @@ export function QuestionDetailedView({
   const router = useRouter();
   surveyId = surveyId || (router.query?.surveyId as string);
 
-  const [currentResponse, updateResponse] = useState(null || []); //temp state for preview
+  const [currentResponse, updateResponse] = useState(null);
   const [deleteFileLoading, setDeleteFileLoading] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({

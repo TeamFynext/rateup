@@ -19,19 +19,19 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
-const WaAmelia = () => {
+const WpAmelia = () => {
   const { data, isPending, isError } = useIntegrationByType(
-    IntegratedApps.waAmelia,
+    IntegratedApps.amelia,
   );
   const createIntegrationMutation = useCreateIntegrationMutation(
-    IntegratedApps.waAmelia,
+    IntegratedApps.amelia,
   );
 
   const updateIntegrationMutation = useUpdateIntegrationMutation(
-    IntegratedApps.waAmelia,
+    IntegratedApps.amelia,
   );
   const deleteIntegrationMutation = useDeleteIntegrationMutation(
-    IntegratedApps.waAmelia,
+    IntegratedApps.amelia,
   );
 
   const schema = z.object({
@@ -66,7 +66,7 @@ const WaAmelia = () => {
           baseUrl: form.getValues().baseUrl,
           serviceId: form.getValues().serviceId,
         },
-        name: IntegratedApps.waAmelia,
+        name: IntegratedApps.amelia,
       });
     } else {
       createIntegrationMutation.mutate({
@@ -75,13 +75,13 @@ const WaAmelia = () => {
           baseUrl: form.getValues().baseUrl,
           serviceId: form.getValues().serviceId,
         },
-        name: IntegratedApps.waAmelia,
+        name: IntegratedApps.amelia,
       });
     }
   };
   return (
     <Stack p={"xl"}>
-      <Title order={3}>Wa Amelia Config</Title>
+      <Title order={3}>Amelia Config</Title>
       <PaperLayout>
         {isPending ||
         createIntegrationMutation?.isPending ||
@@ -90,13 +90,13 @@ const WaAmelia = () => {
         ) : (
           <Stack w={500}>
             <ContainedTextField
-              label={"Wa Amelia"}
+              label={"Amelia"}
               placeholder="Enter you api key"
               {...form.getInputProps("apiKey")}
             />
 
             <ContainedTextField
-              label={"Wa Amelia base url"}
+              label={"Amelia base url"}
               placeholder="Enter you base url"
               type="url"
               {...form.getInputProps("baseUrl")}
@@ -130,4 +130,4 @@ const WaAmelia = () => {
   );
 };
 
-export default WaAmelia;
+export default WpAmelia;

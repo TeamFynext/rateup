@@ -72,10 +72,21 @@
   "Language": "Language",
   "Select Languages": "Select Languages",
   "*Type to add new languages": "*Type to add new languages",
-
   "SORT BY": "SORT BY",
   "Latest First": "Latest First",
   "Old First": "Old First",
   "A - Z": "A - Z",
-  "Z - A": "Z - A"
+  "Z - A": "Z - A",
+  "web": "web",
+  "whatsapp": "whatsapp",
+  "Members": "Members",
+  "An error occurred!": "An error occurred!",
+  "Unable to get theme, please try again later": "Unable to get theme, please try again later",
+  "Apply": "Apply",
+  "Save & Apply": "Save & Apply",
+  "Survey Page": "Survey Page",
+  "Welcome Page": "Welcome Page",
+  "Thankyou Page": "Thankyou Page",
+  "Language Page": "Language Page",
+  "Save": "Save"
 }

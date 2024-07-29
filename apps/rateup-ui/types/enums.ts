@@ -9,18 +9,21 @@ export enum SurveyType {
 
 export enum PageType {
   Welcome = "Welcome",
+  Language = "Language",
   ThankYou = "ThankYou",
   Custom = "Custom",
 }
 
 export enum PageTitle {
   Welcome = "Welcome Page",
+  Language = "Language Page",
   ThankYou = "ThankYou Page",
   Custom = "Custom HTML Page",
 }
 
 export enum PageDescription {
   Welcome = "This is the first page to welcome",
+  Language = "This is the second page for language selection",
   ThankYou = "This is the End Page of the survey",
   Custom = "",
 }
@@ -62,7 +65,7 @@ export enum QuestionType {
   Optin = "OptIn",
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
-  WaTimeSlot = "Dropdown",
+  WaTimeSlot = "WaTimeSlot",
 }
 
 export enum LDResponse {
@@ -183,6 +186,7 @@ export enum SubscriptionFeaturePathName {
   Team = "team",
   TeamMember = "team.teamMember",
   Ticket = "ticket",
+  AI = "ai",
 }
 
 export enum PaymentType {
@@ -345,7 +349,7 @@ export enum ShopifySendAfter {
 export enum IntegratedApps {
   shopify = "Shopify",
   googlesheet = "Google Sheet",
-  waAmelia = "WaAmelia",
+  amelia = "amelia",
 }
 
 export enum MenuButtons {
