@@ -85,7 +85,7 @@ export const RateupButtonBlue = ({
   rightIcon = null,
   variant,
   size,
-  w = "fit-content",
+  w,
   ...other
 }: Props) => {
   return (
@@ -102,7 +102,7 @@ export const RateupButtonBlue = ({
       loading={loading}
       fw={400}
       {...other}
-      w={w}
+      w={w ?? undefined}
     >
       {title}
     </Button>
@@ -125,7 +125,7 @@ export const RateupButtonSecondary = ({
   size,
   color,
   fw = 400,
-  w = "fit-content",
+  w,
   ...other
 }: Props) => {
   return (
@@ -145,7 +145,7 @@ export const RateupButtonSecondary = ({
       mt={mt}
       fw={fw}
       variant={variant || "outline"}
-      w={w}
+      w={w ?? undefined}
       {...other}
     >
       {title}

@@ -229,6 +229,7 @@ const LargeTextResponseSummary = ({
                       setSelectedQuestion(question);
                       setSummaryTab(ResponseSummaryType.Team);
                     }}
+                    w={"fit-content"}
                   />
                 </Stack>
               )}
