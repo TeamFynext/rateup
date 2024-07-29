@@ -1,42 +1,44 @@
 import React, { useState } from "react";
-import { useUser } from "../../../context/UserContext";
 import { useRouter } from "next/router";
+
 import {
-  Stack,
-  Loader,
-  Text,
-  Group,
-  Button,
   Badge,
-  ScrollArea,
+  Button,
   Divider,
+  Group,
+  Loader,
+  ScrollArea,
+  Stack,
+  Text,
   Tooltip,
 } from "@mantine/core";
-import {
-  useTeamsMembersOfOrg,
-  useUpdateRoleMutation,
-} from "../../../backend/org/org.query";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import Heading from "../../../components/styled/Heading/Heading";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "../../../components/input/ContainedInput/ContainedInput";
-import { UserRole } from "../../../utils/enums";
 import {
   IconPlayerPause,
   IconPlayerPlay,
   IconTrash,
   IconUserEdit,
 } from "@tabler/icons-react";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
+
+import {
+  useTeamsMembersOfOrg,
+  useUpdateRoleMutation,
+} from "../../../backend/org/org.query";
 import {
   useUpdateActiveStatusMutation,
   useUpdateUserPause,
 } from "../../../backend/user/user.query";
-import { useDisclosure } from "@mantine/hooks";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "../../../components/input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import Heading from "../../../components/styled/Heading/Heading";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useUser } from "../../../context/UserContext";
+import { UserRole } from "../../../utils/enums";
 
 const Members = () => {
   const router = useRouter();
@@ -318,9 +320,9 @@ const LongMemberCard = ({
               disabled={user.userId === member.id}
             >
               {member.isPaused ? (
-                <IconPlayerPause size={"1rem"} />
-              ) : (
                 <IconPlayerPlay size={"1rem"} />
+              ) : (
+                <IconPlayerPause size={"1rem"} />
               )}
             </Button>
           </Tooltip>
