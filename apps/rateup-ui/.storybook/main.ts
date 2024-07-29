@@ -5,19 +5,20 @@ const config: StorybookConfig = {
     "../stories/**/*.mdx",
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
   ],
+
   addons: [
     "@storybook/addon-links",
     "@storybook/addon-essentials",
-    "@storybook/addon-onboarding",
     "@storybook/addon-interactions",
+    "@chromatic-com/storybook",
+    "@storybook/addon-styling-webpack",
   ],
+
   framework: {
     name: "@storybook/nextjs",
     options: {},
   },
-  docs: {
-    autodocs: "tag",
-  },
-  staticDirs: [{from: '../public', to: 'public'}],
+
+  docs: {},
 };
 export default config;
