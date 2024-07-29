@@ -307,9 +307,7 @@ function ElementEditor({
       <ScrollArea h={"80%"}>
         <Group justify="space-between">
           <Badge variant="outline" size="lg">
-            {question.type === QuestionType.WaTimeSlot
-              ? "TimeSlot"
-              : question.type}
+            {question.type}
           </Badge>
         </Group>
         <Group p={2} gap={2} pr={42}>
