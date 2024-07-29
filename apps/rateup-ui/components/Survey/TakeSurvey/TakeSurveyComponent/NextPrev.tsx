@@ -13,6 +13,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { isEmptyObject } from "@tiptap/react";
 
+import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext";
+
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
@@ -32,9 +34,6 @@ function NextPrev({
   surveyThemeData,
   errorTextDivRef,
   isSurveyThemePreview = false,
-  isWelcomePageEnabled = false,
-  isThankYouPageEnabled = false,
-  isLanguagePageEnabled = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -42,6 +41,7 @@ function NextPrev({
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const isMobile = useMediaQuery("(max-width: 480px)");
+  const { isLastQuestion, isFirstQuestion } = useHandleNextPrevFuncs();
 
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
   const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
@@ -96,17 +96,6 @@ function NextPrev({
   }
 
   if (!survey) return null;
-  const isFirstQuestion = isWelcomePageEnabled
-    ? isLanguagePageEnabled
-      ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 2
-      : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 1
-    : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 0;
-
-  const isLastQuestion = isThankYouPageEnabled
-    ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
-      survey?.questions?.length - 2
-    : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
-      survey?.questions?.length - 1;
 
   return (
     <Stack
