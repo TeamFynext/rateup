@@ -49,7 +49,7 @@ export enum QuestionType {
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
-  WaTimeSlot = "Dropdown",
+  WaTimeSlot = "WaTimeSlot",
 }
 
 export enum LDResponse {
