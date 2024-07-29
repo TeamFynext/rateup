@@ -693,9 +693,7 @@ export const handleDecryptedFlowRequest = async (
             .format("YYYY-MM-DD"),
         });
         const slots = transformSlots(
-          dayjs(Number(data?.date))
-            .tz("Asia/Kolkata")
-            .format("YYYY-MM-DD"),
+          dayjs(Number(data?.date)).tz("Asia/Kolkata").format("YYYY-MM-DD"),
           response,
         );
 
@@ -813,8 +811,8 @@ function transformSlots(date: string, response): Slot[] {
     return [{ id: "1", title: "no slot" }];
   }
 
-  return Object.keys(slots).map((time, index) => ({
-    id: (index + 1).toString(),
+  return Object.keys(slots).map((time) => ({
+    id: time,
     title: time,
   }));
 }
