@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 
 import { Group, Stack, Text } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
@@ -7,7 +7,6 @@ import TextAlign from "@tiptap/extension-text-align";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-import SurveyContext from "../../context/SurveyContext";
 import CustomImageExtension from "./InsertImage/CustomImageExtenstion";
 
 function HTMLEditor({ form, selectedLanguage }) {
