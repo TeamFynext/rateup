@@ -1,8 +1,19 @@
 import React from "react";
 
-import { Button, Flex, Grid, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Flex,
+  Grid,
+  Group,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 
-import { PageType } from "../../../types/enums";
+import { hasFeature } from "@/utils/subscription/subscription";
+
+import { PageType, SubscriptionFeaturePathName } from "../../../types/enums";
 import { BasicPages, uniquePages } from "../../../utils/constants";
 import { getPageTypeLabel } from "../../../utils/enums";
 import { pageIcons } from "../Page/PageIcons";
@@ -12,27 +23,60 @@ interface iProps {
   questions: Question[];
   handleTypeSelection: (type: PageType) => void;
 }
-const PageTypeSelection = ({ handleTypeSelection, questions }) => {
+const PageTypeSelection = ({
+  handleTypeSelection,
+  questions,
+  subscription,
+}) => {
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);
   };
-  const QuestionButton = ({ type }) => {
+  const QuestionButton = ({ type, subscription }) => {
     const Icon = pageIcons[type];
     return (
-      <Button
-        key={type}
-        size="lg"
-        leftSection={<Icon size={"1rem"} />}
-        variant={"default"}
-        className={classes.questionTypeButton}
-        onClick={() => handleQuestionTypeClick(type as PageType)}
+      <Tooltip
+        label="Upgrade Rateup Plan"
+        withArrow
+        color="yellow"
         disabled={
-          questions?.filter((q) => q.type === type).length > 0 &&
-          uniquePages.includes(type)
+          !(
+            type === PageType.Custom &&
+            !hasFeature(subscription, SubscriptionFeaturePathName.HTMLCodePage)
+          )
         }
       >
-        <Text fz={14}>{getPageTypeLabel(type)}</Text>
-      </Button>
+        <Button
+          key={type}
+          size="lg"
+          leftSection={<Icon size={"1rem"} />}
+          variant={"default"}
+          className={classes.questionTypeButton}
+          onClick={() => handleQuestionTypeClick(type as PageType)}
+          disabled={(() => {
+            if (type === PageType.Custom) {
+              console.log(
+                hasFeature(
+                  subscription,
+                  SubscriptionFeaturePathName.HTMLCodePage,
+                ),
+              );
+              return hasFeature(
+                subscription,
+                SubscriptionFeaturePathName.HTMLCodePage,
+              )
+                ? false
+                : true;
+            } else {
+              return (
+                questions?.filter((q) => q.type === type).length > 0 &&
+                uniquePages.includes(type)
+              );
+            }
+          })()}
+        >
+          <Text fz={14}>{getPageTypeLabel(type)}</Text>
+        </Button>
+      </Tooltip>
     );
   };
   return (
@@ -49,7 +93,7 @@ const PageTypeSelection = ({ handleTypeSelection, questions }) => {
             {BasicPages?.map((type, index) => {
               return (
                 <Grid.Col span="content" key={index} p={"sm"}>
-                  <QuestionButton type={type} />
+                  <QuestionButton type={type} subscription={subscription} />
                 </Grid.Col>
               );
             })}

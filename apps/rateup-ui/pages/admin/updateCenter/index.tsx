@@ -1,15 +1,18 @@
 import { useCallback, useState } from "react";
 
-import { Blockquote, Button, Loader, Stack, Title } from "@mantine/core";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { Button, Loader, Stack, Text, Title } from "@mantine/core";
 
-import { useUpdateSurveyEditorMutation } from "@/backend/updations/update.query";
+import {
+  useUpdateDatabaseMutation,
+  useUpdateSurveyEditorMutation,
+} from "@/backend/updations/update.query";
 
 import { useUpdateAllThemesMutation } from "../../../backend/surveyTheme/surveyTheme.query";
 
 function UpdateAllThemes() {
   const updateAllThemesMutation = useUpdateAllThemesMutation();
   const updateSurveyEditorMutation = useUpdateSurveyEditorMutation();
+  const updateDBMutation = useUpdateDatabaseMutation();
 
   const [isUpdatingThemes, setIsUpdatingThemes] = useState(false);
   const handleUpdateAllThemesBtnClick = useCallback(async () => {
@@ -26,14 +29,15 @@ function UpdateAllThemes() {
     <Stack>
       <Stack>
         <Title order={2}>Theme Updations</Title>
-        <Blockquote color="blue" icon={<IconInfoCircle />} mt="xl">
+        <Text>
           When we change the web survey theme json structure, we have to update
           all the themes in the db to new structure, this button can be used to
           update the themes in database.
-        </Blockquote>
+        </Text>
 
         <Button
-          style={{ alignSelf: "center" }}
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
           onClick={handleUpdateAllThemesBtnClick}
         >
           Update All Themes
@@ -55,15 +59,38 @@ function UpdateAllThemes() {
         )}
       </Stack>
 
-      <Stack>
+      <Stack mt="xl">
         <Title order={2}>Survey Editor Updations</Title>
+        <Text>
+          Survey JSON changes for supporting new survey editor with Pages
+          support.
+        </Text>
+
         <Button
-          style={{ alignSelf: "center" }}
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
           onClick={() => {
             updateSurveyEditorMutation.mutate();
           }}
         >
-          Update Editor Structure
+          Run Update
+        </Button>
+      </Stack>
+
+      <Stack mt="xl">
+        <Title order={2}>Database Updations (July 30)</Title>
+        <Text>
+          Subscription feature structure change for Ai module, HTML Code Page
+          (premium feature).
+        </Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateDBMutation.mutate();
+          }}
+        >
+          Run Update
         </Button>
       </Stack>
     </Stack>

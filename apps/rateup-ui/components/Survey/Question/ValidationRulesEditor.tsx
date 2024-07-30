@@ -163,7 +163,6 @@ const ValidationRulesEditor = ({
 
   const updateValidationRules = (validationRules: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, validationRules });
-    selectedQ && console.log({ ...selectedQ, validationRules });
   };
 
   useEffect(() => {

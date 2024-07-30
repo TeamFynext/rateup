@@ -1,15 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import DOMPurify from "dompurify";
 
 const CustomHTML = ({ content = "<h1> Not Data found </h1>" }) => {
-  const convertEntitiesToHtml = (str) => {
-    return str?.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-  };
+  const [htmlCode, setHtmlCode] = useState("");
+  useEffect(() => {
+    const convertEntitiesToHtml = (str) => {
+      return str?.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+    };
 
-  const sanitizedOutput = DOMPurify.sanitize(convertEntitiesToHtml(content));
+    const sanitizedOutput = DOMPurify.sanitize(convertEntitiesToHtml(content));
+    setHtmlCode(sanitizedOutput);
+  }, [content]);
 
-  return <div dangerouslySetInnerHTML={{ __html: sanitizedOutput }}></div>;
+  return <div dangerouslySetInnerHTML={{ __html: htmlCode }}></div>;
 };
 
 export default CustomHTML;

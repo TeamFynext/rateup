@@ -166,6 +166,8 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Email Notification";
     case sfpn.WebSurvey + ".googleReview":
       return "Google Review";
+    case sfpn.WebSurvey + ".htmlCodePage":
+      return "HTML Code Page";
     case sfpn.Menu:
       return "Menu";
     case sfpn.Menu + ".monthlyViewLimit":

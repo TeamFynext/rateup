@@ -246,6 +246,7 @@ export default function SurveyID(translations) {
                     addQnTrigger={addQnTrigger}
                     surveyLanguages={survey?.languages}
                     setSelectedLanguage={setSelectedLanguage}
+                    subscription={subscription}
                   />
                 )}
               </Tabs.Panel>
