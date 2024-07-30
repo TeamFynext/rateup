@@ -12,8 +12,8 @@ export async function verifyAccess(
   reply: FastifyReply,
 ) {
   if (
-    request.routerPath === "/api/response/generate" ||
-    request.routerPath === "/api/response/download-response"
+    request.routeOptions.url === "/api/response/generate" ||
+    request.routeOptions.url === "/api/response/download-response"
   )
     return;
   const surveyId = request.params.surveyId
