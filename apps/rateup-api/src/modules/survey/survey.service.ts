@@ -9,6 +9,7 @@ import {
 } from "./survey.schema";
 import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
 import {
+  PageType,
   QuestionType,
   SurveyType,
   SurveyVariableType,
@@ -19,10 +20,13 @@ import {
 } from "../../utils/commnUtils";
 import {
   createSurveyDefaultVariableForQuestion,
+  getPageQuestions,
   getSurveysOrgId,
   isShortId,
 } from "./survey.utils";
 import { offerArrayWithRange } from "../../utils/survey/offer";
+import { cloneDeep } from "lodash";
+import util from "util";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -64,6 +68,7 @@ export async function createSurvey(
             create: teamIds,
           },
           webSurveyThemeId: selectedTheme || defaultThemeId,
+          questions: getPageQuestions(input.languages),
         },
       });
       return survey;
@@ -760,16 +765,17 @@ export async function deleteSurveyFromTeam(
 //------------UPDATE SURVEY by id --------
 export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
   let action = "edit";
+
+  const fetchedSurvey = await prisma.survey.findUnique({
+    where: {
+      id,
+    },
+  });
+
   if ("isPublished" in input) {
     action = "publish";
     if (input?.isPublished === true) {
       //check for all language inputs
-      const fetchedSurvey = await prisma.survey.findUnique({
-        where: {
-          id,
-        },
-      });
-
       if (fetchedSurvey?.questions.length < 1) {
         let data = {
           status: "failed",
@@ -811,11 +817,44 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
   let { teams, ...dataInput } = input;
 
+  let questions = fetchedSurvey.questions;
+
+  if (dataInput?.languages?.length) {
+    const languagePageObj = questions.find(
+      (question) =>
+        question.type === (PageType.Language as unknown as QuestionType),
+    );
+    if (dataInput?.languages?.length > 1) {
+      if (!languagePageObj) {
+        const [newLanguagePageObj, newThankyouPageObj] = getPageQuestions(
+          dataInput.languages,
+        );
+        if (
+          questions[0].type === (PageType.Welcome as unknown as QuestionType)
+        ) {
+          questions.splice(1, 0, newLanguagePageObj);
+          questions.splice(questions.length - 1, 1, newThankyouPageObj);
+        } else {
+          questions.splice(0, 0, newLanguagePageObj);
+          questions.splice(questions.length - 1, 1, newThankyouPageObj);
+        }
+      }
+    } else if (dataInput?.languages?.length === 1) {
+      const newQuestionsArr = questions.filter((question) => {
+        return question.type !== (PageType.Language as unknown as QuestionType);
+      });
+      questions = newQuestionsArr;
+    }
+  }
+
+  const data = cloneDeep(dataInput);
+  data["questions"] = questions;
+
   const survey = await prisma.survey.update({
     where: {
       id,
     },
-    data: dataInput,
+    data: data,
   });
 
   const isOldSurvey = survey.createdAt < new Date(2024, 2, 1);
