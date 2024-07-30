@@ -1,39 +1,43 @@
 import React from "react";
+
 import { notifications } from "@mantine/notifications";
+import { isValidPhoneNumber } from "react-phone-number-input";
+
+import { getContent } from "@/utils";
+
 import { createResponsePublic } from "../../../../backend/surveys/response/response.api";
+import { useGetSurveyVariables } from "../../../../backend/surveys/surveys.query";
 import {
-  QuestionType,
   QuestionType as Q,
+  QuestionType,
   SurveyVariableType,
 } from "../../../../types/enums";
-import { TextForm } from "./QuestionForms/TextForm";
-import { TextAreaForm } from "./QuestionForms/TextAreaForm";
-import { NumberForm } from "./QuestionForms/NumberForm";
-import { RatingForm } from "./QuestionForms/RatingForm";
-import { LDForm } from "./QuestionForms/LDForm";
-import { YNForm } from "./QuestionForms/YNForm";
-import { OpinionScaleForm } from "./QuestionForms/OpinionScaleForm";
-import { SmileyForm } from "./QuestionForms/SmileyForm";
-import { ImageForm } from "./QuestionForms/ImageForm";
-import { MCQForm } from "./QuestionForms/MCQForm";
-import { MSQForm } from "./QuestionForms/MSQForm";
-import { DDSSForm } from "./QuestionForms/DDSSForm";
-import { DDMSForm } from "./QuestionForms/DDMSForm";
-import { TestimonialForm } from "./QuestionForms/TestimonialForm";
-import { EmailPhoneForm } from "./QuestionForms/EmailPhoneForm";
-import { DateForm } from "./QuestionForms/DateForm";
-import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
-import { PCQForm } from "./QuestionForms/PCQForm";
-import ContactForm from "./QuestionForms/ContactForm";
-import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { emailPattern } from "../../../../utils/constants";
-import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
-import MCQGridForm from "./QuestionForms/MCQGridForm";
-import FileInputForm from "./QuestionForms/FileInputForm";
-import { useGetSurveyVariables } from "../../../../backend/surveys/surveys.query";
+import ContactForm from "./QuestionForms/ContactForm";
+import { CustomNPSForm } from "./QuestionForms/CustomNPSForm";
+import { DateForm } from "./QuestionForms/DateForm";
+import { DDMSForm } from "./QuestionForms/DDMSForm";
+import { DDSSForm } from "./QuestionForms/DDSSForm";
 import EmailOTPForm from "./QuestionForms/EmailOTPForm";
+import { EmailPhoneForm } from "./QuestionForms/EmailPhoneForm";
+import FileInputForm from "./QuestionForms/FileInputForm";
+import { ImageForm } from "./QuestionForms/ImageForm";
+import { LDForm } from "./QuestionForms/LDForm";
+import { MCQForm } from "./QuestionForms/MCQForm";
+import MCQGridForm from "./QuestionForms/MCQGridForm";
+import { MSQForm } from "./QuestionForms/MSQForm";
+import MultiTextInputForm from "./QuestionForms/MultiTextInputForm";
+import { NumberForm } from "./QuestionForms/NumberForm";
+import { OpinionScaleForm } from "./QuestionForms/OpinionScaleForm";
+import { PCQForm } from "./QuestionForms/PCQForm";
+import { RatingForm } from "./QuestionForms/RatingForm";
+import { SmileyForm } from "./QuestionForms/SmileyForm";
+import { TermsNConditionsForm } from "./QuestionForms/TermsNConditionsForm";
+import { TestimonialForm } from "./QuestionForms/TestimonialForm";
+import { TextAreaForm } from "./QuestionForms/TextAreaForm";
+import { TextForm } from "./QuestionForms/TextForm";
 import WOPForm from "./QuestionForms/WOPForm";
+import { YNForm } from "./QuestionForms/YNForm";
 
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
@@ -318,7 +322,7 @@ export const getReplacedTitleFromVariable = ({
     componentName,
     prop,
   );
-  if (!variables) return null;
+  if (!variables) return getContent(title) || title;
   variables.forEach((value) => {
     const component = Array.from(doc.querySelectorAll(componentName)).find(
       (el) => el.getAttribute(prop) === value,

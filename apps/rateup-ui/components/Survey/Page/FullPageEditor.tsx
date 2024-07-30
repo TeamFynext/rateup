@@ -1,13 +1,15 @@
+import React from "react";
+
 import { Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconWindowMaximize } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "components/Button/RateupButtons";
-import React from "react";
-import { PageTitle } from "types/enums";
-import SurveyTheme from "../SurveyTheme";
-import styles from "./FullPageEditor.module.css";
 import commonModalStyles from "styles/commonCssModules/modal.module.css";
+import { PageTitle } from "types/enums";
+
+import SurveyTheme from "../SurveyTheme";
 import { ThemeTabEnum } from "../SurveyTheme/SurveyTheme.enums";
+import styles from "./FullPageEditor.module.css";
 
 const FullPageEditor = ({ page, survey }) => {
   const [opened, { close, open }] = useDisclosure(false);

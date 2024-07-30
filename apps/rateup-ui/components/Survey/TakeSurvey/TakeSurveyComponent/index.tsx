@@ -457,6 +457,9 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               nextFn={handleNext}
               prevFn={handlePrev}
               survey={survey}
+              isWelcomePageEnabled={isWelcomePageEnabled}
+              isLanguagePageEnabled={isLanguagePageEnabled}
+              isThankYouPageEnabled={isThankYouPageEnabled}
             >
               <Container
                 size={"md"}
@@ -580,9 +583,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     isSavingResponses={isSavingResponses || giftLoading}
                     errorTextDivRef={errorTextDivRef}
                     isSurveyThemePreview={isSurveyThemePreview}
-                    isWelcomePageEnabled={isWelcomePageEnabled}
-                    isThankYouPageEnabled={isThankYouPageEnabled}
-                    isLanguagePageEnabled={isLanguagePageEnabled}
                   />
                 </Stack>
               </Container>

@@ -1,23 +1,25 @@
 import React, { ReactElement, ReactNode, useEffect } from "react";
+import { NextPage } from "next";
 import { AppProps } from "next/app";
 import Head from "next/head";
+
 import { MantineProvider } from "@mantine/core";
-import { nprogress } from "@mantine/nprogress";
 import { Notifications } from "@mantine/notifications";
-import { redirectToAuth } from "supertokens-auth-react";
-import { frontendConfig } from "../config/frontendConfig";
-import Session from "supertokens-web-js/recipe/session";
+import { nprogress } from "@mantine/nprogress";
 import {
+  HydrationBoundary,
   QueryCache,
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { NextPage } from "next";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { UserProvider } from "../context/UserContext";
-import { HydrationBoundary } from "@tanstack/react-query";
-
+import { redirectToAuth } from "supertokens-auth-react";
 import SuperTokens from "supertokens-web-js";
+import Session from "supertokens-web-js/recipe/session";
+
+import { frontendConfig } from "../config/frontendConfig";
+import { UserProvider } from "../context/UserContext";
+
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
@@ -27,22 +29,26 @@ import "@mantine/dropzone/styles.css";
 import "@mantine/tiptap/styles.css";
 import "../styles/global.css";
 import "keen-slider/keen-slider.min.css";
-import { theme } from "../config/mantineTheme";
-import { motion, AnimatePresence } from "framer-motion";
-import Layout from "../components/Layout/Layout";
-import axios from "axios";
-import { ModalsProvider } from "@mantine/modals";
+
 import { useRouter } from "next/router";
-import { lexend300, notoColorEmogi } from "../utils/fonts";
-import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
-import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
-import GoogleAnalytics from "../components/Analytics/GoogleAnalytics";
-import { pageView } from "../utils/gtag";
-import { isProduction } from "../utils/constants";
-import FacebookPixel from "../components/Analytics/FacebookPixel";
-import { fbPageview } from "../utils/fbpixel";
+
+import { ModalsProvider } from "@mantine/modals";
+import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
+
 import CookieConsentBanner from "../components/Analytics/CookieConsentBanner";
+import FacebookPixel from "../components/Analytics/FacebookPixel";
+import GoogleAnalytics from "../components/Analytics/GoogleAnalytics";
+import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
+import Layout from "../components/Layout/Layout";
+import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
+import { theme } from "../config/mantineTheme";
 import { checkEmailVerification } from "../utils/auth/checkEmailVerification";
+import { isProduction } from "../utils/constants";
+import { fbPageview } from "../utils/fbpixel";
+import { lexend300, notoColorEmogi } from "../utils/fonts";
+import { pageView } from "../utils/gtag";
+
 if (typeof window !== "undefined") {
   SuperTokens.init(frontendConfig());
 }
@@ -175,7 +181,7 @@ export default function App({
   ).split("?")[0];
 
   return (
-    <>
+    <MantineProvider theme={theme}>
       <Head>
         <title>Rateup</title>
         <meta
@@ -194,27 +200,25 @@ export default function App({
       {/* notoColorEmogi is added as fallback for displaying emogies */}
       <main className={`${lexend300.className},${notoColorEmogi.className}`}>
         <QueryClientProvider client={queryClient}>
-          <MantineProvider theme={theme}>
-            <ModalsProvider modals={allModalManagerModalsObj}>
-              <Notifications />
-              <HydrationBoundary state={pageProps.dehydratedState}>
-                <UserProvider>
-                  <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
-                    <Component {...pageProps} />
-                  </LayoutComponent>
-                </UserProvider>
-                {showQueryDevTools && (
-                  <ReactQueryDevtools
-                    initialIsOpen={false}
-                    buttonPosition="top-right"
-                  />
-                )}
-              </HydrationBoundary>
-              <Notifications />
-            </ModalsProvider>
-          </MantineProvider>
+          <ModalsProvider modals={allModalManagerModalsObj}>
+            <Notifications />
+            <HydrationBoundary state={pageProps.dehydratedState}>
+              <UserProvider>
+                <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
+                  <Component {...pageProps} />
+                </LayoutComponent>
+              </UserProvider>
+              {showQueryDevTools && (
+                <ReactQueryDevtools
+                  initialIsOpen={false}
+                  buttonPosition="top-right"
+                />
+              )}
+            </HydrationBoundary>
+            <Notifications />
+          </ModalsProvider>
         </QueryClientProvider>
       </main>
-    </>
+    </MantineProvider>
   );
 }

@@ -11,6 +11,7 @@ import {
   PageType,
   PaymentPlanStatus,
   QuestionType,
+  SubscriptionFeaturePathName as sfpn,
   StripeProductType,
   SurveyType,
   SurveyVariableType,
@@ -91,7 +92,19 @@ declare global {
     wop?: Wop;
     onSelectAction?: boolean;
     waAppName?: IntegratedApps;
+    responseSummary?: ResponseSummary;
   }
+  type ResponseSummary = {
+    all: {
+      summary: string;
+      responseIds: string[];
+    };
+    team: {
+      teamId: string;
+      summary: string;
+      responseIds: string[];
+    }[];
+  };
   type WaSectionsType = Array<{
     title?: string;
     rows: Array<{ title: string; description: string }>;
@@ -590,12 +603,25 @@ declare global {
     subscriptionActiveField;
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
-    [sfpn.Menu]: subscriptionCountRestriction & subscriptionActiveField;
+    [sfpn.Menu]: subscriptionCountRestriction &
+      subscriptionActiveField & {
+        count: {
+          monthlyViewLimit: number;
+        };
+      };
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &
       subscriptionCountRestriction;
-    [sfpn.WebSurvey]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.WebSurvey]: subscriptionActiveField &
+      subscriptionCountRestriction & {
+        encryption: subscriptionActiveField;
+        googleReview: subscriptionActiveField;
+        emailNotification: subscriptionActiveField;
+        count: {
+          monthlyResponseLimit: number;
+        };
+      };
     [sfpn.Whatsapp]: subscriptionWithActiveAndCount & {
       survey: subscriptionWithActiveAndCount;
       campaign: subscriptionWithActiveAndCount;
@@ -609,6 +635,12 @@ declare global {
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
     [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
+    [sfpn.AI]: subscriptionActiveField & {
+      count: {
+        completionTokens: number;
+        promptTokens: number;
+      };
+    };
   }
   interface SPlan {
     id: string;

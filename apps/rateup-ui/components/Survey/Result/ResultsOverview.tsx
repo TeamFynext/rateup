@@ -11,6 +11,7 @@ import { IconTableExport } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Range } from "react-date-range";
 
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
@@ -42,6 +43,7 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
 import QuestionBarChart from "./Charts/QuestionBarChart";
 import QuestionPieChart from "./Charts/QuestionPieChart";
+import LargeTextResponseSummary from "./LargeTextResponseSummary";
 import styles from "./ResultsOverview.module.css";
 
 const ResultsOverview = ({ surveyId }) => {
@@ -65,6 +67,7 @@ const ResultsOverview = ({ surveyId }) => {
 
   const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
+  const { data: subscription } = useSubscription();
 
   useEffect(() => {
     if (questions) {
@@ -142,6 +145,7 @@ const ResultsOverview = ({ surveyId }) => {
     getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags);
 
   useEffect(() => {
+    if (!filteredResponsesByTags || !filteredResponsesByTags?.length) return;
     if (ranges.length === 0) {
       const endDate = dayjs();
       let startDate = dayjs();
@@ -433,6 +437,11 @@ const ResultsOverview = ({ surveyId }) => {
                   ),
                 )}
             </PaperLayout>
+            <LargeTextResponseSummary
+              surveyId={surveyId}
+              questions={questions}
+              subscription={subscription}
+            />
           </Stack>
         </>
       ) : (

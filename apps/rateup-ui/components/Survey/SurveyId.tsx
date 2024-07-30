@@ -172,6 +172,7 @@ export default function SurveyID(translations) {
             encryptionpassword,
             surveyId,
             variables,
+            teams: teamOptions,
           }}
         >
           <StyledTabs
