@@ -115,3 +115,37 @@ export async function createSurveyDefaultVariableForQuestion(
     await createSurveyVariable(surveyId, variable);
   }
 }
+
+export function getTitleAndDescriptionObjs(languages, type) {
+  const title = {};
+  const description = {};
+  languages.forEach((language) => {
+    (title[language] = `${type} Page`),
+      (description[language] = `This is the ${type} page of the survey`);
+  });
+  return {
+    title,
+    description,
+  };
+}
+
+export function getPageQuestions(languages) {
+  const questionsArr = [];
+  if (languages.length > 1) {
+    questionsArr.push({
+      id: "language-page",
+      type: "Language",
+      required: true,
+      enableNpsAnalytics: false,
+      ...getTitleAndDescriptionObjs(languages, "Language"),
+    });
+  }
+  questionsArr.push({
+    id: "thankyou-page",
+    type: "ThankYou",
+    required: true,
+    enableNpsAnalytics: false,
+    ...getTitleAndDescriptionObjs(languages, "ThankYou"),
+  });
+  return questionsArr;
+}
