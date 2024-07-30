@@ -1,11 +1,13 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconBook } from "@tabler/icons-react";
 import React from "react";
 
-const InfoButton = ({ docUrl }) => {
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconBook } from "@tabler/icons-react";
+
+const InfoButton = ({ docUrl, className = "" }) => {
   return (
     <Tooltip label="Visit documentation" position="top" withArrow>
       <ActionIcon
+        className={className}
         variant="light"
         onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
           window.open(docUrl, "_blank");

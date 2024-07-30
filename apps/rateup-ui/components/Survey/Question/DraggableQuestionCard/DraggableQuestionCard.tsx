@@ -71,6 +71,8 @@ export function DraggableQuestionCard({
     questionDeleteMutation.mutate(qId);
   };
 
+  const nonDeletablePagetypeStrs = ["Language", "ThankYou"];
+
   return (
     <>
       <ConfirmationModal
@@ -161,16 +163,19 @@ export function DraggableQuestionCard({
                     style={{ width: "2rem", height: "1rem" }}
                   />
                 )}
-                <ActionIcon
-                  onClick={() => {
-                    closeDialog();
-                    toggle();
-                  }}
-                  variant="subtle"
-                  color="gray"
-                >
-                  <IconTrash />
-                </ActionIcon>
+
+                {!nonDeletablePagetypeStrs.includes(question.type) && (
+                  <ActionIcon
+                    onClick={() => {
+                      closeDialog();
+                      toggle();
+                    }}
+                    variant="subtle"
+                    color="gray"
+                  >
+                    <IconTrash />
+                  </ActionIcon>
+                )}
               </Group>
             </Box>
           </div>

@@ -3,9 +3,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
-import { Center, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Center,
+  Group,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { useListState, useThrottledCallback } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
@@ -113,30 +123,47 @@ export function QuestionsSideBar({
   return (
     <Stack className={styles["add-question-btn-questions-list-container"]}>
       {questionsState?.length > 0 && (
-        <Group
-          className={styles["add-question-btn-more-than-1-que"]}
-          justify="space-between"
-        >
-          <Group>
-            <InfoButton docUrl={`${docsPath}/webSurvey/EditSurvey`} />
-            <RateupButtonBlue
-              onClick={handleAddQn}
-              title={"Add Page"}
-              rightIcon={<IconPlus size="1rem" />}
-              size="md"
-            />
-          </Group>
-
-          <RateupButtonPrimary
-            className={styles["survey-preview-btn"]}
-            title="Survey Preview"
-            onClick={() => {
-              setSelectedQ(null);
-              setActiveTab(QuestionTabsEnum.SurveyPreview);
-            }}
-            fw={"bold"}
+        <Group className={styles["add-question-btn-more-than-1-que"]}>
+          <Button
+            className={styles["add-content-btn"]}
+            rightSection={<IconPlus size="1.125rem" />}
+            onClick={handleAddQn}
+          >
+            Add Content
+          </Button>
+          <InfoButton
+            className={styles["info-btn"]}
+            docUrl={`${docsPath}/webSurvey/EditSurvey`}
           />
+          <Tooltip label={"Survey Preview"}>
+            <ActionIcon
+              className={styles["survey-preview-btn"]}
+              variant="light"
+              onClick={() => {
+                setSelectedQ(null);
+                setActiveTab(QuestionTabsEnum.SurveyPreview);
+              }}
+            >
+              <IconPlayerPlay />
+            </ActionIcon>
+          </Tooltip>
         </Group>
+      )}
+
+      {!questionsState?.length && (
+        <Paper
+          style={{ cursor: "pointer", height: "100%", maxHeight: "850px" }}
+          onClick={handleAddQn}
+        >
+          <Center h="100%">
+            <Stack align="center">
+              <IconPlus size={36} />
+              <Text size="xl" fw={700}>
+                Add Content
+              </Text>
+            </Stack>
+          </Center>
+        </Paper>
       )}
 
       <ScrollArea
@@ -145,22 +172,6 @@ export function QuestionsSideBar({
         scrollbars={"y"}
       >
         <DragDropContext onDragEnd={handleDragEnd}>
-          {!questionsState?.length && (
-            <Paper
-              style={{ cursor: "pointer", marginTop: "200px" }}
-              onClick={handleAddQn}
-            >
-              <Center h="100%">
-                <Stack align="center">
-                  <IconPlus size={36} />
-                  <Text size="xl" fw={700}>
-                    Add Page
-                  </Text>
-                </Stack>
-              </Center>
-            </Paper>
-          )}
-
           <Droppable droppableId="dnd-list" direction="vertical">
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef}>

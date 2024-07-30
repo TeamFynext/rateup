@@ -34,7 +34,7 @@ function LinktreeDashboard() {
   const queryClient = useQueryClient();
   const { data, isPending, isError } = useLinktrees();
   const [linktrees, setLinktrees] = useState([]);
-  const [sortOption, setSortOption] = useState("");
+  const [sortOption, setSortOption] = useState("latest");
 
   const tourSteps = LPTourSteps({ styles });
 

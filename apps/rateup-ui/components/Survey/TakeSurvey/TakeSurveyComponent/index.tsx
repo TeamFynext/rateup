@@ -134,14 +134,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
-      if (isWelcomePageEnabled) {
-        if (isLanguagePageEnabled) {
-          setSelectedQ(survey.questions[2]);
-          questionsHistoryHandlers.append(survey.questions[2]?.id);
-        } else {
-          setSelectedQ(survey.questions[1]);
-          questionsHistoryHandlers.append(survey.questions[1]?.id);
-        }
+      if (isWelcomePageEnabled && isLanguagePageEnabled) {
+        setSelectedQ(survey.questions[2]);
+        questionsHistoryHandlers.append(survey.questions[2]?.id);
+      } else if (isWelcomePageEnabled || isLanguagePageEnabled) {
+        setSelectedQ(survey.questions[1]);
+        questionsHistoryHandlers.append(survey.questions[1]?.id);
       } else {
         setSelectedQ(survey.questions[0]);
         questionsHistoryHandlers.append(survey.questions[0]?.id);
