@@ -25,6 +25,7 @@ export function getSampleSubscriptionFeatures(
       encryption: { active: true },
       googleReview: { active: true },
       emailNotification: { active: true },
+      htmlCodePage: { active: true },
     },
     whatsapp: {
       active: true,

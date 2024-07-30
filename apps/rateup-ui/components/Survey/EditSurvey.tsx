@@ -45,12 +45,14 @@ interface EditSurveyProps {
   addQnTrigger?: number;
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
+  subscription: Subscription;
 }
 export function EditSurvey({
   questions,
   addQnTrigger,
   surveyLanguages,
   setSelectedLanguage,
+  subscription,
 }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
     QuestionTabsEnum.SurveyPreview,
@@ -168,6 +170,7 @@ export function EditSurvey({
                 <PageTypeSelection
                   questions={questions}
                   handleTypeSelection={handleTypeSelection}
+                  subscription={subscription}
                 />
               )}
 
