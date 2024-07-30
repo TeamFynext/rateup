@@ -226,8 +226,8 @@ export const WhatsappStats = ({ stats, totalStats }) => {
 };
 
 const AIStats = ({ stats, totalStats }) => {
-  const isActive = totalStats.ai.active;
-  if (!isActive) return;
+  const aiFeature = totalStats?.ai;
+  if (!aiFeature || !aiFeature?.active) return;
   const statsArray = [
     {
       Icon: IconBrandOpenai as unknown as string,
