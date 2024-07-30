@@ -46,6 +46,10 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
     },
     reputationManagement: { count: { max: count }, active: true },
     ticket: { count: { max: count }, active: true },
+    ai: {
+      count: { completionTokens: 12000, promptTokens: 120000 },
+      active: false,
+    },
   };
 }
 export const SampleSubscriptionFeatures = getSampleSubscriptionFeatures(10);
@@ -101,6 +105,7 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
     },
     reputationManagement: { count: { max: 0 }, active: false },
     ticket: { count: { max: 0 }, active: false },
+    ai: { count: { completionTokens: 0, promptTokens: 0 }, active: false },
   };
 }
 

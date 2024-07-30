@@ -12,6 +12,7 @@ import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
 import {
   ChoiceTypeQuestions,
   QuestionType,
+  ResponseSummaryType,
   SubscriptionFeaturePathName,
 } from "../../types/enums";
 import dayjs from "dayjs";
@@ -24,6 +25,13 @@ import timezone from "dayjs/plugin/timezone";
 import { updateMonthlyStat } from "../stats/stats.service";
 import { hasFeature } from "../subscription/subscription.service";
 import { log } from "../../utils/logger";
+import {
+  getQuestionsBySurveyId,
+  updateQuestion,
+} from "../question/question.service";
+import { FastifyRequest } from "fastify";
+import { getTextSummaryByAI } from "../chatbot/chatbot.service";
+import { UpdateQuestionInput } from "../question/question.schema";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -186,11 +194,11 @@ export async function downloadExcelResponse(
               ? [
                   `${getContent(question.title[defaultLanguage])}: name`,
                   `${getContent(question.title[defaultLanguage])}: testimonial`,
-                  ...Object.keys(question.features?.[defaultLanguage])?.map(
+                  ...(Object.keys(question.features?.[defaultLanguage])?.map(
                     (key) =>
                       `${getContent(question.title[defaultLanguage])}: ${key}`,
-                  ),
-                ] ?? []
+                  ) ?? []),
+                ]
               : [getContent(qsTitle)];
     });
 
@@ -1102,4 +1110,104 @@ export function getFormattedResponse(response, qstn, language) {
       formattedResponse = response;
   }
   return formattedResponse;
+}
+
+export async function getResponseSummary(
+  surveyId: string,
+  request: FastifyRequest,
+  allowedTokens,
+  type: ResponseSummaryType,
+  questionId: string,
+  teamId?: string,
+) {
+  const allResponses = await getAllResponses(surveyId);
+  const questions = await getQuestionsBySurveyId(surveyId);
+  const question = questions.find((q) => q.id === questionId);
+  const questionResponses = allResponses
+    .flatMap((res) =>
+      res.responses.map((r) => ({
+        responseId: r.id,
+        teamId: r.teamId,
+        response: r.responses.find(
+          (ir) => (ir as unknown as QuestionResponse).questionId === questionId,
+        ) as unknown as QuestionResponse,
+      })),
+    )
+    .filter((r) => r.response != undefined);
+
+  let existingSummary = null;
+  let filteredResponses = questionResponses;
+  if (type === ResponseSummaryType.All) {
+    existingSummary = question.responseSummary?.all;
+  } else if (type === ResponseSummaryType.Team) {
+    if (!teamId) throw new Error("TeamId not found");
+    filteredResponses = questionResponses.filter((r) => r.teamId === teamId);
+    existingSummary = question.responseSummary?.team?.find(
+      (t) => t.teamId === teamId,
+    );
+  }
+  const responseIds = filteredResponses.map((r) => r.responseId);
+  const responsesNotSummarised = existingSummary
+    ? filteredResponses.filter(
+        (r) => !existingSummary.responseIds.includes(r.responseId),
+      )
+    : filteredResponses;
+  if (!responsesNotSummarised.length) return;
+  const responseTexts = responsesNotSummarised.map(
+    (r) => r.response.response[r.response.type],
+  );
+  if (existingSummary) responseTexts.push(existingSummary.summary);
+  const res = await getTextSummaryByAI(responseTexts, request, allowedTokens);
+  if (!res) throw new Error("Unable to get Summary");
+  let updateData = null;
+  if (type === ResponseSummaryType.All) {
+    updateData = {
+      responseSummary: {
+        ...question.responseSummary,
+        all: {
+          summary: res.summary,
+          responseIds,
+        },
+      },
+    };
+  } else if (type === ResponseSummaryType.Team) {
+    let updatedTeamSummary = question.responseSummary?.team ?? [];
+    if (existingSummary) {
+      const teamSummaryIndex = updatedTeamSummary.findIndex(
+        (t) => t.teamId === teamId,
+      );
+      updatedTeamSummary[teamSummaryIndex].summary = res.summary;
+      updatedTeamSummary[teamSummaryIndex].responseIds = responseIds;
+    } else {
+      updatedTeamSummary.push({ teamId, responseIds, summary: res?.summary });
+    }
+    updateData = {
+      responseSummary: {
+        ...question.responseSummary,
+        team: updatedTeamSummary,
+      },
+    };
+  }
+  if (updateData && res.tokenUsage)
+    await Promise.all([
+      updateQuestion(
+        surveyId,
+        questionId,
+        updateData as unknown as UpdateQuestionInput,
+      ),
+      prisma.usageStats.update({
+        where: {
+          orgId: request.user.orgId,
+        },
+        data: {
+          aiPromptTokensCount: {
+            increment: res.tokenUsage.promptTokens,
+          },
+          aiCompletionTokensCount: {
+            increment: res.tokenUsage.completionTokens,
+          },
+        },
+      }),
+    ]);
+  return true;
 }
