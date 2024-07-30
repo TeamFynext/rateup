@@ -12,6 +12,7 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
       encryption: { active: true },
       googleReview: { active: true },
       emailNotification: { active: true },
+      htmlCodePage: { active: true },
     },
     whatsapp: {
       active: true,
@@ -71,6 +72,7 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       encryption: { active: false },
       googleReview: { active: false },
       emailNotification: { active: false },
+      htmlCodePage: { active: false },
     },
     whatsapp: {
       active: true,
