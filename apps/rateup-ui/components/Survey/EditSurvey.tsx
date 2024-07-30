@@ -59,7 +59,6 @@ export function EditSurvey({
   const { surveyId } = useContext(SurveyContext);
   const { data: survey, dataUpdatedAt } = useSurvey(surveyId);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  console.log({ activeTab });
   // used to rerender survey theme preview, when questions reoredered or deleted and when survey changes.
   const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
 

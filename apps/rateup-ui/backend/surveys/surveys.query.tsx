@@ -1,44 +1,45 @@
+import { rem } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import { getTeamSurveys } from "../team/team.api";
 import {
   cloneSurvey,
   createSurvey,
   createSurveyLandingPage,
+  createSurveyVariable,
+  deleteSurvey,
+  deleteSurveyVariable,
+  getActiveSurveysSummary,
+  getLandingpage,
+  getPhoneNumberFromSurveyTeamMapId,
   getPublicSurvey,
   getPublicSurveyGoogleLink,
   getSurvey,
-  getLandingpage,
   getSurveyByLandingId,
   getSurveyLandings,
   getSurveys,
+  getSurveysSummary,
+  getSurveyStatsBySurveyTeamMapId,
+  getSurveyTemplates,
+  getSurveyVariables,
+  getSurveyWithQuestions,
   getWhatsappSurveys,
+  sendEmail,
+  sendOTPEmail,
   updateSurvey,
   updateSurveyCompleted,
   updateSurveyGoogleLink,
+  updateSurveyLandingPage,
   updateSurveyPassword,
   updateSurveyStarted,
-  updateSurveyVisited,
-  verifySurveyPassword,
-  updateSurveyLandingPage,
-  getActiveSurveysSummary,
-  deleteSurvey,
-  getSurveyStatsBySurveyTeamMapId,
-  getSurveyTemplates,
-  getSurveyWithQuestions,
-  getPhoneNumberFromSurveyTeamMapId,
-  getSurveysSummary,
-  getSurveyVariables,
-  createSurveyVariable,
   updateSurveyVariable,
-  deleteSurveyVariable,
-  sendEmail,
-  sendOTPEmail,
+  updateSurveyVisited,
   validateOTP,
+  verifySurveyPassword,
 } from "./survey.api";
-import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import { getTeamSurveys } from "../team/team.api";
-import { rem } from "@mantine/core";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export const useSurvey = (surveyId: string) => {
   return useQuery({
@@ -416,6 +417,7 @@ export function useEditSurveyMutation(id) {
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["survey", id] });
+      queryClient.invalidateQueries({ queryKey: ["questions", id] });
     },
     onError: (error: any) => {
       console.error("Error Survey Update:", error.message);

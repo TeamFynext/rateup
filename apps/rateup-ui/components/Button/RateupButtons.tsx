@@ -98,11 +98,11 @@ export const RateupButtonBlue = ({
       onClick={onClick}
       variant={variant || "filled"}
       size={size}
-      style={sx}
       loading={loading}
       fw={400}
       {...other}
       w={w ?? undefined}
+      style={sx}
     >
       {title}
     </Button>
