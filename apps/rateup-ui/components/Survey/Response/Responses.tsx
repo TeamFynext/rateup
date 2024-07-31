@@ -41,6 +41,7 @@ import {
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import {
+  PageType,
   QuestionType,
   SubscriptionFeaturePathName,
   SurveyType,
@@ -254,9 +255,9 @@ const Responses = ({
   };
   const columns = useSurveyResponseColumns({
     questions: !isQLoading
-      ? questions.filter(
-          (q) => q.type !== QuestionType.InfoMessage && q.type in QuestionType,
-        )
+      ? questions
+          .filter((q) => q.type !== QuestionType.InfoMessage)
+          .filter((q) => (q.type in PageType ? false : true))
       : [],
     defaultLanguage,
     setSelectedRowId,
