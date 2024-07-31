@@ -210,6 +210,14 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
               scrollbarSize={10}
             >
               <MantineProvider
+                getRootElement={() => {
+                  return typeof window === "undefined"
+                    ? undefined
+                    : document.querySelector(
+                        `.${cx("languages-list-radio-grp-container")}`,
+                      );
+                }}
+                cssVariablesSelector={`.${cx("languages-list-radio-grp-container")}`}
                 theme={{
                   colors: {
                     // @ts-ignore
