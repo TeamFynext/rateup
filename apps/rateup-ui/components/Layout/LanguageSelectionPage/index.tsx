@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Button,
   Flex,
@@ -12,14 +14,14 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
-import { useState } from "react";
-import surveyThemeStyles from "../../Survey/SurveyTheme/SurveyTheme.module.css";
-import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
+
 import { lexend } from "../../../utils/fonts";
-import { getBgImgAndBgColor } from "../TakeSurveyLayout/utils";
-import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
-import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
 import { CreditsCard } from "../../Card/CreditsCard";
+import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
+import surveyThemeStyles from "../../Survey/SurveyTheme/SurveyTheme.module.css";
+import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
+import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
+import { getBgImgAndBgColor } from "../TakeSurveyLayout/utils";
 
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
@@ -117,6 +119,14 @@ function LanguageSelectionPage({
               scrollbarSize={10}
             >
               <MantineProvider
+                getRootElement={() => {
+                  return typeof window === "undefined"
+                    ? undefined
+                    : document.querySelector(
+                        `.${cx("languages-list-radio-grp-container")}`,
+                      );
+                }}
+                cssVariablesSelector={`.${cx("languages-list-radio-grp-container")}`}
                 theme={{
                   colors: {
                     // @ts-ignore
