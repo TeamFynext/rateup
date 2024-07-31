@@ -57,6 +57,13 @@ function SurveyThemeContextProvider({
       });
   }, [surveyTheme]);
 
+  useEffect(() => {
+    dispatch({
+      type: "selected-page-tab-change",
+      payload: selectedPageTab,
+    });
+  }, [selectedPageTab]);
+
   return (
     <SurveyThemeContext.Provider value={state.surveyTheme}>
       <SelectedPageTabContext.Provider value={state.selectedPageTab}>

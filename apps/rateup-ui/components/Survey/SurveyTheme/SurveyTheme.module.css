@@ -9,20 +9,6 @@
   overflow: auto;
 }
 
-.tabs-and-other-options-container {
-  margin-bottom: 1rem;
-}
-
-.tabs-and-other-options-container > div {
-  flex: 1 1 0;
-  display: flex;
-  justify-content: center;
-}
-
-.tabs-and-other-options-container > div:nth-child(2) {
-  flex-grow: 1.5;
-}
-
 .page-selector-tabs-root {
   display: block;
 }
@@ -33,7 +19,7 @@
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;
-  padding: 5px;
+  padding: 0.3125rem;
   max-height: 800px;
 }
 
@@ -103,19 +89,17 @@
   padding: 0.4375rem;
 }
 
+.survey-theme-preview-layout-div > div > div {
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  border-radius: 1rem;
+}
+
 .survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
   height: 100%;
   overflow: hidden;
   border-radius: 1rem;
-}
-
-.theme-selector-org-logo-styles-component-container {
-  flex: 0.28 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  overflow: hidden;
-  padding: 0.3125rem;
 }
 
 .theme-selector-div {
@@ -184,16 +168,29 @@
 
 /* Survey Editor Header styles which contains options for editing welcome theme and thankyou theme */
 .survey-editor-page-header {
-  margin-bottom: 1rem;
+  padding: 0.3125rem;
 }
 
-.open-close-survey-editor-btn {
-  border-radius: 2rem;
+.survey-editor-page-header > div {
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  padding: 0.875rem 1.25rem;
+  border-radius: 1rem;
+}
+
+.survey-editor-page-header-save-btn {
+  margin-left: auto;
+}
+
+.selected-page-tab-panels-and-styles-div-container {
+  flex: 1 1 0;
+  overflow: auto;
 }
 
 .survey-editor-page-header .theme-selector-div {
   box-shadow: none;
-  padding-left: 0;
+  padding: 0;
 }
 
 .survey-editor-page-header :global(.styles-component-div) {

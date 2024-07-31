@@ -14,18 +14,16 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { useListState, useThrottledCallback } from "@mantine/hooks";
+import { useListState } from "@mantine/hooks";
 import { IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
 import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
-import { docsPath, uniquePages } from "../../utils/constants";
+import { docsPath } from "../../utils/constants";
 import { reorder, reOrderPages } from "../../utils/questions";
 import InfoButton from "../Button/InfoButton";
-import { RateupButtonBlue, RateupButtonPrimary } from "../Button/RateupButtons";
 import { QuestionTabsEnum } from "./EditSurvey";
-import FullPageEditor from "./Page/FullPageEditor";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import styles from "./QuestionsSideBar.module.css";
 

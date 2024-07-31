@@ -148,6 +148,8 @@ declare global {
     };
     surveyPublishAt?: string;
     surveyEndAt?: string;
+    webSurveyTheme: any;
+    webSurveyThemeId: string;
   };
 
   interface STeam {

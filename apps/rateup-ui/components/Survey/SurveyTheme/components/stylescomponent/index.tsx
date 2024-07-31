@@ -44,8 +44,6 @@ function StylesComponent({
   const selectedEditor = useSelectedEditor();
   const setSelectedEditor = useSetSelectedEditor();
 
-  const isWelcomePageEnabled = survey?.welcomePageEnabled;
-
   return (
     <MantineProvider theme={theme}>
       <ScrollArea
