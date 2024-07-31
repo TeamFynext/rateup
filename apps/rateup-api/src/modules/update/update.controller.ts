@@ -1,14 +1,17 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { updateSubscriptionFeatures } from "./migrationFiles/subscription-update";
 import { updateEditorStructure } from "./migrationFiles/editor-update";
+import { updateSubscriptionFeatures2 } from "./migrationFiles/sub-update-2";
 
 export async function updateDatabase(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    console.log(".......Updating Database........");
-    updateSubscriptionFeatures();
+    console.log("Plz Wait....Pushing Database Update...");
+    //updateSubscriptionFeatures();
+    await updateSubscriptionFeatures2();
+    console.log("--->  Successfully Completed Updations.");
     reply.code(201).send("Database Updated Successfully");
   } catch (error) {
     reply.code(500).send(error);
