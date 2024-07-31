@@ -9,6 +9,25 @@
   padding: 1rem;
 }
 
+.add-question-btn-more-than-1-que .add-content-btn {
+  height: auto;
+  padding: 0.625rem 1rem;
+  font-weight: bold;
+  border-radius: 0.625rem;
+}
+
+.add-question-btn-more-than-1-que .add-content-btn svg path {
+  stroke: 2;
+}
+
+.add-question-btn-more-than-1-que .info-btn,
+.add-question-btn-more-than-1-que .survey-preview-btn {
+  height: auto;
+  width: auto;
+  padding: 0.3125rem;
+  border-radius: 0.625rem;
+}
+
 .questions-list-container {
   z-index: 5;
   flex: 1 1 0;

@@ -1,5 +1,5 @@
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Box } from "@mantine/core";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 import styles from "./Reorder.module.css";
 

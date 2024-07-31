@@ -176,6 +176,7 @@ export enum SubscriptionFeaturePathName {
   EmailNotification = "webSurvey.emailNotification",
   GoogleReview = "webSurvey.googleReview",
   Encryption = "webSurvey.encryption",
+  HTMLCodePage = "webSurvey.htmlCodePage",
   Whatsapp = "whatsapp",
   WhatsAppSurvey = "whatsapp.survey",
   WhatsAppCampaign = "whatsapp.campaign",

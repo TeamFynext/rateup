@@ -618,6 +618,7 @@ declare global {
         encryption: subscriptionActiveField;
         googleReview: subscriptionActiveField;
         emailNotification: subscriptionActiveField;
+        htmlCodePage: subscriptionActiveField;
         count: {
           monthlyResponseLimit: number;
         };

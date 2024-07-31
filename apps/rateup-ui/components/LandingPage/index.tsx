@@ -32,7 +32,7 @@ function LandingPageDashboard() {
   const { data, isPending, isError } = useLandingPages();
 
   const [landingPages, setLandingPages] = useState([]);
-  const [sortOption, setSortOption] = useState("");
+  const [sortOption, setSortOption] = useState("latest");
 
   const tourSteps = LPTourSteps({ styles });
 

@@ -268,6 +268,7 @@ export function QuestionDetailedView({
               features={form.values.features}
               tnc={form.values.tnc}
               wop={form.values?.wop}
+              htmlContent={form?.values?.description[selectedLanguage] || null}
             />
           </CurrentResponsesContext.Provider>
         </ScrollArea>
