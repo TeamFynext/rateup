@@ -23,6 +23,7 @@ function SaveButton({
   survey,
   themeObjBeingEdited,
   isThemeObjBeingEditedDefaultTheme,
+  onSave = null,
 }) {
   const selectedPageTab = useSelectedPageTab();
 
@@ -82,6 +83,8 @@ function SaveButton({
       },
     });
     setIsSaving(false);
+
+    onSave?.();
   }, [themeObjBeingEdited, themeObjState]);
 
   useHotkeys([[SAVE_HOTKEY, handleSaveTheme]]);

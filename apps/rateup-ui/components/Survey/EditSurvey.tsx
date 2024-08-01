@@ -1,7 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 
-import { Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+import { Button, Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconEdit } from "@tabler/icons-react";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
+
+import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 
 import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../backend/surveys/surveys.query";
@@ -14,7 +19,6 @@ import {
   WaSurveyQuestionTypes,
 } from "../../utils/constants";
 import { createBlankQuestion, createPage } from "../../utils/questions";
-import { MotionTransition } from "../animation/MotionTransition";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import styles from "./EditSurvey.module.css";
 import PageTypeSelection from "./Page/PageTypeSelection";
@@ -27,7 +31,9 @@ import TicketIssueEditor from "./Question/TicketIssueEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "./QuestionsSideBar";
 import SurveyTheme from "./SurveyTheme";
+import StylesComponent from "./SurveyTheme/components/stylescomponent";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
+import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -64,6 +70,29 @@ export function EditSurvey({
   // used to rerender survey theme preview, when questions reoredered or deleted and when survey changes.
   const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
 
+  // selected surveyThemeId.
+  const [themeSelectorState, setThemeSelectorState] = useState(
+    survey?.webSurveyThemeId,
+  );
+
+  const { data: allThemesArr, isPending: isAllThemesFetchPending } =
+    useAllThemes();
+
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj) => obj.id === themeSelectorState,
+  );
+  const isThemeObjBeingEditedDefaultTheme =
+    themeObjBeingEdited?.name === "Default Theme";
+
+  const [
+    isStylesEditorDrawerOpen,
+    {
+      open: openStylesEditorDrawer,
+      close: closeStylesEditorDrawer,
+      toggle: toggleStylesEditorDrawer,
+    },
+  ] = useDisclosure(false);
+
   useEffect(() => {
     const newKey = uuidv4();
     setSurveyPreveiwCompKey(newKey);
@@ -99,144 +128,228 @@ export function EditSurvey({
     });
   };
 
-  let intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.SURVEY;
+  let inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.SURVEY;
   if (selectedQ?.type === PageType.Welcome) {
-    intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.WELCOME;
+    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.WELCOME;
   } else if (selectedQ?.type === PageType.ThankYou) {
-    intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.THANKYOU;
+    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.THANKYOU;
   } else if (selectedQ?.type === PageType.Language) {
-    intitalSelectedTabForSurveyThemeComp = ThemeTabEnum.LANGUAGE;
+    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.LANGUAGE;
   }
 
-  return (
-    <Flex className={styles["edit-survey-div"]}>
-      <PaperLayout className={styles["question-sidebar-container"]}>
-        <QuestionsSideBar
-          questions={questions}
-          selectedQ={selectedQ}
-          setSelectedQ={setSelectedQ}
-          setActiveTab={setActiveTab}
-          surveyLanguages={surveyLanguages}
-          setSelectedLanguage={setSelectedLanguage}
-          addQnTrigger={addQnTrigger}
-          survey={survey}
-        />
-      </PaperLayout>
-      <PaperLayout
-        className={`${styles["question-editor-container"]} ${activeTab ? activeTab + "-QDV" : ""} ${selectedQ?.type ? selectedQ.type + "-QDV" : ""}`}
-      >
-        <Tabs
-          value={activeTab}
-          onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
-          style={{ height: "100%" }}
-          classNames={{
-            panel: styles["panel"],
-          }}
-        >
-          <Tabs.Panel
-            value={QuestionTabsEnum.Edit}
-            className={styles["question-detailed-view-panel"]}
-          >
-            {selectedQ && (
-              <MotionTransition keyValue={selectedQ} style={{ height: "100%" }}>
-                {uniquePages.includes(selectedQ?.type as PageType) ? (
-                  <Stack gap={"xs"} h={"100%"}>
-                    {survey && (
-                      <SurveyTheme
-                        survey={survey}
-                        initialSelectedPageTab={
-                          intitalSelectedTabForSurveyThemeComp
-                        }
-                      />
-                    )}
-                  </Stack>
-                ) : (
-                  <QuestionDetailedView
-                    survey={survey}
-                    question={selectedQ}
-                    setSelectedQ={setSelectedQ}
-                    setActiveTab={setActiveTab}
-                    surveyLanguages={surveyLanguages}
-                    setSelectedLanguage={setSelectedLanguage}
-                    key={selectedQ.id}
-                  />
-                )}
-              </MotionTransition>
-            )}
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
-            <Stack className={styles["type-selection-panel-child-div"]}>
-              {survey?.type === SurveyType.Web && (
-                <PageTypeSelection
-                  questions={questions}
-                  handleTypeSelection={handleTypeSelection}
-                  subscription={subscription}
-                />
-              )}
+  if (activeTab === QuestionTabsEnum.SurveyPreview) {
+    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.SURVEY;
+  }
 
-              <QuestionTypeSelection
-                questionTypeGroups={
-                  survey?.type === SurveyType.WhatsApp
-                    ? WaSurveyQuestionTypes
-                    : QuestionTypesGroup
-                }
-                handleTypeSelection={handleTypeSelection}
-              />
-            </Stack>
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
-            {selectedQ && (
-              <LogicEditor
-                selectedQ={selectedQ}
-                setActiveTab={setActiveTab}
-                key={selectedQ.id}
-              />
-            )}
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
-            <GoogleReviewEditor
-              selectedQ={selectedQ}
-              setSelectedQ={setSelectedQ}
-              setActiveTab={setActiveTab}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.TicketIssueEditor}>
-            <TicketIssueEditor
-              selectedQ={selectedQ}
-              setSelectedQ={setSelectedQ}
-              setActiveTab={setActiveTab}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.ValidationRulesEditor}>
-            <ValidationRulesEditor
-              selectedQ={selectedQ}
-              setSelectedQ={setSelectedQ}
-              setActiveTab={setActiveTab}
-              activeTab={activeTab}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.VariableEditor}>
-            <SurveyVariableEditor setActiveTab={setActiveTab} />
-          </Tabs.Panel>
-          <Tabs.Panel value={QuestionTabsEnum.None}>
-            <Center style={{ height: "100%" }}>
-              <Text c="dimmed">Select a question to edit</Text>
-            </Center>
-          </Tabs.Panel>
-          <Tabs.Panel
-            className={styles["survey-preview-panel"]}
-            value={QuestionTabsEnum.SurveyPreview}
+  useEffect(() => {
+    closeStylesEditorDrawer();
+  }, [inititalSelectedTabForSurveyThemeComp]);
+
+  return (
+    <SurveyThemeContextProvider
+      surveyTheme={survey?.webSurveyTheme?.theme}
+      selectedPageTab={inititalSelectedTabForSurveyThemeComp}
+    >
+      <Flex className={styles["edit-survey-div"]}>
+        <LayoutGroup>
+          <motion.div
+            className={styles["question-sidebar-container-motion-div"]}
+            layout={"position"}
           >
-            {survey && (
-              <SurveyTheme
-                key={surveyPreviewCompKey}
-                initialSelectedPageTab={ThemeTabEnum.SURVEY}
+            <PaperLayout className={styles["question-sidebar-container"]}>
+              <QuestionsSideBar
+                questions={questions}
+                selectedQ={selectedQ}
+                setSelectedQ={setSelectedQ}
+                setActiveTab={setActiveTab}
+                surveyLanguages={surveyLanguages}
+                setSelectedLanguage={setSelectedLanguage}
+                addQnTrigger={addQnTrigger}
                 survey={survey}
               />
-            )}
-          </Tabs.Panel>
-        </Tabs>
-      </PaperLayout>
-    </Flex>
+            </PaperLayout>
+          </motion.div>
+
+          <motion.div
+            className={`${styles["question-editor-container-motion-div"]}`}
+            layout={"position"}
+          >
+            <PaperLayout
+              className={`${styles["question-editor-container"]} ${activeTab ? activeTab + "-QDV" : ""} ${selectedQ?.type ? selectedQ.type + "-QDV" : ""}`}
+            >
+              <Tabs
+                value={activeTab}
+                onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
+                style={{ height: "100%" }}
+                classNames={{
+                  panel: styles["panel"],
+                }}
+              >
+                <Tabs.Panel
+                  value={QuestionTabsEnum.Edit}
+                  className={styles["question-detailed-view-panel"]}
+                >
+                  {selectedQ && (
+                    <>
+                      {uniquePages.includes(selectedQ?.type as PageType) ? (
+                        <Stack gap={"xs"} h={"100%"}>
+                          {survey && (
+                            <SurveyTheme
+                              survey={survey}
+                              initialSelectedPageTab={
+                                inititalSelectedTabForSurveyThemeComp
+                              }
+                              allThemesArr={allThemesArr}
+                              themeSelectorState={themeSelectorState}
+                              setThemeSelectorState={setThemeSelectorState}
+                              isAllThemesFetchPending={isAllThemesFetchPending}
+                              isThemeObjBeingEditedDefaultTheme={
+                                isThemeObjBeingEditedDefaultTheme
+                              }
+                              themeObjBeingEdited={themeObjBeingEdited}
+                              closeStylesEditorDrawer={closeStylesEditorDrawer}
+                            />
+                          )}
+                        </Stack>
+                      ) : (
+                        <QuestionDetailedView
+                          survey={survey}
+                          question={selectedQ}
+                          setSelectedQ={setSelectedQ}
+                          setActiveTab={setActiveTab}
+                          surveyLanguages={surveyLanguages}
+                          setSelectedLanguage={setSelectedLanguage}
+                          key={selectedQ.id}
+                        />
+                      )}
+                    </>
+                  )}
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
+                  <Stack className={styles["type-selection-panel-child-div"]}>
+                    {survey?.type === SurveyType.Web && (
+                      <PageTypeSelection
+                        questions={questions}
+                        handleTypeSelection={handleTypeSelection}
+                        subscription={subscription}
+                      />
+                    )}
+
+                    <QuestionTypeSelection
+                      questionTypeGroups={
+                        survey?.type === SurveyType.WhatsApp
+                          ? WaSurveyQuestionTypes
+                          : QuestionTypesGroup
+                      }
+                      handleTypeSelection={handleTypeSelection}
+                    />
+                  </Stack>
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
+                  {selectedQ && (
+                    <LogicEditor
+                      selectedQ={selectedQ}
+                      setActiveTab={setActiveTab}
+                      key={selectedQ.id}
+                    />
+                  )}
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
+                  <GoogleReviewEditor
+                    selectedQ={selectedQ}
+                    setSelectedQ={setSelectedQ}
+                    setActiveTab={setActiveTab}
+                  />
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.TicketIssueEditor}>
+                  <TicketIssueEditor
+                    selectedQ={selectedQ}
+                    setSelectedQ={setSelectedQ}
+                    setActiveTab={setActiveTab}
+                  />
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.ValidationRulesEditor}>
+                  <ValidationRulesEditor
+                    selectedQ={selectedQ}
+                    setSelectedQ={setSelectedQ}
+                    setActiveTab={setActiveTab}
+                    activeTab={activeTab}
+                  />
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.VariableEditor}>
+                  <SurveyVariableEditor setActiveTab={setActiveTab} />
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.None}>
+                  <Center style={{ height: "100%" }}>
+                    <Text c="dimmed">Select a question to edit</Text>
+                  </Center>
+                </Tabs.Panel>
+                <Tabs.Panel
+                  className={styles["survey-preview-panel"]}
+                  value={QuestionTabsEnum.SurveyPreview}
+                >
+                  {survey && activeTab === QuestionTabsEnum.SurveyPreview && (
+                    <SurveyTheme
+                      key={surveyPreviewCompKey}
+                      initialSelectedPageTab={
+                        inititalSelectedTabForSurveyThemeComp
+                      }
+                      survey={survey}
+                      allThemesArr={allThemesArr}
+                      themeSelectorState={themeSelectorState}
+                      setThemeSelectorState={setThemeSelectorState}
+                      isAllThemesFetchPending={isAllThemesFetchPending}
+                      isThemeObjBeingEditedDefaultTheme={
+                        isThemeObjBeingEditedDefaultTheme
+                      }
+                      themeObjBeingEdited={themeObjBeingEdited}
+                      closeStylesEditorDrawer={closeStylesEditorDrawer}
+                    />
+                  )}
+                </Tabs.Panel>
+              </Tabs>
+            </PaperLayout>
+          </motion.div>
+          {isStylesEditorDrawerOpen && (
+            <AnimatePresence>
+              <motion.div
+                layout
+                className={
+                  styles["edit-survey-theme-style-component-motion-div"]
+                }
+                style={{ flex: 1.75, height: "100%" }}
+                initial={{ x: 500 }}
+                animate={{ x: 0 }}
+                exit={{ x: 500 }}
+                transition={{ duration: 0.4, type: "tween" }}
+              >
+                <PaperLayout
+                  className={styles["edit-survey-theme-style-component-div"]}
+                >
+                  <StylesComponent
+                    survey={survey}
+                    isThemeObjBeingEditedDefaultTheme={
+                      isThemeObjBeingEditedDefaultTheme
+                    }
+                    themeObjBeingEdited={themeObjBeingEdited}
+                  />
+                </PaperLayout>
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </LayoutGroup>
+
+        {(uniquePages.includes(selectedQ?.type as PageType) ||
+          activeTab === QuestionTabsEnum.SurveyPreview) && (
+          <Button
+            className={styles["open-close-survey-editor-btn"]}
+            leftSection={<IconEdit size={"1rem"} />}
+            onClick={() => toggleStylesEditorDrawer()}
+          >
+            {isStylesEditorDrawerOpen ? "Close Editor" : "Open Editor"}
+          </Button>
+        )}
+      </Flex>
+    </SurveyThemeContextProvider>
   );
 }

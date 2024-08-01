@@ -54,12 +54,6 @@ const PageTypeSelection = ({
           onClick={() => handleQuestionTypeClick(type as PageType)}
           disabled={(() => {
             if (type === PageType.Custom) {
-              console.log(
-                hasFeature(
-                  subscription,
-                  SubscriptionFeaturePathName.HTMLCodePage,
-                ),
-              );
               return hasFeature(
                 subscription,
                 SubscriptionFeaturePathName.HTMLCodePage,

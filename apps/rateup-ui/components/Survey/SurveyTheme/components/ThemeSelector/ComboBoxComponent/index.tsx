@@ -66,7 +66,7 @@ function ComboBoxComponent({
         onChange(val);
         combobox.closeDropdown();
       }}
-      zIndex={202}
+      zIndex={200}
     >
       <Combobox.Target targetType="button">
         <InputBase

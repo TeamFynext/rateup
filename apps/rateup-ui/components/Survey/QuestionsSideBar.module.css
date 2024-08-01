@@ -29,7 +29,7 @@
 }
 
 .questions-list-container {
-  z-index: 5;
+  /* z-index: 5; */
   flex: 1 1 0;
   overflow: auto;
   padding: 1rem;
