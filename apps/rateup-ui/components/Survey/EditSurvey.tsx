@@ -145,6 +145,10 @@ export function EditSurvey({
     closeStylesEditorDrawer();
   }, [inititalSelectedTabForSurveyThemeComp]);
 
+  useEffect(() => {
+    closeStylesEditorDrawer();
+  }, [activeTab]);
+
   return (
     <SurveyThemeContextProvider
       surveyTheme={survey?.webSurveyTheme?.theme}
