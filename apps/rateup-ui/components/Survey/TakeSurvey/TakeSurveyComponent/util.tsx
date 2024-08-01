@@ -322,7 +322,7 @@ export const getReplacedTitleFromVariable = ({
     componentName,
     prop,
   );
-  if (!variables) return getContent(title) || title;
+  if (!variables) return isPublicPage ? title : getContent(title) || title;
   variables.forEach((value) => {
     const component = Array.from(doc.querySelectorAll(componentName)).find(
       (el) => el.getAttribute(prop) === value,
