@@ -71,7 +71,7 @@ export function DraggableQuestionCard({
     questionDeleteMutation.mutate(qId);
   };
 
-  const nonDeletablePagetypeStrs = ["Language", "ThankYou"];
+  const nonDeletablePagetypeStrs = ["Language", "GoogleReview"];
 
   return (
     <>

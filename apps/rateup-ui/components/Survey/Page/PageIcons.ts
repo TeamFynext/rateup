@@ -1,4 +1,5 @@
 import {
+  IconBrandGoogle,
   IconFileInfo,
   IconLanguage,
   IconNotebook,
@@ -12,4 +13,5 @@ export const pageIcons = {
   [PageType.Custom]: IconFileInfo,
   [PageType.ThankYou]: IconPageBreak,
   [PageType.Language]: IconLanguage,
+  [PageType.GoogleReview]: IconBrandGoogle,
 };

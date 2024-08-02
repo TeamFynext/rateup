@@ -33,8 +33,9 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
   const welcomeItem = pages.find((item) => item.type === "Welcome");
   const languageItem = pages.find((item) => item.type === "Language");
   const thankYouItem = pages.find((item) => item.type === "ThankYou");
+  const googleReviewItem = pages.find((item) => item.type === "GoogleReview");
 
-  const pagesTypeStrsArr = ["Welcome", "Language", "ThankYou"];
+  const pagesTypeStrsArr = ["Welcome", "Language", "ThankYou", "GoogleReview"];
   // PagesObjs means objects with type key value as Welcome, Language, ThankYou.
   const arrWithoutPagesObjs = pages.filter(
     (obj) => !pagesTypeStrsArr.includes(obj.type),
@@ -45,6 +46,7 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
     newArray.push(pageObj);
   }
   if (thankYouItem) newArray.push({ ...thankYouItem });
+  if (googleReviewItem) newArray.push({ ...googleReviewItem });
 
   return newArray;
 }
