@@ -1,7 +1,9 @@
-import styles from "./SecuritySettings.module.css";
+import PremiumFeature from "@/components/Premium/PremiumFeature";
+
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import ETESettings from "./ETESettings";
 import PasswordSettings from "./PasswordSettings";
+import styles from "./SecuritySettings.module.css";
 
 function SecuritySettings({ survey, surveyId, enabledModules }) {
   return (
@@ -13,9 +15,11 @@ function SecuritySettings({ survey, surveyId, enabledModules }) {
         >
           <h2 className={"settings-section-heading"}>Security</h2>
 
-          {enabledModules.includes("endtoendencryption") && (
+          <PremiumFeature
+            isSubscribed={enabledModules.includes("endtoendencryption")}
+          >
             <ETESettings survey={survey} />
-          )}
+          </PremiumFeature>
 
           {enabledModules.includes("password") && (
             <PasswordSettings survey={survey} surveyId={surveyId} />
