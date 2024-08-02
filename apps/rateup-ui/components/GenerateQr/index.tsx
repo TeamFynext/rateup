@@ -1,17 +1,24 @@
+import { useState } from "react";
+import { useRouter } from "next/router";
+
 import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
-import { useState } from "react";
+
 import RefreshButton from "../Button/RefreshButton";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 import NothingFound from "../NothingFound/NothingFound";
 import CreateQrModal from "./CreateQrModal";
-import styles from "./GenerateQr.module.css";
 import GeneratedQrCardsList from "./GeneratedQrCardsList";
+import styles from "./GenerateQr.module.css";
 
 function GenerateQr() {
-  const [isCreateQrModalOpen, createQrModalHandlers] = useDisclosure();
+  const router = useRouter();
+  const action = router.query.action;
+  const [isCreateQrModalOpen, createQrModalHandlers] = useDisclosure(
+    action === "create",
+  );
   const {
     data: generatedQrs,
     isPending,
@@ -59,7 +66,7 @@ function GenerateQr() {
     <Stack className={`${styles["generate-qr-dashboard-page-div"]}`}>
       <Group justify="space-between">
         <Group className={styles["heading-and-create-qr-btn-container"]}>
-          <h1>Generate Qr</h1>
+          <h1>Qr Creator</h1>
           <RefreshButton queryKeys={["generatedQrs"]} />
           <Button
             className={styles["create-qr-btn"]}

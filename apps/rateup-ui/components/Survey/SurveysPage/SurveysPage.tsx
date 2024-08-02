@@ -34,10 +34,13 @@ export function SurveysPage({
   surveyType = "web",
   refetch,
 }: Readonly<SurveysPageProps>) {
+  const router = useRouter();
+  const { action } = router.query;
+
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },
-  ] = useDisclosure(false);
+  ] = useDisclosure(action === "create");
   const [
     surveyTemplatesOpened,
     { open: openSurveyTemplates, close: closeSurveyTemplates },
@@ -49,10 +52,8 @@ export function SurveysPage({
   const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
-  const router = useRouter();
   const { translations, loadingTranslations } = useTranslations();
 
-  const { action } = router.query;
   const [template, setTemplate] = useState(null);
 
   const {
@@ -61,12 +62,6 @@ export function SurveysPage({
     isError,
     error,
   } = useTeamsByUser();
-
-  useEffect(() => {
-    if (action === "create") {
-      openSurveyTemplates();
-    }
-  }, [action]);
 
   useEffect(() => {
     if (createSurveyOpened === false) {

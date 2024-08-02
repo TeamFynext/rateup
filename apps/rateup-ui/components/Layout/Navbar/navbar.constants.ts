@@ -14,6 +14,7 @@ import {
   IconHome,
   IconInbox,
   IconKeyframes,
+  IconLink,
   IconLogout,
   IconMessage2Code,
   IconMessageChatbot,
@@ -26,7 +27,6 @@ import {
   IconTerminal2,
   IconTicket,
   IconTools,
-  IconTree,
   IconUsers,
   IconWaveSine,
 } from "@tabler/icons-react";
@@ -206,18 +206,18 @@ export function getNavTopData(subscription?: Subscription) {
       : []),
     ...[
       {
-        Icon: IconTools,
-        label: "Builder",
+        Icon: IconQrcode,
+        label: "QR Studio",
         submenus: [
           {
-            Icon: IconQrcode,
-            label: "Generate QR",
-            href: "/dashboard/generateQr",
+            Icon: IconTools,
+            label: "QR Creator",
+            href: "/dashboard/qrCreator",
           },
           {
-            Icon: IconTree,
-            label: "Linktree",
-            href: "/dashboard/linktree",
+            Icon: IconLink,
+            label: "Quick Access Links",
+            href: "/dashboard/quickAccessLinks",
           },
           {
             Icon: IconAppWindow,

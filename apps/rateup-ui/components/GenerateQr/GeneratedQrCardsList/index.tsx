@@ -1,8 +1,8 @@
 import { Box } from "@mantine/core";
+
 import GeneratedQrCard from "../GeneratedQrCard";
 
 function GenerateQrCardsList({ generatedQrs }) {
-  console.log(generatedQrs, "from generate Qr cards list");
   const jsxElementsArray = generatedQrs.map((generateQrObj) => {
     return <GeneratedQrCard key={generateQrObj.id} {...generateQrObj} />;
   });

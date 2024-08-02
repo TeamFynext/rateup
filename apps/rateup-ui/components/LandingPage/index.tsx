@@ -27,8 +27,10 @@ import LandingPageCardsList from "./LandingPageCardsList";
 import styles from "./landingPageDashboardPage.module.css";
 
 function LandingPageDashboard() {
+  const router = useRouter();
+  const action = router.query.action;
   const [isCreateLandingPageModalOpen, createLandingPageModalHandlers] =
-    useDisclosure();
+    useDisclosure(action === "create");
   const { data, isPending, isError } = useLandingPages();
 
   const [landingPages, setLandingPages] = useState([]);

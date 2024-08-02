@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import { Box, Group, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -23,10 +24,12 @@ import { docsPath } from "@/utils/constants";
 import styles from "./flows.module.css";
 
 function Flows() {
+  const router = useRouter();
+  const { action } = router.query;
   const [
     isCreateFlowModalOpened,
     { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
-  ] = useDisclosure(false);
+  ] = useDisclosure(action === "create");
   let { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const { isPending: isPendingTeamsUser, data: teamsDataUser } =

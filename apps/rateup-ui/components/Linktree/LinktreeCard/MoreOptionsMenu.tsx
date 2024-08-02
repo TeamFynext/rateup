@@ -27,7 +27,7 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
 
   const handleShareClick = useCallback(() => {
     router.push({
-      pathname: `/dashboard/linktrees/${shortUrlId}`,
+      pathname: `/dashboard//quickAccessLinks/${shortUrlId}`,
       query: { tab: "share" },
     });
   }, [shortUrlId]);
@@ -35,10 +35,10 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
   const handleDeleteClick = useCallback(async () => {
     // deleteLinktreeMutation.mutateAsync();
     modals.openConfirmModal({
-      title: "Delete Linktree?",
+      title: "Delete Quick Access Link?",
       children: (
         <Text className={styles["are-you-sure-text"]}>
-          Are you sure to delete this Linktree?
+          Are you sure to delete this Quick Access Link?
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },

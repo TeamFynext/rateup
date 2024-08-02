@@ -11,7 +11,7 @@ function LinktreeCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
   const handleCardClick = useCallback(() => {
     router.push({
-      pathname: `/dashboard/linktree/${shortUrlId}`,
+      pathname: `/dashboard/quickAccessLinks/${shortUrlId}`,
     });
   }, [shortUrlId, router]);
 
