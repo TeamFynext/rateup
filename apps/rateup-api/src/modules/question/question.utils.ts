@@ -1,10 +1,17 @@
-import { LogicAction, LogicCondition, QuestionType } from "../../types/enums";
+import {
+  LogicAction,
+  LogicCondition,
+  PageType,
+  QuestionType,
+} from "../../types/enums";
 import { QuestionType as Q } from "../../types/enums";
 import { log } from "../../utils/logger";
+import prisma from "../../utils/prisma";
 import {
   ChoiceTypeQuestions,
   getChoiceIndex,
 } from "../../utils/survey/question/question.utils";
+import { cloneDeep } from "lodash";
 
 // Copied from frontend. Update accordingly.
 export const logicSupportedTypes = Object.values(Q);
@@ -252,3 +259,82 @@ export function validateLogic(
 }
 
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+export function getTitleAndDescriptionObjs(languages, type) {
+  const title = {};
+  const description = {};
+  languages.forEach((language) => {
+    (title[language] = `${type} Page`),
+      (description[language] = `This is the ${type} page of the survey`);
+  });
+  return {
+    title,
+    description,
+  };
+}
+
+export function getPageQuestions(languages) {
+  const questionsArr = [];
+  if (languages.length > 1) {
+    questionsArr.push({
+      id: "language-page",
+      type: "Language",
+      required: true,
+      enableNpsAnalytics: false,
+      ...getTitleAndDescriptionObjs(languages, "Language"),
+    });
+  }
+  questionsArr.push({
+    id: "thankyou-page",
+    type: "ThankYou",
+    required: true,
+    enableNpsAnalytics: false,
+    ...getTitleAndDescriptionObjs(languages, "ThankYou"),
+  });
+  return questionsArr;
+}
+
+export function getPageTypeQuestionObj(languages, type) {
+  return {
+    id: `${type}-page`,
+    type,
+    required: true,
+    enableNpsAnalytics: false,
+    ...getTitleAndDescriptionObjs(languages, type),
+  };
+}
+
+// GR => GoogleReview
+export async function getQuestionsArrUpdatedGRTypeQuestion(
+  questionsArr,
+  surveyId,
+) {
+  const questionsArrCopy = cloneDeep(questionsArr);
+  const googleReviewPageObjIndex = questionsArrCopy.findIndex((question) => {
+    return question.type === (PageType.GoogleReview as unknown as QuestionType);
+  });
+
+  const survey = await prisma.survey.findFirst({
+    where: {
+      id: surveyId,
+    },
+  });
+
+  let hasGoogleReview = questionsArrCopy?.some(
+    (item) => item.googleReview !== null && item.googleReview !== undefined,
+  );
+
+  if (hasGoogleReview) {
+    if (googleReviewPageObjIndex === -1) {
+      questionsArrCopy.push(
+        getPageTypeQuestionObj(survey.languages, PageType.GoogleReview),
+      );
+    }
+  } else if (!hasGoogleReview) {
+    if (googleReviewPageObjIndex > -1) {
+      questionsArrCopy.splice(googleReviewPageObjIndex, 1);
+    }
+  }
+
+  return questionsArrCopy;
+}

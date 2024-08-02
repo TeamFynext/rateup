@@ -1,12 +1,15 @@
+import { MultipartFile } from "@fastify/multipart";
 import { randomUUID } from "crypto";
+import xlsx from "node-xlsx";
+import Papa from "papaparse";
 import prisma from "../../utils/prisma";
-import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema";
 import { updateSurveyVariables } from "../survey/survey.service";
 import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils";
-import { MultipartFile } from "@fastify/multipart";
-import Papa from "papaparse";
-import { emailPattern } from "./question.utils";
-import xlsx from "node-xlsx";
+import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema";
+import {
+  emailPattern,
+  getQuestionsArrUpdatedGRTypeQuestion,
+} from "./question.utils";
 
 export async function createQuestion(
   surveyId: string,
@@ -70,8 +73,12 @@ export async function deleteQuestionById(surveyId: string, id: string) {
   const questions = (await getQuestionsBySurveyId(surveyId)).filter(
     (question) => question.id !== id,
   );
-  await updateQuestionsOnSurvey(surveyId, questions);
-  await updateSurveyVariables(surveyId, questions);
+  const updatedQuestions = await getQuestionsArrUpdatedGRTypeQuestion(
+    questions,
+    surveyId,
+  );
+  await updateQuestionsOnSurvey(surveyId, updatedQuestions);
+  await updateSurveyVariables(surveyId, updatedQuestions);
 }
 
 export async function reorderQuestions(
@@ -100,6 +107,7 @@ export async function updateQuestion(
   let hasGoogleReview = questions?.some(
     (item) => item.googleReview !== null && item.googleReview !== undefined,
   );
+
   if (hasGoogleReview) {
     //Turn off kiosk
     const surveyUpdate = await prisma.survey.update({
@@ -108,7 +116,11 @@ export async function updateQuestion(
     });
   }
 
-  await updateQuestionsOnSurvey(surveyId, questions);
+  const updatedQuestions = await getQuestionsArrUpdatedGRTypeQuestion(
+    questions,
+    surveyId,
+  );
+  await updateQuestionsOnSurvey(surveyId, updatedQuestions);
 }
 
 /**
@@ -192,8 +204,8 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
     } else {
       const workSheetsFromFile = xlsx.parse(file);
       const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map(
-          (header) => header?.toString().toLowerCase(),
+        workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
+          header?.toString().toLowerCase(),
         ) ?? [];
       const headerIndices = headers.map((header, index) => ({ header, index }));
 

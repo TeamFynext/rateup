@@ -10,6 +10,7 @@ export enum PageType {
   ThankYou = "ThankYou",
   Custom = "Custom",
   Language = "Language",
+  GoogleReview = "GoogleReview",
 }
 
 export enum QuestionType {
