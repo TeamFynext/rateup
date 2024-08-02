@@ -148,10 +148,12 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   }, [isWelcomePageEnabled, survey?.questions]);
 
   useEffect(() => {
-    const index = survey?.questions?.indexOf(selectedQ);
+    const index = survey?.questions?.findIndex(
+      (question) => question?.id === selectedQ?.id,
+    );
     setQnNo(index + 1);
     setCurrentQuestionNo(index + 1);
-  }, [selectedQ]);
+  }, [selectedQ, survey]);
 
   // Getting location coordinates
   // TODO: fetching location is very slow. Plan what to do when user finishes survey before location is fetched
@@ -373,11 +375,13 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         shouldShowGoogleReview
           ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
             setIsReviewPage(selectedLanguage)
-          : fromShortUrl
-            ? router.push(`/ws/${router.query.shortId}/end`)
-            : router.push(
-                `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
-              );
+          : isThankYouPageEnabled
+            ? fromShortUrl
+              ? router.push(`/ws/${router.query.shortId}/end`)
+              : router.push(
+                  `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
+                )
+            : router.push(`/ws/${router.query.shortId}/response-submitted`);
       })
       .catch((e) => {
         if (e?.message === "ALREADY_RESPONDED") {
