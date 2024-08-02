@@ -20,13 +20,13 @@ import {
 } from "../../utils/commnUtils";
 import {
   createSurveyDefaultVariableForQuestion,
-  getPageQuestions,
   getSurveysOrgId,
   isShortId,
 } from "./survey.utils";
 import { offerArrayWithRange } from "../../utils/survey/offer";
 import { cloneDeep } from "lodash";
 import util from "util";
+import { getPageQuestions } from "../question/question.utils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
