@@ -11,6 +11,7 @@ import {
   NPSWeightage,
   SubscriptionFeaturePathName as sfpn,
   WaFlowFormElementType,
+  IntegratedApps,
 } from "./enums";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
@@ -21,6 +22,7 @@ import {
   WaTemplateSendComponent,
 } from "./whatsapp.types";
 import { RouteShorthandOptionsWithHandler } from "fastify";
+import { Session } from "@shopify/shopify-api";
 
 type GoogleReview = {
   minRating?: number;
@@ -92,6 +94,63 @@ declare global {
       summary: string;
       responseIds: string[];
     }[];
+  };
+
+  type Integration = {
+    id: string;
+    orgId: string;
+    active: boolean;
+    name: IntegratedApps;
+  };
+
+  type GoogleSheetCredential = {
+    accessToken: string;
+    refreshToken: string;
+    expiryDate: string;
+    scopes: string[];
+    userEmail: string | null;
+  };
+  type GoogleSheetIntegration = Integration & {
+    credential: GoogleSheetCredential;
+  };
+  type ShopifyCredential = {
+    session: Session;
+    isWebhookRegistered: boolean;
+    shopifySurveys: ShopifySurvey[];
+  };
+
+  type ShopifyIntegration = Integration & {
+    credential: ShopifyCredential;
+  };
+
+  export type AmeliaCredential = {
+    apiKey: string;
+    baseUrl: string;
+    serviceId: number;
+  };
+
+  export type AmeliaIntegration = integration & {
+    credential: AmeliaCredential;
+  };
+
+  export type ShopifySurvey = {
+    waTemplateId?: string;
+    event: ShopifyEvents;
+    isProductSpecific: boolean;
+    productId?: string;
+    teamId: string;
+    sendAfter: ShopifySendAfter;
+    surveyId?: string;
+    active: boolean;
+    schedules: ShopifySchedules[];
+  };
+
+  type ShopifySchedules = {
+    phone: string;
+    scheduleTime: Date;
+    status?: string;
+    webhookId: string;
+    createdAt: Date;
   };
 
   type WaSectionsType = Array<{

@@ -7,10 +7,11 @@ import {
   getContent,
   getReplacedTitleFromVariable,
 } from "../../utils/survey/response.data";
-import { getAccessToken, initializeAuthClient } from "../org/org.services";
+import { getAccessToken } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
 import {
   ChoiceTypeQuestions,
+  IntegratedApps,
   QuestionType,
   ResponseSummaryType,
   SubscriptionFeaturePathName,
@@ -32,6 +33,11 @@ import {
 import { FastifyRequest } from "fastify";
 import { getTextSummaryByAI } from "../chatbot/chatbot.service";
 import { UpdateQuestionInput } from "../question/question.schema";
+import {
+  getIntegrationByName,
+  initializeAuthClient,
+  updateIntegrationByName,
+} from "../integrations/integrations.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -176,20 +182,20 @@ export async function downloadExcelResponse(
         question?.label?.[defaultLanguage] ||
         "";
       return question.type === QuestionType.Contact
-        ? Object.entries(question.features?.[defaultLanguage])
+        ? (Object.entries(question.features?.[defaultLanguage])
             ?.filter((data: any) => data[1].isEnabled)
-            .map((data) => `${getContent(qsTitle)}: ${data[0]}`) ?? []
+            .map((data) => `${getContent(qsTitle)}: ${data[0]}`) ?? [])
         : question.type === QuestionType.MCQGrid
-          ? question.features?.[defaultLanguage]?.questions?.map(
+          ? (question.features?.[defaultLanguage]?.questions?.map(
               (q) => `${getContent(qsTitle)}: ${q}`,
-            ) ?? []
+            ) ?? [])
           : question.type === QuestionType.MultiTextInput
-            ? question.features?.[defaultLanguage]?.fields?.map(
+            ? (question.features?.[defaultLanguage]?.fields?.map(
                 (field) =>
                   `${getContent(
                     question.title[defaultLanguage],
                   )}: ${field?.fieldKey}`,
-              ) ?? []
+              ) ?? [])
             : question.type === QuestionType.Testimonial
               ? [
                   `${getContent(question.title[defaultLanguage])}: name`,
@@ -658,8 +664,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     },
   });
   const authClient = await initializeAuthClient();
-  const token = await getAccessToken(orgId);
-  authClient.credentials.refresh_token = token.refreshToken;
+  const tokenFromIntgration = (await getIntegrationByName(
+    orgId,
+    IntegratedApps.googlesheet,
+  )) as unknown as GoogleSheetIntegration;
+  const token = (await getAccessToken(orgId)) || tokenFromIntgration;
+  authClient.credentials.refresh_token = token.credential?.refreshToken;
   const drive = google.drive({ version: "v3", auth: authClient });
   const isDocExist = survey?.spreadSheetId
     ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
@@ -668,7 +678,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
     : null;
   if (!doc) {
-    const driveFolderId = await getDriveFolderId(orgId, authClient, drive);
+    const driveFolderId = await getDriveFolderId(
+      orgId,
+      authClient,
+      drive,
+      tokenFromIntgration,
+    );
     const existingFiles = await drive.files.list({
       q: `mimeType = 'application/vnd.google-apps.spreadsheet' and name = '${survey.title}' and '${driveFolderId}' in parents`,
       fields: "nextPageToken, files(id, name)",
@@ -888,15 +903,21 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   return survey;
 }
 
-export async function getDriveFolderId(orgId: string, authClient, drive) {
-  let { driveFolderId } = await prisma.org.findUnique({
-    where: {
-      id: orgId,
-    },
-    select: {
-      driveFolderId: true,
-    },
-  });
+export async function getDriveFolderId(
+  orgId: string,
+  authClient,
+  drive,
+  token,
+) {
+  let { driveFolderId } =
+    (await prisma.org.findUnique({
+      where: {
+        id: orgId,
+      },
+      select: {
+        driveFolderId: true,
+      },
+    })) || token?.credential;
 
   const isFolderExist = driveFolderId
     ? await checkFileExistInDrive(driveFolderId, drive)
@@ -921,14 +942,20 @@ export async function getDriveFolderId(orgId: string, authClient, drive) {
       });
       driveFolderId = file.data.id;
     }
-    await prisma.org.update({
-      where: {
-        id: orgId,
-      },
-      data: {
-        driveFolderId,
-      },
-    });
+
+    if (!token)
+      await prisma.org.update({
+        where: {
+          id: orgId,
+        },
+        data: {
+          driveFolderId,
+        },
+      });
+    else
+      await updateIntegrationByName(orgId, IntegratedApps.googlesheet, {
+        credential: { ...token?.credential, driveFolderId },
+      });
   }
   return driveFolderId;
 }
@@ -989,8 +1016,13 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
     }
     if (spreadSheetId) {
       const authClient = await initializeAuthClient();
-      const token = await getAccessToken(team.orgId);
-      authClient.credentials.refresh_token = token.refreshToken;
+      const token =
+        (await getAccessToken(team.orgId)) ||
+        ((await getIntegrationByName(
+          team.orgId,
+          IntegratedApps.googlesheet,
+        )) as unknown as GoogleSheetIntegration);
+      authClient.credentials.refresh_token = token?.credential?.refreshToken;
       const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
       await doc.loadInfo();
       let sheet = await doc.sheetsByTitle[response.language];
@@ -1072,8 +1104,9 @@ export function getFormattedResponse(response, qstn, language) {
     case QuestionType.MCQ:
       formattedResponse =
         response?.value?.trim() ||
-        `${qstn?.features?.[language]?.other
-          ?.title}: ${response?.other?.trim()}`;
+        `${
+          qstn?.features?.[language]?.other?.title
+        }: ${response?.other?.trim()}`;
       break;
     case QuestionType.CustomNPS:
     case QuestionType.DDSS:
@@ -1085,8 +1118,9 @@ export function getFormattedResponse(response, qstn, language) {
         .map(
           (item) =>
             item?.value?.trim() ||
-            `${qstn?.features?.[language]?.other
-              ?.title}: ${item?.other?.trim()}`,
+            `${
+              qstn?.features?.[language]?.other?.title
+            }: ${item?.other?.trim()}`,
         )
         .join(", ");
       break;

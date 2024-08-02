@@ -81,10 +81,9 @@ import { updatePublicRoutes } from "./modules/update/update.public.route";
 import { servicePublicRoutes } from "./modules/services/services.public.route";
 import generateQrRoutes from "./modules/generateQr/generateQr.routes";
 import { generateQrSchemas } from "./modules/generateQr/generateQr.schema";
-import { shopifyRoutes } from "./modules/shopify/shopify.route";
-import { shopifySchema } from "./modules/shopify/shopify.schema";
 import { integrationSchemas } from "./modules/integrations/integrations.schema";
 import { integrationsRoutes } from "./modules/integrations/integrations.route";
+import { integrationPublicRoutes } from "./modules/integrations/integration.public.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -120,7 +119,6 @@ export function registerRoutes(server: FastifyInstance): void {
     campaignParticipantsSchemas,
     emailSchema,
     generateQrSchemas,
-    shopifySchema,
     integrationSchemas,
   ];
   for (const module of modules) {
@@ -189,6 +187,8 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(externalRoutes, { prefix: "api/external" });
   server.register(emailPublicRoutes, { prefix: "api/email" });
   server.register(generateQrRoutes, { prefix: "/api/generateQr" });
-  server.register(shopifyRoutes, { prefix: "api/shopify" });
+  server.register(integrationPublicRoutes, {
+    prefix: "/api/public/integrations",
+  });
   server.register(integrationsRoutes, { prefix: "api/integrations" });
 }

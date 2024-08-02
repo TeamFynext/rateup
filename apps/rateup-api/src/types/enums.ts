@@ -296,3 +296,9 @@ export enum ResponseSummaryType {
   All = "all",
   Team = "team",
 }
+
+export enum IntegratedApps {
+  shopify = "shopify",
+  googlesheet = "googlesheet",
+  amelia = "amelia",
+}

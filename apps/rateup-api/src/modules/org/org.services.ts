@@ -8,9 +8,9 @@ import {
 } from "./org.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
-import { google } from "googleapis";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
+import { IntegratedApps } from "../../types/enums";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -534,48 +534,19 @@ export async function getOrgStats(orgId: string) {
   return stats;
 }
 
-export async function initializeAuthClient() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_OAUTH_CLIENT_ID,
-    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    `${process.env.FRONTEND_URL}/auth/oauth2callback`,
-  );
-  google.options({ auth: oauth2Client });
-  return oauth2Client;
-}
-
-export async function saveAuthTokens(token, email, orgId) {
-  let res = await prisma.googleAccessToken.upsert({
-    where: {
-      orgId: orgId,
-    },
-    update: {
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
-      expiryDate: `${token.expiry_date}`,
-      scopes: token.scope.split(" "),
-      userEmail: email,
-    },
-    create: {
-      orgId: orgId,
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
-      expiryDate: `${token.expiry_date}`,
-      scopes: token.scope.split(" "),
-      userEmail: email,
-    },
-  });
-  return res;
-}
+//to remove after transfer
 export async function getAccessToken(orgId) {
   let res = await prisma.googleAccessToken.findUnique({
     where: {
       orgId: orgId,
     },
   });
-  return res;
+  if (!res) return null;
+  const credential: GoogleSheetCredential = { ...res };
+  return { name: IntegratedApps.googlesheet, orgId, credential };
 }
 
+//to remove after transfer
 export async function deleteGoogleAuthToken(orgId) {
   let res = await prisma.googleAccessToken.delete({
     where: {
@@ -592,6 +563,9 @@ export async function deleteGoogleAuthToken(orgId) {
       },
     }),
     await prisma.survey.updateMany({
+      where: {
+        orgId,
+      },
       data: {
         spreadSheetId: null,
       },

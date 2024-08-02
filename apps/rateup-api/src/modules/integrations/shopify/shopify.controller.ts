@@ -1,0 +1,239 @@
+import { registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema";
+import {
+  deleteAllWebhooks,
+  getShopifyAuthUrl,
+  getShopifyInfo,
+  getShopifyIntegrationByShop,
+  handleShopifyAuthCallback,
+  registerShopifyWebhook,
+  updateShopifyIntegrationByOrgId,
+  updateShopifyIntegrationByShop,
+} from "./shopify.service";
+import { FastifyReply, FastifyRequest } from "fastify";
+import shopify from "./shopify.config";
+
+import webhookHandlers, { defaultWebhookHandlers } from "./shopify.handler";
+import { ShopifyWebhookTopicEventMap } from "./shopify.util";
+import { FRONTEND_URL, API_URL } from "../../../utils/constants/constants";
+import { log } from "../../../utils/logger";
+import {
+  createIntegration,
+  getIntegrationByName,
+  updateIntegrationByName,
+} from "../integrations.service";
+import { IntegratedApps } from "../../../types/enums";
+
+export async function getShopifyAuthHandler(
+  request: FastifyRequest<{ Querystring: { shop: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { shop } = request.query;
+    if (!shop) return reply.code(404).send("Shop is missing");
+    const shopifyInfo = await getShopifyIntegrationByShop(shop);
+    if (
+      !shopifyInfo ||
+      !shopifyInfo.active ||
+      !shopify.config.scopes.equals(shopifyInfo.credential.session.scope)
+    ) {
+      await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
+    } else reply.redirect(`${FRONTEND_URL}/apps&services/shopify`);
+  } catch (e) {
+    console.error(e);
+    reply.redirect(
+      `${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
+    );
+  }
+}
+
+export async function getShopifyAuthCallbackHandler(
+  request: FastifyRequest<{ Querystring: { shop: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const callbackResponse = await handleShopifyAuthCallback(request, reply);
+    const session = callbackResponse.session;
+    const data = {
+      name: IntegratedApps.shopify,
+      credential: {
+        session: {
+          id: session.id,
+          shop: session.shop,
+          state: session.state,
+          isOnline: session.isOnline,
+          accessToken: session.accessToken,
+          scope: session.scope,
+        },
+        isWebhookRegistered: false,
+        shopifySurveys: [],
+      },
+    };
+    const integration = await createIntegration(data);
+    reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
+  } catch (e) {
+    console.error(e);
+    reply.redirect(
+      `${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
+    );
+  }
+}
+
+export async function updateShopifyIntegrationByShopHandler(
+  request: FastifyRequest<{ Params: ShopParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const shop = request.params.shop;
+    const orgId = request.user.orgId;
+    await updateShopifyIntegrationByShop(shop, { orgId });
+
+    reply.code(200).send({ message: "success" });
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function registerWebhookHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const shopifyInfo = await getShopifyInfo(orgId);
+    shopify.webhooks.addHandlers(defaultWebhookHandlers);
+    await registerShopifyWebhook(shopifyInfo?.credential?.session);
+    await updateIntegrationByName(orgId, IntegratedApps.shopify, {
+      credential: { ...shopifyInfo.credential, isWebhookRegistered: true },
+    });
+    reply.code(200).send();
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function registerWebhookByTopicHandler(
+  request: FastifyRequest<{ Body: registerWebhookbyTopicInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const shopifyInfo = await getShopifyInfo(request.user.orgId);
+    const { topic } = request.body;
+
+    const webhook = new shopify.rest.Webhook({
+      session: shopifyInfo.credential?.session,
+    });
+    webhook.address = `${API_URL}/api/shopify/webhooks`;
+    (webhook.topic = ShopifyWebhookTopicEventMap.find(
+      (webhookTopic) => webhookTopic.key == topic,
+    ).value),
+      (webhook.format = "json");
+    await webhook.save({ update: true });
+    reply.code(200).send();
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteWebhookByTopicHandler(
+  request: FastifyRequest<{ Body: registerWebhookbyTopicInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const shopifyInfo = await getShopifyInfo(request.user.orgId);
+    const { topic } = request.body;
+    const session = shopifyInfo.credential?.session;
+    const webhooks = await shopify.rest.Webhook.all({ session });
+    const webhookId = webhooks.data.find(
+      (webhook) =>
+        webhook.topic ===
+        ShopifyWebhookTopicEventMap.find((t) => t.key == topic).value,
+    ).id;
+    await shopify.rest.Webhook.delete({
+      session: session,
+      id: webhookId,
+    });
+    reply.code(200).send();
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteAllWebhookHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const shopifyInfo = await getShopifyInfo(request.user.orgId);
+    const session = shopifyInfo.credential.session;
+    await deleteAllWebhooks(session);
+    await updateShopifyIntegrationByOrgId(orgId, {
+      credential: {
+        ...shopifyInfo.credential,
+        isWebhookRegistered: false,
+        shopifySurveys: [],
+      },
+    });
+    reply.code(200).send({ message: "success" });
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function shopifyWebhooksHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    shopify.webhooks.addHandlers(webhookHandlers);
+    log.info("Processing webhook");
+    await shopify.webhooks.process({
+      rawBody: request.rawBody as string, // is a string
+      rawRequest: request.raw,
+      rawResponse: reply.raw,
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export async function getRegisteredWebhooksHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const shopifyInfo = await getShopifyInfo(request.user.orgId);
+    const session = shopifyInfo.credential.session;
+    const webhooks = await shopify.rest.Webhook.all({ session });
+    const formattedWebhooks = webhooks.data.map(
+      (webhook) =>
+        ShopifyWebhookTopicEventMap.find(
+          (topic) => topic.value == webhook.topic,
+        ).key,
+    );
+    reply.code(200).send(formattedWebhooks);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getProductsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const shopifyInfo = await getShopifyInfo(request.user.orgId);
+    const session = shopifyInfo.credential.session;
+    const products = await shopify.rest.Product.all({ session });
+    reply.code(200).send(products.data);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e);
+  }
+}

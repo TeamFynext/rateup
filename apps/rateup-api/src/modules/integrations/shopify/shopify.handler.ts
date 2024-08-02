@@ -2,13 +2,12 @@ import "@shopify/shopify-api/adapters/node";
 import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
 import {
   createScheduleOnShopifyEvent,
-  getShopifySchedules,
-  getShopifySession,
-  updateShopifySession,
+  getShopifyIntegrationByShop,
+  updateShopifyIntegrationByShop,
 } from "./shopify.service";
-import { ShopifyEvents } from "../../types/enums";
-import { log } from "../../utils/logger";
 import shopify from "./shopify.config";
+import { ShopifyEvents } from "../../../types/enums";
+import { log } from "../../../utils/logger";
 
 //callbackhandlers only working if added in same file. find out why?
 async function draftOrderCreateHandler(
@@ -20,8 +19,11 @@ async function draftOrderCreateHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -32,16 +34,17 @@ async function draftOrderCreateHandler(
     webhookRequestBodyJson?.customer?.default_address?.phone;
   webhookRequestBodyJson?.billing_address?.phone ||
     webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
+  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
+    products?.product_id?.toString(),
   );
   if (customerPhone)
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.DRAFT_ORDERS_CREATE,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 
@@ -54,8 +57,11 @@ export async function orderCreateHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -66,16 +72,17 @@ export async function orderCreateHandler(
     webhookRequestBodyJson?.customer?.default_address?.phone;
   webhookRequestBodyJson?.billing_address?.phone ||
     webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
+  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
+    products?.product_id?.toString(),
   );
   if (customerPhone)
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.ORDERS_CREATE,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 
@@ -88,7 +95,7 @@ export async function appUninstalledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  await updateShopifySession(shop, { active: false });
+  await updateShopifyIntegrationByShop(shop, { active: false });
 }
 
 export async function orderCancelledHandler(
@@ -100,8 +107,11 @@ export async function orderCancelledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -112,16 +122,17 @@ export async function orderCancelledHandler(
     webhookRequestBodyJson?.customer?.default_address?.phone;
   webhookRequestBodyJson?.billing_address?.phone ||
     webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
+  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
+    products?.product_id?.toString(),
   );
   if (customerPhone)
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.ORDERS_CREATE,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 
@@ -134,8 +145,11 @@ export async function orderFulFilledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -146,16 +160,17 @@ export async function orderFulFilledHandler(
     webhookRequestBodyJson?.customer?.default_address?.phone;
   webhookRequestBodyJson?.billing_address?.phone ||
     webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
+  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
+    products?.product_id?.toString(),
   );
   if (customerPhone)
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.ORDERS_CREATE,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 
@@ -168,8 +183,11 @@ export async function orderPaidHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -180,16 +198,17 @@ export async function orderPaidHandler(
     webhookRequestBodyJson?.customer?.default_address?.phone;
   webhookRequestBodyJson?.billing_address?.phone ||
     webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
+  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
+    products?.product_id?.toString(),
   );
   if (customerPhone)
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.ORDERS_CREATE,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 export async function orderPartiallyFulfilledHandler(
@@ -201,8 +220,11 @@ export async function orderPartiallyFulfilledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -213,16 +235,17 @@ export async function orderPartiallyFulfilledHandler(
     webhookRequestBodyJson?.customer?.default_address?.phone;
   webhookRequestBodyJson?.billing_address?.phone ||
     webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map(
-    (products) => products?.product_id?.toString(),
+  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
+    products?.product_id?.toString(),
   );
   if (customerPhone)
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.ORDERS_CREATE,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 export async function fulfillmentOrderCancelledHandler(
@@ -234,8 +257,11 @@ export async function fulfillmentOrderCancelledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const session = await getShopifySession(shop);
-  const existingSchedules = await getShopifySchedules(session.orgId);
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
+    (s) => s.schedules,
+  );
   if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
     log.trace(`webhook with ${webhookId} already recieved`);
     return;
@@ -245,13 +271,13 @@ export async function fulfillmentOrderCancelledHandler(
   const gidArray = fulfillmentOrderGId.split("/");
   const fulfillmentOrderId = parseInt(gidArray[gidArray.length - 1]);
   const fulfillmentOrder = await shopify.rest.FulfillmentOrder.find({
-    session,
+    session: shopifyInfo.credential.session,
     id: fulfillmentOrderId,
     include_order_reference_fields: true,
   });
   if (!fulfillmentOrder) return;
   const orderDetails = await shopify.rest.Order.find({
-    session,
+    session: shopifyInfo.credential.session,
     id: fulfillmentOrder.order_id,
   });
   if (!orderDetails) return;
@@ -267,9 +293,10 @@ export async function fulfillmentOrderCancelledHandler(
     await createScheduleOnShopifyEvent(
       customerPhone,
       ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
-      session,
+      shopifyInfo,
       productIds,
       webhookId,
+      shop,
     );
 }
 
@@ -306,82 +333,83 @@ export async function shopRedactRequestHandler(
 }
 
 //callbackroutes
+const WEBHOOK_API_ROUTE = "/api/public/integrations/shopify/webhooks";
 
 export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
   ORDERS_CREATE: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: orderCreateHandler,
     },
   ],
   APP_UNINSTALLED: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: appUninstalledHandler,
     },
   ],
   DRAFT_ORDERS_CREATE: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: draftOrderCreateHandler,
     },
   ],
   ORDERS_FULFILLED: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: orderFulFilledHandler,
     },
   ],
   ORDERS_PAID: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: orderPaidHandler,
     },
   ],
   ORDERS_CANCELLED: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: orderCancelledHandler,
     },
   ],
   ORDERS_PARTIALLY_FULFILLED: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: orderPartiallyFulfilledHandler,
     },
   ],
   FULFILLMENT_ORDERS_CANCELLED: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: fulfillmentOrderCancelledHandler,
     },
   ],
   CUSTOMERS_DATA_REQUEST: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: customersDataRequestHandler,
     },
   ],
   CUSTOMERS_REDACT: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: customersRedactHandler,
     },
   ],
   SHOP_REDACT: [
     {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/api/shopify/webhooks",
+      callbackUrl: WEBHOOK_API_ROUTE,
       callback: shopRedactRequestHandler,
     },
   ],

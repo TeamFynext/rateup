@@ -29,6 +29,10 @@ import { Prisma } from "@prisma/client";
 import { log } from "../../utils/logger";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
 import { IdParamInput } from "../survey/survey.schema";
+import {
+  deleteSuperTokenUserForId,
+  getUserInfo,
+} from "../../utils/supertoken/supertoken";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
@@ -303,6 +307,21 @@ export async function pauseUserHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteUserFromSuperTokenHandler(
+  request: FastifyRequest<{ Body: userEmailCheckSchemaInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const userInfo = await getUserInfo(request.body.email);
+    if (!userInfo.length) reply.code(404).send("No user found");
+    const userId = userInfo[0].id;
+    await deleteSuperTokenUserForId(userId);
+    reply.code(200).send("Success");
+  } catch (e) {
     reply.code(500).send(e);
   }
 }

@@ -1,16 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createOrg,
-  deleteGoogleAuthToken,
   deleteOrg,
-  getAccessToken,
   getAllMembersWithTeams,
   getAllOrgs,
   getOrgStats,
   getTeamsMembers,
-  initializeAuthClient,
   pauseOrg,
-  saveAuthTokens,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgUserRole,
@@ -25,6 +21,7 @@ import {
   UpdateRoleInput,
 } from "./org.schema";
 import Session from "supertokens-node/recipe/session";
+import { initializeAuthClient } from "../integrations/integrations.service";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -192,85 +189,10 @@ export async function deleteOrgHandler(
 ) {
   try {
     const deleteOrganization = await deleteOrg(request.params.orgId);
-    reply
-      .code(200)
-      .send(deleteOrganization);
+    reply.code(200).send(deleteOrganization);
   } catch (e) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
-  }
-}
-
-export async function checkGoogleAccessHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const googleAccess = await getAccessToken(request.user.orgId);
-    reply
-      .code(201)
-      .send({ isExist: googleAccess ? true : false, auth: googleAccess });
-  } catch (e) {
-    console.error(e);
-    reply.code(500).send({ success: false, message: e.message });
-  }
-}
-
-export async function getGoogleAuthUrl(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const scopes = [
-      "https://www.googleapis.com/auth/drive.file",
-      "https://www.googleapis.com/auth/userinfo.email",
-    ];
-    const oauth2Client = await initializeAuthClient();
-    const authorizeUrl = oauth2Client.generateAuthUrl({
-      access_type: "offline",
-      scope: scopes.join(" "),
-      prompt: "consent",
-    });
-    reply.code(201).send(authorizeUrl);
-  } catch (error) {
-    console.error(error);
-    reply.code(500).send();
-  }
-}
-
-export async function createGoogleAuthToken(
-  request: FastifyRequest<{
-    Body: {
-      code: string;
-    };
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const code = request.body.code;
-    const oauth2Client = await initializeAuthClient();
-    const { tokens } = await oauth2Client.getToken(code);
-    const { email } = await oauth2Client.getTokenInfo(tokens.access_token);
-    //store in database
-    let res = await saveAuthTokens(tokens, email, request.user.orgId);
-    reply.code(201).send({ message: "success" });
-  } catch (error) {
-    console.error(error);
-    reply.code(500).send();
-  }
-}
-
-export async function deleteGoogleAuthTokenHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const orgId = request.user.orgId;
-    let res = await deleteGoogleAuthToken(orgId);
-    reply.code(201).send({ message: "success" });
-  } catch (error) {
-    console.error(error);
-    reply.code(500).send();
   }
 }
 

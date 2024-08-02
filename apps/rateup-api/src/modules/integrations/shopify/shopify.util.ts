@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { ShopifyEvents, ShopifySendAfter } from "../../types/enums";
+import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums";
 
 export const ShopifyWebhookTopicEventMap = [
   { key: ShopifyEvents.ORDERS_CREATE, value: "orders/create" },
@@ -38,5 +38,5 @@ export function getScheduledTime(sendAfter) {
       scheduledTime = currentTime.add(2, "days");
       break;
   }
-  return scheduledTime.toISOString();
+  return scheduledTime.toDate();
 }
