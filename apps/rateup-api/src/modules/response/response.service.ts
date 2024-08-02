@@ -7,7 +7,6 @@ import {
   getContent,
   getReplacedTitleFromVariable,
 } from "../../utils/survey/response.data";
-import { getAccessToken } from "../org/org.services";
 import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
 import {
   ChoiceTypeQuestions,
@@ -668,7 +667,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     orgId,
     IntegratedApps.googlesheet,
   )) as unknown as GoogleSheetIntegration;
-  const token = (await getAccessToken(orgId)) || tokenFromIntgration;
+  const token = tokenFromIntgration;
   authClient.credentials.refresh_token = token.credential?.refreshToken;
   const drive = google.drive({ version: "v3", auth: authClient });
   const isDocExist = survey?.spreadSheetId
@@ -909,15 +908,7 @@ export async function getDriveFolderId(
   drive,
   token,
 ) {
-  let { driveFolderId } =
-    (await prisma.org.findUnique({
-      where: {
-        id: orgId,
-      },
-      select: {
-        driveFolderId: true,
-      },
-    })) || token?.credential;
+  let { driveFolderId } = token?.credential;
 
   const isFolderExist = driveFolderId
     ? await checkFileExistInDrive(driveFolderId, drive)
@@ -942,20 +933,9 @@ export async function getDriveFolderId(
       });
       driveFolderId = file.data.id;
     }
-
-    if (!token)
-      await prisma.org.update({
-        where: {
-          id: orgId,
-        },
-        data: {
-          driveFolderId,
-        },
-      });
-    else
-      await updateIntegrationByName(orgId, IntegratedApps.googlesheet, {
-        credential: { ...token?.credential, driveFolderId },
-      });
+    await updateIntegrationByName(orgId, IntegratedApps.googlesheet, {
+      credential: { ...token?.credential, driveFolderId },
+    });
   }
   return driveFolderId;
 }
@@ -1016,12 +996,10 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
     }
     if (spreadSheetId) {
       const authClient = await initializeAuthClient();
-      const token =
-        (await getAccessToken(team.orgId)) ||
-        ((await getIntegrationByName(
-          team.orgId,
-          IntegratedApps.googlesheet,
-        )) as unknown as GoogleSheetIntegration);
+      const token = (await getIntegrationByName(
+        team.orgId,
+        IntegratedApps.googlesheet,
+      )) as unknown as GoogleSheetIntegration;
       authClient.credentials.refresh_token = token?.credential?.refreshToken;
       const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
       await doc.loadInfo();
