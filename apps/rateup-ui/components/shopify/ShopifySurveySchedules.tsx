@@ -1,31 +1,19 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
-import {
-  ActionIcon,
-  Badge,
-  Group,
-  Menu,
-  Stack,
-  Table,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Badge, Group, Menu, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { ActiveStatusBadge } from "pages/dashboard/apps&services/shopify";
 
-import {
-  useDeleteShopifySurveySchedule,
-  useGetShopifySurveySchedules,
-  useUpdateShopifySurveySchedule,
-} from "../../backend/shopify/shopify.query";
+import { IntegratedApps } from "@/types/enums";
+import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
+import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
+import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+
 import { shopifyEventData } from "../../utils/constants";
 import { formatIsoDateStringWithTime } from "../../utils/dateTime";
 import { showLoadingToast } from "../../utils/notifications";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
+import { RateupButtonBlue } from "../Button/RateupButtons";
 import RefreshButton from "../Button/RefreshButton";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import PaperLayout from "../styled/Layouts/PaperLayout";
@@ -34,9 +22,17 @@ import ScheduleSurveyModal from "./ScheduleSurveyModal";
 import { getLabelsforConfirmModal } from "./ShopifySettings";
 
 const ShopifySurveySchedules = ({
-  session,
+  shopifyInfo,
   shopifyProducts,
   setShopifyProducts,
+  waTemplates,
+  teams,
+}: {
+  shopifyInfo: ShopifyIntegration;
+  shopifyProducts: any[];
+  setShopifyProducts: React.Dispatch<React.SetStateAction<any[]>>;
+  waTemplates: WaTemplate[];
+  teams: TeamData[];
 }) => {
   const columns = [
     { key: "event", value: "Event" },
@@ -58,29 +54,35 @@ const ShopifySurveySchedules = ({
     {
       key: "action",
       value: "Action",
-      renderCell: (row) => <ActionMenu selectedRow={row} />,
+      renderCell: (row) => (
+        <ActionMenu selectedRow={row} shopifyInfo={shopifyInfo} />
+      ),
     },
   ];
   const [opened, { open, close }] = useDisclosure(false);
-  const { data: shopifySurveys } = useGetShopifySurveySchedules();
+  const shopifySurveys = shopifyInfo?.credential?.shopifySurveys;
 
   const rows = shopifySurveys
-    ? shopifySurveys?.map((row) => ({
-        event: shopifyEventData.find((event) => row.event == event.value)
-          ?.label,
-        whatsapp_template: row.waTemplate.data.name,
-        isProductSpecific: row.isProductSpecific ? "Yes" : "No",
-        product: row.isProductSpecific
-          ? shopifyProducts?.find(
-              (product) => product.id.toString() === row.productId,
-            )?.title
-          : "----",
-        sendAfter: row.sendAfter,
-        status: row.active,
-        team: row.team.name,
-        createdAt: formatIsoDateStringWithTime(row.createdAt),
-        action: row,
-      }))
+    ? shopifySurveys?.map((row) => {
+        const waTemplate = waTemplates?.find((t) => t.id === row.waTemplateId);
+        const team = teams?.find((t) => t.id === row.teamId);
+        return {
+          event: shopifyEventData.find((event) => row.event == event.value)
+            ?.label,
+          whatsapp_template: waTemplate?.data.name,
+          isProductSpecific: row.isProductSpecific ? "Yes" : "No",
+          product: row.isProductSpecific
+            ? shopifyProducts?.find(
+                (product) => product.id.toString() === row.productId,
+              )?.title
+            : "----",
+          sendAfter: row.sendAfter,
+          status: row.active,
+          team: team?.name,
+          createdAt: formatIsoDateStringWithTime(row.createdAt),
+          action: row,
+        };
+      })
     : [];
 
   return (
@@ -100,31 +102,62 @@ const ShopifySurveySchedules = ({
       <ScheduleSurveyModal
         opened={opened}
         close={close}
-        session={session}
+        shopifyInfo={shopifyInfo}
         setShopifyProducts={setShopifyProducts}
       />
     </Stack>
   );
 };
 
-const ActionMenu = ({ selectedRow }) => {
-  const updateScheule = useUpdateShopifySurveySchedule();
-  const deleteShopifySurvey = useDeleteShopifySurveySchedule();
+const ActionMenu = ({
+  selectedRow,
+  shopifyInfo,
+}: {
+  selectedRow: ShopifySurvey;
+  shopifyInfo: ShopifyIntegration;
+}) => {
+  const updateIntegration = useUpdateIntegrationMutation(
+    IntegratedApps.shopify,
+  );
   const [opened, { open, close }] = useDisclosure(false);
   const [deleteCase, setDeleteCase] = useState(null);
-  const updateSurveySchedule = (scheduleId, data) => {
-    showLoadingToast("Updating survey schedules..", "shopify-survey", true);
-    updateScheule.mutate({ scheduleId, data });
+  const updateSurveySchedule = () => {
+    const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
+      (s) => s.event !== selectedRow.event,
+    );
+    const updateRow = {
+      ...selectedRow,
+      active: !selectedRow.active,
+    };
+    allSchedules.push(updateRow);
+    showLoadingToast(
+      "Updating survey schedules..",
+      "integration-update",
+      true,
+      "",
+      "",
+      false,
+    );
+    updateIntegration.mutate({
+      credential: { ...shopifyInfo.credential, shopifySurveys: allSchedules },
+    });
   };
 
   const handleDeleteShopifySurvey = (schedule) => {
-    showLoadingToast(
-      "Deleting survey schedule",
-      "shopify-survey",
-      true,
-      "Loading",
+    const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
+      (s) => s.event !== selectedRow.event,
     );
-    deleteShopifySurvey.mutate(schedule.id);
+    showLoadingToast(
+      "Deleting survey schedules..",
+      "integration-update",
+      true,
+      "",
+      "",
+      false,
+    );
+    updateIntegration.mutate({
+      credential: { ...shopifyInfo.credential, shopifySurveys: allSchedules },
+    });
   };
 
   return (
@@ -150,13 +183,7 @@ const ActionMenu = ({ selectedRow }) => {
         >
           Delete
         </Menu.Item>
-        <Menu.Item
-          onClick={() =>
-            updateSurveySchedule(selectedRow.id, {
-              active: !selectedRow.active,
-            })
-          }
-        >
+        <Menu.Item onClick={updateSurveySchedule}>
           {selectedRow.active ? "Deactivate" : "Activate"}
         </Menu.Item>
       </Menu.Dropdown>

@@ -5,10 +5,13 @@ import { IntegratedApps } from "@/types/enums";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
+  createGoogleSheetAuthToken,
   createIntegration,
   deleteIntegration,
+  getGoogleSheetAuthorizationUrl,
   getIntegrationByType,
   updateIntegration,
+  updateIntegrationSchema,
 } from "./integration.api";
 
 export const useIntegrationByType = (type: IntegratedApps) => {
@@ -43,13 +46,15 @@ export const useCreateIntegrationMutation = (type: IntegratedApps) => {
 export const useUpdateIntegrationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateIntegration,
+    mutationFn: (data: updateIntegrationSchema) =>
+      updateIntegration(type, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       showSuccessToast(
         "Integration updated successfully",
-        "Integration-update",
+        "integration-update",
         <IconCheck />,
+        true,
       );
     },
     onError: (error: any) => {
@@ -57,6 +62,7 @@ export const useUpdateIntegrationMutation = (type: IntegratedApps) => {
         `Error updating integration: ${error?.response?.data?.error}`,
         "integration-update",
         <IconX />,
+        true,
       );
     },
   });
@@ -70,8 +76,9 @@ export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       showSuccessToast(
         "Integration deleted successfully",
-        "Integration-delete",
+        "integration-delete",
         <IconCheck />,
+        true,
       );
     },
     onError: (error: any) => {
@@ -79,7 +86,22 @@ export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
         `Error deleting integration: ${error?.response?.data?.error}`,
         "integration-delete",
         <IconX />,
+        true,
       );
     },
+  });
+};
+
+export const useGetGoogleSheetAuthorizationUrl = () => {
+  return useQuery({
+    queryKey: ["authriationurl"],
+    queryFn: () => getGoogleSheetAuthorizationUrl(),
+  });
+};
+
+export const useCreateAuthToken = () => {
+  return useMutation({
+    mutationFn: createGoogleSheetAuthToken,
+    onSuccess: (data) => {},
   });
 };

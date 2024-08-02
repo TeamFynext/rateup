@@ -11,3 +11,8 @@ export const updateDatabase = async () => {
   const response = await axiosClient.get(`/public/update/db`);
   return response.data;
 };
+
+export async function transferDataToIntegration(app) {
+  return (await axiosClient.post(`/public/update/transfer-integration/${app}`))
+    .data;
+}

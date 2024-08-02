@@ -18,6 +18,7 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { showLoadingToast } from "@/utils/notifications";
 
 const WpAmelia = () => {
   const { data, isPending, isError } = useIntegrationByType(
@@ -60,13 +61,11 @@ const WpAmelia = () => {
 
     if (data?.id) {
       updateIntegrationMutation.mutate({
-        id: data?.id,
         credential: {
           apiKey: form.getValues().apiKey,
           baseUrl: form.getValues().baseUrl,
           serviceId: form.getValues().serviceId,
         },
-        name: IntegratedApps.amelia,
       });
     } else {
       createIntegrationMutation.mutate({
@@ -117,7 +116,15 @@ const WpAmelia = () => {
                 loading={deleteIntegrationMutation?.isPending}
                 disabled={!data?.credential?.apiKey && !data?.credential?.base}
                 onClick={() => {
-                  deleteIntegrationMutation.mutate(data?.id);
+                  showLoadingToast(
+                    "Deleting..",
+                    "integration-delete",
+                    true,
+                    "",
+                    "",
+                    false,
+                  );
+                  deleteIntegrationMutation.mutate(IntegratedApps.amelia);
                 }}
               >
                 <IconTrash />

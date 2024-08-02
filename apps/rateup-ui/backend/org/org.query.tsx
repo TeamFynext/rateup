@@ -1,22 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCheck } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { IconCheck } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
-  IUpdateLogo,
-  getTeamsMembersOfOrg,
-  updateOrgLogo,
-  updateRole,
-  updateOrgDetails,
-  IUpdateOrgDetails,
   getAllOrgs,
   getOrgStats,
-  getAuthorizationUrl,
-  createAuthToken,
-  getGoogleAccessToken,
-  deleteAuthToken,
+  getTeamsMembersOfOrg,
+  IUpdateLogo,
+  IUpdateOrgDetails,
+  updateOrgDetails,
+  updateOrgLogo,
   updateOrgPause,
+  updateRole,
 } from "./org.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export const useTeamsMembersOfOrg = () => {
   return useQuery({
@@ -139,60 +136,6 @@ export function useUpdateOrgDetailsMutation(setIsLoading) {
     },
   });
 }
-
-export const useGetAuthorizationUrl = () => {
-  return useQuery({
-    queryKey: ["authriationurl"],
-    queryFn: () => getAuthorizationUrl(),
-  });
-};
-
-export const useCreateAuthToken = () => {
-  return useMutation({
-    mutationFn: createAuthToken,
-    onSuccess: (data) => {},
-  });
-};
-
-export const useGetGoogleAccessToken = () => {
-  return useQuery({
-    queryKey: ["googleAuthAccessToken"],
-    queryFn: getGoogleAccessToken,
-  });
-};
-
-export const useDeleteAuthToken = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: deleteAuthToken,
-    onSuccess: (data) => {
-      notifications.update({
-        id: "load-data",
-        loading: false,
-        color: "teal",
-        title: "Success",
-        message: "Signed out from synced account successfully",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.resetQueries({ queryKey: ["googleAuthAccessToken"] });
-    },
-    onError: (error: any) => {
-      notifications.update({
-        id: "load-data",
-        loading: false,
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-    },
-  });
-};
 
 export const useUpdateOrgPause = () => {
   const queryClient = useQueryClient();

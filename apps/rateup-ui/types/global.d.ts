@@ -12,6 +12,7 @@ import {
   PaymentPlanStatus,
   QuestionType,
   SubscriptionFeaturePathName as sfpn,
+  ShopifyEvents,
   StripeProductType,
   SurveyType,
   SurveyVariableType,
@@ -1251,4 +1252,64 @@ export type orgWsMessage = {
     contact: ContactsData;
     message: WaGetMessagesBody;
   };
+};
+
+type Integration = {
+  id: string;
+  orgId: string;
+  active: boolean;
+  name: IntegratedApps;
+};
+
+export type GoogleSheetCredential = {
+  accessToken: string;
+  refreshToken: string;
+  expiryDate: string;
+  scopes: string[];
+  userEmail: string | null;
+};
+
+export type GoogleSheetIntegration = Integration & {
+  credential: GoogleSheetCredential;
+};
+
+export type ShopifyCredential = {
+  session: Session;
+  isWebhookRegistered: boolean;
+  shopifySurveys: ShopifySurvey[];
+};
+
+export type ShopifyIntegration = Integration & {
+  credential: ShopifyCredential;
+};
+
+export type AmeliaCredential = {
+  apiKey: string;
+  baseUrl: string;
+  serviceId: number;
+};
+
+export type AmeliaIntegration = integration & {
+  credential: AmeliaCredential;
+};
+
+export type ShopifySurvey = {
+  waTemplateId?: string;
+  event: ShopifyEvents;
+  isProductSpecific: boolean;
+  productId?: string;
+  teamId: string;
+  sendAfter: ShopifySendAfter;
+  surveyId?: string;
+  active: boolean;
+  schedules: ShopifySchedule[];
+  createdAt: Date;
+};
+
+export type ShopifySchedule = {
+  phone: string;
+  scheduleTime: Date;
+  status?: string;
+  webhookId: string;
+  createdAt: Date;
 };
