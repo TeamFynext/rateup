@@ -1,9 +1,7 @@
 import "@shopify/shopify-api/adapters/node";
 import { ApiVersion, LogSeverity, shopifyApi } from "@shopify/shopify-api";
 import { restResources } from "@shopify/shopify-api/rest/admin/2024-07";
-import { log } from "../../utils/logger";
-import { API_URL } from "../../utils/constants/constants";
-import webhookHandlers from "./shopify.handler";
+import { API_URL } from "../../../utils/constants/constants";
 
 const apiUrl = new URL(API_URL);
 const protocol = apiUrl.protocol.replace(":", "");

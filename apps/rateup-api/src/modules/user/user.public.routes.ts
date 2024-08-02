@@ -1,9 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { $UserRef } from "./user.schema";
-import { checkEmailExistHandler } from "./user.controller";
+import {
+  checkEmailExistHandler,
+  deleteUserFromSuperTokenHandler,
+} from "./user.controller";
 
 export async function userPublicRoutes(server: FastifyInstance) {
-
   server.post(
     "/check-email",
     {
@@ -11,6 +13,17 @@ export async function userPublicRoutes(server: FastifyInstance) {
         body: $UserRef("userEmailCheckSchema"),
       },
     },
-    checkEmailExistHandler
+    checkEmailExistHandler,
+  );
+
+  //for development
+  server.delete(
+    "/delete-user",
+    {
+      schema: {
+        body: $UserRef("userEmailCheckSchema"),
+      },
+    },
+    deleteUserFromSuperTokenHandler,
   );
 }

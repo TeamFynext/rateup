@@ -19,7 +19,7 @@ import {
   publishSurveyCronAction,
 } from "./modules/survey/survey.service";
 import { sendCampaignCronAction } from "./modules/campaign/campaign.service";
-import { sendShopifySurveyCronAction } from "./modules/shopify/shopify.service";
+import { sendShopifySurveyCronAction } from "./modules/integrations/shopify/shopify.service";
 
 const server = Fastify({
   logger: logOptions,
