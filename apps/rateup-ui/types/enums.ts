@@ -348,8 +348,8 @@ export enum ShopifySendAfter {
 }
 
 export enum IntegratedApps {
-  shopify = "Shopify",
-  googlesheet = "Google Sheet",
+  shopify = "shopify",
+  googlesheet = "googlesheet",
   amelia = "amelia",
 }
 

@@ -2,9 +2,17 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "@/utils/notifications";
 
-import { updateAllSurveys, updateDatabase } from "./update.api";
+import {
+  transferDataToIntegration,
+  updateAllSurveys,
+  updateDatabase,
+} from "./update.api";
 
 export const useUpdateSurveyEditorMutation = () => {
   return useMutation({
@@ -28,6 +36,21 @@ export const useUpdateDatabaseMutation = () => {
     },
     onError: (err) => {
       showErrorToast("Unable to update Database, please try again later.");
+    },
+  });
+};
+
+export const useTransferDataToIntegration = () => {
+  return useMutation({
+    mutationFn: async ({ app }: { app: string }) => {
+      showLoadingToast("Transfering data...", "transfer", true, "", "", false);
+      return await transferDataToIntegration(app);
+    },
+    onSuccess: (data: any) => {
+      showSuccessToast(`Success: ${data?.message}`, "transfer", "", true);
+    },
+    onError: () => {
+      showErrorToast("Data transfer failed", "transfer", "", true);
     },
   });
 };

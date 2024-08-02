@@ -17,7 +17,6 @@ import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 
 import {
-  useDeleteAuthToken,
   useUpdateOrgDetailsMutation,
   useUpdateOrgLogoMutation,
 } from "../../../backend/org/org.query";
@@ -32,10 +31,11 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 
 import "react-phone-number-input/style.css";
 
-import { UserRole } from "@/utils/enums";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+
+import { UserRole } from "@/utils/enums";
 
 import { SAVE_HOTKEY } from "../../../utils/constants";
 import PermanentDelete from "./advanced/PermanentDelete";
@@ -57,7 +57,6 @@ const OrgSettings = () => {
   const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
   const { user } = useUser();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
-  const deleteAuthTokenMutation = useDeleteAuthToken();
 
   const orgForm = useForm({
     initialValues: {

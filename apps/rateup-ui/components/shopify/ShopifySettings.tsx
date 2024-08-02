@@ -11,17 +11,19 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 
-import { ShopifyEvents } from "@/types/enums";
+import { IntegratedApps } from "@/types/enums";
+import { ShopifyIntegration } from "@/types/global";
 import {
-  useDeleteAllShopifySchedule,
-  useDeleteAllShopifySurveySchedule,
+  useDeleteIntegrationMutation,
+  useUpdateIntegrationMutation,
+} from "@/backend/appsIntegration/integration.query";
+import {
   useDeleteAllWebhooks,
-  useDeleteShopifySession,
   useDeleteWebhookByTopic,
   useGetRegisteredWebhooks,
   useRegisterWebhookByTopic,
   useRegisterWebhooks,
-} from "@/backend/shopify/shopify.query";
+} from "@/backend/appsIntegration/shopify/shopify.query";
 import { shopifyEventData } from "@/utils/constants";
 import { showLoadingToast } from "@/utils/notifications";
 
@@ -30,22 +32,28 @@ import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
-const ShopifySettings = ({ session }) => {
+const ShopifySettings = ({
+  shopifyInfo,
+}: {
+  shopifyInfo: ShopifyIntegration;
+}) => {
   const [openedConfirm, { open: openConfirm, close: closeConfirm }] =
     useDisclosure(false);
   const [showEvents, { toggle }] = useDisclosure(false);
   const [deleteCase, setDeleteCase] = useState(null);
   const [isWebhookEnabled, setIsWebhookEnabled] = useState(
-    session?.isWebhookRegistered,
+    shopifyInfo?.credential?.isWebhookRegistered,
   );
   const deleteAllWebhooksmt = useDeleteAllWebhooks();
-  const deleteAllShopifySurveysmt = useDeleteAllShopifySurveySchedule();
-  const deleteAllSchedulemt = useDeleteAllShopifySchedule();
-  const deleteSessionmt = useDeleteShopifySession();
   const registerWebhooksmutate = useRegisterWebhooks();
   const registerWebhookByTopicMt = useRegisterWebhookByTopic();
   const deleteWebhookbyTopicMt = useDeleteWebhookByTopic();
+  const deleteIntgration = useDeleteIntegrationMutation(IntegratedApps.shopify);
+  const updateIntegration = useUpdateIntegrationMutation(
+    IntegratedApps.shopify,
+  );
   const { data: webhooks } = useGetRegisteredWebhooks(showEvents);
+  const session = shopifyInfo.credential.session;
   const handleDeleteWehooks = () => {
     if (!session) return;
     showLoadingToast("hold on..deleting webhooks", "webhooks", true);
@@ -57,8 +65,12 @@ const ShopifySettings = ({ session }) => {
   };
   const handleDeleteSession = () => {
     if (!session) return;
-    showLoadingToast("hold on..deleting connection", "session", true);
-    deleteSessionmt.mutate(session.shop);
+    showLoadingToast(
+      "hold on..deleting connection",
+      "integration-delete",
+      true,
+    );
+    deleteIntgration.mutate(IntegratedApps.shopify);
   };
   const registerWebhooks = () => {
     showLoadingToast(
@@ -86,17 +98,29 @@ const ShopifySettings = ({ session }) => {
   };
 
   const handleDeleteAllShopifySurveys = () => {
+    const updateData = {
+      ...shopifyInfo.credential,
+      shopifySurveys: [],
+    };
     showLoadingToast(
       "hold on..deleting surveys delivery settings",
-      "shopify-survey",
+      "integration-update",
       true,
     );
-    deleteAllShopifySurveysmt.mutate();
+    updateIntegration.mutate({ credential: updateData });
   };
 
   const handleDeleteAllSchedules = () => {
-    showLoadingToast("hold on..deleting schedules", "shopify-schedules", true);
-    deleteAllSchedulemt.mutate();
+    const shopifySurveys = shopifyInfo.credential.shopifySurveys;
+    shopifySurveys.forEach((s) => {
+      s.schedules = [];
+    });
+    const updateData = {
+      ...shopifyInfo.credential,
+      shopifySurveys: shopifySurveys,
+    };
+    showLoadingToast("hold on..deleting schedules", "integration-update", true);
+    updateIntegration.mutate({ credential: updateData });
   };
 
   const handleChangeWebhookByTopic = (event, isEnabled) => {
@@ -166,7 +190,7 @@ const ShopifySettings = ({ session }) => {
                 );
                 openConfirm();
               }}
-              disabled={deleteAllShopifySurveysmt.isPending}
+              disabled={updateIntegration.isPending}
             />
             <RateupButtonPrimary
               color="red"
@@ -181,7 +205,7 @@ const ShopifySettings = ({ session }) => {
                 );
                 openConfirm();
               }}
-              disabled={deleteAllSchedulemt.isPending}
+              disabled={updateIntegration.isPending}
             />
           </Stack>
         </PaperLayout>
@@ -245,9 +269,11 @@ const ShopifySettings = ({ session }) => {
           closeConfirm();
         }}
         opened={openedConfirm}
-        onConfirm={() =>
-          deleteCase?.confirmFunction(...deleteCase.confirmFuncArgs)
-        }
+        onConfirm={() => {
+          const funcArgs = deleteCase?.confirmFuncArgs;
+          if (funcArgs) deleteCase?.confirmFunction(...funcArgs);
+          else deleteCase?.confirmFunction();
+        }}
         closeLabel="Cancel"
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}

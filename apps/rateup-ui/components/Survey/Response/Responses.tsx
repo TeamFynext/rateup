@@ -26,12 +26,12 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { Range } from "react-date-range";
 
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
 import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
-import { useGetGoogleAccessToken } from "../../../backend/org/org.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
@@ -41,6 +41,7 @@ import {
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import {
+  IntegratedApps,
   PageType,
   QuestionType,
   SubscriptionFeaturePathName,
@@ -95,7 +96,9 @@ const Responses = ({
   const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
-  const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
+  const { data: googleAccessToken } = useIntegrationByType(
+    IntegratedApps.googlesheet,
+  );
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
     useDisclosure(false);
   const [
@@ -275,7 +278,7 @@ const Responses = ({
 
   const handleSyncGoogleSheet = () => {
     setIsSyncing(true);
-    if (!googleAuthAccessToken.isExist) {
+    if (!googleAccessToken) {
       setIsSyncing(false);
       setAlertMsg("Please sync your Google account in the App & Services.");
       redirectModalOpen();
@@ -412,28 +415,26 @@ const Responses = ({
               </Popover.Target>
               <Popover.Dropdown>
                 <Stack>
-                  {isFetched && (
-                    <RateupButtonSecondary
-                      title={
-                        survey.spreadSheetId
-                          ? "Resync with Google Sheet"
-                          : "Sync with Google Sheet"
-                      }
-                      onClick={() => {
-                        if (survey.spreadSheetId) alertModalOpen();
-                        else handleSyncGoogleSheet();
-                      }}
-                      leftIcon={
-                        <IconRefresh
-                          className={
-                            isSyncing ? styles.rotateInfinitely : undefined
-                          }
-                          style={{ width: "90%", height: "90%" }}
-                          stroke={1.5}
-                        />
-                      }
-                    />
-                  )}
+                  <RateupButtonSecondary
+                    title={
+                      survey.spreadSheetId
+                        ? "Resync with Google Sheet"
+                        : "Sync with Google Sheet"
+                    }
+                    onClick={() => {
+                      if (survey.spreadSheetId) alertModalOpen();
+                      else handleSyncGoogleSheet();
+                    }}
+                    leftIcon={
+                      <IconRefresh
+                        className={
+                          isSyncing ? styles.rotateInfinitely : undefined
+                        }
+                        style={{ width: "90%", height: "90%" }}
+                        stroke={1.5}
+                      />
+                    }
+                  />
                   <RateupButtonSecondary
                     onClick={() => {
                       handleExcelDownload();

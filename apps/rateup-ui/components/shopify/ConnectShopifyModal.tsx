@@ -17,7 +17,9 @@ const ConnectShopifyModal = ({ opened, close }) => {
     const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
     if (regex.test(shop)) {
       close();
-      window.open(`${API_URL}/api/shopify?shop=${shop}`);
+      window.open(
+        `${API_URL}/api/public/integrations/shopify/auth?shop=${shop}`,
+      );
       setShop("");
     } else {
       setError("Invalid shop name");

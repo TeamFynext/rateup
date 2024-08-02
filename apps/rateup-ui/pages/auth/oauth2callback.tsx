@@ -14,10 +14,10 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useCreateAuthToken } from "../../backend/org/org.query";
+import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query";
+
 import { RateupButtonBlue } from "../../components/Button/RateupButtons";
 import { useCheckSession } from "../../hooks/checkSession";
-import { showSuccessToast } from "../../utils/notifications";
 
 export default function AuthCallBack() {
   const router = useRouter();

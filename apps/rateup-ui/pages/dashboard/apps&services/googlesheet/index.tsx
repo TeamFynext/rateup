@@ -2,24 +2,32 @@ import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
-import {
-  useDeleteAuthToken,
-  useGetAuthorizationUrl,
-  useGetGoogleAccessToken,
-} from "backend/org/org.query";
 import { RateupButtonPrimary } from "components/Button/RateupButtons";
 import ConfirmationModal from "components/Modal/ConfirmationModal";
 import { useLocalStorage } from "react-use";
 
+import { IntegratedApps } from "@/types/enums";
+import {
+  useDeleteIntegrationMutation,
+  useGetGoogleSheetAuthorizationUrl,
+  useIntegrationByType,
+} from "@/backend/appsIntegration/integration.query";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const GoogleSheet = () => {
   const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
     useDisclosure(false);
-  const { data: googleAuthAccessToken, isFetched } = useGetGoogleAccessToken();
-  const deleteAuthTokenMutation = useDeleteAuthToken();
-  const { data: authUrl } = useGetAuthorizationUrl();
+
+  const { data: googleAccessToken } = useIntegrationByType(
+    IntegratedApps.googlesheet,
+  );
+
+  const deleteAccount = useDeleteIntegrationMutation(
+    IntegratedApps.googlesheet,
+  );
+
+  const { data: authUrl } = useGetGoogleSheetAuthorizationUrl();
   const [callbackRoute, setCallBackRoute] = useLocalStorage(
     "google-callback-route",
     "/dashboard/apps&services/googlesheet",
@@ -27,16 +35,16 @@ const GoogleSheet = () => {
 
   const handleSignOutGoogleSync = () => {
     notifications.show({
-      id: "load-data",
+      id: "integration-delete",
       loading: true,
       title: "Signing out from google sheet",
       message: `Hold on, Signing out from google sheet..`,
       autoClose: false,
       withCloseButton: false,
     });
-    deleteAuthTokenMutation.mutate(null, {});
+    deleteAccount.mutate(IntegratedApps.googlesheet);
   };
-  if (!googleAuthAccessToken || !googleAuthAccessToken?.isExist)
+  if (!googleAccessToken)
     return (
       <Center h={"80vh"}>
         <Stack align="center" justify="center">
@@ -58,11 +66,11 @@ const GoogleSheet = () => {
       <Title order={3}>Google Sheet Config</Title>
       <PaperLayout>
         <Flex justify="space-between">
-          {googleAuthAccessToken?.auth?.userEmail && (
+          {googleAccessToken?.credential?.userEmail && (
             <Stack w={"40%"}>
               <Title order={4}> Synced account info</Title>
               <ContainedTextField
-                value={googleAuthAccessToken.auth.userEmail}
+                value={googleAccessToken?.credential?.userEmail}
                 disabled
                 label={"Email Address"}
               />

@@ -1,0 +1,127 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { Group, Stack, Text } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+
+import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
+import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
+import { importMethod } from "@/utils/enums";
+
+import classes from "./styles.module.css";
+import UnknownContactAddCard from "./unknownContactAddCard";
+
+interface UnknownContactModalProps {
+  phone: string;
+  successCallback?: () => void;
+}
+export default function AddUnknownContactModal(
+  props: UnknownContactModalProps,
+) {
+  const router = useRouter();
+  const contactMutation = useCreateContactMutation();
+  const [opened, { open, close: onClose }] = useDisclosure();
+  const [loading, setLoading] = useState(false);
+  const form = useForm({
+    initialValues: {
+      name: "",
+      phone: "",
+      email: "",
+      countryCode: "91",
+      source: importMethod.MANUAL,
+    },
+    validate: {
+      name: (value) => (value.length ? null : "Name cannot be blank"),
+      phone: (value) =>
+        !value
+          ? "Phone Number cannot be blank"
+          : !isValidPhoneNumber(value)
+            ? "Invalid phone number"
+            : null,
+    },
+  });
+  function openChatDisplayForContact(data: Partial<ContactsData>) {
+    router.push(`/dashboard/whatsapp/inbox?contactId=${data.id}`);
+  }
+  function onSubmit(values: ICreateContact) {
+    setLoading(true);
+    values.phone = values.phone.slice(1);
+    contactMutation.mutate(values, {
+      onSuccess(data) {
+        form.reset();
+        form.resetDirty();
+        openChatDisplayForContact(data.data);
+        props.successCallback();
+        setLoading(false);
+        onClose();
+      },
+      onError(error) {
+        setLoading(false);
+        console.log(error);
+      },
+    });
+  }
+  useEffect(() => {
+    if (props) {
+      form.setFieldValue("phone", "+" + form.values.countryCode + props.phone);
+    }
+  }, [props]);
+  return (
+    <>
+      <UnknownContactAddCard onClick={open} phone={props.phone} />
+      {opened && (
+        <FormModalLayout
+          {...{
+            opened,
+            onClose,
+            title: "Add New Contact",
+            centered: true,
+            size: "md",
+            isLoading: loading,
+            withCloseButton: true,
+            buttonTitle: "Add Contact",
+            cancelButtonTitle: "Cancel",
+            includeCancelButton: true,
+            onSubmit: form.onSubmit((values) => onSubmit(values)),
+          }}
+        >
+          <Stack gap={5}>
+            <ContainedTextField
+              label="Name"
+              withAsterisk
+              {...form.getInputProps("name")}
+            />
+            <Stack gap={0}>
+              <Group gap={3}>
+                <Text className={classes.inputLabel}>Phone Number</Text>
+                <Text c="red">*</Text>
+              </Group>
+              <PhoneInputWithCountrySelect
+                international
+                defaultCountry="IN"
+                countryCallingCodeEditable={false}
+                placeholder="Enter phone number"
+                className={classes.inputPhone}
+                key={form.key("phone")}
+                {...form.getInputProps("phone")}
+              />
+              <Text size="sm" c={"red"}>
+                {form?.errors?.phone}
+              </Text>
+            </Stack>
+            <ContainedTextField
+              label="Email"
+              {...form.getInputProps("email")}
+            />
+          </Stack>
+        </FormModalLayout>
+      )}
+    </>
+  );
+}

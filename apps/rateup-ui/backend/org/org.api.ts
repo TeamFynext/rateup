@@ -54,36 +54,6 @@ export async function getOrgStats(orgId: string) {
   return (await axiosClient.get(`/org/${orgId}`)).data;
 }
 
-export async function getAuthorizationUrl() {
-  const res = await axiosClient.get(`org/auth-url`);
-  return res.data;
-}
-
-export async function createAuthToken(data) {
-  const res = await axiosClient.post(`org/auth-token`, data);
-  return res.data;
-}
-
-type GoogleAuthAccess = {
-  isExist: boolean;
-  auth: {
-    accessToken: string;
-    refreshToken: string;
-    expiryDate: string;
-    scopes: Array<string>;
-    userEmail: string;
-  };
-};
-export async function getGoogleAccessToken() {
-  const res = await axiosClient.get(`org/google-auth-access`);
-  return res.data as GoogleAuthAccess;
-}
-
-export async function deleteAuthToken() {
-  const res = await axiosClient.delete(`org/auth-token`);
-  return res.data;
-}
-
 export async function deleteOrg(orgId: string) {
   return await axiosClient.delete(`org/${orgId}`);
 }

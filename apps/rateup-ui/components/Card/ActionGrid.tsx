@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Avatar, Group, SimpleGrid, Text, Title } from "@mantine/core";
 
 import { IntegratedApps } from "@/types/enums";
+import { getIntegrationDisplayName } from "@/utils/integration";
 
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import classes from "./ActionGrid.module.css";
@@ -23,7 +24,7 @@ export function ActionsGrid({ getAppIconImageUrl }) {
       >
         <Avatar name={value} color="initials" radius={0} src={src} size={30} />
         <Text size="xs" mt={7} fz={"sm"}>
-          {value}
+          {getIntegrationDisplayName(value)}
         </Text>
       </PaperLayout>
     );
