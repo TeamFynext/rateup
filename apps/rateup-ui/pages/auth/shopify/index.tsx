@@ -3,9 +3,10 @@ import { useRouter } from "next/router";
 
 import { Center, Stack, Text } from "@mantine/core";
 import { IconLoader } from "@tabler/icons-react";
-import { useUpdateShopifySession } from "backend/shopify/shopify.query";
 import { useRouteAndCartStore } from "components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import { useCheckSession } from "hooks/checkSession";
+
+import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
 
 import style from "../../../components/Graph/graph.module.css";
 

@@ -12,6 +12,7 @@ export enum PageType {
   Language = "Language",
   ThankYou = "ThankYou",
   Custom = "Custom",
+  GoogleReview = "GoogleReview",
 }
 
 export enum PageTitle {
@@ -348,8 +349,8 @@ export enum ShopifySendAfter {
 }
 
 export enum IntegratedApps {
-  shopify = "Shopify",
-  googlesheet = "Google Sheet",
+  shopify = "shopify",
+  googlesheet = "googlesheet",
   amelia = "amelia",
 }
 

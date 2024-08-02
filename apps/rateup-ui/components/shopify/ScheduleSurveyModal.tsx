@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { getProductsFromShopify } from "@/backend/shopify/shopify.api";
 import {
   ActionIcon,
   Alert,
-  Blockquote,
   Checkbox,
   Group,
   Stack,
@@ -13,12 +11,11 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
-import { ShopifySendAfter } from "@/types/enums";
+import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
+import { ShopifyIntegration } from "@/types/global";
+import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
+import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 
-import {
-  useCreateShopifySurveySchedule,
-  useGetProductsFromShopify,
-} from "../../backend/shopify/shopify.query";
 import useTemplatesAvailableForTeam from "../../hooks/team";
 import { shopifyEventData } from "../../utils/constants";
 import { showLoadingToast } from "../../utils/notifications";
@@ -29,15 +26,20 @@ import FormModalLayout from "../Modal/FormModalLayout";
 const ScheduleSurveyModal = ({
   opened,
   close,
-  session,
+  shopifyInfo,
   setShopifyProducts,
+}: {
+  opened: boolean;
+  close: () => void;
+  shopifyInfo: ShopifyIntegration;
+  setShopifyProducts: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
   const [productData, setProductData] = useState([]);
 
   const form = useForm({
     initialValues: {
       waTemplateId: "",
-      event: "",
+      event: null,
       isProductSpecific: false,
       productId: "",
       teamId: "",
@@ -53,7 +55,9 @@ const ScheduleSurveyModal = ({
     },
   });
 
-  const createShopifySurveySchedule = useCreateShopifySurveySchedule();
+  const updateIntegration = useUpdateIntegrationMutation(
+    IntegratedApps.shopify,
+  );
 
   //get wa templates from db
   const templates = useTemplatesAvailableForTeam(form.values.teamId);
@@ -73,18 +77,42 @@ const ScheduleSurveyModal = ({
 
   const handleScheduleSurvey = () => {
     if (form.validate().hasErrors) return;
+    const newShopifySurveys = [...shopifyInfo.credential.shopifySurveys];
+    const isEventExist = newShopifySurveys.find(
+      (s) => s.event === form.values.event,
+    );
+    if (isEventExist) {
+      form.setFieldError("event", "You have a schedule in this event");
+      return;
+    }
+    newShopifySurveys.push({
+      ...form.values,
+      active: true,
+      schedules: [],
+      createdAt: new Date(),
+    });
     showLoadingToast(
-      "Survey Schedule is creating",
-      "shopify-survey",
+      "Creating Survey Schedule",
+      "integration-update",
       true,
       "Loading",
+      "",
+      false,
     );
-    createShopifySurveySchedule.mutate(form.values, {
-      onSuccess: () => {
-        form.reset();
-        close();
+    updateIntegration.mutate(
+      {
+        credential: {
+          ...shopifyInfo.credential,
+          shopifySurveys: newShopifySurveys,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          form.reset();
+          close();
+        },
+      },
+    );
   };
 
   const loadShopifyProducts = async () => {
@@ -102,19 +130,24 @@ const ScheduleSurveyModal = ({
   return (
     <FormModalLayout
       opened={opened}
-      onClose={close}
+      onClose={() => {
+        form.reset();
+        close();
+      }}
       title=""
       centered
       onSubmit={handleScheduleSurvey}
       buttonTitle="Create"
       includeCancelButton
       size="lg"
-      submitButtonDisabled={!session.isWebhookRegistered}
+      submitButtonDisabled={!shopifyInfo.credential.isWebhookRegistered}
     >
       <Stack>
         <Alert
           title={"Important"}
-          display={!session.isWebhookRegistered ? "block" : "none"}
+          display={
+            !shopifyInfo.credential.isWebhookRegistered ? "block" : "none"
+          }
           icon={<IconAlertCircle color="red" />}
           color="red"
         >

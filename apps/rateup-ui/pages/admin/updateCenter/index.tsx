@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { Button, Loader, Stack, Text, Title } from "@mantine/core";
 
 import {
+  useTransferDataToIntegration,
   useUpdateDatabaseMutation,
   useUpdateSurveyEditorMutation,
 } from "@/backend/updations/update.query";
@@ -13,6 +14,7 @@ function UpdateAllThemes() {
   const updateAllThemesMutation = useUpdateAllThemesMutation();
   const updateSurveyEditorMutation = useUpdateSurveyEditorMutation();
   const updateDBMutation = useUpdateDatabaseMutation();
+  const updateIntegrationMutation = useTransferDataToIntegration();
 
   const [isUpdatingThemes, setIsUpdatingThemes] = useState(false);
   const handleUpdateAllThemesBtnClick = useCallback(async () => {
@@ -91,6 +93,20 @@ function UpdateAllThemes() {
           }}
         >
           Run Update
+        </Button>
+      </Stack>
+
+      <Stack>
+        <Title order={2}>Integration Updations</Title>
+        <Text>Migrating data from googleAccessTokens to Integration.</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateIntegrationMutation.mutate({ app: "googlesheet" });
+          }}
+        >
+          Update Google Sheet Credentials
         </Button>
       </Stack>
     </Stack>

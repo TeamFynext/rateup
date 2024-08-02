@@ -10,7 +10,7 @@ const TableLayoutSecondary = ({
     value: string;
     renderCell?: (value) => JSX.Element;
   }>;
-  rows: Array<Array<any>>;
+  rows: Array<any>;
   maxHeight?: string | number;
 }) => {
   return (

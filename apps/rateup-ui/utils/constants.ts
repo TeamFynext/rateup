@@ -95,7 +95,7 @@ const FlowInputQuestions = [
 
 export const BasicPages = [
   PageType.Welcome,
-  // PageType.ThankYou,
+  PageType.ThankYou,
   PageType.Custom,
   // PageType.Language,
 ];

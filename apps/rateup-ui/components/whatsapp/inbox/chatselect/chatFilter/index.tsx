@@ -7,15 +7,15 @@ import {
   Loader,
   SegmentedControl,
   Stack,
-  Switch,
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { IconFilter } from "@tabler/icons-react";
-import classes from "./styles.module.css";
-import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
-import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { useMediaQuery } from "@mantine/hooks";
+import { IconFilter } from "@tabler/icons-react";
+
+import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
+import classes from "./styles.module.css";
 
 export type MultiGV = {
   group: string;

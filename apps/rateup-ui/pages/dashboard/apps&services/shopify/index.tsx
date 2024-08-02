@@ -1,11 +1,5 @@
 import { useState } from "react";
 
-import { getProductsFromShopify } from "@/backend/shopify/shopify.api";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
 import {
   ActionIcon,
   Badge,
@@ -24,10 +18,20 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
+import { IntegratedApps } from "@/types/enums";
+import { ShopifyIntegration } from "@/types/global";
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
+import { useTeamsByUser } from "@/backend/team/team.query";
+import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "@/utils/notifications";
 
-import { useGetShopifySession } from "../../../../backend/shopify/shopify.query";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -50,7 +54,12 @@ enum ShopifyActivePanel {
 const Shopify = () => {
   const [connectOpened, { open: openConnect, close: closeConnect }] =
     useDisclosure(false);
-  const { data: session } = useGetShopifySession();
+  const { data: shopifyInfo } = useIntegrationByType(
+    IntegratedApps.shopify,
+  ) as { data: ShopifyIntegration };
+  const { data: templates, isPending, isError, refetch } = useWaTemplates();
+  const { data: teams } = useTeamsByUser();
+  const session = shopifyInfo?.credential?.session;
   const [shopifyProducts, setShopifyProducts] = useState([]);
 
   const [activePanel, setActivePanel] = useState<ShopifyActivePanel>(
@@ -78,7 +87,7 @@ const Shopify = () => {
     }
   };
 
-  if (!session || !session?.active)
+  if (!shopifyInfo || !shopifyInfo?.active || !shopifyInfo.credential.session)
     return (
       <Center h={"100%"}>
         <Stack>
@@ -132,16 +141,23 @@ const Shopify = () => {
         gap={"xl"}
       >
         <ShopifySurveySchedules
-          session={session}
+          shopifyInfo={shopifyInfo}
           shopifyProducts={shopifyProducts}
           setShopifyProducts={setShopifyProducts}
+          waTemplates={templates}
+          teams={teams?.data}
         />
-        <ShopifySchedules shopifyProducts={shopifyProducts} />
+        <ShopifySchedules
+          shopifyProducts={shopifyProducts}
+          shopifyInfo={shopifyInfo}
+          waTemplates={templates}
+          teams={teams?.data}
+        />
       </Stack>
       <Stack
         display={activePanel == ShopifyActivePanel.Settings ? "block" : "none"}
       >
-        <ShopifySettings session={session} />
+        <ShopifySettings shopifyInfo={shopifyInfo} />
       </Stack>
     </Stack>
   );

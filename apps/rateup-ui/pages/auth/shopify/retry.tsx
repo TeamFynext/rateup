@@ -12,12 +12,6 @@ const ShopifyCallbackRetry = () => {
   const router = useRouter();
   const { shop } = router.query as { shop: string };
 
-  useEffect(() => {
-    const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
-    if (!shop || !regex.test(shop)) {
-      router.push("/login");
-    }
-  }, [shop]);
   return (
     <Center h={"100vh"}>
       <PaperLayout w={400} p={"xl"}>
@@ -26,7 +20,16 @@ const ShopifyCallbackRetry = () => {
           <Text>Something went wrong..</Text>
           <RateupButtonBlue
             title="Retry"
-            onClick={() => window.open(`${API_URL}/api/shopify?shop=${shop}`)}
+            onClick={() => {
+              const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
+              console.log("shop", shop);
+              if (!shop || !regex.test(shop)) {
+                router.push("/login");
+              }
+              window.open(
+                `${API_URL}/api/public/integrations/shopify/auth?shop=${shop}`,
+              );
+            }}
             fullWidth
             leftIcon={<IconReload size={"1rem"} />}
           />
