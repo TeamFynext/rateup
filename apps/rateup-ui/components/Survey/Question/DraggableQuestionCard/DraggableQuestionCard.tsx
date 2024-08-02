@@ -71,7 +71,8 @@ export function DraggableQuestionCard({
     questionDeleteMutation.mutate(qId);
   };
 
-  const nonDeletablePagetypeStrs = ["Language", "ThankYou"];
+  const nonDeletablePagetypeStrs = ["Language", "GoogleReview"];
+  const nonClickableQuestionTypeStrs = ["GoogleReview"];
 
   return (
     <>
@@ -103,7 +104,11 @@ export function DraggableQuestionCard({
                 classes.transition,
               )}
               ref={provided.innerRef}
-              onClick={() => handleOpenQuestion(question)}
+              onClick={() => {
+                if (!nonClickableQuestionTypeStrs.includes(question.type)) {
+                  handleOpenQuestion(question);
+                }
+              }}
               {...provided.draggableProps}
               data-select={selected}
               style={{
