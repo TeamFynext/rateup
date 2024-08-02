@@ -1,18 +1,30 @@
-import { ActionIcon, Divider, Group, Loader, Stack, Text } from "@mantine/core";
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
-import classes from "./styles.module.css";
-import { IconRefresh, IconSearch } from "@tabler/icons-react";
-import WaInboxChatSelectCard from "./chatselectCard";
-import { ContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { useEffect, useState } from "react";
+
+import {
+  ActionIcon,
+  Card,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
+import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import { FixedSizeList as List } from "react-window";
-import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
+
+import { ContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
   useContactsWithLastMessage,
   useFilteredContacts,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.query";
+import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
+import AddUnknownContactModal from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
+import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
+import WaInboxChatSelectCard from "./chatselectCard";
+import classes from "./styles.module.css";
+
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
   setFilteredContacts: (contacts: ContactsWithLastMessage[]) => void;
@@ -36,6 +48,7 @@ export default function WaInboxChatSelect(props: {
 
   const {
     data: filteredContacts,
+    isFetched: isFilteredContactsFetched,
     isFetchingNextPage: isFilteredContactsFetchingNextPage,
     error: filteredContactsError,
     fetchNextPage: fetchNextPageFilteredContacts,
@@ -91,6 +104,16 @@ export default function WaInboxChatSelect(props: {
           .flat()
       : []
     : props?.contacts;
+
+  function validateSearchStringAsMobileNumber(searchString: string): Boolean {
+    return searchString.match(/^\d{10}$/) ? true : false;
+  }
+
+  function clearSearchTermFilter() {
+    const currentFilters = { ...filter };
+    currentFilters.searchTerm = "";
+    setFilter(currentFilters);
+  }
 
   useEffect(() => {
     if (
@@ -160,50 +183,71 @@ export default function WaInboxChatSelect(props: {
         </Group>
       </Stack>
       <Divider />
-      <div className={classes.chat_cards_wrapper} ref={ref}>
-        <List
-          height={height}
-          width={width}
-          itemCount={contactsToDisplay?.length || 0}
-          itemSize={69}
-          onItemsRendered={(e) => {
-            if (filteredContacts?.pages?.length > 0) {
-              if (
-                !isFilteredContactsFetchingNextPage &&
-                shouldFetchAgainFilteredContacts &&
+      {isFilteredContactsFetched && contactsToDisplay.length === 0 ? (
+        validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+          <AddUnknownContactModal
+            phone={filter.searchTerm}
+            successCallback={() =>
+              prepareFilters({
+                ...filter,
+                searchTerm: "",
+              })
+            }
+          />
+        ) : (
+          <Card component={Group}>
+            <Text c={"dimmed"} size="sm" ta={"center"}>
+              No chats found <br />
+              search for a valid phone number or contact name
+            </Text>
+          </Card>
+        )
+      ) : (
+        <div className={classes.chat_cards_wrapper} ref={ref}>
+          <List
+            height={height}
+            width={width}
+            itemCount={contactsToDisplay?.length || 0}
+            itemSize={69}
+            onItemsRendered={(e) => {
+              if (filteredContacts?.pages?.length > 0) {
+                if (
+                  !isFilteredContactsFetchingNextPage &&
+                  shouldFetchAgainFilteredContacts &&
+                  e.visibleStopIndex === contactsToDisplay.length - 1
+                ) {
+                  fetchNextPageFilteredContacts();
+                }
+              } else if (
+                !isFetchingNextPage &&
+                shouldFetchAgainData &&
                 e.visibleStopIndex === contactsToDisplay.length - 1
               ) {
-                fetchNextPageFilteredContacts();
+                fetchNextPage();
               }
-            } else if (
-              !isFetchingNextPage &&
-              shouldFetchAgainData &&
-              e.visibleStopIndex === contactsToDisplay.length - 1
-            ) {
-              fetchNextPage();
-            }
-          }}
-          overscanCount={2}
-        >
-          {({ index, style }) => {
-            // Get the contact for this index
-            const contact = contactsToDisplay[index];
+            }}
+            overscanCount={2}
+          >
+            {({ index, style }) => {
+              // Get the contact for this index
+              const contact = contactsToDisplay[index];
 
-            // Render the item
-            return (
-              <div style={style}>
-                <WaInboxChatSelectCard key={contact.id} contact={contact} />
-              </div>
-            );
-          }}
-        </List>
-        {(isError || filteredContactsError) && (
-          <Text size="xs" c="red">
-            {error?.message}
-            {filteredContactsError?.message}
-          </Text>
-        )}
-      </div>
+              // Render the item
+              return (
+                <div style={style}>
+                  <WaInboxChatSelectCard key={contact.id} contact={contact} />
+                </div>
+              );
+            }}
+          </List>
+          {(isError || filteredContactsError) && (
+            <Text size="xs" c="red">
+              {error?.message}
+              {filteredContactsError?.message}
+            </Text>
+          )}
+        </div>
+      )}
     </Stack>
   );
 }
