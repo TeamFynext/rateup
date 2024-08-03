@@ -1,12 +1,14 @@
-import { useForm } from "@mantine/form";
 import { useCallback, useRef } from "react";
+
 import { Box, Button, Modal, TextInput } from "@mantine/core";
-import modalStyles from "styles/commonCssModules/modal.module.css";
-import styles from "./CreateQrModal.module.css";
+import { useForm } from "@mantine/form";
 import {
   useCreateQrMutation,
   useUpdateQrMutation,
 } from "backend/generateQr/generateQr.query";
+import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import styles from "./CreateQrModal.module.css";
 
 function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const form = useForm({
@@ -98,7 +100,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
           <TextInput
             className={styles["name-text-input"]}
             label="Name"
-            placeholder="Enter name QR"
+            placeholder="Enter name of QR"
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
             withAsterisk

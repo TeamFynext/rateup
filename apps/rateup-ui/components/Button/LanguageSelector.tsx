@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 
 import { Grid, Menu, Text } from "@mantine/core";
-import { FaGlobeAmericas } from "react-icons/fa";
+import { IconLanguage } from "@tabler/icons-react";
 
 import { useUpdateUserLanguageMutation } from "../../backend/user/user.query";
 
 const LanguageSelector = () => {
-  const [language, setLanguage] = useState("");
   const router = useRouter();
+  const [language, setLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const updateUserLanguageMutation =
@@ -44,8 +44,8 @@ const LanguageSelector = () => {
             borderRadius: "4px",
           }}
         >
-          <FaGlobeAmericas style={{ width: 20, height: 20, marginRight: 8 }} />
-          <Text size="sm" weight={500} color="#333">
+          <IconLanguage style={{ width: 20, height: 20, marginRight: 8 }} />
+          <Text size="sm" fw={500} c="#333">
             {language || "Select Language"}
           </Text>
         </Grid>

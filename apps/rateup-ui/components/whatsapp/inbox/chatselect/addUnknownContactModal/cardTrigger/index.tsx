@@ -2,7 +2,7 @@ import { Button, Card, Stack, Text } from "@mantine/core";
 
 import classes from "./styles.module.css";
 
-export default function UnknownContactAddCard(props: {
+export default function CardTrigger(props: {
   phone: string;
   onClick: () => void;
 }) {

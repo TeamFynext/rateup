@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 import {
   ActionIcon,
@@ -10,8 +11,14 @@ import {
   Text,
 } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { IconRefresh, IconSearch } from "@tabler/icons-react";
+import {
+  IconRefresh,
+  IconSearch,
+  IconSquareRoundedX,
+} from "@tabler/icons-react";
 import { FixedSizeList as List } from "react-window";
+
+import { WaInboxMessage } from "@/types/global";
 
 import { ContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -29,7 +36,11 @@ export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
   setFilteredContacts: (contacts: ContactsWithLastMessage[]) => void;
   messageCount?: number;
+  setNewlyAdddedContact?: React.Dispatch<
+    React.SetStateAction<ContactsWithLastMessage>
+  >;
 }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "all",
     strictFilter: false,
@@ -114,6 +125,21 @@ export default function WaInboxChatSelect(props: {
     currentFilters.searchTerm = "";
     setFilter(currentFilters);
   }
+  function openChatDisplayForContact(data: Partial<ContactsData>) {
+    router.push(`/dashboard/whatsapp/inbox?contactId=${data.id}`);
+  }
+  function onUnknownContactAddSuccess(contact: ContactsData) {
+    props.setNewlyAdddedContact({
+      ...contact,
+      groups: [],
+      userInitiatedFinalTimeStamp: "",
+      lastMessage: {
+        messageBody: {} as WaInboxMessage,
+        waCreatedAt: "",
+      },
+    });
+    openChatDisplayForContact(contact);
+  }
 
   useEffect(() => {
     if (
@@ -144,7 +170,18 @@ export default function WaInboxChatSelect(props: {
     <Stack className={classes.wrapper}>
       <Stack className={classes.chat_select_header}>
         <ContainedTextField
-          leftSection={<IconSearch />}
+          leftSection={
+            <IconSearch style={{ marginLeft: "var(--mantine-spacing-xs)" }} />
+          }
+          rightSection={
+            filter.searchTerm && (
+              <IconSquareRoundedX
+                size={18}
+                style={{ marginRight: "var(--mantine-spacing-xs)" }}
+                onClick={clearSearchTermFilter}
+              />
+            )
+          }
           placeholder="Search Contacts"
           value={filter?.searchTerm || ""}
           onChange={(e) =>
@@ -177,6 +214,14 @@ export default function WaInboxChatSelect(props: {
             </Group>
           </Stack>
           <Group>
+            <AddUnknownContactModal
+              {...{
+                phone: "",
+                triggerType: "action_button",
+                successCallback: (contact) =>
+                  onUnknownContactAddSuccess(contact),
+              }}
+            />
             <WaInboxChatFilter {...{ filter, setFilter: prepareFilters }} />
             <WaInboxChatExport />
           </Group>
@@ -187,12 +232,13 @@ export default function WaInboxChatSelect(props: {
         validateSearchStringAsMobileNumber(filter.searchTerm) ? (
           <AddUnknownContactModal
             phone={filter.searchTerm}
-            successCallback={() =>
+            successCallback={(contact) => {
               prepareFilters({
                 ...filter,
                 searchTerm: "",
-              })
-            }
+              });
+              onUnknownContactAddSuccess(contact);
+            }}
           />
         ) : (
           <Card component={Group}>

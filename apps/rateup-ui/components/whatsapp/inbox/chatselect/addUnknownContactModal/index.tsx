@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 
 import { Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -14,17 +13,18 @@ import { ContainedTextField } from "@/components/input/ContainedInput/ContainedI
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { importMethod } from "@/utils/enums";
 
+import ActionButtonTrigger from "./actionButtonTrigger";
+import CardTrigger from "./cardTrigger";
 import classes from "./styles.module.css";
-import UnknownContactAddCard from "./unknownContactAddCard";
 
 interface UnknownContactModalProps {
   phone: string;
-  successCallback?: () => void;
+  successCallback?: (contact: ContactsData) => void;
+  triggerType?: "action_button" | "card";
 }
 export default function AddUnknownContactModal(
   props: UnknownContactModalProps,
 ) {
-  const router = useRouter();
   const contactMutation = useCreateContactMutation();
   const [opened, { open, close: onClose }] = useDisclosure();
   const [loading, setLoading] = useState(false);
@@ -46,9 +46,7 @@ export default function AddUnknownContactModal(
             : null,
     },
   });
-  function openChatDisplayForContact(data: Partial<ContactsData>) {
-    router.push(`/dashboard/whatsapp/inbox?contactId=${data.id}`);
-  }
+
   function onSubmit(values: ICreateContact) {
     setLoading(true);
     values.phone = values.phone.slice(1);
@@ -56,14 +54,12 @@ export default function AddUnknownContactModal(
       onSuccess(data) {
         form.reset();
         form.resetDirty();
-        openChatDisplayForContact(data.data);
-        props.successCallback();
+        props.successCallback(data.data);
         setLoading(false);
         onClose();
       },
       onError(error) {
         setLoading(false);
-        console.log(error);
       },
     });
   }
@@ -74,7 +70,12 @@ export default function AddUnknownContactModal(
   }, [props]);
   return (
     <>
-      <UnknownContactAddCard onClick={open} phone={props.phone} />
+      {!props.triggerType || props.triggerType === "card" ? (
+        <CardTrigger onClick={open} phone={props.phone} />
+      ) : (
+        <ActionButtonTrigger onClick={open} />
+      )}
+
       {opened && (
         <FormModalLayout
           {...{

@@ -1,17 +1,19 @@
+import { useEffect, useState } from "react";
+
 import { Box } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { lexend } from "../../../utils/fonts";
+import FlowSettingsUpdate from "./FlowSettingsUpdate";
 import GeneralSettings from "./GeneralSettings";
+import GoogleSheetSettings from "./GoogleSheetSettings";
 import KioskFetchLocSkipPreview from "./KioskFetchLocSkipPreview";
 import OtherSettings from "./OtherSettings";
 import RedirectSettings from "./RedirectSettings";
 import SecuritySettings from "./SecuritySettings";
 import styles from "./SurveySettings.module.css";
 import TicketSettings from "./TicketSettings";
-import FlowSettingsUpdate from "./FlowSettingsUpdate";
-import GoogleSheetSettings from "./GoogleSheetSettings";
 
 const defaultEnabledModules = [
   "name",
@@ -126,14 +128,11 @@ const SurveySettings = ({
             survey={survey}
           />
 
-          {(enabledModules.includes("tickets") ||
-            enabledModules.includes("enableNotificationEmail")) && (
-            <TicketSettings
-              survey={survey}
-              surveyId={surveyId}
-              enabledModules={enabledModules}
-            />
-          )}
+          <TicketSettings
+            survey={survey}
+            surveyId={surveyId}
+            enabledModules={enabledModules}
+          />
           {enabledModules.includes("flow") && (
             <FlowSettingsUpdate
               name={flowName}

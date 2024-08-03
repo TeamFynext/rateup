@@ -1,6 +1,8 @@
-import { Badge, Box, Group } from "@mantine/core";
-import { useRouter } from "next/router";
 import { useCallback } from "react";
+import { useRouter } from "next/router";
+
+import { Badge, Box, Group } from "@mantine/core";
+
 import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
 import styles from "./GeneratedQrCard.module.css";
 import MoreOptionsMenu from "./MoreOptionsMenu";
@@ -9,7 +11,7 @@ function GeneratedQrCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
   const handleCardClick = useCallback(() => {
     router.push({
-      pathname: `/dashboard/generateQr/${shortUrlId}`,
+      pathname: `/dashboard/qrCreator/${shortUrlId}`,
     });
   }, [shortUrlId, router]);
 

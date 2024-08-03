@@ -61,7 +61,11 @@ function CreateLinktreeModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={mode === "create" ? "Create Linktree" : "Rename Linktree"}
+      title={
+        mode === "create"
+          ? "Create Quick Access Link"
+          : "Rename Quick Access Link"
+      }
       centered
       classNames={{
         header: modalStyles["modal-header"],
@@ -82,7 +86,7 @@ function CreateLinktreeModal({
           <TextInput
             className={styles["name-text-input"]}
             label="Name"
-            placeholder="Enter name of Landing Page"
+            placeholder="Enter name of Quick Access Link"
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
           />

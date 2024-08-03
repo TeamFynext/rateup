@@ -4,25 +4,21 @@ import { useRouter } from "next/router";
 import {
   ActionIcon,
   Blockquote,
-  Box,
-  Container,
-  Flex,
   Group,
   Portal,
-  SimpleGrid,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconAlertCircle,
+  IconAppWindow,
   IconBrandWhatsapp,
-  IconCheck,
   IconCheckupList,
   IconCloudExclamation,
-  IconPageBreak,
+  IconLink,
   IconPlus,
+  IconQrcode,
   IconReload,
   IconShoppingCart,
   IconSocial,
@@ -35,7 +31,6 @@ import {
 } from "../../backend/surveys/surveys.query";
 import {
   RateupButtonBlue,
-  RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../components/Button/RateupButtons";
 import RefreshButton from "../../components/Button/RefreshButton";
@@ -56,7 +51,7 @@ import WelcomeTour from "../../components/WelcomeTour/WelcomeTour";
 import { useUser } from "../../context/UserContext";
 import { getDictionary } from "../../dictionaries/dictionaries";
 import { SurveyTypeFilters } from "../../types/enums";
-import { lexend400, lexend500 } from "../../utils/fonts";
+import { lexend400 } from "../../utils/fonts";
 import { getFormattedResponseForAreaGraph } from "../../utils/response";
 import classes from "./dashboard.module.css";
 
@@ -133,10 +128,20 @@ export default function DashboardHome() {
     {
       Icon: IconBrandWhatsapp,
       title: "WhatsApp Flows",
-      routerPath: "/dashboard/whatsapp?action=create",
+      routerPath: "/dashboard/whatsapp/flows?action=create",
     },
     {
-      Icon: IconPageBreak,
+      Icon: IconQrcode,
+      title: "QR Creator",
+      routerPath: "/dashboard/qrCreator?action=create",
+    },
+    {
+      Icon: IconLink,
+      title: "Quick Access Links",
+      routerPath: "/dashboard/quickAccessLinks?action=create",
+    },
+    {
+      Icon: IconAppWindow,
       title: "Landing Page",
       routerPath: "/dashboard/landingPages?action=create",
     },

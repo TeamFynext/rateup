@@ -30,7 +30,7 @@ function LinktreeDashboard() {
   const router = useRouter();
   const { action } = router.query;
   const [isCreateLinktreeModalOpen, createLinktreeModalHandlers] =
-    useDisclosure();
+    useDisclosure(action === "create");
   const queryClient = useQueryClient();
   const { data, isPending, isError } = useLinktrees();
   const [linktrees, setLinktrees] = useState([]);
@@ -81,7 +81,9 @@ function LinktreeDashboard() {
     <Stack className={`${styles["linktree-dashboard-page-div"]}`}>
       <Group justify="space-between">
         <Group className={styles["heading-and-create-linktree-btn-container"]}>
-          <Title className={styles["heading-container"]}>Linktree</Title>
+          <Title className={styles["heading-container"]}>
+            Quick Access Links
+          </Title>
           <InfoButton docUrl={`${docsPath}/landingpage`} />
           <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["linktrees"]} />
@@ -90,7 +92,7 @@ function LinktreeDashboard() {
             rightSection={<IconPlus />}
             onClick={createLinktreeModalHandlers.open}
           >
-            Create Linktree
+            Create Quick Access Link
           </Button>
         </Group>
         <div className={styles["sort-dropdown"]}>

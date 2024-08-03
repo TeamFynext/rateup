@@ -39,7 +39,7 @@ export async function getContactById(contactId: string) {
 
 export const createContact = async (data: ICreateContact) => {
   let res = await axiosClient.post(CONTACT_BASE_URL, data);
-  return res;
+  return res as { data: ContactsData };
 };
 
 export const importContacts = async (data) => {
