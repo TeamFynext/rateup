@@ -17,7 +17,6 @@ import {
   UpdateIntgrationInput,
 } from "./integrations.schema";
 import { IntegratedApps } from "../../types/enums";
-import { deleteGoogleAuthToken, getAccessToken } from "../org/org.services";
 
 export const getAllIntegrationsHandler = async (
   request: FastifyRequest,
@@ -41,12 +40,6 @@ export const getIntegrationByNameHandler = async (
     const { orgId } = request.user;
     const name = request.params.name;
     const data = await getIntegrationByName(orgId, name);
-    //to remove after transfer-----------------
-    if (name === IntegratedApps.googlesheet && !data) {
-      const res = await getAccessToken(orgId);
-      return reply.code(200).send(res);
-    }
-    //--------------------------------
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error fetching integration by name");
@@ -95,14 +88,6 @@ export const deleteIntegrationByNameHandler = async (
   try {
     const orgId = request.user.orgId;
     const name = request.params.name;
-    //to remove after transfer
-    if (name === IntegratedApps.googlesheet) {
-      const data = await getIntegrationByName(orgId, name);
-      if (!data) {
-        await deleteGoogleAuthToken(orgId);
-        return reply.code(200).send("success");
-      }
-    }
     const data = await deleteIntegrationByName(name, orgId);
     if (name === IntegratedApps.googlesheet)
       await removeSurveySpreadSheetSheetId(orgId);

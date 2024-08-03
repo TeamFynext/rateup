@@ -105,8 +105,6 @@ model Org {
   Subscription      Subscription?
   Order             Order[]
   WaFlow            WaFlow[]
-  googleAccessToken GoogleAccessToken?
-  driveFolderId     String?
   contacts          Contact[]
   loyaltyCampaigns  LoyaltyCampaign[]
   loyaltyCustomers  LoyaltyCustomer[]
@@ -120,8 +118,6 @@ model Org {
   Survey            Survey[]
   WaAccountSettings WaAccountSettings?
   generateQr        GenerateQr[]
-  shopifySurveys    ShopifySurvey[]
-  shopifySessions   ShopifySession[]
   landingPage       LandingPage[]
   Integration       Integration[]
 }
@@ -219,7 +215,6 @@ model Team {
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
   WaAutomatedReply       WaAutomatedReply[]
-  shopifySurvey          ShopifySurvey[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -292,7 +287,6 @@ model Survey {
   surveyVariables                   SurveyVariables[]
   surveyPublishAt                   DateTime?
   surveyEndAt                       DateTime?
-  shopifySurvey                     ShopifySurvey[]
 }
 
 model SurveyTeamMap {
@@ -575,7 +569,6 @@ model WaTemplate {
   orgId         String          @db.Uuid
   waSession     WaSession[]
   Campaign      Campaign[]
-  shopifySurvey ShopifySurvey[]
 }
 
 model MenuLanding {
@@ -924,16 +917,6 @@ model TicketComment {
   ticketId    String   @db.Uuid
 }
 
-model GoogleAccessToken {
-  accessToken  String
-  orgId        String   @unique @db.Uuid
-  org          Org      @relation(fields: [orgId], references: [id])
-  refreshToken String
-  expiryDate   String
-  scopes       String[]
-  userEmail    String?
-}
-
 model LoyaltyCampaign {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt      DateTime @default(now())
@@ -1170,53 +1153,6 @@ model GenerateQr {
   createdBy     User     @relation(fields: [createdById], references: [id])
   link          String
   noOfScans     Int      @default(0)
-}
-
-model ShopifySession {
-  id                  String   @unique
-  shop                String   @unique
-  state               String
-  isOnline            Boolean
-  scope               String
-  accessToken         String
-  orgId               String?  @db.Uuid
-  org                 Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  createdAt           DateTime @default(now())
-  active              Boolean  @default(true)
-  isWebhookRegistered Boolean  @default(false)
-}
-
-model ShopifySurvey {
-  id                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyId          String?                 @db.Uuid
-  survey            Survey?                 @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  orgId             String                  @db.Uuid
-  org               Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  createdAt         DateTime                @default(now())
-  active            Boolean                 @default(true)
-  isProductSpecific Boolean                 @default(false)
-  productId         String?
-  event             String
-  shop              String
-  team              Team                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId            String                  @db.Uuid
-  waTemplate        WaTemplate?             @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
-  waTemplateId      String?                 @db.Uuid
-  sendAfter         String?
-  schedules         ShopifySurveySchedule[]
-
-  @@unique([orgId, event, shop], name: "orgid_event_shop_unique")
-}
-
-model ShopifySurveySchedule {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scheduledTime   DateTime
-  phone           String
-  shopifySurveyId String        @db.Uuid
-  shopifySurvey   ShopifySurvey @relation(fields: [shopifySurveyId], references: [id], onDelete: Cascade)
-  webhookId       String?       @unique
-  status          String?       @default("SCHEDULED")
-  createdAt       DateTime      @default(now())
 }
 
 model LandingPage {

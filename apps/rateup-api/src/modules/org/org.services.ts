@@ -534,46 +534,6 @@ export async function getOrgStats(orgId: string) {
   return stats;
 }
 
-//to remove after transfer
-export async function getAccessToken(orgId) {
-  let res = await prisma.googleAccessToken.findUnique({
-    where: {
-      orgId: orgId,
-    },
-  });
-  if (!res) return null;
-  const credential: GoogleSheetCredential = { ...res };
-  return { name: IntegratedApps.googlesheet, orgId, credential };
-}
-
-//to remove after transfer
-export async function deleteGoogleAuthToken(orgId) {
-  let res = await prisma.googleAccessToken.delete({
-    where: {
-      orgId,
-    },
-  });
-  Promise.all([
-    await prisma.org.update({
-      where: {
-        id: orgId,
-      },
-      data: {
-        driveFolderId: null,
-      },
-    }),
-    await prisma.survey.updateMany({
-      where: {
-        orgId,
-      },
-      data: {
-        spreadSheetId: null,
-      },
-    }),
-  ]);
-  return res;
-}
-
 export async function pauseOrg(id, data: PauseOrgInput) {
   return await prisma.org.update({
     where: {

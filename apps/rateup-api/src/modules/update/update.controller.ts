@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { updateSubscriptionFeatures } from "./migrationFiles/subscription-update";
 import { updateEditorStructure } from "./migrationFiles/editor-update";
 import { updateSubscriptionFeatures2 } from "./migrationFiles/sub-update-2";
-import { updateGoogleSheetToIntegration } from "./migrationFiles/integration-update";
 
 export async function updateDatabase(
   request: FastifyRequest,
@@ -51,7 +50,10 @@ export async function transferDataToIntegrationsHandler(
   try {
     const app = request.params.app;
     let res;
-    if (app === "googlesheet") res = await updateGoogleSheetToIntegration();
+    if (app === "googlesheet")
+      reply
+        .code(404)
+        .send({ message: "googleAccessToken table removed already" });
     reply.code(200).send(res);
   } catch (e) {
     return reply.code(500).send({ error: "Something went wrong" });
