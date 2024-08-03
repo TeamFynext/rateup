@@ -77,7 +77,7 @@ export const Navbar = () => {
             />
           </ExpiryComponent>
         )}
-        <LanguageSelector />
+        {process.env.NEXT_PUBLIC_EXPERIMENT && <LanguageSelector />}
         {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
       </Group>
     </Group>

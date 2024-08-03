@@ -1,7 +1,10 @@
-import { Group, MantineProvider, Stack, Title } from "@mantine/core";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+
+import { Group, MantineProvider, Stack, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+
 import {
   ContactsWithLastMessage,
   WaGetMessagesBody,
@@ -17,9 +20,8 @@ import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect"
 import WhatsAppInboxLoader from "../../../../components/whatsapp/inbox/loader";
 import { whatsappTheme } from "../../../../config/mantineTheme";
 import { useWsData } from "../../../../context/UserContext";
-import styles from "./WhatsappInbox.module.css";
 import ChatDisplayContext from "./ChatDisplayContext";
-import { useMediaQuery } from "@mantine/hooks";
+import styles from "./WhatsappInbox.module.css";
 
 export default function WhatsAppInbox() {
   const queryClient = useQueryClient();
@@ -29,6 +31,8 @@ export default function WhatsAppInbox() {
   const [filteredContactList, setFilteredContactList] = useState(
     [] as ContactsWithLastMessage[],
   );
+  const [newlyAddedContact, setNewlyAddedContact] =
+    useState<ContactsWithLastMessage | null>(null);
   const { wsData } = useWsData();
 
   const searchParams = useSearchParams();
@@ -141,6 +145,7 @@ export default function WhatsAppInbox() {
           {!isMobile && <Title>Inbox</Title>}
           <Group className={styles["chat-selector-and-chat-container"]}>
             <WaInboxChatSelect
+              setNewlyAdddedContact={setNewlyAddedContact}
               contacts={contactList}
               setFilteredContacts={setFilteredContactList}
               messageCount={messageCount}
@@ -163,7 +168,8 @@ export default function WhatsAppInbox() {
                 ) ??
                 filteredContactList.find(
                   (contact) => contact.id === searchParams.get("contactId"),
-                )
+                ) ??
+                newlyAddedContact
               }
             />
           </Group>
