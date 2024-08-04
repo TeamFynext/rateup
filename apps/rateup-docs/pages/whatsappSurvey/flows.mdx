@@ -5,9 +5,14 @@ You can create Flows in RateUp. Flows allows to create survey which can be share
 It has feature of creating multiple screens, each of which can have a number of questions.
 
 ### Create Flow
+import ScreenShot from "../../components/Screenshot";
 
 In order to create a flow, go to `WhatsApp -> Flows`, then click on **Create flow**. 
 You can also add a flow by syncing using **Sync** button in right hand side.
+
+<ScreenShot src={"/screenshots/whatsapp/create-flow.png"} alt="WhatsApp flow create"/>
+
+Enter the flow name and category, assign a team, and then click "Create" in the Modal.
 
 Once the flow is created, You can add a screen and add questions in the screen using **Add Element**.
 
@@ -32,8 +37,9 @@ Once the flow is created, You can add a screen and add questions in the screen u
 ##### Input Questions
    - **Text** : Accepts text responses only.
    - **Large Text** : Allows multiline responses.
-   - **Date** : Requires a date response.
+   - **Date** : Requires a date response. You can enable a dynamic datepicker and choose an integration, such as Amelia, for date booking. This will retrieve available time slots and provide them for the time slot question.
    - **Opt In** : Provide a checkbox. It can show selected screen based on acceptance.
+   - **Time Slot** : It offers a dropdown menu that displays time slots and can only be used if the date question is enabled with a dynamic datepicker.
 
 ##### Non-Input Questions
 
@@ -52,6 +58,9 @@ You can preview the question you have created to ensure how it will be appear on
 
 In the flow settings, you can update teams and name of the flow. 
 
+   ##### Anonymous Flow
+      you can enable an anonymous flow, where user contact information is not saved in the response
+
 ##### Delete Flow
 
 There are 2 ways to delete a Flow.
@@ -64,14 +73,32 @@ There are 2 ways to delete a Flow.
 
 ### Share Flow
 
-Once your questions are ready, you can publish your flow and share to the users through generated link or QR code. To do that,
+Click on the `Save to WhatsApp` button and use the `copy URL` button to test your flow.
 
- - Move to the share page of the flow and turn on **Publish Survey**. 
+Once your questions are ready, you can publish your flow and share it with users through the generated link or QR code. To do this:
 
- - Its good to test the flow before publishing. For that, you can save the flow to whatsapp by clicking on **Save to WhatsApp** button in the share page.
+- Navigate to the share page of the flow and turn on **Publish Survey**.
 
- - You can also customize start message and template message in share page
+- It's a good idea to test the flow before publishing. To do this, save the flow to WhatsApp by clicking the **Save to WhatsApp** button on the share page.
 
+- You can also customize the start message and template message on the share page.
+
+<span style={{ color: 'red', fontWeight: 'bold' }}>Important Note:</span> After publishing the flow, it cannot be edited.
+
+### Result
+
+#### Response
+- It displays a table with flow responses 
+- Users can filter, search, and sort individual columns.
+- They can apply a general filter using a date range.
+- Users can export data by selecting `export -> download` to save it as an XLSX file.
+- They can synchronize with Google Sheets by choosing `export -> sync with Google Sheets`.
+
+#### Analytics
+- It displays the analytics of flow responses.
+
+#### Comparison
+- It compares team-based response activity for flow question responses.
 
 
 

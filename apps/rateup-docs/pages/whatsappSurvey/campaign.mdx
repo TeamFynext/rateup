@@ -1,10 +1,10 @@
 # Campaign
 
-A Campaign is a valuable tool for gathering customer feedback during special occasions, employing WhatsApp flow surveys. By creating a campaign and adding participants to it, you can efficiently collect opinions. Once the campaign begins, surveys are sent individually to each participant, streamlining the feedback process.
+A campaign is used to send WhatsApp templates to multiple users either at the current time or on a future date. You can also resend messages based on their status, such as failed, pending, sent, delivered, read, or a combination of these statuses.
 
 import ScreenShot from "../../components/Screenshot";
 
-<ScreenShot src={"/screenshots/campaign.png"} alt="WhatsApp campaign"/>
+<ScreenShot src={"/screenshots/whatsapp/campaign.png"} alt="WhatsApp campaign"/>
 
 ## Create Campaign
 
@@ -25,6 +25,19 @@ The added participants will list in campaign page with their status. If the part
 
 To remove participants from campaign click on **select action** and then click **Remove participant**
 
-#### Start campaign
+#### Start campaign/ Resend campaign
 
-To start the campaign click on `send`. Once it is started, the flow will be sent to the all participants.
+To start the campaign, click on send and choose the sending option, such as send `now` or `schedule later` ratio button for a future date. If you want to resend the campaign, click on the resend button, then choose either the `now` or `scheduled later` radio button. Select a status or combination of statuses to send the campaign specifically to those recipients.
+
+#### Campaign Detail View
+
+<ScreenShot src={"/screenshots/whatsapp/campaignParticipants.png"} alt="WhatsApp campaign participants"/>
+
+- In here it shows stats of campaign like total number of participants ,pending campaign to send ,and other message sending status
+- You can send dynamic templates with custom values to personalize each message. 
+- For example, the template body:
+Hi `{{1}}`
+
+will be replaced with "Hi [name]" from the contact list, making each message feel personalized.
+
+You can select each variable's values from the dropdown menu, which contains data saved in the contact, such as name and other fields. To use this feature, ensure you save additional details like location when adding contact information in the contact tab.

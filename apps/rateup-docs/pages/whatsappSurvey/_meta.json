@@ -4,6 +4,7 @@
     "template": "Templates",
     "campaign":"Campaign",
     "contacts":"Contacts",
-    "waSettings": "Settings"
-
+    "waSettings": "Settings",
+    "inbox":"Inbox",
+    "automatedReply":"Automated Reply"
 }
