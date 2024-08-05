@@ -104,7 +104,7 @@ export function createBlankQuestion(
     title,
     description,
     label,
-    required: true,
+    required: type !== QuestionType.InfoMessage,
     type,
   };
 }

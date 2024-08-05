@@ -214,61 +214,66 @@ export function getQuestionForm(type, selectedQ) {
 
 export const validateResponse = (response, selectedQ, selectedLanguage) => {
   let errMsg = "";
+  if (!selectedQ.required && !response) return errMsg;
   switch (selectedQ.type) {
     case QuestionType.Contact:
     case QuestionType.Email:
     case QuestionType.Phone:
-      if (
-        selectedQ.features?.[selectedLanguage]?.name.isEnabled &&
-        !response?.name?.length &&
-        selectedQ.required
-      ) {
-        errMsg = "Name cannot be blank";
-      } else if (
-        selectedQ.features?.[selectedLanguage]?.phone.isEnabled &&
-        (!response?.phone ||
-          (!isValidPhoneNumber(response?.phone) && selectedQ.required))
-      ) {
-        if (!response?.phone) errMsg = "phone number cannot be blank";
-        else if (!isValidPhoneNumber(response?.phone))
-          errMsg = "Enter a valid phone number";
-      } else if (
-        selectedQ.features?.[selectedLanguage]?.email.isEnabled &&
-        (!response?.email?.length || !emailPattern.test(response?.email))
-      ) {
-        if (!response?.email?.length && selectedQ.required)
-          errMsg = "Email cannot be blank";
-        else if (!emailPattern.test(response?.email))
-          errMsg = "Enter a valid email";
+      if (!selectedQ.required && response) {
+        if (response?.phone && !isValidPhoneNumber(response?.phone)) {
+          errMsg = "Invalid phone number";
+          break;
+        }
+        if (response?.email && !emailPattern.test(response?.email)) {
+          errMsg = "Invalid email";
+          break;
+        }
+      } else {
+        if (
+          selectedQ.features?.[selectedLanguage]?.name.isEnabled &&
+          !response?.name?.length
+        ) {
+          errMsg = "Name cannot be blank";
+        } else if (
+          selectedQ.features?.[selectedLanguage]?.phone.isEnabled &&
+          (!response?.phone || !isValidPhoneNumber(response?.phone))
+        ) {
+          if (!response?.phone) errMsg = "phone number cannot be blank";
+          else if (!isValidPhoneNumber(response?.phone))
+            errMsg = "Enter a valid phone number";
+        } else if (
+          selectedQ.features?.[selectedLanguage]?.email.isEnabled &&
+          (!response?.email?.length || !emailPattern.test(response?.email))
+        ) {
+          if (!response?.email?.length) errMsg = "Email cannot be blank";
+          else if (!emailPattern.test(response?.email))
+            errMsg = "Enter a valid email";
+        }
       }
       break;
     case QuestionType.Testimonial:
-      if (response) {
-        const { name, testimonial } = response;
-        if (
-          (selectedQ.required && !name) ||
-          !testimonial ||
-          name?.length < 3 ||
-          testimonial?.length < 5
-        )
-          errMsg =
-            "Name - min 3 characters, and \n testimonial - min 5 characters";
-      }
+      if (!selectedQ.required) break;
+      if (
+        !response?.name ||
+        !response?.testimonial ||
+        response?.name?.length < 3 ||
+        response?.testimonial?.length < 5
+      )
+        errMsg =
+          "Name - min 3 characters, and \n testimonial - min 5 characters";
       break;
     case QuestionType.MCQGrid:
-      if (response) {
-        const questions = selectedQ?.features?.[selectedLanguage]?.questions;
-        const responsedQuestions = Object.keys(response);
-        if (
-          !questions.every((q) => responsedQuestions.includes(q)) &&
-          selectedQ.required
-        )
-          errMsg = "All questions are mandatory";
-      }
+      if (!selectedQ.required) break;
+      const questions = selectedQ?.features?.[selectedLanguage]?.questions;
+      const responsedQuestions = response ? Object.keys(response) : [];
+      if (
+        !responsedQuestions.length ||
+        !questions.every((q) => responsedQuestions.includes(q))
+      )
+        errMsg = "All questions are mandatory";
       break;
     case QuestionType.EmailOtp:
-      if (selectedQ?.required && response?.isValid == false)
-        errMsg = "Incorrect OTP";
+      if (response?.isValid === false) errMsg = "Incorrect OTP";
       break;
     default:
       errMsg = "";
