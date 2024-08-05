@@ -20,7 +20,7 @@ import { Video } from "./InsertVideo/CustomVideo";
 import { VariableComponentExtension } from "./MantineComponentExtension";
 import { getContent } from "./utils";
 
-function TextEditor({ form, selectedLanguage }) {
+function TextEditor({ form, selectedLanguage, className = "" }) {
   const { variables } = useContext(SurveyContext);
   const content = getContent(
     form.values?.title?.[selectedLanguage],
@@ -68,7 +68,7 @@ function TextEditor({ form, selectedLanguage }) {
   }, [content, editor]);
 
   return (
-    <RichTextEditor editor={editor}>
+    <RichTextEditor editor={editor} className={className}>
       <RichTextEditor.Toolbar sticky tabIndex={-1}>
         <Group gap={"xs"}>
           <RichTextEditor.ControlsGroup>
