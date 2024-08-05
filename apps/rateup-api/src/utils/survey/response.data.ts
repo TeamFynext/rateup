@@ -6,7 +6,7 @@ import {
   YNResponse,
 } from "../../types/enums";
 import { ResponsePlatform } from "@prisma/client";
-import cheerio from "cheerio";
+import { load } from "cheerio";
 
 export const generateResponseData = (surveyTeamMapId, survey) => {
   return {
@@ -149,7 +149,7 @@ export const getPropValueFromQuestionCustomComponent = (
   componentName = "variable-component",
   prop = "label",
 ) => {
-  const doc = cheerio.load(str);
+  const doc = load(str);
   const labels = [];
   const customComponents = doc(componentName);
   if (!customComponents?.length) return null;
@@ -173,7 +173,7 @@ export const getReplacedTitleFromVariable = ({
   prop = "label",
   componentName = "variable-component",
 }: IReplaceTitleForVar) => {
-  const doc = cheerio.load(title);
+  const doc = load(title);
   const variables = getPropValueFromQuestionCustomComponent(
     title,
     componentName,
