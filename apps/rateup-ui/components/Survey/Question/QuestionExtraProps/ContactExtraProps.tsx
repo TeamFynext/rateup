@@ -1,8 +1,11 @@
-import { Flex, Paper, Stack, Switch } from "@mantine/core";
+import { useContext, useEffect, useState } from "react";
+
+import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
+import { IconCircleCheckFilled } from "@tabler/icons-react";
+
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { useCallback, useContext, useEffect } from "react";
-import { ContainedTextArea } from "../../../input/ContainedInput/ContainedInput";
 import { QuestionType } from "../../../../types/enums";
+import classes from "./Style.module.css";
 
 const ContactExtraProps = ({ form }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
@@ -21,13 +24,8 @@ const ContactExtraProps = ({ form }) => {
       headText: "",
     },
   };
-  const style = {
-    input: {
-      border: "none",
-      borderBottom: "1px solid var(--mantine-color-gray-3)",
-      borderRadius: 0,
-    },
-  };
+  const [selectedField, setSelectedField] = useState(null);
+  const [text, setText] = useState("");
   function updateFeatures(features) {
     form.setFieldValue("features", {
       ...form.values.features,
@@ -35,8 +33,10 @@ const ContactExtraProps = ({ form }) => {
     });
   }
   useEffect(() => {
-    if (!form.values.features?.[selectedLanguage]) updateFeatures(features);
-  }, [form]);
+    if (!form.values?.features?.[selectedLanguage]) updateFeatures(features);
+  }, []);
+
+  const questionTitle = form?.values?.title?.[selectedLanguage];
 
   return (
     <Stack gap={"xl"}>
@@ -47,8 +47,14 @@ const ContactExtraProps = ({ form }) => {
             c={features?.name.isEnabled ? "var(--tertiary-color" : "dimmed"}
             checked={features?.name.isEnabled}
             onChange={(e) => {
-              features.name.isEnabled = e.currentTarget.checked;
-              updateFeatures(features);
+              const updatedFeature = {
+                ...features,
+                name: {
+                  ...features.name,
+                  isEnabled: e.currentTarget.checked,
+                },
+              };
+              updateFeatures(updatedFeature);
             }}
           />
         </Paper>
@@ -59,8 +65,14 @@ const ContactExtraProps = ({ form }) => {
               c={features?.phone.isEnabled ? "var(--tertiary-color" : "dimmed"}
               checked={features?.phone.isEnabled}
               onChange={(e) => {
-                features.phone.isEnabled = e.currentTarget.checked;
-                updateFeatures(features);
+                const updatedFeature = {
+                  ...features,
+                  phone: {
+                    ...features.phone,
+                    isEnabled: e.currentTarget.checked,
+                  },
+                };
+                updateFeatures(updatedFeature);
               }}
             />
           </Paper>
@@ -72,49 +84,83 @@ const ContactExtraProps = ({ form }) => {
               checked={features?.email.isEnabled}
               c={features.email.isEnabled ? "var(--tertiary-color" : "dimmed"}
               onChange={(e) => {
-                features.email.isEnabled = e.currentTarget.checked;
-                updateFeatures(features);
+                const updatedFeature = {
+                  ...features,
+                  email: {
+                    ...features.email,
+                    isEnabled: e.currentTarget.checked,
+                  },
+                };
+                updateFeatures(updatedFeature);
               }}
             />
           </Paper>
         )}
       </Flex>
       <Stack gap={"sm"}>
-        {features.name.isEnabled && (
-          <ContainedTextArea
-            placeholder="Enter name heading here"
-            styles={style}
-            size="md"
-            onChange={(e) => {
-              features.name.headText = e.currentTarget.value;
-              updateFeatures(features);
-            }}
-            value={features?.name.headText}
-          />
-        )}
-        {features.phone.isEnabled && (
-          <ContainedTextArea
-            placeholder="Enter phone heading here"
-            styles={style}
-            size="md"
-            onChange={(e) => {
-              features.phone.headText = e.currentTarget.value;
-              updateFeatures(features);
-            }}
-            value={features?.phone.headText}
-          />
-        )}
-        {features.email.isEnabled && (
-          <ContainedTextArea
-            placeholder="Enter email heading"
-            styles={style}
-            size="md"
-            onChange={(e) => {
-              features.email.headText = e.currentTarget.value;
-              updateFeatures(features);
-            }}
-            value={features?.email.headText}
-          />
+        {Object.entries(features).map(
+          ([key, value]: [
+            string,
+            { isEnabled: boolean; headText: string },
+          ]) => (
+            <Tooltip
+              label={"Please fill question"}
+              disabled={questionTitle !== "<p></p>"}
+              key={key}
+            >
+              <Textarea
+                placeholder={`Enter ${key} title here`}
+                classNames={{ input: classes.inputHeadText }}
+                size="md"
+                key={key}
+                disabled={questionTitle == "<p></p>"}
+                onChange={(e) => setText(e.currentTarget.value)}
+                onBlur={() => {
+                  if (!questionTitle) return;
+                  if (text !== value.headText) {
+                    const updatedFeature = {
+                      ...features,
+                      [key]: {
+                        ...features[key],
+                        headText: text,
+                      },
+                    };
+                    updateFeatures(updatedFeature);
+                  }
+                  setSelectedField(null);
+                }}
+                value={selectedField === key ? text : value.headText}
+                onFocus={() => {
+                  if (!questionTitle) return;
+                  setSelectedField(key);
+                  setText(value.headText);
+                }}
+                autosize
+                display={value.isEnabled ? "block" : "none"}
+                rightSection={
+                  selectedField === key && questionTitle ? (
+                    <Tooltip label={"save"}>
+                      <IconCircleCheckFilled
+                        onClick={() => {
+                          if (text !== value.headText) {
+                            const updatedFeature = {
+                              ...features,
+                              [key]: {
+                                ...features[key],
+                                headText: text,
+                              },
+                            };
+                            updateFeatures(updatedFeature);
+                          }
+                          setSelectedField(null);
+                        }}
+                      />
+                    </Tooltip>
+                  ) : null
+                }
+              />
+            </Tooltip>
+          ),
         )}
       </Stack>
     </Stack>

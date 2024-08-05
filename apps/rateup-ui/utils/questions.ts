@@ -112,7 +112,7 @@ export function createBlankQuestion(
 export function validateAllLanguagesArePopulated(
   question: Question,
   languages: Array<string>,
-  keyToValidate: Array<"title" | "description" | "choices" | "features">,
+  keyToValidate: Array<"title" | "description" | "choices">,
 ) {
   let missingLangs = [];
 
@@ -132,7 +132,6 @@ export function validateAllLanguagesArePopulated(
       });
     }
   });
-
   return missingLangs;
 }
 

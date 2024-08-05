@@ -37,6 +37,7 @@ import { QuestionTabsEnum } from "../EditSurvey";
 import ImportChoices from "./ImportChoices";
 import { LanguageCompletionView } from "./LanguageCompletionView";
 import QuestionTypePreview from "./Previews/QuestionTypePreview";
+import styles from "./QuestionDetailedView.module.css";
 import QuestionDetailedViewBadge from "./QuestionDetailedViewBadge";
 import QuestionDetailedViewFooter from "./QuestionDetailedViewFooter";
 import { ChoicesCreator } from "./QuestionExtraProps/ChoicesCreator";
@@ -107,9 +108,11 @@ export function QuestionDetailedView({
   });
 
   form.watch("features", ({ previousValue, value, touched, dirty }) => {
-    if (!getIncompleteLanguages()?.length) {
+    if (
+      JSON.stringify(previousValue) !== JSON.stringify(value) &&
+      !getIncompleteLanguages().length
+    )
       handleSave();
-    }
   });
 
   useEffect(() => {
@@ -203,6 +206,7 @@ export function QuestionDetailedView({
     >
       <Stack style={{ height: "100%" }} ref={formRef}>
         <ScrollArea
+          className={styles["editor-scroll-area-div"]}
           style={{ flex: "1 1 0" }}
           offsetScrollbars={"x"}
           styles={{ viewport: { paddingRight: "1rem" } }}
@@ -210,7 +214,12 @@ export function QuestionDetailedView({
           <QuestionDetailedViewBadge question={question} />
           <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
             <Stack
-              style={{ minHeight: "150px", height: "100%", flex: 1 }}
+              style={{
+                minHeight: "150px",
+                height: "100%",
+                flex: 1,
+                overflow: "hidden",
+              }}
               mr={"xs"}
             >
               <Group
@@ -226,9 +235,17 @@ export function QuestionDetailedView({
                 }}
               >
                 {question?.type === PageType.Custom ? (
-                  <HTMLEditor form={form} selectedLanguage={selectedLanguage} />
+                  <HTMLEditor
+                    className={styles["html-editor-div"]}
+                    form={form}
+                    selectedLanguage={selectedLanguage}
+                  />
                 ) : (
-                  <TextEditor form={form} selectedLanguage={selectedLanguage} />
+                  <TextEditor
+                    className={styles["rich-text-editor"]}
+                    form={form}
+                    selectedLanguage={selectedLanguage}
+                  />
                 )}
               </Group>
 

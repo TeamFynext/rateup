@@ -1,34 +1,36 @@
 import { useContext, useEffect, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import {
   Box,
   FileButton,
   Group,
   Image,
+  Rating,
   Skeleton,
   Stack,
-  TextInput,
-  Textarea,
   Text,
-  Rating,
+  Textarea,
+  TextInput,
   useMantineTheme,
 } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
+import { useDisclosure } from "@mantine/hooks";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { fallbackImage } from "../../../../../utils/constants";
 import {
   dataURItoBlob,
   getFileUrlFromKey,
   uploadFile,
 } from "../../../../../utils/file-upload/upload";
 import { showErrorToast } from "../../../../../utils/notifications";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import WebcamCapture from "../../../../input/WebCamCapture";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
-import { useDisclosure } from "@mantine/hooks";
+import WebcamCapture from "../../../../input/WebCamCapture";
 import FormModalLayout from "../../../../Modal/FormModalLayout";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal";
-import { fallbackImage } from "../../../../../utils/constants";
-import FormPaperLayout from "./layout/FormPaperLayout";
+import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 interface TestimonialProps {
   features;
@@ -111,25 +113,15 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           aspect={4 / 3}
         />
       )}
-      <FormPaperLayout>
-        <TextInput
-          placeholder="Enter your name"
-          value={response?.name}
-          onChange={handleNameChange}
-          style={{ maxWidth: "400px" }}
-          variant="unstyled"
-          classNames={{
-            input: classes.input,
-          }}
-          onClick={handleInputScrollIntoView}
-        />
-      </FormPaperLayout>
-      {features?.[selectedLanguage]?.jobTitle && (
+      <Stack gap={"xs"}>
+        <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+          {features?.[selectedLanguage]?.nameQn}
+        </Text>
         <FormPaperLayout>
           <TextInput
-            placeholder="Enter your job title"
-            value={response?.jobTitle}
-            onChange={handleJobTitleChange}
+            placeholder="Enter name"
+            value={response?.name}
+            onChange={handleNameChange}
             style={{ maxWidth: "400px" }}
             variant="unstyled"
             classNames={{
@@ -138,35 +130,64 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             onClick={handleInputScrollIntoView}
           />
         </FormPaperLayout>
+      </Stack>
+      {features?.[selectedLanguage]?.jobTitle && (
+        <Stack gap={"xs"}>
+          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+            {features?.[selectedLanguage]?.jobTitleQn}
+          </Text>
+          <FormPaperLayout>
+            <TextInput
+              placeholder="Enter job title"
+              value={response?.jobTitle}
+              onChange={handleJobTitleChange}
+              style={{ maxWidth: "400px" }}
+              variant="unstyled"
+              classNames={{
+                input: classes.input,
+              }}
+              onClick={handleInputScrollIntoView}
+            />
+          </FormPaperLayout>
+        </Stack>
       )}
-      <FormPaperLayout>
-        <Textarea
-          placeholder="Enter your testimonial"
-          value={response?.testimonial}
-          onChange={handleTestimonialChange}
-          style={{ maxWidth: "400px" }}
-          variant="unstyled"
-          classNames={{
-            input: classes.input,
-          }}
-          onClick={handleInputScrollIntoView}
-        />
-      </FormPaperLayout>
+      <Stack gap={"xs"}>
+        <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+          {features?.[selectedLanguage]?.testimonialQn}
+        </Text>
+        <FormPaperLayout>
+          <Textarea
+            placeholder="Enter testimonial"
+            value={response?.testimonial}
+            onChange={handleTestimonialChange}
+            style={{ maxWidth: "400px" }}
+            variant="unstyled"
+            classNames={{
+              input: classes.input,
+            }}
+            onClick={handleInputScrollIntoView}
+          />
+        </FormPaperLayout>
+      </Stack>
       {features?.[selectedLanguage]?.rating && (
-        <>
-          <Text>Rate Us Now</Text>
+        <Stack gap={"xs"}>
+          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+            {features?.[selectedLanguage]?.ratingQn || "Give rating"}
+          </Text>
           <Rating
             value={response?.rating}
             onChange={(value) => updateResponse({ ...response, rating: value })}
             size={"xl"}
             color={theme.primaryColor}
           />
-        </>
+        </Stack>
       )}
       {features?.[selectedLanguage]?.photo && (
         <>
-          <Stack>
-            <Text>Upload your Image</Text>
+          <Stack gap={"xs"}>
+            <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+              {features?.[selectedLanguage]?.photoQn || "Upload Photo"}
+            </Text>
             <Group>
               <Box
                 style={{ border: "1px solid grey", borderRadius: "10px" }}
