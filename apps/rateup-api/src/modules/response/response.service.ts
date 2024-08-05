@@ -169,7 +169,7 @@ export async function downloadExcelResponse(
     return visibleColumn.includes(
       getReplacedTitleFromVariable({
         title: qsTitle,
-      }) || qsTitle,
+      }) || getContent(qsTitle),
     );
   });
 
@@ -199,10 +199,14 @@ export async function downloadExcelResponse(
               ? [
                   `${getContent(question.title[defaultLanguage])}: name`,
                   `${getContent(question.title[defaultLanguage])}: testimonial`,
-                  ...(Object.keys(question.features?.[defaultLanguage])?.map(
-                    (key) =>
-                      `${getContent(question.title[defaultLanguage])}: ${key}`,
-                  ) ?? []),
+                  ...(question?.features?.[defaultLanguage]
+                    ? Object.entries(question.features?.[defaultLanguage])
+                        ?.filter(([key, value]) => value)
+                        .map(
+                          ([key, value]) =>
+                            `${getContent(question.title[defaultLanguage])}: ${key}`,
+                        )
+                    : []),
                 ]
               : [getContent(qsTitle)];
     });
@@ -307,15 +311,18 @@ export async function downloadExcelResponse(
             tempArray.push({ [answerIndex]: questionId });
             bodyArray[answerIndex].push(responseValue?.name ?? "");
             bodyArray[answerIndex].push(responseValue?.testimonial ?? "");
-            Object.keys(question?.features?.[defaultLanguage])?.map((key) =>
-              responseValue?.[key]
-                ? bodyArray[answerIndex].push(
-                    key == "photo"
-                      ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
-                      : responseValue?.[key],
-                  )
-                : bodyArray[answerIndex].push(""),
-            );
+            question?.features?.[defaultLanguage] &&
+              Object.entries(question?.features?.[defaultLanguage])
+                .filter(([key, value]) => value)
+                .map(([key, value]) =>
+                  responseValue?.[key]
+                    ? bodyArray[answerIndex].push(
+                        key == "photo"
+                          ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
+                          : responseValue?.[key],
+                      )
+                    : bodyArray[answerIndex].push(""),
+                );
             flag = false;
           } else if (!tempArray.includes({ [answerIndex]: questionId })) {
             if (ChoiceTypeQuestions.includes(responseType)) {
@@ -349,6 +356,27 @@ export async function downloadExcelResponse(
         } else {
           if (question.type === QuestionType.MCQGrid) {
             question?.features?.[defaultLanguage]?.questions?.map((q) =>
+              bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          } else if (question.type === QuestionType.Contact) {
+            Object.values(question.features?.[defaultLanguage]).forEach(
+              (key: any) => {
+                if (key?.isEnabled) bodyArray[answerIndex].push("");
+              },
+            );
+            flag = false;
+          } else if (question.type === QuestionType.Testimonial) {
+            bodyArray[answerIndex].push("", "");
+            const features = question.features?.[defaultLanguage];
+            if (features) {
+              Object.values(features).forEach((key: any) => {
+                if (key) bodyArray[answerIndex].push("");
+              });
+              flag = false;
+            }
+          } else if (question.type === QuestionType.MultiTextInput) {
+            question?.features?.[defaultLanguage]?.fields?.forEach((field) =>
               bodyArray[answerIndex].push(""),
             );
             flag = false;

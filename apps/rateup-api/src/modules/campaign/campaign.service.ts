@@ -263,6 +263,7 @@ export async function sendCampaign(
 
 export async function getCampaignFilterForFlows(surveyId: string) {
   const flow = await getFlowBySurveyId(surveyId);
+  if (!flow) return;
   const result = await prisma.campaign.findMany({
     where: {
       flowId: flow.dbFlowId,
