@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 
 import CustomImageExtension from "./InsertImage/CustomImageExtenstion";
 
-function HTMLEditor({ form, selectedLanguage }) {
+function HTMLEditor({ form, selectedLanguage, className = "" }) {
   const content = form.values?.title?.[selectedLanguage];
   const htmlContent = form.values?.description?.[selectedLanguage];
 
@@ -68,7 +68,7 @@ function HTMLEditor({ form, selectedLanguage }) {
   }, [htmlContent, codeEditor]);
 
   return (
-    <Stack style={{ width: "100%" }}>
+    <Stack style={{ width: "100%" }} className={className}>
       <RichTextEditor editor={editor}>
         <RichTextEditor.Toolbar sticky tabIndex={-1}>
           <Group gap={"xs"} style={{ width: "100%" }}>
