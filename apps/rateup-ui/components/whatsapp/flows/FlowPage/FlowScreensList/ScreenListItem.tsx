@@ -5,7 +5,6 @@ import {
   ActionIcon,
   Badge,
   Box,
-  Button,
   Flex,
   Group,
   Image,
@@ -29,19 +28,25 @@ import {
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
 
-import { useReplaceQuestionsMutation } from "../../../../../backend/surveys/questions/questions.query";
-import {
-  usePushToWaMutation,
-  useWaFlowFromDb,
-} from "../../../../../backend/whatsapp/flow/flow.query";
 import {
   QuestionType,
   WaFlowFormElementType,
   WaFlowStatus,
-} from "../../../../../types/enums";
-import { WaFlowFormElement, WaFlowScreen } from "../../../../../types/global";
-import { FlowChoiceQuestions } from "../../../../../utils/constants";
-import { showErrorToast } from "../../../../../utils/notifications";
+} from "@/types/enums";
+import { WaFlowFormElement, WaFlowScreen } from "@/types/global";
+import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
+import {
+  usePushToWaMutation,
+  useWaFlowFromDb,
+} from "@/backend/whatsapp/flow/flow.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import {
+  FlowMaxElementsPerScreen,
+  FlowMaxScreens,
+} from "@/components/whatsapp/whatsappConfig";
+import { FlowChoiceQuestions } from "@/utils/constants";
+import { showErrorToast } from "@/utils/notifications";
 import {
   getFlowElementText,
   getFlowFooterElementsFromScreen,
@@ -50,15 +55,9 @@ import {
   getQuestionsFromScreen,
   getScreenObjById,
   updateFlowJsonNavigationAndDataPassing,
-} from "../../../../../utils/whatsapp/flow.utils";
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import { EditableText } from "../../../../input/EditableText";
-import ConfirmationModal from "../../../../Modal/ConfirmationModal";
+} from "@/utils/whatsapp/flow.utils";
+
 import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
-import {
-  FlowMaxElementsPerScreen,
-  FlowMaxScreens,
-} from "../../../whatsappConfig";
 import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import styles from "./ScreenListIem.module.css";
@@ -524,7 +523,9 @@ function FormElementCard({
     <Box
       onClick={() => handleOpen(index)}
       style={{
-        backgroundColor: selected ? "var(--light-grey-color)" : "white",
+        backgroundColor: selected
+          ? "light-dark(var(--light-grey-color),var(--mantine-color-dark-7))"
+          : "var(--mantine-body-color)",
       }}
       className={dndClasses.item}
     >

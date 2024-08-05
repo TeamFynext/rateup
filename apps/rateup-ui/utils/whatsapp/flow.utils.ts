@@ -560,8 +560,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   }
   if (question.type === QuestionType.WaTimeSlot) {
     questionElement["data-source"] = "${data.available_slots}";
-  }
-  if (question?.onSelectAction && question.waAppName) {
+  } else if (question?.onSelectAction && question.waAppName) {
     let now = dayjs().tz("Asia/Kolkata").startOf("day");
     let afterSixMonth = dayjs().add(6, "M").startOf("day");
     questionElement["min-date"] = now.utc().valueOf().toString();
@@ -573,6 +572,13 @@ export function getFlowElementJsonFromQuestion(question: Question) {
         component_action: "update_date",
       },
     };
+  } else if (question?.optinScreenId && question.type === QuestionType.Optin) {
+    questionElement.name = "navigate";
+    questionElement["next"] = {
+      type: "screen",
+      name: question.optinScreenId,
+    };
+    questionElement["payload"] = {};
   }
   mapData.type = question.type;
   mapData.questionId = question.id;

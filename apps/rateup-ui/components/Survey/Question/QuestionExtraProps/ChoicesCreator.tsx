@@ -1,50 +1,46 @@
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+
 import {
-  Stack,
-  Group,
-  Checkbox,
   ActionIcon,
   Badge,
-  Flex,
-  Select,
-  Text,
-  FileButton,
   Button,
+  Checkbox,
+  FileButton,
+  Flex,
+  Group,
+  Select,
+  Stack,
   Switch,
+  Text,
 } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useState, useContext, useCallback, useRef, useEffect } from "react";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+
+import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums";
+import { useResponses } from "@/backend/surveys/response/response.query";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
-} from "../../../Button/RateupButtons";
+} from "@/components/Button/RateupButtons";
+import { useImageStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import {
   ContainedTextArea,
   ContainedTextField,
-} from "../../../input/ContainedInput/ContainedInput";
-import { LengthTracker } from "../../../input/LengthTracker";
+} from "@/components/input/ContainedInput/ContainedInput";
+import { LengthTracker } from "@/components/input/LengthTracker";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
+import { ImageCropModal } from "@/components/Modal/ImageCropModal";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import SelectedLanguageContext from "@/context/SelectedLanguage";
+import { SurveyContext } from "@/context/SurveyObjContext";
+import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants";
+import { uploadFile } from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
+
 import inputStyles from "../../../input/InputStyles.module.css";
-import {
-  NPSWeightage,
-  QuestionType,
-  SurveyType,
-} from "../../../../types/enums";
-import FormModalLayout from "../../../Modal/FormModalLayout";
 import { getNpsColor } from "../QuestionDetailedView";
-import SurveyContext from "../../../../context/SurveyContext";
-import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-} from "../../../../utils/constants";
-import { showErrorToast } from "../../../../utils/notifications";
-import { ImageCropModal } from "../../../Modal/ImageCropModal";
-import { useImageStore } from "../../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import { uploadFile } from "../../../../utils/file-upload/upload";
-import ConfirmationModal from "../../../Modal/ConfirmationModal";
-import { useResponses } from "../../../../backend/surveys/response/response.query";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
@@ -212,6 +208,7 @@ export function ChoicesCreator({
             index={i}
             image={image}
             buttonRef={buttonRef}
+            maxCharCount={maxCharCount}
           />
         ))}
       </Stack>
@@ -381,6 +378,7 @@ interface ChoiceProps {
   index: number;
   image?;
   buttonRef?;
+  maxCharCount?: number;
 }
 function Choice({
   choice,
@@ -389,6 +387,7 @@ function Choice({
   index,
   image,
   buttonRef,
+  maxCharCount,
 }: ChoiceProps) {
   const { hovered, ref } = useHover<HTMLInputElement>();
   const [opened, { open, close }] = useDisclosure(false);
@@ -469,6 +468,8 @@ function Choice({
       setError("Choice Already exist");
       return;
     } else {
+      if (maxCharCount && choiceValue.length > maxCharCount)
+        return setError("Max character limit reached");
       setError("");
 
       if (image) {
@@ -585,6 +586,14 @@ function Choice({
             }}
             error={error}
             autosize
+            rightSection={
+              maxCharCount && (
+                <LengthTracker
+                  length={choiceValue.length}
+                  maxValue={maxCharCount}
+                />
+              )
+            }
           />
           {image && (
             <Stack gap={0} mt={fileError && "lg"}>

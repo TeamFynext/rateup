@@ -16,12 +16,13 @@ import {
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconPlayerPlay, IconPlus } from "@tabler/icons-react";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
-import { reorderQuestions } from "../../backend/surveys/questions/questions.api";
-import { docsPath } from "../../utils/constants";
-import { reorder, reOrderPages } from "../../utils/questions";
+import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
+import { docsPath } from "@/utils/constants";
+import { reorder, reOrderPages } from "@/utils/questions";
+
 import InfoButton from "../Button/InfoButton";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
