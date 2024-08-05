@@ -213,9 +213,7 @@ function QuestionDetailedViewFooter({
                         data-disabled
                         radius="lg"
                         onClick={(event) => event.preventDefault()}
-                        leftSection={
-                          <IconBrandGoogle stroke={4} size={"1rem"} />
-                        }
+                        leftSection={<IconTicket stroke={4} size={"1rem"} />}
                       >
                         Create Tickets
                       </Button>

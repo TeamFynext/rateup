@@ -107,9 +107,11 @@ export function QuestionDetailedView({
   });
 
   form.watch("features", ({ previousValue, value, touched, dirty }) => {
-    if (!getIncompleteLanguages()?.length) {
+    if (
+      JSON.stringify(previousValue) !== JSON.stringify(value) &&
+      !getIncompleteLanguages().length
+    )
       handleSave();
-    }
   });
 
   useEffect(() => {

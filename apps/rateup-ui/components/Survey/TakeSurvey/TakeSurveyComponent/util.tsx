@@ -245,7 +245,12 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
     case QuestionType.Testimonial:
       if (response) {
         const { name, testimonial } = response;
-        if (selectedQ.required && (name?.length < 3 || testimonial?.length < 5))
+        if (
+          (selectedQ.required && !name) ||
+          !testimonial ||
+          name?.length < 3 ||
+          testimonial?.length < 5
+        )
           errMsg =
             "Name - min 3 characters, and \n testimonial - min 5 characters";
       }

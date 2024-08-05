@@ -1,66 +1,157 @@
-import { Flex, Paper, Switch } from "@mantine/core";
-import { useContext, useState, useEffect } from "react";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { useContext, useEffect, useState } from "react";
 
-const TestimonialExtraProps = ({ qId, form }) => {
+import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
+import { IconCircleCheckFilled } from "@tabler/icons-react";
+import { isEmptyObject } from "@tiptap/react";
+
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import classes from "./Style.module.css";
+
+const TestimonialExtraProps = ({
+  qId,
+  form,
+}: {
+  qId: string;
+  form: UseFormReturnType<any>;
+}) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
     rating: false,
     jobTitle: false,
     photo: false,
+    nameQn: "",
+    ratingQn: "",
+    testimonialQn: "",
+    jobTitleQn: "",
+    photoQn: "",
   };
-  const [rating, setHasRating] = useState(features?.rating);
-  const [jobTitle, setHasJobTitle] = useState(features?.jobTitle);
-  const [photo, setHasPhoto] = useState(features?.photo);
+  const [selectedField, setSelectedField] = useState(null);
+  const [text, setText] = useState("");
+
+  function updateFeatures(featurekey, value) {
+    form.setFieldValue("features", {
+      ...form.values.features,
+      [selectedLanguage]: { ...features, [featurekey]: value },
+    });
+  }
+
+  const questionTitleFields = [
+    {
+      key: "nameQn",
+      label: "name",
+      active: true,
+    },
+    {
+      key: "testimonialQn",
+      label: "testimonial",
+      active: true,
+    },
+    {
+      key: "ratingQn",
+      label: "rating",
+      active: features?.rating,
+    },
+    {
+      key: "jobTitleQn",
+      label: "job title",
+      active: features?.jobTitle,
+    },
+    {
+      key: "photoQn",
+      label: "photo",
+      active: features?.photo,
+    },
+  ];
 
   useEffect(() => {
-    form.setFieldValue("features", {
-      ...form.values.features,
-      [selectedLanguage]: { ...features, rating: rating },
-    });
-  }, [rating]);
-  useEffect(() => {
-    form.setFieldValue("features", {
-      ...form.values.features,
-      [selectedLanguage]: { ...features, jobTitle: jobTitle },
-    });
-  }, [jobTitle]);
-  useEffect(() => {
-    form.setFieldValue("features", {
-      ...form.values.features,
-      [selectedLanguage]: { ...features, photo: photo },
-    });
-  }, [photo]);
+    let data = {};
+    if (!features?.rating) data["ratingQn"] = "";
+    if (!features?.jobTitle) data["jobTitleQn"] = "";
+    if (!features?.photo) data["photoQn"] = "";
+    if (!isEmptyObject(data))
+      form.setFieldValue("features", {
+        ...form.values.features,
+        [selectedLanguage]: { ...features, ...data },
+      });
+  }, [features?.rating, features?.jobTitle, features?.photo]);
+
+  const questionTitle = form.values?.title?.[selectedLanguage];
 
   return (
-    <>
+    <Stack>
       <Flex justify={"flex-start"} columnGap={"lg"}>
         <Paper shadow="xl" p={"lg"}>
           <Switch
             label={"Enable Rating Qn"}
-            c={rating ? "var(--tertiary-color)" : "dimmed"}
-            checked={rating}
-            onChange={(e) => setHasRating(e.currentTarget.checked)}
+            c={features?.rating ? "var(--tertiary-color)" : "dimmed"}
+            checked={features?.rating}
+            onChange={(e) => updateFeatures("rating", e.currentTarget.checked)}
           />
         </Paper>
         <Paper shadow="xl" p={"lg"} c={"dimmed"}>
           <Switch
             label={"Add job title"}
-            c={jobTitle ? "var(--tertiary-color)" : "dimmed"}
-            checked={jobTitle}
-            onChange={(e) => setHasJobTitle(e.currentTarget.checked)}
+            c={features?.jobTitle ? "var(--tertiary-color)" : "dimmed"}
+            checked={features?.jobTitle}
+            onChange={(e) =>
+              updateFeatures("jobTitle", e.currentTarget.checked)
+            }
           />
         </Paper>
         <Paper shadow="xl" p={"lg"}>
           <Switch
             label={"Capture photo"}
-            c={photo ? "var(--tertiary-color)" : "dimmed"}
-            checked={photo}
-            onChange={(e) => setHasPhoto(e.currentTarget.checked)}
+            c={features?.photo ? "var(--tertiary-color)" : "dimmed"}
+            checked={features?.photo}
+            onChange={(e) => updateFeatures("photo", e.currentTarget.checked)}
           />
         </Paper>
       </Flex>
-    </>
+      <Stack pt={"sm"}>
+        {questionTitleFields.map((field) => (
+          <Tooltip
+            label={"Please fill question"}
+            disabled={questionTitle !== "<p></p>"}
+            key={field.key}
+          >
+            <Textarea
+              placeholder={`Enter ${field.label} title here`}
+              classNames={{ input: classes.inputHeadText }}
+              size="md"
+              disabled={questionTitle == "<p></p>"}
+              onChange={(e) => setText(e.currentTarget.value)}
+              onBlur={() => {
+                if (text !== features[field.key])
+                  updateFeatures(field.key, text);
+                setSelectedField(null);
+              }}
+              value={selectedField === field.key ? text : features[field.key]}
+              onFocus={() => {
+                setSelectedField(field.key);
+                setText(features[field.key]);
+              }}
+              autosize
+              key={field.key}
+              display={field.active ? "block" : "none"}
+              rightSection={
+                selectedField === field.key ? (
+                  <Tooltip label={"save"}>
+                    <IconCircleCheckFilled
+                      onClick={() => {
+                        if (text !== features[field.key])
+                          updateFeatures(field.key, text);
+                        setSelectedField(null);
+                      }}
+                    />
+                  </Tooltip>
+                ) : null
+              }
+            />
+          </Tooltip>
+        ))}
+      </Stack>
+    </Stack>
   );
 };
 
