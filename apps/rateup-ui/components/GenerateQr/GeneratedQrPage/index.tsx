@@ -1,9 +1,27 @@
-import { Box, Center, Flex, Group, Loader, Stack } from "@mantine/core";
-import { useGetQrWithShortUrlId } from "backend/generateQr/generateQr.query";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+
+import {
+  Box,
+  Button,
+  Center,
+  CopyButton,
+  Flex,
+  Group,
+  Loader,
+  Stack,
+  TextInput,
+} from "@mantine/core";
+import { useThrottledCallback } from "@mantine/hooks";
+import { IconCopy, IconDeviceFloppy, IconEdit } from "@tabler/icons-react";
+import {
+  useGetQrWithShortUrlId,
+  useUpdateQrMutation,
+} from "backend/generateQr/generateQr.query";
 import RefreshButton from "components/Button/RefreshButton";
 import ShareQR from "components/Survey/ShareSurvey/ShareQR";
 import { CopyLinkComponent } from "components/Survey/ShareSurvey/ShareSurvey";
-import { useRouter } from "next/router";
+
 import styles from "./GeneratedQrPage.module.css";
 
 function GeneratedQrPage({}) {
@@ -11,11 +29,50 @@ function GeneratedQrPage({}) {
   const shortUrlId = router.query.shortUrlId;
 
   const { isPending, isError, data } = useGetQrWithShortUrlId(shortUrlId);
+  const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
   const qrUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/qr/${shortUrlId}`;
-  const destinationUrl = data?.link;
+  const [destinationUrl, setDestinationUrl] = useState(data?.link);
+  const [isDestinationUrlEditable, setIsDestinationUrlEditable] =
+    useState(false);
+  const destinationUrlFromApi = data?.link || "";
+  const isDestinationUrlFromApiAndDestinationUrlSame =
+    destinationUrlFromApi === destinationUrl;
+  const [isSaving, setIsSaving] = useState(false);
 
+  const destinationUrlInputRef = useRef(null);
   let componentToBeRendered = null;
+
+  const onDestinationUrlInputChange = (e) => {
+    setDestinationUrl(e.target.value);
+  };
+
+  const handleSaveDestinationUrl = async () => {
+    try {
+      if (!isDestinationUrlFromApiAndDestinationUrlSame) {
+        setIsSaving(true);
+        await updateQrMutation.mutateAsync({
+          shortUrlId,
+          link: destinationUrl,
+        });
+        setIsDestinationUrlEditable(false);
+        setIsSaving(false);
+      }
+    } catch (err) {
+      setDestinationUrl(data?.link || "");
+      setIsDestinationUrlEditable(false);
+    }
+  };
+
+  const handleEditSaveBtnClick = () => {
+    setIsDestinationUrlEditable(true);
+    destinationUrlInputRef.current?.focus();
+    handleSaveDestinationUrl();
+  };
+
+  useEffect(() => {
+    setDestinationUrl(data?.link);
+  }, [data]);
 
   if (isPending) {
     componentToBeRendered = (
@@ -42,8 +99,36 @@ function GeneratedQrPage({}) {
         </Group>
         <Group className={styles["copy-link-comp-and-stats-container"]}>
           <Stack className={styles["copy-link-comp-container-div"]}>
+            <Group className={styles["destination-link-input-root-div"]}>
+              <TextInput
+                ref={destinationUrlInputRef}
+                className={styles["destination-url-text-input"]}
+                label="Destination Url"
+                value={destinationUrl}
+                onChange={onDestinationUrlInputChange}
+                readOnly={!isDestinationUrlEditable}
+                onBlur={() => {
+                  handleSaveDestinationUrl();
+                  setIsDestinationUrlEditable(false);
+                }}
+              />
+              <Button
+                className={`${styles["destination-input-edit-btn"]}`}
+                rightSection={
+                  isDestinationUrlFromApiAndDestinationUrlSame ? (
+                    <IconEdit size={"1.5rem"} />
+                  ) : (
+                    <IconDeviceFloppy size={"1.5rem"} />
+                  )
+                }
+                onClick={handleEditSaveBtnClick}
+                loading={isSaving}
+              >
+                {isDestinationUrlFromApiAndDestinationUrlSame ? "Edit" : "Save"}
+              </Button>
+            </Group>
+
             <CopyLinkComponent value={qrUrl} label="QR Url" />
-            <CopyLinkComponent value={destinationUrl} label="Destination Url" />
           </Stack>
 
           <Flex className={styles["stats-container"]}>

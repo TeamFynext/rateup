@@ -27,7 +27,6 @@ async function createQr(data) {
 }
 
 async function updateQr(data: any) {
-  console.log(data, "fRom denerate updateeee");
   const res = await axiosClient.put(url, data);
   return res.data;
 }
