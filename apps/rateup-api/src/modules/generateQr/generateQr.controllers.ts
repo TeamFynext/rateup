@@ -1,5 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { CreateGenerateQrRecordReqBody } from "./generateQr.schema";
+import {
+  CreateGenerateQrRecordReqBody,
+  updateGenerateQrRecordReqBodyType,
+} from "./generateQr.schema";
 import { shortIdUniqueConstraintErrHandler } from "../../utils/commnUtils";
 import {
   createGenerateQrRecordInDB,
@@ -54,7 +57,7 @@ async function getGenerateQrRecords(req: FastifyRequest, rep: FastifyReply) {
 }
 
 async function updateGenerateQrRecordWithShortId(
-  req: FastifyRequest<{ Body: { shortUrlId: string } }>,
+  req: FastifyRequest<{ Body: updateGenerateQrRecordReqBodyType }>,
   rep: FastifyReply,
 ) {
   const updatedGenerateQrRecord =

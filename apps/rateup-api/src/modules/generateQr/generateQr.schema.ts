@@ -26,6 +26,7 @@ const updateGenerateQrRecordReqBody = z.object({
   shortUrlId: z.string(),
   name: z.string().optional(),
   shareSettings: z.any().optional(),
+  link: z.string().optional(),
 });
 
 const models = {
@@ -42,6 +43,10 @@ type CreateGenerateQrRecordReqBody = z.infer<
 
 const { schemas: generateQrSchemas, $ref: generateQrSchemaRef } =
   buildJsonSchemas(models, { $id: "generateQrSchema" });
+
+export type updateGenerateQrRecordReqBodyType = z.infer<
+  typeof updateGenerateQrRecordReqBody
+>;
 
 export {
   generateQrSchemas,
