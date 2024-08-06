@@ -45,7 +45,7 @@ const LanguageSelector = () => {
           }}
         >
           <IconLanguage style={{ width: 20, height: 20, marginRight: 8 }} />
-          <Text size="sm" fw={500} c="#333">
+          <Text size="sm" fw={500} c="dimmed">
             {language || "Select Language"}
           </Text>
         </Grid>

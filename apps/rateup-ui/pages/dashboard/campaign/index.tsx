@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Center,
   Flex,
@@ -9,20 +11,21 @@ import {
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
-import { useState } from "react";
+
+import { whatsappTheme } from "@/config/mantineTheme";
 import {
   useCampaignData,
   useCampaignDataByTeam,
-} from "../../../backend/campaign/campaign.query";
-import CreateCampaignModal from "../../../components/Campaign/CreateCampaignModal";
-import { contactParticipentColumn } from "../../../components/Contacts/utils/utils";
-import TanstackTable from "../../../components/Table/TanstackTable";
-import { TeamSelector } from "../../../components/input/TeamSelector";
-import Heading from "../../../components/styled/Heading/Heading";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { whatsappTheme } from "../../../config/mantineTheme";
+} from "@/backend/campaign/campaign.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
+import { contactParticipentColumn } from "@/components/Contacts/utils/utils";
+import { TeamSelector } from "@/components/input/TeamSelector";
+import Heading from "@/components/styled/Heading/Heading";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import TanstackTable from "@/components/Table/TanstackTable";
+
 import styles from "./campaign.module.css";
-import ErrorComponent from "../../../components/404/ErrorComponent";
 
 export default function CampaignList() {
   const [searchText, setSearchText] = useDebouncedState("", 200);
@@ -60,11 +63,7 @@ export default function CampaignList() {
   )?.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // sorting by date
 
   if (isError || isAllCampaignError)
-    return (
-      <Stack h={"90dvh"}>
-        <ErrorComponent refetch={isError ? refetch : refetchAllkCampaign} />
-      </Stack>
-    );
+    return <ErrorComponent refetch={isError ? refetch : refetchAllkCampaign} />;
   const column: ColumnDef<any>[] = contactParticipentColumn;
 
   return (

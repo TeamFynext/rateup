@@ -10,6 +10,8 @@ import "react-date-range/dist/theme/default.css";
 
 import { IconCalendar } from "@tabler/icons-react";
 
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+
 export function DateRangePickerButton({
   onChange,
   ranges,
@@ -58,13 +60,13 @@ export function DateRangePickerButton({
           direction="horizontal"
         />
         <Group justify="end">
-          <Button
+          <RateupButtonPrimary
             onClick={() => onChange(undefined)}
             variant="outline"
             color="red"
-          >
-            Clear
-          </Button>
+            title="Clear"
+          />
+          <RateupButtonPrimary onClick={close} title="Done" />
         </Group>
       </Modal>
     </>

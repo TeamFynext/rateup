@@ -1,46 +1,46 @@
+import { useEffect } from "react";
 import { useRouter } from "next/router";
-import {
-  useCampaign,
-  useLoyaltyCampaignInsights,
-  useUpdateCampaignMutation,
-} from "../../../../../backend/loyalty/campaign/loyaltyCampaign.query";
-import RateupLoader from "../../../../../components/Loaders/RateupLoader";
+
 import {
   Button,
-  Text,
+  Card,
   Center,
+  Flex,
   Group,
   SimpleGrid,
   Stack,
   Switch,
+  Text,
   Title,
-  Flex,
   useMantineTheme,
-  StackProps,
-  Box,
-  Divider,
-  Portal,
 } from "@mantine/core";
-import { generateWaMessageUrl } from "../../../../../utils/whatsapp/wa_url";
-import styles from "../../styles.module.css";
-import { InsightsCard } from "../../../../../components/loyalty/campaign/InsightsCard";
+import { notifications } from "@mantine/notifications";
 import {
   IconArrowRight,
   IconArticle,
   IconChevronRight,
-  IconUser,
   IconUsers,
   IconWriting,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import { useRouteParams } from "../../../../../context/RouteParamsContext";
-import { useEffect } from "react";
-import { LinkCopyElement } from "../../../../../components/input/LinkCopyElement";
-import { LCampaignTypeBadge } from "../../../../../components/loyalty/campaign/LCampaignTypeBadge";
-import { LoyaltyCampaignType } from "../../../../../types/enums";
-import { CampaignEventsTable } from "./event-history";
-import { useWaSettings } from "../../../../../backend/whatsapp/settings/waSettings.query";
-import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
+
+import { LoyaltyCampaignType } from "@/types/enums";
+import {
+  useCampaign,
+  useLoyaltyCampaignInsights,
+  useUpdateCampaignMutation,
+} from "@/backend/loyalty/campaign/loyaltyCampaign.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { LinkCopyElement } from "@/components/input/LinkCopyElement";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import { InsightsCard } from "@/components/loyalty/campaign/InsightsCard";
+import { LCampaignTypeBadge } from "@/components/loyalty/campaign/LCampaignTypeBadge";
+import PaperLayout, {
+  PaperLayoutProps,
+} from "@/components/styled/Layouts/PaperLayout";
+import { useRouteParams } from "@/context/RouteParamsContext";
+import { generateWaMessageUrl } from "@/utils/whatsapp/wa_url";
+
+import styles from "../../styles.module.css";
 
 export default function LoyaltyCampaignPage() {
   const router = useRouter();
@@ -88,19 +88,8 @@ export default function LoyaltyCampaignPage() {
           }}
           direction={"column"}
         >
-          <Stack
-            py={"xl"}
-            className={styles["card-container"]}
-            style={{
-              flex: 1,
-            }}
-            mb={"md"}
-          >
-            <Center
-              style={{
-                flex: 1,
-              }}
-            >
+          <PaperLayout py={"xl"} flex={1} mb={"md"}>
+            <Center>
               <Switch
                 label={"Campaign Status: "}
                 labelPosition={"left"}
@@ -126,21 +115,12 @@ export default function LoyaltyCampaignPage() {
             ].includes(campaign.type) && (
               <LinkCopyElement disabled={!campaign.active} link={registerUrl} />
             )}
-          </Stack>
+          </PaperLayout>
           <QuickActions />
         </Flex>
         <LoyaltyCampaignInsights campaignId={lcampaignId} />
       </Group>
-      <RecentEvents />
     </Stack>
-  );
-}
-
-function RecentEvents() {
-  return (
-    <PaperLayout p={0}>
-      <CampaignEventsTable />
-    </PaperLayout>
   );
 }
 
@@ -174,35 +154,21 @@ function QuickActions() {
   );
 }
 
-interface QuickActionCardProps extends StackProps {
+interface QuickActionCardProps extends PaperLayoutProps {
   Icon: React.FC<any>;
   text: string;
 }
 function QuickActionCard({ Icon, text, ...props }: QuickActionCardProps) {
   const theme = useMantineTheme();
-  const primaryColor = theme.colors[theme.primaryColor][6];
 
   return (
-    <Stack
-      className={styles["card-container"]}
-      align={"center"}
-      p={"lg"}
-      style={{
-        cursor: "pointer",
-        flex: 1,
-      }}
-      {...props}
-    >
+    <PaperLayout ta={"center"} flex={1} hoveractive {...props}>
       <Icon size={32} />
-      <Group
-        style={{
-          color: primaryColor,
-        }}
-      >
+      <Group justify="center" c={theme.primaryColor}>
         <Text>{text}</Text>
         <IconChevronRight />
       </Group>
-    </Stack>
+    </PaperLayout>
   );
 }
 
@@ -212,7 +178,7 @@ function LoyaltyCampaignInsights({ campaignId }) {
   if (!insights) return;
 
   return (
-    <Stack className={styles["card-container"]}>
+    <Card className={styles["card-container"]}>
       <SimpleGrid cols={2}>
         <InsightsCard value={insights.totalCustomers} text={`Customers`} />
         <InsightsCard
@@ -237,6 +203,6 @@ function LoyaltyCampaignInsights({ campaignId }) {
       >
         View More Insights
       </Button>
-    </Stack>
+    </Card>
   );
 }
