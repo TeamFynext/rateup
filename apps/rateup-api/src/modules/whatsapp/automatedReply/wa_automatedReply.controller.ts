@@ -7,6 +7,7 @@ import { FastifyReply } from "fastify";
 import {
   createAutomatedReply,
   deleteAutomatedReply,
+  getAutomatedRepliesByOrgId,
   getAutomatedRepliesByTeamId,
   getAutomatedReplyById,
   updateAutomatedReply,
@@ -21,6 +22,13 @@ export async function getAutomatedRepliesByTeamIdHandler(
   reply.send(automatedReplies);
 }
 
+export async function getAllAutomatedRepliesByOrgIdHandler(
+  req: FastifyRequest<{ Params: ByTeamIdParams }>,
+  reply: FastifyReply,
+) {
+  const automatedReplies = await getAutomatedRepliesByOrgId(req.user.orgId);
+  reply.send(automatedReplies);
+}
 export async function getAutomatedRepliesByIdHandler(
   req: FastifyRequest<{ Params: ByWaAutomatedReplyIdParams }>,
   reply: FastifyReply,
