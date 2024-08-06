@@ -1,16 +1,18 @@
 import { useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import {
   Anchor,
   Checkbox,
   Group,
+  luminance,
   Modal,
   Text,
-  luminance,
   useMantineTheme,
 } from "@mantine/core";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { useDisclosure } from "@mantine/hooks";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import FormPaperLayout from "./layout/FormPaperLayout";
 
@@ -39,7 +41,7 @@ export function TermsNConditionsForm({ tncData }) {
         <Checkbox
           p="sm"
           labelPosition="right"
-          value={response || false}
+          checked={response || false}
           onChange={(e) => updateResponse(e.currentTarget.checked)}
           color={textColor}
           label={

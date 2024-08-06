@@ -58,8 +58,9 @@ function QuestionDetailedViewFooter({
             form.setFieldValue("required", checked);
           }}
           disabled={
-            question.type === QuestionType.InfoMessage ||
-            question.type in PageType
+            [QuestionType.InfoMessage, QuestionType.EmailOtp].includes(
+              question.type,
+            ) || question.type in PageType
           }
         />
         <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />

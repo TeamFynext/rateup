@@ -12,19 +12,19 @@ import {
   Title,
   useMantineTheme,
 } from "@mantine/core";
+import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import { QuestionType as Q } from "../../../../types/enums";
+import { extractText, isHtml } from "../../../../utils";
+import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import {
   RateupButtonBlackOutline,
   RateupButtonBlue,
 } from "../../../Button/RateupButtons";
-import { QuestionType as Q } from "../../../../types/enums";
-import { IconChevronLeft } from "@tabler/icons-react";
-import { IconCheck } from "@tabler/icons-react";
-import styles from "./TakeSurvey.module.css";
 import modalStyles from "./ModalStyles.module.css";
 import { mapSmileyIcon } from "./SmileyRating";
-import dayjs from "dayjs";
-import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
-import { extractText, isHtml } from "../../../../utils";
+import styles from "./TakeSurvey.module.css";
 
 function ConfirmResponsesModal({
   opened,
@@ -246,10 +246,13 @@ function ConfirmResponsesModal({
                             const answers = Object.values(
                               response?.response,
                             )[0];
+                            if (!answers) return null;
                             return (
                               <Stack>
-                                {Object.values(answers).map((ad) => (
-                                  <Text fw="300">{ad}</Text>
+                                {Object.values(answers).map((ad, index) => (
+                                  <Text fw="300" key={index}>
+                                    {ad}
+                                  </Text>
                                 ))}
                               </Stack>
                             );
@@ -260,7 +263,7 @@ function ConfirmResponsesModal({
                             return (
                               <Stack>
                                 {Object.entries(results).map(([q, res]) => (
-                                  <Text fw="300">
+                                  <Text fw="300" key={q}>
                                     {q}: {res?.value}
                                   </Text>
                                 ))}
