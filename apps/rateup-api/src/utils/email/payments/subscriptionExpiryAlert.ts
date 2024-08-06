@@ -3,6 +3,7 @@ import prisma from "../../prisma";
 import { formatDateT1 } from "../../date";
 import { sendAWSEmail } from "../sendAWSEmail";
 import { billingPage, statsPage } from "../../constants/constants";
+import { log } from "../../logger";
 
 export async function subscriptionExpiryAlert() {
   try {
@@ -50,9 +51,9 @@ export async function subscriptionExpiryAlert() {
       reminderBeforeOneDay(oneDayRemainingSubscriptions),
       reminderOnExpiry(expiredSubscriptions),
     ]);
-    console.log("....All Subscription expiry alert has sent....");
+    log.info("....All Subscription expiry alert has sent....");
   } catch (e) {
-    console.error(e);
+    log.error("Error sending subscription expiry email", e);
   }
 }
 
@@ -60,9 +61,9 @@ async function reminderBeforeThirtyDays(subscriptions) {
   if (!subscriptions.length) return;
 
   for (const subscription of subscriptions) {
-    console.log(
-      "....Sending Subcription Expiry Mail Alert......" +
-        subscription?.org?.owner?.email,
+    log.info(
+      `....Sending Subcription Expiry Mail Alert......
+          ${subscription?.org?.owner?.email}`,
     );
     const expiryBody = subscriptionExpiryfriendlyReminderBody(subscription);
     const title = `Reminder! Your Rateup Subscription Expires in One Month`;
@@ -79,9 +80,9 @@ async function reminderBeforeThirtyDays(subscriptions) {
 async function reminderBeforeFifteenDays(subscriptions) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
-    console.log(
-      "....Sending Subcription Expiry Mail Alert......" +
-        subscription?.org?.owner?.email,
+    log.info(
+      `....Sending Subcription Expiry Mail Alert......
+          ${subscription?.org?.owner?.email}`,
     );
     const expiryBody = subscriptionExpiryfriendlyReminderBody(subscription);
     const title = `Reminder! Your Rateup Subscription Expires in 15 Days`;
@@ -98,9 +99,9 @@ async function reminderBeforeFifteenDays(subscriptions) {
 async function reminderBeforeSevenDays(subscriptions) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
-    console.log(
-      "....Sending Subcription Expiry Mail Alert......" +
-        subscription?.org?.owner?.email,
+    log.info(
+      `....Sending Subcription Expiry Mail Alert......
+          ${subscription?.org?.owner?.email}`,
     );
     const expiryBody = subscriptionExpiryfriendlyReminderBody(subscription);
     const title = `Your Rateup Subscription will Expire in 7 days`;
@@ -117,9 +118,9 @@ async function reminderBeforeSevenDays(subscriptions) {
 async function reminderBeforeThreeDays(subscriptions) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
-    console.log(
-      "....Sending Subcription Expiry Mail Alert......" +
-        subscription?.org?.owner?.email,
+    log.info(
+      `....Sending Subcription Expiry Mail Alert......
+          ${subscription?.org?.owner?.email}`,
     );
     const expiryBody = subscriptionExpiryfriendlyReminderBody(subscription);
     const title = `Your Rateup Subscription will Expire in 3 days`;
@@ -136,9 +137,9 @@ async function reminderBeforeThreeDays(subscriptions) {
 async function reminderBeforeOneDay(subscriptions) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
-    console.log(
-      "....Sending Subcription Expiry Mail Alert......" +
-        subscription?.org?.owner?.email,
+    log.info(
+      `....Sending Subcription Expiry Mail Alert......
+          ${subscription?.org?.owner?.email}`,
     );
     const expiryBody = subscriptionExpiryTomorrowReminderBody(subscription);
     const title = `Your Rateup Subscription Expires Tomorrow!`;
@@ -155,9 +156,9 @@ async function reminderBeforeOneDay(subscriptions) {
 async function reminderOnExpiry(subscriptions) {
   if (!subscriptions.length) return;
   for (const subscription of subscriptions) {
-    console.log(
-      "....Sending Subcription Expiry Mail Alert......" +
-        subscription?.org?.owner?.email,
+    log.info(
+      `....Sending Subcription Expiry Mail Alert......
+          ${subscription?.org?.owner?.email}`,
     );
     const expiryBody = subscriptionExpiredReminderBody(subscription);
     const title = `Your Rateup Subscription has Expired`;

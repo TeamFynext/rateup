@@ -89,7 +89,7 @@ server.register(fastifyCron, {
       cronTime: "0 9 * * *", // This cron expression means "at 09:00 AM on every day"
       onTick: async () => {
         const currentTime = new Date();
-        console.log("......Running Daily Jobs --> .....", currentTime);
+        log.info(`......Running Daily Jobs --> .....${currentTime}`);
         await subscriptionExpiryAlert();
       },
       start: true,
