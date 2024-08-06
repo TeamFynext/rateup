@@ -59,7 +59,6 @@ import {
 } from "@/utils/questions";
 import {
   getFlowTextLimit,
-  getFormObjFromScreenId,
   questionTypeToFlowFormElementType,
 } from "@/utils/whatsapp/flow.utils";
 
@@ -149,8 +148,7 @@ function ElementEditor({
 }: Readonly<ElementEditorProps>) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const { selectedScreenId, flowJson, updateFlowJson } =
-    useContext(EditFlowContext);
+  const { selectedScreenId, flowJson } = useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -230,28 +228,6 @@ function ElementEditor({
       if (getIncompleteLanguages().length > 0) {
         setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
-      }
-      if (question.type === QuestionType.Optin) {
-        updateFlowJson((draft) => {
-          const formEl = getFormObjFromScreenId(
-            draft.screens,
-            selectedScreenId,
-          );
-
-          if (
-            form.values.optinScreenId &&
-            question.type === QuestionType.Optin
-          ) {
-            formEl.children[currentIndex + 1]["on-click-action"] = {
-              name: "navigate",
-              next: {
-                type: "screen",
-                name: form.values.optinScreenId,
-              },
-              payload: {},
-            };
-          }
-        });
       }
       // Checking if its a new question
       if (!question.id) {

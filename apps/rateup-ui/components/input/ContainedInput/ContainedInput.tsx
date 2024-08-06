@@ -1,43 +1,45 @@
 import React, { useRef } from "react";
+
 import {
-  Select,
-  TextInput,
-  SelectProps,
-  TextInputProps,
-  PasswordInput,
-  PasswordInputProps,
-  FileInputProps,
-  FileInput,
-  Textarea,
-  TextareaProps,
-  NumberInputProps,
-  NumberInput,
+  ActionIcon,
+  Box,
+  Button,
   ColorInput,
   ColorInputProps,
-  ActionIcon,
-  rem,
-  MultiSelect,
-  MultiSelectProps,
-  TagsInputProps,
-  TagsInput,
-  JsonInputProps,
-  JsonInput,
-  Button,
   FileButton,
   FileButtonProps,
+  FileInput,
+  FileInputProps,
+  JsonInput,
+  JsonInputProps,
+  MultiSelect,
+  MultiSelectProps,
+  NumberInput,
+  NumberInputProps,
+  PasswordInput,
+  PasswordInputProps,
+  rem,
+  Select,
+  SelectProps,
+  TagsInput,
+  TagsInputProps,
   Text,
-  Box,
+  Textarea,
+  TextareaProps,
+  TextInput,
+  TextInputProps,
 } from "@mantine/core";
-import classes from "./ContainedInput.module.css";
 import {
+  DateInput,
+  DateInputProps,
   DateTimePicker,
+  DateTimePickerProps,
   TimeInput,
   TimeInputProps,
-  DateTimePickerProps,
-  DateInputProps,
-  DateInput,
 } from "@mantine/dates";
 import { IconClock } from "@tabler/icons-react";
+
+import classes from "./ContainedInput.module.css";
 
 export const ContainedTextField = React.forwardRef(function ContainedTextField(
   props: TextInputProps,
@@ -61,7 +63,20 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
 });
 
 export function ContainedTextArea(props: TextareaProps) {
-  return <Textarea classNames={classes} {...props} />;
+  return (
+    <Textarea
+      classNames={classes}
+      {...props}
+      styles={{
+        input: {
+          paddingRight: props.rightSection ? 70 : 0,
+        },
+        section: {
+          width: props.rightSection && "fit-content",
+        },
+      }}
+    />
+  );
 }
 
 export function ContainedSelection(props: SelectProps) {

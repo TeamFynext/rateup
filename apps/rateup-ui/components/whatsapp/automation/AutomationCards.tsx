@@ -1,32 +1,31 @@
 import { useRouter } from "next/router";
+
 import {
-  useDeleteWaAutomatedReplyMutation,
-  useWaAutomatedReplies,
-} from "../../../backend/whatsapp/automated-reply/automatedReply.query";
-import { useTimeSince } from "../../../hooks/timeSince";
-import { WaAutomatedReply } from "../../../types/global";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import {
-  Stack,
-  Group,
-  Title,
-  Text,
-  Menu,
   ActionIcon,
-  SimpleGrid,
   Badge,
+  Group,
+  Menu,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
-import { IconDots, IconTrash } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
+import { IconDots, IconTrash } from "@tabler/icons-react";
+
+import { WaAutomatedReply } from "@/types/global";
+import { useTimeSince } from "@/hooks/timeSince";
+import { useDeleteWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+
 import classes from "./styles.module.css";
 
 interface WaAutomationCardsProps {
-  teamId: string;
+  data: any;
 }
-export function WaAutomationCards({ teamId }: WaAutomationCardsProps) {
-  const { data: automations } = useWaAutomatedReplies(teamId);
-  if (!automations || !Array.isArray(automations)) return null;
+export function WaAutomationCards({ data }: WaAutomationCardsProps) {
+  if (!data || !Array.isArray(data)) return null;
 
   return (
     <SimpleGrid
@@ -35,7 +34,7 @@ export function WaAutomationCards({ teamId }: WaAutomationCardsProps) {
       cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }}
       style={{ overflow: "auto" }}
     >
-      {automations.map((automation) => (
+      {data.map((automation) => (
         <AutomationCard key={automation.id} automation={automation} />
       ))}
     </SimpleGrid>
@@ -83,7 +82,7 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
             ""
           )}
           {automation?.matchData?.keywords?.map((kw) => (
-            <Badge size="xs" variant="outline">
+            <Badge size="xs" variant="outline" key={kw}>
               {kw}
             </Badge>
           )) ?? ""}

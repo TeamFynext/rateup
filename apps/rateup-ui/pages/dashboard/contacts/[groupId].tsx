@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   Avatar,
   Badge,
@@ -24,29 +27,28 @@ import {
   ColumnFiltersState,
   SortingState,
 } from "@tanstack/react-table";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+
 import {
   useAddNewContactFromCSVMutation,
   useContactGroupById,
   useDeleteGroupMutation,
-} from "../../../backend/campaign/contactGroup/contactGroup.query";
-import { useGetContactTags } from "../../../backend/whatsapp/settings/waSettings.query";
-import AddCustomerModal from "../../../components/Contacts/AddCustomerModal";
-import CreateGroupModal from "../../../components/Contacts/CreateGroupModal";
-import { ParticipantMenu } from "../../../components/Contacts/GroupParticipant";
+} from "@/backend/campaign/contactGroup/contactGroup.query";
+import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import AddCustomerModal from "@/components/Contacts/AddCustomerModal";
+import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal";
+import CreateGroupModal from "@/components/Contacts/CreateGroupModal";
+import { ParticipantMenu } from "@/components/Contacts/GroupParticipant";
 import {
   CONTACT_SORT,
-  WhatsappTableType,
   contactColumn,
-} from "../../../components/Contacts/utils/utils";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import ContactTable from "../../../components/Table/ContactTable";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { useRouteParams } from "../../../context/RouteParamsContext";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import ContactImportErrorModal from "../../../components/Contacts/ContactImportErrorModal";
-import ErrorComponent from "../../../components/404/ErrorComponent";
+  WhatsappTableType,
+} from "@/components/Contacts/utils/utils";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import ContactTable from "@/components/Table/ContactTable";
+import { useRouteParams } from "@/context/RouteParamsContext";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -127,12 +129,7 @@ export default function ContactGroup() {
     },
   ];
   const loadingState = isLoading || isPending || isRefetching;
-  if (groupByIderror)
-    return (
-      <Stack h={"90dvh"}>
-        <ErrorComponent refetch={refetchgroupById} />
-      </Stack>
-    );
+  if (groupByIderror) return <ErrorComponent refetch={refetchgroupById} />;
 
   return (
     <Box h={"100%"}>
