@@ -34,7 +34,7 @@ import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
-import { SurveyContext } from "@/context/SurveyObjContext";
+import SurveyContext from "@/context/SurveyContext";
 import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";

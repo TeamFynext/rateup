@@ -1,20 +1,33 @@
-import { Group, Stack, Title, Text, Button, SimpleGrid } from "@mantine/core";
+import { useRouter } from "next/router";
+
+import {
+  Box,
+  Button,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconArrowRight,
   IconChevronRight,
   IconGift,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import styles from "./styles.module.css";
+
 import {
   useCampaigns,
   useLoyaltyInsights,
-} from "../../../backend/loyalty/campaign/loyaltyCampaign.query";
-import { LCampaignCard } from "../../../components/loyalty/campaign/LCampaignCard";
-import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/router";
-import { showSuccessToast } from "../../../utils/notifications";
-import { InsightsCard } from "../../../components/loyalty/campaign/InsightsCard";
+} from "@/backend/loyalty/campaign/loyaltyCampaign.query";
+import { InsightsCard } from "@/components/loyalty/campaign/InsightsCard";
+import { LCampaignCard } from "@/components/loyalty/campaign/LCampaignCard";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { showSuccessToast } from "@/utils/notifications";
+
+import styles from "./styles.module.css";
 
 export default function LoyaltyDashboardPage() {
   const router = useRouter();
@@ -22,43 +35,45 @@ export default function LoyaltyDashboardPage() {
   return (
     <Stack>
       <Group align={"stretch"}>
-        <Stack className={styles["card-container"]}>
-          <Group>
-            <Stack
-              align="center"
-              className={styles["card-container"]}
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push("/dashboard/loyalty/campaign/create")}
+        <PaperLayout w={"max-content"}>
+          <Stack>
+            <Group>
+              <Paper
+                className={styles["card-container"]}
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  router.push("/dashboard/loyalty/campaign/create")
+                }
+              >
+                <IconGift size={64} />
+                <Text>Create Loyalty Campaign</Text>
+              </Paper>
+              <Paper
+                className={styles["card-container"]}
+                style={{ cursor: "pointer" }}
+                onClick={() => router.push("/dashboard/loyalty/customer")}
+              >
+                <IconUsersGroup size={64} />
+                <Text>View Customers</Text>
+              </Paper>
+            </Group>
+            <Button
+              variant={"light"}
+              h={50}
+              radius={12}
+              onClick={() => router.push("/dashboard/loyalty/reward")}
             >
-              <IconGift size={64} />
-              <Text>Create Loyalty Campaign</Text>
-            </Stack>
-            <Stack
-              align={"center"}
-              className={styles["card-container"]}
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push("/dashboard/loyalty/customer")}
+              Rewards
+            </Button>
+            <Button
+              h={50}
+              radius={12}
+              onClick={() => showSuccessToast("Coming Soon")}
             >
-              <IconUsersGroup size={64} />
-              <Text>View Customers</Text>
-            </Stack>
-          </Group>
-          <Button
-            variant={"light"}
-            h={50}
-            radius={12}
-            onClick={() => router.push("/dashboard/loyalty/reward")}
-          >
-            Rewards
-          </Button>
-          <Button
-            h={50}
-            radius={12}
-            onClick={() => showSuccessToast("Coming Soon")}
-          >
-            Redeem
-          </Button>
-        </Stack>
+              Redeem
+            </Button>
+          </Stack>
+        </PaperLayout>
         <InsightsOverview />
       </Group>
       <RecentLoyaltyCampaigns />
@@ -72,7 +87,7 @@ function InsightsOverview() {
   if (!insights) return;
 
   return (
-    <Stack className={styles["card-container"]}>
+    <PaperLayout w={"fit-content"}>
       <SimpleGrid cols={2}>
         <InsightsCard
           value={insights.totalCustomers}
@@ -100,7 +115,7 @@ function InsightsOverview() {
       >
         View More Insights
       </Button>
-    </Stack>
+    </PaperLayout>
   );
 }
 
@@ -118,11 +133,11 @@ function RecentLoyaltyCampaigns() {
           View All
         </Button>
       </Group>
-      <Group>
+      <Box className="cards-grid-global-class">
         {campaigns.slice(0, 3).map((campaign) => (
           <LCampaignCard key={campaign.id} campaign={campaign} />
         ))}
-      </Group>
+      </Box>
     </Stack>
   );
 }
