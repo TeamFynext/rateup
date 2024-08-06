@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 import styles from "./PaperLayout.module.css";
 
-interface PaperLayoutProps extends PaperProps {
+export interface PaperLayoutProps extends PaperProps {
   hoveractive?: boolean;
   selected?: boolean;
   children?: JSX.Element | JSX.Element[];

@@ -1,7 +1,8 @@
 import { Image } from "@mantine/core";
+import { IconBrandFacebook } from "@tabler/icons-react";
+
 import { imagesPath, rateupLogoBlueTextUrl } from "../../constants";
 import styles from "./footer.module.css";
-import { IconBrandFacebook } from "@tabler/icons-react";
 import FooterNavLinks from "./FooterNavLinks";
 
 const logosFolderPath = `${imagesPath}/follow-us-on-logos`;
@@ -40,7 +41,10 @@ function Footer() {
                   h={25}
                 />
               </a>
-              <a target="_blank" href="#">
+              <a
+                target="_blank"
+                href="https://www.facebook.com/profile.php?id=61556199852468"
+              >
                 <Image
                   src={`${logosFolderPath}/facebook-logo.png`}
                   alt="follow us on facebook"

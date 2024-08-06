@@ -1,35 +1,45 @@
-import { Button, Flex, Group, Stack, Title } from "@mantine/core";
+import Link from "next/link";
+
+import { Box, Group, Stack, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useCampaigns } from "../../../../backend/loyalty/campaign/loyaltyCampaign.query";
-import { LCampaignCard } from "../../../../components/loyalty/campaign/LCampaignCard";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
+
+import { useCampaigns } from "@/backend/loyalty/campaign/loyaltyCampaign.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { LoyaltyCardListSkeleton } from "@/components/animation/skeleton/loyalty/LoyaltyCardList.skeleton";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { LCampaignCard } from "@/components/loyalty/campaign/LCampaignCard";
+import NothingFound from "@/components/NothingFound/NothingFound";
 
 export default function LoyaltyCampaignsPage() {
-  const router = useRouter();
-  const { data: campaigns, isLoading } = useCampaigns(true);
-  function handleCreateClick() {
-    router.push("/dashboard/loyalty/campaign/create");
-  }
-
-  if (isLoading || !campaigns || !Array.isArray(campaigns)) {
-    console.log("campaignsError", campaigns);
-    return <RateupLoader />;
-  }
-
   return (
-    <Stack>
+    <Stack h={"100%"}>
       <Group>
         <Title order={2}>Loyalty Campaigns</Title>
-        <Button onClick={handleCreateClick} leftSection={<IconPlus />}>
-          Create Campaign
-        </Button>
+        <Link href={"campaign/create"}>
+          <RateupButtonPrimary
+            title="Create Campaign"
+            leftIcon={<IconPlus />}
+          />
+        </Link>
       </Group>
-      <Flex wrap={"wrap"} mt="sm" gap={"md"}>
-        {campaigns.map((campaign) => (
-          <LCampaignCard key={campaign.id} campaign={campaign} />
-        ))}
-      </Flex>
+      <LCardList />
     </Stack>
   );
 }
+
+const LCardList = () => {
+  const { data: campaigns, isPending, isError, refetch } = useCampaigns(true);
+
+  if (isPending) return <LoyaltyCardListSkeleton />;
+  if (isError) return <ErrorComponent refetch={refetch} />;
+  if (!campaigns || !Array.isArray(campaigns) || campaigns?.length === 0)
+    return <NothingFound text="Nothing found" />;
+
+  return (
+    <Box className="cards-grid-global-class">
+      {campaigns.map((campaign) => (
+        <LCampaignCard key={campaign.id} campaign={campaign} />
+      ))}
+    </Box>
+  );
+};

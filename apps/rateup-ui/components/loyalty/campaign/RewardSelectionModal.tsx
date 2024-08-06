@@ -1,17 +1,21 @@
 import {
-  Stack,
-  Group,
   Button,
+  Card,
   Divider,
-  Text,
+  Group,
   Modal,
+  Stack,
   Table,
+  Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { CreateRewardModal } from "../reward/CreateRewardModal";
-import { useRewards } from "../../../backend/loyalty/reward/reward.query";
-import { RewardTypeBadge } from "../reward/RewardTypeBadge";
+
+import { useRewards } from "@/backend/loyalty/reward/reward.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+
 import RateupLoader from "../../Loaders/RateupLoader";
+import { CreateRewardModal } from "../reward/CreateRewardModal";
+import { RewardTypeBadge } from "../reward/RewardTypeBadge";
 
 export function RewardSelectionModal({ setReward, opened, close }) {
   const [createROpened, { open: createROpen, close: CreateRClose }] =
@@ -33,7 +37,7 @@ export function RewardSelectionModal({ setReward, opened, close }) {
   return (
     <Modal opened={opened} onClose={close} title="Select Reward" size="md">
       <Stack>
-        <Stack bg="whitesmoke">
+        <Stack bg={"light-dark(whitesmoke,var(--mantine-color-dark-6))"}>
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -50,13 +54,12 @@ export function RewardSelectionModal({ setReward, opened, close }) {
                       <RewardTypeBadge type={reward.type} />
                     </Table.Td>
                     <Table.Td>
-                      <Button
+                      <RateupButtonPrimary
                         onClick={() => {
                           handleSetRewardId(reward.id);
                         }}
-                      >
-                        Select
-                      </Button>
+                        title="Select"
+                      />
                     </Table.Td>
                   </Table.Tr>
                 );
@@ -77,7 +80,7 @@ export function RewardSelectionModal({ setReward, opened, close }) {
             }}
           />
         </Group>
-        <Button onClick={createROpen}>Create New Reward</Button>
+        <RateupButtonPrimary onClick={createROpen} title="Create New Reward" />
       </Stack>
       <CreateRewardModal opened={createROpened} close={CreateRClose} />
     </Modal>

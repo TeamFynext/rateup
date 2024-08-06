@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Box,
@@ -7,25 +9,22 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { useTimeSince } from "../../../hooks/timeSince";
-import { useRouter } from "next/router";
-import { LCampaignTypeBadge } from "./LCampaignTypeBadge";
-import { IconDots, IconTrash } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
-import { useDeleteCampaignMutation } from "../../../backend/loyalty/campaign/loyaltyCampaign.query";
+import { IconDots, IconTrash } from "@tabler/icons-react";
+
+import { useTimeSince } from "@/hooks/timeSince";
+import { useDeleteCampaignMutation } from "@/backend/loyalty/campaign/loyaltyCampaign.query";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+
+import { LCampaignTypeBadge } from "./LCampaignTypeBadge";
 
 export function LCampaignCard({ campaign }) {
   const timeSince = useTimeSince(campaign.createdAt);
   const router = useRouter();
   return (
     <PaperLayout
-      maw="300px"
-      h="150px"
-      style={{
-        cursor: "pointer",
-      }}
+      hoveractive
       onClick={() => router.push(`/dashboard/loyalty/campaign/${campaign.id}`)}
     >
       <Stack>
