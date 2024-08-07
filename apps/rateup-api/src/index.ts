@@ -20,6 +20,7 @@ import {
 } from "./modules/survey/survey.service";
 import { sendCampaignCronAction } from "./modules/campaign/campaign.service";
 import { sendShopifySurveyCronAction } from "./modules/integrations/shopify/shopify.service";
+import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
 
 const server = Fastify({
   logger: logOptions,
@@ -83,6 +84,15 @@ server.register(fastifyCron, {
       },
       start: true,
       timeZone: "Etc/UTC", // Set to UTC+0
+    },
+    {
+      cronTime: "0 9 * * *", // This cron expression means "at 09:00 AM on every day"
+      onTick: async () => {
+        const currentTime = new Date();
+        log.info(`......Running Daily Jobs --> .....${currentTime}`);
+        await subscriptionExpiryAlert();
+      },
+      start: true,
     },
     {
       cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
