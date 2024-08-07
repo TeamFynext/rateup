@@ -32,9 +32,8 @@ const ContactExtraProps = ({ form }) => {
       [selectedLanguage]: features,
     });
   }
-  useEffect(() => {
-    if (!form.values?.features?.[selectedLanguage]) updateFeatures(features);
-  }, []);
+
+  if (!form.values?.features?.[selectedLanguage]) updateFeatures(features);
 
   const questionTitle = form?.values?.title?.[selectedLanguage];
 
