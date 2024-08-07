@@ -15,6 +15,35 @@
   flex: 1;
 }
 
+.destination-link-input-root-div {
+  align-items: center;
+}
+
+.destination-url-text-input {
+  flex: 1;
+  max-width: 600px;
+}
+
+.destination-url-text-input input {
+  height: 2.875rem;
+  border-radius: 0.75rem;
+}
+
+.destination-url-text-input label {
+  pointer-events: none;
+  font-size: var(--mantine-font-size-xs);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4));
+  z-index: 1;
+}
+
+.destination-input-edit-btn {
+  align-self: flex-end;
+  border-radius: 0.5rem;
+  position: relative;
+  bottom: 0.3125rem;
+  width: auto;
+}
+
 .copy-link-comp-container-div > div {
   gap: 1rem;
 }

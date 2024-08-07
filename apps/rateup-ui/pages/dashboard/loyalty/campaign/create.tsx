@@ -146,7 +146,7 @@ export default function CreateLoyalty() {
       </SimpleGrid>
       <Group justify="flex-end" mt="md">
         <RateupButtonPrimary
-          title="Cancel"
+          title="Clear"
           variant={"light"}
           onClick={() => form.reset()}
           size="md"
