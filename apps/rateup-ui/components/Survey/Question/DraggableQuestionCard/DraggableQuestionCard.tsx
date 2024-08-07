@@ -13,16 +13,16 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
+import { Draggable } from "@hello-pangea/dnd";
 import cx from "clsx";
-import { Draggable } from "react-beautiful-dnd";
 
 import { PageType } from "@/types/enums";
+import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
+import { GoogleIcon } from "@/components/Button/GoogleIcon";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import SelectedLanguageContext from "@/context/SelectedLanguage";
+import { extractText } from "@/utils";
 
-import { useQuestionDeleteMutation } from "../../../../backend/surveys/questions/questions.query";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { extractText } from "../../../../utils";
-import { GoogleIcon } from "../../../Button/GoogleIcon";
-import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { pageIcons } from "../../Page/PageIcons";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util";
 import { questionIcons } from "../QuestionTypeSelection";

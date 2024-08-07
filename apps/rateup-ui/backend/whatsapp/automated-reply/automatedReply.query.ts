@@ -1,18 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showSuccessToast } from "../../../utils/notifications";
 import {
   createWaAutomatedReply,
   deleteWaAutomatedReply,
+  getAllWaAutomatedReplies,
   getWaAutomatedRepliesById,
   getWaAutomatedRepliesByTeamId,
   updateWaAutomatedReply,
 } from "./automatedReply.api";
-import { showSuccessToast } from "../../../utils/notifications";
 
 export const useWaAutomatedReplies = (teamId: string) =>
   useQuery({
     queryKey: ["waAutomatedReplies", { teamId }],
     queryFn: () => getWaAutomatedRepliesByTeamId(teamId),
     enabled: !!teamId,
+  });
+
+export const useAllWaAutomatedReplies = () =>
+  useQuery({
+    queryKey: ["allWaAutomatedReplies"],
+    queryFn: getAllWaAutomatedReplies,
   });
 
 export const useWaAutomatedReplyById = (waAutomatedReplyId: string) =>

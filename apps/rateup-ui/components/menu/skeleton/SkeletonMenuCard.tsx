@@ -1,7 +1,11 @@
-import { Box, Flex, Skeleton, Stack } from "@mantine/core";
 import React from "react";
 
-export const SkeletonMenuCard = ({ isMobile }) => {
+import { Box, Flex, Skeleton, Stack } from "@mantine/core";
+
+type SkeletonMenuCardProps = {
+  isMobile?: boolean;
+};
+export const SkeletonMenuCard = ({ isMobile }: SkeletonMenuCardProps) => {
   const boxes = [
     { h: 5, w: 42 },
     { h: 1.5, w: 42 },

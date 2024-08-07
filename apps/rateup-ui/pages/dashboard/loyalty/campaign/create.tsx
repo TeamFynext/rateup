@@ -1,24 +1,23 @@
-import {
-  Stack,
-  Group,
-  Title,
-  Button,
-  TextInput,
-  Select,
-  NumberInput,
-  Text,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { LoyaltyCampaignType } from "../../../../types/enums";
-import { getLoyaltyCampaignTypeLabel } from "../../../../utils/enums";
 import { useState } from "react";
-import { useRewards } from "../../../../backend/loyalty/reward/reward.query";
-import { RewardCard } from "../../../../components/loyalty/reward/RewardCard";
-import { RewardSelectionModal } from "../../../../components/loyalty/campaign/RewardSelectionModal";
-import { useCreateCampaignMutation } from "../../../../backend/loyalty/campaign/loyaltyCampaign.query";
 import { useRouter } from "next/router";
 
-export default function () {
+import { Box, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { useForm } from "@mantine/form";
+
+import { LoyaltyCampaignType } from "@/types/enums";
+import { useCreateCampaignMutation } from "@/backend/loyalty/campaign/loyaltyCampaign.query";
+import { useRewards } from "@/backend/loyalty/reward/reward.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import {
+  ContainedNumberInput,
+  ContainedSelection,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput";
+import { RewardSelectionModal } from "@/components/loyalty/campaign/RewardSelectionModal";
+import { RewardCard } from "@/components/loyalty/reward/RewardCard";
+import { getLoyaltyCampaignTypeLabel } from "@/utils/enums";
+
+export default function CreateLoyalty() {
   const { data: rewards } = useRewards(true);
   const form = useForm({
     initialValues: {
@@ -81,73 +80,83 @@ export default function () {
         <Title order={1}>Create new Loyalty Campaign</Title>
       </Group>
 
-      <TextInput
-        label="Campaign Name"
-        placeholder="Enter Campaign Name"
-        required
-        {...form.getInputProps("name")}
-      />
-      <Select
-        label="Campaign Type"
-        placeholder="Select Campaign Type"
-        required
-        {...form.getInputProps("type")}
-        data={Object.values(LoyaltyCampaignType).map((type) => ({
-          value: type,
-          label: getLoyaltyCampaignTypeLabel(type),
-        }))}
-      />
+      <SimpleGrid cols={2}>
+        <Box>
+          <ContainedTextField
+            label="Campaign Name"
+            placeholder="Enter Campaign Name"
+            required
+            {...form.getInputProps("name")}
+          />
+          <ContainedSelection
+            label="Campaign Type"
+            placeholder="Select Campaign Type"
+            required
+            {...form.getInputProps("type")}
+            data={Object.values(LoyaltyCampaignType).map((type) => ({
+              value: type,
+              label: getLoyaltyCampaignTypeLabel(type),
+            }))}
+          />
 
-      {form.values.type !== LoyaltyCampaignType.Transaction ? (
-        <NumberInput
-          label="Max Per Referrer"
-          placeholder="Enter Max Per Referrer"
-          required
-          {...form.getInputProps("maxPerReferrer")}
-        />
-      ) : null}
-      <NumberInput
-        label="Max Per User"
-        placeholder="Enter Max Per User"
-        required
-        {...form.getInputProps("maxPerUser")}
-      />
+          {form.values.type !== LoyaltyCampaignType.Transaction ? (
+            <ContainedNumberInput
+              label="Max Per Referrer"
+              placeholder="Enter Max Per Referrer"
+              required
+              {...form.getInputProps("maxPerReferrer")}
+            />
+          ) : null}
+          <ContainedNumberInput
+            label="Max Per User"
+            placeholder="Enter Max Per User"
+            required
+            {...form.getInputProps("maxPerUser")}
+          />
+        </Box>
 
-      {form.values.type !== LoyaltyCampaignType.Transaction ? (
         <Group>
-          <Text>Referrer Reward:</Text>
-          {referrerReward ? (
-            <RewardCard reward={referrerReward} />
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => setRewardSelectionOpened("referrer")}
-            >
-              Select Reward
-            </Button>
-          )}
+          {form.values.type !== LoyaltyCampaignType.Transaction ? (
+            <Box flex={1}>
+              <Text mb={"xs"}>Referrer Reward:</Text>
+              {referrerReward ? (
+                <RewardCard reward={referrerReward} />
+              ) : (
+                <RateupButtonPrimary
+                  variant="outline"
+                  onClick={() => setRewardSelectionOpened("referrer")}
+                  title="Select Reward"
+                />
+              )}
+            </Box>
+          ) : null}
+          <Box flex={1}>
+            <Text mb={"xs"}>User Reward:</Text>
+            {userRewardId ? (
+              <RewardCard reward={userRewardId} />
+            ) : (
+              <RateupButtonPrimary
+                variant="outline"
+                onClick={() => setRewardSelectionOpened("user")}
+                title="Select Reward"
+              />
+            )}
+          </Box>
         </Group>
-      ) : null}
-      <Group>
-        <Text>User Reward:</Text>
-        {userRewardId ? (
-          <RewardCard reward={userRewardId} />
-        ) : (
-          <Button
-            variant="outline"
-            onClick={() => setRewardSelectionOpened("user")}
-          >
-            Select Reward
-          </Button>
-        )}
-      </Group>
-      <Group justify="space-between" mt="md">
-        <Button size="lg" variant={"light"} onClick={() => form.reset()}>
-          Cancel
-        </Button>
-        <Button onClick={handleCreate} size="lg" disabled={!form.isValid()}>
-          Create
-        </Button>
+      </SimpleGrid>
+      <Group justify="flex-end" mt="md">
+        <RateupButtonPrimary
+          title="Clear"
+          variant={"light"}
+          onClick={() => form.reset()}
+          size="md"
+        />
+        <RateupButtonPrimary
+          title="Create"
+          onClick={handleCreate}
+          disabled={!form.isValid()}
+          size="md"
+        />
       </Group>
 
       <RewardSelectionModal

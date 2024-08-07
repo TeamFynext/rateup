@@ -1,11 +1,6 @@
 import { useMemo, useState } from "react";
-
-import dayjs from "dayjs";
-
 import { useRouter } from "next/router";
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
-import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
+
 import {
   Box,
   Button,
@@ -18,33 +13,38 @@ import {
   Tabs,
   TextInput,
 } from "@mantine/core";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
+import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
-import { showLoadingToast } from "../../../utils/notifications";
-import Heading from "../../../components/styled/Heading/Heading";
-import ContactTable from "../../../components/Table/ContactTable";
-import { TeamSelector } from "../../../components/input/TeamSelector";
-import ContactAction from "../../../components/Contacts/ContactAction";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
+import { useContacts } from "@/backend/campaign/contacts/contacts.query";
+import {
+  useGetContactTags,
+  useUpdateContactTagsMutation,
+} from "@/backend/whatsapp/settings/waSettings.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { ContactMenu } from "@/components/Card/ContactCard";
+import ContactAction from "@/components/Contacts/ContactAction";
 import {
   CONTACT_SORT,
   contactColumn,
   contactGroupColumn,
-} from "../../../components/Contacts/utils/utils";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { useContacts } from "../../../backend/campaign/contacts/contacts.query";
-import { ContactMenu } from "../../../components/Card/ContactCard";
-import { useContactGroup } from "../../../backend/campaign/contactGroup/contactGroup.query";
+} from "@/components/Contacts/utils/utils";
 import {
   ContainedMultiSelect,
   ContainedTagInput,
-} from "../../../components/input/ContainedInput/ContainedInput";
-import {
-  useGetContactTags,
-  useUpdateContactTagsMutation,
-} from "../../../backend/whatsapp/settings/waSettings.query";
-import { PAGE_SIZE } from "../../../utils/constants";
+} from "@/components/input/ContainedInput/ContainedInput";
+import { TeamSelector } from "@/components/input/TeamSelector";
+import Heading from "@/components/styled/Heading/Heading";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import ContactTable from "@/components/Table/ContactTable";
+import { PAGE_SIZE } from "@/utils/constants";
+import { showLoadingToast } from "@/utils/notifications";
+
 import styles from "./contacts.module.css";
-import ErrorComponent from "../../../components/404/ErrorComponent";
 
 export enum ContactTabs {
   GROUPS = "groups",
@@ -130,9 +130,7 @@ export default function Contacts() {
   );
   if (isError || isErrorGroup)
     return (
-      <Stack h={"90dvh"}>
-        <ErrorComponent refetch={isError ? refetchContacts : refetchGroups} />
-      </Stack>
+      <ErrorComponent refetch={isError ? refetchContacts : refetchGroups} />
     );
   return (
     <Stack className={styles["contacts-page-root-div"]}>

@@ -9,6 +9,11 @@ export async function createWaAutomatedReply(data: any) {
   return res.data as WaAutomatedReply;
 }
 
+export async function getAllWaAutomatedReplies() {
+  const res = await axiosClient.get(`${base}`);
+  return res.data as WaAutomatedReply[];
+}
+
 export async function getWaAutomatedRepliesByTeamId(teamId: string) {
   const res = await axiosClient.get(`${base}/team/${teamId}`);
   return res.data as WaAutomatedReply[];

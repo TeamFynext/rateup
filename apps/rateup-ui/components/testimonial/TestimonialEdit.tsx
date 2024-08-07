@@ -1,18 +1,21 @@
+import { useRouter } from "next/router";
+
 import {
+  Center,
   Checkbox,
   Group,
-  Stack,
-  Center,
   ScrollAreaAutosize,
+  Stack,
 } from "@mantine/core";
-import TestimonialCard from "./TestimonialCard";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { reorder } from "../../utils/questions";
-import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
-import { getFilteredTestimonials } from "../../utils/testimonial";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+
+import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
+import { reorder } from "@/utils/questions";
+import { getFilteredTestimonials } from "@/utils/testimonial";
+
 import NothingFound from "../NothingFound/NothingFound";
 import classes from "./testimonial.module.css";
-import { useRouter } from "next/router";
+import TestimonialCard from "./TestimonialCard";
 
 const TestimonialEdit = ({
   currentStyle,

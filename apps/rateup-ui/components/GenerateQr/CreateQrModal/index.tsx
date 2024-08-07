@@ -135,7 +135,6 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
       </Box>
     </Modal>
   );
-  ``;
 }
 
 export default CreateQrModal;

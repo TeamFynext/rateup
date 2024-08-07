@@ -1,4 +1,11 @@
-import { Button, Group, Modal, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Modal,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import dayjs from "dayjs";
 import { DateRangePicker, Range } from "react-date-range";
@@ -8,7 +15,9 @@ import classes from "./InsideLabel.module.css";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-import { IconCalendar } from "@tabler/icons-react";
+import { IconCalendar, IconX } from "@tabler/icons-react";
+
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 
 export function DateRangePickerButton({
   onChange,
@@ -43,6 +52,11 @@ export function DateRangePickerButton({
           classNames={classes}
           leftSection={<IconCalendar size={"1rem"} />}
         />
+        <Tooltip label={"Clear Date Filter"}>
+          <ActionIcon onClick={() => onChange(undefined)} variant="light">
+            <IconX />
+          </ActionIcon>
+        </Tooltip>
       </Group>
       <Modal
         opened={opened}
@@ -58,13 +72,13 @@ export function DateRangePickerButton({
           direction="horizontal"
         />
         <Group justify="end">
-          <Button
+          <RateupButtonPrimary
             onClick={() => onChange(undefined)}
             variant="outline"
             color="red"
-          >
-            Clear
-          </Button>
+            title="Clear"
+          />
+          <RateupButtonPrimary onClick={close} title="Done" />
         </Group>
       </Modal>
     </>

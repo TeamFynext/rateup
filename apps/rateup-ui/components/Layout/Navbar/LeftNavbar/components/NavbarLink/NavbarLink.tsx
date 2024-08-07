@@ -1,6 +1,6 @@
+import React from "react";
 import { useRouter } from "next/router";
-import { UserRole } from "../../../../../../utils/enums";
-import { NavbarLinkProps as NavbarLinkData } from "../../../navbar.constants";
+
 import {
   Burger,
   Divider,
@@ -8,7 +8,10 @@ import {
   Tooltip,
   useMantineColorScheme,
 } from "@mantine/core";
-import React from "react";
+
+import { UserRole } from "@/utils/enums";
+
+import { NavbarLinkProps as NavbarLinkData } from "../../../navbar.constants";
 
 interface NavbarLinkProps {
   data: Array<NavbarLinkData>;
@@ -106,53 +109,51 @@ function NavbarLink({
                   }
                 }
               }}
-              children={
-                submenus?.length > 0
-                  ? submenus.map(({ Icon, label, href, role }, index) => {
-                      if (role && currentRole !== role) return null;
-                      return (
-                        <React.Fragment key={index}>
-                          <Tooltip
-                            label={!opened ? label : ""}
-                            position="right"
-                            styles={{ tooltip: { display: opened && "none" } }}
-                          >
-                            <NavLink
-                              styles={{
-                                children: { display: !opened && "none" },
-                                root: {
-                                  borderRadius: 5,
-                                },
-                                label: {
-                                  color: router.pathname !== href && "gray",
-                                },
-                              }}
-                              p={5}
-                              label={opened && label}
-                              leftSection={
-                                <Icon
-                                  size={18}
-                                  color={
-                                    router.pathname !== href
-                                      ? "grey"
-                                      : "var(--tertiary-color)"
-                                  }
-                                />
+            >
+              {submenus?.length > 0 &&
+                submenus.map(({ Icon, label, href, role }, index) => {
+                  if (role && currentRole !== role) return null;
+                  return (
+                    <React.Fragment key={index}>
+                      <Tooltip
+                        label={!opened ? label : ""}
+                        position="right"
+                        styles={{ tooltip: { display: opened && "none" } }}
+                      >
+                        <NavLink
+                          styles={{
+                            children: { display: !opened && "none" },
+                            root: {
+                              borderRadius: 5,
+                            },
+                            label: {
+                              color: router.pathname !== href && "gray",
+                            },
+                          }}
+                          p={5}
+                          label={opened && label}
+                          leftSection={
+                            <Icon
+                              size={18}
+                              color={
+                                !router.pathname?.startsWith(href)
+                                  ? "grey"
+                                  : "var(--tertiary-color)"
                               }
-                              onClick={() => {
-                                href && router.push(href);
-                                setActive(parentIndex);
-                              }}
-                              active={router.pathname === href}
                             />
-                          </Tooltip>
-                          <Divider opacity={0.5} />
-                        </React.Fragment>
-                      );
-                    })
-                  : null
-              }
-            />
+                          }
+                          onClick={() => {
+                            href && router.push(href);
+                            setActive(parentIndex);
+                          }}
+                          active={router.pathname?.startsWith(href)}
+                        />
+                      </Tooltip>
+                      <Divider opacity={0.5} />
+                    </React.Fragment>
+                  );
+                })}
+            </NavLink>
           </Tooltip>
         );
       })}

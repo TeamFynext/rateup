@@ -126,12 +126,7 @@ const CampaignById = () => {
     [campaignData?.waTemplate?.data?.components],
   );
 
-  if (isError)
-    return (
-      <Stack h={"90dvh"}>
-        <ErrorComponent refetch={refetchCampaign} />
-      </Stack>
-    );
+  if (isError) return <ErrorComponent refetch={refetchCampaign} />;
   return (
     <MantineProvider theme={whatsappTheme}>
       <Stack className={styles["campaign-id-page-root-div"]}>
