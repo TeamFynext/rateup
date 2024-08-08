@@ -1,8 +1,26 @@
+.styles-component-root-div {
+  height: 100%;
+}
+
+.expand-all-collapse-all-btn-container {
+  padding: 0.875rem;
+  padding-bottom: 0;
+}
+
+.expand-all-collapse-all-btn-container button {
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  height: auto;
+  line-height: normal;
+  padding: 0.3125rem 1rem;
+}
+
 .styles-component-div {
   display: flex;
   flex-direction: column;
-  padding: 0.875rem;
+  padding: 0 0.875rem;
   height: 100%;
+  flex: 1;
 }
 
 .styles-component-div :global(.custom-color-picker-container) {
@@ -106,4 +124,26 @@
 
 .logo-styles-logo-upload-file-input-container {
   justify-content: center;
+}
+
+.close-save-btns-container {
+  padding: 0.875rem;
+  padding-top: 0;
+  justify-content: space-between;
+}
+
+.close-save-btns-container > div {
+  flex: 1 1 0;
+}
+
+.close-btn {
+  height: auto;
+  line-height: normal;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  width: 100%;
+}
+
+.save-btn-div button {
+  width: 100%;
 }

@@ -11,6 +11,8 @@ import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 function SurveyThemePreviewLayout({
   survey,
   isThemeObjBeingEditedDefaultTheme,
+  previewId,
+  isSurveyThemeEditView,
 }) {
   const selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
@@ -53,7 +55,11 @@ function SurveyThemePreviewLayout({
               />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.SURVEY}>
-              <SurveyThemeView survey={survey} />
+              <SurveyThemeView
+                previewId={previewId}
+                survey={survey}
+                isSurveyThemeEditView={isSurveyThemeEditView}
+              />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
               <ThankyouPageThemeView

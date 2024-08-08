@@ -42,11 +42,6 @@ export const renameSurveyTheme = async ({
   surveyThemeId: string;
   body: { name: string };
 }) => {
-  console.log(
-    "from rename survey theme mutation api function",
-    surveyThemeId,
-    body,
-  );
   const response = await axiosClient.patch(
     `${THEME_API_PATH}/${surveyThemeId}`,
     body,

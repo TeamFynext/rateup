@@ -47,10 +47,14 @@ import { validateQuestion } from "../../../../utils/validation";
 import RateupLoader from "../../../Loaders/RateupLoader";
 import GiftModal from "../../Gift/GiftModal";
 import CustomHTML from "../../Page/Previews/CustomHTML";
-import { useIsSurveyThemePreviewContext } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import {
+  useIsSurveyThemeEditView,
+  useIsSurveyThemePreview,
+} from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
 import NextBtn from "./NextBtn";
+import NextBtnForSurveyThemeEditPreview from "./NextBtnForSurveyThemeEditView";
 import NextPrev from "./NextPrev";
 import QuestionDesc from "./QuestionDesc";
 import QuestionForm from "./QuestionForm";
@@ -64,7 +68,8 @@ import {
 } from "./util";
 
 function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
+  const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const smallScreen = useMediaQuery("(max-width: 30em)");
@@ -575,17 +580,31 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     </Box>
                   </AnimatePresence>
 
-                  <NextPrev
-                    next={handleNext}
-                    prev={handlePrev}
-                    num={QnNo}
-                    total={questionCount}
-                    survey={survey}
-                    surveyThemeData={surveyThemeData}
-                    isSavingResponses={isSavingResponses || giftLoading}
-                    errorTextDivRef={errorTextDivRef}
-                    isSurveyThemePreview={isSurveyThemePreview}
-                  />
+                  {!isSurveyThemeEditView ? (
+                    <NextPrev
+                      next={handleNext}
+                      prev={handlePrev}
+                      num={QnNo}
+                      total={questionCount}
+                      survey={survey}
+                      surveyThemeData={surveyThemeData}
+                      isSavingResponses={isSavingResponses || giftLoading}
+                      errorTextDivRef={errorTextDivRef}
+                      isSurveyThemePreview={isSurveyThemePreview}
+                    />
+                  ) : (
+                    <NextBtnForSurveyThemeEditPreview
+                      next={handleNext}
+                      prev={handlePrev}
+                      num={QnNo}
+                      total={questionCount}
+                      survey={survey}
+                      surveyThemeData={surveyThemeData}
+                      isSavingResponses={isSavingResponses || giftLoading}
+                      errorTextDivRef={errorTextDivRef}
+                      isSurveyThemePreview={isSurveyThemePreview}
+                    />
+                  )}
                 </Stack>
               </Container>
             </NextPrevFuncsAndLastQuestionContextProvider>

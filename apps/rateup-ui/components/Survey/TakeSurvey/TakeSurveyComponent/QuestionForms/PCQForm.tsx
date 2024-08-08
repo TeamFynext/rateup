@@ -1,15 +1,17 @@
 import { useContext, useEffect, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { Radio } from "@mantine/core";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import { samplePictureChoices } from "../../../../../utils/constants/forms";
 import { useRouter } from "next/router";
-import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
-import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+
+import { Radio } from "@mantine/core";
 import { useAnimate } from "framer-motion";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
+import { samplePictureChoices } from "../../../../../utils/constants/forms";
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
+import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 
 interface PCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -37,7 +39,7 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const publicRoute =
     router.pathname.startsWith("/public") || router.pathname.startsWith("/ws");
 
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
 
   useEffect(() => {
     if (response) {

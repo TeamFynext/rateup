@@ -20,7 +20,7 @@ import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
-  useSetSelectedEditor,
+  useSetOpenEditors,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
@@ -33,7 +33,7 @@ export default function WelcomePageThemeView({
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const selectedPreview = useSelectedPreview();
   const isWelcomePageEnabled = survey?.welcomePageEnabled;
-  const setSelectedEditor = useSetSelectedEditor();
+  const setOpenEditors = useSetOpenEditors();
 
   const {
     welcomeTheme,
@@ -148,7 +148,7 @@ export default function WelcomePageThemeView({
                   value={title}
                   onChange={handleTitleInputChange}
                   ref={titleInputRef}
-                  onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
+                  onFocus={() => setOpenEditors(["title-styles"])}
                   autoComplete="off"
                 />
 
@@ -182,7 +182,7 @@ export default function WelcomePageThemeView({
                   value={subtitle}
                   onChange={handleSubtitleTextareaChange}
                   ref={subtitleInputRef}
-                  onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
+                  onFocus={() => setOpenEditors(["desc-styles"])}
                   autoComplete="off"
                 />
 
@@ -232,7 +232,7 @@ export default function WelcomePageThemeView({
                     },
                   }}
                   ref={startBtnInputRef}
-                  onFocus={() => setSelectedEditor(SelectedItemEnum.BUTTON)}
+                  onFocus={() => setOpenEditors(["button-styles"])}
                   autoComplete="off"
                 />
 

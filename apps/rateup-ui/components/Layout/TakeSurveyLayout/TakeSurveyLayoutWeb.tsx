@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -28,24 +28,27 @@ import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { CreditsCard } from "../../Card/CreditsCard";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import { useIsSurveyThemePreviewContext } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import {
+  useIsSurveyThemeEditView,
+  useIsSurveyThemePreview,
+} from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext";
 import LanguageSelectionPage from "../LanguageSelectionPage";
 import WelcomePage from "../WelcomePage/WelcomePage";
 import styles from "./TakeSurveyLayoutWeb.module.css";
 import { getBgImgAndBgColor } from "./utils";
 
-export const TakeSurveyLayoutWeb = ({ survey, children }) => {
+export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
 
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
+  const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
   const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
   const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
 
   // This one is being used for preview in surveyTheme editor
   //(TakeSurveyLayoutWeb and TakeSurvey component is also being used in surveyTheme editor).
-
   const selectedPreview = useSelectedPreview();
 
   const surveyTeamMapId = survey?.surveyTeamMapId;
@@ -124,11 +127,17 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     setSelectedLanguage(survey?.languages[0]);
   }
 
+  if (!selectedLanguage && isSurveyThemeEditView) {
+    setSelectedLanguage("English");
+  }
+
   const surveyThemeDataPrimaryColor =
     surveyThemeData?.surveyTheme?.input?.primaryColor;
 
   const isLanguagePageActive =
-    !selectedLanguage && survey?.languages?.length > 1;
+    !selectedLanguage &&
+    survey?.languages?.length > 1 &&
+    !isSurveyThemeEditView;
   const isWelcomeThemeActive = !startClicked;
   const useSurveyBackground =
     isWelcomeThemeActive &&
@@ -147,14 +156,19 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   );
 
   const getRootElementForMantineProvider: () => HTMLElement = () => {
-    return typeof window === "undefined"
-      ? undefined
-      : document.querySelector(`.${styles["take-survey-layout-web-root-div"]}`);
+    if (!(typeof window === "undefined")) {
+      if (isSurveyThemePreview) {
+        return document.getElementById(previewId);
+      } else {
+        return document.documentElement;
+      }
+    }
+    return undefined;
   };
 
   return (
     <MantineProvider
-      cssVariablesSelector={`.${styles["take-survey-layout-web-root-div"]}`}
+      cssVariablesSelector={isSurveyThemePreview ? `#${previewId}` : ":root"}
       getRootElement={getRootElementForMantineProvider}
       theme={{
         colors: {
@@ -220,7 +234,6 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
             url={backgroundImageSrc}
           >
             <BackgroundImage
-              // mih={"100dvh"}
               h={"100%"}
               style={{
                 flex: 1,
@@ -235,10 +248,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
               {(survey?.isPublished == true || isSurveyThemePreview) &&
                 !isLanguagePageActive &&
                 (startClicked || isSurveyThemePreview) && (
-                  <Box
-                    // align="center"
-                    className={styles["logo-container"]}
-                  >
+                  <Box className={styles["logo-container"]}>
                     {orgLogoSrc && (
                       <Image
                         src={orgLogoSrc}
@@ -270,7 +280,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                       bg={"transparent"}
                       style={{ overflow: "hidden" }}
                     >
-                      {(startClicked || isSurveyThemePreview) &&
+                      {startClicked &&
                         (isLanguagePageActive ? (
                           <LanguageSelectionPage
                             languages={survey?.languages}
@@ -290,17 +300,15 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                           )
                         ))}
 
-                      {isWelcomePageEnabled &&
-                        !startClicked &&
-                        !isSurveyThemePreview && (
-                          <WelcomePage
-                            surveyThemeData={surveyThemeData?.welcomeTheme}
-                            onStart={handleStartClick}
-                            largeScreen={largeScreen}
-                            orgLogoSrc={orgLogoSrc}
-                            orgLogoStyles={orgLogoStyles}
-                          />
-                        )}
+                      {isWelcomePageEnabled && !startClicked && (
+                        <WelcomePage
+                          surveyThemeData={surveyThemeData?.welcomeTheme}
+                          onStart={handleStartClick}
+                          largeScreen={largeScreen}
+                          orgLogoSrc={orgLogoSrc}
+                          orgLogoStyles={orgLogoStyles}
+                        />
+                      )}
                     </Paper>
                   )
                 ) : (

@@ -1,142 +1,121 @@
 import {
+  Accordion,
   Box,
+  Button,
+  Divider,
   Group,
   MantineProvider,
   Overlay,
   ScrollArea,
-  Select,
-  Tabs,
+  Stack,
 } from "@mantine/core";
-import { IconEdit } from "@tabler/icons-react";
+import { IconChevronsDown, IconChevronsUp } from "@tabler/icons-react";
 
 import { theme } from "../../../../../config/mantineTheme";
 import { supportedPageEditors } from "../../SurveyTheme.constants";
-import { SelectedItemEnum, ThemeTabEnum } from "../../SurveyTheme.enums";
 import surveyThemeStyles from "../../SurveyTheme.module.css";
-import { _SurveyTheme } from "../../surveyTheme.types";
 import {
-  useSelectedEditor,
+  useOpenEditors,
   useSelectedPageTab,
-  useSetSelectedEditor,
+  useSetOpenEditors,
 } from "../../SurveyThemeContext";
-import BackgroundStyles from "../BackgroundStyles";
-import ButtonStyles from "../ButtonStyles";
-import DescStyles from "../DescStyles";
-import HeaderStyles from "../HeaderStyles";
-import InputStyles from "../InputStyles";
-import LogoStyles from "../LogoStyles";
 import SaveButton from "../SaveButton";
-import EditorSelectionTabs from "./EditorSelectionTabs";
 import styles from "./StylesComponent.module.css";
-
-function RenderOption({ option, checked }) {
-  return <Box>{option.label}</Box>;
-}
 
 function StylesComponent({
   survey,
   isThemeObjBeingEditedDefaultTheme,
   themeObjBeingEdited,
-  useTabsForEditorSelection = false,
-  displaySaveBtn = false,
+  closeStylesEditorDrawer,
 }) {
   const selectedPageTab = useSelectedPageTab();
-  const selectedEditor = useSelectedEditor();
-  const setSelectedEditor = useSetSelectedEditor();
+  const openEditors = useOpenEditors();
+  const setOpenEditors = useSetOpenEditors();
+
+  const editorComponents = supportedPageEditors[selectedPageTab];
 
   return (
     <MantineProvider theme={theme}>
-      <ScrollArea
-        type="hover"
-        className={`${styles["styles-component-div"]} styles-component-div`}
-      >
-        {isThemeObjBeingEditedDefaultTheme && (
-          <Overlay className={surveyThemeStyles["overlay"]} />
-        )}
-
-        {useTabsForEditorSelection ? (
-          <Group className={styles["tabs-list-tabs-comp-container"]}>
-            <EditorSelectionTabs
-              data={supportedPageEditors[selectedPageTab]}
-              value={selectedEditor}
-              onChange={setSelectedEditor}
-            />
-            {displaySaveBtn && (
-              <SaveButton
-                survey={survey}
-                isThemeObjBeingEditedDefaultTheme={
-                  isThemeObjBeingEditedDefaultTheme
-                }
-                themeObjBeingEdited={themeObjBeingEdited}
-              />
-            )}
-          </Group>
-        ) : (
-          <Select
-            className={styles["editor-select-dropdown"]}
-            value={selectedEditor}
-            data={supportedPageEditors[selectedPageTab]}
-            onChange={setSelectedEditor}
-            leftSection={<IconEdit width={"1rem"} />}
-            renderOption={RenderOption}
-            classNames={{
-              option: styles["editor-select-dropdown-option"],
-              input: styles["editor-selector-dropdown-input"],
+      <Stack className={styles["styles-component-root-div"]}>
+        <Group className={styles["expand-all-collapse-all-btn-container"]}>
+          <Button
+            leftSection={<IconChevronsDown size={"1rem"} />}
+            onClick={() => {
+              const editorsObjArr = supportedPageEditors[selectedPageTab];
+              if (editorsObjArr) {
+                setOpenEditors(editorsObjArr.map(({ value }) => value));
+              }
             }}
-            allowDeselect={false}
+          >
+            Expand All
+          </Button>
+          <Button
+            leftSection={<IconChevronsUp size={"1rem"} />}
+            onClick={() => setOpenEditors([])}
+          >
+            Collapse All
+          </Button>
+        </Group>
+        <Divider />
+        <ScrollArea
+          type="hover"
+          className={`${styles["styles-component-div"]} styles-component-div`}
+        >
+          {isThemeObjBeingEditedDefaultTheme && (
+            <Overlay className={surveyThemeStyles["overlay"]} />
+          )}
+
+          <Accordion
+            multiple
+            onChange={(valuesArr) => {
+              const lastEleIndex = valuesArr.length - 1;
+              if (lastEleIndex > 0) {
+                setOpenEditors(valuesArr.splice(lastEleIndex, 1));
+                return;
+              }
+              setOpenEditors(valuesArr);
+            }}
+            value={openEditors}
+          >
+            {editorComponents?.map(({ id, Component, value, label }) => {
+              return (
+                <Accordion.Item key={selectedPageTab + id} value={value}>
+                  <Accordion.Control>{label}</Accordion.Control>
+                  <Accordion.Panel>
+                    <Component />
+                  </Accordion.Panel>
+                </Accordion.Item>
+              );
+            })}
+          </Accordion>
+        </ScrollArea>
+        <Divider />
+        <Group className={styles["close-save-btns-container"]}>
+          <Box className={styles["close-btn-div"]}>
+            <Button
+              className={styles["close-btn"]}
+              onClick={() => {
+                closeStylesEditorDrawer();
+              }}
+              variant="outline"
+            >
+              Close
+            </Button>
+          </Box>
+
+          <SaveButton
+            className={styles["save-btn-div"]}
+            survey={survey}
+            isThemeObjBeingEditedDefaultTheme={
+              isThemeObjBeingEditedDefaultTheme
+            }
+            themeObjBeingEdited={themeObjBeingEdited}
+            onSave={() => {
+              closeStylesEditorDrawer();
+            }}
           />
-        )}
-
-        <Tabs value={selectedEditor}>
-          {supportedPageEditors[selectedPageTab].includes(
-            SelectedItemEnum.BACKGROUND,
-          ) && (
-            <Tabs.Panel value={SelectedItemEnum.BACKGROUND}>
-              <BackgroundStyles />
-            </Tabs.Panel>
-          )}
-
-          {supportedPageEditors[selectedPageTab].includes(
-            SelectedItemEnum.TITLE,
-          ) && (
-            <Tabs.Panel value={SelectedItemEnum.TITLE}>
-              <HeaderStyles />
-            </Tabs.Panel>
-          )}
-
-          {supportedPageEditors[selectedPageTab].includes(
-            SelectedItemEnum.SUBTITLE,
-          ) && (
-            <Tabs.Panel value={SelectedItemEnum.SUBTITLE}>
-              <DescStyles />
-            </Tabs.Panel>
-          )}
-
-          {supportedPageEditors[selectedPageTab].includes(
-            SelectedItemEnum.BUTTON,
-          ) && (
-            <Tabs.Panel value={SelectedItemEnum.BUTTON}>
-              <ButtonStyles />
-            </Tabs.Panel>
-          )}
-
-          {supportedPageEditors[selectedPageTab].includes(
-            SelectedItemEnum.INPUT,
-          ) && (
-            <Tabs.Panel value={SelectedItemEnum.INPUT}>
-              <InputStyles />
-            </Tabs.Panel>
-          )}
-
-          {supportedPageEditors[selectedPageTab].includes(
-            SelectedItemEnum.LOGO,
-          ) && (
-            <Tabs.Panel value={SelectedItemEnum.LOGO}>
-              <LogoStyles />
-            </Tabs.Panel>
-          )}
-        </Tabs>
-      </ScrollArea>
+        </Group>
+      </Stack>
     </MantineProvider>
   );
 }

@@ -1,4 +1,11 @@
 import { QuestionType } from "../../../types/enums";
+import BackgroundStyles from "./components/BackgroundStyles";
+import ButtonStyles from "./components/ButtonStyles";
+import DescStyles from "./components/DescStyles";
+import HeaderStyles from "./components/HeaderStyles";
+import InputStyles from "./components/InputStyles";
+import LogoStyles from "./components/LogoStyles";
+import Translations from "./components/Translations";
 import { SelectedItemEnum } from "./SurveyTheme.enums";
 
 export const dummyImage =
@@ -102,33 +109,94 @@ export const questionTypeEnumArray = [
 ];
 
 const commonSupportedPageEditors = [
-  SelectedItemEnum.BACKGROUND,
-  SelectedItemEnum.TITLE,
+  {
+    id: "bg-styles-comp",
+    Component: BackgroundStyles,
+    value: "background-styles",
+    label: "Background",
+  },
+  {
+    id: "title-styles-comp",
+    Component: HeaderStyles,
+    value: "title-styles",
+    label: "Title",
+  },
 ];
 
 const surveyPageEditors = [
   ...commonSupportedPageEditors,
-  SelectedItemEnum.BUTTON,
-  SelectedItemEnum.INPUT,
-  SelectedItemEnum.LOGO,
+  {
+    id: "button-styles-comp",
+    Component: ButtonStyles,
+    value: "button-styles",
+    label: "Button",
+  },
+  {
+    id: "input-styles-comp",
+    Component: InputStyles,
+    value: "input-styles",
+    label: "Input",
+  },
+  {
+    id: "logo-styles-comp",
+    Component: LogoStyles,
+    value: "logo-styles",
+    label: "Logo",
+  },
+  {
+    id: "submit-next-btn-translations-comp",
+    Component: Translations,
+    value: "submit-next-btn-translations",
+    label: "Translations",
+  },
 ];
 
 const welcomePageEditors = [
   ...commonSupportedPageEditors,
-  SelectedItemEnum.SUBTITLE,
-  SelectedItemEnum.BUTTON,
+  {
+    id: "desc-styles-comp",
+    Component: DescStyles,
+    value: "desc-styles",
+    label: "Subtitle",
+  },
+  {
+    id: "button-styles-comp",
+    Component: ButtonStyles,
+    value: "button-styles",
+    label: "Button",
+  },
 ];
 
 const thankyouPageEditors = [
   ...commonSupportedPageEditors,
-  SelectedItemEnum.SUBTITLE,
+  {
+    id: "desc-styles-comp",
+    Component: DescStyles,
+    value: "desc-styles",
+    label: "Subtitle",
+  },
 ];
 
 const languagePageEditors = [
   ...commonSupportedPageEditors,
-  SelectedItemEnum.SUBTITLE,
-  SelectedItemEnum.BUTTON,
-  SelectedItemEnum.INPUT,
+  {
+    id: "desc-styles-comp",
+    Component: DescStyles,
+    value: "desc-styles",
+    label: "Subtitle",
+  },
+  {
+    id: "button-styles-comp",
+    Component: ButtonStyles,
+    value: "button-styles",
+    label: "Button",
+  },
+  {
+    id: "input-styles-comp",
+    Component: InputStyles,
+    value: "input-styles",
+    label: "Input",
+  },
 ];
 
 export const supportedPageEditors = {

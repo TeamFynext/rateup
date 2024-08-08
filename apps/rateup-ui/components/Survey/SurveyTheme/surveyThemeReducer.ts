@@ -1,5 +1,6 @@
-import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
 import _ from "lodash";
+
+import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
 
 function surveyThemeReducer(state, action) {
   const { payload } = action;
@@ -13,8 +14,8 @@ function surveyThemeReducer(state, action) {
       break;
     }
 
-    case "selected-editor-change": {
-      state.selectedEditor = payload;
+    case "open-editors-change": {
+      state.openEditors = payload;
       break;
     }
 

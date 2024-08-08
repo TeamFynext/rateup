@@ -94,8 +94,8 @@ function SaveButton({
       justify="center"
       className={`${styles["save-button-root-div"]} save-button-root-div ${className}`}
     >
-      <InfoButton docUrl={`${docsPath}/webSurvey/surveyTheme/themes`} />
-      <Text
+      {/* <InfoButton docUrl={`${docsPath}/webSurvey/surveyTheme/themes`} /> */}
+      {/* <Text
         className={styles["save-unsaved-text-p"]}
         style={{
           color:
@@ -105,7 +105,7 @@ function SaveButton({
         }}
       >
         {saveStatusText}
-      </Text>
+      </Text> */}
       <Button
         className={styles["save-btn"]}
         loading={isSaving}

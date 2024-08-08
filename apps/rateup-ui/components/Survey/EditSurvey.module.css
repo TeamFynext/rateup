@@ -5,6 +5,8 @@
   gap: 0.625rem;
   overflow: hidden;
   background: var(--mantine-color-body);
+  position: relative;
+  max-height: 900px;
 }
 
 .panel {
@@ -43,7 +45,7 @@
 }
 
 .edit-survey-theme-style-component-motion-div {
-  flex: 1.75;
+  flex: 2;
   height: 100%;
 }
 
@@ -51,19 +53,6 @@
   height: 100%;
   padding: 0;
 }
-
-.open-close-survey-editor-btn {
-  border-radius: 2rem;
-  position: fixed;
-  right: 3.125rem;
-  top: 4.5rem;
-}
-
-/* .question-editor-container:global(.Welcome-QDV),
-.question-editor-container:global(.ThankYou-QDV),
-.question-editor-container:global(.SurveyPreview-QDV) {
-  padding: 0.625rem;
-} */
 
 .question-detailed-view-panel > div {
   height: 100%;

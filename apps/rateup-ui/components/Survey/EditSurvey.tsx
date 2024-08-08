@@ -30,6 +30,7 @@ import SurveyVariableEditor from "./Question/SurveyVariableEditor";
 import TicketIssueEditor from "./Question/TicketIssueEditor";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "./QuestionsSideBar";
+import SurveyPreviewModal from "./SurveyPreviewModal";
 import SurveyTheme from "./SurveyTheme";
 import StylesComponent from "./SurveyTheme/components/stylescomponent";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
@@ -67,6 +68,12 @@ export function EditSurvey({
   const { surveyId } = useContext(SurveyContext);
   const { data: survey, dataUpdatedAt } = useSurvey(surveyId);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+
+  const [
+    isSurveyPreviewModalOpen,
+    { open: openSurveyPreviewModal, close: closeSurveyPreviewModal },
+  ] = useDisclosure(false);
+
   // used to rerender survey theme preview, when questions reoredered or deleted and when survey changes.
   const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
 
@@ -200,6 +207,7 @@ export function EditSurvey({
                           {survey && (
                             <SurveyTheme
                               survey={survey}
+                              previewId={`${selectedQ.type}-preview`}
                               initialSelectedPageTab={
                                 inititalSelectedTabForSurveyThemeComp
                               }
@@ -212,6 +220,8 @@ export function EditSurvey({
                               }
                               themeObjBeingEdited={themeObjBeingEdited}
                               closeStylesEditorDrawer={closeStylesEditorDrawer}
+                              openStylesEditorDrawer={openStylesEditorDrawer}
+                              openSurveyPreviewModal={openSurveyPreviewModal}
                             />
                           )}
                         </Stack>
@@ -294,6 +304,7 @@ export function EditSurvey({
                 >
                   {survey && activeTab === QuestionTabsEnum.SurveyPreview && (
                     <SurveyTheme
+                      previewId={"survey-theme-edit-preview"}
                       key={surveyPreviewCompKey}
                       initialSelectedPageTab={
                         inititalSelectedTabForSurveyThemeComp
@@ -308,6 +319,9 @@ export function EditSurvey({
                       }
                       themeObjBeingEdited={themeObjBeingEdited}
                       closeStylesEditorDrawer={closeStylesEditorDrawer}
+                      openStylesEditorDrawer={openStylesEditorDrawer}
+                      openSurveyPreviewModal={openSurveyPreviewModal}
+                      isSurveyThemeEditView={true}
                     />
                   )}
                 </Tabs.Panel>
@@ -321,7 +335,6 @@ export function EditSurvey({
                 className={
                   styles["edit-survey-theme-style-component-motion-div"]
                 }
-                style={{ flex: 1.75, height: "100%" }}
                 initial={{ x: 500 }}
                 animate={{ x: 0 }}
                 exit={{ x: 500 }}
@@ -336,6 +349,7 @@ export function EditSurvey({
                       isThemeObjBeingEditedDefaultTheme
                     }
                     themeObjBeingEdited={themeObjBeingEdited}
+                    closeStylesEditorDrawer={closeStylesEditorDrawer}
                   />
                 </PaperLayout>
               </motion.div>
@@ -343,16 +357,28 @@ export function EditSurvey({
           )}
         </LayoutGroup>
 
-        {(uniquePages.includes(selectedQ?.type as PageType) ||
-          activeTab === QuestionTabsEnum.SurveyPreview) && (
-          <Button
-            className={styles["open-close-survey-editor-btn"]}
-            leftSection={<IconEdit size={"1rem"} />}
-            onClick={() => toggleStylesEditorDrawer()}
-          >
-            {isStylesEditorDrawerOpen ? "Close Editor" : "Open Editor"}
-          </Button>
-        )}
+        <SurveyPreviewModal
+          opened={isSurveyPreviewModalOpen}
+          onClose={closeSurveyPreviewModal}
+        >
+          <SurveyTheme
+            key={"preview" + surveyPreviewCompKey}
+            previewId={"survey-theme-prod-preview"}
+            initialSelectedPageTab={inititalSelectedTabForSurveyThemeComp}
+            survey={survey}
+            allThemesArr={allThemesArr}
+            themeSelectorState={themeSelectorState}
+            setThemeSelectorState={setThemeSelectorState}
+            isAllThemesFetchPending={isAllThemesFetchPending}
+            isThemeObjBeingEditedDefaultTheme={
+              isThemeObjBeingEditedDefaultTheme
+            }
+            themeObjBeingEdited={themeObjBeingEdited}
+            closeStylesEditorDrawer={closeStylesEditorDrawer}
+            openStylesEditorDrawer={openStylesEditorDrawer}
+            openSurveyPreviewModal={openSurveyPreviewModal}
+          />
+        </SurveyPreviewModal>
       </Flex>
     </SurveyThemeContextProvider>
   );

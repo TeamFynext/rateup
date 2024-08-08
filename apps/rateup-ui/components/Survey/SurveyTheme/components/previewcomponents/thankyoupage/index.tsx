@@ -20,7 +20,7 @@ import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
-  useSetSelectedEditor,
+  useSetOpenEditors,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
@@ -31,7 +31,7 @@ export default function ThankyouPageThemeView({
   const surveyTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const selectedPreview = useSelectedPreview();
-  const setSelectedEditor = useSetSelectedEditor();
+  const setOpenEditors = useSetOpenEditors();
 
   const { thankyouTheme } = surveyTheme;
   const { ref, width, height } = useElementSize();
@@ -121,7 +121,7 @@ export default function ThankyouPageThemeView({
                     value={title}
                     onChange={handleTitleInputChange}
                     ref={titleInputRef}
-                    onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
+                    onFocus={() => setOpenEditors(["title-styles"])}
                     autoComplete="off"
                   />
 
@@ -156,7 +156,7 @@ export default function ThankyouPageThemeView({
                     mt="lg"
                     ta={"center"}
                     ref={subtitleInputRef}
-                    onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
+                    onFocus={() => setOpenEditors(["desc-styles"])}
                     autoComplete="off"
                   />
                   <ActionIcon

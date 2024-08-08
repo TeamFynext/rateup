@@ -1,4 +1,5 @@
-import { Box, Center, Group, Stack } from "@mantine/core";
+import { Box, Button, Center, Group, Stack } from "@mantine/core";
+import { IconEdit, IconPlayerPlay } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import useTranslations from "@/dictionaries/useTranslation";
@@ -15,13 +16,17 @@ const cx = classNames.bind(styles);
 function SurveyTheme({
   survey,
   initialSelectedPageTab = undefined,
-  closeStylesEditorDrawer = null,
+  closeStylesEditorDrawer,
   allThemesArr,
   themeSelectorState,
   setThemeSelectorState,
   isAllThemesFetchPending,
   isThemeObjBeingEditedDefaultTheme,
   themeObjBeingEdited,
+  openStylesEditorDrawer,
+  openSurveyPreviewModal,
+  previewId,
+  isSurveyThemeEditView = false,
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
@@ -34,11 +39,16 @@ function SurveyTheme({
       </Center>
     );
 
+  const isSelectedPagetabSurvey =
+    initialSelectedPageTab === ThemeTabEnum.SURVEY;
+
   return (
     <Box className={`${cx("survey-theme-root-div")} survey-theme-root-div`}>
-      <Stack className={styles["survey-editor-page-header"]}>
+      <Stack
+        className={`${styles["survey-editor-page-header"]} survey-editor-page-header`}
+      >
         <Group gap={"2rem"} justify="space-between">
-          {initialSelectedPageTab === ThemeTabEnum.SURVEY && (
+          {isSelectedPagetabSurvey && (
             <ThemeSelector
               className={cx("theme-selector-div")}
               allThemesArr={allThemesArr}
@@ -48,17 +58,26 @@ function SurveyTheme({
               survey={survey}
             />
           )}
-          <SaveButton
-            className={styles["survey-editor-page-header-save-btn"]}
-            survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
-            themeObjBeingEdited={themeObjBeingEdited}
-            onSave={() => {
-              closeStylesEditorDrawer?.();
-            }}
-          />
+
+          <Group>
+            {isSelectedPagetabSurvey && (
+              <Button
+                className={styles["preview-survey-btn"]}
+                leftSection={<IconPlayerPlay size={"1rem"} />}
+                onClick={openSurveyPreviewModal}
+              >
+                Preview Survey
+              </Button>
+            )}
+
+            <Button
+              className={styles["edit-theme-btn"]}
+              leftSection={<IconEdit size={"1rem"} />}
+              onClick={() => openStylesEditorDrawer()}
+            >
+              Edit Theme
+            </Button>
+          </Group>
         </Group>
       </Stack>
 
@@ -74,6 +93,8 @@ function SurveyTheme({
             isThemeObjBeingEditedDefaultTheme={
               isThemeObjBeingEditedDefaultTheme
             }
+            previewId={previewId}
+            isSurveyThemeEditView={isSurveyThemeEditView}
           />
         </Box>
       </Box>
