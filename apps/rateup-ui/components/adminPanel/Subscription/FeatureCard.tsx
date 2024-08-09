@@ -1,11 +1,12 @@
 import { ActionIcon, Box, Checkbox, Collapse, Group } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import { UseFormReturnType } from "@mantine/form";
+
+import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { CountRestrictionCards } from "./CountRestrictionCards";
 import { FeatureBadge } from "./FeatureBadge";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 interface FeatureCardProps {
   featurePathName: SubscriptionFeaturePathName;
@@ -62,7 +63,11 @@ export function FeatureCard({
         <Box style={{ flex: 1, cursor: "pointer" }} onClick={toggle} mx="sm">
           <FeatureBadge featurePathName={featurePathName} />
         </Box>
-        <ActionIcon onClick={toggle} variant="transparent">
+        <ActionIcon
+          onClick={toggle}
+          variant="transparent"
+          display={Object.keys(feature || {}).length <= 1 ? "none" : "block"}
+        >
           {opened ? <IconChevronUp /> : <IconChevronDown />}
         </ActionIcon>
       </Group>

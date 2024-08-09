@@ -8,7 +8,11 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
   return (
     <Menu shadow="md" width={120}>
       <Menu.Target>
-        <Tooltip label={translations["Filter survey"]} withArrow position="top">
+        <Tooltip
+          label={translations["Filter survey"] || "Filter survey"}
+          withArrow
+          position="top"
+        >
           <Button
             variant="outline"
             color="#3F5BA9"
@@ -18,7 +22,6 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
             style={{ minWidth: 110 }}
           >
             {translations[filterParam] ?? translations["Status"]}
-            {filterParam ?? "Status"}
           </Button>
         </Tooltip>
       </Menu.Target>

@@ -1,21 +1,22 @@
 import {
-  Avatar,
-  Group,
-  Stack,
-  Title,
-  Text,
-  Rating,
-  Anchor,
-  Modal,
-  Flex,
   ActionIcon,
+  Anchor,
+  Avatar,
+  Flex,
+  Group,
+  Modal,
+  Rating,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import { formatDate } from "../../utils/dateTime";
-import { Testimonial } from "../../types/global";
-import PaperLayout from "../styled/Layouts/PaperLayout";
 import { IconX } from "@tabler/icons-react";
+
+import { Testimonial } from "../../types/global";
+import { formatDate } from "../../utils/dateTime";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 interface TestimonialCardInterface {
   testimonial: Omit<Testimonial, "teamId" | "survey">;
@@ -121,7 +122,7 @@ const TestimonialContent = ({
         >
           {testimonial?.testimonial.testimonial}
         </Text>
-        {!isModal && testimonial?.testimonial.testimonial.length >= 80 && (
+        {!isModal && testimonial?.testimonial.testimonial?.length >= 80 && (
           <Anchor onClick={open} size="sm">
             Read more
           </Anchor>
