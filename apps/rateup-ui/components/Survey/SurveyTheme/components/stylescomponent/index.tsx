@@ -20,6 +20,7 @@ import {
   useSetOpenEditors,
 } from "../../SurveyThemeContext";
 import SaveButton from "../SaveButton";
+import ThemeSelector from "../ThemeSelector";
 import styles from "./StylesComponent.module.css";
 
 function StylesComponent({
@@ -27,6 +28,10 @@ function StylesComponent({
   isThemeObjBeingEditedDefaultTheme,
   themeObjBeingEdited,
   closeStylesEditorDrawer,
+  allThemesArr,
+  themeSelectorState,
+  setThemeSelectorState,
+  isAllThemesFetchPending,
 }) {
   const selectedPageTab = useSelectedPageTab();
   const openEditors = useOpenEditors();
@@ -37,6 +42,15 @@ function StylesComponent({
   return (
     <MantineProvider theme={theme}>
       <Stack className={styles["styles-component-root-div"]}>
+        <ThemeSelector
+          className={styles["theme-selector-div"]}
+          allThemesArr={allThemesArr}
+          themeSelectorState={themeSelectorState}
+          setThemeSelectorState={setThemeSelectorState}
+          isAllThemesFetchPending={isAllThemesFetchPending}
+          survey={survey}
+        />
+        <Divider />
         <Group className={styles["expand-all-collapse-all-btn-container"]}>
           <Button
             leftSection={<IconChevronsDown size={"1rem"} />}
@@ -78,14 +92,16 @@ function StylesComponent({
             value={openEditors}
           >
             {editorComponents?.map(({ id, Component, value, label }) => {
-              return (
-                <Accordion.Item key={selectedPageTab + id} value={value}>
-                  <Accordion.Control>{label}</Accordion.Control>
-                  <Accordion.Panel>
-                    <Component />
-                  </Accordion.Panel>
-                </Accordion.Item>
-              );
+              if (Component) {
+                return (
+                  <Accordion.Item key={selectedPageTab + id} value={value}>
+                    <Accordion.Control>{label}</Accordion.Control>
+                    <Accordion.Panel>
+                      <Component />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                );
+              }
             })}
           </Accordion>
         </ScrollArea>

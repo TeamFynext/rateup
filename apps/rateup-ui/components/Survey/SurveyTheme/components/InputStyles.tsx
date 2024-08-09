@@ -30,11 +30,12 @@ function InputStyles() {
       className={`${styles["style-inputs-container"]} style-inputs-container`}
     >
       <Group justify="space-between" w={"100%"}>
-        <Box className={"custom-color-picker-and-heading-container"}>
+        <Box className={"custom-color-picker-and-heading-container"} w={"100%"}>
           <h2>Color</h2>
           <CustomColorPicker
             value={input?.primaryColor}
             onChange={handleColorPickerChange}
+            withoutEyedropper
           />
         </Box>
       </Group>

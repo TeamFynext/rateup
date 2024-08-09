@@ -130,22 +130,17 @@ export function QuestionsSideBar({
           >
             Add Content
           </Button>
-          <InfoButton
-            className={styles["info-btn"]}
-            docUrl={`${docsPath}/webSurvey/EditSurvey`}
-          />
-          <Tooltip label={"Survey Preview"}>
-            <ActionIcon
-              className={styles["survey-preview-btn"]}
-              variant="light"
-              onClick={() => {
-                setSelectedQ(null);
-                setActiveTab(QuestionTabsEnum.SurveyPreview);
-              }}
-            >
-              <IconPlayerPlay />
-            </ActionIcon>
-          </Tooltip>
+
+          <Button
+            className={styles["survey-preview-btn"]}
+            variant="light"
+            onClick={() => {
+              setSelectedQ(null);
+              setActiveTab(QuestionTabsEnum.SurveyPreview);
+            }}
+          >
+            View
+          </Button>
         </Group>
       )}
 

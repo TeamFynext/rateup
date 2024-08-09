@@ -1,10 +1,32 @@
 .styles-component-root-div {
   height: 100%;
+  gap: 0.875rem;
+}
+
+.theme-selector-div {
+  padding: 0.875rem;
+  padding-bottom: 0;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.theme-selector-div :global(.choose-theme-dropdown) {
+  width: 100%;
+}
+
+.theme-selector-div > :global(.create-theme-btn) {
+  padding: 0.3125rem 1rem;
+  margin-bottom: 0;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  align-self: auto;
 }
 
 .expand-all-collapse-all-btn-container {
-  padding: 0.875rem;
-  padding-bottom: 0;
+  padding: 0 0.875rem;
 }
 
 .expand-all-collapse-all-btn-container button {
@@ -12,7 +34,13 @@
   font-size: 0.75rem;
   height: auto;
   line-height: normal;
-  padding: 0.3125rem 1rem;
+  padding: 0.3125rem 0.625rem;
+  flex: 1;
+}
+
+.expand-all-collapse-all-btn-container button :global(.mantine-Button-section) {
+  margin-right: 0;
+  font-size: 0.625rem;
 }
 
 .styles-component-div {
@@ -25,6 +53,34 @@
 
 .styles-component-div :global(.custom-color-picker-container) {
   max-width: 18.75rem;
+}
+
+.styles-component-root-div
+  .styles-component-div
+  :global(.custom-color-picker-container button),
+.styles-component-root-div
+  .styles-component-div
+  :global(.custom-color-picker-container input) {
+  height: 2rem;
+}
+
+.styles-component-root-div
+  .styles-component-div
+  :global(.custom-color-picker-container .color-indicator) {
+  width: 2rem;
+  border-radius: 50%;
+}
+
+.styles-component-div :global(.local-or-unsplash-image-picker-div) {
+  width: auto;
+  gap: 0.625rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.styles-component-div :global(.local-or-unsplash-image-picker-label) {
+  flex: initial;
+  display: none;
 }
 
 .editor-select-dropdown {
@@ -89,8 +145,9 @@
 }
 
 .styles-component-div :global(.custom-color-picker-and-heading-container) h2 {
-  font-size: 1rem;
-  margin-bottom: 1rem;
+  color: var(--mantine-color-gray-7);
+  font-size: 0.75rem;
+  margin-bottom: 0.3125rem;
   font-weight: 500;
 }
 
@@ -111,7 +168,7 @@
 /* Individual Styles components like BackgrounsStyles,ButtonStyles, others styles */
 .style-inputs-container {
   width: 100%;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .logo-styles-number-inputs-container {
@@ -124,6 +181,51 @@
 
 .logo-styles-logo-upload-file-input-container {
   justify-content: center;
+}
+
+.header-styles :global(.mantine-Input-input),
+.desc-styles :global(.mantine-Input-input),
+.logo-styles :global(.mantine-Input-input) {
+  border-radius: 0.75rem;
+}
+
+.header-styles :global(.mantine-NumberInput-root .mantine-NumberInput-section),
+.desc-styles :global(.mantine-NumberInput-root .mantine-NumberInput-section),
+.logo-styles :global(.mantine-NumberInput-root .mantine-NumberInput-section) {
+  right: 4px;
+}
+
+.header-styles
+  :global(
+    .mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]
+  ),
+.desc-styles
+  :global(
+    .mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]
+  ),
+.logo-styles
+  :global(
+    .mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]
+  ) {
+  border-top-right-radius: 0.75rem;
+}
+
+.header-styles
+  :global(
+    .mantine-NumberInput-root
+      .mantine-NumberInput-control[data-direction="down"]
+  ),
+.desc-styles
+  :global(
+    .mantine-NumberInput-root
+      .mantine-NumberInput-control[data-direction="down"]
+  ),
+.logo-styles
+  :global(
+    .mantine-NumberInput-root
+      .mantine-NumberInput-control[data-direction="down"]
+  ) {
+  border-bottom-right-radius: 0.75rem;
 }
 
 .close-save-btns-container {
@@ -146,4 +248,17 @@
 
 .save-btn-div button {
   width: 100%;
+}
+
+.font-weight-popover-container > div {
+  min-width: 115px;
+}
+
+.button-position-input input {
+  font-size: 0.875rem;
+  height: 2.25rem;
+}
+
+.button-position-input-container > div {
+  min-width: 120px;
 }

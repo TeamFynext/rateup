@@ -16,13 +16,7 @@ const cx = classNames.bind(styles);
 function SurveyTheme({
   survey,
   initialSelectedPageTab = undefined,
-  closeStylesEditorDrawer,
-  allThemesArr,
-  themeSelectorState,
-  setThemeSelectorState,
-  isAllThemesFetchPending,
   isThemeObjBeingEditedDefaultTheme,
-  themeObjBeingEdited,
   openStylesEditorDrawer,
   openSurveyPreviewModal,
   previewId,
@@ -47,18 +41,7 @@ function SurveyTheme({
       <Stack
         className={`${styles["survey-editor-page-header"]} survey-editor-page-header`}
       >
-        <Group gap={"2rem"} justify="space-between">
-          {isSelectedPagetabSurvey && (
-            <ThemeSelector
-              className={cx("theme-selector-div")}
-              allThemesArr={allThemesArr}
-              themeSelectorState={themeSelectorState}
-              setThemeSelectorState={setThemeSelectorState}
-              isAllThemesFetchPending={isAllThemesFetchPending}
-              survey={survey}
-            />
-          )}
-
+        <Group gap={"2rem"} justify={"flex-end"}>
           <Group>
             {isSelectedPagetabSurvey && (
               <Button
@@ -66,7 +49,7 @@ function SurveyTheme({
                 leftSection={<IconPlayerPlay size={"1rem"} />}
                 onClick={openSurveyPreviewModal}
               >
-                Preview Survey
+                Preview
               </Button>
             )}
 
@@ -75,7 +58,7 @@ function SurveyTheme({
               leftSection={<IconEdit size={"1rem"} />}
               onClick={() => openStylesEditorDrawer()}
             >
-              Edit Theme
+              {isSelectedPagetabSurvey ? "Edit Theme" : "Edit Page"}
             </Button>
           </Group>
         </Group>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Breadcrumbs, Group, Text } from "@mantine/core";
+import { Breadcrumbs, Flex, Group, Text } from "@mantine/core";
 import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
 
 import { useSubscription } from "../../../backend/subscription/subscription.query";
@@ -49,8 +49,9 @@ export const Navbar = () => {
       </Link>
     ));
   return (
-    <Group justify="space-between" h={37}>
+    <Group className={styles["navbar-root-div"]}>
       <Breadcrumbs
+        className={styles["breadcrumbs"]}
         separator={
           <IconChevronRight size={15} color="var(--mantine-color-gray-6)" />
         }
@@ -60,7 +61,18 @@ export const Navbar = () => {
         </Link>
         {items}
       </Breadcrumbs>
-      <Group justify="flex-end">
+      {/* 
+        Below tabs container is currently being used in web SurveyId Component, to render tabs of that page here using portal
+      */}
+      <Flex
+        id={"tabs-container-entity-editor-tabs"}
+        className={styles["tabs-container"]}
+      >
+        {/* Tabs will be rendered here */}
+      </Flex>
+      <Group
+        className={styles["language-selector-and-other-options-container"]}
+      >
         {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
           <ExpiryComponent expiryDate={subscription?.expiresAt}>
             <RateupButtonPrimary
