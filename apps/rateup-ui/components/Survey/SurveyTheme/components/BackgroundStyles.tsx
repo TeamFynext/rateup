@@ -162,10 +162,4 @@ function BackgroundStyles() {
   );
 }
 
-// export function getFileName(url: string | File, isNewFile: boolean): ReactNode {
-//   if (isNewFile || typeof url === "string") return <>{url}</>;
-//   const pattern = /^[^-]+-/;
-//   return url.name.replace(pattern, "");
-// }
-
 export default BackgroundStyles;
