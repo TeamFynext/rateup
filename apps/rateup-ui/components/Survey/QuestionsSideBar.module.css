@@ -14,18 +14,22 @@
   padding: 0.625rem 1rem;
   font-weight: bold;
   border-radius: 0.625rem;
+  min-width: 7.5rem;
+  flex: 1.7;
 }
 
 .add-question-btn-more-than-1-que .add-content-btn svg path {
   stroke: 2;
 }
 
-.add-question-btn-more-than-1-que .info-btn,
 .add-question-btn-more-than-1-que .survey-preview-btn {
   height: auto;
   width: auto;
-  padding: 0.3125rem;
+  padding: 0.625rem 1rem;
   border-radius: 0.625rem;
+  min-width: 7.5rem;
+  flex: 1;
+  line-height: normal;
 }
 
 .questions-list-container {

@@ -117,11 +117,10 @@ function BackgroundStyles() {
       <Stack style={{ position: "relative" }}>
         {useSurveyBackground && <Overlay color="#FFFFFF" />}
         <RadioGroup
-          label="Choose the background"
           value={chooseBgRadioInputValue}
           onChange={handleChooseBackgroundRadioGroupChange}
         >
-          <Group mt={"1rem"} gap={"1.25rem"}>
+          <Group gap={"1.25rem"}>
             <Radio value={"color"} label="Color" />
             <Radio value={"image"} label="Image" />
           </Group>
@@ -132,6 +131,7 @@ function BackgroundStyles() {
             <CustomColorPicker
               value={bgColor}
               onChange={handleBgColorPickerChange}
+              withoutEyedropper
             />
           </Box>
         )}
@@ -162,10 +162,10 @@ function BackgroundStyles() {
   );
 }
 
-export default BackgroundStyles;
+// export function getFileName(url: string | File, isNewFile: boolean): ReactNode {
+//   if (isNewFile || typeof url === "string") return <>{url}</>;
+//   const pattern = /^[^-]+-/;
+//   return url.name.replace(pattern, "");
+// }
 
-export function getFileName(url: string | File, isNewFile: boolean): ReactNode {
-  if (isNewFile || typeof url === "string") return <>{url}</>;
-  const pattern = /^[^-]+-/;
-  return url.name.replace(pattern, "");
-}
+export default BackgroundStyles;

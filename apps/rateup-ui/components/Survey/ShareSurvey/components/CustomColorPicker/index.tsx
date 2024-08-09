@@ -1,9 +1,11 @@
-import { Flex, ColorPicker, Button, Popover, Text } from "@mantine/core";
-import { IconColorPicker } from "@tabler/icons-react";
+import { useCallback, useState } from "react";
+
+import { Box, Button, ColorPicker, Flex, Popover, Text } from "@mantine/core";
 import { useEyeDropper, useMediaQuery } from "@mantine/hooks";
+import { IconColorPicker } from "@tabler/icons-react";
+
 import styles from "./CustomColorPicker.module.css";
 import buttonStyles from "./MantineButtonStyles.module.css";
-import { useCallback, useState } from "react";
 
 enum Size {
   md = "md",
@@ -15,6 +17,8 @@ type CustomColorPickerProps = {
   value: string;
   onChange: any;
   size?: string;
+  elementToBeDisplayed?: React.ReactNode;
+  withoutEyedropper?: boolean;
 };
 
 function CustomColorPicker({
@@ -22,6 +26,8 @@ function CustomColorPicker({
   value,
   onChange,
   size = "md",
+  elementToBeDisplayed,
+  withoutEyedropper,
 }: CustomColorPickerProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
@@ -63,39 +69,48 @@ function CustomColorPicker({
   return (
     <Popover opened={isColorPickerOpen} onChange={setIsColorPickerOpen}>
       <Popover.Target>
-        <Flex
-          className={`${styles["custom-color-picker-container"]} custom-color-picker-container ${size === Size.md ? styles["size-md"] : ""} ${className}`}
-        >
-          <Button
-            className={`${styles["color-indicator"]} color-indicator`}
-            style={{ backgroundColor: value }}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            color={`${value}`}
-          />
-
-          <input
-            type="text"
-            className={`${styles["text-input-for-picking-color"]} text-input-for-picking-color`}
-            size={7}
-            maxLength={7}
-            value={!value?.length ? "#000000" : value}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            onChange={handleInputChange}
-          />
-
-          {!isEyeDroppersupported ? null : (
+        {elementToBeDisplayed ? (
+          <Flex
+            className={"custom-element-from-props"}
+            onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+          >
+            {elementToBeDisplayed}
+          </Flex>
+        ) : (
+          <Flex
+            className={`${styles["custom-color-picker-container"]} custom-color-picker-container ${size === Size.md ? styles["size-md"] : ""} ${className}`}
+          >
             <Button
-              className={`${styles["eye-dropper-btn"]} eye-dropper-btn`}
-              leftSection={<IconColorPicker />}
-              onClick={pickEyeDropperColor}
-              classNames={buttonStyles}
-            >
-              {"Eye Dropper"}
-            </Button>
-          )}
-        </Flex>
+              className={`${styles["color-indicator"]} color-indicator`}
+              style={{ backgroundColor: value }}
+              onBlur={handleBlur}
+              onFocus={handleFocus}
+              color={`${value}`}
+            />
+
+            <input
+              type="text"
+              className={`${styles["text-input-for-picking-color"]} text-input-for-picking-color`}
+              size={7}
+              maxLength={7}
+              value={!value?.length ? "#000000" : value}
+              onBlur={handleBlur}
+              onFocus={handleFocus}
+              onChange={handleInputChange}
+            />
+
+            {!isEyeDroppersupported || withoutEyedropper ? null : (
+              <Button
+                className={`${styles["eye-dropper-btn"]} eye-dropper-btn`}
+                leftSection={<IconColorPicker />}
+                onClick={pickEyeDropperColor}
+                classNames={buttonStyles}
+              >
+                {"Eye Dropper"}
+              </Button>
+            )}
+          </Flex>
+        )}
       </Popover.Target>
       <Popover.Dropdown>
         <ColorPicker

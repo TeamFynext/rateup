@@ -211,15 +211,9 @@ export function EditSurvey({
                               initialSelectedPageTab={
                                 inititalSelectedTabForSurveyThemeComp
                               }
-                              allThemesArr={allThemesArr}
-                              themeSelectorState={themeSelectorState}
-                              setThemeSelectorState={setThemeSelectorState}
-                              isAllThemesFetchPending={isAllThemesFetchPending}
                               isThemeObjBeingEditedDefaultTheme={
                                 isThemeObjBeingEditedDefaultTheme
                               }
-                              themeObjBeingEdited={themeObjBeingEdited}
-                              closeStylesEditorDrawer={closeStylesEditorDrawer}
                               openStylesEditorDrawer={openStylesEditorDrawer}
                               openSurveyPreviewModal={openSurveyPreviewModal}
                             />
@@ -310,15 +304,9 @@ export function EditSurvey({
                         inititalSelectedTabForSurveyThemeComp
                       }
                       survey={survey}
-                      allThemesArr={allThemesArr}
-                      themeSelectorState={themeSelectorState}
-                      setThemeSelectorState={setThemeSelectorState}
-                      isAllThemesFetchPending={isAllThemesFetchPending}
                       isThemeObjBeingEditedDefaultTheme={
                         isThemeObjBeingEditedDefaultTheme
                       }
-                      themeObjBeingEdited={themeObjBeingEdited}
-                      closeStylesEditorDrawer={closeStylesEditorDrawer}
                       openStylesEditorDrawer={openStylesEditorDrawer}
                       openSurveyPreviewModal={openSurveyPreviewModal}
                       isSurveyThemeEditView={true}
@@ -350,6 +338,10 @@ export function EditSurvey({
                     }
                     themeObjBeingEdited={themeObjBeingEdited}
                     closeStylesEditorDrawer={closeStylesEditorDrawer}
+                    allThemesArr={allThemesArr}
+                    themeSelectorState={themeSelectorState}
+                    setThemeSelectorState={setThemeSelectorState}
+                    isAllThemesFetchPending={isAllThemesFetchPending}
                   />
                 </PaperLayout>
               </motion.div>
@@ -366,15 +358,9 @@ export function EditSurvey({
             previewId={"survey-theme-prod-preview"}
             initialSelectedPageTab={inititalSelectedTabForSurveyThemeComp}
             survey={survey}
-            allThemesArr={allThemesArr}
-            themeSelectorState={themeSelectorState}
-            setThemeSelectorState={setThemeSelectorState}
-            isAllThemesFetchPending={isAllThemesFetchPending}
             isThemeObjBeingEditedDefaultTheme={
               isThemeObjBeingEditedDefaultTheme
             }
-            themeObjBeingEdited={themeObjBeingEdited}
-            closeStylesEditorDrawer={closeStylesEditorDrawer}
             openStylesEditorDrawer={openStylesEditorDrawer}
             openSurveyPreviewModal={openSurveyPreviewModal}
           />

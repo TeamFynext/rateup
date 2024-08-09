@@ -66,6 +66,7 @@ function ButtonStyles() {
         <CustomColorPicker
           value={button?.styles?.backgroundColor}
           onChange={handleBackgroundColorChange}
+          withoutEyedropper
         />
       </Box>
 
@@ -74,6 +75,7 @@ function ButtonStyles() {
         <CustomColorPicker
           value={button?.styles?.color}
           onChange={handleTextColorChange}
+          withoutEyedropper
         />
       </Box>
 
@@ -82,20 +84,32 @@ function ButtonStyles() {
           <h2>Button position</h2>
           <Flex gap={"sm"}>
             <ContainedSelection
+              className={styles["button-position-input"]}
               data={COORDINATESX}
               placeholder="X axis"
               defaultValue={button?.position?.x ?? COORDINATESX?.[1]}
               onChange={handleXCoOrdinateChange}
               allowDeselect={false}
               label={"x axis"}
+              comboboxProps={{
+                portalProps: {
+                  className: styles["button-position-input-container"],
+                },
+              }}
             />
             <ContainedSelection
+              className={styles["button-position-input"]}
               data={COORDINATESY}
               placeholder="Y axis"
               defaultValue={button?.position?.y ?? COORDINATESY?.[3]}
               onChange={handleYCoOrdinateChange}
               allowDeselect={false}
               label={"y axis"}
+              comboboxProps={{
+                portalProps: {
+                  className: styles["button-position-input-container"],
+                },
+              }}
             />
           </Flex>
         </Box>

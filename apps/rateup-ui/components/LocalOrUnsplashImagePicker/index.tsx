@@ -1,7 +1,9 @@
-import { ActionIcon, Box, Button } from "@mantine/core";
+import { useCallback } from "react";
+
+import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { useCallback } from "react";
+
 import mmCommonStyles from "../Modal/ModalManagerModals/mmCommonStyles.module.css";
 import styles from "./LocalOrUnsplashImagePicker.module.css";
 
@@ -27,27 +29,33 @@ function LocalOrUnsplashImagePicker({
   }, []);
 
   return (
-    <Box className={styles["local-or-unsplash-image-picker-div"]}>
-      <p className={styles["label-p"]}>
+    <Box
+      className={`${styles["local-or-unsplash-image-picker-div"]} local-or-unsplash-image-picker-div`}
+    >
+      <p
+        className={`${styles["label-p"]} local-or-unsplash-image-picker-label`}
+      >
         <span>{`${label}`}</span>
         <span>{` :`}</span>
       </p>
-      <Button
-        className={styles["upload-bg-img-btn"]}
-        leftSection={<IconUpload size={16} />}
-        onClick={handleUploadBtnClick}
-      >
-        Upload
-      </Button>
-      <Box className={styles["delete-bg-img-btn-container"]}>
-        <ActionIcon
-          className={styles["delete-bg-img-btn"]}
-          disabled={!value}
-          onClick={() => onImageSelected(null)}
+      <Group>
+        <Button
+          className={styles["upload-bg-img-btn"]}
+          leftSection={<IconUpload size={16} />}
+          onClick={handleUploadBtnClick}
         >
-          <IconTrash size={16} />
-        </ActionIcon>
-      </Box>
+          Upload
+        </Button>
+        <Box className={styles["delete-bg-img-btn-container"]}>
+          <ActionIcon
+            className={styles["delete-bg-img-btn"]}
+            disabled={!value}
+            onClick={() => onImageSelected(null)}
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Box>
+      </Group>
     </Box>
   );
 }

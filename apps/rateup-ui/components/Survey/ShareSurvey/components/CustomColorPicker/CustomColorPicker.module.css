@@ -1,8 +1,6 @@
 .custom-color-picker-container {
   display: flex;
   gap: 0.625rem;
-  width: fit-content;
-  /* max-width: 18.75rem; */
 }
 
 .color-indicator {
