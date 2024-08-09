@@ -37,6 +37,11 @@ import {
   initializeAuthClient,
   updateIntegrationByName,
 } from "../integrations/integrations.service";
+import {
+  addNewContactsToGroup,
+  createContactGroup,
+  getContactGroupByNameAndTeam,
+} from "../contact/contactGroup/contactGroup.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -1250,4 +1255,41 @@ export async function getResponseSummary(
       }),
     ]);
   return true;
+}
+
+export async function exportContactResponseToContacts(surveyId, orgId) {
+  const allResponse = await getAllResponses(surveyId);
+  const surveyTitle = allResponse[0].survey.title;
+  const contactResponses = allResponse.map((r) => ({
+    team: {
+      id: r.team.id,
+      name: r.team.name,
+    },
+    responses: r.responses.flatMap((res) =>
+      res.responses.filter((r) => r.type === QuestionType.Contact),
+    ),
+  }));
+
+  if (!contactResponses.length) return;
+
+  await Promise.all(
+    contactResponses.map(async (team) => {
+      let groupName = `_${surveyTitle}_${team.team.name}`;
+      const teamId = team.team.id;
+      const contacts = team.responses
+        .map((res) => res.response[QuestionType.Contact])
+        .filter((c) => c.phone)
+        .map((c) => ({
+          ...c,
+          phone: c.phone.slice(1),
+          source: `survey_import: ${surveyTitle}`,
+          email: undefined,
+        }));
+      if (!contacts.length) return;
+      let contactGroup = await getContactGroupByNameAndTeam(groupName, teamId);
+      if (!contactGroup)
+        contactGroup = await createContactGroup({ name: groupName, teamId });
+      await addNewContactsToGroup(contactGroup.id, contacts, orgId);
+    }),
+  );
 }
