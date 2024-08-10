@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Box,
@@ -6,14 +9,13 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import styles from "./ThemeSelector.module.css";
-import { useDisclosure } from "@mantine/hooks";
-import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "@mantine/form";
-import modalStyles from "styles/commonCssModules/modal.module.css";
-import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useRouter } from "next/router";
+import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
+import styles from "./ThemeSelector.module.css";
 
 function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
   const router = useRouter();
@@ -65,9 +67,13 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
   return (
     <>
       <Tooltip label="Create New Theme">
-        <ActionIcon className={styles["new-theme-btn"]} onClick={open}>
-          <IconPlus size={"1.25rem"} color="white" />
-        </ActionIcon>
+        <Button
+          className={`${styles["new-theme-btn"]} create-theme-btn`}
+          onClick={open}
+          rightSection={<IconPlus size={"1.25rem"} color="white" />}
+        >
+          Create Theme
+        </Button>
       </Tooltip>
 
       <Modal

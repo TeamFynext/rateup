@@ -11,8 +11,8 @@ const SelectedPageTabContext = createContext(null);
 
 const DispatchContext = createContext(null);
 
-const SelectedEditorContext = createContext("Background");
-const SetSelectedEditorContext = createContext(null);
+const OpenEditorsContext = createContext([]);
+const SetOpenEditorsContext = createContext(null);
 
 const SelectedPreviewContext = createContext("desktop");
 const SetSelectedPreviewContext = createContext(null);
@@ -27,13 +27,13 @@ function SurveyThemeContextProvider({
   const [state, dispatch] = useImmerReducer(surveyThemeReducer, {
     selectedPageTab,
     surveyTheme,
-    selectedEditor: "Background",
+    openEditors: [],
     selectedPreview: "desktop",
   });
 
-  const setSelectedEditor = (value) => {
+  const setOpenEditors = (value) => {
     dispatch({
-      type: "selected-editor-change",
+      type: "open-editors-change",
       payload: value,
     });
   };
@@ -46,7 +46,7 @@ function SurveyThemeContextProvider({
   };
 
   useEffect(() => {
-    setSelectedEditor("Background");
+    setOpenEditors([]);
   }, [state.selectedPageTab]);
 
   useEffect(() => {
@@ -68,15 +68,15 @@ function SurveyThemeContextProvider({
     <SurveyThemeContext.Provider value={state.surveyTheme}>
       <SelectedPageTabContext.Provider value={state.selectedPageTab}>
         <DispatchContext.Provider value={dispatch}>
-          <SelectedEditorContext.Provider value={state.selectedEditor}>
-            <SetSelectedEditorContext.Provider value={setSelectedEditor}>
+          <OpenEditorsContext.Provider value={state.openEditors}>
+            <SetOpenEditorsContext.Provider value={setOpenEditors}>
               <SelectedPreviewContext.Provider value={state.selectedPreview}>
                 <SetSelectedPreviewContext.Provider value={setSelectedPreview}>
                   {children}
                 </SetSelectedPreviewContext.Provider>
               </SelectedPreviewContext.Provider>
-            </SetSelectedEditorContext.Provider>
-          </SelectedEditorContext.Provider>
+            </SetOpenEditorsContext.Provider>
+          </OpenEditorsContext.Provider>
         </DispatchContext.Provider>
       </SelectedPageTabContext.Provider>
     </SurveyThemeContext.Provider>
@@ -95,12 +95,12 @@ function useSurveyThemeStateDispatch() {
   return useContext(DispatchContext);
 }
 
-function useSelectedEditor() {
-  return useContext(SelectedEditorContext);
+function useOpenEditors() {
+  return useContext(OpenEditorsContext);
 }
 
-function useSetSelectedEditor() {
-  return useContext(SetSelectedEditorContext);
+function useSetOpenEditors() {
+  return useContext(SetOpenEditorsContext);
 }
 
 function useSelectedPreview() {
@@ -116,8 +116,8 @@ export {
   useSurveyThemeContextValue,
   useSelectedPageTab,
   useSurveyThemeStateDispatch,
-  useSelectedEditor,
-  useSetSelectedEditor,
+  useOpenEditors,
+  useSetOpenEditors,
   useSelectedPreview,
   useSetSelectedPreview,
 };

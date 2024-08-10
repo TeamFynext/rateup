@@ -41,13 +41,14 @@ function HeaderStyles() {
 
   return (
     <Stack
-      className={`${styles["style-inputs-container"]} style-inputs-container header-style-inputs-container`}
+      className={`${styles["style-inputs-container"]} ${styles["header-styles"]} style-inputs-container header-style-inputs-container`}
     >
       <Box className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
           value={title.styles.color}
           onChange={handleColorChange}
+          withoutEyedropper
         />
       </Box>
       <Group wrap="nowrap" gap={"xs"}>
@@ -58,6 +59,11 @@ function HeaderStyles() {
           value={title.styles.fontWeight}
           classNames={{ label: styles["label"] }}
           onChange={handleFontWeightChange}
+          comboboxProps={{
+            portalProps: {
+              className: styles["font-weight-popover-container"],
+            },
+          }}
         />
         <NumberInput
           min={10}

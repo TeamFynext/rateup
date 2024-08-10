@@ -1,8 +1,6 @@
-import { useRouter } from "next/router";
 import { useState } from "react";
-import { UserCardInterface } from "./LeftNavbar";
-import { useNavBottomData } from "./navbar.constants";
-import styles from "./Navbar.module.css";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Avatar,
@@ -10,13 +8,18 @@ import {
   Box,
   Group,
   Menu,
+  rem,
   Text,
   ThemeIcon,
-  rem,
 } from "@mantine/core";
-import { UserRole } from "../../../utils/enums";
 import { IconChevronRight } from "@tabler/icons-react";
-import { surveyUploadsPath } from "../../../utils/constants";
+
+import { UserCardInterface } from "../..";
+import { surveyUploadsPath } from "../../../../../../utils/constants";
+import { UserRole } from "../../../../../../utils/enums";
+import { useNavBottomData } from "../../../navbar.constants";
+import styles from "./NavbarFooter.module.css";
+
 const NavbarFooter = (props: UserCardInterface) => {
   const router = useRouter();
   const bottomNavData = useNavBottomData();

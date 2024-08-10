@@ -1,13 +1,15 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { luminance, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
 import { DatePickerInput } from "@mantine/dates";
-import { IconCalendarEvent } from "@tabler/icons-react";
-import FormPaperLayout from "./layout/FormPaperLayout";
 import { useOs } from "@mantine/hooks";
+import { IconCalendarEvent } from "@tabler/icons-react";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import classes from "../TakeSurvey.module.css";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function DateForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -25,7 +27,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
   const os = useOs();
   const isMobile =
     os === "android" || os === "ios" || selectedPreview === "mobile";
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
 
   useEffect(() => {

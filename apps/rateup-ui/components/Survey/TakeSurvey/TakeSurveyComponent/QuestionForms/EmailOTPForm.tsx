@@ -1,32 +1,34 @@
+import { useContext, useEffect, useState } from "react";
+
 import {
+  Button,
   PinInput,
   Stack,
-  TextInput,
   Text,
-  Button,
+  TextInput,
   useMantineTheme,
 } from "@mantine/core";
-import FormPaperLayout from "./layout/FormPaperLayout";
-import { useContext, useEffect, useState } from "react";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconMail } from "@tabler/icons-react";
-import classes from "../TakeSurvey.module.css";
-import { handleInputScrollIntoView } from "../util";
+
 import {
   useSendOTPEmail,
   useValidateOtp,
 } from "../../../../../backend/surveys/surveys.query";
-import { showErrorToast } from "../../../../../utils/notifications";
-import { emailPattern } from "../../../../../utils/constants";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
-import { useMediaQuery } from "@mantine/hooks";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { emailPattern } from "../../../../../utils/constants";
+import { showErrorToast } from "../../../../../utils/notifications";
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
+import classes from "../TakeSurvey.module.css";
+import { handleInputScrollIntoView } from "../util";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const survey = !isPreview ? useSurveyContext() : null;
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
   const { selectedQ } = useContext(SelectedQContext);
   const [otp, setOTP] = useState("");
   const [email, setEmail] = useState("");

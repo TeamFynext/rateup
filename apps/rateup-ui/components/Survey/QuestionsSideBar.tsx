@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
-import { IconPlayerPlay, IconPlus } from "@tabler/icons-react";
+import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -38,6 +38,8 @@ interface QuestionsSideBarProps {
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   isWaSurvey?: boolean;
   survey?: Survey;
+  openStylesEditorDrawer?: () => void;
+  openSurveyPreviewModal?: () => void;
 }
 export function QuestionsSideBar({
   questions,
@@ -48,7 +50,8 @@ export function QuestionsSideBar({
   isWaSurvey,
   surveyLanguages,
   setSelectedLanguage,
-  survey,
+  openStylesEditorDrawer,
+  openSurveyPreviewModal,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -130,20 +133,24 @@ export function QuestionsSideBar({
           >
             Add Content
           </Button>
-          <InfoButton
-            className={styles["info-btn"]}
-            docUrl={`${docsPath}/webSurvey/EditSurvey`}
-          />
-          <Tooltip label={"Survey Preview"}>
+
+          <Tooltip label="Survey Preview">
             <ActionIcon
               className={styles["survey-preview-btn"]}
               variant="light"
-              onClick={() => {
-                setSelectedQ(null);
-                setActiveTab(QuestionTabsEnum.SurveyPreview);
-              }}
+              onClick={openSurveyPreviewModal}
             >
               <IconPlayerPlay />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label="Edit Theme">
+            <ActionIcon
+              className={styles["edit-theme-btn"]}
+              variant="light"
+              onClick={openStylesEditorDrawer}
+            >
+              <IconEdit />
             </ActionIcon>
           </Tooltip>
         </Group>

@@ -24,7 +24,7 @@ import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import surveyThemeStyles from "../../../SurveyTheme.module.css";
 import {
   useSelectedPreview,
-  useSetSelectedEditor,
+  useSetOpenEditors,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
@@ -35,7 +35,7 @@ const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
 
 function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
   const selectedPreview = useSelectedPreview();
-  const setSelectedEditor = useSetSelectedEditor();
+  const setOpenEditors = useSetOpenEditors();
 
   const subtitleInputRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -152,7 +152,7 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
                   value={subtitle}
                   onChange={handleSubtitleInputChange}
                   ref={subtitleInputRef}
-                  onFocus={() => setSelectedEditor(SelectedItemEnum.SUBTITLE)}
+                  onFocus={() => setOpenEditors(["desc-styles"])}
                   autoComplete="off"
                 />
 
@@ -186,7 +186,7 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
                   value={title}
                   onChange={handleTitleInputChange}
                   ref={titleInputRef}
-                  onFocus={() => setSelectedEditor(SelectedItemEnum.TITLE)}
+                  onFocus={() => setOpenEditors(["title-styles"])}
                   autoComplete="off"
                 />
 
@@ -264,7 +264,7 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
                   />
                 }
                 ref={startBtnInputRef}
-                onFocus={() => setSelectedEditor(SelectedItemEnum.BUTTON)}
+                onFocus={() => setOpenEditors(["button-styles"])}
                 styles={{
                   input: {
                     color: buttonStyles.color,

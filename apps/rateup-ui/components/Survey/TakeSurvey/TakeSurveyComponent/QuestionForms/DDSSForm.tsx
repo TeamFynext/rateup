@@ -7,7 +7,7 @@ import { CurrentResponsesContext } from "../../../../../context/ResponseContext"
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import { sampleChoices } from "../../../../../utils/constants/forms";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import CustomSelectForMobile from "../components/CustomSelectForMobile";
 import classes from "../TakeSurvey.module.css";
@@ -27,7 +27,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
     ? choices

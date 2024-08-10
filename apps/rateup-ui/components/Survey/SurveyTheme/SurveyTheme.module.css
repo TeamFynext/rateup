@@ -19,7 +19,6 @@
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;
-  padding: 0.3125rem;
   max-height: 800px;
 }
 
@@ -34,6 +33,7 @@
 }
 
 .theme-preview-container {
+  box-shadow: none;
   flex: 0.72 0 0;
 }
 
@@ -48,11 +48,6 @@
   z-index: 100;
   background-color: white;
   border-radius: 0.3125rem;
-}
-
-.theme-preview-container :global(.welcome-tab-preview-device-selector) {
-  left: 0.75rem;
-  right: initial;
 }
 
 .survey-theme-preview-tab-panels-root {
@@ -86,24 +81,12 @@
 .survey-theme-preview-layout-div {
   height: 100%;
   width: 100%;
-  padding: 0.4375rem;
-}
-
-.survey-theme-preview-layout-div > div > div {
-  box-shadow:
-    rgba(0, 0, 0, 0.05) 0px 1px 0px,
-    rgba(0, 0, 0, 0.11) 0px 0px 8px;
-  border-radius: 1rem;
 }
 
 .survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
   height: 100%;
   overflow: hidden;
   border-radius: 1rem;
-}
-
-.theme-selector-div {
-  padding: 0.625rem 1rem;
 }
 
 .styles-component-container {
@@ -166,78 +149,17 @@
   background-color: light-dark(#ffffff8e, #2e2e2ec0);
 }
 
-/* Survey Editor Header styles which contains options for editing welcome theme and thankyou theme */
+/* Survey Editor Header styles */
 .survey-editor-page-header {
   padding: 0.3125rem;
 }
 
-.survey-editor-page-header > div {
-  box-shadow:
-    rgba(0, 0, 0, 0.05) 0px 1px 0px,
-    rgba(0, 0, 0, 0.11) 0px 0px 8px;
-  padding: 0.875rem 1.25rem;
-  border-radius: 1rem;
-}
-
-.survey-editor-page-header-save-btn {
-  margin-left: auto;
+.preview-survey-btn,
+.edit-theme-btn {
+  border-radius: 2rem;
 }
 
 .selected-page-tab-panels-and-styles-div-container {
   flex: 1 1 0;
   overflow: auto;
-}
-
-.survey-editor-page-header .theme-selector-div {
-  box-shadow: none;
-  padding: 0;
-}
-
-.survey-editor-page-header :global(.styles-component-div) {
-  box-shadow:
-    rgba(0, 0, 0, 0.05) 0px 1px 0px,
-    rgba(0, 0, 0, 0.11) 0px 0px 8px;
-  border-radius: 1rem;
-  padding: 1rem;
-}
-
-.survey-editor-page-header .theme-selector-div :global(.choose-theme-dropdown) {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.survey-editor-page-header .theme-selector-div label {
-  font-size: 1rem;
-}
-
-.survey-editor-page-header .theme-selector-div :global(.mantine-Input-input) {
-  min-width: 18.75rem;
-}
-
-.survey-editor-page-header :global(.save-button-root-div) {
-  width: auto;
-}
-
-.survey-editor-page-header :global(.style-inputs-container) {
-  gap: 2rem;
-  flex-direction: row;
-}
-
-.survey-editor-page-header :global(.background-style-inputs-div) {
-  align-items: center;
-}
-
-.survey-editor-page-header :global(.header-style-inputs-container),
-.survey-editor-page-header :global(.desc-style-inputs-container) {
-  align-items: flex-end;
-}
-
-.survey-editor-page-header :global(.logo-style-inputs-container) {
-  align-items: flex-end;
-}
-
-.survey-editor-page-header
-  :global(.logo-style-inputs-container .upload-logo-divider) {
-  display: none;
 }

@@ -264,7 +264,7 @@ const ShareSurvey = ({
   );
 
   return (
-    <Stack p={"0.3125rem"} pr={"0.625rem"}>
+    <Stack p={"0.3125rem"} pr={"0.625rem"} pb={"2rem"}>
       <PaperLayout>
         <Group justify="space-between">
           {isScheduled ? (

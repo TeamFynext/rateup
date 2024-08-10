@@ -1,9 +1,10 @@
 import { ActionIcon, Avatar, Box, Group, Text } from "@mantine/core";
 import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react";
-import { UserCardInterface } from "./LeftNavbar";
-
 import classNames from "classnames/bind";
-import styles from "./Navbar.module.css";
+
+import { UserCardInterface } from "../..";
+import styles from "./NavbarHeader.module.css";
+
 const cx = classNames.bind(styles);
 
 const NavbarHeader = (props: UserCardInterface) => {

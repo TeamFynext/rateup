@@ -1,20 +1,22 @@
+import React, { useRef } from "react";
+
 import {
+  alpha,
   Checkbox,
   Image,
+  isLightColor,
   Radio,
   SimpleGrid,
   Stack,
   Text,
   UnstyledButton,
-  alpha,
-  isLightColor,
   useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
 import cx from "clsx";
-import React, { useRef } from "react";
+
 import { getImageValue } from "../../../../../utils/file-upload/upload";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import classes from "./ImageCheckboxes.module.css";
 
@@ -169,7 +171,7 @@ export function SingleSelectCard({
     />
   ));
 
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
   const surveyThemeMobilePreview =
     isSurveyThemePreview && selectedPreview === "mobile";

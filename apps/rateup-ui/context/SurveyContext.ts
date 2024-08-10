@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
 type ISurveyCtx = {
   surveyId?: string;

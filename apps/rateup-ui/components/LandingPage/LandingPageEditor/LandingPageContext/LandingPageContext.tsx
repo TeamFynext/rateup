@@ -76,7 +76,6 @@ function LandingPageContextProvider({
     ],
     content: tiptapEditorContent,
     onUpdate: ({ editor }) => {
-      //  console.log(editor);
       handleEditorContentSave(editor);
     },
     editorProps: {

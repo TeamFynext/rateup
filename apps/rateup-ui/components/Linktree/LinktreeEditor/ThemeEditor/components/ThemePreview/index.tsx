@@ -27,7 +27,6 @@ function ThemePreview() {
 
   const linktreeObj = useLinktreeObj();
   const links = linktreeObj?.links || [];
-  console.log("From ThemePreveiw", "Frdlfsokmfs thee", links);
 
   const themeDispatch = useThemeDispatch();
 

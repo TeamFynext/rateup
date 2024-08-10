@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import {
   Button,
   Flex,
@@ -7,14 +7,16 @@ import {
   isLightColor,
   useMantineTheme,
 } from "@mantine/core";
+import classNames from "classnames/bind";
 import { useAnimate } from "framer-motion";
+
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import styles from "./OpinionScaleForm.module.css";
-import classNames from "classnames/bind";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
-import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 const cx = classNames.bind(styles);
 interface iProps {
@@ -64,7 +66,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
     }
   };
 
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
   const surveyThemeMobilePreview =
     isSurveyThemePreview && selectedPreview === "mobile";

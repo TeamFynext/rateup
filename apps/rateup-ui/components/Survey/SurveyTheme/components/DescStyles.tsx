@@ -41,13 +41,14 @@ function DescStyles() {
 
   return (
     <Stack
-      className={`${styles["style-inputs-container"]} style-inputs-container desc-style-inputs-container`}
+      className={`${styles["style-inputs-container"]} ${styles["desc-styles"]} style-inputs-container desc-style-inputs-container`}
     >
       <Box className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
           value={subtitle?.styles?.color}
           onChange={handleColorChange}
+          withoutEyedropper
         />
       </Box>
       <Group wrap="nowrap" gap={"xs"}>

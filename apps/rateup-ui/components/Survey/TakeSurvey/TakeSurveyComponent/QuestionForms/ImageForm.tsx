@@ -1,5 +1,5 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import { ReactNode, useContext, useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   Box,
@@ -11,11 +11,18 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { uploadFile } from "../../../../../utils/file-upload/upload";
 import { IconX } from "@tabler/icons-react";
-import { getFileName } from "../../../SurveyTheme/components/BackgroundStyles";
-import styles from "./ImageForm.module.css";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
+import { uploadFile } from "../../../../../utils/file-upload/upload";
+import styles from "./ImageForm.module.css";
+
+export function getFileName(url: string | File, isNewFile: boolean): ReactNode {
+  if (isNewFile || typeof url === "string") return <>{url}</>;
+  const pattern = /^[^-]+-/;
+  return url.name.replace(pattern, "");
+}
 
 export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);

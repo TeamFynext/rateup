@@ -99,11 +99,11 @@ function LogoStyles() {
 
   return (
     <Stack
-      className={`${styles["style-inputs-container"]} style-inputs-container ${styles["logo-styles-div"]} logo-style-inputs-container`}
+      className={`${styles["style-inputs-container"]} style-inputs-container ${styles["logo-styles"]} logo-style-inputs-container`}
     >
       <Group
         wrap="nowrap"
-        gap="xs"
+        gap="lg"
         className={styles["logo-styles-number-inputs-container"]}
       >
         <NumberInput
@@ -129,23 +129,9 @@ function LogoStyles() {
       </Group>
 
       <Stack>
-        <Divider
-          className="upload-logo-divider"
-          label="Upload Logo"
-          variant="dashed"
-          w={"100%"}
-        />
         <Group
           className={styles["logo-styles-logo-upload-file-input-container"]}
         >
-          <Group gap={"xs"}>
-            <ThemeIcon>
-              <IconStar size={15} />
-            </ThemeIcon>
-            <Text fw={100} c={"dark"} size="xs">
-              Logo :{" "}
-            </Text>
-          </Group>
           <Group>
             <FileButton
               onChange={handleFileInputChange}
@@ -159,7 +145,7 @@ function LogoStyles() {
                   size="xs"
                   {...props}
                 >
-                  Upload Image
+                  Upload
                 </Button>
               )}
             </FileButton>

@@ -1,3 +1,5 @@
+import React, { useRef } from "react";
+
 import {
   Box,
   Checkbox,
@@ -7,8 +9,8 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
-import React, { useRef } from "react";
-import { useIsSurveyThemePreviewContext } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreveiwContext";
+
+import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import classes from "./ImageCheckboxes.module.css";
 
@@ -122,7 +124,7 @@ export function MultipleSelectCard({
   ));
 
   const colsCount = { base: 1, xs: 2, sm: 3, md: 4 };
-  const isSurveyThemePreview = useIsSurveyThemePreviewContext();
+  const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
   const surveyThemeMobilePreview =
     isSurveyThemePreview && selectedPreview === "mobile";

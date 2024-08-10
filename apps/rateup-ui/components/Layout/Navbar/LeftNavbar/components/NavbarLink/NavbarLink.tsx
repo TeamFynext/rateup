@@ -136,7 +136,7 @@ function NavbarLink({
                             <Icon
                               size={18}
                               color={
-                                !router.pathname?.startsWith(href)
+                                router.pathname !== href
                                   ? "grey"
                                   : "var(--tertiary-color)"
                               }
@@ -146,7 +146,7 @@ function NavbarLink({
                             href && router.push(href);
                             setActive(parentIndex);
                           }}
-                          active={router.pathname?.startsWith(href)}
+                          active={router.pathname === href}
                         />
                       </Tooltip>
                       <Divider opacity={0.5} />

@@ -1,3 +1,4 @@
+import { getContent } from ".";
 import {
   PageDescription,
   PageTitle,
@@ -125,7 +126,7 @@ export function validateAllLanguagesArePopulated(
       languages.forEach((language: string) => {
         if (
           !question[key][language] ||
-          question[key][language] == "<p></p><p></p><p></p>"
+          !getContent(question[key][language]).trim().length
         ) {
           if (!missingLangs.includes(language)) missingLangs.push(language);
         }
