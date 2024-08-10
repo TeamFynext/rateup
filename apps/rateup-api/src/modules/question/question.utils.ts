@@ -264,8 +264,13 @@ export function getTitleAndDescriptionObjs(languages, type) {
   const title = {};
   const description = {};
   languages.forEach((language) => {
-    (title[language] = `${type} Page`),
-      (description[language] = `This is the ${type} page of the survey`);
+    if (type !== PageType.Custom) {
+      title[language] = `${type} Page`;
+      description[language] = `This is the ${type} page of the survey`;
+    } else {
+      title[language] = "<p>Custom HTML Page</p>";
+      description[language] = " ";
+    }
   });
   return {
     title,
@@ -284,13 +289,6 @@ export function getPageQuestions(languages) {
       ...getTitleAndDescriptionObjs(languages, "Language"),
     });
   }
-  questionsArr.push({
-    id: "thankyou-page",
-    type: "ThankYou",
-    required: true,
-    enableNpsAnalytics: false,
-    ...getTitleAndDescriptionObjs(languages, "ThankYou"),
-  });
   return questionsArr;
 }
 
@@ -302,6 +300,55 @@ export function getPageTypeQuestionObj(languages, type) {
     enableNpsAnalytics: false,
     ...getTitleAndDescriptionObjs(languages, type),
   };
+}
+
+export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
+  questionsArr,
+  languagesArr,
+) {
+  let questionsArrCopy = cloneDeep(questionsArr);
+  if (languagesArr?.length) {
+    const languagePageObj = questionsArrCopy.find(
+      (question) =>
+        question.type === (PageType.Language as unknown as QuestionType),
+    );
+    if (languagesArr?.length > 1) {
+      if (!languagePageObj) {
+        const [newLanguagePageObj] = getPageQuestions(languagesArr);
+        if (
+          questionsArrCopy[0].type ===
+          (PageType.Welcome as unknown as QuestionType)
+        ) {
+          questionsArrCopy.splice(1, 0, newLanguagePageObj);
+        } else {
+          questionsArrCopy.splice(0, 0, newLanguagePageObj);
+        }
+      }
+    } else if (languagesArr?.length === 1) {
+      const newQuestionsArr = questionsArrCopy.filter((question) => {
+        return question.type !== (PageType.Language as unknown as QuestionType);
+      });
+      questionsArrCopy = newQuestionsArr;
+    }
+  }
+  const resultArr = questionsArrCopy.map((questionObj) => {
+    const questionType = questionObj.type;
+    if (Object.values(PageType).includes(questionType)) {
+      languagesArr.forEach((language) => {
+        if (questionType !== PageType.Custom) {
+          questionObj.title[language] = `${questionType} Page`;
+          questionObj.description[language] =
+            `This is the ${questionType} page of the survey`;
+        } else {
+          if (!questionObj.title[language]?.trim().length) {
+            questionObj.title[language] = "<p>Custom HTML Page</p>";
+          }
+        }
+      });
+    }
+    return questionObj;
+  });
+  return resultArr;
 }
 
 // GR => GoogleReview
