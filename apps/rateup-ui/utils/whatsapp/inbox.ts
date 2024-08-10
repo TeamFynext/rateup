@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+
+import { WaTemplateDefaultValues } from "../../components/whatsapp/templates/Schema/templateSchema";
 import {
   WaInboxMessage,
   WaSendMessageBody,
@@ -6,7 +8,6 @@ import {
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "../../types/global";
-import { WaTemplateDefaultValues } from "../../components/whatsapp/templates/Schema/templateSchema";
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;
@@ -122,7 +123,7 @@ export function validateInboxTemplateSending(
   sendTemplateComponents: WaTemplateComponent[],
   defaultValues: WaTemplateDefaultValues,
 ) {
-  return createTemplateComponents.map((componentC) => {
+  return createTemplateComponents?.map((componentC) => {
     switch (componentC.type) {
       case "HEADER":
         const sendHeaderComponent = sendTemplateComponents.find(

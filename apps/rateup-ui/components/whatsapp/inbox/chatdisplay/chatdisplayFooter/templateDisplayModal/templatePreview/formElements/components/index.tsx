@@ -1,16 +1,22 @@
-import { Badge, Divider, Group, Paper, Text, rem } from "@mantine/core";
-import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
-import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
-import classes from "./styles.module.css";
-import { ContainedTextField } from "../../../../../../../../input/ContainedInput/ContainedInput";
 import { useState } from "react";
+
+import { Badge, Divider, Group, Paper, rem, Text } from "@mantine/core";
+import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
+import { useForm } from "@mantine/form";
+import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
+
+import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+
+import classes from "./styles.module.css";
+
 interface Props {
-  type: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION";
+  type: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT";
   buildtemplatequerycomponent: (
     component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
-    component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION",
+    component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT",
     component_data: any,
   ) => void;
+  exampleParams?: string[];
 }
 export default function WaTemplateFormComponents(props: Props) {
   switch (props?.type) {
@@ -34,6 +40,17 @@ export default function WaTemplateFormComponents(props: Props) {
           <Divider variant="dotted" />
           <WaLocationInputComponent
             buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
+          />
+        </Paper>
+      );
+    case "TEXT":
+      return (
+        <Paper className={classes.paper_wrapper}>
+          <Badge variant="light">{props?.type}</Badge>
+          <Divider variant="dotted" />
+          <WaBodyVariableInputComponent
+            buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
+            exampleParams={props.exampleParams}
           />
         </Paper>
       );
@@ -165,6 +182,40 @@ function WaLocationInputComponent({
           });
         }}
       />
+    </>
+  );
+}
+
+function WaBodyVariableInputComponent({
+  buildtemplatequerycomponent,
+  exampleParams,
+}: {
+  buildtemplatequerycomponent: (
+    component_type: "BODY",
+    component_format: "TEXT",
+    component_data: any,
+  ) => void;
+  exampleParams?: string[];
+}) {
+  const form = useForm({
+    initialValues: {
+      dynamicTags: exampleParams || [],
+    },
+    onValuesChange: (e) => {
+      buildtemplatequerycomponent("BODY", "TEXT", e.dynamicTags);
+    },
+  });
+
+  return (
+    <>
+      {exampleParams?.map((_, i) => (
+        <ContainedTextField
+          key={i}
+          label={`{{${i + 1}}}`}
+          placeholder="select a dynamic tag value"
+          {...form.getInputProps(`dynamicTags.${i}`)}
+        />
+      ))}
     </>
   );
 }

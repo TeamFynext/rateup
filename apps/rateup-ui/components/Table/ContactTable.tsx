@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+
 import { ActionIcon, Box, Divider, Flex, Group, Tooltip } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
@@ -15,6 +16,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+
+import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import {
   useDeleteManyContactGroupsMutation,
   useRemoveContactsFromGroup,
@@ -22,20 +25,20 @@ import {
 import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
 import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
+import InfoButton from "../Button/InfoButton";
 import { RateupButtonBlue } from "../Button/RateupButtons";
+import RefreshButton from "../Button/RefreshButton";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
 import {
   DETAIL_BTN,
-  WhatsappTableType,
   tabHeaderLabels,
+  WhatsappTableType,
 } from "../Contacts/utils/utils";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
-import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import styles from "./TanstackTable.module.css";
-import InfoButton from "../Button/InfoButton";
 
 function ContactTable({
   data,
@@ -239,11 +242,16 @@ function ContactTable({
             </Tooltip>
           )}
           {toggle ? (
-            <RateupButtonBlue
-              title={btnTitle}
-              rightIcon={<IconPlus />}
-              onClick={toggle}
-            />
+            <Group>
+              <RateupButtonBlue
+                title={btnTitle}
+                rightIcon={<IconPlus />}
+                onClick={toggle}
+              />
+              {groupId && (
+                <RefreshButton queryKeys={["campaignById", groupId]} />
+              )}
+            </Group>
           ) : (
             <Group gap={"sm"}>
               <OpenCreateMenu

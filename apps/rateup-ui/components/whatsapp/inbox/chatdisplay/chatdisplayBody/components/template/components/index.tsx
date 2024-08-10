@@ -1,11 +1,15 @@
+import React from "react";
+
 import { Button, Divider, Image, Stack, Text } from "@mantine/core";
-import classes from "./styles.module.css";
+import { IconMessageReply } from "@tabler/icons-react";
+
+import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating";
+
 import {
   WaTemplateComponent,
   WaTemplateFetchBodyComponent,
 } from "../../../../../../../../types/global";
-import { IconMessageReply } from "@tabler/icons-react";
-import React from "react";
+import classes from "./styles.module.css";
 
 interface Props {
   templateComponent: WaTemplateFetchBodyComponent;
@@ -21,7 +25,7 @@ export default function WaInboxTemplateComponents(props: Props) {
         />
       );
     case "BODY":
-      return <WaInboxTemplateBody {...props?.templateComponent} />;
+      return <WaInboxTemplateBody {...props} />;
     case "FOOTER":
       return <WaInboxTemplateFooter {...props?.templateComponent} />;
     case "BUTTONS":
@@ -64,8 +68,17 @@ const WaInboxTemplateHeader = (props: Props) => {
   }
 };
 
-const WaInboxTemplateBody = (props: WaTemplateFetchBodyComponent) => {
-  return <Text className={classes.body_text}>{props?.text}</Text>;
+const WaInboxTemplateBody = (props: Props) => {
+  return (
+    <Text className={classes.body_text}>
+      {TextWithFormatting(
+        props?.templateComponent?.text,
+        (props?.parameterData?.parameters?.map((data) => data?.text) ||
+          props?.templateComponent?.example?.body_text?.[0]) ??
+          [],
+      )}
+    </Text>
+  );
 };
 
 const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {

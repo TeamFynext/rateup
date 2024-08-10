@@ -1,9 +1,12 @@
-import { WaTemplateFetchBody } from "../../../../../../../../types/global";
-import { Divider, Paper, Stack, Text } from "@mantine/core";
-import classes from "./styles.module.css";
-import WaTemplateFormComponents from "./components";
 import { useCallback } from "react";
+
+import { Divider, Paper, Stack, Text } from "@mantine/core";
 import { Updater } from "use-immer";
+
+import { WaTemplateFetchBody } from "@/types/global";
+
+import WaTemplateFormComponents from "./components";
+import classes from "./styles.module.css";
 
 interface Props {
   setParameterData: Updater<any>;
@@ -36,6 +39,29 @@ export default function WaTemplateFormElements(props: Props) {
                     [component_format.toLowerCase()]: component_data,
                   },
                 ],
+              });
+            }
+          });
+          break;
+        case "BODY":
+          props?.setParameterData((draft: Array<any>) => {
+            const existingItem = draft.find((item) => {
+              return item.type === component_type.toLowerCase();
+            });
+            if (existingItem) {
+              component_data?.forEach((variable, i) => {
+                existingItem.parameters[i] = {
+                  type: "text",
+                  text: variable,
+                };
+              });
+            } else {
+              draft.push({
+                type: component_type.toLowerCase(),
+                parameters: component_data?.map((variable) => ({
+                  type: "text",
+                  text: variable,
+                })),
               });
             }
           });
@@ -81,7 +107,15 @@ export default function WaTemplateFormElements(props: Props) {
                   labelPosition="left"
                   className={classes.divider}
                 />
-                <NoParams type={"Body"} />
+                {component?.example?.body_text?.[0]?.length ? (
+                  <WaTemplateFormComponents
+                    type={"TEXT"}
+                    buildtemplatequerycomponent={buildtemplatequerycomponent}
+                    exampleParams={component?.example?.body_text?.[0]}
+                  />
+                ) : (
+                  <NoParams type={"Body"} />
+                )}
               </>
             );
           case "FOOTER":
