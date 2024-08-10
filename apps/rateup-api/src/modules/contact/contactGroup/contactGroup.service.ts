@@ -232,3 +232,17 @@ export async function deleteManyContactGroups(groupIds: string[]) {
     },
   });
 }
+
+export async function getContactGroupByNameAndTeam(
+  name: string,
+  teamId: string,
+) {
+  return await prisma.contactGroup.findUnique({
+    where: {
+      group_name_team_id_unique: {
+        name,
+        teamId,
+      },
+    },
+  });
+}

@@ -3,6 +3,7 @@ import { $Rref } from "./response.schema";
 import {
   deleteResponseHandler,
   downloadExcelResponseHandler,
+  exportContactResponseToContactsHandler,
   generateResponseHandler,
   getAllResponsesHandler,
   getResponsesHandler,
@@ -83,6 +84,11 @@ export async function responseRoutes(server: FastifyInstance) {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     syncResponseToGoogleSheetHandler,
+  );
+
+  server.post(
+    "/export-contacts/:surveyId",
+    exportContactResponseToContactsHandler,
   );
 
   server.post(
