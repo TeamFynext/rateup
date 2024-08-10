@@ -755,7 +755,7 @@ async function _sendCampaignToParticipants(
 
   for (const participant of campaign.campaignParticipants) {
     const { contact, id } = participant;
-
+    let copyComponents = [...components];
     if (
       !individualParticipantId &&
       !sendToStatuses.includes(
@@ -785,13 +785,13 @@ async function _sendCampaignToParticipants(
             : contact.tags?.[tag] || defaultValue[i];
         return { type: "text", text: textValue };
       });
-      components.push({
+      copyComponents.push({
         type: "body",
         parameters,
       });
     }
 
-    const updatedComponent = updateButtonText(components, contact.phone);
+    const updatedComponent = updateButtonText(copyComponents, contact.phone);
 
     // TODO: add rate limiting
     // https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#throughput
