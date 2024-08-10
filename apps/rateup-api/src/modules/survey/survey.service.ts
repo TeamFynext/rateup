@@ -26,7 +26,10 @@ import {
 import { offerArrayWithRange } from "../../utils/survey/offer";
 import { cloneDeep } from "lodash";
 import util from "util";
-import { getPageQuestions } from "../question/question.utils";
+import {
+  getPageQuestions,
+  getQuestionsArrUpdatedWithLanguageTypeQuestion,
+} from "../question/question.utils";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -817,38 +820,15 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
   let { teams, ...dataInput } = input;
 
-  let questions = fetchedSurvey.questions;
-
-  if (dataInput?.languages?.length) {
-    const languagePageObj = questions.find(
-      (question) =>
-        question.type === (PageType.Language as unknown as QuestionType),
-    );
-    if (dataInput?.languages?.length > 1) {
-      if (!languagePageObj) {
-        const [newLanguagePageObj, newThankyouPageObj] = getPageQuestions(
-          dataInput.languages,
-        );
-        if (
-          questions[0].type === (PageType.Welcome as unknown as QuestionType)
-        ) {
-          questions.splice(1, 0, newLanguagePageObj);
-          questions.splice(questions.length - 1, 1, newThankyouPageObj);
-        } else {
-          questions.splice(0, 0, newLanguagePageObj);
-          questions.splice(questions.length - 1, 1, newThankyouPageObj);
-        }
-      }
-    } else if (dataInput?.languages?.length === 1) {
-      const newQuestionsArr = questions.filter((question) => {
-        return question.type !== (PageType.Language as unknown as QuestionType);
-      });
-      questions = newQuestionsArr;
-    }
-  }
-
   const data = cloneDeep(dataInput);
-  data["questions"] = questions;
+
+  if (fetchedSurvey?.questions.length) {
+    const questions = await getQuestionsArrUpdatedWithLanguageTypeQuestion(
+      fetchedSurvey.questions,
+      dataInput.languages,
+    );
+    data["questions"] = questions;
+  }
 
   const survey = await prisma.survey.update({
     where: {

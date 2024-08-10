@@ -11,6 +11,7 @@ import {
   createResponse,
   deleteResponse,
   downloadExcelResponse,
+  exportContactResponseToContacts,
   generateResponse,
   getAllResponses,
   getResponses,
@@ -269,5 +270,21 @@ export async function summarizeResponseHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function exportContactResponseToContactsHandler(
+  request: FastifyRequest<{ Params: GetResponsesParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    await exportContactResponseToContacts(
+      request.params.surveyId,
+      request.user.orgId,
+    );
+    reply.code(200).send();
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ message: "Error exporting contacts" });
   }
 }

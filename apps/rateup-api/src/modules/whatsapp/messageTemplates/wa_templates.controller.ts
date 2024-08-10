@@ -421,6 +421,19 @@ export async function sendTemplateToUserHandler(
       },
       components: components,
     };
+    const defaultValue = dbTemplate?.data?.components?.find(
+      (data) => data.example?.body_text,
+    )?.example?.body_text?.[0];
+    if (defaultValue?.length > 0) {
+      let params = templateQuery?.components.find(
+        (component) => component.type === "body",
+      )?.parameters;
+      params?.forEach((data, i) => {
+        if (data?.text?.trim().length === 0) {
+          data.text = defaultValue?.[i];
+        }
+      });
+    }
     const templateMessage = createTemplateMessage(phone, templateQuery);
 
     orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
