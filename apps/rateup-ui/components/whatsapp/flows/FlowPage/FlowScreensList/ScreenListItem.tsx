@@ -145,11 +145,11 @@ function ScreenListItem({
       updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
     handlers.decrement();
-    const feNames = getFlowFormElementsFromScreen(screen, true).map(
+    const feNames = getFlowFormElementsFromScreen(screen, true)?.map(
       (fe) => fe.name,
     );
     updateMap((draft) => {
-      for (const feName of feNames) {
+      for (const feName of feNames || []) {
         delete draft[feName];
       }
     });
@@ -168,7 +168,7 @@ function ScreenListItem({
   function handleAddElementClick() {
     if (!flowEditable) return;
     const elements = getFlowFormElementsFromScreen(screen);
-    if (elements.length >= FlowMaxElementsPerScreen) {
+    if (elements?.length >= FlowMaxElementsPerScreen) {
       showErrorToast(
         `Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`,
       );

@@ -1,20 +1,23 @@
+import { useEffect, useState } from "react";
+
 import { Badge, Box, Group, Stack, Text } from "@mantine/core";
-import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { WaTemplateFetchBody } from "../../../../../../../types/global";
-import WaInboxTemplate from "../../../chatdisplayBody/components/template";
-import WaInboxSingleMessageLayout from "../../../chatdisplayBody/layout/singleMessageLayout";
-import classes from "./styles.module.css";
+import { useMediaQuery } from "@mantine/hooks";
+import { IconSend } from "@tabler/icons-react";
 import { UseMutationResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import { RateupButtonPrimary } from "../../../../../../Button/RateupButtons";
-import { IconSend } from "@tabler/icons-react";
-import WaTemplateFormElements from "./formElements";
 import { useImmer } from "use-immer";
+
+import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { useWaTemplateById } from "../../../../../../../backend/whatsapp/whatsapp.query";
+import { WaTemplateFetchBody } from "../../../../../../../types/global";
 import { uploadFile } from "../../../../../../../utils/file-upload/upload";
 import { validateInboxTemplateSending } from "../../../../../../../utils/whatsapp/inbox";
-import { useEffect, useState } from "react";
-import { useWaTemplateById } from "../../../../../../../backend/whatsapp/whatsapp.query";
-import { useMediaQuery } from "@mantine/hooks";
+import { RateupButtonPrimary } from "../../../../../../Button/RateupButtons";
+import WaInboxTemplate from "../../../chatdisplayBody/components/template";
+import WaInboxSingleMessageLayout from "../../../chatdisplayBody/layout/singleMessageLayout";
+import WaTemplateFormElements from "./formElements";
+import classes from "./styles.module.css";
+
 interface Props {
   template: WaTemplateFetchBody;
   sendTemplate: UseMutationResult<
@@ -121,7 +124,7 @@ export default function WaInboxTemplatePreview(props: Props) {
               props?.template?.components,
               parameterData,
               dbTemplate?.defaultValues,
-            ).includes(false)}
+            )?.includes(false)}
             ml="auto"
             onClick={handleSendTemplate}
             title="Send"

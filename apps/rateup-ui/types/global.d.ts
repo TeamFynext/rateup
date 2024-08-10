@@ -1154,6 +1154,7 @@ export type WaTemplateFetchBodyComponent = {
   text?: string;
   example: {
     header_handle: string[];
+    body_text?: [string[]];
   };
   buttons?: {
     type: WaButtonType.QUICK_REPLY;
