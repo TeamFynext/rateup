@@ -195,9 +195,9 @@ export function getQuestionsFromScreen(
   const formElementIds = screen.layout.children
     .find((se) => se.type === "Form")
     ?.children?.map((q) => q.name);
-  const qIds = formElementIds.map((fid) => map[fid]?.questionId);
+  const qIds = formElementIds?.map((fid) => map[fid]?.questionId);
   const questions = qIds
-    .map((qid) => survey.questions.find((q) => q.id === qid))
+    ?.map((qid) => survey.questions.find((q) => q.id === qid))
     .filter((q) => !!q);
 
   return questions;
@@ -450,7 +450,7 @@ export const updateFlowJsonNavigationAndDataPassing = (
 };
 function getScreenDataForFormElement(fe: WaFlowFormElement): {
   type: string;
-  ["__example__"]: string | Array<any>;
+  ["__example__"]: string | Array<any> | boolean;
   items?: any;
 } {
   if (fe.type === WaFlowFormElementType.checkboxGroup) {
@@ -460,6 +460,12 @@ function getScreenDataForFormElement(fe: WaFlowFormElement): {
         type: "string",
       },
       __example__: [],
+    };
+  }
+  if (fe.type === WaFlowFormElementType.optIn) {
+    return {
+      type: "boolean",
+      __example__: false,
     };
   } else {
     return {
@@ -568,17 +574,21 @@ export function getFlowElementJsonFromQuestion(question: Question) {
     questionElement["on-select-action"] = {
       name: "data_exchange",
       payload: {
-        date: "${form" + "." + questionElement.name + "}",
+        date: `\${form.${questionElement.name}}`,
         component_action: "update_date",
       },
     };
   } else if (question?.optinScreenId && question.type === QuestionType.Optin) {
-    questionElement.name = "navigate";
-    questionElement["next"] = {
-      type: "screen",
-      name: question.optinScreenId,
+    questionElement["on-click-action"] = {
+      name: "navigate",
+      next: {
+        type: "screen",
+        name: question.optinScreenId,
+      },
+      payload: {
+        [questionElement.name]: `\${form.${questionElement.name}}`,
+      },
     };
-    questionElement["payload"] = {};
   }
   mapData.type = question.type;
   mapData.questionId = question.id;

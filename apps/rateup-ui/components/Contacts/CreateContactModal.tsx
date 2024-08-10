@@ -1,37 +1,42 @@
 import { useState } from "react";
+
 import {
-  Paper,
-  Stack,
-  Text,
+  Blockquote,
   Box,
-  Group,
   Checkbox,
+  Group,
+  NavLink,
+  Paper,
   Radio,
   SimpleGrid,
-  TextInput,
-  Blockquote,
-  NavLink,
+  Stack,
   Switch,
+  Text,
+  TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+
+import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
+import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import { SAVE_HOTKEY } from "@/utils/constants";
+import { importMethod } from "@/utils/enums";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
+
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { useCreateContactMutation } from "../../backend/campaign/contacts/contacts.query";
-import { ICreateContact } from "../../backend/campaign/contacts/contacts.api";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
-import { importMethod } from "../../utils/enums";
-import { showErrorToast } from "../../utils/notifications";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+
 import "react-phone-number-input/style.css";
+
 import styles from "./contact.module.css";
-import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
-import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 
 export interface ImportContact {
   name: string;
@@ -49,6 +54,7 @@ const CreateContactModal = ({
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
   const form = useForm({
+    mode: "uncontrolled",
     initialValues: {
       name: "",
       phone: "",
@@ -72,7 +78,6 @@ const CreateContactModal = ({
         (value.length ? null : "Name cannot be blank"),
     },
   });
-
   const handleSubmit = async () => {
     const validation = form.validate();
     if (validation.hasErrors) {

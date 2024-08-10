@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
+
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconRefresh, IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 
 const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
+  const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
   const handleRefresh = async () => {
+    setLoading(true);
     showLoadingToast(
       "Hold on..Data is refreshing",
       "refresh",
@@ -16,6 +20,7 @@ const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
     );
     for (const queryKey of queryKeys)
       await queryClient.invalidateQueries({ queryKey: [queryKey] });
+    setLoading(false);
     showSuccessToast(
       "Data Updated Successfully",
       "refresh",
@@ -26,7 +31,12 @@ const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
 
   return (
     <Tooltip label="Refresh data" position="top" withArrow>
-      <ActionIcon variant="light" aria-label="Refresh" onClick={handleRefresh}>
+      <ActionIcon
+        variant="light"
+        aria-label="Refresh"
+        onClick={handleRefresh}
+        loading={loading}
+      >
         <IconRefresh style={{ width: "90%", height: "90%" }} stroke={1.5} />
       </ActionIcon>
     </Tooltip>

@@ -1,5 +1,7 @@
-import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
 import { useState } from "react";
+
+import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
+
 import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
 import useTemplatesAvailableForTeam from "../../../../../../hooks/team";
 import { TeamSelector } from "../../../../../input/TeamSelector";
@@ -9,6 +11,7 @@ import classes from "./styles.module.css";
 import WaInboxTemplatePreview from "./templatePreview";
 import WaInboxTemplateSelectCard from "./templateSelectCard";
 import WaTemplateSF from "./templateSF";
+
 interface Props {
   sessionExpired: boolean;
   contact: ContactsData;
@@ -38,7 +41,10 @@ export default function WaInboxTemplateDisplayModal({
   // Final list of templates after applying all filters
   const filteredTemplates = searchFilteredTemplates;
 
-  const hasTemplates = filteredTemplates && filteredTemplates?.length > 0;
+  const hasTemplates =
+    filteredTemplates &&
+    filteredTemplates?.length > 0 &&
+    searchFilteredTemplates?.find((data) => data.id === selectedTemplateId);
 
   return (
     <>

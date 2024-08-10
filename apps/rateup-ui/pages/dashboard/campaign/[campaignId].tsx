@@ -215,7 +215,7 @@ const CampaignById = () => {
                 sorting={sorting}
                 columnFilters={columnFilters}
                 setColumnFilters={setColumnFilters}
-                isPending={isPending || isRefetching}
+                isPending={isPending}
               />
             </PaperLayout>
             <Modal
