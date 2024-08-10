@@ -115,7 +115,7 @@ function BackgroundStyles() {
       )}
 
       <Stack style={{ position: "relative" }}>
-        {useSurveyBackground && <Overlay color="#FFFFFF" />}
+        {useSurveyBackground && <Overlay color="#FFFFFF" zIndex={198} />}
         <RadioGroup
           value={chooseBgRadioInputValue}
           onChange={handleChooseBackgroundRadioGroupChange}

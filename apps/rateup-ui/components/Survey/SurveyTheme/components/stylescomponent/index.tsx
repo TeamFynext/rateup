@@ -76,7 +76,7 @@ function StylesComponent({
           className={`${styles["styles-component-div"]} styles-component-div`}
         >
           {isThemeObjBeingEditedDefaultTheme && (
-            <Overlay className={surveyThemeStyles["overlay"]} />
+            <Overlay className={surveyThemeStyles["overlay"]} zIndex={198} />
           )}
 
           <Accordion

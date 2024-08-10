@@ -13,9 +13,14 @@ function SurveyThemePreviewLayout({
   isThemeObjBeingEditedDefaultTheme,
   previewId,
   isSurveyThemeEditView,
+  isSurveyThemePreview,
 }) {
-  const selectedPageTab = useSelectedPageTab();
+  let selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
+
+  if (isSurveyThemePreview) {
+    selectedPageTab = ThemeTabEnum.SURVEY;
+  }
 
   return (
     <Stack

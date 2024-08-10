@@ -1,13 +1,9 @@
-import { Box, Button, Center, Group, Stack } from "@mantine/core";
-import { IconEdit, IconPlayerPlay } from "@tabler/icons-react";
+import { Box, Center } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
-import SaveButton from "./components/SaveButton";
-import ThemeSelector from "./components/ThemeSelector";
-import { ThemeTabEnum } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
 
@@ -15,12 +11,10 @@ const cx = classNames.bind(styles);
 
 function SurveyTheme({
   survey,
-  initialSelectedPageTab = undefined,
   isThemeObjBeingEditedDefaultTheme,
-  openStylesEditorDrawer,
-  openSurveyPreviewModal,
   previewId,
   isSurveyThemeEditView = false,
+  isSurveyThemePreview = false,
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
@@ -33,37 +27,8 @@ function SurveyTheme({
       </Center>
     );
 
-  const isSelectedPagetabSurvey =
-    initialSelectedPageTab === ThemeTabEnum.SURVEY;
-
   return (
     <Box className={`${cx("survey-theme-root-div")} survey-theme-root-div`}>
-      <Stack
-        className={`${styles["survey-editor-page-header"]} survey-editor-page-header`}
-      >
-        <Group gap={"2rem"} justify={"flex-end"}>
-          <Group>
-            {isSelectedPagetabSurvey && (
-              <Button
-                className={styles["preview-survey-btn"]}
-                leftSection={<IconPlayerPlay size={"1rem"} />}
-                onClick={openSurveyPreviewModal}
-              >
-                Preview
-              </Button>
-            )}
-
-            <Button
-              className={styles["edit-theme-btn"]}
-              leftSection={<IconEdit size={"1rem"} />}
-              onClick={() => openStylesEditorDrawer()}
-            >
-              {isSelectedPagetabSurvey ? "Edit Theme" : "Edit Page"}
-            </Button>
-          </Group>
-        </Group>
-      </Stack>
-
       <Box
         className={`${cx("selected-page-tab-panels-and-styles-div-container")} selected-page-tab-panels-and-styles-div-container`}
       >
@@ -78,6 +43,7 @@ function SurveyTheme({
             }
             previewId={previewId}
             isSurveyThemeEditView={isSurveyThemeEditView}
+            isSurveyThemePreview={isSurveyThemePreview}
           />
         </Box>
       </Box>

@@ -15,25 +15,22 @@
   font-weight: bold;
   border-radius: 0.625rem;
   min-width: 7.5rem;
-  flex: 1.7;
 }
 
 .add-question-btn-more-than-1-que .add-content-btn svg path {
   stroke: 2;
 }
 
-.add-question-btn-more-than-1-que .survey-preview-btn {
+.add-question-btn-more-than-1-que .survey-preview-btn,
+.edit-theme-btn {
   height: auto;
   width: auto;
-  padding: 0.625rem 1rem;
   border-radius: 0.625rem;
-  min-width: 7.5rem;
-  flex: 1;
   line-height: normal;
+  padding: 0.4375rem;
 }
 
 .questions-list-container {
-  /* z-index: 5; */
   flex: 1 1 0;
   overflow: auto;
   padding: 1rem;

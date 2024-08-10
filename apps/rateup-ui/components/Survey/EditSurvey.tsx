@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 
-import { Button, Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+import { Box, Button, Center, Flex, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
@@ -167,7 +167,7 @@ export function EditSurvey({
             className={styles["question-sidebar-container-motion-div"]}
             layout={"position"}
           >
-            <PaperLayout className={styles["question-sidebar-container"]}>
+            <Box className={styles["question-sidebar-container"]}>
               <QuestionsSideBar
                 questions={questions}
                 selectedQ={selectedQ}
@@ -177,15 +177,17 @@ export function EditSurvey({
                 setSelectedLanguage={setSelectedLanguage}
                 addQnTrigger={addQnTrigger}
                 survey={survey}
+                openStylesEditorDrawer={openStylesEditorDrawer}
+                openSurveyPreviewModal={openSurveyPreviewModal}
               />
-            </PaperLayout>
+            </Box>
           </motion.div>
 
           <motion.div
             className={`${styles["question-editor-container-motion-div"]}`}
             layout={"position"}
           >
-            <PaperLayout
+            <Box
               className={`${styles["question-editor-container"]} ${activeTab ? activeTab + "-QDV" : ""} ${selectedQ?.type ? selectedQ.type + "-QDV" : ""}`}
             >
               <Tabs
@@ -208,14 +210,9 @@ export function EditSurvey({
                             <SurveyTheme
                               survey={survey}
                               previewId={`${selectedQ.type}-preview`}
-                              initialSelectedPageTab={
-                                inititalSelectedTabForSurveyThemeComp
-                              }
                               isThemeObjBeingEditedDefaultTheme={
                                 isThemeObjBeingEditedDefaultTheme
                               }
-                              openStylesEditorDrawer={openStylesEditorDrawer}
-                              openSurveyPreviewModal={openSurveyPreviewModal}
                             />
                           )}
                         </Stack>
@@ -300,21 +297,16 @@ export function EditSurvey({
                     <SurveyTheme
                       previewId={"survey-theme-edit-preview"}
                       key={surveyPreviewCompKey}
-                      initialSelectedPageTab={
-                        inititalSelectedTabForSurveyThemeComp
-                      }
                       survey={survey}
                       isThemeObjBeingEditedDefaultTheme={
                         isThemeObjBeingEditedDefaultTheme
                       }
-                      openStylesEditorDrawer={openStylesEditorDrawer}
-                      openSurveyPreviewModal={openSurveyPreviewModal}
                       isSurveyThemeEditView={true}
                     />
                   )}
                 </Tabs.Panel>
               </Tabs>
-            </PaperLayout>
+            </Box>
           </motion.div>
           {isStylesEditorDrawerOpen && (
             <AnimatePresence>
@@ -356,13 +348,11 @@ export function EditSurvey({
           <SurveyTheme
             key={"preview" + surveyPreviewCompKey}
             previewId={"survey-theme-prod-preview"}
-            initialSelectedPageTab={inititalSelectedTabForSurveyThemeComp}
             survey={survey}
             isThemeObjBeingEditedDefaultTheme={
               isThemeObjBeingEditedDefaultTheme
             }
-            openStylesEditorDrawer={openStylesEditorDrawer}
-            openSurveyPreviewModal={openSurveyPreviewModal}
+            isSurveyThemePreview
           />
         </SurveyPreviewModal>
       </Flex>

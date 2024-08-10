@@ -19,7 +19,6 @@
 .selected-page-tab-panels-and-styles-div-container {
   display: flex;
   gap: 0.625rem;
-  padding: 0.3125rem;
   max-height: 800px;
 }
 
@@ -34,6 +33,7 @@
 }
 
 .theme-preview-container {
+  box-shadow: none;
   flex: 0.72 0 0;
 }
 
@@ -81,7 +81,6 @@
 .survey-theme-preview-layout-div {
   height: 100%;
   width: 100%;
-  padding: 0.4375rem;
 }
 
 .survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
