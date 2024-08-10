@@ -4,6 +4,8 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import { decryptResultResponse } from "../../../utils/response";
@@ -12,6 +14,7 @@ import {
   deleteResponse,
   downloadExcelResponse,
   downloadExcelResponseType,
+  exportContactResponseToContacts,
   generateResponse,
   getAllResponses,
   getLargeTextResponseSummaryByAI,
@@ -232,3 +235,30 @@ export function useGetLargeTextResponseSummaryByAI(surveyId: string) {
     },
   });
 }
+
+export const useExportContactResponses = (surveyId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => exportContactResponseToContacts(surveyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
+      });
+      showSuccessToast(
+        "Contacts exported successfully",
+        "export-contacts",
+        <IconCheck />,
+        true,
+      );
+    },
+    onError: () => {
+      showErrorToast(
+        "Contacts export failed",
+        "export-contacts",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};

@@ -98,3 +98,7 @@ export async function getLargeTextResponseSummaryByAI({ surveyId, data }) {
     })
   ).data;
 }
+
+export async function exportContactResponseToContacts(surveyId) {
+  return await axiosClient.post(`${RESPONSE_URL}/export-contacts/${surveyId}`);
+}

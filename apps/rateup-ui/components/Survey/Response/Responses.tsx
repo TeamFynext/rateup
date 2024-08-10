@@ -1,16 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import {
-  Box,
-  Button,
-  Flex,
-  Group,
-  Popover,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Box, Button, Flex, Group, Popover, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
@@ -30,12 +21,11 @@ import { useIntegrationByType } from "@/backend/appsIntegration/integration.quer
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
-import { ICreateContact } from "../../../backend/campaign/contacts/contacts.api";
-import { useImportContactMutation } from "../../../backend/campaign/contacts/contacts.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
   useDownloadExcelResponse,
+  useExportContactResponses,
   useSyncResponseToGoogleSheet,
 } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
@@ -47,9 +37,13 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
 } from "../../../types/enums";
-import { ContactQuestions, docsPath } from "../../../utils/constants";
+import { docsPath } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
 import InfoButton from "../../Button/InfoButton";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
@@ -120,7 +114,7 @@ const Responses = ({
     close,
     setIsDeleting,
   );
-  const importContactMutation = useImportContactMutation();
+
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -130,6 +124,8 @@ const Responses = ({
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
+
+  const exportContactMutation = useExportContactResponses(surveyId);
 
   //The below filtering should be done in the backend
   const [campaignFlowFilter, setCampaignFlowFilter] = useState<
@@ -155,52 +151,12 @@ const Responses = ({
   //
   const downloadExcelResponse = useDownloadExcelResponse();
   function handleExportContacts() {
-    const contacts = [];
-    responses.map((response) => {
-      const teamId = response.teamId;
-      const responseArray = response.responses;
-      responseArray.map((res) => {
-        if (ContactQuestions.includes(res.type)) {
-          const contact: ICreateContact = {
-            name: "",
-            teamId: teamId,
-            source: survey?.title,
-          };
-          let phone = null;
-          let email = null;
-          let name = "";
-          switch (res.type) {
-            case QuestionType.EmailPhone:
-              phone = res.response?.[QuestionType.EmailPhone]?.phone;
-              email = res.response?.[QuestionType.EmailPhone]?.email;
-              break;
-            case QuestionType.Email:
-            case QuestionType.Phone:
-            case QuestionType.Contact:
-              phone = res.response?.[res.type]?.phone;
-              email = res.response?.[res.type]?.email;
-              name = res.response?.[res.type]?.name;
-          }
-          contact.phone = phone ? phone.slice(1) : undefined;
-          contact.email = email ? email : undefined;
-          contact.name = name ? name : "";
-          if (
-            !contacts.some(
-              (c) =>
-                c.teamId == contact.teamId &&
-                ((c.phone && c.phone == contact.phone) ||
-                  (c.email && c.email == contact.email)),
-            )
-          )
-            contacts.push(contact);
-        }
-      });
-    });
-    importContactMutation.mutate(contacts, {
-      onSettled: () => {
-        toggle();
-      },
-    });
+    showLoadingToast(
+      "Exporting Contact responses to Contacts...",
+      "export-contacts",
+      true,
+    );
+    exportContactMutation.mutate();
   }
   const handleExcelDownload = useCallback(() => {
     downloadExcelResponse.mutate({
@@ -447,7 +403,7 @@ const Responses = ({
                   {hasContactQuestion && (
                     <RateupButtonSecondary
                       onClick={handleExportContacts}
-                      title={"Import Contacts"}
+                      title={"Export Contacts"}
                       radius={"lg"}
                       leftIcon={<IconDatabaseImport stroke={1.5} />}
                     />
