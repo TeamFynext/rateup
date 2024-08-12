@@ -92,6 +92,10 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     survey?.questions?.some((q) => q.type === PageType.Language) || false,
   );
 
+  const [isGoogleReviewPageEnabled, setIsGoogleReviewPageEnabled] = useState(
+    survey?.questions?.some((q) => q.type === PageType.GoogleReview) || false,
+  );
+
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [QnNo, setQnNo] = useState(1);
   const [invoiceList, setInvoiceList] = useState<Invoice[]>([]);
@@ -253,9 +257,16 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const handleNext = (response: any) => {
     const currentResponse_ = response ? response : currentResponse;
-    const questionsLength = isThankYouPageEnabled
-      ? survey.questions.length - 2
-      : survey.questions.length - 1;
+    let questionsLength = survey.questions.length;
+
+    if (!isThankYouPageEnabled && !isGoogleReviewPageEnabled) {
+      questionsLength = survey?.questions?.length - 1;
+    } else if (isThankYouPageEnabled && isGoogleReviewPageEnabled) {
+      questionsLength = survey?.questions?.length - 3;
+    } else if (isThankYouPageEnabled || isGoogleReviewPageEnabled) {
+      questionsLength = survey?.questions?.length - 2;
+    }
+
     const index = survey.questions.findIndex((Q) => selectedQ.id === Q.id);
     if (index === -1) throw new Error("Question not found"); // this should never happen
 
@@ -467,6 +478,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               isWelcomePageEnabled={isWelcomePageEnabled}
               isLanguagePageEnabled={isLanguagePageEnabled}
               isThankYouPageEnabled={isThankYouPageEnabled}
+              isGoogleReviewPageEnabled={isGoogleReviewPageEnabled}
             >
               <Container
                 size={"md"}
