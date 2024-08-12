@@ -6,7 +6,7 @@ export function hasFeature(
   featurePath: SubscriptionFeaturePathName,
 ) {
   if (!subscription) return false;
-  return getNestedProperty(subscription.features, featurePath).active;
+  return getNestedProperty(subscription.features, featurePath)?.active;
 }
 
 export function getSampleSubscriptionFeatures(
