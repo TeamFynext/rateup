@@ -316,7 +316,7 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
       if (!languagePageObj) {
         const [newLanguagePageObj] = getPageQuestions(languagesArr);
         if (
-          questionsArrCopy[0].type ===
+          questionsArrCopy[0]?.type ===
           (PageType.Welcome as unknown as QuestionType)
         ) {
           questionsArrCopy.splice(1, 0, newLanguagePageObj);
@@ -334,7 +334,7 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
   const resultArr = questionsArrCopy.map((questionObj) => {
     const questionType = questionObj.type;
     if (Object.values(PageType).includes(questionType)) {
-      languagesArr.forEach((language) => {
+      languagesArr?.forEach((language) => {
         if (questionType !== PageType.Custom) {
           questionObj.title[language] = `${questionType} Page`;
           questionObj.description[language] =
@@ -385,3 +385,6 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(
 
   return questionsArrCopy;
 }
+
+// For Welcome, Language, Thankyou pages.
+export async function addTitleSubtitleStartBtnTextOnPageTypeQuestions() {}

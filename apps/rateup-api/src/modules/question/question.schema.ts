@@ -126,6 +126,11 @@ const questionCore = {
       segColors: z.array(z.string()),
     })
     .optional(),
+
+  // For PageType Question objects like welcome, language, thankyoupage,
+  subtitleText: z.string().optional(),
+  titleText: z.string().optional(),
+  startButtonText: z.string().optional(),
 };
 
 export const questionSchema = z.object({
@@ -139,6 +144,7 @@ const createQuestionRequestSchema = z.object({
   // Should be index of the question in the array (0 based)
   position: z.number().optional(),
 });
+
 const createQuestionResponseSchema = z.object({
   ...questionCore,
   id: z.string(),
@@ -204,11 +210,6 @@ const updateQuestionRequestSchema = z.object({
       ),
     })
     .optional(),
-
-  // For PageType Question objects like welcome, language, thankyoupage,
-  subtitleText: z.string().optional(),
-  titleText: z.string().optional(),
-  startButtonText: z.string().optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
