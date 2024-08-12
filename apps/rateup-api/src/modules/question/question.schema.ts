@@ -210,6 +210,11 @@ const updateQuestionRequestSchema = z.object({
       ),
     })
     .optional(),
+
+  // For PageType Question objects like welcome, language, thankyoupage,
+  subtitleText: z.string().optional(),
+  titleText: z.string().optional(),
+  startButtonText: z.string().optional(),
 });
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
