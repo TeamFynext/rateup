@@ -822,7 +822,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
   const data = cloneDeep(dataInput);
 
-  if (fetchedSurvey?.questions.length) {
+  if (fetchedSurvey?.questions) {
     const questions = await getQuestionsArrUpdatedWithLanguageTypeQuestion(
       fetchedSurvey.questions,
       dataInput.languages,
