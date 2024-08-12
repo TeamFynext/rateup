@@ -17,23 +17,37 @@ function NextPrevFuncsAndLastQuestionContextProvider({
   isWelcomePageEnabled,
   isThankYouPageEnabled,
   isLanguagePageEnabled,
+  isGoogleReviewPageEnabled,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const endSurveyActions = selectedQ.logic?.filter(
     (obj) => obj.action === "EndSurvey",
   );
 
+  const selectedQuestionIndex = survey?.questions?.findIndex(
+    (Q) => selectedQ.id === Q.id,
+  );
+
   const isFirstQuestion = isWelcomePageEnabled
     ? isLanguagePageEnabled
-      ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 2
-      : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 1
-    : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) === 0;
+      ? selectedQuestionIndex === 2
+      : selectedQuestionIndex === 1
+    : selectedQuestionIndex === 0;
 
-  const isLastQuestion = isThankYouPageEnabled
-    ? survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
-      survey?.questions?.length - 2
-    : survey?.questions?.findIndex((Q) => selectedQ.id === Q.id) ===
-      survey?.questions?.length - 1;
+  let isLastQuestion = false;
+  if (!isThankYouPageEnabled && !isGoogleReviewPageEnabled) {
+    if (selectedQuestionIndex === survey?.questions?.length - 1) {
+      isLastQuestion = true;
+    }
+  } else if (isThankYouPageEnabled && isGoogleReviewPageEnabled) {
+    if (selectedQuestionIndex === survey?.questions?.length - 3) {
+      isLastQuestion = true;
+    }
+  } else if (isThankYouPageEnabled || isGoogleReviewPageEnabled) {
+    if (selectedQuestionIndex === survey?.questions?.length - 2) {
+      isLastQuestion = true;
+    }
+  }
 
   return (
     <NextPrevFuncsAndLastQuestionContext.Provider
