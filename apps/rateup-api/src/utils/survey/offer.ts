@@ -69,7 +69,7 @@ export const offerArrayWithRange = [
     ],
   },
   {
-    range: [100000, 100001],
+    range: [100000, 100005],
     gifts: [
       { image: "gift_01.jpg", name: "5% Discount" },
       { image: "gift_02.jpg", name: "6% Discount" },

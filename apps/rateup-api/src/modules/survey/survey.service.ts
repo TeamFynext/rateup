@@ -822,7 +822,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
 
   const data = cloneDeep(dataInput);
 
-  if (fetchedSurvey?.questions.length) {
+  if (fetchedSurvey?.questions) {
     const questions = await getQuestionsArrUpdatedWithLanguageTypeQuestion(
       fetchedSurvey.questions,
       dataInput.languages,
@@ -1209,7 +1209,7 @@ export async function getSurveyLanguagesFromTeamId(teamId: string) {
 
 function getRandomGift(price) {
   if (price > 100000) {
-    price = 100000;
+    price = 100001;
   }
   let range = offerArrayWithRange.find(
     (r) => price >= r.range[0] && price <= r.range[1],
