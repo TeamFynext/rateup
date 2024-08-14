@@ -659,7 +659,7 @@ export function convertComponentForSenting(dbTemplate) {
   dbTemplate.data.components.forEach((item) => {
     if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
       item?.buttons.forEach((button, idx) => {
-        if (button.type === "URL") {
+        if (button.type === "URL" && button?.example?.length > 0) {
           components.push({
             type: "button",
             sub_type: "url",
@@ -684,7 +684,11 @@ export function convertComponentForSenting(dbTemplate) {
 export function updateButtonText(array, newText) {
   return (
     array.map((item) => {
-      if (item.type === "button" && item.sub_type === "url") {
+      if (
+        item.type === "button" &&
+        item.sub_type === "url" &&
+        item?.parameters?.length > 0
+      ) {
         return {
           ...item,
           parameters: item.parameters.map((param) => {

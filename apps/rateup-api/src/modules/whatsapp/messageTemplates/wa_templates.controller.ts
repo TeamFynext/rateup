@@ -395,7 +395,7 @@ export async function sendTemplateToUserHandler(
     dbTemplate.data.components.forEach((item) => {
       if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
         item?.buttons.forEach((button, idx) => {
-          if (button.type === "URL") {
+          if (button.type === "URL" && button?.example?.length > 0) {
             components.push({
               type: "button",
               sub_type: "url",
