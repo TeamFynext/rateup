@@ -246,13 +246,15 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       description: data?.description,
       planType: data?.planType as PaymentPlanType,
       paymentPlan:
-        data?.stripeId && existingPlan.paymentPlanId
+        (data?.stripeId || !data?.paymentPlanId?.length) &&
+        existingPlan.paymentPlanId
           ? { disconnect: { id: existingPlan.paymentPlanId } }
           : data?.paymentPlanId
             ? { connect: { id: data?.paymentPlanId } }
             : undefined,
       stripeProduct:
-        data?.paymentPlanId && existingPlan.stripeId
+        (data?.paymentPlanId || !data?.stripeId?.length) &&
+        existingPlan.stripeId
           ? { disconnect: { id: existingPlan.stripeId } }
           : data?.stripeId
             ? { connect: { id: data?.stripeId } }
