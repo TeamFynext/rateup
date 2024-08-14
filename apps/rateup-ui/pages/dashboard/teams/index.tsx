@@ -40,7 +40,7 @@ import TeamTourSteps from "../../../components/WelcomeTour/components/TeamTourSt
 import styles from "../../../components/WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
 import { useUser } from "../../../context/UserContext";
-import useTranslations from "../../../dictionaries/useTranslation"; // Import the getDictionary function
+import useTranslations from "../../../dictionaries/useTranslation";
 import { docsPath } from "../../../utils/constants";
 import { retrieveRole } from "../../../utils/essential";
 import TeamCard from "./TeamCard";

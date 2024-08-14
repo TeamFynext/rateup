@@ -1,25 +1,29 @@
+import { useState } from "react";
+
 import {
   Badge,
+  Flex,
   Group,
-  Stack,
-  Title,
-  Text,
   List,
   ScrollArea,
-  Flex,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
-import { useState } from "react";
-import { formatIsoDateString } from "../../../utils/dateTime";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useDisclosure } from "@mantine/hooks";
+import { IconCheck, IconRefresh } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import NothingFound from "../../../components/NothingFound/NothingFound";
-import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { formatIsoDateString } from "../../../utils/dateTime";
 import {
   showLoadingToast,
   showSuccessToast,
 } from "../../../utils/notifications";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import classes from "./setting.module.css";
 
 const OrderHistory = ({ orders, refetch, isRefetching }) => {
@@ -28,23 +32,24 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
     { open: openOrderDetails, close: closeOrderDetails },
   ] = useDisclosure(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const { translations } = useTranslations();
   return (
     <>
       {orders?.length > 0 ? (
         <>
           <Flex justify={"flex-end"} p="sm">
             <RateupButtonSecondary
-              title="Refresh"
+              title={translations["Refresh"]}
               onClick={async () => {
                 showLoadingToast(
-                  "Hold on...data getting updated.",
+                  translations["Hold on...data getting updated."],
                   "order-history",
                   true,
-                  "Refreshing order history",
+                  translations["Refreshing order history"],
                 );
                 await refetch();
                 showSuccessToast(
-                  "Updated Succesfully",
+                  translations["Updated Succesfully"],
                   "order-history",
                   <IconCheck />,
                   true,
@@ -65,12 +70,12 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
             c={"gray"}
             style={{ marginLeft: "20px" }}
           >
-            <Text w={150}>Order Id</Text>
-            <Text w={120}>Billing Date</Text>
-            <Text w={100}>Plan</Text>
-            <Text w={100}>Amount</Text>
-            <Text w={120}>Payment</Text>
-            <Text w={120}>Status</Text>
+            <Text w={150}>{translations["Order Id"]}</Text>
+            <Text w={120}>{translations["Billing Date"]}</Text>
+            <Text w={100}>{translations["Plan"]}</Text>
+            <Text w={100}>{translations["Amount"]}</Text>
+            <Text w={120}>{translations["Payment"]}</Text>
+            <Text w={120}>{translations["Status"]}</Text>
           </Group>
           <ScrollArea.Autosize h={"60vh"} scrollbarSize={6}>
             <Stack px={"sm"} gap={0}>
@@ -109,7 +114,7 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
                         <Title order={5} w={120}>
                           {order?.paymentMethod
                             ? order.paymentMethod.toUpperCase()
-                            : "Not available"}
+                            : translations["Not available"]}
                         </Title>
                         <Title order={5} w={120}>
                           <OrderStatusBadge order={order} />
@@ -122,12 +127,12 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
           </ScrollArea.Autosize>
         </>
       ) : (
-        <NothingFound text="No Orders Found" />
+        <NothingFound text={translations["No Orders Found"]} />
       )}
       <FormModalLayout
         opened={openedOrderDetails}
         onClose={closeOrderDetails}
-        title={"Order Details"}
+        title={translations["Order Details"]}
         size="xl"
         centered
       >
@@ -139,16 +144,16 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
             style={{ background: "var(--light-grey-color)" }}
           >
             <Text>
-              Order Placed <br />{" "}
+              {translations["Order Placed"]} <br />{" "}
               {formatIsoDateString(selectedOrder?.createdAt)}
             </Text>
             <Text>
-              Total Amount <br />{" "}
+              {translations["Total Amount"]} <br />{" "}
               {selectedOrder?.currency === "INR" ? "₹" : "$"}{" "}
               {selectedOrder?.amount} /-
             </Text>
             <Stack gap="5px">
-              <Text>Order Id</Text>
+              <Text>{translations["Order Id"]}</Text>
               <Text size="xs" c="dimmed">
                 {selectedOrder?.id}
               </Text>
@@ -169,23 +174,23 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
 
               <Group mt="xl">
                 <Text fw={500} style={{ minWidth: "150px" }}>
-                  Payment Method :
+                  {translations["Payment Method :"]}
                 </Text>
                 <Text c="dimmed">
                   {selectedOrder?.paymentMethod
                     ? selectedOrder.paymentMethod.toUpperCase()
-                    : "Not available"}
+                    : translations["Not available"]}
                 </Text>
               </Group>
               <Group>
                 <Text fw={500} style={{ minWidth: "150px" }}>
-                  Payment Status :
+                  {translations["Payment Status :"]}
                 </Text>
                 <Text c="dimmed">{selectedOrder?.paymentStatus} </Text>
               </Group>
             </Stack>
             <Stack mr="xl">
-              <Title order={5}> Plan Features </Title>
+              <Title order={5}>{translations["Plan Features"]} </Title>
               <List>
                 {selectedOrder?.planFeatures?.map((feature) => {
                   if (feature.startsWith("-")) return null;
@@ -203,28 +208,29 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
 export default OrderHistory;
 
 export const OrderStatusBadge = ({ order }) => {
+  const { translations } = useTranslations();
   let color, statusText;
 
   switch (order?.status) {
     case "PENDING":
       if (order?.paymentStatus === "SUCCESS") {
         color = "blue";
-        statusText = "PROCESSING";
+        statusText = translations["PROCESSING"];
       } else if (order?.paymentStatus === "FAILED") {
         color = "red";
-        statusText = "FAILED";
+        statusText = translations["FAILED"];
       } else {
         color = "yellow";
-        statusText = order?.status;
+        statusText = translations[order?.status] || order?.status;
       }
       break;
     case "FAILED":
       color = "red";
-      statusText = order?.status;
+      statusText = translations[order?.status] || order?.status;
       break;
     default:
       color = "green";
-      statusText = order?.status;
+      statusText = translations[order?.status] || order?.status;
   }
 
   return (

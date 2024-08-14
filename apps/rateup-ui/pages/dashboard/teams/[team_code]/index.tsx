@@ -1,42 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+
 import {
-  Tabs,
-  Loader,
-  Stack,
-  SimpleGrid,
   Box,
-  Space,
-  Text,
-  Group,
   Center,
+  Group,
+  Loader,
+  SimpleGrid,
+  Space,
+  Stack,
+  Tabs,
+  Text,
 } from "@mantine/core";
-import {
-  RateupButtonBlue,
-  RateupButtonOutline,
-} from "../../../../components/Button/RateupButtons";
-import { IconCheck, IconReload } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import validateNameAndEmail from "../validation";
-import { useMutation } from "@tanstack/react-query";
-import { useQueryClient } from "@tanstack/react-query";
-import { getOrgIdRole, getUserID } from "../../../../utils/userInfo";
+import { IconCheck, IconPlus, IconReload } from "@tabler/icons-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { inviteTeamMember } from "../../../../backend/team/team.api";
-import StyledTabs from "../../../../components/styled/StyledTabs/StyledTabs";
-import TeamMemberCard from "../TeamMemberCard";
-import { IconPlus } from "@tabler/icons-react";
-import { useRouteParams } from "../../../../context/RouteParamsContext";
-import TeamSettings from "../TeamSettings";
 import {
   useTeamMembersFromInvitation,
   useTeamsByUser,
 } from "../../../../backend/team/team.query";
-import FormModalLayout from "../../../../components/Modal/FormModalLayout";
+import {
+  RateupButtonBlue,
+  RateupButtonOutline,
+} from "../../../../components/Button/RateupButtons";
 import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../../../components/Modal/FormModalLayout";
 import Heading from "../../../../components/styled/Heading/Heading";
-import styles from "./teams.module.css";
+import StyledTabs from "../../../../components/styled/StyledTabs/StyledTabs";
+import { useRouteParams } from "../../../../context/RouteParamsContext";
+import useTranslations from "../../../../dictionaries/useTranslation";
+import { getOrgIdRole, getUserID } from "../../../../utils/userInfo";
 import TeamCard from "../TeamCard";
+import TeamMemberCard from "../TeamMemberCard";
+import TeamSettings from "../TeamSettings";
+import validateNameAndEmail from "../validation";
+import styles from "./teams.module.css";
 
 const TeamDetails = () => {
   const router = useRouter();
@@ -46,7 +47,7 @@ const TeamDetails = () => {
   const [email, setEmail] = useState("");
   const [sort, setSort] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+  const { translations } = useTranslations();
   const queryClient = useQueryClient();
   const { update } = useRouteParams();
   //fecthing teams data
@@ -89,9 +90,9 @@ const TeamDetails = () => {
         notifications.update({
           id: "load-data",
           color: "teal",
-          title: "Success",
+          title: translations["success"],
           loading: false,
-          message: "Invite sent successfully.",
+          message: translations["Invite sent successfully."],
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
@@ -105,7 +106,7 @@ const TeamDetails = () => {
         id: "load-data",
         color: "red",
         loading: false,
-        title: "Failed",
+        title: translations["Failed"],
         message: error?.response?.data?.message || error.message,
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
@@ -118,7 +119,7 @@ const TeamDetails = () => {
   }, [teamsMembersData]);
 
   const handleSubmit = async (e) => {
-    const validationErrors = validateNameAndEmail(name, email);
+    const validationErrors = validateNameAndEmail(name, email, translations);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -127,8 +128,8 @@ const TeamDetails = () => {
       notifications.show({
         id: "load-data",
         loading: true,
-        title: "Sending Invite..",
-        message: `Hold on, Sending invite to  '${name}'.`,
+        title: translations["Sending Invite.."],
+        message: `${translations["Hold on, Sending invite to"]} '${name}'.`,
         autoClose: false,
         withCloseButton: true,
       });
@@ -157,15 +158,15 @@ const TeamDetails = () => {
         centered
         opened={opened}
         onClose={close}
-        title="Add Member"
-        buttonTitle="Add member"
+        title={translations["Add Member"]}
+        buttonTitle={translations["Add member"]}
         onSubmit={handleSubmit}
       >
         <Box>
           <ContainedTextField
             required
-            label="Name"
-            placeholder="Enter name"
+            label={translations["Name"]}
+            placeholder={translations["Enter name"]}
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
@@ -173,8 +174,8 @@ const TeamDetails = () => {
           <Space h="lg" />
           <ContainedTextField
             required
-            label="Email"
-            placeholder="Enter email id"
+            label={translations["Email"]}
+            placeholder={translations["Enter email id"]}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -187,8 +188,13 @@ const TeamDetails = () => {
       >
         <Stack gap={10}>
           <Tabs.List>
-            <Tabs.Tab value={TabEnum.Members}>Members</Tabs.Tab>
-            <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Members}>
+              {translations["Members"]}
+            </Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Settings}>
+              {" "}
+              {translations["Settings"]}
+            </Tabs.Tab>
           </Tabs.List>
         </Stack>
         <Tabs.Panel value={TabEnum.Members} h={"100%"}>
@@ -196,12 +202,12 @@ const TeamDetails = () => {
             <Group>
               <Group style={{ marginTop: "auto", marginBottom: "auto" }}>
                 <Heading
-                  title={teamsMembersData?.teamName || "Team"}
+                  title={teamsMembersData?.teamName || translations["Team"]}
                   titleprops={{ w: "fit-content" }}
                 />
               </Group>
               <RateupButtonBlue
-                title="Add Member"
+                title={translations["Add Member"]}
                 rightIcon={<IconPlus />}
                 onClick={open}
               />
@@ -214,11 +220,11 @@ const TeamDetails = () => {
             ) : teamsMembersError ? (
               <Center h={"100%"}>
                 <Stack>
-                  <p>Error... Try Refreshing...</p>
+                  <p> {translations["Error... Try Refreshing..."]}</p>
                   <RateupButtonOutline
                     onClick={refetchInvitedTeamMembers}
                     rightIcon={<IconReload size="1rem" />}
-                    title="Refresh"
+                    title={translations["Refresh"]}
                     size="xs"
                   />
                 </Stack>
@@ -240,7 +246,7 @@ const TeamDetails = () => {
         </Tabs.Panel>
         <Tabs.Panel value={TabEnum.Settings} mt={60}>
           <Heading
-            title={teamsMembersData?.teamName || "Team"}
+            title={teamsMembersData?.teamName || translations["Team"]}
             titleprops={{ w: "fit-content" }}
           />
 
