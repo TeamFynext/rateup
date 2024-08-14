@@ -779,7 +779,10 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     action = "publish";
     if (input?.isPublished === true) {
       //check for all language inputs
-      if (fetchedSurvey?.questions.length < 1) {
+      const questions = fetchedSurvey.questions
+        ? fetchedSurvey.questions.filter((q) => !(q.type in PageType))
+        : [];
+      if (questions.length < 1) {
         let data = {
           status: "failed",
           data: {
@@ -918,7 +921,7 @@ function validateSurvey(surveyData) {
     // Check if title contains all languages
     let titleLanguages = question?.title ? Object.keys(question.title) : [];
     let missingLangTitle = languages.filter(
-      (lang) => !titleLanguages.includes(lang),
+      (lang) => !titleLanguages.includes(lang) || !question.title[lang].length,
     );
     if (missingLangTitle.length > 0) {
       incompleteQuestions.push({

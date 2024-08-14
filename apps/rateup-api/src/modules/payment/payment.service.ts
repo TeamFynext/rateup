@@ -232,6 +232,12 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
     });
   }
 
+  const existingPlan = await prisma.rateupPlan.findUnique({
+    where: {
+      id: data?.id,
+    },
+  });
+
   const plans = await prisma.rateupPlan.update({
     data: {
       name: data?.name,
@@ -239,12 +245,18 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       displayWidgetId: data?.displayWidgetId ?? undefined,
       description: data?.description,
       planType: data?.planType as PaymentPlanType,
-      paymentPlan: data?.paymentPlanId
-        ? { connect: { id: data?.paymentPlanId } }
-        : undefined,
-      stripeProduct: data?.stripeId
-        ? { connect: { id: data?.stripeId } }
-        : undefined,
+      paymentPlan:
+        data?.stripeId && existingPlan.paymentPlanId
+          ? { disconnect: { id: existingPlan.paymentPlanId } }
+          : data?.paymentPlanId
+            ? { connect: { id: data?.paymentPlanId } }
+            : undefined,
+      stripeProduct:
+        data?.paymentPlanId && existingPlan.stripeId
+          ? { disconnect: { id: existingPlan.stripeId } }
+          : data?.stripeId
+            ? { connect: { id: data?.stripeId } }
+            : undefined,
       features: data?.features,
     },
     where: {
@@ -310,7 +322,7 @@ export async function updateSubscription(payload) {
         renewedAt: new Date(),
         expiresAt: new Date(current_end * 1000),
         subscriptionRef: id,
-        lastLimitAlertSentAt: null
+        lastLimitAlertSentAt: null,
       },
     });
 
