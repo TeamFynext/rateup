@@ -779,9 +779,9 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     action = "publish";
     if (input?.isPublished === true) {
       //check for all language inputs
-      const questions = fetchedSurvey.questions.filter(
-        (q) => !(q.type in PageType),
-      );
+      const questions = fetchedSurvey.questions
+        ? fetchedSurvey.questions.filter((q) => !(q.type in PageType))
+        : [];
       if (questions.length < 1) {
         let data = {
           status: "failed",
