@@ -256,7 +256,7 @@ export async function importCSVContacts(
       let phno = contact.phone?.startsWith("+")
         ? contact.phone
         : `+${contact.phone}`;
-      if (!contact?.phone || !isValidPhoneNumber(phno) || !contact?.name) {
+      if (!contact?.phone || !isValidPhoneNumber(phno)) {
         errorContact.push({
           name: contact?.name ? contact.name : "name is missing/invalid",
           phone: contact?.phone ? contact.phone : "phone is missing/invalid",
@@ -313,8 +313,8 @@ export async function importCSVContacts(
     } else {
       const workSheetsFromFile = xlsx.parse(file);
       const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map(
-          (header) => header?.toString().toLowerCase(),
+        workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
+          header?.toString().toLowerCase(),
         ) ?? [];
       const headerIndices = headers.map((header, index) => ({ header, index }));
 
