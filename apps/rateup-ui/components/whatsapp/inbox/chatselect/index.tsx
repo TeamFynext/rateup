@@ -114,7 +114,10 @@ export default function WaInboxChatSelect(props: {
           ?.map((page) => page)
           .flat()
       : []
-    : props?.contacts;
+    : props?.contacts?.map((contact) => ({
+        ...contact,
+        total_contact_count: props.messageCount,
+      }));
 
   function validateSearchStringAsMobileNumber(searchString: string): Boolean {
     return searchString.match(/^\d{10}$/) ? true : false;
@@ -166,6 +169,7 @@ export default function WaInboxChatSelect(props: {
       }
     }
   }, [filteredContacts]);
+
   return (
     <Stack className={classes.wrapper}>
       <Stack className={classes.chat_select_header}>
@@ -193,7 +197,7 @@ export default function WaInboxChatSelect(props: {
             <Text className={classes.chat_select_filter_text}>All Chats</Text>
             <Group className={classes.chat_select_filter_indicator_wrapper}>
               <Text className={classes.chat_indicator_text}>
-                {props?.messageCount || 0} Chats
+                {contactsToDisplay?.[0]?.total_contact_count || 0} Chats
               </Text>
               {(isFetchingNextPage || isFilteredContactsFetchingNextPage) && (
                 <Loader size={10} />
