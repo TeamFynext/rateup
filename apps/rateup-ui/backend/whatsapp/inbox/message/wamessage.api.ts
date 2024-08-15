@@ -1,6 +1,7 @@
 import { WA_INBOX_BASE_PATH } from "..";
 import { WaInboxMessage, WaTemplateComponent } from "../../../../types/global";
 import { axiosClient } from "../../../apiClient";
+
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
 
 export type WaGetMessagesBody = {
@@ -42,6 +43,7 @@ export type ContactsWithLastMessage = ContactsData & {
     messageBody: WaInboxMessage;
   };
   userInitiatedFinalTimeStamp: string;
+  total_contact_count?: string;
 };
 export async function getContactsWithLastMessage(page: number) {
   return (
