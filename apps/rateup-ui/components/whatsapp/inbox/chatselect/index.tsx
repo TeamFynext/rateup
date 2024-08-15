@@ -35,7 +35,7 @@ import classes from "./styles.module.css";
 export default function WaInboxChatSelect(props: {
   contacts: ContactsWithLastMessage[];
   setFilteredContacts: (contacts: ContactsWithLastMessage[]) => void;
-  messageCount?: number;
+  messageCount?: string;
   setNewlyAdddedContact?: React.Dispatch<
     React.SetStateAction<ContactsWithLastMessage>
   >;
