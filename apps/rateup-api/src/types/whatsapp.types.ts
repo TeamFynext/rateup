@@ -80,6 +80,13 @@ export interface WaReceiveMessageBody {
       conversation: {
         id: string;
       };
+      type?: string;
+      payment?: {
+        reference_id?: string;
+        transaction?: {
+          status?: string;
+        };
+      };
     },
   ];
 }
@@ -213,6 +220,7 @@ export type WaTemplateButton = {
   flow_id?: string;
   flow_action?: "navigate" | "data_exchange";
   navigate_screen?: string;
+  example?: any;
 };
 
 export enum WHATSAPP_BUTTON_TYPE {

@@ -38,16 +38,13 @@ export async function createAutomatedReply(data: any) {
   return automatedReply;
 }
 
-export async function updateAutomatedReply(id: string, data: any) {
-  const automatedReply = await prisma.waAutomatedReply.update({
+export function updateAutomatedReply(id: string, data: any) {
+  return prisma.waAutomatedReply.update({
     where: {
       id,
     },
-    data: {
-      ...data,
-    },
+    data,
   });
-  return automatedReply;
 }
 
 export async function deleteAutomatedReply(id: string) {

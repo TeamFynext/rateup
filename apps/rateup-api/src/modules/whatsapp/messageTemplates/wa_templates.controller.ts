@@ -298,6 +298,136 @@ export async function uploadHandler(
   }
 }
 
+export async function sendTemplateToUserCore(
+  orgId: string,
+  templateId: string,
+  phone: string,
+  parameterData: any[],
+  teamId?: string,
+): Promise<void> {
+  const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+  const { data, defaultValues } = dbTemplate;
+  const components = [...parameterData]; // Clone parameter data
+  log.trace("parameterData => %o", parameterData);
+
+  const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
+
+  if (containsFlowButton) {
+    components.push({
+      type: "button",
+      sub_type: "flow",
+      index: 0,
+      parameters: [
+        {
+          type: "action",
+          action: {
+            flow_token: phone,
+          },
+        },
+      ],
+    });
+
+    const flowId = getFlowIdFromTemplateComponents(data.components);
+    if (!flowId) {
+      throw new Error("Flow id not found in template");
+    }
+
+    const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
+    if (!dbFlow) {
+      throw new Error("Flow not found in db");
+    }
+
+    const surveyTeamMap = dbFlow?.survey?.teams.find(
+      (t) => t.teamId === teamId,
+    )?.id;
+    if (!surveyTeamMap) {
+      throw new Error("Team not found in survey");
+    }
+
+    await deleteSession(orgId, phone);
+    await createSession({
+      phone,
+      orgId,
+      surveyTeamMapId: surveyTeamMap,
+      language: dbFlow?.survey?.languages[0],
+    });
+  }
+
+  const containsImage =
+    dbTemplate.data.components.find(
+      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+    )?.format === `IMAGE`;
+
+  if (containsImage) {
+    if (!components.some((c) => c.type === "header")) {
+      if (defaultValues?.image?.link) {
+        components.push({
+          type: "header",
+          parameters: [
+            {
+              type: "image",
+              image: {
+                link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+              },
+            },
+          ],
+        });
+      } else {
+        throw new Error(
+          "Image not found in template. Please upload an image and try again",
+        );
+      }
+    }
+  }
+
+  dbTemplate.data.components.forEach((item) => {
+    if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+      item?.buttons.forEach((button, idx) => {
+        if (button.type === "URL" && button?.example?.length > 0) {
+          components.push({
+            type: "button",
+            sub_type: "url",
+            index: idx,
+            parameters: [
+              {
+                type: "text",
+                text: phone,
+              },
+            ],
+          });
+        }
+      });
+    }
+  });
+
+  const templateQuery = {
+    name: data?.name,
+    language: {
+      code: dbTemplate.data?.language,
+    },
+    components: components,
+  };
+
+  const defaultValue = dbTemplate?.data?.components?.find(
+    (data) => data.example?.body_text,
+  )?.example?.body_text?.[0];
+
+  if (defaultValue?.length > 0) {
+    let params = templateQuery?.components.find(
+      (component) => component.type === "body",
+    )?.parameters;
+    params?.forEach((data, i) => {
+      if (data?.text?.trim().length === 0) {
+        data.text = defaultValue?.[i];
+      }
+    });
+  }
+
+  const templateMessage = createTemplateMessage(phone, templateQuery);
+  await sendMessage(orgId, templateMessage);
+  await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+}
+
 export async function sendTemplateToUserHandler(
   request: FastifyRequest<{
     Params: ByTemplateIdParamsSchema;
@@ -307,141 +437,21 @@ export async function sendTemplateToUserHandler(
 ) {
   try {
     const { templateId } = request.params;
-    const { phone, parameterData } = request.body;
+    const { phone, parameterData, teamId } = request.body;
     const orgId = request.user.orgId;
-    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    const { data, defaultValues } = dbTemplate;
-    const components = parameterData;
-    log.trace("parameterData => %o", parameterData);
 
-    const containsFlowButton = !!getFlowIdFromTemplateComponents(
-      data.components,
+    await sendTemplateToUserCore(
+      orgId,
+      templateId,
+      phone,
+      parameterData,
+      teamId,
     );
 
-    if (containsFlowButton) {
-      const teamId = request.body.teamId;
-      components.push({
-        type: "button",
-        sub_type: "flow",
-        index: 0,
-        parameters: [
-          {
-            type: "action",
-            action: {
-              flow_token: phone,
-            },
-          },
-        ],
-      });
-
-      const flowId = getFlowIdFromTemplateComponents(data.components);
-      if (!flowId) {
-        log.error("Flow id not found in template\n Template => %o", data);
-        reply.code(500).send("Flow id not found in template");
-        return;
-      }
-      // getting flow with surveyTeamMapId
-      const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
-      if (!dbFlow) {
-        log.error("Flow not found in db with id %s", flowId);
-        reply.code(500).send("Flow not found in db");
-        return;
-      }
-
-      const surveyTeamMap = dbFlow?.survey?.teams.find(
-        (t) => t.teamId === teamId,
-      )?.id;
-      if (!surveyTeamMap) {
-        log.error("Team not found in survey;\nteam => %s", teamId);
-        reply.code(500).send("Team not found in survey");
-        return;
-      }
-
-      await deleteSession(orgId, phone);
-      await createSession({
-        phone,
-        orgId,
-        surveyTeamMapId: surveyTeamMap,
-        language: dbFlow?.survey?.languages[0],
-      });
-      log.trace("Session created successfully");
-    }
-
-    const containsImage =
-      dbTemplate.data.components.find(
-        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-      )?.format === `IMAGE`;
-    if (containsImage) {
-      if (!components.some((c) => c.type === "header")) {
-        if (defaultValues?.image?.link) {
-          components.push({
-            type: "header",
-            parameters: [
-              {
-                type: "image",
-                image: {
-                  link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
-                },
-              },
-            ],
-          });
-        } else {
-          throw new Error(
-            "Image not found in template. Please upload an image and try again",
-          );
-        }
-      }
-    }
-    dbTemplate.data.components.forEach((item) => {
-      if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-        item?.buttons.forEach((button, idx) => {
-          if (button.type === "URL" && button?.example?.length > 0) {
-            components.push({
-              type: "button",
-              sub_type: "url",
-              index: idx,
-              parameters: [
-                {
-                  type: "text",
-                  text: phone,
-                },
-              ],
-            });
-          }
-        });
-      } else {
-        // components.push(item);
-        //skiping for now
-      }
-    });
-    const templateQuery = {
-      name: data?.name,
-      language: {
-        code: dbTemplate.data?.language,
-      },
-      components: components,
-    };
-    const defaultValue = dbTemplate?.data?.components?.find(
-      (data) => data.example?.body_text,
-    )?.example?.body_text?.[0];
-    if (defaultValue?.length > 0) {
-      let params = templateQuery?.components.find(
-        (component) => component.type === "body",
-      )?.parameters;
-      params?.forEach((data, i) => {
-        if (data?.text?.trim().length === 0) {
-          data.text = defaultValue?.[i];
-        }
-      });
-    }
-    const templateMessage = createTemplateMessage(phone, templateQuery);
-
-    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
-    await sendMessage(orgId, templateMessage);
-    reply.code(200).send("Template send to user successfully");
+    reply.code(200).send("Template sent to user successfully");
   } catch (error) {
     log.error("Error sending template to user \n%o", error);
-    reply.code(500).send(error);
+    reply.code(500).send(error.message || "Internal Server Error");
   }
 }
 
