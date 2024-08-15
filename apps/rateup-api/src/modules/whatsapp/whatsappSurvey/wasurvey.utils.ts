@@ -19,6 +19,7 @@ import { uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { WaSession } from "@prisma/client";
+import { sendMessage } from "./wasurvey.service";
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -39,6 +40,14 @@ export function getEventType(data: WaMessageBody) {
       data.entry[0].changes[0].value.messages?.length > 0
     ) {
       return WaEvent.Message;
+    } else if (
+      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status ===
+        "captured" &&
+      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.payment?.transaction
+        ?.status === "success" &&
+      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.type === "payment"
+    ) {
+      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status;
     } else if (data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status) {
       return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]
         ?.status as WaEvent;
@@ -46,6 +55,35 @@ export function getEventType(data: WaMessageBody) {
   }
   return null;
 }
+export const handlePaymentConfirmation = async (
+  phoneNo: string,
+  refrenceId: string,
+) => {
+  let orgId = process.env.ROOT_ORG;
+
+  const templateMessage: any = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: phoneNo,
+    type: "interactive",
+    interactive: {
+      type: "order_status",
+      body: {
+        text: "Awesome! See you at the meetup. Let's make it a blast! 🎉🎉",
+      },
+      action: {
+        name: "review_order",
+        parameters: {
+          reference_id: refrenceId,
+          order: {
+            status: "completed",
+          },
+        },
+      },
+    },
+  };
+  await sendMessage(orgId, templateMessage);
+};
 export function getMessageObject(data: WaMessageBody) {
   if (data.entry[0].changes[0].value.messages.length > 1) {
     // TODO: Find out when this happens
@@ -389,9 +427,9 @@ export async function generateMessageDataFromQuestion(
       let bodyText = description;
       // Displaying choices in `index) choice` format
       const options = question
-        .choices![lang].map(
-          (choice, index) => `\n${index + 1}) ${choice.value}`,
-        )
+        .choices![
+          lang
+        ].map((choice, index) => `\n${index + 1}) ${choice.value}`)
         .join();
 
       bodyText = bodyText + options;

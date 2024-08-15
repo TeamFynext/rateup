@@ -9,8 +9,12 @@ import {
   parseMessage,
 } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
-import { sendTextMessage } from "../whatsappSurvey/wasurvey.service";
+import {
+  sendMessage,
+  sendTextMessage,
+} from "../whatsappSurvey/wasurvey.service";
 import { log } from "../../../utils/logger";
+import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
 
 export function validateAutomationMatchCondition(
   automation: WaAutomatedReply,
@@ -75,14 +79,95 @@ export async function sendAutomatedReplyMessage(
   { from }: WaParsedMessage,
   automation: WaAutomatedReply,
 ) {
-  const { responseType, responseText } = automation;
+  const { responseType, responseText, responseTemplateId, teamId, name } =
+    automation;
 
   if (responseType === WaAutomatedReplyResponseType.Template) {
-    // TODO:
-    throw new Error("Not implemented");
+    // TODO: improve template sending
+    await sendTemplateToUserCore(orgId, responseTemplateId, from, [], teamId);
+  } else if (orgId === process.env.ROOT_ORG && name === "founders-meet") {
+    await sendPaymentInitTemplate(orgId, from);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
     await sendTextMessage({ phone: from, orgId }, "", responseText);
   } else {
     throw new Error("Not implemented");
   }
+}
+
+function generateOrderReferenceId() {
+  const timestamp = Date.now().toString(36); // Convert timestamp to base36 for shorter representation
+  const randomPart = Math.random().toString(36).substring(2, 7); // Generate a random 5-character string
+
+  let referenceId = `ord-${timestamp}-${randomPart}`;
+
+  // Ensure the length doesn't exceed 32 characters
+  referenceId = referenceId.substring(0, 32);
+
+  // Replace invalid characters with allowed ones
+  referenceId = referenceId.replace(/[^a-zA-Z0-9_.-]/g, "");
+
+  return referenceId;
+}
+
+export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
+  const uniqueReferenceId = generateOrderReferenceId();
+  const templateMessage: any = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: phoneNo,
+    type: "interactive",
+    interactive: {
+      type: "order_details",
+      body: {
+        text: "Please, click the Pay Now button to complete your registration",
+      },
+      action: {
+        name: "review_and_pay",
+        parameters: {
+          reference_id: uniqueReferenceId,
+          type: "digital-goods",
+          payment_settings: [
+            {
+              type: "payment_gateway",
+              payment_gateway: {
+                type: "razorpay",
+                configuration_name: "RateUp",
+                razorpay: {
+                  receipt: "founders-meet",
+                },
+              },
+            },
+          ],
+          currency: "INR",
+          total_amount: {
+            value: 70000,
+            offset: 100,
+          },
+          order: {
+            status: "pending",
+            type: "quick_pay",
+            items: [
+              {
+                name: "Founders Meet",
+                amount: {
+                  value: 70000,
+                  offset: 100,
+                },
+                quantity: 1,
+              },
+            ],
+            subtotal: {
+              value: 70000,
+              offset: 100,
+            },
+            tax: {
+              value: 0,
+              offset: 100,
+            },
+          },
+        },
+      },
+    },
+  };
+  await sendMessage(orgId, templateMessage);
 }

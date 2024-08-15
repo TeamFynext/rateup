@@ -7,6 +7,7 @@ import {
   getEventType,
   getMessageObject,
   getQuestionByIdFromSession,
+  handlePaymentConfirmation,
   isValidResponse,
   parseMessage,
   parseResponse,
@@ -108,6 +109,11 @@ export async function whatsappEventHandler(
     if (!eventType) {
       // Probably a message delivery status. Ignoring...
       return;
+    } else if (eventType === "captured") {
+      await handlePaymentConfirmation(
+        body.entry[0].changes[0].value.statuses?.[0].recipient_id,
+        body.entry[0].changes[0].value.statuses?.[0].payment?.reference_id,
+      );
     } else if (
       [WaEvent.DELIVERED, WaEvent.READ, WaEvent.FAILED, WaEvent.SENT].includes(
         eventType,
@@ -225,16 +231,15 @@ async function whatsappMessageHandler(
         session = undefined;
       }
     }
+    const automation = await checkIfMessageMatchesAnyAutomation(
+      orgId,
+      waMessage,
+    );
+    if (automation) {
+      await sendAutomatedReplyMessage(orgId, parsedMessage, automation);
+    }
     if (session) {
       await handleWaSurveySession(orgId, waMessage, session);
-    } else {
-      const automation = await checkIfMessageMatchesAnyAutomation(
-        orgId,
-        waMessage,
-      );
-      if (automation) {
-        await sendAutomatedReplyMessage(orgId, parsedMessage, automation);
-      }
     }
   }
 }
