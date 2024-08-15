@@ -1,5 +1,4 @@
 import { MultipartFile } from "@fastify/multipart";
-import { WaTemplate } from "@prisma/client";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import { getWaSettings } from "../settings/wa_settings.service";
@@ -22,6 +21,7 @@ import {
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
+import { WaTemplateComponent } from "../../../types/whatsapp.types";
 
 /**
  * fetches templates from WhatsApp Business API
@@ -74,6 +74,22 @@ export async function getTemplatesByOrgId(orgId: string) {
   return templates as WaTemplateWithTypes[];
 }
 
+type templateData = {
+  id: string;
+  createdAt: Date;
+  data: {
+    components: WaTemplateComponent[];
+    name: string;
+    language: string;
+  };
+  acceptButton: string | null;
+  defaultValues: {
+    image: {
+      link: string;
+    };
+  } | null;
+  orgId: string;
+};
 export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
   const template = await prisma.waTemplate.findFirst({
     where: {
@@ -81,7 +97,7 @@ export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
       id,
     },
   });
-  return template;
+  return template as templateData;
 }
 
 export async function getTemplateByNameAndOrgId(name: string, orgId: string) {
@@ -430,7 +446,7 @@ export async function uploadFileToWaTemplate(
 
 interface SendTemplateToPhoneProps {
   orgId: string;
-  dbTemplate: WaTemplate;
+  dbTemplate: templateData;
   phone: string;
   teamId: string | undefined;
   header: SendTemplateHeaderComponent;
@@ -483,8 +499,9 @@ export async function sendTemplateToPhone({
       log.error("Team id not found in request");
       throw new Error("Team id not found in request");
     }
-    const surveyTeamMap = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)
-      ?.id;
+    const surveyTeamMap = dbFlow?.survey?.teams.find(
+      (t) => t.teamId === teamId,
+    )?.id;
     if (!surveyTeamMap) {
       log.error("Team not found in survey;\nteam => %s", teamId);
       throw new Error("Team not found in survey");

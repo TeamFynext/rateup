@@ -13,6 +13,7 @@ import {
   updateAutomatedReply,
 } from "./wa_automatedReply.service";
 import { ByTeamIdParams } from "../../team/team.schema";
+import { log } from "../../../utils/logger";
 
 export async function getAutomatedRepliesByTeamIdHandler(
   req: FastifyRequest<{ Params: ByTeamIdParams }>,
@@ -54,11 +55,13 @@ export async function updateAutomatedReplyHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const automatedReply = await updateAutomatedReply(
-    req.params.waAutomatedReplyId,
-    req.body,
-  );
-  reply.send(automatedReply);
+  try {
+    await updateAutomatedReply(req.params.waAutomatedReplyId, req.body);
+    reply.code(204).send();
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send("error in updating automatedReply");
+  }
 }
 
 export async function deleteAutomatedReplyHandler(

@@ -309,13 +309,19 @@ export async function filterChats(
               w."messageBody"->'exchangeProcess' = '"receive"'
           ORDER BY
               w."contactId", w."waCreatedAt" DESC
+      ),
+      TotalContactCount AS (
+          SELECT COUNT(DISTINCT c."id")::text AS total_contact_count
+          FROM "Contact" c
+          WHERE c."orgId" = $1::uuid ${extendQueryForFilters()}
       )
       SELECT
           c.*,
           lm."messageBody" AS LatestMessage,
           lm."waCreatedAt" AS LatestMessageTime,
           lrm.receiveMessageBody AS LatestReceiveMessage,
-          lrm.receiveCreatedAt AS LatestReceiveTime
+          lrm.receiveCreatedAt AS LatestReceiveTime,
+          tcc.total_contact_count
       FROM
           "Contact" c
       LEFT JOIN 
@@ -328,19 +334,24 @@ export async function filterChats(
           LatestMessages lm ON c.id = lm."contactId"
       LEFT JOIN
           LatestReceiveMessages lrm ON c.id = lrm."contactId"
+      CROSS JOIN
+          TotalContactCount tcc
       WHERE
           c."orgId" = $1::uuid ${extendQueryForFilters()}
       ORDER BY 
           lm."waCreatedAt" DESC NULLS LAST
       LIMIT 5000 OFFSET $2`;
+
     const contacts: Array<
       Contact & {
         latestmessage: WaMessage;
         latestreceivemessage: WaMessage;
         latestmessagetime: string;
         latestreceivetime: string;
+        total_contact_count: number; // Added total_contact_count
       }
     > = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 5000);
+
     const uniqueContacts = Array.from(
       contacts.reduce(
         (map, contact) => map.set(contact.id, contact),
