@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Button,
@@ -7,11 +10,13 @@ import {
   SelectProps,
   Stack,
 } from "@mantine/core";
-import { UseFormReturnType, useForm } from "@mantine/form";
+import { useForm, UseFormReturnType } from "@mantine/form";
+
 import {
-  WaAutomatedReplyMatchType,
-  WaAutomatedReplyResponseType,
-} from "../../../../types/enums";
+  useCreateWaAutomatedReplyMutation,
+  useUpdateWaAutomatedReplyMutation,
+} from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
+import { useWaTemplates } from "../../../../backend/whatsapp/whatsapp.query";
 import {
   ContainedSelection,
   ContainedTagInput,
@@ -19,18 +24,15 @@ import {
   ContainedTextField,
 } from "../../../../components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../../../../components/input/TeamSelector";
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import {
+  WaAutomatedReplyMatchType,
+  WaAutomatedReplyResponseType,
+} from "../../../../types/enums";
 import {
   WaAutomatedReply,
   WaAutomatedReplyMatchData,
 } from "../../../../types/global";
-import { useWaTemplates } from "../../../../backend/whatsapp/whatsapp.query";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import {
-  useCreateWaAutomatedReplyMutation,
-  useUpdateWaAutomatedReplyMutation,
-} from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 export default function CreateAutomatedReplyPage() {
   return (
@@ -150,7 +152,6 @@ export function AutomatedReplyForm({
         <ContainedSelection
           label="Response Type"
           data={Object.values(WaAutomatedReplyResponseType)}
-          disabled
           {...rootForm.getInputProps("responseType")}
         />
         <ResponseSelector type={rootForm.values.responseType} form={rootForm} />
@@ -225,7 +226,7 @@ function ResponseSelector({ type, form }: ResponseSelectorProps) {
         />
       )}
       {type === WaAutomatedReplyResponseType.Template && (
-        <TemplateSelector {...form.getInputProps("templateId")} />
+        <TemplateSelector {...form.getInputProps("responseTemplateId")} />
       )}
     </>
   );

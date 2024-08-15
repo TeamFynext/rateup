@@ -6,11 +6,11 @@ import {
   GridRowId,
 } from "@mui/x-data-grid";
 
+import styles from "../../../components/adminPanel/admin.module.css";
+import { renderFeatures } from "../../../pages/admin/subscriptions";
 import { PaymentType } from "../../../types/enums";
 import { widgetIds } from "../../../utils/constants/forms";
 import { showLoadingToast } from "../../../utils/notifications";
-import { renderFeatures } from "../../../pages/admin/subscriptions";
-import styles from "../../../components/adminPanel/admin.module.css";
 
 export const generateColumns = (
   data,
@@ -120,7 +120,7 @@ export const generateColumns = (
           ...params.props,
         };
       },
-      valueOptions: data,
+      valueOptions: data ? [...data, null] : [],
     },
     {
       field: "stripeId",
@@ -140,7 +140,7 @@ export const generateColumns = (
           ...params.props,
         };
       },
-      valueOptions: stripeProducts,
+      valueOptions: stripeProducts ? [...stripeProducts, null] : [],
     },
     {
       field: "features",
