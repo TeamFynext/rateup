@@ -45,10 +45,20 @@
 .theme-preview-container :global(.preview-device-selector) {
   position: absolute;
   top: 0.75rem;
-  right: 0.75rem;
+  left: 0.75rem;
   z-index: 100;
   background-color: white;
   border-radius: 0.3125rem;
+}
+
+.theme-preview-container .edit-page-theme-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 100;
+  height: auto;
+  border-radius: 2rem;
+  padding: 0.5rem 1rem;
 }
 
 .survey-theme-preview-tab-panels-root {
@@ -165,6 +175,7 @@
 .start-btn-input-div :global(.auto-save-input-edit-btn) {
   position: relative;
   padding: 0.75rem 2rem;
+  padding-right: 2.5rem;
   left: 0;
   overflow: visible;
   width: auto;

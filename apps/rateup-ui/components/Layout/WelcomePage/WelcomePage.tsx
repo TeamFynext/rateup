@@ -2,6 +2,8 @@ import React from "react";
 
 import { Button, Image, Stack, Text } from "@mantine/core";
 
+import { PageType } from "@/types/enums";
+
 import { cordinateStyle } from "../../../utils";
 import { surveyUploadsPath } from "../../../utils/constants";
 import { lexend } from "../../../utils/fonts";
@@ -21,14 +23,28 @@ function WelcomePage({
   largeScreen,
   orgLogoSrc,
   orgLogoStyles,
+  questionsArr,
 }: {
   surveyThemeData: WelcomeTheme;
   onStart: any;
   largeScreen: any;
   orgLogoSrc: string | null;
   orgLogoStyles: any;
+  questionsArr: any;
 }) {
   const position = surveyThemeData.button?.position;
+
+  const defaultTitleSubtitleStartButtonTexts = {
+    titleText: "Welcome",
+    subtitleText: "Welcome to the survey",
+    startButtonText: "Start Survey",
+  };
+
+  const welcomeTypeQuestionObj =
+    questionsArr?.find((question) => question.type === PageType.Welcome) ||
+    defaultTitleSubtitleStartButtonTexts;
+  const { titleText, subtitleText, startButtonText } = welcomeTypeQuestionObj;
+
   return (
     <Stack
       align="center"
@@ -47,12 +63,8 @@ function WelcomePage({
           style={{ ...orgLogoStyles }}
         />
       )}
-      <Text style={surveyThemeData?.title?.styles}>
-        {surveyThemeData?.title?.title || " "}
-      </Text>
-      <Text style={surveyThemeData?.subtitle?.styles}>
-        {surveyThemeData?.subtitle?.subtitle || " "}
-      </Text>
+      <Text style={surveyThemeData?.title?.styles}>{titleText}</Text>
+      <Text style={surveyThemeData?.subtitle?.styles}>{subtitleText}</Text>
       <div
         style={{
           display: "flex",
@@ -76,7 +88,7 @@ function WelcomePage({
           miw={200}
           ff={"inherit"}
         >
-          {surveyThemeData?.button?.label || "Start Survey"}
+          {startButtonText}
         </Button>
       </div>
     </Stack>

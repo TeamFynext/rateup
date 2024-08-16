@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import {
   Center,
   Flex,
@@ -13,10 +17,10 @@ import {
 import { useDisclosure, useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { IconHome } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
+
+import { PageType } from "@/types/enums";
+
 import {
   getPublicSurvey,
   getPublicSurveyGoogleLink,
@@ -25,11 +29,11 @@ import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/revi
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
+import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 import GoogleReview from "../../../../components/Survey/TakeSurvey/GoogleReview";
 import { imagesPath, surveyUploadsPath } from "../../../../utils/constants";
 import { lexend500, lexend600 } from "../../../../utils/fonts";
 import styles from "./end.module.css";
-import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 
 export async function getServerSideProps(context) {
   const { surveyId } = context.params;
@@ -38,12 +42,23 @@ export async function getServerSideProps(context) {
   let propsToPass: any = {
     enableGoogleReview: false,
   };
+
+  const defaultTitleSubtitleTexts = {
+    titleText: "Thank you",
+    subtitleText: "Thank you for taking the survey",
+  };
+
   if (msg == "thanks") {
     const [googleLink, reviews, survey] = await Promise.all([
       getPublicSurveyGoogleLink(surveyId),
       getPublicReviewsBySurveyTeamMapId(surveyId, language),
       getPublicSurvey(surveyId),
     ]);
+    const questions = survey.questions;
+    const thankyouPageTypeObj =
+      questions?.find(
+        (questionObj) => questionObj.type === PageType.ThankYou,
+      ) || defaultTitleSubtitleTexts;
     propsToPass.googleLink = googleLink;
     propsToPass.reviews = reviews;
     if (googleLink) propsToPass.enableGoogleReview = true;
@@ -52,14 +67,23 @@ export async function getServerSideProps(context) {
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
       propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
+      propsToPass.titleText = thankyouPageTypeObj.titleText;
+      propsToPass.subtitleText = thankyouPageTypeObj.subtitleText;
     }
   } else {
     const survey = await getPublicSurvey(surveyId);
+    const questions = survey.questions;
+    const thankyouPageTypeObj =
+      questions?.find(
+        (questionObj) => questionObj.type === PageType.ThankYou,
+      ) || defaultTitleSubtitleTexts;
     if (survey) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
       propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
+      propsToPass.titleText = thankyouPageTypeObj.titleText;
+      propsToPass.subtitleText = thankyouPageTypeObj.subtitleText;
     }
   }
   return {
@@ -82,6 +106,8 @@ export default function ThankYou({
     error: "",
     price: "",
   },
+  titleText,
+  subtitleText,
 }) {
   const [imageLoading, setImageLoading] = useState(true);
   const [pulsing, setPulsing] = useState(true);
@@ -348,9 +374,7 @@ export default function ThankYou({
                       ...surveyThemeData?.thankyouTheme?.title?.styles,
                     }}
                   >
-                    {!!err
-                      ? "Thank You!"
-                      : surveyThemeData?.thankyouTheme?.title?.title}
+                    {!!err ? "Thank You!" : titleText}
                   </Title>
                   {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle ||
                     err) && (
@@ -359,7 +383,7 @@ export default function ThankYou({
                     >
                       {!!err
                         ? "You've already submitted a response earlier."
-                        : surveyThemeData?.thankyouTheme?.subtitle?.subtitle}
+                        : subtitleText}
                     </Text>
                   )}
                 </Stack>

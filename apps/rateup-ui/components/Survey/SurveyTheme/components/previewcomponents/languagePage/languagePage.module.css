@@ -54,13 +54,9 @@
   position: relative;
 }
 
-.autosave-input-right-chevron-icon-container
-  :global(.auto-save-input-edit-btn) {
-  padding-right: 2.5rem;
-}
-
-.autosave-input-right-chevron-icon-container input {
+.start-btn-wrapper .autosave-input-right-chevron-icon-container input {
   padding-right: 1.75rem;
+  padding-left: 1rem;
 }
 
 .start-btn-right-chevron {

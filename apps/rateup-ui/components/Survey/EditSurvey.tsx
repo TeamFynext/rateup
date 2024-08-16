@@ -62,7 +62,7 @@ export function EditSurvey({
   subscription,
 }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
-    QuestionTabsEnum.SurveyPreview,
+    QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const { surveyId } = useContext(SurveyContext);
@@ -149,11 +149,12 @@ export function EditSurvey({
   }
 
   useEffect(() => {
-    closeStylesEditorDrawer();
+    if (inititalSelectedTabForSurveyThemeComp !== ThemeTabEnum.SURVEY)
+      closeStylesEditorDrawer();
   }, [inititalSelectedTabForSurveyThemeComp]);
 
   useEffect(() => {
-    closeStylesEditorDrawer();
+    if (activeTab !== QuestionTabsEnum.SurveyPreview) closeStylesEditorDrawer();
   }, [activeTab]);
 
   return (
@@ -211,6 +212,7 @@ export function EditSurvey({
                             <SurveyTheme
                               survey={survey}
                               previewId={`${selectedQ.type}-preview`}
+                              onEditPageBtnClick={openStylesEditorDrawer}
                             />
                           )}
                         </Stack>
@@ -324,7 +326,12 @@ export function EditSurvey({
                       isThemeObjBeingEditedDefaultTheme
                     }
                     themeObjBeingEdited={themeObjBeingEdited}
-                    closeStylesEditorDrawer={closeStylesEditorDrawer}
+                    onClose={() => {
+                      closeStylesEditorDrawer();
+                      if (activeTab === QuestionTabsEnum.SurveyPreview) {
+                        setActiveTab(QuestionTabsEnum.None);
+                      }
+                    }}
                     allThemesArr={allThemesArr}
                     themeSelectorState={themeSelectorState}
                     setThemeSelectorState={setThemeSelectorState}

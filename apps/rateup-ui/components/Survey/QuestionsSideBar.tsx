@@ -84,7 +84,7 @@ export function QuestionsSideBar({
     if (questionId === selectedQ?.id) {
       setSelectedQ(null);
     }
-    setActiveTab(QuestionTabsEnum.SurveyPreview);
+    setActiveTab(QuestionTabsEnum.None);
   };
 
   const items = questionsState?.map((question, index) => (
@@ -148,7 +148,11 @@ export function QuestionsSideBar({
             <ActionIcon
               className={styles["edit-theme-btn"]}
               variant="light"
-              onClick={openStylesEditorDrawer}
+              onClick={() => {
+                setSelectedQ(null);
+                openStylesEditorDrawer();
+                setActiveTab(QuestionTabsEnum.SurveyPreview);
+              }}
             >
               <IconEdit />
             </ActionIcon>
