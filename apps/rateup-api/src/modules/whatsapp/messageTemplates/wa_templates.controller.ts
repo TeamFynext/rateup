@@ -421,6 +421,15 @@ export async function sendTemplateToUserCore(
         data.text = defaultValue?.[i];
       }
     });
+    if (!params) {
+      templateQuery?.components?.push({
+        type: "body",
+        parameters: defaultValue?.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
+    }
   }
 
   const templateMessage = createTemplateMessage(phone, templateQuery);
