@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Badge,
@@ -9,29 +12,30 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
-import { formatIsoDateString } from "../../../utils/dateTime";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import Pricing from "../../../components/HomePage/pages/Pricing";
 import { useDisclosure, useElementSize } from "@mantine/hooks";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import {
   IconCheck,
   IconInfoCircle,
   IconMail,
   IconRefresh,
 } from "@tabler/icons-react";
-import classes from "./setting.module.css";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
+import { useCancelStripeSubscriptionMutation } from "../../../backend/payment/stripe/stripe.query";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import Pricing from "../../../components/HomePage/pages/Pricing";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { formatIsoDateString } from "../../../utils/dateTime";
 import {
   showLoadingToast,
   showSuccessToast,
 } from "../../../utils/notifications";
-import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
-import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import { useRouter } from "next/router";
-import { useCancelStripeSubscriptionMutation } from "../../../backend/payment/stripe/stripe.query";
+import classes from "./setting.module.css";
 
 const Billing = ({
   subscription,
@@ -74,15 +78,15 @@ const Billing = ({
   const [cancelDialogOpened, { open, close }] = useDisclosure();
   const CancelRazorpaySubscription = useCancelRazorpaySubscriptionMutation();
   const CancelStripeSubscription = useCancelStripeSubscriptionMutation();
-
+  const { translations } = useTranslations();
   const { ref, width } = useElementSize();
   const router = useRouter();
   const handleCancelSubscription = () => {
     showLoadingToast(
-      "Hold.. your subscription is getting cancelled...",
+      translations["Hold.. your subscription is getting cancelled..."],
       "load-data",
       true,
-      "Cancelling Subscription",
+      translations["Cancelling Subscription"],
     );
 
     if (subscription?.basePlan?.stripeProduct) {
@@ -120,12 +124,18 @@ const Billing = ({
             >
               <Group justify="space-between">
                 <Text mb="lg">
-                  Your plan activation is under process. <br /> You will receive
-                  activation status via email shortly. <br />
-                  Usually takes between 30seconds to 15 mins.
+                  {translations["Your plan activation is under process."]}{" "}
+                  <br />{" "}
+                  {
+                    translations[
+                      "You will receive activation status via email shortly."
+                    ]
+                  }{" "}
+                  <br />
+                  {translations["Usually takes between 30seconds to 15 mins."]}
                 </Text>
                 <RateupButtonPrimary
-                  title="Refresh Status"
+                  title={translations["Refresh Status"]}
                   onClick={handleRefresh}
                   rightIcon={<IconRefresh />}
                   disabled={isRefetching}
@@ -136,20 +146,20 @@ const Billing = ({
 
           <Group>
             <Title order={4}>Current Plan</Title>
-            <Tooltip label="Refresh data">
+            <Tooltip label={translations["Refresh data"]}>
               <ActionIcon
                 variant="light"
                 aria-label="Settings"
                 onClick={async () => {
                   showLoadingToast(
-                    "Hold on...data getting updated.",
+                    translations["Hold on...data getting updated."],
                     "subscription",
                     true,
-                    "Refreshing",
+                    translations["Refreshing"],
                   );
                   await handleRefresh();
                   showSuccessToast(
-                    "Updated Succesfully",
+                    translations["Updated Succesfully"],
                     "subscription",
                     <IconCheck />,
                     true,
@@ -168,10 +178,14 @@ const Billing = ({
             forDeleteFunctionality
             opened={cancelDialogOpened}
             onClose={close}
-            headerLabel="Are you sure you want to cancel your active subscription?"
-            headerTitle="Cancel Subscription"
-            confirmLabel="Confirm Cancel"
-            closeLabel="Close "
+            headerLabel={
+              translations[
+                "Are you sure you want to cancel your active subscription?"
+              ]
+            }
+            headerTitle={translations["Cancel Subscription"]}
+            confirmLabel={translations["Confirm Cancel"]}
+            closeLabel={translations["Close "]}
             onConfirm={handleCancelSubscription}
             includeEmailConfirmation={true}
           />
@@ -180,7 +194,7 @@ const Billing = ({
               <Group justify="space-between">
                 <Stack gap={1} style={{ minWidth: "230px" }}>
                   <Text c={"GrayText"} fw={500} fz={15}>
-                    Plan Name
+                    {translations["Plan Name"]}
                   </Text>
                   <Title order={5}>{subscription?.basePlan?.name}</Title>
                 </Stack>
@@ -189,7 +203,7 @@ const Billing = ({
                   !isCustomPlan && (
                     <Stack gap={1}>
                       <Text c={"GrayText"} fw={500} fz={15}>
-                        Next Charging on:
+                        {translations["Next Charging on:"]}
                       </Text>
                       <Title order={5}>
                         {formatIsoDateString(
@@ -204,7 +218,7 @@ const Billing = ({
                   !isCustomPlan && (
                     <Stack gap={1}>
                       <Text c={"GrayText"} fw={500} fz={15}>
-                        Cancelled on:
+                        {translations["Cancelled on:"]}
                       </Text>
                       <Title order={5}>
                         {formatIsoDateString(
@@ -218,13 +232,16 @@ const Billing = ({
                 (subscription?.basePlan?.name === "FREE PLAN" &&
                   !isCustomPlan &&
                   !isProcessingPlan) ? (
-                  <RateupButtonPrimary title="Upgrade plan" onClick={toggle} />
+                  <RateupButtonPrimary
+                    title={translations["Upgrade plan"]}
+                    onClick={toggle}
+                  />
                 ) : (
                   subscription?.basePlan?.name &&
                   (activeOrderData?.subscriptionStatus === "cancelled" &&
                   !isCustomPlan ? (
                     <RateupButtonPrimary
-                      title="Cancelled"
+                      title={translations["Cancelled"]}
                       onClick={() => {}}
                       disabled
                     />
@@ -232,7 +249,7 @@ const Billing = ({
                     !isCustomPlan &&
                     !isProcessingPlan && (
                       <RateupButtonPrimary
-                        title="Cancel Subscription"
+                        title={translations["Cancel Subscription"]}
                         onClick={open}
                         color="red"
                       />
@@ -242,7 +259,7 @@ const Billing = ({
 
                 {isCustomPlan && (
                   <RateupButtonPrimary
-                    title="Upgrade plan"
+                    title={translations["Upgrade plan"]}
                     onClick={openCustom}
                   />
                 )}
@@ -250,7 +267,7 @@ const Billing = ({
               <Group justify="space-between">
                 <Stack gap={1}>
                   <Text c={"GrayText"} fw={500} fz={15}>
-                    Validity
+                    {translations["Validity"]}
                   </Text>
                   <Group>
                     <Text>
@@ -263,13 +280,13 @@ const Billing = ({
                       }
                     >
                       {checkExpiry(subscription?.expiresAt)
-                        ? "Expired"
-                        : "Active"}
+                        ? translations["Expired"]
+                        : translations["Active"]}
                     </Badge>
                     {checkExpiry(subscription?.expiresAt) &&
                     !isProcessingPlan ? (
                       <RateupButtonPrimary
-                        title="Upgrade plan"
+                        title={translations["Upgrade plan"]}
                         onClick={toggle}
                       />
                     ) : null}
@@ -277,7 +294,7 @@ const Billing = ({
                 </Stack>
                 <Stack gap={1}>
                   <Text c={"GrayText"} fw={500} fz={15}>
-                    Billing Cycle
+                    {translations["Billing Cycle"]}
                   </Text>
                   <Title order={5}>
                     {(subscription?.basePlan?.paymentPlan?.period ||
@@ -287,7 +304,7 @@ const Billing = ({
                 </Stack>
                 <Stack gap={1}>
                   <Text c={"GrayText"} fw={500} fz={15}>
-                    Plan Cost
+                    {translations["Plan Cost"]}
                   </Text>
                   <Title order={5}>
                     {subscription?.basePlan?.paymentPlan?.amount
@@ -302,16 +319,16 @@ const Billing = ({
                 <Group justify="space-between">
                   <Stack gap={1}>
                     <Text c={"GrayText"} fw={500} fz={15}>
-                      Addons
+                      {translations["Addons"]}
                     </Text>
-                    <Title order={5}>Nil</Title>
+                    <Title order={5}>{translations["Nil"]}</Title>
                   </Stack>
                   {!["FREE PLAN", "RATEUP TRIAL"].includes(
                     subscription?.basePlan?.name,
                   ) ? (
                     activeOrderData?.subscriptionStatus === "cancelled" ? (
                       <RateupButtonPrimary
-                        title="Upgrade plan"
+                        title={translations["Upgrade plan"]}
                         onClick={toggle}
                       />
                     ) : (
@@ -326,7 +343,7 @@ const Billing = ({
               <Group justify="center" mt="xl" mb="-20px">
                 <Text c="dimmed">
                   {" "}
-                  *For Custom Plans / Support / Assistance
+                  {translations["*For Custom Plans / Support / Assistance"]}
                 </Text>
                 <IconMail
                   style={{ width: "20px", height: "20px", color: "gray" }}
@@ -346,7 +363,7 @@ const Billing = ({
         opened={openedUpgradeModal}
         onClose={closeUpgradeModal}
         centered
-        title="Upgrade Your Plan"
+        title={translations["Upgrade Your Plan"]}
         size="auto"
       >
         <Pricing isAccount={true} handleSelection={closeUpgradeModal} />
@@ -356,17 +373,28 @@ const Billing = ({
         opened={cancelResult}
         onClose={closeCancelResult}
         centered
-        title="Subscription Cancelled !"
+        title={translations["Subscription Cancelled !"]}
         size="auto"
       >
         <Stack justify="center" mt="xl" mb="-20px">
           <Text c="dimmed">
-            Your current Rateup plan subscription is successfully cancelled.{" "}
-            <br /> <br /> You can still enjoy the premium features until the
-            validity expires.
+            {
+              translations[
+                "Your current Rateup plan subscription is successfully cancelled."
+              ]
+            }
+            <br /> <br />{" "}
+            {
+              translations[
+                "You can still enjoy the premium features until the validity expires."
+              ]
+            }
             <br />
-            Also your existing base plan benefits will be replaced on an
-            upgrade.
+            {
+              translations[
+                "Also your existing base plan benefits will be replaced on an upgrade."
+              ]
+            }
           </Text>
           <Group mb="50" mt="md">
             <IconMail
@@ -385,14 +413,14 @@ const Billing = ({
         opened={customUpgradeModal}
         onClose={closeCustomModal}
         centered
-        title="Upgrade Custom Plan"
+        title={translations["Upgrade Custom Plan"]}
         size="auto"
       >
         <Stack justify="center" mt="xl" mb="-20px">
           <Text c="dimmed">
             {" "}
-            For Upgrading your Custom Plan, <br />
-            Connect Rateup billing team via email.
+            {translations["For Upgrading your Custom Plan,"]} <br />
+            {translations["Connect Rateup billing team via email."]}
           </Text>
           <Group mb="50" mt="md">
             <IconMail

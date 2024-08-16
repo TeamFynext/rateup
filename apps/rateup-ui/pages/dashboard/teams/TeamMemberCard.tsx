@@ -1,30 +1,33 @@
 import React, { useState } from "react";
+
 import {
-  Flex,
-  Text,
-  Badge,
-  Menu,
   ActionIcon,
-  Stack,
-  Title,
+  Badge,
   Button,
+  Flex,
+  Menu,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconDots,
   IconPencilMinus,
   IconSend,
   IconTrash,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import { useUser } from "../../../context/UserContext";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { MemberEditFormModal } from "../members";
-import { UserRole } from "../../../utils/enums";
+
 import {
   useDeleteInviteMutation,
   userResendInviteTeamMutation,
 } from "../../../backend/team/team.query";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useUser } from "../../../context/UserContext";
+import useTranslations from "../../../dictionaries/useTranslation";
+import { UserRole } from "../../../utils/enums";
 import { showErrorToast } from "../../../utils/notifications";
+import { MemberEditFormModal } from "../members";
 
 const TeamMemberCard = ({
   member,
@@ -42,6 +45,7 @@ const TeamMemberCard = ({
 }) => {
   const { user } = useUser();
   const [memberModalOpenId, setMemberModalOpenedId] = useState("");
+  const { translations } = useTranslations();
   return (
     <>
       <PaperLayout>
@@ -86,7 +90,7 @@ const TeamMemberCard = ({
                 variant="dot"
                 size="sm"
               >
-                {member?.role}
+                {translations[member?.role]}
               </Badge>
             )}
             <Badge
@@ -94,7 +98,7 @@ const TeamMemberCard = ({
               variant="light"
               p={"sm"}
             >
-              {member.active ? "ACTIVE" : member?.status}
+              {translations[member.active ? "ACTIVE" : member?.status]}
             </Badge>
           </Flex>
         </Stack>
@@ -119,27 +123,36 @@ export default TeamMemberCard;
 function TeamMemberMenu({ status, inviteId, teamID }) {
   const { mutate, isPending, isError } = userResendInviteTeamMutation();
   const deleteInviteMutation = useDeleteInviteMutation(teamID);
+  const { translations } = useTranslations();
   if (deleteInviteMutation?.isPending || isPending) {
     notifications.show({
       id: deleteInviteMutation?.isPending
         ? "load-data-deleting"
         : "load-data-invitaion",
       loading: true,
-      title: deleteInviteMutation?.isPending
-        ? "Deleting Invite.."
-        : "Resending Invitation..",
-      message: deleteInviteMutation?.isPending
-        ? "Hold on, Member invite is getting deleted."
-        : "Hold on, Team Invitation Resending.",
+      title:
+        translations[
+          deleteInviteMutation?.isPending
+            ? "Deleting Invite.."
+            : "Resending Invitation.."
+        ],
+      message:
+        translations[
+          deleteInviteMutation?.isPending
+            ? "Hold on, Member invite is getting deleted."
+            : "Hold on, Team Invitation Resending."
+        ],
       autoClose: false,
       withCloseButton: false,
     });
   }
   if (isError || deleteInviteMutation?.isError) {
     showErrorToast(
-      isError
-        ? "Team Invitation Resend Failed"
-        : "Team Invitation Deletion Failed",
+      translations[
+        isError
+          ? "Team Invitation Resend Failed"
+          : "Team Invitation Deletion Failed"
+      ],
       isError ? "load-data-invitaion" : "load-data-deleting",
       "",
       true,
@@ -172,7 +185,7 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
               mutate(inviteId);
             }}
           >
-            Resend Invite
+            {translations["Resend Invite"]}
           </Menu.Item>
         )}
         {status === "PENDING" && (
@@ -183,7 +196,7 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
               deleteInviteMutation?.mutate(inviteId);
             }}
           >
-            Delete Invite
+            {translations["Delete Invite"]}
           </Menu.Item>
         )}
       </Menu.Dropdown>

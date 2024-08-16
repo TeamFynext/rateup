@@ -18,6 +18,7 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import { showLoadingToast } from "@/utils/notifications";
 
 const WpAmelia = () => {
@@ -34,7 +35,7 @@ const WpAmelia = () => {
   const deleteIntegrationMutation = useDeleteIntegrationMutation(
     IntegratedApps.amelia,
   );
-
+  const { translations } = useTranslations();
   const schema = z.object({
     apiKey: z.string(),
     baseUrl: z.string().trim().url(),
@@ -80,7 +81,7 @@ const WpAmelia = () => {
   };
   return (
     <Stack p={"xl"}>
-      <Title order={3}>Amelia Config</Title>
+      <Title order={3}>{translations["Amelia Config"]}</Title>
       <PaperLayout>
         {isPending ||
         createIntegrationMutation?.isPending ||
@@ -89,26 +90,26 @@ const WpAmelia = () => {
         ) : (
           <Stack w={500}>
             <ContainedTextField
-              label={"Amelia"}
-              placeholder="Enter you api key"
+              label={translations["Amelia"]}
+              placeholder={translations["Enter your api key"]}
               {...form.getInputProps("apiKey")}
             />
 
             <ContainedTextField
-              label={"Amelia base url"}
-              placeholder="Enter you base url"
+              label={translations["Amelia base url"]}
+              placeholder={translations["Enter your base url"]}
               type="url"
               {...form.getInputProps("baseUrl")}
             />
             <ContainedNumberInput
-              label={"serviceId"}
-              placeholder="Enter serviceId"
+              label={translations["serviceId"]}
+              placeholder={translations["Enter serviceId"]}
               {...form.getInputProps("serviceId")}
               min={0}
             />
             <Group justify="space-between">
               <RateupButtonPrimary
-                title="save"
+                title={translations["save"]}
                 onClick={handleSave}
                 disabled={!form.isDirty()}
               />
@@ -117,7 +118,7 @@ const WpAmelia = () => {
                 disabled={!data?.credential?.apiKey && !data?.credential?.base}
                 onClick={() => {
                   showLoadingToast(
-                    "Deleting..",
+                    translations["Deleting.."],
                     "integration-delete",
                     true,
                     "",

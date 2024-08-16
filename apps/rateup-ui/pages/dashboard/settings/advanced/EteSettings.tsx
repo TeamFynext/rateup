@@ -1,8 +1,29 @@
-import { useSearchParams } from "next/navigation";
-import { useUser } from "../../../../context/UserContext";
 import { useState } from "react";
-import { useUpdateOrgDetailsMutation } from "../../../../backend/org/org.query";
+import { useSearchParams } from "next/navigation";
+
+import {
+  Badge,
+  Blockquote,
+  Button,
+  Group,
+  Mark,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import {
+  IconInfoTriangleFilled,
+  IconPlus,
+  IconRefresh,
+} from "@tabler/icons-react";
+
+import { useUpdateOrgDetailsMutation } from "../../../../backend/org/org.query";
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
+import { ContainedPasswordInput } from "../../../../components/input/ContainedInput/ContainedInput";
+import SimpleModalLayout from "../../../../components/Modal/SimpleModalLayout";
+import { useUser } from "../../../../context/UserContext";
+import useTranslations from "../../../../dictionaries/useTranslation";
 import {
   decryptPrivateKey,
   encryptPrivateKey,
@@ -13,28 +34,11 @@ import {
   showLoadingToast,
   showSuccessToast,
 } from "../../../../utils/notifications";
-import { useForm } from "@mantine/form";
-import SimpleModalLayout from "../../../../components/Modal/SimpleModalLayout";
-import {
-  Badge,
-  Blockquote,
-  Button,
-  Group,
-  Mark,
-  Stack,
-  Text,
-} from "@mantine/core";
-import {
-  IconInfoTriangleFilled,
-  IconPlus,
-  IconRefresh,
-} from "@tabler/icons-react";
-import { ContainedPasswordInput } from "../../../../components/input/ContainedInput/ContainedInput";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import styles from "../setting.module.css";
 
 export default function ETESettings() {
   const searchParams = useSearchParams();
+  const { translations } = useTranslations();
   const highlighted = !!searchParams.get("highlighted") === true;
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +58,7 @@ export default function ETESettings() {
             },
           });
           sessionStorage.clear();
-          showSuccessToast("End to end encryption enabled");
+          showSuccessToast(translations["End to end encryption enabled"]);
           closeEteModal();
         },
       );
@@ -73,10 +77,10 @@ export default function ETESettings() {
   });
   const onPasswordResetSubmit = async (values) => {
     showLoadingToast(
-      "Hold.. your password is getting modified...",
+      translations["Hold.. your password is getting modified..."],
       "reset-encryption-password",
       true,
-      "Resetting Password",
+      translations["Resetting Password"],
     );
     const { privateKey } = await decryptPrivateKey(
       user?.encryptionKeys?.privateKey,
@@ -84,13 +88,15 @@ export default function ETESettings() {
     );
     if (!privateKey) {
       passwordResetForm.setErrors({
-        oldPassword: "The old password is incorrect",
+        oldPassword: translations["The old password is incorrect"],
       });
     } else {
       if (values["oldPassword"] === values["newPassword"]) {
         passwordResetForm.setErrors({
           newPassword:
-            "The new password should be different from the old password",
+            translations[
+              "The new password should be different from the old password"
+            ],
         });
         return;
       } else {
@@ -109,7 +115,7 @@ export default function ETESettings() {
           {
             onSuccess: () => {
               sessionStorage.clear();
-              showSuccessToast("Password reset successful");
+              showSuccessToast(translations["Password reset successful"]);
               closePasswordResetModal();
             },
           },
@@ -124,10 +130,12 @@ export default function ETESettings() {
         centered
         opened={eteModalOpened}
         onClose={closeEteModal}
-        title="Enter the password"
+        title={translations["Enter the password"]}
       >
         <Stack>
-          <Text>Enter the password to enable end to end encryption</Text>
+          <Text>
+            {translations["Enter the password to enable end to end encryption"]}
+          </Text>
           <Blockquote
             p={"sm"}
             color="yellow"
@@ -135,21 +143,24 @@ export default function ETESettings() {
             iconSize={18}
           >
             <Text size="sm">
-              Note: You are required to enter this password to view the results
-              of any end-to-end encrypted survey. This
+              {
+                translations[
+                  " Note: You are required to enter this password to view the results of any end-to-end encrypted survey. This"
+                ]
+              }
               <Mark px={5} bg={"white"} c={"red"} fw={"800"}>
-                Password is not recoverable
+                {translations["Password is not recoverable"]}
               </Mark>
             </Text>
           </Blockquote>
           <ContainedPasswordInput
-            label="Password"
+            label={translations["Password"]}
             value={encryptionpassword}
             onChange={(e) => setEncryptionPassword(e.target.value)}
           />
           <RateupButtonBlue
             loading={isLoading}
-            title="Submit"
+            title={translations["Submit"]}
             onClick={() => triggerEndtoEndEncryptionUpdate(encryptionpassword)}
           />
         </Stack>
@@ -159,7 +170,7 @@ export default function ETESettings() {
         centered
         opened={passwordResetModalOpened}
         onClose={closePasswordResetModal}
-        title="Reset Your Password"
+        title={translations["Reset Your Password"]}
       >
         <form
           onSubmit={passwordResetForm.onSubmit((values) =>
@@ -168,16 +179,16 @@ export default function ETESettings() {
         >
           <Stack>
             <ContainedPasswordInput
-              label="Old Password"
+              label={translations["Old Password"]}
               {...passwordResetForm.getInputProps("oldPassword")}
             />
             <ContainedPasswordInput
-              label="New Password"
+              label={translations["New Password"]}
               {...passwordResetForm.getInputProps("newPassword")}
             />
             <RateupButtonBlue
               loading={isLoading}
-              title="Submit"
+              title={translations["Submit"]}
               type={"submit"}
               onClick={() =>
                 triggerEndtoEndEncryptionUpdate(encryptionpassword)
@@ -190,7 +201,7 @@ export default function ETESettings() {
       <Stack className={highlighted && styles["blink"]}>
         <Group>
           <Text size="lg" fw={500}>
-            End-to-End Encryption
+            {translations["End-to-End Encryption"]}
           </Text>
           <Badge
             color={user?.encryptionKeys ? "green" : "red"}
@@ -201,7 +212,7 @@ export default function ETESettings() {
           </Badge>
         </Group>
         <Text size="sm" c={"var(--tertiary-color)"}>
-          Generate Key Pairs for End To End Encryption Here
+          {translations["Generate Key Pairs for End To End Encryption Here"]}
         </Text>
         <Group>
           <Button
@@ -209,7 +220,7 @@ export default function ETESettings() {
             radius={"xl"}
             onClick={openEteModal}
           >
-            Generate Key Pair
+            {translations["Generate Key Pair"]}
           </Button>
           <Button
             rightSection={<IconRefresh />}
@@ -218,7 +229,7 @@ export default function ETESettings() {
             disabled={!user?.encryptionKeys}
             onClick={openPasswordResetModal}
           >
-            Reset Password
+            {translations["Reset Password"]}
           </Button>
         </Group>
       </Stack>

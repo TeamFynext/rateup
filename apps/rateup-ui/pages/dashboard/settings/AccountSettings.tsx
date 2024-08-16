@@ -1,31 +1,35 @@
-import {
-  Title,
-  Group,
-  Text,
-  Stack,
-  Blockquote,
-  Tabs,
-  ScrollAreaAutosize,
-} from "@mantine/core";
 import React, { useEffect, useState } from "react";
-import { useSubscription } from "../../../backend/subscription/subscription.query";
+import { useRouter } from "next/router";
+
+import {
+  Blockquote,
+  Group,
+  ScrollAreaAutosize,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconInfoCircle } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateCheckoutSession,
   useUserOrgOrders,
 } from "../../../backend/payment/payment.query";
-import { useUser } from "../../../context/UserContext";
-import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
-import { generateListItems } from "../../../components/HomePage/pages/Pricing/Card/PricingCard";
-import OrderHistory from "./OrderHistory";
-import Billing from "./Billing";
-import dayjs from "dayjs";
-import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
+import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { generateListItems } from "../../../components/HomePage/pages/Pricing/Card/PricingCard";
+import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
+import { useUser } from "../../../context/UserContext";
+import Billing from "./Billing";
+import OrderHistory from "./OrderHistory";
 import UsageStats from "./UsageStats";
-import { useRouter } from "next/router";
 
 export enum AccountSettingsTabs {
   UsageStats = "Usage Stats",
@@ -57,7 +61,7 @@ const AccountSettings = () => {
   const createCheckout = useCreateCheckoutSession(setIsLoading, setOrder);
   const { user } = useUser();
   const router = useRouter();
-
+  const { translations } = useTranslations();
   const {
     data: subscription,
     isPending,
@@ -125,7 +129,7 @@ const AccountSettings = () => {
     );
 
     if (!res) {
-      alert("Razropay failed to load!!");
+      alert(translations["Razropay failed to load!!"]);
       return;
     }
 
@@ -133,11 +137,11 @@ const AccountSettings = () => {
       var options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
         subscription_id: order?.subscriptionId,
-        name: "RateUp Payment",
-        description: "Subscription Plans in Rateup",
+        name: translations["RateUp Payment"],
+        description: translations["Subscription Plans in Rateup"],
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
         handler: function (response) {
-          console.log("Payment Successful...!");
+          console.log(translations["Payment Successful...!"]);
           setProcessingPayment(false);
           openSummary();
           refreshOrders();
@@ -258,8 +262,12 @@ const AccountSettings = () => {
           reset();
         }}
         centered
-        title={enablePurchase ? "Confirm your Order" : "Buy Rateup Premium"}
-        buttonTitle={enablePurchase && "Continue to Payment"}
+        title={
+          enablePurchase
+            ? translations["Confirm your Order"]
+            : translations["Buy Rateup Premium"]
+        }
+        buttonTitle={enablePurchase && translations["Continue to Payment"]}
         includeCancelButton={enablePurchase}
         isLoading={isLoading}
         size="auto"
@@ -289,7 +297,7 @@ const AccountSettings = () => {
               </Title>
             </Stack>
             <Stack mr="xl">
-              <Title order={5}> Plan Features </Title>
+              <Title order={5}>{translations["Plan Features"]} </Title>
               {cart?.description && generateListItems(cart?.description)}
             </Stack>
           </Group>
@@ -298,15 +306,17 @@ const AccountSettings = () => {
             <Blockquote color="blue" icon={<IconInfoCircle />} mt="lg">
               <Text>
                 {" "}
-                You have an active Base Plan already. So you cannot buy another
-                Rateup base plan. But you can buy the available ADDON rateup
-                plan to get more features.
+                {
+                  translations[
+                    "You have an active Base Plan already. So you cannot buy another Rateup base plan. But you can buy the available ADDON rateup plan to get more features."
+                  ]
+                }
               </Text>
             </Blockquote>
 
             <Group ml="xl" my="xl">
               <Title order={4} style={{ minWidth: "140px" }}>
-                Current Plan :
+                {translations["Current Plan :"]}
               </Title>
               <Text> {subscription?.basePlan?.name} </Text>
             </Group>
@@ -324,8 +334,8 @@ const AccountSettings = () => {
           reset();
         }}
         centered
-        title="Order Processing Started 🎉"
-        buttonTitle="Continue"
+        title={translations["Order Processing Started 🎉"]}
+        buttonTitle={translations["Continue"]}
         isLoading={isLoading}
         onSubmit={() => {
           closeSummary();
@@ -340,13 +350,22 @@ const AccountSettings = () => {
         >
           <Stack>
             <Text c="green" fw={500}>
-              Your payment was successful..!
+              {translations["Your payment was successful..!"]}
             </Text>
             <Text>
-              Thank you for choosing Rateup Premium subscription. <br /> <br />{" "}
-              You can enjoy Rateup Premium features once your order is processed
-              successfully. <br />
-              You will be notified by email shortly.
+              {
+                translations[
+                  "Thank you for choosing Rateup Premium subscription."
+                ]
+              }
+              <br /> <br />
+              {
+                translations[
+                  "You can enjoy Rateup Premium features once your order is processed successfully."
+                ]
+              }
+              <br />
+              {translations["You will be notified by email shortly."]}
             </Text>
           </Stack>
         </Group>

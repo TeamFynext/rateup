@@ -13,6 +13,8 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useUsageStats } from "../../../backend/stats/stats.query";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
@@ -57,6 +59,7 @@ export const StatsCard = ({
   );
 };
 export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
+  const { translations } = useTranslations();
   const statsArray = [
     {
       Icon: IconSocial as unknown as string,
@@ -77,17 +80,17 @@ export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
       <Group justify="space-between">
         <Title order={4}>Team</Title>
         <RateupButtonSecondary
-          title="Refetch Stats"
+          title={translations["Refetch Stats"]}
           onClick={async () => {
             showLoadingToast(
-              "Hold on...data getting updated.",
+              translations["Hold on...data getting updated."],
               "usage-stats",
               true,
-              "Refreshing Stats",
+              translations["Refreshing Stats"],
             );
             await refetch();
             showSuccessToast(
-              "Updated Succesfully",
+              translations["Updated Succesfully"],
               "usage-stats",
               <IconCheck />,
               true,
@@ -112,6 +115,7 @@ export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
 };
 
 export const MenuStats = ({ stats, totalStats }) => {
+  const { translations } = useTranslations();
   const isActive = totalStats?.menu?.active;
   if (!isActive) return;
   const statsArray = [
@@ -135,7 +139,7 @@ export const MenuStats = ({ stats, totalStats }) => {
   ];
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Menu</Title>
+      <Title order={4}>{translations["Menu"]}</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
@@ -145,6 +149,7 @@ export const MenuStats = ({ stats, totalStats }) => {
   );
 };
 export const SurveyStats = ({ stats, totalStats }) => {
+  const { translations } = useTranslations();
   const isActive = totalStats?.webSurvey?.active;
   if (!isActive) return;
   const totalSurveyCount = totalStats?.webSurvey?.count?.max;
@@ -170,7 +175,7 @@ export const SurveyStats = ({ stats, totalStats }) => {
 
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Web Survey</Title>
+      <Title order={4}>{translations["Web Survey"]}</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
@@ -180,6 +185,7 @@ export const SurveyStats = ({ stats, totalStats }) => {
   );
 };
 export const WhatsappStats = ({ stats, totalStats }) => {
+  const { translations } = useTranslations();
   const isActive = totalStats?.whatsapp?.active;
   if (!isActive) return;
   const statsArray = [
@@ -215,7 +221,7 @@ export const WhatsappStats = ({ stats, totalStats }) => {
 
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>Whatsapp</Title>
+      <Title order={4}>{translations["Whatsapp"]}</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
@@ -226,6 +232,7 @@ export const WhatsappStats = ({ stats, totalStats }) => {
 };
 
 const AIStats = ({ stats, totalStats }) => {
+  const { translations } = useTranslations();
   const aiFeature = totalStats?.ai;
   if (!aiFeature || !aiFeature?.active) return;
   const statsArray = [
@@ -244,7 +251,7 @@ const AIStats = ({ stats, totalStats }) => {
   ];
   return (
     <Stack gap={"xs"}>
-      <Title order={4}>AI</Title>
+      <Title order={4}>{translations["AI"]}</Title>
       <Group>
         {statsArray.map((item, index) => (
           <StatsCard {...item} key={index} />
