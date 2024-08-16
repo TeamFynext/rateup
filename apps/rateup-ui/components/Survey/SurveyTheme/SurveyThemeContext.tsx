@@ -25,7 +25,7 @@ function SurveyThemeContextProvider({
   surveyTheme,
   children,
   selectedPageTab = ThemeTabEnum.SURVEY,
-  editSurveySelectedQuestion,
+  editSurveySelectedQuestion = null,
 }) {
   const isFirstRender = useIsFirstRender();
 
