@@ -160,6 +160,7 @@ export function EditSurvey({
     <SurveyThemeContextProvider
       surveyTheme={survey?.webSurveyTheme?.theme}
       selectedPageTab={inititalSelectedTabForSurveyThemeComp}
+      editSurveySelectedQuestion={selectedQ}
     >
       <Flex className={styles["edit-survey-div"]}>
         <LayoutGroup>
@@ -210,9 +211,6 @@ export function EditSurvey({
                             <SurveyTheme
                               survey={survey}
                               previewId={`${selectedQ.type}-preview`}
-                              isThemeObjBeingEditedDefaultTheme={
-                                isThemeObjBeingEditedDefaultTheme
-                              }
                             />
                           )}
                         </Stack>
@@ -298,9 +296,6 @@ export function EditSurvey({
                       previewId={"survey-theme-edit-preview"}
                       key={surveyPreviewCompKey}
                       survey={survey}
-                      isThemeObjBeingEditedDefaultTheme={
-                        isThemeObjBeingEditedDefaultTheme
-                      }
                       isSurveyThemeEditView={true}
                     />
                   )}
@@ -349,9 +344,6 @@ export function EditSurvey({
             key={"preview" + surveyPreviewCompKey}
             previewId={"survey-theme-prod-preview"}
             survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
             isSurveyThemePreview
           />
         </SurveyPreviewModal>

@@ -6,7 +6,10 @@ import {
   QuestionType,
   SurveyType,
 } from "../types/enums";
-import { ChoiceTypeQuestions } from "./constants";
+import {
+  ChoiceTypeQuestions,
+  defaultTitleSubtitleStartBtnTextsObj,
+} from "./constants";
 
 interface Reorderable {
   type?: string;
@@ -70,6 +73,25 @@ export function createPage(
     }
   }
 
+  let defaultTitleSubtitleStartBtnTexts = {};
+  switch (type) {
+    case PageType.Welcome: {
+      defaultTitleSubtitleStartBtnTexts =
+        defaultTitleSubtitleStartBtnTextsObj["welcomePage"];
+      break;
+    }
+    case PageType.Language: {
+      defaultTitleSubtitleStartBtnTexts =
+        defaultTitleSubtitleStartBtnTextsObj["languagePage"];
+      break;
+    }
+    case PageType.ThankYou: {
+      defaultTitleSubtitleStartBtnTexts =
+        defaultTitleSubtitleStartBtnTextsObj["thankyouPage"];
+      break;
+    }
+  }
+
   return {
     // TODO: only set id when saving to db?
     id: "",
@@ -78,6 +100,7 @@ export function createPage(
     label,
     required: true,
     type,
+    ...defaultTitleSubtitleStartBtnTexts,
   };
 }
 
