@@ -60,7 +60,7 @@ export const useUpdatePageTypeQuestions = () => {
   return useMutation({
     mutationFn: updatePageTypeQuestions,
     onSuccess: () => {
-      showSuccessToast("Your hard work paid offfff");
+      showSuccessToast("Updated questions successfully");
     },
   });
 };
