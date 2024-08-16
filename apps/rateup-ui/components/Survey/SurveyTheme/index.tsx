@@ -11,7 +11,6 @@ const cx = classNames.bind(styles);
 
 function SurveyTheme({
   survey,
-  isThemeObjBeingEditedDefaultTheme,
   previewId,
   isSurveyThemeEditView = false,
   isSurveyThemePreview = false,
@@ -38,9 +37,6 @@ function SurveyTheme({
           <PreviewDeviceButtons />
           <SurveyThemePreviewLayout
             survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
             previewId={previewId}
             isSurveyThemeEditView={isSurveyThemeEditView}
             isSurveyThemePreview={isSurveyThemePreview}

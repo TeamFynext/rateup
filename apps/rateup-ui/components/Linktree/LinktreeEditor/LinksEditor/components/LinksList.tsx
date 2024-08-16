@@ -1,7 +1,5 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/router";
-
-import { Box, Stack } from "@mantine/core";
 
 import { useUpdateLinktreeMutation } from "../../../../../backend/linktree/linktree.query";
 import styles from "../LinksEditor.module.css";

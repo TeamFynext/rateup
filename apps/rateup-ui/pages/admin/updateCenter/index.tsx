@@ -5,6 +5,7 @@ import { Button, Loader, Stack, Text, Title } from "@mantine/core";
 import {
   useTransferDataToIntegration,
   useUpdateDatabaseMutation,
+  useUpdatePageTypeQuestions,
   useUpdateSurveyEditorMutation,
 } from "@/backend/updations/update.query";
 
@@ -15,6 +16,7 @@ function UpdateAllThemes() {
   const updateSurveyEditorMutation = useUpdateSurveyEditorMutation();
   const updateDBMutation = useUpdateDatabaseMutation();
   const updateIntegrationMutation = useTransferDataToIntegration();
+  const updatePageTypeQuestionsMutations = useUpdatePageTypeQuestions();
 
   const [isUpdatingThemes, setIsUpdatingThemes] = useState(false);
   const handleUpdateAllThemesBtnClick = useCallback(async () => {
@@ -61,7 +63,7 @@ function UpdateAllThemes() {
         )}
       </Stack>
 
-      <Stack mt="xl">
+      {/* <Stack mt="xl">
         <Title order={2}>Survey Editor Updations</Title>
         <Text>
           Survey JSON changes for supporting new survey editor with Pages
@@ -76,6 +78,24 @@ function UpdateAllThemes() {
           }}
         >
           Run Update
+        </Button>
+      </Stack> */}
+
+      <Stack mt="xl">
+        <Title order={2}>Update Page Type Questions</Title>
+        <Text>
+          Updates welcome, language, thankyou page type questions with title,
+          subtitle, start button text values from active survey theme.
+        </Text>
+
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updatePageTypeQuestionsMutations.mutate();
+          }}
+        >
+          Update Page type Questions.
         </Button>
       </Stack>
 
@@ -96,7 +116,7 @@ function UpdateAllThemes() {
         </Button>
       </Stack>
 
-      <Stack>
+      <Stack mt="xl">
         <Title order={2}>Integration Updations</Title>
         <Text>Migrating data from googleAccessTokens to Integration.</Text>
         <Button

@@ -50,26 +50,21 @@
   padding-left: 10px;
 }
 
-.start-btn-text-input-wrapper {
-  justify-content: center;
+.autosave-input-right-chevron-icon-container {
+  position: relative;
 }
 
-.start-btn-text-input-container {
-  justify-content: center;
-  padding: 10px;
-  border-radius: 1rem;
+.autosave-input-right-chevron-icon-container
+  :global(.auto-save-input-edit-btn) {
+  padding-right: 2.5rem;
 }
 
-.start-btn-text-input input {
-  font-size: 18px;
-  text-align: center;
-  font-weight: 600;
-  color: white;
-  padding-right: 1.375rem;
+.autosave-input-right-chevron-icon-container input {
+  padding-right: 1.75rem;
 }
 
-.start-btn-text-input :global(.mantine-Input-section) {
-  width: 1.5rem;
-  height: 1.5rem;
+.start-btn-right-chevron {
+  position: absolute;
+  right: 0.625rem;
   top: calc(50% - 0.75rem);
 }

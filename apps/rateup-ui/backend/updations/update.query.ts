@@ -12,6 +12,7 @@ import {
   transferDataToIntegration,
   updateAllSurveys,
   updateDatabase,
+  updatePageTypeQuestions,
 } from "./update.api";
 
 export const useUpdateSurveyEditorMutation = () => {
@@ -51,6 +52,15 @@ export const useTransferDataToIntegration = () => {
     },
     onError: () => {
       showErrorToast("Data transfer failed", "transfer", "", true);
+    },
+  });
+};
+
+export const useUpdatePageTypeQuestions = () => {
+  return useMutation({
+    mutationFn: updatePageTypeQuestions,
+    onSuccess: () => {
+      showSuccessToast("Your hard work paid offfff");
     },
   });
 };

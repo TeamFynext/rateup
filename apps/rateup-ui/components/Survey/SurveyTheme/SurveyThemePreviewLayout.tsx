@@ -10,7 +10,6 @@ import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 
 function SurveyThemePreviewLayout({
   survey,
-  isThemeObjBeingEditedDefaultTheme,
   previewId,
   isSurveyThemeEditView,
   isSurveyThemePreview,
@@ -44,20 +43,10 @@ function SurveyThemePreviewLayout({
             }}
           >
             <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
-              <LanguagePageThemeView
-                survey={survey}
-                isThemeObjBeingEditedDefaultTheme={
-                  isThemeObjBeingEditedDefaultTheme
-                }
-              />
+              <LanguagePageThemeView survey={survey} />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.WELCOME}>
-              <WelcomePageThemeView
-                survey={survey}
-                isThemeObjBeingEditedDefaultTheme={
-                  isThemeObjBeingEditedDefaultTheme
-                }
-              />
+              <WelcomePageThemeView survey={survey} />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.SURVEY}>
               <SurveyThemeView
@@ -67,11 +56,7 @@ function SurveyThemePreviewLayout({
               />
             </Tabs.Panel>
             <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
-              <ThankyouPageThemeView
-                isThemeObjBeingEditedDefaultTheme={
-                  isThemeObjBeingEditedDefaultTheme
-                }
-              />
+              <ThankyouPageThemeView survey={survey} />
             </Tabs.Panel>
           </Tabs>
         </Box>
