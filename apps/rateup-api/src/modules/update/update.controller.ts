@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { updateSubscriptionFeatures } from "./migrationFiles/subscription-update";
 import { updateEditorStructure } from "./migrationFiles/editor-update";
 import { updateSubscriptionFeatures2 } from "./migrationFiles/sub-update-2";
+import { updatePageTypeQuestionsInDB } from "./migrationFiles/update-page-type-questions";
 
 export async function updateDatabase(
   request: FastifyRequest,
@@ -57,5 +58,23 @@ export async function transferDataToIntegrationsHandler(
     reply.code(200).send(res);
   } catch (e) {
     return reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function updatePageTypeQuestions(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await updatePageTypeQuestionsInDB();
+    reply.status(200).send({
+      success: true,
+      message: "update questions successfully.",
+    });
+  } catch (err) {
+    reply.status(500).send({
+      success: false,
+      message: "Something went wrong while updating questions.",
+    });
   }
 }
