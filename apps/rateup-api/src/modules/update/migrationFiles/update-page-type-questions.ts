@@ -5,6 +5,7 @@ import { PageType } from "../../../types/enums";
 import { getQuestionsArrUpdatedWithLanguageTypeQuestion } from "../../question/question.utils";
 
 async function updatePageTypeQuestionsInDB() {
+  console.log("In progress, Please wait....");
   const allSurveys = await prisma.survey.findMany({
     select: {
       id: true,
@@ -95,6 +96,7 @@ async function updatePageTypeQuestionsInDB() {
       });
     }
   });
+  console.log("Data update Success.");
 }
 
 export { updatePageTypeQuestionsInDB };
