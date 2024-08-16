@@ -287,6 +287,9 @@ export function getPageQuestions(languages) {
       required: true,
       enableNpsAnalytics: false,
       ...getTitleAndDescriptionObjs(languages, "Language"),
+      titleText: "Select a Language",
+      subtitleText: "Let's Begin!",
+      startButtonText: "Start Survey",
     });
   }
   return questionsArr;
@@ -302,6 +305,7 @@ export function getPageTypeQuestionObj(languages, type) {
   };
 }
 
+// This function also adds title, description to other page type questions if they are not present.
 export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
   questionsArr,
   languagesArr,
@@ -331,6 +335,8 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
       questionsArrCopy = newQuestionsArr;
     }
   }
+
+  // adds title, description for page type questions when they are not present for a language.
   const resultArr = questionsArrCopy.map((questionObj) => {
     const questionType = questionObj.type;
     if (Object.values(PageType).includes(questionType)) {
@@ -385,6 +391,3 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(
 
   return questionsArrCopy;
 }
-
-// For Welcome, Language, Thankyou pages.
-export async function addTitleSubtitleStartBtnTextOnPageTypeQuestions() {}
