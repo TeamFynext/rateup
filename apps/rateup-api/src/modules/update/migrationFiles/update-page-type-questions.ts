@@ -1,7 +1,5 @@
-import { cloneDeep } from "lodash";
-import prisma from "../../../utils/prisma";
-import util from "util";
 import { PageType } from "../../../types/enums";
+import prisma from "../../../utils/prisma";
 import { getQuestionsArrUpdatedWithLanguageTypeQuestion } from "../../question/question.utils";
 
 async function updatePageTypeQuestionsInDB() {
