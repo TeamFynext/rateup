@@ -110,10 +110,11 @@ export async function updateAllWebSurveyThemesJson(
   reply: FastifyReply,
 ) {
   try {
-    const allThemes = await updateAllWebSurveyThemesInDB(reply);
+    // const allThemes = await updateAllWebSurveyThemesInDB(reply);
     reply.code(200).send({
       success: true,
-      message: "Updated all themes successfully.",
+      message:
+        "No Json changes needed for now, if there is a need for json change check endpoint code",
     });
   } catch (err) {
     console.log(err);
