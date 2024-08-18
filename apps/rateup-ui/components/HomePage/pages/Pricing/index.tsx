@@ -46,17 +46,17 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   // let currency = "INR";
   // let currencySymbol = "₹";
 
-  if (gateway === "stripe") {
-    //temp for stripe testing
-    currency = "USD";
-    currencySymbol = "$";
-  }
+  // if (gateway === "stripe") {
+  //   //temp for stripe testing
+  //   currency = "USD";
+  //   currencySymbol = "$";
+  // }
 
-  if (gateway === "razorpay") {
-    //for optional switching of gateway for NRIs
-    currency = "INR";
-    currencySymbol = "₹";
-  }
+  // if (gateway === "razorpay") {
+  //   //for optional switching of gateway for NRIs
+  //   currency = "INR";
+  //   currencySymbol = "₹";
+  // }
 
   const session = useCheckSession();
 

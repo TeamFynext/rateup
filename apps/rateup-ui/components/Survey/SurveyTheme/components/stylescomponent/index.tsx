@@ -13,6 +13,7 @@ import { IconChevronsDown, IconChevronsUp } from "@tabler/icons-react";
 
 import { theme } from "../../../../../config/mantineTheme";
 import { supportedPageEditors } from "../../SurveyTheme.constants";
+import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import surveyThemeStyles from "../../SurveyTheme.module.css";
 import {
   useOpenEditors,
@@ -27,7 +28,7 @@ function StylesComponent({
   survey,
   isThemeObjBeingEditedDefaultTheme,
   themeObjBeingEdited,
-  closeStylesEditorDrawer,
+  onClose,
   allThemesArr,
   themeSelectorState,
   setThemeSelectorState,
@@ -38,18 +39,22 @@ function StylesComponent({
   const setOpenEditors = useSetOpenEditors();
 
   const editorComponents = supportedPageEditors[selectedPageTab];
+  const shouldDisplayThemeSelector = selectedPageTab === ThemeTabEnum.SURVEY;
 
   return (
     <MantineProvider theme={theme}>
       <Stack className={styles["styles-component-root-div"]}>
-        <ThemeSelector
-          className={styles["theme-selector-div"]}
-          allThemesArr={allThemesArr}
-          themeSelectorState={themeSelectorState}
-          setThemeSelectorState={setThemeSelectorState}
-          isAllThemesFetchPending={isAllThemesFetchPending}
-          survey={survey}
-        />
+        {shouldDisplayThemeSelector && (
+          <ThemeSelector
+            className={styles["theme-selector-div"]}
+            allThemesArr={allThemesArr}
+            themeSelectorState={themeSelectorState}
+            setThemeSelectorState={setThemeSelectorState}
+            isAllThemesFetchPending={isAllThemesFetchPending}
+            survey={survey}
+          />
+        )}
+
         <Divider />
         <Group className={styles["expand-all-collapse-all-btn-container"]}>
           <Button
@@ -110,9 +115,7 @@ function StylesComponent({
           <Box className={styles["close-btn-div"]}>
             <Button
               className={styles["close-btn"]}
-              onClick={() => {
-                closeStylesEditorDrawer();
-              }}
+              onClick={onClose}
               variant="outline"
             >
               Close
@@ -126,9 +129,7 @@ function StylesComponent({
               isThemeObjBeingEditedDefaultTheme
             }
             themeObjBeingEdited={themeObjBeingEdited}
-            onSave={() => {
-              closeStylesEditorDrawer();
-            }}
+            onSave={onClose}
           />
         </Group>
       </Stack>

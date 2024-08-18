@@ -166,6 +166,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     return undefined;
   };
 
+  const questionsArr = survey?.questions;
+
   return (
     <MantineProvider
       cssVariablesSelector={isSurveyThemePreview ? `#${previewId}` : ":root"}
@@ -286,6 +288,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
                             languages={survey?.languages}
                             setSelectedLanguage={setSelectedLanguage}
                             surveyThemeData={surveyThemeData}
+                            questionsArr={questionsArr}
                           />
                         ) : (
                           selectedLanguage && (
@@ -307,6 +310,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
                           largeScreen={largeScreen}
                           orgLogoSrc={orgLogoSrc}
                           orgLogoStyles={orgLogoStyles}
+                          questionsArr={questionsArr}
                         />
                       )}
                     </Paper>

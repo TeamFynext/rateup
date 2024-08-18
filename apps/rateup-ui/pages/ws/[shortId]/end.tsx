@@ -1,5 +1,7 @@
-import ThankYou from "../../public/survey/[surveyId]/end";
+import { PageType } from "@/types/enums";
+
 import { getPublicSurvey } from "../../../backend/surveys/survey.api";
+import ThankYou from "../../public/survey/[surveyId]/end";
 
 export const getServerSideProps = async (context) => {
   try {
@@ -20,7 +22,19 @@ export const getServerSideProps = async (context) => {
       kioskMode,
       redirect,
       webSurveyTheme: { theme: surveyThemeData },
+      questions,
     } = await getPublicSurvey(shortId);
+
+    const defaultTitleSubtitleTexts = {
+      titleText: "Thank you",
+      subtitleText: "Thank you for taking the survey",
+    };
+
+    const { titleText, subtitleText } =
+      questions?.find(
+        (questionObj) => questionObj.type === PageType.ThankYou,
+      ) || defaultTitleSubtitleTexts;
+
     return {
       props: {
         surveyId,
@@ -34,6 +48,8 @@ export const getServerSideProps = async (context) => {
           error,
           price,
         },
+        titleText,
+        subtitleText,
       },
     };
   } catch (error) {
@@ -56,7 +72,15 @@ export const getServerSideProps = async (context) => {
   }
 };
 
-function End({ kioskMode, surveyId, redirect, surveyThemeData, gift }) {
+function End({
+  kioskMode,
+  surveyId,
+  redirect,
+  surveyThemeData,
+  gift,
+  titleText,
+  subtitleText,
+}) {
   return (
     <ThankYou
       redirect={redirect}
@@ -65,6 +89,8 @@ function End({ kioskMode, surveyId, redirect, surveyThemeData, gift }) {
       fromShortUrl={true}
       surveyThemeData={surveyThemeData}
       gift={gift}
+      titleText={titleText}
+      subtitleText={subtitleText}
     />
   );
 }

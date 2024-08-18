@@ -94,6 +94,9 @@ declare global {
     onSelectAction?: boolean;
     waAppName?: IntegratedApps;
     responseSummary?: ResponseSummary;
+    subtitleText?: string;
+    titleText?: string;
+    startButtonText?: string;
   }
   type ResponseSummary = {
     all: {

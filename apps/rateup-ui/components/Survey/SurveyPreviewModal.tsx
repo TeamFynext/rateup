@@ -1,4 +1,5 @@
-import { Box, Button, Group, Modal, Stack } from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Modal, Stack } from "@mantine/core";
+import { IconX } from "@tabler/icons-react";
 
 import styles from "./SurveyPreviewModal.module.css";
 
@@ -14,13 +15,21 @@ function SurveyPreviewModal({ opened, onClose, children }) {
         withOverlay={false}
         size={"100%"}
       >
-        <Stack>
+        <Stack
+          className={styles["close-btn-preview-container"]}
+          align="center"
+          gap={0}
+        >
           <Group justify="center">
-            <Button className={styles["close-btn"]} onClick={onClose}>
-              Close Preveiw
-            </Button>
+            <ActionIcon
+              className={styles["close-btn"]}
+              variant="subtle"
+              onClick={onClose}
+            >
+              <IconX color="gray" />
+            </ActionIcon>
           </Group>
-          {children}
+          <Box className={styles["preview-container-div"]}>{children}</Box>
         </Stack>
       </Modal>
     </Box>

@@ -13,33 +13,43 @@ import { useElementSize } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
 import Confetti from "react-confetti";
 
+import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
+import AutosaveInput from "@/components/input/AutosaveInput";
+
 import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
+  useEditSurveySelectedQuestion,
   useSelectedPreview,
   useSetOpenEditors,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
 
-export default function ThankyouPageThemeView({
-  isThemeObjBeingEditedDefaultTheme,
-}) {
+export default function ThankyouPageThemeView({ survey }) {
   const surveyTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
+  const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const selectedPreview = useSelectedPreview();
   const setOpenEditors = useSetOpenEditors();
+
+  const questionUpdateMutation = useQuestionUpdateMutation({
+    surveyId: survey.id,
+  });
 
   const { thankyouTheme } = surveyTheme;
   const { ref, width, height } = useElementSize();
   const {
-    subtitle: { styles: subtitleStyles, subtitle },
-    title: { styles: titleStyles, title },
+    subtitle: { styles: subtitleStyles },
+    title: { styles: titleStyles },
     confettiEnabled,
   } = thankyouTheme;
+
+  const { titleText: title, subtitleText: subtitle } =
+    editSurveySelectedQuestion || {};
 
   const useSurveyBackground =
     surveyTheme["thankyouTheme"].bg.useSurveyBackground;
@@ -49,30 +59,28 @@ export default function ThankyouPageThemeView({
     selectedPreview === "mobile",
   );
 
-  const handleTitleInputChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "title-text-change",
-          payload: e.target.value,
+  const handleSaveTitleSubtitleStartTextSave = useCallback(
+    async (value, name) => {
+      let data = {};
+      switch (name) {
+        case "title": {
+          data["titleText"] = value;
+          break;
+        }
+        case "subtitle": {
+          data["subtitleText"] = value;
+          break;
+        }
+      }
+      if (editSurveySelectedQuestion) {
+        await questionUpdateMutation.mutateAsync({
+          qId: editSurveySelectedQuestion["id"],
+          data,
         });
+      }
     },
-    [isThemeObjBeingEditedDefaultTheme],
+    [editSurveySelectedQuestion],
   );
-
-  const handleSubtitleTextareaChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "subtitle-text-change",
-          payload: e.target.value,
-        });
-    },
-    [isThemeObjBeingEditedDefaultTheme],
-  );
-
-  const titleInputRef = useRef(null);
-  const subtitleInputRef = useRef(null);
 
   return (
     <Flex
@@ -103,71 +111,29 @@ export default function ThankyouPageThemeView({
               direction={"column"}
             >
               <Tooltip label="Edit title">
-                <Box className={classes.titleBox} mt={20} w={"50%"}>
-                  <TextInput
-                    className={lexend.className}
-                    placeholder={"Thankyou"}
-                    variant="unstyled"
-                    size="xxl"
-                    name="headerText"
-                    onClick={(e) => e.stopPropagation()}
-                    styles={{
-                      input: {
-                        ...titleStyles,
-                        height: "fit-content",
-                        fontFamily: "inherit",
-                      },
-                    }}
+                <Box className={classes.titleBox}>
+                  <AutosaveInput
+                    name="title"
                     value={title}
-                    onChange={handleTitleInputChange}
-                    ref={titleInputRef}
-                    onFocus={() => setOpenEditors(["title-styles"])}
-                    autoComplete="off"
+                    onSave={handleSaveTitleSubtitleStartTextSave}
+                    style={{
+                      ...titleStyles,
+                    }}
                   />
-
-                  <ActionIcon
-                    variant="default"
-                    radius="lg"
-                    size="sm"
-                    className={classes.actionIcon}
-                    onClick={() => titleInputRef.current?.focus()}
-                  >
-                    <IconEdit style={{ width: "70%", height: "70%" }} />
-                  </ActionIcon>
                 </Box>
               </Tooltip>
               {/* //--------------------------- */}
               <Tooltip label="Edit subtitle">
                 <Box className={classes.titleBox} mt={20} w={"50%"}>
-                  <Textarea
-                    className={lexend.className}
-                    onChange={handleSubtitleTextareaChange}
+                  <AutosaveInput
+                    isTextArea
+                    name="subtitle"
                     value={subtitle}
-                    placeholder={"Please fill the survey"}
-                    variant="unstyled"
-                    onClick={(e) => e.stopPropagation()}
-                    name="descText"
-                    styles={{
-                      input: {
-                        ...subtitleStyles,
-                        fontFamily: "inherit",
-                      },
+                    onSave={handleSaveTitleSubtitleStartTextSave}
+                    style={{
+                      ...subtitleStyles,
                     }}
-                    mt="lg"
-                    ta={"center"}
-                    ref={subtitleInputRef}
-                    onFocus={() => setOpenEditors(["desc-styles"])}
-                    autoComplete="off"
                   />
-                  <ActionIcon
-                    variant="default"
-                    radius="lg"
-                    size="sm"
-                    className={classes.actionIcon}
-                    onClick={() => subtitleInputRef.current?.focus()}
-                  >
-                    <IconEdit style={{ width: "70%", height: "70%" }} />
-                  </ActionIcon>
                 </Box>
               </Tooltip>
             </Flex>

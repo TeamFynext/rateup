@@ -149,62 +149,42 @@ const PlanCard = ({
           </Stack>
 
           <Center mb="lg">
-            {currencySymbol === "$" ? (
-              <RateupButtonPrimary
-                title="Contact Sales"
-                color={cardMainColor}
-                onClick={() => {
-                  gAnalyticsAndFbEvent(
-                    "contact_sales",
-                    "ContactSalesButtonClick",
-                    "Clicked on Contact Sales button ($) in the pricing page",
-                  );
-                  open();
-                }}
-                radius={"xl"}
-                size="md"
-                className={ButtonStyles["button-hover"]}
-              />
-            ) : (
-              <RateupButtonPrimary
-                title={title}
-                color={cardMainColor}
-                radius={"xl"}
-                className={ButtonStyles["button-hover"]}
-                size="md"
-                onClick={() => {
-                  gAnalyticsAndFbEvent(
-                    "subscribe_pricing",
-                    "SubscribeNowButtonClick",
-                    "Clicked on subscribe now button in the pricing page",
-                  );
-                  if (data?.displayName.includes("FREE")) {
-                    router.push("/signup");
-                  } else {
-                    handlePlanSelection({
-                      id: data?.id,
-                      name: data?.displayName,
-                      currency: data?.currency,
-                      description: data?.description,
-                      amount: data?.paymentPlan
-                        ? data?.paymentPlan?.amount
-                        : data?.stripeProduct?.amount,
-                      currencySymbol: currencySymbol,
-                      period: data?.paymentPlan
-                        ? data?.paymentPlan?.period
-                        : data?.stripeProduct?.interval,
-                      gateway: data?.paymentPlan ? "RAZORPAY" : "STRIPE",
-                      planId: data?.paymentPlan
-                        ? data?.paymentPlan?.planId
-                        : "",
-                      priceId: data?.paymentPlan
-                        ? ""
-                        : data?.stripeProduct?.priceId,
-                    });
-                  }
-                }}
-              />
-            )}
+            <RateupButtonPrimary
+              title={title}
+              color={cardMainColor}
+              radius={"xl"}
+              className={ButtonStyles["button-hover"]}
+              size="md"
+              onClick={() => {
+                gAnalyticsAndFbEvent(
+                  "subscribe_pricing",
+                  "SubscribeNowButtonClick",
+                  "Clicked on subscribe now button in the pricing page",
+                );
+                if (data?.displayName.includes("FREE")) {
+                  router.push("/signup");
+                } else {
+                  handlePlanSelection({
+                    id: data?.id,
+                    name: data?.displayName,
+                    currency: data?.currency,
+                    description: data?.description,
+                    amount: data?.paymentPlan
+                      ? data?.paymentPlan?.amount
+                      : data?.stripeProduct?.amount,
+                    currencySymbol: currencySymbol,
+                    period: data?.paymentPlan
+                      ? data?.paymentPlan?.period
+                      : data?.stripeProduct?.interval,
+                    gateway: data?.paymentPlan ? "RAZORPAY" : "STRIPE",
+                    planId: data?.paymentPlan ? data?.paymentPlan?.planId : "",
+                    priceId: data?.paymentPlan
+                      ? ""
+                      : data?.stripeProduct?.priceId,
+                  });
+                }
+              }}
+            />
           </Center>
         </Stack>
       )}
