@@ -296,5 +296,23 @@ export const shopifyEventData = [
   },
 ];
 
+export const defaultTitleSubtitleStartBtnTextsObj = {
+  welcomePage: {
+    titleText: "Welcome",
+    subtitleText: "Welcome to the Survey",
+    startButtonText: "Start Survey",
+  },
+  languagePage: {
+    titleText: "Select a Language",
+    subtitleText: "Let's Begin!",
+    startButtonText: "Start Survey",
+  },
+  thankyouPage: {
+    titleText: "Thank you",
+    subtitleText: "Thank you for taking the survey",
+    startButtonText: "",
+  },
+};
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;

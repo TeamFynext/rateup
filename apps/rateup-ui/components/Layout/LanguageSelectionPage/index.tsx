@@ -15,6 +15,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
+import { PageType } from "@/types/enums";
+
 import { lexend } from "../../../utils/fonts";
 import { CreditsCard } from "../../Card/CreditsCard";
 import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
@@ -31,6 +33,7 @@ function LanguageSelectionPage({
   languages,
   setSelectedLanguage,
   surveyThemeData,
+  questionsArr,
 }) {
   const [lang, setLang] = useState(languages[0]);
   const selectedPreview = useSelectedPreview();
@@ -38,15 +41,28 @@ function LanguageSelectionPage({
   const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
   const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
 
+  const defaultTitleSubtitleStartButtonTexts = {
+    titleText: "Select a Language",
+    subtitleText: "Let's Begin!",
+    startButtonText: "Start Survey",
+  };
+
+  const languageTypeQuestionObj =
+    questionsArr?.find((question) => question.type === PageType.Language) ||
+    defaultTitleSubtitleStartButtonTexts;
+  const { titleText, subtitleText, startButtonText } = languageTypeQuestionObj;
+
   const {
     languageTheme: {
       bg: { useSurveyBackground = false },
-      title: { styles: titleStyles, title },
-      subtitle: { styles: subtitleStyles, subtitle },
-      button: { styles: buttonStyles, label: startBtnLabel },
+      title: { styles: titleStyles },
+      subtitle: { styles: subtitleStyles },
+      button: { styles: buttonStyles },
       input: { primaryColor: inputPrimaryColor },
     },
   } = surveyThemeData;
+
+  console.log({ buttonStyles });
 
   const isOrgLogoPresent = orgLogoSrc?.length > 0;
   const isMobile =
@@ -95,7 +111,7 @@ function LanguageSelectionPage({
                   height: "fit-content",
                 }}
               >
-                {subtitle}
+                {subtitleText}
               </p>
             </Stack>
 
@@ -107,7 +123,7 @@ function LanguageSelectionPage({
                   height: "fit-content",
                 }}
               >
-                {title}
+                {titleText}
               </p>
             </Stack>
           </Stack>
@@ -148,6 +164,7 @@ function LanguageSelectionPage({
 
           <Flex
             className={`${surveyThemeStylesCx("buttonBox")} ${cx("start-btn-text-input-wrapper")}`}
+            justify={"center"}
           >
             <Flex
               className={cx("start-btn-text-input-container")}
@@ -166,7 +183,7 @@ function LanguageSelectionPage({
                   padding: "0.75rem 1rem 0.75rem 1.5625rem",
                 }}
               >
-                {startBtnLabel}
+                {startButtonText}
               </Button>
             </Flex>
           </Flex>

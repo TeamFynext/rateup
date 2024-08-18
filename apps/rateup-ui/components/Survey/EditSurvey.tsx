@@ -62,7 +62,7 @@ export function EditSurvey({
   subscription,
 }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
-    QuestionTabsEnum.SurveyPreview,
+    QuestionTabsEnum.None,
   );
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const { surveyId } = useContext(SurveyContext);
@@ -149,17 +149,19 @@ export function EditSurvey({
   }
 
   useEffect(() => {
-    closeStylesEditorDrawer();
+    if (inititalSelectedTabForSurveyThemeComp !== ThemeTabEnum.SURVEY)
+      closeStylesEditorDrawer();
   }, [inititalSelectedTabForSurveyThemeComp]);
 
   useEffect(() => {
-    closeStylesEditorDrawer();
+    if (activeTab !== QuestionTabsEnum.SurveyPreview) closeStylesEditorDrawer();
   }, [activeTab]);
 
   return (
     <SurveyThemeContextProvider
       surveyTheme={survey?.webSurveyTheme?.theme}
       selectedPageTab={inititalSelectedTabForSurveyThemeComp}
+      editSurveySelectedQuestion={selectedQ}
     >
       <Flex className={styles["edit-survey-div"]}>
         <LayoutGroup>
@@ -210,9 +212,7 @@ export function EditSurvey({
                             <SurveyTheme
                               survey={survey}
                               previewId={`${selectedQ.type}-preview`}
-                              isThemeObjBeingEditedDefaultTheme={
-                                isThemeObjBeingEditedDefaultTheme
-                              }
+                              onEditPageBtnClick={openStylesEditorDrawer}
                             />
                           )}
                         </Stack>
@@ -298,9 +298,6 @@ export function EditSurvey({
                       previewId={"survey-theme-edit-preview"}
                       key={surveyPreviewCompKey}
                       survey={survey}
-                      isThemeObjBeingEditedDefaultTheme={
-                        isThemeObjBeingEditedDefaultTheme
-                      }
                       isSurveyThemeEditView={true}
                     />
                   )}
@@ -329,7 +326,12 @@ export function EditSurvey({
                       isThemeObjBeingEditedDefaultTheme
                     }
                     themeObjBeingEdited={themeObjBeingEdited}
-                    closeStylesEditorDrawer={closeStylesEditorDrawer}
+                    onClose={() => {
+                      closeStylesEditorDrawer();
+                      if (activeTab === QuestionTabsEnum.SurveyPreview) {
+                        setActiveTab(QuestionTabsEnum.None);
+                      }
+                    }}
                     allThemesArr={allThemesArr}
                     themeSelectorState={themeSelectorState}
                     setThemeSelectorState={setThemeSelectorState}
@@ -349,9 +351,6 @@ export function EditSurvey({
             key={"preview" + surveyPreviewCompKey}
             previewId={"survey-theme-prod-preview"}
             survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
             isSurveyThemePreview
           />
         </SurveyPreviewModal>

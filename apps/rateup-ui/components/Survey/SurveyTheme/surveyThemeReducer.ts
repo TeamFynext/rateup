@@ -28,19 +28,6 @@ function surveyThemeReducer(state, action) {
       state.selectedPageTab = payload;
       break;
     }
-    case "title-text-change": {
-      surveyTheme[surveyThemeKey].title.title = payload;
-      break;
-    }
-    case "subtitle-text-change": {
-      surveyTheme[surveyThemeKey].subtitle.subtitle = payload;
-      break;
-    }
-    // wp => welcome page; lp => landing page
-    case "wp-lp-start-button-text-change": {
-      surveyTheme[surveyThemeKey].button.label = payload;
-      break;
-    }
 
     case "bg-background-color-change": {
       if (selectedPreview === "desktop") {

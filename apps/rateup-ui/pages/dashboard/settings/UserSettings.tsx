@@ -1,47 +1,55 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
 import {
-  Title,
+  Avatar,
   Divider,
+  FileButton,
+  Flex,
+  Grid,
+  Group,
+  Paper,
   Stack,
   Text,
-  FileButton,
-  Grid,
-  Avatar,
-  Group,
-  Flex,
-  Paper,
+  Title,
 } from "@mantine/core";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus } from "@tabler/icons-react";
+
 import {
   useChangePasswordMutation,
   useGetUserProfile,
   useUpdateProfileMutation,
   useUpdateProfilePhotoMutation,
 } from "../../../backend/user/user.query";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { uploadFile } from "../../../utils/file-upload/upload";
-import { notifications } from "@mantine/notifications";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import {
   ContainedPasswordInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
-import { mergeNames, retrieveRole } from "../../../utils/essential";
-import { passwordValidation } from "../../../utils/validation";
-import { IconPlus } from "@tabler/icons-react";
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
+import { mergeNames, retrieveRole } from "../../../utils/essential";
+import { uploadFile } from "../../../utils/file-upload/upload";
+import { passwordValidation } from "../../../utils/validation";
 import styles from "./setting.module.css";
+
 import "react-phone-number-input/style.css";
+
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const ProfileSettings = () => {
+  const { translations } = useTranslations();
   const {
     isLoading: isprofileLoading,
     error: profileError,
@@ -59,10 +67,11 @@ const ProfileSettings = () => {
       confirmPassword: "",
     },
     validate: {
-      title: isNotEmpty("Select a title"),
-      firstname: isNotEmpty("Name Cannot be blank"),
+      title: isNotEmpty(translations["Select a title"]),
+      firstname: isNotEmpty(translations["Name Cannot be blank"]),
       phone: (value) => {
-        if (value && !isValidPhoneNumber(value)) return "Invalid phone number";
+        if (value && !isValidPhoneNumber(value))
+          return translations["Invalid phone number"];
         return null;
       },
       existingPassword: (value, values) =>
@@ -71,7 +80,9 @@ const ProfileSettings = () => {
         isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
       confirmPassword: (value, values) => {
         if (value !== values.newPassword && isAnyPasswordFieldDirty(values)) {
-          return "New Password  and Confirm Password did not match";
+          return translations[
+            "New Password  and Confirm Password did not match"
+          ];
         }
         return null; // Validation passed
       },
@@ -170,8 +181,8 @@ const ProfileSettings = () => {
           notifications.show({
             id: "load-data",
             loading: true,
-            title: "Uploading photo",
-            message: `Hold on, changing your profile photo`,
+            title: translations["Uploading photo"],
+            message: translations["Hold on, changing your profile photo"],
             autoClose: false,
             withCloseButton: false,
           });
@@ -207,7 +218,7 @@ const ProfileSettings = () => {
         image={selectedImage.url}
         aspect={1}
       />
-      <Title order={2}>User Settings</Title>
+      <Title order={2}>{translations["User Settings"]}</Title>
       <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
           direction={"column"}
@@ -233,7 +244,7 @@ const ProfileSettings = () => {
           </Paper>
           <Group>
             <RateupButtonSecondary
-              title="Remove Image"
+              title={translations["Remove Image"]}
               size="sm"
               variant="outline"
               color="var(--tertiary-color)"
@@ -246,7 +257,7 @@ const ProfileSettings = () => {
             >
               {(props) => (
                 <RateupButtonBlue
-                  title="Change Image"
+                  title={translations["Change Image"]}
                   size="sm"
                   color="var(--tertiary-color)"
                   onClick={removePhoto}
@@ -257,7 +268,7 @@ const ProfileSettings = () => {
           </Group>
           <Stack align={"center"}>
             <Text size={"28px"} fw={500}>
-              {profileData?.data?.data?.name || "User"}
+              {profileData?.data?.data?.name || translations["User"]}
             </Text>
             <Text> {retrieveRole(profileData?.data?.data?.role)}</Text>
             <Text size="sm">{profileData?.data?.data?.email}</Text>
@@ -272,7 +283,7 @@ const ProfileSettings = () => {
           miw="300px"
         >
           <Text size="lg" fw={500}>
-            Edit Info
+            {translations["Edit Info"]}
           </Text>
           <form
             onSubmit={profileForm.onSubmit(onSubmit)}
@@ -287,8 +298,8 @@ const ProfileSettings = () => {
             <Grid columns={10} grow>
               <Grid.Col span={{ xs: 10, lg: 2 }}>
                 <ContainedSelection
-                  label="Title"
-                  placeholder="Select"
+                  label={translations["Title"]}
+                  placeholder={translations["Select"]}
                   data={[
                     { value: "MALE", label: "Mr" },
                     { value: "FEMALE", label: "Mrs" },
@@ -301,28 +312,30 @@ const ProfileSettings = () => {
               <Grid.Col span={{ xs: 10, md: 5, lg: 4 }}>
                 <ContainedTextField
                   w={"100%"}
-                  label="First Name"
-                  placeholder="Enter your full name"
+                  label={translations["First Name"]}
+                  placeholder={translations["Enter your full name"]}
                   {...profileForm.getInputProps("firstname")}
                   withAsterisk
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, md: 5, lg: 4 }}>
                 <ContainedTextField
-                  label="Last Name"
-                  placeholder="Enter your full name"
+                  label={translations["Last Name"]}
+                  placeholder={translations["Enter your full name"]}
                   {...profileForm.getInputProps("lastname")}
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 4 }}>
                 <Text fz={12} c={"#495057"} mt={6}>
-                  Phone Number
+                  {translations["Phone Number"]}
                 </Text>
                 <PhoneInputWithCountrySelect
                   defaultCountry="IN"
                   international
                   countryCallingCodeEditable={false}
-                  placeholder="Enter your organization phone number"
+                  placeholder={
+                    translations["Enter your organization phone number"]
+                  }
                   value={profileForm?.values?.phone || null}
                   {...profileForm?.getInputProps("phone")}
                   className={styles.inputPhone}
@@ -334,8 +347,8 @@ const ProfileSettings = () => {
               <Grid.Col span={{ xs: 10, lg: 6 }}>
                 <ContainedTextField
                   disabled
-                  label="Email"
-                  placeholder="Enter your email"
+                  label={translations["Email"]}
+                  placeholder={translations["Enter your email"]}
                   value={profileData?.data?.data?.email}
                   withAsterisk
                 />
@@ -350,24 +363,24 @@ const ProfileSettings = () => {
             >
               <Stack>
                 <Title size="lg" fw={500} style={{ marginBottom: "1rem" }}>
-                  Change Password
+                  {translations["Change Password"]}
                 </Title>
               </Stack>
               <Flex gap={"md"} wrap="wrap" direction={"column"}>
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
                   w={"100%"}
-                  placeholder="Enter existing password"
+                  placeholder={translations["Enter existing password"]}
                   {...profileForm.getInputProps("existingPassword")}
                 />
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
-                  placeholder="Enter new password"
+                  placeholder={translations["Enter new password"]}
                   {...profileForm.getInputProps("newPassword")}
                 />
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
-                  placeholder="Enter new password again"
+                  placeholder={translations["Enter new password again"]}
                   {...profileForm.getInputProps("confirmPassword")}
                 />
               </Flex>
@@ -377,7 +390,7 @@ const ProfileSettings = () => {
                 type="submit"
                 loading={isLoading}
                 size="sm"
-                title="Save Changes"
+                title={translations["Save Changes"]}
               />
             </Flex>
           </form>

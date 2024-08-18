@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect } from "react";
 import { useIsFirstRender } from "@mantine/hooks";
 import { useImmerReducer } from "use-immer";
 
+import { QuestionType } from "@/types/enums";
+
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 import surveyThemeReducer from "./surveyThemeReducer";
 
@@ -17,10 +19,13 @@ const SetOpenEditorsContext = createContext(null);
 const SelectedPreviewContext = createContext("desktop");
 const SetSelectedPreviewContext = createContext(null);
 
+const SelectedQuestionContext = createContext<Question>(null);
+
 function SurveyThemeContextProvider({
   surveyTheme,
   children,
   selectedPageTab = ThemeTabEnum.SURVEY,
+  editSurveySelectedQuestion = null,
 }) {
   const isFirstRender = useIsFirstRender();
 
@@ -66,19 +71,23 @@ function SurveyThemeContextProvider({
 
   return (
     <SurveyThemeContext.Provider value={state.surveyTheme}>
-      <SelectedPageTabContext.Provider value={state.selectedPageTab}>
-        <DispatchContext.Provider value={dispatch}>
-          <OpenEditorsContext.Provider value={state.openEditors}>
-            <SetOpenEditorsContext.Provider value={setOpenEditors}>
-              <SelectedPreviewContext.Provider value={state.selectedPreview}>
-                <SetSelectedPreviewContext.Provider value={setSelectedPreview}>
-                  {children}
-                </SetSelectedPreviewContext.Provider>
-              </SelectedPreviewContext.Provider>
-            </SetOpenEditorsContext.Provider>
-          </OpenEditorsContext.Provider>
-        </DispatchContext.Provider>
-      </SelectedPageTabContext.Provider>
+      <SelectedQuestionContext.Provider value={editSurveySelectedQuestion}>
+        <SelectedPageTabContext.Provider value={state.selectedPageTab}>
+          <DispatchContext.Provider value={dispatch}>
+            <OpenEditorsContext.Provider value={state.openEditors}>
+              <SetOpenEditorsContext.Provider value={setOpenEditors}>
+                <SelectedPreviewContext.Provider value={state.selectedPreview}>
+                  <SetSelectedPreviewContext.Provider
+                    value={setSelectedPreview}
+                  >
+                    {children}
+                  </SetSelectedPreviewContext.Provider>
+                </SelectedPreviewContext.Provider>
+              </SetOpenEditorsContext.Provider>
+            </OpenEditorsContext.Provider>
+          </DispatchContext.Provider>
+        </SelectedPageTabContext.Provider>
+      </SelectedQuestionContext.Provider>
     </SurveyThemeContext.Provider>
   );
 }
@@ -111,6 +120,10 @@ function useSetSelectedPreview() {
   return useContext(SetSelectedPreviewContext);
 }
 
+function useEditSurveySelectedQuestion() {
+  return useContext(SelectedQuestionContext);
+}
+
 export {
   SurveyThemeContextProvider,
   useSurveyThemeContextValue,
@@ -120,4 +133,5 @@ export {
   useSetOpenEditors,
   useSelectedPreview,
   useSetSelectedPreview,
+  useEditSurveySelectedQuestion,
 };

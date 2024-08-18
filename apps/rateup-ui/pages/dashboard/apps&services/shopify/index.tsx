@@ -26,6 +26,7 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
+import useTranslations from "@/dictionaries/useTranslation";
 import {
   showErrorToast,
   showLoadingToast,
@@ -40,9 +41,10 @@ import ConnectShopifyModal from "../../../../components/shopify/ConnectShopifyMo
 import ShopifySurveySchedules from "../../../../components/shopify/ShopifySurveySchedules";
 
 export const ActiveStatusBadge = ({ active }) => {
+  const { translations } = useTranslations();
   return (
     <Badge color={active ? "green" : "red"}>
-      {active ? "ACTIVE" : "INACTIVE"}
+      {active ? translations["ACTIVE"] : translations["INACTIVE"]}
     </Badge>
   );
 };
@@ -59,6 +61,7 @@ const Shopify = () => {
   ) as { data: ShopifyIntegration };
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
+  const { translations } = useTranslations();
   const session = shopifyInfo?.credential?.session;
   const [shopifyProducts, setShopifyProducts] = useState([]);
 
@@ -68,18 +71,22 @@ const Shopify = () => {
 
   const handleLoadProducts = async () => {
     try {
-      showLoadingToast("Syncing Shopify products", "shopify-products", true);
+      showLoadingToast(
+        translations["Syncing Shopify products"],
+        "shopify-products",
+        true,
+      );
       const products = await getProductsFromShopify();
       setShopifyProducts(products ?? []);
       showSuccessToast(
-        "Products loaded successfully",
+        translations["Products loaded successfully"],
         "shopify-products",
         <IconCheck />,
         true,
       );
     } catch (e) {
       showErrorToast(
-        "Product syncing failed",
+        translations["Product syncing failed"],
         "shopify-products",
         <IconX />,
         true,
@@ -93,7 +100,7 @@ const Shopify = () => {
         <Stack>
           <Image src={"../../../images/shopifystore.jpeg"} />
           <RateupButtonBlue
-            title="Connect with shopify store"
+            title={translations["Connect with shopify store"]}
             leftIcon={<IconPlus />}
             onClick={openConnect}
             color="#5e8e3e"
@@ -106,7 +113,7 @@ const Shopify = () => {
     <Stack>
       <Group justify="flex-end">
         <RateupButtonSecondary
-          title="Sync products"
+          title={translations["Sync products"]}
           onClick={handleLoadProducts}
         />
         <Tooltip

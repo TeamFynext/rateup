@@ -1,37 +1,31 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 
-import {
-  ActionIcon,
-  BackgroundImage,
-  Box,
-  Flex,
-  Image,
-  Textarea,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
-import { IconEdit } from "@tabler/icons-react";
+import { BackgroundImage, Box, Flex, Image, Tooltip } from "@mantine/core";
+
+import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
+import AutosaveInput from "@/components/input/AutosaveInput";
 
 import { cordinateStyle } from "../../../../../../utils";
-import { lexend, lexend300 } from "../../../../../../utils/fonts";
+import { lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
-import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
+  useEditSurveySelectedQuestion,
   useSelectedPreview,
   useSetOpenEditors,
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
 
-export default function WelcomePageThemeView({
-  survey,
-  isThemeObjBeingEditedDefaultTheme,
-}) {
+export default function WelcomePageThemeView({ survey }) {
   const surveyTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
+  const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const selectedPreview = useSelectedPreview();
+  const questionUpdateMutation = useQuestionUpdateMutation({
+    surveyId: survey.id,
+  });
   const isWelcomePageEnabled = survey?.welcomePageEnabled;
   const setOpenEditors = useSetOpenEditors();
 
@@ -42,50 +36,46 @@ export default function WelcomePageThemeView({
 
   const {
     bg: { styles, desktopbg, mobilebg },
-    button: { styles: buttonStyles, label, position },
-    subtitle: { styles: subtitleStyles, subtitle },
-    title: { styles: titleStyles, title },
+    button: { styles: buttonStyles, position },
+    subtitle: { styles: subtitleStyles },
+    title: { styles: titleStyles },
   } = welcomeTheme;
+
+  const {
+    titleText: title,
+    subtitleText: subtitle,
+    startButtonText: startBtnLabel,
+  } = editSurveySelectedQuestion || {};
 
   const orgLogoSrc = logo?.logo;
   const orgLogoStyles = logo?.styles;
 
-  const handleTitleInputChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "title-text-change",
-          payload: e.target.value,
+  const handleSaveTitleSubtitleStartTextSave = useCallback(
+    async (value, name) => {
+      let data = {};
+      switch (name) {
+        case "title": {
+          data["titleText"] = value;
+          break;
+        }
+        case "subtitle": {
+          data["subtitleText"] = value;
+          break;
+        }
+        case "startBtn": {
+          data["startButtonText"] = value;
+          break;
+        }
+      }
+      if (editSurveySelectedQuestion) {
+        await questionUpdateMutation.mutateAsync({
+          qId: editSurveySelectedQuestion["id"],
+          data,
         });
+      }
     },
-    [isThemeObjBeingEditedDefaultTheme],
+    [editSurveySelectedQuestion],
   );
-
-  const handleSubtitleTextareaChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "subtitle-text-change",
-          payload: e.target.value,
-        });
-    },
-    [isThemeObjBeingEditedDefaultTheme],
-  );
-
-  const handleStartBtnTextChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "wp-lp-start-button-text-change",
-          payload: e.target.value,
-        });
-    },
-    [isThemeObjBeingEditedDefaultTheme],
-  );
-
-  const titleInputRef = useRef(null);
-  const subtitleInputRef = useRef(null);
-  const startBtnInputRef = useRef(null);
 
   const useSurveyBackground =
     surveyTheme["welcomeTheme"].bg.useSurveyBackground;
@@ -119,7 +109,7 @@ export default function WelcomePageThemeView({
             h={"100%"}
             direction={"column"}
             pos={"relative"}
-            gap={"1.5rem"}
+            gap={"2rem"}
           >
             {orgLogoSrc && (
               <Image
@@ -130,122 +120,57 @@ export default function WelcomePageThemeView({
             )}
 
             <Tooltip label="Edit title">
-              <Box className={classes.titleBox} w={"50%"}>
-                <TextInput
-                  className={lexend.className}
-                  placeholder={"Welcome"}
-                  variant="unstyled"
-                  size="xxl"
-                  name="headerText"
-                  onClick={(e) => e.stopPropagation()}
-                  styles={{
-                    input: {
-                      ...titleStyles,
-                      fontFamily: "inherit",
-                      height: "fit-content",
-                    },
-                  }}
+              <Box className={classes.titleBox}>
+                <AutosaveInput
+                  name="title"
                   value={title}
-                  onChange={handleTitleInputChange}
-                  ref={titleInputRef}
-                  onFocus={() => setOpenEditors(["title-styles"])}
-                  autoComplete="off"
+                  onSave={handleSaveTitleSubtitleStartTextSave}
+                  style={{
+                    ...titleStyles,
+                  }}
                 />
-
-                <ActionIcon
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  className={classes.actionIcon}
-                  onClick={() => titleInputRef.current?.focus()}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
               </Box>
             </Tooltip>
             {/* //--------------------------- */}
             <Tooltip label="Edit subtitle">
-              <Box className={classes.titleBox} w={"50%"}>
-                <Textarea
-                  className={lexend.className}
-                  placeholder={"Please fill the survey"}
-                  variant="unstyled"
-                  onClick={(e) => e.stopPropagation()}
-                  name="descText"
-                  styles={{
-                    input: {
-                      ...subtitleStyles,
-                      fontFamily: "inherit",
-                    },
-                  }}
-                  ta={"center"}
+              <Box className={classes.titleBox}>
+                <AutosaveInput
+                  isTextArea
+                  name="subtitle"
                   value={subtitle}
-                  onChange={handleSubtitleTextareaChange}
-                  ref={subtitleInputRef}
-                  onFocus={() => setOpenEditors(["desc-styles"])}
-                  autoComplete="off"
+                  onSave={handleSaveTitleSubtitleStartTextSave}
+                  style={{
+                    ...subtitleStyles,
+                  }}
                 />
-
-                <ActionIcon
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  className={classes.actionIcon}
-                  onClick={() => subtitleInputRef.current?.focus()}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
               </Box>
             </Tooltip>
 
             <Box
-              w={"50%"}
-              className={classes.buttonBox}
+              className={classes.titleBox}
               style={{
                 display: "flex",
                 ...(position?.x ? cordinateStyle(position.x) : {}),
                 ...(position?.y ? cordinateStyle(position.y) : {}),
               }}
             >
-              <Flex
-                justify={"center"}
-                p={10}
-                style={{ ...buttonStyles, borderRadius: "2rem" }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <TextInput
-                  onChange={handleStartBtnTextChange}
-                  value={label}
-                  placeholder={"Start Survey"}
-                  variant="unstyled"
-                  name="buttonText"
-                  size="xs"
-                  styles={{
-                    input: {
-                      color: "inherit",
-                      fontSize: "18px",
-                      textAlign: "center",
-                      minWidth: "150px",
-                      alignSelf: "center",
-                      fontWeight: 600,
-                      fontFamily: "inherit",
-                    },
-                  }}
-                  ref={startBtnInputRef}
-                  onFocus={() => setOpenEditors(["button-styles"])}
-                  autoComplete="off"
-                />
-
-                <ActionIcon
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  className={classes.actionIcon}
-                  onClick={() => startBtnInputRef.current?.focus()}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
-              </Flex>
+              <AutosaveInput
+                className={classes["start-btn-input-div"]}
+                name="startBtn"
+                value={startBtnLabel}
+                onSave={handleSaveTitleSubtitleStartTextSave}
+                style={{
+                  color: "inherit",
+                  fontSize: "18px",
+                  textAlign: "center",
+                  minWidth: "150px",
+                  alignSelf: "center",
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  ...buttonStyles,
+                  borderRadius: "2rem",
+                }}
+              />
             </Box>
           </Flex>
         </BackgroundImage>

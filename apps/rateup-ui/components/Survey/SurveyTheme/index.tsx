@@ -1,4 +1,5 @@
-import { Box, Center } from "@mantine/core";
+import { ActionIcon, Box, Button, Center } from "@mantine/core";
+import { IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import useTranslations from "@/dictionaries/useTranslation";
@@ -11,10 +12,10 @@ const cx = classNames.bind(styles);
 
 function SurveyTheme({
   survey,
-  isThemeObjBeingEditedDefaultTheme,
   previewId,
   isSurveyThemeEditView = false,
   isSurveyThemePreview = false,
+  onEditPageBtnClick = null,
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
@@ -36,11 +37,18 @@ function SurveyTheme({
           className={`${cx("theme-preview-container")} theme-preview-container`}
         >
           <PreviewDeviceButtons />
+          {!isSurveyThemeEditView && !isSurveyThemePreview && (
+            <Button
+              className={styles["edit-page-theme-btn"]}
+              rightSection={<IconEdit size={16} />}
+              onClick={onEditPageBtnClick}
+            >
+              Edit
+            </Button>
+          )}
+
           <SurveyThemePreviewLayout
             survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
             previewId={previewId}
             isSurveyThemeEditView={isSurveyThemeEditView}
             isSurveyThemePreview={isSurveyThemePreview}

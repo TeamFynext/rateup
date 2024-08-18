@@ -1,4 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createNewTheme,
   deleteTheme,
@@ -8,8 +11,6 @@ import {
   updateAllThemes,
   updateSurveyTheme,
 } from "./surveyTheme.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { AxiosError } from "axios";
 
 export const useSurveyTheme = (surveyThemeId: string) => {
   return useQuery({
@@ -113,7 +114,9 @@ export const useUpdateAllThemesMutation = () => {
   return useMutation({
     mutationFn: updateAllThemes,
     onSuccess: () => {
-      showSuccessToast("Updated all the themes Successfully.");
+      showSuccessToast(
+        "No Json changes needed for now, if there is a need for json change check endpoint code",
+      );
     },
     onError: (err) => {
       showErrorToast("Unable to update themes, please try again later.");

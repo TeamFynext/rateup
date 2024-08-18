@@ -16,6 +16,10 @@ import {
 import { IconChevronRight, IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
+import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
+import AutosaveInput from "@/components/input/AutosaveInput";
+import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
+
 import { lexend } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
@@ -23,6 +27,7 @@ import { SingleSelectCard } from "../../../../TakeSurvey/TakeSurveyComponent/Sel
 import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import surveyThemeStyles from "../../../SurveyTheme.module.css";
 import {
+  useEditSurveySelectedQuestion,
   useSelectedPreview,
   useSetOpenEditors,
   useSurveyThemeContextValue,
@@ -33,7 +38,7 @@ import styles from "./languagePage.module.css";
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
 
-function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
+function LanguagePage({ survey }) {
   const selectedPreview = useSelectedPreview();
   const setOpenEditors = useSetOpenEditors();
 
@@ -43,6 +48,10 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
 
   const surveyThemeObj = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
+  const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
+  const questionUpdateMutation = useQuestionUpdateMutation({
+    surveyId: survey.id,
+  });
 
   const languages = survey.languages;
   const [lang, setLang] = useState(languages[0]);
@@ -53,9 +62,9 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
     },
     languageTheme: {
       bg: { useSurveyBackground = false },
-      title: { styles: titleStyles, title },
-      subtitle: { styles: subtitleStyles, subtitle },
-      button: { styles: buttonStyles, label: startBtnLabel },
+      title: { styles: titleStyles },
+      subtitle: { styles: subtitleStyles },
+      button: { styles: buttonStyles },
       input: { primaryColor: inputPrimaryColor },
     },
   } = surveyThemeObj;
@@ -68,45 +77,47 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
     isMobile,
   );
 
-  const handleSubtitleInputChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "subtitle-text-change",
-          payload: e.target.value,
-        });
-    },
-    [isThemeObjBeingEditedDefaultTheme],
-  );
-
-  const handleTitleInputChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "title-text-change",
-          payload: e.target.value,
-        });
-    },
-    [isThemeObjBeingEditedDefaultTheme],
-  );
-
-  const handleStartBtnTextChange = useCallback(
-    (e) => {
-      if (!isThemeObjBeingEditedDefaultTheme)
-        surveyThemeDispatch({
-          type: "wp-lp-start-button-text-change",
-          payload: e.target.value,
-        });
-    },
-    [isThemeObjBeingEditedDefaultTheme],
-  );
+  const {
+    titleText: title,
+    subtitleText: subtitle,
+    startButtonText: startBtnLabel,
+  } = editSurveySelectedQuestion || {};
 
   useEffect(() => {
-    startBtnInputRef.current.setAttribute("size", startBtnLabel.length - 1);
+    if (startBtnInputRef.current) {
+      startBtnInputRef.current.setAttribute("size", startBtnLabel?.length - 1);
+    }
   }, [startBtnLabel]);
 
   const isUnsplashImage = backgroundImageSrc?.startsWith(
     "https://images.unsplash.com",
+  );
+
+  const handleSaveTitleSubtitleStartTextSave = useCallback(
+    async (value, name) => {
+      let data = {};
+      switch (name) {
+        case "title": {
+          data["titleText"] = value;
+          break;
+        }
+        case "subtitle": {
+          data["subtitleText"] = value;
+          break;
+        }
+        case "startBtn": {
+          data["startButtonText"] = value;
+          break;
+        }
+      }
+      if (editSurveySelectedQuestion) {
+        await questionUpdateMutation.mutateAsync({
+          qId: editSurveySelectedQuestion["id"],
+          data,
+        });
+      }
+    },
+    [editSurveySelectedQuestion],
   );
 
   return (
@@ -135,70 +146,27 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
           <Stack className={cx("header")}>
             <Tooltip label="Edit Subtitle">
               <Stack className={surveyThemeStylesCx("titleBox")}>
-                <TextInput
-                  className={lexend.className}
-                  placeholder={"Let's Begin"}
-                  variant="unstyled"
-                  size="xxl"
-                  name="headerText"
-                  onClick={(e) => e.stopPropagation()}
-                  styles={{
-                    input: {
-                      ...subtitleStyles,
-                      fontFamily: "inherit",
-                      height: "fit-content",
-                    },
-                  }}
+                <AutosaveInput
+                  name="subtitle"
                   value={subtitle}
-                  onChange={handleSubtitleInputChange}
-                  ref={subtitleInputRef}
-                  onFocus={() => setOpenEditors(["desc-styles"])}
-                  autoComplete="off"
+                  onSave={handleSaveTitleSubtitleStartTextSave}
+                  style={{
+                    ...subtitleStyles,
+                  }}
                 />
-
-                <ActionIcon
-                  className={surveyThemeStylesCx("actionIcon")}
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  onClick={() => subtitleInputRef.current?.focus()}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
               </Stack>
             </Tooltip>
 
             <Tooltip label={"Edit Title"}>
               <Stack className={surveyThemeStylesCx("titleBox")}>
-                <TextInput
-                  className={lexend.className}
-                  placeholder={"Select a Language"}
-                  variant="unstyled"
-                  size="xxl"
-                  onClick={(e) => e.stopPropagation()}
-                  styles={{
-                    input: {
-                      ...titleStyles,
-                      fontFamily: "inherit",
-                      height: "fit-content",
-                    },
-                  }}
+                <AutosaveInput
+                  name="title"
                   value={title}
-                  onChange={handleTitleInputChange}
-                  ref={titleInputRef}
-                  onFocus={() => setOpenEditors(["title-styles"])}
-                  autoComplete="off"
+                  onSave={handleSaveTitleSubtitleStartTextSave}
+                  style={{
+                    ...titleStyles,
+                  }}
                 />
-
-                <ActionIcon
-                  className={surveyThemeStylesCx("actionIcon")}
-                  variant="default"
-                  radius="lg"
-                  size="sm"
-                  onClick={() => titleInputRef.current?.focus()}
-                >
-                  <IconEdit style={{ width: "70%", height: "70%" }} />
-                </ActionIcon>
               </Stack>
             </Tooltip>
           </Stack>
@@ -238,51 +206,34 @@ function LanguagePage({ survey, isThemeObjBeingEditedDefaultTheme }) {
           </Flex>
 
           <Flex
-            className={`${surveyThemeStylesCx("buttonBox")} ${cx("start-btn-text-input-wrapper")}`}
+            className={`${startBtnWrapperStyles["titleBox"]} ${cx("start-btn-wrapper")}`}
           >
-            <Flex
-              p={"0.625rem 0.875rem"}
-              className={cx("start-btn-text-input-container")}
-              style={{
-                backgroundColor: buttonStyles.backgroundColor,
-                borderRadius: "2rem",
-              }}
-              onClick={(e) => e.stopPropagation()}
+            <Box
+              className={`${cx("autosave-input-right-chevron-icon-container")}`}
             >
-              <TextInput
-                className={cx("start-btn-text-input")}
-                onChange={handleStartBtnTextChange}
+              <AutosaveInput
+                className={`${startBtnWrapperStyles["start-btn-input-div"]} ${cx("start-btn-auto-save-input-div")}`}
+                name="startBtn"
                 value={startBtnLabel}
-                placeholder={"Start Survey"}
-                variant="unstyled"
-                name="buttonText"
-                size="xs"
-                rightSection={
-                  <IconChevronRight
-                    color={buttonStyles.color}
-                    size={"1.5rem"}
-                  />
-                }
-                ref={startBtnInputRef}
-                onFocus={() => setOpenEditors(["button-styles"])}
-                styles={{
-                  input: {
-                    color: buttonStyles.color,
-                  },
+                onSave={handleSaveTitleSubtitleStartTextSave}
+                style={{
+                  color: "inherit",
+                  fontSize: "18px",
+                  textAlign: "center",
+                  minWidth: "150px",
+                  alignSelf: "center",
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  ...buttonStyles,
+                  borderRadius: "2rem",
                 }}
-                autoComplete="off"
               />
-
-              <ActionIcon
-                variant="default"
-                radius="lg"
-                size="sm"
-                className={surveyThemeStylesCx("actionIcon")}
-                onClick={() => startBtnInputRef.current?.focus()}
-              >
-                <IconEdit style={{ width: "70%", height: "70%" }} />
-              </ActionIcon>
-            </Flex>
+              <IconChevronRight
+                className={cx("start-btn-right-chevron")}
+                color={buttonStyles.color}
+                size={"1.5rem"}
+              />
+            </Box>
           </Flex>
         </Stack>
       </Flex>
