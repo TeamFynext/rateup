@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Button, Image, Stack, Text } from "@mantine/core";
+import { Button, Flex, Image, Stack, Text } from "@mantine/core";
 
 import { PageType } from "@/types/enums";
 
@@ -46,52 +46,54 @@ function WelcomePage({
   const { titleText, subtitleText, startButtonText } = welcomeTypeQuestionObj;
 
   return (
-    <Stack
-      align="center"
-      justify="center"
-      h={"100%"}
-      p={"lg"}
-      className={lexend.className}
-      // gap={largeScreen ? "xl" : "sm"}
-      gap={"xl"}
-    >
-      {orgLogoSrc && (
-        <Image
-          fit="contain"
-          src={orgLogoSrc}
-          alt="Logo"
-          style={{ ...orgLogoStyles }}
-        />
-      )}
-      <Text style={surveyThemeData?.title?.styles}>{titleText}</Text>
-      <Text style={surveyThemeData?.subtitle?.styles}>{subtitleText}</Text>
-      <div
-        style={{
-          display: "flex",
-          ...(position?.x ? cordinateStyle(position.x) : {}),
-          ...(position?.y ? cordinateStyle(position.y) : {}),
-          padding: 20,
-        }}
+    <Flex justify={"center"} align={"center"} h={"100%"}>
+      <Stack
+        align="center"
+        justify="center"
+        h={"100%"}
+        p={"lg"}
+        className={lexend.className}
+        gap={"xl"}
+        maw={1920}
       >
-        <Button
-          style={
-            surveyThemeData?.button?.styles
-              ? {
-                  ...surveyThemeData?.button?.styles,
-                  height: "45px",
-                  fontSize: "1.1rem",
-                  borderRadius: "2rem",
-                }
-              : { ..._buttonStyles }
-          }
-          onClick={onStart}
-          miw={200}
-          ff={"inherit"}
+        {orgLogoSrc && (
+          <Image
+            fit="contain"
+            src={orgLogoSrc}
+            alt="Logo"
+            style={{ ...orgLogoStyles }}
+          />
+        )}
+        <Text style={surveyThemeData?.title?.styles}>{titleText}</Text>
+        <Text style={surveyThemeData?.subtitle?.styles}>{subtitleText}</Text>
+        <div
+          style={{
+            display: "flex",
+            ...(position?.x ? cordinateStyle(position.x) : {}),
+            ...(position?.y ? cordinateStyle(position.y) : {}),
+            padding: 20,
+          }}
         >
-          {startButtonText}
-        </Button>
-      </div>
-    </Stack>
+          <Button
+            style={
+              surveyThemeData?.button?.styles
+                ? {
+                    ...surveyThemeData?.button?.styles,
+                    height: "45px",
+                    fontSize: "1.1rem",
+                    borderRadius: "2rem",
+                  }
+                : { ..._buttonStyles }
+            }
+            onClick={onStart}
+            miw={200}
+            ff={"inherit"}
+          >
+            {startButtonText}
+          </Button>
+        </div>
+      </Stack>
+    </Flex>
   );
 }
 
