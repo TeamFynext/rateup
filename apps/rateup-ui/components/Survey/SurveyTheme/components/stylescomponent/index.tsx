@@ -10,6 +10,7 @@ import {
   Stack,
 } from "@mantine/core";
 import { IconChevronsDown, IconChevronsUp } from "@tabler/icons-react";
+import _ from "lodash";
 
 import { theme } from "../../../../../config/mantineTheme";
 import { supportedPageEditors } from "../../SurveyTheme.constants";
@@ -87,6 +88,16 @@ function StylesComponent({
           <Accordion
             multiple
             onChange={(valuesArr) => {
+              if (
+                openEditors?.length ===
+                supportedPageEditors[selectedPageTab]?.length
+              ) {
+                const editorsObjArr = supportedPageEditors[selectedPageTab];
+                const allValues = editorsObjArr?.map(({ value }) => value);
+                const diff = _.difference(allValues, valuesArr);
+                setOpenEditors(diff);
+                return;
+              }
               const lastEleIndex = valuesArr.length - 1;
               if (lastEleIndex > 0) {
                 setOpenEditors(valuesArr.splice(lastEleIndex, 1));
