@@ -61,12 +61,6 @@ export const getServerSideProps = async (context) => {
         surveyTeamMapId: "",
         kioskMode: "n",
         redirect: { url: "/", time: "5", enable: true },
-        gift: {
-          name: "",
-          image: "",
-          error: "",
-          price: "",
-        },
       },
     };
   }
@@ -77,7 +71,6 @@ function End({
   surveyId,
   redirect,
   surveyThemeData,
-  gift,
   titleText,
   subtitleText,
 }) {
@@ -88,7 +81,6 @@ function End({
       surveyIdValue={surveyId}
       fromShortUrl={true}
       surveyThemeData={surveyThemeData}
-      gift={gift}
       titleText={titleText}
       subtitleText={subtitleText}
     />
