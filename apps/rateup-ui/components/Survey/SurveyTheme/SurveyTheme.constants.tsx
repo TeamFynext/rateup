@@ -5,8 +5,6 @@ import DescStyles from "./components/DescStyles";
 import HeaderStyles from "./components/HeaderStyles";
 import InputStyles from "./components/InputStyles";
 import LogoStyles from "./components/LogoStyles";
-import Translations from "./components/Translations";
-import { SelectedItemEnum } from "./SurveyTheme.enums";
 
 export const dummyImage =
   "https://www.freeiconspng.com/uploads/no-image-icon-4.png";
@@ -142,12 +140,6 @@ const surveyPageEditors = [
     Component: LogoStyles,
     value: "logo-styles",
     label: "Logo",
-  },
-  {
-    id: "submit-next-btn-translations-comp",
-    Component: Translations,
-    value: "submit-next-btn-translations",
-    label: "Translations",
   },
 ];
 
