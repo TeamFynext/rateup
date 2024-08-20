@@ -11,7 +11,6 @@ import {
   createSession,
   deleteSession,
   sendMessage,
-  sendTextMessage,
 } from "../whatsappSurvey/wasurvey.service";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import {
@@ -56,7 +55,6 @@ import {
   handleWhatsappError,
 } from "../wa_error_handler";
 import { updateMonthlyStat } from "../../stats/stats.service";
-import { wait } from "../whatsappSurvey/wasurvey.controller";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -436,12 +434,6 @@ export async function sendTemplateToUserCore(
 
   const templateMessage = createTemplateMessage(phone, templateQuery);
   await sendMessage(orgId, templateMessage);
-  await wait(50);
-  await sendTextMessage(
-    { phone, orgId },
-    "You can also pay Rs. 700 by clicking the link below if you encounter any technical difficulties",
-    "http://razorpay.me/@rateup123",
-  );
   await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
 }
 

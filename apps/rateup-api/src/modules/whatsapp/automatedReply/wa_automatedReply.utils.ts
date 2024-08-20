@@ -15,7 +15,6 @@ import {
 } from "../whatsappSurvey/wasurvey.service";
 import { log } from "../../../utils/logger";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
-import { wait } from "../whatsappSurvey/wasurvey.controller";
 
 export function validateAutomationMatchCondition(
   automation: WaAutomatedReply,
@@ -171,10 +170,4 @@ export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
     },
   };
   await sendMessage(orgId, templateMessage);
-  await wait(50);
-  await sendTextMessage(
-    { phone: phoneNo, orgId },
-    "You can also pay Rs. 700 by clicking the link below if you encounter any technical difficulties",
-    "http://razorpay.me/@rateup123",
-  );
 }
