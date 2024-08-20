@@ -14,6 +14,7 @@ import {
   getCampaignFilterForFlows,
   getCampaignsByOrgId,
   getCampaignsByTeamId,
+  getResponseByCampaignById,
   sendCampaign,
   updateCampaign,
 } from "./campaign.service";
@@ -22,6 +23,7 @@ import { verifyRole } from "../../utils/auth";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
 import { CampaignStatus, SentCampaignEnum } from "../../types/enums";
+import { log } from "../../utils/logger";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -136,4 +138,19 @@ export async function getCampaignFilterForFlowsHandler(
   }
   const result = await getCampaignFilterForFlows(request.query.surveyId);
   return reply.status(200).send(result);
+}
+
+export async function getResponseByCampaignByIdHandler(
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getResponseByCampaignById(request.params.campaignId);
+    return reply.status(200).send(res);
+  } catch (error) {
+    log.error("Error while handling getResponseByCampaignById", error);
+    return reply.code(500).send(error);
+  }
 }

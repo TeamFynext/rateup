@@ -4,6 +4,7 @@ import {
   deleteCampaignByIdHandler,
   getCampaignFilterForFlowsHandler,
   getCampaignsHandler,
+  getResponseByCampaignByIdHandler,
   sendCampaignHandler,
   updateCampaignByIdHandler,
 } from "./campaign.controller";
@@ -78,5 +79,14 @@ export async function campaignRoutes(server: FastifyInstance) {
     "/flow/filter",
     { schema: { querystring: $surveyThemeRef("bySurveyIdSchema") } },
     getCampaignFilterForFlowsHandler,
+  );
+  server.get(
+    "/:campaignId/responses",
+    {
+      schema: {
+        params: $campaignRef("byCampaignIdParamsSchema"),
+      },
+    },
+    getResponseByCampaignByIdHandler,
   );
 }
