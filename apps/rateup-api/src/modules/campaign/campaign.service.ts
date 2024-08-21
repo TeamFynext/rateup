@@ -366,11 +366,52 @@ export async function sendCampaignCronAction() {
 }
 
 export const getResponseByCampaignById = async (id: string) => {
-  return await prisma.$queryRaw`
-  SELECT sr.*
-    FROM "SurveyResponse" sr
-    INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
-    INNER JOIN "Campaign" c ON c."teamId" = stm."teamId"
-    INNER JOIN "WaFlow" wf ON wf."dbFlowId"::text = c."flowId"::text AND wf."surveyId" = stm."surveyId"
-    WHERE c.id::text = ${id}::text`;
+  const responses: any[] = await prisma.$queryRaw`
+  SELECT sr.id, sr."createdAt", 
+    sr.responses,
+    sr.language, sr.tag, sr."surveyTeamMapId",sr.language, s.questions,c."teamId",co.phone
+  FROM "SurveyResponse" sr
+  INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
+  INNER JOIN "Campaign" c ON c."teamId" = stm."teamId"
+  INNER JOIN "WaFlow" wf ON wf."dbFlowId"::text = c."flowId"::text AND wf."surveyId" = stm."surveyId"
+  INNER JOIN "Survey" s ON s.id = stm."surveyId"
+  LEFT JOIN "Contact" co ON sr."contactId" = co.id
+  WHERE c.id::text = ${id}::text`;
+
+  const responsesWithTitles = responses.map(
+    ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
+      // Create a mapping of questionId to title for easier lookup
+      const questionMap = questions.reduce(
+        (map, { id, title, description, label }) => {
+          map[id] =
+            Object.values(title)?.[0] ||
+            Object.values(description)?.[0] ||
+            Object.values(label)?.[0];
+          return map;
+        },
+        {},
+      );
+      // Map over each response to replace questionId with the corresponding title
+      const updatedResponses = responses.map(
+        ({ questionId, response = {}, ...rest }) => ({
+          ...rest,
+          response: Object.values(response)?.[0],
+          title: questionMap[questionId],
+        }),
+      );
+
+      // Return the updated response object
+      return {
+        id,
+        createdAt,
+        tag,
+        phone,
+        language,
+        teamId,
+        responses: updatedResponses,
+      };
+    },
+  );
+
+  return responsesWithTitles;
 };

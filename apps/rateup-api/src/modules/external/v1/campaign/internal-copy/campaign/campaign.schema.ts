@@ -50,23 +50,18 @@ const sendCampaignInputSchema = z.object({
 });
 const responseSchema = z.object({
   type: z.string(),
-  response: z.object({}),
-  questionId: z.string(),
+  response: z.any(),
+  title: z.string().optional(),
 });
 
 const campaignResponseByIdSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.date(),
-  surveyTeamMapId: z.string().uuid(),
+  teamId: z.string().uuid(),
   responses: z.array(responseSchema),
   language: z.string(),
-  platform: z.string(),
-  ip: z.string().optional(),
-  location: z.any().optional(),
-  deviceData: z.any().optional(),
-  contactId: z.string().optional(),
+  phone: z.string().optional(),
   tag: z.string().optional(),
-  encryptedResponses: z.any().optional(),
 });
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(
