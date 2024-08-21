@@ -26,17 +26,18 @@ const ShopifyAuthCallback = () => {
         updateRouteAndCart(`/auth/shopify?shop=${shop}`, null);
       }
       router.push("/login");
-    }
-    updateShopifySession.mutate(
-      { shop, data: null },
-      {
-        onSuccess: () => {
-          localStorage.setItem("shopify-auth-callback", null);
-          reset();
-          router.push(`/dashboard`);
+    } else {
+      updateShopifySession.mutate(
+        { shop, data: null },
+        {
+          onSuccess: () => {
+            localStorage.removeItem("shopify-auth-callback");
+            reset();
+            router.push(`/dashboard`);
+          },
         },
-      },
-    );
+      );
+    }
   }, [shop, session]);
   return (
     <Center h={"100vh"}>

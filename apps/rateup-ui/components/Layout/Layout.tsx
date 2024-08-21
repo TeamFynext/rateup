@@ -119,10 +119,16 @@ export default function Layout({ children, appProps }) {
       router.push(
         `/login/callback/paused?pausedby=${userInfo?.data?.pausedBy}`,
       );
-    const shopifySetUpFinishRoute = JSON.parse(
-      localStorage.getItem("shopify-auth-callback"),
+    const shopifySetUpFinishRoute = localStorage.getItem(
+      "shopify-auth-callback",
     );
     if (shopifySetUpFinishRoute) router.push(shopifySetUpFinishRoute);
+
+    const shopifySubscriptionReturn = localStorage.getItem(
+      "shopify-subscription-callback",
+    );
+    if (shopifySubscriptionReturn) router.push(shopifySubscriptionReturn);
+
     if (userInfo === null)
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
   }, [userInfo]);

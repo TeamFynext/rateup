@@ -1,7 +1,11 @@
+import { useRouter } from "next/router";
+
+import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
-  ICreateCheckoutType,
   cancelRazorpaySubscription,
   createCheckoutSession,
   createRateupPaymentPlan,
@@ -12,13 +16,11 @@ import {
   getAllPaymentPlans,
   getAllPaymentSubscription,
   getAllRateupPaymentPlans,
+  ICreateCheckoutType,
   syncRazorPayPlans,
   updatePaymentPlan,
   updateRateupPaymentPlan,
 } from "./payment.api";
-import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/router";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
 export function usePaymentsPlans() {
   return useQuery({
@@ -34,10 +36,11 @@ export function useRateupPaymentsPlans() {
   });
 }
 
-export function useUserOrgOrders() {
+export function useUserOrgOrders(enabled = true) {
   return useQuery({
     queryKey: ["userOrgOrdersQuery"],
     queryFn: getAllOrdersUserOrg,
+    enabled,
   });
 }
 
