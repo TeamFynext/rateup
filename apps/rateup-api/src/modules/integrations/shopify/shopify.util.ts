@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums";
+import { SubscriptionStatus } from "@prisma/client";
 
 export const ShopifyWebhookTopicEventMap = [
   { key: ShopifyEvents.ORDERS_CREATE, value: "orders/create" },
@@ -39,4 +40,47 @@ export function getScheduledTime(sendAfter) {
       break;
   }
   return scheduledTime.toDate();
+}
+
+export const shopifyRecurringChargeSubscriptionStatusMap = {
+  pending: SubscriptionStatus.pending,
+  active: SubscriptionStatus.active,
+  declined: SubscriptionStatus.none,
+  expired: SubscriptionStatus.expired,
+  frozen: SubscriptionStatus.halted,
+  cancelled: SubscriptionStatus.cancelled,
+};
+
+export enum shopifyRecurringChargeStatus {
+  pending = "PENDING",
+  active = "ACTIVE",
+  declined = "DECLINED",
+  expired = "EXPIRED",
+  frozen = "FROZEN",
+  cancelled = "CANCELLED",
+}
+// name should change according to whatsapp plan displaname. also in shopify app listing
+export const ShopifyPlanMap = {
+  free: {
+    name: "FREE PLAN",
+    id: 89502,
+  },
+  essential: {
+    name: "Essential",
+    id: 89571,
+  },
+  plus: {
+    name: "Plus",
+    id: 89571,
+  },
+  pro: {
+    name: "Pro",
+    id: 89600,
+  },
+};
+
+export enum PaymentSource {
+  Razorpay = "Razorpay",
+  Stripe = "Stripe",
+  Shopify = "Shopify",
 }

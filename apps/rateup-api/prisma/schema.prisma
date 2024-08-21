@@ -129,17 +129,17 @@ model UsageStats {
   org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String   @unique @db.Uuid
 
-  teamsCount             Int @default(0)
-  teamMembersCount       Int @default(0)
-  surveysCount           Int @default(0)
-  surveyResponsesCount   Int @default(0)
-  waSurveysCount         Int @default(0)
-  waSurveyResponsesCount Int @default(0)
-  menusCount             Int @default(0)
-  menuViewsCount         Int @default(0)
-  messagesCount          Int @default(0)
+  teamsCount              Int @default(0)
+  teamMembersCount        Int @default(0)
+  surveysCount            Int @default(0)
+  surveyResponsesCount    Int @default(0)
+  waSurveysCount          Int @default(0)
+  waSurveyResponsesCount  Int @default(0)
+  menusCount              Int @default(0)
+  menuViewsCount          Int @default(0)
+  messagesCount           Int @default(0)
   aiPromptTokensCount     Int @default(0)
-  aiCompletionTokensCount    Int @default(0)
+  aiCompletionTokensCount Int @default(0)
 
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)
@@ -170,7 +170,7 @@ model WhatsappSettings {
   appId           String
   webhookPassword String?
 
-  type String // enums.ts: WaConfigType
+  type       String // enums.ts: WaConfigType
   /// [PWaEncryptionKeys]
   encryption Json? // for flow {publicKey: string, privateKey: string}
 }
@@ -566,10 +566,10 @@ model WaTemplate {
   /// [PWaTemplateDefaultValues]
   defaultValues Json? // default values for images and other fields
 
-  org           Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId         String          @db.Uuid
-  waSession     WaSession[]
-  Campaign      Campaign[]
+  org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String      @db.Uuid
+  waSession WaSession[]
+  Campaign  Campaign[]
 }
 
 model MenuLanding {
@@ -763,14 +763,15 @@ model Order {
   id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String
   createdAt            DateTime            @default(now())
-  createdBy            User?                @relation(fields: [createdById], references: [id])
-  createdById          String?              @db.Uuid
-  org                  Org?                 @relation(fields: [orgId], references: [id])
-  orgId                String?              @db.Uuid
+  createdBy            User?               @relation(fields: [createdById], references: [id])
+  createdById          String?             @db.Uuid
+  org                  Org?                @relation(fields: [orgId], references: [id])
+  orgId                String?             @db.Uuid
   deletedOrgInfo       String?
   status               OrderStatus         @default(PENDING)
   priceId              String? // stripe price
   planId               String? // razorpay plan
+  shopifyPlanId        String? // shopify plan
   subscriptionId       String?             @unique
   subscriptionChargeAt DateTime? //next charge date
   subscriptionEndedAt  DateTime? //cancelled or expired date
@@ -1172,13 +1173,21 @@ model LandingPage {
 }
 
 model Integration {
-  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String 
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
   credential Json
-  org        Org?    @relation(fields: [orgId], references: [id], onDelete: Cascade) 
-  orgId      String? @db.Uuid //case of orgId not available when getting credential. can be update later
-  createdAt  DateTime?  @default(now())
-  active     Boolean    @default(true)
+  org        Org?      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId      String?   @db.Uuid //case of orgId not available when getting credential. can be update later
+  createdAt  DateTime? @default(now())
+  active     Boolean   @default(true)
 
-  @@unique([orgId, name], name:"orgid_integration_name_unique")
+  @@unique([orgId, name], name: "orgid_integration_name_unique")
+}
+
+model jobQueue {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type      String
+  data      Json
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
 }

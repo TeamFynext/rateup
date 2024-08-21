@@ -8,6 +8,9 @@ import {
 import shopify from "./shopify.config";
 import { ShopifyEvents } from "../../../types/enums";
 import { log } from "../../../utils/logger";
+import dayjs from "dayjs";
+import { pauseOrg } from "../../org/org.services";
+import { addToQueue, QueueType } from "../../../utils/jobQueue";
 
 //callbackhandlers only working if added in same file. find out why?
 async function draftOrderCreateHandler(
@@ -95,7 +98,12 @@ export async function appUninstalledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  await updateShopifyIntegrationByShop(shop, { active: false });
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (dayjs(shopifyInfo.org.createdAt).isBefore(dayjs(shopifyInfo.createdAt)))
+    await updateShopifyIntegrationByShop(shop, { active: false });
+  else {
+    await pauseOrg(shopifyInfo.orgId, { isPaused: true });
+  }
 }
 
 export async function orderCancelledHandler(
@@ -332,6 +340,25 @@ export async function shopRedactRequestHandler(
   log.info(`handling webhook ${topic} for ${shop} shop`);
 }
 
+export async function appSubscriptionUpdateHandler(
+  topic: string,
+  shop: string,
+  webhookRequestBody: string,
+  webhookId: string,
+  apiVersion: string,
+  context?: any,
+) {
+  log.info(`handling webhook ${topic} for ${shop} shop`);
+  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
+}
+
 //callbackroutes
 const WEBHOOK_API_ROUTE = "/api/public/integrations/shopify/webhooks";
 
@@ -341,13 +368,6 @@ export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: WEBHOOK_API_ROUTE,
       callback: orderCreateHandler,
-    },
-  ],
-  APP_UNINSTALLED: [
-    {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: WEBHOOK_API_ROUTE,
-      callback: appUninstalledHandler,
     },
   ],
   DRAFT_ORDERS_CREATE: [
@@ -392,6 +412,23 @@ export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
       callback: fulfillmentOrderCancelledHandler,
     },
   ],
+};
+
+export const mandatoryWebhookHandlers: Record<string, WebhookHandler[]> = {
+  APP_SUBSCRIPTIONS_UPDATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: appSubscriptionUpdateHandler,
+    },
+  ],
+  APP_UNINSTALLED: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: appUninstalledHandler,
+    },
+  ],
   CUSTOMERS_DATA_REQUEST: [
     {
       deliveryMethod: DeliveryMethod.Http,
@@ -421,6 +458,10 @@ const newWebhookHandlers: Record<string, WebhookHandler[]> = {
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
 };
 
-const webhookHandlers = { ...defaultWebhookHandlers, ...newWebhookHandlers };
+const webhookHandlers = {
+  ...mandatoryWebhookHandlers,
+  ...defaultWebhookHandlers,
+  ...newWebhookHandlers,
+};
 
 export default webhookHandlers;

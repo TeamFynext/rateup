@@ -79,6 +79,7 @@ export async function getSubscription(orgId: string) {
               amount: true,
             },
           },
+          displayName: true,
         },
       },
       subscriptionRef: true,
@@ -118,7 +119,7 @@ export async function updateSubscription(
     where: {
       orgId,
     },
-    data: {...updatedData,  lastLimitAlertSentAt: null   },
+    data: { ...updatedData, lastLimitAlertSentAt: null },
   });
 }
 

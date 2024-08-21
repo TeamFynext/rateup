@@ -16,6 +16,7 @@ import {
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../utils/email/payments/subscriptionActivated";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import { getRecurringCharge } from "../integrations/shopify/shopify.service";
 
 const prisma = new PrismaClient();
 const credentials = Buffer.from(
@@ -573,11 +574,12 @@ export async function getAllOrgOrders(orgId: string) {
         subscriptionStatus: true,
         subscriptionChargeAt: true,
         subscriptionEndedAt: true,
+        shopifyPlanId: true,
       },
     });
 
     const filteredOrders = orders.filter(
-      (order) => order.planId || order.priceId,
+      (order) => order.planId || order.priceId || order.shopifyPlanId,
     );
 
     const planDetailsPromises = filteredOrders.map(async (order) => {
@@ -608,10 +610,26 @@ export async function getAllOrgOrders(orgId: string) {
             RateupPlan: true,
           },
         });
+      } else if (order.shopifyPlanId) {
+        const recurringCharge = await getRecurringCharge(
+          order.subscriptionId,
+          orgId,
+        );
+        if (recurringCharge) {
+          const rateupPlan = await prisma.rateupPlan.findFirst({
+            where: {
+              displayName: recurringCharge?.name,
+            },
+          });
+          planDetail = {
+            amount: recurringCharge.price,
+            currency: recurringCharge.currency,
+            description: rateupPlan.description,
+            interval: "monthly",
+            RateupPlan: rateupPlan,
+          };
+        }
       }
-      const {
-        RateupPlan: { description: planFeatures, planType, displayName },
-      } = planDetail;
 
       const {
         createdBy: { email, name },
@@ -624,11 +642,11 @@ export async function getAllOrgOrders(orgId: string) {
         createdBy: { email, name },
         status: order.status,
         planId: order.planId,
-        amount: planDetail.amount,
-        currency: planDetail.currency,
-        planFeatures,
-        planType,
-        displayName,
+        amount: planDetail?.amount,
+        currency: planDetail?.currency,
+        planFeatures: planDetail?.rateupPlan?.description,
+        planType: planDetail?.rateupPlan?.planType,
+        displayName: planDetail?.rateupPlan?.displayName,
         paymentMethod: order?.payment?.method || "",
         paymentStatus: order.paymentStatus,
         subscriptionId: order.subscriptionId,

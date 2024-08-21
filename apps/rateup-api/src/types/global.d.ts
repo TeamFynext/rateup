@@ -101,6 +101,7 @@ declare global {
     orgId: string;
     active: boolean;
     name: IntegratedApps;
+    createdAt: string;
   };
 
   type GoogleSheetCredential = {
@@ -291,6 +292,7 @@ declare global {
       period: string;
       amount: number;
     };
+    displayName: string;
   }
 
   interface Subscription {
