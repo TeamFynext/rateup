@@ -153,6 +153,7 @@ const updateSurveyRequestSchema = z.object({
     .optional(),
   surveyPublishAt: z.string().nullable().optional(),
   surveyEndAt: z.string().nullable().optional(),
+  uiTextTranslations: z.any().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

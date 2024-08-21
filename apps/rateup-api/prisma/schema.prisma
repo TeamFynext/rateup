@@ -287,6 +287,7 @@ model Survey {
   surveyVariables                   SurveyVariables[]
   surveyPublishAt                   DateTime?
   surveyEndAt                       DateTime?
+  uiTextTranslations                Json?             @default("{\"nextBtn\": { \"english\": \"Next\"}, \"submitBtn\": { \"english\": \"Submit\" }}")
 }
 
 model SurveyTeamMap {
