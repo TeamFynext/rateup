@@ -7,6 +7,7 @@ import {
   getCampaignsHandler,
   sendCampaignHandler,
 } from "./internal-copy/campaign/campaign.controller";
+import { getResponseByCampaignByIdHandler } from "../../../campaign/campaign.controller";
 
 export async function externalCampaignRoutes(server: FastifyInstance) {
   server.post(
@@ -38,7 +39,23 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
     },
     getCampaignsHandler,
   );
-
+  server.get(
+    "/:campaignId/responses",
+    {
+      schema: {
+        tags: ["Campaign"],
+        description: "Get campaign responses by ID",
+        summary: "Get campaign responses by ID",
+        response: {
+          200: {
+            type: "array",
+            items: $campaignRef("campaignResponseByIdSchema"),
+          },
+        },
+      },
+    },
+    getResponseByCampaignByIdHandler,
+  );
   server.delete(
     "/:campaignId",
     {
@@ -46,7 +63,6 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
         tags: ["Campaign"],
         description: "Delete a campaign by ID",
         summary: "Delete a campaign by ID",
-        params: $campaignRef("byCampaignIdParamsSchema"),
       },
     },
     deleteCampaignByIdHandler,

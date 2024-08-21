@@ -364,3 +364,13 @@ export async function sendCampaignCronAction() {
 
   log.info(`sent ${campaignsToBeSent.length} campaings. At ${currentTime}`);
 }
+
+export const getResponseByCampaignById = async (id: string) => {
+  return await prisma.$queryRaw`
+  SELECT sr.*
+    FROM "SurveyResponse" sr
+    INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
+    INNER JOIN "Campaign" c ON c."teamId" = stm."teamId"
+    INNER JOIN "WaFlow" wf ON wf."dbFlowId"::text = c."flowId"::text AND wf."surveyId" = stm."surveyId"
+    WHERE c.id::text = ${id}::text`;
+};

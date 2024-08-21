@@ -48,6 +48,26 @@ const sendCampaignInputSchema = z.object({
   sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)),
   participantId: z.string().optional(),
 });
+const responseSchema = z.object({
+  type: z.string(),
+  response: z.object({}),
+  questionId: z.string(),
+});
+
+const campaignResponseByIdSchema = z.object({
+  id: z.string().uuid(),
+  createdAt: z.date(),
+  surveyTeamMapId: z.string().uuid(),
+  responses: z.array(responseSchema),
+  language: z.string(),
+  platform: z.string(),
+  ip: z.string().optional(),
+  location: z.any().optional(),
+  deviceData: z.any().optional(),
+  contactId: z.string().optional(),
+  tag: z.string().optional(),
+  encryptedResponses: z.any().optional(),
+});
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(
     {
@@ -57,6 +77,7 @@ export const { schemas: campaignSchemas, $ref: $campaignRef } =
       getCampaignsQuerySchema,
       campaignResponseSchema,
       sendCampaignInputSchema,
+      campaignResponseByIdSchema,
     },
     {
       $id: "campaignSchema",
@@ -68,3 +89,6 @@ export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;
 export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
 export type ByCampaignIdParams = z.infer<typeof byCampaignIdParamsSchema>;
 export type SendCampaignInput = z.infer<typeof sendCampaignInputSchema>;
+export type CampaignResponseByIdSchema = z.infer<
+  typeof campaignResponseByIdSchema
+>;
