@@ -605,3 +605,19 @@ export const useValidateOtp = () => {
     mutationFn: validateOTP,
   });
 };
+
+export const useSurveyUpdateMutation = (surveyId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) => {
+      return updateSurvey(surveyId, data);
+    },
+    onSuccess: () => {
+      showSuccessToast("Data updated Successfully", surveyId);
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
+    onError: () => {
+      showErrorToast("Something went wrong, Please try again later.", surveyId);
+    },
+  });
+};
