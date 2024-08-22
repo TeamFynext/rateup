@@ -43,6 +43,11 @@ const TestimonialExtraProps = ({
       active: true,
     },
     {
+      key: "jobTitleQn",
+      label: "job title",
+      active: features?.jobTitle,
+    },
+    {
       key: "testimonialQn",
       label: "testimonial",
       active: true,
@@ -51,11 +56,6 @@ const TestimonialExtraProps = ({
       key: "ratingQn",
       label: "rating",
       active: features?.rating,
-    },
-    {
-      key: "jobTitleQn",
-      label: "job title",
-      active: features?.jobTitle,
     },
     {
       key: "photoQn",
@@ -116,7 +116,7 @@ const TestimonialExtraProps = ({
             key={field.key}
           >
             <Textarea
-              placeholder={`Enter ${field.label} title here`}
+              placeholder={`Enter ${field.label}'s title here`}
               classNames={{ input: classes.inputHeadText }}
               size="md"
               disabled={questionTitle == "<p></p>"}
