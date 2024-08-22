@@ -27,12 +27,30 @@ import {
 import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.service";
 import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils";
 import { parsePhoneNumber } from "libphonenumber-js";
-import { getScheduledTime } from "./shopify.util";
+import {
+  getScheduledTime,
+  PaymentSource,
+  ShopifyPlanMap,
+  shopifyRecurringChargeStatus,
+  shopifyRecurringChargeSubscriptionStatusMap,
+  ShopifyWebhookTopicEventMap,
+} from "./shopify.util";
 import {
   getIntegrationByName,
   updateIntegrationByName,
 } from "../integrations.service";
 import { UpdateIntgrationInput } from "../integrations.schema";
+import { API_URL } from "../../../utils/constants/constants";
+import {
+  OrderStatus,
+  Org,
+  PaymentStatus,
+  SubscriptionStatus,
+} from "@prisma/client";
+import { getSubscription } from "../../subscription/subscription.service";
+import dayjs from "dayjs";
+import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
+import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -66,7 +84,10 @@ export async function getShopifyIntegrationByShop(shop: string) {
         equals: shop,
       },
     },
-  })) as unknown as ShopifyIntegration;
+    include: {
+      org: true,
+    },
+  })) as unknown as ShopifyIntegration & { org: Org };
 }
 
 export async function updateShopifyIntegrationByOrgId(
@@ -177,7 +198,7 @@ export async function sendShopifySurveyCronAction() {
     where: {
       name: IntegratedApps.shopify,
     },
-  })) as ShopifyIntegration[];
+  })) as unknown as ShopifyIntegration[];
 
   if (!integrations.length) return;
 
@@ -325,4 +346,249 @@ export async function deleteAllWebhooks(session) {
       });
     }),
   );
+}
+
+export async function registerWebhookByTopic(topic, orgId) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  const webhook = new shopify.rest.Webhook({
+    session: shopifyInfo.credential?.session,
+  });
+  webhook.address = `${API_URL}/api/shopify/webhooks`;
+  (webhook.topic = ShopifyWebhookTopicEventMap.find(
+    (webhookTopic) => webhookTopic.key == topic,
+  ).value),
+    (webhook.format = "json");
+  await webhook.save({ update: true });
+}
+
+export async function handleSubscriptionUpdateFromShopify(shop, payload) {
+  const integration = await getShopifyIntegrationByShop(shop);
+  const subscription = await getSubscription(integration.orgId);
+  const rateupPlan = await prisma.rateupPlan.findFirst({
+    where: {
+      displayName: payload?.app_subscription?.name,
+    },
+  });
+  const currentPlanInRateup = subscription.basePlan.displayName;
+
+  const chargeIdSplitArray =
+    payload.app_subscription?.admin_graphql_api_id?.split("/");
+  const chargeId = chargeIdSplitArray[chargeIdSplitArray.length - 1];
+  const recurringCharge = await shopify.rest.RecurringApplicationCharge.find({
+    session: integration.credential.session,
+    id: parseInt(chargeId),
+  });
+  let haltSubscription = false;
+
+  const shopDetails = await shopify.rest.Shop.current({
+    session: integration.credential.session,
+  });
+
+  switch (payload.app_subscription?.status) {
+    case shopifyRecurringChargeStatus.pending:
+      const order = await prisma.order.create({
+        data: {
+          name: payload?.app_subscription?.name,
+          createdById: integration.org.ownerId,
+          orgId: integration.orgId,
+          subscriptionId: chargeId,
+          rateupPlanId: rateupPlan.id,
+          subscriptionStatus: SubscriptionStatus.pending,
+          shopifyPlanId: Object.values(ShopifyPlanMap)
+            .find((plan) => plan.name === payload?.app_subscription?.name)
+            ?.id?.toString(),
+        },
+      });
+      break;
+    case shopifyRecurringChargeStatus.declined:
+      haltSubscription = true;
+      break;
+    case shopifyRecurringChargeStatus.active:
+      if (payload.app_subscription?.name === "FREE PLAN") break;
+      activateSubscriptionThroughShopify(
+        recurringCharge,
+        integration,
+        chargeId,
+        rateupPlan,
+        shopDetails,
+      );
+      break;
+    case shopifyRecurringChargeStatus.cancelled:
+      if (currentPlanInRateup === payload?.app_subscription.name) {
+        const order = await prisma.order.findUnique({
+          where: {
+            subscriptionId: chargeId,
+          },
+        });
+        if (order) {
+          const subscriptionStatus = await prisma.order.update({
+            data: {
+              subscriptionStatus: SubscriptionStatus.cancelled,
+              subscriptionEndedAt: new Date(),
+            },
+            where: {
+              subscriptionId: chargeId,
+            },
+          });
+        }
+      }
+      break;
+    case shopifyRecurringChargeStatus.expired:
+      haltSubscription = true;
+      break;
+    case shopifyRecurringChargeStatus.frozen:
+      await prisma.order.update({
+        where: {
+          subscriptionId: chargeId,
+        },
+        data: {
+          subscriptionStatus: SubscriptionStatus.pending,
+          status: OrderStatus.PENDING,
+          paymentStatus: PaymentStatus.PENDING,
+        },
+      });
+      break;
+    default:
+      await prisma.order.create({
+        data: {
+          name: payload?.name,
+          createdById: integration.org.ownerId,
+          orgId: integration.orgId,
+          subscriptionId: chargeId,
+          rateupPlanId: rateupPlan.id,
+          subscriptionStatus: SubscriptionStatus.none,
+          shopifyPlanId: Object.values(ShopifyPlanMap)
+            .find((plan) => plan.name === payload?.app_subscription?.name)
+            ?.id?.toString(),
+        },
+      });
+      break;
+  }
+
+  if (haltSubscription) {
+    const order = await prisma.order.update({
+      where: {
+        subscriptionId: chargeId,
+      },
+      data: {
+        subscriptionStatus: SubscriptionStatus.halted,
+        status: OrderStatus.FAILED,
+        paymentStatus: PaymentStatus.FAILED,
+      },
+    });
+  }
+}
+
+async function activateSubscriptionThroughShopify(
+  recurringCharge,
+  integration,
+  chargeId,
+  rateupPlan,
+  shopDetails,
+) {
+  if (recurringCharge.name === "FREE PLAN") return;
+  const data = {
+    name: recurringCharge.name,
+    createdById: integration.org.ownerId,
+    orgId: integration.orgId,
+    rateupPlanId: rateupPlan.id,
+    subscriptionStatus:
+      shopifyRecurringChargeSubscriptionStatusMap[recurringCharge.status],
+    subscriptionChargeAt: new Date(recurringCharge.billing_on),
+    shopifyPlanId: Object.values(ShopifyPlanMap)
+      .find((plan) => plan.name === recurringCharge.name)
+      ?.id?.toString(),
+  };
+  const order = await prisma.order.upsert({
+    where: {
+      subscriptionId: chargeId,
+    },
+    create: {
+      ...data,
+      subscriptionId: chargeId,
+    },
+    update: data,
+  });
+  const payment = await prisma.payments.create({
+    data: {
+      payId: chargeId,
+      amount: Number(recurringCharge?.price),
+      currency: recurringCharge?.currency,
+      method: PaymentSource.Shopify,
+      description: "Subscription activated through shopify",
+      customer_email: shopDetails.email || "",
+      customer_phone: shopDetails.phone || "",
+      rateupOrderId: order.id,
+      createdAt: Math.floor(
+        new Date(recurringCharge.activated_on).getTime() / 1000,
+      ),
+    },
+  });
+  const expiresAt = dayjs(recurringCharge.activated_on)
+    .add(29, "days")
+    .toDate();
+  const updatedSubscription = await prisma.subscription.update({
+    where: { orgId: integration?.orgId },
+    data: {
+      basePlanId: rateupPlan?.id,
+      features: rateupPlan.features,
+      renewedAt: new Date(),
+      expiresAt,
+      subscriptionRef: chargeId,
+      lastLimitAlertSentAt: null,
+    },
+  });
+
+  const updatedOrder = await prisma.order.update({
+    where: {
+      id: order.id,
+    },
+    data: {
+      status: OrderStatus.COMPLETE,
+      paymentStatus: PaymentStatus.SUCCESS,
+    },
+  });
+
+  if (updatedOrder) {
+    log.info("sending email..");
+    const user = await prisma.user.findUnique({
+      where: {
+        id: integration.org.ownerId,
+      },
+    });
+
+    const msg = {
+      to: user.email,
+      subject: "Rateup Subscription Activated - Rateup.app",
+      text: `Your subscription from shopify for the Rateup ${recurringCharge.name} has activated`,
+      html: createEmailBodySubscriptionActivated(
+        rateupPlan?.displayName,
+        expiresAt,
+      ),
+    };
+    try {
+      sendAWSEmail(msg);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
+    }
+  }
+}
+
+export async function handleWebhook(webhook) {
+  switch (webhook.topic) {
+    case ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE:
+      await handleSubscriptionUpdateFromShopify(webhook.shop, webhook.body);
+      break;
+  }
+}
+
+export async function getRecurringCharge(chargId, orgId) {
+  const integration = await getShopifyInfo(orgId);
+  if (integration)
+    return await shopify.rest.RecurringApplicationCharge.find({
+      session: integration.credential.session,
+      id: parseInt(chargId),
+    });
+  return null;
 }

@@ -6,19 +6,22 @@ import {
   getShopifyIntegrationByShop,
   handleShopifyAuthCallback,
   registerShopifyWebhook,
+  registerWebhookByTopic,
   updateShopifyIntegrationByOrgId,
   updateShopifyIntegrationByShop,
 } from "./shopify.service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import shopify from "./shopify.config";
 
-import webhookHandlers, { defaultWebhookHandlers } from "./shopify.handler";
+import webhookHandlers, {
+  defaultWebhookHandlers,
+  mandatoryWebhookHandlers,
+} from "./shopify.handler";
 import { ShopifyWebhookTopicEventMap } from "./shopify.util";
-import { FRONTEND_URL, API_URL } from "../../../utils/constants/constants";
+import { FRONTEND_URL } from "../../../utils/constants/constants";
 import { log } from "../../../utils/logger";
 import {
   createIntegration,
-  getIntegrationByName,
   updateIntegrationByName,
 } from "../integrations.service";
 import { IntegratedApps } from "../../../types/enums";
@@ -69,6 +72,8 @@ export async function getShopifyAuthCallbackHandler(
       },
     };
     const integration = await createIntegration(data);
+    shopify.webhooks.addHandlers(mandatoryWebhookHandlers);
+    await registerShopifyWebhook(session);
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
   } catch (e) {
     console.error(e);
@@ -86,7 +91,6 @@ export async function updateShopifyIntegrationByShopHandler(
     const shop = request.params.shop;
     const orgId = request.user.orgId;
     await updateShopifyIntegrationByShop(shop, { orgId });
-
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);
@@ -118,18 +122,8 @@ export async function registerWebhookByTopicHandler(
   reply: FastifyReply,
 ) {
   try {
-    const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const { topic } = request.body;
-
-    const webhook = new shopify.rest.Webhook({
-      session: shopifyInfo.credential?.session,
-    });
-    webhook.address = `${API_URL}/api/shopify/webhooks`;
-    (webhook.topic = ShopifyWebhookTopicEventMap.find(
-      (webhookTopic) => webhookTopic.key == topic,
-    ).value),
-      (webhook.format = "json");
-    await webhook.save({ update: true });
+    await registerWebhookByTopic(topic, request.user.orgId);
     reply.code(200).send();
   } catch (e) {
     console.error(e);
@@ -190,7 +184,13 @@ export async function shopifyWebhooksHandler(
   reply: FastifyReply,
 ) {
   try {
-    shopify.webhooks.addHandlers(webhookHandlers);
+    const allTopics = Object.keys(webhookHandlers);
+    if (
+      !allTopics.every((topic) =>
+        shopify.webhooks.getTopicsAdded().includes(topic),
+      )
+    )
+      shopify.webhooks.addHandlers(webhookHandlers);
     log.info("Processing webhook");
     await shopify.webhooks.process({
       rawBody: request.rawBody as string, // is a string
