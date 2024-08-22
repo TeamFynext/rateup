@@ -1,5 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { geResponsesBySurveyIdHandler } from "../../../response/response.controller";
+import {
+  getResponsesBySurveyIdHandler,
+  getSurveyListHandler,
+} from "../../../response/response.controller";
 import { $Rref } from "../../../response/response.schema";
 import { $campaignRef } from "../../../campaign/campaign.schema";
 
@@ -20,6 +23,23 @@ export async function extSurveyRoutes(server: FastifyInstance) {
         },
       },
     },
-    geResponsesBySurveyIdHandler,
+    getResponsesBySurveyIdHandler,
+  );
+  server.get(
+    "/",
+    {
+      schema: {
+        tags: ["Surveys/List"],
+        description: "Get all survey and whatsapp flows",
+        summary: "Get all survey and whatsapp flows",
+        response: {
+          200: {
+            type: "array",
+            items: $Rref("getSurveyListResponseSchema"),
+          },
+        },
+      },
+    },
+    getSurveyListHandler,
   );
 }

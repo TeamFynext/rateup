@@ -202,6 +202,19 @@ export const getResponseBySurveyById = async (id: string) => {
   return responsesWithTitles;
 };
 
+export const getSurveyList = async (orgId: string) => {
+  return prisma.survey.findMany({
+    where: {
+      orgId,
+    },
+    select: {
+      id: true,
+      title: true,
+      type: true,
+    },
+  });
+};
+
 export async function downloadExcelResponse(
   surveyId,
   allResponses,

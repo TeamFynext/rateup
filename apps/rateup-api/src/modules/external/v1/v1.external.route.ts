@@ -27,7 +27,7 @@ export async function v1ExternalRoutes(server: FastifyInstance) {
     }
   }
 
-  server.register(extSurveyRoutes, { prefix: "/wa/surveys" });
+  server.register(extSurveyRoutes, { prefix: "/surveys" });
   server.register(externalContactRoutes, { prefix: "/contacts" });
   server.register(extContactGroupRoutes, { prefix: "/contact-groups" });
   server.register(externalLoyaltyRoutes, { prefix: "/loyalty" });
