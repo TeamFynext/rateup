@@ -99,6 +99,7 @@ export async function appUninstalledHandler(
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
   if (dayjs(shopifyInfo.org.createdAt).isBefore(dayjs(shopifyInfo.createdAt)))
     await updateShopifyIntegrationByShop(shop, { active: false });
   else {

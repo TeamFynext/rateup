@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
-import { QuestionType, ResponseSummaryType } from "../../types/enums";
+import {
+  QuestionType,
+  ResponseSummaryType,
+  SurveyType,
+} from "../../types/enums";
 import { ResponsePlatform } from "@prisma/client";
 
 // Individual question response
@@ -67,6 +71,13 @@ const getResponsesBySurveyParamsSchema = z.object({
 const getResponsesBodySchema = z.object({
   surveyId: z.string().optional(),
 });
+
+const getSurveyListResponseSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().optional(),
+  type: z.nativeEnum(SurveyType),
+});
+
 const idInputParamsSchema = z.object({
   id: z.string(),
 });
@@ -105,6 +116,7 @@ export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   generateXlsxSchema,
   summarizeSchema,
   getResponsesBySurveyParamsSchema,
+  getSurveyListResponseSchema,
 });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
