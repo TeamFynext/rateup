@@ -17,6 +17,7 @@ import {
   getResponseBySurveyById,
   getResponses,
   getResponseSummary,
+  getSurveyList,
   resetResponsesStats,
   saveResponseToGoogleSheet,
   sendEmailOnResponseCreation,
@@ -68,7 +69,8 @@ export async function getAllResponsesHandler(
     reply.code(500).send();
   }
 }
-export async function geResponsesBySurveyIdHandler(
+//to get response of survey by id for external api
+export async function getResponsesBySurveyIdHandler(
   req: FastifyRequest<{
     Params: GetResponsesParams;
   }>,
@@ -80,6 +82,21 @@ export async function geResponsesBySurveyIdHandler(
     res.send(response);
   } catch (error) {
     log.error("error while geResponsesBySurveyId");
+    res.code(500).send(error);
+  }
+}
+
+//to get survey lisit for external api
+export async function getSurveyListHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.user;
+    const response = await getSurveyList(orgId);
+    res.send(response);
+  } catch (error) {
+    log.error("error while getSurveyListHandler");
     res.code(500).send(error);
   }
 }
