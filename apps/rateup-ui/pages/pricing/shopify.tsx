@@ -19,7 +19,6 @@ const ShopifySubscriptionApprovalCallback = () => {
   };
   const [isSessionExist, setIsSessionExist] = useState(false);
   useEffect(() => {
-    console.log("read", router.isReady);
     if (!router.isReady) return;
     if (!charge_id || !shop || !plan) {
       router.push("/login");
