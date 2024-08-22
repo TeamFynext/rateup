@@ -43,6 +43,18 @@ function NextPrev({
   const isMobile = useMediaQuery("(max-width: 480px)");
   const { isLastQuestion, isFirstQuestion } = useHandleNextPrevFuncs();
 
+  const uiTextTranslations = survey?.uiTextTranslations;
+  let nextBtnLabel =
+    uiTextTranslations["nextBtn"][selectedLanguage.toLowerCase()]?.trim();
+  let submitBtnLabel =
+    uiTextTranslations["submitBtn"][selectedLanguage.toLowerCase()]?.trim();
+  if (!nextBtnLabel) {
+    nextBtnLabel = "Next";
+  }
+  if (!submitBtnLabel) {
+    submitBtnLabel = "Submit";
+  }
+
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
   const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
@@ -160,7 +172,7 @@ function NextPrev({
               color: themeStylesWoBr?.color || "white",
             }}
           >
-            {isLastQuestion ? "Submit" : "Next"}
+            {isLastQuestion ? submitBtnLabel : nextBtnLabel}
           </Button>
         </Group>
 

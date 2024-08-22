@@ -1,9 +1,12 @@
+import { useCallback, useState } from "react";
+
 import { ActionIcon, Box, Button, Center } from "@mantine/core";
-import { IconEdit } from "@tabler/icons-react";
+import { IconEdit, IconLanguage } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
+import UiTextTranslationsModal from "../UiTextTranslationsModal";
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
 import styles from "./SurveyTheme.module.css";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
@@ -37,6 +40,7 @@ function SurveyTheme({
           className={`${cx("theme-preview-container")} theme-preview-container`}
         >
           <PreviewDeviceButtons />
+
           {!isSurveyThemeEditView && !isSurveyThemePreview && (
             <Button
               className={styles["edit-page-theme-btn"]}

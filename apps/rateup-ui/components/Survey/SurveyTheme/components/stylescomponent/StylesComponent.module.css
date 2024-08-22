@@ -26,7 +26,7 @@
 }
 
 .expand-all-collapse-all-btn-container {
-  padding: 0 0.875rem;
+  padding: 0 0.75rem;
 }
 
 .expand-all-collapse-all-btn-container button {
@@ -35,7 +35,6 @@
   height: auto;
   line-height: normal;
   padding: 0.3125rem 0.625rem;
-  flex: 1;
 }
 
 .expand-all-collapse-all-btn-container button :global(.mantine-Button-section) {
@@ -255,7 +254,7 @@
 }
 
 .button-position-input input {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   height: 2.25rem;
 }
 

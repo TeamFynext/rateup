@@ -1,11 +1,13 @@
 const elementsToBeTranslated = [
   {
-    id: "next-btn",
+    id: "next-button",
     name: "nextBtn",
+    label: "Next Button",
   },
   {
-    id: "submit-btn",
+    id: "submit-button",
     name: "submitBtn",
+    label: "Submit Button",
   },
 ];
 

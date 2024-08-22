@@ -119,6 +119,10 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const updateCompleted = useUpdateCompletedMutation(survey?.id);
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
+  const responsesRef = useRef(responses);
+  useEffect(() => {
+    responsesRef.current = responses;
+  }, [responses]);
 
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
@@ -312,7 +316,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       //TODO REMOVE LATER: MYG GIFT VISHU
       try {
         if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
-          const contactRes = responses?.find(
+          const contactRes = responsesRef.current?.find(
             (data) => data.type === QuestionType.Contact,
           );
           setGiftLoading(true);
@@ -340,21 +344,21 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
     let shouldShowGoogleReview = checkGoogleReviewForQuestion(
       survey?.questions,
-      responses,
+      responsesRef.current,
     );
     let shouldRaiseTicket = checkRaiseTicketIssueQuestion(
       survey?.questions,
-      responses,
+      responsesRef.current,
     );
 
     let checkUniqueDevice = survey?.uniqueDeviceResponse;
 
     //logic for encrypting the responses, to swap values between response variable and end to end encrypted response
-    let defaultResponses = responses;
+    let defaultResponses = responsesRef.current;
     let encryptedResponses = "";
     if (survey?.isEncrypted || survey?.publicKey) {
       const { encryptedResponse } = await encryptResponse(
-        responses,
+        responsesRef.current,
         survey?.publicKey,
       );
       encryptedResponses = encryptedResponse;
@@ -378,7 +382,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
         //TODO REMOVE LATER: MYG GIFT VISHU
         if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
-          const giftRes = responses?.findLast(
+          const giftRes = responsesRef.current?.findLast(
             (data) => data.type === QuestionType.WinItem,
           );
           const encodedString = encodeURIComponent(
@@ -415,7 +419,9 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   };
 
   const updateResponse = (response: object) => {
-    const index = responses.findIndex((r) => r.questionId === selectedQ.id);
+    const index = responsesRef.current.findIndex(
+      (r) => r.questionId === selectedQ.id,
+    );
     // Converting response to QuestionResponse
     const formattedResponse: QuestionResponse = {
       response: {
@@ -442,7 +448,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
     if (!id || redeem || price < MIN_GIFT_AMOUNT) return;
     const gift = getRandomGift(price);
     if (gift) {
-      responses.push({
+      responsesRef.current.push({
         questionId: "win_item",
         response: {
           Win_item: gift.name,
@@ -452,7 +458,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       });
       finishSurvey(gift.image, price);
     } else {
-      responses.push({
+      responsesRef.current.push({
         questionId: "win_item",
         response: {
           Win_item: "Not eligible",
@@ -491,7 +497,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     close={closeConfirmResponsesModal}
                     survey={survey}
                     questionsHistory={questionsHistory}
-                    responses={responses}
+                    responses={responsesRef.current}
                     selectedLanguage={selectedLanguage}
                     surveyThemeData={surveyThemeData}
                     finishSurvey={finishSurvey}
@@ -560,7 +566,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                                         ?.styles
                                     }
                                     smallScreen={smallScreen}
-                                    responses={responses}
+                                    responses={responsesRef.current}
                                     surveyId={survey?.id}
                                   />
                                   {!isHtml(

@@ -83,3 +83,17 @@
   flex: initial;
   width: 100%;
 }
+
+.survey-edit-view-panel {
+  position: relative;
+}
+
+.ui-text-translations-modal-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 100;
+  height: auto;
+  width: auto;
+  padding: 0.3125rem;
+}
