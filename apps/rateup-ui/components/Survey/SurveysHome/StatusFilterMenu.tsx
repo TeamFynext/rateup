@@ -9,7 +9,7 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
     <Menu shadow="md" width={120}>
       <Menu.Target>
         <Tooltip
-          label={translations["Filter survey"] || "Filter survey"}
+          label={translations["Status"] ?? "Status"}
           withArrow
           position="top"
         >
@@ -21,7 +21,7 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
             tt={"capitalize"}
             style={{ minWidth: 110 }}
           >
-            {translations[filterParam] ?? translations["Status"]}
+            {translations[filterParam] ?? filterParam}
           </Button>
         </Tooltip>
       </Menu.Target>
