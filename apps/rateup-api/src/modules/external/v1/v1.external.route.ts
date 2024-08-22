@@ -10,6 +10,7 @@ import { externalContactRoutes } from "./contact/contact.external.route";
 import { externalLoyaltyRoutes } from "./loyalty/external.loyalty.routes";
 import { waTemplateSchemas } from "./whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.schema";
 import { contactGroupSchemas } from "./contact/internal-copy/contact/contactGroup/contactGroup.schema";
+import { extSurveyRoutes } from "./survey/survey.external.routes";
 
 export async function v1ExternalRoutes(server: FastifyInstance) {
   server.addHook("onRequest", verifyApiAccessTokenHook);
@@ -26,6 +27,7 @@ export async function v1ExternalRoutes(server: FastifyInstance) {
     }
   }
 
+  server.register(extSurveyRoutes, { prefix: "/wa/surveys" });
   server.register(externalContactRoutes, { prefix: "/contacts" });
   server.register(extContactGroupRoutes, { prefix: "/contact-groups" });
   server.register(externalLoyaltyRoutes, { prefix: "/loyalty" });

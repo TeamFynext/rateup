@@ -14,6 +14,7 @@ import {
   exportContactResponseToContacts,
   generateResponse,
   getAllResponses,
+  getResponseBySurveyById,
   getResponses,
   getResponseSummary,
   resetResponsesStats,
@@ -65,6 +66,21 @@ export async function getAllResponsesHandler(
   } catch (e) {
     console.error(e);
     reply.code(500).send();
+  }
+}
+export async function geResponsesBySurveyIdHandler(
+  req: FastifyRequest<{
+    Params: GetResponsesParams;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { surveyId } = req.params;
+    const response = await getResponseBySurveyById(surveyId);
+    res.send(response);
+  } catch (error) {
+    log.error("error while geResponsesBySurveyId");
+    res.code(500).send(error);
   }
 }
 
