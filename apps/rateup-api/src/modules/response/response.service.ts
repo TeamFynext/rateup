@@ -152,6 +152,55 @@ export async function getAllResponses(
   });
   return responseData;
 }
+export const getResponseBySurveyById = async (id: string) => {
+  const responses: any[] = await prisma.$queryRaw`
+  SELECT sr.id, sr."createdAt", 
+      sr.responses,
+      sr.language, sr.tag, sr."surveyTeamMapId", sr.language, s.questions, stm."teamId", co.phone
+  FROM "SurveyResponse" sr
+  INNER JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id
+  INNER JOIN "WaFlow" wf ON wf."surveyId" = ${id}::uuid
+  INNER JOIN "Survey" s ON s.id = stm."surveyId"
+  LEFT JOIN "Contact" co ON sr."contactId" = co.id
+  WHERE stm."surveyId" = ${id}::uuid`;
+
+  const responsesWithTitles = responses.map(
+    ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
+      // Create a mapping of questionId to title for easier lookup
+      const questionMap = questions.reduce(
+        (map, { id, title, description, label }) => {
+          map[id] =
+            Object.values(title)?.[0] ||
+            Object.values(description)?.[0] ||
+            Object.values(label)?.[0];
+          return map;
+        },
+        {},
+      );
+      // Map over each response to replace questionId with the corresponding title
+      const updatedResponses = responses.map(
+        ({ questionId, response = {}, ...rest }) => ({
+          ...rest,
+          response: Object.values(response)?.[0],
+          title: questionMap[questionId],
+        }),
+      );
+
+      // Return the updated response object
+      return {
+        id,
+        createdAt,
+        tag,
+        phone,
+        language,
+        teamId,
+        responses: updatedResponses,
+      };
+    },
+  );
+
+  return responsesWithTitles;
+};
 
 export async function downloadExcelResponse(
   surveyId,
