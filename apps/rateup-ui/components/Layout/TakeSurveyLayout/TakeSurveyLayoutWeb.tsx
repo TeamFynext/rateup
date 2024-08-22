@@ -247,9 +247,9 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
               src={backgroundImageSrc}
             >
               {/* .........Survey Header Section.......... */}
-              {(survey?.isPublished == true || isSurveyThemePreview) &&
+              {survey?.isPublished == true &&
                 !isLanguagePageActive &&
-                (startClicked || isSurveyThemePreview) && (
+                startClicked && (
                   <Box className={styles["logo-container"]}>
                     {orgLogoSrc && (
                       <Image

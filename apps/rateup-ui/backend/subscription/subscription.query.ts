@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   getAllSubscriptions,
   getSubscription,
   getUserSubscription,
   updateSubscription,
 } from "./subscription.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 
-export const useSubscription = () =>
+export const useSubscription = (enabled = true) =>
   useQuery({
     queryKey: ["subscription"],
     queryFn: getUserSubscription,
+    enabled,
   });
 export const useSubscriptionByOrgId = (orgId: string) =>
   useQuery({

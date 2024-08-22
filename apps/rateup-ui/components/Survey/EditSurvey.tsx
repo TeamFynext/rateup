@@ -1,8 +1,17 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
-import { Box, Button, Center, Flex, Stack, Tabs, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Center,
+  Flex,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit } from "@tabler/icons-react";
+import { IconEdit, IconLanguage } from "@tabler/icons-react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
 
@@ -35,6 +44,7 @@ import SurveyTheme from "./SurveyTheme";
 import StylesComponent from "./SurveyTheme/components/stylescomponent";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext";
+import UiTextTranslationsModal from "./UiTextTranslationsModal";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -68,6 +78,12 @@ export function EditSurvey({
   const { surveyId } = useContext(SurveyContext);
   const { data: survey, dataUpdatedAt } = useSurvey(surveyId);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const [isUiTextTranslationsModalOpen, setIsUiTextTranlationsModalOpen] =
+    useState(false);
+
+  const handleUiTextTranslationsModalClose = useCallback(() => {
+    setIsUiTextTranlationsModalOpen(false);
+  }, [isUiTextTranslationsModalOpen]);
 
   const [
     isSurveyPreviewModalOpen,
@@ -290,7 +306,7 @@ export function EditSurvey({
                   </Center>
                 </Tabs.Panel>
                 <Tabs.Panel
-                  className={styles["survey-preview-panel"]}
+                  className={styles["survey-edit-view-panel"]}
                   value={QuestionTabsEnum.SurveyPreview}
                 >
                   {survey && activeTab === QuestionTabsEnum.SurveyPreview && (
@@ -301,6 +317,19 @@ export function EditSurvey({
                       isSurveyThemeEditView={true}
                     />
                   )}
+
+                  {
+                    <ActionIcon
+                      className={styles["ui-text-translations-modal-btn"]}
+                      onClick={() => {
+                        setIsUiTextTranlationsModalOpen(
+                          !isUiTextTranslationsModalOpen,
+                        );
+                      }}
+                    >
+                      <IconLanguage size={20} />
+                    </ActionIcon>
+                  }
                 </Tabs.Panel>
               </Tabs>
             </Box>
@@ -354,6 +383,12 @@ export function EditSurvey({
             isSurveyThemePreview
           />
         </SurveyPreviewModal>
+
+        <UiTextTranslationsModal
+          survey={survey}
+          opened={isUiTextTranslationsModalOpen}
+          onClose={handleUiTextTranslationsModalClose}
+        />
       </Flex>
     </SurveyThemeContextProvider>
   );

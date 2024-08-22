@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import {
@@ -20,21 +21,18 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 
+import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
+import { useCancelStripeSubscriptionMutation } from "@/backend/payment/stripe/stripe.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import Pricing from "@/components/HomePage/pages/Pricing";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
+import { checkExpiry } from "@/components/Premium/ExpiryComponent";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import useTranslations from "@/dictionaries/useTranslation";
+import { formatIsoDateString } from "@/utils/dateTime";
+import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
 
-import { useCancelRazorpaySubscriptionMutation } from "../../../backend/payment/payment.query";
-import { useCancelStripeSubscriptionMutation } from "../../../backend/payment/stripe/stripe.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import Pricing from "../../../components/HomePage/pages/Pricing";
-import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { checkExpiry } from "../../../components/Premium/ExpiryComponent";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { formatIsoDateString } from "../../../utils/dateTime";
-import {
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
 import classes from "./setting.module.css";
 
 const Billing = ({
@@ -59,6 +57,7 @@ const Billing = ({
   const [isProcessingPlan, setIsProcessingPlan] = useState(
     latestOrderData?.subscriptionStatus === "pending" || false,
   );
+  const [isShopifyPlan, setIsShopifyPlan] = useState(false);
 
   useEffect(() => {
     if (
@@ -69,6 +68,16 @@ const Billing = ({
     } else {
       setIsCustomPlan(false);
     }
+    if (
+      (!subscription?.basePlan?.paymentPlan &&
+        !subscription?.basePlan?.stripeProduct &&
+        subscription?.basePlan?.name &&
+        !subscription.basePlan.name.toUpperCase().includes("CUSTOM")) ||
+      !subscription.basePlan.name.toUpperCase().includes("TRIAL") ||
+      !subscription.basePlan.name.toUpperCase().includes("FREE")
+    )
+      setIsShopifyPlan(true);
+    else setIsShopifyPlan(false);
   }, [subscription?.basePlan?.name]);
 
   useEffect(() => {
@@ -247,7 +256,8 @@ const Billing = ({
                     />
                   ) : (
                     !isCustomPlan &&
-                    !isProcessingPlan && (
+                    !isProcessingPlan &&
+                    !isShopifyPlan && (
                       <RateupButtonPrimary
                         title={translations["Cancel Subscription"]}
                         onClick={open}
@@ -297,22 +307,30 @@ const Billing = ({
                     {translations["Billing Cycle"]}
                   </Text>
                   <Title order={5}>
-                    {(subscription?.basePlan?.paymentPlan?.period ||
-                      subscription?.basePlan?.stripeProduct?.interval) ??
-                      "----"}
+                    {subscription?.basePlan?.paymentPlan?.period ||
+                    subscription?.basePlan?.stripeProduct?.interval ||
+                    isShopifyPlan
+                      ? "Monthly"
+                      : "----"}
                   </Title>
                 </Stack>
                 <Stack gap={1}>
                   <Text c={"GrayText"} fw={500} fz={15}>
                     {translations["Plan Cost"]}
                   </Text>
-                  <Title order={5}>
-                    {subscription?.basePlan?.paymentPlan?.amount
-                      ? `₹${subscription.basePlan.paymentPlan.amount}`
-                      : subscription?.basePlan?.stripeProduct?.amount
-                        ? `$${subscription.basePlan.stripeProduct.amount}`
-                        : "----"}
-                  </Title>
+                  {isShopifyPlan ? (
+                    <Link href={"https://admin.shopify.com/"} target="_blank">
+                      See in Shopiy
+                    </Link>
+                  ) : (
+                    <Title order={5}>
+                      {subscription?.basePlan?.paymentPlan?.amount
+                        ? `${subscription?.basePlan?.paymentPlan?.currency} ${subscription.basePlan.paymentPlan.amount}`
+                        : subscription?.basePlan?.stripeProduct?.amount
+                          ? `$${subscription.basePlan.stripeProduct.amount}`
+                          : "----"}
+                    </Title>
+                  )}
                 </Stack>
               </Group>
               {!isCustomPlan && !isProcessingPlan && (

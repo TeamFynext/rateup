@@ -62,8 +62,6 @@ function LanguageSelectionPage({
     },
   } = surveyThemeData;
 
-  console.log({ buttonStyles });
-
   const isOrgLogoPresent = orgLogoSrc?.length > 0;
   const isMobile =
     useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";

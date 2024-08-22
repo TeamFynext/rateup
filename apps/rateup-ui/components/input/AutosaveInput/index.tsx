@@ -17,12 +17,13 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 import styles from "./AutosaveInput.module.css";
 
 interface AutosaveInputProps {
-  value: string;
+  value?: string;
   isTextArea?: boolean;
   onSave: (value: string, name?: string) => Promise<any>;
   style?: React.CSSProperties;
   className?: string;
   name?: string;
+  showToasts?: boolean;
 }
 
 function AutosaveInput({
@@ -32,6 +33,7 @@ function AutosaveInput({
   onSave,
   style,
   name,
+  showToasts = true,
 }: AutosaveInputProps) {
   const [inputState, setInputState] = useState(value);
   const [isInputBeingEdited, setIsInputBeingEdited] = useState(false);
@@ -47,14 +49,13 @@ function AutosaveInput({
     async (e) => {
       setIsInputBeingEdited(false);
       if (inputState !== value) {
-        console.log({ inputState, value });
         setIsSavingText(true);
         try {
           await onSave(inputState, name);
-          showSuccessToast("Saved Changes");
+          if (showToasts) showSuccessToast("Saved Changes");
         } catch (err) {
           setInputState(value);
-          showErrorToast("Failed to Save Changes");
+          if (showToasts) showErrorToast("Failed to Save Changes");
         }
         setIsSavingText(false);
         showSuccessToast;
