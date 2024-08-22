@@ -58,10 +58,10 @@ const campaignResponseByIdSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.date(),
   teamId: z.string().uuid(),
-  responses: z.array(responseSchema),
   language: z.string(),
   phone: z.string().optional(),
   tag: z.string().optional(),
+  responses: z.array(responseSchema),
 });
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(

@@ -58,7 +58,11 @@ const createResponseInputSchema = z.object({
 
 const getResponsesParamsSchema = z.object({
   surveyTeamMapId: z.string(),
-  surveyId: z.string().optional(),
+  surveyId: z.string().uuid().optional(),
+});
+const getResponsesBySurveyParamsSchema = z.object({
+  orgId: z.string().uuid().optional(),
+  surveyId: z.string().uuid().optional(),
 });
 const getResponsesBodySchema = z.object({
   surveyId: z.string().optional(),
@@ -100,6 +104,7 @@ export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   getResponsesBodySchema,
   generateXlsxSchema,
   summarizeSchema,
+  getResponsesBySurveyParamsSchema,
 });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
