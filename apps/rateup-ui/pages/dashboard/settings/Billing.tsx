@@ -69,12 +69,14 @@ const Billing = ({
       setIsCustomPlan(false);
     }
     if (
-      (!subscription?.basePlan?.paymentPlan &&
-        !subscription?.basePlan?.stripeProduct &&
-        subscription?.basePlan?.name &&
-        !subscription.basePlan.name.toUpperCase().includes("CUSTOM")) ||
-      !subscription.basePlan.name.toUpperCase().includes("TRIAL") ||
-      !subscription.basePlan.name.toUpperCase().includes("FREE")
+      !subscription?.basePlan?.paymentPlan &&
+      !subscription?.basePlan?.stripeProduct &&
+      subscription?.basePlan?.name &&
+      !(
+        subscription.basePlan.name.toUpperCase().includes("CUSTOM") ||
+        subscription.basePlan.name.toUpperCase().includes("TRIAL") ||
+        subscription.basePlan.name.toUpperCase().includes("FREE")
+      )
     )
       setIsShopifyPlan(true);
     else setIsShopifyPlan(false);
