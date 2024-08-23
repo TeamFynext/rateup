@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import {
   ActionIcon,
@@ -11,7 +11,6 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { isEmptyObject } from "@tiptap/react";
 
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext";
 
@@ -22,13 +21,12 @@ import { QuestionType as Q, QuestionType } from "../../../../types/enums";
 import { validationSupportedTypes } from "../../../../utils/data";
 import { validateQuestion } from "../../../../utils/validation";
 import styles from "./TakeSurvey.module.css";
-import { validateResponse } from "./util";
+import { getSelectedQPos, validateResponse } from "./util";
 
 function NextPrev({
   prev,
   next,
-  num,
-  total,
+  questionsLength,
   survey,
   isSavingResponses,
   surveyThemeData,
@@ -54,6 +52,7 @@ function NextPrev({
   if (!submitBtnLabel) {
     submitBtnLabel = "Submit";
   }
+  const selectedQuestionPosition = getSelectedQPos(survey, selectedQ);
 
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
   const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
@@ -177,7 +176,9 @@ function NextPrev({
         </Group>
 
         <Progress
-          value={parseInt(getCompletionRate(num, total))}
+          value={parseInt(
+            getCompletionRate(selectedQuestionPosition, questionsLength),
+          )}
           transitionDuration={300}
           color={inputColor}
           size={isMobile ? "xs" : "sm"}

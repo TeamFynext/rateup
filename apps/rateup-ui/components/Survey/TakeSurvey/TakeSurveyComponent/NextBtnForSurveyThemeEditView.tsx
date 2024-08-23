@@ -24,15 +24,10 @@ import styles from "./TakeSurvey.module.css";
 import { validateResponse } from "./util";
 
 function NextBtnForSurveyThemeEditView({
-  prev,
-  next,
-  num,
-  total,
   survey,
   isSavingResponses,
   surveyThemeData,
   errorTextDivRef,
-  isSurveyThemePreview = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -70,29 +65,6 @@ function NextBtnForSurveyThemeEditView({
       }
     }
   }, [response, selectedQ]);
-
-  function handleNextClick() {
-    if (
-      selectedQ?.type === Q.Email ||
-      selectedQ?.type === Q.Phone ||
-      selectedQ?.type === Q.EmailPhone ||
-      selectedQ?.type === Q.Testimonial ||
-      selectedQ.type === Q.Contact
-    ) {
-      if (!errorMsg) {
-        next();
-      } else {
-        setIsErrorInput(true);
-      }
-    } else {
-      next();
-    }
-  }
-
-  function getCompletionRate(num, total) {
-    const completionPercentage = ((num / total) * 100).toFixed(0);
-    return completionPercentage;
-  }
 
   if (!survey) return null;
 

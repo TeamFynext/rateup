@@ -9,7 +9,6 @@ import styles from "./UiTextTranslationsModal.module.css";
 function UiTextTranslationsModal({ opened, onClose, survey }) {
   const lanugages = survey?.languages;
   const uiTextTranslations = survey?.uiTextTranslations;
-  console.log({ lanugages, uiTextTranslations });
 
   return (
     <Modal
