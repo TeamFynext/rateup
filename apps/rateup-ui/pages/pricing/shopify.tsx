@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Center, Stack, Text } from "@mantine/core";
 import { IconArrowRight, IconLoader } from "@tabler/icons-react";
+import Session from "supertokens-web-js/recipe/session";
 
-import { useCheckSession } from "@/hooks/checkSession";
 import { useUserOrgOrders } from "@/backend/payment/payment.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
@@ -17,16 +17,27 @@ const ShopifySubscriptionApprovalCallback = () => {
     shop: string;
     plan: string;
   };
-  const isSessionExist = useCheckSession();
+  const [isSessionExist, setIsSessionExist] = useState(false);
   useEffect(() => {
-    if (!charge_id || !shop || !plan) return;
-    if (!isSessionExist) {
-      localStorage?.setItem(
-        "shopify-subscription-callback",
-        `/pricing/shopify?plan=${plan}&charge_id=${charge_id}&shop=${shop}`,
-      );
+    if (!router.isReady) return;
+    if (!charge_id || !shop || !plan) {
+      router.push("/login");
+      return;
     }
-  }, [router.query, isSessionExist]);
+    const checkSession = async () => {
+      const isExist = await Session.doesSessionExist();
+      setIsSessionExist(isExist);
+      if (!isExist) {
+        localStorage?.setItem(
+          "shopify-subscription-callback",
+          `/pricing/shopify?plan=${plan}&charge_id=${charge_id}&shop=${shop}`,
+        );
+        router.push("/login");
+      }
+      return isExist;
+    };
+    checkSession();
+  }, [router]);
 
   const { data: orders, isFetching } = useUserOrgOrders(isSessionExist);
   const { data: subscription, isFetching: subscriptionFetching } =
@@ -45,6 +56,8 @@ const ShopifySubscriptionApprovalCallback = () => {
         (order) => order.subscriptionId === charge_id.toString(),
       )
     : false;
+
+  if (!charge_id || !isSessionExist) return null;
 
   if (isFetching || subscriptionFetching)
     return (

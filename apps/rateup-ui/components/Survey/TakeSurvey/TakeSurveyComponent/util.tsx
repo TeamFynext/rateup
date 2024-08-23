@@ -8,6 +8,7 @@ import { getContent } from "@/utils";
 import { createResponsePublic } from "../../../../backend/surveys/response/response.api";
 import { useGetSurveyVariables } from "../../../../backend/surveys/surveys.query";
 import {
+  PageType,
   QuestionType as Q,
   QuestionType,
   SurveyVariableType,
@@ -420,3 +421,53 @@ export const DEFAULT_WOP = {
   segments: ["$200 Gift Card", "$100 Gift Card"],
   segColors: ["#1c518e", "#06ac6e"],
 };
+
+const pageTypeStrsWithoutCustomPageStr = Object.values(PageType).filter(
+  (str) => str !== PageType.Custom,
+);
+
+export function getQuestionsArrWithoutPageTypeQuestions(survey) {
+  return survey?.questions?.filter((questionObj) => {
+    return !pageTypeStrsWithoutCustomPageStr.includes(questionObj?.type);
+  });
+}
+
+export function getFirstQuestion(survey) {
+  const firstQuestion = survey?.questions?.find((questionObj) => {
+    return !pageTypeStrsWithoutCustomPageStr.includes(questionObj?.type);
+  });
+  return firstQuestion;
+}
+
+export function getLastQuestion(survey) {
+  const questions = survey?.questions;
+  if (questions?.length > 0) {
+    for (let i = questions.length - 1; i >= 0; i--) {
+      const question = questions[i];
+      if (!pageTypeStrsWithoutCustomPageStr.includes(question?.type)) {
+        return question;
+      }
+    }
+  }
+}
+
+export function getQuestionsLength(survey) {
+  const questions = getQuestionsArrWithoutPageTypeQuestions(survey);
+  if (questions && questions?.length >= 0) {
+    return questions.length;
+  } else {
+    return 0;
+  }
+}
+
+export function getSelectedQPos(survey, selectedQ) {
+  if (survey?.questions && selectedQ) {
+    const questions = getQuestionsArrWithoutPageTypeQuestions(survey);
+    const selectedQuestionIndex = questions.findIndex(
+      (question) => question.id === selectedQ.id,
+    );
+    return selectedQuestionIndex + 1;
+  } else {
+    return 1;
+  }
+}

@@ -17,7 +17,7 @@ type CustomInputFields = {
 const MultiTextInputForm = ({ features }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const fields: CustomInputFields[] = features?.[selectedLanguage].fields;
+  const fields: CustomInputFields[] = features?.[selectedLanguage]?.fields;
 
   useEffect(() => {
     if (

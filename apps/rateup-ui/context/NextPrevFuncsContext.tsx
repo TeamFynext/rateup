@@ -1,5 +1,10 @@
 import { createContext, useContext } from "react";
 
+import {
+  getFirstQuestion,
+  getLastQuestion,
+} from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util";
+
 import { SelectedQContext } from "./SelectedQ";
 
 const NextPrevFuncsAndLastQuestionContext = createContext({
@@ -14,40 +19,14 @@ function NextPrevFuncsAndLastQuestionContextProvider({
   prevFn,
   survey,
   children,
-  isWelcomePageEnabled,
-  isThankYouPageEnabled,
-  isLanguagePageEnabled,
-  isGoogleReviewPageEnabled,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
-  const endSurveyActions = selectedQ.logic?.filter(
-    (obj) => obj.action === "EndSurvey",
-  );
 
-  const selectedQuestionIndex = survey?.questions?.findIndex(
-    (Q) => selectedQ.id === Q.id,
-  );
+  const firstQuestion = getFirstQuestion(survey);
+  const lastQuestion = getLastQuestion(survey);
 
-  const isFirstQuestion = isWelcomePageEnabled
-    ? isLanguagePageEnabled
-      ? selectedQuestionIndex === 2
-      : selectedQuestionIndex === 1
-    : selectedQuestionIndex === 0;
-
-  let isLastQuestion = false;
-  if (!isThankYouPageEnabled && !isGoogleReviewPageEnabled) {
-    if (selectedQuestionIndex === survey?.questions?.length - 1) {
-      isLastQuestion = true;
-    }
-  } else if (isThankYouPageEnabled && isGoogleReviewPageEnabled) {
-    if (selectedQuestionIndex === survey?.questions?.length - 3) {
-      isLastQuestion = true;
-    }
-  } else if (isThankYouPageEnabled || isGoogleReviewPageEnabled) {
-    if (selectedQuestionIndex === survey?.questions?.length - 2) {
-      isLastQuestion = true;
-    }
-  }
+  const isFirstQuestion = firstQuestion?.id === selectedQ?.id;
+  const isLastQuestion = lastQuestion?.id === selectedQ?.id;
 
   return (
     <NextPrevFuncsAndLastQuestionContext.Provider
