@@ -12,41 +12,37 @@ export async function createFreePlanSubscription(
   pClient = prisma,
 ) {
   // Check if the FREE PLAN plan exists  -- was earlier RATEUP TRIAL
-  const rateupFreePlan = await pClient.rateupPlan.findFirst({
+  let rateupFreePlan = await pClient.rateupPlan.findFirst({
     where: {
       name: "FREE PLAN",
     },
   });
 
-  let planId;
   let freePlanDescription = [
-    "1 Survey",
-    "50 Response/Month",
-    "1 Menu",
-    "50 Views/Month",
+    "2 Surveys",
+    "100 Response/Month",
+    "100 Messages/Month",
     "1 Team",
     "1 User",
   ];
 
-  if (rateupFreePlan) {
-    planId = rateupFreePlan.id;
-  } else {
-    const newRateupFreePlan = await pClient.rateupPlan.create({
+  if (!rateupFreePlan) {
+    rateupFreePlan = await pClient.rateupPlan.create({
       data: {
         name: "FREE PLAN",
         displayName: "FREE PLAN",
         planType: PaymentPlanType.BASE,
         description: freePlanDescription,
+        features: FreePlanSubscriptionFeatures as any,
       },
     });
-    planId = newRateupFreePlan.id;
   }
 
   await pClient.subscription.create({
     data: {
       orgId,
-      basePlanId: planId,
-      features: FreePlanSubscriptionFeatures as any,
+      basePlanId: rateupFreePlan.id,
+      features: rateupFreePlan.features,
       expiresAt: dayjs().add(100, "day").toDate(),
     },
   });

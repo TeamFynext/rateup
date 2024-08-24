@@ -60,14 +60,14 @@ export const UnlimitedAccess = getSampleSubscriptionFeatures(10000);
 
 function getFreeSubscriptionFeatures(): SubscriptionFeatures {
   return {
-    menu: { count: { max: 1, monthlyViewLimit: 50 }, active: true },
+    menu: { count: { max: 1, monthlyViewLimit: 50 }, active: false },
     team: {
       count: { max: 1 },
       teamMember: { count: { max: 1 }, active: true },
       active: true,
     },
     webSurvey: {
-      count: { max: 1, monthlyResponseLimit: 50 },
+      count: { max: 2, monthlyResponseLimit: 100 },
       active: true,
       encryption: { active: false },
       googleReview: { active: false },

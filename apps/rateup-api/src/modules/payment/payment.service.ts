@@ -266,6 +266,16 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       id: data.id,
     },
   });
+  if (data.features) {
+    await prisma.subscription.updateMany({
+      where: {
+        basePlanId: plans.id,
+      },
+      data: {
+        features: plans.features,
+      },
+    });
+  }
   return { code: 200, data: plans };
 }
 
