@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { Box, Group, Title } from "@mantine/core";
+import { Box, Group, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { FlowCardListSkeleton } from "@/components/animation/skeleton/wa/FlowCardList.skeleton";
 import InfoButton from "@/components/Button/InfoButton";
@@ -31,6 +32,7 @@ function Flows() {
     { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
   ] = useDisclosure(action === "create");
   let { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
+  const { data, isPending: waSettingsPending } = useWaSettings();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const { isPending: isPendingTeamsUser, data: teamsDataUser } =
     useTeamsByUser();
@@ -39,7 +41,8 @@ function Flows() {
   let teamsData = teamsDataUser?.data;
 
   const ComponentToBeRendered = () => {
-    if (isPending || isPendingTeamsUser) return <FlowCardListSkeleton />;
+    if (isPending || isPendingTeamsUser || waSettingsPending)
+      return <FlowCardListSkeleton />;
     if (isError) return <ErrorComponent refetch={refetch} />;
     if (!flows?.length) return <NothingFound text="No Flows Available" />;
     let filteredMenus =
@@ -67,13 +70,22 @@ function Flows() {
           <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
           <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["flow", "db"]} />
-          <RateupButtonBlue
-            className={styles["create-button"]}
-            title="Create flow"
-            rightIcon={<IconPlus size={"1rem"} />}
-            onClick={handleCreateFlowModalOpen}
-            disabled={isPending || isPendingTeamsUser}
-          />
+          <Tooltip
+            label={"Connect a WhatsApp number in settings to create a Flow"}
+            disabled={!!data}
+          >
+            <Box>
+              <RateupButtonBlue
+                className={styles["create-button"]}
+                title="Create flow"
+                rightIcon={<IconPlus size={"1rem"} />}
+                onClick={handleCreateFlowModalOpen}
+                disabled={
+                  isPending || isPendingTeamsUser || waSettingsPending || !data
+                }
+              />
+            </Box>
+          </Tooltip>
         </Group>
         <Group>
           <TeamSelector
@@ -83,7 +95,14 @@ function Flows() {
             enableAll={true}
             allowDeselect={false}
           />
-          <SyncFlowsButton />
+          <Tooltip
+            label={"Connect a WhatsApp number in settings to sync a Flow"}
+            disabled={!!data}
+          >
+            <Box>
+              <SyncFlowsButton disabled={!data} />
+            </Box>
+          </Tooltip>
         </Group>
       </Group>
 

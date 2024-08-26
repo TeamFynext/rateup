@@ -35,7 +35,7 @@ export function ActionsGrid({ getAppIconImageUrl }) {
       <Group justify="space-between">
         <Title order={4}>Apps</Title>
       </Group>
-      <SimpleGrid cols={3} mt="md">
+      <SimpleGrid cols={4} mt="md">
         {items}
       </SimpleGrid>
     </PaperLayout>

@@ -9,11 +9,13 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import {
   useDeleteWaTemplateMutation,
   useWaTemplates,
@@ -39,6 +41,8 @@ export default function Template() {
   const [sortOption, setSortOption] = useState("latest");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
+  const { data, isPending: waSettingsPending } = useWaSettings();
+
   const templateDeleteMutation = useDeleteWaTemplateMutation(
     () => {
       setSelectedTemplate(null);
@@ -91,13 +95,20 @@ export default function Template() {
           <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
           <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["watemplates"]} />
-          <RateupButtonBlue
-            className={styles["create-template-button"]}
-            title="Create Templates"
-            rightIcon={<IconPlus size={"1rem"} />}
-            onClick={handleCreateClick}
-            disabled={isPending}
-          />
+          <Tooltip
+            label={"Connect a WhatsApp number in settings to create a Template"}
+            disabled={!!data}
+          >
+            <Box>
+              <RateupButtonBlue
+                className={styles["create-template-button"]}
+                title="Create Templates"
+                rightIcon={<IconPlus size={"1rem"} />}
+                onClick={handleCreateClick}
+                disabled={isPending || !data}
+              />
+            </Box>
+          </Tooltip>
         </Flex>
 
         <Flex
@@ -114,7 +125,14 @@ export default function Template() {
               defaultSortOption={sortOption}
             />
           </div>
-          <SyncTemplatesButton disabled={isPending} />
+          <Tooltip
+            label="Connect a WhatsApp number in settings to sync Template"
+            disabled={!!data}
+          >
+            <Box>
+              <SyncTemplatesButton disabled={isPending || !data} />
+            </Box>
+          </Tooltip>
         </Flex>
       </Flex>
       <TemplateCardList

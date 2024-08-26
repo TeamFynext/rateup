@@ -352,6 +352,7 @@ export enum IntegratedApps {
   shopify = "shopify",
   googlesheet = "googlesheet",
   amelia = "amelia",
+  waPayment = "waPayment",
 }
 
 export enum MenuButtons {
