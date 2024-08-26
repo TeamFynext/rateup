@@ -38,14 +38,13 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import { MCC, PROVIDER_NAMES } from "@/components/integrations/utils";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { showLoadingToast } from "@/utils/notifications";
-
-import { MCC, PROVIDER_NAMES } from "./utils";
 
 enum Providers {
   razorpay = "razorpay",
