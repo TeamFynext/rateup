@@ -1,9 +1,13 @@
 import {
   createIntegration,
+  createWaPaymentConfigurations,
   deleteIntegrationByName,
+  deleteWaPaymentConfiguration,
   getAllIntegrations,
   getGoogleAuthUrl,
   getIntegrationByName,
+  getRegenerateWaPaymentConfigOauth,
+  getWaPaymentConfigurations,
   initializeAuthClient,
   removeSurveySpreadSheetSheetId,
   updateIntegrationByName,
@@ -15,6 +19,7 @@ import {
   ByNameParams,
   IntegrationSchema,
   UpdateIntgrationInput,
+  WaPaymentCreateSchema,
 } from "./integrations.schema";
 import { IntegratedApps } from "../../types/enums";
 
@@ -44,6 +49,67 @@ export const getIntegrationByNameHandler = async (
   } catch (error) {
     log.error("Error fetching integration by name");
     return reply.code(500).send({ error: "Something went wrong" });
+  }
+};
+
+export const getWaPaymentConfigurationsHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    const data = await getWaPaymentConfigurations(orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error fetching integration by name");
+    return reply.code(500).send(error);
+  }
+};
+export const getRegenerateWaPaymentConfigOauthHandler = async (
+  request: FastifyRequest<{
+    Params: ByNameParams;
+  }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    await getRegenerateWaPaymentConfigOauth(orgId, request.params.name);
+    reply.code(204).send();
+  } catch (error) {
+    log.error("Error regenerating wa config oauth link");
+    return reply.code(500).send(error);
+  }
+};
+
+export const createWaPaymentConfigurationsHandler = async (
+  request: FastifyRequest<{
+    Body: WaPaymentCreateSchema;
+  }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    const data = await createWaPaymentConfigurations(orgId, request.body);
+    reply
+      .code(data ? 201 : 400)
+      .send(!data && "Error in creating whatsapp payment");
+  } catch (error) {
+    log.error("Error creating whatsapp payment");
+    return reply.code(500).send(error);
+  }
+};
+
+export const deleteWaPaymentConfigurationHandler = async (
+  request: FastifyRequest<{ Params: ByNameParams }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    await deleteWaPaymentConfiguration(orgId, request.params.name);
+    reply.code(204).send();
+  } catch (error) {
+    log.error("Error deleting whatsapp payment");
+    return reply.code(500).send(error);
   }
 };
 
