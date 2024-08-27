@@ -1,12 +1,10 @@
-import { useCallback, useState } from "react";
-
-import { ActionIcon, Box, Button, Center } from "@mantine/core";
-import { IconEdit, IconLanguage } from "@tabler/icons-react";
+import { Box, Button, Center } from "@mantine/core";
+import { IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
+import { useNavControlContext } from "@/context/NavControlContext";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import UiTextTranslationsModal from "../UiTextTranslationsModal";
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
 import styles from "./SurveyTheme.module.css";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
@@ -23,6 +21,8 @@ function SurveyTheme({
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
   const { translations, loadingTranslations } = useTranslations();
+
+  const { navOpened, setNavOpened } = useNavControlContext();
 
   if (!surveyTheme)
     return (
@@ -45,7 +45,10 @@ function SurveyTheme({
             <Button
               className={styles["edit-page-theme-btn"]}
               rightSection={<IconEdit size={16} />}
-              onClick={onEditPageBtnClick}
+              onClick={() => {
+                onEditPageBtnClick?.();
+                setNavOpened(false);
+              }}
             >
               Edit
             </Button>

@@ -22,6 +22,10 @@ const index = () => {
         return {
           src: "/images/amelia.png",
         };
+      case IntegratedApps.waPayment:
+        return {
+          src: "/images/whatsapp.png",
+        };
     }
   }
 

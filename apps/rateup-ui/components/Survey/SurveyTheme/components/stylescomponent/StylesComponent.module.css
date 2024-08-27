@@ -27,14 +27,14 @@
 
 .expand-all-collapse-all-btn-container {
   padding: 0 0.75rem;
+  justify-content: center;
 }
 
 .expand-all-collapse-all-btn-container button {
-  border-radius: 2rem;
+  border-radius: 0.5rem;
   font-size: 0.75rem;
   height: auto;
   line-height: normal;
-  padding: 0.3125rem 0.625rem;
 }
 
 .expand-all-collapse-all-btn-container button :global(.mantine-Button-section) {
@@ -82,17 +82,13 @@
   display: none;
 }
 
-.editor-select-dropdown {
-  margin-bottom: 1.5rem;
+.accordion-root-div :global(.mantine-Accordion-control) {
+  padding: 0 0.3125rem;
 }
 
-.tabs-list-tabs-comp-container {
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.editor-select-dropdown :global(.mantine-Select-section) svg {
-  color: white;
+.accordion-root-div :global(.mantine-Accordion-content) {
+  padding-left: 0.3125rem;
+  padding-right: 0.3125rem;
 }
 
 .editor-selector-dropdown-input {
@@ -101,19 +97,6 @@
   background-color: var(--tertiary-color);
   color: white;
   border-radius: 0.625rem;
-}
-
-.editor-select-dropdown-option[data-checked="true"] {
-  background-color: var(--mantine-primary-color-5);
-  color: white;
-}
-
-.editor-select-dropdown-option:hover {
-  background-color: var(--mantine-color-rateup-blue-light-hover);
-}
-
-.editor-select-dropdown-option[data-checked="true"]:hover {
-  background-color: var(--mantine-primary-color-5);
 }
 
 .label {
@@ -243,14 +226,16 @@
   padding: 0.5rem 1rem;
   border-radius: 2rem;
   width: 100%;
+  font-size: 0.75rem;
 }
 
 .save-btn-div button {
   width: 100%;
+  font-size: 0.75rem;
 }
 
 .font-weight-popover-container > div {
-  min-width: 115px;
+  min-width: 130px;
 }
 
 .button-position-input input {

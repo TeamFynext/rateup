@@ -59,6 +59,11 @@ function DescStyles() {
           value={subtitle?.styles?.fontWeight}
           classNames={{ label: styles["label"] }}
           onChange={handleFontWeightChange}
+          comboboxProps={{
+            portalProps: {
+              className: styles["font-weight-popover-container"],
+            },
+          }}
         />
         <NumberInput
           min={10}

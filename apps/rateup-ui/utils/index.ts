@@ -126,3 +126,13 @@ export function getUserRoleColor(role) {
       return "#ADD8E6";
   }
 }
+
+export function isValidUrl(url: string, checkHttps: boolean = true) {
+  try {
+    const validatedUrl = new URL(url);
+    if (checkHttps) return validatedUrl.protocol === "https:";
+    return ["http:", "https:"].includes(validatedUrl.protocol);
+  } catch (e) {
+    return false;
+  }
+}

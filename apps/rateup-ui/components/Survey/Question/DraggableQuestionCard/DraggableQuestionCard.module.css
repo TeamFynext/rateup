@@ -3,7 +3,7 @@
   align-items: center;
   border-radius: 8px;
   border: 1px solid var(--item-border-color, #ccc);
-  padding: var(--item-padding, 8px 0px 8px 10px);
+  padding: 0.625rem;
   background-color: var(--item-background-color, white);
   background-color: white;
   margin-bottom: var(--item-margin-bottom, 8px);
