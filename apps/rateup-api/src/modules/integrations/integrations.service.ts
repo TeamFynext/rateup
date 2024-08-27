@@ -68,14 +68,19 @@ export const getWaPaymentConfigurations = async (
         }
       : itemA;
   });
-  const data = await prisma.integration.update({
+  const data = await prisma.integration.upsert({
     where: {
       orgid_integration_name_unique: {
         orgId,
         name: IntegratedApps.waPayment,
       },
     },
-    data: {
+    create: {
+      orgId,
+      name: IntegratedApps.waPayment,
+      credential: mapedData,
+    },
+    update: {
       credential: mapedData,
     },
   });
