@@ -1,5 +1,7 @@
+import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
+import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { CopyLinkComponent } from "../ShareSurvey/ShareSurvey";
 
 const GoogleSheetSettings = ({ spreadSheetId }) => {
   const url = spreadSheetId
@@ -8,7 +10,12 @@ const GoogleSheetSettings = ({ spreadSheetId }) => {
   return url ? (
     <PaperLayout className={`section-div`}>
       <h2 className={"settings-section-heading"}>GoogleSheet</h2>
-      <CopyLinkComponent value={url} buttonRadius={"lg"} label="Sheet Url" />
+      <ContainedTextField
+        rightSection={<ApiCopyButton value={url} />}
+        label={"Sheet Url"}
+        value={url}
+        readOnly
+      />
     </PaperLayout>
   ) : null;
 };

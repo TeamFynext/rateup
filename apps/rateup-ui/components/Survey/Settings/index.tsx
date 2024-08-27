@@ -14,6 +14,7 @@ import RedirectSettings from "./RedirectSettings";
 import SecuritySettings from "./SecuritySettings";
 import styles from "./SurveySettings.module.css";
 import TicketSettings from "./TicketSettings";
+import WebhookSettings from "./WebhookSettings";
 
 const defaultEnabledModules = [
   "name",
@@ -93,7 +94,10 @@ const SurveySettings = ({
             surveyId={surveyId}
             enabledModules={enabledModules}
           />
-          <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />
+          <WebhookSettings
+            responseWebhookEndpoint={survey?.responseWebhookEndpoint}
+            editSurvey={editSurvey}
+          />
         </Box>
         <Box className={`${styles["right-panel"]} ${styles["panel"]}`}>
           <KioskFetchLocSkipPreview
@@ -115,7 +119,6 @@ const SurveySettings = ({
             survey={survey}
             surveyId={surveyId}
           />
-
           <RedirectSettings
             enabledModules={enabledModules}
             kioskMode={kioskMode}
@@ -127,7 +130,7 @@ const SurveySettings = ({
             setRedirectError={setRedirectError}
             survey={survey}
           />
-
+          <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />
           <TicketSettings
             survey={survey}
             surveyId={surveyId}
@@ -142,7 +145,6 @@ const SurveySettings = ({
           )}
         </Box>
       </Box>
-
       <Box className={styles["other-settings-container"]}>
         <OtherSettings />
       </Box>
