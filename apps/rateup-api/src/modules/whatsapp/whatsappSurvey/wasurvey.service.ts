@@ -19,6 +19,7 @@ import { CreateResponseInput } from "../../response/response.schema";
 import {
   createResponse,
   saveResponseToGoogleSheet,
+  sendResponseToWebhook,
   updateResponse,
 } from "../../response/response.service";
 import {
@@ -380,6 +381,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     respondent: !anonymous && Contact?.phone,
     tag,
   });
+  await sendResponseToWebhook(res);
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {

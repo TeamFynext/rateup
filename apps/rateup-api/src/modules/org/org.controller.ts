@@ -21,7 +21,8 @@ import {
   UpdateRoleInput,
 } from "./org.schema";
 import Session from "supertokens-node/recipe/session";
-import { initializeAuthClient } from "../integrations/integrations.service";
+import { log } from "../../utils/logger";
+import { getWebhookSecret } from "../../utils/webhook";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -206,6 +207,19 @@ export async function pauseOrgHandler(
     reply.code(200).send(res);
   } catch (e) {
     console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getWebhookClientSecretHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const secret = await getWebhookSecret(request.user.orgId);
+    reply.code(200).send(secret);
+  } catch (e) {
+    log.error(e);
     reply.code(500).send(e);
   }
 }

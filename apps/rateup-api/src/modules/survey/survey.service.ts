@@ -780,7 +780,9 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     if (input?.isPublished === true) {
       //check for all language inputs
       const questions = fetchedSurvey.questions
-        ? fetchedSurvey.questions.filter((q) => !(q.type in PageType))
+        ? fetchedSurvey.questions.filter(
+            (q) => !((q as unknown as Question).type in PageType),
+          )
         : [];
       if (questions.length < 1) {
         let data = {

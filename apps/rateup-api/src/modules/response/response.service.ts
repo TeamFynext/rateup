@@ -42,6 +42,7 @@ import {
   createContactGroup,
   getContactGroupByNameAndTeam,
 } from "../contact/contactGroup/contactGroup.service";
+import { sendWebhook } from "../../utils/webhook";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -570,11 +571,13 @@ export async function createResponse(
           survey: {
             select: {
               questions: true,
+              responseWebhookEndpoint: true,
             },
           },
           team: {
             select: {
               orgId: true,
+              id: true,
             },
           },
         },
@@ -1328,7 +1331,9 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       name: r.team.name,
     },
     responses: r.responses.flatMap((res) =>
-      res.responses.filter((r) => r.type === QuestionType.Contact),
+      res.responses.filter(
+        (r) => (r as unknown as QuestionResponse).type === QuestionType.Contact,
+      ),
     ),
   }));
 
@@ -1339,7 +1344,10 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       let groupName = `_${surveyTitle}_${team.team.name}`;
       const teamId = team.team.id;
       const contacts = team.responses
-        .map((res) => res.response[QuestionType.Contact])
+        .map(
+          (res) =>
+            (res as unknown as QuestionResponse).response[QuestionType.Contact],
+        )
         .filter((c) => c.phone)
         .map((c) => ({
           ...c,
@@ -1354,4 +1362,37 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       await addNewContactsToGroup(contactGroup.id, contacts, orgId);
     }),
   );
+}
+
+export async function sendResponseToWebhook(responseObj) {
+  const endpoint = responseObj.surveyTeamMap.survey.responseWebhookEndpoint;
+  if (!endpoint) return;
+  const questionMap = responseObj.surveyTeamMap.survey.questions.reduce(
+    (map, { id, title, description, label }) => {
+      map[id] =
+        title[responseObj?.language] ||
+        description[responseObj?.language] ||
+        label[responseObj?.language];
+      return map;
+    },
+    {},
+  );
+  const responses = responseObj.responses.map(
+    ({ questionId, response = {}, type }) => ({
+      type,
+      response: response[type],
+      title: questionMap[questionId],
+    }),
+  );
+  const payload = {
+    tag: responseObj?.tag,
+    createdAt: responseObj.createdAt,
+    phone: responseObj?.Contact?.phone,
+    language: responseObj?.language,
+    responses,
+    teamId: responseObj.surveyTeamMap.team.id,
+    surveyId: responseObj.surveyTeamMap.surveyId,
+  };
+  const orgId = responseObj.surveyTeamMap.team.orgId;
+  await sendWebhook(endpoint, payload, orgId);
 }
