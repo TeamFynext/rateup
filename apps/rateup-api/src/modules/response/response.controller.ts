@@ -21,6 +21,7 @@ import {
   resetResponsesStats,
   saveResponseToGoogleSheet,
   sendEmailOnResponseCreation,
+  sendResponseToWebhook,
   syncResponseToGoogleSheet,
   updateResponse,
 } from "./response.service";
@@ -198,7 +199,7 @@ export async function createResponseHandler(
     if (invoiceId && giftName) {
       updateInvoice(invoiceId, giftName);
     }
-    reply.code(201).send(response);
+    reply.code(201).send();
     const {
       surveyTeamMapId,
       responses: responseArray,
@@ -208,31 +209,30 @@ export async function createResponseHandler(
       tag,
     } = response;
     const responses = responseArray as unknown as QuestionResponse[];
-    await saveResponseToGoogleSheet({
-      surveyTeamMapId,
-      responses,
-      language,
-      createdAt,
-      respondent: Contact?.phone,
-      tag,
-    });
+    const coords = (response.location as any)?.coordinates;
+    let location = await fetchLocation(coords);
+    if (!location) {
+      location = undefined;
+    }
     // checking location information after response is created since we dont
     // want to leave the user waiting
     if (data.platform === "WHATSAPP") {
       // TODO: check if its possible to get location from whatsapp
     } else {
-      await sendEmailOnResponseCreation(data.surveyTeamMapId, response);
-      const coords = (response.location as any)?.coordinates;
-      let location = await fetchLocation(coords);
-      if (!location) {
-        location = undefined;
-      }
-
-      await updateResponse(response.id, { ip, location });
-      const hasTestimonialResponse = data.responses.some(
-        (res) => res?.type === QuestionType.Testimonial,
-      );
-      if (hasTestimonialResponse) await createTestimonial(data, response.id);
+      await Promise.all([
+        saveResponseToGoogleSheet({
+          surveyTeamMapId,
+          responses,
+          language,
+          createdAt,
+          respondent: Contact?.phone,
+          tag,
+        }),
+        sendEmailOnResponseCreation(data.surveyTeamMapId, response),
+        updateResponse(response.id, { ip, location }),
+        sendResponseToWebhook(response),
+        createTestimonial(data, response.id),
+      ]);
     }
   } catch (e) {
     console.error(e);

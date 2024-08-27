@@ -288,6 +288,7 @@ model Survey {
   surveyPublishAt                   DateTime?
   surveyEndAt                       DateTime?
   uiTextTranslations                Json?             @default("{\"nextBtn\": { \"english\": \"Next\"}, \"submitBtn\": { \"english\": \"Submit\" }}")
+  responseWebhookEndpoint           String?
 }
 
 model SurveyTeamMap {

@@ -6,6 +6,7 @@ import {
   getAllOrgsHandler,
   getAllTeamsAndMembers,
   getOrgStatsHandler,
+  getWebhookClientSecretHandler,
   pauseOrgHandler,
   updateLogoHandler,
   updateOrgDetailsHandler,
@@ -15,7 +16,6 @@ import { $Sref } from "./org.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { checkSession } from "../../utils/checkSession";
 import { assertRootOrg } from "../../utils/auth";
-import { $UserRef } from "../user/user.schema";
 export async function orgRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
@@ -120,4 +120,6 @@ export async function orgRoutes(server: FastifyInstance) {
     },
     pauseOrgHandler,
   );
+
+  server.get("/webhook-client-secret", getWebhookClientSecretHandler);
 }

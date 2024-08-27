@@ -6,6 +6,10 @@ export async function createTestimonial(
   responseData: CreateResponseInput,
   responseId,
 ) {
+  const hasTestimonialResponse = responseData.responses.some(
+    (res) => res?.type === QuestionType.Testimonial,
+  );
+  if (!hasTestimonialResponse) return;
   const testimonialRes = responseData.responses.filter(
     (res) => res.type == QuestionType.Testimonial,
   );
