@@ -1,8 +1,10 @@
 import Link from "next/link";
+
 import { Flex, Menu, NavLink } from "@mantine/core";
-import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover";
+
 import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
+import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover";
 
 export const imagesPath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const rateupLogoBlueTextUrl = `${imagesPath}/rateup-logo-blue-text.svg`;
@@ -54,7 +56,7 @@ const headerNavLinks = [
     linkText: "Pricing",
   },
   {
-    href: "/blog",
+    href: "https://blog.rateup.app/",
     linkText: "Blog",
   },
 ];
