@@ -1,5 +1,6 @@
 import {
   Accordion,
+  ActionIcon,
   Box,
   Button,
   Divider,
@@ -57,35 +58,17 @@ function StylesComponent({
         )}
 
         <Divider />
-        <Group className={styles["expand-all-collapse-all-btn-container"]}>
-          <Button
-            leftSection={<IconChevronsDown size={"1rem"} />}
-            onClick={() => {
-              const editorsObjArr = supportedPageEditors[selectedPageTab];
-              if (editorsObjArr) {
-                setOpenEditors(editorsObjArr.map(({ value }) => value));
-              }
-            }}
-          >
-            Expand All
-          </Button>
-          <Button
-            leftSection={<IconChevronsUp size={"1rem"} />}
-            onClick={() => setOpenEditors([])}
-          >
-            Collapse All
-          </Button>
-        </Group>
-        <Divider />
+
         <ScrollArea
           type="hover"
           className={`${styles["styles-component-div"]} styles-component-div`}
+          scrollbarSize={10}
         >
           {isThemeObjBeingEditedDefaultTheme && (
             <Overlay className={surveyThemeStyles["overlay"]} zIndex={198} />
           )}
-
           <Accordion
+            className={styles["accordion-root-div"]}
             multiple
             onChange={(valuesArr) => {
               if (

@@ -20,6 +20,7 @@ import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
+import { useNavControlContext } from "@/context/NavControlContext";
 import { docsPath } from "@/utils/constants";
 import { reorder, reOrderPages } from "@/utils/questions";
 
@@ -56,6 +57,7 @@ export function QuestionsSideBar({
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
   const [questionsState, handlers] = useListState(questions);
+  const { navOpened, setNavOpened } = useNavControlContext();
 
   useEffect(() => {
     handlers.setState(questions);
@@ -152,6 +154,7 @@ export function QuestionsSideBar({
                 setSelectedQ(null);
                 openStylesEditorDrawer();
                 setActiveTab(QuestionTabsEnum.SurveyPreview);
+                setNavOpened(false);
               }}
             >
               <IconEdit />

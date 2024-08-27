@@ -89,7 +89,7 @@ function ComboBoxComponent({
         </InputBase>
       </Combobox.Target>
 
-      <Combobox.Dropdown>
+      <Combobox.Dropdown miw={300}>
         <Combobox.Options className={styles["combobox-options-div"]}>
           <ScrollArea.Autosize
             scrollbarSize={"0.4375rem"}
