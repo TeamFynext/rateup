@@ -26,6 +26,7 @@ import {
   tagQuerySchema,
 } from "./team.schema";
 import Session from "supertokens-node/recipe/session";
+import { log } from "../../utils/logger";
 
 export async function createTeamHandler(
   request: FastifyRequest<{
@@ -148,6 +149,7 @@ export async function completeInviteHandler(
       .code(200)
       .send({ message: "Invite Accepted successfully.", data: invite });
   } catch (e) {
+    log.error(e);
     reply.code(500).send({ message: `Internal server error : ${e}` });
   }
 }
