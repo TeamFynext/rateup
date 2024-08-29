@@ -29,6 +29,7 @@ import { IntegratedApps } from "@/types/enums";
 import {
   useCreateWaPaymentConfigurationMutation,
   useDeleteWaPaymentConfigurationMutation,
+  useGetWaPaymentConfigurationByNameMutation,
   useIntegrationByType,
   useRegenerateWaPaymentConfigurationOauthMutation,
   useWaPaymentConfigurations,
@@ -46,6 +47,7 @@ import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { showLoadingToast } from "@/utils/notifications";
 
+//TODO: re add create and get all wa payment config list
 enum Providers {
   razorpay = "razorpay",
   payu = "payu",
@@ -58,9 +60,11 @@ const WhatsappPayment = () => {
     isPending,
     refetch: integrationListRefetch,
   } = useIntegrationByType(IntegratedApps.waPayment);
-  const { refetch } = useWaPaymentConfigurations();
-  const createWaPaymentConfigurationMutation =
-    useCreateWaPaymentConfigurationMutation(IntegratedApps.waPayment);
+  // const { refetch } = useWaPaymentConfigurations();
+  // const createWaPaymentConfigurationMutation =
+  //   useCreateWaPaymentConfigurationMutation(IntegratedApps.waPayment);
+  const getWaPaymentConfigurationByNameMutation =
+    useGetWaPaymentConfigurationByNameMutation(IntegratedApps.waPayment);
   const regenerateWaPaymentConfigurationOauthMutation =
     useRegenerateWaPaymentConfigurationOauthMutation(IntegratedApps.waPayment);
   const deleteMutation = useDeleteWaPaymentConfigurationMutation(
@@ -80,7 +84,19 @@ const WhatsappPayment = () => {
     merchant_category_code: z.string().min(1),
     provider_name: z.nativeEnum(Providers),
   });
+  const getConfigSchema = z.object({
+    configuration_name: z
+      .string()
+      .min(4, "configuration_name must be at least 4 characters long")
+      .max(40, "configuration_name must be at most 40 characters long")
+      .regex(
+        /^[a-zA-Z0-9._-]+$/,
+        "configuration_name can only contain alphanumeric characters, periods, hyphens, and underscores",
+      )
+      .regex(/^\S*$/, "configuration_name cannot contain spaces"),
+  });
   const form = useForm<z.infer<typeof schema>>({
+    mode: "uncontrolled",
     initialValues: {
       configuration_name: "",
       purpose_code: "00",
@@ -89,32 +105,47 @@ const WhatsappPayment = () => {
     },
     validate: zodResolver(schema),
   });
+  const getConfigForm = useForm<z.infer<typeof getConfigSchema>>({
+    mode: "uncontrolled",
+    initialValues: {
+      configuration_name: "",
+    },
+    validate: zodResolver(getConfigSchema),
+  });
   if (isPending) <RateupLoader />;
   const handleSubmit = () => {
+    // showLoadingToast(
+    //   "whatsapp payment configuration creating...",
+    //   "waPaymentConfigurations-create",
+    //   true,
+    // );
+    // createWaPaymentConfigurationMutation.mutate(form.getValues());
+    // form.reset();
     showLoadingToast(
-      "whatsapp payment configuration creating...",
-      "waPaymentConfigurations-create",
+      "getting whatsapp payment configuration...",
+      "waPaymentConfiguration-get-by-name",
       true,
     );
-    createWaPaymentConfigurationMutation.mutate(form.getValues());
-    form.reset();
+    getWaPaymentConfigurationByNameMutation.mutate(getConfigForm.getValues());
+    getConfigForm.reset();
     close();
   };
 
   return (
     <Stack h={"100%"}>
       <Group>
-        <RateupButtonPrimary
+        {/* <RateupButtonPrimary
           title="New Configuration"
           rightIcon={<IconPlus />}
           onClick={open}
-        />
+        /> */}
         <RateupButtonPrimary
           title="Get Configuration From Whatsapp"
           variant="light"
           rightIcon={<IconRefresh />}
           onClick={() => {
-            refetch().then(() => integrationListRefetch());
+            open();
+            // refetch().then(() => integrationListRefetch());
           }}
         />
         <FormModalLayout
@@ -123,6 +154,30 @@ const WhatsappPayment = () => {
             form.reset();
           }}
           opened={opened}
+          title="Get Configuration"
+          noCustomHeader
+          centered
+          onSubmit={getConfigForm.onSubmit(handleSubmit)}
+          includeCancelButton
+          buttonTitle={"Submit"}
+        >
+          <Stack gap={"xs"}>
+            <ContainedTextField
+              label={"Payment configuration name"}
+              placeholder="Enter configuration name"
+              {...getConfigForm.getInputProps("configuration_name")}
+            />
+          </Stack>
+        </FormModalLayout>
+        <FormModalLayout
+          onClose={() => {
+            close();
+            form.reset();
+          }}
+          opened={
+            // opened
+            null
+          }
           title="New Configuration"
           noCustomHeader
           centered
@@ -186,10 +241,10 @@ const WhatsappPaymentList = ({
               <Text mr={"sm"} truncate fz="lg" fw={700}>
                 {credential?.configuration_name}
               </Text>
-              <WhatsappPaymentCardMenu
+              {/* <WhatsappPaymentCardMenu
                 name={credential?.configuration_name}
                 deleteMutation={deleteMutation}
-              />
+              /> */}
             </Flex>
             <Box>
               <Text>
@@ -237,7 +292,7 @@ const WhatsappPaymentList = ({
             </Group>
             <Group justify="space-between">
               <Badge variant="light" color="orange">
-                {credential?.provider_name}
+                {credential?.provider_name ?? "RazorPay"}
               </Badge>
               <Badge variant="light" color="green">
                 {credential?.status}
