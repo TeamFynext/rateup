@@ -87,6 +87,41 @@ export const getWaPaymentConfigurations = async (
   return data;
 };
 
+export const getWaPaymentConfigByName = async (orgId: string, name: string) => {
+  const waSettings = await getWaSettings(orgId);
+  const res = await callWhatsappApi(
+    `/${waSettings.wabaId}/payment_configuration/${name}`,
+    "GET",
+    waSettings.accessToken,
+  );
+
+  if (res.status === 200) {
+    const mappedData = res?.data?.data || [];
+    if (mappedData?.length === 0) throw new Error(`No config ${name} found`);
+
+    await prisma.integration.upsert({
+      where: {
+        orgid_integration_name_unique: {
+          orgId,
+          name: IntegratedApps.waPayment,
+        },
+      },
+      create: {
+        orgId,
+        name: IntegratedApps.waPayment,
+        credential: mappedData,
+      },
+      update: {
+        credential: mappedData,
+      },
+    });
+    return true;
+  } else {
+    log.error("Error getting wa config by name res => %o", res.data);
+    throw new Error(res?.data?.data?.toString());
+  }
+};
+
 export const getRegenerateWaPaymentConfigOauth = async (
   orgId: string,
   name: string,
