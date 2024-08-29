@@ -10,6 +10,7 @@ import {
   getGoogleAuthUrlForSheetHandler,
   getIntegrationByNameHandler,
   getRegenerateWaPaymentConfigOauthHandler,
+  getWaPaymentConfigByNameHandler,
   getWaPaymentConfigurationsHandler,
   updateIntegrationByNameHandler,
 } from "./integrations.controller";
@@ -82,6 +83,16 @@ export async function integrationsRoutes(server: FastifyInstance) {
     },
     getRegenerateWaPaymentConfigOauthHandler,
   );
+  server.post(
+    "/wa_payment_configuration/:name",
+    {
+      schema: {
+        params: $integrationRef("byNameSchema"),
+      },
+    },
+    getWaPaymentConfigByNameHandler,
+  );
+
   server.post(
     "/wa_payment_configuration",
     {
