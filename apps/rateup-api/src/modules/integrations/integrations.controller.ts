@@ -7,6 +7,7 @@ import {
   getGoogleAuthUrl,
   getIntegrationByName,
   getRegenerateWaPaymentConfigOauth,
+  getWaPaymentConfigByName,
   getWaPaymentConfigurations,
   initializeAuthClient,
   removeSurveySpreadSheetSheetId,
@@ -77,6 +78,21 @@ export const getRegenerateWaPaymentConfigOauthHandler = async (
     reply.code(204).send();
   } catch (error) {
     log.error("Error regenerating wa config oauth link");
+    return reply.code(500).send(error);
+  }
+};
+export const getWaPaymentConfigByNameHandler = async (
+  request: FastifyRequest<{
+    Params: ByNameParams;
+  }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    await getWaPaymentConfigByName(orgId, request.params.name);
+    reply.code(204).send();
+  } catch (error) {
+    log.error("Error getting wa config by name ");
     return reply.code(500).send(error);
   }
 };
