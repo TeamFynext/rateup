@@ -24,6 +24,10 @@ import {
 } from "../../utils/supertoken/supertoken";
 import { UserRecipes } from "../../types/enums";
 import dayjs from "dayjs";
+import {
+  createHubSpotCompany,
+  createHubSpotContact,
+} from "../../utils/hubspot";
 
 const prisma = new PrismaClient();
 
@@ -57,9 +61,9 @@ export async function createUserSignup({
   log.info("Creating user....");
   try {
     // Start a transaction
-    let team, teamMember;
+    let team, teamMember, newUser, org;
     const result = await prisma.$transaction(async (prisma) => {
-      const newUser = await prisma.user.create({
+      newUser = await prisma.user.create({
         data: {
           id,
           email,
@@ -70,7 +74,7 @@ export async function createUserSignup({
         },
       });
 
-      const org = await prisma.org.create({
+      org = await prisma.org.create({
         data: {
           name: orgName,
           ownerId: newUser.id,
@@ -148,6 +152,21 @@ export async function createUserSignup({
 
     // Commit the transaction
     log.trace(" create user transaction committed..........:", result);
+    const companyId = await createHubSpotCompany({
+      name: orgName,
+      joined_date: org.createdAt,
+      owner_email: email,
+    });
+    await createHubSpotContact(
+      {
+        firstname: name,
+        email,
+        phone: phone ?? undefined,
+        company: orgName,
+        joined_date: newUser.createdAt,
+      },
+      companyId,
+    );
     return result;
   } catch (error) {
     // Rollback the transaction

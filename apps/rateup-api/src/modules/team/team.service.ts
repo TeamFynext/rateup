@@ -18,6 +18,10 @@ import EmailPassword from "supertokens-node/recipe/emailpassword";
 
 import { FastifyReply, FastifyRequest } from "fastify";
 import { Prisma } from "@prisma/client";
+import {
+  createHubSpotContact,
+  getHubSpotCompanyByOwnerEmail,
+} from "../../utils/hubspot";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -292,6 +296,18 @@ export async function completeInvite(token: string) {
     data: {
       status: "ACCEPTED",
     },
+    include: {
+      org: {
+        select: {
+          name: true,
+          owner: {
+            select: {
+              email: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   // find user in User table with the same email as the invitation
@@ -372,6 +388,19 @@ export async function completeInvite(token: string) {
         // user does not exist or is not an email password user
       }
     }
+
+    const companyId = await getHubSpotCompanyByOwnerEmail(
+      updatedInvitation.org.owner.email,
+    );
+    await createHubSpotContact(
+      {
+        email: updatedInvitation.email,
+        firstname: updatedInvitation.name,
+        company: updatedInvitation.org.name,
+        joined_date: updatedInvitation.createdAt,
+      },
+      companyId,
+    );
   } else {
     //for existing user
     if (!user.name) {
