@@ -8,3 +8,8 @@ export const updatePageTypeQuestions = async () => {
   );
   return response.data;
 };
+
+export async function createHubSpotContacts() {
+  const res = await axiosClient.post("/public/update/create-hubspot-contact");
+  return res.data;
+}

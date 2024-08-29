@@ -89,13 +89,15 @@ export function SubscriptionEditorModal({
       title={rateupPlanEnable ? `Modify Rateup Plan` : `Modify Subscription`}
     >
       <Stack>
-        <DateInput
-          label="Expires At"
-          value={dayjs(subscriptionForm.values.expiresAt).toDate()}
-          onChange={(value) =>
-            subscriptionForm.setFieldValue("expiresAt", value)
-          }
-        />
+        {!rateupPlanEnable && (
+          <DateInput
+            label="Expires At"
+            value={dayjs(subscriptionForm.values.expiresAt).toDate()}
+            onChange={(value) =>
+              subscriptionForm.setFieldValue("expiresAt", value)
+            }
+          />
+        )}
         <Box
           style={{
             flex: 1,

@@ -1,5 +1,9 @@
-import { Group, Stack, Title, Text, Badge, Flex } from "@mantine/core";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { useEffect, useState } from "react";
+
+import { Badge, Flex, Group, Stack, Text, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
+import { Box } from "@mui/material";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -7,19 +11,19 @@ import {
   GridRenderCellParams,
   GridToolbar,
 } from "@mui/x-data-grid";
+
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
   useGetAllUsers,
   useUpdateRecipeNameMutation,
   useUpdateUserPause,
 } from "../../../backend/user/user.query";
-import { Box } from "@mui/material";
-import { useEffect, useState } from "react";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { useDisclosure } from "@mantine/hooks";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
-import { showLoadingToast } from "../../../utils/notifications";
 import RefreshButton from "../../../components/Button/RefreshButton";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import { getUserRoleColor } from "../../../utils";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -27,10 +31,8 @@ import {
   isToday,
   isYesterday,
 } from "../../../utils/dateTime";
-import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
-import { getUserRoleColor } from "../../../utils";
+import { showLoadingToast } from "../../../utils/notifications";
 import UserModal from "./UserModal";
-import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 const index = () => {
   const { data: orgs } = useAllOrgs();
@@ -40,6 +42,7 @@ const index = () => {
   const rows = users
     ? users?.map((user) => ({
         id: user?.email,
+        name: user?.userName,
         orgName: user?.orgName,
         role: user?.role,
         signupDate: formatIsoDateStringWithTime(user?.createdAt),
@@ -66,6 +69,7 @@ const index = () => {
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "Email ID", width: 300 },
+    { field: "name", headerName: "Name", width: 200 },
     {
       field: "orgName",
       headerName: "Organization",

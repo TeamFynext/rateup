@@ -1,9 +1,13 @@
 import { Button, Stack, Text, Title } from "@mantine/core";
 
-import { useUpdatePageTypeQuestions } from "@/backend/updations/update.query";
+import {
+  useCreateHubSpotContacts,
+  useUpdatePageTypeQuestions,
+} from "@/backend/updations/update.query";
 
 function UpdateAllThemes() {
   const updatePageTypeQuestionsMutations = useUpdatePageTypeQuestions();
+  const exportUserToHubSpot = useCreateHubSpotContacts();
 
   return (
     <Stack>
@@ -22,6 +26,22 @@ function UpdateAllThemes() {
           }}
         >
           Update Page type Questions.
+        </Button>
+      </Stack>
+
+      <Stack mt="xl">
+        <Title order={2}>Export user data to hubspot</Title>
+        <Text>Export user emails and org name to hubspot</Text>
+
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            exportUserToHubSpot.mutate();
+          }}
+          loading={exportUserToHubSpot.isPending}
+        >
+          Export
         </Button>
       </Stack>
     </Stack>
