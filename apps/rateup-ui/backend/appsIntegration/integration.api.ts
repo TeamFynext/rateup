@@ -61,6 +61,17 @@ export const getWaPaymentConfigurations = async () => {
   );
   return response.data;
 };
+export const getWaPaymentConfigurationByName = async ({
+  configuration_name,
+}: {
+  configuration_name?: string;
+}) => {
+  const response = await axiosClient.post(
+    `${ROUTE_URL}wa_payment_configuration/${configuration_name}`,
+    {},
+  );
+  return response.data;
+};
 
 export const createWaPaymentConfiguration = async (data) => {
   const response = await axiosClient.post(

@@ -12,6 +12,7 @@ import {
   deleteWaPaymentConfiguration,
   getGoogleSheetAuthorizationUrl,
   getIntegrationByType,
+  getWaPaymentConfigurationByName,
   getWaPaymentConfigurations,
   regenerateWaPaymentConfigurationOauth,
   updateIntegration,
@@ -30,6 +31,32 @@ export const useWaPaymentConfigurations = () => {
     enabled: false,
     queryKey: ["waPaymentConfigurations"],
     queryFn: getWaPaymentConfigurations,
+  });
+};
+
+export const useGetWaPaymentConfigurationByNameMutation = (
+  type: IntegratedApps,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: getWaPaymentConfigurationByName,
+    onSuccess: () => {
+      showSuccessToast(
+        "whatsapp payment configuration found successfully",
+        "waPaymentConfiguration-get-by-name",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["integrations", type] });
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error getting waPaymentConfiguration: ${error?.response?.data?.message}`,
+        "waPaymentConfiguration-get-by-name",
+        <IconX />,
+        true,
+      );
+    },
   });
 };
 
