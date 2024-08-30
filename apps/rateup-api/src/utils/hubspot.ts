@@ -23,6 +23,7 @@ export async function createHubSpotContact(
   hubSpotCompanyId: string,
 ) {
   try {
+    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
     const res = (
       await hubApiClient.post("/crm/v3/objects/contacts", {
         properties: data,
@@ -56,6 +57,7 @@ type hubSpotCompany = {
 
 export async function createHubSpotCompany(data: hubSpotCompany) {
   try {
+    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
     const res = (
       await hubApiClient.post("/crm/v3/objects/companies", {
         properties: data,
@@ -69,6 +71,7 @@ export async function createHubSpotCompany(data: hubSpotCompany) {
 
 export async function getHubSpotCompanyByOwnerEmail(owner_email: string) {
   try {
+    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
     const res = (
       await hubApiClient.get(
         `/crm/v3/objects/companies/${owner_email}?idProperty=owner_email`,

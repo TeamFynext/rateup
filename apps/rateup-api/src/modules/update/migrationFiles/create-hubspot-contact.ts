@@ -42,7 +42,8 @@ export async function createHubSpotContactsForExistingRecords() {
         .includes(user.email),
   );
 
-  if (!remainingContacts.length) return true;
+  if (!remainingContacts.length)
+    return { message: "all data already exported" };
 
   const userInput = remainingContacts.map((user) => ({
     properties: {
@@ -103,5 +104,5 @@ export async function createHubSpotContactsForExistingRecords() {
       inputs: associateInput,
     },
   );
-  return true;
+  return { message: "Data exported" };
 }
