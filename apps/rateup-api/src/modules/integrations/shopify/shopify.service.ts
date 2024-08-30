@@ -149,6 +149,14 @@ export async function createScheduleOnShopifyEvent(
     return;
   }
 
+  if (
+    shopifySurvey.isProductSpecific &&
+    !productIds.includes(shopifySurvey.productId)
+  ) {
+    log.trace(`Specified product is not in the list`);
+    return;
+  }
+
   const phoneWithoutPlus = phone.countryCallingCode + phone.nationalNumber;
   if (!phoneWithoutPlus) {
     log.trace(`No customer phone number found`);
@@ -171,23 +179,12 @@ export async function createScheduleOnShopifyEvent(
       s.schedules = schedules;
     }
   });
-  if (shopifySurvey.isProductSpecific) {
-    if (productIds.includes(shopifySurvey.productId)) {
-      await updateShopifyIntegrationByShop(shop, {
-        credential: {
-          ...shopifyInfo.credential,
-          shopifySurveys: newShopifySurveys,
-        },
-      });
-    }
-  } else {
-    await updateShopifyIntegrationByShop(shop, {
-      credential: {
-        ...shopifyInfo.credential,
-        shopifySurveys: newShopifySurveys,
-      },
-    });
-  }
+  await updateShopifyIntegrationByShop(shop, {
+    credential: {
+      ...shopifyInfo.credential,
+      shopifySurveys: newShopifySurveys,
+    },
+  });
 }
 
 export async function sendShopifySurveyCronAction() {
@@ -580,6 +577,15 @@ export async function handleWebhook(webhook) {
     case ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE:
       await handleSubscriptionUpdateFromShopify(webhook.shop, webhook.body);
       break;
+    case ShopifyEvents.DRAFT_ORDERS_CREATE:
+    case ShopifyEvents.ORDERS_CREATE:
+    case ShopifyEvents.ORDERS_CANCELLED:
+    case ShopifyEvents.ORDERS_PAID:
+    case ShopifyEvents.ORDERS_PARTIALLY_FULFILLED:
+    case ShopifyEvents.ORDERS_FULFILLED:
+    case ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED:
+      await handleShopifyOrderEvents(webhook);
+      break;
   }
 }
 
@@ -591,4 +597,59 @@ export async function getRecurringCharge(chargId, orgId) {
       id: parseInt(chargId),
     });
   return null;
+}
+
+export async function handleShopifyOrderEvents(webhook) {
+  const { webhookId, body, shop, topic } = webhook;
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) {
+    log.trace(`No shopify session found`);
+    return;
+  }
+  let customerPhone, productIds;
+  if (topic === ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED) {
+    const fulfillmentOrderGId = body.fulfillment_order.id;
+    const gidArray = fulfillmentOrderGId.split("/");
+    const fulfillmentOrderId = parseInt(gidArray[gidArray.length - 1]);
+    const fulfillmentOrder = await shopify.rest.FulfillmentOrder.find({
+      session: shopifyInfo.credential.session,
+      id: fulfillmentOrderId,
+      include_order_reference_fields: true,
+    });
+    if (!fulfillmentOrder) return;
+    const orderDetails = await shopify.rest.Order.find({
+      session: shopifyInfo.credential.session,
+      id: fulfillmentOrder.order_id,
+    });
+    if (!orderDetails) return;
+    customerPhone =
+      orderDetails.customer.phone ||
+      orderDetails.customer.default_address.phone ||
+      orderDetails.billing_address.phone ||
+      orderDetails.shipping_address.phone;
+    productIds = fulfillmentOrder.line_items.map((product) =>
+      product.product_id.toString(),
+    );
+  } else {
+    customerPhone =
+      body?.customer?.phone ||
+      body?.customer?.default_address?.phone ||
+      body?.billing_address?.phone ||
+      webhook.body?.shipping_address?.phone;
+    productIds = body.line_items?.map((products) =>
+      products?.product_id?.toString(),
+    );
+  }
+  if (!customerPhone) {
+    log.trace("No cutsomer phone number found");
+    return;
+  }
+  await createScheduleOnShopifyEvent(
+    customerPhone,
+    topic,
+    shopifyInfo,
+    productIds,
+    webhookId,
+    shop,
+  );
 }

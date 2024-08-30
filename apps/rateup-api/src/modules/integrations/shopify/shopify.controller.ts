@@ -40,7 +40,7 @@ export async function getShopifyAuthHandler(
       !shopify.config.scopes.equals(shopifyInfo.credential.session.scope)
     ) {
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
-    } else reply.redirect(`${FRONTEND_URL}/apps&services/shopify`);
+    } else reply.redirect(`${FRONTEND_URL}/dashboard/apps&services/shopify`);
   } catch (e) {
     console.error(e);
     reply.redirect(
@@ -71,7 +71,13 @@ export async function getShopifyAuthCallbackHandler(
         shopifySurveys: [],
       },
     };
-    const integration = await createIntegration(data);
+    const integrationbyshop = await getShopifyIntegrationByShop(session.shop);
+    if (integrationbyshop && integrationbyshop?.orgId)
+      await updateShopifyIntegrationByOrgId(integrationbyshop?.orgId, {
+        credential: data.credential,
+        active: true,
+      });
+    else await createIntegration(data);
     shopify.webhooks.addHandlers(mandatoryWebhookHandlers);
     await registerShopifyWebhook(session);
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
@@ -105,7 +111,10 @@ export async function registerWebhookHandler(
   try {
     const { orgId } = request.user;
     const shopifyInfo = await getShopifyInfo(orgId);
-    shopify.webhooks.addHandlers(defaultWebhookHandlers);
+    shopify.webhooks.addHandlers({
+      ...defaultWebhookHandlers,
+      ...mandatoryWebhookHandlers,
+    });
     await registerShopifyWebhook(shopifyInfo?.credential?.session);
     await updateIntegrationByName(orgId, IntegratedApps.shopify, {
       credential: { ...shopifyInfo.credential, isWebhookRegistered: true },
@@ -213,8 +222,8 @@ export async function getRegisteredWebhooksHandler(
     const formattedWebhooks = webhooks.data.map(
       (webhook) =>
         ShopifyWebhookTopicEventMap.find(
-          (topic) => topic.value == webhook.topic,
-        ).key,
+          (topic) => topic.value === webhook.topic,
+        )?.key,
     );
     reply.code(200).send(formattedWebhooks);
   } catch (e) {
