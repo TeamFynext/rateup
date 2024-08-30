@@ -154,6 +154,7 @@ declare global {
     surveyEndAt?: string;
     webSurveyTheme: any;
     webSurveyThemeId: string;
+    webSurveyPagesTheme: any;
   };
 
   interface STeam {

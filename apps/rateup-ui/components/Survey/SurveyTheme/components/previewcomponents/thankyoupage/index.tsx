@@ -30,7 +30,7 @@ import {
 } from "../../../SurveyThemeContext";
 
 export default function ThankyouPageThemeView({ survey }) {
-  const surveyTheme = useSurveyThemeContextValue();
+  const webSurveyPagesTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const selectedPreview = useSelectedPreview();
@@ -40,22 +40,34 @@ export default function ThankyouPageThemeView({ survey }) {
     surveyId: survey.id,
   });
 
-  const { thankyouTheme } = surveyTheme;
+  const surveyThemeObj = survey?.webSurveyTheme?.theme;
+
   const { ref, width, height } = useElementSize();
-  const {
-    subtitle: { styles: subtitleStyles },
-    title: { styles: titleStyles },
-    confettiEnabled,
-  } = thankyouTheme;
 
   const { titleText: title, subtitleText: subtitle } =
     editSurveySelectedQuestion || {};
 
-  const useSurveyBackground =
-    surveyTheme["thankyouTheme"].bg.useSurveyBackground;
+  const shouldUseSurveyTheme =
+    webSurveyPagesTheme["thankyouTheme"]?.useSurveyTheme;
+  const requiredThemeObj = shouldUseSurveyTheme
+    ? surveyThemeObj["surveyTheme"]
+    : webSurveyPagesTheme["thankyouTheme"];
+
+  const titleStyles = requiredThemeObj?.title?.styles;
+  let subtitleStyles = requiredThemeObj?.subtitle?.styles;
+  if (!subtitleStyles) {
+    subtitleStyles = {
+      color: titleStyles?.color,
+      fontWeight: "400",
+      fontSize: 16,
+      textAlign: "center",
+    };
+  }
+  const confettiEnabled = requiredThemeObj?.confettiEnabled;
+
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyTheme,
-    useSurveyBackground ? "surveyTheme" : "thankyouTheme",
+    shouldUseSurveyTheme ? surveyThemeObj : webSurveyPagesTheme,
+    shouldUseSurveyTheme ? "surveyTheme" : "thankyouTheme",
     selectedPreview === "mobile",
   );
 

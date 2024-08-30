@@ -2,20 +2,20 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
   useCreateHubSpotContacts,
-  useUpdatePageTypeQuestions,
+  useUpdateWebSurveyPagesTheme,
 } from "@/backend/updations/update.query";
 
 function UpdateAllThemes() {
-  const updatePageTypeQuestionsMutations = useUpdatePageTypeQuestions();
   const exportUserToHubSpot = useCreateHubSpotContacts();
+  const updatePageTypeQuestionsMutations = useUpdateWebSurveyPagesTheme();
 
   return (
     <Stack>
       <Stack mt="xl">
-        <Title order={2}>Update Page Type Questions</Title>
+        <Title order={2}>Update WebSurveyPagesTheme</Title>
         <Text>
-          Updates welcome, language, thankyou page type questions with title,
-          subtitle, start button text values from active survey theme.
+          Updates webSurveyPagesTheme column of survey table, which is used in
+          survey editor page.
         </Text>
 
         <Button
@@ -25,7 +25,7 @@ function UpdateAllThemes() {
             updatePageTypeQuestionsMutations.mutate();
           }}
         >
-          Update Page type Questions.
+          Update WebSurveyPagesTheme
         </Button>
       </Stack>
 

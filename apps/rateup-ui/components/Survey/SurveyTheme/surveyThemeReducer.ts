@@ -65,9 +65,6 @@ function surveyThemeReducer(state, action) {
       surveyTheme[surveyThemeKey].confettiEnabled = payload;
       break;
     }
-    case "bg-use-survey-background-checkbox-change": {
-      surveyTheme[surveyThemeKey].bg.useSurveyBackground = payload;
-    }
 
     case "title-color-change": {
       surveyTheme[surveyThemeKey].title.styles.color = payload;

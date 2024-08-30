@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { useCallback } from "react";
 
 import {
   Box,
@@ -81,13 +81,6 @@ function BackgroundStyles() {
     [selectedPreview],
   );
 
-  const handleUseSurveyBackgroundCheckboxChange = useCallback((e) => {
-    surveyThemeDispatch({
-      type: "bg-use-survey-background-checkbox-change",
-      payload: e.target.checked,
-    });
-  }, []);
-
   const { bgColor, chooseBgRadioInputValue, imageUrl } =
     bg[selectedPreview + "Bg"];
 
@@ -100,17 +93,10 @@ function BackgroundStyles() {
     >
       {selectedPageTab === ThemeTabEnum.THANKYOU && (
         <CustomSwitch
+          className={styles["confetti-switch"]}
           checked={confettiEnabled}
           onChange={handleConfettiChange}
           label={!confettiEnabled ? "Enable Confetti" : "Disable Confetti"}
-        />
-      )}
-
-      {!isSurveyPageTab && (
-        <Checkbox
-          checked={useSurveyBackground}
-          onChange={handleUseSurveyBackgroundCheckboxChange}
-          label="Use Survey Background"
         />
       )}
 

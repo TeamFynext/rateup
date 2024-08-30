@@ -15,7 +15,7 @@
 .preview-container-div {
   width: 100%;
   height: 100%;
-  max-width: 1400px;
+  max-width: 1200px;
 }
 
 .survey-preview-modal :global(.survey-editor-page-header) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -40,6 +40,7 @@ import { getBgImgAndBgColor } from "./utils";
 
 export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
+  const pagesThemeData = survey?.webSurveyPagesTheme;
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
@@ -62,8 +63,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
   );
   const [startClicked, setStartClicked] = useState<boolean>(start || false);
-  const [questionCount, setQuestionCount] = useState(0);
-  const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
+
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
   const updateVisited = useUpdateVisitedMutation(survey?.id);
@@ -138,19 +138,22 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     !selectedLanguage &&
     survey?.languages?.length > 1 &&
     !isSurveyThemeEditView;
-  const isWelcomeThemeActive = !startClicked;
+  const isWelcomePageActive = !startClicked && isWelcomePageEnabled;
   const useSurveyBackground =
-    isWelcomeThemeActive &&
-    surveyThemeData["welcomeTheme"].bg.useSurveyBackground;
+    isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
   let requiredSurveyThemeObjKey = "surveyTheme";
-  if (!isSurveyThemePreview && isWelcomeThemeActive && !useSurveyBackground)
+  let requiredThemeData = surveyThemeData;
+  if (isWelcomePageActive && !useSurveyBackground) {
     requiredSurveyThemeObjKey = "welcomeTheme";
+    requiredThemeData = pagesThemeData;
+  }
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyThemeData,
+    requiredThemeData,
     requiredSurveyThemeObjKey,
     isMobile,
   );
+
   const isUnsplashImage = backgroundImageSrc?.startsWith(
     "https://images.unsplash.com",
   );
@@ -287,6 +290,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
                         <LanguageSelectionPage
                           languages={survey?.languages}
                           setSelectedLanguage={setSelectedLanguage}
+                          pagesThemeData={pagesThemeData}
                           surveyThemeData={surveyThemeData}
                           questionsArr={questionsArr}
                         />
@@ -305,12 +309,14 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
 
                     {isWelcomePageEnabled && !startClicked && (
                       <WelcomePage
-                        surveyThemeData={surveyThemeData?.welcomeTheme}
+                        surveyThemeData={surveyThemeData}
+                        pagesThemeData={pagesThemeData}
                         onStart={handleStartClick}
                         largeScreen={largeScreen}
                         orgLogoSrc={orgLogoSrc}
                         orgLogoStyles={orgLogoStyles}
                         questionsArr={questionsArr}
+                        isMobile={isMobile}
                       />
                     )}
                   </Paper>

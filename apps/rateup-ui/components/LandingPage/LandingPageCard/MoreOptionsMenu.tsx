@@ -38,12 +38,12 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
     modals.openConfirmModal({
       title: "Delete Landing Page?",
       children: (
-        <Text className={styles["are-you-sure-text"]}>
+        <Text className={modalStyles["are-you-sure-text"]}>
           Are you sure to delete this Landing Page?
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },
-      className: styles["delete-confirmation-modal"],
+      className: modalStyles["delete-confirmation-modal"],
       centered: true,
       classNames: {
         header: modalStyles["modal-header"],

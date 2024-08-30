@@ -3,7 +3,11 @@ import _ from "lodash";
 
 import { TakeSurveyLayoutWeb } from "../../../../../Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import TakeSurvey from "../../../../TakeSurvey/TakeSurveyComponent";
-import { useSurveyThemeContextValue } from "../../../SurveyThemeContext";
+import { ThemeTabEnum } from "../../../SurveyTheme.enums";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+} from "../../../SurveyThemeContext";
 import IsSurveyThemePreviewContextProvider from "./isSurveyThemePreviewContext";
 import styles from "./SurveyThemePreview.module.css";
 import { editViewQuestionsArr } from "./utils";
@@ -14,9 +18,17 @@ function SurveyThemeView({
   isSurveyThemePreview = true,
   isSurveyThemeEditView = false,
 }) {
+  const selectedPageTab = useSelectedPageTab();
+  const isSurveyPageTabSelected = selectedPageTab === ThemeTabEnum.SURVEY;
+
   const surveyTheme = useSurveyThemeContextValue();
   const surveyCopy = _.cloneDeep(survey);
-  surveyCopy.webSurveyTheme.theme = surveyTheme;
+  if (isSurveyPageTabSelected) {
+    surveyCopy.webSurveyTheme.theme = surveyTheme;
+  } else if (!isSurveyPageTabSelected) {
+    surveyCopy.webSurveyPagesTheme = surveyTheme;
+  }
+
   if (isSurveyThemeEditView) {
     surveyCopy.questions = editViewQuestionsArr;
   }

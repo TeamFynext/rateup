@@ -3,7 +3,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import {
   ActionIcon,
   Box,
-  Button,
   Center,
   Flex,
   Stack,
@@ -11,8 +10,10 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconLanguage } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { IconLanguage } from "@tabler/icons-react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 import { v4 as uuidv4 } from "uuid";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
@@ -42,8 +43,12 @@ import { QuestionsSideBar } from "./QuestionsSideBar";
 import SurveyPreviewModal from "./SurveyPreviewModal";
 import SurveyTheme from "./SurveyTheme";
 import StylesComponent from "./SurveyTheme/components/stylescomponent";
+import { getSurveyThemeKeyOf } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
-import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext";
+import {
+  SurveyThemeContextProvider,
+  SurveyThemeContextProvider as WebSurveyPagesThemeContextProvider,
+} from "./SurveyTheme/SurveyThemeContext";
 import UiTextTranslationsModal from "./UiTextTranslationsModal";
 
 export enum QuestionTabsEnum {
@@ -74,9 +79,15 @@ export function EditSurvey({
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
     QuestionTabsEnum.None,
   );
-  const [selectedQ, setSelectedQ] = useState<Question>(null);
   const { surveyId } = useContext(SurveyContext);
   const { data: survey, dataUpdatedAt } = useSurvey(surveyId);
+  const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const [selectedSurveyThemeTab, setSelectedSurveyThemeTab] = useState(
+    ThemeTabEnum.SURVEY,
+  );
+  const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
+    survey?.webSurveyTheme?.theme,
+  );
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isUiTextTranslationsModalOpen, setIsUiTextTranlationsModalOpen] =
     useState(false);
@@ -117,6 +128,14 @@ export function EditSurvey({
   ] = useDisclosure(false);
 
   useEffect(() => {
+    if (uniquePages.includes(selectedQ?.type as PageType)) {
+      setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
+    } else if (activeTab === QuestionTabsEnum.SurveyPreview) {
+      setSurveyThemeContextValue(survey?.webSurveyTheme?.theme);
+    }
+  }, [survey]);
+
+  useEffect(() => {
     const newKey = uuidv4();
     setSurveyPreveiwCompKey(newKey);
   }, [survey, questions]);
@@ -136,6 +155,7 @@ export function EditSurvey({
   const questionCreateMutation = useQuestionCreateMutation({
     surveyId,
   });
+
   const handleTypeSelection = (type: QuestionType | PageType) => {
     let newQ;
     if (type in PageType) {
@@ -151,32 +171,22 @@ export function EditSurvey({
     });
   };
 
-  let inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.SURVEY;
-  if (selectedQ?.type === PageType.Welcome) {
-    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.WELCOME;
-  } else if (selectedQ?.type === PageType.ThankYou) {
-    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.THANKYOU;
-  } else if (selectedQ?.type === PageType.Language) {
-    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.LANGUAGE;
-  }
-
-  if (activeTab === QuestionTabsEnum.SurveyPreview) {
-    inititalSelectedTabForSurveyThemeComp = ThemeTabEnum.SURVEY;
-  }
-
   useEffect(() => {
-    if (inititalSelectedTabForSurveyThemeComp !== ThemeTabEnum.SURVEY)
+    if (selectedSurveyThemeTab !== ThemeTabEnum.SURVEY) {
       closeStylesEditorDrawer();
-  }, [inititalSelectedTabForSurveyThemeComp]);
+    }
+  }, [selectedSurveyThemeTab]);
 
   useEffect(() => {
-    if (activeTab !== QuestionTabsEnum.SurveyPreview) closeStylesEditorDrawer();
+    if (activeTab !== QuestionTabsEnum.SurveyPreview) {
+      closeStylesEditorDrawer();
+    }
   }, [activeTab]);
 
   return (
     <SurveyThemeContextProvider
-      surveyTheme={survey?.webSurveyTheme?.theme}
-      selectedPageTab={inititalSelectedTabForSurveyThemeComp}
+      surveyTheme={surveyThemeContextValue}
+      selectedPageTab={selectedSurveyThemeTab}
       editSurveySelectedQuestion={selectedQ}
     >
       <Flex className={styles["edit-survey-div"]}>
@@ -197,6 +207,9 @@ export function EditSurvey({
                 survey={survey}
                 openStylesEditorDrawer={openStylesEditorDrawer}
                 openSurveyPreviewModal={openSurveyPreviewModal}
+                setSurveyThemeContextValue={setSurveyThemeContextValue}
+                setSelectedSurveyThemeTab={setSelectedSurveyThemeTab}
+                setThemeSelectorState={setThemeSelectorState}
               />
             </Box>
           </motion.div>
@@ -215,6 +228,7 @@ export function EditSurvey({
                 classNames={{
                   panel: styles["panel"],
                 }}
+                keepMounted={false}
               >
                 <Tabs.Panel
                   value={QuestionTabsEnum.Edit}
@@ -309,7 +323,7 @@ export function EditSurvey({
                   className={styles["survey-edit-view-panel"]}
                   value={QuestionTabsEnum.SurveyPreview}
                 >
-                  {survey && activeTab === QuestionTabsEnum.SurveyPreview && (
+                  {survey && (
                     <SurveyTheme
                       previewId={"survey-theme-edit-preview"}
                       key={surveyPreviewCompKey}

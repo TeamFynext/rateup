@@ -1,9 +1,11 @@
 import { Switch } from "@mantine/core";
+
 import styles from "./CustomSwitch.module.css";
 
-function CustomSwitch({ checked, onChange, label }) {
+function CustomSwitch({ className = "", checked, onChange, label }) {
   return (
     <Switch
+      className={className}
       checked={checked}
       label={label}
       classNames={{

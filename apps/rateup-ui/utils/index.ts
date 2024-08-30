@@ -67,13 +67,13 @@ export const cordinateStyle = (type: string): {} => {
       style = { justifyContent: "flex-end" };
       break;
     case COORDINATESY[0]:
-      style = { top: 0, bottom: "unset" };
+      style = { top: "2rem", bottom: "unset" };
       break;
     case COORDINATESY[1]:
       style = { top: "45%", bottom: "unset" };
       break;
     case COORDINATESY[2]:
-      style = { bottom: 0, top: "unset" };
+      style = { bottom: "2rem", top: "unset" };
       break;
     default:
       notDefault = false;

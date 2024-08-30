@@ -19,7 +19,7 @@ import {
 } from "../../../SurveyThemeContext";
 
 export default function WelcomePageThemeView({ survey }) {
-  const surveyTheme = useSurveyThemeContextValue();
+  const webSurveyPagesTheme = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const selectedPreview = useSelectedPreview();
@@ -29,17 +29,35 @@ export default function WelcomePageThemeView({ survey }) {
   const isWelcomePageEnabled = survey?.welcomePageEnabled;
   const setOpenEditors = useSetOpenEditors();
 
+  const surveyThemeObj = survey?.webSurveyTheme?.theme;
   const {
-    welcomeTheme,
-    surveyTheme: { logo },
-  } = surveyTheme;
+    surveyTheme: {
+      logo: { logo: logoUrl, styles: logoStyles },
+    },
+  } = surveyThemeObj;
 
-  const {
-    bg: { styles, desktopbg, mobilebg },
-    button: { styles: buttonStyles, position },
-    subtitle: { styles: subtitleStyles },
-    title: { styles: titleStyles },
-  } = welcomeTheme;
+  const shouldUseSurveyTheme =
+    webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
+  const requiredThemeObj = shouldUseSurveyTheme
+    ? surveyThemeObj["surveyTheme"]
+    : webSurveyPagesTheme["welcomeTheme"];
+  console.log({ webSurveyPagesTheme, shouldUseSurveyTheme, requiredThemeObj });
+
+  const titleStyles = requiredThemeObj?.title?.styles;
+  let subtitleStyles = requiredThemeObj?.subtitle?.styles;
+  if (!subtitleStyles) {
+    subtitleStyles = {
+      color: titleStyles?.color,
+      fontWeight: "400",
+      fontSize: 16,
+      textAlign: "center",
+    };
+  }
+  let buttonStyles = requiredThemeObj?.button?.styles;
+  let buttonPosition = requiredThemeObj?.button?.position;
+  if (!buttonPosition) {
+    buttonPosition = { x: "CENTER", y: "DEFAULT" };
+  }
 
   const {
     titleText: title,
@@ -47,8 +65,8 @@ export default function WelcomePageThemeView({ survey }) {
     startButtonText: startBtnLabel,
   } = editSurveySelectedQuestion || {};
 
-  const orgLogoSrc = logo?.logo;
-  const orgLogoStyles = logo?.styles;
+  const orgLogoSrc = logoUrl;
+  const orgLogoStyles = logoStyles;
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
     async (value, name) => {
@@ -77,11 +95,9 @@ export default function WelcomePageThemeView({ survey }) {
     [editSurveySelectedQuestion],
   );
 
-  const useSurveyBackground =
-    surveyTheme["welcomeTheme"].bg.useSurveyBackground;
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyTheme,
-    useSurveyBackground ? "surveyTheme" : "welcomeTheme",
+    shouldUseSurveyTheme ? surveyThemeObj : webSurveyPagesTheme,
+    shouldUseSurveyTheme ? "surveyTheme" : "welcomeTheme",
     selectedPreview === "mobile",
   );
 
@@ -150,8 +166,8 @@ export default function WelcomePageThemeView({ survey }) {
               className={classes.titleBox}
               style={{
                 display: "flex",
-                ...(position?.x ? cordinateStyle(position.x) : {}),
-                ...(position?.y ? cordinateStyle(position.y) : {}),
+                ...(buttonPosition?.x ? cordinateStyle(buttonPosition.x) : {}),
+                ...(buttonPosition?.y ? cordinateStyle(buttonPosition.y) : {}),
               }}
             >
               <AutosaveInput

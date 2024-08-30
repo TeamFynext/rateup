@@ -19,15 +19,20 @@ import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { PageType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext";
-import { docsPath } from "@/utils/constants";
+import { uniquePages } from "@/utils/constants";
 import { reorder, reOrderPages } from "@/utils/questions";
 
-import InfoButton from "../Button/InfoButton";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import styles from "./QuestionsSideBar.module.css";
+import {
+  getSurveyThemeKeyOf,
+  getSurveyThemeTabValueFromPageType,
+} from "./SurveyTheme/SurveyTheme.constants";
+import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -41,6 +46,9 @@ interface QuestionsSideBarProps {
   survey?: Survey;
   openStylesEditorDrawer?: () => void;
   openSurveyPreviewModal?: () => void;
+  setSurveyThemeContextValue?: any;
+  setSelectedSurveyThemeTab?: any;
+  setThemeSelectorState?: any;
 }
 export function QuestionsSideBar({
   questions,
@@ -53,6 +61,10 @@ export function QuestionsSideBar({
   setSelectedLanguage,
   openStylesEditorDrawer,
   openSurveyPreviewModal,
+  survey,
+  setSurveyThemeContextValue,
+  setSelectedSurveyThemeTab,
+  setThemeSelectorState,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -70,8 +82,15 @@ export function QuestionsSideBar({
     addQnTrigger > 0 && handleAddQn();
   }, [addQnTrigger]);
 
-  const handleOpenQuestion = (Q: Question) => {
-    setSelectedQ(Q);
+  const handleOpenQuestion = (question: Question) => {
+    setSelectedQ(question);
+    if (uniquePages.includes(question.type as PageType)) {
+      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(
+        question.type,
+      );
+      setSelectedSurveyThemeTab(surveyThemeTabValue);
+      setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
+    }
     setActiveTab(QuestionTabsEnum.Edit);
   };
 
@@ -155,6 +174,9 @@ export function QuestionsSideBar({
                 openStylesEditorDrawer();
                 setActiveTab(QuestionTabsEnum.SurveyPreview);
                 setNavOpened(false);
+                setSurveyThemeContextValue(survey?.webSurveyTheme?.theme);
+                setThemeSelectorState(survey?.webSurveyThemeId);
+                setSelectedSurveyThemeTab(ThemeTabEnum.SURVEY);
               }}
             >
               <IconEdit />

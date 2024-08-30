@@ -3,8 +3,6 @@ import { createContext, useContext, useEffect } from "react";
 import { useIsFirstRender } from "@mantine/hooks";
 import { useImmerReducer } from "use-immer";
 
-import { QuestionType } from "@/types/enums";
-
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 import surveyThemeReducer from "./surveyThemeReducer";
 
@@ -126,12 +124,12 @@ function useEditSurveySelectedQuestion() {
 
 export {
   SurveyThemeContextProvider,
-  useSurveyThemeContextValue,
-  useSelectedPageTab,
-  useSurveyThemeStateDispatch,
-  useOpenEditors,
-  useSetOpenEditors,
-  useSelectedPreview,
-  useSetSelectedPreview,
   useEditSurveySelectedQuestion,
+  useOpenEditors,
+  useSelectedPageTab,
+  useSelectedPreview,
+  useSetOpenEditors,
+  useSetSelectedPreview,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
 };

@@ -51,3 +51,24 @@
   border: 1px solid var(--mantine-color-gray-3);
   color: var(--tertiary-color);
 }
+
+/* Delete confirmation modal styles */
+
+.delete-confirmation-modal :global(.mantine-Modal-body) {
+  margin-top: 1.5rem;
+}
+
+.delete-confirmation-modal .are-you-sure-text {
+  text-align: left;
+}
+
+.delete-confirmation-modal div:nth-child(2) button {
+  border-radius: 0.625rem;
+}
+
+.delete-confirmation-modal
+  :global(.mantine-Modal-body)
+  div:nth-child(2)
+  button:nth-child(2) {
+  background-color: var(--mantine-color-red-7);
+}

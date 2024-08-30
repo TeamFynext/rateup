@@ -56,6 +56,7 @@ export async function getServerSideProps(context) {
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
       propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
+      propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
       propsToPass.titleText = thankyouPageTypeObj.titleText;
       propsToPass.subtitleText = thankyouPageTypeObj.subtitleText;
     }
@@ -71,6 +72,7 @@ export async function getServerSideProps(context) {
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
       propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
+      propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
       propsToPass.titleText = thankyouPageTypeObj.titleText;
       propsToPass.subtitleText = thankyouPageTypeObj.subtitleText;
     }
@@ -89,6 +91,7 @@ export default function ThankYou({
   fromShortUrl,
   redirect = null,
   surveyThemeData,
+  pagesThemeData,
   titleText,
   subtitleText,
 }) {
@@ -163,14 +166,28 @@ export default function ThankYou({
     setTimeout(() => setPulsing(false), 600);
   };
 
-  const useSurveyBackground =
-    surveyThemeData["thankyouTheme"].bg.useSurveyBackground;
+  const shouldUseSurveyTheme = pagesThemeData["thankyouTheme"]?.useSurveyTheme;
+  const requiredThemeObj = shouldUseSurveyTheme
+    ? surveyThemeData["surveyTheme"]
+    : pagesThemeData["thankyouTheme"];
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyThemeData,
-    useSurveyBackground ? "surveyTheme" : "thankyouTheme",
+    shouldUseSurveyTheme ? surveyThemeData : pagesThemeData,
+    shouldUseSurveyTheme ? "surveyTheme" : "thankyouTheme",
     isMobile,
   );
+
+  const titleStyles = requiredThemeObj?.title?.styles;
+  let subtitleStyles = requiredThemeObj?.subtitle?.styles;
+  if (!subtitleStyles) {
+    subtitleStyles = {
+      color: titleStyles?.color,
+      fontWeight: "400",
+      fontSize: 16,
+      textAlign: "center",
+    };
+  }
+  const confettiEnabled = requiredThemeObj?.confettiEnabled;
 
   return (
     <CreditsCard
@@ -207,7 +224,7 @@ export default function ThankYou({
             overflow: "hidden",
           }}
         >
-          {surveyThemeData?.thankyouTheme?.confettiEnabled && (
+          {confettiEnabled && (
             <Confetti width={width - 1} height={height - 1} />
           )}
 
@@ -217,16 +234,15 @@ export default function ThankYou({
                 <Title
                   order={1}
                   style={{
-                    ...surveyThemeData?.thankyouTheme?.title?.styles,
+                    ...titleStyles,
+                    textAlign: "center",
                   }}
                 >
                   {!!err ? "Thank You!" : titleText}
                 </Title>
                 {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle ||
                   err) && (
-                  <Text
-                    style={surveyThemeData?.thankyouTheme?.subtitle?.styles}
-                  >
+                  <Text style={subtitleStyles}>
                     {!!err
                       ? "You've already submitted a response earlier."
                       : subtitleText}
