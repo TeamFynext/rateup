@@ -4,11 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
-import { createHubSpotContacts, updatePageTypeQuestions } from "./update.api";
+import { createHubSpotContacts, updateWebSurveyPagesTheme } from "./update.api";
 
-export const useUpdatePageTypeQuestions = () => {
+export const useUpdateWebSurveyPagesTheme = () => {
   return useMutation({
-    mutationFn: updatePageTypeQuestions,
+    mutationFn: updateWebSurveyPagesTheme,
     onSuccess: () => {
       showSuccessToast("Updated questions successfully");
     },

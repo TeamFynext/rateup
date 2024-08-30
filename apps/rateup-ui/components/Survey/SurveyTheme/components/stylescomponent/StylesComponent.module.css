@@ -25,6 +25,20 @@
   align-self: auto;
 }
 
+.use-survey-theme-checkbox-container {
+  padding: 0 1.1875rem;
+  padding-top: 0.875rem;
+}
+
+.use-survey-theme-checkbox :global(.mantine-Checkbox-input) {
+  cursor: pointer;
+}
+
+.use-survey-theme-checkbox :global(.mantine-Checkbox-label) {
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
 .expand-all-collapse-all-btn-container {
   padding: 0 0.75rem;
   justify-content: center;
@@ -153,6 +167,10 @@
   gap: 1rem;
 }
 
+.confetti-switch :global(.mantine-Switch-label) {
+  font-size: 0.875rem;
+}
+
 .logo-styles-number-inputs-container {
   justify-content: center;
 }
@@ -211,22 +229,32 @@
 }
 
 .close-save-btns-container {
+  position: relative;
   padding: 0.875rem;
   padding-top: 0;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .close-save-btns-container > div {
-  flex: 1 1 0;
+  flex: 0 1 auto;
 }
 
-.close-btn {
+.close-btn,
+.page-theme-save-btn {
   height: auto;
   line-height: normal;
   padding: 0.5rem 1rem;
   border-radius: 2rem;
   width: 100%;
   font-size: 0.75rem;
+}
+
+.page-theme-save-btn {
+  width: auto;
+}
+
+.close-save-btns-container .save-btn-div {
+  width: auto;
 }
 
 .save-btn-div button {
