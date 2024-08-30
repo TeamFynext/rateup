@@ -283,10 +283,10 @@ export function getPageQuestions(languages) {
   if (languages.length > 1) {
     questionsArr.push({
       id: "language-page",
-      type: "Language",
+      type: PageType.Language,
       required: true,
       enableNpsAnalytics: false,
-      ...getTitleAndDescriptionObjs(languages, "Language"),
+      ...getTitleAndDescriptionObjs(languages, PageType.Language),
       titleText: "Select a Language",
       subtitleText: "Let's Begin!",
       startButtonText: "Start Survey",
@@ -295,13 +295,14 @@ export function getPageQuestions(languages) {
   return questionsArr;
 }
 
-export function getPageTypeQuestionObj(languages, type) {
+export function getPageTypeQuestionObj(languages, type, additionalData = {}) {
   return {
     id: `${type}-page`,
     type,
     required: true,
     enableNpsAnalytics: false,
     ...getTitleAndDescriptionObjs(languages, type),
+    ...additionalData,
   };
 }
 
@@ -391,3 +392,31 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(
 
   return questionsArrCopy;
 }
+
+// To add welcome page, thankyou page when a new survey is created.
+export const getInitialSurveyQuestions = (languages) => {
+  const arr = [];
+  arr.push(
+    getPageTypeQuestionObj(languages, PageType.Welcome, {
+      titleText: "Welcome",
+      subtitleText: "Welcome to the survey",
+      startButtonText: "Start Survey",
+    }),
+  );
+  if (languages.length > 1) {
+    arr.push(
+      getPageTypeQuestionObj(languages, PageType.Language, {
+        titleText: "Select a Language",
+        subtitleText: "Let's Begin!",
+        startButtonText: "Start Survey",
+      }),
+    );
+  }
+  arr.push(
+    getPageTypeQuestionObj(languages, PageType.ThankYou, {
+      titleText: "Thank you",
+      subtitleText: "Thank you for taking the survey",
+    }),
+  );
+  return arr;
+};

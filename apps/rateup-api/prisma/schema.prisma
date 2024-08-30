@@ -20,8 +20,8 @@ datasource db {
 
 enum Role {
   // can access all the team
-  SUPER_ADMIN
   // can access only to the teams they are member of
+  SUPER_ADMIN
   ADMIN
   //can access only team based survey responses, stats
   MEMBER
@@ -279,6 +279,7 @@ model Survey {
   surveyTheme                       SurveyTheme?
   webSurveyThemeId                  String?           @db.Uuid
   webSurveyTheme                    WebSurveyTheme?   @relation(fields: [webSurveyThemeId], references: [id])
+  webSurveyPagesTheme               Json?             @default("{}")
   WaFlow                            WaFlow?
   spreadSheetId                     String?
   redirect                          Json              @default("{\"url\": \"/\",\"time\": \"5\" }")

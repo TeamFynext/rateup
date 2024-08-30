@@ -1,22 +1,22 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { updatePageTypeQuestionsInDB } from "./migrationFiles/update-page-type-questions";
+import { updateWebSurveyPagesThemeInDB } from "./migrationFiles/update-web-survey-pages-theme";
 import { log } from "../../utils/logger";
 import { createHubSpotContactsForExistingRecords } from "./migrationFiles/create-hubspot-contact";
 
-export async function updatePageTypeQuestions(
+export async function updateWebSurveyPagesTheme(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const result = await updatePageTypeQuestionsInDB();
+    const result = await updateWebSurveyPagesThemeInDB();
     reply.status(200).send({
       success: true,
-      message: "update questions successfully.",
+      message: "update WebSurveyPagesTheme successfully.",
     });
   } catch (err) {
     reply.status(500).send({
       success: false,
-      message: "Something went wrong while updating questions.",
+      message: "Something went wrong while updating WebSurveyPagesTheme.",
     });
   }
 }
@@ -26,6 +26,8 @@ export async function createHubSpotContactsForExistingUsers(
   reply: FastifyReply,
 ) {
   try {
+    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN)
+      return reply.code(403).send({ message: "Access token is not available" });
     const res = await createHubSpotContactsForExistingRecords();
     reply.code(200).send(res);
   } catch (e) {

@@ -1,3 +1,5 @@
+import { produce } from "immer";
+
 const background = {
   desktopBg: {
     chooseBgRadioInputValue: "color",
@@ -29,7 +31,7 @@ const subtitle = {
   subtitle: "",
   styles: {
     fontWeight: "400",
-    fontSize: 15,
+    fontSize: 16,
     textAlign: "center",
   },
 };
@@ -47,10 +49,23 @@ const input = {
 };
 
 export const defaultTheme = {
+  surveyTheme: {
+    bg: background,
+    title: {
+      ...title,
+      styles: { ...title.styles, textAlign: "left", fontSize: 20 },
+      subtitleFontSize: 16,
+    },
+    button: button,
+    input,
+    logo: logo,
+  },
+};
+
+export const defaultThemeOld = {
   welcomeTheme: {
     bg: {
       ...background,
-      useSurveyBackground: true,
     },
     title: { ...title, title: "Welcome" },
     subtitle: { ...subtitle, subtitle: "Welcome to the survey" },
@@ -74,7 +89,6 @@ export const defaultTheme = {
   thankyouTheme: {
     bg: {
       ...background,
-      useSurveyBackground: true,
     },
     title: { ...title, title: "Thank you" },
     subtitle: { ...subtitle, subtitle: "Thank you for taking the survey" },
@@ -83,7 +97,6 @@ export const defaultTheme = {
   languageTheme: {
     bg: {
       ...background,
-      useSurveyBackground: true,
     },
     title: {
       title: "Select a Language",
@@ -105,3 +118,10 @@ export const defaultTheme = {
     input,
   },
 };
+
+export const defaultWebSurveyPagesTheme = produce(defaultThemeOld, (draft) => {
+  delete draft.surveyTheme;
+  draft.welcomeTheme["useSurveyTheme"] = true;
+  draft.languageTheme["useSurveyTheme"] = true;
+  draft.thankyouTheme["useSurveyTheme"] = true;
+});

@@ -3,14 +3,6 @@ import prisma from "../../utils/prisma";
 import { defaultTheme } from "./defaultTheme";
 import { verifyAndConvertSurveyThemeObj } from "./utils";
 
-// export async function getSurveyThemeBySurveyId(surveyId: string) {
-//   return await prisma.webSurveyTheme.findUnique({
-//     where: {
-//       surveyId: surveyId,
-//     },
-//   });
-// }
-
 export async function getSurveyThemeById(webSurveyThemeId: string) {
   return await prisma.webSurveyTheme.findUnique({
     where: {
@@ -52,11 +44,6 @@ export async function createNewThemeInDB(req) {
 }
 
 export async function applyThemeToSurvey(surveyId: string, themeId) {
-  console.log(
-    { surveyId, themeId },
-    "From survey theme service eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-  );
-
   await prisma.survey.update({
     where: {
       id: surveyId,
@@ -91,13 +78,6 @@ export async function createAndApplyThemeToSurvey(req) {
     return newTheme;
   });
 }
-
-// export async function createDefaultSurveyTheme(surveyId: string) {
-//   console.log("surveyId", surveyId);
-//   return await prisma.webSurveyTheme.create({
-//     data: { ...defaultTheme, ...{ surveyId: surveyId } },
-//   });
-// }
 
 export async function renameThemeInDB(req) {
   const { webSurveyThemeId } = req.params;
