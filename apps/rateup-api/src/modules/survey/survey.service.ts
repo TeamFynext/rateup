@@ -27,9 +27,11 @@ import { offerArrayWithRange } from "../../utils/survey/offer";
 import { cloneDeep } from "lodash";
 import util from "util";
 import {
+  getInitialSurveyQuestions,
   getPageQuestions,
   getQuestionsArrUpdatedWithLanguageTypeQuestion,
 } from "../question/question.utils";
+import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -71,7 +73,8 @@ export async function createSurvey(
             create: teamIds,
           },
           webSurveyThemeId: selectedTheme || defaultThemeId,
-          questions: getPageQuestions(input.languages),
+          questions: getInitialSurveyQuestions(input.languages),
+          webSurveyPagesTheme: defaultWebSurveyPagesTheme,
         },
       });
       return survey;

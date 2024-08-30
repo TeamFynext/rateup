@@ -6,7 +6,6 @@ import {
   getAllThemesOfUserOrgFromDB,
   getSurveyThemeById,
   renameThemeInDB,
-  updateAllWebSurveyThemesInDB,
   updateSurveyThemeActiveSurveyThemeInDB,
 } from "./surveyTheme.service";
 

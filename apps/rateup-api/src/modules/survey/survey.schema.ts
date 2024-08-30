@@ -154,6 +154,7 @@ const updateSurveyRequestSchema = z.object({
   surveyPublishAt: z.string().nullable().optional(),
   surveyEndAt: z.string().nullable().optional(),
   uiTextTranslations: z.any().optional(),
+  webSurveyPagesTheme: z.any().optional(),
   responseWebhookEndpoint: z.string().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
