@@ -1,12 +1,9 @@
 import "@shopify/shopify-api/adapters/node";
 import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
 import {
-  createScheduleOnShopifyEvent,
   getShopifyIntegrationByShop,
   updateShopifyIntegrationByShop,
 } from "./shopify.service";
-import shopify from "./shopify.config";
-import { ShopifyEvents } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import dayjs from "dayjs";
 import { pauseOrg } from "../../org/org.services";
@@ -22,33 +19,14 @@ async function draftOrderCreateHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const shopifyInfo = await getShopifyIntegrationByShop(shop);
-  if (!shopifyInfo) return;
-  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
-    log.trace(`webhook with ${webhookId} already recieved`);
-    return;
-  }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
-    products?.product_id?.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.DRAFT_ORDERS_CREATE,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 
 export async function orderCreateHandler(
@@ -60,33 +38,14 @@ export async function orderCreateHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const shopifyInfo = await getShopifyIntegrationByShop(shop);
-  if (!shopifyInfo) return;
-  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
-    log.trace(`webhook with ${webhookId} already recieved`);
-    return;
-  }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
-    products?.product_id?.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.ORDERS_CREATE,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 
 export async function appUninstalledHandler(
@@ -116,33 +75,14 @@ export async function orderCancelledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const shopifyInfo = await getShopifyIntegrationByShop(shop);
-  if (!shopifyInfo) return;
-  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
-    log.trace(`webhook with ${webhookId} already recieved`);
-    return;
-  }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
-    products?.product_id?.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.ORDERS_CREATE,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 
 export async function orderFulFilledHandler(
@@ -154,33 +94,14 @@ export async function orderFulFilledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const shopifyInfo = await getShopifyIntegrationByShop(shop);
-  if (!shopifyInfo) return;
-  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
-    log.trace(`webhook with ${webhookId} already recieved`);
-    return;
-  }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
-    products?.product_id?.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.ORDERS_CREATE,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 
 export async function orderPaidHandler(
@@ -192,33 +113,14 @@ export async function orderPaidHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const shopifyInfo = await getShopifyIntegrationByShop(shop);
-  if (!shopifyInfo) return;
-  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
-    log.trace(`webhook with ${webhookId} already recieved`);
-    return;
-  }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
-    products?.product_id?.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.ORDERS_CREATE,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 export async function orderPartiallyFulfilledHandler(
   topic: string,
@@ -229,33 +131,14 @@ export async function orderPartiallyFulfilledHandler(
   context?: any,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
-  const shopifyInfo = await getShopifyIntegrationByShop(shop);
-  if (!shopifyInfo) return;
-  const existingSchedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  if (existingSchedules.find((schedule) => schedule.webhookId === webhookId)) {
-    log.trace(`webhook with ${webhookId} already recieved`);
-    return;
-  }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const customerPhone =
-    webhookRequestBodyJson?.customer?.phone ||
-    webhookRequestBodyJson?.customer?.default_address?.phone;
-  webhookRequestBodyJson?.billing_address?.phone ||
-    webhookRequestBodyJson?.shipping_address?.phone;
-  const productIds = webhookRequestBodyJson.line_items?.map((products) =>
-    products?.product_id?.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.ORDERS_CREATE,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 export async function fulfillmentOrderCancelledHandler(
   topic: string,
@@ -276,37 +159,13 @@ export async function fulfillmentOrderCancelledHandler(
     return;
   }
   const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
-  const fulfillmentOrderGId = webhookRequestBodyJson.fulfillment_order.id;
-  const gidArray = fulfillmentOrderGId.split("/");
-  const fulfillmentOrderId = parseInt(gidArray[gidArray.length - 1]);
-  const fulfillmentOrder = await shopify.rest.FulfillmentOrder.find({
-    session: shopifyInfo.credential.session,
-    id: fulfillmentOrderId,
-    include_order_reference_fields: true,
-  });
-  if (!fulfillmentOrder) return;
-  const orderDetails = await shopify.rest.Order.find({
-    session: shopifyInfo.credential.session,
-    id: fulfillmentOrder.order_id,
-  });
-  if (!orderDetails) return;
-  const customerPhone =
-    orderDetails.customer.phone ||
-    orderDetails.customer.default_address.phone ||
-    orderDetails.billing_address.phone ||
-    orderDetails.shipping_address.phone;
-  const productIds = fulfillmentOrder.line_items.map((product) =>
-    product.product_id.toString(),
-  );
-  if (customerPhone)
-    await createScheduleOnShopifyEvent(
-      customerPhone,
-      ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
-      shopifyInfo,
-      productIds,
-      webhookId,
-      shop,
-    );
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  addToQueue({ type: QueueType.webhookQueue, data: webhook });
 }
 
 export async function customersDataRequestHandler(
