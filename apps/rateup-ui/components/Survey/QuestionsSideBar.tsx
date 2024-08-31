@@ -28,10 +28,7 @@ import { reorder, reOrderPages } from "@/utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import styles from "./QuestionsSideBar.module.css";
-import {
-  getSurveyThemeKeyOf,
-  getSurveyThemeTabValueFromPageType,
-} from "./SurveyTheme/SurveyTheme.constants";
+import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 
 interface QuestionsSideBarProps {
@@ -50,6 +47,7 @@ interface QuestionsSideBarProps {
   setSelectedSurveyThemeTab?: any;
   setThemeSelectorState?: any;
 }
+
 export function QuestionsSideBar({
   questions,
   setActiveTab,

@@ -153,8 +153,7 @@ function NextPrev({
               ((selectedQ?.required || selectedQ?.validationRules) &&
                 response !== 0 &&
                 !response) ||
-              isErrorInput ||
-              (isLastQuestion && isSurveyThemePreview)
+              isErrorInput
             }
             onClick={handleNextClick}
             rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}

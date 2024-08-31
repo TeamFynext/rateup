@@ -86,14 +86,15 @@ export default function ThankYou({
   enableGoogleReview = false,
   googleLink = "",
   reviews = [],
-  kioskMode,
-  surveyIdValue,
+  kioskMode = "",
+  surveyIdValue = "",
   fromShortUrl,
   redirect = null,
   surveyThemeData,
   pagesThemeData,
   titleText,
   subtitleText,
+  isSurveyPreview = false,
 }) {
   const [imageLoading, setImageLoading] = useState(true);
   const [pulsing, setPulsing] = useState(true);
@@ -200,7 +201,7 @@ export default function ThankYou({
         style={{
           ...surveyThemeData?.thankyouTheme?.bg?.styles,
           ...{
-            height: "100dvh",
+            height: isSurveyPreview ? "100%" : "100dvh",
             backgroundColor: backgroundColor,
             backgroundImage: `url(${backgroundImageSrc})`,
             backgroundRepeat: "no-repeat",
@@ -240,8 +241,7 @@ export default function ThankYou({
                 >
                   {!!err ? "Thank You!" : titleText}
                 </Title>
-                {(surveyThemeData?.thankyouTheme?.subtitle?.subtitle ||
-                  err) && (
+                {(subtitleText || err) && (
                   <Text style={subtitleStyles}>
                     {!!err
                       ? "You've already submitted a response earlier."

@@ -7,6 +7,10 @@
   padding: 1rem;
 }
 
+.response-submitted-root-div.survey-preview {
+  min-height: 100%;
+}
+
 .check-icon-container-and-thankyou-message-container {
   justify-content: center;
   align-items: center;

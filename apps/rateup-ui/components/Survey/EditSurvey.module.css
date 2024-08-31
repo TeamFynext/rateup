@@ -31,7 +31,7 @@
 }
 
 .question-editor-container-motion-div {
-  flex: 5;
+  flex: 6;
   height: 100%;
   overflow: hidden;
   box-shadow:
@@ -48,7 +48,7 @@
 }
 
 .edit-survey-theme-style-component-motion-div {
-  flex: 1.4;
+  flex: 1.6;
   height: 100%;
 }
 

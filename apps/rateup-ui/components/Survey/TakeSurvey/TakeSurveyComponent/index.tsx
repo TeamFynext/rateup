@@ -41,7 +41,13 @@ import {
   submitSurvey,
 } from "./util";
 
-function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
+function TakeSurvey({
+  survey,
+  setIsReviewPage,
+  fromShortUrl = false,
+  setIsThankyouPage = null,
+  setIsDefaultThankyouPage = null,
+}) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
@@ -251,7 +257,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   };
 
   async function openConfirmationModal() {
-    if (survey.skipPreview) {
+    if (survey.skipPreview || isSurveyThemePreview) {
       try {
         finishSurvey();
       } catch (error) {
@@ -263,7 +269,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   }
 
   const finishSurvey = async (pageType = "") => {
-    setIsSavingResponses(true);
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
     const shouldShowGoogleReview =
       pageType === PageType.GoogleReview ||
@@ -272,6 +277,18 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       survey?.questions,
       responsesRef.current,
     );
+
+    // This If Condition is for survey preview in survey editor.
+    if (isSurveyThemePreview) {
+      shouldShowGoogleReview && !(pageType === PageType.ThankYou)
+        ? setIsReviewPage(selectedLanguage)
+        : isThankYouPageEnabled
+          ? setIsThankyouPage?.(true)
+          : setIsDefaultThankyouPage?.(true);
+      return;
+    }
+
+    setIsSavingResponses(true);
 
     let checkUniqueDevice = survey?.uniqueDeviceResponse;
 

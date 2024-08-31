@@ -5,11 +5,13 @@ import { IconCircleCheckFilled } from "@tabler/icons-react";
 
 import styles from "./ResponseSubmitted.module.css";
 
-function ResponseSubmitted() {
+function ResponseSubmitted({ isSurveyPreview = false }) {
   const router = useRouter();
 
   return (
-    <Stack className={styles["response-submitted-root-div"]}>
+    <Stack
+      className={`${styles["response-submitted-root-div"]} ${isSurveyPreview ? styles["survey-preview"] : ""}`}
+    >
       <Stack
         className={
           styles["check-icon-container-and-thankyou-message-container"]
