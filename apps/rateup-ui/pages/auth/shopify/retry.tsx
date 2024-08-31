@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -22,7 +21,6 @@ const ShopifyCallbackRetry = () => {
             title="Retry"
             onClick={() => {
               const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
-              console.log("shop", shop);
               if (!shop || !regex.test(shop)) {
                 router.push("/login");
               }

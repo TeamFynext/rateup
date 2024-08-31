@@ -159,7 +159,7 @@ const ShopifySettings = ({
           <Stack>
             <Title order={4}>Connected Store</Title>
             <ContainedTextField value={session?.shop} disabled />
-            <Group justify="flex-end">
+            {/* <Group justify="flex-end">
               <RateupButtonPrimary
                 color="red"
                 leftIcon={<IconTrash size={"1rem"} />}
@@ -171,7 +171,7 @@ const ShopifySettings = ({
                   openConfirm();
                 }}
               />
-            </Group>
+            </Group> */}
           </Stack>
         </PaperLayout>
         <PaperLayout>
