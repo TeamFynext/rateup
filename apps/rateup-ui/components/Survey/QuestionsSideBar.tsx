@@ -1,5 +1,4 @@
 //TODO: refactor drag and drop
-
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
@@ -15,9 +14,12 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import _ from "lodash";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { PageType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
@@ -28,10 +30,7 @@ import { reorder, reOrderPages } from "@/utils/questions";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
 import styles from "./QuestionsSideBar.module.css";
-import {
-  getSurveyThemeKeyOf,
-  getSurveyThemeTabValueFromPageType,
-} from "./SurveyTheme/SurveyTheme.constants";
+import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 
 interface QuestionsSideBarProps {
@@ -49,7 +48,10 @@ interface QuestionsSideBarProps {
   setSurveyThemeContextValue?: any;
   setSelectedSurveyThemeTab?: any;
   setThemeSelectorState?: any;
+  checkForUnsavedChanges?: () => boolean;
+  activeTab?: QuestionTabsEnum;
 }
+
 export function QuestionsSideBar({
   questions,
   setActiveTab,
@@ -65,6 +67,8 @@ export function QuestionsSideBar({
   setSurveyThemeContextValue,
   setSelectedSurveyThemeTab,
   setThemeSelectorState,
+  checkForUnsavedChanges,
+  activeTab,
 }: QuestionsSideBarProps) {
   const router = useRouter();
   const { surveyId } = router.query as { surveyId: string };
@@ -82,16 +86,57 @@ export function QuestionsSideBar({
     addQnTrigger > 0 && handleAddQn();
   }, [addQnTrigger]);
 
-  const handleOpenQuestion = (question: Question) => {
+  const openQuestion = (question) => {
     setSelectedQ(question);
     if (uniquePages.includes(question.type as PageType)) {
+      const webSurveyPagesThemeCopy = _.cloneDeep(survey?.webSurveyPagesTheme);
       const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(
         question.type,
       );
       setSelectedSurveyThemeTab(surveyThemeTabValue);
-      setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
+      setSurveyThemeContextValue(webSurveyPagesThemeCopy);
     }
     setActiveTab(QuestionTabsEnum.Edit);
+  };
+
+  const openSurveyEditPreview = () => {
+    setSelectedQ(null);
+    openStylesEditorDrawer();
+    setActiveTab(QuestionTabsEnum.SurveyPreview);
+    setNavOpened(false);
+    setSurveyThemeContextValue(survey?.webSurveyTheme?.theme);
+    setThemeSelectorState(survey?.webSurveyThemeId);
+    setSelectedSurveyThemeTab(ThemeTabEnum.SURVEY);
+  };
+
+  const handleOpenQuestion = (question: Question) => {
+    if (selectedQ === question) {
+      return;
+    }
+    const haveUnsavedChanges = checkForUnsavedChanges();
+    if (haveUnsavedChanges) {
+      modals.openConfirmModal({
+        title: "Discard unsaved changes?",
+        children: (
+          <Text className={modalStyles["are-you-sure-text"]}>
+            Are you sure, you want to discard unsaved changes?
+          </Text>
+        ),
+        labels: { confirm: "Discard", cancel: "Cancel" },
+        className: modalStyles["delete-confirmation-modal"],
+        centered: true,
+        classNames: {
+          header: modalStyles["modal-header"],
+          body: modalStyles["modal-body"],
+          content: modalStyles["modal-content"],
+        },
+        onConfirm: () => {
+          openQuestion(question);
+        },
+      });
+      return;
+    }
+    openQuestion(question);
   };
 
   const handleAddQn = () => {
@@ -170,13 +215,33 @@ export function QuestionsSideBar({
               className={styles["edit-theme-btn"]}
               variant="light"
               onClick={() => {
-                setSelectedQ(null);
-                openStylesEditorDrawer();
-                setActiveTab(QuestionTabsEnum.SurveyPreview);
-                setNavOpened(false);
-                setSurveyThemeContextValue(survey?.webSurveyTheme?.theme);
-                setThemeSelectorState(survey?.webSurveyThemeId);
-                setSelectedSurveyThemeTab(ThemeTabEnum.SURVEY);
+                if (activeTab === QuestionTabsEnum.SurveyPreview) {
+                  return;
+                }
+                const haveUnsavedChanges = checkForUnsavedChanges();
+                if (haveUnsavedChanges) {
+                  modals.openConfirmModal({
+                    title: "Discard unsaved changes?",
+                    children: (
+                      <Text className={modalStyles["are-you-sure-text"]}>
+                        Are you sure, you want to discard unsaved changes?
+                      </Text>
+                    ),
+                    labels: { confirm: "Discard", cancel: "Cancel" },
+                    className: modalStyles["delete-confirmation-modal"],
+                    centered: true,
+                    classNames: {
+                      header: modalStyles["modal-header"],
+                      body: modalStyles["modal-body"],
+                      content: modalStyles["modal-content"],
+                    },
+                    onConfirm: () => {
+                      openSurveyEditPreview();
+                    },
+                  });
+                  return;
+                }
+                openSurveyEditPreview();
               }}
             >
               <IconEdit />

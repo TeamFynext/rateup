@@ -41,7 +41,6 @@ export default function WelcomePageThemeView({ survey }) {
   const requiredThemeObj = shouldUseSurveyTheme
     ? surveyThemeObj["surveyTheme"]
     : webSurveyPagesTheme["welcomeTheme"];
-  console.log({ webSurveyPagesTheme, shouldUseSurveyTheme, requiredThemeObj });
 
   const titleStyles = requiredThemeObj?.title?.styles;
   let subtitleStyles = requiredThemeObj?.subtitle?.styles;

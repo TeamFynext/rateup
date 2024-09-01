@@ -41,9 +41,9 @@ function SurveyTheme({
         >
           <PreviewDeviceButtons />
 
-          {!isSurveyThemeEditView && !isSurveyThemePreview && (
+          {!isSurveyThemePreview && (
             <Button
-              className={styles["edit-page-theme-btn"]}
+              className={`${cx("edit-page-theme-btn", { "edit-preview-edit-page-theme-btn": isSurveyThemeEditView })}`}
               rightSection={<IconEdit size={16} />}
               onClick={() => {
                 onEditPageBtnClick?.();

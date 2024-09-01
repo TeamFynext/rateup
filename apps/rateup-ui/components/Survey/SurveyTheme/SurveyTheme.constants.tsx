@@ -225,3 +225,17 @@ export const getSurveyThemeTabValueFromPageType = (pageType) => {
     }
   }
 };
+
+export const getSurveyThemeKeyFromPageType = (pageType) => {
+  switch (pageType) {
+    case PageType.Welcome: {
+      return "welcomeTheme";
+    }
+    case PageType.Language: {
+      return "languageTheme";
+    }
+    case PageType.ThankYou: {
+      return "thankyouTheme";
+    }
+  }
+};

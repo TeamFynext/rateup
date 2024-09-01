@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import {
   ActionIcon,
@@ -10,10 +10,9 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import { IconLanguage } from "@tabler/icons-react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import modalStyles from "styles/commonCssModules/modal.module.css";
+import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
@@ -43,12 +42,9 @@ import { QuestionsSideBar } from "./QuestionsSideBar";
 import SurveyPreviewModal from "./SurveyPreviewModal";
 import SurveyTheme from "./SurveyTheme";
 import StylesComponent from "./SurveyTheme/components/stylescomponent";
-import { getSurveyThemeKeyOf } from "./SurveyTheme/SurveyTheme.constants";
+import { getSurveyThemeKeyFromPageType } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
-import {
-  SurveyThemeContextProvider,
-  SurveyThemeContextProvider as WebSurveyPagesThemeContextProvider,
-} from "./SurveyTheme/SurveyThemeContext";
+import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext";
 import UiTextTranslationsModal from "./UiTextTranslationsModal";
 
 export enum QuestionTabsEnum {
@@ -68,13 +64,16 @@ interface EditSurveyProps {
   surveyLanguages: string[];
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   subscription: Subscription;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: any;
 }
+
 export function EditSurvey({
   questions,
   addQnTrigger,
   surveyLanguages,
   setSelectedLanguage,
   subscription,
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange,
 }: EditSurveyProps) {
   const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
     QuestionTabsEnum.None,
@@ -88,6 +87,10 @@ export function EditSurvey({
   const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
     survey?.webSurveyTheme?.theme,
   );
+
+  // To store state of surveyThemeContextProvider.
+  const surveyThemeContextProviderValueRef = useRef(null);
+
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [isUiTextTranslationsModalOpen, setIsUiTextTranlationsModalOpen] =
     useState(false);
@@ -126,6 +129,43 @@ export function EditSurvey({
       toggle: toggleStylesEditorDrawer,
     },
   ] = useDisclosure(false);
+
+  const checkForUnsavedChanges = useCallback(() => {
+    if (!selectedQ && activeTab === QuestionTabsEnum.SurveyPreview) {
+      if (
+        themeSelectorState !== survey?.webSurveyThemeId ||
+        !_.isEqual(
+          surveyThemeContextProviderValueRef.current,
+          survey?.webSurveyTheme?.theme,
+        )
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    } else if (uniquePages.includes(selectedQ?.type as PageType)) {
+      const themeObjKey = getSurveyThemeKeyFromPageType(selectedQ?.type);
+      if (
+        !_.isEqual(
+          survey?.webSurveyPagesTheme[themeObjKey],
+          surveyThemeContextProviderValueRef.current[themeObjKey],
+        )
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }, [
+    surveyThemeContextValue,
+    survey,
+    themeSelectorState,
+    selectedQ,
+    activeTab,
+    surveyThemeContextProviderValueRef.current,
+  ]);
 
   useEffect(() => {
     if (uniquePages.includes(selectedQ?.type as PageType)) {
@@ -183,11 +223,21 @@ export function EditSurvey({
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    setFunToRunBeforeSurveyIdPageHeaderTabsChange(() => {
+      return checkForUnsavedChanges;
+    });
+    return () => {
+      setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
+    };
+  }, [checkForUnsavedChanges, setFunToRunBeforeSurveyIdPageHeaderTabsChange]);
+
   return (
     <SurveyThemeContextProvider
       surveyTheme={surveyThemeContextValue}
       selectedPageTab={selectedSurveyThemeTab}
       editSurveySelectedQuestion={selectedQ}
+      surveyThemeContextProviderValueRef={surveyThemeContextProviderValueRef}
     >
       <Flex className={styles["edit-survey-div"]}>
         <LayoutGroup>
@@ -201,6 +251,7 @@ export function EditSurvey({
                 selectedQ={selectedQ}
                 setSelectedQ={setSelectedQ}
                 setActiveTab={setActiveTab}
+                activeTab={activeTab}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
                 addQnTrigger={addQnTrigger}
@@ -210,6 +261,7 @@ export function EditSurvey({
                 setSurveyThemeContextValue={setSurveyThemeContextValue}
                 setSelectedSurveyThemeTab={setSelectedSurveyThemeTab}
                 setThemeSelectorState={setThemeSelectorState}
+                checkForUnsavedChanges={checkForUnsavedChanges}
               />
             </Box>
           </motion.div>
@@ -329,6 +381,7 @@ export function EditSurvey({
                       key={surveyPreviewCompKey}
                       survey={survey}
                       isSurveyThemeEditView={true}
+                      onEditPageBtnClick={openStylesEditorDrawer}
                     />
                   )}
 
@@ -371,9 +424,6 @@ export function EditSurvey({
                     themeObjBeingEdited={themeObjBeingEdited}
                     onClose={() => {
                       closeStylesEditorDrawer();
-                      if (activeTab === QuestionTabsEnum.SurveyPreview) {
-                        setActiveTab(QuestionTabsEnum.None);
-                      }
                     }}
                     allThemesArr={allThemesArr}
                     themeSelectorState={themeSelectorState}

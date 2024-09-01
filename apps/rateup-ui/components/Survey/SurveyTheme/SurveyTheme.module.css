@@ -61,6 +61,10 @@
   padding: 0.5rem 1rem;
 }
 
+.theme-preview-container .edit-preview-edit-page-theme-btn {
+  right: 3.5rem;
+}
+
 .survey-theme-preview-tab-panels-root {
   height: 100%;
 }
