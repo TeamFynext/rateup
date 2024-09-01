@@ -2,58 +2,30 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/dist/client/components/navigation";
 import { useRouter } from "next/router";
 
-import {
-  Box,
-  Center,
-  Container,
-  Loader,
-  ScrollArea,
-  Stack,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
+import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useBeforeUnload } from "react-use";
 
-import Page from "@/pages/admin";
-
-import {
-  getInvoicesByPhNo,
-  Invoice,
-} from "../../../../backend/surveys/survey.api";
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
 import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
-import QuestionCountContext from "../../../../context/QuestionCountContext";
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import { SurveyContextProvider } from "../../../../context/SurveyObjContext";
 import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeContext";
-import {
-  LogicAction,
-  PageType,
-  QuestionType as Q,
-  QuestionType,
-} from "../../../../types/enums";
+import { LogicAction, PageType, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
-import { INTERNAL_ERROR2 } from "../../../../utils/constants";
 import { encryptResponse } from "../../../../utils/encryption";
 import { lexend } from "../../../../utils/fonts";
 import { showErrorToast } from "../../../../utils/notifications";
-import { getRandomGift, MIN_GIFT_AMOUNT } from "../../../../utils/survey/gift";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
-import { validateQuestion } from "../../../../utils/validation";
-import RateupLoader from "../../../Loaders/RateupLoader";
-import GiftModal from "../../Gift/GiftModal";
 import CustomHTML from "../../Page/Previews/CustomHTML";
 import {
   useIsSurveyThemeEditView,
   useIsSurveyThemePreview,
 } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
-import { SurveyTheme } from "../../SurveyTheme/surveyTheme.types";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
-import NextBtn from "./NextBtn";
 import NextBtnForSurveyThemeEditPreview from "./NextBtnForSurveyThemeEditView";
 import NextPrev from "./NextPrev";
 import QuestionDesc from "./QuestionDesc";
@@ -63,11 +35,19 @@ import styles from "./TakeSurvey.module.css";
 import {
   checkGoogleReviewForQuestion,
   checkRaiseTicketIssueQuestion,
+  getFirstQuestion,
+  getLastQuestion,
+  getQuestionsLength,
   submitSurvey,
-  validateResponse,
 } from "./util";
 
-function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
+function TakeSurvey({
+  survey,
+  setIsReviewPage,
+  fromShortUrl = false,
+  setIsThankyouPage = null,
+  setIsDefaultThankyouPage = null,
+}) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
@@ -76,46 +56,33 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const searchParams = useSearchParams();
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const [giftLoading, setGiftLoading] = useState(false);
 
   const surveyTeamMapId = survey.surveyTeamMapId;
   useBeforeUnload(true, "Your inputs are not submitted yet, are you sure?");
 
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
-  const [isWelcomePageEnabled, setIsWelcomePageEnabled] = useState(
-    survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
-  );
+
   const [isThankYouPageEnabled, setIsThankYouPageEnabled] = useState(
     survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
   );
-  const [isLanguagePageEnabled, setIsLanguagePageEnabled] = useState(
-    survey?.questions?.some((q) => q.type === PageType.Language) || false,
-  );
-
-  const [isGoogleReviewPageEnabled, setIsGoogleReviewPageEnabled] = useState(
-    survey?.questions?.some((q) => q.type === PageType.GoogleReview) || false,
-  );
 
   const [selectedQ, setSelectedQ] = useState<Question>(null);
-  const [QnNo, setQnNo] = useState(1);
-  const [invoiceList, setInvoiceList] = useState<Invoice[]>([]);
   const [
     isConfirmResponsesModalOpen,
     { open: openConfirmationResponsesModal, close: closeConfirmResponsesModal },
   ] = useDisclosure(false);
-  const [opened, { toggle, close }] = useDisclosure(false);
+
+  // Questions Array length without PageType Questions(excluding Custom Page type question).
+  const questionsLength = getQuestionsLength(survey);
 
   // used for animation of question change in Question AnimationPresence below.
   const [aPDirection, setApDirection] = useState(0);
 
-  const theme = useMantineTheme();
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
   }>(undefined);
 
-  const { setQuestionCount, setCurrentQuestionNo, questionCount } =
-    useContext(QuestionCountContext);
   const updateCompleted = useUpdateCompletedMutation(survey?.id);
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
@@ -128,45 +95,21 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
   const router = useRouter();
 
-  const [pageSwitchTransition, setPageSwitchTransition] = useState<
-    "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut"
-  >("bottomSlideIn");
-
-  const formMaxHeight = smallScreen ? "calc(100dvh - 10.9375rem)" : `70dvh`;
-
   useEffect(() => {
-    setIsWelcomePageEnabled(
-      survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
-    );
     setIsThankYouPageEnabled(
       survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
     );
-    setIsLanguagePageEnabled(survey?.languages?.length > 1 || false);
-    setQuestionCount(survey?.questions?.length);
   }, [survey?.questions]);
 
   useEffect(() => {
     if (survey?.questions?.length > 0 && selectedQ === null) {
-      if (isWelcomePageEnabled && isLanguagePageEnabled) {
-        setSelectedQ(survey.questions[2]);
-        questionsHistoryHandlers.append(survey.questions[2]?.id);
-      } else if (isWelcomePageEnabled || isLanguagePageEnabled) {
-        setSelectedQ(survey.questions[1]);
-        questionsHistoryHandlers.append(survey.questions[1]?.id);
-      } else {
-        setSelectedQ(survey.questions[0]);
-        questionsHistoryHandlers.append(survey.questions[0]?.id);
+      const firstQuestion = getFirstQuestion(survey);
+      if (firstQuestion) {
+        setSelectedQ(firstQuestion);
+        questionsHistoryHandlers.append(firstQuestion?.id);
       }
     }
-  }, [isWelcomePageEnabled, survey?.questions]);
-
-  useEffect(() => {
-    const index = survey?.questions?.findIndex(
-      (question) => question?.id === selectedQ?.id,
-    );
-    setQnNo(index + 1);
-    setCurrentQuestionNo(index + 1);
-  }, [selectedQ, survey]);
+  }, [survey?.questions]);
 
   // Getting location coordinates
   // TODO: fetching location is very slow. Plan what to do when user finishes survey before location is fetched
@@ -229,7 +172,7 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const errorTextDivRef = useRef(null);
 
-  if (!survey?.questions?.length) {
+  if (!questionsLength) {
     return (
       <Center style={{ height: "100vh" }}>
         <Text fw={500}>No Questions found!</Text>
@@ -246,7 +189,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
 
   const goTo = (question: Question) => {
     setSelectedQ(question);
-    setPageSwitchTransition("bottomSlideIn");
     questionsHistoryHandlers.append(question.id);
     setApDirection(1);
   };
@@ -254,27 +196,21 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   const goBack = () => {
     const prevQId = questionsHistory[questionsHistory.length - 2];
     setSelectedQ(survey.questions.find((q) => q.id === prevQId));
-    setPageSwitchTransition("bottomSlideOut");
     questionsHistoryHandlers.pop();
     setApDirection(-1);
   };
 
   const handleNext = (response: any) => {
     const currentResponse_ = response ? response : currentResponse;
-    let questionsLength = survey.questions.length;
+    const lastQuestion = getLastQuestion(survey);
+    const isLastQuestion = selectedQ?.id === lastQuestion?.id;
 
-    if (!isThankYouPageEnabled && !isGoogleReviewPageEnabled) {
-      questionsLength = survey?.questions?.length - 1;
-    } else if (isThankYouPageEnabled && isGoogleReviewPageEnabled) {
-      questionsLength = survey?.questions?.length - 3;
-    } else if (isThankYouPageEnabled || isGoogleReviewPageEnabled) {
-      questionsLength = survey?.questions?.length - 2;
-    }
+    const selectedQuestionIndex = survey.questions.findIndex(
+      (Q) => selectedQ.id === Q.id,
+    );
+    if (selectedQuestionIndex === -1) throw new Error("Question not found"); // this should never happen
 
-    const index = survey.questions.findIndex((Q) => selectedQ.id === Q.id);
-    if (index === -1) throw new Error("Question not found"); // this should never happen
-
-    if (index < questionsLength) {
+    if (!isLastQuestion) {
       // Not last question
       // Checking for logic jump
       const action = parseLogicAction(
@@ -293,18 +229,27 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         } else {
           // Action is a question id
           const nextQ = survey.questions.find((q) => q.id === action);
-          if (!nextQ) {
-            // quietly go to next question
+          if (nextQ) {
+            if (
+              nextQ.type === PageType.GoogleReview ||
+              nextQ.type === PageType.ThankYou
+            ) {
+              try {
+                finishSurvey(nextQ.type);
+              } catch (error) {
+                showErrorToast(error?.message?.toString());
+              }
+            }
+            goTo(nextQ);
+            return;
+          } else {
             console.error(
               "Question not found. Invalid logic jump. Going to next question",
             );
-          } else {
-            goTo(nextQ);
-            return;
           }
         }
       }
-      goTo(survey.questions[index + 1]);
+      goTo(survey.questions[selectedQuestionIndex + 1]);
     } else {
       // Survey completed
       openConfirmationModal();
@@ -312,44 +257,38 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
   };
 
   async function openConfirmationModal() {
-    if (survey.skipPreview) {
-      //TODO REMOVE LATER: MYG GIFT VISHU
+    if (survey.skipPreview || isSurveyThemePreview) {
       try {
-        if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
-          const contactRes = responsesRef.current?.find(
-            (data) => data.type === QuestionType.Contact,
-          );
-          setGiftLoading(true);
-
-          const res = await getInvoicesByPhNo(
-            contactRes?.response?.Contact?.phone?.substring(3),
-          );
-          setInvoiceList(res);
-          toggle();
-        } else {
-          finishSurvey();
-        }
+        finishSurvey();
       } catch (error) {
         showErrorToast(error?.message?.toString());
-      } finally {
-        setGiftLoading(false);
       }
     } else {
       openConfirmationResponsesModal();
     }
   }
 
-  const finishSurvey = async (image = "", price = 0, error = "") => {
-    setIsSavingResponses(true);
+  const finishSurvey = async (pageType = "") => {
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
-    let shouldShowGoogleReview = checkGoogleReviewForQuestion(
-      survey?.questions,
-      responsesRef.current,
-    );
+    const shouldShowGoogleReview =
+      pageType === PageType.GoogleReview ||
+      checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
     let shouldRaiseTicket = checkRaiseTicketIssueQuestion(
       survey?.questions,
       responsesRef.current,
     );
+
+    // This If Condition is for survey preview in survey editor.
+    if (isSurveyThemePreview) {
+      shouldShowGoogleReview && !(pageType === PageType.ThankYou)
+        ? setIsReviewPage(selectedLanguage)
+        : isThankYouPageEnabled
+          ? setIsThankyouPage?.(true)
+          : setIsDefaultThankyouPage?.(true);
+      return;
+    }
+
+    setIsSavingResponses(true);
 
     let checkUniqueDevice = survey?.uniqueDeviceResponse;
 
@@ -380,21 +319,9 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
         updateCompleted.mutate(surveyTeamMapId);
         let kioskMode = survey?.kioskMode ? "y" : "n";
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
-        //TODO REMOVE LATER: MYG GIFT VISHU
-        if (survey.id === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
-          const giftRes = responsesRef.current?.findLast(
-            (data) => data.type === QuestionType.WinItem,
-          );
-          const encodedString = encodeURIComponent(
-            `?name=${giftRes?.response?.Win_item ?? ""}&image=${image ?? ""}&error=${error ?? ""}&price=${price ?? 0}`,
-          );
-          const gift = btoa(encodedString);
-          router.push(`/ws/${router.query.shortId}/end?gift=${gift}`);
-          return;
-        }
-        shouldShowGoogleReview
-          ? //  ? router.push(`${surveyId}/review-us-on-google`)  //TODO remove after testing
-            setIsReviewPage(selectedLanguage)
+
+        shouldShowGoogleReview && !(pageType === PageType.ThankYou)
+          ? setIsReviewPage(selectedLanguage)
           : isThankYouPageEnabled
             ? fromShortUrl
               ? router.push(`/ws/${router.query.shortId}/end`)
@@ -436,39 +363,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
       handlers.setItem(index, formattedResponse);
     }
   };
-  const handleInvoiceSubmit = ({
-    id,
-    price,
-    redeem,
-  }: {
-    id: string;
-    price: number;
-    redeem: boolean;
-  }) => {
-    if (!id || redeem || price < MIN_GIFT_AMOUNT) return;
-    const gift = getRandomGift(price);
-    if (gift) {
-      responsesRef.current.push({
-        questionId: "win_item",
-        response: {
-          Win_item: gift.name,
-          invoice_id: id,
-        },
-        type: QuestionType.WinItem,
-      });
-      finishSurvey(gift.image, price);
-    } else {
-      responsesRef.current.push({
-        questionId: "win_item",
-        response: {
-          Win_item: "Not eligible",
-          invoice_id: id,
-        },
-        type: QuestionType.WinItem,
-      });
-      finishSurvey("", 0, INTERNAL_ERROR2);
-    }
-  };
 
   return (
     <CurrentResponsesContext.Provider
@@ -481,10 +375,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
               nextFn={handleNext}
               prevFn={handlePrev}
               survey={survey}
-              isWelcomePageEnabled={isWelcomePageEnabled}
-              isLanguagePageEnabled={isLanguagePageEnabled}
-              isThankYouPageEnabled={isThankYouPageEnabled}
-              isGoogleReviewPageEnabled={isGoogleReviewPageEnabled}
             >
               <Container
                 size={"md"}
@@ -503,12 +393,6 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     finishSurvey={finishSurvey}
                     isSavingResponses={isSavingResponses}
                     largeScreen={largeScreen}
-                  />
-                  <GiftModal
-                    close={close}
-                    invoiceList={invoiceList}
-                    opened={opened}
-                    handleInvoiceSubmit={handleInvoiceSubmit}
                   />
 
                   <AnimatePresence initial={false}>
@@ -602,25 +486,19 @@ function TakeSurvey({ survey, setIsReviewPage, fromShortUrl = false }) {
                     <NextPrev
                       next={handleNext}
                       prev={handlePrev}
-                      num={QnNo}
-                      total={questionCount}
                       survey={survey}
+                      questionsLength={questionsLength}
                       surveyThemeData={surveyThemeData}
-                      isSavingResponses={isSavingResponses || giftLoading}
+                      isSavingResponses={isSavingResponses}
                       errorTextDivRef={errorTextDivRef}
                       isSurveyThemePreview={isSurveyThemePreview}
                     />
                   ) : (
                     <NextBtnForSurveyThemeEditPreview
-                      next={handleNext}
-                      prev={handlePrev}
-                      num={QnNo}
-                      total={questionCount}
                       survey={survey}
                       surveyThemeData={surveyThemeData}
-                      isSavingResponses={isSavingResponses || giftLoading}
+                      isSavingResponses={isSavingResponses}
                       errorTextDivRef={errorTextDivRef}
-                      isSurveyThemePreview={isSurveyThemePreview}
                     />
                   )}
                 </Stack>

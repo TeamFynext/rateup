@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -17,13 +17,13 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 
 import { PageType } from "@/types/enums";
+import { getQuestionsLength } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util";
 
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
   useVerifySurveyPwdMutation,
 } from "../../../backend/surveys/surveys.query";
-import QuestionCountContext from "../../../context/QuestionCountContext";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { CreditsCard } from "../../Card/CreditsCard";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
@@ -40,6 +40,7 @@ import { getBgImgAndBgColor } from "./utils";
 
 export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
+  const pagesThemeData = survey?.webSurveyPagesTheme;
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
@@ -62,8 +63,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
   );
   const [startClicked, setStartClicked] = useState<boolean>(start || false);
-  const [questionCount, setQuestionCount] = useState(0);
-  const [currentQuestionNo, setCurrentQuestionNo] = useState(0);
+
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
   const updateVisited = useUpdateVisitedMutation(survey?.id);
@@ -138,19 +138,22 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     !selectedLanguage &&
     survey?.languages?.length > 1 &&
     !isSurveyThemeEditView;
-  const isWelcomeThemeActive = !startClicked;
+  const isWelcomePageActive = !startClicked && isWelcomePageEnabled;
   const useSurveyBackground =
-    isWelcomeThemeActive &&
-    surveyThemeData["welcomeTheme"].bg.useSurveyBackground;
+    isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
   let requiredSurveyThemeObjKey = "surveyTheme";
-  if (!isSurveyThemePreview && isWelcomeThemeActive && !useSurveyBackground)
+  let requiredThemeData = surveyThemeData;
+  if (isWelcomePageActive && !useSurveyBackground) {
     requiredSurveyThemeObjKey = "welcomeTheme";
+    requiredThemeData = pagesThemeData;
+  }
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyThemeData,
+    requiredThemeData,
     requiredSurveyThemeObjKey,
     isMobile,
   );
+
   const isUnsplashImage = backgroundImageSrc?.startsWith(
     "https://images.unsplash.com",
   );
@@ -167,6 +170,14 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   };
 
   const questionsArr = survey?.questions;
+
+  if (!getQuestionsLength(survey)) {
+    return (
+      <Center style={{ height: "100vh" }}>
+        <Text fw={500}>No Questions found!</Text>
+      </Center>
+    );
+  }
 
   return (
     <MantineProvider
@@ -185,159 +196,153 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
         primaryColor: "primaryColor",
       }}
     >
-      <QuestionCountContext.Provider
-        value={{
-          questionCount,
-          currentQuestionNo,
-          setQuestionCount,
-          setCurrentQuestionNo,
+      <FormModalLayout
+        opened={opened}
+        onClose={close}
+        title={"Survey Login"}
+        centered
+        onSubmit={() => {
+          notifications.show({
+            id: "load-data",
+            loading: true,
+            title: "Verifying Password..",
+            message: `Hold on, your access is getting verified.`,
+            autoClose: false,
+            withCloseButton: false,
+          });
+          verifySurveyPassword.mutate();
         }}
+        buttonTitle={"Login"}
+        submitBtnColor={"var(--tertiary-color)"}
       >
-        <FormModalLayout
-          opened={opened}
-          onClose={close}
-          title={"Survey Login"}
-          centered
-          onSubmit={() => {
-            notifications.show({
-              id: "load-data",
-              loading: true,
-              title: "Verifying Password..",
-              message: `Hold on, your access is getting verified.`,
-              autoClose: false,
-              withCloseButton: false,
-            });
-            verifySurveyPassword.mutate();
-          }}
-          buttonTitle={"Login"}
-          submitBtnColor={"var(--tertiary-color)"}
-        >
-          <Text mt="lg" size="sm" c="gray">
-            Hey Welcome , <br /> You need to enter password to continue.
-          </Text>
-          <Space h="lg" />
-          <ContainedPasswordInput
-            required
-            label="Password"
-            placeholder="Enter survey password"
-            onChange={(event) => setPasswordInput(event?.target?.value)}
-            my="lg"
-          />
-        </FormModalLayout>
+        <Text mt="lg" size="sm" c="gray">
+          Hey Welcome , <br /> You need to enter password to continue.
+        </Text>
+        <Space h="lg" />
+        <ContainedPasswordInput
+          required
+          label="Password"
+          placeholder="Enter survey password"
+          onChange={(event) => setPasswordInput(event?.target?.value)}
+          my="lg"
+        />
+      </FormModalLayout>
 
-        <Stack
-          className={`${styles["take-survey-layout-web-root-div"]} take-survey-layout-web-root-div`}
-          w={"100%"}
-          // mih={"100dvh"}
-          style={{ backgroundColor }}
+      <Stack
+        className={`${styles["take-survey-layout-web-root-div"]} take-survey-layout-web-root-div`}
+        w={"100%"}
+        // mih={"100dvh"}
+        style={{ backgroundColor }}
+      >
+        <CreditsCard
+          enableCredits={isUnsplashImage && !isLanguagePageActive}
+          url={backgroundImageSrc}
         >
-          <CreditsCard
-            enableCredits={isUnsplashImage && !isLanguagePageActive}
-            url={backgroundImageSrc}
+          <BackgroundImage
+            h={"100%"}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              objectFit: "contain",
+            }}
+            src={backgroundImageSrc}
           >
-            <BackgroundImage
-              h={"100%"}
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                objectFit: "contain",
-              }}
-              src={backgroundImageSrc}
+            {/* .........Survey Header Section.......... */}
+            {survey?.isPublished == true &&
+              !isLanguagePageActive &&
+              startClicked && (
+                <Box className={styles["logo-container"]}>
+                  {orgLogoSrc && (
+                    <Image
+                      src={orgLogoSrc}
+                      alt="Logo"
+                      style={{ ...orgLogoStyles }}
+                      mah={100}
+                      maw={100}
+                      fit="contain"
+                    />
+                  )}
+                </Box>
+              )}
+
+            <Paper
+              pt="-50px"
+              radius={0}
+              bg="transparent"
+              style={{ padding: 0, margin: 0, flex: 1 }}
+              display={"flex"}
             >
-              {/* .........Survey Header Section.......... */}
-              {survey?.isPublished == true &&
-                !isLanguagePageActive &&
-                startClicked && (
-                  <Box className={styles["logo-container"]}>
-                    {orgLogoSrc && (
-                      <Image
-                        src={orgLogoSrc}
-                        alt="Logo"
-                        style={{ ...orgLogoStyles }}
-                        mah={100}
-                        maw={100}
-                        fit="contain"
-                      />
-                    )}
-                  </Box>
-                )}
-
-              <Paper
-                pt="-50px"
-                radius={0}
-                bg="transparent"
-                style={{ padding: 0, margin: 0, flex: 1 }}
-                display={"flex"}
-              >
-                {(survey?.isPublished && survey?.active) ||
-                isSurveyThemePreview ? (
-                  survey?.isProtected &&
-                  !isPasswordVerified &&
-                  !isSurveyThemePreview ? null : (
-                    <Paper
-                      radius={0}
-                      w={"100%"}
-                      bg={"transparent"}
-                      style={{ overflow: "hidden" }}
-                    >
-                      {startClicked &&
-                        (isLanguagePageActive ? (
-                          <LanguageSelectionPage
-                            languages={survey?.languages}
-                            setSelectedLanguage={setSelectedLanguage}
-                            surveyThemeData={surveyThemeData}
-                            questionsArr={questionsArr}
-                          />
-                        ) : (
-                          selectedLanguage && (
-                            <SelectedLanguageContext.Provider
-                              value={{
-                                selectedLanguage,
-                                defaultLanguage: survey?.languages[0],
-                              }}
-                            >
-                              {children}
-                            </SelectedLanguageContext.Provider>
-                          )
-                        ))}
-
-                      {isWelcomePageEnabled && !startClicked && (
-                        <WelcomePage
-                          surveyThemeData={surveyThemeData?.welcomeTheme}
-                          onStart={handleStartClick}
-                          largeScreen={largeScreen}
-                          orgLogoSrc={orgLogoSrc}
-                          orgLogoStyles={orgLogoStyles}
+              {(survey?.isPublished && survey?.active) ||
+              isSurveyThemePreview ? (
+                survey?.isProtected &&
+                !isPasswordVerified &&
+                !isSurveyThemePreview ? null : (
+                  <Paper
+                    radius={0}
+                    w={"100%"}
+                    bg={"transparent"}
+                    style={{ overflow: "hidden" }}
+                  >
+                    {startClicked &&
+                      (isLanguagePageActive ? (
+                        <LanguageSelectionPage
+                          languages={survey?.languages}
+                          setSelectedLanguage={setSelectedLanguage}
+                          pagesThemeData={pagesThemeData}
+                          surveyThemeData={surveyThemeData}
                           questionsArr={questionsArr}
                         />
-                      )}
-                    </Paper>
-                  )
-                ) : (
-                  <Center style={{ flex: 1 }}>
-                    {(survey?.isPublished !== true || !survey?.active) && (
-                      <Group align="center" justify="center">
-                        <Image
-                          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
-                          alt="Logo"
-                          w={isMobile ? 70 : 80}
-                          h={isMobile ? 70 : 80}
-                          fit={"contain"}
-                        />
-                        <Text c="#CDCDCD" fw={"bold"} fz={28}>
-                          Survey is not available..!
-                        </Text>
-                      </Group>
+                      ) : (
+                        selectedLanguage && (
+                          <SelectedLanguageContext.Provider
+                            value={{
+                              selectedLanguage,
+                              defaultLanguage: survey?.languages[0],
+                            }}
+                          >
+                            {children}
+                          </SelectedLanguageContext.Provider>
+                        )
+                      ))}
+
+                    {isWelcomePageEnabled && !startClicked && (
+                      <WelcomePage
+                        surveyThemeData={surveyThemeData}
+                        pagesThemeData={pagesThemeData}
+                        onStart={handleStartClick}
+                        largeScreen={largeScreen}
+                        orgLogoSrc={orgLogoSrc}
+                        orgLogoStyles={orgLogoStyles}
+                        questionsArr={questionsArr}
+                        isMobile={isMobile}
+                      />
                     )}
-                  </Center>
-                )}
-              </Paper>
-            </BackgroundImage>
-          </CreditsCard>
-        </Stack>
-      </QuestionCountContext.Provider>
+                  </Paper>
+                )
+              ) : (
+                <Center style={{ flex: 1 }}>
+                  {(survey?.isPublished !== true || !survey?.active) && (
+                    <Group align="center" justify="center">
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/bw-logo.png`}
+                        alt="Logo"
+                        w={isMobile ? 70 : 80}
+                        h={isMobile ? 70 : 80}
+                        fit={"contain"}
+                      />
+                      <Text c="#CDCDCD" fw={"bold"} fz={28}>
+                        Survey is not available..!
+                      </Text>
+                    </Group>
+                  )}
+                </Center>
+              )}
+            </Paper>
+          </BackgroundImage>
+        </CreditsCard>
+      </Stack>
     </MantineProvider>
   );
 };

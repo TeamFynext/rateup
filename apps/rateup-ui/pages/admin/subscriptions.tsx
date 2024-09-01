@@ -1,20 +1,22 @@
+import { useState } from "react";
+
+import { CloseButton, Flex, Group, Input, Skeleton } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconSearch } from "@tabler/icons-react";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import dayjs from "dayjs";
+
+import { useRateupPaymentsPlans } from "../../backend/payment/payment.query";
 import {
   useAllSubscriptions,
   useUpdateSubscriptionMutation,
 } from "../../backend/subscription/subscription.query";
-import dayjs from "dayjs";
-import { CloseButton, Flex, Group, Input, Skeleton } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { SubscriptionEditorModal } from "../../components/adminPanel/Subscription/SubscriptionEditorModal";
-import { FeatureBadge } from "../../components/adminPanel/Subscription/FeatureBadge";
-import { SubscriptionFeaturePathName } from "../../types/enums";
 import styles from "../../components/adminPanel/admin.module.css";
-import { useRateupPaymentsPlans } from "../../backend/payment/payment.query";
-import { useState } from "react";
-import ConfirmationModal from "../../components/Modal/ConfirmationModal";
-import { IconSearch } from "@tabler/icons-react";
+import { FeatureBadge } from "../../components/adminPanel/Subscription/FeatureBadge";
+import { SubscriptionEditorModal } from "../../components/adminPanel/Subscription/SubscriptionEditorModal";
 import RefreshButton from "../../components/Button/RefreshButton";
+import ConfirmationModal from "../../components/Modal/ConfirmationModal";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export default function () {
   const {
@@ -154,7 +156,7 @@ export default function () {
 }
 
 export function renderFeatures(params: GridRenderCellParams<any, any>) {
-  const subscription = params.value;
+  const subscription = params.value; //rateup plan in admin/rateup
   const features = subscription.features;
   const [opened, { open, close }] = useDisclosure(false);
   return (

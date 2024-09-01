@@ -22,6 +22,7 @@ export const getServerSideProps = async (context) => {
       kioskMode,
       redirect,
       webSurveyTheme: { theme: surveyThemeData },
+      webSurveyPagesTheme: pagesThemeData,
       questions,
     } = await getPublicSurvey(shortId);
 
@@ -42,6 +43,7 @@ export const getServerSideProps = async (context) => {
         kioskMode: kioskMode ? "y" : "n",
         redirect,
         surveyThemeData,
+        pagesThemeData,
         gift: {
           name,
           image,
@@ -71,6 +73,7 @@ function End({
   surveyId,
   redirect,
   surveyThemeData,
+  pagesThemeData,
   titleText,
   subtitleText,
 }) {
@@ -81,6 +84,7 @@ function End({
       surveyIdValue={surveyId}
       fromShortUrl={true}
       surveyThemeData={surveyThemeData}
+      pagesThemeData={pagesThemeData}
       titleText={titleText}
       subtitleText={subtitleText}
     />

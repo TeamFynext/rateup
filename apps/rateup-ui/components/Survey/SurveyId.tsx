@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { MantineProvider, Portal } from "@mantine/core";
+import { MantineProvider, Portal, Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
 
-import { useSubscription } from "../../backend/subscription/subscription.query";
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
   useGetSurveyVariables,
@@ -68,18 +69,57 @@ export default function SurveyID(translations) {
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
 
+  const [
+    funToRunBeforeSurveyIdPageHeaderTabsChange,
+    setFunToRunBeforeSurveyIdPageHeaderTabsChange,
+  ] = useState(null);
+
   const { navOpened, setNavOpened } = useNavControlContext();
+
+  const handleTabChange = useCallback(
+    (value) => {
+      const haveUnsavedChanges = funToRunBeforeSurveyIdPageHeaderTabsChange?.();
+      if (haveUnsavedChanges) {
+        modals.openConfirmModal({
+          title: "Discard unsaved changes?",
+          children: (
+            <Text className={modalStyles["are-you-sure-text"]}>
+              Are you sure, you want to discard unsaved changes?
+            </Text>
+          ),
+          labels: { confirm: "Discard", cancel: "Cancel" },
+          className: modalStyles["delete-confirmation-modal"],
+          centered: true,
+          classNames: {
+            header: modalStyles["modal-header"],
+            body: modalStyles["modal-body"],
+            content: modalStyles["modal-content"],
+          },
+          onConfirm: () => {
+            setActiveTab(value);
+            setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
+          },
+        });
+        return;
+      }
+      setActiveTab(value);
+      setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
+    },
+    [funToRunBeforeSurveyIdPageHeaderTabsChange],
+  );
 
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
       setActiveTab(TabEnum.Result);
     }
   }, [survey]);
+
   useEffect(() => {
     if (tab && Object.values(TabEnum).includes(tab as any)) {
       setActiveTab(tab as any);
     }
   }, [tab]);
+
   useEffect(() => {
     if (survey) {
       if (activeTab !== TabEnum.Result) {
@@ -101,9 +141,6 @@ export default function SurveyID(translations) {
   useEffect(() => {
     teamOptions && setSelectedTeamId(teamOptions[0]?.value);
   }, [teamOptions]);
-  const multiSelectOptions = survey?.teams?.map((team) => {
-    return { value: team?.mapId, label: team?.name };
-  });
 
   useEffect(() => {
     if (selectedTeamId) {
@@ -119,6 +156,7 @@ export default function SurveyID(translations) {
   const savedEncryptionPassword = getFromSessionStorage(
     `${survey?.id}_ete_passkey`,
   );
+
   useEffect(() => {
     if (savedEncryptionPassword) {
       setEncryptionPassword(savedEncryptionPassword);
@@ -135,9 +173,11 @@ export default function SurveyID(translations) {
 
   if (isLoading || isSurveyLoading || !activeTab)
     return <RateupLoader h={"80dvh"} />;
+
   if (error || surveyError) {
     return <p>An error has occurred</p>;
   }
+
   return (
     <MantineProvider
       theme={survey?.type === SurveyType.WhatsApp ? whatsappTheme : undefined}
@@ -162,7 +202,7 @@ export default function SurveyID(translations) {
           >
             {user?.role !== UserRole.MEMBER && (
               <Portal target={"#tabs-container-entity-editor-tabs"}>
-                <TabsListComp value={activeTab} onChange={setActiveTab} />
+                <TabsListComp value={activeTab} onChange={handleTabChange} />
               </Portal>
             )}
 
@@ -178,6 +218,9 @@ export default function SurveyID(translations) {
               setEncryptionPassword={setEncryptionPassword}
               translations={translations}
               setActiveTab={setActiveTab}
+              setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+                setFunToRunBeforeSurveyIdPageHeaderTabsChange
+              }
             />
           </SurveyContext.Provider>
         </SelectedLanguageContext.Provider>

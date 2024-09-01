@@ -1,10 +1,11 @@
-import { QuestionType } from "../../../types/enums";
+import { PageType, QuestionType } from "../../../types/enums";
 import BackgroundStyles from "./components/BackgroundStyles";
 import ButtonStyles from "./components/ButtonStyles";
 import DescStyles from "./components/DescStyles";
 import HeaderStyles from "./components/HeaderStyles";
 import InputStyles from "./components/InputStyles";
 import LogoStyles from "./components/LogoStyles";
+import { ThemeTabEnum } from "./SurveyTheme.enums";
 
 export const dummyImage =
   "https://www.freeiconspng.com/uploads/no-image-icon-4.png";
@@ -208,5 +209,33 @@ export const getSurveyThemeKeyOf = (selectedPageTab) => {
       return "thankyouTheme";
     case "languagePage":
       return "languageTheme";
+  }
+};
+
+export const getSurveyThemeTabValueFromPageType = (pageType) => {
+  switch (pageType) {
+    case PageType.Welcome: {
+      return ThemeTabEnum.WELCOME;
+    }
+    case PageType.Language: {
+      return ThemeTabEnum.LANGUAGE;
+    }
+    case PageType.ThankYou: {
+      return ThemeTabEnum.THANKYOU;
+    }
+  }
+};
+
+export const getSurveyThemeKeyFromPageType = (pageType) => {
+  switch (pageType) {
+    case PageType.Welcome: {
+      return "welcomeTheme";
+    }
+    case PageType.Language: {
+      return "languageTheme";
+    }
+    case PageType.ThankYou: {
+      return "thankyouTheme";
+    }
   }
 };

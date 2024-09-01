@@ -144,7 +144,7 @@ export function DraggableQuestionCard({
                 {extractText(questionTitle)}
               </Text>
 
-              <Group justify={"flex-end"} gap={4} ml={"auto"} miw={70}>
+              <Group justify={"flex-end"} gap={4} ml={"auto"}>
                 {question?.logic?.length && (
                   <Image
                     src={

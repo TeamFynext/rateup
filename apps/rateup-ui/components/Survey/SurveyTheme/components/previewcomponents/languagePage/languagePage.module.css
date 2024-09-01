@@ -28,7 +28,7 @@
 
 .header {
   align-items: stretch;
-  gap: 0.3125rem;
+  gap: 1rem;
 }
 
 .header > div {

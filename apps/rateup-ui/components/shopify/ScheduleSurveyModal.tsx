@@ -151,7 +151,8 @@ const ScheduleSurveyModal = ({
           icon={<IconAlertCircle color="red" />}
           color="red"
         >
-          Register webhooks before scheduling survey
+          Allow rateup to subscribe to your store events in th settings before
+          scheduling survey
         </Alert>
         <TeamSelector
           placeholder="Select Team"

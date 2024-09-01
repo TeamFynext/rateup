@@ -1,9 +1,24 @@
+import { useState } from "react";
+
 import { Box } from "@mantine/core";
 import _ from "lodash";
 
+import { PageType } from "@/types/enums";
+import { usePublicReviewSuggestions } from "@/backend/team/reviewSuggestion/reviewSuggestion.query";
+import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
+import { useUser } from "@/context/UserContext";
+import ThankYou from "@/pages/public/survey/[surveyId]/end";
+import ReviewUsOnGoogle from "@/pages/public/survey/[surveyId]/review-us-on-google";
+import ResponseSubmitted from "@/pages/ws/[shortId]/response-submitted";
+import { surveyUploadsPath } from "@/utils/constants";
+
 import { TakeSurveyLayoutWeb } from "../../../../../Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
 import TakeSurvey from "../../../../TakeSurvey/TakeSurveyComponent";
-import { useSurveyThemeContextValue } from "../../../SurveyThemeContext";
+import { ThemeTabEnum } from "../../../SurveyTheme.enums";
+import {
+  useSelectedPageTab,
+  useSurveyThemeContextValue,
+} from "../../../SurveyThemeContext";
 import IsSurveyThemePreviewContextProvider from "./isSurveyThemePreviewContext";
 import styles from "./SurveyThemePreview.module.css";
 import { editViewQuestionsArr } from "./utils";
@@ -14,11 +29,74 @@ function SurveyThemeView({
   isSurveyThemePreview = true,
   isSurveyThemeEditView = false,
 }) {
+  const selectedPageTab = useSelectedPageTab();
+  const isSurveyPageTabSelected = selectedPageTab === ThemeTabEnum.SURVEY;
+
   const surveyTheme = useSurveyThemeContextValue();
   const surveyCopy = _.cloneDeep(survey);
-  surveyCopy.webSurveyTheme.theme = surveyTheme;
+
+  const userInfo = useUser();
+  const userObj = userInfo?.user;
+  const orgLogo = userObj?.orgLogo;
+  const orgLogoUrl = `${surveyUploadsPath}${orgLogo}`;
+
+  // empty if its not review page, contains surveyLanguage if its review page
+  const [isReviewPage, setIsReviewPage] = useState<string>("");
+
+  const [isThankyouPage, setIsThankyouPage] = useState(false);
+  const [isDefaultThankyouPage, setIsDefaultThankyouPage] = useState(false);
+
+  if (isSurveyPageTabSelected) {
+    surveyCopy.webSurveyTheme.theme = surveyTheme;
+  } else if (!isSurveyPageTabSelected) {
+    surveyCopy.webSurveyPagesTheme = surveyTheme;
+  }
+
   if (isSurveyThemeEditView) {
     surveyCopy.questions = editViewQuestionsArr;
+  }
+
+  let componentToBeRendered = null;
+  if (isReviewPage) {
+    componentToBeRendered = (
+      <GoogleReview
+        googleLink={"https://rateup.app"}
+        isSurveyPreview
+        orgLogoUrl={orgLogo ? `${surveyUploadsPath}${orgLogo}` : ""}
+      />
+    );
+  } else if (isThankyouPage) {
+    const thankyouTypePageQuestionObj = surveyCopy?.questions?.find(
+      (question) => question?.type === PageType.ThankYou,
+    );
+
+    const titleText = thankyouTypePageQuestionObj?.titleText;
+    const subtitleText = thankyouTypePageQuestionObj?.subtitleText;
+
+    componentToBeRendered = (
+      <ThankYou
+        fromShortUrl={true}
+        surveyThemeData={surveyCopy?.webSurveyTheme?.theme}
+        pagesThemeData={surveyCopy?.webSurveyPagesTheme}
+        titleText={titleText}
+        subtitleText={subtitleText}
+        isSurveyPreview={true}
+      />
+    );
+  } else if (isDefaultThankyouPage) {
+    componentToBeRendered = <ResponseSubmitted isSurveyPreview={true} />;
+  } else {
+    componentToBeRendered = (
+      <TakeSurveyLayoutWeb survey={surveyCopy} previewId={previewId}>
+        <TakeSurvey
+          survey={surveyCopy}
+          setIsReviewPage={setIsReviewPage}
+          setIsThankyouPage={setIsThankyouPage}
+          setIsDefaultThankyouPage={setIsDefaultThankyouPage}
+          fromShortUrl={true}
+        />
+      </TakeSurveyLayoutWeb>
+    );
   }
 
   return (
@@ -30,13 +108,7 @@ function SurveyThemeView({
         isSurveyThemePreview={isSurveyThemePreview}
         isSurveyThemeEditView={isSurveyThemeEditView}
       >
-        <TakeSurveyLayoutWeb survey={surveyCopy} previewId={previewId}>
-          <TakeSurvey
-            survey={surveyCopy}
-            setIsReviewPage={false}
-            fromShortUrl={true}
-          />
-        </TakeSurveyLayoutWeb>
+        {componentToBeRendered}
       </IsSurveyThemePreviewContextProvider>
     </Box>
   );

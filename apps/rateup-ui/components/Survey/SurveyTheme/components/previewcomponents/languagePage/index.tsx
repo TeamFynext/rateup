@@ -1,30 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  ActionIcon,
   Box,
   Flex,
   Image,
   MantineProvider,
-  MantineThemeProvider,
   Radio,
   ScrollAreaAutosize,
   Stack,
-  TextInput,
   Tooltip,
 } from "@mantine/core";
-import { IconChevronRight, IconEdit } from "@tabler/icons-react";
+import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput";
 import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
-import { lexend } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 import { SingleSelectCard } from "../../../../TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard";
-import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import surveyThemeStyles from "../../../SurveyTheme.module.css";
 import {
   useEditSurveySelectedQuestion,
@@ -39,6 +34,9 @@ const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
 
 function LanguagePage({ survey }) {
+  const webSurveyPagesTheme = useSurveyThemeContextValue();
+  const surveyThemeObj = survey?.webSurveyTheme?.theme;
+
   const selectedPreview = useSelectedPreview();
   const setOpenEditors = useSetOpenEditors();
 
@@ -46,7 +44,6 @@ function LanguagePage({ survey }) {
   const titleInputRef = useRef(null);
   const startBtnInputRef = useRef(null);
 
-  const surveyThemeObj = useSurveyThemeContextValue();
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const questionUpdateMutation = useQuestionUpdateMutation({
@@ -56,26 +53,38 @@ function LanguagePage({ survey }) {
   const languages = survey.languages;
   const [lang, setLang] = useState(languages[0]);
 
+  const surveyTheme = survey?.webSurveyTheme?.theme?.surveyTheme;
   const {
-    surveyTheme: {
-      logo: { logo: logoUrl, styles: logoStyles },
-    },
-    languageTheme: {
-      bg: { useSurveyBackground = false },
-      title: { styles: titleStyles },
-      subtitle: { styles: subtitleStyles },
-      button: { styles: buttonStyles },
-      input: { primaryColor: inputPrimaryColor },
-    },
-  } = surveyThemeObj;
+    logo: { logo: logoUrl, styles: logoStyles },
+  } = surveyTheme;
 
   const isOrgLogoPresent = logoUrl?.length > 0;
   const isMobile = selectedPreview === "mobile";
+
+  const shouldUseSurveyTheme =
+    webSurveyPagesTheme["languageTheme"]?.useSurveyTheme;
+  const requiredThemeObj = shouldUseSurveyTheme
+    ? surveyThemeObj["surveyTheme"]
+    : webSurveyPagesTheme["languageTheme"];
+
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyThemeObj,
-    useSurveyBackground ? "surveyTheme" : "languageTheme",
+    shouldUseSurveyTheme ? surveyThemeObj : webSurveyPagesTheme,
+    shouldUseSurveyTheme ? "surveyTheme" : "languageTheme",
     isMobile,
   );
+
+  const titleStyles = requiredThemeObj?.title?.styles;
+  let subtitleStyles = requiredThemeObj?.subtitle?.styles;
+  if (!subtitleStyles) {
+    subtitleStyles = {
+      color: titleStyles?.color,
+      fontWeight: "600",
+      fontSize: 20,
+      textAlign: "center",
+    };
+  }
+  const buttonStyles = requiredThemeObj?.button?.styles;
+  const inputPrimaryColor = requiredThemeObj?.input?.primaryColor;
 
   const {
     titleText: title,

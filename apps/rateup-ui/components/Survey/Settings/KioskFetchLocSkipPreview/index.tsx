@@ -1,14 +1,15 @@
 import { Box, Group, Switch, Tooltip } from "@mantine/core";
-import styles from "./KioskFetchLocSkipPreview.module.css";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import { IconInfoCircle } from "@tabler/icons-react";
+
+import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import UniqueDeviceSettings from "../UniqueDeviceSettings";
 import {
   updateGetLocation,
   updateKioskMode,
   updateSkipPreview,
   updatewebSurveyAutoTransitionToNextQues,
 } from "../updateSettings";
-import UniqueDeviceSettings from "../UniqueDeviceSettings";
+import styles from "./KioskFetchLocSkipPreview.module.css";
 
 function KioskFetchLocSkipPreview({
   enabledModules,
@@ -28,9 +29,7 @@ function KioskFetchLocSkipPreview({
   return (
     <>
       {enabledModules.some((data) =>
-        ["kiosk", "location", "preview" || "uniqueDeviceResponse"].includes(
-          data,
-        ),
+        ["kiosk", "location", "preview", "uniqueDeviceResponse"].includes(data),
       ) && (
         <PaperLayout className={`section-div`}>
           {enabledModules.includes("kiosk") && (

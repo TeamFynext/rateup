@@ -8,8 +8,6 @@ import {
   Radio,
   ScrollAreaAutosize,
   Stack,
-  Title,
-  Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
@@ -33,13 +31,17 @@ function LanguageSelectionPage({
   languages,
   setSelectedLanguage,
   surveyThemeData,
+  pagesThemeData,
   questionsArr,
 }) {
   const [lang, setLang] = useState(languages[0]);
   const selectedPreview = useSelectedPreview();
 
-  const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
-  const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
+  const {
+    surveyTheme: {
+      logo: { logo: logoUrl, styles: logoStyles },
+    },
+  } = surveyThemeData;
 
   const defaultTitleSubtitleStartButtonTexts = {
     titleText: "Select a Language",
@@ -52,22 +54,31 @@ function LanguageSelectionPage({
     defaultTitleSubtitleStartButtonTexts;
   const { titleText, subtitleText, startButtonText } = languageTypeQuestionObj;
 
-  const {
-    languageTheme: {
-      bg: { useSurveyBackground = false },
-      title: { styles: titleStyles },
-      subtitle: { styles: subtitleStyles },
-      button: { styles: buttonStyles },
-      input: { primaryColor: inputPrimaryColor },
-    },
-  } = surveyThemeData;
-
-  const isOrgLogoPresent = orgLogoSrc?.length > 0;
+  const isOrgLogoPresent = logoUrl?.length > 0;
   const isMobile =
     useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
+
+  const shouldUseSurveyTheme = pagesThemeData["languageTheme"]?.useSurveyTheme;
+  const requiredThemeObj = shouldUseSurveyTheme
+    ? surveyThemeData["surveyTheme"]
+    : pagesThemeData["languageTheme"];
+
+  const titleStyles = requiredThemeObj?.title?.styles;
+  let subtitleStyles = requiredThemeObj?.subtitle?.styles;
+  if (!subtitleStyles) {
+    subtitleStyles = {
+      color: titleStyles?.color,
+      fontWeight: "600",
+      fontSize: 20,
+      textAlign: "center",
+    };
+  }
+  const buttonStyles = requiredThemeObj?.button?.styles;
+  const inputPrimaryColor = requiredThemeObj?.input?.primaryColor;
+
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyThemeData,
-    useSurveyBackground ? "surveyTheme" : "languageTheme",
+    shouldUseSurveyTheme ? surveyThemeData : pagesThemeData,
+    shouldUseSurveyTheme ? "surveyTheme" : "languageTheme",
     isMobile,
   );
 
@@ -92,8 +103,8 @@ function LanguageSelectionPage({
           <Flex className={cx("logo-container")}>
             <Image
               className={cx("logo")}
-              src={orgLogoSrc}
-              style={orgLogoStyles}
+              src={logoUrl}
+              style={logoStyles}
               fit="contain"
             />
           </Flex>
@@ -113,7 +124,7 @@ function LanguageSelectionPage({
               </p>
             </Stack>
 
-            <Stack className={surveyThemeStylesCx("titleBox")}>
+            <Stack className={surveyThemeStylesCx("titleBox")} align="center">
               <p
                 style={{
                   ...titleStyles,

@@ -8,6 +8,8 @@ export function getIntegrationDisplayName(name) {
       return "Shopify";
     case IntegratedApps.amelia:
       return "Amelia";
+    case IntegratedApps.waPayment:
+      return "Whatsapp Payment";
     default:
       return "Not defined";
   }

@@ -7,6 +7,7 @@ import {
   getAllOrgs,
   getOrgStats,
   getTeamsMembersOfOrg,
+  getWebhookClientSecret,
   IUpdateLogo,
   IUpdateOrgDetails,
   updateOrgDetails,
@@ -148,5 +149,13 @@ export const useUpdateOrgPause = () => {
     onError: () => {
       showErrorToast("Error in updating pause status");
     },
+  });
+};
+
+export const useGetWebhookClientSecret = (webhookUrl) => {
+  return useQuery({
+    queryKey: ["webhookClientSecret"],
+    queryFn: getWebhookClientSecret,
+    enabled: !!webhookUrl,
   });
 };

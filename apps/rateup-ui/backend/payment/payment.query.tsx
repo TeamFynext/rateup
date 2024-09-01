@@ -83,6 +83,7 @@ export function useRateupPaymentsPlanUpdateMutation(close) {
     mutationFn: (data) => updateRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
       notifications.update({
         id: "load-data",
         color: "teal",

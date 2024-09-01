@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   ActionIcon,
   Button,
@@ -9,12 +11,12 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconCopy, IconReload, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
+
 import {
-  useLoyaltyApiKey,
   useCreateLoyaltyApiKey,
-  useRegenerateLoyaltyApiKey,
   useDeleteLoyaltyApiKey,
+  useLoyaltyApiKey,
+  useRegenerateLoyaltyApiKey,
 } from "../../backend/loyalty/apiKey/loyaltyApiKey.query";
 import { useUser } from "../../context/UserContext";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
@@ -132,7 +134,7 @@ export default function ApiAccessKeyPage() {
   );
 }
 
-function ApiCopyButton({ value }) {
+export function ApiCopyButton({ value }) {
   return (
     <CopyButton value={value}>
       {({ copy, copied }) => (

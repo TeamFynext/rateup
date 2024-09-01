@@ -1,4 +1,5 @@
-import { Stack, Group, Avatar, Title, Divider, Text } from "@mantine/core";
+import { Avatar, Divider, Group, Stack, Text, Title } from "@mantine/core";
+
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
 const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
@@ -7,10 +8,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
       <Group justify="space-around">
         <Stack gap={1}>
           <Avatar
-            src={
-              `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}` ??
-              null
-            }
+            src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}`}
             size={"xl"}
           />
           <Title order={4}>{selectedUser?.userName}</Title>
@@ -50,10 +48,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
         <Group justify="space-around">
           <Stack gap={1}>
             <Avatar
-              src={
-                `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.orgLogo}` ??
-                null
-              }
+              src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${selectedUser.orgLogo}`}
               size={"lg"}
             />
             <Title order={5}>{selectedUser?.orgName}</Title>

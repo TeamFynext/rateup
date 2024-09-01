@@ -1,4 +1,4 @@
-import { Box, Overlay, Stack, Tabs } from "@mantine/core";
+import { Box, Stack, Tabs } from "@mantine/core";
 
 import LanguagePageThemeView from "./components/previewcomponents/languagePage";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
@@ -41,6 +41,7 @@ function SurveyThemePreviewLayout({
             classNames={{
               root: styles["survey-theme-preview-tab-panels-root"],
             }}
+            keepMounted={false}
           >
             <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
               <LanguagePageThemeView survey={survey} />

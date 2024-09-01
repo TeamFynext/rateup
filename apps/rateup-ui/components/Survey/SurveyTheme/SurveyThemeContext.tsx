@@ -3,8 +3,6 @@ import { createContext, useContext, useEffect } from "react";
 import { useIsFirstRender } from "@mantine/hooks";
 import { useImmerReducer } from "use-immer";
 
-import { QuestionType } from "@/types/enums";
-
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 import surveyThemeReducer from "./surveyThemeReducer";
 
@@ -26,6 +24,7 @@ function SurveyThemeContextProvider({
   children,
   selectedPageTab = ThemeTabEnum.SURVEY,
   editSurveySelectedQuestion = null,
+  surveyThemeContextProviderValueRef = null,
 }) {
   const isFirstRender = useIsFirstRender();
 
@@ -55,11 +54,12 @@ function SurveyThemeContextProvider({
   }, [state.selectedPageTab]);
 
   useEffect(() => {
-    if (!isFirstRender)
+    if (!isFirstRender) {
       dispatch({
         type: "set-survey-theme",
         payload: surveyTheme,
       });
+    }
   }, [surveyTheme]);
 
   useEffect(() => {
@@ -68,6 +68,10 @@ function SurveyThemeContextProvider({
       payload: selectedPageTab,
     });
   }, [selectedPageTab]);
+
+  useEffect(() => {
+    surveyThemeContextProviderValueRef["current"] = state.surveyTheme;
+  }, [state.surveyTheme]);
 
   return (
     <SurveyThemeContext.Provider value={state.surveyTheme}>
@@ -126,12 +130,12 @@ function useEditSurveySelectedQuestion() {
 
 export {
   SurveyThemeContextProvider,
-  useSurveyThemeContextValue,
-  useSelectedPageTab,
-  useSurveyThemeStateDispatch,
-  useOpenEditors,
-  useSetOpenEditors,
-  useSelectedPreview,
-  useSetSelectedPreview,
   useEditSurveySelectedQuestion,
+  useOpenEditors,
+  useSelectedPageTab,
+  useSelectedPreview,
+  useSetOpenEditors,
+  useSetSelectedPreview,
+  useSurveyThemeContextValue,
+  useSurveyThemeStateDispatch,
 };

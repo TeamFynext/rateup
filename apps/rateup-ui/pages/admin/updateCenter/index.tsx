@@ -1,17 +1,21 @@
 import { Button, Stack, Text, Title } from "@mantine/core";
 
-import { useUpdatePageTypeQuestions } from "@/backend/updations/update.query";
+import {
+  useCreateHubSpotContacts,
+  useUpdateWebSurveyPagesTheme,
+} from "@/backend/updations/update.query";
 
 function UpdateAllThemes() {
-  const updatePageTypeQuestionsMutations = useUpdatePageTypeQuestions();
+  const exportUserToHubSpot = useCreateHubSpotContacts();
+  const updatePageTypeQuestionsMutations = useUpdateWebSurveyPagesTheme();
 
   return (
     <Stack>
       <Stack mt="xl">
-        <Title order={2}>Update Page Type Questions</Title>
+        <Title order={2}>Update WebSurveyPagesTheme</Title>
         <Text>
-          Updates welcome, language, thankyou page type questions with title,
-          subtitle, start button text values from active survey theme.
+          Updates webSurveyPagesTheme column of survey table, which is used in
+          survey editor page.
         </Text>
 
         <Button
@@ -21,7 +25,23 @@ function UpdateAllThemes() {
             updatePageTypeQuestionsMutations.mutate();
           }}
         >
-          Update Page type Questions.
+          Update WebSurveyPagesTheme
+        </Button>
+      </Stack>
+
+      <Stack mt="xl">
+        <Title order={2}>Export user data to hubspot</Title>
+        <Text>Export user emails and org name to hubspot</Text>
+
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            exportUserToHubSpot.mutate();
+          }}
+          loading={exportUserToHubSpot.isPending}
+        >
+          Export
         </Button>
       </Stack>
     </Stack>

@@ -61,3 +61,7 @@ export async function deleteOrg(orgId: string) {
 export async function updateOrgPause({ orgId, data }) {
   return await axiosClient.put(`org/pause/${orgId}`, data);
 }
+
+export async function getWebhookClientSecret() {
+  return (await axiosClient.get(`org/webhook-client-secret`)).data;
+}

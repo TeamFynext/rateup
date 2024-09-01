@@ -44,7 +44,9 @@ export const ActiveStatusBadge = ({ active }) => {
   const { translations } = useTranslations();
   return (
     <Badge color={active ? "green" : "red"}>
-      {active ? translations["ACTIVE"] : translations["INACTIVE"]}
+      {active
+        ? translations["ACTIVE"] ?? "ACTIVE"
+        : translations["INACTIVE"] ?? "INACTIVE"}
     </Badge>
   );
 };

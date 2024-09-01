@@ -1,7 +1,10 @@
+import { useCallback } from "react";
+
 import {
   Accordion,
   Box,
   Button,
+  Checkbox,
   Divider,
   Group,
   MantineProvider,
@@ -9,18 +12,25 @@ import {
   ScrollArea,
   Stack,
 } from "@mantine/core";
-import { IconChevronsDown, IconChevronsUp } from "@tabler/icons-react";
+import { produce } from "immer";
 import _ from "lodash";
 
+import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
+
 import { theme } from "../../../../../config/mantineTheme";
-import { supportedPageEditors } from "../../SurveyTheme.constants";
+import {
+  getSurveyThemeKeyOf,
+  supportedPageEditors,
+} from "../../SurveyTheme.constants";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import surveyThemeStyles from "../../SurveyTheme.module.css";
 import {
   useOpenEditors,
   useSelectedPageTab,
   useSetOpenEditors,
+  useSurveyThemeContextValue,
 } from "../../SurveyThemeContext";
+import PageThemeSaveBtn from "../PageThemeSaveButton/indext";
 import SaveButton from "../SaveButton";
 import ThemeSelector from "../ThemeSelector";
 import styles from "./StylesComponent.module.css";
@@ -39,53 +49,79 @@ function StylesComponent({
   const openEditors = useOpenEditors();
   const setOpenEditors = useSetOpenEditors();
 
+  const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab);
+  const isSurveyPageTab = selectedPageTab === "surveyPage";
+  const selectedPageUseSurveyThemeValue =
+    survey?.webSurveyPagesTheme?.[surveyThemeKey]?.["useSurveyTheme"];
+  const shouldUseSurveyTheme =
+    selectedPageUseSurveyThemeValue && !isSurveyPageTab;
+
   const editorComponents = supportedPageEditors[selectedPageTab];
   const shouldDisplayThemeSelector = selectedPageTab === ThemeTabEnum.SURVEY;
+
+  const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
+
+  const handleUseSurveyThemeCheckboxChange = useCallback(
+    async (event) => {
+      const value = event.target.checked;
+      const webSurveyPagesTheme = survey?.webSurveyPagesTheme;
+      const newWebSurveyPagesTheme = produce(webSurveyPagesTheme, (draft) => {
+        draft[surveyThemeKey]["useSurveyTheme"] = value;
+      });
+
+      await surveyUpdateMutation.mutateAsync({
+        surveyId: survey?.id,
+        data: {
+          webSurveyPagesTheme: newWebSurveyPagesTheme,
+        },
+      });
+    },
+    [survey],
+  );
 
   return (
     <MantineProvider theme={theme}>
       <Stack className={styles["styles-component-root-div"]}>
         {shouldDisplayThemeSelector && (
-          <ThemeSelector
-            className={styles["theme-selector-div"]}
-            allThemesArr={allThemesArr}
-            themeSelectorState={themeSelectorState}
-            setThemeSelectorState={setThemeSelectorState}
-            isAllThemesFetchPending={isAllThemesFetchPending}
-            survey={survey}
-          />
+          <>
+            <ThemeSelector
+              className={styles["theme-selector-div"]}
+              allThemesArr={allThemesArr}
+              themeSelectorState={themeSelectorState}
+              setThemeSelectorState={setThemeSelectorState}
+              isAllThemesFetchPending={isAllThemesFetchPending}
+              survey={survey}
+            />
+            <Divider />
+          </>
         )}
 
-        <Divider />
-        <Group className={styles["expand-all-collapse-all-btn-container"]}>
-          <Button
-            leftSection={<IconChevronsDown size={"1rem"} />}
-            onClick={() => {
-              const editorsObjArr = supportedPageEditors[selectedPageTab];
-              if (editorsObjArr) {
-                setOpenEditors(editorsObjArr.map(({ value }) => value));
-              }
-            }}
-          >
-            Expand All
-          </Button>
-          <Button
-            leftSection={<IconChevronsUp size={"1rem"} />}
-            onClick={() => setOpenEditors([])}
-          >
-            Collapse All
-          </Button>
-        </Group>
-        <Divider />
+        {!isSurveyPageTab && (
+          <>
+            <Box className={styles["use-survey-theme-checkbox-container"]}>
+              <Checkbox
+                className={styles["use-survey-theme-checkbox"]}
+                checked={selectedPageUseSurveyThemeValue}
+                label="Use Survey Theme"
+                size="1.25rem"
+                onChange={handleUseSurveyThemeCheckboxChange}
+              />
+            </Box>
+            <Divider />
+          </>
+        )}
+
         <ScrollArea
           type="hover"
           className={`${styles["styles-component-div"]} styles-component-div`}
+          scrollbarSize={10}
         >
-          {isThemeObjBeingEditedDefaultTheme && (
+          {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) ||
+            shouldUseSurveyTheme) && (
             <Overlay className={surveyThemeStyles["overlay"]} zIndex={198} />
           )}
-
           <Accordion
+            className={styles["accordion-root-div"]}
             multiple
             onChange={(valuesArr) => {
               if (
@@ -133,15 +169,26 @@ function StylesComponent({
             </Button>
           </Box>
 
-          <SaveButton
-            className={styles["save-btn-div"]}
-            survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
-            themeObjBeingEdited={themeObjBeingEdited}
-            onSave={onClose}
-          />
+          {isSurveyPageTab && (
+            <SaveButton
+              className={styles["save-btn-div"]}
+              survey={survey}
+              isThemeObjBeingEditedDefaultTheme={
+                isThemeObjBeingEditedDefaultTheme
+              }
+              themeObjBeingEdited={themeObjBeingEdited}
+              onSave={onClose}
+            />
+          )}
+
+          {!isSurveyPageTab && (
+            <PageThemeSaveBtn
+              className={styles["page-theme-save-btn"]}
+              disabled={shouldUseSurveyTheme}
+              survey={survey}
+              selectedPageTab={selectedPageTab}
+            />
+          )}
         </Group>
       </Stack>
     </MantineProvider>

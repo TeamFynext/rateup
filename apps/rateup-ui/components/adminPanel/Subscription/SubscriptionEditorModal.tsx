@@ -1,15 +1,17 @@
-import dayjs from "dayjs";
-import { Box, Button, Group, Modal, Space, Stack, Text } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { DateInput } from "@mantine/dates";
-import { FeatureCard } from "./FeatureCard";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
-import { useRouter } from "next/router";
-import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
 import { useEffect } from "react";
-import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
+import { useRouter } from "next/router";
+
+import { Box, Button, Group, Modal, Space, Stack, Text } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
+import { useForm } from "@mantine/form";
 import { IconX } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
+import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
+import { FeatureCard } from "./FeatureCard";
 
 interface SubscriptionEditorModalProps {
   opened: boolean;
@@ -19,7 +21,7 @@ interface SubscriptionEditorModalProps {
 export function SubscriptionEditorModal({
   opened,
   onClose,
-  subscription,
+  subscription, // rateuplan if router.pathname === "/admin/rateup"
 }: SubscriptionEditorModalProps) {
   const subscriptionForm = useForm({
     initialValues: {
@@ -87,13 +89,15 @@ export function SubscriptionEditorModal({
       title={rateupPlanEnable ? `Modify Rateup Plan` : `Modify Subscription`}
     >
       <Stack>
-        <DateInput
-          label="Expires At"
-          value={dayjs(subscriptionForm.values.expiresAt).toDate()}
-          onChange={(value) =>
-            subscriptionForm.setFieldValue("expiresAt", value)
-          }
-        />
+        {!rateupPlanEnable && (
+          <DateInput
+            label="Expires At"
+            value={dayjs(subscriptionForm.values.expiresAt).toDate()}
+            onChange={(value) =>
+              subscriptionForm.setFieldValue("expiresAt", value)
+            }
+          />
+        )}
         <Box
           style={{
             flex: 1,

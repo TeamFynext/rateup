@@ -7,11 +7,12 @@
   border-bottom: 1px solid var(--mantine-color-gray-4);
   padding-bottom: 1rem;
   padding: 1rem;
+  flex-wrap: nowrap;
 }
 
 .add-question-btn-more-than-1-que .add-content-btn {
   height: auto;
-  padding: 0.625rem 1rem;
+  padding: 0.625rem;
   font-weight: bold;
   border-radius: 0.625rem;
   min-width: 7.5rem;

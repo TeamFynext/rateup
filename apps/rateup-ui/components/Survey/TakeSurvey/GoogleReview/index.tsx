@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ReviewSuggestion } from "../../../../types/global";
-import { shuffleArray } from "../../../../utils";
-import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import Link from "next/link";
+
 import {
   Box,
   Button,
@@ -11,19 +10,23 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import Link from "next/link";
+import { useDisclosure } from "@mantine/hooks";
+
+import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import { ReviewSuggestion } from "../../../../types/global";
+import { shuffleArray } from "../../../../utils";
+import { lexend500 } from "../../../../utils/fonts";
 import { GoogleIcon } from "../../../Button/GoogleIcon";
+import RateupRedirectCard from "../../../Card/RateupRedirectCard";
 import styles from "./GoogleReview.module.css";
 import WandIcon from "./WandIcon";
-import { lexend500 } from "../../../../utils/fonts";
-import { useDisclosure } from "@mantine/hooks";
-import RateupRedirectCard from "../../../Card/RateupRedirectCard";
 
 function GoogleReview({
   googleLink,
-  reviewSuggestions,
-  orgLogoUrl,
-  surveyTeamMapId,
+  reviewSuggestions = [],
+  orgLogoUrl = "",
+  surveyTeamMapId = "",
+  isSurveyPreview = false,
 }) {
   const [
     isSuggestionCopiedModalOpen,
@@ -38,7 +41,7 @@ function GoogleReview({
     useState<ReviewSuggestion>(null);
 
   useEffect(() => {
-    if (reviewSuggestions) {
+    if (reviewSuggestions.length > 0) {
       setShuffledArray(shuffleArray(reviewSuggestions));
       handleRegenerate();
     }
@@ -86,7 +89,7 @@ function GoogleReview({
   }, [isSuggestionCopiedModalOpen, shuffledArray, reviewIndex]);
 
   return (
-    <Stack mih={"100dvh"}>
+    <Stack mih={isSurveyPreview ? "100%" : "100dvh"}>
       <Box className={styles["google-review-div"]}>
         {orgLogoUrl && (
           <Box className={styles["org-logo-container"]}>
