@@ -24,6 +24,7 @@ function SurveyThemeContextProvider({
   children,
   selectedPageTab = ThemeTabEnum.SURVEY,
   editSurveySelectedQuestion = null,
+  surveyThemeContextProviderValueRef = null,
 }) {
   const isFirstRender = useIsFirstRender();
 
@@ -53,11 +54,12 @@ function SurveyThemeContextProvider({
   }, [state.selectedPageTab]);
 
   useEffect(() => {
-    if (!isFirstRender)
+    if (!isFirstRender) {
       dispatch({
         type: "set-survey-theme",
         payload: surveyTheme,
       });
+    }
   }, [surveyTheme]);
 
   useEffect(() => {
@@ -66,6 +68,10 @@ function SurveyThemeContextProvider({
       payload: selectedPageTab,
     });
   }, [selectedPageTab]);
+
+  useEffect(() => {
+    surveyThemeContextProviderValueRef["current"] = state.surveyTheme;
+  }, [state.surveyTheme]);
 
   return (
     <SurveyThemeContext.Provider value={state.surveyTheme}>

@@ -23,6 +23,7 @@ function TabPanelsComp({
   setEncryptionPassword,
   translations,
   setActiveTab,
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange,
 }) {
   const { data: subscription } = useSubscription();
 
@@ -45,6 +46,9 @@ function TabPanelsComp({
           surveyLanguages={survey?.languages}
           setSelectedLanguage={setSelectedLanguage}
           subscription={subscription}
+          setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+            setFunToRunBeforeSurveyIdPageHeaderTabsChange
+          }
         />
       </TabsPanel>
       <TabsPanel value={TabEnum.Settings}>
