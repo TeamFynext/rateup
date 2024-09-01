@@ -51,6 +51,7 @@ import { getSubscription } from "../../subscription/subscription.service";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
+import { pauseOrg } from "../../org/org.services";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -586,6 +587,9 @@ export async function handleWebhook(webhook) {
     case ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED:
       await handleShopifyOrderEvents(webhook);
       break;
+    case ShopifyEvents.APP_UNINSTALLED:
+      await handleShopifyAppUnistalled(webhook);
+      break;
   }
 }
 
@@ -652,4 +656,15 @@ export async function handleShopifyOrderEvents(webhook) {
     webhookId,
     shop,
   );
+}
+
+export async function handleShopifyAppUnistalled(webhook) {
+  const { shop } = webhook;
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) return;
+  if (dayjs(shopifyInfo.org.createdAt).isBefore(dayjs(shopifyInfo.createdAt)))
+    await updateShopifyIntegrationByShop(shop, { active: false });
+  else {
+    await pauseOrg(shopifyInfo.orgId, { isPaused: true });
+  }
 }
