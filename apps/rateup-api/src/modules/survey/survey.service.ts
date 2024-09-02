@@ -778,9 +778,9 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     },
   });
 
-  if ("isPublished" in input) {
+  if ("isPublished" in input || input.surveyPublishAt) {
     action = "publish";
-    if (input?.isPublished === true) {
+    if (input?.isPublished === true || input.surveyPublishAt) {
       //check for all language inputs
       const questions = fetchedSurvey.questions
         ? fetchedSurvey.questions.filter(
