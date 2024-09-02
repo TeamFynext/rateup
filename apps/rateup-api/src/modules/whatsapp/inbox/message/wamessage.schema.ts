@@ -54,6 +54,7 @@ const waChatExportConstraints = z.object({
 });
 const waChatExportQuerySchema = z.object({
   constraints: z.string(),
+  filterData: z.string(),
 });
 
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(

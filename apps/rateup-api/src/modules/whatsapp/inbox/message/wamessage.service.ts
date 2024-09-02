@@ -248,46 +248,59 @@ export async function filterChats(
   bodyFilterProps: WaChatFilterSchema,
 ) {
   try {
-    function extendQueryForFilters() {
+    function extendQueryForFilters(context = "") {
       let extendedWhereClause = "";
-      //TODO: Add strict filter
-      let isStrict = bodyFilterProps?.strictFilter;
+
+      // Filter for messageType when not in TotalContactCount context
       if (
         bodyFilterProps?.messageType &&
-        bodyFilterProps?.messageType !== "all"
+        bodyFilterProps?.messageType !== "all" &&
+        context !== "TotalContactCount"
       ) {
         if (bodyFilterProps?.messageType === "usermessages") {
-          extendedWhereClause += `AND lm."messageBody"->'exchangeProcess' = '"receive"'`;
+          extendedWhereClause += `AND lm."messageBody"->>'exchangeProcess' = 'receive'`;
         }
       }
+
+      // Filter for contactGroups when ContactGroup (cg) is accessible
       if (
         bodyFilterProps?.contactGroups &&
-        bodyFilterProps?.contactGroups?.length > 0
+        bodyFilterProps?.contactGroups?.length > 0 &&
+        (context === "" || context === "main")
       ) {
         extendedWhereClause += `AND cg."id" IN (${bodyFilterProps?.contactGroups
           ?.map((v) => `'${v}'::uuid`)
           .join(",")})`;
       }
+
+      // Filter for campaigns when CampaignParticipant (cpt) is accessible
       if (
         bodyFilterProps?.campaigns &&
-        bodyFilterProps?.campaigns?.length > 0
+        bodyFilterProps?.campaigns?.length > 0 &&
+        (context === "" || context === "main")
       ) {
         extendedWhereClause += `AND cpt."campaignId" IN (${bodyFilterProps?.campaigns
           ?.map((v) => `'${v}'::uuid`)
           .join(",")})`;
       }
+
+      // Filter for tags
       if (bodyFilterProps?.tags && bodyFilterProps.tags.length > 0) {
         const tagsFilter = bodyFilterProps.tags
           .map((tag) => `c."tags" @> '${JSON.stringify(tag)}'`)
           .join(" OR ");
         extendedWhereClause += ` AND (${tagsFilter})`;
       }
+
+      // Search term filter
       if (bodyFilterProps?.searchTerm) {
         const search = bodyFilterProps.searchTerm;
         extendedWhereClause += ` AND (c."name" ILIKE '%${search}%' OR c."phone" LIKE '%${search}%')`;
       }
+
       return extendedWhereClause;
     }
+
     const query = `WITH LatestMessages AS (
       SELECT DISTINCT ON (w."contactId")
           w."contactId",
@@ -297,50 +310,50 @@ export async function filterChats(
           "WaMessage" w
       ORDER BY
           w."contactId", w."waCreatedAt" DESC
-      ),
-      LatestReceiveMessages AS (
-          SELECT DISTINCT ON (w."contactId")
-              w."contactId",
-              w."messageBody" AS receiveMessageBody,
-              w."waCreatedAt" AS receiveCreatedAt
-          FROM
-              "WaMessage" w
-          WHERE
-              w."messageBody"->'exchangeProcess' = '"receive"'
-          ORDER BY
-              w."contactId", w."waCreatedAt" DESC
-      ),
-      TotalContactCount AS (
-          SELECT COUNT(DISTINCT c."id")::text AS total_contact_count
-          FROM "Contact" c
-          WHERE c."orgId" = $1::uuid ${extendQueryForFilters()}
-      )
-      SELECT
-          c.*,
-          lm."messageBody" AS LatestMessage,
-          lm."waCreatedAt" AS LatestMessageTime,
-          lrm.receiveMessageBody AS LatestReceiveMessage,
-          lrm.receiveCreatedAt AS LatestReceiveTime,
-          tcc.total_contact_count
-      FROM
-          "Contact" c
-      LEFT JOIN 
-          "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
-      LEFT JOIN 
-          "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
-      LEFT JOIN 
-          "CampaignParticipant" cpt ON cpt."contactId" = c."id"
-      LEFT JOIN
-          LatestMessages lm ON c.id = lm."contactId"
-      LEFT JOIN
-          LatestReceiveMessages lrm ON c.id = lrm."contactId"
-      CROSS JOIN
-          TotalContactCount tcc
-      WHERE
-          c."orgId" = $1::uuid ${extendQueryForFilters()}
-      ORDER BY 
-          lm."waCreatedAt" DESC NULLS LAST
-      LIMIT 5000 OFFSET $2`;
+    ),
+    LatestReceiveMessages AS (
+        SELECT DISTINCT ON (w."contactId")
+            w."contactId",
+            w."messageBody" AS receiveMessageBody,
+            w."waCreatedAt" AS receiveCreatedAt
+        FROM
+            "WaMessage" w
+        WHERE
+            w."messageBody"->'exchangeProcess' = '"receive"'
+        ORDER BY
+            w."contactId", w."waCreatedAt" DESC
+    ),
+    TotalContactCount AS (
+        SELECT COUNT(DISTINCT c."id")::text AS total_contact_count
+        FROM "Contact" c
+        WHERE c."orgId" = $1::uuid ${extendQueryForFilters("TotalContactCount")}
+    )
+    SELECT
+        c.*,
+        lm."messageBody" AS LatestMessage,
+        lm."waCreatedAt" AS LatestMessageTime,
+        lrm.receiveMessageBody AS LatestReceiveMessage,
+        lrm.receiveCreatedAt AS LatestReceiveTime,
+        tcc.total_contact_count
+    FROM
+        "Contact" c
+    LEFT JOIN 
+        "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
+    LEFT JOIN 
+        "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
+    LEFT JOIN 
+        "CampaignParticipant" cpt ON cpt."contactId" = c."id"
+    LEFT JOIN
+        LatestMessages lm ON c.id = lm."contactId"
+    LEFT JOIN
+        LatestReceiveMessages lrm ON c.id = lrm."contactId"
+    CROSS JOIN
+        TotalContactCount tcc
+    WHERE
+        c."orgId" = $1::uuid ${extendQueryForFilters("main")}
+    ORDER BY 
+        lm."waCreatedAt" DESC NULLS LAST
+    LIMIT 5000 OFFSET $2`;
 
     const contacts: Array<
       Contact & {
@@ -386,6 +399,7 @@ export async function filterChats(
 export async function exportWhatsapChats(
   orgId: string,
   constraints: WaChatExportConstraints,
+  bodyFilterProps: WaChatFilterSchema,
 ): Promise<
   Array<{
     date: string;
@@ -396,57 +410,92 @@ export async function exportWhatsapChats(
     templatename: string;
   }>
 > {
-  console.log(constraints);
-  function extendedWhereClause() {
+  function extendedWhereClause(): string {
     let extendedWhereClause = "";
+
+    // Handling date constraints
     if (constraints?.date) {
       switch (constraints.date.type) {
-        case DateType.BETWEEN: {
-          extendedWhereClause += `AND wm."createdAt" BETWEEN '${constraints.date.between.from}' AND '${constraints.date.between.to}'`;
+        case DateType.BETWEEN:
+          extendedWhereClause += `AND wm."createdAt" BETWEEN '${constraints.date.between.from}' AND '${constraints.date.between.to}' `;
           break;
-        }
-        case DateType.BEFORE: {
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${
-            constraints.date.inclusive ? "<=" : "<"
-          }'${constraints.date.before}'`;
+        case DateType.BEFORE:
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? "<=" : "<"} '${constraints.date.before}' `;
           break;
-        }
-        case DateType.AFTER: {
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${
-            constraints.date.inclusive ? ">=" : ">"
-          } '${constraints.date.after}'`;
+        case DateType.AFTER:
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? ">=" : ">"} '${constraints.date.after}' `;
           break;
-        }
-        case DateType.ON: {
-          console.log("hello from on clause");
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = '${constraints.date.on}'`;
+        case DateType.ON:
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = '${constraints.date.on}' `;
           break;
-        }
       }
     }
+
+    // Handling repliesOnly constraint
     if (constraints?.repliesOnly) {
-      extendedWhereClause += `AND wm."messageBody"->'exchangeProcess' = '"receive"'`;
+      extendedWhereClause += `AND wm."messageBody"->>'exchangeProcess' = 'receive' `;
     }
-    console.log(extendedWhereClause);
-    return extendedWhereClause;
+
+    // Filter for contactGroups when ContactGroup (cg) is accessible
+    if (
+      bodyFilterProps?.contactGroups &&
+      bodyFilterProps?.contactGroups?.length > 0
+    ) {
+      extendedWhereClause += `AND cg."id" IN (${bodyFilterProps?.contactGroups
+        ?.map((v: any) => `'${v?.value}'::uuid`)
+        .join(",")})`;
+    }
+
+    // Filter for campaigns when CampaignParticipant (cpt) is accessible
+    if (bodyFilterProps?.campaigns && bodyFilterProps?.campaigns?.length > 0) {
+      extendedWhereClause += `AND cpt."campaignId" IN (${bodyFilterProps?.campaigns
+        ?.map((v: any) => `'${v?.value}'::uuid`)
+        .join(",")})`;
+    }
+
+    // Filter for tags
+    if (bodyFilterProps?.tags && bodyFilterProps.tags.length > 0) {
+      const tagsFilter = bodyFilterProps.tags
+        .map((tag) => `c."tags" @> '${JSON.stringify(tag)}'`)
+        .join(" OR ");
+      extendedWhereClause += ` AND (${tagsFilter}) `;
+    }
+
+    return extendedWhereClause.trim();
   }
-  const result = await prisma.$queryRawUnsafe(
-    `SELECT
+  const query = `
+    SELECT
       wm."createdAt" AS date,
       c."phone" AS "from",
       c."name" AS "name",
-      wm."messageBody"->'receive'->'messages'->0->'text'->>'body' AS receivebody,
+      COALESCE(
+        wm."messageBody"->'receive'->'messages'->0->'text'->>'body',
+        wm."messageBody"->'receive'->'messages'->0->'button'->>'text'
+        ) AS receivebody,
       wm."messageBody"->'send'->'text'->>'body' AS sendbody,
       wm."messageBody"->'send'->'template'->>'name' AS templatename
     FROM 
       "WaMessage" wm 
     JOIN 
       "Contact" c ON wm."contactId" = c.id
+    LEFT JOIN 
+        "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
+    LEFT JOIN 
+        "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
+    LEFT JOIN 
+        "CampaignParticipant" cpt ON cpt."contactId" = c."id"
     WHERE
-      c."orgId"=$1::uuid ${extendedWhereClause()}
+      c."orgId" = $1::uuid ${extendedWhereClause()}
     ORDER BY 
-      wm."createdAt" ASC`,
-    orgId,
-  );
-  return result as any;
+      wm."createdAt" ASC`;
+
+  const result = await prisma.$queryRawUnsafe(query, orgId);
+  return result as Array<{
+    date: string;
+    from: string;
+    name: string;
+    receivebody: string;
+    sendbody: string;
+    templatename: string;
+  }>;
 }
