@@ -30,10 +30,10 @@ import { parsePhoneNumber } from "libphonenumber-js";
 import {
   getScheduledTime,
   PaymentSource,
+  ShopifyOrderWebhookTopicEventMap,
   ShopifyPlanMap,
   shopifyRecurringChargeStatus,
   shopifyRecurringChargeSubscriptionStatusMap,
-  ShopifyWebhookTopicEventMap,
 } from "./shopify.util";
 import {
   getIntegrationByName,
@@ -52,6 +52,7 @@ import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import { pauseOrg } from "../../org/org.services";
+import { WEBHOOK_API_ROUTE } from "./shopify.handler";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -338,6 +339,10 @@ export async function deleteAllWebhooks(session) {
   const webhookslist = await shopify.rest.Webhook.all({ session });
   await Promise.all(
     webhookslist.data.map(async (webhook) => {
+      const webhookTopic = ShopifyOrderWebhookTopicEventMap.find(
+        (t) => t.value === webhook.topic,
+      );
+      if (!webhookTopic) return false;
       const response = await shopify.rest.Webhook.delete({
         session,
         id: webhook.id,
@@ -351,9 +356,9 @@ export async function registerWebhookByTopic(topic, orgId) {
   const webhook = new shopify.rest.Webhook({
     session: shopifyInfo.credential?.session,
   });
-  webhook.address = `${API_URL}/api/shopify/webhooks`;
-  (webhook.topic = ShopifyWebhookTopicEventMap.find(
-    (webhookTopic) => webhookTopic.key == topic,
+  webhook.address = `${API_URL}${WEBHOOK_API_ROUTE}`;
+  (webhook.topic = ShopifyOrderWebhookTopicEventMap.find(
+    (webhookTopic) => webhookTopic.key === topic,
   ).value),
     (webhook.format = "json");
   await webhook.save({ update: true });

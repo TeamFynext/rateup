@@ -16,9 +16,10 @@ import shopify from "./shopify.config";
 import webhookHandlers, {
   defaultWebhookHandlers,
   mandatoryWebhookHandlers,
+  WEBHOOK_API_ROUTE,
 } from "./shopify.handler";
-import { ShopifyWebhookTopicEventMap } from "./shopify.util";
-import { FRONTEND_URL } from "../../../utils/constants/constants";
+import { ShopifyOrderWebhookTopicEventMap } from "./shopify.util";
+import { API_URL, FRONTEND_URL } from "../../../utils/constants/constants";
 import { log } from "../../../utils/logger";
 import {
   createIntegration,
@@ -78,8 +79,17 @@ export async function getShopifyAuthCallbackHandler(
         active: true,
       });
     else await createIntegration(data);
-    shopify.webhooks.addHandlers(mandatoryWebhookHandlers);
-    await registerShopifyWebhook(session);
+    const webhook = new shopify.rest.Webhook({
+      session,
+    });
+    webhook.address = `${API_URL}${WEBHOOK_API_ROUTE}`;
+    webhook.format = "json";
+    const res = await Promise.all(
+      ["app/uninstalled", "app_subscriptions/update"].map(async (topic) => {
+        webhook.topic = topic;
+        await webhook.save({ update: true });
+      }),
+    );
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
   } catch (e) {
     console.error(e);
@@ -152,7 +162,7 @@ export async function deleteWebhookByTopicHandler(
     const webhookId = webhooks.data.find(
       (webhook) =>
         webhook.topic ===
-        ShopifyWebhookTopicEventMap.find((t) => t.key == topic).value,
+        ShopifyOrderWebhookTopicEventMap.find((t) => t.key === topic).value,
     ).id;
     await shopify.rest.Webhook.delete({
       session: session,
@@ -221,7 +231,7 @@ export async function getRegisteredWebhooksHandler(
     const webhooks = await shopify.rest.Webhook.all({ session });
     const formattedWebhooks = webhooks.data.map(
       (webhook) =>
-        ShopifyWebhookTopicEventMap.find(
+        ShopifyOrderWebhookTopicEventMap.find(
           (topic) => topic.value === webhook.topic,
         )?.key,
     );
