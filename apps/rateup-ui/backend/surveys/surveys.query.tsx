@@ -615,6 +615,7 @@ export const useSurveyUpdateMutation = (surveyId) => {
     onSuccess: () => {
       showSuccessToast("Data updated Successfully", surveyId);
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+      queryClient.invalidateQueries({ queryKey: ["survey-templates", "web"] });
     },
     onError: () => {
       showErrorToast("Something went wrong, Please try again later.", surveyId);
