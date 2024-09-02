@@ -41,7 +41,7 @@ export async function getShopifyAuthHandler(
       !shopify.config.scopes.equals(shopifyInfo.credential.session.scope)
     ) {
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
-    } else reply.redirect(`${FRONTEND_URL}/dashboard/apps&services/shopify`);
+    } else reply.redirect(`${FRONTEND_URL}`);
   } catch (e) {
     console.error(e);
     reply.redirect(
