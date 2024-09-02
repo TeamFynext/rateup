@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums";
 import { SubscriptionStatus } from "@prisma/client";
 
-export const ShopifyWebhookTopicEventMap = [
+export const ShopifyOrderWebhookTopicEventMap = [
   { key: ShopifyEvents.ORDERS_CREATE, value: "orders/create" },
   { key: ShopifyEvents.DRAFT_ORDERS_CREATE, value: "draft_orders/create" },
   { key: ShopifyEvents.ORDERS_PAID, value: "orders/paid" },
@@ -16,7 +16,6 @@ export const ShopifyWebhookTopicEventMap = [
     key: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
     value: "fulfillment_orders/cancelled",
   },
-  { key: ShopifyEvents.APP_UNINSTALLED, value: "app/uninstalled" },
 ];
 
 export function getScheduledTime(sendAfter) {
