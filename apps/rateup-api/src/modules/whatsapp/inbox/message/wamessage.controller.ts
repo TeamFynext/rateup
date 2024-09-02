@@ -213,16 +213,22 @@ export async function exportWhatsappChatsHandler(
   request: FastifyRequest<{ Querystring: WaChatExportQuerySchema }>,
   reply: FastifyReply,
 ) {
-  const { constraints } = request.query;
+  const { constraints, filterData } = request.query;
   if (!constraints) {
     reply.status(400).send("Constraints not provided");
     return;
   } else {
     const orgId = request.user.orgId;
+
     const constraintsDecoded: WaChatExportConstraints = JSON.parse(
       decodeURIComponent(constraints),
     );
-    const dataToExport = await exportWhatsapChats(orgId, constraintsDecoded);
+    const filterfilterDataDecoded = JSON.parse(decodeURIComponent(filterData));
+    const dataToExport = await exportWhatsapChats(
+      orgId,
+      constraintsDecoded,
+      filterfilterDataDecoded,
+    );
     const _excelData = dataToExport.map((chat) => {
       return [
         chat.date,
