@@ -227,7 +227,7 @@ export default function WaInboxChatSelect(props: {
               }}
             />
             <WaInboxChatFilter {...{ filter, setFilter: prepareFilters }} />
-            <WaInboxChatExport />
+            <WaInboxChatExport filter={filter} />
           </Group>
         </Group>
       </Stack>
