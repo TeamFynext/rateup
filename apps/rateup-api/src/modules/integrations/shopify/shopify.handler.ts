@@ -206,7 +206,7 @@ export async function appSubscriptionUpdateHandler(
 }
 
 //callbackroutes
-const WEBHOOK_API_ROUTE = "/api/public/integrations/shopify/webhooks";
+export const WEBHOOK_API_ROUTE = "/api/public/integrations/shopify/webhooks";
 
 export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
   ORDERS_CREATE: [
