@@ -1,32 +1,50 @@
 import { BackgroundImage, Flex, Stack } from "@mantine/core";
-import { CreditsCard } from "../../../../components/Card/CreditsCard";
-import { PreviewTypeEnum } from "../../../../components/Survey/SurveyTheme/SurveyTheme.enums";
-import classes from "../../../../components/Survey/SurveyTheme/SurveyTheme.module.css";
-import { getImageUrl } from "../../../../components/Survey/SurveyTheme/SurveyTheme.utils";
-import {
-  useSelectedPreview,
-  useSurveyThemeContextValue,
-} from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
-import { lexend300 } from "../../../../utils/fonts";
-import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 
-export default function TemplateCard() {
-  const surveyTheme = useSurveyThemeContextValue();
+import { PageType } from "@/types/enums";
+
+import { CreditsCard } from "../../../../components/Card/CreditsCard";
+import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
+import classes from "../../../../components/Survey/SurveyTheme/SurveyTheme.module.css";
+import { useSelectedPreview } from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
+import { lexend300 } from "../../../../utils/fonts";
+
+export default function TemplateCard({ survey }) {
+  const webSurveyPagesTheme = survey?.webSurveyPagesTheme;
+  const surveyThemeObj = survey?.webSurveyTheme?.theme;
+  const questionsArr = survey?.questions;
   const selectedPreview = useSelectedPreview();
 
-  const { welcomeTheme } = surveyTheme || {};
+  const shouldUseSurveyTheme =
+    webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
+  const requiredThemeObj = shouldUseSurveyTheme
+    ? surveyThemeObj["surveyTheme"]
+    : webSurveyPagesTheme["welcomeTheme"];
 
-  const {
-    bg: { useSurveyBackground },
-    // button: { styles: buttonStyles, label, position },
-    // logo: { styles: logoStyles, logo },
-    subtitle: { styles: subtitleStyles, subtitle },
-    title: { styles: titleStyles, title },
-  } = surveyTheme.welcomeTheme;
+  const defaultTitleSubtitleStartButtonTexts = {
+    titleText: "Welcome",
+    subtitleText: "Welcome to the survey",
+    startButtonText: "Start Survey",
+  };
+  const welcomeTypeQuestionObj =
+    questionsArr?.find((question) => question.type === PageType.Welcome) ||
+    defaultTitleSubtitleStartButtonTexts;
+  const { titleText, subtitleText } = welcomeTypeQuestionObj;
+
+  const titleStyles = requiredThemeObj?.title?.styles;
+  let subtitleStyles = requiredThemeObj?.subtitle?.styles;
+  if (!subtitleStyles) {
+    subtitleStyles = {
+      color: titleStyles?.color,
+      fontWeight: "400",
+      fontSize: 16,
+      textAlign: "center",
+    };
+  }
+  console.log({ requiredThemeObj, titleStyles, subtitleStyles });
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
-    surveyTheme,
-    useSurveyBackground ? "surveyTheme" : "welcomeTheme",
+    shouldUseSurveyTheme ? surveyThemeObj : webSurveyPagesTheme,
+    shouldUseSurveyTheme ? "surveyTheme" : "welcomeTheme",
     selectedPreview === "mobile",
   );
 
@@ -67,7 +85,7 @@ export default function TemplateCard() {
                 maxWidth: "200px",
               }}
             >
-              {title}
+              {titleText}
             </Stack>
             <Stack
               mt="lg"
@@ -79,8 +97,8 @@ export default function TemplateCard() {
                 marginBottom: "2rem",
               }}
             >
-              {subtitle.split(" ").slice(0, 10).join(" ")}{" "}
-              {subtitle.split(" ").length > 10 && "..."}
+              {subtitleText.split(" ").slice(0, 10).join(" ")}{" "}
+              {subtitleText.split(" ").length > 10 && "..."}
             </Stack>
           </Flex>
         </BackgroundImage>

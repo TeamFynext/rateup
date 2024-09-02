@@ -70,7 +70,9 @@ function SurveyThemeContextProvider({
   }, [selectedPageTab]);
 
   useEffect(() => {
-    surveyThemeContextProviderValueRef["current"] = state.surveyTheme;
+    if (surveyThemeContextProviderValueRef) {
+      surveyThemeContextProviderValueRef["current"] = state.surveyTheme;
+    }
   }, [state.surveyTheme]);
 
   return (
