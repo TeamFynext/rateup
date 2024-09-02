@@ -65,10 +65,16 @@ export async function getFilteredContacts(filterData: string, page: number) {
   ).data as ContactsWithLastMessage[];
 }
 
-export async function exportWaChats(constraints: string) {
+export async function exportWaChats({
+  constraints,
+  filterData,
+}: {
+  constraints: string;
+  filterData: string;
+}) {
   return (
     await axiosClient.post(
-      `${WA_CONTACT_BASE_PATH}/exportmessages?constraints=${constraints}`,
+      `${WA_CONTACT_BASE_PATH}/exportmessages?constraints=${constraints}&filterData=${filterData}`,
       {},
       { responseType: "arraybuffer" },
     )

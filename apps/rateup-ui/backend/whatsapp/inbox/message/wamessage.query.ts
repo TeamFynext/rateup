@@ -1,11 +1,12 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+
 import {
   exportWaChats,
   getChatFilterData,
   getContactsWithLastMessage,
   getFilteredContacts,
   getMessageCount,
-  getMessagesByContactId as getMessagesByContactId,
+  getMessagesByContactId,
   sendNewWaMessage,
 } from "./wamessage.api";
 
@@ -71,7 +72,7 @@ export const useFilteredContacts = (
 
 export const useExportWaChats = () => {
   return useMutation({
-    mutationFn: (constraints: string) => exportWaChats(constraints),
+    mutationFn: exportWaChats,
     onError: (error) => {
       console.error("Error exporting chats", error);
     },

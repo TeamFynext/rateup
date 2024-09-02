@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Button,
   Checkbox,
@@ -13,14 +15,14 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { IconDownload } from "@tabler/icons-react";
-import classes from "./styles.module.css";
 import { DatePicker, DatePickerProps } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { useState } from "react";
-import dayjs from "dayjs";
 import { useMediaQuery } from "@mantine/hooks";
+import { IconDownload } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import classes from "./styles.module.css";
 
 enum DateType {
   BETWEEN = "between",
@@ -28,7 +30,7 @@ enum DateType {
   AFTER = "after",
   ON = "on",
 }
-export default function WaInboxChatExport() {
+export default function WaInboxChatExport({ filter }) {
   const [chatsExporting, setChatsExporting] = useState(false);
   const exportChats = useExportWaChats();
   const form = useForm({
@@ -81,24 +83,30 @@ export default function WaInboxChatExport() {
   });
   function handleSubmit(values: typeof form.values) {
     setChatsExporting(true);
-    exportChats.mutate(encodeURIComponent(JSON.stringify(values)), {
-      onSuccess: (data) => {
-        const blob = new Blob([data]);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `export.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        setChatsExporting(false);
+    exportChats.mutate(
+      {
+        constraints: encodeURIComponent(JSON.stringify(values)),
+        filterData: encodeURIComponent(JSON.stringify(filter)),
       },
-      onError: (error) => {
-        console.error(error);
-        setChatsExporting(false);
+      {
+        onSuccess: (data) => {
+          const blob = new Blob([data]);
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `export.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          setChatsExporting(false);
+        },
+        onError: (error) => {
+          console.error(error);
+          setChatsExporting(false);
+        },
       },
-    });
+    );
   }
 
   const isMobile = useMediaQuery("(max-width: 768px)");
