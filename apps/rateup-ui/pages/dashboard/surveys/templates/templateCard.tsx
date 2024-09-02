@@ -40,7 +40,6 @@ export default function TemplateCard({ survey }) {
       textAlign: "center",
     };
   }
-  console.log({ requiredThemeObj, titleStyles, subtitleStyles });
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
     shouldUseSurveyTheme ? surveyThemeObj : webSurveyPagesTheme,
