@@ -82,11 +82,14 @@ export async function createCheckoutSession(
 //...get razorpay plan list to rateup db
 export async function syncPaymentPlans() {
   try {
-    const apiResponse = await axios.get("https://api.razorpay.com/v1/plans", {
-      headers: {
-        Authorization: `Basic ${credentials}`,
+    const apiResponse = await axios.get(
+      "https://api.razorpay.com/v1/plans?count=50",
+      {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
       },
-    });
+    );
 
     const plansData = apiResponse?.data?.items;
 
