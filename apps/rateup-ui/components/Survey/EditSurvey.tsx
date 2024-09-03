@@ -93,9 +93,9 @@ export function EditSurvey({
   const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
     survey?.webSurveyTheme?.theme,
   );
-  const questionDetailedViewForm = useForm({
-    initialValues: getInitialQuestionValues(selectedQ, surveyLanguages),
-  });
+
+  // To store questionDetailedViewForm State.
+  const questionDetailedViewFormRef = useRef(null);
 
   // To store state of surveyThemeContextProvider.
   const surveyThemeContextProviderValueRef = useRef(null);
@@ -167,12 +167,16 @@ export function EditSurvey({
     } else if (
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
-      const missingLanguages = validateAllLanguagesArePopulated(
-        questionDetailedViewForm.getValues() as Question,
-        surveyLanguages,
-        ["title", "choices"],
-      );
-      return missingLanguages?.length > 0;
+      if (questionDetailedViewFormRef.current) {
+        const missingLanguages = validateAllLanguagesArePopulated(
+          questionDetailedViewFormRef.current as Question,
+          surveyLanguages,
+          ["title", "choices"],
+        );
+        return missingLanguages?.length > 0;
+      } else {
+        return false;
+      }
     } else {
       return false;
     }
@@ -183,7 +187,7 @@ export function EditSurvey({
     selectedQ,
     activeTab,
     surveyThemeContextProviderValueRef.current,
-    questionDetailedViewForm.getValues()?.id,
+    questionDetailedViewFormRef.current,
   ]);
 
   useEffect(() => {
@@ -346,7 +350,9 @@ export function EditSurvey({
                           surveyLanguages={surveyLanguages}
                           setSelectedLanguage={setSelectedLanguage}
                           key={selectedQ.id}
-                          form={questionDetailedViewForm}
+                          questionDetailedViewFormRef={
+                            questionDetailedViewFormRef
+                          }
                         />
                       )}
                     </>
