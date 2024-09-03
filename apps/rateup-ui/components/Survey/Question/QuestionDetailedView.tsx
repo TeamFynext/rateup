@@ -59,7 +59,7 @@ interface QuestionDetailedViewProps {
   setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
   surveyId?: string;
   survey: Survey;
-  form: any;
+  questionDetailedViewFormRef?: any;
 }
 export function QuestionDetailedView({
   question,
@@ -69,7 +69,7 @@ export function QuestionDetailedView({
   setSelectedLanguage,
   surveyId,
   survey,
-  form,
+  questionDetailedViewFormRef,
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   surveyId = surveyId || (router.query?.surveyId as string);
@@ -98,6 +98,10 @@ export function QuestionDetailedView({
       hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     );
   }, [subscription]);
+
+  const form = useForm({
+    initialValues: getInitialQuestionValues(question, surveyLanguages),
+  });
 
   form.watch("choices", ({ previousValue, value, touched, dirty }) => {
     if (!getIncompleteLanguages()?.length) {
@@ -188,10 +192,17 @@ export function QuestionDetailedView({
     if (form.isDirty()) handleSave();
   }, [form.values.required, form.values.enableNpsAnalytics]);
 
+  useEffect(() => {
+    if (questionDetailedViewFormRef) {
+      questionDetailedViewFormRef.current = form.getValues();
+    }
+  }, [form]);
+
   const isSaving =
     questionCreateMutation.isPending ||
     questionUpdateMutation.isPending ||
     deleteFileLoading;
+
   return (
     <form
       onSubmit={(e) => {
