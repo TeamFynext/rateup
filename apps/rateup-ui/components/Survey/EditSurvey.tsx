@@ -9,6 +9,7 @@ import {
   Tabs,
   Text,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLanguage } from "@tabler/icons-react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
@@ -27,7 +28,12 @@ import {
   uniquePages,
   WaSurveyQuestionTypes,
 } from "../../utils/constants";
-import { createBlankQuestion, createPage } from "../../utils/questions";
+import {
+  createBlankQuestion,
+  createPage,
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+} from "../../utils/questions";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import styles from "./EditSurvey.module.css";
 import PageTypeSelection from "./Page/PageTypeSelection";
@@ -87,6 +93,9 @@ export function EditSurvey({
   const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
     survey?.webSurveyTheme?.theme,
   );
+  const questionDetailedViewForm = useForm({
+    initialValues: getInitialQuestionValues(selectedQ, surveyLanguages),
+  });
 
   // To store state of surveyThemeContextProvider.
   const surveyThemeContextProviderValueRef = useRef(null);
@@ -155,6 +164,15 @@ export function EditSurvey({
       } else {
         return false;
       }
+    } else if (
+      Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
+    ) {
+      const missingLanguages = validateAllLanguagesArePopulated(
+        questionDetailedViewForm.getValues() as Question,
+        surveyLanguages,
+        ["title", "choices"],
+      );
+      return missingLanguages?.length > 0;
     } else {
       return false;
     }
@@ -165,6 +183,7 @@ export function EditSurvey({
     selectedQ,
     activeTab,
     surveyThemeContextProviderValueRef.current,
+    questionDetailedViewForm.getValues()?.id,
   ]);
 
   useEffect(() => {
@@ -225,12 +244,32 @@ export function EditSurvey({
 
   useEffect(() => {
     setFunToRunBeforeSurveyIdPageHeaderTabsChange(() => {
-      return checkForUnsavedChanges;
+      return () => {
+        const haveUnsavedChanges = checkForUnsavedChanges();
+        let feedbackElement = "modal";
+        if (
+          haveUnsavedChanges &&
+          Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
+        ) {
+          feedbackElement = "toast";
+        }
+        if (haveUnsavedChanges) {
+          return {
+            haveUnsavedChanges,
+            feedbackElement,
+            toastMessage: "Please Enter heading and choices for all languages.",
+          };
+        }
+      };
     });
     return () => {
       setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
     };
-  }, [checkForUnsavedChanges, setFunToRunBeforeSurveyIdPageHeaderTabsChange]);
+  }, [
+    checkForUnsavedChanges,
+    setFunToRunBeforeSurveyIdPageHeaderTabsChange,
+    selectedQ,
+  ]);
 
   return (
     <SurveyThemeContextProvider
@@ -307,6 +346,7 @@ export function EditSurvey({
                           surveyLanguages={surveyLanguages}
                           setSelectedLanguage={setSelectedLanguage}
                           key={selectedQ.id}
+                          form={questionDetailedViewForm}
                         />
                       )}
                     </>

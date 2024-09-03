@@ -7,6 +7,7 @@ import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
+import { showErrorToast } from "@/utils/notifications";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
@@ -78,8 +79,9 @@ export default function SurveyID(translations) {
 
   const handleTabChange = useCallback(
     (value) => {
-      const haveUnsavedChanges = funToRunBeforeSurveyIdPageHeaderTabsChange?.();
-      if (haveUnsavedChanges) {
+      const data = funToRunBeforeSurveyIdPageHeaderTabsChange?.();
+      const { haveUnsavedChanges, feedbackElement, toastMessage } = data || {};
+      if (haveUnsavedChanges && feedbackElement === "modal") {
         modals.openConfirmModal({
           title: "Discard unsaved changes?",
           children: (
@@ -100,6 +102,9 @@ export default function SurveyID(translations) {
             setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
           },
         });
+        return;
+      } else if (haveUnsavedChanges && feedbackElement === "toast") {
+        showErrorToast(toastMessage, "surveyid-unsaved-changes-toast");
         return;
       }
       setActiveTab(value);

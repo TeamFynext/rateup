@@ -21,10 +21,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
-import { PageType } from "@/types/enums";
+import { PageType, QuestionType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext";
 import { uniquePages } from "@/utils/constants";
+import { showErrorToast } from "@/utils/notifications";
 import { reorder, reOrderPages } from "@/utils/questions";
 
 import { QuestionTabsEnum } from "./EditSurvey";
@@ -109,31 +110,48 @@ export function QuestionsSideBar({
     setSelectedSurveyThemeTab(ThemeTabEnum.SURVEY);
   };
 
+  const openDiscardChangesModal = (onConfirm) => {
+    modals.openConfirmModal({
+      title: "Discard unsaved changes?",
+      children: (
+        <Text className={modalStyles["are-you-sure-text"]}>
+          Are you sure, you want to discard unsaved changes?
+        </Text>
+      ),
+      labels: { confirm: "Discard", cancel: "Cancel" },
+      className: modalStyles["delete-confirmation-modal"],
+      centered: true,
+      classNames: {
+        header: modalStyles["modal-header"],
+        body: modalStyles["modal-body"],
+        content: modalStyles["modal-content"],
+      },
+      onConfirm,
+    });
+  };
+
   const handleOpenQuestion = (question: Question) => {
     if (selectedQ === question) {
       return;
     }
     const haveUnsavedChanges = checkForUnsavedChanges();
-    if (haveUnsavedChanges) {
-      modals.openConfirmModal({
-        title: "Discard unsaved changes?",
-        children: (
-          <Text className={modalStyles["are-you-sure-text"]}>
-            Are you sure, you want to discard unsaved changes?
-          </Text>
-        ),
-        labels: { confirm: "Discard", cancel: "Cancel" },
-        className: modalStyles["delete-confirmation-modal"],
-        centered: true,
-        classNames: {
-          header: modalStyles["modal-header"],
-          body: modalStyles["modal-body"],
-          content: modalStyles["modal-content"],
-        },
-        onConfirm: () => {
-          openQuestion(question);
-        },
+    if (
+      haveUnsavedChanges &&
+      (uniquePages.includes(selectedQ?.type as PageType) ||
+        activeTab === QuestionTabsEnum.SurveyPreview)
+    ) {
+      openDiscardChangesModal(() => {
+        openQuestion(question);
       });
+      return;
+    } else if (
+      haveUnsavedChanges &&
+      Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
+    ) {
+      showErrorToast(
+        "Please Enter heading and choices for all languages.",
+        "missing-title-toast",
+      );
       return;
     }
     openQuestion(question);
@@ -219,26 +237,24 @@ export function QuestionsSideBar({
                   return;
                 }
                 const haveUnsavedChanges = checkForUnsavedChanges();
-                if (haveUnsavedChanges) {
-                  modals.openConfirmModal({
-                    title: "Discard unsaved changes?",
-                    children: (
-                      <Text className={modalStyles["are-you-sure-text"]}>
-                        Are you sure, you want to discard unsaved changes?
-                      </Text>
-                    ),
-                    labels: { confirm: "Discard", cancel: "Cancel" },
-                    className: modalStyles["delete-confirmation-modal"],
-                    centered: true,
-                    classNames: {
-                      header: modalStyles["modal-header"],
-                      body: modalStyles["modal-body"],
-                      content: modalStyles["modal-content"],
-                    },
-                    onConfirm: () => {
-                      openSurveyEditPreview();
-                    },
+                if (
+                  haveUnsavedChanges &&
+                  uniquePages.includes(selectedQ?.type as PageType)
+                ) {
+                  openDiscardChangesModal(() => {
+                    openSurveyEditPreview();
                   });
+                  return;
+                } else if (
+                  haveUnsavedChanges &&
+                  Object.values(QuestionType).includes(
+                    selectedQ?.type as QuestionType,
+                  )
+                ) {
+                  showErrorToast(
+                    "Please Enter heading and choices for all languages.",
+                    "missing-title-toast",
+                  );
                   return;
                 }
                 openSurveyEditPreview();
