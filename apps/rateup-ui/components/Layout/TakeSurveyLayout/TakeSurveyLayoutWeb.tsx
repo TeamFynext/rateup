@@ -250,22 +250,20 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
             src={backgroundImageSrc}
           >
             {/* .........Survey Header Section.......... */}
-            {survey?.isPublished == true &&
-              !isLanguagePageActive &&
-              startClicked && (
-                <Box className={styles["logo-container"]}>
-                  {orgLogoSrc && (
-                    <Image
-                      src={orgLogoSrc}
-                      alt="Logo"
-                      style={{ ...orgLogoStyles }}
-                      mah={100}
-                      maw={100}
-                      fit="contain"
-                    />
-                  )}
-                </Box>
-              )}
+            {!isLanguagePageActive && startClicked && (
+              <Box className={styles["logo-container"]}>
+                {orgLogoSrc && (
+                  <Image
+                    src={orgLogoSrc}
+                    alt="Logo"
+                    style={{ ...orgLogoStyles }}
+                    mah={100}
+                    maw={100}
+                    fit="contain"
+                  />
+                )}
+              </Box>
+            )}
 
             <Paper
               pt="-50px"
