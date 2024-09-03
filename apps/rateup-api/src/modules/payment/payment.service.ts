@@ -35,7 +35,7 @@ export async function createCheckoutSession(
 ) {
   const requestBody = {
     plan_id: data.planId,
-    total_count: data.period === "monthly" ? 12 : 1,
+    total_count: data.period === "monthly" ? 1200 : 100,
     quantity: 1,
     customer_notify: 1, //enable notifications
     notes: {

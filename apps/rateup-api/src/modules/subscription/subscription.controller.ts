@@ -15,6 +15,7 @@ import {
   FreePlanSubscriptionFeatures,
   UnlimitedAccess,
 } from "./subscription.data";
+import dayjs from "dayjs";
 
 export async function getUserSubscriptionHandler(req, res) {
   const { orgId } = req.user;
@@ -48,11 +49,16 @@ export async function updateSubscriptionHandler(
   const updatedData = req.body;
   if (updatedData?.basePlanId) {
     const rateupPlan = await getRateuplanById(updatedData?.basePlanId);
+    if (rateupPlan.paymentPlanId)
+      return res
+        .code(403)
+        .send({ message: "You cannot change to Razorpay plans manually" });
     if (rateupPlan.name === "FREE PLAN")
       updatedData.features = FreePlanSubscriptionFeatures;
     else if (rateupPlan.name === "RATEUP TRIAL")
       updatedData.features = UnlimitedAccess;
     else updatedData.features = rateupPlan.features;
+    updatedData.expiresAt = dayjs().add(30, "days").toDate();
   }
   const subscription = await updateSubscription(orgId, updatedData);
   return res.send(subscription);
