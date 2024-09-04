@@ -4,11 +4,9 @@ import { Box } from "@mantine/core";
 import _ from "lodash";
 
 import { PageType } from "@/types/enums";
-import { usePublicReviewSuggestions } from "@/backend/team/reviewSuggestion/reviewSuggestion.query";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
 import { useUser } from "@/context/UserContext";
 import ThankYou from "@/pages/public/survey/[surveyId]/end";
-import ReviewUsOnGoogle from "@/pages/public/survey/[surveyId]/review-us-on-google";
 import ResponseSubmitted from "@/pages/ws/[shortId]/response-submitted";
 import { surveyUploadsPath } from "@/utils/constants";
 
@@ -38,7 +36,7 @@ function SurveyThemeView({
   const userInfo = useUser();
   const userObj = userInfo?.user;
   const orgLogo = userObj?.orgLogo;
-  const orgLogoUrl = `${surveyUploadsPath}${orgLogo}`;
+  const orgLogoUrl = orgLogo ? `${surveyUploadsPath}${orgLogo}` : "";
 
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
@@ -62,7 +60,7 @@ function SurveyThemeView({
       <GoogleReview
         googleLink={"https://rateup.app"}
         isSurveyPreview
-        orgLogoUrl={orgLogo ? `${surveyUploadsPath}${orgLogo}` : ""}
+        orgLogoUrl={orgLogoUrl}
       />
     );
   } else if (isThankyouPage) {
