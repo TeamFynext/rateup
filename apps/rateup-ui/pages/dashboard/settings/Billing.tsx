@@ -309,11 +309,9 @@ const Billing = ({
                     {translations["Billing Cycle"]}
                   </Text>
                   <Title order={5}>
-                    {subscription?.basePlan?.paymentPlan?.period ||
-                    subscription?.basePlan?.stripeProduct?.interval ||
-                    isShopifyPlan
-                      ? "Monthly"
-                      : "----"}
+                    {(subscription?.basePlan?.paymentPlan?.period ||
+                      subscription?.basePlan?.stripeProduct?.interval) ??
+                      (isShopifyPlan ? "Monthly" : "----")}
                   </Title>
                 </Stack>
                 <Stack gap={1}>

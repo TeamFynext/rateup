@@ -40,9 +40,11 @@ export const useUpdateSubscriptionMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       showSuccessToast("Subscription updated successfully");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error(error);
-      showErrorToast("Error updating subscription");
+      showErrorToast(
+        `Error updating subscription ${error?.response?.data?.message ?? ""}`,
+      );
     },
   });
 };

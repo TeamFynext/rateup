@@ -657,6 +657,7 @@ declare global {
       period: string;
       amount: number;
     };
+    paymentPlanId?: string;
   }
 
   type StripeProduct = {
