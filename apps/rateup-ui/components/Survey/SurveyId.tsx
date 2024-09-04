@@ -7,6 +7,7 @@ import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast } from "@/utils/notifications";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
@@ -34,7 +35,7 @@ export enum TabEnum {
   Theme = "Theme",
 }
 
-export default function SurveyID(translations) {
+export default function SurveyID() {
   const router = useRouter();
   const { surveyId } = router.query;
   const { tab } = router.query;
@@ -69,6 +70,7 @@ export default function SurveyID(translations) {
   const [filterTags, setFilterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
+  const { translations } = useTranslations();
 
   const [
     funToRunBeforeSurveyIdPageHeaderTabsChange,
