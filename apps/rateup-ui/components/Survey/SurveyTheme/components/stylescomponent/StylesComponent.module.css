@@ -161,6 +161,22 @@
   margin-bottom: 0.3125rem;
 }
 
+.default-theme-not-editable-overlay-message-container-root-div {
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+}
+
+.overlay-message-container {
+  padding: 1rem;
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 1rem;
+}
+
+.overlay-message-p {
+  font-size: 0.875rem;
+}
+
 /* Individual Styles components like BackgrounsStyles,ButtonStyles, others styles */
 .style-inputs-container {
   width: 100%;

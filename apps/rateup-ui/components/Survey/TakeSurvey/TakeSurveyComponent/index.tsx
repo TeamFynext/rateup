@@ -238,6 +238,8 @@ function TakeSurvey({
                 finishSurvey(nextQ.type);
               } catch (error) {
                 showErrorToast(error?.message?.toString());
+              } finally {
+                return;
               }
             }
             goTo(nextQ);
@@ -380,6 +382,7 @@ function TakeSurvey({
                 size={"md"}
                 className={styles["take-survey-root-div"]}
                 ref={takeSurveyRootDivRef}
+                style={isSavingResponses ? { pointerEvents: "none" } : {}}
               >
                 <Stack justify="space-between" h={"100%"} gap={"1rem"}>
                   <ConfirmResponsesModal

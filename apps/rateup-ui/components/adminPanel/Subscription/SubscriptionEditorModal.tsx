@@ -34,6 +34,8 @@ export function SubscriptionEditorModal({
   const updateMutation = useUpdateSubscriptionMutation();
   const rateupPaymentsPlanUpdateMutation =
     useRateupPaymentsPlanUpdateMutation(onClose);
+  const isRazorPayPlan =
+    !rateupPlanEnable && subscription?.basePlan?.paymentPlanId;
   function handleSave() {
     if (rateupPlanEnable) {
       showLoadingToast(
@@ -49,18 +51,10 @@ export function SubscriptionEditorModal({
       };
       rateupPaymentsPlanUpdateMutation.mutate(updatedData);
     } else {
-      if (!subscription.basePlan.name.toUpperCase().includes("CUSTOM")) {
-        showErrorToast(
-          "Subscription can only updated in custom plan",
-          "",
-          <IconX />,
-        );
-        return;
-      }
       updateMutation.mutate(
         {
           orgId: subscription.orgId,
-          updatedData: { ...subscriptionForm.values, renewedAt: new Date() },
+          updatedData: { ...subscriptionForm.values },
         },
         {
           onSuccess: () => {
@@ -96,6 +90,13 @@ export function SubscriptionEditorModal({
             onChange={(value) =>
               subscriptionForm.setFieldValue("expiresAt", value)
             }
+            disabled={
+              !(
+                subscription.basePlan.name.toUpperCase().includes("CUSTOM") ||
+                subscription.basePlan.name.toUpperCase().includes("TRIAL") ||
+                subscription.basePlan.name.toUpperCase().includes("FREE")
+              )
+            }
           />
         )}
         <Box
@@ -126,6 +127,12 @@ export function SubscriptionEditorModal({
                 },
               )}
           </Stack>
+          {isRazorPayPlan && (
+            <Text size="sm" c={"var(--tertiary-color)"} fw={"bold"} m={"xs"}>
+              *Note: The updated feature will be valid only till end of the
+              current billing cycle
+            </Text>
+          )}
         </Box>
         <Group justify="end">
           <Button variant="outline" onClick={onClose}>
