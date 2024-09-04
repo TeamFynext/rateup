@@ -1,13 +1,16 @@
 import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
-  useCreateHubSpotContacts,
+  useUpdateFreePlanSubscription,
   useUpdateWebSurveyPagesTheme,
 } from "@/backend/updations/update.query";
 
 function UpdateAllThemes() {
-  const exportUserToHubSpot = useCreateHubSpotContacts();
   const updatePageTypeQuestionsMutations = useUpdateWebSurveyPagesTheme();
+  const updateFreePlanSubscription = useUpdateFreePlanSubscription();
+
+  const isDev =
+    process.env.NEXT_PUBLIC_FRONTEND_URL === "https://dev.rateup.app";
 
   return (
     <Stack>
@@ -29,21 +32,23 @@ function UpdateAllThemes() {
         </Button>
       </Stack>
 
-      <Stack mt="xl">
-        <Title order={2}>Export user data to hubspot</Title>
-        <Text>Export user emails and org name to hubspot</Text>
+      {isDev && (
+        <Stack mt="xl">
+          <Title order={2}>Update Free plan susbcription feature</Title>
+          <Text>Update free plan features since it is missing</Text>
 
-        <Button
-          ml="md"
-          style={{ alignSelf: "flex-start" }}
-          onClick={() => {
-            exportUserToHubSpot.mutate();
-          }}
-          loading={exportUserToHubSpot.isPending}
-        >
-          Export
-        </Button>
-      </Stack>
+          <Button
+            ml="md"
+            style={{ alignSelf: "flex-start" }}
+            onClick={() => {
+              updateFreePlanSubscription.mutate();
+            }}
+            loading={updateFreePlanSubscription.isPending}
+          >
+            Update
+          </Button>
+        </Stack>
+      )}
     </Stack>
   );
 }
