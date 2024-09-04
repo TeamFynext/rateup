@@ -67,6 +67,7 @@ export async function getSubscription(orgId: string) {
             select: {
               period: true,
               amount: true,
+              currency: true,
             },
           },
           stripeProduct: {
@@ -75,6 +76,7 @@ export async function getSubscription(orgId: string) {
               amount: true,
             },
           },
+          paymentPlanId: true,
           displayName: true,
         },
       },
@@ -101,6 +103,7 @@ export async function getAllSubscriptions() {
         select: {
           id: true,
           name: true,
+          paymentPlanId: true,
         },
       },
     },
