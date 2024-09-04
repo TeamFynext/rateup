@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { updateWebSurveyPagesThemeInDB } from "./migrationFiles/update-web-survey-pages-theme";
 import { log } from "../../utils/logger";
-import { createHubSpotContactsForExistingRecords } from "./migrationFiles/create-hubspot-contact";
+import { updateFreePlanSubscriptionFeatures } from "./migrationFiles/update-free-plan-features";
 
 export async function updateWebSurveyPagesTheme(
   request: FastifyRequest,
@@ -21,17 +21,16 @@ export async function updateWebSurveyPagesTheme(
   }
 }
 
-export async function createHubSpotContactsForExistingUsers(
+//update free plan subscription features in dev since it is missing
+export async function updateFreePlanSubscriptionFeaturesHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN)
-      return reply.code(403).send({ message: "Access token is not available" });
-    const res = await createHubSpotContactsForExistingRecords();
+    const res = await updateFreePlanSubscriptionFeatures();
     reply.code(200).send(res);
   } catch (e) {
-    log.error("error creating hubspot contact for existing records %o", e);
+    log.error(e);
     reply.code(500).send(e);
   }
 }
