@@ -85,10 +85,10 @@ export async function verificationHandler(
         data?.payload?.payment?.entity,
         data?.event,
       );
-      reply.code(201).send(paymentPlans);
+      return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);
-      reply.code(500).send("Failed");
+      return reply.code(500).send("Failed");
     }
   }
 
@@ -96,20 +96,20 @@ export async function verificationHandler(
     console.log(".....................subscription.charged");
     try {
       const paymentPlans = await updateSubscription(data?.payload);
-      reply.code(201).send(paymentPlans);
+      return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);
-      reply.code(500).send("Failed");
+      return reply.code(500).send("Failed");
     }
   }
 
   if (data?.event === "subscription.activated") {
     try {
       const paymentPlans = await activateSubscription(data?.payload);
-      reply.code(201).send(paymentPlans);
+      return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);
-      reply.code(500).send("Failed");
+      return reply.code(500).send("Failed");
     }
   }
 

@@ -292,6 +292,7 @@ declare global {
       period: string;
       amount: number;
     };
+    paymentPlanId?: string;
     displayName: string;
   }
 
