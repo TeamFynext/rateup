@@ -91,6 +91,7 @@ export function SubscriptionEditorModal({
               subscriptionForm.setFieldValue("expiresAt", value)
             }
             disabled={
+              subscription?.basePlan &&
               !(
                 subscription.basePlan.name.toUpperCase().includes("CUSTOM") ||
                 subscription.basePlan.name.toUpperCase().includes("TRIAL") ||
