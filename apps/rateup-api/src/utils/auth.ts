@@ -129,13 +129,19 @@ export function getVerifySubscriptionHandler(
         })) as unknown as Subscription;
         return;
       }
-      if (dayjs(subscription.expiresAt).isBefore(dayjs())) {
+      if (
+        dayjs(subscription.expiresAt).isBefore(dayjs()) &&
+        ["POST", "PUT"].includes(request.method)
+      ) {
         log.error(
           "Subscription expired\n%o\nrequest.user => %o",
           subscription,
           request.user,
         );
-        reply.code(403).send({ message: "Subscription expired" });
+        reply.code(403).send({
+          message: "Subscription expired",
+          displayMessageInClient: true,
+        });
         return;
       }
       const missingFeatures = featurePathNames.filter(
