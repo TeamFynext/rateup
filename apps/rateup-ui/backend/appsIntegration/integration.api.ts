@@ -93,3 +93,7 @@ export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
   );
   return response.data;
 };
+
+export async function getAllIntegrations() {
+  return (await axiosClient.get(`${ROUTE_URL}all`)).data;
+}

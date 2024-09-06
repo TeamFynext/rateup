@@ -10,6 +10,7 @@ import {
   createWaPaymentConfiguration,
   deleteIntegration,
   deleteWaPaymentConfiguration,
+  getAllIntegrations,
   getGoogleSheetAuthorizationUrl,
   getIntegrationByType,
   getWaPaymentConfigurationByName,
@@ -219,5 +220,12 @@ export const useCreateAuthToken = () => {
   return useMutation({
     mutationFn: createGoogleSheetAuthToken,
     onSuccess: (data) => {},
+  });
+};
+
+export const useGetAllIntegrations = () => {
+  return useQuery({
+    queryKey: ["integrations"],
+    queryFn: getAllIntegrations,
   });
 };
