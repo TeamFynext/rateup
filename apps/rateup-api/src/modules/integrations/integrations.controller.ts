@@ -4,6 +4,7 @@ import {
   deleteIntegrationByName,
   deleteWaPaymentConfiguration,
   getAllIntegrations,
+  getAllIntegrationsByOrgId,
   getGoogleAuthUrl,
   getIntegrationByName,
   getRegenerateWaPaymentConfigOauth,
@@ -24,13 +25,13 @@ import {
 } from "./integrations.schema";
 import { IntegratedApps } from "../../types/enums";
 
-export const getAllIntegrationsHandler = async (
+export const getAllIntegrationsByOrgHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
     const { orgId } = request.user;
-    const data = await getAllIntegrations(orgId);
+    const data = await getAllIntegrationsByOrgId(orgId);
     reply.send(data);
   } catch (error) {
     log.error("Error fetching all integrations");
@@ -52,6 +53,19 @@ export const getIntegrationByNameHandler = async (
     return reply.code(500).send({ error: "Something went wrong" });
   }
 };
+
+export async function getAllIntegrationsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const integrations = await getAllIntegrations();
+    reply.code(200).send(integrations);
+  } catch (e) {
+    log.error("Error fetching all integrations %o", e);
+    reply.code(500).send(e);
+  }
+}
 
 export const getWaPaymentConfigurationsHandler = async (
   request: FastifyRequest,

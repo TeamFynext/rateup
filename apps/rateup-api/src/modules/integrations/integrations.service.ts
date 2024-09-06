@@ -12,7 +12,7 @@ import { callWhatsappApi } from "../whatsapp/wa_axios";
 import { log } from "../../utils/logger";
 import { getWaSettings } from "../whatsapp/settings/wa_settings.service";
 
-export const getAllIntegrations = (orgId: string) => {
+export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
     where: {
       orgId,
@@ -31,6 +31,10 @@ export const getIntegrationByName = async (orgId: string, name: string) => {
   });
   return data;
 };
+
+export async function getAllIntegrations() {
+  return await prisma.integration.findMany();
+}
 
 export const getWaPaymentConfigurations = async (
   orgId: string,

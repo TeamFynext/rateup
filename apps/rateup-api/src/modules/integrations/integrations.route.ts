@@ -6,6 +6,7 @@ import {
   createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
   deleteWaPaymentConfigurationHandler,
+  getAllIntegrationsByOrgHandler,
   getAllIntegrationsHandler,
   getGoogleAuthUrlForSheetHandler,
   getIntegrationByNameHandler,
@@ -25,7 +26,8 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.register(shopifyRoutes, { prefix: "/shopify" });
   shopifySchema.forEach((schema) => server.addSchema(schema));
 
-  server.get("/", {}, getAllIntegrationsHandler);
+  server.get("/", {}, getAllIntegrationsByOrgHandler);
+  server.get("/all", {}, getAllIntegrationsHandler);
   server.get(
     "/:name",
     {
