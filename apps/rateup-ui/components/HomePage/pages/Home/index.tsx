@@ -1,13 +1,17 @@
+import Head from "next/head";
+
+import { Box } from "@mantine/core";
+
+import Banner from "../../components/Banner";
+import CompaniesUsingRateup from "./CompaniesUsingRateup";
+import EmpowerYourBrandsGrowth from "./EmpowerYourBrandsGrowth";
+import Features from "./Features";
+import PerfectSurveyForYourNeeds from "./Features/PerfectSurveyForYourNeeds";
 import HeroSection from "./HeroSection";
 import OurFeaturesSection from "./OurFeaturesSection";
 import OurSolutionsSection from "./OursolutionsSection";
-import Head from "next/head";
 import TestimonialsSection from "./TestimonialsSection";
-import EmpowerYourBrandsGrowth from "./EmpowerYourBrandsGrowth";
-import Banner from "../../components/Banner";
-import { Box } from "@mantine/core";
-import PerfectSurveyForYourNeeds from "./Features/PerfectSurveyForYourNeeds";
-import Features from "./Features";
+import WhyUseRateup from "./WhyUseRateup";
 
 function Home() {
   return (
@@ -42,16 +46,8 @@ function Home() {
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
-
-      <EmpowerYourBrandsGrowth />
-      <Banner
-        title={"Discover Rateup!"}
-        subtitle={"Your Complete Customer Engagement Solution"}
-      />
-      <Features />
-      {/* <OurFeaturesSection /> */}
-      {/* <OurSolutionsSection /> */}
-      {/* <TestimonialsSection /> */}
+      <CompaniesUsingRateup />
+      <WhyUseRateup />
     </Box>
   );
 }

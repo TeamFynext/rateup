@@ -1,14 +1,15 @@
 import { ActionIcon, Container, Flex } from "@mantine/core";
-import Header from "../components/Header";
-import BookADemoSection from "../components/BookADemoSection";
-import Footer from "../components/Footer";
-import styles from "./LandingPageLayout.module.css";
-import { lexend, rubik } from "../../../utils/fonts";
-import classNames from "classnames/bind";
 import { useWindowScroll } from "@mantine/hooks";
 import { IconArrowUp } from "@tabler/icons-react";
-import CookieConsentBanner from "../../Analytics/CookieConsentBanner";
+import classNames from "classnames/bind";
+
 import { isProduction } from "../../../utils/constants";
+import { lexend, rubik } from "../../../utils/fonts";
+import CookieConsentBanner from "../../Analytics/CookieConsentBanner";
+import BookADemoSection from "../components/BookADemoSection";
+import Footer from "../components/Footer";
+import Header from "../components/Header";
+import styles from "./LandingPageLayout.module.css";
 
 const cx = classNames.bind(styles);
 
@@ -29,7 +30,6 @@ function LandingPageLayout({ children, className = "" }) {
 
   return (
     <div className={requiredClassName}>
-      {/* The header will be rendered in Herosection of /components/Hompage/Home.tsx component for "/" path */}
       <Header />
 
       <Container

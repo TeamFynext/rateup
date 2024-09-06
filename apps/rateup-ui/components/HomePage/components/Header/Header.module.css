@@ -1,11 +1,11 @@
 .header-container {
   border-bottom: 1px solid rgb(215, 215, 215);
   box-shadow:
-    0 4px 8px 0 rgba(0, 0, 0, 0.1),
-    0 6px 20px 0 rgba(0, 0, 0, 0.1);
+    0 4px 8px 0 rgba(28, 81, 142, 0.1),
+    0 6px 20px 0 rgba(28, 81, 142, 0.1);
   background-color: white;
   align-items: center;
-  padding: 1rem 10%;
+  padding: 0.75rem 5%;
   width: 100%;
   max-width: 120rem;
   transition: top 0.4s linear;
@@ -26,43 +26,42 @@
 .header-link {
   font-family: var(--font-rubik);
   composes: header-footer-link from "../../index.module.css";
-  /* color: var(--grey-color); */
-  color: var(--mantine-color-gray-7);
+  color: #0f4b90;
   margin-right: 0;
-  font-weight: 400;
+  font-weight: 430;
 }
 
 .header-link:global(.link-active) {
-  color: var(--homepage-blue);
-  font-weight: 500;
+  color: #0f4b90;
+  font-weight: 550;
 }
 
 .header-link:global(.link-active) + :global(.sublinks-chevron-btn) {
-  color: var(--homepage-blue);
+  color: #0f4b90;
 }
 
 .header-link:active {
-  color: var(--homepage-blue);
+  color: #0f4b90;
 }
 
 .header-link:hover {
-  color: var(--homepage-blue);
+  color: #0f4b90;
 }
 
 .header-link:hover + :global(.sublinks-chevron-btn) {
-  color: var(--homepage-blue);
+  color: #0f4b90;
 }
 
 .login-signup-link {
   composes: header-footer-link from "../../index.module.css";
   height: auto;
-  padding: 0.4375rem 1.25rem;
+  padding: 0.3125rem 2rem;
   composes: gradient-image-1 from "../../index.module.css";
-  border-radius: 0.3125rem;
+  border-radius: 2rem;
   display: block;
   font-family: var(--font-rubik);
-  font-weight: 500;
-  border: 2px solid var(--homepage-blue);
+  font-weight: 430;
+  border: 2px solid var(--tertiary-color);
 }
 
 .login-link {
@@ -82,9 +81,9 @@
 
 .signup-link {
   composes: header-footer-link from "../../index.module.css";
-  composes: gradient-image-1 from "../../index.module.css";
   composes: login-signup-link;
   color: white;
+  background-image: linear-gradient(90deg, #2564ae, #00397b);
 }
 
 .go-to-dashboard-link {
@@ -174,6 +173,7 @@
 @media screen and (max-width: 1024px) {
   .header-container {
     gap: 1rem;
+    padding: 0.75rem 8%;
   }
 
   .header-links-container {
@@ -205,6 +205,6 @@
 
 @media screen and (min-width: 120rem) {
   .header-container {
-    padding: 1rem 192px;
+    padding: 0.75rem 192px;
   }
 }
