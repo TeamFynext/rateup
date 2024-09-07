@@ -367,11 +367,24 @@ export async function registerWebhookByTopic(topic, orgId) {
 export async function handleSubscriptionUpdateFromShopify(shop, payload) {
   const integration = await getShopifyIntegrationByShop(shop);
   const subscription = await getSubscription(integration.orgId);
-  const rateupPlan = await prisma.rateupPlan.findFirst({
-    where: {
-      displayName: payload?.app_subscription?.name,
-    },
-  });
+  let rateupPlan;
+  if (payload?.app_subscription?.name === "FREE PLAN") {
+    rateupPlan = await prisma.rateupPlan.findFirst({
+      where: {
+        displayName: "FREE PLAN",
+      },
+    });
+  } else {
+    rateupPlan = await prisma.rateupPlan.findFirst({
+      where: {
+        displayName: payload?.app_subscription?.name,
+        name: {
+          contains: "WhatsApp",
+        },
+      },
+    });
+  }
+
   const currentPlanInRateup = subscription.basePlan.displayName;
 
   const chargeIdSplitArray =
@@ -407,7 +420,6 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
       haltSubscription = true;
       break;
     case shopifyRecurringChargeStatus.active:
-      if (payload.app_subscription?.name === "FREE PLAN") break;
       activateSubscriptionThroughShopify(
         recurringCharge,
         integration,
@@ -489,7 +501,6 @@ async function activateSubscriptionThroughShopify(
   rateupPlan,
   shopDetails,
 ) {
-  if (recurringCharge.name === "FREE PLAN") return;
   const data = {
     name: recurringCharge.name,
     createdById: integration.org.ownerId,
@@ -497,7 +508,9 @@ async function activateSubscriptionThroughShopify(
     rateupPlanId: rateupPlan.id,
     subscriptionStatus:
       shopifyRecurringChargeSubscriptionStatusMap[recurringCharge.status],
-    subscriptionChargeAt: new Date(recurringCharge.billing_on),
+    subscriptionChargeAt: recurringCharge.billing_on
+      ? new Date(recurringCharge.billing_on)
+      : null,
     shopifyPlanId: Object.values(ShopifyPlanMap)
       .find((plan) => plan.name === recurringCharge.name)
       ?.id?.toString(),
@@ -512,21 +525,23 @@ async function activateSubscriptionThroughShopify(
     },
     update: data,
   });
-  const payment = await prisma.payments.create({
-    data: {
-      payId: chargeId,
-      amount: Number(recurringCharge?.price),
-      currency: recurringCharge?.currency,
-      method: PaymentSource.Shopify,
-      description: "Subscription activated through shopify",
-      customer_email: shopDetails.email || "",
-      customer_phone: shopDetails.phone || "",
-      rateupOrderId: order.id,
-      createdAt: Math.floor(
-        new Date(recurringCharge.activated_on).getTime() / 1000,
-      ),
-    },
-  });
+  if (recurringCharge.name !== "FREE PLAN") {
+    const payment = await prisma.payments.create({
+      data: {
+        payId: chargeId,
+        amount: Number(recurringCharge?.price),
+        currency: recurringCharge?.currency,
+        method: PaymentSource.Shopify,
+        description: "Subscription activated through shopify",
+        customer_email: shopDetails.email || "",
+        customer_phone: shopDetails.phone || "",
+        rateupOrderId: order.id,
+        createdAt: Math.floor(
+          new Date(recurringCharge.activated_on).getTime() / 1000,
+        ),
+      },
+    });
+  }
   const expiresAt = dayjs(recurringCharge.activated_on)
     .add(29, "days")
     .toDate();
@@ -548,7 +563,10 @@ async function activateSubscriptionThroughShopify(
     },
     data: {
       status: OrderStatus.COMPLETE,
-      paymentStatus: PaymentStatus.SUCCESS,
+      paymentStatus:
+        recurringCharge.name === "FREE PLAN"
+          ? undefined
+          : PaymentStatus.SUCCESS,
     },
   });
 
