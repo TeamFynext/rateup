@@ -138,7 +138,7 @@ export function createEmailBodySubscriptionActivated(
                         Subscribed Plan:  <b> ${plan} </b><br/> 
                         Valid till:  <b> ${formattedDate} </b> <br/> <br/>
                         
-                        Enjoy your Rateup premium features.
+                       ${plan !== "FREE PLAN" ? "Enjoy your Rateup premium features" : ""}
                       </p>
                     </td>
                   </tr>
