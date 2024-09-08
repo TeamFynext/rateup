@@ -1,6 +1,11 @@
+import { useState } from "react";
+
 import { Box, Group, Stack, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconTrash } from "@tabler/icons-react";
 import {
   DataGrid,
+  GridActionsCellItem,
   GridColDef,
   GridRenderCellParams,
   GridToolbar,
@@ -8,13 +13,19 @@ import {
 
 import { IntegratedApps } from "@/types/enums";
 import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.query";
+import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
 import styles from "@/components/adminPanel/admin.module.css";
 import RefreshButton from "@/components/Button/RefreshButton";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
+import { showLoadingToast } from "@/utils/notifications";
 
 const index = () => {
   const { data: integrations } = useGetAllIntegrations();
+  const [selectedShop, setSelectedShop] = useState("");
+  const [opened, { open: openConfirmModal, close }] = useDisclosure(false);
+  const deleteIntegration = useDeleteShopifyIntegrationByShop();
 
   const rows = integrations
     ? integrations
@@ -45,7 +56,29 @@ const index = () => {
       },
     },
     { field: "createdAt", headerName: "Created At", width: 200 },
+    {
+      field: "action",
+      headerName: "Actions",
+      type: "actions",
+      width: 200,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<IconTrash />}
+          onClick={() => {
+            setSelectedShop(params.row.shop);
+            openConfirmModal();
+          }}
+          label="Delete"
+          showInMenu
+        />,
+      ],
+    },
   ];
+
+  const handleDelete = () => {
+    showLoadingToast("Deleting...", "integration");
+    deleteIntegration.mutate({ shop: selectedShop });
+  };
   return (
     <Stack>
       <Group>
@@ -66,6 +99,16 @@ const index = () => {
           }}
         />
       </Box>
+      <ConfirmationModal
+        confirmLabel="Yes"
+        headerLabel="Are you sure, you want to delete it?"
+        headerTitle="Delete"
+        onClose={close}
+        onConfirm={handleDelete}
+        forDeleteFunctionality
+        opened={opened}
+        closeLabel="No"
+      />
     </Stack>
   );
 };

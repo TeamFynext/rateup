@@ -88,7 +88,7 @@ export function showWarnToast(message: string, id = undefined) {
 export function showLoadingToast(
   message: string,
   id: string | undefined = undefined,
-  loading: boolean,
+  loading: boolean = true,
   title: string = "Loading",
   color: string = "teal",
   autoClose: number | boolean = 3000,
