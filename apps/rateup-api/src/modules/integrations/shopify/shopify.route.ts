@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   deleteAllWebhookHandler,
+  deleteIntegrationByShopHandler,
   deleteWebhookByTopicHandler,
   getProductsHandler,
   getRegisteredWebhooksHandler,
@@ -47,5 +48,15 @@ export async function shopifyRoutes(server: FastifyInstance) {
       },
     },
     deleteWebhookByTopicHandler,
+  );
+
+  server.delete(
+    "/:shop",
+    {
+      schema: {
+        params: ShopifyRef("byShopParamsSchema"),
+      },
+    },
+    deleteIntegrationByShopHandler,
   );
 }
