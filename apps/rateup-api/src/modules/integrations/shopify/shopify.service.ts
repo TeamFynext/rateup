@@ -691,3 +691,14 @@ export async function handleShopifyAppUnistalled(webhook) {
     await pauseOrg(shopifyInfo.orgId, { isPaused: true });
   }
 }
+
+export async function deleteShopifyIntegrationByShop(shop: string) {
+  await prisma.integration.deleteMany({
+    where: {
+      credential: {
+        path: ["session", "shop"],
+        equals: shop,
+      },
+    },
+  });
+}

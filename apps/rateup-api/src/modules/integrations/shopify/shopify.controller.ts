@@ -1,6 +1,7 @@
 import { registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema";
 import {
   deleteAllWebhooks,
+  deleteShopifyIntegrationByShop,
   getShopifyAuthUrl,
   getShopifyInfo,
   getShopifyIntegrationByShop,
@@ -23,6 +24,7 @@ import { API_URL, FRONTEND_URL } from "../../../utils/constants/constants";
 import { log } from "../../../utils/logger";
 import {
   createIntegration,
+  deleteIntegrationByName,
   updateIntegrationByName,
 } from "../integrations.service";
 import { IntegratedApps } from "../../../types/enums";
@@ -115,6 +117,9 @@ export async function updateShopifyIntegrationByShopHandler(
   try {
     const shop = request.params.shop;
     const orgId = request.user.orgId;
+    const integration = await getShopifyInfo(orgId);
+    if (integration)
+      await deleteIntegrationByName(IntegratedApps.shopify, orgId);
     await updateShopifyIntegrationByShop(shop, { orgId });
     reply.code(200).send({ message: "success" });
   } catch (e) {
@@ -262,6 +267,30 @@ export async function getProductsHandler(
     reply.code(200).send(products.data);
   } catch (e) {
     console.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteIntegrationByShopHandler(
+  request: FastifyRequest<{ Params: ShopParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const integration = await getShopifyIntegrationByShop(request.params.shop);
+    try {
+      const shop = await shopify.rest.Shop.current({
+        session: integration.credential.session,
+      });
+      if (shop) {
+        return reply.code(403).send("App is still installed on Shop");
+      }
+    } catch (e) {
+      log.trace("App is not installed in shop. continue deleting...");
+    }
+    const res = await deleteShopifyIntegrationByShop(request.params.shop);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error("error deleting integration %o", e);
     reply.code(500).send(e);
   }
 }
