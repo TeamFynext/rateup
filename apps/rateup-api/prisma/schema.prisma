@@ -463,9 +463,9 @@ model CampaignParticipant {
   campaignId                      String                            @db.Uuid
   contact                         Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
   contactId                       String                            @db.Uuid
-  contactGroup                    ContactGroup?                     @relation(fields: [contactGroupId], references: [id], onDelete: Cascade)
+  contactGroup                    ContactGroup?                     @relation(fields: [contactGroupId], references: [id], onDelete: SetNull)
   contactGroupId                  String?                           @db.Uuid
-  response                        SurveyResponse?                   @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  response                        SurveyResponse?                   @relation(fields: [responseId], references: [id], onDelete: SetNull)
   responseId                      String?                           @db.Uuid
   WaSession                       WaSession?
   errorMessage                    String?
@@ -575,10 +575,10 @@ model WaTemplate {
   defaultValues Json? // default values for images and other fields
   templateType  TemplateType @default(GENERAL_NOTIFICATION)
   config        Json?
-  org       Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId     String      @db.Uuid
-  waSession WaSession[]
-  Campaign  Campaign[]
+  org           Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId         String       @db.Uuid
+  waSession     WaSession[]
+  Campaign      Campaign[]
 }
 
 model MenuLanding {
