@@ -4,6 +4,7 @@ import { Box } from "@mantine/core";
 
 import Banner from "../../components/Banner";
 import CompaniesUsingRateup from "./CompaniesUsingRateup";
+import CustomerFeedback from "./CustomerFeedback";
 import EmpowerYourBrandsGrowth from "./EmpowerYourBrandsGrowth";
 import Features from "./Features";
 import PerfectSurveyForYourNeeds from "./Features/PerfectSurveyForYourNeeds";
@@ -11,6 +12,7 @@ import HeroSection from "./HeroSection";
 import OurFeaturesSection from "./OurFeaturesSection";
 import OurSolutionsSection from "./OursolutionsSection";
 import TestimonialsSection from "./TestimonialsSection";
+import WhatCanYouDo from "./WhatCanYouDo";
 import WhyUseRateup from "./WhyUseRateup";
 
 function Home() {
@@ -48,6 +50,8 @@ function Home() {
       <HeroSection />
       <CompaniesUsingRateup />
       <WhyUseRateup />
+      <WhatCanYouDo />
+      <CustomerFeedback />
     </Box>
   );
 }

@@ -1,7 +1,7 @@
 .text-illustration-root-div {
-  padding: 0 10%;
+  padding: 0;
   flex-wrap: wrap;
-  margin-bottom: 6.25rem;
+  margin-bottom: 4rem;
 }
 
 .text-illustration-root-div.image-as-first-element .text-container {
