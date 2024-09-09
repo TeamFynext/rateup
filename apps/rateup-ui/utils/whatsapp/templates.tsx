@@ -10,6 +10,8 @@ export function parseTemplate(template) {
   parsedTemplate.header = null;
   parsedTemplate.buttons = [];
   parsedTemplate.footer = "";
+  parsedTemplate.templateType = template?.templateType;
+  // parsedTemplate.config = template?.config;
 
   for (const component of template?.data?.components ?? []) {
     if (component.type.toLowerCase() === "header") {

@@ -5,6 +5,7 @@ import {
   Alert,
   Box,
   Card,
+  Divider,
   Flex,
   Grid,
   Group,
@@ -18,11 +19,15 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useToggle } from "@mantine/hooks";
-import { IconAsterisk, IconInfoCircle } from "@tabler/icons-react";
+import {
+  IconAsterisk,
+  IconImageInPicture,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
 
-import { WaTemplateStatus } from "@/types/enums";
+import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
 import {
@@ -33,6 +38,7 @@ import {
 } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
+  ContainedNumberInput,
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
@@ -52,6 +58,7 @@ import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/He
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating";
 import {
+  configSchema,
   templateSchema,
   WaTemplateDefaultValues,
 } from "@/components/whatsapp/templates/Schema/templateSchema";
@@ -86,7 +93,6 @@ export default function WhatsappTemplateById() {
   const inputRef = useRef(null);
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
-
   const form = useForm<z.infer<typeof templateSchema>>({
     initialValues: {
       name: "",
@@ -99,16 +105,52 @@ export default function WhatsappTemplateById() {
       buttons: [],
       status: WaTemplateStatus.DRAFT,
       example: [],
+      templateType: TemplateType.GENERAL_NOTIFICATION,
     },
     validate: zodResolver(templateSchema),
   });
+  const configForm = useForm<z.infer<typeof configSchema>>({
+    initialValues: {
+      price: 0,
+      tax: 0,
+      orderType: null,
+      name: "",
+    },
+    validate: zodResolver(configSchema),
+  });
+  const isOrderCreate = form.values.templateType === TemplateType.ORDER_DETAILS;
+
   useEffect(() => {
     if (editingItem) {
       form.resetDirty();
       form.setValues(parseTemplate(editingItem));
+      configForm.setValues(editingItem?.config);
       update({ templateId: editingItem?.data?.name });
     }
   }, [editingItem]);
+
+  useEffect(() => {
+    switch (form.getValues().templateType) {
+      case TemplateType.ORDER_DETAILS:
+        form.setFieldValue("category", "UTILITY");
+        form.setFieldValue("buttons", [
+          {
+            type: WHATSAPP_BUTTON_TYPE.ORDER_DETAILS,
+            text: "Review and Pay",
+          },
+        ]);
+        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
+        break;
+      case TemplateType.PAYMENT_CONFIRMATION:
+        form.setFieldValue("category", "UTILITY");
+        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+        form.setFieldValue("buttons", []);
+        break;
+      default:
+        form.setFieldValue("buttons", []);
+        break;
+    }
+  }, [form.getValues().templateType]);
 
   const createTemplateMutation = useCreateTemplateMutation(
     () => {
@@ -151,6 +193,16 @@ export default function WhatsappTemplateById() {
       );
       return;
     }
+    if (isOrderCreate) {
+      const { hasErrors: configHasErrors, errors: configErrors } =
+        configForm.validate();
+      if (configHasErrors) {
+        showErrorToast(
+          (Object.values(configErrors)?.[0] as string) ?? "Error in Template",
+        );
+        return;
+      }
+    }
     const dynamicVariableArray = parseStringWithVariables(form.values.body);
 
     if (dynamicVariableArray?.length > 0) {
@@ -190,6 +242,9 @@ export default function WhatsappTemplateById() {
         //@ts-ignore
         values.defaultValues = defaultValues;
       }
+      let templateData = isOrderCreate
+        ? { ...values, config: configForm.getValues() }
+        : values;
       if (editingItem?.data?.id) {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
           showWarnToast(
@@ -200,12 +255,12 @@ export default function WhatsappTemplateById() {
         }
         const mutationData = saveAsDraft
           ? { ...values, id: editingItem.id }
-          : { templateId: editingItem.id, templateData: values };
+          : { templateId: editingItem.id, templateData };
         saveAsDraft
           ? saveTemplateAsDraftMutation.mutate(mutationData)
           : updateTemplateMutation.mutate(mutationData);
       } else {
-        const mutationData = { ...values, id: editingItem?.id };
+        const mutationData = { ...templateData, id: editingItem?.id };
         saveAsDraft
           ? saveTemplateAsDraftMutation.mutate(mutationData)
           : createTemplateMutation.mutate(mutationData);
@@ -335,12 +390,15 @@ export default function WhatsappTemplateById() {
                 <RateupButtonPrimary title="Edit" onClick={toggle} />
               ) : (
                 <>
-                  <RateupButtonPrimary
-                    title="Save as draft"
-                    loading={isSubmittingDraft}
-                    variant="outline"
-                    onClick={() => handleSubmit(true)}
-                  />
+                  {!isOrderCreate && (
+                    <RateupButtonPrimary
+                      title="Save as draft"
+                      loading={isSubmittingDraft}
+                      variant="outline"
+                      onClick={() => handleSubmit(true)}
+                    />
+                  )}
+
                   <RateupButtonPrimary
                     title="Save & Submit"
                     loading={isSubmitting}
@@ -395,35 +453,51 @@ export default function WhatsappTemplateById() {
                       />
                     )}
                   </Group>
-                  <ContainedTextField
-                    label={
-                      <Text fz={14} ff={lexend500.style.fontFamily}>
-                        Template Name {requiredIcon}
-                      </Text>
-                    }
-                    placeholder="Name"
-                    {...form.getInputProps("name")}
-                    rightSection={
-                      <LengthTracker
-                        length={form?.values?.name?.length}
-                        maxValue={512}
-                        atStart
-                      />
-                    }
-                    disabled={!!editingItem?.data?.id}
-                  />
                   <SimpleGrid cols={2}>
+                    <ContainedTextField
+                      label={
+                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                          Template Name {requiredIcon}
+                        </Text>
+                      }
+                      placeholder="Name"
+                      {...form.getInputProps("name")}
+                      rightSection={
+                        <LengthTracker
+                          length={form?.values?.name?.length}
+                          maxValue={512}
+                          atStart
+                        />
+                      }
+                      disabled={!!editingItem?.data?.id}
+                    />
                     <ContainedSelection
                       label={
                         <Text fz={14} ff={lexend500.style.fontFamily}>
-                          Category {requiredIcon}
+                          TemplateType {requiredIcon}
                         </Text>
                       }
-                      placeholder="Category"
-                      {...form.getInputProps("category")}
-                      data={WHATSAPP_TEMPLATE_CATEGORY}
+                      placeholder="TemplateType"
+                      {...form.getInputProps("templateType")}
+                      data={Object.values(TemplateType)}
                       allowDeselect={false}
                     />
+                    {form.getValues().templateType !==
+                      TemplateType.PAYMENT_CONFIRMATION && (
+                      <ContainedSelection
+                        label={
+                          <Text fz={14} ff={lexend500.style.fontFamily}>
+                            Category {requiredIcon}
+                          </Text>
+                        }
+                        placeholder="Category"
+                        {...form.getInputProps("category")}
+                        data={WHATSAPP_TEMPLATE_CATEGORY}
+                        allowDeselect={false}
+                        disabled={isOrderCreate}
+                      />
+                    )}
+
                     <ContainedSelection
                       label={
                         <Text fz={14} ff={lexend500.style.fontFamily}>
@@ -437,48 +511,59 @@ export default function WhatsappTemplateById() {
                       allowDeselect={false}
                     />
                   </SimpleGrid>
-                  <Grid>
-                    <Grid.Col span={6}>
-                      <ContainedSelection
-                        label={
-                          <>
-                            <Text fz={14} ff={lexend500.style.fontFamily}>
-                              Broadcast header {requiredIcon}
-                            </Text>
-                            <Text fz={13}>
-                              Highlight your brand here, use images or videos,
-                              to stand out
-                            </Text>
-                          </>
-                        }
-                        placeholder="Broadcast Type"
-                        onChange={(e) => {
-                          if (
-                            e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
-                            form.values.header instanceof File
-                          ) {
-                            form.setFieldValue("header", "");
+                  {form.getValues().templateType !==
+                    TemplateType.PAYMENT_CONFIRMATION && (
+                    <Grid>
+                      <Grid.Col span={6}>
+                        <ContainedSelection
+                          label={
+                            <>
+                              <Text fz={14} ff={lexend500.style.fontFamily}>
+                                Broadcast header {requiredIcon}
+                              </Text>
+                              <Text fz={13}>
+                                Highlight your brand here, use images or videos,
+                                to stand out
+                              </Text>
+                            </>
                           }
-                          form.setFieldValue("format", e);
-                        }}
-                        value={form.values.format}
-                        data={Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)}
-                        allowDeselect={false}
-                      />
-                    </Grid.Col>
-                    <Grid.Col span={"auto"}>
-                      <Stack
-                        h={"100%"}
-                        justify="center"
-                        w={form.values?.format === "TEXT" ? "100%" : 300}
-                      >
-                        <BroadCastTypeValue
-                          form={form}
-                          type={form.values?.format}
+                          placeholder="Broadcast Type"
+                          onChange={(e) => {
+                            if (
+                              e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
+                              form.values.header instanceof File
+                            ) {
+                              form.setFieldValue("header", "");
+                            }
+                            form.setFieldValue("format", e);
+                          }}
+                          value={form.values.format}
+                          data={
+                            isOrderCreate
+                              ? [
+                                  WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
+                                  WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+                                ]
+                              : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)
+                          }
+                          allowDeselect={false}
                         />
-                      </Stack>
-                    </Grid.Col>
-                  </Grid>
+                      </Grid.Col>
+                      <Grid.Col span={"auto"}>
+                        <Stack
+                          h={"100%"}
+                          justify="center"
+                          w={form.values?.format === "TEXT" ? "100%" : 300}
+                        >
+                          <BroadCastTypeValue
+                            form={form}
+                            type={form.values?.format}
+                          />
+                        </Stack>
+                      </Grid.Col>
+                    </Grid>
+                  )}
+
                   <Stack gap={0}>
                     <Text fz={14} ff={lexend500.style.fontFamily}>
                       Body {requiredIcon}
@@ -525,53 +610,107 @@ export default function WhatsappTemplateById() {
                       {...form.getInputProps(`example.${index}`)}
                     />
                   ))}
-                  <ContainedTextField
-                    label={
-                      <>
-                        <Text fz={14} ff={lexend500.style.fontFamily}>
-                          Footer (Optional)
-                        </Text>
-                        <Text fz={13}>
-                          Footers are great to add any disclaimers or to add a
-                          thoughtful PS
-                        </Text>
-                      </>
-                    }
-                    placeholder="Footer"
-                    {...form.getInputProps("footer")}
-                    rightSection={
-                      <LengthTracker
-                        length={form?.values?.footer?.length}
-                        maxValue={60}
-                        atStart
-                      />
-                    }
-                  />
-
-                  <ButtonSelection
-                    handleMenuSelection={handleMenuSelection}
-                    flowBtn={
-                      !!form?.values?.buttons?.find(
-                        (data) => data.type === "FLOW",
-                      )
-                    }
-                    btnLen={form?.values?.buttons?.length}
-                  />
-                  {form.values?.buttons?.length > 0 && (
+                  {form.getValues().templateType !==
+                    TemplateType.PAYMENT_CONFIRMATION && (
                     <>
-                      {form.values?.buttons?.map((data, index) => (
-                        <Group
-                          className={buttonInputStyles.buttonBox}
-                          key={index}
-                        >
-                          <ButtonInput
-                            form={form}
-                            deleteButton={deleteButton}
-                            index={index}
-                            data={data}
+                      <ContainedTextField
+                        label={
+                          <>
+                            <Text fz={14} ff={lexend500.style.fontFamily}>
+                              Footer (Optional)
+                            </Text>
+                            <Text fz={13}>
+                              Footers are great to add any disclaimers or to add
+                              a thoughtful PS
+                            </Text>
+                          </>
+                        }
+                        placeholder="Footer"
+                        {...form.getInputProps("footer")}
+                        rightSection={
+                          <LengthTracker
+                            length={form?.values?.footer?.length}
+                            maxValue={60}
+                            atStart
                           />
-                        </Group>
-                      ))}
+                        }
+                      />
+                      <ButtonSelection
+                        handleMenuSelection={handleMenuSelection}
+                        flowBtn={
+                          !!form?.values?.buttons?.find(
+                            (data) => data.type === "FLOW",
+                          )
+                        }
+                        btnLen={form?.values?.buttons?.length}
+                        disabled={isOrderCreate}
+                      />
+                      {form.values?.buttons?.length > 0 && (
+                        <>
+                          {form.values?.buttons?.map((data, index) => (
+                            <Group
+                              className={buttonInputStyles.buttonBox}
+                              key={index}
+                            >
+                              <ButtonInput
+                                form={form}
+                                deleteButton={deleteButton}
+                                index={index}
+                                data={data}
+                              />
+                            </Group>
+                          ))}
+                        </>
+                      )}
+                      {isOrderCreate && (
+                        <>
+                          <Text fz={14} ff={lexend500.style.fontFamily}>
+                            Config {requiredIcon}
+                          </Text>
+                          <ContainedTextField
+                            label={
+                              <Text fz={14} ff={lexend500.style.fontFamily}>
+                                Name {requiredIcon}
+                              </Text>
+                            }
+                            placeholder={"name"}
+                            {...configForm.getInputProps("name")}
+                          />
+                          <ContainedNumberInput
+                            label={
+                              <Text fz={14} ff={lexend500.style.fontFamily}>
+                                Price {requiredIcon}
+                              </Text>
+                            }
+                            placeholder={"price"}
+                            min={0}
+                            {...configForm.getInputProps("price")}
+                          />
+                          <ContainedNumberInput
+                            label={
+                              <Text fz={14} ff={lexend500.style.fontFamily}>
+                                Tax {requiredIcon}
+                              </Text>
+                            }
+                            placeholder={"tax"}
+                            min={0}
+                            {...configForm.getInputProps("tax")}
+                          />
+                          <ContainedSelection
+                            label={
+                              <Text fz={14} ff={lexend500.style.fontFamily}>
+                                OrderType
+                              </Text>
+                            }
+                            placeholder={"order type"}
+                            data={Object.values(OrderType)}
+                            description={
+                              'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
+                            }
+                            {...configForm.getInputProps("orderType")}
+                          />
+                        </>
+                      )}
                     </>
                   )}
                 </Stack>
@@ -586,6 +725,26 @@ export default function WhatsappTemplateById() {
                   <WaChatPreview>
                     <Stack miw="200px" gap={3} p={"md"}>
                       <ResponseMessageContainer>
+                        <Box
+                          bg={"var(--light-grey-color-2)"}
+                          display={isOrderCreate ? "block" : "none"}
+                        >
+                          <Text fz={"xs"}>ORDER #{"{{Order number}}"}</Text>
+                          <Divider variant="dashed" color={"black"} />
+
+                          <Group>
+                            <IconImageInPicture height={50} size={32} />
+                            <Box>
+                              <Text fz={"xs"}>{"{{Product name}}"}</Text>
+                              <Text fz={"xs"}>Quantity {"{{#}}"}</Text>
+                            </Box>
+                          </Group>
+                          <Divider variant="dashed" color={"black"} />
+                          <Group justify="space-between">
+                            <Text fz={"xs"}>Total</Text>
+                            <Text fz={"xs"}>${"{{}}"}</Text>
+                          </Group>
+                        </Box>
                         <Text
                           fw="bold"
                           style={{
@@ -617,6 +776,12 @@ export default function WhatsappTemplateById() {
                           style={{
                             wordBreak: "break-all",
                           }}
+                          display={
+                            form.getValues().templateType !==
+                            TemplateType.PAYMENT_CONFIRMATION
+                              ? "block"
+                              : "none"
+                          }
                         >
                           {form.values.footer}
                         </Text>

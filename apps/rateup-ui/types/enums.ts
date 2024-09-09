@@ -360,3 +360,13 @@ export enum MenuButtons {
   WHATSAPP = "whatsApp",
   OTHER = "other",
 }
+
+export enum TemplateType {
+  GENERAL_NOTIFICATION = "GENERAL_NOTIFICATION",
+  ORDER_DETAILS = "ORDER_DETAILS",
+  PAYMENT_CONFIRMATION = "PAYMENT_CONFIRMATION",
+}
+
+export enum OrderType {
+  QUICK_PAY = "quick_pay",
+}
