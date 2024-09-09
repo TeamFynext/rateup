@@ -118,8 +118,11 @@ export async function updateShopifyIntegrationByShopHandler(
     const shop = request.params.shop;
     const orgId = request.user.orgId;
     const integration = await getShopifyInfo(orgId);
-    if (integration)
-      await deleteIntegrationByName(IntegratedApps.shopify, orgId);
+    if (integration) {
+      if (integration.credential.session.shop === shop)
+        return reply.code(200).send("success");
+      else await deleteIntegrationByName(IntegratedApps.shopify, orgId);
+    }
     await updateShopifyIntegrationByShop(shop, { orgId });
     reply.code(200).send({ message: "success" });
   } catch (e) {
