@@ -1,25 +1,26 @@
 import {
-  MenuProps,
-  Stack,
-  Menu,
+  Box,
   Button,
-  rem,
   Group,
+  Menu,
+  MenuProps,
+  rem,
+  Stack,
   Text,
   Tooltip,
-  Box,
 } from "@mantine/core";
 import {
-  IconPlus,
-  IconChevronDown,
   IconAdjustments,
-  IconCopy,
   IconBulb,
-  IconPhone,
+  IconChevronDown,
+  IconCopy,
   IconLink,
+  IconPhone,
+  IconPlus,
   IconWaveSine,
   IconWorld,
 } from "@tabler/icons-react";
+
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
 
@@ -48,16 +49,23 @@ export const ButtonSelection = ({
 
       <Menu shadow="md" width={200} {...restProps}>
         <Menu.Target>
-          <Button
-            maw={"min-content"}
-            variant="outline"
-            radius={12}
-            leftSection={<IconPlus size={16} />}
-            rightSection={<IconChevronDown size={16} />}
-            disabled={disabled}
+          <Tooltip
+            label={
+              "Only one button is supported for this type of template. The button text is not editable."
+            }
+            disabled={!disabled}
           >
-            Add Action Button
-          </Button>
+            <Button
+              maw={"min-content"}
+              variant="outline"
+              radius={12}
+              leftSection={<IconPlus size={16} />}
+              rightSection={<IconChevronDown size={16} />}
+              disabled={disabled}
+            >
+              Add Action Button
+            </Button>
+          </Tooltip>
         </Menu.Target>
 
         <Menu.Dropdown>

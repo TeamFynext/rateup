@@ -1,15 +1,18 @@
 import { ActionIcon, Box, Text } from "@mantine/core";
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import { IconX } from "@tabler/icons-react";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
+
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
+import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
+
 import "react-phone-number-input/style.css";
-import styles from "./ButtonInput.module.css";
-import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
+
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
+import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
+import styles from "./ButtonInput.module.css";
 
 const ButtonInput = ({ form, index, deleteButton, data }) => {
   let { data: flows } = useWaFlowsFromDb(
@@ -276,6 +279,36 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           >
             <IconX />
           </ActionIcon>
+        </>
+      );
+    case WHATSAPP_BUTTON_TYPE.ORDER_DETAILS:
+      return (
+        <>
+          <ContainedTextField
+            label={
+              <Text fz={14} ff={lexend500.style.fontFamily}>
+                Type of action
+              </Text>
+            }
+            value={"Open order details"}
+            readOnly
+          />
+          <ContainedTextField
+            label={
+              <Text fz={14} ff={lexend500.style.fontFamily}>
+                Button text
+              </Text>
+            }
+            rightSection={
+              <LengthTracker
+                length={form.values?.buttons?.[index]?.text?.length}
+                maxValue={25}
+                atStart
+              />
+            }
+            {...form.getInputProps(`buttons.${index}.text`)}
+            disabled
+          />
         </>
       );
 
