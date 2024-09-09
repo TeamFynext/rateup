@@ -5,6 +5,7 @@ import {
   WaButtonType,
   WaTemplateCategory,
 } from "../../../types/enums";
+import { TemplateType } from "@prisma/client";
 
 const waTemplateInput = {
   id: z.string().optional(),
@@ -46,6 +47,8 @@ const waTemplateInput = {
         .optional(),
     })
     .optional(),
+  templateType: z.nativeEnum(TemplateType).optional(),
+  config: z.any(),
 };
 
 const waTemplateFormattedInput = {

@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Role, TemplateType } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   SubscriptionFeaturePathName,
@@ -89,20 +89,54 @@ export async function createTemplateHandler(
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
     // TODO: restrict access to super admin and admin?
 
-    const { defaultValues, ...templateData } = request.body;
+    const { defaultValues, templateType, config, ...templateData } =
+      request.body;
     const formattedTemplate = generateTemplate(templateData);
-    const template = await createTemplate(orgId, formattedTemplate);
-    //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
-    const fetchedTemplate = await fetchTemplate(template?.name, orgId);
+    let fetchedTemplate;
+    switch (request.body.templateType) {
+      case TemplateType.GENERAL_NOTIFICATION:
+        const template = await createTemplate(orgId, formattedTemplate);
+        //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
+        fetchedTemplate = await fetchTemplate(template?.name, orgId);
+        break;
+      case TemplateType.ORDER_DETAILS:
+        fetchedTemplate = {
+          ...formattedTemplate,
+          status: WaTemplateStatus.APPROVED,
+          id: "localTemplate",
+        };
+        break;
+      case TemplateType.PAYMENT_CONFIRMATION:
+        fetchedTemplate = {
+          ...formattedTemplate,
+          components: formattedTemplate.components?.filter(
+            (component) => component.type === WaTemplateComponentType.BODY,
+          ),
+          status: WaTemplateStatus.APPROVED,
+          id: "localTemplate",
+        };
+        break;
+      default:
+        break;
+    }
     if (templateData?.id) {
-      await updateTemplateInDb(templateData.id, fetchedTemplate);
+      await updateTemplateInDb(
+        templateData.id,
+        fetchedTemplate,
+        null,
+        templateType,
+        config,
+      );
     } else {
       await saveTemplate(
         fetchedTemplate,
         orgId,
         defaultValues as WaTemplateDefaultValues,
+        templateType,
+        config,
       );
     }
+
     reply.code(200).send("template created");
   } catch (e) {
     log.error("Error creating template \n%o", e?.response?.data);
