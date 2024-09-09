@@ -1,0 +1,6 @@
+-- CreateEnum
+CREATE TYPE "TemplateType" AS ENUM ('GENERAL_NOTIFICATION', 'ORDER_DETAILS', 'PAYMENT_CONFIRMATION');
+
+-- AlterTable
+ALTER TABLE "WaTemplate" ADD COLUMN     "config" JSONB,
+ADD COLUMN     "templateType" "TemplateType" NOT NULL DEFAULT 'GENERAL_NOTIFICATION';

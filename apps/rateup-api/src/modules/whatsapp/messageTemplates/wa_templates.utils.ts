@@ -10,7 +10,6 @@ import {
   WaTemplateComponent,
   WaTemplateFetchComponents,
 } from "../../../types/whatsapp.types";
-import prisma from "../../../utils/prisma";
 import { parseStringWithVariables } from "../../../utils/template";
 import {
   CreateWaTemplateFormattedInput,
