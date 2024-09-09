@@ -16,12 +16,14 @@ import {
 } from "../whatsappSurvey/wasurvey.service";
 import {
   WaTemplateComponentType,
+  WaTemplateStatus,
   WaTemplateSupportedFormats,
 } from "../../../types/enums";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
 import { WaTemplateComponent } from "../../../types/whatsapp.types";
+import { TemplateType } from "@prisma/client";
 
 /**
  * fetches templates from WhatsApp Business API
@@ -185,7 +187,11 @@ export async function saveTemplate(
   template: any,
   orgId: string,
   defaultValues: WaTemplateDefaultValues = {},
+  templateType?: TemplateType,
+  config?: any,
 ) {
+  console.log(config, "config");
+
   try {
     const res = await prisma.waTemplate.create({
       data: {
@@ -193,6 +199,8 @@ export async function saveTemplate(
         acceptButton: "",
         orgId: orgId,
         defaultValues,
+        templateType,
+        config,
       },
     });
     log.trace("Template saved to db %o", res);
@@ -254,6 +262,8 @@ export async function updateTemplateInDb(
   templateId: string,
   template: any,
   defaultValues?: WaTemplateDefaultValues,
+  templateType?: TemplateType,
+  config?: any,
 ) {
   log.trace(`Updating template %o`, { templateId, data: template });
   try {
@@ -264,6 +274,8 @@ export async function updateTemplateInDb(
       data: {
         data: template,
         defaultValues: defaultValues ? defaultValues : undefined,
+        templateType,
+        config,
       },
     });
     return res;
@@ -318,27 +330,60 @@ export async function updateTemplate(
   data: CreateWaTemplateInput,
 ) {
   const template = await getDbTemplate(templateId);
-  const { components } = generateTemplate(data);
-  const res = await editTemplate(
-    template.orgId,
-    template.data.id,
-    components,
-    template.data.category,
-  );
-  if (res) {
-    const updatedTemplate = await fetchTemplate(
-      template.data.name,
-      template.orgId,
-    );
-    const res = await updateTemplateInDb(
-      templateId,
-      updatedTemplate,
-      data.defaultValues as WaTemplateDefaultValues,
-    );
-    return res;
-  } else {
-    return null;
+  const formattedTemplate = generateTemplate(data);
+  let res;
+  switch (data.templateType) {
+    case TemplateType.GENERAL_NOTIFICATION:
+      res = await editTemplate(
+        template.orgId,
+        template.data.id,
+        formattedTemplate.components,
+        template.data.category,
+      );
+      if (res) {
+        const updatedTemplate = await fetchTemplate(
+          template.data.name,
+          template.orgId,
+        );
+        res = await updateTemplateInDb(
+          templateId,
+          updatedTemplate,
+          data.defaultValues as WaTemplateDefaultValues,
+        );
+        break;
+      }
+      break;
+    case TemplateType.ORDER_DETAILS:
+      res = await updateTemplateInDb(
+        templateId,
+        {
+          ...formattedTemplate,
+          status: WaTemplateStatus.APPROVED,
+          id: "localTemplate",
+        },
+        data.defaultValues as WaTemplateDefaultValues,
+        data.templateType,
+        data.config,
+      );
+      break;
+    default:
+      res = await updateTemplateInDb(
+        templateId,
+        {
+          ...formattedTemplate,
+          components: formattedTemplate.components?.filter(
+            (component) => component.type === WaTemplateComponentType.BODY,
+          ),
+          status: WaTemplateStatus.APPROVED,
+          id: "localTemplate",
+        },
+        data.defaultValues as WaTemplateDefaultValues,
+        data.templateType,
+        data.config,
+      );
+      break;
   }
+  return res;
 }
 
 /**
