@@ -1,8 +1,8 @@
 .button {
-  padding: 0.8125em 1.5em;
-  border-radius: 0.625rem;
-  font-weight: 500;
-  font-size: 1.125rem;
+  padding: 0.5625rem 2rem;
+  border-radius: 2rem;
+  font-weight: 430;
+  font-size: 1rem;
   height: auto;
   line-height: initial;
   background-repeat: no-repeat;
@@ -22,8 +22,12 @@
 }
 
 .gradient-background-white-text-btn {
-  composes: gradient-image-1 from "../../index.module.css";
   color: white;
+  background-image: linear-gradient(
+    90deg,
+    var(--shade-of-blue-5),
+    var(--shade-of-blue-3)
+  );
 }
 
 @media screen and (max-width: 768px) {

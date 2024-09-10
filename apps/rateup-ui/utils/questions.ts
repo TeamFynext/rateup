@@ -165,12 +165,12 @@ export const getInitialQuestionValues = (
   type = SurveyType.Web,
 ): Question & { enableNpsAnalytics?: boolean } => {
   const emptyText = {};
-  languages.forEach((lang) => {
+  languages?.forEach((lang) => {
     emptyText[lang] = "";
   });
 
   const required =
-    question.type !== QuestionType.InfoMessage && !(question.type in PageType)
+    question?.type !== QuestionType.InfoMessage && !(question?.type in PageType)
       ? question?.required
       : false;
 

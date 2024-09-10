@@ -83,7 +83,7 @@
   height: 3.125rem;
   border-radius: 1rem;
   border: 1px solid var(--tertiary-color);
-  color: #2564ae;
+  color: var(--shade-of-blue-5);
   font-size: 1rem;
 }
 

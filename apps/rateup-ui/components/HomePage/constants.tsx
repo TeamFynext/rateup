@@ -113,30 +113,6 @@ export const footerNavLinks = {
   },
 };
 
-// [
-//   ...headerNavLinks,
-//   {
-//     href: "/terms-of-service",
-//     linkText: "Terms of Service",
-//   },
-//   {
-//     href: "/privacy-policy",
-//     linkText: "Privacy Policy",
-//   },
-//   {
-//     href: "/shipping-and-delivery",
-//     linkText: "Shipping and Delivery",
-//   },
-//   {
-//     href: "/cancellation-and-refund",
-//     linkText: "Cancellation and Refund",
-//   },
-//   {
-//     href: "/contact-us",
-//     linkText: "Contact Us",
-//   }
-// ];
-
 export const getNavLinksArray = (
   className: string,
   currentRoutePath: string,

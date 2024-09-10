@@ -41,3 +41,7 @@ export async function deleteShopifyWebhookByTopic(data: {
     data,
   });
 }
+
+export async function deleteShopifyIntegrationByShop({ shop }) {
+  return await axiosClient.delete(`${SHOPIFY_BASE_URL}/${shop}`);
+}

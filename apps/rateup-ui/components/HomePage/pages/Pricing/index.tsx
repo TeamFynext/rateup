@@ -155,7 +155,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             { label: "Custom", value: "Custom" },
           ]}
         />
-        {/* <Flex align="center" pos={"relative"} gap={"xs"}>
+        <Flex align="center" pos={"relative"} gap={"xs"}>
           <Switch
             color={"var(--shade-of-blue-5)"}
             classNames={classes}
@@ -177,13 +177,13 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
               c={"var(--light-grey-color-5)"}
               ff={lexend300.style.fontFamily}
             >
-              Subscribe Anually
+              Subscribe Annually
             </Text>
             <Text c={"var(--shade-of-blue-5"}>
               Save Upto {DISCOUNT_PERCENTAGE} Months
             </Text>
           </Stack>
-        </Flex> */}
+        </Flex>
       </SimpleGrid>
 
       <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">

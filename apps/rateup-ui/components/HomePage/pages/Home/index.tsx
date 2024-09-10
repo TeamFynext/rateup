@@ -1,13 +1,13 @@
-import HeroSection from "./HeroSection";
-import OurFeaturesSection from "./OurFeaturesSection";
-import OurSolutionsSection from "./OursolutionsSection";
 import Head from "next/head";
-import TestimonialsSection from "./TestimonialsSection";
-import EmpowerYourBrandsGrowth from "./EmpowerYourBrandsGrowth";
-import Banner from "../../components/Banner";
+
 import { Box } from "@mantine/core";
-import PerfectSurveyForYourNeeds from "./Features/PerfectSurveyForYourNeeds";
-import Features from "./Features";
+
+import CompaniesUsingRateup from "./CompaniesUsingRateup";
+import CustomerFeedback from "./CustomerFeedback";
+import HeroSection from "./HeroSection";
+import UseCase from "./UseCase";
+import WhatCanYouDo from "./WhatCanYouDo";
+import WhyUseRateup from "./WhyUseRateup";
 
 function Home() {
   return (
@@ -42,16 +42,11 @@ function Home() {
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
-
-      <EmpowerYourBrandsGrowth />
-      <Banner
-        title={"Discover Rateup!"}
-        subtitle={"Your Complete Customer Engagement Solution"}
-      />
-      <Features />
-      {/* <OurFeaturesSection /> */}
-      {/* <OurSolutionsSection /> */}
-      {/* <TestimonialsSection /> */}
+      <CompaniesUsingRateup />
+      <WhyUseRateup />
+      <WhatCanYouDo />
+      <CustomerFeedback />
+      <UseCase />
     </Box>
   );
 }

@@ -1,10 +1,12 @@
-import { Flex, Group, Text } from "@mantine/core";
 import Link from "next/link";
-import styles from "./Header.module.css";
-import { useCheckSession } from "../../../../hooks/checkSession";
-import classNames from "classnames/bind";
 import { useRouter } from "next/router";
+
+import { Flex, Group } from "@mantine/core";
+import classNames from "classnames/bind";
+
+import { useCheckSession } from "../../../../hooks/checkSession";
 import BookDemoContactForm from "../BookDemoContactForm";
+import styles from "./Header.module.css";
 
 const cx = classNames.bind(styles);
 

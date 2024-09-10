@@ -1,4 +1,4 @@
-import { Image } from "@mantine/core";
+import { Group, Image } from "@mantine/core";
 import { IconBrandFacebook } from "@tabler/icons-react";
 
 import { imagesPath, rateupLogoBlueTextUrl } from "../../constants";
@@ -55,6 +55,24 @@ function Footer() {
             </span>
           </p>
         </div>
+
+        <Group className={styles["footer-logos-container"]}>
+          <Image
+            className={styles["footer-logo"]}
+            src={`${imagesPath}/homepage/footer-logos/kerala-startup-mission-logo.png`}
+            alt="kerala startup mission"
+          />
+          <Image
+            className={styles["footer-logo"]}
+            src={`${imagesPath}/homepage/footer-logos/meta-business-partner-logo.png`}
+            alt="meta business partner"
+          />
+          <Image
+            className={styles["footer-logo"]}
+            src={`${imagesPath}/homepage/footer-logos/startup-india.png`}
+            alt="startup india"
+          />
+        </Group>
 
         <FooterNavLinks />
       </div>

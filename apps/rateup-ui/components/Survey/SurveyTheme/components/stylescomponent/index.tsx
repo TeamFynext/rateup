@@ -4,8 +4,10 @@ import {
   Accordion,
   Box,
   Button,
+  Center,
   Checkbox,
   Divider,
+  Flex,
   Group,
   MantineProvider,
   Overlay,
@@ -118,7 +120,24 @@ function StylesComponent({
         >
           {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) ||
             shouldUseSurveyTheme) && (
-            <Overlay className={surveyThemeStyles["overlay"]} zIndex={198} />
+            <Overlay className={surveyThemeStyles["overlay"]} zIndex={198}>
+              {isSurveyPageTab && isThemeObjBeingEditedDefaultTheme && (
+                <Center
+                  className={
+                    styles[
+                      "default-theme-not-editable-overlay-message-container-root-div"
+                    ]
+                  }
+                >
+                  <Flex className={styles["overlay-message-container"]}>
+                    <p className={styles["overlay-message-p"]}>
+                      Default themes are not editable. Choose another theme or
+                      create a new one.
+                    </p>
+                  </Flex>
+                </Center>
+              )}
+            </Overlay>
           )}
           <Accordion
             className={styles["accordion-root-div"]}

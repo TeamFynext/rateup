@@ -657,6 +657,7 @@ declare global {
       period: string;
       amount: number;
     };
+    paymentPlanId?: string;
   }
 
   type StripeProduct = {
@@ -964,6 +965,7 @@ export type Testimonial = {
     jobTitle?: string;
     questionId?: string;
     testimonial: string;
+    photo?: string;
   };
   teamId: string;
   survey: {

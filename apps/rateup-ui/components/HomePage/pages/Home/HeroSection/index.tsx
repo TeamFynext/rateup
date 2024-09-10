@@ -1,80 +1,59 @@
-import { Box, Group, Stack } from "@mantine/core";
-import { IconPlayerPlay } from "@tabler/icons-react";
-import classNames from "classnames/bind";
 import Image from "next/image";
+
+import { Box, Button, Flex, Group, Stack } from "@mantine/core";
+import classNames from "classnames/bind";
+
+import MotionButtonGesture from "@/components/HomePage/components/MotionButtonGesture";
+
+import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import BookDemoContactForm from "../../../components/BookDemoContactForm";
-import Button from "../../../components/Button";
-import LightBlueGradientBg from "../../../components/LightBlueGradientBg";
 import { imagePath } from "../../constants";
 import styles from "./HeroSection.module.css";
-import TrustedByCompaniesCarousel from "./TrustedByCompaniesCarousel";
-import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 
 const cx = classNames.bind(styles);
 
 function HeroSection() {
   return (
-    <Stack className={`${styles["hero-section-wrapper"]}`}>
-      <Group className={cx("heading-and-illustration-container")}>
-        <Stack className={cx("heading-and-btns-container")}>
-          <Stack className={cx("heading-and-text-container")}>
-            <h1 className={cx("blue-bg-heading")}>
-              The Customer Experience Platform!
-            </h1>
-            <p className={cx("text-p")}>
-              <span>Engage effortlessly.</span>
-              <span>Amplify your impact.</span>
-              <LightBlueGradientBg className={cx("elevate-brand-gradient-div")}>
-                <span>Elevate your brand</span>
-              </LightBlueGradientBg>
-            </p>
-          </Stack>
-
-          <Group className={cx("btns-container")}>
-            <Button
-              className={cx("play-video-btn")}
-              leftSection={<IconPlayerPlay size={"1em"} />}
-              onClick={() => {
-                gAnalyticsAndFbEvent(
-                  "play_video",
-                  "PlayVideoButtonClick",
-                  "Clicked on youtube video play button in home page",
-                );
-                window?.open("https://youtu.be/knlzbNSHTRM", "_blank");
-              }}
-            >
-              Play Video
-            </Button>
-            <BookDemoContactForm
-              buttonProps={{
-                whiteBackgroundGradientText: true,
-              }}
-            />
-          </Group>
-        </Stack>
-
-        <Box className={cx("illustration-img-container")}>
+    <Stack className={`${styles["hero-section-root-div"]}`}>
+      <Flex className={`${styles["hero-section-div"]}`}>
+        <h1 className={styles["hero-section-heading"]}>
+          <span className={styles["heading-small-text-span"]}>
+            The Customer Feedback Management Platform
+          </span>
+          <span className={styles["heading-large-text-span"]}>
+            <span>Get lots of quality customer{` `}</span>
+            <span>feedback automatically</span>
+          </span>
+        </h1>
+        <Box className={styles["hero-section-image-container"]}>
           <Image
-            className={cx("illustration-img")}
-            src={`${imagePath}/homepage/home-hero-section-illustration.png`}
-            width={1314}
-            height={1304}
-            alt="Google Reviews Illustration"
-            priority={true}
+            className={styles["hero-section-image"]}
+            src={`${imagePath}/homepage/hero-section-image.png`}
+            priority
+            alt={""}
+            width={2298}
+            height={924}
           />
         </Box>
-      </Group>
-
-      <Stack className={cx("trusted-companies-container")}>
-        <h1 className={cx("blue-bg-heading", "trusted-companies-h1")}>
-          Our Trusted Companies
-        </h1>
-        <TrustedByCompaniesCarousel />
-      </Stack>
-
-      {/* <div
-        className={styles["blue-background-for-screens-bigger-than-1920px"]}
-      ></div> */}
+        <Group className={styles["book-demo-try-free-plan-btns-container"]}>
+          <BookDemoContactForm />
+          <MotionButtonGesture>
+            <Button
+              className={cx("try-free-plan-btn")}
+              onClick={() => {
+                gAnalyticsAndFbEvent(
+                  "try_free_plan",
+                  "TryFreePlanButtonClick",
+                  "Clicked on try free plan button in home page",
+                );
+              }}
+              variant="subtle"
+            >
+              Try free plan!
+            </Button>
+          </MotionButtonGesture>
+        </Group>
+      </Flex>
     </Stack>
   );
 }
