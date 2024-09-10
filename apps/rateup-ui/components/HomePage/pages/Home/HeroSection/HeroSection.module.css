@@ -27,7 +27,7 @@
 }
 
 .heading-small-text-span {
-  color: #00397b;
+  color: var(--shade-of-blue-3);
   font-size: 0.4em;
   font-weight: 500;
 }
@@ -52,6 +52,7 @@
 }
 
 .book-demo-try-free-plan-btns-container {
+  justify-content: center;
   gap: 1rem;
 }
 

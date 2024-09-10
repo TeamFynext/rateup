@@ -33,7 +33,11 @@
 
 .tab[data-active="true"] {
   border: none;
-  background-image: linear-gradient(90deg, #2564ae, #00397b);
+  background-image: linear-gradient(
+    90deg,
+    var(--shade-of-blue-5),
+    var(--shade-of-blue-3)
+  );
   color: white;
   font-weight: bold;
 }

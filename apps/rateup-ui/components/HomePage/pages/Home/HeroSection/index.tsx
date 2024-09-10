@@ -1,14 +1,12 @@
 import Image from "next/image";
 
 import { Box, Button, Flex, Group, Stack } from "@mantine/core";
-import { IconPlayerPlay } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import MotionButtonGesture from "@/components/HomePage/components/MotionButtonGesture";
 
 import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import BookDemoContactForm from "../../../components/BookDemoContactForm";
-import LightBlueGradientBg from "../../../components/LightBlueGradientBg";
 import { imagePath } from "../../constants";
 import styles from "./HeroSection.module.css";
 

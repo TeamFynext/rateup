@@ -13,7 +13,7 @@
 .close {
   width: 45px;
   height: 45px;
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .body {

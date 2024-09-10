@@ -25,12 +25,10 @@ function CustomerFeedback() {
     );
   }
 
-  if (isError || data?.testimonials.length === 0) {
-    feedbacks = devCustomerFeedbackData["testimonials"];
+  if (!isError && !isPending && data?.testimonials?.length > 0) {
     jsxToBeRendered = <FeedbackCardsList feedbacks={feedbacks} />;
-  }
-
-  if (!isError && !isPending) {
+  } else {
+    feedbacks = devCustomerFeedbackData["testimonials"];
     jsxToBeRendered = <FeedbackCardsList feedbacks={feedbacks} />;
   }
 

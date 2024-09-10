@@ -15,7 +15,7 @@ function UseCase() {
         <Stack className={cx("column-1")}>
           {useCasesData.map((cardData, index) => {
             if (index % 2 == 0) {
-              return <UseCaseCard {...cardData} />;
+              return <UseCaseCard key={cardData?.id} {...cardData} />;
             } else {
               return null;
             }
@@ -24,7 +24,7 @@ function UseCase() {
         <Stack className={cx("column-2")}>
           {useCasesData.map((cardData, index) => {
             if (index % 2 == 1) {
-              return <UseCaseCard {...cardData} />;
+              return <UseCaseCard key={cardData?.id} {...cardData} />;
             } else {
               return null;
             }
