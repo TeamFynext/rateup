@@ -1,15 +1,17 @@
-import { Flex, Drawer, Burger, Image, Menu, Text } from "@mantine/core";
+import { useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+import { Burger, Drawer, Flex, Image, Menu, Text } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import styles from "./MobileNavDrawer.module.css";
+import classNames from "classnames/bind";
+
+import { rubik } from "../../../../../utils/fonts";
+import { getMobileNavLinkMenuItems, rateupLogoUrl } from "../../../constants";
 import headerStyles from "../Header.module.css";
 import drawerStyles from "./Drawer.module.css";
 import menuStyles from "./Menu.module.css";
-import Link from "next/link";
-import { getMobileNavLinkMenuItems, rateupLogoUrl } from "../../../constants";
-import { useEffect } from "react";
-import { useRouter } from "next/router";
-import classNames from "classnames/bind";
-import { rubik } from "../../../../../utils/fonts";
+import styles from "./MobileNavDrawer.module.css";
 
 const cx = classNames.bind(styles);
 const heCx = classNames.bind(headerStyles);
@@ -42,8 +44,8 @@ function MobileNavDrawer() {
         className="mobile-nav-burger-icon"
         onClick={() => toggle()}
         aria-label="Toggle navigation"
-        size={"lg"}
-        color="#013553"
+        size={"30"}
+        color="#0F4B90"
       />
 
       <Drawer

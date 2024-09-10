@@ -965,6 +965,7 @@ export type Testimonial = {
     jobTitle?: string;
     questionId?: string;
     testimonial: string;
+    photo?: string;
   };
   teamId: string;
   survey: {
