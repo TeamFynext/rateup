@@ -1,19 +1,11 @@
-import {
-  Box,
-  Center,
-  Group,
-  Loader,
-  ScrollArea,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Center, Loader, ScrollArea, Stack, Text } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import { useGetAllTestimonialsByCollection } from "@/backend/testimonials/testimonial.query";
-import { imagesPath } from "@/utils/constants";
 
 import styles from "./CustomerFeedback.module.css";
-import FeedbackCard from "./FeedbackCard";
+import { devCustomerFeedbackData } from "./devCustomerFeedbackData";
+import FeedbackCardsList from "./FeedbackCardsList";
 
 const cx = classNames.bind(styles);
 
@@ -23,6 +15,8 @@ function CustomerFeedback() {
   );
 
   let jsxToBeRendered = null;
+  let feedbacks = data?.testimonials;
+
   if (isPending) {
     jsxToBeRendered = (
       <Center>
@@ -31,47 +25,13 @@ function CustomerFeedback() {
     );
   }
 
-  if (isError) {
-    jsxToBeRendered = (
-      <Center>
-        <Text>Something went wrong, please try again later</Text>
-      </Center>
-    );
+  if (isError || data?.testimonials.length === 0) {
+    feedbacks = devCustomerFeedbackData["testimonials"];
+    jsxToBeRendered = <FeedbackCardsList feedbacks={feedbacks} />;
   }
 
   if (!isError && !isPending) {
-    const feedbacks = data?.testimonials;
-    const imagesUrl = `https://d1y5kzki4npqx9.cloudfront.net/`;
-    jsxToBeRendered = (
-      <>
-        {feedbacks.map(
-          ({
-            id,
-            testimonial: { name, jobTitle, rating, testimonial, photo },
-          }) => {
-            return (
-              <FeedbackCard
-                key={id}
-                name={name}
-                role={jobTitle}
-                rating={rating}
-                feedback={testimonial}
-                imageUrl={
-                  photo
-                    ? `${imagesUrl}/${photo}`
-                    : `${imagesPath}/homepage/customer-feedback/blank-user.png`
-                }
-                imageAlt={name}
-              />
-            );
-          },
-        )}
-      </>
-    );
-  }
-
-  if (!isError && !isPending && data?.testimonials.length === 0) {
-    jsxToBeRendered = "No Feedback found";
+    jsxToBeRendered = <FeedbackCardsList feedbacks={feedbacks} />;
   }
 
   return (
@@ -79,8 +39,9 @@ function CustomerFeedback() {
       <h1 className={cx("heading")}>Customer Feedback</h1>
       <ScrollArea.Autosize
         className={cx("customer-feedback-cards-scroll-area")}
-        mah={600}
+        mah={700}
         scrollbars={"y"}
+        scrollbarSize={8}
       >
         {jsxToBeRendered}
       </ScrollArea.Autosize>
