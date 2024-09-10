@@ -16,7 +16,7 @@ const useCasesData = [
     heading: "Feedback Collection",
     useCaseText:
       "Gather valuable insights directly from customers to continuously enhance your products and services.",
-    imageUrl: `${imagesPath}/homepage/use-case/feedback-collection.png`,
+    imageUrl: `${imagesPath}/homepage/use-case/feedback-collection-image.png`,
     imageAlt: "Feedback Collection",
     imageWidth: 690,
     imageHeight: 454,
