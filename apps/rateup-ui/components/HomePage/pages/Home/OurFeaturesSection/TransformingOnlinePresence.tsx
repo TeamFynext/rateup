@@ -1,8 +1,9 @@
 import { Image, Text, Title } from "@mantine/core";
-import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
-import styles from "../../../index.module.css";
+
 import { imagesPath } from "../../../../../utils/constants";
 import Button from "../../../components/Button";
+import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
+import styles from "../../../index.module.css";
 
 function TransformingOnlinePresence() {
   const imagePath = `${imagesPath}/homepage/our-features/transforming-online-presence.png`;
@@ -26,7 +27,7 @@ function TransformingOnlinePresence() {
         <Button
           whiteBackgroundGradientText
           style={{
-            border: "2px solid #00397b",
+            border: "2px solid var(--shade-of-blue-3)",
           }}
         >
           Know More

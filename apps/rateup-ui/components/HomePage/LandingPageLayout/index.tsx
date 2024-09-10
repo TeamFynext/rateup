@@ -38,8 +38,6 @@ function LandingPageLayout({ children, className = "" }) {
       >
         {children}
       </Container>
-
-      {/* <BookADemoSection /> */}
       <Footer />
 
       {/* Scroll to top button */}

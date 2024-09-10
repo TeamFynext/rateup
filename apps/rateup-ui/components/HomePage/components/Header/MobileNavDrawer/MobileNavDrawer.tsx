@@ -45,7 +45,7 @@ function MobileNavDrawer() {
         onClick={() => toggle()}
         aria-label="Toggle navigation"
         size={"30"}
-        color="#0F4B90"
+        color="var(--shade-of-blue-8)"
       />
 
       <Drawer

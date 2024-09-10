@@ -12,7 +12,7 @@ const cx = classNames.bind(styles);
 
 function WhatCanYouDo() {
   return (
-    <Stack className={cx("what-can-you-do-root-div")}>
+    <Stack className={cx("what-can-you-do-root-div")} id="our-features">
       <h1 className={cx("heading")}>
         What can you do with the RateUp platform?
       </h1>

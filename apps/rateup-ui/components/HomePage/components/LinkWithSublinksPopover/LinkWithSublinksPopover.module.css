@@ -1,7 +1,7 @@
 .sublinks-chevron-btn {
   padding: 0;
   background-color: initial;
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
   transition: transform 0.3s linear;
 }
 

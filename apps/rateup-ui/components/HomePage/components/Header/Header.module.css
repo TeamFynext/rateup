@@ -26,30 +26,30 @@
 .header-link {
   font-family: var(--font-rubik);
   composes: header-footer-link from "../../index.module.css";
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
   margin-right: 0;
   font-weight: 430;
 }
 
 .header-link:global(.link-active) {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
   font-weight: 550;
 }
 
 .header-link:global(.link-active) + :global(.sublinks-chevron-btn) {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .header-link:active {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .header-link:hover {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .header-link:hover + :global(.sublinks-chevron-btn) {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .login-signup-link {
@@ -83,12 +83,20 @@
   composes: header-footer-link from "../../index.module.css";
   composes: login-signup-link;
   color: white;
-  background-image: linear-gradient(90deg, #2564ae, #00397b);
+  background-image: linear-gradient(
+    90deg,
+    var(--shade-of-blue-5),
+    var(--shade-of-blue-3)
+  );
 }
 
 .go-to-dashboard-link {
   composes: header-footer-link from "../../index.module.css";
-  composes: gradient-image-1 from "../../index.module.css";
+  background-image: linear-gradient(
+    90deg,
+    var(--shade-of-blue-5),
+    var(--shade-of-blue-3)
+  );
   composes: login-signup-link;
   color: white;
 }

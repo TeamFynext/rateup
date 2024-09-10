@@ -23,7 +23,11 @@
 
 .gradient-background-white-text-btn {
   color: white;
-  background-image: linear-gradient(90deg, #2564ae, #00397b);
+  background-image: linear-gradient(
+    90deg,
+    var(--shade-of-blue-5),
+    var(--shade-of-blue-3)
+  );
 }
 
 @media screen and (max-width: 768px) {

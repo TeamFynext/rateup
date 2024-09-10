@@ -3,14 +3,14 @@
   font-family: var(--font-rubik);
   padding: 1rem 0;
   background-color: transparent;
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
   /* font-weight: bold; */
   font-weight: 430;
   font-size: 1rem;
 }
 
 .root:hover {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .label {
@@ -31,6 +31,6 @@
 }
 
 .navlink-with-chevron:global(.link-active) {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
   font-weight: 550;
 }

@@ -20,11 +20,11 @@
   display: block;
   font-weight: 430;
   font-size: 1rem;
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
 }
 
 .mobile-nav-drawer-link:global(.link-active) {
-  color: #0f4b90;
+  color: var(--shade-of-blue-8);
   font-weight: 550;
 }
 
