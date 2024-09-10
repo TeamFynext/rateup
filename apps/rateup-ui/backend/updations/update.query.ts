@@ -4,7 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
-import { createHubSpotContacts, updateWebSurveyPagesTheme } from "./update.api";
+import {
+  updateFreePlanSubscription,
+  updateWebSurveyPagesTheme,
+} from "./update.api";
 
 export const useUpdateWebSurveyPagesTheme = () => {
   return useMutation({
@@ -15,18 +18,14 @@ export const useUpdateWebSurveyPagesTheme = () => {
   });
 };
 
-export const useCreateHubSpotContacts = () => {
+export const useUpdateFreePlanSubscription = () => {
   return useMutation({
-    mutationFn: createHubSpotContacts,
-    onSuccess: (data) => {
-      showSuccessToast(
-        `User emails exported to hub spot successfully: ${data?.message ?? ""}`,
-      );
+    mutationFn: updateFreePlanSubscription,
+    onSuccess: () => {
+      showSuccessToast("Update Success");
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Error exporting user contacts: ${e.response?.data?.message ?? ""}`,
-      );
+    onError: () => {
+      showErrorToast("Update Error");
     },
   });
 };

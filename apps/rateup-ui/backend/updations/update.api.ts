@@ -9,7 +9,6 @@ export const updateWebSurveyPagesTheme = async () => {
   return response.data;
 };
 
-export async function createHubSpotContacts() {
-  const res = await axiosClient.post("/public/update/create-hubspot-contact");
-  return res.data;
+export async function updateFreePlanSubscription() {
+  return await axiosClient.post(`/public/update/subscription/freeplan`);
 }

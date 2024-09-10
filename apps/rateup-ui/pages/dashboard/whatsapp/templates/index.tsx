@@ -223,9 +223,10 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
           </Group>
         </Flex>
         <CreatedSinceText createdAt={template.createdAt} />
-        <Group>
+        <Group gap={8}>
           <WaTemplateStatusBadge status={template.data.status} />
           <WaTemplateStatusBadge status={template.data.category} defaultType />
+          <WaTemplateStatusBadge status={template.templateType} defaultType />
         </Group>
       </Stack>
     </PaperLayout>

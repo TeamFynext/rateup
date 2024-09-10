@@ -1,10 +1,15 @@
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
-import { WaTemplateStatus } from "../../../../types/enums";
+
+import {
+  OrderType,
+  TemplateType,
+  WaTemplateStatus,
+} from "../../../../types/enums";
 import {
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
 } from "../../../../utils/constants";
-import { isValidPhoneNumber } from "react-phone-number-input";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
 const FILE_SIZE = 10;
@@ -16,6 +21,12 @@ const ACCEPTED_MIME_TYPES = [
   "application/pdf",
   "video/mp4",
 ];
+export const configSchema = z.object({
+  price: z.number().min(0),
+  tax: z.number().min(0),
+  orderType: z.nativeEnum(OrderType).nullable().optional(),
+  name: z.string().min(1).max(60),
+});
 export const templateSchema = z
   .object({
     name: z
@@ -92,6 +103,7 @@ export const templateSchema = z
       .max(10),
     status: z.nativeEnum(WaTemplateStatus),
     example: z.array(z.string().trim()).optional(),
+    templateType: z.nativeEnum(TemplateType),
   })
   .superRefine((values, ctx) => {
     const format = values.format;
@@ -161,6 +173,8 @@ export const templateSchema = z
       errorMessage =
         !documentType.includes(value?.type) &&
         `Incorrect Type use only ${documentType?.join(",")}`;
+    } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT && !value) {
+      errorMessage = "Header Text Needed";
     }
     if (errorMessage)
       ctx.addIssue({

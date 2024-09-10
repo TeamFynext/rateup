@@ -6,6 +6,7 @@ import { IntegratedApps } from "@/types/enums";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   deleteAllShopifyWebhooks,
+  deleteShopifyIntegrationByShop,
   deleteShopifyWebhookByTopic,
   getProductsFromShopify,
   getRegisteredWebhooks,
@@ -137,6 +138,30 @@ export const useDeleteWebhookByTopic = () => {
       showErrorToast(
         "Webhook subscription deletion failed",
         "webhooks",
+        <IconX />,
+        true,
+      );
+    },
+  });
+};
+
+export const useDeleteShopifyIntegrationByShop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteShopifyIntegrationByShop,
+    onSuccess: () => {
+      showSuccessToast(
+        "Integration deleted",
+        "integration",
+        <IconCheck />,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["integrations"] });
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        `Error in deleting integration ${e.response.data ?? ""}`,
+        "integration",
         <IconX />,
         true,
       );
