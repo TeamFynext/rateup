@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { ScrollArea, Text } from "@mantine/core";
+import { Text } from "@mantine/core";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
@@ -24,25 +24,15 @@ function QuestionTitle({
     surveyId,
     isPublicPage: true,
   };
-
-  let styles = {};
   const replacedTitle =
     getReplacedTitleFromVariable(data) ?? selectedQ?.title[selectedLanguage];
-  if (typeof replacedTitle === "string") {
-    if (
-      replacedTitle.includes("<h1>") ||
-      replacedTitle.includes("<h2>") ||
-      replacedTitle.includes("<h3>") ||
-      replacedTitle.includes("<h4>")
-    ) {
-      styles = {};
-    } else {
-      styles = themeStyles;
-    }
-  }
-
   return replacedTitle ? (
-    <Text style={styles} dangerouslySetInnerHTML={{ __html: replacedTitle }} />
+    <Text
+      style={{
+        color: themeStyles?.color,
+      }}
+      dangerouslySetInnerHTML={{ __html: replacedTitle }}
+    />
   ) : (
     <Text
       size={largeScreen ? "30px" : "20px"}

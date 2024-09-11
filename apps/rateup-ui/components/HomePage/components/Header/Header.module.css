@@ -61,7 +61,7 @@
   display: block;
   font-family: var(--font-rubik);
   font-weight: 430;
-  border: 2px solid var(--tertiary-color);
+  border: 1px solid var(--tertiary-color);
 }
 
 .login-link {
