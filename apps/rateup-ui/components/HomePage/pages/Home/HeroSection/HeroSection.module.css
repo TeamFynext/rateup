@@ -1,6 +1,6 @@
 .hero-section-root-div {
   position: relative;
-  padding: 3rem 0;
+  padding: 3rem 5%;
   font-family: var(--font-rubik);
   margin-bottom: 1rem;
 }
@@ -10,6 +10,9 @@
   align-items: center;
   flex-direction: column;
   gap: 2.5rem;
+  padding: 1.5rem 0;
+  border-radius: 1rem;
+  background-color: rgb(171, 171, 171, 0.15);
 }
 
 .hero-section-heading {
@@ -59,11 +62,12 @@
 .try-free-plan-btn {
   background-color: white;
   color: var(--tertiary-color);
-  border: 2px solid var(--tertiary-color);
+  border: 1px solid var(--tertiary-color);
   border-radius: 2rem;
-  padding: 0.65625rem 2rem;
+  padding: 0.625rem 2rem;
   height: auto;
   font-weight: 430;
+  line-height: normal;
 }
 
 /* Media Queries */
@@ -98,5 +102,11 @@
   .try-free-plan-btn {
     font-size: 0.75rem;
     padding: 0.5625rem 2rem;
+  }
+}
+
+@media screen and (min-width: 120rem) {
+  .hero-section-root-div {
+    padding: 3rem 192px;
   }
 }
