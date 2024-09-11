@@ -1,18 +1,30 @@
-const editViewQuestionsArr = [
-  {
-    id: "100d5c8c-5d9b-497a-9034-a1d8542514e7",
-    type: "Smiley",
-    title: {
-      English: "<p>Smiley Question</p>",
-    },
-    required: true,
-    description: {
-      English: "",
-    },
-    googleReview: {
-      reqOptions: ["VeryHappy", "Happy"],
-    },
-  },
-];
+import { PageType } from "@/types/enums";
 
-export { editViewQuestionsArr };
+const getSurveyEditViewQuestions = (questionsArr) => {
+  const isWelcomePageActive = questionsArr?.find(
+    (question) => question?.type === PageType.Welcome,
+  );
+  const isLanguagePageActive = questionsArr?.find(
+    (question) => question?.type === PageType.Language,
+  );
+  if (isWelcomePageActive && isLanguagePageActive) {
+    return questionsArr.filter(
+      (question) =>
+        question.type !== PageType.Welcome &&
+        question.type !== PageType.Language,
+    );
+  }
+  if (isWelcomePageActive) {
+    return questionsArr.filter(
+      (question) => question.type !== PageType.Welcome,
+    );
+  }
+  if (isLanguagePageActive) {
+    return questionsArr.filter(
+      (question) => question.type !== PageType.Language,
+    );
+  }
+  return questionsArr;
+};
+
+export { getSurveyEditViewQuestions };

@@ -485,25 +485,16 @@ function TakeSurvey({
                     </Box>
                   </AnimatePresence>
 
-                  {!isSurveyThemeEditView ? (
-                    <NextPrev
-                      next={handleNext}
-                      prev={handlePrev}
-                      survey={survey}
-                      questionsLength={questionsLength}
-                      surveyThemeData={surveyThemeData}
-                      isSavingResponses={isSavingResponses}
-                      errorTextDivRef={errorTextDivRef}
-                      isSurveyThemePreview={isSurveyThemePreview}
-                    />
-                  ) : (
-                    <NextBtnForSurveyThemeEditPreview
-                      survey={survey}
-                      surveyThemeData={surveyThemeData}
-                      isSavingResponses={isSavingResponses}
-                      errorTextDivRef={errorTextDivRef}
-                    />
-                  )}
+                  <NextPrev
+                    next={handleNext}
+                    prev={handlePrev}
+                    survey={survey}
+                    questionsLength={questionsLength}
+                    surveyThemeData={surveyThemeData}
+                    isSavingResponses={isSavingResponses}
+                    errorTextDivRef={errorTextDivRef}
+                    isSurveyThemePreview={isSurveyThemePreview}
+                  />
                 </Stack>
               </Container>
             </NextPrevFuncsAndLastQuestionContextProvider>
