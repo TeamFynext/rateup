@@ -1,22 +1,26 @@
+import React, { useState } from "react";
+
 import { Group, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import React, { useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import InfoButton from "../../../components/Button/InfoButton";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import RefreshButton from "../../../components/Button/RefreshButton";
 import SortDropdown from "../../../components/Dashboard/SortDropDown";
 import { TeamSelector } from "../../../components/input/TeamSelector";
+import { CreateMenuModal } from "../../../components/menu/CreateMenu";
 import Heading from "../../../components/styled/Heading/Heading";
+import DigitalMenuTourSteps from "../../../components/WelcomeTour/components/DigitalMenuTourSteps";
+import styles from "../../../components/WelcomeTour/components/Tour.module.css";
+import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
+import SelectedTeamContext from "../../../context/SelectedTeam";
 import { useUser } from "../../../context/UserContext";
 import { docsPath } from "../../../utils/constants";
 import { UserRole } from "../../../utils/enums";
 import MenuCardsList from "./MenuCardsList/MenuCardsList";
-import SelectedTeamContext from "../../../context/SelectedTeam";
-import { CreateMenuModal } from "../../../components/menu/CreateMenu";
-import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
-import DigitalMenuTourSteps from "../../../components/WelcomeTour/components/DigitalMenuTourSteps";
-import styles from "../../../components/WelcomeTour/components/Tour.module.css";
 
 export default function MenuPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -25,7 +29,7 @@ export default function MenuPage() {
   const [sortOption, setSortOption] = useState("latest");
   const { user } = useUser();
   const tourSteps = DigitalMenuTourSteps({ styles });
-
+  const { translations } = useTranslations();
   function handleEditClick(menu: Menu) {
     setEditingItem(menu);
     open();
@@ -47,7 +51,10 @@ export default function MenuPage() {
       <Group justify="space-between">
         <Group>
           <Group className={styles["heading-container"]}>
-            <Heading title="Menus" titleprops={{ w: "fit-content" }} />
+            <Heading
+              title={translations["Menus"]}
+              titleprops={{ w: "fit-content" }}
+            />
           </Group>
           <InfoButton docUrl={`${docsPath}/menu`} />
           <WelcomeTour steps={tourSteps} />
@@ -55,7 +62,7 @@ export default function MenuPage() {
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
               className={styles["create-menu-button"]}
-              title="Create Menu"
+              title={translations["Create Menu"]}
               rightIcon={<IconPlus />}
               onClick={handleCreateClick}
             />

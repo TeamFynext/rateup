@@ -1,17 +1,21 @@
 import { useRouter } from "next/router";
+
+import { Button, Group, Paper, Stack, TextInput, Title } from "@mantine/core";
+import { useForm } from "@mantine/form";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateCampaignMutation,
   usePublicCampaign,
 } from "../../../../backend/loyalty/campaign/loyaltyCampaign.query";
-import { Button, Group, Paper, Stack, TextInput, Title } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
 import { useCreateLoyaltyCustomerMutation } from "../../../../backend/loyalty/customer/customer.query";
+import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
 
 export default function RegisterLCampaignPage() {
   const router = useRouter();
   const lcampaignId = router.query.lcampaignId as string;
-
+  const { translations } = useTranslations();
   const { data: campaign } = usePublicCampaign(lcampaignId);
 
   const form = useForm({
@@ -20,8 +24,9 @@ export default function RegisterLCampaignPage() {
       phone: "",
     },
     validate: {
-      phone: (ph) => ph.length !== 12 && "Enter country code & number", // TODO: add proper validation,
-      name: (name) => name.length === 0 && "Must not be empty",
+      phone: (ph) =>
+        ph.length !== 12 && translations["Enter country code & number"], // TODO: add proper validation,
+      name: (name) => name.length === 0 && translations["Must not be empty"],
     },
   });
 
@@ -37,12 +42,21 @@ export default function RegisterLCampaignPage() {
   return (
     <Paper p="sm">
       <Stack>
-        <Title>Registration Form for: {campaign.name}</Title>
-        <ContainedTextField {...form.getInputProps("name")} label="Name" />
-        <ContainedTextField {...form.getInputProps("phone")} label="Phone" />
+        <Title>
+          {translations["Registration Form for: "]}
+          {campaign.name}
+        </Title>
+        <ContainedTextField
+          {...form.getInputProps("name")}
+          label={translations["Name"]}
+        />
+        <ContainedTextField
+          {...form.getInputProps("phone")}
+          label={translations["Phone"]}
+        />
         <Group>
-          <Button variant="outline">Cancel</Button>
-          <Button onClick={handleSubmit}>Submit</Button>
+          <Button variant="outline">{translations["Cancel"]}</Button>
+          <Button onClick={handleSubmit}>{translations["Submit"]}</Button>
         </Group>
       </Stack>
     </Paper>
