@@ -19,7 +19,7 @@ import {
 } from "../../../SurveyThemeContext";
 import IsSurveyThemePreviewContextProvider from "./isSurveyThemePreviewContext";
 import styles from "./SurveyThemePreview.module.css";
-import { editViewQuestionsArr } from "./utils";
+import { getSurveyEditViewQuestions } from "./utils";
 
 function SurveyThemeView({
   survey,
@@ -51,11 +51,12 @@ function SurveyThemeView({
   }
 
   if (isSurveyThemeEditView) {
-    surveyCopy.questions = editViewQuestionsArr;
+    const questions = getSurveyEditViewQuestions(survey.questions);
+    surveyCopy.questions = questions;
   }
 
   let componentToBeRendered = null;
-  if (isReviewPage) {
+  if (isReviewPage && !isSurveyThemeEditView) {
     componentToBeRendered = (
       <GoogleReview
         googleLink={"https://rateup.app"}
@@ -63,7 +64,7 @@ function SurveyThemeView({
         orgLogoUrl={orgLogoUrl}
       />
     );
-  } else if (isThankyouPage) {
+  } else if (isThankyouPage && !isSurveyThemeEditView) {
     const thankyouTypePageQuestionObj = surveyCopy?.questions?.find(
       (question) => question?.type === PageType.ThankYou,
     );
@@ -81,7 +82,7 @@ function SurveyThemeView({
         isSurveyPreview={true}
       />
     );
-  } else if (isDefaultThankyouPage) {
+  } else if (isDefaultThankyouPage && !isSurveyThemeEditView) {
     componentToBeRendered = <ResponseSubmitted isSurveyPreview={true} />;
   } else {
     componentToBeRendered = (

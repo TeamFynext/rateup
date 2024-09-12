@@ -48,7 +48,10 @@ import { QuestionsSideBar } from "./QuestionsSideBar";
 import SurveyPreviewModal from "./SurveyPreviewModal";
 import SurveyTheme from "./SurveyTheme";
 import StylesComponent from "./SurveyTheme/components/stylescomponent";
-import { getSurveyThemeKeyFromPageType } from "./SurveyTheme/SurveyTheme.constants";
+import {
+  getSurveyThemeKeyFromPageType,
+  getSurveyThemeTabValueFromPageType,
+} from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext";
 import UiTextTranslationsModal from "./UiTextTranslationsModal";
@@ -229,6 +232,16 @@ export function EditSurvey({
     const { id, ...restData } = newQ;
     const saveQ = { ...restData };
     questionCreateMutation.mutateAsync(saveQ).then((r) => {
+      const question = r.data;
+      if (uniquePages.includes(question.type)) {
+        setSelectedSurveyThemeTab(
+          getSurveyThemeTabValueFromPageType(question.type),
+        );
+        setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
+        surveyThemeContextProviderValueRef.current =
+          survey?.webSurveyPagesTheme;
+      }
+      setSelectedQ(question);
       setSelectedQ(r.data);
       setActiveTab(QuestionTabsEnum.Edit);
     });
