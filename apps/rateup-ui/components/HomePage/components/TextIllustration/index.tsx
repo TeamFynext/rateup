@@ -1,6 +1,7 @@
 import { Group, Stack } from "@mantine/core";
-import styles from "./TextIllustration.module.css";
 import classNames from "classnames/bind";
+
+import styles from "./TextIllustration.module.css";
 
 const cx = classNames.bind(styles);
 

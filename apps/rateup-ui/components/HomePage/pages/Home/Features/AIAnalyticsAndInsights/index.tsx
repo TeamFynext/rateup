@@ -1,8 +1,10 @@
 import { Box } from "@mantine/core";
-import TextIllustration from "../../TextIllustration";
+import classNames from "classnames/bind";
+
+import TextIllustration from "../../../../components/TextIllustration";
 import { aIAnalyticsAndInsightsContent } from "../../constants";
 import styles from "./AIAnalyticsAndInsights.module.css";
-import classNames from "classnames/bind";
+
 const cx = classNames.bind(styles);
 
 function AIAnalyticsAndInsights() {

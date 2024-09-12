@@ -41,6 +41,15 @@ const headerNavLinks = [
         },
         iconLink: `${imagesPath}/homepage/header/clipboard.svg`,
       },
+      {
+        id: 1003,
+        link: "/qr-studio",
+        content: {
+          heading: "QR Studio",
+          description: "One smart QR code, Endless Possibilities",
+        },
+        iconLink: `${imagesPath}/qr-studio-page/qr-studio-icon.png`,
+      },
     ],
   },
   {

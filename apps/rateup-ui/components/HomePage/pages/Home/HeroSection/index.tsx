@@ -4,6 +4,7 @@ import { Box, Button, Flex, Group, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import MotionButtonGesture from "@/components/HomePage/components/MotionButtonGesture";
+import TryFreePlanBtn from "@/components/HomePage/components/TryFreePlanBtn";
 
 import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import BookDemoContactForm from "../../../components/BookDemoContactForm";
@@ -37,21 +38,11 @@ function HeroSection() {
         </Box>
         <Group className={styles["book-demo-try-free-plan-btns-container"]}>
           <BookDemoContactForm />
-          <MotionButtonGesture>
-            <Button
-              className={cx("try-free-plan-btn")}
-              onClick={() => {
-                gAnalyticsAndFbEvent(
-                  "try_free_plan",
-                  "TryFreePlanButtonClick",
-                  "Clicked on try free plan button in home page",
-                );
-              }}
-              variant="subtle"
-            >
-              Try free plan!
-            </Button>
-          </MotionButtonGesture>
+          <TryFreePlanBtn
+            gACategory={"try_free_plan"}
+            fbEventName={"TryFreePlanButtonClick"}
+            gALabel={"Clicked on try free plan button in home page"}
+          />
         </Group>
       </Flex>
     </Stack>
