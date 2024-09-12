@@ -48,12 +48,14 @@ import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
 import { useRouteParams } from "@/context/RouteParamsContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
+  const { translations } = useTranslations();
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
@@ -78,15 +80,18 @@ export default function ContactGroup() {
 
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: "Delete Group",
+      title: translations["Delete Group"],
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete this group? This action is destructive
-          and you will have to contact support to restore your data.
+          {
+            translations[
+              "Are you sure you want to delete this group? This action is destructive and you will have to contact support to restore your data."
+            ]
+          }
         </Text>
       ),
-      labels: { confirm: "Ok", cancel: "cancel" },
+      labels: { confirm: translations["Ok"], cancel: translations["cancel"] },
       confirmProps: { color: "red" },
       onCancel: () => modals.closeAll(),
       onConfirm: () => deleteContactGroup(),
@@ -145,7 +150,7 @@ export default function ContactGroup() {
                 src={
                   groupDetails?.icon && getFileUrlFromKey(groupDetails?.icon)
                 }
-                alt="profile pic"
+                alt={translations["profile pic"]}
                 size={"xl"}
                 radius={"md"}
               >
@@ -166,11 +171,11 @@ export default function ContactGroup() {
                     variant="default"
                     disabled={loadingState}
                   >
-                    Edit Profile
+                    {translations["Edit Profile"]}
                   </Button>
                   <FormModalLayout
                     centered
-                    title="Edit Group"
+                    title={translations["Edit Group"]}
                     opened={openedEditModal}
                     onClose={closeEditModal}
                     size="lg"
@@ -189,7 +194,7 @@ export default function ContactGroup() {
                     onClick={openDeleteModal}
                     disabled={loadingState}
                   >
-                    Delete this Group
+                    {translations["Delete this Group"]}
                   </Button>
                 </Group>
               </Stack>
@@ -212,19 +217,19 @@ export default function ContactGroup() {
                     {groupDetails?.contacts?.length ?? 0}
                   </Title>
                 </Center>
-                <Text>members</Text>
+                <Text>{translations["members"]}</Text>
               </Stack>
             </Group>
           </Group>
         </PaperLayout>
         <Stack mt={"xs"} flex={1}>
           <Group justify="space-between">
-            <Title order={2}>Members</Title>
+            <Title order={2}>{translations["Members"]}</Title>
             <TextInput
               leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
               radius="xl"
               size="md"
-              placeholder={"Search member"}
+              placeholder={translations["Search member"]}
               rightSectionWidth={60}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -254,7 +259,7 @@ export default function ContactGroup() {
       <FormModalLayout
         onClose={close}
         opened={opened}
-        title={`Add members`}
+        title={translations["Add members"]}
         size="xl"
         centered
       >

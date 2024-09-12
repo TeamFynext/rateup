@@ -26,6 +26,7 @@ function SurveyThemeContextProvider({
   editSurveySelectedQuestion = null,
   surveyThemeContextProviderValueRef = null,
 }) {
+  // console.log({ selectedPageTab, theme: surveyThemeContextProviderValueRef.current})
   const isFirstRender = useIsFirstRender();
 
   const [state, dispatch] = useImmerReducer(surveyThemeReducer, {

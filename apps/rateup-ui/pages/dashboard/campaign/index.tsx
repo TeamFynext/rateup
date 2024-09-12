@@ -24,6 +24,7 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./campaign.module.css";
 
@@ -31,6 +32,7 @@ export default function CampaignList() {
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
+  const { translations } = useTranslations();
   const enabled = !!selectedTeam && selectedTeam != "all";
   const {
     data: campaignDataByTeam,
@@ -70,9 +72,12 @@ export default function CampaignList() {
     <MantineProvider theme={whatsappTheme}>
       <Stack gap={"sm"} h={"100%"}>
         <Flex justify={"space-between"}>
-          <Heading title="Campaigns" titleprops={{ w: "fit-content" }} />
+          <Heading
+            title={translations["Campaigns"]}
+            titleprops={{ w: "fit-content" }}
+          />
           <SearchInput
-            placeholder={"Search Campaign"}
+            placeholder={translations["Search Campaign"]}
             searchText={searchText}
             setSearchText={setSearchText}
           />
@@ -88,7 +93,7 @@ export default function CampaignList() {
           <TanstackTable
             columns={column}
             data={filteredCampaigns}
-            btnTitle="Create"
+            btnTitle={translations["Create"]}
             toggle={open}
             disableFuzzyFnCustom={true}
             detailBtn

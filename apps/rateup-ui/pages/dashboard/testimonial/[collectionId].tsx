@@ -1,31 +1,35 @@
 import { useEffect, useState } from "react";
-import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { Stack, Tabs, Group, Paper, Checkbox, Button } from "@mantine/core";
-import Heading from "../../../components/styled/Heading/Heading";
 import { useRouter } from "next/router";
-import TestimonialSelect from "../../../components/testimonial/TestimonialSelect";
-import TestimonialEdit from "../../../components/testimonial/TestimonialEdit";
-import TestimonialShare, {
-  TestimonialShareModal,
-} from "../../../components/testimonial/TestimonialShare";
-import TestimonialFilter from "../../../components/testimonial/TestimonialFilter";
-import {
-  useAddMultipleTestimonialsToCollection,
-  useDeleteMultipleTestimonialsFromCollection,
-  useGetAllTestimonialsByCollection,
-  useGetAllTestimonialsByOrg,
-} from "../../../backend/testimonials/testimonial.query";
-import { useRouteParams } from "../../../context/RouteParamsContext";
-import { getFilteredTestimonials } from "../../../utils/testimonial";
+
+import { Button, Checkbox, Group, Paper, Stack, Tabs } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import TestimonialEditModal from "../../../components/testimonial/TestimonialEditModal";
 import {
   IconDeviceFloppy,
   IconPencil,
   IconShare,
   IconTrash,
 } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import {
+  useAddMultipleTestimonialsToCollection,
+  useDeleteMultipleTestimonialsFromCollection,
+  useGetAllTestimonialsByCollection,
+  useGetAllTestimonialsByOrg,
+} from "../../../backend/testimonials/testimonial.query";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import Heading from "../../../components/styled/Heading/Heading";
+import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
+import TestimonialEdit from "../../../components/testimonial/TestimonialEdit";
+import TestimonialEditModal from "../../../components/testimonial/TestimonialEditModal";
+import TestimonialFilter from "../../../components/testimonial/TestimonialFilter";
+import TestimonialSelect from "../../../components/testimonial/TestimonialSelect";
+import TestimonialShare, {
+  TestimonialShareModal,
+} from "../../../components/testimonial/TestimonialShare";
+import { useRouteParams } from "../../../context/RouteParamsContext";
+import { getFilteredTestimonials } from "../../../utils/testimonial";
 
 export enum TestimonialTabs {
   Select = "Select",
@@ -205,7 +209,7 @@ function UtilityComponent({
     useDisclosure(false);
   const [openedShare, { open: openShare, close: closeShare }] =
     useDisclosure(false);
-
+  const { translations } = useTranslations();
   const handleSave = () => {
     addMultipleTestimonials.mutate(selectedTestimonialIds, {
       onSuccess: () => {
@@ -231,11 +235,11 @@ function UtilityComponent({
     else setSelectedTestimonialIds([]);
   }
 
-  const isAllSelected = testimonialIdsNotInCollection?.every(
-    (t) => selectedTestimonialIds?.includes(t),
+  const isAllSelected = testimonialIdsNotInCollection?.every((t) =>
+    selectedTestimonialIds?.includes(t),
   );
-  const isAllSelectedForDelete = savedTestimonialIds?.every(
-    (t) => selectedTestimonialIds?.includes(t),
+  const isAllSelectedForDelete = savedTestimonialIds?.every((t) =>
+    selectedTestimonialIds?.includes(t),
   );
 
   useEffect(() => {
@@ -250,7 +254,7 @@ function UtilityComponent({
           <>
             {isDelete && (
               <Checkbox
-                label={"Select All"}
+                label={translations["Select All"]}
                 size="xs"
                 checked={isAllSelectedForDelete}
                 disabled={!savedTestimonialIds?.length}
@@ -269,7 +273,7 @@ function UtilityComponent({
               disabled={!savedTestimonialIds?.length}
               leftSection={<IconPencil size={"1rem"} />}
             >
-              Customize
+              {translations["Customize"]}
             </Button>
 
             <Button
@@ -281,7 +285,7 @@ function UtilityComponent({
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconTrash size={"1rem"} />}
             >
-              Delete
+              {translations["Delete"]}
             </Button>
             {isDelete && (
               <Button
@@ -290,7 +294,7 @@ function UtilityComponent({
                 variant="filled"
                 onClick={toggleDelete}
               >
-                Cancel
+                {translations["Cancel"]}
               </Button>
             )}
           </>
@@ -299,7 +303,7 @@ function UtilityComponent({
         {activeTab === TestimonialTabs.Select && (
           <>
             <Checkbox
-              label={"Select All"}
+              label={translations["Select All"]}
               size="xs"
               checked={isAllSelected}
               disabled={!filteredTestimonialIds?.length}
@@ -313,7 +317,7 @@ function UtilityComponent({
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconDeviceFloppy size={"1rem"} />}
             >
-              Save and Next
+              {translations["Save and Next"]}
             </Button>
           </>
         )}
@@ -327,7 +331,7 @@ function UtilityComponent({
               disabled={!savedTestimonialIds?.length}
               leftSection={<IconShare size={"1rem"} />}
             >
-              Share
+              {translations["Share"]}
             </Button>
           </>
         )}
@@ -339,9 +343,9 @@ function UtilityComponent({
       />
       <ConfirmationModal
         forDeleteFunctionality
-        confirmLabel="Delete"
-        headerLabel="Are you sure to delete these testimonials?"
-        headerTitle="Delete testimonials?"
+        confirmLabel={translations["Delete"]}
+        headerLabel={translations["Are you sure to delete these testimonials?"]}
+        headerTitle={translations["Delete testimonials?"]}
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {

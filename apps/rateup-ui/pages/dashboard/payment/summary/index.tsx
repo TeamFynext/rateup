@@ -1,14 +1,18 @@
-import { useRouter } from "next/router";
 import React, { useEffect } from "react";
-import { useGetStripeCheckoutSession } from "../../../../backend/payment/stripe/stripe.query";
+import { useRouter } from "next/router";
+
 import { Flex, Paper, Stack, Text, Title } from "@mantine/core";
-import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
 import { IconChevronLeft } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useGetStripeCheckoutSession } from "../../../../backend/payment/stripe/stripe.query";
+import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
 
 const CheckoutReturn = () => {
   const router = useRouter();
   const { session_id } = router.query;
-
+  const { translations } = useTranslations();
   const { data: sessionData, refetch } =
     useGetStripeCheckoutSession(session_id);
 
@@ -32,18 +36,25 @@ const CheckoutReturn = () => {
           direction="column"
           wrap="wrap"
         >
-          <Title order={1}>Thank You 🎉</Title>
+          <Title order={1}>{translations["Thank You 🎉"]}</Title>
 
-          <Title order={2}>Your Order is getting Processed...</Title>
+          <Title order={2}>
+            {translations["Your Order is getting Processed..."]}
+          </Title>
           <Text mb="xl">
-            You will shortly receive an email confirmation, <br /> once your
-            payment & order is processed successfully,
+            {translations["You will shortly receive an email confirmation,"]}{" "}
+            <br />{" "}
+            {
+              translations[
+                "once your payment & order is processed successfully,"
+              ]
+            }
           </Text>
           <RateupButtonPrimary
             onClick={() =>
               router.push("/dashboard/settings?activeTab=account&view=myOrders")
             }
-            title="Go to My Orders"
+            title={translations["Go to My Orders"]}
             leftIcon={<IconChevronLeft />}
           />
         </Flex>{" "}

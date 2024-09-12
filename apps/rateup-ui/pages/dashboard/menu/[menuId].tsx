@@ -1,29 +1,33 @@
-import { Flex, Grid, Group, Stack, Tabs, rem } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { Flex, Grid, Group, rem, Stack, Tabs } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconFileImport,
   IconLayersSubtract,
   IconPlus,
 } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCategories,
   useDeleteMenuCategoryMutation,
 } from "../../../backend/menu/category/mCategory.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
-import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
-import NothingFound from "../../../components/NothingFound/NothingFound";
+import { useMenuLandingById } from "../../../backend/menu/LandingPage/landingpage.query";
 import { MotionTransition } from "../../../components/animation/MotionTransition";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import SearchBox from "../../../components/input/SearchBox";
-import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
-import MenuSettings from "../../../components/menu/Settings/MenuSettings";
-import ShareMenu from "../../../components/menu/Share/ShareMenu";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 import MenuAnalytics from "../../../components/menu/analytics/MenuAnalytics";
 import { CategoryCard } from "../../../components/menu/category/CategoryCard";
 import CategoryItemCsvModal from "../../../components/menu/category/CategoryItemCsvModal";
+import { CreateMenuCategoryModal } from "../../../components/menu/CreateMenuCategoryModal";
+import MenuSettings from "../../../components/menu/Settings/MenuSettings";
+import ShareMenu from "../../../components/menu/Share/ShareMenu";
+import { BannerAddAndViewModal } from "../../../components/Modal/BannerAddAndViewModal";
+import NothingFound from "../../../components/NothingFound/NothingFound";
 import Heading from "../../../components/styled/Heading/Heading";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -41,7 +45,7 @@ export default function MenuById({ categories: initialCategories }) {
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
   const { update } = useRouteParams();
-
+  const { translations } = useTranslations();
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [openUploadCsv, { close: closeUploadCsv, toggle }] =
     useDisclosure(false);
@@ -114,10 +118,14 @@ export default function MenuById({ categories: initialCategories }) {
           </Grid.Col>
           <Grid.Col span={6}>
             <Tabs.List>
-              <Tabs.Tab value={TabEnum.Menu}>Menu</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Settings}>Settings</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Share}>Share</Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Analytics}>Analytics</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Menu}>{translations["Menu"]}</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Settings}>
+                {translations["Settings"]}
+              </Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Share}>{translations["Share"]}</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Analytics}>
+                {translations["Analytics"]}
+              </Tabs.Tab>
             </Tabs.List>
           </Grid.Col>
         </Grid>
@@ -133,14 +141,14 @@ export default function MenuById({ categories: initialCategories }) {
               <Flex justify={"space-between"} wrap={"wrap"} pt={"0.3125rem"}>
                 <Group>
                   <RateupButtonPrimary
-                    title="Add Category"
+                    title={translations["Add Category"]}
                     rightIcon={<IconPlus />}
                     radius="xl"
                     size="md"
                     onClick={handleCreateCategory}
                   />
                   <RateupButtonPrimary
-                    title="Import Menu"
+                    title={translations["Import Menu"]}
                     rightIcon={<IconFileImport size={16} />}
                     radius="xl"
                     size="md"
@@ -158,7 +166,7 @@ export default function MenuById({ categories: initialCategories }) {
                   }}
                 />
                 <RateupButtonPrimary
-                  title="Manage Banners"
+                  title={translations["Manage Banners"]}
                   rightIcon={
                     <IconLayersSubtract
                       style={{ width: rem(18), height: rem(18) }}
@@ -189,7 +197,7 @@ export default function MenuById({ categories: initialCategories }) {
                 mah={800}
               >
                 {filteredCategory?.length === 0 ? (
-                  <NothingFound text="No Category available." />
+                  <NothingFound text={translations["No Category available."]} />
                 ) : (
                   filteredCategory?.map((category) => (
                     <CategoryCard

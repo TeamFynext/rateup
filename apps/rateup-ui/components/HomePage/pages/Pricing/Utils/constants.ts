@@ -1,4 +1,8 @@
-export const BlueGradient = { from: "#2564AE", to: "#00397B", deg: 131 };
+export const BlueGradient = {
+  from: "var(--shade-of-blue-5)",
+  to: "var(--shade-of-blue-3)",
+  deg: 131,
+};
 export const initialPrices = {
   essentials: 664,
   plus: 830,

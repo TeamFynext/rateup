@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { ScrollArea, Text } from "@mantine/core";
+import { Text } from "@mantine/core";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
@@ -33,9 +33,10 @@ function QuestionTitle({
       replacedTitle.includes("<h1>") ||
       replacedTitle.includes("<h2>") ||
       replacedTitle.includes("<h3>") ||
-      replacedTitle.includes("<h4>")
+      replacedTitle.includes("<h4>") ||
+      replacedTitle.includes("<b>")
     ) {
-      styles = {};
+      styles = { color: themeStyles?.color };
     } else {
       styles = themeStyles;
     }

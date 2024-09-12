@@ -15,10 +15,12 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import { RewardSelectionModal } from "@/components/loyalty/campaign/RewardSelectionModal";
 import { RewardCard } from "@/components/loyalty/reward/RewardCard";
+import useTranslations from "@/dictionaries/useTranslation";
 import { getLoyaltyCampaignTypeLabel } from "@/utils/enums";
 
 export default function CreateLoyalty() {
   const { data: rewards } = useRewards(true);
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       name: "",
@@ -30,22 +32,24 @@ export default function CreateLoyalty() {
     },
     validate: {
       name: (value: string) =>
-        value.trim().length > 0 ? null : "Name is required",
+        value.trim().length > 0 ? null : translations["Name is required"],
       type: (value: LoyaltyCampaignType) =>
-        value !== null ? null : "Type is required",
+        value !== null ? null : translations["Type is required"],
       maxPerReferrer: (value: number) => {
         if (form.values.type === LoyaltyCampaignType.Transaction) return;
-        return value > 0 ? null : "Max Per Referrer is required";
+        return value > 0 ? null : translations["Max Per Referrer is required"];
       },
       maxPerUser: (value: number) =>
-        value > 0 ? null : "Max Per User is required",
+        value > 0 ? null : translations["Max Per User is required"],
       referrerRewardId: (value: string) => {
         if (form.values.type === LoyaltyCampaignType.Transaction) return;
 
-        return value !== "" ? null : "Referrer Reward is required";
+        return value !== ""
+          ? null
+          : translations["Referrer Reward is required"];
       },
       userRewardId: (value: string) =>
-        value !== "" ? null : "User Reward is required",
+        value !== "" ? null : translations["User Reward is required"],
     },
   });
 
@@ -83,14 +87,14 @@ export default function CreateLoyalty() {
       <SimpleGrid cols={2}>
         <Box>
           <ContainedTextField
-            label="Campaign Name"
-            placeholder="Enter Campaign Name"
+            label={translations["Campaign Name"]}
+            placeholder={translations["Enter Campaign Name"]}
             required
             {...form.getInputProps("name")}
           />
           <ContainedSelection
-            label="Campaign Type"
-            placeholder="Select Campaign Type"
+            label={translations["Campaign Type"]}
+            placeholder={translations["Select Campaign Type"]}
             required
             {...form.getInputProps("type")}
             data={Object.values(LoyaltyCampaignType).map((type) => ({
@@ -101,15 +105,15 @@ export default function CreateLoyalty() {
 
           {form.values.type !== LoyaltyCampaignType.Transaction ? (
             <ContainedNumberInput
-              label="Max Per Referrer"
-              placeholder="Enter Max Per Referrer"
+              label={translations["Max Per Referrer"]}
+              placeholder={translations["Enter Max Per Referrer"]}
               required
               {...form.getInputProps("maxPerReferrer")}
             />
           ) : null}
           <ContainedNumberInput
-            label="Max Per User"
-            placeholder="Enter Max Per User"
+            label={translations["Max Per User"]}
+            placeholder={translations["Enter Max Per User"]}
             required
             {...form.getInputProps("maxPerUser")}
           />
@@ -118,27 +122,27 @@ export default function CreateLoyalty() {
         <Group>
           {form.values.type !== LoyaltyCampaignType.Transaction ? (
             <Box flex={1}>
-              <Text mb={"xs"}>Referrer Reward:</Text>
+              <Text mb={"xs"}>{translations["Referrer Reward:"]}</Text>
               {referrerReward ? (
                 <RewardCard reward={referrerReward} />
               ) : (
                 <RateupButtonPrimary
                   variant="outline"
                   onClick={() => setRewardSelectionOpened("referrer")}
-                  title="Select Reward"
+                  title={translations["Select Reward"]}
                 />
               )}
             </Box>
           ) : null}
           <Box flex={1}>
-            <Text mb={"xs"}>User Reward:</Text>
+            <Text mb={"xs"}>{translations["User Reward:"]}</Text>
             {userRewardId ? (
               <RewardCard reward={userRewardId} />
             ) : (
               <RateupButtonPrimary
                 variant="outline"
                 onClick={() => setRewardSelectionOpened("user")}
-                title="Select Reward"
+                title={translations["Select Reward"]}
               />
             )}
           </Box>
@@ -146,13 +150,13 @@ export default function CreateLoyalty() {
       </SimpleGrid>
       <Group justify="flex-end" mt="md">
         <RateupButtonPrimary
-          title="Clear"
+          title={translations["Clear"]}
           variant={"light"}
           onClick={() => form.reset()}
           size="md"
         />
         <RateupButtonPrimary
-          title="Create"
+          title={translations["Create"]}
           onClick={handleCreate}
           disabled={!form.isValid()}
           size="md"

@@ -38,6 +38,7 @@ import PaperLayout, {
   PaperLayoutProps,
 } from "@/components/styled/Layouts/PaperLayout";
 import { useRouteParams } from "@/context/RouteParamsContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import { generateWaMessageUrl } from "@/utils/whatsapp/wa_url";
 
 import styles from "../../styles.module.css";
@@ -46,7 +47,7 @@ export default function LoyaltyCampaignPage() {
   const router = useRouter();
   const lcampaignId = router.query.campaignId as string;
   const { update } = useRouteParams();
-
+  const { translations } = useTranslations();
   const { data: campaign, isLoading: isCampaignLoading } =
     useCampaign(lcampaignId);
   const { data: waSettings } = useWaSettings();
@@ -74,7 +75,7 @@ export default function LoyaltyCampaignPage() {
 
   const registerUrl = phone
     ? generateWaMessageUrl(phone, `/register ${lcampaignId}`)
-    : "Configure Whatsapp>Settings to enable registration.";
+    : translations["Configure Whatsapp>Settings to enable registration."];
   return (
     <Stack gap={"xl"}>
       <Group>
@@ -91,13 +92,13 @@ export default function LoyaltyCampaignPage() {
           <PaperLayout py={"xl"} flex={1} mb={"md"}>
             <Center>
               <Switch
-                label={"Campaign Status: "}
+                label={translations["Campaign Status: "]}
                 labelPosition={"left"}
                 checked={campaign.active}
                 onChange={handleActiveChange}
                 size={"xl"}
-                onLabel={"Active"}
-                offLabel={"Paused"}
+                onLabel={translations["Active"]}
+                offLabel={translations["Paused"]}
                 styles={{
                   track: {
                     width: "90px",
@@ -126,26 +127,27 @@ export default function LoyaltyCampaignPage() {
 
 function QuickActions() {
   const router = useRouter();
+  const { translations } = useTranslations();
 
   return (
     <Group align={"end"} justify={"space-evenly"}>
       <QuickActionCard
         Icon={IconUsers}
-        text={"Customers"}
+        text={translations["Customers"]}
         onClick={() => {
           router.push(window.location + "/participants");
         }}
       />
       <QuickActionCard
         Icon={IconWriting}
-        text={"Event Entry"}
+        text={translations["Event Entry"]}
         onClick={() => {
           router.push(window.location + "/event-entry");
         }}
       />
       <QuickActionCard
         Icon={IconArticle}
-        text={"Event History"}
+        text={translations["Event History"]}
         onClick={() => {
           router.push(window.location + "/event-history");
         }}
@@ -174,34 +176,37 @@ function QuickActionCard({ Icon, text, ...props }: QuickActionCardProps) {
 
 function LoyaltyCampaignInsights({ campaignId }) {
   const { data: insights } = useLoyaltyCampaignInsights(campaignId);
-
+  const { translations } = useTranslations();
   if (!insights) return;
 
   return (
     <Card className={styles["card-container"]}>
       <SimpleGrid cols={2}>
-        <InsightsCard value={insights.totalCustomers} text={`Customers`} />
+        <InsightsCard
+          value={insights.totalCustomers}
+          text={translations["Customers"]}
+        />
         <InsightsCard
           value={insights.totalTransactions}
-          text={`Total Transactions`}
+          text={translations["Total Transactions"]}
         />
         <InsightsCard
           value={insights.totalPointsRewarded}
-          text={`Rewarded Points`}
+          text={translations["Rewarded Points"]}
         />
         <InsightsCard
           value={insights.totalTransactionAmount}
-          text={`Total Transaction Amount`}
+          text={translations["Total Transaction Amount"]}
         />
       </SimpleGrid>
       <Button
         variant={"transparent"}
         rightSection={<IconArrowRight />}
         onClick={() => {
-          notifications.show({ message: "Coming Soon" });
+          notifications.show({ message: translations["Coming Soon"] });
         }}
       >
-        View More Insights
+        {translations["View More Insights"]}
       </Button>
     </Card>
   );
