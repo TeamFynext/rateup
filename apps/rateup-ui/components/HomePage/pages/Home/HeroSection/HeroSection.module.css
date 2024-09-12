@@ -120,6 +120,10 @@
   .hero-section-image {
     height: 200px;
   }
+  .book-demo-try-free-plan-btns-container {
+    gap: 1rem;
+    padding: 0 1rem;
+  }
   .book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
     font-size: 0.75rem;
   }
