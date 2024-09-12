@@ -1,5 +1,4 @@
 .companies-using-rateup-root-div {
-  padding: 0 5%;
   margin-bottom: 4rem;
   gap: 1.5rem;
 }
@@ -14,7 +13,6 @@
   background-color: var(--tertiary-color);
   background-image: linear-gradient(135deg, #004f98, #0197f6);
   width: 100%;
-  border-radius: 1rem;
   position: relative;
 }
 
@@ -44,11 +42,5 @@
   .logo-img {
     width: 100px;
     height: 60px;
-  }
-}
-
-@media screen and (min-width: 120rem) {
-  .companies-using-rateup-root-div {
-    padding: 0 192px;
   }
 }

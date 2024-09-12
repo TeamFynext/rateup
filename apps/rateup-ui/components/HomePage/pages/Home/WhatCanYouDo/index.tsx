@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Box, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
+import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
+
 import TextIllustration from "../TextIllustration";
 import { sectionValues } from "./sectionValues";
 import styles from "./WhatCanYouDo.module.css";
@@ -14,7 +16,8 @@ function WhatCanYouDo() {
   return (
     <Stack className={cx("what-can-you-do-root-div")} id="our-features">
       <h1 className={cx("heading")}>
-        What can you do with the RateUp platform?
+        What can you do with the{" "}
+        <LightBlueGradientBg>RateUp platform?</LightBlueGradientBg>
       </h1>
       <Box className={cx("sections-container")}>
         {sectionValues.map(

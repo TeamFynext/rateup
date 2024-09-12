@@ -4,7 +4,7 @@
   white-space: nowrap;
   padding: 0.3125rem 2.5rem;
   background-image: linear-gradient(90deg, #387adf, #50c4ed);
-  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+  /* clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); */
   clip-path: polygon(
     3.81% 5.69%,
     3.81% 5.69%,
@@ -61,4 +61,14 @@
 .displayInline {
   display: inline-block;
   padding: 0.3125em 1em;
+}
+
+@media screen and (max-width: 1024px) {
+  .light-blue-gradient-bg-div {
+    padding: 0 !important;
+    background-image: none;
+    color: black;
+    clip-path: none;
+    white-space: initial;
+  }
 }

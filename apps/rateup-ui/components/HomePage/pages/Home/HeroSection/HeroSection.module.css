@@ -12,17 +12,19 @@
   gap: 2.5rem;
   padding: 1.5rem 0;
   border-radius: 1rem;
-  background-color: rgb(171, 171, 171, 0.15);
+  background-color: var(--tertiary-color);
 }
 
 .hero-section-heading {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   gap: 1rem;
   width: 70%;
   text-align: center;
   font-size: 2.5rem;
+  color: white;
 }
 
 .hero-section-heading span {
@@ -30,13 +32,16 @@
 }
 
 .heading-small-text-span {
-  color: var(--shade-of-blue-3);
   font-size: 0.4em;
   font-weight: 500;
+  color: var(--tertiary-color);
+  background-color: white;
+  width: auto;
+  padding: 0.3125rem 1rem;
+  border-radius: 2rem;
 }
 
 .heading-large-text-span {
-  color: black;
   font-size: 1em;
   font-weight: 500;
   line-height: normal;
@@ -59,10 +64,16 @@
   gap: 1rem;
 }
 
-.try-free-plan-btn {
+.book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
   background-color: white;
+  background-image: none;
   color: var(--tertiary-color);
-  border: 1px solid var(--tertiary-color);
+  font-size: 0.875rem;
+}
+
+.try-free-plan-btn {
+  color: white;
+  border: 1px solid white;
   border-radius: 2rem;
   padding: 0.625rem 2rem;
   height: auto;
@@ -98,6 +109,9 @@
 @media screen and (max-width: 425px) {
   .hero-section-heading {
     font-size: 1.75rem;
+  }
+  .book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
+    font-size: 0.75rem;
   }
   .try-free-plan-btn {
     font-size: 0.75rem;

@@ -11,6 +11,10 @@
   font-weight: 400;
 }
 
+.heading span {
+  display: inline;
+}
+
 .customer-feedback-cards-scroll-area > div {
   width: 100%;
 }

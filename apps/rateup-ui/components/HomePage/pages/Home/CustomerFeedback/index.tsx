@@ -2,6 +2,7 @@ import { Center, Loader, ScrollArea, Stack, Text } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import { useGetAllTestimonialsByCollection } from "@/backend/testimonials/testimonial.query";
+import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 
 import styles from "./CustomerFeedback.module.css";
 import { devCustomerFeedbackData } from "./devCustomerFeedbackData";
@@ -34,7 +35,9 @@ function CustomerFeedback() {
 
   return (
     <Stack className={cx("customer-feedback-root-div")}>
-      <h1 className={cx("heading")}>Customer Feedback</h1>
+      <h1 className={cx("heading")}>
+        <LightBlueGradientBg>Customer Feedback</LightBlueGradientBg>
+      </h1>
       <ScrollArea.Autosize
         className={cx("customer-feedback-cards-scroll-area")}
         mah={700}

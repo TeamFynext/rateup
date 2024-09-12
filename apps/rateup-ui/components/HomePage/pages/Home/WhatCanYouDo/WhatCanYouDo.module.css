@@ -10,6 +10,10 @@
   font-weight: 400;
 }
 
+.heading span {
+  display: inline;
+}
+
 .section-heading {
   font-weight: 500;
   font-size: 1.5rem;
