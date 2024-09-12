@@ -6,7 +6,7 @@ import classNames from "classnames/bind";
 
 import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 
-import TextIllustration from "../TextIllustration";
+import TextIllustration from "../../../components/TextIllustration";
 import { sectionValues } from "./sectionValues";
 import styles from "./WhatCanYouDo.module.css";
 
