@@ -64,7 +64,7 @@
 
 .book-demo-try-free-plan-btns-container {
   justify-content: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
@@ -82,6 +82,10 @@
   height: auto;
   font-weight: 430;
   line-height: normal;
+}
+
+.try-free-plan-btn:hover {
+  color: white;
 }
 
 /* Media Queries */
