@@ -51,6 +51,9 @@
   padding: 0 1rem;
   max-width: 100%;
   height: 21.875rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .hero-section-image {
@@ -108,7 +111,10 @@
 
 @media screen and (max-width: 425px) {
   .hero-section-heading {
-    font-size: 1.75rem;
+    font-size: 1.65rem;
+  }
+  .hero-section-image {
+    height: 200px;
   }
   .book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
     font-size: 0.75rem;
