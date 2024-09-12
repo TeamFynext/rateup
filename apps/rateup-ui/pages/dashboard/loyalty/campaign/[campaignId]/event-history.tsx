@@ -1,13 +1,17 @@
+import { useRouter } from "next/router";
+
 import { Box, Title } from "@mantine/core";
 import { createColumnHelper } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { useRouter } from "next/router";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useRewardEvents } from "../../../../../backend/loyalty/campaign/campaignRewardEvent/care.query";
 import { useCampaign } from "../../../../../backend/loyalty/campaign/loyaltyCampaign.query";
+import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 import TanstackTable from "../../../../../components/Table/TanstackTable";
 import { LoyaltyCampaignType } from "../../../../../types/enums";
 import styles from "./event-history.module.css";
-import PaperLayout from "../../../../../components/styled/Layouts/PaperLayout";
 
 export default function CampaignEventsPage() {
   return (
@@ -22,6 +26,7 @@ export default function CampaignEventsPage() {
 }
 
 export function CampaignEventsTable() {
+  const { translations } = useTranslations();
   const router = useRouter();
   const lcampaignId = router.query.campaignId as string;
   const { data: campaign } = useCampaign(lcampaignId);
@@ -35,7 +40,9 @@ export function CampaignEventsTable() {
       className={styles["tanstack-table"]}
       columns={defaultColumns}
       data={events}
-      toggleOffContent={<Title order={3}>Recent Events</Title>}
+      toggleOffContent={
+        <Title order={3}>{translations["Recent Events"]}</Title>
+      }
     />
   );
 }

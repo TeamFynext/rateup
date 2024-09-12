@@ -1,3 +1,6 @@
+import React, { useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Group,
@@ -10,25 +13,26 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
-import { useRouter } from "next/router";
-import React, { useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
+import InfoButton from "../../../../components/Button/InfoButton";
 import {
   RateupButtonBlue,
   RateupButtonPrimary,
 } from "../../../../components/Button/RateupButtons";
+import RefreshButton from "../../../../components/Button/RefreshButton";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import FormModalLayout from "../../../../components/Modal/FormModalLayout";
-import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
+import NothingFound from "../../../../components/NothingFound/NothingFound";
 import Heading from "../../../../components/styled/Heading/Heading";
+import { CreateSurveyModal } from "../../../../components/Survey/CreateSurveyModal";
 import { useUser } from "../../../../context/UserContext";
+import { docsPath } from "../../../../utils/constants";
 import { UserRole } from "../../../../utils/enums";
 import SurveyTemplates from "./surveyTemplates";
-import NothingFound from "../../../../components/NothingFound/NothingFound";
-import InfoButton from "../../../../components/Button/InfoButton";
-import { docsPath } from "../../../../utils/constants";
-import RefreshButton from "../../../../components/Button/RefreshButton";
 
 const Templates = ({ survey }) => {
   const { user } = useUser();
@@ -36,7 +40,7 @@ const Templates = ({ survey }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const router = useRouter();
   const [opened, { open, close }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },
@@ -88,7 +92,7 @@ const Templates = ({ survey }) => {
       >
         <FormModalLayout
           opened={opened}
-          title="Create Survey from Template"
+          title={translations["Create Survey from Template"]}
           onClose={close}
           centered
           size={"lg"}
@@ -98,7 +102,7 @@ const Templates = ({ survey }) => {
               order={3}
               style={{ alignItems: "center", color: "var(--shade-of-blue-3)" }}
             >
-              {selectedTemplate?.title || "Template"}
+              {selectedTemplate?.title || translations["Template"]}
             </Title>
             <Text
               style={{
@@ -107,12 +111,14 @@ const Templates = ({ survey }) => {
                 marginBottom: "1rem",
               }}
             >
-              Customize and deploy this survey effortlessly to uncover
-              actionable data that drives informed decisions and enhances your
-              business strategies
+              {
+                translations[
+                  "Customize and deploy this survey effortlessly to uncover actionable data that drives informed decisions and enhances your business strategies"
+                ]
+              }
             </Text>
             <RateupButtonPrimary
-              title="Try this Template"
+              title={translations["Try this Template"]}
               onClick={() => {
                 setSelectedTemplate(selectedTemplate);
                 close();
@@ -135,7 +141,10 @@ const Templates = ({ survey }) => {
 
       <Group gap="md" justify="space-between">
         <Group ml="md">
-          <Heading title={"Survey Templates"} titleprops={{ w: "500px" }} />
+          <Heading
+            title={translations["Survey Templates"]}
+            titleprops={{ w: "500px" }}
+          />
           <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
           <RefreshButton queryKeys={["survey-templates"]} />
         </Group>
@@ -144,15 +153,15 @@ const Templates = ({ survey }) => {
             miw={"10.9375rem"}
             mr={"200px"}
             rightIcon={<IconPlus />}
-            title="Start Blank"
+            title={translations["Start Blank"]}
             onClick={() => {
               router.push(`/dashboard/surveys?action=create`);
               notifications.show({
                 id: "blank-survey",
                 color: "teal",
-                title: "Setting up Blank Template..",
+                title: translations["Setting up Blank Template.."],
                 loading: true,
-                message: "Hold.. your survey is getting setup..",
+                message: translations["Hold.. your survey is getting setup.."],
                 autoClose: 2000,
               });
             }}
@@ -170,7 +179,7 @@ const Templates = ({ survey }) => {
       {allTemplates && (
         <Box m="lg" pb="xl">
           {Object?.entries(allTemplates)?.length < 1 && (
-            <NothingFound text="No templates found..!!" />
+            <NothingFound text={translations["No templates found..!!"]} />
           )}
 
           {Object?.entries(allTemplates)?.map(

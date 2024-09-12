@@ -37,6 +37,8 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import { z } from "zod";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SearchInput } from ".";
 import {
   useCampaignById,
@@ -78,6 +80,7 @@ export enum CampaignParticipantsTabs {
 const CampaignById = () => {
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [opened, { open, close }] = useDisclosure(false);
+  const { translations } = useTranslations();
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
@@ -159,7 +162,7 @@ const CampaignById = () => {
           />
           {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
             <SearchInput
-              placeholder={"Search Participants"}
+              placeholder={translations["Search Participants"]}
               searchText={searchText}
               setSearchText={setSearchText}
             />
@@ -177,7 +180,8 @@ const CampaignById = () => {
         >
           {getErrorMessage(
             sendMutation.error?.response,
-            campaignData?.errorMessage ?? "Error Sending campaign",
+            campaignData?.errorMessage ??
+              translations["Error Sending campaign"],
           )}
         </Alert>
 
@@ -226,7 +230,7 @@ const CampaignById = () => {
               radius={"lg"}
               title={
                 <Title order={2} pl={"md"}>
-                  Add Participants
+                  {translations["Add Participants"]}
                 </Title>
               }
             >
@@ -255,6 +259,7 @@ const StartCampaignCard = ({
   sendMutation,
 }: StartCampaignCardProps) => {
   const [errorMsg, setErrorMsg] = useState("");
+  const { translations } = useTranslations();
   const [opened, { toggle, close }] = useDisclosure(false);
   const startCampaign = campaign?.status === CampaignStatus.ACTIVE || false;
   const schema = z
@@ -268,7 +273,7 @@ const StartCampaignCard = ({
         ctx.addIssue({
           path: ["statuses"],
           code: z.ZodIssueCode.custom,
-          message: "Select at least one status",
+          message: translations["Select at least one status"],
         });
       }
     });
@@ -306,12 +311,12 @@ const StartCampaignCard = ({
     if (hasErrors) {
       showErrorToast(
         (Object.values(errors)?.[0] as string) ??
-          "Error in campaign senting data",
+          translations["Error in campaign senting data"],
       );
       return;
     }
     if (!participantCount && !startCampaign) {
-      setErrorMsg("No participants found");
+      setErrorMsg(translations["No participants found"]);
       return;
     }
     if (errorMsg) setErrorMsg("");
@@ -341,7 +346,7 @@ const StartCampaignCard = ({
         onClick={toggle}
         rightSection={<IconSend size={16} />}
       >
-        {startCampaign ? "Resend" : "Send"}
+        {startCampaign ? translations["Resend"] : translations["Send"]}
       </Button>
       <Badge
         variant="light"
@@ -358,7 +363,7 @@ const StartCampaignCard = ({
       </Badge>
 
       {campaign?.status === CampaignStatus.SCHEDULED && (
-        <Tooltip label={"cancel schedule"}>
+        <Tooltip label={translations["cancel schedule"]}>
           <ActionIcon
             size={"sm"}
             variant="light"
@@ -390,6 +395,7 @@ const StartCampaignCardRightSection = ({
   isPending,
   dynamicVariables,
 }) => {
+  const { translations } = useTranslations();
   if (isPending) return <Skeleton w={"100%"} h={147} />;
   if (!campaign) return null;
   return (
@@ -402,10 +408,10 @@ const StartCampaignCardRightSection = ({
           dynamicVariables={dynamicVariables}
         />
         <Group>
-          <Tooltip label="Refresh data">
+          <Tooltip label={translations["Refresh data"]}>
             <ActionIcon
               variant="light"
-              aria-label="refresh"
+              aria-label={translations["refresh"]}
               onClick={() => refetchCampaign()}
             >
               <IconRefresh
@@ -423,17 +429,21 @@ const StartCampaignCardRightSection = ({
   );
 };
 const CampaignInfoCard = ({ participantCount, stats, flowId, isPending }) => {
+  const { translations } = useTranslations();
   const statsArray = [
-    { label: "Participants", count: participantCount },
-    { label: "Pending", count: stats?.countPending },
-    { label: "Sent", count: stats?.countSent },
-    { label: "Delivered", count: stats?.countDelivered },
-    { label: "Read", count: stats?.countRead },
-    { label: "Failed", count: stats?.countFailed, color: "red" },
+    { label: translations["Participants"], count: participantCount },
+    { label: translations["Pending"], count: stats?.countPending },
+    { label: translations["Sent"], count: stats?.countSent },
+    { label: translations["Delivered"], count: stats?.countDelivered },
+    { label: translations["Read"], count: stats?.countRead },
+    { label: translations["Failed"], count: stats?.countFailed, color: "red" },
     // { label: "Responded", count: responseCount ?? 0 },
   ];
   if (flowId) {
-    statsArray.push({ label: "Completed", count: stats?.countCompleted });
+    statsArray.push({
+      label: translations["Completed"],
+      count: stats?.countCompleted,
+    });
   }
   return (
     <SimpleGrid cols={{ base: 2, lg: 3 }} m={"xl"}>
@@ -476,30 +486,38 @@ function SendCampaignModal({
   form,
   handleCampaign,
 }: Readonly<SendCampaignModalProps>) {
+  const { translations } = useTranslations();
   return (
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={"Campaign Sent Settings"}
+      title={translations["Campaign Sent Settings"]}
       centered
       onSubmit={handleCampaign}
       buttonTitle={
         form.getValues()?.sentCampaignChoice === SentCampaignEnum.LATER
-          ? "Schedule Campaign"
-          : "Sent Campaign Now"
+          ? translations["Schedule Campaign"]
+          : translations["Sent Campaign Now"]
       }
     >
       <Stack style={{ minHeight: "200px" }}>
         <Radio.Group
-          label={startCampaign ? "Resent" : "Sent"}
+          label={startCampaign ? translations["Resent"] : translations["Sent"]}
           withAsterisk
           {...form.getInputProps("sentCampaignChoice", {
             type: "radio",
           })}
         >
           <Group>
-            <Radio checked label="Now" value={SentCampaignEnum.NOW} />
-            <Radio label="Schedule Later" value={SentCampaignEnum.LATER} />
+            <Radio
+              checked
+              label={translations["Now"]}
+              value={SentCampaignEnum.NOW}
+            />
+            <Radio
+              label={translations["Schedule Later"]}
+              value={SentCampaignEnum.LATER}
+            />
           </Group>
         </Radio.Group>
 
@@ -508,21 +526,25 @@ function SendCampaignModal({
             <ContainedDateTimePickerInput
               valueFormat="DD MMM YYYY - hh mm A"
               dropdownType="modal"
-              placeholder={"Date"}
-              label={"Sent Campaign At"}
+              placeholder={translations["Date"]}
+              label={translations["Sent Campaign At"]}
               withAsterisk
               {...form.getInputProps("campaignSentAt")}
               minDate={new Date()}
             />
             <Text c="red" size="xs">
-              *Time will be rounded to nearest hours.
+              {translations["*Time will be rounded to nearest hours."]}
             </Text>
           </Stack>
         )}
         {startCampaign && (
           <MultiSelect
-            label="Select status of participants to resend campaign to"
-            placeholder="Select statuses"
+            label={
+              translations[
+                "Select status of participants to resend campaign to"
+              ]
+            }
+            placeholder={translations["Select statuses"]}
             data={Object.values(CampaignParticipantStatus).map((status) => ({
               value: status,
               label: getCampaignParticipantStatusLabel(status),

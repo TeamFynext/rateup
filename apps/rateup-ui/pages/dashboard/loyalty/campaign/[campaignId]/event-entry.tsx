@@ -1,21 +1,26 @@
+import { useRouter } from "next/router";
+
 import {
-  Stack,
-  Group,
   Button,
-  Title,
+  Group,
   NumberInput,
+  Stack,
   TextInput,
+  Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useRouter } from "next/router";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useCreateRewardEventMutation } from "../../../../../backend/loyalty/campaign/campaignRewardEvent/care.query";
 import { useCampaign } from "../../../../../backend/loyalty/campaign/loyaltyCampaign.query";
 import { LoyaltyCampaignType } from "../../../../../types/enums";
-import { useCreateRewardEventMutation } from "../../../../../backend/loyalty/campaign/campaignRewardEvent/care.query";
 
 export default function CampaignEventEntryPage() {
   const router = useRouter();
   const lcampaignId = router.query.campaignId as string;
   const { data: campaign } = useCampaign(lcampaignId);
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       referralCode: "",
@@ -23,7 +28,7 @@ export default function CampaignEventEntryPage() {
       transactionAmount: 0,
     },
     validate: {
-      phone: (ph) => (!ph ? "Must Enter phone" : null),
+      phone: (ph) => (!ph ? translations["Must Enter phone"] : null),
     },
   });
 
@@ -47,32 +52,32 @@ export default function CampaignEventEntryPage() {
   return (
     <div>
       <Stack>
-        <Title>Manually Record Transaction Event</Title>
+        <Title>{translations["Manually Record Transaction Event"]}</Title>
 
         {hasReferrer && (
           <TextInput
             {...form.getInputProps("referralCode")}
-            label={"Referral Code"}
+            label={translations["Referral Code"]}
           />
         )}
         {/* TODO: show suggestions of existing phone numbers? */}
         <TextInput
           {...form.getInputProps("phone")}
-          label={"Phone number of customer"}
+          label={translations["Phone number of customer"]}
         />
         {hasTransaction && (
           <NumberInput
             {...form.getInputProps("transactionAmount")}
-            label={"Transaction Amount"}
+            label={translations["Transaction Amount"]}
           />
         )}
 
         <Group justify="space-between" mt="md">
           <Button size="lg" variant={"light"} onClick={() => form.reset()}>
-            Reset
+            {translations["Reset"]}
           </Button>
           <Button onClick={handleSubmit} size="lg" disabled={!form.isValid()}>
-            Submit
+            {translations["Submit"]}
           </Button>
         </Group>
       </Stack>

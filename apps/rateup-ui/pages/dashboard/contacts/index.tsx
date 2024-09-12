@@ -41,6 +41,7 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
+import useTranslations from "@/dictionaries/useTranslation";
 import { PAGE_SIZE } from "@/utils/constants";
 import { showLoadingToast } from "@/utils/notifications";
 
@@ -89,7 +90,7 @@ export default function Contacts() {
   } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
   const updateContactTagsMutation = useUpdateContactTagsMutation();
-
+  const { translations } = useTranslations();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
       ? contactGroupData
@@ -143,7 +144,10 @@ export default function Contacts() {
         wrap="wrap"
       >
         <Group gap={"md"}>
-          <Heading title="Contacts" titleprops={{ w: "fit-content" }} />
+          <Heading
+            title={translations["Contacts"]}
+            titleprops={{ w: "fit-content" }}
+          />
         </Group>
         {activeTab === ContactTabs.GROUPS && (
           <TeamSelector
@@ -173,8 +177,8 @@ export default function Contacts() {
               size="md"
               placeholder={
                 activeTab == ContactTabs.CONTACTS
-                  ? "Search contact"
-                  : "Search contact groups"
+                  ? translations["Search contact"]
+                  : translations["Search contact groups"]
               }
               rightSectionWidth={60}
               defaultValue={searchTerm}
@@ -239,23 +243,27 @@ export default function Contacts() {
             <PaperLayout p="xl">
               <Stack align="start">
                 <ContainedTagInput
-                  placeholder="Type field name and press enter"
-                  label="Enter the Field name you want to add along with the existing fields in Csv Import."
+                  placeholder={translations["Type field name and press enter"]}
+                  label={
+                    translations[
+                      "Enter the Field name you want to add along with the existing fields in Csv Import."
+                    ]
+                  }
                   w={"25rem"}
                   onChange={setContactTags}
                   defaultValue={cTags?.contactTags}
                 />
                 <RateupButtonPrimary
-                  title="Update"
+                  title={translations["Update"]}
                   onClick={() => {
                     updateContactTagsMutation.mutate({
                       tags: contactTags,
                     });
                     showLoadingToast(
-                      "Contact tags updated successfully",
+                      translations["Contact tags updated successfully"],
                       "c-tags",
                       true,
-                      "Loading",
+                      translations["Loading"],
                     );
                   }}
                 />
@@ -269,6 +277,7 @@ export default function Contacts() {
 }
 
 export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
+  const { translations } = useTranslations();
   return (
     <ContainedMultiSelect
       data={[{ group: "Groups", items: contactArray ?? [] }]}
@@ -281,7 +290,7 @@ export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
           return [...prev, { id: "filterGroupName", value: e.join(",") }];
         });
       }}
-      placeholder="Filter contacts"
+      placeholder={translations["Filter contacts"]}
     />
   );
 };
@@ -297,6 +306,7 @@ const ContactActionMenu = ({ groups }) => {
     { open: openActionModal, close: closeActionModal },
   ] = useDisclosure(false);
   const [action, setSelectedAction] = useState<ContactAcions>(null);
+  const { translations } = useTranslations();
   return (
     <Stack px="sm" pr={0}>
       <Menu
@@ -315,7 +325,7 @@ const ContactActionMenu = ({ groups }) => {
             rightSection={<IconChevronDown size="16px" />}
             style={{ maxWidth: "fit-content" }}
           >
-            More
+            {translations["More"]}
           </Button>
         </Menu.Target>
 
@@ -329,7 +339,7 @@ const ContactActionMenu = ({ groups }) => {
               <IconUserPlus style={{ width: rem(14), height: rem(14) }} />
             }
           >
-            Add Contacts to Group
+            {translations["Add Contacts to Group"]}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

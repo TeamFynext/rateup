@@ -1,47 +1,45 @@
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import {
-  Container,
-  Paper,
-  Title,
-  Text,
-  Stack,
-  SimpleGrid,
-  Flex,
-  Menu,
+  ActionIcon,
   Avatar,
   Badge,
-  ActionIcon,
-  useMantineTheme,
+  Container,
+  Flex,
   Group,
   Loader,
-  Space,
-  Select,
+  Menu,
   Modal,
+  Paper,
+  Select,
+  SimpleGrid,
+  Space,
+  Stack,
+  Text,
+  Title,
+  useMantineTheme,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconChartBar,
+  IconChevronDown,
   IconCopy,
   IconDots,
+  IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
+  IconSelector,
+  IconSettings,
   IconShare,
   IconTrash,
-  IconSelector,
-  IconChevronDown,
-  IconPencil,
-  IconSettings,
 } from "@tabler/icons-react";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
-import Link from "next/link";
-import { getTimeSince } from "../../../utils";
-import { useDisclosure } from "@mantine/hooks";
-import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   deleteSurvey,
   updateSurvey,
@@ -52,7 +50,13 @@ import {
   useSurveysByTeam,
 } from "../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../backend/team/team.query";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
+import { CreateSurveyModal } from "../../../components/Survey/CreateSurveyModal";
 import { useUser } from "../../../context/UserContext";
+import { getTimeSince } from "../../../utils";
 
 export default function SurveyLandingList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
@@ -72,7 +76,7 @@ export default function SurveyLandingList() {
   } = useTeamsByUser();
 
   const specificTeamIsSelected = selectedTeamId !== "all";
-
+  const { translations } = useTranslations();
   const { isLoading, error, data: surveys } = useSurveys();
   const queryClient = useQueryClient();
 
@@ -125,7 +129,7 @@ export default function SurveyLandingList() {
   if (isLoading) return <Loader type="bars" />;
   if (error || !Array.isArray(surveys)) {
     console.error(surveys, error);
-    return "An error has occurred";
+    return translations["An error has occurred"];
   }
 
   return (
@@ -147,7 +151,7 @@ export default function SurveyLandingList() {
           wrap="wrap"
           mb="md"
         >
-          <Title order={1}>Landing survey list </Title>
+          <Title order={1}>{translations["Landing survey list "]}</Title>
 
           <Select
             mt="xs"
@@ -169,7 +173,7 @@ export default function SurveyLandingList() {
           <Menu shadow="md" width={200} position="bottom-end" offset={2}>
             <Menu.Target>
               <RateupButtonPrimary
-                title={"Status"}
+                title={translations["Status"]}
                 variant="subtle"
                 rightIcon={<IconChevronDown size="1rem" />}
               />
@@ -184,7 +188,7 @@ export default function SurveyLandingList() {
 
           <RateupButtonPrimary
             onClick={() => setSort(!sort)}
-            title={"Sort"}
+            title={translations["Sort"]}
             variant="subtle"
             rightIcon={<IconSelector size="1rem" />}
           />
@@ -232,7 +236,7 @@ export function SurveyCard({
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user } = useUser();
-
+  const { translations } = useTranslations();
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -275,7 +279,7 @@ export function SurveyCard({
       <Group align={"center"} mt="sm" gap="xs">
         <Avatar radius={"xl"} />
         <Text size="sm" c="dimmed">
-          Created {timeSince}
+          {translations["Created"]} {timeSince}
         </Text>
       </Group>
       <Space h="xl" />
@@ -294,7 +298,7 @@ export function SurveyCard({
         >
           <Group gap="4px">
             <IconChartBar size={20} />
-            <Text>Responses</Text>
+            <Text>{translations["Responses"]}</Text>
           </Group>
         </Link>
       </Flex>
@@ -309,7 +313,7 @@ interface SurveyMenuProps {
 function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
-
+  const { translations } = useTranslations();
   const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const cloneSurvey = useCloneSurveyMutation({
@@ -344,7 +348,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
     onSuccess: () => {
       notifications.show({
         id: "survey",
-        message: "Survey status Updated!",
+        message: translations["Survey status Updated!"],
         autoClose: true,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -366,14 +370,14 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
       >
         <Stack>
           <Text pr="xl" c="dark.2">
-            Select the team in which the copy to be created.
+            {translations["Select the team in which the copy to be created."]}
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>
             <Select
-              label="Select Team"
+              label={translations["Select Team"]}
               maxDropdownHeight={150}
               mt="xs"
-              placeholder="Pick one"
+              placeholder={translations["Pick one"]}
               data={options}
               value={selectedTeamID}
               onChange={(value) => setSelectedTeamID(value)}
@@ -383,9 +387,12 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             />
           </Group>
           <Group mt="xl">
-            <RateupButtonSecondary title="Cancel" onClick={close} />
+            <RateupButtonSecondary
+              title={translations["Cancel"]}
+              onClick={close}
+            />
             <RateupButtonPrimary
-              title="Submit"
+              title={translations["Submit"]}
               onClick={() => {
                 // cloneSurvey.mutate({ id: survey?.id, teamId: selectedTeamID });  //TODO
               }}
@@ -414,7 +421,9 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             surveyUpdateMutation.mutate({ active: !survey.active })
           }
         >
-          {survey.active ? "Pause Survey" : "Resume Survey"}
+          {survey.active
+            ? translations["Pause Survey"]
+            : translations["Resume Survey"]}
         </Menu.Item>
 
         <Menu.Item
@@ -423,7 +432,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             router.push(`/dashboard/surveys/${survey?.id}?tab=Share`);
           }}
         >
-          Share
+          {translations["Share"]}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconCopy />}
@@ -431,7 +440,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             open();
           }}
         >
-          Clone
+          {translations["Clone"]}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconTrash />}
@@ -439,7 +448,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             surveyDeleteMutation.mutate(survey?.id);
           }}
         >
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
 
         <Menu.Item
@@ -448,7 +457,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             router.push(`/dashboard/surveys/${survey?.id}?tab=Settings`);
           }}
         >
-          Settings
+          {translations["Settings"]}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
@@ -456,9 +465,10 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
 }
 
 function StatusBadge({ active }) {
+  const { translations } = useTranslations();
   return (
     <Badge color={active ? "green" : "yellow"}>
-      {active ? "Active" : "Paused"}
+      {active ? translations["Active"] : translations["Paused"]}
     </Badge>
   );
 }

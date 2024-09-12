@@ -1,14 +1,18 @@
-import { createColumnHelper } from "@tanstack/react-table";
-import { useLoyaltyCustomers } from "../../../../backend/loyalty/customer/customer.query";
-import TanstackTable from "../../../../components/Table/TanstackTable";
 import { Box, Paper, Stack, Title } from "@mantine/core";
+import { createColumnHelper } from "@tanstack/react-table";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useLoyaltyCustomers } from "../../../../backend/loyalty/customer/customer.query";
 import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
+import TanstackTable from "../../../../components/Table/TanstackTable";
 import styles from "./customer.module.css";
 
 export default function LoyaltyCampaignCustomersPage() {
+  const { translations } = useTranslations();
   return (
     <Stack h={"100%"}>
-      <Title>Participants</Title>
+      <Title>{translations["Participants"]}</Title>
       <LoyaltyCampaignCustomers />
     </Stack>
   );

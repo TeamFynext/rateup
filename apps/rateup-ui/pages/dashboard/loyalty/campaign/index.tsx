@@ -9,15 +9,17 @@ import { LoyaltyCardListSkeleton } from "@/components/animation/skeleton/loyalty
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { LCampaignCard } from "@/components/loyalty/campaign/LCampaignCard";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import useTranslations from "@/dictionaries/useTranslation";
 
 export default function LoyaltyCampaignsPage() {
+  const { translations } = useTranslations();
   return (
     <Stack h={"100%"}>
       <Group>
-        <Title order={2}>Loyalty Campaigns</Title>
+        <Title order={2}>{translations["Loyalty Campaigns"]}</Title>
         <Link href={"campaign/create"}>
           <RateupButtonPrimary
-            title="Create Campaign"
+            title={translations["Create Campaign"]}
             leftIcon={<IconPlus />}
           />
         </Link>
@@ -29,11 +31,11 @@ export default function LoyaltyCampaignsPage() {
 
 const LCardList = () => {
   const { data: campaigns, isPending, isError, refetch } = useCampaigns(true);
-
+  const { translations } = useTranslations();
   if (isPending) return <LoyaltyCardListSkeleton />;
   if (isError) return <ErrorComponent refetch={refetch} />;
   if (!campaigns || !Array.isArray(campaigns) || campaigns?.length === 0)
-    return <NothingFound text="Nothing found" />;
+    return <NothingFound text={translations["Nothing found"]} />;
 
   return (
     <Box className="cards-grid-global-class">

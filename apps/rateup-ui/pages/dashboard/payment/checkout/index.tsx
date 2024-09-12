@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from "react";
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout,
-} from "@stripe/react-stripe-js";
-
-import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from "next/router";
-import { useCreateStripeCheckoutSession } from "../../../../backend/payment/stripe/stripe.query";
-import { useRouteAndCartStore } from "../../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
-import { useUser } from "../../../../context/UserContext";
+
 import { Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
 import { IconChevronLeft, IconReload } from "@tabler/icons-react";
+import {
+  EmbeddedCheckout,
+  EmbeddedCheckoutProvider,
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useCreateStripeCheckoutSession } from "../../../../backend/payment/stripe/stripe.query";
+import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
+import { useRouteAndCartStore } from "../../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import Loading from "../../../../components/Page/Loading";
+import { useUser } from "../../../../context/UserContext";
 
 //stripe checkout
 
@@ -23,7 +26,7 @@ const Checkout = () => {
   const { cart, reset } = useRouteAndCartStore();
   const { user } = useUser();
   const { pid } = router.query;
-
+  const { translations } = useTranslations();
   const [isLoading, setIsLoading] = useState(true);
   const [loadStripe, setLoadStripe] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
@@ -77,7 +80,7 @@ const Checkout = () => {
               wrap="wrap"
             >
               <Title order={3} mb="xl">
-                Session Expired..!
+                {translations["Session Expired..!"]}
               </Title>
 
               <Group style={{ maxWidth: "300px" }}>
@@ -87,7 +90,7 @@ const Checkout = () => {
                       "/dashboard/settings?activeTab=account&view=billing",
                     )
                   }
-                  title="Go Back to Start Again"
+                  title={translations["Go Back to Start Again"]}
                   fullWidth={false}
                   leftIcon={<IconChevronLeft />}
                 />

@@ -25,11 +25,13 @@ import {
 import { InsightsCard } from "@/components/loyalty/campaign/InsightsCard";
 import { LCampaignCard } from "@/components/loyalty/campaign/LCampaignCard";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import { showSuccessToast } from "@/utils/notifications";
 
 import styles from "./styles.module.css";
 
 export default function LoyaltyDashboardPage() {
+  const { translations } = useTranslations();
   const router = useRouter();
 
   return (
@@ -46,7 +48,7 @@ export default function LoyaltyDashboardPage() {
                 }
               >
                 <IconGift size={64} />
-                <Text>Create Loyalty Campaign</Text>
+                <Text>{translations["Create Loyalty Campaign"]}</Text>
               </Paper>
               <Paper
                 className={styles["card-container"]}
@@ -54,7 +56,8 @@ export default function LoyaltyDashboardPage() {
                 onClick={() => router.push("/dashboard/loyalty/customer")}
               >
                 <IconUsersGroup size={64} />
-                <Text>View Customers</Text>
+                <Text>{translations["Create Loyalty Campaign"]}</Text>
+                <Text>{translations["View Customers"]}</Text>
               </Paper>
             </Group>
             <Button
@@ -63,14 +66,14 @@ export default function LoyaltyDashboardPage() {
               radius={12}
               onClick={() => router.push("/dashboard/loyalty/reward")}
             >
-              Rewards
+              {translations["Rewards"]}
             </Button>
             <Button
               h={50}
               radius={12}
-              onClick={() => showSuccessToast("Coming Soon")}
+              onClick={() => showSuccessToast(translations["Coming Soon"])}
             >
-              Redeem
+              {translations["Redeem"]}
             </Button>
           </Stack>
         </PaperLayout>
@@ -83,7 +86,7 @@ export default function LoyaltyDashboardPage() {
 
 function InsightsOverview() {
   const { data: insights } = useLoyaltyInsights();
-
+  const { translations } = useTranslations();
   if (!insights) return;
 
   return (
@@ -91,29 +94,29 @@ function InsightsOverview() {
       <SimpleGrid cols={2}>
         <InsightsCard
           value={insights.totalCustomers}
-          text={`Loyal Customers`}
+          text={translations["Loyal Customers"]}
         />
         <InsightsCard
           value={insights.totalCampaigns}
-          text={`Active Campaigns`}
+          text={translations["Active Campaigns"]}
         />
         <InsightsCard
           value={insights.totalPointsRewarded}
-          text={`Rewarded Points`}
+          text={translations["Rewarded Points"]}
         />
         <InsightsCard
           value={insights.totalPointsRedeemed}
-          text={`Redeemed Points`}
+          text={translations["Redeemed Points"]}
         />
       </SimpleGrid>
       <Button
         variant={"transparent"}
         rightSection={<IconArrowRight />}
         onClick={() => {
-          notifications.show({ message: "Coming Soon" });
+          notifications.show({ message: translations["Coming Soon"] });
         }}
       >
-        View More Insights
+        {translations["View More Insights"]}
       </Button>
     </PaperLayout>
   );
@@ -121,16 +124,16 @@ function InsightsOverview() {
 
 function RecentLoyaltyCampaigns() {
   const { data: campaigns } = useCampaigns(true);
-
+  const { translations } = useTranslations();
   if (!campaigns) return;
   if (!Array.isArray(campaigns)) return;
 
   return (
     <Stack>
       <Group justify={"space-between"}>
-        <Title order={3}>Recent Loyalty Campaign</Title>
+        <Title order={3}>{translations["Recent Loyalty Campaign"]}</Title>
         <Button variant={"transparent"} rightSection={<IconChevronRight />}>
-          View All
+          {translations["View All"]}
         </Button>
       </Group>
       <Box className="cards-grid-global-class">
