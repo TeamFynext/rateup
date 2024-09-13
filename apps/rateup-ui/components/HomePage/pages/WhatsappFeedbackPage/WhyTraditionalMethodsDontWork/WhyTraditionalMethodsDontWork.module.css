@@ -1,0 +1,27 @@
+.why-traditional-methods-dont-work-root-div {
+  gap: 1.5rem;
+  padding: 0 5%;
+  justify-content: center;
+  margin-bottom: 4rem;
+}
+
+.heading {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+
+.why-traditional-methods-dont-work-cards-list :global(.card) {
+  padding-bottom: 4rem;
+}
+
+.why-traditional-methods-dont-work-cards-list :global(.card .description) {
+  order: 1;
+  font-weight: 430;
+}
+
+.why-traditional-methods-dont-work-cards-list
+  :global(.card .image-container img) {
+  width: 15.625rem;
+  height: 15.625rem;
+}
