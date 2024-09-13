@@ -181,7 +181,6 @@ function LanguageSelectionPage({
               p={0}
             >
               <Button
-                radius={"xl"}
                 onClick={() => setSelectedLanguage(lang)}
                 rightSection={<IconChevronRight />}
                 style={{
@@ -190,6 +189,7 @@ function LanguageSelectionPage({
                   fontSize: "1.125rem",
                   height: "auto",
                   padding: "0.75rem 1rem 0.75rem 1.5625rem",
+                  borderRadius: "0.625rem",
                 }}
               >
                 {startButtonText}
