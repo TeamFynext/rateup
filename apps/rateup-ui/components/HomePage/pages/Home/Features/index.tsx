@@ -1,14 +1,16 @@
+import Image from "next/image";
+
 import { Stack } from "@mantine/core";
 import classNames from "classnames/bind";
+
+import Banner from "../../../components/Banner";
+import TextIllustration from "../../../components/TextIllustration";
+import { textIllustrationSections } from "../constants";
+import AIAnalyticsAndInsights from "./AIAnalyticsAndInsights";
 import styles from "./Features.module.css";
+import LoyaltyFeaturesSection from "./LoyaltyFeaturesSection";
 import PerfectSurveyForYourNeeds from "./PerfectSurveyForYourNeeds";
 import ReputationFeaturesSection from "./ReputationFeaturesSection";
-import Banner from "../../../components/Banner";
-import LoyaltyFeaturesSection from "./LoyaltyFeaturesSection";
-import TextIllustration from "../TextIllustration";
-import { textIllustrationSections } from "../constants";
-import Image from "next/image";
-import AIAnalyticsAndInsights from "./AIAnalyticsAndInsights";
 
 const cx = classNames.bind(styles);
 

@@ -65,7 +65,11 @@
 }
 
 .heading-description-container:global(.link-active) .heading-span {
-  color: var(--homepage-blue);
+  color: var(--tertiary-color);
+}
+
+.heading-description-container:global(.link-active) .description-span {
+  color: var(--tertiary-color);
 }
 
 /* Media Queries */

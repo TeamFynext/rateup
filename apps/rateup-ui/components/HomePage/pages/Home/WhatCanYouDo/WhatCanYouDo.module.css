@@ -28,6 +28,10 @@
   color: var(--tertiary-color);
 }
 
+.section-description {
+  font-size: 1.125rem;
+}
+
 .learn-more-link {
   text-decoration: none;
   color: #19569d;
