@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Box, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
+import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 import TextIllustration from "@/components/HomePage/components/TextIllustration";
 
 import sectionsStyles from "../../Home/WhatCanYouDo/WhatCanYouDo.module.css";
@@ -16,7 +17,10 @@ function WhatCanOrganizationsDo() {
   return (
     <Stack className={cx("what-can-orgs-do-root-div")}>
       <h1 className={cx("heading")}>
-        What can organizations do with RateUp’s QR Studio?
+        What can organizations do with{" "}
+        <LightBlueGradientBg className={cx("light-blue-bg-span")}>
+          RateUp's QR Studio?
+        </LightBlueGradientBg>
       </h1>
       <Box className={cx("sections-container")}>
         {sectionValues.map(

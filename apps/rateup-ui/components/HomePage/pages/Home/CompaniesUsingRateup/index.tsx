@@ -11,11 +11,11 @@ import { companiesLogosList } from "./logosList";
 
 const cx = classNames.bind(styles);
 
-function CompaniesUsingRateup() {
+function CompaniesUsingRateup({ className = "" }) {
   const isVpLeq768px = useMediaQuery("(max-width: 768px)");
   const autoScrollRef = useRef(AutoScroll({ speed: 1 }));
   return (
-    <Stack className={cx("companies-using-rateup-root-div")}>
+    <Stack className={cx("companies-using-rateup-root-div", className)}>
       <h1 className={cx("heading")}>Top companies using RateUp platform</h1>
       <Flex
         className={cx("carousel-container")}

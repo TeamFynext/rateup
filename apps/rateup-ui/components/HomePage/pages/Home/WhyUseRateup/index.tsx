@@ -3,6 +3,7 @@ import classNames from "classnames/bind";
 
 import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 
+import cardsData from "./cardsData";
 import CardsList from "./CardsList";
 import styles from "./WhyUseRateup.module.css";
 
@@ -17,7 +18,7 @@ function WhyUseRateup() {
           customer feedback management?
         </LightBlueGradientBg>
       </h1>
-      <CardsList />
+      <CardsList cardsData={cardsData} />
     </Stack>
   );
 }

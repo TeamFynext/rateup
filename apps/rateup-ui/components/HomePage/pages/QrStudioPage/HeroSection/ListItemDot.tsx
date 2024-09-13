@@ -1,7 +1,14 @@
 import styles from "./HeroSection.module.css";
 
-function ListItemDot() {
-  return <div className={styles["list-item-dot"]}></div>;
+function ListItemDot({ color = "var(--tertiary-color)" }) {
+  return (
+    <div
+      className={styles["list-item-dot"]}
+      style={{
+        backgroundColor: color,
+      }}
+    ></div>
+  );
 }
 
 export default ListItemDot;

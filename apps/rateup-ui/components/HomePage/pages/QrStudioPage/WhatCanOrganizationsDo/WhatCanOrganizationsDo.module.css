@@ -1,5 +1,4 @@
 .what-can-orgs-do-root-div {
-  margin-bottom: 3rem;
   gap: 1.5rem;
 }
 
@@ -7,4 +6,8 @@
   text-align: center;
   font-size: 1.75rem;
   font-weight: 400;
+}
+
+.heading .light-blue-bg-span {
+  display: inline;
 }

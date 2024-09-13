@@ -10,10 +10,10 @@ const cx = classNames.bind(styles);
 
 function Card({ heading, description, imageUrl, width, height, alt }) {
   return (
-    <Stack className={cx("card")}>
-      <h1 className={cx("heading")}>{heading}</h1>
-      <p>{description}</p>
-      <Flex className={cx("image-container")}>
+    <Stack className={`${cx("card")} card`}>
+      {heading && <h1 className={cx("heading")}>{heading}</h1>}
+      <p className={cx("description")}>{description}</p>
+      <Flex className={`${cx("image-container")} image-container`}>
         <Image
           className={cx("card-image")}
           src={imageUrl}

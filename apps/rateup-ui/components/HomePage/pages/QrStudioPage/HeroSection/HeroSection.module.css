@@ -1,5 +1,6 @@
 .hero-section-root-div {
   padding: 3rem 0;
+  padding-top: 0;
   gap: 1rem;
 }
 
@@ -37,7 +38,6 @@
 .list-item-dot {
   width: 0.375em;
   height: 0.375em;
-  background-color: var(--tertiary-color);
   border-radius: 1rem;
 }
 
