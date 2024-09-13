@@ -183,7 +183,7 @@ export default function WelcomePageThemeView({ survey }) {
                   fontWeight: 600,
                   fontFamily: "inherit",
                   ...buttonStyles,
-                  borderRadius: "2rem",
+                  borderRadius: "0.625rem",
                 }}
               />
             </Box>

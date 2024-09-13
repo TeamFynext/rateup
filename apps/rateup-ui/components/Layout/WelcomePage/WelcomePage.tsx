@@ -104,7 +104,7 @@ function WelcomePage({
                     ...buttonStyles,
                     height: "auto",
                     fontSize: "1.125rem",
-                    borderRadius: "2rem",
+                    borderRadius: "0.625rem",
                     padding: "0.75rem 1.5rem",
                   }
                 : { ..._buttonStyles }

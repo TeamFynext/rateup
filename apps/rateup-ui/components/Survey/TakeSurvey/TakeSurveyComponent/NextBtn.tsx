@@ -1,14 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 
-import { IconChevronRight } from "@tabler/icons-react";
 import { Box, Button } from "@mantine/core";
+import { IconChevronRight } from "@tabler/icons-react";
 
-import { validateResponse } from "./util";
+import { CurrentResponsesContext } from "../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../context/SelectedQ";
 import { QuestionType as Q } from "../../../../types/enums";
 import { validateQuestion } from "../../../../utils/validation";
-import { SelectedQContext } from "../../../../context/SelectedQ";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { CurrentResponsesContext } from "../../../../context/ResponseContext";
+import { validateResponse } from "./util";
 
 function NextBtn({ next, themeStyles, survey, isSavingResponses }) {
   const { selectedQ } = useContext(SelectedQContext);
@@ -17,6 +17,7 @@ function NextBtn({ next, themeStyles, survey, isSavingResponses }) {
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const { borderRadius, ...otherThemeStyles } = themeStyles;
+
   useEffect(() => {
     // TODO: check if rebase was done correctly
 

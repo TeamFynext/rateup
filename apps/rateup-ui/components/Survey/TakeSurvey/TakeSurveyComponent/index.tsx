@@ -26,7 +26,6 @@ import {
   useIsSurveyThemePreview,
 } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import ConfirmResponsesModal from "./ConfirmResponsesModal";
-import NextBtnForSurveyThemeEditPreview from "./NextBtnForSurveyThemeEditView";
 import NextPrev from "./NextPrev";
 import QuestionDesc from "./QuestionDesc";
 import QuestionForm from "./QuestionForm";
