@@ -98,8 +98,16 @@
 }
 
 @media screen and (max-width: 425px) {
+  .footer-content-container {
+    padding-bottom: 2rem;
+  }
+
   .footer-nav-links-container {
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
+  }
+
+  .footer-logos-container {
+    gap: 2rem;
   }
 }
