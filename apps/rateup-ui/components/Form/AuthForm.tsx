@@ -1,7 +1,9 @@
-import { Flex, Image, useMantineColorScheme } from "@mantine/core";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+
+import { Flex, Image, useMantineColorScheme } from "@mantine/core";
+
 import { useCreateUserMutation } from "../../backend/user/user.query";
 import {
   useConsumeVerificationCode,
@@ -32,14 +34,14 @@ const AuthForm = ({
   const { colorScheme } = useMantineColorScheme();
 
   useEffect(() => {
-    if (mode === AuthMode.VERIFY) {
+    if (mode === AuthMode.VERIFY && router.isReady) {
       if (token && token?.length > 0) {
         consumeVerificationCode();
       } else {
         sendEmail(); //TODO : Add time gaps for resending verification mails
       }
     }
-  }, [mode, token, sendEmail, consumeVerificationCode, rid]); // add dependencies here
+  }, [mode, token, rid]); // add dependencies here
 
   const signIn = useSignIn();
   const signUp = useSignUp();
