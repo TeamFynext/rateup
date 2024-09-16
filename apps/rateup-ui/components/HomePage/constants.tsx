@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Flex, Menu, NavLink } from "@mantine/core";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
@@ -49,6 +50,15 @@ const headerNavLinks = [
           description: "One smart QR code, Endless Possibilities",
         },
         iconLink: `${imagesPath}/qr-studio-page/qr-studio-icon.png`,
+      },
+      {
+        id: 1004,
+        link: "/whatsapp-feedback",
+        content: {
+          heading: "Whatsapp Feedback",
+          description: "Engage where your customer are most active",
+        },
+        iconLink: `${imagesPath}/whatsapp-feedback-page/brand-whatsapp.svg`,
       },
     ],
   },
