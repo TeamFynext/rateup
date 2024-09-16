@@ -16,7 +16,7 @@ const ssCx = classNames.bind(sectionsStyles);
 function WhatCanOrganizationsDo() {
   return (
     <Stack className={cx("what-can-orgs-do-root-div")}>
-      <h1 className={cx("heading")}>
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
         What can organizations do with{" "}
         <LightBlueGradientBg className={cx("light-blue-bg-span")}>
           RateUp's QR Studio?

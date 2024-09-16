@@ -1,13 +1,7 @@
 .what-can-orgs-do-root-div {
-  gap: 1.5rem;
-}
-
-.heading {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 400;
+  gap: 2rem;
 }
 
 .heading .light-blue-bg-span {
-  display: inline;
+  display: inline-block;
 }

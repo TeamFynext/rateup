@@ -18,25 +18,24 @@ const sectionValues = [
   },
   {
     id: "1767635372",
-    headingLargeText:
-      "Get 35% more customers feedback through Automated  Interactive WhatsApp Forms",
+    headingLargeText: "Create and track tickets to address negative feedback",
     description:
-      "Integrate the RateUp Platform with your existing CRM/billing software. Schedule and automate sending interavtive whatsApp forms or web surveys to collect customer feedback",
-    imageUrl: `${imagesPath}/whatsapp-feedback-page/rateup-customer-feedbback/tickets.png`,
+      "Create tickets, tag respective teams, and track their status until resolution. Visualize the overall customer sentiment and its improvement on the RateUp platform dashboard.",
+    imageUrl: `${imagesPath}/whatsapp-feedback-page/rateup-customer-feedbback/tickets-ui.png`,
     imageAlt: "Tickets UI",
-    imageWidth: 1470,
-    imageHeight: 1200,
+    imageWidth: 1662,
+    imageHeight: 1355,
   },
   {
     id: "1767635373",
     headingLargeText:
-      "Generate, assign, and track tickets. Analyse customer sentiment.",
+      "Turn positive feedback into public reviews on your preferred platform",
     description:
-      "Create tickets, tag respective teams, and track their status untill resolution. Visualize the overall customer sentiment (NPS,CSAT) and their improvements on the RateUp platform dashboard",
-    imageUrl: `${imagesPath}/whatsapp-feedback-page/rateup-customer-feedbback/public-reviews.png`,
+      "Prompt customers to share the positive feedback publicly on your favorite review sites. Improve online reputation and stay ahead of the competition.",
+    imageUrl: `${imagesPath}/whatsapp-feedback-page/rateup-customer-feedbback/public-reviews-image.png`,
     imageAlt: "Reviews",
-    imageWidth: 1662,
-    imageHeight: 1355,
+    imageWidth: 1470,
+    imageHeight: 1200,
   },
 ];
 

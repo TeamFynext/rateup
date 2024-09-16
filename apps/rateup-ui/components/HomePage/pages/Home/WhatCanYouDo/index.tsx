@@ -15,7 +15,7 @@ const cx = classNames.bind(styles);
 function WhatCanYouDo() {
   return (
     <Stack className={cx("what-can-you-do-root-div")} id="our-features">
-      <h1 className={cx("heading")}>
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
         What can you do with the{" "}
         <LightBlueGradientBg>RateUp platform?</LightBlueGradientBg>
       </h1>

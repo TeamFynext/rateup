@@ -5,14 +5,8 @@
   justify-content: center;
 }
 
-.heading {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 400;
-}
-
 .heading span {
-  display: inline;
+  display: inline-block;
 }
 
 .customer-feedback-cards-scroll-area > div {

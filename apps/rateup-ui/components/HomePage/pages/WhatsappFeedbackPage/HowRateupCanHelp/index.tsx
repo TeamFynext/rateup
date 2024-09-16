@@ -15,8 +15,12 @@ const ssCx = classNames.bind(sectionStyles);
 function HowRateupCanHelp() {
   return (
     <Stack className={cx("how-rateup-can-help-root-div")}>
-      <h1 className={cx("heading")}>
-        What can you do with the RateUp platform?
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
+        How RateUp's{" "}
+        <span className={cx("blue-span")}>
+          customer feedback management platform
+        </span>{" "}
+        can help?
       </h1>
       <Box className={cx("sections-container")}>
         {sectionValues.map(
