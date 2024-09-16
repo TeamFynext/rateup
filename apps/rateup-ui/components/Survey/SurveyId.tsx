@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { MantineProvider, Portal, Text } from "@mantine/core";
+import { Alert, MantineProvider, Portal, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { IconAlertOctagon } from "@tabler/icons-react";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast } from "@/utils/notifications";
+import { validateAllLanguagesArePopulated } from "@/utils/questions";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
@@ -212,7 +214,7 @@ export default function SurveyID() {
                 <TabsListComp value={activeTab} onChange={handleTabChange} />
               </Portal>
             )}
-
+            <SurveyIssueAlert questions={questions} survey={survey} />
             <TabPanelsComp
               value={activeTab}
               survey={survey}
@@ -235,3 +237,39 @@ export default function SurveyID() {
     </MantineProvider>
   );
 }
+
+const SurveyIssueAlert = ({ questions, survey }) => {
+  const [issue, setIssue] = useState(null);
+  useEffect(() => {
+    if (survey?.isPublished || survey?.surveyPublishAt) {
+      let flag = false;
+      questions?.forEach((question) => {
+        const missingLangs = validateAllLanguagesArePopulated(
+          question,
+          survey.languages,
+          ["title", "choices"],
+        );
+        if (missingLangs.length) {
+          setIssue(
+            "The survey contains incomplete questions. Please fix the issue.",
+          );
+          flag = true;
+          return false;
+        }
+      });
+      if (!flag && issue) setIssue(null);
+    }
+  }, [questions, survey]);
+  if (!issue) return null;
+  return (
+    <Alert
+      variant="light"
+      color="red"
+      title="Issue with your survey"
+      icon={<IconAlertOctagon />}
+      m={"xs"}
+    >
+      {issue}
+    </Alert>
+  );
+};

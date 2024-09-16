@@ -92,27 +92,28 @@ function NavbarLink({
                   : router.pathname === href
               }
               onClick={(e) => {
+                setActive(parentIndex);
                 if (href) {
                   if (label == "Docs") {
                     window.open(href, "_blank");
                   } else {
                     router.push(href);
                   }
-                  setActive(parentIndex);
                 } else if (submenus?.length > 0) {
                   if (!opened) {
                     if (router.pathname !== submenus[0].href) {
                       router.push(submenus[0].href);
                     }
                     setOpened((o) => true);
-                    setActive(parentIndex);
                   }
                 }
               }}
+              opened={active === parentIndex}
             >
               {submenus?.length > 0 &&
                 submenus.map(({ Icon, label, href, role }, index) => {
-                  if (role && currentRole !== role) return null;
+                  if ((role && currentRole !== role) || active !== parentIndex)
+                    return null;
                   return (
                     <React.Fragment key={index}>
                       <Tooltip

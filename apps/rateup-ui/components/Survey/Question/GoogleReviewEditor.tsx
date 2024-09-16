@@ -1,31 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { QuestionTabsEnum } from "../EditSurvey";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Rating,
+  Button,
+  Divider,
   Group,
-  Title,
+  Rating,
+  SimpleGrid,
   Stack,
   Switch,
   Text,
-  SimpleGrid,
-  Button,
-  Divider,
+  Title,
   useMantineTheme,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
+
+import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
+import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { useTeamsByUser } from "../../../backend/team/team.query";
+import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
-import { notifications } from "@mantine/notifications";
-import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
-import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
-import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
-import { useRouter } from "next/router";
+import { QuestionTabsEnum } from "../EditSurvey";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating";
-import { useTeamsByUser } from "../../../backend/team/team.query";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
-import { useDisclosure } from "@mantine/hooks";
 import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal";
+
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
@@ -316,7 +319,7 @@ const GoogleReviewEditor = ({
                   })()}
                 </Group>
               </Stack>
-              <Divider m="md" />
+              <Divider m="sm" />
               <Text fw={600} size="1.1rem" my="xs">
                 Google Review Links
               </Text>
@@ -325,6 +328,7 @@ const GoogleReviewEditor = ({
                 style={{
                   overflowY: "auto",
                   flexGrow: 1,
+                  height: "150px",
                 }}
               >
                 {teamsToDisplay &&
@@ -340,8 +344,8 @@ const GoogleReviewEditor = ({
           )}
         </>
       </Stack>
-
-      <Group justify="space-between">
+      <Divider m="xs" />
+      <Group justify="space-between" pb={"sm"} px={"sm"}>
         <RateupButtonSecondary
           title={"Cancel"}
           size="md"
