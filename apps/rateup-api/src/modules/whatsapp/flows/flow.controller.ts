@@ -408,7 +408,14 @@ export async function deprecateFlowHandler(
   }
 
   await deprecateFlowInWa(orgId, flow.flowId);
-  await updateFlowInDb(orgId, dbFlowId, { status: WaFlowStatus.DEPRECATED });
+  if (flow.surveyId) {
+    log.trace("deleting survey %s", flow.surveyId);
+    await deleteSurveyById(flow.surveyId);
+    // Deleting the survey will delete the flow from db as well
+  } else {
+    log.trace("deleting flow in db %s", dbFlowId);
+    await deleteFlowInDb(dbFlowId);
+  }
 }
 
 export async function publishFlowHandler(

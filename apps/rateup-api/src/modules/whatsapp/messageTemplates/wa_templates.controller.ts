@@ -55,6 +55,7 @@ import {
   handleWhatsappError,
 } from "../wa_error_handler";
 import { updateMonthlyStat } from "../../stats/stats.service";
+import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -465,8 +466,17 @@ export async function sendTemplateToUserCore(
       });
     }
   }
-
-  const templateMessage = createTemplateMessage(phone, templateQuery);
+  let templateMessage;
+  if (dbTemplate.templateType === TemplateType.ORDER_DETAILS) {
+    templateMessage = await sendPaymentInitTemplate(
+      orgId,
+      phone,
+      templateQuery,
+      dbTemplate,
+    );
+  } else {
+    templateMessage = createTemplateMessage(phone, templateQuery);
+  }
   await sendMessage(orgId, templateMessage);
   await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
 }
