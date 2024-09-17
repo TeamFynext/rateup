@@ -241,8 +241,8 @@ export default function SurveyID() {
 const SurveyIssueAlert = ({ questions, survey }) => {
   const [issue, setIssue] = useState(null);
   useEffect(() => {
+    let flag = false;
     if (survey?.isPublished || survey?.surveyPublishAt) {
-      let flag = false;
       questions?.forEach((question) => {
         const missingLangs = validateAllLanguagesArePopulated(
           question,
@@ -257,8 +257,8 @@ const SurveyIssueAlert = ({ questions, survey }) => {
           return false;
         }
       });
-      if (!flag && issue) setIssue(null);
     }
+    if (!flag && issue) setIssue(null);
   }, [questions, survey]);
   if (!issue) return null;
   return (
