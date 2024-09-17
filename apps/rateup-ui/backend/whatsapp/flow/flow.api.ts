@@ -1,9 +1,10 @@
 import { notifications } from "@mantine/notifications";
+import { CreateAxiosDefaults } from "axios";
+
 import { WHATSAPP_URL } from "..";
 import { WaFlowJson, WaFlowWa } from "../../../types/global";
-import { axiosClient as ac } from "../../apiClient";
-import { CreateAxiosDefaults } from "axios";
 import { showErrorToast } from "../../../utils/notifications";
+import { axiosClient as ac } from "../../apiClient";
 
 const axiosInstanceConfig: CreateAxiosDefaults = {
   timeout: 15000,
@@ -116,7 +117,7 @@ export async function deleteFlow(dbFlowId: string) {
   await axiosClient.delete(`${BASE}/${dbFlowId}`);
 }
 export async function deprecateFlow(dbFlowId: string) {
-  await axiosClient.put(`${BASE}/${dbFlowId}/deprecate`);
+  await axiosClient.post(`${BASE}/${dbFlowId}/deprecate`);
 }
 export async function publishFlow(dbFlowId: string) {
   await axiosClient.put(`${BASE}/${dbFlowId}/publish`);
