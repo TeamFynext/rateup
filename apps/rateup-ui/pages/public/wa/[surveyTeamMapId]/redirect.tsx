@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
+
 import { Box, Stack } from "@mantine/core";
-import { useEffect } from "react";
+
+import RateupLoader from "../../../../components/Loaders/RateupLoader";
 
 export default function Redirect({
   tag = null,
@@ -13,10 +15,10 @@ export default function Redirect({
 
   useEffect(() => {
     const url = tag
-      ? res.shareUrl + encodeURIComponent(`?t=${tag}`)
-      : res.shareUrl;
+      ? res?.shareUrl + encodeURIComponent(`?t=${tag}`)
+      : res?.shareUrl;
     if (url) router.push(url);
-  }, [res.shareUrl, router, tag]);
+  }, [res?.shareUrl, router, tag]);
 
   return (
     <>
