@@ -18,8 +18,9 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { WaSession } from "@prisma/client";
+import { TemplateType, WaSession } from "@prisma/client";
 import { sendMessage } from "./wasurvey.service";
+import prisma from "../../../utils/prisma";
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -60,7 +61,12 @@ export const handlePaymentConfirmation = async (
   refrenceId: string,
 ) => {
   let orgId = process.env.ROOT_ORG;
-
+  const confirmation = await prisma.waTemplate.findFirst({
+    where: {
+      orgId,
+      templateType: TemplateType.PAYMENT_CONFIRMATION,
+    },
+  });
   const templateMessage: any = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -69,7 +75,10 @@ export const handlePaymentConfirmation = async (
     interactive: {
       type: "order_status",
       body: {
-        text: "Awesome! See you at the meetup. Let's make it a blast! 🎉🎉",
+        text:
+          confirmation.data?.components?.find((data) => data.type === "body")
+            ?.text ||
+          "Awesome! See you at the meetup. Let's make it a blast! 🎉🎉",
       },
       action: {
         name: "review_order",

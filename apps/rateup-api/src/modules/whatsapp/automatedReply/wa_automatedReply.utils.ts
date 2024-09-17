@@ -2,6 +2,7 @@ import { WaAutomatedReply } from "@prisma/client";
 import {
   WaAutomatedReplyMatchType,
   WaAutomatedReplyResponseType,
+  WaTemplateComponentType,
 } from "../../../types/enums";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import {
@@ -15,6 +16,8 @@ import {
 } from "../whatsappSurvey/wasurvey.service";
 import { log } from "../../../utils/logger";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
+import prisma from "../../../utils/prisma";
+import { templateData } from "../messageTemplates/wa_templates.service";
 
 export function validateAutomationMatchCondition(
   automation: WaAutomatedReply,
@@ -85,8 +88,6 @@ export async function sendAutomatedReplyMessage(
   if (responseType === WaAutomatedReplyResponseType.Template) {
     // TODO: improve template sending
     await sendTemplateToUserCore(orgId, responseTemplateId, from, [], teamId);
-  } else if (orgId === process.env.ROOT_ORG && name === "founders-meet") {
-    await sendPaymentInitTemplate(orgId, from);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
     await sendTextMessage({ phone: from, orgId }, "", responseText);
   } else {
@@ -109,9 +110,29 @@ function generateOrderReferenceId() {
   return referenceId;
 }
 
-export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
+export async function sendPaymentInitTemplate(
+  orgId: string,
+  phoneNo: string,
+  templateData: {
+    name: string;
+    language: {
+      code: string;
+    };
+    components: any[];
+  },
+  template: templateData,
+) {
   const uniqueReferenceId = generateOrderReferenceId();
-  const templateMessage: any = {
+
+  const config = await prisma.integration.findFirst({
+    where: {
+      orgId: orgId,
+      name: "waPayment",
+    },
+  });
+
+  if (!config.credential) throw new Error("Config not found");
+  const t = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: phoneNo,
@@ -119,7 +140,14 @@ export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
     interactive: {
       type: "order_details",
       body: {
-        text: "Please, click the Pay Now button to complete your registration",
+        text: template.data.components?.find(
+          (data: any) => data.type === WaTemplateComponentType.BODY,
+        )?.text,
+      },
+      footer: {
+        text: template.data.components?.find(
+          (data: any) => data.type === WaTemplateComponentType.FOOTER,
+        )?.text,
       },
       action: {
         name: "review_and_pay",
@@ -131,16 +159,16 @@ export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
               type: "payment_gateway",
               payment_gateway: {
                 type: "razorpay",
-                configuration_name: "RateUp",
+                configuration_name: config.credential?.[0].configuration_name,
                 razorpay: {
-                  receipt: "founders-meet",
+                  receipt: "wa payment",
                 },
               },
             },
           ],
           currency: "INR",
           total_amount: {
-            value: 70000,
+            value: template.config?.price,
             offset: 100,
           },
           order: {
@@ -148,20 +176,20 @@ export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
             type: "quick_pay",
             items: [
               {
-                name: "Founders Meet",
+                name: template.config?.name,
                 amount: {
-                  value: 70000,
+                  value: template.config?.price,
                   offset: 100,
                 },
                 quantity: 1,
               },
             ],
             subtotal: {
-              value: 70000,
+              value: template.config?.price,
               offset: 100,
             },
             tax: {
-              value: 0,
+              value: template.config?.tax,
               offset: 100,
             },
           },
@@ -169,5 +197,5 @@ export async function sendPaymentInitTemplate(orgId: string, phoneNo: string) {
       },
     },
   };
-  await sendMessage(orgId, templateMessage);
+  return t;
 }
