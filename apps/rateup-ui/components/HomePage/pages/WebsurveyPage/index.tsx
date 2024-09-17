@@ -12,7 +12,7 @@ const cx = classNames.bind(styles);
 function WebsurveyPage() {
   return (
     <Stack
-      className={cx("web-feedback-page-root-div")}
+      className={cx("web-survey-page-root-div")}
       style={{ fontFamily: `var(--font-rubik)` }}
     >
       <Head>

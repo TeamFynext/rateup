@@ -37,9 +37,19 @@ const headerNavLinks = [
         content: {
           heading: "Web Survey",
           description:
-            "Effortlessly collect and analyze customer insights with web survey ",
+            "Effortlessly collect and analyze customer insights with web survey",
         },
         iconLink: `${imagesPath}/homepage/header/desktop-icon.svg`,
+      },
+      {
+        id: 1006,
+        link: "/product-packaging-qr",
+        content: {
+          heading: "Product Packaging QR",
+          description:
+            "Transform product packaging into a customer engagement hub with smart QR codes",
+        },
+        iconLink: `${imagesPath}/homepage/header/package.svg`,
       },
       {
         id: 1001,

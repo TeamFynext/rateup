@@ -22,6 +22,14 @@
   color: var(--tertiary-color);
 }
 
+.large-text-span span {
+  display: inline;
+}
+
+.large-text-span span :global(.blue-text) {
+  color: var(--shade-of-blue-9);
+}
+
 .section-description {
   font-size: 1.125rem;
 }

@@ -16,8 +16,12 @@ const sectionValues = [
   {
     id: "1234135372",
     headingSmallText: "Send Form",
-    headingLargeText:
-      "Get 35% more customers feedback through Automated  Interactive WhatsApp Forms",
+    headingLargeText: (
+      <span>
+        Get <span className={"blue-text"}>35% more</span> customers feedback
+        through Automated Interactive WhatsApp Forms
+      </span>
+    ),
     description:
       "Integrate the RateUp Platform with your existing CRM/billing software. Schedule and automate sending interavtive whatsApp forms or web surveys to collect customer feedback",
     imageUrl: `${imagesPath}/homepage/home-what-can-you-do-section/send-form.png`,
