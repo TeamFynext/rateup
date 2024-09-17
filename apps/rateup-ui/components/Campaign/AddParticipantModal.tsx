@@ -1,37 +1,41 @@
+import { useState } from "react";
+
 import {
+  Box,
   Button,
   Checkbox,
+  CloseButton,
+  Flex,
   Group,
+  Loader,
+  MultiSelect,
   ScrollArea,
+  SegmentedControl,
   SimpleGrid,
   Stack,
-  Title,
-  Text,
-  Flex,
-  Loader,
-  Box,
-  SegmentedControl,
-  MultiSelect,
   Tabs,
-  CloseButton,
+  Text,
+  Title,
 } from "@mantine/core";
+import { useDebouncedState, useListState } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import { useContacts } from "../../backend/campaign/contacts/contacts.query";
-import { useState } from "react";
-import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/contactGroup.query";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useCampaignData } from "../../backend/campaign/campaign.query";
 import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
-import { showWarnToast } from "../../utils/notifications";
+import { useContactGroupsByTeamId } from "../../backend/campaign/contactGroup/contactGroup.query";
+import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import {
   CampaignParticipantAddStatus,
   CampaignParticipantSource,
 } from "../../types/enums";
-import { useDebouncedState, useListState } from "@mantine/hooks";
-import { useCampaignData } from "../../backend/campaign/campaign.query";
-import PaperLayout from "../styled/Layouts/PaperLayout";
 import { PAGE_SIZE } from "../../utils/constants";
-import RateupLoader from "../Loaders/RateupLoader";
+import { showWarnToast } from "../../utils/notifications";
 import ContactPagination from "../Contacts/ContactPagination";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import RateupLoader from "../Loaders/RateupLoader";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const AddParticipantModal = ({ close, campaign }) => {
   const [selectedTab, setSelectedTab] = useState(
@@ -50,6 +54,7 @@ const AddParticipantModal = ({ close, campaign }) => {
     pageSize: Number(PAGE_SIZE[0]),
   });
   const { data, isPending } = useContacts(pagination, searchText);
+  const { translations } = useTranslations();
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
   const { data: campaignData, isPending: isAllCampaignLoading } =
@@ -73,7 +78,7 @@ const AddParticipantModal = ({ close, campaign }) => {
       selectedGroups.length === 0 &&
       selectedCampaigns?.length === 0
     ) {
-      showWarnToast("You have not selected any participant");
+      showWarnToast(translations["You have not selected any participant"]);
       return;
     }
 
@@ -167,9 +172,11 @@ const AddParticipantModal = ({ close, campaign }) => {
           <Stack gap={1}>
             <PaperLayout>
               <Group justify="space-between" mb={4}>
-                <Title order={6}>Select {selectedTab?.toLowerCase()}</Title>
+                <Title order={6}>
+                  {translations["Select"]} {selectedTab?.toLowerCase()}
+                </Title>
                 <Checkbox
-                  label="Select all"
+                  label={translations["Select all"]}
                   c={"#149a8a"}
                   checked={isSelectedAll}
                   onChange={handleSelectAll}
@@ -192,7 +199,7 @@ const AddParticipantModal = ({ close, campaign }) => {
                         />
                       ))
                     ) : (
-                      <Text>No contacts found</Text>
+                      <Text>{translations["No contacts found"]}</Text>
                     )}
                   </Tabs.Panel>
                   <Tabs.Panel value={CampaignParticipantSource.GROUP}>
@@ -206,13 +213,13 @@ const AddParticipantModal = ({ close, campaign }) => {
                         />
                       ))
                     ) : (
-                      <Text>No group found</Text>
+                      <Text>{translations["No group found"]}</Text>
                     )}
                   </Tabs.Panel>
                   <Tabs.Panel value={CampaignParticipantSource.CAMPAIGN}>
                     <MultiSelect
-                      label="message status"
-                      placeholder="Pick status"
+                      label={translations["message status"]}
+                      placeholder={translations["Pick status"]}
                       data={Object.values(CampaignParticipantAddStatus)}
                       onChange={(e: any) => selectedStatusHandlers.setState(e)}
                       value={selectedStatus}
@@ -229,7 +236,7 @@ const AddParticipantModal = ({ close, campaign }) => {
                         />
                       ))
                     ) : (
-                      <Text>No group found</Text>
+                      <Text>{translations["No group found"]}</Text>
                     )}
                   </Tabs.Panel>
                 </Tabs>
@@ -282,7 +289,7 @@ const AddParticipantModal = ({ close, campaign }) => {
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"md"}>
           <Button variant="outline" radius={"xl"} onClick={close}>
-            Cancel
+            {translations["Cancel"]}
           </Button>
           <Button
             radius={"xl"}
@@ -290,7 +297,7 @@ const AddParticipantModal = ({ close, campaign }) => {
             onClick={handleSubmit}
             loading={addCampaignParticipants.isPending}
           >
-            Add Participants
+            {translations["Add Participants"]}
           </Button>
         </Flex>
       </Stack>
@@ -305,7 +312,7 @@ const Individual = ({
   participants,
 }) => {
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
-
+  const { translations } = useTranslations();
   const isAlreadySeleted = participants.some(
     (c) => c?.contactId === customer?.id,
   );
@@ -329,7 +336,7 @@ const Individual = ({
           radius={"xl"}
           size="sm"
         >
-          Remove
+          {translations["Remove"]}
         </Button>
       ) : (
         <Button
@@ -350,7 +357,7 @@ const Individual = ({
 
 const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
   const isSelected = selectedGroups.some((c) => c?.id === group?.id);
-
+  const { translations } = useTranslations();
   return (
     <Group justify="space-between">
       <Stack gap={0}>
@@ -370,7 +377,7 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
           radius={"xl"}
           size="sm"
         >
-          Remove
+          {translations["Remove"]}
         </Button>
       ) : (
         <Button
@@ -382,7 +389,7 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
           w={90}
           disabled={!group?._count.contacts}
         >
-          Add
+          {translations["Add"]}
         </Button>
       )}
     </Group>
@@ -394,7 +401,7 @@ const CustomerCampaign = ({
   selectedCampaignsHandlers,
 }) => {
   const isSelected = selectedCampaigns.some((c) => c?.id === campaign?.id);
-
+  const { translations } = useTranslations();
   return (
     <Group justify="space-between" py={4}>
       <Title order={5} lineClamp={1} maw={190}>
@@ -409,7 +416,7 @@ const CustomerCampaign = ({
           radius={"xl"}
           size="sm"
         >
-          Remove
+          {translations["Remove"]}
         </Button>
       ) : (
         <Button
@@ -421,7 +428,7 @@ const CustomerCampaign = ({
           w={90}
           disabled={!campaign?._count.campaignParticipants}
         >
-          Add
+          {translations["Add"]}
         </Button>
       )}
     </Group>

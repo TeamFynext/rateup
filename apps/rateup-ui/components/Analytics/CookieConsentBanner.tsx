@@ -1,20 +1,24 @@
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
 import { Dialog, Group, Text } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import Link from "next/link";
+import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { fbConsent } from "../../utils/fbpixel";
+import { setGAConsent } from "../../utils/gtag";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { useEffect, useState } from "react";
-import { setGAConsent } from "../../utils/gtag";
-import { fbConsent } from "../../utils/fbpixel";
-import dayjs from "dayjs";
 
 const CookieConsentBanner = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [cookieConsent, setCookieConsent] = useState(false);
   const isMobile = useMediaQuery("(max-width: 480px)");
-
+  const { translations } = useTranslations();
   useEffect(() => {
     const storedCookieConsent = JSON.parse(
       localStorage.getItem("cookie_consent"),
@@ -50,15 +54,15 @@ const CookieConsentBanner = () => {
     >
       <Group justify="space-between">
         <Text fw={"bold"} fz={isMobile ? 14 : 16}>
-          We use cookies in our site. See{" "}
+          {translations["We use cookies in our site. See"]}
           <Link href={"/privacy-policy"} style={{ textDecoration: "none" }}>
-            our Privacy and policy
+            {translations["our Privacy and policy"]}
           </Link>{" "}
-          for more details.
+          {translations["for more details."]}
         </Text>
         <Group>
           <RateupButtonSecondary
-            title="Decline"
+            title={translations["Decline"]}
             fw={"bold"}
             variant="light"
             onClick={() => {
@@ -75,7 +79,7 @@ const CookieConsentBanner = () => {
             size={isMobile ? "xs" : "md"}
           />
           <RateupButtonBlue
-            title="Accept"
+            title={translations["Accept"]}
             fw={"bold"}
             onClick={() => {
               setCookieConsent(true);

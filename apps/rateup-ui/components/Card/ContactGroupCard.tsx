@@ -1,9 +1,13 @@
-import { Avatar, Group, Stack, Title, Text, Badge, Card } from "@mantine/core";
 import { useRouter } from "next/router";
-import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import { useTeamsByUser } from "../../backend/team/team.query";
-import dayjs from "dayjs";
+
+import { Avatar, Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { IconUsersGroup } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useTeamsByUser } from "../../backend/team/team.query";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export const ContactGroupCard = ({ group }) => {
@@ -19,7 +23,7 @@ export const ContactGroupCard = ({ group }) => {
     data: TeamsResponse;
     refetch: any;
   };
-
+  const { translations } = useTranslations();
   const teamObj = teamsData?.data?.find((team) => {
     return team?.id === group?.teamId;
   });
@@ -48,12 +52,13 @@ export const ContactGroupCard = ({ group }) => {
           <Title c="var(--tertiary-color)" order={3}>
             {group?._count.contacts}
           </Title>
-          <Text>members</Text>
+          <Text>{translations["members"]}</Text>
         </Stack>
       </Group>
       <Group justify="space-between" mt="md">
         <Text c="dimmed">
-          created on {dayjs(group?.createdAt).format("DD-MM-YYYY")}
+          {translations["created on"]}{" "}
+          {dayjs(group?.createdAt).format("DD-MM-YYYY")}
         </Text>
         <Badge color="var(--tertiary-color)" variant="outline" size="lg">
           {teamObj?.name}

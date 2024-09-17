@@ -1,10 +1,13 @@
 import { Box, Menu, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconChevronDown, IconSend, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useSendCampaign } from "../../backend/campaign/campaign.query";
 import { useRemoveCampaignParticipant } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
-import { useSendCampaign } from "../../backend/campaign/campaign.query";
 
 export const CampaignParticipantMenu = ({
   id,
@@ -15,7 +18,7 @@ export const CampaignParticipantMenu = ({
 }) => {
   const removeCampainPartcipant = useRemoveCampaignParticipant(id);
   const sendMutation = useSendCampaign(id, teamId);
-
+  const { translations } = useTranslations();
   function handleResendClick() {
     sendMutation.mutate({
       participantId,
@@ -25,11 +28,15 @@ export const CampaignParticipantMenu = ({
   }
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: "Remove contact",
+      title: translations["Remove contact"],
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to remove this participant from campaign?
+          {
+            translations[
+              "Are you sure you want to remove this participant from campaign?"
+            ]
+          }
         </Text>
       ),
       labels: { confirm: "Ok", cancel: "cancel" },
@@ -48,7 +55,7 @@ export const CampaignParticipantMenu = ({
       <Menu.Target>
         <Box>
           <RateupButtonPrimary
-            title="Select action"
+            title={translations["Select action"]}
             variant="light"
             rightIcon={<IconChevronDown size="16px" />}
             size="xs"
@@ -62,7 +69,7 @@ export const CampaignParticipantMenu = ({
           onClick={handleResendClick}
           disabled={!consent}
         >
-          Resend
+          {translations["Resend"]}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
@@ -71,7 +78,7 @@ export const CampaignParticipantMenu = ({
           onClick={openDeleteModal}
           disabled={status == CampaignStatus.ACTIVE}
         >
-          Remove participant
+          {translations["Remove participant"]}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

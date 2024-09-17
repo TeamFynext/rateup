@@ -1,14 +1,18 @@
 import { Button, Select } from "@mantine/core";
-import styles from "./ResourceSelector.module.css";
-import selectStyles from "./Select.module.css";
-import { resourceOptions } from "./constants";
 import { IconAnalyze } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { resourceOptions } from "./constants";
+import styles from "./ResourceSelector.module.css";
+import selectStyles from "./Select.module.css";
+
 function ResourceSelector({ resource, setResource, onGenerateBtnClick }) {
+  const { translations } = useTranslations();
   return (
     <div className={styles["resource-selector-dropdown-container"]}>
       <Select
-        placeholder="Select a Resource"
+        placeholder={translations["Select a Resource"]}
         data={resourceOptions}
         classNames={selectStyles}
         onChange={setResource}
@@ -20,7 +24,7 @@ function ResourceSelector({ resource, setResource, onGenerateBtnClick }) {
         onClick={onGenerateBtnClick}
         rightSection={<IconAnalyze />}
       >
-        Generate
+        {translations["Generate"]}
       </Button>
     </div>
   );

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Box,
   Checkbox,
@@ -6,22 +8,26 @@ import {
   Paper,
   SimpleGrid,
   Stack,
-  TextInput,
   Text,
+  TextInput,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
+import { getHotkeyHandler } from "@mantine/hooks";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+
+import { useEditContactMutation } from "../../backend/campaign/contacts/contacts.query";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { useEffect, useState } from "react";
-import { useEditContactMutation } from "../../backend/campaign/contacts/contacts.query";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+
 import "react-phone-number-input/style.css";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import styles from "./contact.module.css";
 
 const EditContactModal = ({
@@ -37,7 +43,7 @@ const EditContactModal = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [contactType, setContactType] = useState<string[]>([]);
-
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       ...contact,
@@ -46,12 +52,12 @@ const EditContactModal = ({
     validate: {
       phone: (value) =>
         !value
-          ? "Phone Number cannot be blank"
+          ? translations["Phone Number cannot be blank"]
           : !isValidPhoneNumber(value)
-            ? "Invalid phone number"
+            ? translations["Invalid phone number"]
             : null,
       tags: {},
-      name: isNotEmpty("Name cannot be blank"),
+      name: isNotEmpty(translations["Name cannot be blank"]),
     },
   });
   const editContactMutation = useEditContactMutation(groupId);
@@ -103,8 +109,8 @@ const EditContactModal = ({
       <form>
         <SimpleGrid cols={2}>
           <TextInput
-            label="Name"
-            placeholder="Enter name"
+            label={translations["Name"]}
+            placeholder={translations["Enter name"]}
             {...form.getInputProps("name")}
             size="md"
             radius={"md"}
@@ -128,14 +134,14 @@ const EditContactModal = ({
           {contactType.includes("phone") && (
             <Stack gap={0}>
               <Group gap={3}>
-                <Text>Phone Number</Text>
+                <Text>{translations["Phone Number"]}</Text>
                 <Text c="red">*</Text>
               </Group>
               <PhoneInputWithCountrySelect
                 defaultCountry="IN"
                 international
                 countryCallingCodeEditable={false}
-                placeholder="Enter phone number"
+                placeholder={translations["Enter phone number"]}
                 {...form.getInputProps("phone")}
                 className={styles.inputPhone}
               />
@@ -160,9 +166,12 @@ const EditContactModal = ({
           )}
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"sm"} mt={"sm"}>
-          <RateupButtonSecondary title="cancel" onClick={closeEditModal} />
+          <RateupButtonSecondary
+            title={translations["cancel"]}
+            onClick={closeEditModal}
+          />
           <RateupButtonBlue
-            title="Edit contact"
+            title={translations["Edit contact"]}
             loading={isUpdating}
             onClick={handleSubmit}
           />

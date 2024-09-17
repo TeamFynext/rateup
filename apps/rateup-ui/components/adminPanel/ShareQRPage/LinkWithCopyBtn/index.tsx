@@ -1,8 +1,12 @@
 import { Button, CopyButton, TextInput } from "@mantine/core";
-import styles from "./LinkWithCopyBtn.module.css";
 import { IconCopy } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
+import styles from "./LinkWithCopyBtn.module.css";
+
 function LinkWithCopyBtn({ link }) {
+  const { translations } = useTranslations();
   return (
     <div className={styles["link-input-copy-btn-container"]}>
       <TextInput
@@ -21,7 +25,7 @@ function LinkWithCopyBtn({ link }) {
             onClick={copy}
             rightSection={<IconCopy />}
           >
-            {copied ? "Copied url" : "Copy url"}
+            {copied ? translations["Copied url"] : translations["Copy url"]}
           </Button>
         )}
       </CopyButton>

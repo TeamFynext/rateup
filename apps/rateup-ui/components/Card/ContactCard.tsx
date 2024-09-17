@@ -1,27 +1,34 @@
+import { useRouter } from "next/router";
+
 import { Box, Menu, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconChevronDown, IconEdit, IconTrash } from "@tabler/icons-react";
-import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
-import { RateupButtonPrimary } from "../Button/RateupButtons";
-import EditContactModal from "../Contacts/EditContactModal";
-import FormModalLayout from "../Modal/FormModalLayout";
-import CreateGroupModal from "../Contacts/CreateGroupModal";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useContactGroupById,
   useDeleteGroupMutation,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useRouter } from "next/router";
+import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
+import CreateGroupModal from "../Contacts/CreateGroupModal";
+import EditContactModal from "../Contacts/EditContactModal";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 export const ContactMenu = ({ contact, groupId, tags }) => {
+  const { translations } = useTranslations();
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: "Delete contact",
+      title: translations["Delete contact"],
       centered: true,
       children: (
-        <Text size="sm">Are you sure you want to delete this contact?</Text>
+        <Text size="sm">
+          {translations["Are you sure you want to delete this contact?"]}
+        </Text>
       ),
       labels: { confirm: "Ok", cancel: "cancel" },
       confirmProps: { color: "red" },
@@ -40,7 +47,7 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
       <Menu.Target>
         <Box>
           <RateupButtonPrimary
-            title="Select action"
+            title={translations["Select action"]}
             variant="light"
             rightIcon={<IconChevronDown size="1rem" />}
             size="xs"
@@ -52,7 +59,7 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
           leftSection={<IconEdit size={"1rem"}></IconEdit>}
           onClick={openEditModal}
         >
-          Edit
+          {translations["Edit"]}
         </Menu.Item>
 
         <Menu.Divider />
@@ -61,12 +68,12 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
           leftSection={<IconTrash size="1rem" />}
           onClick={openDeleteModal}
         >
-          Delete contact
+          {translations["Delete contact"]}
         </Menu.Item>
       </Menu.Dropdown>
       <FormModalLayout
         opened={openedEditModal}
-        title="Edit Contact"
+        title={translations["Edit Contact"]}
         onClose={closeEditModal}
         centered
         size="lg"
@@ -88,19 +95,22 @@ export const ContactGroupMenu = ({ groupId }) => {
   const { data } = useContactGroupById(groupId?.toString(), openedEditModal);
   const deleteGroupMutation = useDeleteGroupMutation();
   const router = useRouter();
-
+  const { translations } = useTranslations();
   const openDeleteModal = (e) => {
     e.stopPropagation();
     modals.openConfirmModal({
-      title: "Delete Group",
+      title: translations["Delete Group"],
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete this group? This action is destructive
-          and you will have to contact support to restore your data.
+          {
+            translations[
+              "Are you sure you want to delete this group? This action is destructive and you will have to contact support to restore your data."
+            ]
+          }
         </Text>
       ),
-      labels: { confirm: "Ok", cancel: "cancel" },
+      labels: { confirm: translations["Ok"], cancel: translations["cancel"] },
       confirmProps: { color: "red" },
       onCancel: () => modals.closeAll(),
       onConfirm: () => deleteContactGroup(),
@@ -122,7 +132,7 @@ export const ContactGroupMenu = ({ groupId }) => {
           }}
         >
           <RateupButtonPrimary
-            title="Select action"
+            title={translations["Select action"]}
             variant="light"
             rightIcon={<IconChevronDown size="1rem" />}
             size="xs"
@@ -137,7 +147,7 @@ export const ContactGroupMenu = ({ groupId }) => {
             openEditModal();
           }}
         >
-          Edit
+          {translations["Edit"]}
         </Menu.Item>
 
         <Menu.Divider />
@@ -146,12 +156,12 @@ export const ContactGroupMenu = ({ groupId }) => {
           leftSection={<IconTrash size="1rem" />}
           onClick={openDeleteModal}
         >
-          Delete contact Group
+          {translations["Delete contact Group"]}
         </Menu.Item>
       </Menu.Dropdown>
       <FormModalLayout
         centered
-        title="Edit Group"
+        title={translations["Edit Group"]}
         opened={openedEditModal}
         onClose={closeEditModal}
         size="lg"
