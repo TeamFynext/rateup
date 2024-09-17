@@ -50,7 +50,7 @@ function AuthTypeSignupForm({
     validate: {
       name: (value) => {
         if (value.length < 4) {
-          return translations[translations];
+          return translations["Name should be at least 4 characters long"];
         }
         return null; // Validation passed
       },
