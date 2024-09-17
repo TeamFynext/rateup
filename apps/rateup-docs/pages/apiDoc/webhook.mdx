@@ -1,0 +1,121 @@
+### Webhook Usage Guide
+
+A **webhook** is a way for your application to send real-time notifications to external systems when certain events occur. Rather than having to continuously poll an API, you can set up a webhook URL (endpoint) to receive event data automatically.
+
+#### Survey Response webhook
+
+##### How to Set Up Webhooks
+
+To receive webhook data, you need to follow these steps:
+
+#### Step 1: Create an HTTP Endpoint
+You need to create an HTTPS endpoint (URL) on your server to receive POST requests containing event data. This endpoint must be capable of handling incoming requests, processing JSON or other payload formats, and responding with a success message.
+
+- The endpoint should accept POST requests.
+- It must be publicly accessible over the internet, ideally over HTTPS for security.
+
+Example webhook URL format:
+```
+https://example.com/webhook-endpoint
+```
+
+#### Step 2: Provide Webhook on Survey Settings
+To enable webhook notifications, you must configure created webhook endpoint on the survey settings. Follow these steps to configure a webhook:
+
+1. **Log in** to your account on rateup.
+2. Navigate to **Web Surveys** > **Surveys** or **WhatsApp** > **Flows**
+3. Select a **Survey / flow** you want to configure the webhook.
+3. Switch to **Settings** tab.
+4. Under webhook, Enter your webhook endpoint URL.
+7. Click **Save changes** to activate the webhook.
+
+import ScreenShot from  "../../components/Screenshot";
+
+<ScreenShot src={"/screenshots/webhook.png"} alt="webhook"/>
+
+Once the webhook is saved, it will be triggered whenever response has been submitted.
+
+
+#### Webhook Payload Structure
+
+When your webhook is triggered, a POST request will be sent to your server's endpoint. The request body will contain a **payload** with details about the event.
+
+Response payload for a survey having 2 questions,
+#### Example Payload (JSON Format):
+```json
+{
+    "tag": "feedback",
+    "createdAt": "2024-09-17T10:00:00Z",
+    "phone": "14155552671",
+    "language": "en",
+    "responses": [
+        {"type": "Rating", "response": 3, "title": "Please rate us?"},
+        {"type": "Smiley", "response": "Happy", "title": "Are you satisfied?"},
+        ],
+    "teamId": "3112a17e-d353-482b-82e0-0af2f10771ee",
+    "surveyId": "4365b702-69a3-4362-a162-1725ad50f259",
+}
+```
+
+#### Webhook Security
+
+Webhooks should always be secured to prevent malicious actors from sending false data to your system. We provide the following security measures:
+
+##### Secret Key (Signature Verification)
+When registering a webhook, cope the provided **client secret**. This secret will be used to sign the payload, allowing you to verify the integrity of the webhook on your end.
+
+Each webhook request will include a **signature** in the request headers, which you can use to verify that the payload was indeed sent from our platform.
+
+###### How to Validate Webhook Signature:
+
+1. Retrieve the `x-rateup-signature` header from the webhook request.
+2. Use the same secret key to generate an HMAC hash of the payload.
+3. Compare your generated hash with the `x-rateup-signature` header value.
+4. If they match, the webhook is legitimate.
+
+##### Example (Node.js):
+```javascript
+const crypto = require('crypto');
+
+function verifySignature(payload, signature, secret) {
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(JSON.stringify(payload))
+    const generatedSignature = hmac.digest('base64');
+    return signature === generatedSignature;
+}
+```
+
+#### Handling Webhook Responses
+
+When your server receives a webhook, it must respond with an HTTP status code to acknowledge the request.
+
+- **200 OK**: The request was successfully received, and no further action is needed.
+- **4xx** or **5xx**: The request failed. In this case, we will retry the webhook based on our retry policy.
+
+**Note**: The response should be sent within 5 seconds to avoid timeouts and retries. Avoid performing long-running tasks during the webhook handling. Instead, process the payload asynchronously if needed.
+
+---
+
+#### Retry Mechanism
+
+Sometimes, webhook delivery might fail (e.g., your server may be down or unreachable). When this happens, our system will automatically retry the webhook with exponential backoff.
+
+- We will retry the webhook up to **3 times**.
+- The retry interval will increase after each failure.
+If the webhook fails after all retries, no further attempts will be made.
+
+---
+
+#### Troubleshooting Webhooks
+
+If you encounter issues with webhooks, here are some common problems and solutions:
+
+- **Webhook Not Triggering**: Ensure the webhook is correctly registered and your endpoint is publicly accessible.
+- **Missing Payload**: Check that your server is properly parsing the incoming payload. Ensure the `Content-Type` is set to `application/json`.
+- **Invalid Signature**: Verify that the secret used for signature verification matches the secret you provided when registering the webhook.
+- **Duplicate Webhooks**: Implement idempotency in your webhook handler to ensure multiple retries don’t cause duplicate actions. Retrieve the `x-webhook-id` from the header to acknowledge the duplicate webhooks. In addition, `x-rateup-triggered-at` provides the time of the webhook triggered in iso format.
+
+
+
+
+

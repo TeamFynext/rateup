@@ -25,6 +25,9 @@
     "advancedFt": {
         "title": "Advanced Feature"
     },
+    "apiDoc": {
+        "title" : "API Documentation"
+    },
     "-- More": {
         "type": "separator",
         "title": "More"
