@@ -6,6 +6,7 @@ import {
   Divider,
   Group,
   Rating,
+  ScrollAreaAutosize,
   SimpleGrid,
   Stack,
   Switch,
@@ -194,156 +195,155 @@ const GoogleReviewEditor = ({
   const { primaryColor } = useMantineTheme();
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
-      <Title order={3}>Google Reviews Setup</Title>
-      <Stack px="lg" h="100%">
-        <>
-          <Switch
-            label="Google Reviews"
-            description="Setup Google Page review for users."
-            labelPosition="left"
-            checked={enableGoogleReview}
-            onChange={(event) => handleSwitch(event)}
-            size="lg"
-            styles={{
-              body: {
-                width: "100%",
-                justifyContent: "space-between",
-                alignItems: "center",
-              },
-            }}
-          />
+      <ScrollAreaAutosize>
+        <Title order={3}>Google Reviews Setup</Title>
+        <Stack px="lg" h="100%">
+          <>
+            <Switch
+              label="Google Reviews"
+              description="Setup Google Page review for users."
+              labelPosition="left"
+              checked={enableGoogleReview}
+              onChange={(event) => handleSwitch(event)}
+              size="lg"
+              styles={{
+                body: {
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              }}
+            />
 
-          {enableGoogleReview && (
-            <>
-              <Stack>
-                <Group>
-                  {(() => {
-                    switch (selectedQ?.type) {
-                      case Q.Smiley:
-                        return (
-                          <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
-                              Select the emojis for which Google Review to be
-                              enabled:
-                            </Text>
-                            <Text fw={500}> : </Text>
-                            <Group style={{ minWidth: "300px" }}>
-                              {Object.values(SmileyResponse).map((value) => (
-                                <Button
-                                  key={value}
-                                  variant={
-                                    selectedSmileys.includes(value)
-                                      ? "light"
-                                      : "default"
-                                  }
-                                  gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
-                                  onClick={() => updateSmileyResponse(value)}
-                                  style={{
-                                    minHeight: "20px",
-                                    maxWidth: "70px",
-                                  }}
-                                >
-                                  {mapSmileyIcon(value, primaryColor)}
-                                </Button>
-                              ))}
-                            </Group>
-                          </SimpleGrid>
-                        );
-                      case Q.Rating:
-                        return (
-                          <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
-                              Select minimum rating for enabling Google Review:
-                            </Text>
-                            <Text fw={500}> : </Text>
-                            <Stack align="center">
-                              <Rating
-                                value={minRating}
-                                onChange={setMinRating}
-                                size="xl"
-                              />
-                              <Text> {minRating} stars and above.</Text>
-                            </Stack>
-                          </SimpleGrid>
-                        );
-                      case Q.Opinion:
-                        return (
-                          <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
-                              {" "}
-                              Select minimum scale value for enabling Google
-                              Review:{" "}
-                            </Text>
-                            <Text fw={500}> : </Text>
-                            <Stack>
-                              <Group style={{ minWidth: "300px" }}>
-                                {(() => {
-                                  const buttons = [];
-                                  for (let i = 1; i <= 10; i++) {
-                                    buttons.push(
-                                      <Button
-                                        key={i}
-                                        radius="xl"
-                                        size="xs"
-                                        onClick={() => setMinOpinion(i)}
-                                        color={
-                                          minOpinion === i ? "blue" : "blue.9"
-                                        }
-                                        variant={
-                                          minOpinion === i
-                                            ? "gradient"
-                                            : "default"
-                                        }
-                                        gradient={{
-                                          from: "#62CBE6",
-                                          to: "#3F5BA9",
-                                        }}
-                                      >
-                                        {i}
-                                      </Button>,
-                                    );
-                                  }
-                                  return buttons;
-                                })()}
-                              </Group>
-                              <Text pt="sm" fz="sm" c="dimmed">
-                                {" "}
-                                For {minOpinion} and above.
+            {enableGoogleReview && (
+              <>
+                <Stack>
+                  <Group>
+                    {(() => {
+                      switch (selectedQ?.type) {
+                        case Q.Smiley:
+                          return (
+                            <SimpleGrid cols={3} spacing={30}>
+                              <Text fw={500}>
+                                Select the emojis for which Google Review to be
+                                enabled:
                               </Text>
-                            </Stack>
-                          </SimpleGrid>
-                        );
-                      default:
-                        return null;
-                    }
-                  })()}
-                </Group>
-              </Stack>
-              <Divider m="sm" />
-              <Text fw={600} size="1.1rem" my="xs">
-                Google Review Links
-              </Text>
-              <Stack
-                p="sm"
-                style={{
-                  overflowY: "auto",
-                  flexGrow: 1,
-                  height: "150px",
-                }}
-              >
-                {teamsToDisplay &&
-                  teamsToDisplay.map((team) => (
-                    <AddGoogleReviewLinkForTeamModal
-                      team={team}
-                      surveyId={surveyId}
-                      key={team?.id}
-                    />
-                  ))}
-              </Stack>
-            </>
-          )}
-        </>
-      </Stack>
+                              <Text fw={500}> : </Text>
+                              <Group style={{ minWidth: "250px" }}>
+                                {Object.values(SmileyResponse).map((value) => (
+                                  <Button
+                                    key={value}
+                                    variant={
+                                      selectedSmileys.includes(value)
+                                        ? "light"
+                                        : "default"
+                                    }
+                                    gradient={{
+                                      from: "#62CBE6",
+                                      to: "#3F5BA9",
+                                    }}
+                                    onClick={() => updateSmileyResponse(value)}
+                                    style={{
+                                      minHeight: "20px",
+                                      maxWidth: "70px",
+                                    }}
+                                  >
+                                    {mapSmileyIcon(value, primaryColor)}
+                                  </Button>
+                                ))}
+                              </Group>
+                            </SimpleGrid>
+                          );
+                        case Q.Rating:
+                          return (
+                            <SimpleGrid cols={3} spacing={30}>
+                              <Text fw={500}>
+                                Select minimum rating for enabling Google
+                                Review:
+                              </Text>
+                              <Text fw={500}> : </Text>
+                              <Stack align="center">
+                                <Rating
+                                  value={minRating}
+                                  onChange={setMinRating}
+                                  size="xl"
+                                />
+                                <Text> {minRating} stars and above.</Text>
+                              </Stack>
+                            </SimpleGrid>
+                          );
+                        case Q.Opinion:
+                          return (
+                            <SimpleGrid cols={3} spacing={30}>
+                              <Text fw={500}>
+                                {" "}
+                                Select minimum scale value for enabling Google
+                                Review:{" "}
+                              </Text>
+                              <Text fw={500}> : </Text>
+                              <Stack>
+                                <Group style={{ minWidth: "250px" }}>
+                                  {(() => {
+                                    const buttons = [];
+                                    for (let i = 1; i <= 10; i++) {
+                                      buttons.push(
+                                        <Button
+                                          key={i}
+                                          radius="xl"
+                                          size="xs"
+                                          onClick={() => setMinOpinion(i)}
+                                          color={
+                                            minOpinion === i ? "blue" : "blue.9"
+                                          }
+                                          variant={
+                                            minOpinion === i
+                                              ? "gradient"
+                                              : "default"
+                                          }
+                                          gradient={{
+                                            from: "#62CBE6",
+                                            to: "#3F5BA9",
+                                          }}
+                                        >
+                                          {i}
+                                        </Button>,
+                                      );
+                                    }
+                                    return buttons;
+                                  })()}
+                                </Group>
+                                <Text pt="sm" fz="sm" c="dimmed">
+                                  {" "}
+                                  For {minOpinion} and above.
+                                </Text>
+                              </Stack>
+                            </SimpleGrid>
+                          );
+                        default:
+                          return null;
+                      }
+                    })()}
+                  </Group>
+                </Stack>
+                <Divider m="sm" />
+                <Text fw={600} size="1.1rem" my="xs">
+                  Google Review Links
+                </Text>
+                <Stack p="sm">
+                  {teamsToDisplay &&
+                    teamsToDisplay.map((team) => (
+                      <AddGoogleReviewLinkForTeamModal
+                        team={team}
+                        surveyId={surveyId}
+                        key={team?.id}
+                      />
+                    ))}
+                </Stack>
+              </>
+            )}
+          </>
+        </Stack>
+      </ScrollAreaAutosize>
       <Divider m="xs" />
       <Group justify="space-between" pb={"sm"} px={"sm"}>
         <RateupButtonSecondary
