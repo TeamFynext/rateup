@@ -31,6 +31,7 @@ function WhatCanYouDo() {
               imageAlt,
               imageWidth,
               imageHeight,
+              learnMoreRoute,
             },
             index,
           ) => {
@@ -46,7 +47,7 @@ function WhatCanYouDo() {
                     </span>
                   </h2>
                   <p className={cx("section-description")}>{description}</p>
-                  <Link className={cx("learn-more-link")} href={"#"}>
+                  <Link className={cx("learn-more-link")} href={learnMoreRoute}>
                     Learn More
                   </Link>
                 </Stack>
