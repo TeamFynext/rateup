@@ -20,6 +20,7 @@ import {
   useCloneAndDeprecateFlowsMutation,
   useCloneFlowsMutation,
   useDeleteFlowMutation,
+  useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
@@ -52,6 +53,7 @@ function FlowCard({
   const [cloneDialogOpened, { toggle: toggleClone, close: closeClone }] =
     useDisclosure(false);
   const deleteMutation = useDeleteFlowMutation();
+  const deprecateFlowMutation = useDeprecateFlowMutation();
   const cloneFlowsMutation = useCloneFlowsMutation(() => {
     closeClone();
     cloneForm.reset();
@@ -109,7 +111,11 @@ function FlowCard({
               headerTitle="Delete Flow?"
               confirmLabel="Delete"
               onConfirm={(e) => {
-                deleteMutation.mutate(dbFlowId);
+                if (status === WaFlowStatus.DRAFT) {
+                  deleteMutation.mutate(dbFlowId);
+                } else if (status !== WaFlowStatus.DEPRECATED) {
+                  deprecateFlowMutation.mutate(dbFlowId);
+                }
                 closeDialog();
               }}
             />
@@ -177,7 +183,7 @@ function FlowCard({
               <Tooltip
                 label={
                   status !== WaFlowStatus.DRAFT
-                    ? "You can only delete flows in DRAFT state"
+                    ? "It will be deprecated and will be removed from the system"
                     : "Delete Flow"
                 }
               >
@@ -187,7 +193,6 @@ function FlowCard({
                   <Menu.Item
                     leftSection={<IconTrash size={16} />}
                     onClick={toggle}
-                    disabled={status !== WaFlowStatus.DRAFT}
                   >
                     Delete
                   </Menu.Item>

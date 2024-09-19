@@ -1,20 +1,13 @@
 .use-case-root-div {
-  gap: 1.5rem;
+  gap: 2rem;
   padding: 0 5%;
   margin-bottom: 4rem;
-}
-
-.heading {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 400;
 }
 
 .use-case-cards-container {
   justify-content: center;
   align-items: stretch;
   gap: 5rem;
-  padding: 1rem;
   padding-bottom: 2rem;
 }
 
@@ -31,6 +24,8 @@
 @media screen and (max-width: 1024px) {
   .use-case-cards-container {
     gap: 2rem;
+    padding: 1rem;
+    padding-bottom: 2rem;
   }
 
   .column-1 {

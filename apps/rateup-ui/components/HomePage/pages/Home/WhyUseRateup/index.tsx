@@ -12,7 +12,7 @@ const cx = classNames.bind(styles);
 function WhyUseRateup() {
   return (
     <Stack className={cx("why-use-rateup-root-div")}>
-      <h1 className={cx("heading")}>
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
         Why use the RateUp platform for{" "}
         <LightBlueGradientBg className={cx("shape-bg-span")}>
           customer feedback management?

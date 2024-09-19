@@ -35,7 +35,7 @@ function CustomerFeedback() {
 
   return (
     <Stack className={cx("customer-feedback-root-div")}>
-      <h1 className={cx("heading")}>
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
         <LightBlueGradientBg>Customer Feedback</LightBlueGradientBg>
       </h1>
       <ScrollArea.Autosize

@@ -12,18 +12,24 @@ const sectionValues = [
     imageAlt: "Create Feedback Form",
     imageWidth: 1350,
     imageHeight: 794,
+    learnMoreRoute: "/web-survey",
   },
   {
     id: "1234135372",
     headingSmallText: "Send Form",
-    headingLargeText:
-      "Get 35% more customers feedback through Automated  Interactive WhatsApp Forms",
+    headingLargeText: (
+      <span>
+        Get <span className={"blue-text"}>35% more</span> customers feedback
+        through Automated Interactive WhatsApp Forms
+      </span>
+    ),
     description:
       "Integrate the RateUp Platform with your existing CRM/billing software. Schedule and automate sending interavtive whatsApp forms or web surveys to collect customer feedback",
     imageUrl: `${imagesPath}/homepage/home-what-can-you-do-section/send-form.png`,
     imageAlt: "Send Feedback Form",
     imageWidth: 1062,
     imageHeight: 842,
+    learnMoreRoute: "/whatsapp-feedback",
   },
   {
     id: "1234135373",
@@ -36,6 +42,7 @@ const sectionValues = [
     imageAlt: "Create tickets, tag respective teams, and track their status",
     imageWidth: 1282,
     imageHeight: 943,
+    learnMoreRoute: "#",
   },
 ];
 

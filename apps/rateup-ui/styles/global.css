@@ -29,6 +29,7 @@
   --shade-of-blue-6: #d6e9ff;
   --shade-of-blue-7: #cce4ff;
   --shade-of-blue-8: #0f4b90;
+  --shade-of-blue-9: #0a3a71;
   --grey-color: #494949;
   --grey-color-2: #73737a;
   --grey-color-3: #595959;
@@ -97,6 +98,14 @@ p {
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   grid-auto-rows: max-content;
   gap: 1.25rem;
+}
+
+/* Landing page means pages in components/HomePage/pages */
+.landing-page-s-h-c {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 2px;
 }
 
 @media screen and (max-width: 768px) {

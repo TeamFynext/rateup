@@ -1,7 +1,9 @@
-.heading {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 400;
+.how-rateup-can-help-root-div {
+  gap: 2rem;
+}
+
+.heading .blue-span {
+  color: var(--shade-of-blue-9);
 }
 
 .section-heading :global(.blue-text) {

@@ -10,7 +10,7 @@ const cx = classNames.bind(styles);
 function UseCase() {
   return (
     <Stack className={cx("use-case-root-div")}>
-      <h1 className={cx("heading")}>Use Case</h1>
+      <h1 className={cx("heading", "landing-page-s-h-c")}>Use Case</h1>
       <Group className={cx("use-case-cards-container")}>
         <Stack className={cx("column-1")}>
           {useCasesData.map((cardData, index) => {

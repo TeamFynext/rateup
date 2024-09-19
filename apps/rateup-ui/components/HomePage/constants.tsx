@@ -23,6 +23,35 @@ const headerNavLinks = [
     hasSublinks: true,
     sublinks: [
       {
+        id: 1004,
+        link: "/whatsapp-feedback",
+        content: {
+          heading: "Whatsapp Feedback",
+          description: "Engage where your customer are most active",
+        },
+        iconLink: `${imagesPath}/homepage/header/whatsapp-icon.svg`,
+      },
+      {
+        id: 1005,
+        link: "/web-survey",
+        content: {
+          heading: "Web Survey",
+          description:
+            "Effortlessly collect and analyze customer insights with web survey",
+        },
+        iconLink: `${imagesPath}/homepage/header/desktop-icon.svg`,
+      },
+      {
+        id: 1006,
+        link: "/product-packaging-qr",
+        content: {
+          heading: "Product Packaging QR",
+          description:
+            "Transform product packaging into a customer engagement hub with smart QR codes",
+        },
+        iconLink: `${imagesPath}/homepage/header/package.svg`,
+      },
+      {
         id: 1001,
         link: "/reputation-management",
         content: {
@@ -50,15 +79,6 @@ const headerNavLinks = [
           description: "One smart QR code, Endless Possibilities",
         },
         iconLink: `${imagesPath}/qr-studio-page/qr-studio-icon.png`,
-      },
-      {
-        id: 1004,
-        link: "/whatsapp-feedback",
-        content: {
-          heading: "Whatsapp Feedback",
-          description: "Engage where your customer are most active",
-        },
-        iconLink: `${imagesPath}/whatsapp-feedback-page/brand-whatsapp.svg`,
       },
     ],
   },

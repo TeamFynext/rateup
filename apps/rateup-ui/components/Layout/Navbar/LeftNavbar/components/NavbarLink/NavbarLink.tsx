@@ -98,17 +98,21 @@ function NavbarLink({
                   } else {
                     router.push(href);
                   }
-                  setActive(parentIndex);
                 } else if (submenus?.length > 0) {
                   if (!opened) {
                     if (router.pathname !== submenus[0].href) {
                       router.push(submenus[0].href);
                     }
                     setOpened((o) => true);
-                    setActive(parentIndex);
+                  }
+                  if (active === parentIndex) {
+                    setActive(null);
+                    return;
                   }
                 }
+                setActive(parentIndex);
               }}
+              opened={active === parentIndex && submenus?.length > 0}
             >
               {submenus?.length > 0 &&
                 submenus.map(({ Icon, label, href, role }, index) => {

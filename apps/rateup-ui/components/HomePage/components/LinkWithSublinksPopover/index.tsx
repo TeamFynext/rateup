@@ -1,11 +1,20 @@
-import { Button, Flex, Image, Popover, Stack } from "@mantine/core";
+import { useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+import {
+  Button,
+  Flex,
+  Image,
+  Popover,
+  ScrollAreaAutosize,
+  Stack,
+} from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { IconChevronDown } from "@tabler/icons-react";
+
 import headerStyles from "../Header/Header.module.css";
 import styles from "./LinkWithSublinksPopover.module.css";
-import Link from "next/link";
-import { IconChevronDown } from "@tabler/icons-react";
-import { useEffect } from "react";
-import { useRouter } from "next/router";
 
 const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
   const [opened, { close, open }] = useDisclosure(false);
@@ -60,30 +69,34 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
         onMouseLeave={close}
         className={styles["popover-dropdown"]}
       >
-        {sublinks.map(({ id, link, content, iconLink }) => {
-          const { heading, description } = content;
-          return (
-            <Link key={id} href={link} className={styles["link"]}>
-              <Flex className={styles["link-content-container"]}>
-                <Flex className={styles["image-container"]}>
-                  <Image
-                    className={styles["link-content-img"]}
-                    src={iconLink}
-                    alt="icon"
-                  />
-                </Flex>
-                <Stack
-                  className={`${styles["heading-description-container"]} ${currentRoutePath === link ? "link-active" : ""}`}
-                >
-                  <span className={styles["heading-span"]}>{heading}</span>
-                  <span className={styles["description-span"]}>
-                    {description}
-                  </span>
-                </Stack>
-              </Flex>
-            </Link>
-          );
-        })}
+        <ScrollAreaAutosize mah={500} offsetScrollbars scrollbarSize={7}>
+          <Stack>
+            {sublinks.map(({ id, link, content, iconLink }) => {
+              const { heading, description } = content;
+              return (
+                <Link key={id} href={link} className={styles["link"]}>
+                  <Flex className={styles["link-content-container"]}>
+                    <Flex className={styles["image-container"]}>
+                      <Image
+                        className={styles["link-content-img"]}
+                        src={iconLink}
+                        alt="icon"
+                      />
+                    </Flex>
+                    <Stack
+                      className={`${styles["heading-description-container"]} ${currentRoutePath === link ? "link-active" : ""}`}
+                    >
+                      <span className={styles["heading-span"]}>{heading}</span>
+                      <span className={styles["description-span"]}>
+                        {description}
+                      </span>
+                    </Stack>
+                  </Flex>
+                </Link>
+              );
+            })}
+          </Stack>
+        </ScrollAreaAutosize>
       </Popover.Dropdown>
     </Popover>
   );

@@ -42,9 +42,9 @@ function HeroSection() {
       <Stack className={cx("image-container")}>
         <Image
           className={cx("hero-section-image")}
-          src={`${imagesPath}/qr-studio-page/hero-section-image-new2.png`}
-          width={1516}
-          height={1249}
+          src={`${imagesPath}/qr-studio-page/hero-section-image.png`}
+          width={1137}
+          height={937}
           alt="One smart QR code,Endless Possibilities"
           priority
         />

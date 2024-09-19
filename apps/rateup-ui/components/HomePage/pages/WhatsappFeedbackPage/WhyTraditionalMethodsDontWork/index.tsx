@@ -10,8 +10,12 @@ const cx = classNames.bind(styles);
 function WhyTraditionalMethodsDontWork() {
   return (
     <Stack className={cx("why-traditional-methods-dont-work-root-div")}>
-      <h1 className={cx("heading")}>
-        Why traditional customer feedback collection methods don't work?
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
+        Why traditional{" "}
+        <span className={cx("blue-span")}>
+          customer feedback collection methods
+        </span>{" "}
+        don't work?
       </h1>
       <Stack className={cx("cards-list-container")}>
         <CardsList
