@@ -23,7 +23,7 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
 import { WaTemplateComponent } from "../../../types/whatsapp.types";
-import { TemplateType } from "@prisma/client";
+import { $Enums, TemplateType } from "@prisma/client";
 
 /**
  * fetches templates from WhatsApp Business API
@@ -76,7 +76,7 @@ export async function getTemplatesByOrgId(orgId: string) {
   return templates as WaTemplateWithTypes[];
 }
 
-type templateData = {
+export type templateData = {
   id: string;
   createdAt: Date;
   data: {
@@ -91,6 +91,12 @@ type templateData = {
     };
   } | null;
   orgId: string;
+  templateType: $Enums.TemplateType;
+  config: {
+    price: number;
+    name: string;
+    tax: number;
+  } | null;
 };
 export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
   const template = await prisma.waTemplate.findFirst({
