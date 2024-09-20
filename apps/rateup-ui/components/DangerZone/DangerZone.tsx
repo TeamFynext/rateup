@@ -1,15 +1,20 @@
-import { Divider, Stack, Text, Title } from "@mantine/core";
 import React from "react";
+
+import { Divider, Stack, Text, Title } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 import Heading from "../styled/Heading/Heading";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export default function DangerZone({ title, message, buttonText, onClick }) {
+  const { translations } = useTranslations();
   return (
     <>
       <Heading
-        subtitle="Danger zone"
-        label="Irreversible and destructive actions"
+        subtitle={translations["Danger zone"]}
+        label={translations["Irreversible and destructive actions"]}
       />
       <PaperLayout>
         <Stack align={"flex-start"} gap={"sm"}>

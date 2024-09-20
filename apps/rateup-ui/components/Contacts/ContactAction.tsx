@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   ActionIcon,
   Box,
@@ -10,20 +11,23 @@ import {
   Table,
   Tooltip,
 } from "@mantine/core";
+import { useDebouncedState } from "@mantine/hooks";
+import { IconRefresh } from "@tabler/icons-react";
+import { ColumnFiltersState } from "@tanstack/react-table";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useAddExistingContactToMultipleGroupsMutation } from "../../backend/campaign/contactGroup/contactGroup.query";
+import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { SearchInput } from "../../pages/dashboard/campaign";
 import { FilterSelect } from "../../pages/dashboard/contacts";
-import FormModalLayout from "../Modal/FormModalLayout";
-import { TeamSelector } from "../input/TeamSelector";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { showLoadingToast } from "../../utils/notifications";
-import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import { PAGE_SIZE } from "../../utils/constants";
+import { showLoadingToast } from "../../utils/notifications";
+import { TeamSelector } from "../input/TeamSelector";
 import RateupLoader from "../Loaders/RateupLoader";
-import { useDebouncedState } from "@mantine/hooks";
+import FormModalLayout from "../Modal/FormModalLayout";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 import ContactPagination from "./ContactPagination";
-import { ColumnFiltersState } from "@tanstack/react-table";
-import { IconRefresh } from "@tabler/icons-react";
 
 const ContactAction = ({ opened, close, allGroups, action }) => {
   const [selectedIds, setSelectedIds] = useState([]);
@@ -57,13 +61,13 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
     label: g?.name,
     value: g?.id,
   }));
-
+  const { translations } = useTranslations();
   const handleSubmit = () => {
     showLoadingToast(
-      "Contact adding to existing group",
+      translations["Contact adding to existing group"],
       "contact-group-add-existing",
       true,
-      "Adding Contact to group",
+      translations["Adding Contact to group"],
     );
     addContactToGroupsMutation.mutate({
       contactIds: selectedIds,
@@ -111,7 +115,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
       centered
       size="lg"
       includeCancelButton
-      buttonTitle="Done"
+      buttonTitle={translations["Done"]}
       onSubmit={handleSubmit}
       submitButtonDisabled={isDisabledSubmit}
     >
@@ -146,7 +150,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
             {columnFilters?.length === 0 ? (
               <Checkbox
                 aria-label="select all"
-                label="Select All"
+                label={translations["Select All"]}
                 checked={
                   allContacts?.users?.length &&
                   allContacts?.users?.every((customer) =>
@@ -166,7 +170,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
             )}
 
             <SearchInput
-              placeholder={"Search"}
+              placeholder={translations["Search"]}
               searchText={searchText}
               setSearchText={setSearchText}
               width={300}
@@ -179,7 +183,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>
-                      <Tooltip label={"refresh data"}>
+                      <Tooltip label={translations["refresh data"]}>
                         <ActionIcon
                           variant="light"
                           onClick={() => {
@@ -190,8 +194,8 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
                         </ActionIcon>
                       </Tooltip>
                     </Table.Th>
-                    <Table.Th>Name</Table.Th>
-                    <Table.Th>Phone Number</Table.Th>
+                    <Table.Th>{translations["Name"]}</Table.Th>
+                    <Table.Th>{translations["Phone Number"]}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>{rows}</Table.Tbody>
@@ -210,7 +214,9 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
             data={groupData}
             value={selectedGroups}
             onChange={setSelectedGroups}
-            placeholder={selectedGroups.length > 0 ? "" : "Select Groups"}
+            placeholder={
+              selectedGroups.length > 0 ? "" : translations["Select Groups"]
+            }
           />
         </Stack>
       )}

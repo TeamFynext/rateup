@@ -4,25 +4,28 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 
 const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
+  const { translations } = useTranslations();
 
   const handleRefresh = async () => {
     setLoading(true);
     showLoadingToast(
-      "Hold on..Data is refreshing",
+      translations["Hold on..Data is refreshing"],
       "refresh",
       true,
-      "Refreshing",
+      translations["Refreshing"],
     );
     for (const queryKey of queryKeys)
       await queryClient.invalidateQueries({ queryKey: [queryKey] });
     setLoading(false);
     showSuccessToast(
-      "Data Updated Successfully",
+      translations["Data Updated Successfully"],
       "refresh",
       <IconCheck />,
       true,
@@ -30,7 +33,7 @@ const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
   };
 
   return (
-    <Tooltip label="Refresh data" position="top" withArrow>
+    <Tooltip label={translations["Refresh data"]} position="top" withArrow>
       <ActionIcon
         variant="light"
         aria-label="Refresh"

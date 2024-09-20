@@ -1,40 +1,44 @@
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import {
-  IconSend,
-  IconArrowAutofitLeft,
-  IconChevronRight,
-  IconArrowLeft,
-  IconX,
-} from "@tabler/icons-react";
-import {
-  Title,
-  Text,
   Anchor,
+  Flex,
   Group,
   Image,
   NavLink,
-  Flex,
+  Text,
+  Title,
 } from "@mantine/core";
-import { useRouter } from "next/router";
 import { useForm } from "@mantine/form";
-import Link from "next/link";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import {
+  IconArrowAutofitLeft,
+  IconArrowLeft,
+  IconChevronRight,
+  IconSend,
+  IconX,
+} from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useCheckEmailExistMutation } from "../../backend/user/user.query";
+import { showNotification } from "../../utils/auth";
 import {
   useSendResetEmail,
   useSetNewPassword,
 } from "../../utils/auth/resetPassword";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import { ResetSteps } from "../../utils/enums";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import styles from "./AuthForm.module.css";
-import { useCheckEmailExistMutation } from "../../backend/user/user.query";
-import { showNotification } from "../../utils/auth";
 import { rateupLogoUrl } from "../HomePage/constants";
 import {
   ContainedPasswordInput,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
 import ConfirmationModal from "../Modal/ConfirmationModal";
+import styles from "./AuthForm.module.css";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
@@ -43,7 +47,7 @@ const ResetPasswordForm = ({ mode }) => {
     token && token.length > 0 ? ResetSteps.STEP_THREE : mode,
   );
   const [opened, { open, close }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (token && token.length > 0) {
       setPage(ResetSteps.STEP_THREE);
@@ -76,25 +80,27 @@ const ResetPasswordForm = ({ mode }) => {
     validate: {
       password: (value, values) => {
         if (!value) {
-          return "Password is required";
+          return translations["Password is required"];
         }
         if (value.length < 5) {
-          return "Password should be at least 5 characters long";
+          return translations["Password should be at least 5 characters long"];
         }
         if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return "Password should contain at least one letter and one number!";
+          return translations[
+            "Password should contain at least one letter and one number!"
+          ];
         }
         if (values.confirmPassword && value !== values.confirmPassword) {
-          return "Passwords do not match";
+          return translations["Passwords do not match"];
         }
         return null;
       },
       confirmPassword: (value, values) => {
         if (!value) {
-          return "Confirm password is required";
+          return translations["Confirm password is required"];
         }
         if (value !== values.password) {
-          return "Passwords do not match";
+          return translations["Passwords do not match"];
         }
         return null;
       },
@@ -116,13 +122,13 @@ const ResetPasswordForm = ({ mode }) => {
           if (!user?.success) {
             emailForm.setFieldError(
               "email",
-              "User with this email does not exist!",
+              translations["User with this email does not exist!"],
             );
             showNotification(
               "error",
               "red",
               "Error",
-              "User with this email does not exist!",
+              translations["User with this email does not exist!"],
               <IconX size="1rem" />,
             );
             return;
@@ -158,8 +164,8 @@ const ResetPasswordForm = ({ mode }) => {
 
           <Title className={`${styles["login-signup-form-heading"]}`} order={2}>
             {page !== ResetSteps.STEP_THREE
-              ? "Reset your Password!"
-              : "Create new password!"}
+              ? translations["Reset your Password!"]
+              : translations["Create new password!"]}
           </Title>
           <Text
             c="dimmed"
@@ -169,9 +175,15 @@ const ResetPasswordForm = ({ mode }) => {
             style={{ textAlign: "center" }}
           >
             {isEmailPage ? (
-              <>We will send you an email to reset your password.</>
+              <>
+                {
+                  translations[
+                    "We will send you an email to reset your password."
+                  ]
+                }
+              </>
             ) : (
-              <>Enter your new password and confirm </>
+              <>{translations["Enter your new password and confirm"]} </>
             )}
           </Text>
 
@@ -193,20 +205,20 @@ const ResetPasswordForm = ({ mode }) => {
           >
             {isEmailPage ? (
               <ContainedTextField
-                placeholder="Email ID"
+                placeholder={translations["Email ID"]}
                 {...emailForm.getInputProps("email")}
               />
             ) : (
               <>
                 <ContainedPasswordInput
-                  placeholder="Password"
+                  placeholder={translations["Password"]}
                   required
                   {...pwdForm.getInputProps("password")}
                   mt="md"
                 />
 
                 <ContainedPasswordInput
-                  placeholder="Confirm Password"
+                  placeholder={translations["Confirm Password"]}
                   required
                   {...pwdForm.getInputProps("confirmPassword")}
                   mt="md"
@@ -220,7 +232,11 @@ const ResetPasswordForm = ({ mode }) => {
               fullWidth={true}
               type="submit"
               loading={isLoading || checkEmailMutaion?.isPending}
-              title={isEmailPage ? "Continue" : "Change Password"}
+              title={
+                isEmailPage
+                  ? translations["Continue"]
+                  : translations["Change Password"]
+              }
             />
             <Group justify="center" mt="xl" pt="xl">
               <Anchor component="button" size="sm">
@@ -230,7 +246,7 @@ const ResetPasswordForm = ({ mode }) => {
                 >
                   <Group>
                     <IconArrowLeft size="1rem" />
-                    <Text>Go Back to Login</Text>
+                    <Text>{translations["Go Back to Login"]}</Text>
                   </Group>
                 </Link>
               </Anchor>
@@ -249,10 +265,10 @@ const ResetPasswordForm = ({ mode }) => {
             </Link>
           </Flex>
           <Title order={2} className={`${styles["login-signup-form-heading"]}`}>
-            Check your email
+            {translations["Check your email"]}
           </Title>
           <Text style={{ textAlign: "center" }}>
-            A password reset email has been sent to{" "}
+            {translations["A password reset email has been sent to"]}
             <Text span c="blue" inherit>
               {emailTo}
             </Text>{" "}
@@ -271,7 +287,7 @@ const ResetPasswordForm = ({ mode }) => {
             <NavLink
               className={styles["resend-change-email-navlink-component"]}
               component="div"
-              label="Resend or change email"
+              label={translations["Resend or change email"]}
               leftSection={<IconSend size="1rem" stroke={1.5} />}
               rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
               variant="subtle"
@@ -281,7 +297,7 @@ const ResetPasswordForm = ({ mode }) => {
           <Link href="/login" style={{ textDecoration: "none" }}>
             <NavLink
               component="div"
-              label="Login"
+              label={translations["Login"]}
               leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
               variant="subtle"
             />
@@ -291,13 +307,13 @@ const ResetPasswordForm = ({ mode }) => {
       <ConfirmationModal
         opened={opened}
         onConfirm={() => router.push("/login")}
-        confirmLabel="Continue"
+        confirmLabel={translations["Continue"]}
         headerLabel={
           type === "invite"
-            ? "Password Created successfully!  <br/>  Please login with your email and new password."
-            : "Password Updated Successfully!  <br/>  Login with your new password."
+            ? `${translations["Password Created successfully!"]} <br/> ${translations["Please login with your email and new password."]}`
+            : `${translations["Password Updated Successfully!"]}  <br/>  ${translations["Login with your new password."]}`
         }
-        headerTitle="Success"
+        headerTitle={translations["Success"]}
         excludeCancelButton={true}
         onClose={close}
       />

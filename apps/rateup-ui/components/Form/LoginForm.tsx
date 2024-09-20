@@ -8,6 +8,8 @@ import { IconPhone } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
@@ -20,6 +22,7 @@ import PhoneNumberForm from "./phoneNumberForm";
 import { signUpType } from "./SignupForm";
 
 function LoginForm({ setIsLoading, signIn, isLoading }) {
+  const { translations } = useTranslations();
   const loginForm = useForm({
     initialValues: {
       email: "",
@@ -31,26 +34,29 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
       email: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
 
-        if (!value) return "Email is required";
-        else return /^\S+@\S+$/.test(value) ? null : "Invalid email";
+        if (!value) return translations["Email is required"];
+        else
+          return /^\S+@\S+$/.test(value) ? null : translations["Invalid email"];
       },
       password: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
         if (!value) {
-          return "Password is required";
+          return translations["Password is required"];
         }
         if (value.length < 5) {
-          return "Password should be at least 5 characters long";
+          return translations["Password should be at least 5 characters long"];
         }
         if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return "Password should contain at least one letter and one number";
+          return translations[
+            "Password should contain at least one letter and one number"
+          ];
         }
         return null; // Validation passed
       },
       phoneNumber: (value) => {
         if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
         if (!isValidPhoneNumber(value)) {
-          return "Enter a valid phone number";
+          return translations["Enter a valid phone number"];
         } else return null;
       },
     },
@@ -75,7 +81,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
         form={loginForm}
         isLoading={isLoading}
         setSignUpTypeValue={setSignUpTypeValue}
-        title="Login"
+        title={translations["Login"]}
       />
     );
   } else {
@@ -83,12 +89,12 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
       <>
         <TextInput
           classNames={styles}
-          placeholder="Email ID"
+          placeholder={translations["Email ID"]}
           {...loginForm.getInputProps("email")}
         />
         <PasswordInput
           classNames={styles}
-          placeholder="Enter Password"
+          placeholder={translations["Enter Password"]}
           {...loginForm.getInputProps("password")}
         />
         <div className={styles["forgot-password-container"]}>
@@ -96,19 +102,19 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
             className={styles["login-form-forgot-password-link"]}
             href="/login/reset-password"
           >
-            Forgot password?
+            {translations["Forgot password?"]}
           </Link>
         </div>
         <RateupButtonBlue
           type="submit"
-          title="Login"
+          title={translations["Login"]}
           loading={isLoading}
           className={styles["login-signup-form-submit-btn"]}
         />
 
         <GoogleSignInButton
           className={styles["login-signup-with-google-btn"]}
-          buttonText={"Login with Google"}
+          buttonText={translations["Login with Google"]}
         />
         {/* <RateupButtonSecondary
           type="button"
@@ -126,7 +132,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
   return (
     <>
       <Title className={styles["login-signup-form-heading"]} order={2}>
-        Welcome Back
+        {translations["Welcome Back"]}
       </Title>
       <LoginSignupLInks isLogin />
 

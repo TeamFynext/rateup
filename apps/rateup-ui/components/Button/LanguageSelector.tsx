@@ -4,13 +4,15 @@ import { useRouter } from "next/router";
 import { Grid, Menu, Text } from "@mantine/core";
 import { IconLanguage } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useUpdateUserLanguageMutation } from "../../backend/user/user.query";
 
 const LanguageSelector = () => {
   const router = useRouter();
   const [language, setLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const { translations } = useTranslations();
   const updateUserLanguageMutation =
     useUpdateUserLanguageMutation(setIsLoading);
 
@@ -52,13 +54,13 @@ const LanguageSelector = () => {
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item leftSection="🇺🇸" onClick={() => handleLanguageChange("en")}>
-          English
+          {translations["English"]}
         </Menu.Item>
         <Menu.Item leftSection="🇩🇪" onClick={() => handleLanguageChange("de")}>
-          Deutsch
+          {translations["German"]}
         </Menu.Item>
         <Menu.Item leftSection="🇮🇳" onClick={() => handleLanguageChange("hi")}>
-          Hindi
+          {translations["Hindi"]}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

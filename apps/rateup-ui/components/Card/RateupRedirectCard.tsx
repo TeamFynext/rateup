@@ -6,8 +6,12 @@ import {
   Text,
   useMantineTheme,
 } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 export default function RateupRedirectCard({ className = "" }) {
   const theme = useMantineTheme();
+  const { translations } = useTranslations();
   return (
     <Center
       className={className}
@@ -27,7 +31,7 @@ export default function RateupRedirectCard({ className = "" }) {
       >
         <Group gap={0} align="flex-end" justify="center">
           <Text fz={10} mb={2} c={"grey"}>
-            Powered By
+            {translations["Powered By"]}
           </Text>
           <Image
             src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}

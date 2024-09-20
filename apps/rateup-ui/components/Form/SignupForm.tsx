@@ -19,6 +19,8 @@ import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
@@ -37,7 +39,7 @@ export const signUpType = {
 
 function SignupForm({ setIsLoading, signUp, isLoading }) {
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
-
+  const { translations } = useTranslations();
   const phoneInputContainerRef = useRef(null);
 
   const [termsPrivacyAgreed, setTermsPrivacyAgreed] = useState(true);
@@ -54,33 +56,36 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     validate: {
       email: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value) return "Email is required";
-        else return /^\S+@\S+$/.test(value) ? null : "Invalid email";
+        if (!value) return translations["Email is required"];
+        else
+          return /^\S+@\S+$/.test(value) ? null : translations["Invalid email"];
       },
       password: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
         if (!value) {
-          return "Password is required";
+          return translations["Password is required"];
         }
         if (value.length < 5) {
-          return "Password should be at least 5 characters long";
+          return translations["Password should be at least 5 characters long"];
         }
         if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return "Password should contain at least one letter and one number";
+          return translations[
+            "Password should contain at least one letter and one number"
+          ];
         }
         return null; // Validation passed
       },
       name: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
         if (!value.length) {
-          return "Name is required";
+          return translations["Name is required"];
         }
         return null; // Validation passed
       },
       orgName: (value) => {
         if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
         if (!value.length) {
-          return "Organization name is required";
+          return translations["Organization name is required"];
         }
         return null; // Validation passed
       },
@@ -89,7 +94,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         if (!value) return null;
 
         if (!isValidPhoneNumber(value)) {
-          return "Enter a valid phone number";
+          return translations["Enter a valid phone number"];
         } else return null;
       },
     },
@@ -116,7 +121,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     <>
       <RateupButtonSecondary
         type="button"
-        title="SignUp with Email"
+        title={translations["SignUp with Email"]}
         loading={isLoading}
         onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_EMAIL)}
         className={styles["login-signup-form-submit-btn"]}
@@ -147,7 +152,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         form={signUpForm}
         isLoading={isLoading}
         setSignUpTypeValue={setSignUpTypeValue}
-        title="Sign Up"
+        title={translations["Sign Up"]}
       />
     );
   } else if (signUpTypeValue === signUpType.SIGNUP_WITH_EMAIL) {
@@ -157,7 +162,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder="Name"
+            placeholder={translations["Name"]}
             {...signUpForm.getInputProps("name")}
           />
         </Grid.Col>
@@ -165,7 +170,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder="Organization Name"
+            placeholder={translations["Organization Name"]}
             {...signUpForm.getInputProps("orgName")}
           />
         </Grid.Col>
@@ -173,14 +178,14 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder={"Email ID"}
+            placeholder={translations["Email ID"]}
             {...signUpForm.getInputProps("email")}
           />
         </Grid.Col>
         <Grid.Col>
           <PasswordInput
             classNames={styles}
-            placeholder="Enter Password"
+            placeholder={translations["Enter Password"]}
             {...signUpForm.getInputProps("password")}
           />
         </Grid.Col>
@@ -193,7 +198,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
               defaultCountry="IN"
               // international
               countryCallingCodeEditable={false}
-              placeholder="Enter Mobile Number (Optional)"
+              placeholder={translations["Enter Mobile Number (Optional)"]}
               value={signUpForm?.getValues()?.phoneNumber || null}
               {...signUpForm?.getInputProps("phoneNumber")}
               className={styles.inputPhone}
@@ -223,8 +228,14 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             }
             label={
               <>
-                I accept <Link href="/terms-of-service">terms of service</Link>{" "}
-                and <Link href="/privacy-policy">privacy policy</Link>
+                {translations["I accept"]}{" "}
+                <Link href="/terms-of-service">
+                  {translations["terms of service"]}
+                </Link>{" "}
+                {translations["and"]}{" "}
+                <Link href="/privacy-policy">
+                  {translations["privacy policy"]}
+                </Link>
               </>
             }
           />
@@ -236,7 +247,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         >
           <RateupButtonSecondary
             type="button"
-            title="Go Back"
+            title={translations["Go Back"]}
             onClick={() => setSignUpTypeValue("")}
             className={styles["login-signup-form-submit-btn"]}
             leftIcon={<IconChevronLeft size={18} />}
@@ -250,7 +261,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <RateupButtonBlue
             disabled={!termsPrivacyAgreed}
             type="submit"
-            title="Sign Up"
+            title={translations["Sign Up"]}
             loading={isLoading}
             className={styles["login-signup-form-submit-btn"]}
           />
@@ -267,8 +278,8 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           `}
         order={2}
       >
-        <span>SignUp now &</span>
-        <span>Start engaging with your Customers</span>
+        <span>{translations["SignUp now &"]}</span>
+        <span>{translations["Start engaging with your Customers"]}</span>
       </Title>
 
       <LoginSignupLinks isSignup />

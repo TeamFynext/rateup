@@ -1,15 +1,21 @@
 import { Box, Group } from "@mantine/core";
-import styles from "./CreatedSinceText.module.css";
 import { IconClock } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import TimeSinceText from "../TimeSinceText";
+import styles from "./CreatedSinceText.module.css";
 
 function CreatedSinceText({ createdAt }) {
+  const { translations } = useTranslations();
   return (
     <Group className={styles["creation-time-text-and-icon-div"]}>
       <Box className={styles["clock-icon-container"]}>
         <IconClock />
       </Box>
-      <p>Created {<TimeSinceText isoDateString={createdAt} />}</p>
+      <p>
+        {translations["Created"]} {<TimeSinceText isoDateString={createdAt} />}
+      </p>
     </Group>
   );
 }
