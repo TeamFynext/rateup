@@ -1,20 +1,12 @@
-import { ActionIcon, Box, Tooltip } from "@mantine/core";
-import FlowScreensList from "../FlowScreensList";
 import { useContext, useState } from "react";
-import styles from "./EditFlow.module.css";
-import { EditFlowContext } from "./EditFlowContext";
-import { QuestionTypeSelection } from "../../../../Survey/Question/QuestionTypeSelection";
 import { useRouter } from "next/router";
-import {
-  getFlowElementJsonFromQuestion,
-  getScreenObjById,
-  updateFlowJsonNavigationAndDataPassing,
-} from "../../../../../utils/whatsapp/flow.utils";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+
+import { ActionIcon, Box, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
-import { FlowQuestionDetailedView } from "./FlowQuestionDetailedView";
-import { FlowQuestionTypes } from "../../../../../utils/constants";
+
 import { useQuestionDeleteMutation } from "../../../../../backend/surveys/questions/questions.query";
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import {
   QuestionType,
   SurveyType,
@@ -23,18 +15,26 @@ import {
   WaFlowFormNonInputElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
-import { createBlankQuestion } from "../../../../../utils/questions";
-import { FlowNonQuestionDetailedView } from "./FlowNonQuestionDetailedView";
+import { WaFlowJson } from "../../../../../types/global";
+import { FlowQuestionTypes } from "../../../../../utils/constants";
 import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
+import { createBlankQuestion } from "../../../../../utils/questions";
 import {
   getAllIdsFromFlowJson,
+  getFlowElementJsonFromQuestion,
   getFlowFormElementById,
   getQuestionFromFlowFormElementName,
   getQuestionIdFromFlowFormElementName,
+  getScreenObjById,
+  updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
+import { QuestionTypeSelection } from "../../../../Survey/Question/QuestionTypeSelection";
 import { PreviewPanel } from "../../Preview/PreviewPanel";
-import { WaFlowJson } from "../../../../../types/global";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import FlowScreensList from "../FlowScreensList";
+import styles from "./EditFlow.module.css";
+import { EditFlowContext } from "./EditFlowContext";
+import { FlowNonQuestionDetailedView } from "./FlowNonQuestionDetailedView";
+import { FlowQuestionDetailedView } from "./FlowQuestionDetailedView";
 
 enum EditFlowRightPanel {
   ElementEditor = "element-editor",
@@ -229,6 +229,7 @@ function EditFlow() {
         style={{
           flex: 6,
           minWidth: "300px",
+          overflow: "auto",
         }}
       >
         {activeEditor === EditFlowRightPanel.TypeSelection && (
