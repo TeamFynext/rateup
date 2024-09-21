@@ -3,25 +3,30 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Checkbox,
   FileButton,
   Flex,
   Group,
+  Image,
   Select,
   Stack,
   Switch,
   Text,
 } from "@mantine/core";
-import { UseFormReturnType } from "@mantine/form";
-import { useDisclosure, useHover } from "@mantine/hooks";
+import { useForm, UseFormReturnType } from "@mantine/form";
+import { getHotkeyHandler, useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { z } from "zod";
 
 import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums";
 import { useResponses } from "@/backend/surveys/response/response.query";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
+  RateupFileUploadButton,
 } from "@/components/Button/RateupButtons";
 import { useImageStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import {
@@ -35,7 +40,13 @@ import { ImageCropModal } from "@/components/Modal/ImageCropModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import SurveyContext from "@/context/SurveyContext";
-import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants";
+import {
+  DEFAULT_IMAGE_BASE64_START,
+  MAX_DESCRIPTION_COUNT,
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+  MAX_METADATA_COUNT,
+} from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
@@ -58,7 +69,6 @@ export function ChoicesCreator({
   image = false,
   surveyType,
 }: ChoicesCreatorProps) {
-  const [newChoice, setNewChoice] = useState<string>("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const [choiceWeightage, setChoiceWeightage] = useState<NPSWeightage>(
     NPSWeightage.PROMOTER,
@@ -77,6 +87,37 @@ export function ChoicesCreator({
   ] = useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   const buttonRef = useRef<HTMLButtonElement>();
+  const choiceResetRef = useRef<() => void>(null);
+  const choiceSchema = z.object({
+    title: z
+      .string()
+      .trim()
+      .min(1)
+      .max(30)
+      .refine((title) => {
+        const isDuplicate = choices.some((c) => {
+          const choiceValue = image
+            ? c?.value?.value.replace(/\s+/g, "")
+            : surveyType !== SurveyType.Web
+              ? c?.value?.title?.replace(/\s+/g, "")
+              : c?.value?.replace(/\s+/g, "");
+          return choiceValue === title.replace(/\s+/g, "");
+        });
+        return !isDuplicate;
+      }, "Option already exists"),
+    description: z.string().trim().max(MAX_DESCRIPTION_COUNT).optional(),
+    metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
+    image: z.string().optional().nullable(),
+  });
+  const choiceForm = useForm<z.infer<typeof choiceSchema>>({
+    initialValues: {
+      title: "",
+      description: "",
+      metadata: "",
+      image: "",
+    },
+    validate: zodResolver(choiceSchema),
+  });
 
   const choices = form.values.choices?.[selectedLanguage] || [];
   const features = form.values.features?.[selectedLanguage] || {
@@ -98,30 +139,21 @@ export function ChoicesCreator({
   }, [isSubmited]);
 
   const handleAddChoice = async () => {
+    const { hasErrors } = choiceForm.validate();
+    if (hasErrors) return;
     try {
-      if (newChoice.trim().length === 0) return setInputError("Text required");
-      if (maxCharCount && newChoice.length > maxCharCount)
-        return setInputError("Max character limit reached");
       if (choiceWeightage.trim().length === 0)
-        return setInputError("Text required");
-      if (
-        choices.some(
-          (c) =>
-            (image
-              ? c?.value?.value.replace(/\s+/g, "")
-              : c?.value?.replace(/\s+/g, "")) ===
-            newChoice.replace(/\s+/g, ""),
-        )
-      )
-        return setInputError("Option already exist");
+        return choiceForm.setFieldError("title", "Text required");
       let choiceObj = {
-        value: newChoice,
+        value:
+          surveyType !== SurveyType.Web
+            ? choiceForm.getValues()
+            : choiceForm.getValues().title,
         weightage:
           form.values.type === QuestionType.CustomNPS
             ? choiceWeightage
             : undefined,
       };
-      setInputError("");
       if (image) {
         if (!selectedImageFile) return setFileError("select image");
         setFileUploadLoading(true);
@@ -131,7 +163,7 @@ export function ChoicesCreator({
           ...form.values.choices,
           [selectedLanguage]: [
             ...choices,
-            { value: { value: newChoice, image: fileKey } },
+            { value: { value: choiceForm.getValues().title, image: fileKey } },
           ],
         });
         setSelectedImageFile(null);
@@ -142,10 +174,10 @@ export function ChoicesCreator({
           [selectedLanguage]: [...choices, choiceObj],
         });
       }
-      setNewChoice("");
+      choiceForm.reset();
       setChoiceWeightage(NPSWeightage.PROMOTER);
     } catch (error) {
-      setNewChoice("");
+      choiceForm.reset();
       setFileUploadLoading(false);
     }
   };
@@ -157,15 +189,6 @@ export function ChoicesCreator({
       [selectedLanguage]: choices.filter((c) => c !== choice),
     });
   };
-
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === "Enter") {
-        handleAddChoice();
-      }
-    },
-    [handleAddChoice],
-  );
 
   const onChangePicture = (event: File | null) => {
     if (!event) return;
@@ -185,6 +208,25 @@ export function ChoicesCreator({
     setFileError("");
   };
 
+  const handleFileChange = async (file: File) => {
+    try {
+      if (!file) return;
+      if (file.size > 300000)
+        return choiceForm.setFieldError("image", "max image size is 300KB");
+      choiceForm.clearFieldError("image");
+      const base64String = await FileConverter.fileToBase64(file);
+      choiceForm.setFieldValue("image", base64String);
+    } catch (error) {
+      showErrorToast(
+        "Error converting file to Base64:" + JSON.stringify(error),
+        "file-converting",
+      );
+    }
+  };
+  const clearFile = () => {
+    choiceForm.setFieldValue("image", null);
+    choiceResetRef.current?.();
+  };
   return (
     <>
       <Stack
@@ -209,6 +251,7 @@ export function ChoicesCreator({
             image={image}
             buttonRef={buttonRef}
             maxCharCount={maxCharCount}
+            surveyType={surveyType}
           />
         ))}
       </Stack>
@@ -217,28 +260,66 @@ export function ChoicesCreator({
         <Group
           className={maxCharCount && inputStyles.lengthTrackerParent}
           mt={"xs"}
+          onKeyDown={getHotkeyHandler([["Enter", handleAddChoice]])}
         >
-          <ContainedTextField
-            placeholder="Enter choice here"
-            value={newChoice}
-            onChange={(e) => {
-              setInputError("");
-              setNewChoice(e.currentTarget.value);
-            }}
-            onKeyDown={handleKeyDown}
+          <Stack
             style={{
               flexGrow: 1,
             }}
-            rightSection={
-              maxCharCount && (
-                <LengthTracker
-                  length={newChoice.length}
-                  maxValue={maxCharCount}
+            gap={4}
+          >
+            <ContainedTextField
+              placeholder="Enter title here"
+              label={"Title"}
+              withAsterisk
+              rightSection={
+                maxCharCount && (
+                  <LengthTracker
+                    length={choiceForm.getValues().title?.length}
+                    maxValue={maxCharCount}
+                  />
+                )
+              }
+              {...choiceForm.getInputProps("title")}
+            />
+            {surveyType !== SurveyType.Web && (
+              <>
+                <ContainedTextField
+                  placeholder="Enter description here"
+                  label={"Description"}
+                  rightSection={
+                    MAX_DESCRIPTION_COUNT && (
+                      <LengthTracker
+                        length={choiceForm.getValues().description?.length}
+                        maxValue={MAX_DESCRIPTION_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("description")}
                 />
-              )
-            }
-            error={inputError}
-          />
+                <ContainedTextField
+                  placeholder="Enter metadata here"
+                  label={"Metadata"}
+                  rightSection={
+                    MAX_METADATA_COUNT && (
+                      <LengthTracker
+                        length={choiceForm.getValues().metadata?.length}
+                        maxValue={MAX_METADATA_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("metadata")}
+                />
+                <RateupFileUploadButton
+                  clearFile={clearFile}
+                  handleFileChange={handleFileChange}
+                  resetRef={resetRef}
+                  fileSrc={choiceForm.getValues().image}
+                  error={choiceForm.errors.image as string}
+                />
+              </>
+            )}
+          </Stack>
           {form?.values?.type === QuestionType.CustomNPS && (
             <Select
               data={Object.values(NPSWeightage)}
@@ -370,7 +451,30 @@ export function ChoicesCreator({
     </>
   );
 }
+class FileConverter {
+  public static async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
 
+      reader.onload = () => {
+        let base64URL = reader.result as string;
+
+        const base64Data = base64URL.replace(
+          /^data:image\/[a-zA-Z]+;base64,/,
+          "",
+        );
+
+        resolve(base64Data);
+      };
+
+      reader.onerror = (error) => {
+        reject(error);
+      };
+
+      reader.readAsDataURL(file); // Converts the file to base64 URL
+    });
+  }
+}
 interface ChoiceProps {
   choice: Choice;
   onDelete: () => void;
@@ -379,6 +483,7 @@ interface ChoiceProps {
   image?;
   buttonRef?;
   maxCharCount?: number;
+  surveyType;
 }
 function Choice({
   choice,
@@ -388,13 +493,11 @@ function Choice({
   image,
   buttonRef,
   maxCharCount,
+  surveyType,
 }: ChoiceProps) {
-  const { hovered, ref } = useHover<HTMLInputElement>();
   const [opened, { open, close }] = useDisclosure(false);
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
-  const [choiceValue, setChoiceValue] = useState(choice?.value);
-  const [error, setError] = useState("");
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>();
   const [selectedInputImage, setSelectedInputImage] = useState({
@@ -412,6 +515,7 @@ function Choice({
   const { data: responses } = useResponses(surveyTeamMapId);
   const resetRef = useRef<() => void>(null);
   let newWeightage = choice?.weightage;
+  const choiceResetRef = useRef<() => void>(null);
 
   useEffect(() => {
     if (form?.values?.choices && isSubmited) {
@@ -419,10 +523,6 @@ function Choice({
       setIsSubmited(false);
     }
   }, [isSubmited]);
-
-  useEffect(() => {
-    setChoiceValue(choice?.value);
-  }, [choice?.value]);
 
   const onChangePicture = (event: File | null) => {
     if (!event) return;
@@ -456,68 +556,113 @@ function Choice({
     });
   };
 
+  let choices = form.values.choices?.[selectedLanguage];
   const handleEditChoice = async () => {
-    const isExist = form.values.choices?.[selectedLanguage]?.some((c, i) => {
-      if (i === index) return;
-      return (
-        (image ? c.value?.value?.trim() : c.value?.trim()) ==
-        choiceValue?.trim()
-      );
-    });
-    if (isExist) {
-      setError("Choice Already exist");
-      return;
-    } else {
-      if (maxCharCount && choiceValue.length > maxCharCount)
-        return setError("Max character limit reached");
-      setError("");
+    const { hasErrors } = choiceForm.validate();
+    if (hasErrors) return;
+    if (image) {
+      let fileKey = "";
 
-      if (image) {
-        let fileKey = "";
-
-        if (selectedImageFile) {
-          setFileUploadLoading(true);
-          fileKey = await uploadFile(selectedImageFile);
-          setFileUploadLoading(false);
-        }
-        const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
-          (c, i) => {
-            if (i == index)
-              return {
-                ...c,
-                value: {
-                  value: choiceValue,
-                  image: fileKey ? fileKey : c?.value?.image,
-                },
-              };
-            else return c;
-          },
-        );
-        form.setFieldValue("choices", {
-          ...form.values.choices,
-          [selectedLanguage]: updatedChoices,
-        });
-        setSelectedImageFile(null);
-      } else {
-        const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
-          (c, i) => {
-            if (i == index) return { ...c, value: choiceValue };
-            else return c;
-          },
-        );
-
-        form.setFieldValue("choices", {
-          ...form.values.choices,
-          [selectedLanguage]: updatedChoices,
-        });
+      if (selectedImageFile) {
+        setFileUploadLoading(true);
+        fileKey = await uploadFile(selectedImageFile);
+        setFileUploadLoading(false);
       }
-      setIsSubmited(true);
-      closeEditModal();
+      const updatedChoices = choices?.map((c, i) => {
+        if (i == index)
+          return {
+            ...c,
+            value: {
+              value: choiceForm.getValues().title,
+              image: fileKey ? fileKey : c?.value?.image,
+            },
+          };
+        else return c;
+      });
+
+      form.setFieldValue("choices", {
+        ...form.values.choices,
+        [selectedLanguage]: updatedChoices,
+      });
+      setSelectedImageFile(null);
+    } else {
+      let choiceObj = {
+        value:
+          surveyType !== SurveyType.Web
+            ? choiceForm.getValues()
+            : choiceForm.getValues().title,
+      };
+      const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
+        (c, i) => {
+          if (i == index) return { ...c, ...choiceObj };
+          else return c;
+        },
+      );
+      form.setFieldValue("choices", {
+        ...form.values.choices,
+        [selectedLanguage]: updatedChoices,
+      });
+    }
+    setIsSubmited(true);
+    closeEditModal();
+  };
+  const choiceSchema = z.object({
+    title: z
+      .string()
+      .trim()
+      .min(1)
+      .max(30)
+      .refine((title) => {
+        const isDuplicate = choices.some((c, i) => {
+          const choiceValue = image
+            ? c?.value?.value.replace(/\s+/g, "")
+            : surveyType !== SurveyType.Web
+              ? c?.value?.title?.replace(/\s+/g, "")
+              : c?.value?.replace(/\s+/g, "");
+          return i !== index && choiceValue === title.replace(/\s+/g, "");
+        });
+
+        return !isDuplicate;
+      }, "Option already exists"),
+    description: z.string().trim().max(MAX_DESCRIPTION_COUNT).optional(),
+    metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
+    image: z.string().optional().nullable(),
+  });
+
+  const choiceForm = useForm<z.infer<typeof choiceSchema>>({
+    initialValues: {
+      title: "",
+      description: "",
+      metadata: "",
+      image: "",
+    },
+    validate: zodResolver(choiceSchema),
+  });
+  useEffect(() => {
+    if (typeof choice.value === "object") choiceForm.setValues(choice.value);
+    else choiceForm.setValues({ title: choice.value });
+  }, []);
+  const clearFile = () => {
+    choiceForm.setFieldValue("image", null);
+    choiceResetRef.current?.();
+  };
+  const handleFileChange = async (file: File) => {
+    try {
+      if (!file) return;
+      if (file.size > 300000)
+        return choiceForm.setFieldError("image", "max image size is 300KB");
+      choiceForm.clearFieldError("image");
+      const base64String = await FileConverter.fileToBase64(file);
+      choiceForm.setFieldValue("image", base64String);
+    } catch (error) {
+      showErrorToast(
+        "Error converting file to Base64:" + JSON.stringify(error),
+        "file-converting",
+      );
     }
   };
-
   return (
-    <Group ref={ref}>
+    <Group>
       <ImageCropModal
         opened={openedCropDialog}
         onclose={closeCropDialog}
@@ -529,7 +674,9 @@ function Choice({
       {form.values.type == QuestionType.CustomNPS ? (
         <Flex gap={"xs"} w={"85%"}>
           <Badge color={getNpsColor(choice.weightage)} mt={"5px"}></Badge>
-          <Text w={"85%"}>{choice.value}</Text>
+          <Text w={"85%"}>
+            {typeof choice.value !== "object" && choice.value}
+          </Text>
           <Select
             data={Object.values(NPSWeightage)}
             value={newWeightage}
@@ -545,6 +692,39 @@ function Choice({
             }}
           />
         </Flex>
+      ) : typeof choice.value === "object" ? (
+        <Group
+          style={{
+            flexShrink: 1,
+            flexGrow: 1,
+          }}
+        >
+          <Checkbox checked={false} readOnly />
+          {choice.value?.image ? (
+            <Image
+              src={`${DEFAULT_IMAGE_BASE64_START}${choice.value?.image}`}
+              h={30}
+              w={30}
+            />
+          ) : (
+            <Box h={30} w={30} />
+          )}
+          <Box
+            style={{
+              flexGrow: 1,
+            }}
+          >
+            <>
+              <Text>Title: {choice.value?.title}</Text>
+              {choice.value?.description && (
+                <Text>Description: {choice.value?.description}</Text>
+              )}
+              {choice.value?.metadata && (
+                <Text>Metadata: {choice.value?.metadata}</Text>
+              )}
+            </>
+          </Box>
+        </Group>
       ) : (
         <Checkbox
           style={{
@@ -578,23 +758,64 @@ function Choice({
         centered
       >
         <Stack justify="center">
-          <ContainedTextArea
-            value={choiceValue}
-            onChange={(event) => {
-              setError("");
-              setChoiceValue(event.target.value);
+          <Stack
+            style={{
+              flexGrow: 1,
             }}
-            error={error}
-            autosize
-            rightSection={
-              maxCharCount && (
-                <LengthTracker
-                  length={choiceValue.length}
-                  maxValue={maxCharCount}
+            gap={4}
+          >
+            <ContainedTextField
+              placeholder="Enter title here"
+              label={"Title"}
+              withAsterisk
+              rightSection={
+                maxCharCount && (
+                  <LengthTracker
+                    length={choiceForm.getValues().title?.length}
+                    maxValue={maxCharCount}
+                  />
+                )
+              }
+              {...choiceForm.getInputProps("title")}
+            />
+            {surveyType !== SurveyType.Web && (
+              <>
+                <ContainedTextField
+                  placeholder="Enter description here"
+                  label={"Description"}
+                  rightSection={
+                    MAX_DESCRIPTION_COUNT && (
+                      <LengthTracker
+                        length={choiceForm.getValues().description?.length}
+                        maxValue={MAX_DESCRIPTION_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("description")}
                 />
-              )
-            }
-          />
+                <ContainedTextField
+                  placeholder="Enter metadata here"
+                  label={"Metadata"}
+                  rightSection={
+                    MAX_METADATA_COUNT && (
+                      <LengthTracker
+                        length={choiceForm.getValues().metadata?.length}
+                        maxValue={MAX_METADATA_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("metadata")}
+                />
+                <RateupFileUploadButton
+                  clearFile={clearFile}
+                  handleFileChange={handleFileChange}
+                  resetRef={resetRef}
+                  fileSrc={choiceForm.getValues().image}
+                  error={choiceForm.errors.image as string}
+                />
+              </>
+            )}
+          </Stack>
           {image && (
             <Stack gap={0} mt={fileError && "lg"}>
               <FileButton
