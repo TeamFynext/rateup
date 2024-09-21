@@ -59,6 +59,12 @@ const questionCore = {
               value: z.string(),
               image: z.string(),
             }),
+            z.object({
+              title: z.string(),
+              description: z.string(),
+              metadata: z.string(),
+              image: z.string(),
+            }),
           ]),
           weightage: z.nativeEnum(NPSWeightage).optional(),
         }),
