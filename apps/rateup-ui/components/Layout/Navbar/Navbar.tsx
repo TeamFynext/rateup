@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import { Breadcrumbs, Flex, Group, Text } from "@mantine/core";
 import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import LanguageSelector from "../../Button/LanguageSelector";
@@ -15,6 +17,7 @@ import styles from "./Navbar.module.css";
 export const Navbar = () => {
   const router = useRouter();
   const { pathname, query } = router;
+  const { translations } = useTranslations();
   let pathParts = pathname.split("/").filter((path) => path);
   const routeParams = useRouteParams();
   const { data: subscription, isPending } = useSubscription();
@@ -76,7 +79,7 @@ export const Navbar = () => {
         {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
           <ExpiryComponent expiryDate={subscription?.expiresAt}>
             <RateupButtonPrimary
-              title="Upgrade Now"
+              title={translations["Upgrade Now"]}
               variant="gradient"
               leftIcon={<IconCrown />}
               gradient={{ from: "#FDBD3A", to: "#F99A21" }}

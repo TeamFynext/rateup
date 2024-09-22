@@ -1,18 +1,22 @@
-import { Paper, Table, Text } from "@mantine/core";
 import { useState } from "react";
-import RateupLoader from "../../Loaders/RateupLoader";
+
+import { Paper, Table, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useDeleteMenuItemMutation,
   useItemsByCategoryId,
   useUpdateMenuItemMutation,
 } from "../../../backend/menu/item/mItem.query";
-import { CreateMenuItemModal } from "../createMenuItem";
 import { MenuItemPriceType } from "../../../types/enums";
-import { CategoryCardHeader } from "./CategoryCardHeader";
+import RateupLoader from "../../Loaders/RateupLoader";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import TableRow from "./table/TableRow";
+import { CreateMenuItemModal } from "../createMenuItem";
+import { CategoryCardHeader } from "./CategoryCardHeader";
 import SortDrawer from "./sortDrawer/SortDrawer";
+import TableRow from "./table/TableRow";
 
 const tableColumns = [
   "image",
@@ -44,6 +48,7 @@ export function CategoryCard({
   const [createMenuItemModalOpened, { close, open }] = useDisclosure(false);
   const [swapOrderOpened, { close: closeSwapOrder, toggle: toggleSwapOrder }] =
     useDisclosure(false);
+  const { translations } = useTranslations();
   const [
     swapOrderCategoryOpened,
     { close: closeSwapOrderCategory, toggle: toggleSwapOrderCategory },
@@ -167,7 +172,7 @@ export function CategoryCard({
               <Table.Tr>
                 <Table.Td colSpan={tableColumns?.length}>
                   <Text fw={500} ta="center" c={"dimmed"}>
-                    No Items
+                    {translations["No Items"]}
                   </Text>
                 </Table.Td>
               </Table.Tr>

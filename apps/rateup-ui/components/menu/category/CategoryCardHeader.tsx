@@ -7,6 +7,9 @@ import {
   IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
@@ -25,7 +28,7 @@ export function CategoryCardHeader({
   toggleSwapOrder,
 }: CategoryCardHeaderProps) {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   return (
     <Group
       justify="space-between"
@@ -45,15 +48,15 @@ export function CategoryCardHeader({
           forDeleteFunctionality
           opened={dialogOpened}
           onClose={closeDialog}
-          headerLabel="Are you sure to delete this category?"
-          headerTitle="Delete Category?"
-          confirmLabel="Delete"
+          headerLabel={translations["Are you sure to delete this category?"]}
+          headerTitle={translations["Delete Category?"]}
+          confirmLabel={translations["Delete"]}
           onConfirm={(e) => {
             notifications.show({
               id: "delete-data-menu-category",
               loading: true,
-              title: "Deleting category..",
-              message: `Hold on, category is getting deleted...`,
+              title: translations["Deleting category.."],
+              message: translations["Hold on, category is getting deleted..."],
               autoClose: false,
               withCloseButton: false,
             });
@@ -68,16 +71,22 @@ export function CategoryCardHeader({
           onClick={openCreateItem}
           radius={"lg"}
         >
-          Add
+          {translations["Add"]}
         </Button>
-        <ActionIconCommon handleClick={() => handleEdit(category)} label="Edit">
+        <ActionIconCommon
+          handleClick={() => handleEdit(category)}
+          label={translations["Edit"]}
+        >
           <IconEdit size={18} />
         </ActionIconCommon>
-        <ActionIconCommon handleClick={toggle} label="Delete">
+        <ActionIconCommon handleClick={toggle} label={translations["Delete"]}>
           <IconTrash size={18} />
         </ActionIconCommon>
         <Stack pr={"sm"}>
-          <ActionIconCommon handleClick={toggleSwapOrder} label="Swap Order">
+          <ActionIconCommon
+            handleClick={toggleSwapOrder}
+            label={translations["Swap Order"]}
+          >
             <IconReplace size={18} />
           </ActionIconCommon>
         </Stack>

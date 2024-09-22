@@ -1,5 +1,9 @@
-import { SelectProps, Text, Skeleton, Card, Group } from "@mantine/core";
 import { useEffect } from "react";
+
+import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
@@ -23,7 +27,7 @@ export function TeamSelector({
     isError,
     error,
   } = useTeamsByUser();
-
+  const { translations } = useTranslations();
   useEffect(() => {
     // Setting the default teamId to the first team in the list
     if (value) return;
@@ -34,7 +38,7 @@ export function TeamSelector({
     }
   }, [teamRes, value]);
   if (isError) {
-    return <Text>Something went wrong!</Text>;
+    return <Text>{translations["Something went wrong!"]}</Text>;
   }
   if (teamsLoading) {
     return (
@@ -48,13 +52,14 @@ export function TeamSelector({
   }
   const teams = teamRes?.data;
   if (!teams) {
-    return <Text>No teams found!</Text>;
+    return <Text>{translations["No teams found!"]}</Text>;
   }
   const teamOptions = teams.map((team) => ({
     value: team.id,
     label: team.name,
   }));
-  if (enableAll) teamOptions.unshift({ value: "all", label: "All Teams" });
+  if (enableAll)
+    teamOptions.unshift({ value: "all", label: translations["All Teams"] });
 
   return (
     <ContainedSelection

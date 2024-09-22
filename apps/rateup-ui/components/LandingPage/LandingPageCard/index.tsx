@@ -3,12 +3,15 @@ import { useRouter } from "next/router";
 
 import { Badge, Box, Group } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
 import styles from "./LandingPageCard.module.css";
 import MoreOptionsMenu from "./MoreOptionsMenu";
 
 function LandingPageCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
+  const { translations } = useTranslations();
   const handleCardClick = useCallback(() => {
     router.push({
       pathname: `/dashboard/landingPages/${shortUrlId}`,
@@ -28,7 +31,7 @@ function LandingPageCard({ name, shortUrlId, id, createdAt, isPublished }) {
         <Badge
           className={`${isPublished ? styles["active-badge"] : styles["inactive-badge"]}`}
         >
-          {isPublished ? "Active" : "Inactive"}
+          {isPublished ? translations["Active"] : translations["Inactive"]}
         </Badge>
       </Group>
     </Box>

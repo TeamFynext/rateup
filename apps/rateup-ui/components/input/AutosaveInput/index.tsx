@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { IconChevronRight, IconPencil } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
 import { lexend } from "@/utils/fonts";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
@@ -38,7 +39,7 @@ function AutosaveInput({
   const [inputState, setInputState] = useState(value);
   const [isInputBeingEdited, setIsInputBeingEdited] = useState(false);
   const [isSavingText, setIsSavingText] = useState(false);
-
+  const { translations } = useTranslations();
   const inputRef = useRef(null);
 
   const handleEditBtnClick = useCallback(() => {
@@ -52,10 +53,11 @@ function AutosaveInput({
         setIsSavingText(true);
         try {
           await onSave(inputState, name);
-          if (showToasts) showSuccessToast("Saved Changes");
+          if (showToasts) showSuccessToast(translations["Saved Changes"]);
         } catch (err) {
           setInputState(value);
-          if (showToasts) showErrorToast("Failed to Save Changes");
+          if (showToasts)
+            showErrorToast(translations["Failed to Save Changes"]);
         }
         setIsSavingText(false);
         showSuccessToast;

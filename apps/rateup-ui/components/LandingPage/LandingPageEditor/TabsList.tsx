@@ -1,8 +1,11 @@
 import { Tabs, TabsList, TabsTab } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import styles from "../../Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
 
 function TabsListComp({ value, onChange }) {
+  const { translations } = useTranslations();
   return (
     <Tabs
       value={value}
@@ -11,9 +14,9 @@ function TabsListComp({ value, onChange }) {
       className="tabs-list-comp-tabs"
     >
       <TabsList>
-        <TabsTab value="edit">Edit</TabsTab>
-        <TabsTab value="share">Share</TabsTab>
-        <TabsTab value="stats">Stats</TabsTab>
+        <TabsTab value="edit">{translations["Edit"]}</TabsTab>
+        <TabsTab value="share">{translations["Share"]}</TabsTab>
+        <TabsTab value="stats">{translations["Stats"]}</TabsTab>
       </TabsList>
     </Tabs>
   );

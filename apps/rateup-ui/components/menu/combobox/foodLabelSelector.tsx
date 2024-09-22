@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   CheckIcon,
   Combobox,
@@ -10,7 +12,9 @@ import {
   Text,
   useCombobox,
 } from "@mantine/core";
-import { useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { menuLabelWithText } from "../util/menuLabelData";
 
 export function FoodLabelSelector({ form }) {
@@ -20,7 +24,7 @@ export function FoodLabelSelector({ form }) {
   });
 
   const [search, setSearch] = useState("");
-
+  const { translations } = useTranslations();
   const handleValueSelect = (val: string) => {
     form.setValues((prevValues) => {
       const updatedFoodLabels = prevValues?.foodLabels?.includes(val)
@@ -83,7 +87,7 @@ export function FoodLabelSelector({ form }) {
           radius={"12px"}
           label={
             <Text c={"var(--mantine-color-gray-7)"} fz={"xs"}>
-              Allergen Info
+              {translations["Allergen Info"]}
             </Text>
           }
         >
@@ -94,7 +98,7 @@ export function FoodLabelSelector({ form }) {
                 onFocus={() => combobox.openDropdown()}
                 onBlur={() => combobox.closeDropdown()}
                 value={search}
-                placeholder="Search Values"
+                placeholder={translations["Search Values"]}
                 onChange={(event) => {
                   combobox.updateSelectedOptionIndex();
                   setSearch(event.currentTarget.value);
@@ -121,7 +125,9 @@ export function FoodLabelSelector({ form }) {
             {options.length > 0 ? (
               options
             ) : (
-              <Combobox.Empty>Nothing found...</Combobox.Empty>
+              <Combobox.Empty>
+                {translations["Nothing found..."]}
+              </Combobox.Empty>
             )}
           </Combobox.Options>
         </ScrollAreaAutosize>

@@ -3,6 +3,8 @@ import { useCallback, useRef } from "react";
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateLinktreeMutation,
   useUpdateLinktreeMutation,
@@ -17,6 +19,7 @@ function CreateLinktreeModal({
   shortUrlId,
   initialName,
 }) {
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       name: initialName || "",
@@ -26,7 +29,9 @@ function CreateLinktreeModal({
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, length should be greater than 2 characters",
+          : translations[
+              "Name should be alphanumeric, length should be greater than 2 characters"
+            ],
     },
   });
 
@@ -63,8 +68,8 @@ function CreateLinktreeModal({
       onClose={onClose}
       title={
         mode === "create"
-          ? "Create Quick Access Link"
-          : "Rename Quick Access Link"
+          ? translations["Create Quick Access Link"]
+          : translations["Rename Quick Access Link"]
       }
       centered
       classNames={{
@@ -85,8 +90,8 @@ function CreateLinktreeModal({
         >
           <TextInput
             className={styles["name-text-input"]}
-            label="Name"
-            placeholder="Enter name of Quick Access Link"
+            label={translations["Name"]}
+            placeholder={translations["Enter name of Quick Access Link"]}
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
           />
@@ -102,10 +107,12 @@ function CreateLinktreeModal({
           onClick={handleCancelBtnClick}
           className={modalStyles["cancel-btn"]}
         >
-          Cancel
+          {translations["Cancel"]}
         </Button>
         <Button onClick={handleCreateLinkBtnClick}>
-          {mode === "create" ? "Create" : "Save changes"}
+          {mode === "create"
+            ? translations["Create"]
+            : translations["Save changes"]}
         </Button>
       </Box>
     </Modal>
