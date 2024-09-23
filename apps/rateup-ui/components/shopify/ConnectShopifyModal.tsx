@@ -3,10 +3,13 @@ import { useState } from "react";
 import { Stack } from "@mantine/core";
 import { API_URL } from "utils/constants";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ConnectShopifyModal = ({ opened, close }) => {
+  const { translations } = useTranslations();
   const [shop, setShop] = useState("");
   const [error, setError] = useState("");
   const handleShopifyInstallation = async () => {
@@ -31,15 +34,15 @@ const ConnectShopifyModal = ({ opened, close }) => {
       onClose={close}
       title=""
       onSubmit={handleShopifyInstallation}
-      buttonTitle="Connect"
+      buttonTitle={translations["Connect"]}
       includeCancelButton
       centered
       size="md"
     >
       <Stack>
         <ContainedTextField
-          label={"Shopify Store name"}
-          placeholder="example.myshopify.com"
+          label={translations["Shopify Store name"]}
+          placeholder={translations["example.myshopify.com"]}
           value={shop}
           onChange={(e) => {
             setError("");

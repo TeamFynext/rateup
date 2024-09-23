@@ -11,6 +11,7 @@ import {
   ShopifySurvey,
 } from "@/types/global";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import useTranslations from "@/dictionaries/useTranslation";
 import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { shopifyEventData } from "@/utils/constants";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
@@ -38,7 +39,7 @@ const ShopifySchedules = ({
   const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] =
     useState<ShopifySurvey>(null);
   const [opened, { open, close }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   const templateAndteam = {
     templateName: waTemplates?.find(
       (t) => t.id === selectedShopifySurveyEvent?.waTemplateId,
@@ -54,16 +55,16 @@ const ShopifySchedules = ({
   };
 
   const columns = [
-    { key: "phone", value: "Customer Phone Number" },
-    { key: "scheduleTime", value: "Scheduled At" },
-    { key: "status", value: "Status" },
+    { key: "phone", value: translations["Customer Phone Number"] },
+    { key: "scheduleTime", value: translations["Scheduled At"] },
+    { key: "status", value: translations["Status"] },
     {
       key: "event_details",
       value: "Event Details",
       renderCell: (value) => (
         <RateupButtonSecondary
           variant="light"
-          title="view"
+          title={translations["view"]}
           size="xs"
           onClick={() => {
             setSelectedShopifySurveyEvent(value);
@@ -91,7 +92,7 @@ const ShopifySchedules = ({
   return (
     <Stack p={"sm"} mt={"lg"}>
       <Group>
-        <Title order={3}>Schedules</Title>
+        <Title order={3}>{translations["Schedules"]}</Title>
         <RefreshButton queryKeys={["shopifySchedules"]} />
       </Group>
       <PaperLayout>
@@ -114,11 +115,12 @@ const EventDetailsModal = ({
   shopifySurvey,
   templateAndTeam,
 }) => {
+  const { translations } = useTranslations();
   return (
     <FormModalLayout opened={opened} onClose={close} title="" centered>
       <Stack>
         <Title order={4}>
-          Event :{" "}
+          {translations["Event :"]}{" "}
           {
             shopifyEventData.find(
               (event) => event.value == shopifySurvey?.event,
@@ -126,7 +128,7 @@ const EventDetailsModal = ({
           }
         </Title>
         <Text>
-          WhatsApp Template :{" "}
+          {translations["WhatsApp Template :"]}{" "}
           <Anchor
             href={`/dashboard/whatsapp/templates/${shopifySurvey?.waTemplateId}`}
             component={Link}
@@ -135,17 +137,26 @@ const EventDetailsModal = ({
           </Anchor>
         </Text>
         <Text>
-          Scheduled To: Send {shopifySurvey?.sendAfter} after event happened
+          {translations["Scheduled To: Send"]} {shopifySurvey?.sendAfter}{" "}
+          {translations[1]}
         </Text>
-        <Text>Team : {templateAndTeam?.teamName}</Text>
+        <Text>
+          {translations["Team : "]}
+          {templateAndTeam?.teamName}
+        </Text>
         {shopifySurvey?.isProductSpecific && (
-          <Text>Sent Only if {templateAndTeam?.product} found</Text>
+          <Text>
+            {translations["Sent Only if"]} {templateAndTeam?.product}{" "}
+            {translations["found"]}
+          </Text>
         )}
         <Text>
-          Status : <ActiveStatusBadge active={shopifySurvey?.active} />
+          {translations["Status : "]}
+          <ActiveStatusBadge active={shopifySurvey?.active} />
         </Text>
         <Text>
-          Created At : {formatIsoDateStringWithTime(shopifySurvey?.createdAt)}{" "}
+          {translations["Created At : "]}
+          {formatIsoDateStringWithTime(shopifySurvey?.createdAt)}{" "}
         </Text>
       </Stack>
     </FormModalLayout>
