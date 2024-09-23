@@ -1,27 +1,29 @@
 import React, { useEffect, useMemo } from "react";
+
 import { Box, Divider, Flex, Group } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { IconPlus } from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
+
 import { docsPath, PAGE_SIZE } from "../../utils/constants";
+import InfoButton from "../Button/InfoButton";
+import { RateupButtonBlue } from "../Button/RateupButtons";
+import RefreshButton from "../Button/RefreshButton";
+import { DETAIL_BTN } from "../Contacts/utils/utils";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { fuzzyFilter } from "../Survey/Response/Filter";
 import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
-import { RateupButtonBlue } from "../Button/RateupButtons";
-import { IconPlus } from "@tabler/icons-react";
 import styles from "./TanstackTable.module.css";
-import { DETAIL_BTN } from "../Contacts/utils/utils";
-import InfoButton from "../Button/InfoButton";
-import { useMediaQuery } from "@mantine/hooks";
-import RefreshButton from "../Button/RefreshButton";
 
 function TanstackTable({
   className,
@@ -56,6 +58,7 @@ function TanstackTable({
   ]);
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
+    ["tag"]: !!data?.find((item) => item?.tag),
   });
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const [filterVisibility, setFilterVisibility] = React.useState(false);

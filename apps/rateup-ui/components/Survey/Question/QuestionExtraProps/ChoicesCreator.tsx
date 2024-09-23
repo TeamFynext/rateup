@@ -11,6 +11,7 @@ import {
   Group,
   Image,
   Select,
+  SimpleGrid,
   Stack,
   Switch,
   Text,
@@ -261,9 +262,13 @@ export function ChoicesCreator({
           className={maxCharCount && inputStyles.lengthTrackerParent}
           mt={"xs"}
           onKeyDown={getHotkeyHandler([["Enter", handleAddChoice]])}
+          style={{
+            flexDirection: surveyType !== SurveyType.Web ? "column" : "row",
+          }}
         >
           <Stack
             style={{
+              width: surveyType !== SurveyType.Web ? "100%" : "auto",
               flexGrow: 1,
             }}
             gap={4}
@@ -297,26 +302,31 @@ export function ChoicesCreator({
                   }
                   {...choiceForm.getInputProps("description")}
                 />
-                <ContainedTextField
-                  placeholder="Enter metadata here"
-                  label={"Metadata"}
-                  rightSection={
-                    MAX_METADATA_COUNT && (
-                      <LengthTracker
-                        length={choiceForm.getValues().metadata?.length}
-                        maxValue={MAX_METADATA_COUNT}
-                      />
-                    )
-                  }
-                  {...choiceForm.getInputProps("metadata")}
-                />
-                <RateupFileUploadButton
-                  clearFile={clearFile}
-                  handleFileChange={handleFileChange}
-                  resetRef={resetRef}
-                  fileSrc={choiceForm.getValues().image}
-                  error={choiceForm.errors.image as string}
-                />
+                <SimpleGrid cols={2}>
+                  <ContainedTextField
+                    placeholder="Enter metadata here"
+                    label={"Metadata"}
+                    rightSection={
+                      MAX_METADATA_COUNT && (
+                        <LengthTracker
+                          length={choiceForm.getValues().metadata?.length}
+                          maxValue={MAX_METADATA_COUNT}
+                        />
+                      )
+                    }
+                    {...choiceForm.getInputProps("metadata")}
+                  />
+                  <RateupFileUploadButton
+                    clearFile={clearFile}
+                    handleFileChange={handleFileChange}
+                    resetRef={resetRef}
+                    fileSrc={choiceForm.getValues().image}
+                    error={choiceForm.errors.image as string}
+                    style={{
+                      marginTop: "20px",
+                    }}
+                  />
+                </SimpleGrid>
               </>
             )}
           </Stack>

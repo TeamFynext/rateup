@@ -7,6 +7,7 @@ import {
   Group,
   HoverCard,
   Image,
+  MantineStyleProp,
 } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
 
@@ -255,6 +256,7 @@ type RateupFileUploadButtonProps = {
   fileSrc?: string;
   accept?: string;
   error?: string;
+  style?: MantineStyleProp;
 };
 export const RateupFileUploadButton = ({
   resetRef,
@@ -266,9 +268,10 @@ export const RateupFileUploadButton = ({
   accept = "image/png,image/jpeg,image/gif,image/webp",
   clearFile,
   error,
+  style,
 }: RateupFileUploadButtonProps) => {
   return (
-    <Group gap={4}>
+    <Group gap={4} style={style}>
       {fileSrc && (
         <HoverCard width={280} shadow="md" position="top" withArrow>
           <HoverCard.Target>
