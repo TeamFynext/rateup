@@ -3,9 +3,16 @@ import React from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconBook } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 const InfoButton = ({ docUrl, className = "" }) => {
+  const { translations } = useTranslations();
   return (
-    <Tooltip label="Visit documentation" position="top" withArrow>
+    <Tooltip
+      label={translations["Visit documentation"]}
+      position="top"
+      withArrow
+    >
       <ActionIcon
         className={className}
         variant="light"

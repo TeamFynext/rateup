@@ -1,25 +1,25 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
+
 import {
   CheckIcon,
+  Divider,
+  isLightColor,
   Radio,
   ScrollArea,
+  ScrollAreaAutosize,
   Stack,
   Table,
   Title,
-  Group,
   UnstyledButton,
   useMantineTheme,
-  ScrollAreaAutosize,
-  Divider,
-  isLightColor,
-  luminance,
 } from "@mantine/core";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useMediaQuery } from "@mantine/hooks";
-import { sampleChoices } from "../../../../../utils/constants/forms";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
+import { sampleChoices } from "../../../../../utils/constants/forms";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 
 interface MCQGridFormProps {
@@ -194,7 +194,7 @@ const MCQGridMobileForm = ({
               const isSelected = response?.[question]?.value == choice?.value;
               return (
                 <UnstyledButton
-                  key={choice?.value}
+                  key={choice?.value as string}
                   onClick={() => handleUpdateResponse(choice?.value, question)}
                   bg={isSelected ? themePrimaryColor : "transparent"}
                   style={{
@@ -204,14 +204,14 @@ const MCQGridMobileForm = ({
                   p={"xs"}
                 >
                   <Radio
-                    value={choice?.value}
+                    value={choice?.value as string}
                     checked={response?.[question]?.value == choice?.value}
                     onChange={(e) =>
                       handleUpdateResponse(e.currentTarget.value, question)
                     }
                     size="md"
                     icon={CheckIcon}
-                    label={choice?.value}
+                    label={choice?.value as string}
                     c={isSelected ? textColor : themePrimaryColor}
                     variant="outline"
                     color={textColor}

@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   ActionIcon,
   Anchor,
@@ -7,25 +9,28 @@ import {
   Stack,
   Table,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { ChatbotResourses } from "../../backend/chatbot/chatbot.api";
 import {
   useDeleteChatborResource,
   useDeleteManyChatborResource,
   useGetChatbotResources,
 } from "../../backend/chatbot/chatbot.query";
-import PaperLayout from "../styled/Layouts/PaperLayout";
 import { ChatBotDataSourceType } from "../../types/enums";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import { useState } from "react";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { RateupButtonBlue } from "../Button/RateupButtons";
-import UploadChatbotSource from "./UploadChatbotSource";
-import { useDisclosure } from "@mantine/hooks";
 import { showLoadingToast } from "../../utils/notifications";
+import { RateupButtonBlue } from "../Button/RateupButtons";
 import NothingFound from "../NothingFound/NothingFound";
-import { ChatbotResourses } from "../../backend/chatbot/chatbot.api";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import UploadChatbotSource from "./UploadChatbotSource";
 
 const ChatbotResources = ({}) => {
   const { data: chatbotResourses } = useGetChatbotResources();
+  const { translations } = useTranslations();
   const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>(
     [],
   );
@@ -34,20 +39,20 @@ const ChatbotResources = ({}) => {
   const deleteManySourceMutation = useDeleteManyChatborResource();
   const handleDelete = (source) => {
     showLoadingToast(
-      "Hold on..Source getting deleted",
+      translations["Hold on..Source getting deleted"],
       "source",
       true,
-      "Deleting",
+      translations["Deleting"],
     );
     deleteSourceMutation.mutate(source);
   };
   const handleDeleteMany = () => {
     if (!selectedSources.length) return;
     showLoadingToast(
-      "Hold on..Sources getting deleted",
+      translations["Hold on..Sources getting deleted"],
       "source",
       true,
-      "Deleting",
+      translations["Deleting"],
     );
     deleteManySourceMutation.mutate(selectedSources, {
       onSettled: () => {
@@ -67,7 +72,7 @@ const ChatbotResources = ({}) => {
     >
       <Table.Td>
         <Checkbox
-          aria-label="Select row"
+          aria-label={translations["Select row"]}
           checked={selectedSources.some(
             (src) => src.contentSource == source.contentSource,
           )}
@@ -107,14 +112,14 @@ const ChatbotResources = ({}) => {
       <Flex justify={"flex-end"} gap={"sm"}>
         {selectedSources.length > 0 ? (
           <RateupButtonBlue
-            title="Delete Resources"
+            title={translations["Delete Resources"]}
             color="red"
             rightIcon={<IconTrash size={"1rem"} />}
             onClick={handleDeleteMany}
           />
         ) : null}
         <RateupButtonBlue
-          title="Upload New"
+          title={translations["Upload New"]}
           rightIcon={<IconPlus />}
           onClick={open}
         />
@@ -126,16 +131,16 @@ const ChatbotResources = ({}) => {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th />
-                  <Table.Th>Source</Table.Th>
-                  <Table.Th>Type</Table.Th>
-                  <Table.Th>Action</Table.Th>
+                  <Table.Th>{translations["Source"]}</Table.Th>
+                  <Table.Th>{translations["Type"]}</Table.Th>
+                  <Table.Th>{translations["Action"]}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>
             </Table>
           </ScrollAreaAutosize>
         ) : (
-          <NothingFound text="No Resources uploaded" />
+          <NothingFound text={translations["No Resources uploaded"]} />
         )}
       </PaperLayout>
       <UploadChatbotSource opened={opened} close={close} />

@@ -1,55 +1,62 @@
 import { useState } from "react";
+
 import {
+  ActionIcon,
+  Blockquote,
   Box,
   Checkbox,
   Group,
+  NavLink,
   Paper,
   Radio,
+  ScrollArea,
   SimpleGrid,
   Stack,
-  TextInput,
-  ScrollArea,
+  Switch,
   Table,
   Text,
-  Blockquote,
-  NavLink,
-  Switch,
-  ActionIcon,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
-import {
-  RateupButtonSecondary,
-  RateupButtonBlue,
-} from "../Button/RateupButtons";
 import { useForm } from "@mantine/form";
+import { getHotkeyHandler, useDebouncedState } from "@mantine/hooks";
 import {
   IconDownload,
   IconInfoCircle,
   IconRefresh,
   IconSearch,
 } from "@tabler/icons-react";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
   useContactGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "../../backend/campaign/contacts/contacts.query";
-import { contactAddType, importMethod } from "../../utils/enums";
-import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
-import { showErrorToast } from "../../utils/notifications";
-import { getHotkeyHandler, useDebouncedState } from "@mantine/hooks";
 import { PAGE_SIZE, SAVE_HOTKEY } from "../../utils/constants";
+import { contactAddType, importMethod } from "../../utils/enums";
+import { showErrorToast } from "../../utils/notifications";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
+import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+
 import "react-phone-number-input/style.css";
-import styles from "./contact.module.css";
-import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import { FilterSelect } from "../../pages/dashboard/contacts";
-import RateupLoader from "../Loaders/RateupLoader";
-import ContactPagination from "./ContactPagination";
+
 import { ColumnFiltersState } from "@tanstack/react-table";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { FilterSelect } from "../../pages/dashboard/contacts";
+import { getFileUrlFromKey } from "../../utils/file-upload/upload";
+import RateupLoader from "../Loaders/RateupLoader";
+import styles from "./contact.module.css";
+import ContactPagination from "./ContactPagination";
 
 export interface IAddCustomer {
   name: string;
@@ -76,6 +83,7 @@ const AddCustomerModal = ({
     useDebouncedState<ColumnFiltersState>([], 200);
   const createNewContactMutation = useAddNewContactMutation(groupId);
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
+  const { translations } = useTranslations();
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -106,16 +114,16 @@ const AddCustomerModal = ({
           addType === contactAddType.NEW
         )
           return !value
-            ? "Phone Number cannot be blank"
+            ? translations["Phone Number cannot be blank"]
             : !isValidPhoneNumber(value)
-              ? "Invalid phone number"
+              ? translations["Invalid phone number"]
               : null;
       },
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         addType == contactAddType.NEW &&
         !value.length
-          ? "Name cannot be blank"
+          ? translations["Name cannot be blank"]
           : null,
     },
   });
@@ -233,7 +241,7 @@ const AddCustomerModal = ({
     >
       <Table.Td>
         <Checkbox
-          aria-label="Select row"
+          aria-label={translations["Select row"]}
           checked={
             customerList?.includes(contact?.id) ||
             existingContactIds?.includes(contact?.id)
@@ -269,14 +277,17 @@ const AddCustomerModal = ({
               value={addType}
               onChange={setAddType}
               name="addType"
-              label="Choose"
+              label={translations["Choose"]}
               styles={customStyle}
             >
               <Group>
-                <Radio value={contactAddType.NEW} label="Add New Contact" />
+                <Radio
+                  value={contactAddType.NEW}
+                  label={translations["Add New Contact"]}
+                />
                 <Radio
                   value={contactAddType.EXISTING}
-                  label="Add Existing Contacts"
+                  label={translations["Add Existing Contacts"]}
                 />
               </Group>
             </Radio.Group>
@@ -290,12 +301,18 @@ const AddCustomerModal = ({
                     form.setFieldValue("importMethod", value)
                   }
                   name="importmethod"
-                  label="Import Contacts"
+                  label={translations["Import Contacts"]}
                   styles={custominputstyle}
                 >
                   <Group>
-                    <Radio value={importMethod.MANUAL} label="Manual" />
-                    <Radio value={importMethod.CSV} label="Import CSV/XLSX" />
+                    <Radio
+                      value={importMethod.MANUAL}
+                      label={translations["Manual"]}
+                    />
+                    <Radio
+                      value={importMethod.CSV}
+                      label={translations["Import CSV/XLSX"]}
+                    />
                   </Group>
                 </Radio.Group>
 
@@ -322,8 +339,8 @@ const AddCustomerModal = ({
               {form.values.importMethod == importMethod.MANUAL && (
                 <SimpleGrid cols={2}>
                   <TextInput
-                    label="Name"
-                    placeholder="Enter name"
+                    label={translations["Name"]}
+                    placeholder={translations["Enter name"]}
                     {...form.getInputProps("name")}
                     radius={"md"}
                     size="md"
@@ -333,7 +350,7 @@ const AddCustomerModal = ({
                   <Stack gap={0}>
                     <Group gap={3}>
                       <Text fw={"bold"} fz={14}>
-                        Phone Number
+                        {translations["Phone Number"]}
                       </Text>
                       <Text fw={"bold"} fz={14} c="red">
                         *
@@ -343,7 +360,7 @@ const AddCustomerModal = ({
                       defaultCountry="IN"
                       international
                       countryCallingCodeEditable={false}
-                      placeholder="Enter phone number"
+                      placeholder={translations["Enter phone number"]}
                       {...form.getInputProps("phone")}
                       className={styles.inputPhone}
                     />
@@ -377,11 +394,14 @@ const AddCustomerModal = ({
                     iconSize={40}
                     mx={"lg"}
                   >
-                    Utilizing CSV/XLSX file uploads to generate contact requires
-                    specific fields in the file: name, phone
+                    {
+                      translations[
+                        "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone"
+                      ]
+                    }
                     <NavLink
                       href={getFileUrlFromKey("/File/contact/demo.csv", false)}
-                      label="Download Demo Csv File"
+                      label={translations["Download Demo Csv File"]}
                       leftSection={<IconDownload size="1rem" stroke={1.5} />}
                       download
                       active
@@ -391,14 +411,20 @@ const AddCustomerModal = ({
                   </Blockquote>
                   <Switch
                     mx={"lg"}
-                    label="Update the existing data while importing"
+                    label={
+                      translations["Update the existing data while importing"]
+                    }
                     key={form.key("updateExisting")}
                     {...form.getInputProps("updateExisting")}
                   />
                   <ContainedFileInput
                     mx={"lg"}
                     label=""
-                    placeholder="Upload a csv file (.csv) or excel file (.xlsx)"
+                    placeholder={
+                      translations[
+                        "Upload a csv file (.csv) or excel file (.xlsx)"
+                      ]
+                    }
                     accept=".csv,.xlsx"
                     multiple={false}
                     onChange={setCsvfile}
@@ -427,7 +453,7 @@ const AddCustomerModal = ({
               <Group justify="space-between" px={"md"}>
                 <Checkbox
                   aria-label="select all"
-                  label="Select All"
+                  label={translations["Select All"]}
                   checked={remainingContactIds?.every((id) =>
                     customerList.includes(id),
                   )}
@@ -444,7 +470,7 @@ const AddCustomerModal = ({
                   leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
                   radius="xl"
                   size="sm"
-                  placeholder={"Search Contact"}
+                  placeholder={translations["Search Contact"]}
                   rightSectionWidth={60}
                   defaultValue={searchTerm}
                   onChange={(event) => setSearchTerm(event.currentTarget.value)}
@@ -457,7 +483,7 @@ const AddCustomerModal = ({
                     <Table.Thead>
                       <Table.Tr>
                         <Table.Th>
-                          <Tooltip label={"refresh data"}>
+                          <Tooltip label={translations["refresh data"]}>
                             <ActionIcon
                               variant="light"
                               onClick={() => {
@@ -468,8 +494,8 @@ const AddCustomerModal = ({
                             </ActionIcon>
                           </Tooltip>
                         </Table.Th>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Phone Number</Table.Th>
+                        <Table.Th>{translations["Name"]}</Table.Th>
+                        <Table.Th>{translations["Phone Number"]}</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>{rows}</Table.Tbody>
@@ -484,9 +510,12 @@ const AddCustomerModal = ({
             </Stack>
           )}
           <Group justify="flex-end">
-            <RateupButtonSecondary title="cancel" onClick={close} />
+            <RateupButtonSecondary
+              title={translations["cancel"]}
+              onClick={close}
+            />
             <RateupButtonBlue
-              title="Add Member"
+              title={translations["Add Member"]}
               onClick={handleSubmit}
               loading={isCreating}
               disabled={

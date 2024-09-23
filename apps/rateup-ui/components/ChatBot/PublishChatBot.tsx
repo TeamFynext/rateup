@@ -1,27 +1,31 @@
 import { useEffect, useState } from "react";
-import { RateupButtonSecondary } from "../Button/RateupButtons";
-import PaperLayout from "../styled/Layouts/PaperLayout";
+
 import { Badge, Flex, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../utils/notifications";
 import {
   IconCheck,
   IconChevronDown,
   IconChevronUp,
   IconX,
 } from "@tabler/icons-react";
-import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey";
-import { ChatbotPublicPageStatus } from "../../types/enums";
 import { useQueryClient } from "@tanstack/react-query";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateChatbot,
   useGetChatbotDetails,
   useUpdateChatbot,
 } from "../../backend/chatbot/chatbot.query";
+import { ChatbotPublicPageStatus } from "../../types/enums";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "../../utils/notifications";
+import { RateupButtonSecondary } from "../Button/RateupButtons";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey";
 
 const PublishChatbot = () => {
   const [chatbotPublicUrl, setChatbotPublicUrl] = useState("");
@@ -31,34 +35,41 @@ const PublishChatbot = () => {
   const [opened, { toggle }] = useDisclosure(false);
   const [isActive, setIsActive] = useState(false);
   const queryClient = useQueryClient();
-
+  const { translations } = useTranslations();
   const generateUrl = () => {
     showLoadingToast(
-      "Hold on...Url is getting generated",
+      translations["Hold on...Url is getting generated"],
       "short-url",
       true,
-      "Generating",
+      translations["Generating"],
     );
     createChatbotUrlMutate.mutate(null, {
       onSuccess: () => {
         showSuccessToast(
-          "Url generated Successfully",
+          translations["Url generated Successfully"],
           "short-url",
           <IconCheck />,
           true,
         );
       },
       onError: () => {
-        showErrorToast("Error generating url", "short-url", <IconX />, true);
+        showErrorToast(
+          translations["Error generating url"],
+          "short-url",
+          <IconX />,
+          true,
+        );
       },
     });
   };
 
   const handleChatbotStatus = () => {
     const loadingMessage = isActive
-      ? "Hold On..Deactivating public page"
-      : "Hold On..Activating public page";
-    const loadingTitle = isActive ? "Deactivating" : "Activating";
+      ? translations["Hold On..Deactivating public page"]
+      : translations["Hold On..Activating public page"];
+    const loadingTitle = isActive
+      ? translations["Deactivating"]
+      : translations["Activating"];
     showLoadingToast(loadingMessage, "chatbot-page", true, loadingTitle);
     updateChatbotMutate.mutate(
       {
@@ -73,8 +84,8 @@ const PublishChatbot = () => {
           });
           showSuccessToast(
             isActive
-              ? "Page Deactivated Succesfully"
-              : "Page Activated Succesfully",
+              ? translations["Page Deactivated Succesfully"]
+              : translations["Page Activated Succesfully"],
             "chatbot-page",
             <IconCheck />,
             true,
@@ -82,7 +93,7 @@ const PublishChatbot = () => {
         },
         onError: () => {
           showErrorToast(
-            "something went wrong",
+            translations["something went wrong"],
             "chatbot-page",
             <IconX />,
             true,
@@ -111,10 +122,10 @@ const PublishChatbot = () => {
           <RateupButtonSecondary
             title={
               chatbotDetails?.shortUrlId
-                ? "Show public url"
+                ? translations["Show public url"]
                 : createChatbotUrlMutate.isPending
-                  ? "Generating.."
-                  : "Generate Public Url"
+                  ? translations["Generating.."]
+                  : translations["Generate Public Url"]
             }
             onClick={chatbotDetails?.shortUrlId ? toggle : generateUrl}
             rightIcon={
@@ -130,14 +141,18 @@ const PublishChatbot = () => {
           {chatbotDetails ? (
             <>
               <Group>
-                <Text>Current Status:</Text>
+                <Text>{translations["Current Status:"]}</Text>
                 <Badge color={isActive ? "green" : "red"}>
                   {chatbotDetails?.publicPageStatus}
                 </Badge>
               </Group>
               <RateupButtonSecondary
                 color={isActive ? "red" : "var(--tertiary-color)"}
-                title={isActive ? "Deactivate" : "Activate"}
+                title={
+                  isActive
+                    ? translations["Deactivate"]
+                    : translations["Activate"]
+                }
                 onClick={handleChatbotStatus}
               />
             </>

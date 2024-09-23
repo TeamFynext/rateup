@@ -1,3 +1,7 @@
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import {
   Flex,
   Group,
@@ -7,27 +11,28 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { getHotkeyHandler } from "@mantine/hooks";
 import { IconArrowAutofitLeft, IconSend, IconX } from "@tabler/icons-react";
-import Link from "next/link";
-import styles from "./AuthForm.module.css";
-import { RateupButtonBlue } from "../Button/RateupButtons";
-import { useState } from "react";
 import {
   clearLoginAttemptInfo,
   consumeCode,
 } from "supertokens-web-js/recipe/passwordless";
-import { useRouter } from "next/router";
-import { resendOTP, showNotification } from "../../utils/auth";
-import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { fetchUserProfile } from "../../backend/user/user.api";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { resendOTP, showNotification } from "../../utils/auth";
 import { SAVE_HOTKEY } from "../../utils/constants";
+import { RateupButtonBlue } from "../Button/RateupButtons";
+import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
+import styles from "./AuthForm.module.css";
 
 function VerifyPhoneNumberPage() {
   const router = useRouter();
   const [otpNumber, setOtpNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { route } = useRouteAndCartStore();
+  const { translations } = useTranslations();
 
   async function handleOTPInput() {
     try {
@@ -52,7 +57,9 @@ function VerifyPhoneNumberPage() {
           "load-data",
           "red",
           "Error",
-          "Wrong OTP! Please try again. Number of attempts left: " +
+          translations[
+            "Wrong OTP! Please try again. Number of attempts left: "
+          ] +
             (response.maximumCodeInputAttempts -
               response.failedCodeInputAttemptCount),
           <IconX size="1rem" />,
@@ -64,7 +71,9 @@ function VerifyPhoneNumberPage() {
           "load-data",
           "red",
           "Error",
-          "Old OTP entered. Please regenerate a new one and try again",
+          translations[
+            "Old OTP entered. Please regenerate a new one and try again"
+          ],
           <IconX size="1rem" />,
         );
       } else {
@@ -103,11 +112,14 @@ function VerifyPhoneNumberPage() {
   return (
     <>
       <Title order={2} className={styles["login-signup-form-heading"]}>
-        Verify your Phone Number
+        {translations["Verify your Phone Number"]}
       </Title>
       <Text className={styles["verify-email-para"]}>
-        Kindly enter the OTP code we've sent via SMS to authenticate your phone
-        number.
+        {
+          translations[
+            "Kindly enter the OTP we have sent via SMS to authenticate your phone number."
+          ]
+        }
       </Text>
       <form
         className={`
@@ -119,13 +131,13 @@ function VerifyPhoneNumberPage() {
         <TextInput
           classNames={styles}
           withAsterisk
-          placeholder="Otp Code"
+          placeholder={translations["OTP Code"]}
           mt={"lg"}
           onChange={(e) => setOtpNumber(e.target.value)}
         />
         <RateupButtonBlue
           type="button"
-          title="Verify Otp"
+          title={translations["Verify OTP"]}
           loading={isLoading}
           className={styles["login-signup-form-submit-btn"]}
           onClick={handleOTPInput}
@@ -134,7 +146,7 @@ function VerifyPhoneNumberPage() {
           <NavLink
             onClick={resendOTP}
             component="div"
-            label="Resend Otp"
+            label={translations["Resend OTP"]}
             leftSection={<IconSend size="1rem" stroke={1.5} />}
             variant="subtle"
             w={"max-content"}
@@ -147,7 +159,7 @@ function VerifyPhoneNumberPage() {
         <NavLink
           component="div"
           style={{ fontWeight: 620 }}
-          label="Logout"
+          label={translations["Logout"]}
           leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
           variant="subtle"
         />

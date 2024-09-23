@@ -10,6 +10,7 @@ import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "@/backend/campaign/campaign.query";
+import useTranslations from "@/dictionaries/useTranslation";
 import { SAVE_HOTKEY } from "@/utils/constants";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons";
@@ -129,7 +130,7 @@ const CreateCampaignModal = ({
       });
     }
   };
-
+  const { translations } = useTranslations();
   return (
     <>
       <form
@@ -140,9 +141,9 @@ const CreateCampaignModal = ({
       >
         {!isEdit && (
           <Group justify={"space-between"} mt={4}>
-            <Title order={2}>Create Campaign</Title>
+            <Title order={2}>{translations["Create Campaign"]}</Title>
             <TeamSelector
-              placeholder="Select Team"
+              placeholder={translations["Select Team"]}
               withAsterisk
               allowDeselect={false}
               disabled={false}
@@ -157,16 +158,16 @@ const CreateCampaignModal = ({
         )}
         <SimpleGrid cols={{ base: 2, lg: isEdit ? 3 : 2 }} p={"lg"}>
           <ContainedTextField
-            label="Campaign Name"
-            placeholder="Enter campaign name"
+            label={translations["Campaign Name"]}
+            placeholder={translations["Enter campaign name"]}
             withAsterisk
             {...form.getInputProps("name")}
             styles={{ label: { fontWeight: "bold", fontSize: 14 } }}
           />
           <ContainedSelection
-            label="Choose Template"
+            label={translations["Choose Template"]}
             withAsterisk
-            placeholder="Select Template"
+            placeholder={translations["Select Template"]}
             {...form.getInputProps("waTemplateId")}
             readOnly={isEdit && campaign?.status === CampaignStatus.ACTIVE}
             data={templatesData}
@@ -184,7 +185,7 @@ const CreateCampaignModal = ({
             <Box mt={26}>
               <RateupButtonPrimary
                 loading={updateCampaignMutation.isPending}
-                title="Update"
+                title={translations["Update"]}
                 disabled={!form.isDirty()}
                 type={"submit"}
               />
@@ -197,7 +198,7 @@ const CreateCampaignModal = ({
               key={i}
               label={`{{${i + 1}}}`}
               data={dynamicVariableData}
-              placeholder="select a dynamic tag value"
+              placeholder={translations["select a dynamic tag value"]}
               {...form.getInputProps(`dynamicTags.${i}`)}
             />
           ))}
@@ -206,11 +207,11 @@ const CreateCampaignModal = ({
           <Flex justify={"flex-end"} gap={"md"} mt={"md"}>
             <RateupButtonPrimary
               onClick={close}
-              title="Cancel"
+              title={translations["Cancel"]}
               variant="outline"
             />
             <RateupButtonPrimary
-              title="Create Now"
+              title={translations["Create Now"]}
               loading={createCampaignMutation.isPending}
               type={"submit"}
             />

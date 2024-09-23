@@ -1,31 +1,35 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Stack,
-  Text,
+  Avatar,
   Box,
-  SimpleGrid,
-  TextInput,
   Button,
   FileButton,
   Group,
-  Avatar,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
 } from "@mantine/core";
-import { IconUpload } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
-import { TeamSelector } from "../input/TeamSelector";
-import { useEffect, useState } from "react";
-import {
-  RateupButtonSecondary,
-  RateupButtonBlue,
-} from "../Button/RateupButtons";
+import { getHotkeyHandler } from "@mantine/hooks";
+import { IconUpload } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateContactGroupMutation,
   useEditContactGroupMutation,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
+import { SAVE_HOTKEY } from "../../utils/constants";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
-import { useRouter } from "next/router";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
+import { TeamSelector } from "../input/TeamSelector";
 
 interface GroupModalProps {
   groupClose: () => void;
@@ -45,6 +49,7 @@ const CreateGroupModal = ({
   const [isUploading, setIsUploading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const router = useRouter();
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: groupDetails || {
       name: "",
@@ -52,8 +57,9 @@ const CreateGroupModal = ({
       teamId: "",
     },
     validate: {
-      name: (value) => (value.length ? null : "Cannot be empty"),
-      teamId: (value) => !isEdit && !value && "Must select a team",
+      name: (value) => (value.length ? null : translations["Cannot be empty"]),
+      teamId: (value) =>
+        !isEdit && !value && translations["Must select a team"],
     },
   });
 
@@ -123,7 +129,7 @@ const CreateGroupModal = ({
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast("Error uploading icon. Please try again.");
+        showErrorToast(translations["Error uploading icon. Please try again."]);
         setIsUploading(false);
       });
   }, [file]);
@@ -136,8 +142,8 @@ const CreateGroupModal = ({
       >
         <SimpleGrid cols={2}>
           <TextInput
-            label="Group Name"
-            placeholder="Enter group name"
+            label={translations["Group Name"]}
+            placeholder={translations["Enter group name"]}
             {...form.getInputProps("name")}
             size="md"
             radius={"md"}
@@ -145,7 +151,7 @@ const CreateGroupModal = ({
           />
           {!isEdit ? (
             <Stack gap={0}>
-              <Text>Select Team</Text>
+              <Text>{translations["Select Team"]}</Text>
               <TeamSelector
                 value={selectedTeamId}
                 onChange={(value) => setSelectedTeamId(value)}
@@ -155,7 +161,7 @@ const CreateGroupModal = ({
             <Stack></Stack>
           )}
           <Stack gap={0}>
-            <Text>Upload Profile Picture</Text>
+            <Text>{translations["Upload Profile Picture"]}</Text>
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
               {(props) => (
                 <Button
@@ -166,7 +172,7 @@ const CreateGroupModal = ({
                   color="grey"
                   leftSection={<IconUpload size={15}></IconUpload>}
                 >
-                  <Text size="sm">Upload Icon</Text>
+                  <Text size="sm">{translations["Upload Icon"]}</Text>
                 </Button>
               )}
             </FileButton>
@@ -183,11 +189,13 @@ const CreateGroupModal = ({
         </SimpleGrid>
         <Group justify="flex-end" mt={"md"}>
           <RateupButtonSecondary
-            title="cancel"
+            title={translations["cancel"]}
             onClick={groupClose}
           ></RateupButtonSecondary>
           <RateupButtonBlue
-            title={isEdit ? "Edit Group" : "Create Group"}
+            title={
+              isEdit ? translations["Edit Group"] : translations["Create Group"]
+            }
             onClick={handleSubmit}
             loading={isCreating}
             disabled={isUploading}

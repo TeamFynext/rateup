@@ -1,13 +1,16 @@
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import { ContactTabs } from "../../pages/dashboard/contacts";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import FormModalLayout from "../Modal/FormModalLayout";
+import ContactImportErrorModal from "./ContactImportErrorModal";
 import CreateContactModal from "./CreateContactModal";
 import CreateGroupModal from "./CreateGroupModal";
 import { WhatsappTableType } from "./utils/utils";
-import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
-import ContactImportErrorModal from "./ContactImportErrorModal";
 
 const OpenCreateMenu = ({
   tags = [],
@@ -20,7 +23,7 @@ const OpenCreateMenu = ({
   const [groupOpened, { open: groupOpen, close: groupClose }] =
     useDisclosure(false);
   const importCSVContactMutation = useImportCSVContactMutation();
-
+  const { translations } = useTranslations();
   return (
     <>
       <ContactImportErrorModal
@@ -28,7 +31,11 @@ const OpenCreateMenu = ({
         isError={importCSVContactMutation.isError}
       />
       <RateupButtonBlue
-        title={tab === WhatsappTableType.MEMBERS ? "Add Members" : "Create"}
+        title={
+          tab === WhatsappTableType.MEMBERS
+            ? translations["Add Members"]
+            : translations["Create"]
+        }
         rightIcon={<IconPlus size={20} />}
         disabled={isPending}
         onClick={() => {
@@ -45,7 +52,7 @@ const OpenCreateMenu = ({
         centered
         opened={contactOpened}
         onClose={contactClose}
-        title="Create contact"
+        title={translations["Create contact"]}
         size={"xl"}
       >
         <CreateContactModal
@@ -59,7 +66,7 @@ const OpenCreateMenu = ({
         centered
         opened={groupOpened}
         onClose={groupClose}
-        title="Create contact group"
+        title={translations["Create contact group"]}
         size="lg"
       >
         <CreateGroupModal groupClose={groupClose} close={close} />
