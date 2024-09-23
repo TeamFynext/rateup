@@ -1,13 +1,17 @@
-import { Group, Modal, Stack, Text, Blockquote } from "@mantine/core";
+import { useState } from "react";
+
+import { Blockquote, Group, Modal, Stack, Text } from "@mantine/core";
+import { IconAlertOctagon } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useUser } from "../../context/UserContext";
+import { showErrorToast } from "../../utils/notifications";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import { useState } from "react";
-import { useUser } from "../../context/UserContext";
-import { showErrorToast } from "../../utils/notifications";
-import { IconAlertOctagon } from "@tabler/icons-react";
 
 interface ConfirmationModalProps {
   forDeleteFunctionality?: boolean;
@@ -37,6 +41,7 @@ export default function ConfirmationModal({
 }: ConfirmationModalProps) {
   const [email, setEmail] = useState("");
   const { user } = useUser();
+  const { translations } = useTranslations();
   function confirmation(e) {
     e.stopPropagation();
     if (includeEmailConfirmation) {
@@ -44,7 +49,7 @@ export default function ConfirmationModal({
         onConfirm();
         onClose();
       } else {
-        showErrorToast("Email entered is invalid");
+        showErrorToast(translations["Email entered is invalid"]);
       }
     } else {
       onConfirm();
@@ -84,24 +89,24 @@ export default function ConfirmationModal({
           {includeEmailConfirmation && (
             <Stack gap={0}>
               <Text c="dimmed" size="xs">
-                Please enter your email to confirm
+                {translations["Please enter your email to confirm"]}
               </Text>
               <ContainedTextField
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={translations["Enter your email"]}
               />
             </Stack>
           )}
           <Group justify="flex-end" mt="md">
             {!excludeCancelButton && (
               <RateupButtonSecondary
-                title={closeLabel || "Cancel"}
+                title={closeLabel || translations["Cancel"]}
                 onClick={onClose}
               />
             )}
             <RateupButtonBlue
-              title={confirmLabel ?? "Submit"}
+              title={confirmLabel ?? translations["Submit"]}
               onClick={confirmation}
               color={forDeleteFunctionality ? "red" : ""}
             />

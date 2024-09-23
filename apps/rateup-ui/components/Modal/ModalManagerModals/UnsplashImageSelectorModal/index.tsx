@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import useDebounce from "../../../menu/hook/useDebounce";
-import {
-  useTriggeringDownload,
-  useUnsplashPhotosList,
-} from "../../../../backend/unsplash/unsplash.query";
-import { useIntersection, useMediaQuery } from "@mantine/hooks";
+
 import {
   ActionIcon,
   Card,
@@ -16,15 +11,24 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
-import { IconSearch, IconArrowRight } from "@tabler/icons-react";
-import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
+import { IconArrowRight, IconSearch } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import {
+  useTriggeringDownload,
+  useUnsplashPhotosList,
+} from "../../../../backend/unsplash/unsplash.query";
 import { mmImageCropModalClassnames } from "../../../../utils/constants";
+import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
+import useDebounce from "../../../menu/hook/useDebounce";
+import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, aspectRatio } = innerProps;
-
+  const { translations } = useTranslations();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 600);
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -49,7 +53,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const handleImageClick = useCallback((url, name) => {
     modals.openContextModal({
       modal: "imageCropModal",
-      title: "Crop Image",
+      title: translations["Crop Image"],
       centered: true,
       classNames: mmImageCropModalClassnames,
       innerProps: {
@@ -103,7 +107,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
         mx={"lg"}
       >
         {_photoList?.length === 0 ? (
-          <Text>Images Not Found</Text>
+          <Text>{translations["Images Not Found"]}</Text>
         ) : (
           _photoList?.map((photo, i) => (
             <UnsplashPhoto
@@ -148,7 +152,7 @@ const UnsplashPhoto = ({
     setSearchQuery("");
     close();
   };
-
+  const { translations } = useTranslations();
   return (
     <Card
       shadow="sm"
@@ -158,7 +162,11 @@ const UnsplashPhoto = ({
       ref={reference}
     >
       <Card.Section>
-        <Image src={regular} h={200} alt="image from unsplash" />
+        <Image
+          src={regular}
+          h={200}
+          alt={translations["image from unsplash"]}
+        />
       </Card.Section>
     </Card>
   );

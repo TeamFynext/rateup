@@ -1,23 +1,27 @@
-import { Group, Text, Select, Stack, PaperProps } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import {
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip as RTooltip,
-  Legend,
-  Brush,
-  LineChart,
-  Line,
-  CartesianGrid,
-} from "recharts";
+
+import { Group, PaperProps, Select, Stack, Text } from "@mantine/core";
+import dayjs from "dayjs";
 import weekofyear from "dayjs/plugin/weekOfYear";
 import {
-  TIME_INTERVALS,
+  Brush,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import {
   groupDataByTimeIntervals,
+  TIME_INTERVALS,
 } from "../../../utils/reputationManagement/rm.data.util";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 dayjs.extend(weekofyear);
 
@@ -39,7 +43,7 @@ export function RatingOverTime({
   const [timeInterval, setTimeInterval] = useState<TIME_INTERVALS>(
     TIME_INTERVALS.Yearly,
   );
-
+  const { translations } = useTranslations();
   const sortedDates = Object.keys(ratingOverTime).sort(
     (a, b) => dayjs(a).unix() - dayjs(b).unix(),
   );
@@ -92,7 +96,7 @@ export function RatingOverTime({
             }}
             c="#666"
           >
-            Rating Over Time
+            {translations["Rating Over Time"]}
           </Text>
           <Select
             allowDeselect={false}

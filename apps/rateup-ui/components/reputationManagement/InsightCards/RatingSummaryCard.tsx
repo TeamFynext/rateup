@@ -8,8 +8,11 @@ import {
   Tooltip,
   useMantineTheme,
 } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { IconStarFilled } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 interface RatingInsights {
   avg: number;
@@ -35,6 +38,7 @@ export const ratingColorMap = {
 };
 export function RatingSummaryCard({ ratingInsights }: RatingSummaryCardProps) {
   const theme = useMantineTheme();
+  const { translations } = useTranslations();
   return (
     <PaperLayout p="0">
       <>
@@ -51,7 +55,7 @@ export function RatingSummaryCard({ ratingInsights }: RatingSummaryCardProps) {
             }}
             mr="xs"
           >
-            {`Total Rating:`}
+            {translations["Total Rating:"]}
           </Text>
           <Text
             style={{

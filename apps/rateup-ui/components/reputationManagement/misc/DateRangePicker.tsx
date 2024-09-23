@@ -18,6 +18,7 @@ import "react-date-range/dist/theme/default.css";
 import { IconCalendar, IconX } from "@tabler/icons-react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import useTranslations from "@/dictionaries/useTranslation";
 
 export function DateRangePickerButton({
   onChange,
@@ -27,7 +28,7 @@ export function DateRangePickerButton({
   ranges: Range[];
 }) {
   const [opened, { open, close }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   return (
     <>
       <Group align="center">
@@ -38,7 +39,7 @@ export function DateRangePickerButton({
           onClick={open}
           readOnly
           w="120px"
-          label="Start date"
+          label={translations["Start date"]}
           classNames={classes}
           leftSection={<IconCalendar size={"1rem"} />}
         />
@@ -48,11 +49,11 @@ export function DateRangePickerButton({
           value={ranges[0] ? dayjs(ranges[0].endDate).format("DD/MM/YYYY") : ""}
           onClick={open}
           readOnly
-          label="End date"
+          label={translations["End date"]}
           classNames={classes}
           leftSection={<IconCalendar size={"1rem"} />}
         />
-        <Tooltip label={"Clear Date Filter"}>
+        <Tooltip label={translations["Clear Date Filter"]}>
           <ActionIcon onClick={() => onChange(undefined)} variant="light">
             <IconX />
           </ActionIcon>
@@ -61,7 +62,7 @@ export function DateRangePickerButton({
       <Modal
         opened={opened}
         onClose={close}
-        title="Date range picker"
+        title={translations["Date range picker"]}
         size={"auto"}
       >
         <DateRangePicker
@@ -76,9 +77,9 @@ export function DateRangePickerButton({
             onClick={() => onChange(undefined)}
             variant="outline"
             color="red"
-            title="Clear"
+            title={translations["Clear"]}
           />
-          <RateupButtonPrimary onClick={close} title="Done" />
+          <RateupButtonPrimary onClick={close} title={translations["Done"]} />
         </Group>
       </Modal>
     </>

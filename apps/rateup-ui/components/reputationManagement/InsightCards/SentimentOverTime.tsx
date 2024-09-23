@@ -1,24 +1,29 @@
-import { Group, Text, Select, Stack, PaperProps } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { getSentimentClass } from "../../../utils/reputationManagement/sentiment.util";
-import { SentimentClass } from "../../../types/enums";
-import {
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip as RTooltip,
-  Legend,
-  Bar,
-  Brush,
-} from "recharts";
+
+import { Group, PaperProps, Select, Stack, Text } from "@mantine/core";
+import dayjs from "dayjs";
 import weekofyear from "dayjs/plugin/weekOfYear";
 import {
-  TIME_INTERVALS,
+  Bar,
+  BarChart,
+  Brush,
+  Legend,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { SentimentClass } from "../../../types/enums";
+import {
   groupDataByTimeIntervals,
+  TIME_INTERVALS,
 } from "../../../utils/reputationManagement/rm.data.util";
+import { getSentimentClass } from "../../../utils/reputationManagement/sentiment.util";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+
 dayjs.extend(weekofyear);
 
 interface SentimentOverTimeProps {
@@ -44,7 +49,7 @@ export function SentimentOverTime({
   ...props
 }: SentimentOverTimeProps & PaperProps) {
   const [timeInterval, setTimeInterval] = useState(TIME_INTERVALS.Yearly);
-
+  const { translations } = useTranslations();
   const sortedDates = Object.keys(sentimentOverTime).sort(
     (a, b) => dayjs(a).unix() - dayjs(b).unix(),
   );
@@ -91,7 +96,7 @@ export function SentimentOverTime({
             }}
             c="#666"
           >
-            Sentiment Over Time
+            {translations["Sentiment Over Time"]}
           </Text>
           <Select
             allowDeselect={false}
