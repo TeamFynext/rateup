@@ -12,6 +12,7 @@ const sectionValues = [
     imageAlt: "Create Feedback Form",
     imageWidth: 1350,
     imageHeight: 794,
+    learnMoreRoute: "/web-survey",
   },
   {
     id: "1234135372",
@@ -28,6 +29,7 @@ const sectionValues = [
     imageAlt: "Send Feedback Form",
     imageWidth: 1062,
     imageHeight: 842,
+    learnMoreRoute: "/whatsapp-feedback",
   },
   {
     id: "1234135373",
@@ -40,6 +42,7 @@ const sectionValues = [
     imageAlt: "Create tickets, tag respective teams, and track their status",
     imageWidth: 1282,
     imageHeight: 943,
+    learnMoreRoute: "#",
   },
 ];
 

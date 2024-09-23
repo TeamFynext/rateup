@@ -691,14 +691,19 @@ export function generateDataSourceFromQuestion(q: Question) {
       case qt.MSQ:
       case qt.DDMS:
       case qt.DDSS:
-        choices = q.choices?.[lang] ? q.choices[lang].map((c) => c.value) : [];
+        choices = q.choices?.[lang]
+          ? q.choices[lang].map((c) => c.value as any)
+          : [];
         break;
     }
 
-    const dataSource: WaFlowFormChoice[] = choices.map((c, index) => ({
-      id: index.toString(),
-      title: c,
-    }));
+    const dataSource: WaFlowFormChoice[] = choices.map((c, index) => {
+      let t = typeof c === "object" ? c : { title: c };
+      return {
+        id: index.toString(),
+        ...t,
+      };
+    });
     const mapData: any = choices.reduce(
       (prev, choice, index) => ({ ...prev, [index]: choice }),
       {},

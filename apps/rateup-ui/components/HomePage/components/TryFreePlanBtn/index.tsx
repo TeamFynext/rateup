@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { Button } from "@mantine/core";
 import classNames from "classnames/bind";
 
@@ -15,11 +17,14 @@ function TryFreePlanBtn({
   gALabel = null,
   onClick = null,
 }) {
+  const router = useRouter();
+
   const handleClick = () => {
     onClick?.();
     if (gACategory && fbEventName && gALabel) {
       gAnalyticsAndFbEvent(gACategory, fbEventName, gALabel);
     }
+    router.push("/signup");
   };
 
   return (

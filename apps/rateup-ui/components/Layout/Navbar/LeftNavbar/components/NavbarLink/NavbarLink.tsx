@@ -92,7 +92,6 @@ function NavbarLink({
                   : router.pathname === href
               }
               onClick={(e) => {
-                setActive(parentIndex);
                 if (href) {
                   if (label == "Docs") {
                     window.open(href, "_blank");
@@ -106,14 +105,18 @@ function NavbarLink({
                     }
                     setOpened((o) => true);
                   }
+                  if (active === parentIndex) {
+                    setActive(null);
+                    return;
+                  }
                 }
+                setActive(parentIndex);
               }}
-              opened={active === parentIndex}
+              opened={active === parentIndex && submenus?.length > 0}
             >
               {submenus?.length > 0 &&
                 submenus.map(({ Icon, label, href, role }, index) => {
-                  if ((role && currentRole !== role) || active !== parentIndex)
-                    return null;
+                  if (role && currentRole !== role) return null;
                   return (
                     <React.Fragment key={index}>
                       <Tooltip

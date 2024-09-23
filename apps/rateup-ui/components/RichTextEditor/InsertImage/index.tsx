@@ -72,39 +72,46 @@ function InsertImage() {
 
   const chooseImageDDState = form.getValues().chooseImageDDState;
 
-  const handlePopoverDDFormSubmit = useCallback(async (values) => {
-    const {
-      chooseImageDDState,
-      imgWidth,
-      imgHeight,
-      imageUrlTextInput,
-      uploadImageFileInputValue,
-    } = values;
-    if (chooseImageDDState === "Enter Image Url") {
-      editor
-        .chain()
-        .focus()
-        .setImage({
-          src: imageUrlTextInput,
-          style: `width: ${imgWidth}px; height: ${imgHeight}px; max-width: 100%; object-fit:contain`,
-        })
-        .run();
-      setIsPopoverOpen(false);
-    } else if (chooseImageDDState === "Upload Image") {
-      setIsUploadingFile(true);
-      const { url } = await uploadFile("src", uploadImageFileInputValue);
-      editor
-        .chain()
-        .focus()
-        .setImage({
-          src: url,
-          style: `width: ${imgWidth}px; height: ${imgHeight}px; max-width: 100%; object-fit:contain`,
-        })
-        .run();
-      setIsUploadingFile(false);
-      setIsPopoverOpen(false);
-    }
-  }, []);
+  const handlePopoverDDFormSubmit = useCallback(
+    async (values) => {
+      const {
+        chooseImageDDState,
+        imgWidth,
+        imgHeight,
+        imageUrlTextInput,
+        uploadImageFileInputValue,
+      } = values;
+      if (chooseImageDDState === "Enter Image Url") {
+        if (editor) {
+          editor
+            .chain()
+            .focus()
+            .setImage({
+              src: imageUrlTextInput,
+              style: `width: ${imgWidth}px; height: ${imgHeight}px; max-width: 100%; object-fit:contain`,
+            })
+            .run();
+          setIsPopoverOpen(false);
+        }
+      } else if (chooseImageDDState === "Upload Image") {
+        setIsUploadingFile(true);
+        const { url } = await uploadFile("src", uploadImageFileInputValue);
+        if (editor) {
+          editor
+            .chain()
+            .focus()
+            .setImage({
+              src: url,
+              style: `width: ${imgWidth}px; height: ${imgHeight}px; max-width: 100%; object-fit:contain`,
+            })
+            .run();
+          setIsUploadingFile(false);
+          setIsPopoverOpen(false);
+        }
+      }
+    },
+    [editor],
+  );
 
   useEffect(() => {
     if (chooseImageDDState === "Enter Image Url") {

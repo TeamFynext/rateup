@@ -1,15 +1,17 @@
-import { Card, Group, Stack, Text, Tooltip } from "@mantine/core";
-import classes from "./styles.module.css";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
+import { Card, Group, Stack, Text, Tooltip } from "@mantine/core";
+
+import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { useSetIsChatDisplayOpen } from "../../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import { formatToCustomTime } from "../../../../../utils/dateTime";
 import {
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
 } from "../../../../../utils/whatsapp/inbox";
 import WaInboxSessionBadge from "./sessionBadge";
-import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import Link from "next/link";
-import { useSetIsChatDisplayOpen } from "../../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
+import classes from "./styles.module.css";
 
 interface WaInboxChatSelectCardProps {
   contact: ContactsWithLastMessage;
@@ -36,7 +38,7 @@ export default function WaInboxChatSelectCard({
             title={contact?.name}
             truncate
           >
-            {contact?.name}
+            {contact?.name ?? contact?.phone}
           </Text>
           <Group gap={"xs"}>
             <WaInboxSessionBadge
