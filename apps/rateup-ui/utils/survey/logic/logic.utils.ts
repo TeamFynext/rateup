@@ -154,7 +154,10 @@ export function getResponses(
       case Q.CustomNPS:
         return (
           question.choices[selectedLanguage].map((choice, index) => ({
-            label: choice.value as string,
+            label:
+              typeof choice.value === "object"
+                ? choice.value?.title
+                : choice.value,
             value: index.toString(),
           })) || []
         );
