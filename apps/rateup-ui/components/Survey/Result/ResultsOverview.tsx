@@ -397,8 +397,15 @@ const ResultsOverview = ({ surveyId }) => {
                             no={qindex + 1}
                             choices={item?.choices?.map((choice) => {
                               return {
-                                value: choice.value,
-                                color: stringToColour(choice.value),
+                                value:
+                                  typeof choice.value === "object"
+                                    ? choice.value.title
+                                    : choice.value,
+                                color: stringToColour(
+                                  typeof choice.value === "object"
+                                    ? choice.value.title
+                                    : choice.value,
+                                ),
                               };
                             })}
                             data={item?.responses
@@ -434,8 +441,15 @@ const ResultsOverview = ({ surveyId }) => {
                         no={index + 1}
                         choices={item?.choices?.map((choice) => {
                           return {
-                            value: choice.value,
-                            color: stringToColour(choice.value),
+                            value:
+                              typeof choice.value === "object"
+                                ? choice.value.title
+                                : choice.value,
+                            color: stringToColour(
+                              typeof choice.value === "object"
+                                ? choice.value.title
+                                : choice.value,
+                            ),
                           };
                         })}
                         data={item?.responses}

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import {
   Box,
   Checkbox,
@@ -8,11 +8,13 @@ import {
   Stack,
   useMantineTheme,
 } from "@mantine/core";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
+import { AnimatePresence, motion } from "framer-motion";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard";
-import { AnimatePresence, motion } from "framer-motion";
 import classes from "../TakeSurvey.module.css";
 
 interface MSQFormProps {
@@ -56,7 +58,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
 
   const handleSelectedOp = (values: string[]) => {
     setSelectedOp(values);
-    const res = options?.filter((op) => values?.includes(op?.value));
+    const res = options?.filter((op) => values?.includes(op?.value as string));
     if (values.includes(selectedFeature?.other?.title)) {
       if (otherInput?.length) updateResponse([...res, { other: otherInput }]);
       else updateResponse(null);

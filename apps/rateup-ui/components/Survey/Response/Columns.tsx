@@ -1,14 +1,17 @@
+import { useContext } from "react";
+
 import {
   Badge,
   Button,
   Center,
   Group,
   Menu,
+  rem,
   Stack,
   Text,
   Tooltip,
-  rem,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconChevronDown,
   IconEye,
@@ -17,24 +20,22 @@ import {
 } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { QuestionType } from "../../../types/enums";
-import {
-  getResponse,
-  getResponseArrayByQuestionType,
-} from "../../../utils/response";
-import { HoverCardComponent } from "../HoverCard/HoverCard";
 
-import { useDisclosure } from "@mantine/hooks";
-import { useContext } from "react";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
-import PreviewModal from "../../Modal/PreviewModal";
-import { fuzzyFilter } from "./Filter";
+import { QuestionType } from "../../../types/enums";
 import {
   getFileNameFromKey,
   getFileUrlFromKey,
 } from "../../../utils/file-upload/upload";
+import {
+  getResponse,
+  getResponseArrayByQuestionType,
+} from "../../../utils/response";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import PreviewModal from "../../Modal/PreviewModal";
+import { HoverCardComponent } from "../HoverCard/HoverCard";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
+import { fuzzyFilter } from "./Filter";
 
 export const useSurveyResponseColumns = ({
   questions = [],

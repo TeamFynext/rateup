@@ -251,7 +251,14 @@ declare global {
     weightage?: NPSWeightage;
   };
   type Choice = {
-    value: string;
+    value:
+      | string
+      | {
+          image?: string;
+          title: string;
+          description?: string;
+          metadata?: string;
+        };
     weightage?: NPSWeightage;
   };
   type QuestionResponse = {

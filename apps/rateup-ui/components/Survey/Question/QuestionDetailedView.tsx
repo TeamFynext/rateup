@@ -367,7 +367,14 @@ function ExtraProps({
         </>
       );
     case QuestionType.PCQ:
-      return <ChoicesCreator qId={question?.id} form={form} image />;
+      return (
+        <ChoicesCreator
+          qId={question?.id}
+          form={form}
+          image
+          surveyType={surveyType}
+        />
+      );
     case QuestionType.Testimonial:
       return <TestimonialExtraProps qId={question.id} form={form} />;
     case QuestionType.Contact:

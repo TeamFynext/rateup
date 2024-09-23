@@ -1,4 +1,17 @@
-import { Button } from "@mantine/core";
+import { MutableRefObject } from "react";
+
+import {
+  Button,
+  ButtonProps,
+  FileButton,
+  Group,
+  HoverCard,
+  Image,
+  MantineStyleProp,
+} from "@mantine/core";
+import { IconUpload } from "@tabler/icons-react";
+
+import { DEFAULT_IMAGE_BASE64_START } from "@/utils/constants";
 
 interface Props {
   title: string;
@@ -230,5 +243,84 @@ export const RateupIconButton = ({
     >
       {rightIcon}
     </Button>
+  );
+};
+
+type RateupFileUploadButtonProps = {
+  resetRef: MutableRefObject<() => void>;
+  handleFileChange: (file: File) => Promise<void>;
+  clearFile: () => void;
+  fileButton?: ButtonProps;
+  resetButton?: ButtonProps;
+  type?: "file" | "image";
+  fileSrc?: string;
+  accept?: string;
+  error?: string;
+  style?: MantineStyleProp;
+};
+export const RateupFileUploadButton = ({
+  resetRef,
+  handleFileChange,
+  fileSrc,
+  fileButton,
+  resetButton,
+  type = "image",
+  accept = "image/png,image/jpeg,image/gif,image/webp",
+  clearFile,
+  error,
+  style,
+}: RateupFileUploadButtonProps) => {
+  return (
+    <Group gap={4} style={style}>
+      {fileSrc && (
+        <HoverCard width={280} shadow="md" position="top" withArrow>
+          <HoverCard.Target>
+            <Image
+              src={`${DEFAULT_IMAGE_BASE64_START}${fileSrc}`}
+              h={35}
+              alt="choice-preview"
+            />
+          </HoverCard.Target>
+          <HoverCard.Dropdown>
+            <Image
+              src={`${DEFAULT_IMAGE_BASE64_START}${fileSrc}`}
+              alt="choice-preview"
+              mah={400}
+            />
+          </HoverCard.Dropdown>
+        </HoverCard>
+      )}
+
+      <FileButton
+        onChange={handleFileChange}
+        accept={accept}
+        resetRef={resetRef}
+      >
+        {(props) => (
+          <Button
+            variant="outline"
+            rightSection={<IconUpload size={18} />}
+            radius={"md"}
+            color={error && "red"}
+            style={{
+              flexGrow: 1,
+            }}
+            {...fileButton}
+            {...props}
+          >
+            {error || (fileSrc ? "Replace" : "Select" + ` ${type}`)}
+          </Button>
+        )}
+      </FileButton>
+      <Button
+        disabled={!fileSrc}
+        color="red"
+        radius={"md"}
+        onClick={clearFile}
+        {...resetButton}
+      >
+        reset
+      </Button>
+    </Group>
   );
 };
