@@ -61,9 +61,9 @@ const questionCore = {
             }),
             z.object({
               title: z.string(),
-              description: z.string(),
-              metadata: z.string(),
-              image: z.string(),
+              description: z.string().optional(),
+              metadata: z.string().optional(),
+              image: z.string().optional(),
             }),
           ]),
           weightage: z.nativeEnum(NPSWeightage).optional(),
