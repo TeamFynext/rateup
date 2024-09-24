@@ -6,7 +6,15 @@ import React, {
   useState,
 } from "react";
 
-import { Badge, Button, Divider, Flex, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Divider,
+  Flex,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Range } from "react-date-range";
@@ -297,22 +305,25 @@ const ResultsOverview = ({ surveyId }) => {
   return (
     <Stack className={styles["results-overview-root-div"]} h={"100%"} p={3}>
       {chartData?.length > 0 ? (
-        <>
-          <Button
-            className={styles["export-to-pdf-btn"]}
-            leftSection={<IconTableExport size={"0.875rem"} />}
-            onClick={handleExportToPdf}
-            loading={isExporting}
-          >
-            Export to Pdf
-          </Button>
+        <Stack>
           <Stack p={5} ref={contentDivRef}>
-            <Flex justify={"flex-end"}>
-              <DateRangePickerButton
-                onChange={(r) => setRange(r ? [r["selection"]] : [])}
-                ranges={ranges}
-              />
-            </Flex>
+            <PaperLayout p={"md"}>
+              <Flex justify={"space-between"}>
+                <Tooltip label={"Export to Pdf"}>
+                  <ActionIcon
+                    onClick={handleExportToPdf}
+                    loading={isExporting}
+                    variant="subtle"
+                  >
+                    <IconTableExport size={"1.5rem"} />
+                  </ActionIcon>
+                </Tooltip>
+                <DateRangePickerButton
+                  onChange={(r) => setRange(r ? [r["selection"]] : [])}
+                  ranges={ranges}
+                />
+              </Flex>
+            </PaperLayout>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
                 <Heading subtitle="NPS Overview" />
@@ -386,8 +397,15 @@ const ResultsOverview = ({ surveyId }) => {
                             no={qindex + 1}
                             choices={item?.choices?.map((choice) => {
                               return {
-                                value: choice.value,
-                                color: stringToColour(choice.value),
+                                value:
+                                  typeof choice.value === "object"
+                                    ? choice.value.title
+                                    : choice.value,
+                                color: stringToColour(
+                                  typeof choice.value === "object"
+                                    ? choice.value.title
+                                    : choice.value,
+                                ),
                               };
                             })}
                             data={item?.responses
@@ -423,8 +441,15 @@ const ResultsOverview = ({ surveyId }) => {
                         no={index + 1}
                         choices={item?.choices?.map((choice) => {
                           return {
-                            value: choice.value,
-                            color: stringToColour(choice.value),
+                            value:
+                              typeof choice.value === "object"
+                                ? choice.value.title
+                                : choice.value,
+                            color: stringToColour(
+                              typeof choice.value === "object"
+                                ? choice.value.title
+                                : choice.value,
+                            ),
                           };
                         })}
                         data={item?.responses}
@@ -443,7 +468,7 @@ const ResultsOverview = ({ surveyId }) => {
               subscription={subscription}
             />
           </Stack>
-        </>
+        </Stack>
       ) : (
         <NothingFound text="No responses yet" />
       )}

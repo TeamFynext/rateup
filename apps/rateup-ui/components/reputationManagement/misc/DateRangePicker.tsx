@@ -53,7 +53,11 @@ export function DateRangePickerButton({
           leftSection={<IconCalendar size={"1rem"} />}
         />
         <Tooltip label={"Clear Date Filter"}>
-          <ActionIcon onClick={() => onChange(undefined)} variant="light">
+          <ActionIcon
+            onClick={() => onChange(undefined)}
+            variant="light"
+            size={"xs"}
+          >
             <IconX />
           </ActionIcon>
         </Tooltip>
