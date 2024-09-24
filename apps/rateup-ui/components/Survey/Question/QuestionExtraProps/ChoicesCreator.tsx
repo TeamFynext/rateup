@@ -94,7 +94,7 @@ export function ChoicesCreator({
       .string()
       .trim()
       .min(1)
-      .max(30)
+      .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
         const isDuplicate = choices.some((c) => {
           const choiceValue = image
@@ -629,7 +629,7 @@ function Choice({
       .string()
       .trim()
       .min(1)
-      .max(30)
+      .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
         const isDuplicate = choices.some((c, i) => {
           const choiceValue = image
