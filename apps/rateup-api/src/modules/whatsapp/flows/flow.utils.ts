@@ -219,6 +219,8 @@ export function parseFlowResponse({
     case qt.Text:
     case qt.TextArea:
     case qt.Number:
+    case qt.PhotoPicker:
+    case qt.DocumentPicker:
       return response;
     case qt.Phone:
       return { phone: response };
@@ -581,6 +583,10 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.radioButtonsGroup;
     case qt.MSQ:
       return WaFlowFormElementType.checkboxGroup;
+    case qt.PhotoPicker:
+      return WaFlowFormElementType.photoPicker;
+    case qt.DocumentPicker:
+      return WaFlowFormElementType.documentPicker;
     default:
       throw Error("Not implemented");
   }
