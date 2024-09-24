@@ -51,6 +51,8 @@ export enum QuestionType {
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
   WaTimeSlot = "WaTimeSlot",
+  DocumentPicker = "Document Picker",
+  PhotoPicker = "Photo Picker",
 }
 
 export enum LDResponse {
@@ -211,6 +213,8 @@ export enum WaFlowFormElementType {
   checkboxGroup = "CheckboxGroup",
   dropDown = "Dropdown",
   optIn = "OptIn",
+  photoPicker = "PhotoPicker",
+  documentPicker = "DocumentPicker",
 }
 
 export const ChoiceTypeQuestions = [
@@ -304,4 +308,10 @@ export enum IntegratedApps {
   googlesheet = "googlesheet",
   amelia = "amelia",
   waPayment = "waPayment",
+}
+
+export enum PhotoSource {
+  cameraGallery = "camera_gallery",
+  gallery = "gallery",
+  camera = "camera",
 }

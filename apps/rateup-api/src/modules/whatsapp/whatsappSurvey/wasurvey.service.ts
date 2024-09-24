@@ -42,6 +42,8 @@ import {
   ratingEmoji,
 } from "./wasurvey.utils";
 import { getGraphApiErrorMessage } from "../wa_error_handler";
+import { uploadFile } from "../../../utils/upload/s3Upload";
+import axios from "axios";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -354,9 +356,54 @@ export async function saveResponses(session: WaSessionWithRelations) {
     phone: anonymous ? "anonynous" : session.phone,
     responses: session.responses,
   });
-  const questionResponses =
+  let questionResponses =
     session.responses as unknown as Array<QuestionResponse>;
+  if (
+    [QuestionType.PhotoPicker, QuestionType.DocumentPicker].includes(
+      questionResponses[0].type,
+    )
+  ) {
+    try {
+      const settings = await getWaSettings(session.orgId);
+      // Step 1: Download the media from WhatsApp API
+      let parsedResponse =
+        questionResponses?.[0].response?.[questionResponses?.[0].type]?.[0];
+      const fileUrl = await callWhatsappApi(
+        `/${parsedResponse.id}`,
+        "GET",
+        settings.accessToken,
+      );
+      if (fileUrl?.data) {
+        // Step 2: Convert the downloaded media to a Buffer (for binary data)
+        const fileResponse = await axios.get(fileUrl?.data.url, {
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${settings.accessToken}`,
+          },
+        });
+        // Step 3: Prepare S3 upload parameters
+        const imageBuffer = Buffer.from(fileResponse.data, "binary");
 
+        const s3Params = {
+          Bucket: process.env.AWS_S3_BUCKET || "rateup-survey-uploads",
+          Key: parsedResponse.file_name,
+          ContentType: parsedResponse?.mime_type,
+          Body: imageBuffer,
+        };
+
+        // Step 4: Upload the file to S3
+        const obj = await uploadFile(s3Params);
+
+        questionResponses[0].response[questionResponses[0].type] = obj["Key"]
+          ? obj["Key"]
+          : null;
+      } else {
+        log.error("Failed to download media file from WhatsApp API.");
+      }
+    } catch (error) {
+      log.error("Error occurred while processing media file:", error);
+    }
+  }
   // TODO: save name
   const contact =
     !anonymous &&
