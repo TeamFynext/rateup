@@ -91,6 +91,8 @@ const FlowInputQuestions = [
   QuestionType.Date,
   QuestionType.Optin,
   QuestionType.WaTimeSlot,
+  QuestionType.PhotoPicker,
+  QuestionType.DocumentPicker,
 ];
 
 export const BasicPages = [

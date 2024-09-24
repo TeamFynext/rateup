@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
+  Alert,
   Badge,
   Box,
   Checkbox,
@@ -9,6 +10,7 @@ import {
   Group,
   Image,
   ScrollArea,
+  SimpleGrid,
   Stack,
   Switch,
   Text,
@@ -19,16 +21,25 @@ import {
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
+import {
+  IconBrandGoogle,
+  IconDeviceSdCard,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import _ from "lodash";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { z } from "zod";
 
 import {
+  DocumentMimeType,
   IntegratedApps,
+  PhotoSource,
   QuestionType,
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
 } from "@/types/enums";
+import { WaFlowScreen } from "@/types/global";
 import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
@@ -38,7 +49,11 @@ import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons";
-import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedNumberInput,
+  ContainedSelection,
+} from "@/components/input/ContainedInput/ContainedInput";
 import { LengthTracker } from "@/components/input/LengthTracker";
 import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor";
 import { ChoicesCreator } from "@/components/Survey/Question/QuestionExtraProps/ChoicesCreator";
@@ -58,7 +73,9 @@ import {
   validateAllLanguagesArePopulated,
 } from "@/utils/questions";
 import {
+  getFlowFormElementById,
   getFlowTextLimit,
+  getFormObjFromScreenId,
   questionTypeToFlowFormElementType,
 } from "@/utils/whatsapp/flow.utils";
 
@@ -148,7 +165,8 @@ function ElementEditor({
 }: Readonly<ElementEditorProps>) {
   const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const { selectedScreenId, flowJson } = useContext(EditFlowContext);
+  const { selectedScreenId, flowJson, updateFlowJson, selectedFormElementId } =
+    useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -202,6 +220,42 @@ function ElementEditor({
     },
   });
 
+  const fileSchema = z.object({
+    "photo-source": z
+      .nativeEnum(PhotoSource, {
+        required_error: "Photo source is required",
+      })
+      .optional()
+      .nullable(),
+    "max-file-size-kb": z
+      .number()
+      .min(1, "File size must be at least 1 KB")
+      .max(25600, "File size cannot exceed 25600 KB"),
+    "min-uploaded-photos": z.number().min(0).max(30),
+    "max-uploaded-photos": z
+      .number()
+      .min(1, "Must upload at least 1 photo")
+      .max(30, "Cannot upload more than 30 photos"),
+    "min-uploaded-documents": z.number().min(0).max(30),
+    "max-uploaded-documents": z
+      .number()
+      .min(1, "Must upload at least 1 document")
+      .max(30, "Cannot upload more than 30 documents"),
+    "allowed-mime-types": z.array(z.string()).optional(),
+  });
+
+  const extraConfigForm = useForm({
+    validate: zodResolver(fileSchema),
+    initialValues: {
+      "photo-source": PhotoSource.cameraGallery,
+      "max-file-size-kb": 5120,
+      "min-uploaded-photos": 1,
+      "max-uploaded-photos": 1,
+      "min-uploaded-documents": 1,
+      "max-uploaded-documents": 1,
+      "allowed-mime-types": [],
+    },
+  });
   form.watch("choices", ({ previousValue, value, touched, dirty }) => {
     handleSave();
   });
@@ -213,7 +267,10 @@ function ElementEditor({
       ["choices"],
     );
   }
-
+  const selectedFormElement = getFlowFormElementById(
+    selectedFormElementId,
+    flowJson,
+  );
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
     if (!flowEditable) {
@@ -251,6 +308,68 @@ function ElementEditor({
           qId: question.id,
           data: form.getValues(),
         });
+      }
+      switch (question.type) {
+        case QuestionType.PhotoPicker:
+        case QuestionType.DocumentPicker:
+          const { hasErrors } = extraConfigForm.validate();
+          if (hasErrors) return;
+          notifications.clean();
+          const flowForm = getFormObjFromScreenId(
+            flowJson.screens,
+            selectedScreenId,
+          );
+          const index = flowForm.children.findIndex(
+            (fe) => fe === selectedFormElement,
+          );
+
+          if (index !== -1) {
+            updateFlowJson((draft) => {
+              const formEl = getFormObjFromScreenId(
+                draft.screens,
+                selectedScreenId,
+              );
+              const updatedValues = Object.fromEntries(
+                Object.entries(
+                  question.type === QuestionType.PhotoPicker
+                    ? {
+                        "photo-source": extraConfigForm.values["photo-source"],
+                        "max-file-size-kb":
+                          extraConfigForm.values["max-file-size-kb"],
+                        "min-uploaded-photos":
+                          extraConfigForm.values["min-uploaded-photos"],
+                        "max-uploaded-photos":
+                          extraConfigForm.values["max-uploaded-photos"],
+                      }
+                    : {
+                        "max-file-size-kb":
+                          extraConfigForm.values["max-file-size-kb"],
+                        "min-uploaded-documents":
+                          extraConfigForm.values["min-uploaded-documents"],
+                        "max-uploaded-documents":
+                          extraConfigForm.values["max-uploaded-documents"],
+                        "allowed-mime-types":
+                          extraConfigForm.values["allowed-mime-types"],
+                      },
+                ).filter(([_, value]) => {
+                  // Check if value is an array and ensure it has a length greater than 0
+                  if (Array.isArray(value)) {
+                    return value.length > 0;
+                  }
+                  // Otherwise, check if value is not undefined, null, or an empty string
+                  return value !== undefined && value !== null && value !== "";
+                }),
+              );
+
+              formEl.children[index] = {
+                ...formEl.children[index],
+                required: undefined,
+                ...updatedValues,
+              } as any;
+            });
+          }
+        default:
+          break;
       }
     }
 
@@ -363,43 +482,13 @@ function ElementEditor({
                   handleSave();
               }}
             />
-            {question.type === QuestionType.Optin && (
-              <ContainedSelection
-                data={nextScreens?.map((data) => ({
-                  label: data?.title,
-                  value: data?.id,
-                }))}
-                {...form.getInputProps("optinScreenId")}
-                label={"Read more screen"}
-                placeholder="select next screen to show the details"
-                w={300}
-              />
-            )}
-            {question.type === QuestionType.Date && (
-              <Stack mt={"xs"}>
-                <Switch
-                  size="md"
-                  label={"Enable dynamic datepicker"}
-                  {...form.getInputProps("onSelectAction", {
-                    type: "checkbox",
-                  })}
-                />
-                {form.values.onSelectAction && (
-                  <ContainedSelection
-                    label={"Integration App Name"}
-                    placeholder="Select Integration App Name"
-                    data={[IntegratedApps.amelia]}
-                    {...form.getInputProps("waAppName")}
-                    w={400}
-                  />
-                )}
-              </Stack>
-            )}
 
             <FlowQuestionExtraProps
               form={form}
               question={question}
               handleSave={handleSave}
+              nextScreens={nextScreens}
+              extraConfigForm={extraConfigForm}
             />
           </Stack>
         </Group>
@@ -514,12 +603,18 @@ interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
   handleSave: () => void;
+  nextScreens?: WaFlowScreen[];
+  extraConfigForm: UseFormReturnType<any>;
 }
 function FlowQuestionExtraProps({
   form,
   question,
+  nextScreens,
   handleSave,
+  extraConfigForm,
 }: ExtraPropsProps) {
+  const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
+    useContext(EditFlowContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   switch (question.type) {
     case QuestionType.MCQ:
@@ -552,6 +647,138 @@ function FlowQuestionExtraProps({
           </Box>
         </Stack>
       );
+    case QuestionType.Optin:
+      return (
+        <ContainedSelection
+          data={nextScreens?.map((data) => ({
+            label: data?.title,
+            value: data?.id,
+          }))}
+          {...form.getInputProps("optinScreenId")}
+          label={"Read more screen"}
+          placeholder="select next screen to show the details"
+          w={300}
+        />
+      );
+    case QuestionType.Date:
+      return (
+        <Stack mt={"xs"}>
+          <Switch
+            size="md"
+            label={"Enable dynamic datepicker"}
+            {...form.getInputProps("onSelectAction", {
+              type: "checkbox",
+            })}
+          />
+          {form.values.onSelectAction && (
+            <ContainedSelection
+              label={"Integration App Name"}
+              placeholder="Select Integration App Name"
+              data={[IntegratedApps.amelia]}
+              {...form.getInputProps("waAppName")}
+              w={400}
+            />
+          )}
+        </Stack>
+      );
+    case QuestionType.PhotoPicker:
+      // const selectedFormElement = getFlowFormElementById(
+      //   selectedFormElementId,
+      //   flowJson,
+      // );
+      return (
+        <SimpleGrid mt={"xs"} cols={2}>
+          <Alert variant="light" color="blue" title="Info">
+            No more than 10 images or documents can be sent as part of the
+            response message.
+          </Alert>
+          <Alert variant="light" color="blue" title="Info">
+            Additionally, the maximum aggregated size of attached images or
+            documents cannot exceed 100 MiB.
+          </Alert>
+
+          <ContainedSelection
+            label={"Photo Source"}
+            placeholder="Select Photo Source"
+            description="source where the image can be selected from"
+            data={Object.values(PhotoSource)}
+            {...extraConfigForm.getInputProps("photo-source")}
+          />
+          <ContainedNumberInput
+            label={"max file size in kb"}
+            description="maximum file size (in kilobytes) that can be uploaded"
+            placeholder="max file size in kb"
+            min={1}
+            max={25600}
+            {...extraConfigForm.getInputProps("max-file-size-kb")}
+          />
+          <ContainedNumberInput
+            label={"min uploaded photos"}
+            description="minimum number of photos that are required"
+            placeholder="min uploaded photos"
+            min={0}
+            max={30}
+            {...extraConfigForm.getInputProps("min-uploaded-photos")}
+          />
+          <ContainedNumberInput
+            label={"max uploaded photos"}
+            description="maximum number of photos that can be uploaded"
+            placeholder="max uploaded photos"
+            min={1}
+            max={30}
+            {...extraConfigForm.getInputProps("max-uploaded-photos")}
+          />
+        </SimpleGrid>
+      );
+    case QuestionType.DocumentPicker:
+      return (
+        <SimpleGrid mt={"xs"} cols={2}>
+          <Alert variant="light" color="blue" title="Info">
+            No more than 10 images or documents can be sent as part of the
+            response message.
+          </Alert>
+          <Alert variant="light" color="blue" title="Info">
+            Additionally, the maximum aggregated size of attached images or
+            documents cannot exceed 100 MiB.
+          </Alert>
+
+          <ContainedNumberInput
+            label={"max file size in kb"}
+            description="maximum file size (in kilobytes) that can be uploaded"
+            placeholder="max file size in kb"
+            min={1}
+            max={25600}
+            {...extraConfigForm.getInputProps("max-file-size-kb")}
+          />
+          <ContainedNumberInput
+            label={"min uploaded documents"}
+            description="minimum number of documents that are required"
+            placeholder="min uploaded documents"
+            min={0}
+            max={30}
+            {...extraConfigForm.getInputProps("min-uploaded-documents")}
+          />
+          <ContainedNumberInput
+            label={"max uploaded documents"}
+            description="maximum number of documents that can be uploaded"
+            placeholder="max uploaded documents"
+            min={1}
+            max={30}
+            {...extraConfigForm.getInputProps("max-uploaded-documents")}
+          />
+          <ContainedMultiSelect
+            label={"allowed mime types"}
+            placeholder="Select allowed mime types"
+            description="by default all the mime types are allowed"
+            data={Object.entries(DocumentMimeType).map(([key, value]) => ({
+              label: key,
+              value: value,
+            }))}
+            {...extraConfigForm.getInputProps("allowed-mime-types")}
+          />
+        </SimpleGrid>
+      );
+
     default:
       return null;
   }

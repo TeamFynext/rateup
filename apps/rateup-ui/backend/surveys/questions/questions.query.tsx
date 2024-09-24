@@ -1,4 +1,8 @@
+import { notifications } from "@mantine/notifications";
+import { IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createQuestion,
   deleteQuestion,
@@ -7,9 +11,6 @@ import {
   replaceQuestions,
   updateQuestion,
 } from "./questions.api";
-import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
-import { notifications } from "@mantine/notifications";
-import { IconX } from "@tabler/icons-react";
 
 export const useQuestions = (surveyId: string) => {
   return useQuery({

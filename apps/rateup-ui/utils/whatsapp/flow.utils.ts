@@ -648,6 +648,10 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.optIn;
     case qt.WaTimeSlot:
       return WaFlowFormElementType.dropDown;
+    case qt.PhotoPicker:
+      return WaFlowFormElementType.photoPicker;
+    case qt.DocumentPicker:
+      return WaFlowFormElementType.documentPicker;
     default:
       throw Error(qtype + "Not implemented");
   }

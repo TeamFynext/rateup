@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Box,
   Button,
   Checkbox,
   Divider,
@@ -14,8 +15,11 @@ import {
 import { DatePickerInput } from "@mantine/dates";
 import {
   IconCalendar,
+  IconCamera,
   IconChevronRight,
   IconDotsVertical,
+  IconFile,
+  IconFileText,
   IconX,
 } from "@tabler/icons-react";
 
@@ -87,6 +91,28 @@ export function FlowDateInputPreview({ label = "Label" }: { label?: string }) {
       placeholder="dd/mm/yyyy"
       rightSection={<IconCalendar />}
     />
+  );
+}
+
+export function FlowFileInputPreview({
+  label = "Label",
+  type = "photo",
+}: {
+  label?: string;
+  type: "photo" | "document";
+}) {
+  return (
+    <Box>
+      <Text>{label}</Text>
+      <Button
+        variant="outline"
+        leftSection={type === "photo" ? <IconCamera /> : <IconFileText />}
+        fullWidth
+        radius={"xl"}
+      >
+        {type === "photo" ? "Take photo" : "Upload Document"}
+      </Button>
+    </Box>
   );
 }
 export function FlowRadioPreview({
@@ -349,6 +375,10 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return (
         <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />
       );
+    case WaFlowFormElementType.photoPicker:
+      return <FlowFileInputPreview label={fe.label} type={"photo"} />;
+    case WaFlowFormElementType.documentPicker:
+      return <FlowFileInputPreview label={fe.label} type={"document"} />;
     default:
       throw new Error("Invalid form element type");
   }

@@ -174,6 +174,8 @@ const questionIcons = {
   [QuestionType.WaList]: IconList,
   [QuestionType.WaButtons]: IconCircuitPushbutton,
   [QuestionType.WaTimeSlot]: IconCalendarTime,
+  [QuestionType.PhotoPicker]: IconCameraFilled,
+  [QuestionType.DocumentPicker]: IconFileFilled,
   [WaFlowFormNonInputElementType.nonInputText]: IconTextSize,
   [WaFlowFormNonInputElementType.image]: IconPhoto,
   [WaFlowFormNonInputElementType.embeddedLink]: IconLink,
