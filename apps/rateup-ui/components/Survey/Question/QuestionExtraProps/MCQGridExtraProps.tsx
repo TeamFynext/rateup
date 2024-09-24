@@ -1,24 +1,28 @@
-import { Flex, Group, Stack, Title, Text, ActionIcon } from "@mantine/core";
-import { ChoicesCreator } from "./ChoicesCreator";
 import { useContext, useState } from "react";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { ContainedTextArea } from "../../../input/ContainedInput/ContainedInput";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../Button/RateupButtons";
+
+import { ActionIcon, Flex, Group, Stack, Text, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconEdit,
   IconGripVertical,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import FormModalLayout from "../../../Modal/FormModalLayout";
-import { useDisclosure } from "@mantine/hooks";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { reorder } from "../../../../utils/questions";
-import classes from "../DraggableQuestionCard/DraggableQuestionCard.module.css";
 import cx from "clsx";
+
+import { SurveyType } from "@/types/enums";
+
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import { reorder } from "../../../../utils/questions";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../Button/RateupButtons";
+import { ContainedTextArea } from "../../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../../Modal/FormModalLayout";
+import classes from "../DraggableQuestionCard/DraggableQuestionCard.module.css";
+import { ChoicesCreator } from "./ChoicesCreator";
 
 const MCQGridExtraProps = ({ form, qId }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -171,7 +175,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
       </Flex>
 
       <Title order={5}>Add Choices</Title>
-      <ChoicesCreator form={form} qId={qId} />
+      <ChoicesCreator form={form} qId={qId} surveyType={SurveyType.Web} />
       <FormModalLayout
         opened={opened}
         onClose={close}

@@ -148,7 +148,11 @@ export function ChoicesCreator({
       let choiceObj = {
         value:
           surveyType !== SurveyType.Web
-            ? choiceForm.getValues()
+            ? Object.fromEntries(
+                Object.entries(choiceForm.getValues()).filter(
+                  ([key, value]) => value?.trim() !== "",
+                ),
+              )
             : choiceForm.getValues().title,
         weightage:
           form.values.type === QuestionType.CustomNPS
@@ -599,7 +603,11 @@ function Choice({
       let choiceObj = {
         value:
           surveyType !== SurveyType.Web
-            ? choiceForm.getValues()
+            ? Object.fromEntries(
+                Object.entries(choiceForm.getValues()).filter(
+                  ([key, value]) => value?.trim() !== "",
+                ),
+              )
             : choiceForm.getValues().title,
       };
       const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
