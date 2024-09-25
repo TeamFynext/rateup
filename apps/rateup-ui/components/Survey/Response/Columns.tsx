@@ -1,6 +1,7 @@
 import { useContext } from "react";
 
 import {
+  Anchor,
   Badge,
   Button,
   Center,
@@ -122,12 +123,17 @@ export const useSurveyResponseColumns = ({
               <HoverCardComponent content={content} fw={600} fz={"lg"} />
             ),
             enableColumnFilter: ![
+              QuestionType.DocumentPicker,
+              QuestionType.PhotoPicker,
               QuestionType.Photo,
               QuestionType.PCQ,
             ].includes(q.type),
-            enableSorting: ![QuestionType.Photo, QuestionType.PCQ].includes(
-              q.type,
-            ),
+            enableSorting: ![
+              QuestionType.Photo,
+              QuestionType.PCQ,
+              QuestionType.DocumentPicker,
+              QuestionType.PhotoPicker,
+            ].includes(q.type),
             cell: (info) => {
               return (
                 <BadgeorTextorPreview
@@ -244,7 +250,7 @@ export const useSurveyResponseColumns = ({
   return column;
 };
 
-const previewRequired = [QuestionType.Photo];
+const previewRequired = [QuestionType.Photo, QuestionType.PhotoPicker];
 const badgeRequired = [
   QuestionType.Rating,
   QuestionType.Smiley,
@@ -278,6 +284,19 @@ function BadgeorTextorPreview({
           opened={previewModalopened}
         />
       </>
+    );
+  } else if (questionType === QuestionType.DocumentPicker) {
+    return (
+      <Text p={10} miw={200}>
+        {response && (
+          <Anchor
+            href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`}
+            download
+          >
+            Download
+          </Anchor>
+        )}
+      </Text>
     );
   } else if (badgeRequired.includes(questionType)) {
     return (

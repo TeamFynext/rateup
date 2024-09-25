@@ -11,7 +11,7 @@ import {
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import cx from "clsx";
 
-import useTranslations from "@/dictionaries/useTranslation";
+import { SurveyType } from "@/types/enums";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { reorder } from "../../../../utils/questions";
@@ -175,7 +175,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
       </Flex>
 
       <Title order={5}>Add Choices</Title>
-      <ChoicesCreator form={form} qId={qId} />
+      <ChoicesCreator form={form} qId={qId} surveyType={SurveyType.Web} />
       <FormModalLayout
         opened={opened}
         onClose={close}

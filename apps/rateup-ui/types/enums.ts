@@ -67,6 +67,8 @@ export enum QuestionType {
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons
   WaTimeSlot = "WaTimeSlot",
+  DocumentPicker = "Document Picker",
+  PhotoPicker = "Photo Picker",
 }
 
 export enum LDResponse {
@@ -224,6 +226,8 @@ export enum WaFlowFormElementType {
   checkboxGroup = "CheckboxGroup",
   dropDown = "Dropdown",
   optIn = "OptIn",
+  photoPicker = "PhotoPicker",
+  documentPicker = "DocumentPicker",
 }
 export enum WaFlowFormInputElementType {
   textInput = "TextInput",
@@ -233,6 +237,8 @@ export enum WaFlowFormInputElementType {
   radioButtonsGroup = "RadioButtonsGroup",
   checkboxGroup = "CheckboxGroup",
   dropDown = "Dropdown",
+  photoPicker = "PhotoPicker",
+  documentPicker = "DocumentPicker",
   // optIn = "OptIn",
 }
 export enum WaFlowFormNonInputElementType {
@@ -354,7 +360,46 @@ export enum IntegratedApps {
   amelia = "amelia",
   waPayment = "waPayment",
 }
+export enum PhotoSource {
+  cameraGallery = "camera_gallery",
+  gallery = "gallery",
+  camera = "camera",
+}
+export enum InputType {
+  Text = "text",
+  Number = "number",
+  Email = "email",
+  Password = "password",
+  Passcode = "passcode",
+  Phone = "phone",
+}
 
+export enum DocumentMimeType {
+  Gzip = "application/gzip",
+  Msword = "application/msword",
+  Pdf = "application/pdf",
+  VndMsExcel = "application/vnd.ms-excel",
+  VndMsPowerpoint = "application/vnd.ms-powerpoint",
+  VndOasisOpendocumentPresentation = "application/vnd.oasis.opendocument.presentation",
+  VndOasisOpendocumentSpreadsheet = "application/vnd.oasis.opendocument.spreadsheet",
+  VndOasisOpendocumentText = "application/vnd.oasis.opendocument.text",
+  VndOpenxmlformatsOfficedocumentPresentationmlPresentation = "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  VndOpenxmlformatsOfficedocumentWordprocessingmlDocument = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  X7zCompressed = "application/x-7z-compressed",
+  Zip = "application/zip",
+  Avif = "image/avif",
+  Gif = "image/gif",
+  Heic = "image/heic",
+  Heif = "image/heif",
+  Jpeg = "image/jpeg",
+  Png = "image/png",
+  Tiff = "image/tiff",
+  Webp = "image/webp",
+  Plain = "text/plain",
+  Mp4 = "video/mp4",
+  Mpeg = "video/mpeg",
+}
 export enum MenuButtons {
   CONTACT = "contact",
   WHATSAPP = "whatsApp",

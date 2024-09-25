@@ -589,6 +589,24 @@ export function getFlowElementJsonFromQuestion(question: Question) {
         [questionElement.name]: `\${form.${questionElement.name}}`,
       },
     };
+  } else if (
+    [
+      QuestionType.Text,
+      QuestionType.PhotoPicker,
+      QuestionType.DocumentPicker,
+      QuestionType.Email,
+      QuestionType.Phone,
+    ].includes(question.type as QuestionType)
+  ) {
+    questionElement.required = ![
+      QuestionType.PhotoPicker,
+      QuestionType.DocumentPicker,
+    ].includes(question.type as QuestionType)
+      ? question.required
+      : undefined;
+    Object.entries(question.extraConfig).forEach(([key, value]) => {
+      questionElement[key] = value;
+    });
   }
   mapData.type = question.type;
   mapData.questionId = question.id;
@@ -648,6 +666,10 @@ export function questionTypeToFlowFormElementType(
       return WaFlowFormElementType.optIn;
     case qt.WaTimeSlot:
       return WaFlowFormElementType.dropDown;
+    case qt.PhotoPicker:
+      return WaFlowFormElementType.photoPicker;
+    case qt.DocumentPicker:
+      return WaFlowFormElementType.documentPicker;
     default:
       throw Error(qtype + "Not implemented");
   }

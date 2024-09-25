@@ -172,7 +172,8 @@ export function DraggableQuestionCard({
 
                 {!nonDeletablePagetypeStrs.includes(question.type) && (
                   <ActionIcon
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       closeDialog();
                       toggle();
                     }}

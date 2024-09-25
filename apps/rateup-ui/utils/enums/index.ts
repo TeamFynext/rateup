@@ -138,6 +138,10 @@ export function getQuestionTypeLabel(
       return "Wheel Of Price";
     case QuestionType.WaTimeSlot:
       return "TimeSlot";
+    case QuestionType.PhotoPicker:
+      return "Photo Picker";
+    case QuestionType.DocumentPicker:
+      return "Document Picker";
     default:
       return false;
   }

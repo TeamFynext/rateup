@@ -95,7 +95,7 @@ export function ChoicesCreator({
       .string()
       .trim()
       .min(1)
-      .max(30)
+      .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
         const isDuplicate = choices.some((c) => {
           const choiceValue = image
@@ -149,7 +149,11 @@ export function ChoicesCreator({
       let choiceObj = {
         value:
           surveyType !== SurveyType.Web
-            ? choiceForm.getValues()
+            ? Object.fromEntries(
+                Object.entries(choiceForm.getValues()).filter(
+                  ([key, value]) => value?.trim() !== "",
+                ),
+              )
             : choiceForm.getValues().title,
         weightage:
           form.values.type === QuestionType.CustomNPS
@@ -604,7 +608,11 @@ function Choice({
       let choiceObj = {
         value:
           surveyType !== SurveyType.Web
-            ? choiceForm.getValues()
+            ? Object.fromEntries(
+                Object.entries(choiceForm.getValues()).filter(
+                  ([key, value]) => value?.trim() !== "",
+                ),
+              )
             : choiceForm.getValues().title,
       };
       const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
@@ -626,7 +634,7 @@ function Choice({
       .string()
       .trim()
       .min(1)
-      .max(30)
+      .max(surveyType !== SurveyType.Web ? 30 : 100)
       .refine((title) => {
         const isDuplicate = choices.some((c, i) => {
           const choiceValue = image
