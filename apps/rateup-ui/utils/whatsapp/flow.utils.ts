@@ -594,10 +594,16 @@ export function getFlowElementJsonFromQuestion(question: Question) {
       QuestionType.Text,
       QuestionType.PhotoPicker,
       QuestionType.DocumentPicker,
+      QuestionType.Email,
+      QuestionType.Phone,
     ].includes(question.type as QuestionType)
   ) {
-    questionElement.required =
-      QuestionType.Text === question.type ? question.required : undefined;
+    questionElement.required = ![
+      QuestionType.PhotoPicker,
+      QuestionType.DocumentPicker,
+    ].includes(question.type as QuestionType)
+      ? question.required
+      : undefined;
     Object.entries(question.extraConfig).forEach(([key, value]) => {
       questionElement[key] = value;
     });
