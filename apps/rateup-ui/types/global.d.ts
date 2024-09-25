@@ -97,13 +97,15 @@ declare global {
     subtitleText?: string;
     titleText?: string;
     startButtonText?: string;
-    photoSource?: PhotoSource;
-    maxFileSizeKB?: number;
-    minUploadedPhotos?: number;
-    maxUploadedPhotos?: number;
-    minUploadedDocuments?: number;
-    maxUploadedDocuments?: number;
-    allowedMimeTypes?: string[];
+    extraConfig?: {
+      photoSource?: PhotoSource;
+      maxFileSizeKB?: number;
+      minUploadedPhotos?: number;
+      maxUploadedPhotos?: number;
+      minUploadedDocuments?: number;
+      maxUploadedDocuments?: number;
+      allowedMimeTypes?: string[];
+    };
   }
   type ResponseSummary = {
     all: {

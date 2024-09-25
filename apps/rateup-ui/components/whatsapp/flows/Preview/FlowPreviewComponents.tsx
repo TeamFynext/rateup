@@ -104,6 +104,7 @@ export function FlowFileInputPreview({
   return (
     <Box>
       <Text>{label}</Text>
+      <Text fz={"sm"}>automated description</Text>
       <Button
         variant="outline"
         leftSection={type === "photo" ? <IconCamera /> : <IconFileText />}

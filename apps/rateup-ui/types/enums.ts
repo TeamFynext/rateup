@@ -365,6 +365,15 @@ export enum PhotoSource {
   gallery = "gallery",
   camera = "camera",
 }
+export enum InputType {
+  Text = "text",
+  Number = "number",
+  Email = "email",
+  Password = "password",
+  Passcode = "passcode",
+  Phone = "phone",
+}
+
 export enum DocumentMimeType {
   Gzip = "application/gzip",
   Msword = "application/msword",

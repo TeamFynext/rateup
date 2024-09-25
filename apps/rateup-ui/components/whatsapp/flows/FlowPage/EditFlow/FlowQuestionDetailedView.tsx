@@ -21,17 +21,14 @@ import {
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import {
-  IconBrandGoogle,
-  IconDeviceSdCard,
-  IconInfoCircle,
-} from "@tabler/icons-react";
+import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import _ from "lodash";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
 
 import {
   DocumentMimeType,
+  InputType,
   IntegratedApps,
   PhotoSource,
   QuestionType,
@@ -73,9 +70,7 @@ import {
   validateAllLanguagesArePopulated,
 } from "@/utils/questions";
 import {
-  getFlowFormElementById,
   getFlowTextLimit,
-  getFormObjFromScreenId,
   questionTypeToFlowFormElementType,
 } from "@/utils/whatsapp/flow.utils";
 
@@ -242,6 +237,7 @@ function ElementEditor({
       .min(1, "Must upload at least 1 document")
       .max(30, "Cannot upload more than 30 documents"),
     "allowed-mime-types": z.array(z.string()).optional(),
+    "input-type": z.nativeEnum(InputType).optional().nullable(),
   });
 
   const extraConfigForm = useForm({
@@ -254,8 +250,15 @@ function ElementEditor({
       "min-uploaded-documents": 1,
       "max-uploaded-documents": 1,
       "allowed-mime-types": [],
+      "input-type": InputType.Text,
     },
   });
+  useEffect(() => {
+    if (question.extraConfig) {
+      extraConfigForm.setValues(question.extraConfig);
+    }
+  }, [question.extraConfig]);
+
   form.watch("choices", ({ previousValue, value, touched, dirty }) => {
     handleSave();
   });
@@ -267,10 +270,6 @@ function ElementEditor({
       ["choices"],
     );
   }
-  const selectedFormElement = getFlowFormElementById(
-    selectedFormElementId,
-    flowJson,
-  );
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
     if (!flowEditable) {
@@ -285,6 +284,52 @@ function ElementEditor({
       if (getIncompleteLanguages().length > 0) {
         setSelectedLanguage(getIncompleteLanguages()[0]);
         return "error";
+      }
+      switch (question.type) {
+        case QuestionType.PhotoPicker:
+        case QuestionType.DocumentPicker:
+        case QuestionType.Text:
+          const { hasErrors } = extraConfigForm.validate();
+          if (hasErrors) return;
+          notifications.clean();
+          const updatedValues = Object.fromEntries(
+            Object.entries(
+              question.type === QuestionType.PhotoPicker
+                ? {
+                    "photo-source": extraConfigForm.values["photo-source"],
+                    "max-file-size-kb":
+                      extraConfigForm.values["max-file-size-kb"],
+                    "min-uploaded-photos":
+                      extraConfigForm.values["min-uploaded-photos"],
+                    "max-uploaded-photos":
+                      extraConfigForm.values["max-uploaded-photos"],
+                  }
+                : question.type === QuestionType.DocumentPicker
+                  ? {
+                      "max-file-size-kb":
+                        extraConfigForm.values["max-file-size-kb"],
+                      "min-uploaded-documents":
+                        extraConfigForm.values["min-uploaded-documents"],
+                      "max-uploaded-documents":
+                        extraConfigForm.values["max-uploaded-documents"],
+                      "allowed-mime-types":
+                        extraConfigForm.values["allowed-mime-types"],
+                    }
+                  : {
+                      "input-type": extraConfigForm.values["input-type"],
+                    },
+            ).filter(([_, value]) => {
+              // Check if value is an array and ensure it has a length greater than 0
+              if (Array.isArray(value)) {
+                return value.length > 0;
+              }
+              // Otherwise, check if value is not undefined, null, or an empty string
+              return value !== undefined && value !== null && value !== "";
+            }),
+          );
+          form.setFieldValue("extraConfig", updatedValues);
+        default:
+          break;
       }
       // Checking if its a new question
       if (!question.id) {
@@ -308,68 +353,6 @@ function ElementEditor({
           qId: question.id,
           data: form.getValues(),
         });
-      }
-      switch (question.type) {
-        case QuestionType.PhotoPicker:
-        case QuestionType.DocumentPicker:
-          const { hasErrors } = extraConfigForm.validate();
-          if (hasErrors) return;
-          notifications.clean();
-          const flowForm = getFormObjFromScreenId(
-            flowJson.screens,
-            selectedScreenId,
-          );
-          const index = flowForm.children.findIndex(
-            (fe) => fe === selectedFormElement,
-          );
-
-          if (index !== -1) {
-            updateFlowJson((draft) => {
-              const formEl = getFormObjFromScreenId(
-                draft.screens,
-                selectedScreenId,
-              );
-              const updatedValues = Object.fromEntries(
-                Object.entries(
-                  question.type === QuestionType.PhotoPicker
-                    ? {
-                        "photo-source": extraConfigForm.values["photo-source"],
-                        "max-file-size-kb":
-                          extraConfigForm.values["max-file-size-kb"],
-                        "min-uploaded-photos":
-                          extraConfigForm.values["min-uploaded-photos"],
-                        "max-uploaded-photos":
-                          extraConfigForm.values["max-uploaded-photos"],
-                      }
-                    : {
-                        "max-file-size-kb":
-                          extraConfigForm.values["max-file-size-kb"],
-                        "min-uploaded-documents":
-                          extraConfigForm.values["min-uploaded-documents"],
-                        "max-uploaded-documents":
-                          extraConfigForm.values["max-uploaded-documents"],
-                        "allowed-mime-types":
-                          extraConfigForm.values["allowed-mime-types"],
-                      },
-                ).filter(([_, value]) => {
-                  // Check if value is an array and ensure it has a length greater than 0
-                  if (Array.isArray(value)) {
-                    return value.length > 0;
-                  }
-                  // Otherwise, check if value is not undefined, null, or an empty string
-                  return value !== undefined && value !== null && value !== "";
-                }),
-              );
-
-              formEl.children[index] = {
-                ...formEl.children[index],
-                required: undefined,
-                ...updatedValues,
-              } as any;
-            });
-          }
-        default:
-          break;
       }
     }
 
@@ -613,8 +596,6 @@ function FlowQuestionExtraProps({
   handleSave,
   extraConfigForm,
 }: ExtraPropsProps) {
-  const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
-    useContext(EditFlowContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   switch (question.type) {
     case QuestionType.MCQ:
@@ -682,10 +663,6 @@ function FlowQuestionExtraProps({
         </Stack>
       );
     case QuestionType.PhotoPicker:
-      // const selectedFormElement = getFlowFormElementById(
-      //   selectedFormElementId,
-      //   flowJson,
-      // );
       return (
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
@@ -777,6 +754,17 @@ function FlowQuestionExtraProps({
             {...extraConfigForm.getInputProps("allowed-mime-types")}
           />
         </SimpleGrid>
+      );
+    case QuestionType.Text:
+      return (
+        <>
+          <ContainedSelection
+            label={"Input Type"}
+            placeholder="Select Type"
+            data={Object.values(InputType)}
+            {...extraConfigForm.getInputProps("input-type")}
+          />
+        </>
       );
 
     default:

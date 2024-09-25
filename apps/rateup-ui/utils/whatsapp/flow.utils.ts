@@ -589,6 +589,18 @@ export function getFlowElementJsonFromQuestion(question: Question) {
         [questionElement.name]: `\${form.${questionElement.name}}`,
       },
     };
+  } else if (
+    [
+      QuestionType.Text,
+      QuestionType.PhotoPicker,
+      QuestionType.DocumentPicker,
+    ].includes(question.type as QuestionType)
+  ) {
+    questionElement.required =
+      QuestionType.Text === question.type ? question.required : undefined;
+    Object.entries(question.extraConfig).forEach(([key, value]) => {
+      questionElement[key] = value;
+    });
   }
   mapData.type = question.type;
   mapData.questionId = question.id;
