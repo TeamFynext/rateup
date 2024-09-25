@@ -163,7 +163,7 @@ export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,
   type = SurveyType.Web,
-): Question & { enableNpsAnalytics?: boolean } => {
+): Question & { enableNpsAnalytics?: boolean; extraConfig: any } => {
   const emptyText = {};
   languages?.forEach((lang) => {
     emptyText[lang] = "";
@@ -194,13 +194,7 @@ export const getInitialQuestionValues = (
       type === SurveyType.WhatsApp ? question?.sections || {} : undefined,
     onSelectAction: question?.onSelectAction,
     waAppName: question?.waAppName,
-    allowedMimeTypes: question?.allowedMimeTypes,
-    maxFileSizeKB: question?.maxFileSizeKB,
-    photoSource: question?.photoSource,
-    minUploadedPhotos: question?.minUploadedPhotos,
-    maxUploadedPhotos: question?.maxUploadedPhotos,
-    minUploadedDocuments: question?.minUploadedDocuments,
-    maxUploadedDocuments: question?.maxUploadedDocuments,
+    extraConfig: question?.extraConfig,
   };
 };
 
