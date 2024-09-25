@@ -215,30 +215,58 @@ function ElementEditor({
     },
   });
 
-  const fileSchema = z.object({
-    "photo-source": z
-      .nativeEnum(PhotoSource, {
-        required_error: "Photo source is required",
-      })
-      .optional()
-      .nullable(),
-    "max-file-size-kb": z
-      .number()
-      .min(1, "File size must be at least 1 KB")
-      .max(25600, "File size cannot exceed 25600 KB"),
-    "min-uploaded-photos": z.number().min(0).max(30),
-    "max-uploaded-photos": z
-      .number()
-      .min(1, "Must upload at least 1 photo")
-      .max(30, "Cannot upload more than 30 photos"),
-    "min-uploaded-documents": z.number().min(0).max(30),
-    "max-uploaded-documents": z
-      .number()
-      .min(1, "Must upload at least 1 document")
-      .max(30, "Cannot upload more than 30 documents"),
-    "allowed-mime-types": z.array(z.string()).optional(),
-    "input-type": z.nativeEnum(InputType).optional().nullable(),
-  });
+  const fileSchema = z
+    .object({
+      "photo-source": z
+        .nativeEnum(PhotoSource, {
+          required_error: "Photo source is required",
+        })
+        .optional()
+        .nullable(),
+      "max-file-size-kb": z
+        .number()
+        .min(1, "File size must be at least 1 KB")
+        .max(25600, "File size cannot exceed 25600 KB"),
+      "min-uploaded-photos": z.number().min(0).max(30),
+      "max-uploaded-photos": z
+        .number()
+        .min(1, "Must upload at least 1 photo")
+        .max(30, "Cannot upload more than 30 photos"),
+      "min-uploaded-documents": z.number().min(0).max(30),
+      "max-uploaded-documents": z
+        .number()
+        .min(1, "Must upload at least 1 document")
+        .max(30, "Cannot upload more than 30 documents"),
+      "allowed-mime-types": z.array(z.string()).optional(),
+      "input-type": z.nativeEnum(InputType).optional().nullable(),
+    })
+    .superRefine((values, ctx) => {
+      if (values["min-uploaded-photos"] > values["max-uploaded-photos"]) {
+        ctx.addIssue({
+          path: ["max-uploaded-photos"],
+          code: z.ZodIssueCode.custom,
+          message: "Minimum uploaded photos cannot be greater than maximum",
+        });
+      } else if (
+        values["min-uploaded-documents"] > values["max-uploaded-documents"]
+      ) {
+        ctx.addIssue({
+          path: ["min-uploaded-documents"],
+          code: z.ZodIssueCode.custom,
+          message: "Minimum uploaded documents cannot be greater than maximum",
+        });
+      }
+    });
+  const getInputType = () => {
+    switch (question.type) {
+      case QuestionType.Email:
+        return InputType.Email;
+      case QuestionType.Phone:
+        return InputType.Phone;
+      default:
+        return InputType.Text;
+    }
+  };
 
   const extraConfigForm = useForm({
     validate: zodResolver(fileSchema),
@@ -250,7 +278,7 @@ function ElementEditor({
       "min-uploaded-documents": 1,
       "max-uploaded-documents": 1,
       "allowed-mime-types": [],
-      "input-type": InputType.Text,
+      "input-type": getInputType(),
     },
   });
   useEffect(() => {
@@ -276,87 +304,128 @@ function ElementEditor({
       showErrorToast("Published Flows cannot be edited");
       return;
     }
-    const res = form.validate();
-    if (res.hasErrors) {
+
+    // Form validation
+    const formValidation = form.validate();
+    if (formValidation.hasErrors) {
       showErrorToast("Fix errors before saving");
       return "error";
+    }
+
+    // Language completion check
+    const incompleteLanguages = getIncompleteLanguages();
+    if (incompleteLanguages.length > 0) {
+      setSelectedLanguage(incompleteLanguages[0]);
+      return "error";
+    }
+
+    // Extra configuration validation for specific question types
+
+    if (
+      [
+        QuestionType.PhotoPicker,
+        QuestionType.DocumentPicker,
+        QuestionType.Text,
+        QuestionType.Email,
+        QuestionType.Phone,
+      ].includes(question.type as QuestionType)
+    ) {
+      const { hasErrors: extraConfigErrors } = extraConfigForm.validate();
+      if (extraConfigErrors) return "error";
+
+      notifications.clean();
+      const updatedValues = getUpdatedValues();
+      form.setFieldValue("extraConfig", updatedValues);
+    }
+    // Save the question - create new or update existing
+    if (!question.id) {
+      createNewQuestion();
     } else {
-      if (getIncompleteLanguages().length > 0) {
-        setSelectedLanguage(getIncompleteLanguages()[0]);
-        return "error";
-      }
-      switch (question.type) {
-        case QuestionType.PhotoPicker:
-        case QuestionType.DocumentPicker:
-        case QuestionType.Text:
-          const { hasErrors } = extraConfigForm.validate();
-          if (hasErrors) return;
-          notifications.clean();
-          const updatedValues = Object.fromEntries(
-            Object.entries(
-              question.type === QuestionType.PhotoPicker
-                ? {
-                    "photo-source": extraConfigForm.values["photo-source"],
-                    "max-file-size-kb":
-                      extraConfigForm.values["max-file-size-kb"],
-                    "min-uploaded-photos":
-                      extraConfigForm.values["min-uploaded-photos"],
-                    "max-uploaded-photos":
-                      extraConfigForm.values["max-uploaded-photos"],
-                  }
-                : question.type === QuestionType.DocumentPicker
-                  ? {
-                      "max-file-size-kb":
-                        extraConfigForm.values["max-file-size-kb"],
-                      "min-uploaded-documents":
-                        extraConfigForm.values["min-uploaded-documents"],
-                      "max-uploaded-documents":
-                        extraConfigForm.values["max-uploaded-documents"],
-                      "allowed-mime-types":
-                        extraConfigForm.values["allowed-mime-types"],
-                    }
-                  : {
-                      "input-type": extraConfigForm.values["input-type"],
-                    },
-            ).filter(([_, value]) => {
-              // Check if value is an array and ensure it has a length greater than 0
-              if (Array.isArray(value)) {
-                return value.length > 0;
-              }
-              // Otherwise, check if value is not undefined, null, or an empty string
-              return value !== undefined && value !== null && value !== "";
-            }),
-          );
-          form.setFieldValue("extraConfig", updatedValues);
-        default:
-          break;
-      }
-      // Checking if its a new question
-      if (!question.id) {
-        // Creating new question
-        questionCreateMutation.mutate(form.values, {
-          onSuccess: (r) => {
-            onCreated(r.data);
-          },
-        });
-      } else {
-        // Updating existing question
-        notifications.show({
-          id: "load-data",
-          loading: true,
-          title: "updating question",
-          message: `Hold on, your changes are getting updated...`,
-          autoClose: false,
-          withCloseButton: false,
-        });
-        questionUpdateMutation.mutate({
-          qId: question.id,
-          data: form.getValues(),
-        });
-      }
+      updateExistingQuestion();
     }
 
     return "saved";
+  };
+
+  // Helper function to extract updated values based on question type
+  const getUpdatedValues = () => {
+    const extraConfigValues = (() => {
+      switch (question.type) {
+        case QuestionType.PhotoPicker:
+          return {
+            "photo-source": extraConfigForm.values["photo-source"],
+            "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
+            "min-uploaded-photos":
+              extraConfigForm.values["min-uploaded-photos"],
+            "max-uploaded-photos":
+              extraConfigForm.values["max-uploaded-photos"],
+          };
+        case QuestionType.DocumentPicker:
+          return {
+            "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
+            "min-uploaded-documents":
+              extraConfigForm.values["min-uploaded-documents"],
+            "max-uploaded-documents":
+              extraConfigForm.values["max-uploaded-documents"],
+            "allowed-mime-types": extraConfigForm.values["allowed-mime-types"],
+          };
+        case QuestionType.Text:
+        case QuestionType.Email:
+        case QuestionType.Phone:
+          return {
+            "input-type": extraConfigForm.values["input-type"],
+          };
+      }
+    })();
+
+    return Object.fromEntries(
+      Object.entries(extraConfigValues).filter(([_, value]) => {
+        // Check if value is an array with length > 0, otherwise check for truthy values
+        return Array.isArray(value)
+          ? value.length > 0
+          : value !== undefined && value !== null && value !== "";
+      }),
+    );
+  };
+
+  // Create new question
+  const createNewQuestion = () => {
+    questionCreateMutation.mutate(form.getValues(), {
+      onSuccess: (response) => {
+        onCreated(response.data);
+      },
+    });
+  };
+
+  // Update existing question
+  const updateExistingQuestion = () => {
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: "Updating question",
+      message: "Hold on, your changes are getting updated...",
+      autoClose: false,
+      withCloseButton: false,
+    });
+
+    questionUpdateMutation.mutate(
+      {
+        qId: question.id,
+        data: form.getValues(),
+      },
+      {
+        onSuccess: () => {
+          notifications.clean();
+          notifications.show({
+            id: "load-data",
+            title: "Success",
+            message: "Your question was updated successfully",
+            color: "green",
+            autoClose: 3000,
+          });
+        },
+      },
+    );
   };
 
   const isSaving =
