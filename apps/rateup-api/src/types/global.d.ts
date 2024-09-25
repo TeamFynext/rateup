@@ -207,6 +207,18 @@ declare global {
       [QuestionType.Date]?: Date;
       [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };
+      [QuestionType.PhotoPicker]?: Array<{
+        id: string;
+        sha256: string;
+        file_name: string;
+        mime_type: string;
+      }>;
+      [QuestionType.DocumentPicker]?: Array<{
+        id: string;
+        sha256: string;
+        file_name: string;
+        mime_type: string;
+      }>;
     };
   };
   type LogicJump = {

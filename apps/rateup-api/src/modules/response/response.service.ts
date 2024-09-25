@@ -43,6 +43,7 @@ import {
   getContactGroupByNameAndTeam,
 } from "../contact/contactGroup/contactGroup.service";
 import { sendWebhook } from "../../utils/webhook";
+import { getFileUrlFromKey } from "../../utils/upload/s3Upload";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -338,6 +339,11 @@ export async function downloadExcelResponse(
             case QuestionType.WinItem:
             case QuestionType.TnC: {
               responseValue = responseValue?.toString();
+              break;
+            }
+            case QuestionType.PhotoPicker:
+            case QuestionType.DocumentPicker: {
+              responseValue = getFileUrlFromKey(responseValue?.toString());
               break;
             }
           }
