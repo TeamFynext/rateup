@@ -1,17 +1,21 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Text, Stack, Group, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
 import { useRouter } from "next/router";
-import { useUser } from "../../../context/UserContext";
+
+import { Group, Stack, Text, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import SurveyContext from "../../../context/SurveyContext";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
 import { useDeleteSurveyMutation } from "../../../backend/surveys/surveys.query";
+import SurveyContext from "../../../context/SurveyContext";
+import { useUser } from "../../../context/UserContext";
+import { RateupButtonBlue } from "../../Button/RateupButtons";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -25,7 +29,7 @@ const OtherSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const router = useRouter();
-
+  const { translations } = useTranslations();
   const resetResponsesStats = useResetResponsesStats(
     surveyId,
     surveyTeamMapId,
@@ -42,8 +46,8 @@ const OtherSettings = () => {
       notifications.show({
         id: "load-data",
         loading: true,
-        title: "Resetting data.",
-        message: `Hold on, data is getting reset...`,
+        title: translations["Resetting data."],
+        message: translations["Hold on, data is getting reset..."],
         autoClose: false,
         withCloseButton: false,
       });
@@ -53,8 +57,8 @@ const OtherSettings = () => {
       notifications.show({
         id: "load-data",
         color: "red",
-        title: "Error",
-        message: "Incorrect email",
+        title: translations["Error"],
+        message: translations["Incorrect email"],
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
@@ -67,8 +71,8 @@ const OtherSettings = () => {
     notifications.show({
       id: "delete-survey",
       loading: true,
-      title: "Deleting survey..",
-      message: `Hold on, survey is getting deleted...`,
+      title: translations["Deleting survey.."],
+      message: translations["Hold on, survey is getting deleted..."],
       autoClose: true,
       withCloseButton: false,
     });
@@ -82,18 +86,18 @@ const OtherSettings = () => {
       <PaperLayout shadow="xl" p={"xl"}>
         <Group justify="space-between">
           <Stack gap={0}>
-            <Title order={4}>DANGER ZONE</Title>
-            <Text c="dimmed">Reset data and responses</Text>
+            <Title order={4}>{translations["DANGER ZONE"]}</Title>
+            <Text c="dimmed">{translations["Reset data and responses"]}</Text>
           </Stack>
           <Stack>
             <RateupButtonBlue
               color="red"
-              title="Reset Response data"
+              title={translations["Reset Response data"]}
               onClick={open}
             />
             <RateupButtonBlue
               color="red"
-              title="Delete Survey"
+              title={translations["Delete Survey"]}
               onClick={openDeleteModal}
             />
           </Stack>
@@ -103,8 +107,8 @@ const OtherSettings = () => {
         opened={opened}
         onClose={close}
         centered
-        title="Reset Reponses & Stats"
-        buttonTitle="Confirm"
+        title={translations["Reset Reponses & Stats"]}
+        buttonTitle={translations["Confirm"]}
         includeCancelButton
         isLoading={isLoading}
         onSubmit={confirmReset}
@@ -112,14 +116,14 @@ const OtherSettings = () => {
         <Stack>
           <ContainedTextField
             withAsterisk
-            label="Verify email"
-            placeholder="Enter your login email"
+            label={translations["Verify email"]}
+            placeholder={translations["Enter your login email"]}
             required
             value={verifyEmail}
             onChange={(e) => setVerifyEmail(e.target.value)}
           />
           <Text style={{ color: "red" }}>
-            Once reset, all response data will be lost.
+            {translations["Once reset, all response data will be lost."]}
           </Text>
         </Stack>
       </FormModalLayout>
@@ -127,15 +131,15 @@ const OtherSettings = () => {
         opened={deleteModalOpened}
         onClose={closeDeleteModal}
         centered
-        title="Confirm Delete Survey"
-        buttonTitle="Confirm"
+        title={translations["Confirm Delete Survey"]}
+        buttonTitle={translations["Confirm"]}
         includeCancelButton
         isLoading={isLoading}
         onSubmit={confirmDeleteSurvey}
       >
         <Text style={{ color: "red" }}>
-          Are you sure you want to delete this survey? <br />
-          This action cannot be undone..!!
+          {translations["Are you sure you want to delete this survey?"]} <br />
+          {translations["This action cannot be undone..!!"]}
         </Text>
       </FormModalLayout>
     </>

@@ -23,6 +23,8 @@ import {
   YAxis,
 } from "recharts";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
@@ -59,7 +61,7 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
     isLoading: rLoading,
     error: rError,
   } = useAllResponses(surveyId?.toString());
-
+  const { translations } = useTranslations();
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
     teamWiseResponses,
@@ -68,7 +70,9 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
   if (qLoading || rLoading) return <RateupLoader h={"100dvh"} />;
   if (qError || rError) return <div>Error...</div>;
   if (teamWiseResponses?.length === 0)
-    return <NothingFound text="No responses found for comparison" />;
+    return (
+      <NothingFound text={translations["No responses found for comparison"]} />
+    );
   return (
     <PaperLayout
       p={5}
@@ -78,11 +82,11 @@ export default function ResultComparison({ surveyId }: { surveyId: string }) {
       style={{ flexDirection: "column" }}
     >
       <Stack style={{ overflow: "auto", flex: 1 }} mt={"md"} p={10}>
-        <Heading subtitle="Team Response Activity" />
+        <Heading subtitle={translations["Team Response Activity"]} />
         <TeamResponseActivitySection
           teamWiseResponses={filteredResponsesByTeam}
         />
-        <Heading subtitle="Team Question Activity" />
+        <Heading subtitle={translations["Team Question Activity"]} />
         {questions?.map((q, i) => {
           if (questionTypesForComparison.includes(q?.type as QuestionType)) {
             let questionResponses = [];
@@ -149,6 +153,7 @@ interface TeamResponseActivitySectionProps {
 const TeamResponseActivitySection = ({
   teamWiseResponses,
 }: TeamResponseActivitySectionProps) => {
+  const { translations } = useTranslations();
   enum ActivePlot {
     Radar = "radar",
     Bar = "bar",
@@ -160,7 +165,7 @@ const TeamResponseActivitySection = ({
   ) {
     return (
       <Stack mih={400}>
-        <NothingFound text="No response activity yet" />
+        <NothingFound text={translations["No response activity yet"]} />
       </Stack>
     );
   } else {
@@ -171,13 +176,13 @@ const TeamResponseActivitySection = ({
       >
         <Tabs.List>
           <Tabs.Tab value={ActivePlot.Bar} leftSection={<IconAntennaBars4 />}>
-            Bar
+            {translations["Bar"]}
           </Tabs.Tab>
           <Tabs.Tab value={ActivePlot.Pie} leftSection={<IconChartPieFilled />}>
-            Pie
+            {translations["Pie"]}
           </Tabs.Tab>
           <Tabs.Tab value={ActivePlot.Radar} leftSection={<IconChartRadar />}>
-            Radar
+            {translations["Radar"]}
           </Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value={ActivePlot.Bar}>
@@ -247,6 +252,7 @@ const CombinedChart = ({
   questionResponses,
   question,
 }: CombinedChartProps) => {
+  const { translations } = useTranslations();
   const data = teams.map(({ code, id }) => {
     const responses = getResponseObjectByQuestionType(
       question.type as QuestionType,
@@ -267,7 +273,9 @@ const CombinedChart = ({
   if (data?.every((d) => Object.values(d.responses)?.every((r) => r === 0))) {
     return (
       <Stack h={400}>
-        <NothingFound text="No response activity for this question yet" />
+        <NothingFound
+          text={translations["No response activity for this question yet"]}
+        />
       </Stack>
     );
   } else {

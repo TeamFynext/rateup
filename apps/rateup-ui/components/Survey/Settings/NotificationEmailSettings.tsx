@@ -1,10 +1,14 @@
-import { Stack, Group, Title, Switch, Text, Box } from "@mantine/core";
+import { useEffect, useState } from "react";
+
+import { Box, Group, Stack, Switch, Text, Title } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { updateEmailSurvey } from "./updateSettings";
-import { useEffect, useState } from "react";
-import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 
 const NotificationEmailSettings = ({ survey, surveyId }) => {
   const [enableNotificationEmail, setEnabledNotificationEmail] = useState(
@@ -13,10 +17,12 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
   const [notificationEmail, setNotificationEmail] = useState(
     survey?.notificationEmail,
   );
+  const { translations } = useTranslations();
   const [error, setError] = useState("");
   const editSurvey = useEditSurveyMutation(surveyId);
   useEffect(() => {
-    if (!/^\S+@\S+$/.test(notificationEmail)) setError("Invalid Email");
+    if (!/^\S+@\S+$/.test(notificationEmail))
+      setError(translations["Invalid Email"]);
     else setError("");
   }, [notificationEmail]);
   return (
@@ -31,7 +37,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
           }
         />
         <Box className={"switch-heading-and-desc-container"}>
-          <h3>Enable Email Notification</h3>
+          <h3>{translations["Enable Email Notification"]}</h3>
         </Box>
       </Group>
       <Stack>
@@ -40,20 +46,24 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
           withAsterisk
           value={notificationEmail}
           onChange={(e) => setNotificationEmail(e.target.value)}
-          placeholder="Enter email ID"
+          placeholder={translations["Enter email ID"]}
           error={error}
         />
         {!survey?.notificationEmail?.length && (
           <Text c="var(--tertiary-color)" fz={15}>
-            Please Enter Email ID and Save to complete the process.
+            {
+              translations[
+                "Please Enter Email ID and Save to complete the process."
+              ]
+            }
           </Text>
         )}
         <Group justify="center">
           <RateupButtonBlue
             title={
               survey?.notificationEmail?.length
-                ? "Edit Email ID"
-                : "Save Email ID"
+                ? translations["Edit Email ID"]
+                : translations["Save Email ID"]
             }
             radius={"xl"}
             disabled={error.length != 0 || !enableNotificationEmail}

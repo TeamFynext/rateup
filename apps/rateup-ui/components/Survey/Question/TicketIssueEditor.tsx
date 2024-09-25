@@ -1,27 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { QuestionTabsEnum } from "../EditSurvey";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Rating,
+  Button,
   Group,
-  Title,
+  Rating,
+  SimpleGrid,
   Stack,
   Switch,
   Text,
-  SimpleGrid,
-  Button,
+  Title,
   useMantineTheme,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconInfoCircle, IconX } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
+import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../Button/RateupButtons";
-import { notifications } from "@mantine/notifications";
-import { IconInfoCircle, IconX } from "@tabler/icons-react";
-import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
-import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
-import { useRouter } from "next/router";
+import { QuestionTabsEnum } from "../EditSurvey";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
+
 interface IProps {
   selectedQ: Question;
   setSelectedQ: (Q: Question) => void;
@@ -43,7 +48,7 @@ const TicketIssueEditor = ({
   const [enableTicketIssue, setEnableTicketIssue] = useState(
     !!selectedQ?.ticketIssue,
   );
-
+  const { translations } = useTranslations();
   const [minRating, setMinRating] = useState(
     selectedQ?.ticketIssue?.minRating || 3,
   );
@@ -108,8 +113,8 @@ const TicketIssueEditor = ({
       notifications.show({
         id: "load-data",
         color: "var(--color-tertiary)",
-        title: "Configure Ticket Issue",
-        message: "Enter condition for ticket issue",
+        title: translations["Configure Ticket Issue"],
+        message: translations["Enter condition for ticket issue"],
         icon: <IconInfoCircle size="3rem" />,
         autoClose: 3000,
       });
@@ -128,8 +133,8 @@ const TicketIssueEditor = ({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: "Enabling automatic ticket issue",
-      message: `Hold on, your changes are getting updated...`,
+      title: translations["Enabling automatic ticket issue"],
+      message: translations["Hold on, your changes are getting updated..."],
       autoClose: false,
       withCloseButton: false,
     });
@@ -146,8 +151,8 @@ const TicketIssueEditor = ({
     notifications.show({
       id: "load-data",
       color: "red",
-      title: "Failed",
-      message: `Failed to update.. try again. Error: ${error.message}`,
+      title: translations["Failed"],
+      message: ` ${translations["Failed to update.. try again. Error:"]} ${error.message}`,
       icon: <IconX size="1rem" />,
       autoClose: 2000,
     });
@@ -164,8 +169,8 @@ const TicketIssueEditor = ({
           notifications.update({
             id: "load-data",
             loading: false,
-            title: "Failed",
-            message: `Error updating Ticket issue settings`,
+            title: translations["Failed"],
+            message: translations["Error updating Ticket issue settings"],
             autoClose: true,
             withCloseButton: true,
           });
@@ -174,8 +179,8 @@ const TicketIssueEditor = ({
           notifications.update({
             id: "load-data",
             loading: false,
-            title: "Success",
-            message: `Updated Ticket issue settings Successfully`,
+            title: translations["Success"],
+            message: translations["Updated Ticket issue settings Successfully"],
             autoClose: true,
             withCloseButton: true,
           });
@@ -193,8 +198,12 @@ const TicketIssueEditor = ({
       <Stack px="lg" h="100%">
         <>
           <Switch
-            label="Enable Auto-Ticket Creation"
-            description="Setup automated ticket creation for negative responses."
+            label={translations["Enable Auto-Ticket Creation"]}
+            description={
+              translations[
+                "Setup automated ticket creation for negative responses."
+              ]
+            }
             labelPosition="left"
             checked={enableTicketIssue}
             onChange={(event) => handleSwitch(event)}
@@ -218,8 +227,11 @@ const TicketIssueEditor = ({
                         return (
                           <SimpleGrid cols={3} spacing={30}>
                             <Text fw={500}>
-                              Select the emojis for which Ticket creation to be
-                              enabled:
+                              {
+                                translations[
+                                  "Select the emojis for which Ticket creation to be enabled:"
+                                ]
+                              }
                             </Text>
                             <Text fw={500}> : </Text>
                             <Group style={{ minWidth: "300px" }}>
@@ -249,8 +261,11 @@ const TicketIssueEditor = ({
                         return (
                           <SimpleGrid cols={3} spacing={30}>
                             <Text fw={500}>
-                              Select rating until which Ticket should be
-                              created:
+                              {
+                                translations[
+                                  "Select rating until which Ticket should be created:"
+                                ]
+                              }
                             </Text>
                             <Text fw={500}> : </Text>
                             <Stack align="center">
@@ -268,7 +283,11 @@ const TicketIssueEditor = ({
                           <SimpleGrid cols={3} spacing={30}>
                             <Text fw={500}>
                               {" "}
-                              Select scale until which Ticket should be created:{" "}
+                              {
+                                translations[
+                                  "Select scale until which Ticket should be created:"
+                                ]
+                              }{" "}
                             </Text>
                             <Text fw={500}> : </Text>
                             <Stack>
@@ -304,7 +323,8 @@ const TicketIssueEditor = ({
                               </Group>
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
-                                For {minOpinion} and below.
+                                {translations["For"]} {minOpinion}{" "}
+                                {translations["and below."]}
                               </Text>
                             </Stack>
                           </SimpleGrid>
@@ -322,12 +342,12 @@ const TicketIssueEditor = ({
 
       <Group justify="space-between">
         <RateupButtonSecondary
-          title={"Cancel"}
+          title={translations["Cancel"]}
           size="md"
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
         <RateupButtonBlue
-          title={"Save"}
+          title={translations["Save"]}
           size="md"
           onClick={handleSave}
           loading={questionUpdateMutation.isPending}

@@ -7,13 +7,16 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { updateRedirect } from "../updateSettings";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import {
   ContainedNumberInput,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
-import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
+import { updateRedirect } from "../updateSettings";
 
 function RedirectSettings({
   enabledModules,
@@ -26,6 +29,7 @@ function RedirectSettings({
   setRedirectError,
   debounced,
 }) {
+  const { translations } = useTranslations();
   function validateUrl(url: string) {
     try {
       if (url === "/") return false;
@@ -42,18 +46,20 @@ function RedirectSettings({
       <PaperLayout className={`section-div`}>
         <Group>
           <Switch
-            className={`switch ${redirect?.enable ?? false ? "on" : "off"}`}
+            className={`switch ${(redirect?.enable ?? false) ? "on" : "off"}`}
             size="md"
             checked={redirect?.enable ?? false}
             onChange={() => updateRedirect(setRedirect, editSurvey)}
             disabled={kioskMode}
           />
           <Box className={"switch-heading-and-desc-container"}>
-            <h3>Redirect</h3>
+            <h3>{translations["Redirect"]}</h3>
             <p>
               {kioskMode
-                ? "Not available since KioskMode is Enabled"
-                : "Redirect to a specific url after the user completes the survey"}
+                ? translations["Not available since KioskMode is Enabled"]
+                : translations[
+                    "Redirect to a specific url after the user completes the survey"
+                  ]}
             </p>
           </Box>
         </Group>
@@ -62,21 +68,23 @@ function RedirectSettings({
             <ContainedTextField
               disabled={!areInputsEnabled}
               withAsterisk
-              placeholder="Target URL for redirection"
+              placeholder={translations["Target URL for redirection"]}
               required
-              label={"Redirect Url"}
+              label={translations["Redirect Url"]}
               defaultValue={redirect?.url}
               onChange={(e) => {
                 if (e.target.value?.trim()?.length === 0) {
                   return setRedirectError((prev) => ({
                     ...prev,
-                    ...{ url: "Url should not be empty" },
+                    ...{ url: translations["Url should not be empty"] },
                   }));
                 } else if (validateUrl(e.target.value.trim())) {
                   return setRedirectError((prev) => ({
                     ...prev,
                     ...{
-                      url: "Enter the Url in Correct format or / for RateUp homepage",
+                      url: translations[
+                        "Enter the Url in Correct format or / for RateUp homepage"
+                      ],
                     },
                   }));
                 }
@@ -92,15 +100,15 @@ function RedirectSettings({
             <ContainedNumberInput
               disabled={!areInputsEnabled}
               withAsterisk
-              placeholder="time in seconds"
+              placeholder={translations["time in seconds"]}
               required
-              label={"Redirect After (in seconds)"}
+              label={translations["Redirect After (in seconds)"]}
               defaultValue={redirect?.time}
               onChange={(e: number) => {
                 if (e < 2 || e > 60) {
                   return setRedirectError((prev) => ({
                     ...prev,
-                    ...{ time: "Time must be between 2-60" },
+                    ...{ time: translations["Time must be between 2-60"] },
                   }));
                 }
                 setRedirectError((prev) => ({
@@ -117,8 +125,8 @@ function RedirectSettings({
             <RateupButtonBlue
               title={
                 survey?.notificationEmail?.length
-                  ? "Edit Redirect"
-                  : "Save Redirect"
+                  ? translations["Edit Redirect"]
+                  : translations["Save Redirect"]
               }
               radius={"xl"}
               disabled={

@@ -19,6 +19,7 @@ import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
@@ -114,10 +115,10 @@ const Responses = ({
     close,
     setIsDeleting,
   );
-
+  const { translations } = useTranslations();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
-    throw new Error("surveyId is an array");
+    throw new Error(translations["surveyId is an array"]);
   }
   const {
     isPending: isQLoading,
@@ -152,7 +153,7 @@ const Responses = ({
   const downloadExcelResponse = useDownloadExcelResponse();
   function handleExportContacts() {
     showLoadingToast(
-      "Exporting Contact responses to Contacts...",
+      translations["Exporting Contact responses to Contacts..."],
       "export-contacts",
       true,
     );
@@ -194,8 +195,8 @@ const Responses = ({
       notifications.show({
         id: "load-data",
         loading: true,
-        title: "Deleting Response",
-        message: `Hold on, response is getting deleted...`,
+        title: translations["Deleting Response"],
+        message: translations["Hold on, response is getting deleted..."],
         autoClose: false,
         withCloseButton: false,
       });
@@ -205,8 +206,8 @@ const Responses = ({
       notifications.show({
         id: "load-data",
         color: "red",
-        title: "Error",
-        message: "Incorrect email",
+        title: translations["Error"],
+        message: translations["Incorrect email"],
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
@@ -236,7 +237,9 @@ const Responses = ({
     setIsSyncing(true);
     if (!googleAccessToken) {
       setIsSyncing(false);
-      setAlertMsg("Please sync your Google account in the App & Services.");
+      setAlertMsg(
+        translations["Please sync your Google account in the App & Services."],
+      );
       redirectModalOpen();
     } else {
       syncResponseToGoogleSheet.mutate(
@@ -245,7 +248,7 @@ const Responses = ({
           onSuccess: () => {
             setIsSyncing(false);
             showSuccessToast(
-              "Response synced to Google sheet successfully",
+              translations["Response synced to Google sheet successfully"],
               "success",
               <IconCheck />,
             );
@@ -256,12 +259,14 @@ const Responses = ({
             console.log(error);
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
-                "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
+                translations[
+                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services"
+                ],
               );
               redirectModalOpen();
             } else {
               toggle();
-              showErrorToast("Error in syncing response");
+              showErrorToast(translations["Error in syncing response"]);
             }
           },
         },
@@ -324,7 +329,9 @@ const Responses = ({
 
       <Group className={styles["total-responses-export-btn-container"]}>
         <Flex align={"center"}>
-          <Heading subtitle={`Total Responses : ${responseCount}`} />
+          <Heading
+            subtitle={`${translations["Total Responses :"]} ${responseCount}`}
+          />
           <RefreshButton queryKeys={["allresponses"]} />
         </Flex>
 
@@ -336,7 +343,7 @@ const Responses = ({
         <Group>
           {CFData && CFData.length > 0 && (
             <ContainedMultiSelect
-              placeholder="Filter By Campaign"
+              placeholder={translations["Filter By Campaign"]}
               onChange={(value) =>
                 setCampaignFlowFilter(
                   CFData.filter((c) => value.includes(c.campaignId)),
@@ -366,7 +373,7 @@ const Responses = ({
                   fw={400}
                   onClick={toggle}
                 >
-                  Export
+                  {translations["Export"]}
                 </Button>
               </Popover.Target>
               <Popover.Dropdown>
@@ -374,8 +381,8 @@ const Responses = ({
                   <RateupButtonSecondary
                     title={
                       survey.spreadSheetId
-                        ? "Resync with Google Sheet"
-                        : "Sync with Google Sheet"
+                        ? translations["Resync with Google Sheet"]
+                        : translations["Sync with Google Sheet"]
                     }
                     onClick={() => {
                       if (survey.spreadSheetId) alertModalOpen();
@@ -396,14 +403,14 @@ const Responses = ({
                       handleExcelDownload();
                       toggle();
                     }}
-                    title={"Download Excel"}
+                    title={translations["Download Excel"]}
                     radius={"lg"}
                     leftIcon={<IconFileDownload stroke={1.5} />}
                   />
                   {hasContactQuestion && (
                     <RateupButtonSecondary
                       onClick={handleExportContacts}
-                      title={"Export Contacts"}
+                      title={translations["Export Contacts"]}
                       radius={"lg"}
                       leftIcon={<IconDatabaseImport stroke={1.5} />}
                     />
@@ -411,17 +418,21 @@ const Responses = ({
                   <ConfirmationModal
                     opened={alertModalOpened}
                     onClose={alertModalClose}
-                    headerTitle="Resync Google Sheet"
-                    headerLabel="Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
-                    confirmLabel="Yes"
+                    headerTitle={translations["Resync Google Sheet"]}
+                    headerLabel={
+                      translations[
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
+                      ]
+                    }
+                    confirmLabel={translations["Yes"]}
                     onConfirm={handleSyncGoogleSheet}
                   />
                   <ConfirmationModal
                     opened={redirectModalOpened}
                     onClose={redirectModalClose}
-                    headerTitle="Sync Google Sheet"
+                    headerTitle={translations["Sync Google Sheet"]}
                     headerLabel={alertMsg}
-                    confirmLabel="Continue"
+                    confirmLabel={translations["Continue"]}
                     onConfirm={() => {
                       router.push("/dashboard/apps&services/googlesheet");
                     }}
@@ -443,30 +454,36 @@ const Responses = ({
           <FormModalLayout
             opened={opened}
             onClose={close}
-            title="Delete Response"
+            title={translations["Delete Response"]}
             centered
-            buttonTitle="Delete"
+            buttonTitle={translations["Delete"]}
             includeCancelButton
             onSubmit={confirmDelete}
           >
             <Stack py={"sm"}>
-              <Text>To proceed further, verify your email id.</Text>
+              <Text>
+                {translations["To proceed further, verify your email id."]}
+              </Text>
               <ContainedTextField
                 withAsterisk
-                label="Verify email"
-                placeholder="Enter your login email"
+                label={translations["Verify email"]}
+                placeholder={translations["Enter your login email"]}
                 required
                 value={verifyEmail}
                 onChange={(e) => setVerifyEmail(e.target.value)}
               />
               <Text c="red">
-                Once deleted, response entry data will be lost.
+                {
+                  translations[
+                    "Once deleted, response entry data will be lost."
+                  ]
+                }
               </Text>
             </Stack>
           </FormModalLayout>
         </Box>
       ) : (
-        <NothingFound text="No responses yet" />
+        <NothingFound text={translations["No responses yet"]} />
       )}
     </Stack>
   );

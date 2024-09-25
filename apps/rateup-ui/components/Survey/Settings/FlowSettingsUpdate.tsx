@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import styles from "./SurveySettings.module.css";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
+
 import { Box, Group, Stack, Switch } from "@mantine/core";
-import { useUpdateFlowMetaDataMutation } from "../../../backend/whatsapp/flow/flow.query";
 import { useForm } from "@mantine/form";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useUpdateFlowMetaDataMutation } from "../../../backend/whatsapp/flow/flow.query";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import styles from "./SurveySettings.module.css";
 
 const FlowSettingsUpdate = ({
   name,
@@ -29,14 +33,15 @@ const FlowSettingsUpdate = ({
       dbFlowId,
     });
   };
+  const { translations } = useTranslations();
   return (
     <PaperLayout>
       <Stack align="center">
         <ContainedTextField
           className={styles["form-input"]}
           withAsterisk
-          label={"Flow Name"}
-          placeholder="Enter Flow name"
+          label={translations["Flow Name"]}
+          placeholder={translations["Enter Flow name"]}
           required
           w={"100%"}
           key={form.key("name")}
@@ -44,22 +49,22 @@ const FlowSettingsUpdate = ({
         />
         <Group w={"100%"}>
           <Switch
-            className={`switch ${anonymous ?? false ? "on" : "off"}`}
+            className={`switch ${(anonymous ?? false) ? "on" : "off"}`}
             size="md"
             key={form.key("anonymous")}
             {...form.getInputProps("anonymous", { type: "checkbox" })}
           />
           <Box className={"switch-heading-and-desc-container"}>
-            <h3>Anonymous</h3>
+            <h3>{translations["Anonymous"]}</h3>
             <p>
               {form.getValues().anonymous
-                ? "Anonymous Flow is enabled"
-                : "Anonymous Flow is disabled"}
+                ? translations["Anonymous Flow is enabled"]
+                : translations["Anonymous Flow is disabled"]}
             </p>
           </Box>
         </Group>
         <RateupButtonPrimary
-          title="Save Changes"
+          title={translations["Save Changes"]}
           onClick={handleFlowMetaData}
           loading={updateFlowMetaDataMutation?.isPending}
         />
