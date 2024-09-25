@@ -132,6 +132,7 @@ const questionCore = {
       segColors: z.array(z.string()),
     })
     .optional(),
+  extraConfig: z.any(),
 
   // For PageType Question objects like welcome, language, thankyoupage,
   subtitleText: z.string().optional(),
