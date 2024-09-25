@@ -141,7 +141,7 @@ export async function getCampaignById(campaignId: string) {
     participant.waStatus = latestStatus;
     delete participant.WaMessageCampaginParticipantMap;
   });
-  campaign.contactTags = campaign.team.org.WaAccountSettings.contactTags;
+  campaign.contactTags = campaign.team.org?.WaAccountSettings?.contactTags;
   delete campaign.team.org;
 
   campaign.stats = {
