@@ -101,8 +101,6 @@ export const useRegenerateWaPaymentConfigurationOauthMutation = (
       );
     },
     onError: (error: any) => {
-      console.log(error);
-
       showErrorToast(
         `Error creating waPaymentConfigurations oauth link: ${error?.response?.data?.message}`,
         "waPaymentConfigurations-oauth",
