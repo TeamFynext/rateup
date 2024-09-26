@@ -69,7 +69,7 @@ const GoogleReviewEditor = ({
   const updateGoogleReview = (googleReview: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, googleReview });
   };
-  cc;
+  const { translations } = useTranslations();
   useEffect(() => {
     if (
       selectedQ?.hasOwnProperty("googleReview") &&
