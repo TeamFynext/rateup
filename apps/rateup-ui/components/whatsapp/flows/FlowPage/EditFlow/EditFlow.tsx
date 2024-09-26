@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import { ActionIcon, Box, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 
+import { showErrorToast } from "@/utils/notifications";
+
 import { useQuestionDeleteMutation } from "../../../../../backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -26,6 +28,7 @@ import {
   getQuestionFromFlowFormElementName,
   getQuestionIdFromFlowFormElementName,
   getScreenObjById,
+  questionTypeToFlowFormElementType,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { QuestionTypeSelection } from "../../../../Survey/Question/QuestionTypeSelection";
@@ -90,6 +93,45 @@ function EditFlow() {
   }
 
   const handleTypeSelection = (type: QuestionType | WaFlowFormElementType) => {
+    const screenToBeEdited = getScreenObjById(
+      flowJson.screens,
+      selectedScreenId,
+    );
+    let formElementChildren = screenToBeEdited.layout.children.find(
+      (se) => se.type === "Form",
+    ).children;
+    if (formElementChildren.length > 50)
+      return showErrorToast(
+        "Only 50 components in a screen",
+        "error-max-screen-elements",
+      );
+    let qsType = questionTypeToFlowFormElementType(type as QuestionType);
+    if (
+      [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(
+        type as QuestionType,
+      ) &&
+      formElementChildren.find((c) => c.type === qsType)
+    ) {
+      return showErrorToast(
+        `Only one ${type} allowed per screen`,
+        "error-max-screen-elements",
+      );
+    } else if (
+      [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(
+        type as QuestionType,
+      ) &&
+      formElementChildren.some((child) =>
+        [
+          WaFlowFormElementType.photoPicker,
+          WaFlowFormElementType.documentPicker,
+        ].includes(child.type),
+      )
+    ) {
+      return showErrorToast(
+        "Using both PhotoPicker and DocumentPicker components on a single screen is not allowed per screen",
+        "error-max-screen-elements",
+      );
+    }
     if (Object.values(QuestionType).includes(type as QuestionType)) {
       const newQ = createBlankQuestion(
         type as QuestionType,

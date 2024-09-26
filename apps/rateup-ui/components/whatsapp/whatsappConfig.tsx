@@ -23,6 +23,9 @@ export function getFlowLabelLimit(type: WaFlowFormElementType) {
       return 20;
     case WaFlowFormElementType.datePicker:
       return 40;
+    case WaFlowFormElementType.documentPicker:
+    case WaFlowFormElementType.photoPicker:
+      return 80;
     default:
       console.error("Invalid FlowElement type", type);
       return 20;
