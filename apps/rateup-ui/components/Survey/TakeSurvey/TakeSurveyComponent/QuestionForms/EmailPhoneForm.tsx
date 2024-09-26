@@ -1,10 +1,16 @@
 import { useContext, useRef } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { Stack, TextInput, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
 import { IconMail } from "@tabler/icons-react";
 import PhoneInput from "react-phone-number-input";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import classes from "../TakeSurvey.module.css";
+
 import "react-phone-number-input/style.css";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function EmailPhoneForm() {
@@ -12,14 +18,14 @@ export function EmailPhoneForm() {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, email: e.currentTarget.value });
   };
-
+  const { translations } = useTranslations();
   const emailRef = useRef(null);
   const theme = useMantineTheme();
   return (
     <Stack>
       <FormPaperLayout onClick={() => emailRef.current.focus()}>
         <TextInput
-          placeholder="Enter your email"
+          placeholder={translations["Enter your email"]}
           ref={emailRef}
           value={response?.email}
           onChange={handleEmailChange}
@@ -41,7 +47,7 @@ export function EmailPhoneForm() {
           defaultCountry="IN"
           international
           countryCallingCodeEditable={false}
-          placeholder="Enter phone number"
+          placeholder={translations["Enter phone number"]}
           value={response?.phone || null}
           onChange={(value) => updateResponse({ ...response, phone: value })}
           className={classes.inputPhone}

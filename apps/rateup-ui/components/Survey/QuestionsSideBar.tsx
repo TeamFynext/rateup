@@ -24,6 +24,7 @@ import modalStyles from "styles/commonCssModules/modal.module.css";
 import { PageType, QuestionType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import { uniquePages } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 import { reorder, reOrderPages } from "@/utils/questions";
@@ -75,7 +76,7 @@ export function QuestionsSideBar({
   const { surveyId } = router.query as { surveyId: string };
   const [questionsState, handlers] = useListState(questions);
   const { navOpened, setNavOpened } = useNavControlContext();
-
+  const { translations } = useTranslations();
   useEffect(() => {
     handlers.setState(questions);
 
@@ -115,10 +116,13 @@ export function QuestionsSideBar({
       title: "Discard unsaved changes?",
       children: (
         <Text className={modalStyles["are-you-sure-text"]}>
-          Are you sure, you want to discard unsaved changes?
+          {translations["Are you sure, you want to discard unsaved changes?"]}
         </Text>
       ),
-      labels: { confirm: "Discard", cancel: "Cancel" },
+      labels: {
+        confirm: translations["Discard"],
+        cancel: translations["Cancel"],
+      },
       className: modalStyles["delete-confirmation-modal"],
       centered: true,
       classNames: {
@@ -149,7 +153,7 @@ export function QuestionsSideBar({
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
       showErrorToast(
-        "Please Enter heading and choices for all languages.",
+        translations["Please Enter heading and choices for all languages."],
         "missing-title-toast",
       );
       return;
@@ -215,10 +219,10 @@ export function QuestionsSideBar({
             rightSection={<IconPlus size="1.125rem" />}
             onClick={handleAddQn}
           >
-            Add Content
+            {translations["Add Content"]}
           </Button>
 
-          <Tooltip label="Survey Preview">
+          <Tooltip label={translations["Survey Preview"]}>
             <ActionIcon
               className={styles["survey-preview-btn"]}
               variant="light"
@@ -228,7 +232,7 @@ export function QuestionsSideBar({
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label="Edit Theme">
+          <Tooltip label={translations["Edit Theme"]}>
             <ActionIcon
               className={styles["edit-theme-btn"]}
               variant="light"
@@ -252,7 +256,9 @@ export function QuestionsSideBar({
                   )
                 ) {
                   showErrorToast(
-                    "Please Enter heading and choices for all languages.",
+                    translations[
+                      "Please Enter heading and choices for all languages."
+                    ],
                     "missing-title-toast",
                   );
                   return;
@@ -275,7 +281,7 @@ export function QuestionsSideBar({
             <Stack align="center">
               <IconPlus size={36} />
               <Text size="xl" fw={700}>
-                Add Content
+                {translations["Add Content"]}
               </Text>
             </Stack>
           </Center>

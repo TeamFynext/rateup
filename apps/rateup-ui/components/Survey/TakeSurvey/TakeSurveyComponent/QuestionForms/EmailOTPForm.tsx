@@ -11,6 +11,8 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { IconMail } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useSendOTPEmail,
   useValidateOtp,
@@ -44,7 +46,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (response) {
       setEmail(response?.email);
@@ -86,7 +88,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
         setTimerComplete(false);
       },
       onError: () => {
-        showErrorToast("Something went wrong. please retry");
+        showErrorToast(translations["Something went wrong. please retry"]);
       },
     });
   };
@@ -118,8 +120,10 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
     <Stack w={"100%"}>
       {isOtpSend && !response?.isValid ? (
         <Stack>
-          <Text fz={"sm"}>An OTP has been sent to your email</Text>
-          <Text fz={"sm"}>Enter OTP</Text>
+          <Text fz={"sm"}>
+            {translations["An OTP has been sent to your email"]}
+          </Text>
+          <Text fz={"sm"}>{translations["Enter OTP"]}</Text>
           <PinInput
             length={6}
             oneTimeCode
@@ -137,8 +141,12 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
               fz={"sm"}
               c={`var(--mantine-color-${theme.primaryColor}-filled)`}
             >
-              Note: * The OTP expires in 10 minutes once it is sent. You can
-              resend in {timeLeft}
+              {
+                translations[
+                  "Note: * The OTP expires in 10 minutes once it is sent. You can resend in"
+                ]
+              }{" "}
+              {timeLeft}
             </Text>
           ) : !response?.isValid ? (
             <>
@@ -146,14 +154,18 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
                 fz={"sm"}
                 c={`var(--mantine-color-${theme.primaryColor}-filled)`}
               >
-                Note: * The OTP expires in 10 minutes once it is sent.
+                {
+                  translations[
+                    "Note: * The OTP expires in 10 minutes once it is sent."
+                  ]
+                }
               </Text>
               <Button
                 onClick={handleGetOTP}
                 loading={sendOtpMailMutation.isPending}
                 w={"fit-content"}
               >
-                Resend OTP
+                {translations["Resend OTP"]}
               </Button>
             </>
           ) : null}
@@ -192,7 +204,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
               disabled={isPreview || isSurveyThemePreview}
               w={"fit-content"}
             >
-              Generate OTP
+              {translations["Generate OTP"]}
             </Button>
           )}
           {error && (

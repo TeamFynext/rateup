@@ -431,13 +431,15 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
           {options}
 
           {!exactOptionMatch && search.trim().length > 0 && (
-            <Combobox.Option value="$create">+ Create {search}</Combobox.Option>
+            <Combobox.Option value="$create">
+              + {translations["Create"]} {search}
+            </Combobox.Option>
           )}
 
           {exactOptionMatch &&
             search.trim().length > 0 &&
             options.length === 0 && (
-              <Combobox.Empty>Nothing found</Combobox.Empty>
+              <Combobox.Empty>{translations["Nothing found"]}</Combobox.Empty>
             )}
         </Combobox.Options>
       </Combobox.Dropdown>

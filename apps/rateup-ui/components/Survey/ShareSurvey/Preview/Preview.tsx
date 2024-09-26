@@ -1,7 +1,11 @@
+import { useEffect, useRef, useState } from "react";
+
 import { Box, Image, Stack } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
 import domtoimage from "dom-to-image-more";
-import { useEffect, useRef, useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { showErrorToast } from "../../../../utils/notifications";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
@@ -29,7 +33,7 @@ function Preview({
     useState(false);
 
   const previewContainerRef = useRef();
-
+  const { translations } = useTranslations();
   const logoSrc = getLogoSrc(qrBgImgLogo);
 
   useEffect(() => {
@@ -59,14 +63,14 @@ function Preview({
         setIsLogoDownloadProcessing(false);
       } catch (err) {
         showErrorToast(
-          "Unable to download QR, Please try again later",
+          translations["Unable to download QR, Please try again later"],
           "download-qr",
         );
         setIsLogoDownloadProcessing(false);
       }
     } else {
       showErrorToast(
-        "Unable to download QR, Please try again later",
+        translations["Unable to download QR, Please try again later"],
         "download-qr",
       );
     }
@@ -119,7 +123,7 @@ function Preview({
 
       <RateupButtonBlue
         className={styles["qr-download-btn"]}
-        title="Download QR Code"
+        title={translations["Download QR Code"]}
         onClick={downloadQrCode}
         rightIcon={<IconDownload />}
         loading={isLogoDownloadProcessing}

@@ -12,6 +12,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { ReviewSuggestion } from "../../../../types/global";
 import { shuffleArray } from "../../../../utils";
@@ -39,7 +41,7 @@ function GoogleReview({
   const [fakeLoading, setFakeLoading] = useState(false);
   const [lastCopiedReview, setLastCopiedReview] =
     useState<ReviewSuggestion>(null);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (reviewSuggestions.length > 0) {
       setShuffledArray(shuffleArray(reviewSuggestions));
@@ -99,19 +101,19 @@ function GoogleReview({
         <Box className={styles["happy-text-div"]}>
           <h2 className={lexend500.className}>Make us more happy!</h2>
           <Box className={styles["leave-review-paras-container"]}>
-            <p>Leave us a review on Google.</p>
+            <p>{translations["Leave us a review on Google."]}</p>
           </Box>
         </Box>
         {reviewSuggestions?.length >= 3 && (
           <Box className={styles["review-suggestions-container"]}>
-            <p>Need Inspirations?</p>
+            <p>{translations["Need Inspirations?"]}</p>
             <Box className={styles["suggestions-div"]}>
               <Button
                 className={styles["generate-suggestions-btn"]}
                 leftSection={<WandIcon />}
                 onClick={handleRegenerate}
               >
-                Regenerate Suggestions
+                {translations["Regenerate Suggestions"]}
               </Button>
               {fakeLoading || !shuffledArray ? (
                 <Box className={styles["review-suggestion-skeleton-container"]}>
@@ -128,7 +130,7 @@ function GoogleReview({
                   </Box>
 
                   <Button className={styles["copy-btn"]} disabled>
-                    Copy
+                    {translations["Copy"]}
                   </Button>
                 </Box>
               ) : (
@@ -147,7 +149,7 @@ function GoogleReview({
                     className={styles["copy-btn"]}
                     onClick={handleCopyBtnClick}
                   >
-                    Copy
+                    {translations["Copy"]}
                   </Button>
                 </Box>
               )}
@@ -160,7 +162,7 @@ function GoogleReview({
             target="_blank"
             onClick={handleGoToReviewPage}
           >
-            <span>Go to Review Page</span>
+            <span>{translations["Go to Review Page"]}</span>
             <span>
               <GoogleIcon />
             </span>
@@ -176,7 +178,7 @@ function GoogleReview({
           title={false}
         >
           <p className={styles["suggestion-copied-text-p"]}>
-            Your Suggestion is copied!
+            {translations["Your Suggestion is copied!"]}
           </p>
           <Box className={styles["google-review-link-container"]}>
             <Link
@@ -184,7 +186,7 @@ function GoogleReview({
               target="_blank"
               onClick={handleGoToReviewPage}
             >
-              <span>Go to Review Page</span>
+              <span>{translations["Go to Review Page"]}</span>
               <span>
                 <GoogleIcon />
               </span>

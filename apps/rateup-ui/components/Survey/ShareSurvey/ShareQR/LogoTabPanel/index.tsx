@@ -8,14 +8,17 @@ import {
   Stack,
   Title,
 } from "@mantine/core";
-import styles from "./LogoTabPanel.module.css";
-import fileInputStyles from "./FileInput.module.css";
-import radioStyles from "./Radio.module.css";
-import ChipGroup from "./ChipGroup";
-import { logoFillTypes } from "./constants";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import CustomSwitch from "../../../SurveyTheme/components/stylescomponent/CustomSwitch";
 import CustomColorPicker from "../../components/CustomColorPicker";
 import { getLogoFileValueForFileInput } from "../utils";
-import CustomSwitch from "../../../SurveyTheme/components/stylescomponent/CustomSwitch";
+import ChipGroup from "./ChipGroup";
+import { logoFillTypes } from "./constants";
+import fileInputStyles from "./FileInput.module.css";
+import styles from "./LogoTabPanel.module.css";
+import radioStyles from "./Radio.module.css";
 
 function LogoTabpanel({ state, dispatch }) {
   const {
@@ -27,11 +30,11 @@ function LogoTabpanel({ state, dispatch }) {
     logoFile,
     isLogoEnabled = true,
   } = state;
-
+  const { translations } = useTranslations();
   return (
     <Stack className={styles["panel-container"]}>
       <Title order={3} className={styles["panel-heading"]}>
-        Logo Options
+        {translations["Logo Options"]}
       </Title>
 
       <Flex className={styles["logo-tab-options-container"]}>
@@ -39,7 +42,7 @@ function LogoTabpanel({ state, dispatch }) {
           <Stack className={styles["option-container"]}>
             <Group>
               <Title order={4} className={styles["option-heading"]}>
-                Logo:
+                {translations["Logo:"]}
               </Title>
               <CustomSwitch
                 checked={isLogoEnabled}
@@ -49,14 +52,18 @@ function LogoTabpanel({ state, dispatch }) {
                     payload: e.target.checked,
                   });
                 }}
-                label={isLogoEnabled ? "Enabled" : "Disabled"}
+                label={
+                  isLogoEnabled
+                    ? translations["Enabled"]
+                    : translations["Disabled"]
+                }
               />
             </Group>
 
             {isLogoEnabled && (
               <FileInput
                 classNames={fileInputStyles}
-                placeholder="Upload Logo"
+                placeholder={translations["Upload Logo"]}
                 accept="image/png,image/jpeg,image/svg+xml"
                 onChange={(value) => {
                   dispatch({
@@ -71,7 +78,7 @@ function LogoTabpanel({ state, dispatch }) {
 
           <Stack className={styles["option-container"]}>
             <Title order={4} className={styles["option-heading"]}>
-              Size
+              {translations["Size"]}
             </Title>
             <Slider
               className={styles["slider"]}
@@ -92,7 +99,7 @@ function LogoTabpanel({ state, dispatch }) {
 
           <Stack className={styles["option-container"]}>
             <Title order={4} className={styles["option-heading"]}>
-              Fill Type
+              {translations["Fill Type"]}
             </Title>
             <Group className={styles["fill-types-chip-container"]}>
               <ChipGroup
@@ -113,7 +120,7 @@ function LogoTabpanel({ state, dispatch }) {
           {/* <Stack style={{ gap: "2rem" }}> */}
           <Stack className={styles["option-container"]}>
             <Title order={4} className={styles["option-heading"]}>
-              Border Radius
+              {translations["Border Radius"]}
             </Title>
             <Slider
               className={styles["slider"]}
@@ -136,7 +143,7 @@ function LogoTabpanel({ state, dispatch }) {
         <Box>
           <Stack className={styles["option-container"]}>
             <Title order={4} className={styles["option-heading"]}>
-              Background Color
+              {translations["Background Color"]}
             </Title>
             <Radio.Group
               onChange={(value) => {
@@ -158,9 +165,13 @@ function LogoTabpanel({ state, dispatch }) {
                 <Radio
                   classNames={radioStyles}
                   value="transparent"
-                  label="Transparent"
+                  label={translations["Transparent"]}
                 />
-                <Radio classNames={radioStyles} value="color" label="Color" />
+                <Radio
+                  classNames={radioStyles}
+                  value="color"
+                  label={translations["Color"]}
+                />
               </Stack>
             </Radio.Group>
             {qrBgColor.startsWith("#") && (
@@ -177,7 +188,7 @@ function LogoTabpanel({ state, dispatch }) {
           </Stack>
           <Stack className={styles["option-container"]}>
             <Title order={4} className={styles["option-heading"]}>
-              Color
+              {translations["Color"]}
             </Title>
             <CustomColorPicker
               value={qrColor}

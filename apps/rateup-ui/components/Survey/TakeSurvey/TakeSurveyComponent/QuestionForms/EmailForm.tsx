@@ -1,17 +1,22 @@
 import { useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { TextInput, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
 import { IconMail } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function EmailForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
+  const { translations } = useTranslations();
   return (
     <FormPaperLayout>
       <TextInput
-        placeholder="Enter email address"
+        placeholder={translations["Enter email address"]}
         value={response || ""}
         onChange={(e) => updateResponse(e.currentTarget.value)}
         style={{ maxWidth: "400px" }}

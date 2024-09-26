@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
   Box,
   Button,
@@ -5,37 +8,38 @@ import {
   Group,
   Stack,
   Text,
-  TextInputProps,
   Textarea,
   TextareaProps,
+  TextInputProps,
   Title,
 } from "@mantine/core";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { UseFormReturnType, useForm } from "@mantine/form";
-import {
-  SentMessageContainer,
-  WaResponseMessage,
-} from "../../whatsapp/MessageComponents";
-import whatsappStyles from "../../whatsapp/whatsapp.module.css";
-import { LengthTracker, LengthTrackerProps } from "../../input/LengthTracker";
-import { SaveStatus } from "../../../types/enums";
+import { useForm, UseFormReturnType } from "@mantine/form";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
-import templateStyles from "../../whatsapp/templates/template.module.css";
-import { useRouter } from "next/router";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useSurvey } from "../../../backend/surveys/surveys.query";
 import {
   useUpdateFlowMutation,
   useWaFlowFromDb,
 } from "../../../backend/whatsapp/flow/flow.query";
-import { useEffect, useState } from "react";
-import { showErrorToast } from "../../../utils/notifications";
+import { SaveStatus } from "../../../types/enums";
+import { WaFlowStartMessageConfig } from "../../../types/global";
 import {
   getFileUrlFromKey,
   uploadFile,
 } from "../../../utils/file-upload/upload";
-import { WaFlowStartMessageConfig } from "../../../types/global";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { showErrorToast } from "../../../utils/notifications";
 import { generateWaSurveyIdentifier_byName } from "../../../utils/whatsapp/wa_url";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import { LengthTracker, LengthTrackerProps } from "../../input/LengthTracker";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import {
+  SentMessageContainer,
+  WaResponseMessage,
+} from "../../whatsapp/MessageComponents";
+import templateStyles from "../../whatsapp/templates/template.module.css";
+import whatsappStyles from "../../whatsapp/whatsapp.module.css";
 
 const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
@@ -99,7 +103,7 @@ export function FlowShareTemplateEditor({
     }
     setImageToUpload(event);
   };
-
+  const { translations } = useTranslations();
   const [imageToUpload, setImageToUpload] = useState(null);
 
   // saving image
@@ -121,7 +125,7 @@ export function FlowShareTemplateEditor({
   return (
     <Stack gap={0}>
       <Group mb="4">
-        <Title order={4}>Edit Template Message</Title>
+        <Title order={4}>{translations["Edit Template Message"]}</Title>
         <SaveStatusIndicator status={status} />
       </Group>
 
@@ -141,24 +145,26 @@ export function FlowShareTemplateEditor({
             {(props) => {
               return (
                 <Button {...props}>
-                  {imageToUpload ? "Change Image" : "Upload Image"}
+                  {imageToUpload
+                    ? translations["Change Image"]
+                    : translations["Upload Image"]}
                 </Button>
               );
             }}
           </FileButton>
 
           <Button variant="outline" onClick={handleRemoveImage}>
-            Remove Image
+            {translations["Remove Image"]}
           </Button>
         </Group>
 
         <TextareaWithLengthTracker
-          label={"Body"}
+          label={translations["Body"]}
           {...form.getInputProps("body")}
           maxValue={1024}
         />
         <TextInputWithLengthTracker
-          label={"Footer"}
+          label={translations["Footer"]}
           {...form.getInputProps("footer")}
           maxValue={60}
         />
@@ -219,11 +225,11 @@ export function FlowStartMessageEditor({
 
     return () => clearTimeout(timer);
   }, [form.values]);
-
+  const { translations } = useTranslations();
   return (
     <Stack gap={0}>
       <Group mb="4">
-        <Title order={4}>Edit Start Message</Title>
+        <Title order={4}>{translations["Edit Start Message"]}</Title>
         <SaveStatusIndicator status={status} />
       </Group>
 
@@ -236,12 +242,12 @@ export function FlowStartMessageEditor({
         }}
       >
         <TextareaWithLengthTracker
-          label={"Body"}
+          label={translations["Body"]}
           {...form.getInputProps("prefix")}
           maxValue={1024}
         />
         <TextareaWithLengthTracker
-          label={"Suffix"}
+          label={translations["Suffix"]}
           {...form.getInputProps("suffix")}
           maxValue={1024}
         />
@@ -269,7 +275,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
   const startMessageForm = useForm<WaFlowStartMessageConfig>({
     initialValues: startMessageInitialValues,
   });
-
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       p="30px"
@@ -306,7 +312,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
           }}
         >
           <Group mb="4" justify={"center"}>
-            <Title order={4}>Preview</Title>
+            <Title order={4}>{translations["Preview"]}</Title>
           </Group>
           <Box
             className={whatsappStyles.chatBg}

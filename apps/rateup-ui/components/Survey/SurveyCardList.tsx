@@ -1,26 +1,28 @@
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import {
-  Paper,
-  Text,
-  SimpleGrid,
-  Flex,
   Avatar,
   Badge,
-  useMantineTheme,
+  Checkbox,
+  Flex,
   Group,
   Loader,
+  Paper,
+  SimpleGrid,
   Space,
-  Checkbox,
+  Text,
+  useMantineTheme,
 } from "@mantine/core";
-import { IconChartBar } from "@tabler/icons-react";
-
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
+import { IconChartBar } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useUser } from "../../context/UserContext";
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSurveys } from "../../backend/surveys/surveys.query";
+import { useUser } from "../../context/UserContext";
 import { getTimeSince } from "../../utils";
 
 export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
@@ -28,7 +30,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
 
   const { isLoading, error, data: surveys } = useSurveys();
   const queryClient = useQueryClient();
-
+  const { translations } = useTranslations();
   useEffect(() => {
     //-----------callback function to get selected surveys to parent -------
     getSelectedSurveys(surveyidArray);
@@ -49,7 +51,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     );
   if (error || !Array.isArray(surveys)) {
     console.error(surveys, error);
-    return <>"An error has occurred"</>;
+    return <> {translations["An error has occurred"]}</>;
   }
 
   //--------handle check box click ----------
@@ -60,8 +62,8 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
       notifications.show({
         id: "survey-merge-max",
 
-        title: "Limit exceed",
-        message: "Max 4 surveys can be merged.",
+        title: translations["Limit exceed"],
+        message: translations["Max 4 surveys can be merged."],
 
         autoClose: 2000,
       });
@@ -132,7 +134,7 @@ function SurveyCard({
   }, []);
 
   const router = useRouter();
-
+  const { translations } = useTranslations();
   return (
     <>
       <Paper
@@ -161,7 +163,8 @@ function SurveyCard({
         <Group align={"center"} mt="sm" gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
-            Created {timeSince}
+            {translations["Created "]}
+            {timeSince}
           </Text>
         </Group>
         <Space h="xl" />
@@ -179,7 +182,7 @@ function SurveyCard({
           >
             <Group gap="4px">
               <IconChartBar size={20} />
-              <Text>Responses</Text>
+              <Text>{translations["Responses"]}</Text>
             </Group>
           </Link>
         </Flex>

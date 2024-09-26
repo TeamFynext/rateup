@@ -12,6 +12,7 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import cx from "clsx";
 
 import { SurveyType } from "@/types/enums";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { reorder } from "../../../../utils/questions";

@@ -87,13 +87,20 @@ export default function SurveyID() {
       const { haveUnsavedChanges, feedbackElement, toastMessage } = data || {};
       if (haveUnsavedChanges && feedbackElement === "modal") {
         modals.openConfirmModal({
-          title: "Discard unsaved changes?",
+          title: translations["Discard unsaved changes?"],
           children: (
             <Text className={modalStyles["are-you-sure-text"]}>
-              Are you sure, you want to discard unsaved changes?
+              {
+                translations[
+                  "Are you sure, you want to discard unsaved changes?"
+                ]
+              }
             </Text>
           ),
-          labels: { confirm: "Discard", cancel: "Cancel" },
+          labels: {
+            confirm: translations["Discard"],
+            cancel: translations["Cancel"],
+          },
           className: modalStyles["delete-confirmation-modal"],
           centered: true,
           classNames: {
@@ -184,7 +191,7 @@ export default function SurveyID() {
     return <RateupLoader h={"80dvh"} />;
 
   if (error || surveyError) {
-    return <p>An error has occurred</p>;
+    return <p>{translations["An error has occurred"]}</p>;
   }
 
   return (
@@ -240,6 +247,7 @@ export default function SurveyID() {
 
 const SurveyIssueAlert = ({ questions, survey }) => {
   const [issue, setIssue] = useState(null);
+  const { translations } = useTranslations();
   useEffect(() => {
     let flag = false;
     if (survey?.isPublished || survey?.surveyPublishAt) {
@@ -251,7 +259,9 @@ const SurveyIssueAlert = ({ questions, survey }) => {
         );
         if (missingLangs.length) {
           setIssue(
-            "The survey contains incomplete questions. Please fix the issue.",
+            translations[
+              "The survey contains incomplete questions. Please fix the issue."
+            ],
           );
           flag = true;
           return false;
@@ -265,7 +275,7 @@ const SurveyIssueAlert = ({ questions, survey }) => {
     <Alert
       variant="light"
       color="red"
-      title="Issue with your survey"
+      title={translations["Issue with your survey"]}
       icon={<IconAlertOctagon />}
       m={"xs"}
     >

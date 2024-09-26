@@ -1,15 +1,19 @@
+import { useRouter } from "next/router";
+
 import { Stack } from "@mantine/core";
-import FormModalLayout from "../Modal/FormModalLayout";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useTeamsByUser } from "../../backend/team/team.query";
+import { useCreateTestimonialCollection } from "../../backend/testimonials/testimonial.query";
+import { defaultTestimonialStyle } from "../../utils/testimonial";
 import {
   ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { useCreateTestimonialCollection } from "../../backend/testimonials/testimonial.query";
-import { defaultTestimonialStyle } from "../../utils/testimonial";
-import { useRouter } from "next/router";
-import { notifications } from "@mantine/notifications";
-import { useTeamsByUser } from "../../backend/team/team.query";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 const SaveTestimonialCollection = ({ opened, close }) => {
   const {
@@ -22,6 +26,7 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     value: team?.id,
     label: team?.name,
   }));
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       name: "",
