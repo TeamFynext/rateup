@@ -1,23 +1,25 @@
-import { useForm } from "@mantine/form";
 import { useCallback, useContext, useEffect } from "react";
+import { useRouter } from "next/router";
+
+import { useForm } from "@mantine/form";
+
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
+import { showErrorToast } from "../../../../../utils/notifications";
 import {
   getNewScreenObj,
   getScreenObjById,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../../utils/whatsapp/flow.utils";
-import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
-import { showErrorToast } from "../../../../../utils/notifications";
-import { EditFlowContext } from "../EditFlow/EditFlowContext";
-import { useRouter } from "next/router";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
-import FormModalLayout from "../../../../Modal/FormModalLayout";
 import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../../../Modal/FormModalLayout";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
 
 function getInitialValues(screens) {
   return {
     screenId: getUniqueRandomAlphaId(
       6,
-      screens.map(({ id }) => id),
+      screens?.map(({ id }) => id),
     ),
     screenTitle: "",
     footerBtnLabel: "Next",
