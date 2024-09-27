@@ -38,6 +38,8 @@ import ImageUploadSettings from "./ImageUploadSettings";
 
 import "react-phone-number-input/style.css";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = {
     ...editingItem?.menu,
@@ -56,7 +58,7 @@ const GeneralSettings = ({ editingItem }) => {
   const [logo, setLogo] = useState<File | null>(null);
   const [imageToDelete, setImageToDelete] = useState([]);
   const [updatingLoading, setUpdatingLoading] = useState(false);
-
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: formatedItemValue || {
       name: "",
@@ -174,19 +176,19 @@ const GeneralSettings = ({ editingItem }) => {
           [SAVE_HOTKEY, (event: any) => form.onSubmit(onSubmit)(event)],
         ])}
       >
-        <Heading subtitle="General settings" />
+        <Heading subtitle={translations["General settings"]} />
         <Container my="md" size={"xl"}>
           <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
             <Stack>
               <ContainedTextField
-                label="Menu Name"
-                placeholder="Menu 1"
+                label={translations["Menu Name"]}
+                placeholder={translations["Menu 1"]}
                 withAsterisk
                 {...form.getInputProps("name")}
               />
               <TeamSelector
-                placeholder="Select Team"
-                label="Team"
+                placeholder={translations["Select Team"]}
+                label={translations["Team"]}
                 withAsterisk
                 defaultValue={formatedItemValue?.teamId}
                 allowDeselect={false}
@@ -207,8 +209,8 @@ const GeneralSettings = ({ editingItem }) => {
 
             <Stack>
               <ContainedTextField
-                label="Display Name"
-                placeholder="Hotel Name"
+                label={translations["Display Name"]}
+                placeholder={translations["Hotel Name"]}
                 withAsterisk
                 {...form.getInputProps("displayName")}
               />
@@ -217,16 +219,18 @@ const GeneralSettings = ({ editingItem }) => {
                 data={currencyLabel}
                 defaultValue={currencyLabel[0].value}
                 {...form.getInputProps("currency")}
-                label={"Currency"}
+                label={translations["Currency"]}
               />
             </Stack>
             <Stack>
               <ContainedSelection
-                label="Choose a survey to display in the menu page"
+                label={
+                  translations["Choose a survey to display in the menu page"]
+                }
                 placeholder={
                   surveyFormatedData?.length === 0
-                    ? "There is no published survay"
-                    : "Select survey"
+                    ? translations["There is no published survay"]
+                    : translations["Select survey"]
                 }
                 disabled={surveyFormatedData?.length === 0}
                 required
@@ -234,8 +238,8 @@ const GeneralSettings = ({ editingItem }) => {
                 {...form.getInputProps("surveyTeamMapId")}
               />
               <ContainedTextField
-                label="Location Label"
-                placeholder="Kannur Rd, near CH Over bridge"
+                label={translations["Location Label"]}
+                placeholder={translations["Kannur Rd, near CH Over bridge"]}
                 {...form.getInputProps("locationText")}
               />
             </Stack>
@@ -249,11 +253,13 @@ const GeneralSettings = ({ editingItem }) => {
                 ]}
                 defaultValue={form?.values?.hideUnavailableCategory}
                 {...form.getInputProps("hideUnavailableCategory")}
-                label={"Disable category outside its scheduled time"}
+                label={
+                  translations["Disable category outside its scheduled time"]
+                }
               />
               <ContainedTextField
-                label="Location URL"
-                placeholder="https://goo.gl/maps/xyz1234"
+                label={translations["Location URL"]}
+                placeholder={"https://goo.gl/maps/xyz1234"}
                 {...form.getInputProps("locationUrl")}
                 type="url"
               />
@@ -277,9 +283,9 @@ const GeneralSettings = ({ editingItem }) => {
               >
                 <Group>
                   <ContainedSelection
-                    label={`Menu Button Type ${i + 1}`}
+                    label={`${translations["Menu Button Type"]} ${i + 1}`}
                     data={Object.values(MenuButtons)}
-                    placeholder="select button type"
+                    placeholder={translations["select button type"]}
                     {...form.getInputProps(`menuButtons.${i}.name`)}
                     value={
                       Object.values(MenuButtons)?.includes(
@@ -302,8 +308,8 @@ const GeneralSettings = ({ editingItem }) => {
                     form.values.menuButtons?.[i]?.name as any,
                   ) && (
                     <ContainedTextField
-                      label={`Menu Button Name ${i + 1}`}
-                      placeholder="other"
+                      label={`${translations["Menu Button Name"]} ${i + 1}`}
+                      placeholder={translations["other"]}
                       {...form.getInputProps(`menuButtons.${i}.name`)}
                     />
                   )}
@@ -325,7 +331,7 @@ const GeneralSettings = ({ editingItem }) => {
                         defaultCountry="IN"
                         international
                         countryCallingCodeEditable={false}
-                        placeholder="Enter phone number"
+                        placeholder={translations["Enter phone number"]}
                         className={styles.inputPhone}
                         {...form.getInputProps(`menuButtons.${i}.link`)}
                       />
@@ -336,7 +342,7 @@ const GeneralSettings = ({ editingItem }) => {
                   </Box>
                 ) : (
                   <ContainedTextField
-                    label={`Menu Button Value ${i + 1}`}
+                    label={`${translations["Menu Button Value"]} ${i + 1}`}
                     placeholder={i === 0 ? "+919876543210" : "link"}
                     {...form.getInputProps(`menuButtons.${i}.link`)}
                   />
@@ -350,7 +356,7 @@ const GeneralSettings = ({ editingItem }) => {
                   "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))"
                 }
               >
-                Menu Buttons
+                {translations["Menu Buttons"]}
               </Text>
               <Group>
                 {form.values?.menuButtons?.length < 3 && (
@@ -391,7 +397,7 @@ const GeneralSettings = ({ editingItem }) => {
             <RateupButtonPrimary
               type="submit"
               loading={isPending || updatingLoading}
-              title="Save Changes"
+              title={translations["Save Changes"]}
             />
           </Stack>
         </Container>

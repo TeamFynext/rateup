@@ -27,6 +27,7 @@ import {
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import {
   MAX_FILE_SIZE_IN_BYTE,
   MAX_FILE_SIZE_IN_MB,
@@ -66,6 +67,7 @@ export const Slide = ({
     name: "",
   });
   const resetRef = useRef(null);
+  const { translations } = useTranslations();
   const [
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
@@ -91,8 +93,9 @@ export const Slide = ({
       foodLabels: [],
     },
     validate: {
-      name: (value) => (value.length ? null : "Cannot be empty"),
-      description: (value) => (value.length ? null : "Cannot be empty"),
+      name: (value) => (value.length ? null : translations["Cannot be empty"]),
+      description: (value) =>
+        value.length ? null : translations["Cannot be empty"],
     },
   });
 
@@ -156,7 +159,9 @@ export const Slide = ({
   const onChangePicture = (event: File) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      showErrorToast(
+        `${translations["Max file size is"]} ${MAX_FILE_SIZE_IN_MB} MB`,
+      );
       return;
     }
     setSelectedImage({
@@ -172,8 +177,8 @@ export const Slide = ({
       notifications.show({
         id: "menu-banner-delete",
         loading: true,
-        title: "Deleting Menu Banner..",
-        message: `Hold on, Your Menu Banner Is Getting Deleted.`,
+        title: translations["Deleting Menu Banner.."],
+        message: translations["Hold on, Your Menu Banner Is Getting Deleted."],
         autoClose: false,
         withCloseButton: false,
       });
@@ -218,20 +223,20 @@ export const Slide = ({
           <Stack>
             <Flex columnGap={30} rowGap={0}>
               <ContainedTextField
-                label="Name"
-                placeholder="Name"
+                label={translations["Name"]}
+                placeholder={translations["Name"]}
                 withAsterisk
                 {...form.getInputProps("name")}
               />
               <ContainedTextField
-                label="Video Url"
-                placeholder="Video Url"
+                label={translations["Video Url"]}
+                placeholder={translations["Video Url"]}
                 {...form.getInputProps("videoUrl")}
               />
             </Flex>
             <ContainedTextArea
-              label="Description"
-              placeholder="Description"
+              label={translations["Description"]}
+              placeholder={translations["Description"]}
               withAsterisk
               autosize
               minRows={5}
@@ -290,8 +295,8 @@ export const Slide = ({
                             return (
                               <Text fz={"xs"} {...props}>
                                 {form?.values?.image
-                                  ? "Change Banner Image"
-                                  : "Upload Banner Image"}
+                                  ? translations["Change Banner Image"]
+                                  : translations["Upload Banner Image"]}
                               </Text>
                             );
                           }}
@@ -299,7 +304,7 @@ export const Slide = ({
                       </Flex>
                       {!form?.values?.image && (
                         <Text c={"var(--grey-color-4)"} fz={10}>
-                          Width : 1980 X Height: 312
+                          {translations["Width : 1980 X Height: 312"]}
                         </Text>
                       )}
                     </Stack>
@@ -364,16 +369,16 @@ export const Slide = ({
               updateMenuBannerMutation?.isPending
             }
             type="submit"
-            title="save"
+            title={translations["save"]}
           />
         </Group>
         <ConfirmationModal
           forDeleteFunctionality
           opened={dialogOpened}
           onClose={closeDialog}
-          headerLabel="Are you sure to delete this Menu Banner?"
-          headerTitle="Delete Menu Banner?"
-          confirmLabel="Delete"
+          headerLabel={translations["Are you sure to delete this Menu Banner?"]}
+          headerTitle={translations["Delete Menu Banner?"]}
+          confirmLabel={translations["Delete"]}
           onConfirm={(e) => {
             handleDeleteMutation();
             closeDialog();

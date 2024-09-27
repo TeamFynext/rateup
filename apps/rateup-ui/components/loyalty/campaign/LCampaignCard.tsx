@@ -16,12 +16,14 @@ import { useTimeSince } from "@/hooks/timeSince";
 import { useDeleteCampaignMutation } from "@/backend/loyalty/campaign/loyaltyCampaign.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { LCampaignTypeBadge } from "./LCampaignTypeBadge";
 
 export function LCampaignCard({ campaign }) {
   const timeSince = useTimeSince(campaign.createdAt);
   const router = useRouter();
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       hoveractive
@@ -71,7 +73,7 @@ export function CardMenu({ children }) {
 function LCampaignCardMenuItems({ campaignId }) {
   const [deleteDialogOpened, { open, close }] = useDisclosure(false);
   const deleteMutation = useDeleteCampaignMutation();
-
+  const { translations } = useTranslations();
   function handleDelete() {
     deleteMutation.mutate(campaignId, {
       onSuccess: close,
@@ -82,16 +84,18 @@ function LCampaignCardMenuItems({ campaignId }) {
     <>
       <Menu.Dropdown>
         <Menu.Item leftSection={<IconTrash />} onClick={open}>
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel="Are you sure you want to delete this loyalty campaign?"
-        headerTitle="Delete Loyalty Campaign"
-        confirmLabel="Delete"
+        headerLabel={
+          translations["Are you sure you want to delete this loyalty campaign?"]
+        }
+        headerTitle={translations["Delete Loyalty Campaign"]}
+        confirmLabel={translations["Delete"]}
         onConfirm={handleDelete}
       />
     </>

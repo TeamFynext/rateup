@@ -19,6 +19,8 @@ import {
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { fallbackImage } from "../../../../utils/constants";
 import { getImageValue } from "../../../../utils/file-upload/upload";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
@@ -38,7 +40,7 @@ const TableRow = ({
   currency = "0",
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   return (
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
@@ -112,15 +114,16 @@ const TableRow = ({
             forDeleteFunctionality
             opened={dialogOpened}
             onClose={close}
-            headerLabel="Are you sure to delete this Menu Item?"
-            headerTitle="Delete Menu Item?"
-            confirmLabel="Delete"
+            headerLabel={translations["Are you sure to delete this Menu Item?"]}
+            headerTitle={translations["Delete Menu Item?"]}
+            confirmLabel={translations["Delete"]}
             onConfirm={(e) => {
               notifications.show({
                 id: "delete-data-menu-item",
                 loading: true,
-                title: "Deleting menu item..",
-                message: `Hold on, menu item is getting deleted...`,
+                title: translations["Deleting menu item.."],
+                message:
+                  translations["Hold on, menu item is getting deleted..."],
                 autoClose: false,
                 withCloseButton: false,
               });
@@ -154,23 +157,26 @@ const TableRow = ({
             }}
           >
             {item?.disabled ? (
-              <Tooltip label="Enable Item">
+              <Tooltip label={translations["Enable Item"]}>
                 <IconWashDrycleanOff />
               </Tooltip>
             ) : (
-              <Tooltip label="Disable Item">
+              <Tooltip label={translations["Disable Item"]}>
                 <IconCircleCheckFilled />
               </Tooltip>
             )}
           </ActionIcon>
-          <ActionIconCommon handleClick={toggle} label="Delete">
+          <ActionIconCommon handleClick={toggle} label={translations["Delete"]}>
             <IconTrash />
           </ActionIconCommon>
         </Flex>
       </Table.Td>
       <Table.Td>
         <Stack pr={"sm"}>
-          <ActionIconCommon handleClick={toggleSwapOrder} label="Swap Order">
+          <ActionIconCommon
+            handleClick={toggleSwapOrder}
+            label={translations["Swap Order"]}
+          >
             <IconReplace size={18} />
           </ActionIconCommon>
         </Stack>

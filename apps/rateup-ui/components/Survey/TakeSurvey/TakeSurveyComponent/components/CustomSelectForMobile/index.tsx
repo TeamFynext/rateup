@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   Combobox,
   Group,
   Input,
   InputBase,
+  isLightColor,
+  luminance,
   Portal,
   ScrollAreaAutosize,
   Stack,
-  isLightColor,
-  luminance,
   useCombobox,
   useMantineTheme,
 } from "@mantine/core";
-import classNames from "classnames/bind";
 import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
-import styles from "./CustomSelectForMobile.module.css";
+import classNames from "classnames/bind";
 import { motion, useAnimate } from "framer-motion";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
+import styles from "./CustomSelectForMobile.module.css";
 
 const cx = classNames.bind(styles);
 
@@ -60,7 +64,7 @@ function CustomSelectForMobile({
   });
 
   const [scope, animate] = useAnimate();
-
+  const { translations } = useTranslations();
   const optionsMotionDivRefs = useRef(null);
 
   const options = data
@@ -192,7 +196,7 @@ function CustomSelectForMobile({
                 className={cx("search-input")}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
-                placeholder="Type in to search"
+                placeholder={translations["Type in to search"]}
               />
             </Group>
             <Combobox.Options
@@ -204,7 +208,9 @@ function CustomSelectForMobile({
                   {options.length > 0 ? (
                     options
                   ) : (
-                    <Combobox.Empty>Nothing found</Combobox.Empty>
+                    <Combobox.Empty>
+                      {translations["Nothing found"]}
+                    </Combobox.Empty>
                   )}
                 </Stack>
               </ScrollAreaAutosize>

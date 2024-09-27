@@ -12,6 +12,7 @@ import { useDisclosure } from "@mantine/hooks";
 
 import { useRewards } from "@/backend/loyalty/reward/reward.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import RateupLoader from "../../Loaders/RateupLoader";
 import { CreateRewardModal } from "../reward/CreateRewardModal";
@@ -22,7 +23,7 @@ export function RewardSelectionModal({ setReward, opened, close }) {
     useDisclosure(false);
 
   const { data: rewards, isLoading, isError, error } = useRewards(true);
-
+  const { translations } = useTranslations();
   function handleSetRewardId(rewardId) {
     setReward(rewardId);
     close();
@@ -35,14 +36,19 @@ export function RewardSelectionModal({ setReward, opened, close }) {
     return <RateupLoader />;
   }
   return (
-    <Modal opened={opened} onClose={close} title="Select Reward" size="md">
+    <Modal
+      opened={opened}
+      onClose={close}
+      title={translations["Select Reward"]}
+      size="md"
+    >
       <Stack>
         <Stack bg={"light-dark(whitesmoke,var(--mantine-color-dark-6))"}>
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Name</Table.Th>
-                <Table.Th>Type</Table.Th>
+                <Table.Th>{translations["Name"]}</Table.Th>
+                <Table.Th>{translations["Type"]}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -58,7 +64,7 @@ export function RewardSelectionModal({ setReward, opened, close }) {
                         onClick={() => {
                           handleSetRewardId(reward.id);
                         }}
-                        title="Select"
+                        title={translations["Select"]}
                       />
                     </Table.Td>
                   </Table.Tr>
@@ -80,7 +86,10 @@ export function RewardSelectionModal({ setReward, opened, close }) {
             }}
           />
         </Group>
-        <RateupButtonPrimary onClick={createROpen} title="Create New Reward" />
+        <RateupButtonPrimary
+          onClick={createROpen}
+          title={translations["Create New Reward"]}
+        />
       </Stack>
       <CreateRewardModal opened={createROpened} close={CreateRClose} />
     </Modal>

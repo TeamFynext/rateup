@@ -1,9 +1,13 @@
-import { Stack, Group, Switch, Text, Box, Overlay } from "@mantine/core";
+import { useEffect, useState } from "react";
+
+import { Box, Group, Overlay, Stack, Switch, Text } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useUpdateSurveyPwdMutation } from "../../../../backend/surveys/surveys.query";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../../input/ContainedInput/ContainedInput";
 import { updatePwdSurvey } from "../updateSettings";
-import { useEffect, useState } from "react";
-import { useUpdateSurveyPwdMutation } from "../../../../backend/surveys/surveys.query";
 import styles from "./SecuritySettings.module.css";
 
 const PasswordSettings = ({ survey, surveyId }) => {
@@ -11,6 +15,7 @@ const PasswordSettings = ({ survey, surveyId }) => {
   const [passwordProtection, setPasswordProtection] = useState(
     survey?.isProtected,
   );
+  const { translations } = useTranslations();
   const [isPasswordInputInvalid, setIsPasswordInputInvalid] = useState<
     boolean | string
   >(false);
@@ -43,8 +48,14 @@ const PasswordSettings = ({ survey, surveyId }) => {
           }}
         />
         <Box className={"switch-heading-and-desc-container"}>
-          <h3>Password Protection</h3>
-          <p>Participants need to enter the password to start the survey</p>
+          <h3>{translations["Password Protection"]}</h3>
+          <p>
+            {
+              translations[
+                "Participants need to enter the password to start the survey"
+              ]
+            }
+          </p>
         </Box>
       </Group>
       <Stack className={styles["password-protection-input-container"]}>
@@ -53,7 +64,7 @@ const PasswordSettings = ({ survey, surveyId }) => {
           withAsterisk
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter new password"
+          placeholder={translations["Enter new password"]}
           error={isPasswordInputInvalid}
         />
         {/* {!survey?.password?.length && (
@@ -64,11 +75,17 @@ const PasswordSettings = ({ survey, surveyId }) => {
         <Group justify="center">
           <RateupButtonBlue
             disabled={!passwordProtection}
-            title={survey?.password?.length ? "Edit Password" : "Save Password"}
+            title={
+              survey?.password?.length
+                ? translations["Edit Password"]
+                : translations["Save Password"]
+            }
             radius={"xl"}
             onClick={() => {
               if (passwordProtection && password === "") {
-                setIsPasswordInputInvalid("Please enter a password");
+                setIsPasswordInputInvalid(
+                  translations["Please enter a password"],
+                );
               } else {
                 setIsPasswordInputInvalid(false);
                 updateSurveyPassword.mutate({ surveyId, password });

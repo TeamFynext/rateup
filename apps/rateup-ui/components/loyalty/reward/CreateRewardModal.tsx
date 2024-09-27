@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import {
   Button,
   Group,
@@ -8,20 +10,23 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { CampaignRewardType } from "../../../types/enums";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateRewardMutation,
   useUpdateRewardMutation,
 } from "../../../backend/loyalty/reward/reward.query";
-import { useEffect } from "react";
+import { CampaignRewardType } from "../../../types/enums";
 
 export function CreateRewardModal({ opened, close }) {
+  const { translations } = useTranslations();
   return (
     <Modal
       centered
       opened={opened}
       onClose={close}
-      title="Create Reward"
+      title={translations["Create Reward"]}
       size="md"
     >
       <CreateRewardForm close={close} />
@@ -39,7 +44,7 @@ export function CreateRewardForm({
 }: CreateRewardFormProps) {
   const createReward = useCreateRewardMutation();
   const updateReward = useUpdateRewardMutation();
-
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: initialValues || {
       name: "",
@@ -69,22 +74,22 @@ export function CreateRewardForm({
   return (
     <Stack>
       <TextInput
-        label="Reward Name"
-        placeholder="Enter Reward Name"
+        label={translations["Reward Name"]}
+        placeholder={translations["Enter Reward Name"]}
         required
         {...form.getInputProps("name")}
       />
       <Select
-        label="Reward Type"
-        placeholder="Select Reward Type"
+        label={translations["Reward Type"]}
+        placeholder={translations["Select Reward Type"]}
         required
         {...form.getInputProps("type")}
         data={Object.values(CampaignRewardType)}
       />
       {form.values.type === CampaignRewardType.Fixed ? (
         <NumberInput
-          label="Fixed Amount"
-          placeholder="Enter Fixed Amount"
+          label={translations["Fixed Amount"]}
+          placeholder={translations["Enter Fixed Amount"]}
           required
           {...form.getInputProps("fixedAmount")}
         />
@@ -92,14 +97,14 @@ export function CreateRewardForm({
       {form.values.type === CampaignRewardType.Percentage ? (
         <>
           <NumberInput
-            label="Percentage"
-            placeholder="Enter Percentage"
+            label={translations["Percentage"]}
+            placeholder={translations["Enter Percentage"]}
             required
             {...form.getInputProps("percentage")}
           />
           <NumberInput
-            label="Max Points Per Transaction"
-            placeholder="Enter Max Points Per Transaction"
+            label={translations["Max Points Per Transaction"]}
+            placeholder={translations["Enter Max Points Per Transaction"]}
             required
             {...form.getInputProps("maxPointsPerTransaction")}
           />
@@ -108,10 +113,12 @@ export function CreateRewardForm({
 
       <Group justify="right" mt="md">
         <Button onClick={close} variant="outline">
-          Cancel
+          {translations["Cancel"]}
         </Button>
         <Button onClick={handleSubmit}>
-          {initialValues ? `Update` : `Create Reward`}
+          {initialValues
+            ? translations["Update"]
+            : translations["Create Reward"]}
         </Button>
       </Group>
     </Stack>

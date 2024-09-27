@@ -3,6 +3,8 @@ import { useContext, useEffect, useState } from "react";
 import { Box, Button } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
@@ -17,7 +19,7 @@ function NextBtn({ next, themeStyles, survey, isSavingResponses }) {
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const { borderRadius, ...otherThemeStyles } = themeStyles;
-
+  const { translations } = useTranslations();
   useEffect(() => {
     // TODO: check if rebase was done correctly
 
@@ -90,7 +92,7 @@ function NextBtn({ next, themeStyles, survey, isSavingResponses }) {
             }
             loading={isSavingResponses}
           >
-            Submit
+            {translations["Submit"]}
           </Button>
         ) : (
           <Button
@@ -111,7 +113,7 @@ function NextBtn({ next, themeStyles, survey, isSavingResponses }) {
               ) && otherThemeStyles
             }
           >
-            Next
+            {translations["Next"]}
           </Button>
         )}
       </Box>

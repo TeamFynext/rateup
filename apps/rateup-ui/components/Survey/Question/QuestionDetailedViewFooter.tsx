@@ -23,6 +23,7 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons";
+import useTranslations from "@/dictionaries/useTranslation";
 import { docsPath, NPSQuestions } from "@/utils/constants";
 import {
   googleReviewSupportedTypes,
@@ -44,11 +45,12 @@ function QuestionDetailedViewFooter({
   selectedLanguage,
   isSaving,
 }) {
+  const { translations } = useTranslations();
   return (
     <Group mt="sm" justify="space-between" gap="sm">
       <Group justify="flex-start" gap="md">
         <Checkbox
-          label="Required"
+          label={translations["Required"]}
           color="var(--tertiary-color)"
           fw={600}
           mr={!NPSQuestions.includes(question?.type as QuestionType) && "100px"}
@@ -66,7 +68,7 @@ function QuestionDetailedViewFooter({
         <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
         {NPSQuestions.includes(question?.type as QuestionType) && (
           <Checkbox
-            label="NPS Analytics"
+            label={translations["NPS Analytics"]}
             color="var(--tertiary-color)"
             fw={600}
             checked={form.values.enableNpsAnalytics}
@@ -97,7 +99,7 @@ function QuestionDetailedViewFooter({
                 rightSection={<IconChevronDown size="1rem" />}
               >
                 <Text size="sm" c={"var(--text-color-sp)"} fw="700">
-                  Actions
+                  {translations["Actions"]}
                 </Text>
               </Button>
             </Menu.Target>
@@ -105,7 +107,7 @@ function QuestionDetailedViewFooter({
             <Menu.Dropdown>
               <Menu.Item>
                 <RateupButtonSecondary
-                  title={"Variables"}
+                  title={translations["Variables"]}
                   fullWidth
                   size="sm"
                   leftIcon={<IconVariable size={"1.5rem"} />}
@@ -115,7 +117,7 @@ function QuestionDetailedViewFooter({
               {logicSupportedTypes.includes(question?.type as QuestionType) && (
                 <Menu.Item>
                   <RateupButtonSecondary
-                    title={"Logic Jump"}
+                    title={translations["Logic Jump"]}
                     fullWidth
                     leftIcon={
                       <Image
@@ -140,7 +142,7 @@ function QuestionDetailedViewFooter({
                 <Menu.Item>
                   {isGoogleReviewFeatureActive ? (
                     <RateupButtonSecondary
-                      title={"Google Review"}
+                      title={translations["Google Review"]}
                       leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
                       size="sm"
                       fullWidth
@@ -152,7 +154,9 @@ function QuestionDetailedViewFooter({
                     />
                   ) : (
                     <Tooltip
-                      label="Upgrade your Plan for this feature."
+                      label={
+                        translations["Upgrade your Plan for this feature."]
+                      }
                       disabled={isGoogleReviewFeatureActive}
                       color="yellow"
                     >
@@ -164,7 +168,7 @@ function QuestionDetailedViewFooter({
                           <IconBrandGoogle stroke={4} size={"1rem"} />
                         }
                       >
-                        Google Review
+                        {translations["Google Review"]}
                       </Button>
                     </Tooltip>
                   )}
@@ -176,7 +180,7 @@ function QuestionDetailedViewFooter({
               ) && (
                 <Menu.Item>
                   <RateupButtonSecondary
-                    title={"Custom Validation"}
+                    title={translations["Custom Validation"]}
                     leftIcon={<IconEdit />}
                     size="sm"
                     fullWidth
@@ -194,7 +198,7 @@ function QuestionDetailedViewFooter({
                 <Menu.Item>
                   {isTicketFeatureActive ? (
                     <RateupButtonSecondary
-                      title={"Create Tickets"}
+                      title={translations["Create Tickets"]}
                       leftIcon={<IconTicket stroke={4} size={"1rem"} />}
                       size="sm"
                       fullWidth
@@ -206,7 +210,9 @@ function QuestionDetailedViewFooter({
                     />
                   ) : (
                     <Tooltip
-                      label="Upgrade your Plan for this feature."
+                      label={
+                        translations["Upgrade your Plan for this feature."]
+                      }
                       disabled={isTicketFeatureActive}
                       color="yellow"
                     >
@@ -216,7 +222,7 @@ function QuestionDetailedViewFooter({
                         onClick={(event) => event.preventDefault()}
                         leftSection={<IconTicket stroke={4} size={"1rem"} />}
                       >
-                        Create Tickets
+                        {translations["Create Tickets"]}
                       </Button>
                     </Tooltip>
                   )}
@@ -233,8 +239,8 @@ function QuestionDetailedViewFooter({
             getIncompleteLanguages().length > 1 ||
             (getIncompleteLanguages().length > 0 &&
               getIncompleteLanguages()[0] !== selectedLanguage)
-              ? "Fill Next Language"
-              : "Save"
+              ? translations["Fill Next Language"]
+              : translations["Save"]
           }
           size="md"
           onClick={handleSave}

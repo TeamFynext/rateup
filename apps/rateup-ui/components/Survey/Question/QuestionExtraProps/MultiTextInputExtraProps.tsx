@@ -1,24 +1,28 @@
 import { useContext, useEffect, useState } from "react";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+
 import { Group, Stack } from "@mantine/core";
-import DraggableTable from "../../../styled/Table/DraggableTable";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import {
-  RateupButtonSecondary,
   RateupButtonBlue,
+  RateupButtonSecondary,
 } from "../../../Button/RateupButtons";
 import {
-  ContainedTextField,
   ContainedTextArea,
+  ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../../Modal/FormModalLayout";
-import { useForm, isNotEmpty } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
+import DraggableTable from "../../../styled/Table/DraggableTable";
 
 const MultiTextInputExtraProps = ({ form }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values.features?.[selectedLanguage];
-
+  const { translations } = useTranslations();
   const headers = [
     { headerKey: "fieldKey", headerValue: "Field Key" },
     { headerKey: "placeholderText", headerValue: "Display Text" },
@@ -36,11 +40,11 @@ const MultiTextInputExtraProps = ({ form }) => {
     validate: {
       fieldKey: (value) =>
         !value?.trim().length
-          ? "Field key cannot be empty"
+          ? translations["Field key cannot be empty"]
           : !/^[a-zA-Z0-9_]+$/.test(value)
-            ? "only alphabets, digits and underscore are allowed"
+            ? translations["only alphabets, digits and underscore are allowed"]
             : null,
-      placeholderText: isNotEmpty("Display Text cannot be empty"),
+      placeholderText: isNotEmpty(translations["Display Text cannot be empty"]),
     },
   });
   const handleDragEnd = (values) => {
@@ -128,17 +132,17 @@ const MultiTextInputExtraProps = ({ form }) => {
       />
       <Group>
         <ContainedTextField
-          label={"Enter key for the field"}
+          label={translations["Enter key for the field"]}
           {...fieldForm.getInputProps("fieldKey")}
           w={200}
         />
         <ContainedTextField
-          label={"Enter display text for field"}
+          label={translations["Enter display text for field"]}
           w={350}
           {...fieldForm.getInputProps("placeholderText")}
         />
         <RateupButtonSecondary
-          title="Add Field"
+          title={translations["Add Field"]}
           rightIcon={<IconPlus />}
           onClick={() => addField()}
           mt={"md"}
@@ -147,7 +151,7 @@ const MultiTextInputExtraProps = ({ form }) => {
       <FormModalLayout
         opened={openedEditModal}
         onClose={closeEditModal}
-        title="Edit Display Text"
+        title={translations["Edit Display Text"]}
         centered
       >
         <Stack justify="center">
@@ -159,7 +163,7 @@ const MultiTextInputExtraProps = ({ form }) => {
             autosize
           />
           <RateupButtonBlue
-            title="Update Display Text"
+            title={translations["Update Display Text"]}
             onClick={handleEditDisplayText}
           />
         </Stack>

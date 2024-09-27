@@ -1,7 +1,10 @@
 import { Center, Group, Stack, Text, useMantineTheme } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { IconMoodEmpty, IconMoodSad, IconMoodSmile } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SentimentClass } from "../../../types/enums";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { ratingColorMap } from "./RatingSummaryCard";
 
 interface SentimentInsights {
@@ -20,6 +23,7 @@ export function SentimentSummaryCard({
   sentimentInsights,
 }: SentimentSummaryCardProps) {
   const theme = useMantineTheme();
+  const { translations } = useTranslations();
   return (
     <PaperLayout p="0">
       <>
@@ -36,7 +40,7 @@ export function SentimentSummaryCard({
             }}
             mr="xs"
           >
-            {`Total Reviews:`}
+            {translations["Total Reviews:"]}
           </Text>
           <Text
             style={{
@@ -75,7 +79,7 @@ export function SentimentSummaryCard({
                 fontSize: "1.2rem",
               }}
             >
-              Positive
+              {translations["Positive"]}
             </Text>
           </Stack>
           <Stack
@@ -104,7 +108,7 @@ export function SentimentSummaryCard({
                 fontSize: "1.2rem",
               }}
             >
-              Neutral
+              {translations["Neutral"]}
             </Text>
           </Stack>
           <Stack
@@ -133,7 +137,7 @@ export function SentimentSummaryCard({
                 fontSize: "1.2rem",
               }}
             >
-              Negative
+              {translations["Negative"]}
             </Text>
           </Stack>
         </Group>

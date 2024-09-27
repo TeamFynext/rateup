@@ -1,5 +1,7 @@
 import { ScrollAreaAutosize, Table } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 const TableLayoutSecondary = ({
   columns,
   rows,
@@ -13,6 +15,7 @@ const TableLayoutSecondary = ({
   rows: Array<any>;
   maxHeight?: string | number;
 }) => {
+  const { translations } = useTranslations();
   return (
     <ScrollAreaAutosize mah={maxHeight}>
       <Table highlightOnHover stickyHeader striped verticalSpacing={"md"}>
@@ -27,7 +30,7 @@ const TableLayoutSecondary = ({
           {!rows?.length ? (
             <Table.Tr>
               <Table.Td colSpan={9} align="center">
-                Nothing Found
+                {translations["Nothing Found"]}
               </Table.Td>
             </Table.Tr>
           ) : (

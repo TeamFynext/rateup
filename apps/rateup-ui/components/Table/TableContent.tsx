@@ -1,35 +1,39 @@
 import React from "react";
+import { useRouter } from "next/router";
+
 import {
+  Box,
+  Center,
+  Divider,
+  Flex,
+  Group,
+  Pagination,
+  rem,
+  ScrollArea,
   Stack,
   Table,
-  UnstyledButton,
-  Flex,
-  Center,
-  rem,
-  Pagination,
-  Group,
-  Box,
   Text,
-  Divider,
-  ScrollArea,
+  UnstyledButton,
 } from "@mantine/core";
 import {
-  IconChevronUp,
   IconChevronDown,
+  IconChevronUp,
   IconSelector,
 } from "@tabler/icons-react";
-import { Header, Table as TableType, flexRender } from "@tanstack/react-table";
+import { flexRender, Header, Table as TableType } from "@tanstack/react-table";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { PAGE_SIZE } from "../../utils/constants";
-import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
-import { Filter } from "./Filter/Filter";
 import { lexend600 } from "../../utils/fonts";
-import styles from "./TableContent.module.css";
-import { useRouter } from "next/router";
-import { DETAIL_BTN } from "../Contacts/utils/utils";
 import {
   TableBodySkeleton,
   TableHeadSkeleton,
 } from "../animation/skeleton/Table.Skeleton";
+import { DETAIL_BTN } from "../Contacts/utils/utils";
+import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
+import { Filter } from "./Filter/Filter";
+import styles from "./TableContent.module.css";
 
 type TableLayoutProps = {
   table: TableType<any>;
@@ -63,6 +67,7 @@ const TableLayout = ({
   isPending,
 }: TableLayoutProps) => {
   const router = useRouter();
+  const { translations } = useTranslations();
   return (
     <Stack className={styles["table-and-pagination-container"]}>
       <Stack justify="space-between" className={styles["table-container"]}>
@@ -252,7 +257,7 @@ const TableLayout = ({
             </Pagination.Root>
           )}
           <Group className={styles["rows-per-page-text-dd-container"]}>
-            <Text fz="sm">Rows Per page</Text>
+            <Text fz="sm">{translations["Rows Per page"]}</Text>
             <ContainedSelection
               onChange={(value) => {
                 table.setPageSize(Number(value));
@@ -274,7 +279,8 @@ const TableLayout = ({
           pr={"xs"}
           ff={lexend600.style.fontFamily}
         >
-          Total Rows: {(isPending ? 0 : table.getRowCount()) ?? 0}
+          {translations["Total Rows: "]}
+          {(isPending ? 0 : table.getRowCount()) ?? 0}
         </Text>
       </Flex>
     </Stack>

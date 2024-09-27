@@ -21,6 +21,7 @@ import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions
 import { GoogleIcon } from "@/components/Button/GoogleIcon";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
+import useTranslations from "@/dictionaries/useTranslation";
 import { extractText } from "@/utils";
 
 import { pageIcons } from "../../Page/PageIcons";
@@ -73,14 +74,14 @@ export function DraggableQuestionCard({
 
   const nonDeletablePagetypeStrs = ["Language", "GoogleReview"];
   const nonClickableQuestionTypeStrs = ["GoogleReview"];
-
+  const { translations } = useTranslations();
   return (
     <>
       <ConfirmationModal
         forDeleteFunctionality
-        confirmLabel="Delete"
-        headerLabel={`Are you sure to delete this ${question.type in PageType ? "page" : "question"}?`}
-        headerTitle={`Delete ${question.type in PageType ? "page" : "question"}?`}
+        confirmLabel={translations["Delete"]}
+        headerLabel={` ${translations["Are you sure to delete this"]} ${question.type in PageType ? translations["page"] : translations["question"]}?`}
+        headerTitle={` ${translations["Delete"]} ${question.type in PageType ? translations["page"] : translations["question"]}?`}
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {

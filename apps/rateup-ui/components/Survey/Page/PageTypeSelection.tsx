@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 import { PageType, SubscriptionFeaturePathName } from "../../../types/enums";
@@ -31,11 +32,12 @@ const PageTypeSelection = ({
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);
   };
+  const { translations } = useTranslations();
   const QuestionButton = ({ type, subscription }) => {
     const Icon = pageIcons[type];
     return (
       <Tooltip
-        label="Upgrade Rateup Plan"
+        label={translations["Upgrade Rateup Plan"]}
         withArrow
         color="yellow"
         disabled={
@@ -79,7 +81,7 @@ const PageTypeSelection = ({
         <Stack gap={"sm"}>
           <Group justify="space-between">
             <Title order={4} c="dimmed">
-              Basic Pages
+              {translations["Basic Pages"]}
             </Title>
           </Group>
 

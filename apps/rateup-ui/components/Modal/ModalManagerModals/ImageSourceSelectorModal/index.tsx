@@ -1,17 +1,21 @@
+import { useCallback } from "react";
+
 import { Button, FileButton, Group, Image } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconUpload } from "@tabler/icons-react";
-import { useCallback } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { mmImageCropModalClassnames } from "../../../../utils/constants";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
 import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 import commonStyles from "../mmCommonStyles.module.css";
 import styles from "./ImageSourceSelectorModal.module.css";
-import { mmImageCropModalClassnames } from "../../../../utils/constants";
 
 function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
-
+  const { translations } = useTranslations();
   const handleFileBtnValueChange = useCallback(
     (fileObj) => {
       if (!fileObj) {
@@ -22,7 +26,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
         const url = URL.createObjectURL(fileObj);
         modals.openContextModal({
           modal: "imageCropModal",
-          title: "Crop Image",
+          title: translations["Crop Image"],
           centered: true,
           classNames: mmImageCropModalClassnames,
           innerProps: {
@@ -40,7 +44,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
   const handleUnsplashBtnClick = useCallback(() => {
     modals.openContextModal({
       modal: "unsplashImageSelectorModal",
-      title: "Unsplash Images",
+      title: translations["Unsplash Images"],
       centered: true,
       className: commonStyles["mm-modal"],
       classNames: {
@@ -64,7 +68,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
               {...props}
               rightSection={<IconUpload size={16} />}
             >
-              {"Upload from Device"}
+              {translations["Upload from Device"]}
             </Button>
           );
         }}
@@ -82,7 +86,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
         }
         onClick={handleUnsplashBtnClick}
       >
-        Select from Unsplash
+        {translations["Select from Unsplash"]}
       </Button>
     </Group>
   );

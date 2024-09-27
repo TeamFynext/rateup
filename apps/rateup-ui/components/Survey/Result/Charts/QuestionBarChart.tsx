@@ -11,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { QuestionType } from "../../../../types/enums";
 import { getContent } from "../../../../utils";
@@ -40,6 +42,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   payload,
   label,
 }) => {
+  const { translations } = useTranslations();
   if (active && payload && payload.length) {
     return (
       <Paper
@@ -49,7 +52,10 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
       >
         <Stack>
           <Title order={5}> {label} </Title>
-          <Text>Count: {payload[0]?.value}</Text>
+          <Text>
+            {translations["Count: "]}
+            {payload[0]?.value}
+          </Text>
         </Stack>
       </Paper>
     );
@@ -100,7 +106,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     }
   }
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-
+  const { translations } = useTranslations();
   let choiceCounts = choicesToUse?.map((choice, index) => ({
     name: choice?.value,
     count: data?.filter((item) => {
@@ -164,7 +170,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
                 titleprops={{ w: "fit-content" }}
               />
               <Text c={"dimmed"} fw={900} size="sm">
-                Responses
+                {translations["Responses"]}
               </Text>
             </Stack>
           </PaperLayout>

@@ -1,3 +1,5 @@
+import { useCallback, useRef, useState } from "react";
+
 import {
   ActionIcon,
   Badge,
@@ -7,28 +9,30 @@ import {
   Stack,
   Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
   IconCopy,
   IconDownload,
   IconTags,
 } from "@tabler/icons-react";
-import FormModalLayout from "../../../Modal/FormModalLayout";
-import Heading from "../../../styled/Heading/Heading";
+import { DataGrid } from "@mui/x-data-grid";
+import domtoimage from "dom-to-image-more";
+import { saveAs } from "file-saver";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useGetShareSettings } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import {
   ContainedSelection,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
-import { DataGrid } from "@mui/x-data-grid";
+import FormModalLayout from "../../../Modal/FormModalLayout";
+import Heading from "../../../styled/Heading/Heading";
 import Preview from "../Preview/Preview";
 import previewStyles from "../Preview/Preview.module.css";
-import styles from "./TagManager.module.css";
-import { useGetShareSettings } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import CustomGridToolbar from "./CustomGridToolbar/CustomGridToolbar";
-import { useCallback, useRef, useState } from "react";
-import domtoimage from "dom-to-image-more";
-import { saveAs } from "file-saver";
-import { useDisclosure } from "@mantine/hooks";
+import styles from "./TagManager.module.css";
 
 function TagManager({
   isPublished,
@@ -45,7 +49,7 @@ function TagManager({
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] =
     useState(false);
   const dataGridCompRef = useRef(null);
-
+  const { translations } = useTranslations();
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
     useDisclosure(false);
 
@@ -82,12 +86,12 @@ function TagManager({
         console.log("download files failed.");
         return {
           success: false,
-          message: "failed to download files",
+          message: translations["failed to download files"],
         };
       }
       return {
         success: true,
-        message: "successfully downloaded files",
+        message: translations["successfully downloaded files"],
       };
     },
     [surveyTitle],
@@ -117,7 +121,7 @@ function TagManager({
 
   return (
     <>
-      <Tooltip label="Manage URL Tags" position="right-start">
+      <Tooltip label={translations["Manage URL Tags"]} position="right-start">
         <ActionIcon
           disabled={!isPublished}
           onClick={openTagManager}
@@ -132,13 +136,13 @@ function TagManager({
         size="xl"
         onClose={closeTagManager}
         opened={tagManagerOpened}
-        title="Manage URL Tags"
+        title={translations["Manage URL Tags"]}
         customHeader={
           <Group justify="space-between" px={"lg"}>
             <Heading subtitle="URL Taggers" />
             <ContainedSelection
               disabled={!isPublished}
-              label="Select Team"
+              label={translations["Select Team"]}
               allowDeselect={false}
               miw={150}
               value={selectTeamDropdownValue}
@@ -155,7 +159,7 @@ function TagManager({
             rightSection={<IconDownload size={14} />}
             loading={isAllQrDownloadProcessing}
           >
-            Download all QRs
+            {translations["Download all QRs"]}
           </Button>
 
           <DataGrid

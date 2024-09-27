@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 
 import {
-  useCreateMenuCategoryMutation,
-  useUpdateMenuCategoryMutation,
-} from "@/backend/menu/category/mCategory.query";
-import { createCustomTimestamp, formatToCustomTime } from "@/utils/dateTime";
-import {
   Group,
   LoadingOverlay,
   SimpleGrid,
@@ -14,6 +9,13 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+
+import {
+  useCreateMenuCategoryMutation,
+  useUpdateMenuCategoryMutation,
+} from "@/backend/menu/category/mCategory.query";
+import useTranslations from "@/dictionaries/useTranslation";
+import { createCustomTimestamp, formatToCustomTime } from "@/utils/dateTime";
 
 import {
   ContainedTextField,
@@ -34,7 +36,7 @@ export function CreateMenuCategoryModal({
   editingItem,
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
-
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: editingItem ?? {
       name: "",
@@ -44,7 +46,7 @@ export function CreateMenuCategoryModal({
       endTime: "",
     },
     validate: {
-      name: (value) => (value.length ? null : "Cannot be empty"),
+      name: (value) => (value.length ? null : translations["Cannot be empty"]),
     },
   });
 
@@ -123,10 +125,18 @@ export function CreateMenuCategoryModal({
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={editingItem ? "Edit Category" : "Create Category"}
+      title={
+        editingItem
+          ? translations["Edit Category"]
+          : translations["Create Category"]
+      }
       centered
       onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={editingItem ? "Save Category" : "Create Category"}
+      buttonTitle={
+        editingItem
+          ? translations["Save Category"]
+          : translations["Create Category"]
+      }
     >
       <Stack>
         <LoadingOverlay
@@ -141,17 +151,17 @@ export function CreateMenuCategoryModal({
         />
         <Stack>
           <Title order={3} c={"var(--grey-color)"}>
-            Category Details
+            {translations["Category Details"]}
           </Title>
           <ContainedTextField
-            label="Name"
-            placeholder="Name"
+            label={translations["Name"]}
+            placeholder={translations["Name"]}
             withAsterisk
             {...form.getInputProps("name")}
           />
           <Group>
             <Title order={3} c={"var(--grey-color)"}>
-              Timed Menu
+              {translations["Timed Menu"]}
             </Title>
             <Switch
               {...form.getInputProps("scheduleEnabled")}
@@ -160,12 +170,12 @@ export function CreateMenuCategoryModal({
           </Group>
           <SimpleGrid cols={2}>
             <ContainedTimeInput
-              label={"Start Time:"}
+              label={translations["Start Time:"]}
               disabled={!form?.values?.scheduleEnabled}
               {...form.getInputProps("startTime")}
             />
             <ContainedTimeInput
-              label={"End Time:"}
+              label={translations["End Time:"]}
               disabled={!form?.values?.scheduleEnabled}
               {...form.getInputProps("endTime")}
             />

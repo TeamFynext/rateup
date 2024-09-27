@@ -1,11 +1,16 @@
-import { Group, Modal, Space, Stack, Title } from "@mantine/core";
 import { FormEventHandler } from "react";
+
+import { Group, Modal, Space, Stack, Title } from "@mantine/core";
+import { getHotkeyHandler } from "@mantine/hooks";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { SAVE_HOTKEY } from "../../utils/constants";
+
 interface FormModalLayoutProps {
   opened: boolean;
   onClose: () => void;
@@ -42,6 +47,7 @@ export default function FormModalLayout({
   cancelButtonTitle,
   submitBtnColor,
 }: FormModalLayoutProps) {
+  const { translations } = useTranslations();
   return (
     <Modal
       centered={centered}
@@ -87,7 +93,9 @@ export default function FormModalLayout({
               type="reset"
               variant="subtle"
               onClick={cancelOnClick ? cancelOnClick : onClose}
-              title={cancelButtonTitle ? cancelButtonTitle : "Cancel"}
+              title={
+                cancelButtonTitle ? cancelButtonTitle : translations["Cancel"]
+              }
             />
           )}
           {buttonTitle && (

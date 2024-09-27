@@ -3,12 +3,15 @@ import React from "react";
 import { Box, Overlay, Tooltip, useMantineColorScheme } from "@mantine/core";
 import { IconLockSquareRounded } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 const PremiumFeature = ({ isSubscribed, children }) => {
   const { colorScheme } = useMantineColorScheme();
+  const { translations } = useTranslations();
   const isDark = colorScheme === "dark";
   return (
     <Tooltip.Floating
-      label={`Upgrade Your Plan`}
+      label={translations["Upgrade Your Plan"]}
       disabled={isSubscribed}
       color="yellow"
     >

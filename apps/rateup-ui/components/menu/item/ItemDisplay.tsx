@@ -11,6 +11,7 @@ import {
   Text,
 } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
 import classes2 from "@/pages/public/menu/gradientAnimation.module.css";
 
 import { fallbackImage } from "../../../utils/constants";
@@ -34,6 +35,7 @@ export function ItemDisplay({
   categoryDisabled = false,
   currency = "0",
 }: ItemDisplayProps) {
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       p="0"
@@ -101,7 +103,7 @@ export function ItemDisplay({
                     zIndex: 1,
                   }}
                 >
-                  Not Available
+                  {translations["Not Available"]}
                 </Paper>
               </Center>
             )}

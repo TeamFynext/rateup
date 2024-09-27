@@ -14,13 +14,15 @@ import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useDeleteLandingPageMutation } from "../../../backend/landingPage/landingPage.query";
 import CreateLandingPageModal from "../CreateLandingPageModal";
 import styles from "./LandingPageCard.module.css";
 
 function MoreOptionsMenu({ shortUrlId, id, name }) {
   const router = useRouter();
-
+  const { translations } = useTranslations();
   const [isEditLandingPageModalOpen, editLandingPageModalHandlers] =
     useDisclosure();
 
@@ -36,13 +38,16 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
   const handleDeleteClick = useCallback(async () => {
     // deleteLandingPageMutation.mutateAsync();
     modals.openConfirmModal({
-      title: "Delete Landing Page?",
+      title: translations["Delete Landing Page?"],
       children: (
         <Text className={modalStyles["are-you-sure-text"]}>
-          Are you sure to delete this Landing Page?
+          {translations["Are you sure to delete this Landing Page?"]}
         </Text>
       ),
-      labels: { confirm: "Delete", cancel: "Cancel" },
+      labels: {
+        confirm: translations["Delete"],
+        cancel: translations["Cancel"],
+      },
       className: modalStyles["delete-confirmation-modal"],
       centered: true,
       classNames: {
@@ -71,13 +76,13 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
         </MenuTarget>
         <MenuDropdown onClick={(e) => e.stopPropagation()}>
           <MenuItem leftSection={<IconEdit />} onClick={handleRenameClick}>
-            Rename
+            {translations["Rename"]}
           </MenuItem>
           <MenuItem leftSection={<IconShare />} onClick={handleShareClick}>
-            Share
+            {translations["Share"]}
           </MenuItem>
           <MenuItem leftSection={<IconTrash />} onClick={handleDeleteClick}>
-            Delete
+            {translations["Delete"]}
           </MenuItem>
         </MenuDropdown>
       </Menu>

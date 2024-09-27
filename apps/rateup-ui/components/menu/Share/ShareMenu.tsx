@@ -1,9 +1,13 @@
-import { Stack, Switch, Grid, LoadingOverlay } from "@mantine/core";
 import React from "react";
-import ShareQR from "../../Survey/ShareSurvey/ShareQR";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { CopyLinkComponent } from "../../Survey/ShareSurvey/ShareSurvey";
+
+import { Grid, LoadingOverlay, Stack, Switch } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import ShareQR from "../../Survey/ShareSurvey/ShareQR";
+import { CopyLinkComponent } from "../../Survey/ShareSurvey/ShareSurvey";
 
 type ShareMenuProps = {
   menu: {
@@ -22,7 +26,7 @@ const ShareMenu = ({ menu }: ShareMenuProps) => {
     () => {},
     () => {},
   );
-
+  const { translations } = useTranslations();
   const shareLink = menu.shortUrlId
     ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${shortUrlId}`
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${id}`;
@@ -40,7 +44,11 @@ const ShareMenu = ({ menu }: ShareMenuProps) => {
                   updatedData: { isPublished: event.currentTarget.checked },
                 });
               }}
-              label={isPublished ? "Published" : "Not Published"}
+              label={
+                isPublished
+                  ? translations["Published"]
+                  : translations["Not Published"]
+              }
               fw={"600"}
             />
           </PaperLayout>

@@ -8,6 +8,7 @@ import { notifications } from "@mantine/notifications";
 import { IconEye } from "@tabler/icons-react";
 
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import {
@@ -83,7 +84,7 @@ export function QuestionDetailedView({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
-
+  const { translations } = useTranslations();
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
     useState(false);
@@ -139,13 +140,15 @@ export function QuestionDetailedView({
         !form.values.title[selectedLanguage] ||
         form.values.title[selectedLanguage] == ""
       ) {
-        showErrorToast("Question title is missing");
+        showErrorToast(translations["Question title is missing"]);
         return "error";
       } else {
         if (getIncompleteLanguages().length > 0) {
           setSelectedLanguage(getIncompleteLanguages()[0]);
           showErrorToast(
-            "Please Enter heading and choices for all languages before saving.",
+            translations[
+              "Please Enter heading and choices for all languages before saving."
+            ],
           );
           return "error";
         }
@@ -169,8 +172,9 @@ export function QuestionDetailedView({
           notifications.show({
             id: "load-data",
             loading: true,
-            title: "updating question",
-            message: `Hold on, your changes are getting updated...`,
+            title: translations["updating question"],
+            message:
+              translations["Hold on, your changes are getting updated..."],
             autoClose: false,
             withCloseButton: false,
           });
@@ -280,7 +284,7 @@ export function QuestionDetailedView({
             label={
               <>
                 <IconEye size={12} />
-                <Box ml={5}>Preview</Box>
+                <Box ml={5}>{translations["Preview"]}</Box>
               </>
             }
           />

@@ -1,3 +1,5 @@
+import { useContext, useState } from "react";
+
 import {
   ActionIcon,
   Blockquote,
@@ -9,26 +11,28 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useContext, useState } from "react";
+import { IconInfoCircle, IconPlus, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useImportEmailIdsMutation } from "../../../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
+import SurveyContext from "../../../../context/SurveyContext";
+import { emailPattern } from "../../../../utils/constants";
 import {
   showErrorToast,
   showSuccessToast,
 } from "../../../../utils/notifications";
-import { useImportEmailIdsMutation } from "../../../../backend/surveys/questions/questions.query";
-import SurveyContext from "../../../../context/SurveyContext";
-import { IconInfoCircle, IconTrash, IconPlus } from "@tabler/icons-react";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../../Button/RateupButtons";
 import {
   ContainedFileInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../Button/RateupButtons";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { emailPattern } from "../../../../utils/constants";
 
 enum AllowEmailForOTP {
   allEmail = "All Emails",
@@ -54,6 +58,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
   const allChecked = allowedEmailIDs?.every((email) =>
     selectedEmailIds.includes(email),
   );
+  const { translations } = useTranslations();
   const indeterminate =
     allowedEmailIDs?.some((email) => selectedEmailIds.includes(email)) &&
     !allChecked;
@@ -68,7 +73,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
     >
       <Table.Td>
         <Checkbox
-          aria-label="Select email"
+          aria-label={translations["Select email"]}
           checked={selectedEmailIds.includes(email)}
           onChange={(event) =>
             setSelectedEmailIds(
@@ -104,11 +109,11 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
 
   const handleAddEmail = () => {
     if (!newEmail || !emailPattern.test(newEmail)) {
-      setInputError("Invalid Email");
+      setInputError(translations["Invalid Email"]);
       return;
     }
     if (allowedEmailIDs?.includes(newEmail)) {
-      setInputError("Email Already exists");
+      setInputError(translations["Email Already exists"]);
       return;
     }
     allowedEmailIDs?.push(newEmail);
@@ -127,7 +132,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
 
   return (
     <Stack w={"100%"}>
-      <Tooltip label={"Allowed Emails"}>
+      <Tooltip label={translations["Allowed Emails"]}>
         <SegmentedControl
           data={Object.values(AllowEmailForOTP)}
           value={
@@ -167,14 +172,14 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
               )}
             </Group>
             <Title order={5} ta={"center"}>
-              Allowed Email IDs
+              {translations["Allowed Email IDs"]}
             </Title>
             <Table>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>
                     <Checkbox
-                      aria-label="Select email"
+                      aria-label={translations["Select email"]}
                       indeterminate={indeterminate}
                       checked={allChecked}
                       onChange={() => {
@@ -184,7 +189,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
                       size="xs"
                     />
                   </Table.Th>
-                  <Table.Th>Email ID</Table.Th>
+                  <Table.Th>{translations["Email ID"]}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>
@@ -192,9 +197,9 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
           </PaperLayout>
           <ContainedSelection
             data={Object.values(EmailAddMethod)}
-            label={"Method"}
+            label={translations["Method"]}
             w={250}
-            placeholder={"Selecte a method to add email"}
+            placeholder={translations["Selecte a method to add email"]}
             value={emailMethod}
             onChange={(value) => setEmailMethod(value as EmailAddMethod)}
             allowDeselect={false}
@@ -210,13 +215,13 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
                   setNewEmail(e.currentTarget.value);
                 }}
                 error={inputError}
-                placeholder="Enter email here"
+                placeholder={translations["Enter email here"]}
                 style={{
                   flexGrow: 1,
                 }}
               />
               <RateupButtonSecondary
-                title={"Add"}
+                title={translations["Add"]}
                 leftIcon={<IconPlus size={"1rem"} />}
                 onClick={handleAddEmail}
               />
@@ -232,7 +237,7 @@ const ImportAllowedEmailIDs = ({ qId }) => {
   const [file, setFile] = useState<File | null>(null);
   const { surveyId } = useContext(SurveyContext);
   const importEmailIdsMutate = useImportEmailIdsMutation(surveyId);
-
+  const { translations } = useTranslations();
   const handleUploadFile = () => {
     if (!file) return;
     const formData = new FormData();
@@ -241,11 +246,11 @@ const ImportAllowedEmailIDs = ({ qId }) => {
       { questionId: qId, data: formData, surveyId },
       {
         onSuccess: () => {
-          showSuccessToast("Email Ids imported");
+          showSuccessToast(translations["Email Ids imported"]);
           setFile(null);
         },
         onError: () => {
-          showErrorToast("Error in importing emailIds");
+          showErrorToast(translations["Error in importing emailIds"]);
           setFile(null);
         },
       },
@@ -262,8 +267,11 @@ const ImportAllowedEmailIDs = ({ qId }) => {
         w={350}
         ml={10}
       >
-        Upload CSV/XLSX file to generate allowed email Ids. required field in
-        the file: email
+        {
+          translations[
+            "Upload CSV/XLSX file to generate allowed email Ids. required field in the file: email"
+          ]
+        }
       </Blockquote>
       <Stack>
         <ContainedFileInput
@@ -271,10 +279,10 @@ const ImportAllowedEmailIDs = ({ qId }) => {
           accept=".csv, .xlsx"
           value={file}
           w={300}
-          placeholder="Click to Select file"
+          placeholder={translations["Click to Select file"]}
         />
         <RateupButtonBlue
-          title="Upload"
+          title={translations["Upload"]}
           loading={importEmailIdsMutate.isPending}
           onClick={handleUploadFile}
           disabled={!file}

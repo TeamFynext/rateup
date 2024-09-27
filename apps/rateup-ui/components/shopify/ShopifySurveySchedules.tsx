@@ -9,6 +9,7 @@ import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { shopifyEventData } from "../../utils/constants";
 import { formatIsoDateStringWithTime } from "../../utils/dateTime";
@@ -34,26 +35,27 @@ const ShopifySurveySchedules = ({
   waTemplates: WaTemplate[];
   teams: TeamData[];
 }) => {
+  const { translations } = useTranslations();
   const columns = [
     { key: "event", value: "Event" },
-    { key: "whatsapp_template", value: "WhatsApp Template" },
-    { key: "isProductSpecific", value: "Product Specific" },
-    { key: "product", value: "Product" },
-    { key: "sendAfter", value: "Send After" },
+    { key: "whatsapp_template", value: translations["WhatsApp Template"] },
+    { key: "isProductSpecific", value: translations["Product Specific"] },
+    { key: "product", value: translations["Product"] },
+    { key: "sendAfter", value: translations["Send After"] },
     {
       key: "status",
-      value: "Status",
+      value: translations["Status"],
       renderCell: (value) => <ActiveStatusBadge active={value} />,
     },
     {
       key: "team",
-      value: "Team",
+      value: translations["Team"],
       renderCell: (value) => <Badge variant="outline">{value}</Badge>,
     },
     { key: "createdAt", value: "Created At" },
     {
       key: "action",
-      value: "Action",
+      value: translations["Action"],
       renderCell: (row) => (
         <ActionMenu selectedRow={row} shopifyInfo={shopifyInfo} />
       ),
@@ -88,10 +90,10 @@ const ShopifySurveySchedules = ({
   return (
     <Stack p={"sm"}>
       <Group>
-        <Title order={3}>Survey Delivery settings</Title>
+        <Title order={3}>{translations["Survey Delivery settings"]}</Title>
         <RefreshButton queryKeys={["shopifySurveySchedules"]} />
         <RateupButtonBlue
-          title="schedule survey"
+          title={translations["schedule survey"]}
           onClick={open}
           rightIcon={<IconPlus />}
         />
@@ -121,6 +123,7 @@ const ActionMenu = ({
   );
   const [opened, { open, close }] = useDisclosure(false);
   const [deleteCase, setDeleteCase] = useState(null);
+  const { translations } = useTranslations();
   const updateSurveySchedule = () => {
     const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
       (s) => s.event !== selectedRow.event,
@@ -131,7 +134,7 @@ const ActionMenu = ({
     };
     allSchedules.push(updateRow);
     showLoadingToast(
-      "Updating survey schedules..",
+      translations["Updating survey schedules.."],
       "integration-update",
       true,
       "",
@@ -148,7 +151,7 @@ const ActionMenu = ({
       (s) => s.event !== selectedRow.event,
     );
     showLoadingToast(
-      "Deleting survey schedules..",
+      translations["Deleting survey schedules.."],
       "integration-update",
       true,
       "",
@@ -181,20 +184,22 @@ const ActionMenu = ({
             open();
           }}
         >
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
         <Menu.Item onClick={updateSurveySchedule}>
-          {selectedRow.active ? "Deactivate" : "Activate"}
+          {selectedRow.active
+            ? translations["Deactivate"]
+            : translations["Activate"]}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
-        confirmLabel={"Delete"}
+        confirmLabel={translations["Delete"]}
         headerTitle={deleteCase?.headerTitle}
         headerLabel={deleteCase?.headerLabel}
         onClose={close}
         opened={opened}
         onConfirm={() => deleteCase?.confirmFunction(selectedRow)}
-        closeLabel="Cancel"
+        closeLabel={translations["Cancel"]}
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}
       />

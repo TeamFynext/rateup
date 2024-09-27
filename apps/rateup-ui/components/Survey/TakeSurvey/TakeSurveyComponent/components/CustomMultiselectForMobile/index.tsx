@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   Button,
@@ -6,23 +7,26 @@ import {
   ComboboxChevron,
   Group,
   Input,
+  isLightColor,
+  luminance,
   Pill,
   PillsInput,
   Portal,
   ScrollAreaAutosize,
   Stack,
-  isLightColor,
-  luminance,
   useCombobox,
   useMantineTheme,
 } from "@mantine/core";
-import classNames from "classnames/bind";
 import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
+import classNames from "classnames/bind";
 import { motion, useAnimate } from "framer-motion";
-import commonStyles from "../CustomSelectForMobile/CustomSelectForMobile.module.css";
-import styles from "./CustomMultiselectForMobile.module.css";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
+import commonStyles from "../CustomSelectForMobile/CustomSelectForMobile.module.css";
+import styles from "./CustomMultiselectForMobile.module.css";
 
 const cxCommon = classNames.bind(commonStyles);
 const cx = classNames.bind(styles);
@@ -67,7 +71,7 @@ function CustomMultiselectForMobile({
       setSearch("");
     },
   });
-
+  const { translations } = useTranslations();
   const handleValueSelect = async (val) => {
     const valuesArr = value;
     const newValuesArr = value.includes(val)
@@ -232,7 +236,7 @@ function CustomMultiselectForMobile({
                 className={cxCommon("search-input")}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
-                placeholder="Type in to search"
+                placeholder={translations["Type in to search"]}
               />
             </Group>
 
@@ -242,7 +246,9 @@ function CustomMultiselectForMobile({
                   {options.length > 0 ? (
                     options
                   ) : (
-                    <Combobox.Empty>Nothing found</Combobox.Empty>
+                    <Combobox.Empty>
+                      {translations["Nothing found"]}
+                    </Combobox.Empty>
                   )}
                 </Stack>
               </ScrollAreaAutosize>
@@ -262,7 +268,7 @@ function CustomMultiselectForMobile({
                 onClick={() => setIsOptionSelectionDivVisible(false)}
                 color={themePrimaryColor}
               >
-                Done
+                {translations["Done"]}
               </Button>
             </Group>
           </Stack>

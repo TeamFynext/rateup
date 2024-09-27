@@ -16,6 +16,8 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
@@ -63,6 +65,7 @@ export function CreateMenuItemModal({
   currency,
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
+  const { translations } = useTranslations();
   const [deleteImageArray, setDeleteImageArray] = useState<
     { Key: string | File | undefined }[]
   >([]);
@@ -106,8 +109,9 @@ export function CreateMenuItemModal({
       unsplashImage: [],
     },
     validate: {
-      name: (value) => (value.length ? null : "Cannot be empty"),
-      description: (value) => (value.length ? null : "Cannot be empty"),
+      name: (value) => (value.length ? null : translations["Cannot be empty"]),
+      description: (value) =>
+        value.length ? null : translations["Cannot be empty"],
     },
   });
   const [selectedImage, setSelectedImage] = useState(
@@ -254,7 +258,9 @@ export function CreateMenuItemModal({
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      showErrorToast(
+        `${translations["Max file size is"]} ${MAX_FILE_SIZE_IN_MB} MB`,
+      );
       return;
     }
     setSelectedInputImage({
@@ -308,10 +314,14 @@ export function CreateMenuItemModal({
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={editingItem ? "Edit Item" : "Create Item"}
+      title={
+        editingItem ? translations["Edit Item"] : translations["Create Item"]
+      }
       centered
       onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={editingItem ? "Save Item" : "Create Item"}
+      buttonTitle={
+        editingItem ? translations["Save Item"] : translations["Create Item"]
+      }
       size={"xl"}
     >
       <Flex>
@@ -345,7 +355,7 @@ export function CreateMenuItemModal({
         />
         <Stack style={{ flex: 1 }}>
           <Group mr={"xs"}>
-            <Text>Add Images (max 3)</Text>
+            <Text>{translations["Add Images (max 3)"]}</Text>
             {form?.values?.images?.length > 0 ? (
               <Box>
                 <CreditsCard
@@ -380,7 +390,7 @@ export function CreateMenuItemModal({
                     leftSection={<IconTrash />}
                     onClick={handleDeleteImage}
                   >
-                    Delete
+                    {translations["Delete"]}
                   </Button>
                 </Center>
               </Box>
@@ -450,20 +460,20 @@ export function CreateMenuItemModal({
         <Stack style={{ flex: 1.5 }} gap={8}>
           <Flex columnGap={30}>
             <ContainedTextField
-              label="Name"
-              placeholder="Name"
+              label={translations["Name"]}
+              placeholder={translations["Name"]}
               withAsterisk
               {...form.getInputProps("name")}
             />
             <ContainedTextField
-              label="Video Url"
-              placeholder="Video Url"
+              label={translations["Video Url"]}
+              placeholder={translations["Video Url"]}
               {...form.getInputProps("videoUrl")}
             />
           </Flex>
           <ContainedTextArea
-            label="Description"
-            placeholder="Description"
+            label={translations["Description"]}
+            placeholder={translations["Description"]}
             withAsterisk
             autosize
             minRows={5}

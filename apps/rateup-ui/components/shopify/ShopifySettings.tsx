@@ -24,6 +24,7 @@ import {
   useRegisterWebhookByTopic,
   useRegisterWebhooks,
 } from "@/backend/appsIntegration/shopify/shopify.query";
+import useTranslations from "@/dictionaries/useTranslation";
 import { shopifyEventData } from "@/utils/constants";
 import { showLoadingToast } from "@/utils/notifications";
 
@@ -52,11 +53,16 @@ const ShopifySettings = ({
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.shopify,
   );
+  const { translations } = useTranslations();
   const { data: webhooks } = useGetRegisteredWebhooks(showEvents);
   const session = shopifyInfo.credential.session;
   const handleDeleteWehooks = () => {
     if (!session) return;
-    showLoadingToast("hold on..deleting webhooks", "webhooks", true);
+    showLoadingToast(
+      translations["hold on..deleting webhooks"],
+      "webhooks",
+      true,
+    );
     deleteAllWebhooksmt.mutate(session.shop, {
       onSuccess: () => {
         setIsWebhookEnabled(false);
@@ -66,7 +72,7 @@ const ShopifySettings = ({
   const handleDeleteSession = () => {
     if (!session) return;
     showLoadingToast(
-      "hold on..deleting connection",
+      translations["hold on..deleting connection"],
       "integration-delete",
       true,
     );
@@ -74,7 +80,7 @@ const ShopifySettings = ({
   };
   const registerWebhooks = () => {
     showLoadingToast(
-      "Hold On..Registering webhooks",
+      translations["Hold On..Registering webhooks"],
       "webhooks",
       true,
       "Loading",
@@ -103,7 +109,7 @@ const ShopifySettings = ({
       shopifySurveys: [],
     };
     showLoadingToast(
-      "hold on..deleting surveys delivery settings",
+      translations["hold on..deleting surveys delivery settings"],
       "integration-update",
       true,
     );
@@ -119,14 +125,18 @@ const ShopifySettings = ({
       ...shopifyInfo.credential,
       shopifySurveys: shopifySurveys,
     };
-    showLoadingToast("hold on..deleting schedules", "integration-update", true);
+    showLoadingToast(
+      translations["hold on..deleting schedules"],
+      "integration-update",
+      true,
+    );
     updateIntegration.mutate({ credential: updateData });
   };
 
   const handleChangeWebhookByTopic = (event, isEnabled) => {
     if (isEnabled) {
       showLoadingToast(
-        "Hold On..Registering webhooks",
+        translations["Hold On..Registering webhooks"],
         "webhooks",
         true,
         "Loading",
@@ -148,7 +158,11 @@ const ShopifySettings = ({
   };
 
   const handleDeleteWebhookByTopic = (topic) => {
-    showLoadingToast("hold on..deleting webhooks", "webhooks", true);
+    showLoadingToast(
+      translations["hold on..deleting webhooks"],
+      "webhooks",
+      true,
+    );
     deleteWebhookbyTopicMt.mutate({ topic: topic });
   };
 
@@ -157,7 +171,7 @@ const ShopifySettings = ({
       <SimpleGrid cols={2}>
         <PaperLayout p={"sm"}>
           <Stack>
-            <Title order={4}>Connected Store</Title>
+            <Title order={4}>{translations["Connected Store"]}</Title>
             <ContainedTextField value={session?.shop} disabled />
             {/* <Group justify="flex-end">
               <RateupButtonPrimary
@@ -176,11 +190,11 @@ const ShopifySettings = ({
         </PaperLayout>
         <PaperLayout>
           <Stack w={"fit-content"}>
-            <Title order={4}>Danger Zone</Title>
+            <Title order={4}>{translations["Danger Zone"]}</Title>
             <RateupButtonPrimary
               color="red"
               leftIcon={<IconTrash size={"1rem"} />}
-              title="Delete All Survey Delivery Settings"
+              title={translations["Delete All Survey Delivery Settings"]}
               onClick={() => {
                 setDeleteCase(
                   getLabelsforConfirmModal(
@@ -195,7 +209,7 @@ const ShopifySettings = ({
             <RateupButtonPrimary
               color="red"
               leftIcon={<IconTrash size={"1rem"} />}
-              title="Delete All Schedules"
+              title={translations["Delete All Schedules"]}
               onClick={() => {
                 setDeleteCase(
                   getLabelsforConfirmModal(
@@ -214,7 +228,9 @@ const ShopifySettings = ({
             <Title order={4}>Webhooks</Title>
             <Group justify="space-between">
               <Switch
-                label="Allow rateup to subscribe to your store events"
+                label={
+                  translations["Allow rateup to subscribe to your store events"]
+                }
                 styles={{
                   label: {
                     color: "dimgray",
@@ -230,7 +246,7 @@ const ShopifySettings = ({
                   handleWebhookRegistration(e.currentTarget.checked)
                 }
               />
-              <Tooltip label={"Show Events"}>
+              <Tooltip label={translations["Show Events"]}>
                 {showEvents ? (
                   <IconChevronUp onClick={toggle} cursor={"pointer"} />
                 ) : (
@@ -262,7 +278,7 @@ const ShopifySettings = ({
         </PaperLayout>
       </SimpleGrid>
       <ConfirmationModal
-        confirmLabel={deleteCase?.confirmLabel || "Delete"}
+        confirmLabel={deleteCase?.confirmLabel || translations["Delete"]}
         headerTitle={deleteCase?.headerTitle}
         headerLabel={deleteCase?.headerLabel}
         onClose={() => {
@@ -274,7 +290,7 @@ const ShopifySettings = ({
           if (funcArgs) deleteCase?.confirmFunction(...funcArgs);
           else deleteCase?.confirmFunction();
         }}
-        closeLabel="Cancel"
+        closeLabel={translations["Cancel"]}
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}
       />

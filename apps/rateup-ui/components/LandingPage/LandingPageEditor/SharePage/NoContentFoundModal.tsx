@@ -3,11 +3,14 @@ import { useCallback } from "react";
 import { Button, Center, Modal } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import styles from "../../../Modal/ImageCropModal.module.css";
 import { useSetLandingPageEditorTab } from "../LandingPageContext/LandingPageContext";
 
 function NoContentFoundModal({ opened, onClose }) {
   const setLandingPageEditorTab = useSetLandingPageEditorTab();
+  const { translations } = useTranslations();
   const handleGotoEditPageBtnClick = useCallback(() => {
     setLandingPageEditorTab("edit");
     onClose();
@@ -27,13 +30,13 @@ function NoContentFoundModal({ opened, onClose }) {
       <Center
         style={{ padding: "1.5rem", flexDirection: "column", gap: "1.5rem" }}
       >
-        <h2>No Content Found</h2>
+        <h2>{translations["No Content Found"]}</h2>
         <Button
           onClick={handleGotoEditPageBtnClick}
           rightSection={<IconChevronRight />}
           style={{ borderRadius: "1rem" }}
         >
-          Go to edit Page
+          {translations["Go to edit Page"]}
         </Button>
       </Center>
     </Modal>

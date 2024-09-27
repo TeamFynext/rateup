@@ -1,18 +1,22 @@
 import React from "react";
+
 import {
   ActionIcon,
-  rem,
-  Popover,
-  ScrollArea,
-  Flex,
-  Checkbox,
   Box,
-  Tooltip,
+  Checkbox,
+  Flex,
   Group,
+  Popover,
+  rem,
+  ScrollArea,
+  Tooltip,
 } from "@mantine/core";
 import { IconFilter } from "@tabler/icons-react";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { extractText } from "../../../utils";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
 
 const FilterToggles = ({
   table,
@@ -22,6 +26,7 @@ const FilterToggles = ({
   enableColumnSelection,
   tempVisibleColumnArray,
 }) => {
+  const { translations } = useTranslations();
   return (
     <Group>
       {enableFilter && (
@@ -74,7 +79,7 @@ const FilterToggles = ({
         </Popover>
       )}
       {enableFilter && (
-        <Tooltip label="Clear the filtered values">
+        <Tooltip label={translations["Clear the filtered values"]}>
           <Box>
             <RateupButtonPrimary
               onClick={() => table.resetColumnFilters()}

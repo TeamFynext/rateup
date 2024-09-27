@@ -14,6 +14,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
 import { docsPath } from "../../utils/constants";
 import InfoButton from "../Button/InfoButton";
@@ -35,7 +37,7 @@ function LandingPageDashboard() {
 
   const [landingPages, setLandingPages] = useState([]);
   const [sortOption, setSortOption] = useState("latest");
-
+  const { translations } = useTranslations();
   const tourSteps = LPTourSteps({ styles });
 
   useEffect(() => {
@@ -64,13 +66,13 @@ function LandingPageDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>Unable to get data, please try again later.</p>
+        <p>{translations["Unable to get data, please try again later."]}</p>
       </Center>
     );
   } else if (!isPending && !isError && !landingPages.length) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <NothingFound text="No Landing Pages Found." />;
+        <NothingFound text={translations["No Landing Pages Found."]} />;
       </Center>
     );
   } else {
@@ -85,7 +87,9 @@ function LandingPageDashboard() {
         <Group
           className={styles["heading-and-create-landingPage-btn-container"]}
         >
-          <Title className={styles["heading-container"]}>Landing Pages</Title>
+          <Title className={styles["heading-container"]}>
+            {translations["Landing Pages"]}
+          </Title>
           <InfoButton docUrl={`${docsPath}/landingpage`} />
           <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["landingPages"]} />
@@ -94,7 +98,7 @@ function LandingPageDashboard() {
             rightSection={<IconPlus />}
             onClick={createLandingPageModalHandlers.open}
           >
-            Create Landing Page
+            {translations["Create Landing Page"]}
           </Button>
         </Group>
         <div className={styles["sort-dropdown"]}>

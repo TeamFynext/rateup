@@ -1,6 +1,8 @@
 import { Box, Group, Switch, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import UniqueDeviceSettings from "../UniqueDeviceSettings";
 import {
@@ -26,6 +28,7 @@ function KioskFetchLocSkipPreview({
   webSurveyAutoTransitionToNextQues,
   setwebSurveyAutoTransitionToNextQues,
 }) {
+  const { translations } = useTranslations();
   return (
     <>
       {enabledModules.some((data) =>
@@ -43,11 +46,13 @@ function KioskFetchLocSkipPreview({
               />
 
               <Box className={"switch-heading-and-desc-container"}>
-                <h3>Kiosk Mode</h3>
+                <h3>{translations["Kiosk Mode"]}</h3>
                 <p>
                   {hasGoogleReview
-                    ? "Not available since Google Review Questions present"
-                    : "Enables survey to restart on completion"}
+                    ? translations[
+                        "Not available since Google Review Questions present"
+                      ]
+                    : translations["Enables survey to restart on completion"]}
                 </p>
               </Box>
             </Group>
@@ -62,8 +67,10 @@ function KioskFetchLocSkipPreview({
                 onChange={(event) => updateGetLocation(setLocation, editSurvey)}
               />
               <Box className={"switch-heading-and-desc-container"}>
-                <h3>Fetch Location</h3>
-                <p>Retrieves the location of survey participant</p>
+                <h3>{translations["Fetch Location"]}</h3>
+                <p>
+                  {translations["Retrieves the location of survey participant"]}
+                </p>
               </Box>
             </Group>
           )}
@@ -77,8 +84,14 @@ function KioskFetchLocSkipPreview({
                 onChange={() => updateSkipPreview(setPreview, editSurvey)}
               />
               <Box className={"switch-heading-and-desc-container"}>
-                <h3>Skip Preview Screen</h3>
-                <p>Skips Responses preview screen on survey completion</p>
+                <h3>{translations["Skip Preview Screen"]}</h3>
+                <p>
+                  {
+                    translations[
+                      "Skips Responses preview screen on survey completion"
+                    ]
+                  }
+                </p>
               </Box>
             </Group>
           )}
@@ -100,10 +113,13 @@ function KioskFetchLocSkipPreview({
               }
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>Automatic Transition</h3>
+              <h3>{translations["Automatic Transition"]}</h3>
               <p>
-                Proceed to the next question automatically after making a
-                selection
+                {
+                  translations[
+                    "Proceed to the next question automatically after making a selection"
+                  ]
+                }
               </p>
             </Box>
           </Group>

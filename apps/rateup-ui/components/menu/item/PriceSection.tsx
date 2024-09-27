@@ -1,14 +1,18 @@
+import React from "react";
+
 import {
+  ActionIcon,
+  Box,
   Group,
   Radio,
-  TextInput,
   SimpleGrid,
-  ActionIcon,
   Text,
-  Box,
+  TextInput,
 } from "@mantine/core";
-import { IconPlus, IconMinus } from "@tabler/icons-react";
-import React from "react";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { MenuItemPriceType } from "../../../types/enums";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { currencyLabel } from "../util/currencyData";
@@ -20,14 +24,21 @@ export function PriceSection({
   readonly form: any;
   readonly currency: string;
 }) {
+  const { translations } = useTranslations();
   return (
     <>
       <Group>
-        <Text>Price</Text>
+        <Text>{translations["Price"]}</Text>
         <Radio.Group {...form.getInputProps("price.type")}>
           <Group>
-            <Radio label="Fixed" value={MenuItemPriceType.FIXED} />
-            <Radio label="Variant" value={MenuItemPriceType.VARIANT} />
+            <Radio
+              label={translations["Fixed"]}
+              value={MenuItemPriceType.FIXED}
+            />
+            <Radio
+              label={translations["Variant"]}
+              value={MenuItemPriceType.VARIANT}
+            />
           </Group>
         </Radio.Group>
       </Group>

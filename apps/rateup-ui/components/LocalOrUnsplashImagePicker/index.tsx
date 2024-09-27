@@ -4,6 +4,8 @@ import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import mmCommonStyles from "../Modal/ModalManagerModals/mmCommonStyles.module.css";
 import styles from "./LocalOrUnsplashImagePicker.module.css";
 
@@ -13,10 +15,11 @@ function LocalOrUnsplashImagePicker({
   forDevice,
   onImageSelected,
 }) {
+  const { translations } = useTranslations();
   const handleUploadBtnClick = useCallback(() => {
     modals.openContextModal({
       modal: "imageSourceSelectorModal",
-      title: "Select Upload Method",
+      title: translations["Select Upload Method"],
       className: mmCommonStyles["mm-modal"],
       classNames: { header: "img-src-sel-modal-header" },
       size: "auto",
@@ -44,7 +47,7 @@ function LocalOrUnsplashImagePicker({
           leftSection={<IconUpload size={16} />}
           onClick={handleUploadBtnClick}
         >
-          Upload
+          {translations["Upload"]}
         </Button>
         <Box className={styles["delete-bg-img-btn-container"]}>
           <ActionIcon

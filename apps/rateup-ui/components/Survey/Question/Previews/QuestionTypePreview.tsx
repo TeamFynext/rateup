@@ -1,5 +1,7 @@
 import React from "react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { PageType as Page, QuestionType as Q } from "../../../../types/enums";
 import CustomHTML from "../../Page/Previews/CustomHTML";
 import ContactForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/ContactForm";
@@ -37,6 +39,7 @@ const QuestionTypePreview = ({
   wop,
   htmlContent = null,
 }) => {
+  const { translations } = useTranslations();
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -107,7 +110,7 @@ const QuestionTypePreview = ({
     case Page.Custom:
       return <CustomHTML content={htmlContent} />;
     default:
-      return <div>not previews</div>;
+      return <div>{translations["not previews"]}</div>;
   }
 };
 

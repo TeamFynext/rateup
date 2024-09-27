@@ -1,8 +1,12 @@
-import { ActionIcon, Menu } from "@mantine/core";
-import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/router";
+
+import { ActionIcon, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import ConfirmationModal from "../Modal/ConfirmationModal";
 
@@ -20,7 +24,7 @@ function MenuCardMenu({
   handleEditClick,
 }: MenuCardMenuProps) {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
@@ -34,15 +38,15 @@ function MenuCardMenu({
         forDeleteFunctionality
         opened={dialogOpened}
         onClose={closeDialog}
-        headerLabel="Are you sure to delete this Menu?"
-        headerTitle="Delete Menu?"
-        confirmLabel="Delete"
+        headerLabel={translations["Are you sure to delete this Menu?"]}
+        headerTitle={translations["Delete Menu?"]}
+        confirmLabel={translations["Delete"]}
         onConfirm={(e) => {
           notifications.show({
             id: "delete-data-menu",
             loading: true,
-            title: "Deleting menu..",
-            message: `Hold on, menu is getting deleted...`,
+            title: translations["Deleting menu.."],
+            message: translations["Hold on, menu is getting deleted..."],
             autoClose: false,
             withCloseButton: false,
           });
@@ -70,7 +74,7 @@ function MenuCardMenu({
           leftSection={<IconEdit size={16} />}
           onClick={() => handleEditClick(menu)}
         >
-          Rename
+          {translations["Rename"]}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconShare size={16} />}
@@ -78,10 +82,10 @@ function MenuCardMenu({
             router.push(`/dashboard/menu/${menuId}?tab=Share`);
           }}
         >
-          Share
+          {translations["Share"]}
         </Menu.Item>
         <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

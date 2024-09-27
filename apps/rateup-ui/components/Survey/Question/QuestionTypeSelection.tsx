@@ -43,6 +43,8 @@ import {
   IconWheel,
 } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   QuestionType,
   WaFlowFormNonInputElementType,
@@ -69,6 +71,7 @@ export function QuestionTypeSelection({
     handleTypeSelection(type);
     setIsGoogleReviewSupported(false);
   };
+  const { translations } = useTranslations();
   const QuestionButton = ({ type }) => {
     const { hovered, ref } = useHover();
     const Icon = questionIcons[type];
@@ -119,7 +122,7 @@ export function QuestionTypeSelection({
                       },
                     }}
                   >
-                    Review Supported
+                    {translations["Review Supported"]}
                   </Badge>
                 ) : null}
               </Group>

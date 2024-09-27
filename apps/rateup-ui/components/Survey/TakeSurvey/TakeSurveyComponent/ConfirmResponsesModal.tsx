@@ -39,12 +39,12 @@ function ConfirmResponsesModal({
   largeScreen,
 }) {
   const theme = useMantineTheme();
-
+  const { translations } = useTranslations();
   return (
     <Modal
       className={styles["modal"]}
       opened={opened}
-      title="Confirm your responses"
+      title={translations["Confirm your responses"]}
       centered
       onClose={close}
       overlayProps={{
@@ -99,7 +99,7 @@ function ConfirmResponsesModal({
                               />
                             ) : (
                               <Text pb="sm" c="dark.0" fz="xs">
-                                ... not answered...{" "}
+                                {translations["... not answered..."]}
                               </Text>
                             );
                           case Q.MSQ:
@@ -139,17 +139,21 @@ function ConfirmResponsesModal({
                             return (
                               <Stack>
                                 <Group>
-                                  <Text fw="400">Name: </Text>{" "}
+                                  <Text fw="400">{translations["Name: "]}</Text>
                                   <Text fw="300">{data.name}</Text>{" "}
                                 </Group>
                                 {data.jobTitle && (
                                   <Group mt="-10px">
-                                    <Text fw={"400"}>Job Title: </Text>
+                                    <Text fw={"400"}>
+                                      {translations["Job Title: "]}
+                                    </Text>
                                     <Text fw="300">{data.jobTitle}</Text>
                                   </Group>
                                 )}
                                 <Group mt="-10px">
-                                  <Text fw="400">Testimonial: </Text>{" "}
+                                  <Text fw="400">
+                                    {translations["Testimonial: "]}
+                                  </Text>{" "}
                                   <Text fw="300">{data.testimonial}</Text>{" "}
                                 </Group>
                                 {data.rating && (
@@ -173,11 +177,15 @@ function ConfirmResponsesModal({
                             return (
                               <Stack>
                                 <Group>
-                                  <Text fw="400">Email: </Text>{" "}
+                                  <Text fw="400">
+                                    {translations["Email: "]}
+                                  </Text>{" "}
                                   <Text fw="300">{contact.email}</Text>{" "}
                                 </Group>
                                 <Group mt="-10px">
-                                  <Text fw="400">Phone: </Text>{" "}
+                                  <Text fw="400">
+                                    {translations["Phone: "]}
+                                  </Text>{" "}
                                   <Text fw="300">{contact.phone}</Text>{" "}
                                 </Group>
                               </Stack>
@@ -224,19 +232,25 @@ function ConfirmResponsesModal({
                               <Stack>
                                 {res?.name && (
                                   <Group>
-                                    <Text fw="400">Name: </Text>
+                                    <Text fw="400">
+                                      {translations["Name: "]}
+                                    </Text>
                                     <Text fw="300">{res?.name}</Text>
                                   </Group>
                                 )}
                                 {res?.phone && (
                                   <Group>
-                                    <Text fw="400">Phone: </Text>
+                                    <Text fw="400">
+                                      {translations["Phone: "]}
+                                    </Text>
                                     <Text fw="300">{res?.phone}</Text>
                                   </Group>
                                 )}
                                 {res?.email && (
                                   <Group>
-                                    <Text fw="400">Email: </Text>
+                                    <Text fw="400">
+                                      {translations["Email: "]}
+                                    </Text>
                                     <Text fw="300">{res?.email}</Text>
                                   </Group>
                                 )}
@@ -278,7 +292,7 @@ function ConfirmResponsesModal({
                     </Text>
                   ) : (
                     <Text pb="sm" c="dark.0" fz="xs">
-                      ... not answered...{" "}
+                      {translations["... not answered..."]}
                     </Text>
                   )}
                   <Divider />
@@ -299,7 +313,7 @@ function ConfirmResponsesModal({
         <RateupButtonBlue
           loading={isSavingResponses}
           radius={"xl"}
-          title={"Confirm"}
+          title={translations["Confirm"]}
           size={largeScreen ? "lg" : "xs"}
           leftIcon={<IconCheck />}
           onClick={finishSurvey}

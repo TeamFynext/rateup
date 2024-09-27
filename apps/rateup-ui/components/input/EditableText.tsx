@@ -1,3 +1,5 @@
+import { ReactNode, useState } from "react";
+
 import {
   ActionIcon,
   FocusTrap,
@@ -8,7 +10,9 @@ import {
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconCheck, IconPencil } from "@tabler/icons-react";
-import { ReactNode, useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SAVE_HOTKEY } from "../../utils/constants";
 
 interface EditableTextProps {
@@ -43,6 +47,8 @@ export function EditableText({
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
   const [focusTrapToggle, setfocusTrapToggle] = useState(false);
+  const { translations } = useTranslations();
+
   function handleSave() {
     setfocusTrapToggle(false);
     setEditingItem(null);
@@ -55,9 +61,9 @@ export function EditableText({
         label={
           editMode
             ? handleOnFunction
-              ? "Enter the title"
-              : "Enter the footer label"
-            : "Double click to edit"
+              ? translations["Enter the title"]
+              : translations["Enter the footer label"]
+            : translations["Double click to edit"]
         }
         openDelay={500}
       >

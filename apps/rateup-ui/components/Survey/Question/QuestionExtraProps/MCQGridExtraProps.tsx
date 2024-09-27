@@ -12,6 +12,7 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import cx from "clsx";
 
 import { SurveyType } from "@/types/enums";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { reorder } from "../../../../utils/questions";
@@ -36,11 +37,11 @@ const MCQGridExtraProps = ({ form, qId }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [error, setError] = useState("");
   const [updateError, setUpdateError] = useState("");
-
+  const { translations } = useTranslations();
   const handleAddQuestion = () => {
     if (!newQuestion.trim().length) return;
     if (questions?.find((question) => question.trim() === newQuestion.trim())) {
-      setError("Question already present");
+      setError(translations["Question already present"]);
       return;
     }
     form.setFieldValue("features", {
@@ -71,7 +72,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
   const handleUpdateQuestion = () => {
     if (questions[updateQuestion.index] == updateQuestion.question) return;
     if (questions.includes(updateQuestion.question)) {
-      setUpdateError("Question already present");
+      setUpdateError(translations["Question already present"]);
       return;
     }
     form.setFieldValue("features", {
@@ -99,7 +100,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
 
   return (
     <Stack w={"100%"}>
-      <Title order={5}>Add Questions</Title>
+      <Title order={5}>{translations["Add Questions"]}</Title>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="dnd-list" direction="vertical">
           {(provided) => (
@@ -157,7 +158,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
           style={{
             flexGrow: 1,
           }}
-          placeholder="Enter question here"
+          placeholder={translations["Enter question here"]}
           autosize
           size="md"
           value={newQuestion}
@@ -168,7 +169,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
           error={error}
         />
         <RateupButtonSecondary
-          title="Add Question"
+          title={translations["Add Question"]}
           leftIcon={<IconPlus size={"1rem"} />}
           onClick={handleAddQuestion}
         />
@@ -179,7 +180,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
       <FormModalLayout
         opened={opened}
         onClose={close}
-        title="Edit Question"
+        title={translations["Edit Question"]}
         centered
       >
         <Stack justify="center">
@@ -196,7 +197,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
             error={updateError}
           />
           <RateupButtonBlue
-            title="Update Question"
+            title={translations["Update Question"]}
             onClick={handleUpdateQuestion}
           />
         </Stack>

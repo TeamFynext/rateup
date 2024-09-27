@@ -15,6 +15,7 @@ import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import useTemplatesAvailableForTeam from "../../hooks/team";
 import { shopifyEventData } from "../../utils/constants";
@@ -54,7 +55,7 @@ const ScheduleSurveyModal = ({
       sendAfter: isNotEmpty("send After is required"),
     },
   });
-
+  const { translations } = useTranslations();
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.shopify,
   );
@@ -92,10 +93,10 @@ const ScheduleSurveyModal = ({
       createdAt: new Date(),
     });
     showLoadingToast(
-      "Creating Survey Schedule",
+      translations["Creating Survey Schedule"],
       "integration-update",
       true,
-      "Loading",
+      translations["Loading"],
       "",
       false,
     );
@@ -137,25 +138,28 @@ const ScheduleSurveyModal = ({
       title=""
       centered
       onSubmit={handleScheduleSurvey}
-      buttonTitle="Create"
+      buttonTitle={translations["Create"]}
       includeCancelButton
       size="lg"
       submitButtonDisabled={!shopifyInfo.credential.isWebhookRegistered}
     >
       <Stack>
         <Alert
-          title={"Important"}
+          title={translations["Important"]}
           display={
             !shopifyInfo.credential.isWebhookRegistered ? "block" : "none"
           }
           icon={<IconAlertCircle color="red" />}
           color="red"
         >
-          Allow rateup to subscribe to your store events in th settings before
-          scheduling survey
+          {
+            translations[
+              "Allow rateup to subscribe to your store events in th settings before scheduling survey"
+            ]
+          }
         </Alert>
         <TeamSelector
-          placeholder="Select Team"
+          placeholder={translations["Select Team"]}
           withAsterisk
           allowDeselect={false}
           disabled={false}
@@ -167,37 +171,37 @@ const ScheduleSurveyModal = ({
           searchable
         />
         <ContainedSelection
-          label={"Event"}
-          placeholder="Select Shopify Event"
+          label={translations["Event"]}
+          placeholder={translations["Select Shopify Event"]}
           data={shopifyEventData}
           {...form.getInputProps("event")}
         />
         <ContainedSelection
-          label={"whatsApp Template"}
-          placeholder="Select a template"
+          label={translations["whatsApp Template"]}
+          placeholder={translations["Select a template"]}
           data={templatesData}
           {...form.getInputProps("waTemplateId")}
         />
         <ContainedSelection
-          label={"Send After"}
-          placeholder="Select"
+          label={translations["Send After"]}
+          placeholder={translations["Select"]}
           data={Object.values(ShopifySendAfter)}
           {...form.getInputProps("sendAfter")}
         />
         <Checkbox
-          label={"Product Specific"}
+          label={translations["Product Specific"]}
           {...form.getInputProps("isProductSpecific")}
         />
         {form.values.isProductSpecific && (
           <Group>
             <ContainedSelection
-              label={"Product"}
+              label={translations["Product"]}
               data={productData}
-              placeholder="Select a product"
+              placeholder={translations["Select a product"]}
               flex={1}
               {...form.getInputProps("productId")}
             />
-            <TooltipFloating label={"Load products"}>
+            <TooltipFloating label={translations["Load products"]}>
               <ActionIcon
                 onClick={loadShopifyProducts}
                 variant="subtle"

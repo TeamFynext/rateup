@@ -1,17 +1,21 @@
+import { useEffect, useRef, useState } from "react";
+
 import {
   ActionIcon,
   Card,
   Center,
   Image,
   LoadingOverlay,
+  rem,
   SimpleGrid,
   Stack,
   Text,
-  rem,
 } from "@mantine/core";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useTriggeringDownload,
   useUnsplashPhotosList,
@@ -54,6 +58,7 @@ export const UnsplashModal = ({
     root: lastImageRef?.current,
     threshold: 1,
   });
+  const { translations } = useTranslations();
   useEffect(() => {
     if (entry?.isIntersecting) {
       unsplashPhotosList?.fetchNextPage();
@@ -68,7 +73,7 @@ export const UnsplashModal = ({
 
   return (
     <SimpleModalLayout
-      title="Unsplash Images"
+      title={translations["Unsplash Images"]}
       onClose={() => {
         onclose();
         setSearchQuery("");
@@ -83,7 +88,9 @@ export const UnsplashModal = ({
           overlayProps={{ radius: "sm", blur: 2 }}
         />
         {unsplashPhotosList?.isError && (
-          <Text c={"red"}>Currently Unsplash Is Unavailable</Text>
+          <Text c={"red"}>
+            {translations["Currently Unsplash Is Unavailable"]}
+          </Text>
         )}
         {!unsplashPhotosList?.isError && (
           <Center mb={"lg"}>
@@ -117,7 +124,7 @@ export const UnsplashModal = ({
           mx={"lg"}
         >
           {_photoList?.length === 0 ? (
-            <Text>Images Not Found</Text>
+            <Text>{translations["Images Not Found"]}</Text>
           ) : (
             _photoList?.map((photo, i) => (
               <UnsplashPhoto
@@ -161,7 +168,7 @@ const UnsplashPhoto = ({
     setSearchQuery("");
     close();
   };
-
+  const { translations } = useTranslations();
   return (
     <Card
       shadow="sm"
@@ -171,7 +178,11 @@ const UnsplashPhoto = ({
       ref={reference}
     >
       <Card.Section>
-        <Image src={regular} h={200} alt="image from unsplash" />
+        <Image
+          src={regular}
+          h={200}
+          alt={translations["image from unsplash"]}
+        />
       </Card.Section>
     </Card>
   );

@@ -22,12 +22,14 @@ import RefreshButton from "components/Button/RefreshButton";
 import ShareQR from "components/Survey/ShareSurvey/ShareQR";
 import { CopyLinkComponent } from "components/Survey/ShareSurvey/ShareSurvey";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import styles from "./GeneratedQrPage.module.css";
 
 function GeneratedQrPage({}) {
   const router = useRouter();
   const shortUrlId = router.query.shortUrlId;
-
+  const { translations } = useTranslations();
   const { isPending, isError, data } = useGetQrWithShortUrlId(shortUrlId);
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
@@ -85,7 +87,7 @@ function GeneratedQrPage({}) {
   if (isError) {
     componentToBeRendered = (
       <Center w={"100%"} h={"100%"}>
-        <p>Unable to get data, please try again later.</p>
+        <p>{translations["Unable to get data, please try again later."]}</p>
       </Center>
     );
   }
@@ -103,7 +105,7 @@ function GeneratedQrPage({}) {
               <TextInput
                 ref={destinationUrlInputRef}
                 className={styles["destination-url-text-input"]}
-                label="Destination Url"
+                label={translations["Destination Url"]}
                 value={destinationUrl}
                 onChange={onDestinationUrlInputChange}
                 readOnly={!isDestinationUrlEditable}
@@ -124,17 +126,21 @@ function GeneratedQrPage({}) {
                 onClick={handleEditSaveBtnClick}
                 loading={isSaving}
               >
-                {isDestinationUrlFromApiAndDestinationUrlSame ? "Edit" : "Save"}
+                {isDestinationUrlFromApiAndDestinationUrlSame
+                  ? translations["Edit"]
+                  : translations["Save"]}
               </Button>
             </Group>
 
-            <CopyLinkComponent value={qrUrl} label="QR Url" />
+            <CopyLinkComponent value={qrUrl} label={translations["QR Url"]} />
           </Stack>
 
           <Flex className={styles["stats-container"]}>
-            <h2>Stats:</h2>
+            <h2>{translations["Stats:"]}</h2>
             <Group className={styles["no-of-scans-div"]}>
-              <h2 className={styles["no-of-scans-p"]}>No of Scans: </h2>
+              <h2 className={styles["no-of-scans-p"]}>
+                {translations["No of Scans: "]}
+              </h2>
               <p className={styles["no-of-scans-value-p"]}>{data.noOfScans}</p>
             </Group>
           </Flex>

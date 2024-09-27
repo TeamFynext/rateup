@@ -10,13 +10,16 @@ import {
   Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { IconCopy } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import {
   ContainedNumberInput,
   ContainedSelection,
 } from "../../input/ContainedInput/ContainedInput";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { IconCopy } from "@tabler/icons-react";
 
 const IFrameModal = ({ close, shareUrl }) => {
   let disabled = false;
@@ -56,19 +59,19 @@ const IFrameModal = ({ close, shareUrl }) => {
     const height = form.values.height + form.values.heightUnit;
     iframe = `<iframe src="${shareUrl}" width="${width}" height="${height}"></iframe>`;
   }
-
+  const { translations } = useTranslations();
   return (
     <Box>
       <Center>
-        <Text>Create an iframe to embed survey</Text>
+        <Text>{translations["Create an iframe to embed survey"]}</Text>
       </Center>
       <Stack gap={"md"}>
         <form>
           <Grid>
             <Grid.Col span={9}>
               <ContainedNumberInput
-                label="Width"
-                placeholder="Enter width of iframe"
+                label={translations["Width"]}
+                placeholder={translations["Enter width of iframe"]}
                 {...form.getInputProps("width")}
                 allowNegative={false}
                 allowDecimal={false}
@@ -84,8 +87,8 @@ const IFrameModal = ({ close, shareUrl }) => {
             </Grid.Col>
             <Grid.Col span={9}>
               <ContainedNumberInput
-                label="Height"
-                placeholder="Enter height of iframe"
+                label={translations["Height"]}
+                placeholder={translations["Enter height of iframe"]}
                 {...form.getInputProps("height")}
                 allowNegative={false}
                 allowDecimal={false}
@@ -106,7 +109,10 @@ const IFrameModal = ({ close, shareUrl }) => {
             {iframe}
             <Flex justify={"flex-end"}>
               <Group gap={"sm"}>
-                <RateupButtonSecondary title="cancel" onClick={close} />
+                <RateupButtonSecondary
+                  title={translations["cancel"]}
+                  onClick={close}
+                />
                 <CopyButton value={iframe}>
                   {({ copied, copy }) => (
                     <Button
@@ -116,7 +122,9 @@ const IFrameModal = ({ close, shareUrl }) => {
                       radius={"lg"}
                       disabled={disabled}
                     >
-                      {copied ? "Copied" : "Copy code"}
+                      {copied
+                        ? translations["Copied"]
+                        : translations["Copy code"]}
                     </Button>
                   )}
                 </CopyButton>

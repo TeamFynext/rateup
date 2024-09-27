@@ -14,6 +14,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useLinktrees } from "../../backend/linktree/linktree.query";
 import { docsPath } from "../../utils/constants";
 import InfoButton from "../Button/InfoButton";
@@ -35,7 +37,7 @@ function LinktreeDashboard() {
   const { data, isPending, isError } = useLinktrees();
   const [linktrees, setLinktrees] = useState([]);
   const [sortOption, setSortOption] = useState("latest");
-
+  const { translations } = useTranslations();
   const tourSteps = LPTourSteps({ styles });
 
   useEffect(() => {
@@ -64,13 +66,13 @@ function LinktreeDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>Unable to get data, please try again later.</p>
+        <p>{translations["Unable to get data, please try again later."]}</p>
       </Center>
     );
   } else if (!isPending && !isError && !linktrees.length) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <NothingFound text="No Landing Pages Found." />;
+        <NothingFound text={translations["No Landing Pages Found."]} />;
       </Center>
     );
   } else {
@@ -82,7 +84,7 @@ function LinktreeDashboard() {
       <Group justify="space-between">
         <Group className={styles["heading-and-create-linktree-btn-container"]}>
           <Title className={styles["heading-container"]}>
-            Quick Access Links
+            {translations["Quick Access Links"]}
           </Title>
           <InfoButton docUrl={`${docsPath}/landingpage`} />
           <WelcomeTour steps={tourSteps} />
@@ -92,7 +94,7 @@ function LinktreeDashboard() {
             rightSection={<IconPlus />}
             onClick={createLinktreeModalHandlers.open}
           >
-            Create Quick Access Link
+            {translations["Create Quick Access Link"]}
           </Button>
         </Group>
         <div className={styles["sort-dropdown"]}>

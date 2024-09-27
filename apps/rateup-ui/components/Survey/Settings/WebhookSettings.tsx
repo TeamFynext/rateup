@@ -11,6 +11,7 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import { isValidUrl } from "@/utils";
 
 const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
@@ -19,7 +20,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
   const { data: webhookSecret } = useGetWebhookClientSecret(
     responseWebhookEndpoint,
   );
-
+  const { translations } = useTranslations();
   useEffect(() => {
     setEndpointUrl(responseWebhookEndpoint ?? "");
   }, [responseWebhookEndpoint]);
@@ -32,7 +33,9 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
       return;
     if (!(responseWebhookEndpoint && !endpointUrl.trim().length)) {
       if (!isValidUrl(endpointUrl)) {
-        setError("Invalid Url, eg: https://example.com/your-endpoint");
+        setError(
+          translations["Invalid Url, eg: https://example.com/your-endpoint"],
+        );
         return;
       }
     }
@@ -43,20 +46,24 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
   return (
     <PaperLayout className="section-div">
       <Stack>
-        <h2 className={"settings-section-heading"}>Webhooks</h2>
+        <h2 className={"settings-section-heading"}>
+          {translations["Webhooks"]}
+        </h2>
         {responseWebhookEndpoint && (
           <ContainedPasswordInput
             value={webhookSecret}
             readOnly
             rightSection={<ApiCopyButton value={webhookSecret} />}
-            label={"Client Secret"}
+            label={translations["Client Secret"]}
           />
         )}
         <Input.Wrapper>
           <Input.Label>
             <Text size="xs">
-              Enter webhook url endpoint for response
-              <Tooltip label={"Triggers when a response is submitted"}>
+              {translations["Enter webhook url endpoint for response"]}
+              <Tooltip
+                label={translations["Triggers when a response is submitted"]}
+              >
                 <IconInfoCircle size={"1rem"} />
               </Tooltip>
             </Text>
@@ -64,7 +71,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
           <ContainedTextField
             value={endpointUrl}
             type="url"
-            placeholder="https://example.com/webhook"
+            placeholder={translations["https://example.com/webhook"]}
             onChange={(e) => {
               setError("");
               setEndpointUrl(e.currentTarget.value);
@@ -74,7 +81,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
         </Input.Wrapper>
 
         <RateupButtonBlue
-          title="Save Changes"
+          title={translations["Save Changes"]}
           onClick={handleSave}
           w={"fit-content"}
           sx={{ alignSelf: "center" }}

@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
 import {
-  Stack,
   Button,
+  ColorInput,
+  FileButton,
   Group,
   Radio,
-  Text,
-  FileButton,
-  Title,
-  Tabs,
-  ColorInput,
   Slider,
+  Stack,
+  Tabs,
+  Text,
+  Title,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconCheck } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { uploadFile } from "../../../../utils/file-upload/upload";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
-import { IconCheck } from "@tabler/icons-react";
 import CustomColorPicker from "../components/CustomColorPicker";
 
 const StyleTab = ({
@@ -34,7 +38,7 @@ const StyleTab = ({
   setActiveBgStyle,
 }) => {
   const [file, setFile] = useState<File | null>(null);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     //For server upload - template setup
 
@@ -86,7 +90,7 @@ const StyleTab = ({
             style={{ minWidth: "140px", maxWidth: "140px" }}
           >
             {" "}
-            Background
+            {translations["Background"]}
           </Title>
           <Radio.Group
             name="background"
@@ -128,7 +132,7 @@ const StyleTab = ({
 
         <Tabs.Panel value="Color" style={{ minHeight: "70px" }}>
           <Stack style={{ maxWidth: "300px" }} ml="xl">
-            <Text>Select Color</Text>
+            <Text>{translations["Select Color"]}</Text>
             <CustomColorPicker
               value={backgroundColor}
               onChange={setBackgroundColor}
@@ -138,14 +142,14 @@ const StyleTab = ({
         <Tabs.Panel value="Gradient" style={{ minHeight: "70px" }}>
           <Stack>
             <Stack>
-              <Text>Start Color</Text>
+              <Text>{translations["Start Color"]}</Text>
               <CustomColorPicker
                 value={gradient.start}
                 onChange={(e) => setGradient({ ...gradient, start: e })}
               />
             </Stack>
             <Stack>
-              <Text>End Color</Text>
+              <Text>{translations["End Color"]}</Text>
               <CustomColorPicker
                 value={gradient.end}
                 onChange={(e) => setGradient({ ...gradient, end: e })}
@@ -161,20 +165,20 @@ const StyleTab = ({
             >
               {(props) => (
                 <Button fullWidth size="lg" radius="lg" {...props}>
-                  Upload Image
+                  {translations["Upload Image"]}
                 </Button>
               )}
             </FileButton>
 
             <RateupButtonSecondary
-              title="Remove Image"
+              title={translations["Remove Image"]}
               size="sm"
               onClick={removeBgImage}
             />
           </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="Transparent" style={{ minHeight: "70px" }} ml="lg">
-          <Text mb="md">Transparency:</Text>
+          <Text mb="md">{translations["Transparency:"]}</Text>
           <div className="tab-panel">
             <input
               type="range"
@@ -191,7 +195,7 @@ const StyleTab = ({
       <Group align="center" mt="sm">
         <Title order={3} mt="xl" style={{ maxWidth: "150px" }}>
           {" "}
-          QR Styles
+          {translations["QR Styles"]}
         </Title>
         <Radio.Group name="background" withAsterisk mt="md" ml="xl">
           <></>
@@ -202,7 +206,7 @@ const StyleTab = ({
         </Radio.Group>
       </Group>
       <Stack style={{ maxWidth: "300px" }} ml="xl">
-        <Text>QR Size</Text>
+        <Text>{translations["QR Size"]}</Text>
         <Slider
           label={(value) => value}
           value={qrSize}
@@ -212,7 +216,7 @@ const StyleTab = ({
           max={350}
         />
         <Stack>
-          <Text>QR Background Color</Text>
+          <Text>{translations["QR Background Color"]}</Text>
           <CustomColorPicker value={qrBgColor} onChange={setQRBgColor} />
         </Stack>
       </Stack>
