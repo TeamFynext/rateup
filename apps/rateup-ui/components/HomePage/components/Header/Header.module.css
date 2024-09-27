@@ -14,6 +14,11 @@
   z-index: 350;
 }
 
+.header-container.isProductPackagingPage {
+  position: absolute;
+  top: -6rem;
+}
+
 .header-links-container {
   align-items: center;
 }

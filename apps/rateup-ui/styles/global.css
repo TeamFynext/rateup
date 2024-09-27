@@ -30,6 +30,14 @@
   --shade-of-blue-7: #cce4ff;
   --shade-of-blue-8: #0f4b90;
   --shade-of-blue-9: #0a3a71;
+  --shade-of-blue-10: #013758;
+  --shade-of-blue-11: #0277be;
+  --shade-of-blue-12: #387adf;
+  --shade-of-blue-13: #50c4ed;
+  --shade-of-blue-14: #004f98;
+  --shade-of-blue-15: #0197f6;
+  --shade-of-blue-16: #387adf;
+  --shade-of-blue-17: #50c4ed;
   --grey-color: #494949;
   --grey-color-2: #73737a;
   --grey-color-3: #595959;
@@ -106,6 +114,19 @@ p {
   font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: 2px;
+}
+
+.landing-page-section-root-common-styles {
+  padding: 0 5%;
+  margin-bottom: 4rem;
+  justify-content: center;
+  gap: 2rem;
+}
+
+@media screen and (min-width: 120rem) {
+  .landing-page-section-root-common-styles {
+    padding: 0.75rem 192px;
+  }
 }
 
 @media screen and (max-width: 768px) {

@@ -5,12 +5,21 @@ import styles from "./TextIllustration.module.css";
 
 const cx = classNames.bind(styles);
 
-function TextIllustration({ children, imageAsFirstElement = false }) {
+function TextIllustration({
+  children,
+  imageAsFirstElement = false,
+  className = "",
+}) {
   return (
     <Group
-      className={cx("text-illustration-root-div", "ti-root-div", {
-        "image-as-first-element": imageAsFirstElement,
-      })}
+      className={cx(
+        "text-illustration-root-div",
+        "ti-root-div",
+        {
+          "image-as-first-element": imageAsFirstElement,
+        },
+        className,
+      )}
     >
       <Stack className={cx("text-container", "ti-text-container")}>
         {children[0]}
