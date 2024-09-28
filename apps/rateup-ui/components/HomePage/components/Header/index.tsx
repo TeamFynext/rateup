@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { Flex, Group, Image } from "@mantine/core";
+import { useWindowScroll } from "@mantine/hooks";
 import classNames from "classnames/bind";
 
 import {
@@ -16,6 +17,9 @@ import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
 const cx = classNames.bind(styles);
 
 function Header({ className = "", withWhiteTextLogo = false }) {
+  const [scroll, scrollTo] = useWindowScroll();
+  const scrollY = scroll.y;
+
   const router = useRouter();
   const currentRoutePath = router.asPath;
 
@@ -24,7 +28,10 @@ function Header({ className = "", withWhiteTextLogo = false }) {
   return (
     <Flex
       justify="space-between"
-      className={cx(className, "header-container", { isProductPackagingPage })}
+      className={cx(className, "header-container", {
+        isProductPackagingPage,
+        "header-visible": isProductPackagingPage && scrollY > 150,
+      })}
     >
       <Group gap={"sm"} className={cx("logo-nav-container")} wrap="nowrap">
         <Link href="/">

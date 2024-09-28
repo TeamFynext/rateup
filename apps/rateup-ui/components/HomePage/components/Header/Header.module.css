@@ -15,8 +15,12 @@
 }
 
 .header-container.isProductPackagingPage {
-  position: absolute;
+  position: fixed;
   top: -6rem;
+}
+
+.header-container.header-visible {
+  top: 0;
 }
 
 .header-links-container {

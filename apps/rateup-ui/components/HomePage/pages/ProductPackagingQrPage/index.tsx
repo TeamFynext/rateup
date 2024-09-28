@@ -1,9 +1,8 @@
 import Head from "next/head";
 
-import { Stack, Text } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
-import TextIllustration from "../../components/TextIllustration";
 import HassleFree from "./HassleFree";
 import HeroSection from "./HeroSection";
 import styles from "./ProductPackagingQrPage.module.css";
