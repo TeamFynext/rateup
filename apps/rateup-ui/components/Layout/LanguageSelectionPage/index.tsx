@@ -118,6 +118,7 @@ function LanguageSelectionPage({
                   ...subtitleStyles,
                   fontFamily: `var(--font-lexend)`,
                   height: "fit-content",
+                  textAlign: "center",
                 }}
               >
                 {subtitleText}
@@ -130,6 +131,7 @@ function LanguageSelectionPage({
                   ...titleStyles,
                   fontFamily: `var(--font-lexend)`,
                   height: "fit-content",
+                  textAlign: "center",
                 }}
               >
                 {titleText}
