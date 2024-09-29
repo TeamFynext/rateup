@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useUser } from "../../../../context/UserContext";
-import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
+import { useRouter } from "next/navigation";
+
 import {
   ActionIcon,
   Badge,
@@ -11,13 +11,17 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { updateEndToEndEncryption } from "../updateSettings";
-import { IconKey } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../../../Modal/ConfirmationModal";
-import { showErrorToast } from "../../../../utils/notifications";
-import { useRouter } from "next/navigation";
+import { IconKey } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useAllResponses } from "../../../../backend/surveys/response/response.query";
+import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
+import { useUser } from "../../../../context/UserContext";
+import { showErrorToast } from "../../../../utils/notifications";
+import ConfirmationModal from "../../../Modal/ConfirmationModal";
+import { updateEndToEndEncryption } from "../updateSettings";
 import styles from "./SecuritySettings.module.css";
 
 //end to end encryption settings module
@@ -31,6 +35,7 @@ export default function ETESettings(props: ETESettingsInterface) {
   const [endtoendencryption, setEndToEndEncryption] = useState(
     survey?.isEncrypted,
   );
+  const { translations } = useTranslations();
   const [alertModalOpened, { open, close }] = useDisclosure(false);
   const editSurvey = useEditSurveyMutation(survey?.id);
   const { data: responses } = useAllResponses(survey?.id);
@@ -38,7 +43,9 @@ export default function ETESettings(props: ETESettingsInterface) {
     if (e.target.checked) {
       if (!user?.encryptionKeys) {
         showErrorToast(
-          "You need to generate encryptionKeys first , head on to settings to generate your keys",
+          translations[
+            "You need to generate encryptionKeys first , head on to settings to generate your keys"
+          ],
         );
       } else {
         open();
@@ -50,9 +57,13 @@ export default function ETESettings(props: ETESettingsInterface) {
       <ConfirmationModal
         opened={alertModalOpened}
         onClose={close}
-        headerTitle="End-to-End Encryption"
-        headerLabel="Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled."
-        confirmLabel="Confirm"
+        headerTitle={translations["End-to-End Encryption"]}
+        headerLabel={
+          translations[
+            "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled."
+          ]
+        }
+        confirmLabel={translations["Confirm"]}
         onConfirm={() =>
           updateEndToEndEncryption(
             setEndToEndEncryption,
@@ -79,7 +90,7 @@ export default function ETESettings(props: ETESettingsInterface) {
             <Box className={"switch-heading-and-desc-container"}>
               <h3>
                 <Group>
-                  End-to-End Encryption
+                  {translations["End-to-End Encryption"]}
                   <Badge
                     size="xs"
                     variant="light"
@@ -97,7 +108,9 @@ export default function ETESettings(props: ETESettingsInterface) {
             <Tooltip
               position="left-end"
               label={
-                "You need to generate encryptionKeys first , head on to settings to generate your keys"
+                translations[
+                  "You need to generate encryptionKeys first , head on to settings to generate your keys"
+                ]
               }
             >
               <ActionIcon
@@ -128,7 +141,7 @@ export default function ETESettings(props: ETESettingsInterface) {
           {responses
             ?.map((responses) => responses?.responses?.length)
             .some((value) => value > 0) && !survey?.isEncrypted
-            ? "Reset responses to enable end to end encryption"
+            ? translations["Reset responses to enable end to end encryption"]
             : null}
         </Text>
       </Stack>

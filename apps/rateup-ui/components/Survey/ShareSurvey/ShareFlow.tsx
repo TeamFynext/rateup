@@ -1,37 +1,41 @@
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
 import {
-  Stack,
+  Button,
   Group,
-  Title,
+  Stack,
   Switch,
   Text,
-  Button,
+  Title,
   Tooltip,
 } from "@mantine/core";
-import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import ShareQR from "./ShareQR";
-import { updateSurvey } from "../../../backend/surveys/survey.api";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
+import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import { StatusBadge } from "../SurveyCardList";
-import { SurveyType, WaFlowStatus } from "../../../types/enums";
-import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { updateSurvey } from "../../../backend/surveys/survey.api";
 import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
-import { useRouter } from "next/router";
 import {
   usePushToWaMutation,
   useWaFlowFromDb,
 } from "../../../backend/whatsapp/flow/flow.query";
-import { ShareMethods } from "./ShareMethods";
-import { CopyLinkComponent } from "./ShareSurvey";
-import { FlowShareMessageEditor } from "./FlowShareTemplateEditor";
-import { modals } from "@mantine/modals";
-import TagManager from "./TagManager";
-import NothingFound from "../../NothingFound/NothingFound";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
+import { SurveyType, WaFlowStatus } from "../../../types/enums";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
+import NothingFound from "../../NothingFound/NothingFound";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
+import { StatusBadge } from "../SurveyCardList";
+import { FlowShareMessageEditor } from "./FlowShareTemplateEditor";
+import { ShareMethods } from "./ShareMethods";
+import ShareQR from "./ShareQR";
+import { CopyLinkComponent } from "./ShareSurvey";
+import TagManager from "./TagManager";
 
 // TODO: add tag support
 export const ShareFlow = ({
@@ -98,13 +102,13 @@ export const ShareFlow = ({
 
   const surveyUpdateMutation = useUpdateSurveyMutation();
   const pushToWaMutation = usePushToWaMutation();
-
+  const { translations } = useTranslations();
   const surveyStatusUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
       notifications.show({
         id: "survey",
-        message: "Survey status Updated!",
+        message: translations["Survey status Updated!"],
         autoClose: true,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -138,15 +142,17 @@ export const ShareFlow = ({
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to Publish this Flow? You{" "}
-          <b>can&apos;t edit flows after </b>
-          publishing.
+          {translations["Are you sure you want to Publish this Flow?"]}
+          <b> {translations["You can't edit flows after publishing."]} </b>
           <br />
-          It is advised to test the flow by opening the link in before
-          publishing and make sure everything is working fine.
+          {
+            translations[
+              "It is advised to test the flow by opening the link in before publishing and make sure everything is working fine."
+            ]
+          }
         </Text>
       ),
-      labels: { confirm: "Yes", cancel: "Cancel" },
+      labels: { confirm: translations["Yes"], cancel: translations["Cancel"] },
       confirmProps: { color: "red" },
       onConfirm: handlePublish,
       onCancel: () => modals.closeAll(),
@@ -192,8 +198,10 @@ export const ShareFlow = ({
             <Tooltip
               label={
                 dbFlow.pendingSave
-                  ? "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
-                  : "No changes to save"
+                  ? translations[
+                      "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
+                    ]
+                  : translations["No changes to save"]
               }
             >
               <Button
@@ -201,16 +209,18 @@ export const ShareFlow = ({
                 onClick={handleSaveToWa}
                 loading={pushToWaMutation.isPending}
               >
-                Save to WhatsApp
+                {translations["Save to WhatsApp"]}
               </Button>
             </Tooltip>
             <Tooltip
               label={
                 !isPublished
                   ? dbFlow.pendingSave
-                    ? "Save your flow to WhatsApp first."
-                    : "Publish your flow to WhatsApp, so that you can share it."
-                  : "You can`t edit flows after publishing."
+                    ? translations["Save your flow to WhatsApp first."]
+                    : translations[
+                        "Publish your flow to WhatsApp, so that you can share it."
+                      ]
+                  : translations["You can`t edit flows after publishing."]
               }
             >
               <div>
@@ -224,7 +234,9 @@ export const ShareFlow = ({
                   onChange={confirmModal}
                   label={
                     <Text fw={700} fz={"lg"}>
-                      {isPublished ? "Published" : "Publish Survey"}
+                      {isPublished
+                        ? translations["Published"]
+                        : translations["Publish Survey"]}
                     </Text>
                   }
                 />
@@ -232,11 +244,11 @@ export const ShareFlow = ({
             </Tooltip>
           </Group>
           <Group>
-            <Text>Current Status: </Text>
+            <Text>{translations["Current Status: "]}</Text>
             {isPublished ? (
               <StatusBadge active={survey?.active} />
             ) : (
-              <Text c="dark.1"> Not published! </Text>
+              <Text c="dark.1"> {translations["Not published! "]}</Text>
             )}
           </Group>
           <RateupButtonSecondary
@@ -252,12 +264,12 @@ export const ShareFlow = ({
       <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>
         <Group gap="lg">
           <Stack style={{ minWidth: 300, flex: 1 }} p="md">
-            <Title order={4}>Share Survey</Title>
+            <Title order={4}>{translations["Share Survey"]}</Title>
             <Group>
               <ContainedSelection
                 style={{ flex: 1 }}
                 disabled={disableShare}
-                label="Select Team"
+                label={translations["Select Team"]}
                 allowDeselect={false}
                 miw={150}
                 value={surveyTeamMapId}
@@ -267,8 +279,8 @@ export const ShareFlow = ({
               <Group gap={2} align="flex-start" style={{ flex: 1 }}>
                 <ContainedSelection
                   disabled={disableShare || tagSelectData.length === 0}
-                  label="Select Tag"
-                  placeholder="select a single Tag"
+                  label={translations["Select Tag"]}
+                  placeholder={translations["select a single Tag"]}
                   miw={150}
                   data={tagSelectData}
                   value={tag}

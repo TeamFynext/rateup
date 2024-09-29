@@ -1,19 +1,21 @@
-import { z } from "zod";
-import { zodResolver } from "mantine-form-zod-resolver";
-
-import { useForm } from "@mantine/form";
 import { Box, CloseButton, SimpleGrid } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useDebouncedCallback } from "@mantine/hooks";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { z } from "zod";
 
-import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util";
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   ContainedColorInput,
   ContainedNumberInput,
   ContainedTagInput,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
-import { useDebouncedCallback } from "@mantine/hooks";
+import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util";
 
 const WOPExtraProps = ({ form }) => {
+  const { translations } = useTranslations();
   const schema = z
     .object({
       imageSrc: z.string().optional(),
@@ -23,7 +25,7 @@ const WOPExtraProps = ({ form }) => {
       size: z.number().min(1),
       segments: z
         .array(z.string())
-        .min(2, { message: "minimum two segments needed " }),
+        .min(2, { message: translations["minimum two segments needed "] }),
       segColors: z.array(z.string()),
     })
     .superRefine((values, ctx) => {
@@ -35,7 +37,10 @@ const WOPExtraProps = ({ form }) => {
           ctx.addIssue({
             path: [data],
             code: z.ZodIssueCode.custom,
-            message: "Segments and segColors should have equal number of data",
+            message:
+              translations[
+                "Segments and segColors should have equal number of data"
+              ],
           });
         });
       }
@@ -45,7 +50,7 @@ const WOPExtraProps = ({ form }) => {
         ctx.addIssue({
           path: ["imageSrc"],
           code: z.ZodIssueCode.custom,
-          message: "image url should be valid",
+          message: translations["image url should be valid"],
         });
       }
     });
@@ -66,20 +71,20 @@ const WOPExtraProps = ({ form }) => {
     <SimpleGrid cols={2}>
       <ContainedTagInput
         {...wopForm.getInputProps("segments")}
-        label={"Segment of array"}
+        label={translations["Segment of array"]}
         required
-        placeholder="Enter the Segment and press enter"
+        placeholder={translations["Enter the Segment and press enter"]}
       />
       <ContainedTagInput
         {...wopForm.getInputProps("segColors")}
         label={"segColors"}
-        placeholder="Enter the segColor and press enter "
+        placeholder={translations["Enter the segColor and press enter "]}
       />
       <ContainedTextField
         {...wopForm.getInputProps("imageSrc")}
-        label={"Image src"}
+        label={translations["Image src"]}
         type="url"
-        placeholder="Enter the url of image"
+        placeholder={translations["Enter the url of image"]}
         rightSection={
           <CloseButton
             aria-label="Clear input"
@@ -92,24 +97,24 @@ const WOPExtraProps = ({ form }) => {
       />
       <ContainedColorInput
         {...wopForm.getInputProps("primaryColor")}
-        label={"Primary color"}
+        label={translations["Primary color"]}
         required
       />
       <ContainedNumberInput
         {...wopForm.getInputProps("size")}
-        label={"Wheel Size"}
+        label={translations["Wheel Size"]}
         required
-        placeholder="Enter the size of wheel"
+        placeholder={translations["Enter the size of wheel"]}
       />
       <ContainedColorInput
         {...wopForm.getInputProps("primaryColoraround")}
-        label={"Primary color around"}
+        label={translations["Primary color around"]}
         required
       />
       <Box w={10} h={10} />
       <ContainedColorInput
         {...wopForm.getInputProps("contrastColor")}
-        label={"Contrast color"}
+        label={translations["Contrast color"]}
         required
       />
     </SimpleGrid>

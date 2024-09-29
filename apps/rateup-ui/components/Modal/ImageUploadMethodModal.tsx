@@ -1,9 +1,13 @@
 import React from "react";
-import FormModalLayout from "./FormModalLayout";
-import PaperLayout from "../styled/Layouts/PaperLayout";
+
 import { Center, Group, Image, Text } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
+import PaperLayout from "../styled/Layouts/PaperLayout";
+import FormModalLayout from "./FormModalLayout";
 
 interface ImageUploadMethodModalProps {
   onClose: () => void;
@@ -23,9 +27,10 @@ export const ImageUploadMethodModal = ({
     }
     onClose();
   };
+  const { translations } = useTranslations();
   return (
     <FormModalLayout
-      title="Select Upload Method"
+      title={translations["Select Upload Method"]}
       onClose={onClose}
       opened={opened}
       centered

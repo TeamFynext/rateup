@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Group, Stack } from "@mantine/core";
 
 import RefreshButton from "@/components/Button/RefreshButton";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import { useLandingPageObj } from "../LandingPageContext/LandingPageContext";
@@ -13,12 +14,15 @@ function Stats() {
   const { visitorsCount = 0 } = linktreeObj;
   const router = useRouter();
   const { shortUrlId } = router.query;
+  const { translations } = useTranslations();
   return (
     <PaperLayout className={styles["stats-page-root-div"]}>
       <Stack className={styles["stats-container"]}>
         <Group className={styles["visited-div"]}>
           <Group>
-            <h1 className={styles["visited-text-h1"]}>Visited: </h1>
+            <h1 className={styles["visited-text-h1"]}>
+              {translations["Visited: "]}
+            </h1>
             <p className={styles["visited-count-p"]}>{visitorsCount}</p>
             <RefreshButton queryKeys={["landingPage", shortUrlId as string]} />
           </Group>

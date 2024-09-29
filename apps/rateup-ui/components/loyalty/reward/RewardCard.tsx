@@ -1,17 +1,22 @@
-import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { RewardTypeBadge } from "./RewardTypeBadge";
-import { useTimeSince } from "../../../hooks/timeSince";
 import { useRouter } from "next/router";
-import { CardMenu } from "../campaign/LCampaignCard";
-import { IconTrash } from "@tabler/icons-react";
-import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.query";
+
+import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.query";
+import { useTimeSince } from "../../../hooks/timeSince";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { CardMenu } from "../campaign/LCampaignCard";
+import { RewardTypeBadge } from "./RewardTypeBadge";
 
 export function RewardCard({ reward }) {
   const timeSince = useTimeSince(reward.createdAt);
   const router = useRouter();
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       maw="300px"
@@ -36,7 +41,7 @@ export function RewardCard({ reward }) {
           fz="sm"
           c="dimmed"
         >
-          {`Created ${timeSince}`}
+          {`${translations["Created"]} ${timeSince}`}
         </Text>
       </Stack>
     </PaperLayout>
@@ -52,21 +57,23 @@ function RewardCardMenuItems({ rewardId }) {
       onSuccess: close,
     });
   }
-
+  const { translations } = useTranslations();
   return (
     <>
       <Menu.Dropdown>
         <Menu.Item leftSection={<IconTrash />} onClick={open}>
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel="Are you sure you want to delete this Reward?"
-        headerTitle="Delete Reward"
-        confirmLabel="Delete"
+        headerLabel={
+          translations["Are you sure you want to delete this Reward?"]
+        }
+        headerTitle={translations["Delete Reward"]}
+        confirmLabel={translations["Delete"]}
         onConfirm={handleDelete}
       />
     </>

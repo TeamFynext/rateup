@@ -137,21 +137,21 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
   const surveyStatsCountArray = [];
   if (flowMetrics) {
     surveyStatsCountArray.push({
-      label: "Flow Visited",
+      label: translations["Flow Visited"],
       count: flowMetrics?.metric?.data_points?.[0]?.value ?? 0,
     });
   } else if (!flowId) {
     surveyStatsCountArray.push(
       {
-        label: "Visited",
+        label: translations["Visited"],
         count: returnSurveyStats()?.visited ?? 0,
       },
       {
-        label: "Started",
+        label: translations["Started"],
         count: returnSurveyStats()?.started ?? 0,
       },
       {
-        label: "Completed",
+        label: translations["Completed"],
         count: returnSurveyStats()?.completed ?? 0,
       },
     );
@@ -162,13 +162,13 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
         <PaperLayout className={styles["user-stats-card-div"]}>
           <Stack gap={0}>
             <Group>
-              <Heading subtitle="User Stats" />
-              <Tooltip label="Refresh stats">
+              <Heading subtitle={translations["User Stats"]} />
+              <Tooltip label={translations["Refresh stats"]}>
                 <ActionIcon
                   onClick={async () => {
                     await Promise.all([surveyRefetch(), refetch()]);
                     showSuccessToast(
-                      "User stats updated",
+                      translations["User stats updated"],
                       "load-data",
                       <IconCheck />,
                     );
@@ -193,11 +193,15 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
                 c="light-dark(var(--mantine-primary-color-filled),white)"
               >
                 {responseLength ?? 0} &nbsp;
-                {responseLength > 1 ? "Responses" : "Response"}
+                {responseLength > 1
+                  ? translations["Responses"]
+                  : translations["Response"]}
               </Text>
               {surveyStatsCountArray?.length === 0 ? (
                 <PaperLayout className={styles["stats-card"]}>
-                  <Text fw="900">Minimum 250+ response for metrics</Text>
+                  <Text fw="900">
+                    {translations["Minimum 250+ response for metrics"]}
+                  </Text>
                 </PaperLayout>
               ) : (
                 surveyStatsCountArray?.map(({ count, label }) => (
@@ -221,7 +225,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
               <PaperLayout h="350px">
                 <Stack>
                   <Group justify="space-between">
-                    <Heading subtitle="Top Traffic By:" />
+                    <Heading subtitle={translations["Top Traffic By:"]} />
                     <ContainedSelection
                       maw={100}
                       radius={"xl"}

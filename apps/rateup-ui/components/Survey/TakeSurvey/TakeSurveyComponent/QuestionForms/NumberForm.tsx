@@ -1,20 +1,25 @@
 import { KeyboardEventHandler, useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { NumberInput, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
-import FormPaperLayout from "./layout/FormPaperLayout";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
+  const { translations } = useTranslations();
   return (
     <FormPaperLayout>
       <NumberInput
         size="sm"
-        placeholder="Enter number input"
+        placeholder={translations["Enter number input"]}
         value={parseInt(response) === 0 ? 0 : parseInt(response) || null}
         onChange={(value) => updateResponse(value)}
         variant="unstyled"

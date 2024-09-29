@@ -1,20 +1,24 @@
 import { useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { Input, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
-import FormPaperLayout from "./layout/FormPaperLayout";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
-
+  const { translations } = useTranslations();
   return (
     <FormPaperLayout>
       <Input
-        placeholder="Enter your answer"
+        placeholder={translations["Enter your answer"]}
         value={response || ""}
         onChange={(e) => updateResponse(e.currentTarget.value)}
         variant="unstyled"

@@ -1,10 +1,14 @@
 import { useContext, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
-import FormPaperLayout from "./layout/FormPaperLayout";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput";
+import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util";
+import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -18,11 +22,11 @@ export function TextAreaForm() {
     updateResponse(updatedResponse);
     setInputValue(newValue);
   };
-
+  const { translations } = useTranslations();
   return (
     <FormPaperLayout>
       <ContainedTextArea
-        placeholder="Enter your answer"
+        placeholder={translations["Enter your answer"]}
         value={inputValue}
         onChange={handleChange}
         variant="unstyled"

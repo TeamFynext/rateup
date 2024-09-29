@@ -1,13 +1,17 @@
 import React, { useEffect } from "react";
-import FormModalLayout from "../../../Modal/FormModalLayout";
-import { useListState } from "@mantine/hooks";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import classes from "./DndListHandle.module.css";
-import { IconGripVertical } from "@tabler/icons-react";
+
 import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";
-import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
+import { useListState } from "@mantine/hooks";
+import { IconGripVertical } from "@tabler/icons-react";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useUpdateSortOrderMenuCategoryMutation } from "../../../../backend/menu/category/mCategory.query";
+import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
 import { fallbackImage } from "../../../../utils/constants";
+import FormModalLayout from "../../../Modal/FormModalLayout";
+import classes from "./DndListHandle.module.css";
 
 interface Idata {
   id: string;
@@ -109,15 +113,19 @@ const SortDrawer = ({
       });
     }
   };
-
+  const { translations } = useTranslations();
   return (
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={categoryOrNot ? "Swap Order of Categories" : "Swap Order of Items"}
+      title={
+        categoryOrNot
+          ? translations["Swap Order of Categories"]
+          : translations["Swap Order of Items"]
+      }
       centered
       onSubmit={handleSortOrder}
-      buttonTitle={"Save"}
+      buttonTitle={translations["Save"]}
       size={"lg"}
       includeCancelButton={true}
     >

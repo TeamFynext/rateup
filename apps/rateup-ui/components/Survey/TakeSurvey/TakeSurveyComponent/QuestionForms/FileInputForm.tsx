@@ -1,3 +1,5 @@
+import { useContext, useEffect, useState } from "react";
+
 import {
   ActionIcon,
   Group,
@@ -10,14 +12,16 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { Dropzone, DropzoneProps } from "@mantine/dropzone";
-import { IconUpload, IconX, IconFileFilled } from "@tabler/icons-react";
+import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import {
   deleteUploadedFiles,
   getFileNameFromKey,
   uploadFile,
 } from "../../../../../utils/file-upload/upload";
-import { useContext, useEffect, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import PaperLayout from "../../../../styled/Layouts/PaperLayout";
 
 interface FileInputFormProps extends Partial<DropzoneProps> {
@@ -29,7 +33,7 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
-
+  const { translations } = useTranslations();
   const themePrimaryColor = theme.colors.primaryColor
     ? theme.colors.primaryColor[5]
     : "#1C518E";
@@ -121,10 +125,10 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
           </Dropzone.Idle>
           <div>
             <Text size="md" inline c={dragFileTextColor}>
-              Drag file here or click to select file
+              {translations["Drag file here or click to select file"]}
             </Text>
             <Text size="xs" c="dimmed" inline mt={7}>
-              File should not exceed 10mb
+              {translations["File should not exceed 10mb"]}
             </Text>
           </div>
         </Group>

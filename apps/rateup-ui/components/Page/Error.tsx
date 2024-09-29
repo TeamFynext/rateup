@@ -1,9 +1,10 @@
-import React from 'react'
+import React from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
 
 const Error = () => {
-  return (
-    <div>Error!</div>
-  )
-}
+  const { translations } = useTranslations();
+  return <div>{translations["Error!"]}</div>;
+};
 
-export default Error
+export default Error;

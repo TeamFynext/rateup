@@ -1,7 +1,11 @@
 import React, { useCallback, useRef, useState } from "react";
-import Webcam from "react-webcam";
-import { RateupButtonBlue } from "../Button/RateupButtons";
+
 import { Group, Image, Stack } from "@mantine/core";
+import Webcam from "react-webcam";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { RateupButtonBlue } from "../Button/RateupButtons";
 
 const videoConstraints = {
   width: 1280,
@@ -24,6 +28,7 @@ const WebcamCapture = ({
 }: WebcamProps) => {
   const webcamRef = useRef(null);
   const [imgSrc, setImgSrc] = useState(null);
+  const { translations } = useTranslations();
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current.getScreenshot({
       width: 200,
@@ -47,12 +52,18 @@ const WebcamCapture = ({
       )}
       <Group justify="center">
         {imgSrc ? (
-          <RateupButtonBlue title="Retake" onClick={() => setImgSrc(null)} />
+          <RateupButtonBlue
+            title={translations["Retake"]}
+            onClick={() => setImgSrc(null)}
+          />
         ) : (
-          <RateupButtonBlue title="Capture photo" onClick={capture} />
+          <RateupButtonBlue
+            title={translations["Capture photo"]}
+            onClick={capture}
+          />
         )}
         <RateupButtonBlue
-          title="save"
+          title={translations["save"]}
           onClick={() => {
             setCapturedImg(imgSrc);
             close();

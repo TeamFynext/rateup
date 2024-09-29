@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from "react";
+
 import {
   Box,
   Center,
@@ -10,15 +12,17 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
-import FormModalLayout from "../Modal/FormModalLayout";
+import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
+import SurveyTemplates from "../../pages/dashboard/surveys/templates/surveyTemplates";
 import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
-import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
-import SurveyTemplates from "../../pages/dashboard/surveys/templates/surveyTemplates";
+import FormModalLayout from "../Modal/FormModalLayout";
 import NothingFound from "../NothingFound/NothingFound";
 
 const SurveyTemplatesModal = ({
@@ -55,12 +59,12 @@ const SurveyTemplatesModal = ({
   const bgTemp = {
     backgroundColor: "#fff",
   };
-
+  const { translations } = useTranslations();
   return (
     <Box>
       <FormModalLayout
         opened={opened}
-        title="Create Survey"
+        title={translations["Create Survey"]}
         onClose={close}
         centered
         size="auto"
@@ -79,12 +83,12 @@ const SurveyTemplatesModal = ({
               }}
               size="md"
               variant="outline"
-              title="Start Blank"
+              title={translations["Start Blank"]}
               leftIcon={<IconFileBroken size={20} />}
             />
 
             <RateupButtonPrimary
-              title="Choose Template"
+              title={translations["Choose Template"]}
               size="md"
               variant="outline"
               color="var(--tertiary-color)"
@@ -99,7 +103,7 @@ const SurveyTemplatesModal = ({
           >
             <Stack>
               <Title order={3} mb="sm">
-                Choose Template
+                {translations["Choose Template"]}
               </Title>
               <Group
                 justify="center"
@@ -174,7 +178,9 @@ const SurveyTemplatesModal = ({
                     </ScrollArea>
                   </Tabs>
                 ) : (
-                  <NothingFound text="No templates available..!!" />
+                  <NothingFound
+                    text={translations["No templates available..!!"]}
+                  />
                 )}
               </Group>
             </Stack>
@@ -190,13 +196,13 @@ const SurveyTemplatesModal = ({
                     openCreateSurvey();
                   }}
                   fullWidth
-                  title="Start Blank"
+                  title={translations["Start Blank"]}
                 />
               </Group>
 
               <Group>
                 <RateupButtonSecondary
-                  title="Cancel"
+                  title={translations["Cancel"]}
                   size="sm"
                   variant="outline"
                   color="var(--tertiary-color)"
@@ -208,7 +214,7 @@ const SurveyTemplatesModal = ({
                     close();
                     openCreateSurvey();
                   }}
-                  title="Start"
+                  title={translations["Start"]}
                   disabled={!selectedTemplate || categorires.length < 1}
                 />
               </Group>

@@ -18,6 +18,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { CreditsCard } from "@/components/Card/CreditsCard";
 import YoutubeEmbed from "@/components/youtube/YoutubeEmbed";
+import useTranslations from "@/dictionaries/useTranslation";
 import { fallbackImage } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import { lexend } from "@/utils/fonts";
@@ -51,6 +52,7 @@ export function ItemDetailedViewModal({
     border: "unset",
     width: "100%",
   };
+  const { translations } = useTranslations();
   const imageSlides = item?.images?.map((url: string) => (
     <Carousel.Slide key={url}>
       <CreditsCard
@@ -68,7 +70,7 @@ export function ItemDetailedViewModal({
             item?.unsplashImage?.find((data) => data === url)?.length > 0,
           )}
           className={styles.image}
-          alt="menu item image"
+          alt={translations["menu item image"]}
         />
       </CreditsCard>
     </Carousel.Slide>
@@ -109,7 +111,7 @@ export function ItemDetailedViewModal({
               className={styles.image}
               radius={"sm"}
               src={fallbackImage}
-              alt="Menu Item Images"
+              alt={translations["Menu Item Images"]}
             />
           )}
         </Card.Section>
@@ -117,7 +119,7 @@ export function ItemDetailedViewModal({
           item?.foodLabels?.length > 0 && (
             <Card.Section className={classes.section} mt="md">
               <Text className={classes.label} c="dimmed">
-                Allergen Info
+                {translations["Allergen Info"]}
               </Text>
               <Stack gap={0} justify="space-between" mih={230}>
                 <Flex gap={"sm"} wrap={"wrap"} my={"sm"}>
@@ -129,7 +131,7 @@ export function ItemDetailedViewModal({
                 <RateupButtonPrimary
                   fullWidth
                   onClick={() => setAlleryView(false)}
-                  title="Go Back"
+                  title={translations["Go Back"]}
                   leftIcon={<IconArrowLeft />}
                 />
               </Stack>
@@ -152,7 +154,7 @@ export function ItemDetailedViewModal({
               {foodLabelLength > 0 && (
                 <Box>
                   <Text className={classes.label} c="dimmed">
-                    Allergen Info
+                    {translations["Allergen Info"]}
                   </Text>
 
                   <Flex align={"center"} gap={0} w={"100%"} mt={5}>
@@ -171,7 +173,7 @@ export function ItemDetailedViewModal({
                     </Group>
                     {foodLabelLength > 1 && (
                       <RateupButtonPrimary
-                        title="Show All"
+                        title={translations["Show All"]}
                         sx={{
                           height: "20px",
                           width: "80px",

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import FormModalLayout from "../../Modal/FormModalLayout";
+
 import {
   ActionIcon,
   Flex,
@@ -9,20 +9,24 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { isNotEmpty, matches, useForm } from "@mantine/form";
-import SurveyContext from "../../../context/SurveyContext";
+import { useDisclosure } from "@mantine/hooks";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateSurveyVariableMutation,
   useDeleteSurveyVariableMutation,
   useUpdateSurveyVariableMutation,
 } from "../../../backend/surveys/surveys.query";
+import SurveyContext from "../../../context/SurveyContext";
 import { SurveyVariableType } from "../../../types/enums";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
-import { QuestionTabsEnum } from "../EditSurvey";
-import { useDisclosure } from "@mantine/hooks";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../Modal/FormModalLayout";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { QuestionTabsEnum } from "../EditSurvey";
 
 const SurveyVariableEditor = ({ setActiveTab }) => {
   const { variables, surveyId } = useContext(SurveyContext);
@@ -41,13 +45,13 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
   const handleDeleteVariable = (variable: SurveyVariable) => {
     deleteVariable.mutate({ variableId: variable.id });
   };
-
+  const { translations } = useTranslations();
   return (
     <Stack w={"100%"}>
       <ScrollAreaAutosize h={430} scrollbarSize={6}>
         <Stack gap={"sm"} p={"sm"}>
           <PaperLayout p={"sm"}>
-            <Title order={5}>Default Variables</Title>
+            <Title order={5}>{translations["Default Variables"]}</Title>
             <Group gap={"xs"} pt={"sm"}>
               {variables
                 ?.filter(
@@ -62,9 +66,9 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
           </PaperLayout>
           <PaperLayout p={"sm"}>
             <Group justify="space-between">
-              <Title order={5}>Custom Variables</Title>
+              <Title order={5}>{translations["Custom Variables"]}</Title>
               <RateupButtonSecondary
-                title="Add Variable"
+                title={translations["Add Variable"]}
                 leftIcon={<IconPlus size={"1rem"} />}
                 onClick={openCreateVariable}
               />
@@ -103,7 +107,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
       </ScrollAreaAutosize>
       <Group justify="space-between" pb={"xl"}>
         <RateupButtonSecondary
-          title={"Cancel"}
+          title={translations["Cancel"]}
           size="md"
           variant="outline"
           color="var(--tertiary-color)"
@@ -139,6 +143,7 @@ const CreateSurveyVariableModal = ({
   const { surveyId, variables } = useContext(SurveyContext);
   const variableCreation = useCreateSurveyVariableMutation(surveyId);
   const variableUpdation = useUpdateSurveyVariableMutation(surveyId);
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       name: variable?.name || "",
@@ -147,7 +152,9 @@ const CreateSurveyVariableModal = ({
     validate: {
       name: matches(
         /^[a-zA-Z0-9_]+$/,
-        "Variable name can only have letters, numbers and underscore",
+        translations[
+          "Variable name can only have letters, numbers and underscore"
+        ],
       ),
       value: isNotEmpty("Assign a value to variable"),
     },
@@ -203,9 +210,13 @@ const CreateSurveyVariableModal = ({
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={isEdit ? "Update Variable" : "Create Variable"}
+      title={
+        isEdit
+          ? translations["Update Variable"]
+          : translations["Create Variable"]
+      }
       includeCancelButton
-      buttonTitle={isEdit ? "Update" : "Create"}
+      buttonTitle={isEdit ? translations["Update"] : translations["Create"]}
       cancelOnClick={() => {
         form.reset();
         close();

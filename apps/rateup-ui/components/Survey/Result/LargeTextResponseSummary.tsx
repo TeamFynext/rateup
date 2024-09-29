@@ -26,6 +26,7 @@ import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import SurveyContext from "@/context/SurveyContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import {
   showErrorToast,
   showLoadingToast,
@@ -60,7 +61,7 @@ const LargeTextResponseSummary = ({
   const [largeTextQuestions, setLargeTextQuestions] = useState([]);
   const ref = useRef(null);
   const [height, setHeight] = useState(null);
-
+  const { translations } = useTranslations();
   const getResponseSummary = (questionId, teamId?) => {
     if (getSummary.isPending) return;
     showLoadingToast("loading", "summary", true, "", "", false);
@@ -72,7 +73,7 @@ const LargeTextResponseSummary = ({
       {
         onSuccess: () => {
           showSuccessToast(
-            "Summary generated successfully",
+            translations["Summary generated successfully"],
             "summary",
             <IconCheck />,
             true,
@@ -81,7 +82,7 @@ const LargeTextResponseSummary = ({
         onError(error: any, variables, context) {
           console.log(error);
           showErrorToast(
-            `Summary generation failed: ${error?.response?.data ?? ""}`,
+            ` ${translations["Summary generation failed:"]} ${error?.response?.data ?? ""}`,
             "summary",
             <IconX />,
             true,
@@ -119,7 +120,7 @@ const LargeTextResponseSummary = ({
             <IconArrowLeft />
           </ActionIcon>
           <Text fw={800} c={"dark.3"}>
-            Back
+            {translations["Back"]}
           </Text>
         </Group>
         <Stack p={"xl"}>
@@ -137,7 +138,9 @@ const LargeTextResponseSummary = ({
               <Stack key={team.value} pl={"xl"} mt={"md"}>
                 <Flex justify={"flex-end"} gap={"sm"}>
                   <Badge variant="light">{team.label}</Badge>
-                  <Tooltip label={`Generate ${team.label} Summary by AI`}>
+                  <Tooltip
+                    label={` ${translations["Generate"]} ${team.label} ${translations["Summary by AI"]}`}
+                  >
                     <ActionIcon
                       onClick={() =>
                         getResponseSummary(selectedQuestion.id, team.value)
@@ -155,7 +158,9 @@ const LargeTextResponseSummary = ({
                   </Tooltip>
                   <Tooltip
                     label={
-                      "Summary will updated only if there are responses after summary generation"
+                      translations[
+                        "Summary will updated only if there are responses after summary generation"
+                      ]
                     }
                   >
                     <IconInfoCircle size={"1rem"} color="gray" />
@@ -178,7 +183,7 @@ const LargeTextResponseSummary = ({
 
   return (
     <Stack>
-      <Heading subtitle="Large Text Summary" />
+      <Heading subtitle={translations["Large Text Summary"]} />
       <PaperLayout>
         {summaryTab === ResponseSummaryType.Team ? (
           <LargeTextTeamwiseSummary />
@@ -193,7 +198,7 @@ const LargeTextResponseSummary = ({
                     surveyId,
                   })}
                 </Text>
-                <Tooltip label={"Generate Summary by AI"}>
+                <Tooltip label={translations["Generate Summary by AI"]}>
                   <ActionIcon
                     onClick={() => getResponseSummary(question.id)}
                     variant="subtle"
@@ -209,7 +214,9 @@ const LargeTextResponseSummary = ({
                 </Tooltip>
                 <Tooltip
                   label={
-                    "Summary will updated only if there are responses after summary generation"
+                    translations[
+                      "Summary will updated only if there are responses after summary generation"
+                    ]
                   }
                 >
                   <IconInfoCircle size={"1rem"} color="gray" />
@@ -224,7 +231,7 @@ const LargeTextResponseSummary = ({
                     </Text>
                   </Flex>
                   <RateupButtonSecondary
-                    title="Generate Team wise summary"
+                    title={translations["Generate Team wise summary"]}
                     onClick={() => {
                       setSelectedQuestion(question);
                       setSummaryTab(ResponseSummaryType.Team);

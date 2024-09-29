@@ -3,6 +3,8 @@ import { useContext, useEffect, useState } from "react";
 import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { QuestionType } from "../../../../types/enums";
 import classes from "./Style.module.css";
@@ -36,13 +38,13 @@ const ContactExtraProps = ({ form }) => {
   if (!form.values?.features?.[selectedLanguage]) updateFeatures(features);
 
   const questionTitle = form?.values?.title?.[selectedLanguage];
-
+  const { translations } = useTranslations();
   return (
     <Stack gap={"xl"}>
       <Flex justify={"flex-start"} columnGap={"lg"}>
         <Paper shadow="xl" p={"lg"}>
           <Switch
-            label={"Name"}
+            label={translations["Name"]}
             c={features?.name.isEnabled ? "var(--tertiary-color" : "dimmed"}
             checked={features?.name.isEnabled}
             onChange={(e) => {
@@ -60,7 +62,7 @@ const ContactExtraProps = ({ form }) => {
         {qtype != QuestionType.Phone && (
           <Paper shadow="xl" p={"lg"}>
             <Switch
-              label={"Phone"}
+              label={translations["Phone"]}
               c={features?.phone.isEnabled ? "var(--tertiary-color" : "dimmed"}
               checked={features?.phone.isEnabled}
               onChange={(e) => {
@@ -79,7 +81,7 @@ const ContactExtraProps = ({ form }) => {
         {qtype != QuestionType.Email && (
           <Paper shadow="xl" p={"lg"}>
             <Switch
-              label={"Enable Email"}
+              label={translations["Enable Email"]}
               checked={features?.email.isEnabled}
               c={features.email.isEnabled ? "var(--tertiary-color" : "dimmed"}
               onChange={(e) => {
@@ -103,12 +105,12 @@ const ContactExtraProps = ({ form }) => {
             { isEnabled: boolean; headText: string },
           ]) => (
             <Tooltip
-              label={"Please fill question"}
+              label={translations["Please fill question"]}
               disabled={questionTitle !== "<p></p>"}
               key={key}
             >
               <Textarea
-                placeholder={`Enter ${key} title here`}
+                placeholder={`${translations["Enter"]} ${key} ${translations["title here"]}`}
                 classNames={{ input: classes.inputHeadText }}
                 size="md"
                 key={key}

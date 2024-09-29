@@ -1,14 +1,18 @@
-import { Button, Group, PaperProps, Stack, Table, Text } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { useDisclosure } from "@mantine/hooks";
-import { CreateTopicModal } from "../modals/CreateTopic";
-import { useRMTopics } from "../../../backend/reputation_management/topic/topic.query";
 import { useContext } from "react";
-import SelectedTeamContext from "../../../context/SelectedTeam";
-import { getSentimentClass } from "../../../utils/reputationManagement/sentiment.util";
-import { SentimentClass } from "../../../types/enums";
-import { EntitiesData } from "../panels/RM_Overview";
+
+import { Button, Group, PaperProps, Stack, Table, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconAdjustmentsPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useRMTopics } from "../../../backend/reputation_management/topic/topic.query";
+import SelectedTeamContext from "../../../context/SelectedTeam";
+import { SentimentClass } from "../../../types/enums";
+import { getSentimentClass } from "../../../utils/reputationManagement/sentiment.util";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import { CreateTopicModal } from "../modals/CreateTopic";
+import { EntitiesData } from "../panels/RM_Overview";
 
 interface SentimentByTopicProps {
   entities: EntitiesData;
@@ -25,15 +29,15 @@ export function SentimentByTopic({
 }: SentimentByTopicProps & PaperProps) {
   const [createTopicOpened, { open, close }] = useDisclosure(false);
   const { selectedTeamId } = useContext(SelectedTeamContext);
-
+  const { translations } = useTranslations();
   const {
     data: topics,
     isLoading: isTopicsLoading,
     isError: isTopicsError,
   } = useRMTopics(selectedTeamId);
 
-  if (isTopicsLoading) return <div>loading</div>;
-  if (isTopicsError) return <div>error</div>;
+  if (isTopicsLoading) return <div>{translations["loading"]}</div>;
+  if (isTopicsError) return <div>{translations["error"]}</div>;
 
   return (
     <PaperLayout {...props}>
@@ -45,7 +49,7 @@ export function SentimentByTopic({
           }}
           c="#666"
         >
-          Sentiment by Topic
+          {translations["Sentiment by Topic"]}
         </Text>
 
         <Table withRowBorders={false}>
@@ -108,7 +112,7 @@ export function SentimentByTopic({
             </>
           ) : (
             <Text px="md" c="gray">
-              Add a topic to see view it's sentiment
+              {translations["Add a topic to see view it's sentiment"]}
             </Text>
           )}
         </Table>
@@ -118,7 +122,7 @@ export function SentimentByTopic({
           variant="subtle"
           color="gray"
         >
-          Manage Topics
+          {translations["Manage Topics"]}
         </Button>
         <CreateTopicModal
           opened={createTopicOpened}

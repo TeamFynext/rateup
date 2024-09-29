@@ -21,6 +21,8 @@ import { notifications } from "@mantine/notifications";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { isEmptyObject } from "@tiptap/react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import {
@@ -95,7 +97,7 @@ const ValidationRulesEditor = ({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
-
+  const { translations } = useTranslations();
   const form = useForm<FormValues>({
     initialValues: {},
     validate: (values) => {
@@ -241,19 +243,20 @@ const ValidationRulesEditor = ({
       if (ruleType === "textType") {
         setFieldValue(ruleType, {
           type: "Letters_&_Numbers",
-          errorMessage: `Letters_&_Numbers only allowed.`,
+          errorMessage: translations["Letters_&_Numbers only allowed."],
         });
       } else if (ruleType === "wordCount") {
         setFieldValue(ruleType, {
           min: "2",
           max: "15",
-          errorMessage: "Input should contain minimum 2 words",
+          errorMessage: translations["Input should contain minimum 2 words"],
         });
       } else {
         setFieldValue(ruleType, {
           min: "3",
           max: "50",
-          errorMessage: "Input Length should be between 3 and 50 characters",
+          errorMessage:
+            translations["Input Length should be between 3 and 50 characters"],
         });
       }
     }
@@ -277,8 +280,8 @@ const ValidationRulesEditor = ({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: "Saving validations",
-      message: `Hold on, your changes are getting updated...`,
+      title: translations["Saving validations"],
+      message: translations["Hold on, your changes are getting updated..."],
       autoClose: false,
       withCloseButton: false,
     });
@@ -345,13 +348,13 @@ const ValidationRulesEditor = ({
                 (f) => f?.fieldKey,
               )}
               onChange={(value) => setSelectedFieldKey(value)}
-              label={"select field Key"}
-              placeholder="select key"
+              label={translations["select field Key"]}
+              placeholder={translations["select key"]}
               value={selectedFieldKey}
             />
             <Select
-              label={"select rule type"}
-              placeholder="Select rule type"
+              label={translations["select rule type"]}
+              placeholder={translations["Select rule type"]}
               data={ruleList?.filter(
                 (ruleType) =>
                   !multiInputRules?.[selectedFieldKey]?.some(
@@ -405,16 +408,18 @@ const ValidationRulesEditor = ({
                       <ContainedTextField
                         value={r?.type}
                         readOnly
-                        label={"Type"}
+                        label={translations["Type"]}
                       />
                     )}
                     <ContainedTextField
                       value={r?.errorMessage}
                       readOnly
                       description={
-                        "please change according to display text of the field"
+                        translations[
+                          "please change according to display text of the field"
+                        ]
                       }
-                      label={"Error Message"}
+                      label={translations["Error Message"]}
                       mb={"md"}
                     />
                     <ActionIcon
@@ -453,39 +458,44 @@ const ValidationRulesEditor = ({
           <FormModalLayout
             opened={opened}
             onClose={close}
-            title="Update Rule"
+            title={translations["Update Rule"]}
             centered
           >
-            <Text>Field Key: {selectedRule?.fieldKey}</Text>
+            <Text>
+              {translations["Field Key: "]}
+              {selectedRule?.fieldKey}
+            </Text>
             {selectedRule?.ruleType === "length" && (
               <>
                 <ContainedNumberInput
                   {...ruleForm.getInputProps("min")}
-                  label={"Min"}
+                  label={translations["Min"]}
                   w={"fit-content"}
                 />
                 <ContainedNumberInput
                   {...ruleForm.getInputProps("max")}
-                  label={"Max"}
+                  label={translations["Max"]}
                 />
               </>
             )}
             {selectedRule?.ruleType === "textType" && (
               <ContainedSelection
                 {...ruleForm.getInputProps("type")}
-                label={"Type"}
+                label={translations["Type"]}
                 data={["Letters", "Letters_&_Numbers", "Numbers"]}
               />
             )}
             <ContainedTextField
               {...ruleForm.getInputProps("errorMessage")}
-              label={"Error Message"}
+              label={translations["Error Message"]}
               description={
-                "please change according to display text of the field"
+                translations[
+                  "please change according to display text of the field"
+                ]
               }
             />
             <RateupButtonBlue
-              title={"update"}
+              title={translations["update"]}
               onClick={handleUpdateRule}
               mt="sm"
             />
@@ -497,10 +507,14 @@ const ValidationRulesEditor = ({
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Stack>
-        <Title order={3}>Validation Editor</Title>
+        <Title order={3}>{translations["Validation Editor"]}</Title>
         <Text c="gray">
           {" "}
-          Add validation rules to the user input for this question.
+          {
+            translations[
+              "Add validation rules to the user input for this question."
+            ]
+          }
         </Text>
         <Divider />
         {[Q.MultiTextInput].includes(selectedQ?.type as QuestionType) ? (
@@ -537,7 +551,7 @@ const ValidationRulesEditor = ({
                             <Group>
                               <TextInput
                                 style={{ maxWidth: "100px" }}
-                                label="Min"
+                                label={translations["Min"]}
                                 value={ruleData.min}
                                 onChange={(event) => {
                                   const newValue: RuleValue = {
@@ -550,7 +564,7 @@ const ValidationRulesEditor = ({
                                 error={errors[`${ruleType}.min`]}
                               />
                               <TextInput
-                                label="Max"
+                                label={translations["Max"]}
                                 style={{ maxWidth: "100px" }}
                                 value={ruleData.max}
                                 onChange={(event) => {
@@ -567,8 +581,8 @@ const ValidationRulesEditor = ({
                           </>
                         ) : (
                           <Select
-                            label="Input type:"
-                            placeholder="Select rule type"
+                            label={translations["Input type:"]}
+                            placeholder={translations["Select rule type"]}
                             data={["Letters", "Letters_&_Numbers"]}
                             defaultValue="Letters_&_Numbers"
                             onChange={(event) => {
@@ -584,7 +598,7 @@ const ValidationRulesEditor = ({
                         )}
                         <TextInput
                           style={{ maxWidth: "300px" }}
-                          label="Error Message"
+                          label={translations["Error Message"]}
                           value={ruleData.errorMessage}
                           onChange={(event) => {
                             const newValue: RuleValue = {
@@ -621,10 +635,10 @@ const ValidationRulesEditor = ({
                     }}
                   >
                     <Title order={4} style={{ maxWidth: "120px" }}>
-                      Add Rule :
+                      {translations["Add Rule :"]}
                     </Title>
                     <Select
-                      placeholder="Select rule type"
+                      placeholder={translations["Select rule type"]}
                       data={ruleList?.filter(
                         (ruleType) => !(ruleType in values),
                       )}
@@ -639,12 +653,12 @@ const ValidationRulesEditor = ({
       </Stack>
       <Group justify="space-between">
         <RateupButtonSecondary
-          title={"Cancel"}
+          title={translations["Cancel"]}
           size="md"
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
         <RateupButtonBlue
-          title={"Save"}
+          title={translations["Save"]}
           size="md"
           onClick={handleSave}
           loading={questionUpdateMutation.isPending}

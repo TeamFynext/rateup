@@ -1,3 +1,6 @@
+import { useCallback } from "react";
+import { useRouter } from "next/router";
+
 import {
   ActionIcon,
   Menu,
@@ -6,33 +9,36 @@ import {
   MenuTarget,
   Text,
 } from "@mantine/core";
-import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useCallback } from "react";
-import { useRouter } from "next/router";
-
 import { useDisclosure } from "@mantine/hooks";
-import CreateShortUrlModal from "../CreateQrModal";
 import { modals } from "@mantine/modals";
-import modalStyles from "styles/commonCssModules/modal.module.css";
-import styles from "./GeneratedQrCard.module.css";
+import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useDeleteQrMutation } from "backend/generateQr/generateQr.query";
+import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import CreateShortUrlModal from "../CreateQrModal";
+import styles from "./GeneratedQrCard.module.css";
 
 function MoreOptionsMenu({ shortUrlId, name }) {
   const [isEditLandingPageModalOpen, editLandingPageModalHandlers] =
     useDisclosure();
 
   const deleteQrMutation = useDeleteQrMutation();
-
+  const { translations } = useTranslations();
   const handleDeleteClick = useCallback(async () => {
     // deleteLandingPageMutation.mutateAsync();
     modals.openConfirmModal({
-      title: "Delete QR?",
+      title: translations["Delete QR?"],
       children: (
         <Text className={styles["are-you-sure-text"]}>
-          Are you sure to delete this QR?
+          {translations["Are you sure to delete this QR?"]}
         </Text>
       ),
-      labels: { confirm: "Delete", cancel: "Cancel" },
+      labels: {
+        confirm: translations["Delete"],
+        cancel: translations["Cancel"],
+      },
       className: styles["delete-confirmation-modal"],
       centered: true,
       classNames: {
@@ -61,10 +67,10 @@ function MoreOptionsMenu({ shortUrlId, name }) {
         </MenuTarget>
         <MenuDropdown onClick={(e) => e.stopPropagation()}>
           <MenuItem leftSection={<IconEdit />} onClick={handleRenameClick}>
-            Rename
+            {translations["Rename"]}
           </MenuItem>
           <MenuItem leftSection={<IconTrash />} onClick={handleDeleteClick}>
-            Delete
+            {translations["Delete"]}
           </MenuItem>
         </MenuDropdown>
       </Menu>

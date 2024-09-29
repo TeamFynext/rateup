@@ -38,6 +38,8 @@ import {
 } from "@mui/x-data-grid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { updateSurvey } from "../../../backend/surveys/survey.api";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
 import { SurveyType } from "../../../types/enums";
@@ -108,7 +110,7 @@ const ShareSurvey = ({
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
     null,
   );
-
+  const { translations } = useTranslations();
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
   const [editPublish, setEditPublish] = useState(null);
 
@@ -173,7 +175,7 @@ const ShareSurvey = ({
           loading: false,
           message: data?.data?.error
             ? data?.data?.error
-            : "Your survey is incomplete",
+            : translations["Your survey is incomplete"],
           icon: <IconX size="1rem" />,
           autoClose: 3000,
         });
@@ -190,8 +192,8 @@ const ShareSurvey = ({
           loading: false,
           message:
             data?.data?.action === "unpublish"
-              ? "Survey Un-Published."
-              : "Survey Published Successfully!",
+              ? translations["Survey Un-Published."]
+              : translations["Survey Published Successfully!"],
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
@@ -274,7 +276,7 @@ const ShareSurvey = ({
               checked={isScheduled}
               onChange={(event) => {
                 showLoadingToast(
-                  "Hold.. your survey is getting unpublished...",
+                  translations["Hold.. your survey is getting unpublished..."],
                   "load-data",
                   true,
                   "Unpublishing...",
@@ -287,7 +289,7 @@ const ShareSurvey = ({
               }}
               label={
                 <Text fw={700} fz={"lg"}>
-                  Scheduled
+                  {translations["Scheduled"]}
                 </Text>
               }
             />
@@ -302,7 +304,9 @@ const ShareSurvey = ({
                   openPublishSettings();
                 } else {
                   showLoadingToast(
-                    "Hold.. your survey is getting UnPublished...",
+                    translations[
+                      "Hold.. your survey is getting UnPublished..."
+                    ],
                     "load-data",
                     true,
                     "Unpublishing...",
@@ -316,17 +320,19 @@ const ShareSurvey = ({
               }}
               label={
                 <Text fw={700} fz={"lg"}>
-                  {isPublished ? "Published" : "Publish Survey"}
+                  {isPublished
+                    ? translations["Published"]
+                    : translations["Publish Survey"]}
                 </Text>
               }
             />
           )}
           <Group>
-            <Text>Current Status: </Text>
+            <Text>{translations["Current Status: "]}</Text>
             {isPublished ? (
               <StatusBadge active={survey?.active} />
             ) : (
-              <Text c="dark.1"> Not published! </Text>
+              <Text c="dark.1">{translations["Not published! "]}</Text>
             )}
           </Group>
 
@@ -334,7 +340,10 @@ const ShareSurvey = ({
             {(isPublished || survey?.surveyPublishAt) && (
               <Group>
                 <Text w={150}>
-                  {isScheduled ? "To be Published On" : "Published On"}:{" "}
+                  {isScheduled
+                    ? translations["To be Published On"]
+                    : translations["Published On"]}
+                  :{" "}
                 </Text>
                 <Text c={isScheduled ? "orange.6" : "dark.1"}>
                   {survey?.surveyPublishAt
@@ -358,7 +367,7 @@ const ShareSurvey = ({
 
             {survey?.surveyEndAt && (
               <Group>
-                <Text w={150}>End At: </Text>
+                <Text w={150}>{translations["End At: "]}</Text>
                 {/* TODO : Highligh ended time */}
                 {/* <Text>{(survey?.surveyEndAt && !isPublished && !isScheduled) ? 'Ended at:' : 'End at' }</Text> */}
 
@@ -382,7 +391,7 @@ const ShareSurvey = ({
           </Stack>
           {!survey.surveyEndAt &&
             (survey.isPublished || survey.surveyPublishAt) && (
-              <Tooltip label={"Schedule survey expiry"}>
+              <Tooltip label={translations["Schedule survey expiry"]}>
                 <ActionIcon
                   size={"sm"}
                   variant="subtle"
@@ -405,7 +414,9 @@ const ShareSurvey = ({
 
           <RateupButtonSecondary
             disabled={disableShare}
-            title={survey?.active ? "Pause" : "Resume"}
+            title={
+              survey?.active ? translations["Pause"] : translations["Resume"]
+            }
             leftIcon={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
             onClick={() =>
               surveyStatusUpdateMutation.mutate({ active: !survey?.active })
@@ -418,7 +429,7 @@ const ShareSurvey = ({
         centered
         onClose={close}
         opened={opened}
-        title="Survey contains errors"
+        title={translations["Survey contains errors"]}
       >
         <ScrollArea.Autosize mah={400} mb="xl">
           <Box my="xl">
@@ -449,7 +460,10 @@ const ShareSurvey = ({
               ))
             ) : (
               <Box>
-                <Text c="red">Error: {errors?.error}</Text>
+                <Text c="red">
+                  {translations["Error: "]}
+                  {errors?.error}
+                </Text>
               </Box>
             )}
           </Box>
@@ -458,7 +472,7 @@ const ShareSurvey = ({
         <Center>
           <RateupButtonBlue
             leftIcon={<IconChevronLeft />}
-            title="Back to Edit Questions"
+            title={translations["Back to Edit Questions"]}
             onClick={() => {
               close();
               setActiveTab(TabEnum.Edit);
@@ -469,12 +483,12 @@ const ShareSurvey = ({
       <PaperLayout opacity={disableShare ? 0.5 : 1}>
         <Group gap="lg">
           <Stack style={{ minWidth: 300, flex: 1 }}>
-            <Title order={4}>Share Survey</Title>
+            <Title order={4}>{translations["Share Survey"]}</Title>
             <Group>
               <ContainedSelection
                 style={{ flex: 1 }}
                 disabled={disableShare}
-                label="Select Team"
+                label={translations["Select Team"]}
                 allowDeselect={false}
                 value={selectTeamDropdownState}
                 miw={150}
@@ -509,7 +523,7 @@ const ShareSurvey = ({
 
           <Stack style={{ minWidth: 300, flex: 1 }}>
             <Title order={4} style={{ textAlign: "center" }}>
-              How would you like to survey people?
+              {translations["How would you like to survey people?"]}
             </Title>
             <Group justify="center" gap="xl">
               <ActionIcon
@@ -544,7 +558,7 @@ const ShareSurvey = ({
                 style={{ background: "none" }}
               >
                 <Tooltip
-                  label="Share via WhatsApp"
+                  label={translations["Share via WhatsApp"]}
                   withArrow
                   color="var(--light-grey-color)"
                   position="bottom"
@@ -568,7 +582,7 @@ const ShareSurvey = ({
                 style={{ background: "none" }}
               >
                 <Tooltip
-                  label="Share via Facebook"
+                  label={translations["Share via Facebook"]}
                   withArrow
                   color="var(--light-grey-color)"
                   position="bottom"
@@ -593,7 +607,7 @@ const ShareSurvey = ({
                   style={{ background: "none" }}
                 >
                   <Tooltip
-                    label="Embed as iframe"
+                    label={translations["Embed as iframe"]}
                     withArrow
                     color="var(--light-grey-color)"
                     position="bottom"
@@ -624,7 +638,7 @@ const ShareSurvey = ({
         resourceName={"survey"}
       />
       <FormModalLayout
-        title="Generate IFrame"
+        title={translations["Generate IFrame"]}
         opened={openedIframe}
         onClose={closeIframe}
         size="lg"
@@ -686,6 +700,7 @@ const PubliShSettingsModal = ({
   surveyUpdateMutation,
   survey,
 }) => {
+  const { translations } = useTranslations();
   const [publishChoice, setPublishChoice] = useState<any>(PublishEnum.NOW);
   const [surveyExpiry, setSurveyExpiry] = useState<any>(ExpiryEnum.NO_EXPIRY);
   const form = useForm({
@@ -706,13 +721,15 @@ const PubliShSettingsModal = ({
         const minPublishDate = new Date(new Date().getTime() + 60 * 60 * 1000);
         const publishDate = form.values.surveyPublishAt;
         return value < publishDate
-          ? "End date must be after the publish date."
+          ? translations["End date must be after the publish date."]
           : null;
       },
       surveyEndAt: (value) => {
         const minEndDate = new Date(new Date().getTime() + 2 * 60 * 60 * 1000);
         return surveyExpiry === ExpiryEnum.CUSTOM_DATE && value < minEndDate
-          ? "End date must be at least 2 hours ahead of current time."
+          ? translations[
+              "End date must be at least 2 hours ahead of current time."
+            ]
           : null;
       },
     },
@@ -721,9 +738,9 @@ const PubliShSettingsModal = ({
     notifications.show({
       id: "load-data",
       color: "teal",
-      title: "Publishing",
+      title: translations["Publishing"],
       loading: true,
-      message: "Please hold on while publishing your survey",
+      message: translations["Please hold on while publishing your survey"],
       autoClose: 3000,
     });
     const data =
@@ -791,17 +808,17 @@ const PubliShSettingsModal = ({
         form.reset();
         close();
       }}
-      title={"Publish Settings"}
+      title={translations["Publish Settings"]}
       centered
       onSubmit={handlePublish}
       buttonTitle={
         editPublish === "Expiry"
-          ? "Update Expiry"
+          ? translations["Update Expiry"]
           : publishChoice === PublishEnum.LATER
             ? editPublish
-              ? "Update Publish Schedule"
-              : "Schedule Publish"
-            : "Publish Now"
+              ? translations["Update Publish Schedule"]
+              : translations["Schedule Publish"]
+            : translations["Publish Now"]
       }
       includeCancelButton
     >
@@ -812,12 +829,15 @@ const PubliShSettingsModal = ({
               value={publishChoice}
               onChange={setPublishChoice}
               name="selectPublish"
-              label="Publish"
+              label={translations["Publish"]}
               withAsterisk
             >
               <Group mt="xs">
                 <Radio checked label="Now" value={PublishEnum.NOW} />
-                <Radio label="Schedule Later" value={PublishEnum.LATER} />
+                <Radio
+                  label={translations["Schedule Later"]}
+                  value={PublishEnum.LATER}
+                />
               </Group>
             </Radio.Group>
             {publishChoice === PublishEnum.LATER && (
@@ -825,8 +845,8 @@ const PubliShSettingsModal = ({
                 <ContainedDateTimePickerInput
                   valueFormat="DD MMM YYYY - hh mm A"
                   dropdownType="modal"
-                  placeholder={"Date"}
-                  label={"Publish Survey At"}
+                  placeholder={translations["Date"]}
+                  label={translations["Publish Survey At"]}
                   withAsterisk
                   {...form.getInputProps("surveyPublishAt")}
                   minDate={
@@ -836,8 +856,13 @@ const PubliShSettingsModal = ({
                   }
                 />
                 <Text c="red" size="xs">
-                  * Time will be rounded to nearest hours. <br />* Publish time
-                  must be at least 1 hour ahead of current time.
+                  * {translations["Time will be rounded to nearest hours. "]}
+                  <br />*{" "}
+                  {
+                    translations[
+                      "Publish time must be at least 1 hour ahead of current time."
+                    ]
+                  }
                 </Text>
               </Stack>
             )}
@@ -850,12 +875,19 @@ const PubliShSettingsModal = ({
               value={surveyExpiry}
               onChange={setSurveyExpiry}
               name="selectExpiry"
-              label="Expiry Date"
+              label={translations["Expiry Date"]}
               withAsterisk
             >
               <Group mt="xs">
-                <Radio checked label="No Expiry" value={ExpiryEnum.NO_EXPIRY} />
-                <Radio label="Custom Date" value={ExpiryEnum.CUSTOM_DATE} />
+                <Radio
+                  checked
+                  label={translations["No Expiry"]}
+                  value={ExpiryEnum.NO_EXPIRY}
+                />
+                <Radio
+                  label={translations["Custom Date"]}
+                  value={ExpiryEnum.CUSTOM_DATE}
+                />
               </Group>
             </Radio.Group>
 
@@ -864,8 +896,8 @@ const PubliShSettingsModal = ({
                 <ContainedDateTimePickerInput
                   dropdownType="modal"
                   valueFormat="DD MMM YYYY - hh mm A"
-                  placeholder={"Date"}
-                  label={"End Survey At"}
+                  placeholder={translations["Date"]}
+                  label={translations["End Survey At"]}
                   {...form.getInputProps("surveyEndAt")}
                   minDate={
                     publishChoice === PublishEnum.LATER
@@ -879,7 +911,7 @@ const PubliShSettingsModal = ({
                   }
                 />
                 <Text c="red" size="xs">
-                  * End date must be after the publish date.
+                  * {translations["End date must be after the publish date."]}
                 </Text>
               </Stack>
             )}

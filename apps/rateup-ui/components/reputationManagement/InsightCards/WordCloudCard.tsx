@@ -1,3 +1,5 @@
+import { memo, useEffect, useState } from "react";
+
 import {
   Box,
   Center,
@@ -6,12 +8,14 @@ import {
   Text,
   useMantineTheme,
 } from "@mantine/core";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { Wordcloud } from "@visx/wordcloud";
-import { memo, useEffect, useState } from "react";
-import { Text as VText } from "@visx/text";
-import { scaleLog } from "@visx/scale";
 import { useResizeObserver } from "@mantine/hooks";
+import { scaleLog } from "@visx/scale";
+import { Text as VText } from "@visx/text";
+import { Wordcloud } from "@visx/wordcloud";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { EntitiesData } from "../panels/RM_Overview";
 
 interface WordCloudProps {
@@ -37,7 +41,7 @@ export const WordCloudCard = memo(function WordCloudCard({
   const theme = useMantineTheme();
   const [width, setWidth] = useState(300);
   const [height, setHeight] = useState(300);
-
+  const { translations } = useTranslations();
   wordCloudData = Object.fromEntries(
     Object.entries(wordCloudData)
       .filter(([key, value]) => value.count > 1)
@@ -85,7 +89,7 @@ export const WordCloudCard = memo(function WordCloudCard({
               color: "white",
             }}
           >
-            Word Cloud
+            {translations["Word Cloud"]}
           </Text>
         </Center>
 

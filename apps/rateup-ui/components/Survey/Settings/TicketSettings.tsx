@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Box, Group, Stack, Switch } from "@mantine/core";
 
 import PremiumFeature from "@/components/Premium/PremiumFeature";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -13,7 +14,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   const [enableTicketEmailAlerts, setEnableTicketEmailAlerts] = useState(
     survey?.enableTicketEmailAlerts,
   );
-
+  const { translations } = useTranslations();
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               }}
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>Enable Ticketing</h3>
+              <h3>{translations["Enable Ticketing"]}</h3>
             </Box>
           </Group>
           <Group>
@@ -52,7 +53,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               }}
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>Enable Ticket Email Alerts</h3>
+              <h3>{translations["Enable Ticket Email Alerts"]}</h3>
             </Box>
           </Group>
         </PremiumFeature>

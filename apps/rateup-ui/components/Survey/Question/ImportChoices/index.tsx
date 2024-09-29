@@ -1,3 +1,5 @@
+import { useCallback, useRef } from "react";
+
 import {
   Blockquote,
   Box,
@@ -7,12 +9,14 @@ import {
   NavLink,
   Stack,
 } from "@mantine/core";
-import readXlsxFile from "read-excel-file";
-import classNames from "classnames/bind";
-import styles from "./ImportChoices.module.css";
-import { useCallback, useRef } from "react";
-import { showErrorToast } from "../../../../utils/notifications";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
+import classNames from "classnames/bind";
+import readXlsxFile from "read-excel-file";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { showErrorToast } from "../../../../utils/notifications";
+import styles from "./ImportChoices.module.css";
 
 const cx = classNames.bind(styles);
 
@@ -23,7 +27,7 @@ function ImportChoices({
   handleSave,
 }) {
   const fileButtonResetRef = useRef<() => void>(null);
-
+  const { translations } = useTranslations();
   // checks if excel rows has all surveyLanguages columns.
   const areAllSurveyLanguagesColumnsPresent = useCallback((headerRow) => {
     let result = true;
@@ -47,7 +51,9 @@ function ImportChoices({
           areAllSurveyLanguagesColumnsPresent(headerRow);
         if (!areAllSurveyLangsColsPresent) {
           showErrorToast(
-            "Please add all survey languages columns in excel file",
+            translations[
+              "Please add all survey languages columns in excel file"
+            ],
           );
           return;
         }
@@ -122,7 +128,7 @@ function ImportChoices({
 
   return (
     <Stack className={cx("import-choices-root-div")}>
-      <p>Import Choices from Excel File</p>
+      <p>{translations["Import Choices from Excel File"]}</p>
       <Group gap={"1.5rem"}>
         <FileButton
           resetRef={fileButtonResetRef}
@@ -134,11 +140,15 @@ function ImportChoices({
         <Stack className={cx("blockquote-container")}>
           <Blockquote icon={<IconInfoCircle />} iconSize={"1.25rem"}>
             <span>
-              Column headings in Excel file should be the selected language key.
+              {
+                translations[
+                  "Column headings in Excel file should be the selected language key."
+                ]
+              }
             </span>
             <NavLink
               href={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
-              label="Download Demo .xlsx File"
+              label={translations["Download Demo .xlsx File"]}
               leftSection={<IconDownload size="1rem" stroke={1.5} />}
               download
               active

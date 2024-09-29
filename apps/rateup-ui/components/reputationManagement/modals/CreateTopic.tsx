@@ -1,3 +1,5 @@
+import { useContext } from "react";
+
 import {
   ActionIcon,
   Button,
@@ -10,16 +12,18 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useListState } from "@mantine/hooks";
+import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateRMTopicMutation,
   useDeleteRMTopicMutation,
   useRMTopics,
 } from "../../../backend/reputation_management/topic/topic.query";
-import { useContext } from "react";
 import SelectedTeamContext from "../../../context/SelectedTeam";
 import RateupLoader from "../../Loaders/RateupLoader";
-import { useListState } from "@mantine/hooks";
-import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 
 interface CreateTopicModalProps {
   opened: boolean;
@@ -39,7 +43,7 @@ export function CreateTopicModal({
 }: CreateTopicModalProps) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const [expandedTopics, etHandlers] = useListState([]);
-
+  const { translations } = useTranslations();
   const {
     data: topics,
     isLoading: isTopicsLoading,
@@ -54,7 +58,9 @@ export function CreateTopicModal({
     validate: {
       name: (value) => (value.trim().length > 0 ? null : "Name is required"),
       keywords: (value) =>
-        value.length > 0 ? null : "Atleast one keyword is required",
+        value.length > 0
+          ? null
+          : translations["Atleast one keyword is required"],
     },
   });
 
@@ -78,7 +84,7 @@ export function CreateTopicModal({
   }
 
   if (isTopicsLoading) return <RateupLoader />;
-  if (isTopicsError) return <div>error</div>;
+  if (isTopicsError) return <div>{translations["error"]}</div>;
 
   const sortedEntitiesSelectData = Object.entries(entities)
     .sort((a, b) => b[1].count - a[1].count)
@@ -88,7 +94,7 @@ export function CreateTopicModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Manage Topics"
+      title={translations["Manage Topics"]}
       size="lg"
       styles={{
         title: {
@@ -102,7 +108,7 @@ export function CreateTopicModal({
             flex: 1,
           }}
         >
-          <Text>Existing Topics</Text>
+          <Text>{translations["Existing Topics"]}</Text>
 
           <Stack
             bg="whitesmoke"
@@ -113,7 +119,7 @@ export function CreateTopicModal({
             }}
           >
             {topics.map((topic) => (
-              <Paper p="sm" radius={"md"}>
+              <Paper key={topic.id} p="sm" radius={"md"}>
                 <Group justify="space-between">
                   <Text>{topic.name}</Text>
                   <Group>
@@ -160,16 +166,16 @@ export function CreateTopicModal({
             flex: 1,
           }}
         >
-          <Text>Add Topic</Text>
+          <Text>{translations["Add Topic"]}</Text>
           <TextInput
-            label="Topic Name"
-            placeholder="Enter topic name"
+            label={translations["Topic Name"]}
+            placeholder={translations["Enter topic name"]}
             required
             {...form.getInputProps("name")}
           />
           <MultiSelect
-            label="Keywords"
-            placeholder="Search for keywords to track"
+            label={translations["Keywords"]}
+            placeholder={translations["Search for keywords to track"]}
             required
             data={sortedEntitiesSelectData}
             limit={5}
@@ -184,7 +190,7 @@ export function CreateTopicModal({
             }}
           />
           <Button onClick={handleSubmit} loading={createMutation.isPending}>
-            Add
+            {translations["Add"]}
           </Button>
         </Stack>
       </Group>

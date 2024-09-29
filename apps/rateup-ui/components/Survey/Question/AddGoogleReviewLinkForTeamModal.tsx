@@ -1,13 +1,18 @@
-import { useForm } from "@mantine/form";
-import FormModalLayout from "../../Modal/FormModalLayout";
-import { ActionIcon, Group, Stack, TextInput, Text } from "@mantine/core";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import { useEditTeamMutation } from "../../../backend/team/team.query";
-import { IconEdit } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
 import { useEffect } from "react";
 
+import { ActionIcon, Group, Stack, Text, TextInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { IconEdit } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useEditTeamMutation } from "../../../backend/team/team.query";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import FormModalLayout from "../../Modal/FormModalLayout";
+
 const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       googleLink: team?.googleLink ?? "",
@@ -16,7 +21,7 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
       googleLink: (value) =>
         value.startsWith("https://") || value === ""
           ? null
-          : "Please enter a valid url (https://...)",
+          : translations["Please enter a valid url (https://...)"],
     },
   });
   const [opened, { open, close }] = useDisclosure(false);
@@ -60,14 +65,14 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
         <IconEdit size={"1.5rem"} />
       </ActionIcon>
       <FormModalLayout
-        title="Google Review Link"
+        title={translations["Google Review Link"]}
         opened={opened}
         onClose={() => {
           form.reset();
           close();
         }}
         centered
-        buttonTitle="Save"
+        buttonTitle={translations["Save"]}
         includeCancelButton
         onSubmit={handleSubmit}
         size="md"
@@ -76,7 +81,7 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
           <ContainedTextField
             label={team?.name}
             {...form.getInputProps("googleLink")}
-            placeholder={`Enter google review link for ${team?.name}`}
+            placeholder={`${translations["Enter google review link for"]} ${team?.name}`}
           />
         </Stack>
       </FormModalLayout>

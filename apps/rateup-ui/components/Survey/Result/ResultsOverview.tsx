@@ -21,6 +21,7 @@ import { Range } from "react-date-range";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
@@ -72,7 +73,7 @@ const ResultsOverview = ({ surveyId }) => {
     error: QError,
     data: questions,
   } = useQuestions(surveyId);
-
+  const { translations } = useTranslations();
   const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
@@ -180,7 +181,9 @@ const ResultsOverview = ({ surveyId }) => {
   }
 
   if (!isAllowedQnsPresent) {
-    return <NothingFound text="No Data available for Analysis" />;
+    return (
+      <NothingFound text={translations["No Data available for Analysis"]} />
+    );
   }
 
   const prepareData = (
@@ -326,7 +329,7 @@ const ResultsOverview = ({ surveyId }) => {
             </PaperLayout>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
-                <Heading subtitle="NPS Overview" />
+                <Heading subtitle={translations["NPS Overview"]} />
                 <PaperLayout p={"xl"}>
                   {chartData
                     ?.filter(
@@ -358,7 +361,7 @@ const ResultsOverview = ({ surveyId }) => {
                 </PaperLayout>
               </>
             )}
-            <Heading subtitle="Question Wise Overview" />
+            <Heading subtitle={translations["Question Wise Overview"]} />
             <PaperLayout p={"xl"}>
               {chartData
                 ?.filter(
@@ -470,7 +473,7 @@ const ResultsOverview = ({ surveyId }) => {
           </Stack>
         </Stack>
       ) : (
-        <NothingFound text="No responses yet" />
+        <NothingFound text={translations["No responses yet"]} />
       )}
     </Stack>
   );

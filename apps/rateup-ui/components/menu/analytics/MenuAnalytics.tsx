@@ -1,11 +1,15 @@
 import React from "react";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { Stack, Group, Badge, Text, RingProgress } from "@mantine/core";
-import Heading from "../../styled/Heading/Heading";
-import { useGetSurveyStatsBySurveyTeamMapId } from "../../../backend/surveys/surveys.query";
-import RateupLoader from "../../Loaders/RateupLoader";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import Link from "next/link";
+
+import { Badge, Group, RingProgress, Stack, Text } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useGetSurveyStatsBySurveyTeamMapId } from "../../../backend/surveys/surveys.query";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import RateupLoader from "../../Loaders/RateupLoader";
+import Heading from "../../styled/Heading/Heading";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 const MenuAnalytics = ({
   surveyTeamMapId,
@@ -13,6 +17,7 @@ const MenuAnalytics = ({
   surveyId,
   subscription,
 }) => {
+  const { translations } = useTranslations();
   const {
     data: survayStats,
     isPending,
@@ -22,22 +27,22 @@ const MenuAnalytics = ({
 
   const surveyStatsCountArray = [
     {
-      label: "Visited",
+      label: translations["Visited"],
       count: survayStats?.visited ?? 0,
     },
     {
-      label: "Started",
+      label: translations["Started"],
       count: survayStats?.started ?? 0,
     },
     {
-      label: "Completed",
+      label: translations["Completed"],
       count: survayStats?.completed ?? 0,
     },
   ];
   return (
     <Stack px="lg" py={"lg"}>
       <Stack gap={0}>
-        <Heading subtitle="Menu Insights" />
+        <Heading subtitle={translations["Menu Insights"]} />
         <PaperLayout w={300} h={120} mb={"xl"} mt={"sm"} ml={"xs"}>
           <Stack align={"center"} justify="center" h={"100%"}>
             <Text
@@ -51,7 +56,7 @@ const MenuAnalytics = ({
         </PaperLayout>
         {!subscription && (
           <>
-            <Heading subtitle="Your Free Quota" />
+            <Heading subtitle={translations["Your Free Quota"]} />
             <RingProgress
               sections={[
                 {
@@ -75,11 +80,11 @@ const MenuAnalytics = ({
         {surveyTeamMapId && (
           <>
             <Group w={"100%"} justify="space-between" my={"md"}>
-              <Heading subtitle="Survey Insights" />
+              <Heading subtitle={translations["Survey Insights"]} />
               <Link
                 href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/surveys/${surveyId}?tab=Result`}
               >
-                <RateupButtonPrimary title="More Info" />
+                <RateupButtonPrimary title={translations["More Info"]} />
               </Link>
             </Group>
             <Group justify="space-between">

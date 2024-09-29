@@ -1,34 +1,37 @@
+import React, { useEffect, useState } from "react";
+
 import {
   Box,
   Button,
   Flex,
   Group,
   Menu,
+  rem,
   Stack,
   Text,
-  rem,
 } from "@mantine/core";
-import { ReviewWithAnalysis } from "../../../backend/reputation_management/review/review.api";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import SearchBox from "../../input/SearchBox";
-import { useEffect, useState } from "react";
-import { ReviewPlatform, SortType } from "../../../types/enums";
-import { GoogleIcon } from "../../Button/GoogleIcon";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconChevronDown,
-  IconTicket,
   IconStarFilled,
+  IconTicket,
 } from "@tabler/icons-react";
-import { ratingColorMap } from "../InsightCards/RatingSummaryCard";
-import { SortableField } from "../../input/SortableField";
-import React from "react";
-import { FixedSizeList } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
-import classes from "./RM_Review.module.css";
-import { FilterSideBar } from "../misc/FilterSideBar";
-import { useDisclosure } from "@mantine/hooks";
-import CreateTicketModal from "../../Tickets/CreateTicketModal";
+import { FixedSizeList } from "react-window";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { ReviewWithAnalysis } from "../../../backend/reputation_management/review/review.api";
+import { ReviewPlatform, SortType } from "../../../types/enums";
 import { TicketType } from "../../../utils/enums/ticket";
+import { GoogleIcon } from "../../Button/GoogleIcon";
+import SearchBox from "../../input/SearchBox";
+import { SortableField } from "../../input/SortableField";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
+import CreateTicketModal from "../../Tickets/CreateTicketModal";
+import { ratingColorMap } from "../InsightCards/RatingSummaryCard";
+import { FilterSideBar } from "../misc/FilterSideBar";
+import classes from "./RM_Review.module.css";
 
 interface RM_ReviewProps {
   filteredReviews: ReviewWithAnalysis[];
@@ -43,7 +46,7 @@ export function RM_Review({
   selectedTeamId,
 }: RM_ReviewProps) {
   const [searchTerm, setSearchTerm] = useState("");
-
+  const { translations } = useTranslations();
   if (!filteredReviews) return <div>loading</div>;
 
   const searchFilteredReviews =
@@ -80,7 +83,7 @@ export function RM_Review({
       >
         <Stack maw="100%" h={"100%"}>
           <SearchBox
-            placeholder="Search reviews"
+            placeholder={translations["Search reviews"]}
             searchText={searchTerm}
             setSearchText={setSearchTerm}
           />
@@ -105,6 +108,7 @@ const RenderReviewTable = function RenderReviewTable({
     sortKey: "reviewedAt",
     sortType: SortType.DESC,
   });
+  const { translations } = useTranslations();
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -151,10 +155,10 @@ const RenderReviewTable = function RenderReviewTable({
         }}
       >
         <SortableField sortKey={"platform"} sort={sort} setSort={setSort}>
-          Platform
+          {translations["Platform"]}
         </SortableField>
         <SortableField sortKey={"rating"} sort={sort} setSort={setSort}>
-          Rating
+          {translations["Rating"]}
         </SortableField>
         <SortableField
           sortKey={"review"}
@@ -164,10 +168,10 @@ const RenderReviewTable = function RenderReviewTable({
             flex: 1,
           }}
         >
-          Review
+          {translations["Review"]}
         </SortableField>
         <SortableField sortKey={"reviewedAt"} sort={sort} setSort={setSort}>
-          Date
+          {translations["Date"]}
         </SortableField>
         <Text style={{ minWidth: "140px" }}></Text>
       </Flex>
@@ -291,7 +295,7 @@ export function RatingBadge({ rating }: { rating: number }) {
 
 function ActionMenu({ reviewId, setSelectedReviewId, ticketData }) {
   const ticketExist = ticketData?.length > 0;
-
+  const { translations } = useTranslations();
   return (
     <Stack px="sm">
       <Menu
@@ -311,7 +315,7 @@ function ActionMenu({ reviewId, setSelectedReviewId, ticketData }) {
           >
             <Text size="xs" c="dark.5">
               {" "}
-              Select Action{" "}
+              {translations["Select Action"]}{" "}
             </Text>
           </Button>
         </Menu.Target>
@@ -331,7 +335,9 @@ function ActionMenu({ reviewId, setSelectedReviewId, ticketData }) {
               <IconTicket style={{ width: rem(14), height: rem(14) }} />
             }
           >
-            {ticketExist ? " View Ticket" : "Create Ticket"}
+            {ticketExist
+              ? translations["View Ticket"]
+              : translations["Create Ticket"]}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

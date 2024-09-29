@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 
 import { Box, Button, Center, Flex, Loader } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useGetLandingPageWithShortId } from "../../../backend/landingPage/landingPage.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { lexend } from "../../../utils/fonts";
@@ -15,7 +17,7 @@ function LandingPageEdtior() {
   const router = useRouter();
   const shortUrlId = router.query.shortUrlId;
   const tab = router.query?.tab;
-
+  const { translations } = useTranslations();
   const defaultActiveTab = tab ? tab : "edit";
   const { isPending, isError, data } = useGetLandingPageWithShortId(shortUrlId);
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
@@ -39,7 +41,7 @@ function LandingPageEdtior() {
   if (isError) {
     componentToBeRendered = (
       <Center w={"100%"} h={"100%"}>
-        <p>Unable to get data, please try again later.</p>
+        <p>{translations["Unable to get data, please try again later."]}</p>
       </Center>
     );
   }

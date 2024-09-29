@@ -13,6 +13,8 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
@@ -140,10 +142,12 @@ const Result = ({
       <Box className={styles["result-page-tabs-container"]}>
         <ScrollArea offsetScrollbars={true}>
           <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
-            {!flowId && <Tabs.Tab value="overview">Overview</Tabs.Tab>}
-            <Tabs.Tab value="responses">Responses</Tabs.Tab>
-            <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
-            <Tabs.Tab value="comparison">Comparison</Tabs.Tab>
+            {!flowId && (
+              <Tabs.Tab value="overview">{translations["Overview"]}</Tabs.Tab>
+            )}
+            <Tabs.Tab value="responses">{translations["Response"]}</Tabs.Tab>
+            <Tabs.Tab value="analytics">{translations["Analytics"]}</Tabs.Tab>
+            <Tabs.Tab value="comparison">{translations["Comparison"]}</Tabs.Tab>
           </Tabs.List>
         </ScrollArea>
       </Box>
@@ -199,7 +203,7 @@ function EncryptionPasswordModal({
   const {
     user: { encryptionKeys },
   } = useUser();
-
+  const { translations } = useTranslations();
   const router = useRouter();
   const [encryptionpassword, setEncryptionPassword] = useState("");
   async function onSubmitPassword() {
@@ -212,7 +216,7 @@ function EncryptionPasswordModal({
       pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);
       setPassword(encryptionpassword);
     } else {
-      showErrorToast("Invalid Password");
+      showErrorToast(translations["Invalid Password"]);
     }
   }
 
@@ -225,26 +229,28 @@ function EncryptionPasswordModal({
       centered
       opened={passwordModalOpened}
       onClose={close}
-      title="Enter the password"
+      title={translations["Enter the password"]}
       withCloseButton={false}
     >
       <Stack>
-        <Text>Enter the password to view the survey data</Text>
+        <Text>
+          {translations["Enter the password to view the survey data"]}
+        </Text>
         <ContainedPasswordInput
-          label="Password"
+          label={translations["Password"]}
           value={encryptionpassword}
           onChange={(e) => setEncryptionPassword(e.target.value)}
         />
         <Flex style={{ justifyContent: "center", gap: "40px" }}>
           <RateupButtonSecondary
-            title="Go back"
+            title={translations["Go back"]}
             leftIcon={<IconArrowLeft />}
             onClick={() => {
               handleGoback();
             }}
           />
           <RateupButtonBlue
-            title="Submit"
+            title={translations["Submit"]}
             onClick={() => {
               onSubmitPassword();
             }}

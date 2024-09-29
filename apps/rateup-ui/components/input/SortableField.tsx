@@ -1,8 +1,11 @@
-import { Group, Tooltip, GroupProps } from "@mantine/core";
+import { Group, GroupProps, Tooltip } from "@mantine/core";
 import {
   IconTriangleFilled,
   IconTriangleInvertedFilled,
 } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { SortType } from "../../types/enums";
 
 interface SortableFieldProps {
@@ -18,7 +21,7 @@ export function SortableField({
 }: SortableFieldProps & GroupProps) {
   let icon;
   const { children, style, ...rest } = props;
-
+  const { translations } = useTranslations();
   if (sort.sortKey === sortKey) {
     switch (sort.sortType) {
       case SortType.ASC:
@@ -30,7 +33,7 @@ export function SortableField({
     }
   }
   return (
-    <Tooltip label={`Click to sort by field`} openDelay={1000}>
+    <Tooltip label={translations["Click to sort by field"]} openDelay={1000}>
       <Group
         wrap="nowrap"
         gap={"xs"}

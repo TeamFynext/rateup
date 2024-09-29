@@ -1,6 +1,9 @@
-import { Stack, Group, Title, ActionIcon, Image, Tooltip } from "@mantine/core";
-import { SurveyType } from "../../../types/enums";
+import { ActionIcon, Group, Image, Stack, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { SurveyType } from "../../../types/enums";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import IFrameModal from "./IFrameModal";
 
@@ -38,11 +41,12 @@ export function ShareMethods({
         break;
     }
   }
+  const { translations } = useTranslations();
 
   return (
     <Stack style={{ minWidth: 300, flex: 1 }} p="md">
       <Title order={4} style={{ textAlign: "center" }}>
-        How would you like to survey people?
+        {translations["How would you like to survey people?"]}
       </Title>
       <Group justify="center" gap="xl">
         <ActionIcon
@@ -53,7 +57,7 @@ export function ShareMethods({
           style={{ background: "none" }}
         >
           <Tooltip
-            label="Share via Email"
+            label={translations["Share via Email"]}
             withArrow
             color="var(--light-grey-color)"
             position="bottom"
@@ -77,7 +81,7 @@ export function ShareMethods({
           style={{ background: "none" }}
         >
           <Tooltip
-            label="Share via WhatsApp"
+            label={translations["Share via WhatsApp"]}
             withArrow
             color="var(--light-grey-color)"
             position="bottom"
@@ -101,7 +105,7 @@ export function ShareMethods({
           style={{ background: "none" }}
         >
           <Tooltip
-            label="Share via Facebook"
+            label={translations["Share via Facebook"]}
             withArrow
             color="var(--light-grey-color)"
             position="bottom"
@@ -126,7 +130,7 @@ export function ShareMethods({
             style={{ background: "none" }}
           >
             <Tooltip
-              label="Embed as iframe"
+              label={translations["Embed as iframe"]}
               withArrow
               color="var(--light-grey-color)"
               position="bottom"
@@ -145,7 +149,7 @@ export function ShareMethods({
         )}
       </Group>
       <FormModalLayout
-        title="Generate IFrame"
+        title={translations["Generate IFrame"]}
         opened={openedIframe}
         onClose={closeIframe}
         size="lg"

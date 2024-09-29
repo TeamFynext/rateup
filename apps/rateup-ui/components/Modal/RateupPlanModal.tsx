@@ -1,44 +1,52 @@
 import React, { useEffect, useState } from "react";
-import FormModalLayout from "./FormModalLayout";
+
+import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { z } from "zod";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useRateupPaymentsPlanMutation } from "../../backend/payment/payment.query";
+import { PaymentPlans } from "../../pages/admin/rateup";
+import { PaymentType } from "../../types/enums";
+import { widgetIds } from "../../utils/constants/forms";
+import { getSampleSubscriptionFeatures } from "../../utils/subscription/subscription";
 import {
   ContainedJsonInput,
   ContainedSelection,
   ContainedTagInput,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
-import { PaymentType } from "../../types/enums";
-import { widgetIds } from "../../utils/constants/forms";
-import { notifications } from "@mantine/notifications";
-import { getSampleSubscriptionFeatures } from "../../utils/subscription/subscription";
-import { useRateupPaymentsPlanMutation } from "../../backend/payment/payment.query";
-import { PaymentPlans } from "../../pages/admin/rateup";
+import FormModalLayout from "./FormModalLayout";
 
 const RateupPlanModal = ({ opened, close, planList }) => {
   const [checked, setChecked] = useState(false);
+  const { translations } = useTranslations();
   const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
   const schema = z.object({
-    name: z.string().trim().min(1, { message: "Name should Not Be empty" }),
+    name: z
+      .string()
+      .trim()
+      .min(1, { message: translations["Name should Not Be empty"] }),
     displayName: z
       .string()
       .trim()
-      .min(1, { message: "Display Name should Not Be empty" }),
+      .min(1, { message: translations["Display Name should Not Be empty"] }),
     displayWidgetId: z.string().optional(),
     planType: z
       .string()
       .trim()
-      .min(1, { message: "Plan Type should Not Be empty" }),
+      .min(1, { message: translations["Plan Type should Not Be empty"] }),
     paymentPlanId: z.string().optional(),
     description: z
       .array(z.string())
-      .min(1, { message: "Description should Not Be empty" }),
+      .min(1, { message: translations["Description should Not Be empty"] }),
     features: z
       .string()
       .trim()
-      .min(1, { message: "Features should Not Be empty" }),
+      .min(1, { message: translations["Features should Not Be empty"] }),
   });
 
   const form = useForm({
@@ -91,9 +99,9 @@ const RateupPlanModal = ({ opened, close, planList }) => {
     notifications.show({
       id: "load-data",
       color: "teal",
-      title: "Creating RateUp Plan",
+      title: translations["Creating RateUp Plan"],
       loading: true,
-      message: "Hold.. your data is getting created...",
+      message: translations["Hold.. your data is getting created..."],
       autoClose: 2000,
     });
     setChecked(false);
@@ -102,7 +110,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
   return (
     <FormModalLayout
       opened={opened}
-      title={"Add Rateup Plan"}
+      title={translations["Add Rateup Plan"]}
       onClose={() => {
         close();
         form?.reset();
@@ -116,8 +124,8 @@ const RateupPlanModal = ({ opened, close, planList }) => {
     >
       <SimpleGrid cols={2}>
         <ContainedSelection
-          label="Razorpay/Stripe Payment Plan"
-          placeholder="Payment Plan"
+          label={translations["Razorpay/Stripe Payment Plan"]}
+          placeholder={translations["Payment Plan"]}
           data={planList}
           allowDeselect
           onChange={(value) => {
@@ -142,27 +150,27 @@ const RateupPlanModal = ({ opened, close, planList }) => {
           disabled={!planList?.length}
         />
         <ContainedTextField
-          label="Name"
-          placeholder="Name"
+          label={translations["Name"]}
+          placeholder={translations["Name"]}
           withAsterisk
           {...form.getInputProps("name")}
         />
         <ContainedTextField
-          label="Dispaly Name"
-          placeholder="Display Name"
+          label={translations["Dispaly Name"]}
+          placeholder={translations["Display Name"]}
           withAsterisk
           {...form.getInputProps("displayName")}
         />
         <ContainedSelection
-          label="Display Widget Id"
-          placeholder="Widget Id"
+          label={translations["Display Widget Id"]}
+          placeholder={translations["Widget Id"]}
           data={widgetIds}
           allowDeselect
           {...form.getInputProps("displayWidgetId")}
         />
         <ContainedSelection
-          label="Plan Type"
-          placeholder="Plan Type"
+          label={translations["Plan Type"]}
+          placeholder={translations["Plan Type"]}
           data={Object.values(PaymentType)}
           defaultValue="BASE"
           withAsterisk
@@ -170,8 +178,8 @@ const RateupPlanModal = ({ opened, close, planList }) => {
           {...form.getInputProps("planType")}
         />
         <ContainedTagInput
-          label="Description"
-          placeholder="Type Description and press enter"
+          label={translations["Description"]}
+          placeholder={translations["Type Description and press enter"]}
           withAsterisk
           {...form.getInputProps("description")}
         />
@@ -179,7 +187,9 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       <Stack gap={3} py="xs">
         <Group justify="space-between">
           <Group gap={0}>
-            <Text fz={"xs"}>Features - (give data in json format)</Text>
+            <Text fz={"xs"}>
+              {translations["Features - (give data in json format)"]}
+            </Text>
             <Text fz={"xs"} c="red">
               *
             </Text>
@@ -190,11 +200,11 @@ const RateupPlanModal = ({ opened, close, planList }) => {
             onChange={setChecked}
             variant="light"
           >
-            Sample Feature
+            {translations["Sample Feature"]}
           </Chip>
         </Group>
         <ContainedJsonInput
-          placeholder="Features"
+          placeholder={translations["Features"]}
           withAsterisk
           {...form.getInputProps("features")}
         />

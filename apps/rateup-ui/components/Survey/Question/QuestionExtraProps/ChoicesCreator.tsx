@@ -41,6 +41,7 @@ import { ImageCropModal } from "@/components/Modal/ImageCropModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import SurveyContext from "@/context/SurveyContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
@@ -119,13 +120,13 @@ export function ChoicesCreator({
     },
     validate: zodResolver(choiceSchema),
   });
-
+  const { translations } = useTranslations();
   const choices = form.values.choices?.[selectedLanguage] || [];
   const features = form.values.features?.[selectedLanguage] || {
     other: {
       isEnabled: false,
-      title: "Other",
-      placeholder: `Please enter your Other input`,
+      title: translations["Other"],
+      placeholder: translations["Please enter your Other input"],
     },
   };
 
@@ -198,7 +199,9 @@ export function ChoicesCreator({
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      showErrorToast(
+        `${translations["Max file size is"]} ${MAX_FILE_SIZE_IN_MB} MB`,
+      );
       return;
     }
     setSelectedInputImage({
@@ -278,8 +281,8 @@ export function ChoicesCreator({
             gap={4}
           >
             <ContainedTextField
-              placeholder="Enter title here"
-              label={"Title"}
+              placeholder={translations["Enter title here"]}
+              label={translations["Title"]}
               withAsterisk
               rightSection={
                 maxCharCount && (
@@ -294,8 +297,8 @@ export function ChoicesCreator({
             {surveyType !== SurveyType.Web && (
               <>
                 <ContainedTextField
-                  placeholder="Enter description here"
-                  label={"Description"}
+                  placeholder={translations["Enter description here"]}
+                  label={translations["Description"]}
                   rightSection={
                     MAX_DESCRIPTION_COUNT && (
                       <LengthTracker
@@ -365,18 +368,20 @@ export function ChoicesCreator({
                 {(props) => (
                   <Button {...props} variant="outline">
                     <Text fz="sm" mr={4}>
-                      {selectedImageFile?.name ?? "Select Image"}
+                      {selectedImageFile?.name ?? translations["Select Image"]}
                     </Text>
                     <IconUpload size={18} />
                   </Button>
                 )}
               </FileButton>
-              {fileError && <Text c={"red"}>Image Is Required</Text>}
+              {fileError && (
+                <Text c={"red"}>{translations["Image Is Required"]}</Text>
+              )}
             </Stack>
           )}
           <Button type="submit" display={"none"} ref={buttonRef} />
           <RateupButtonSecondary
-            title={"Add choice"}
+            title={translations["Add choice"]}
             size="sm"
             variant={image ? "filled" : "outline"}
             leftIcon={<IconPlus size="1rem" />}
@@ -391,7 +396,7 @@ export function ChoicesCreator({
           <Stack>
             <PaperLayout w={"fit-content"}>
               <Switch
-                label={"Enable Other"}
+                label={translations["Enable Other"]}
                 checked={features?.other?.isEnabled}
                 onChange={(e) => {
                   form.setFieldValue("features", {
@@ -411,7 +416,7 @@ export function ChoicesCreator({
             {features?.other?.isEnabled && (
               <>
                 <ContainedTextArea
-                  label="Title for 'Other'"
+                  label={translations["Title for 'Other'"]}
                   styles={{
                     input: {
                       border: "none",
@@ -435,7 +440,7 @@ export function ChoicesCreator({
                   value={features?.other?.title}
                 />
                 <ContainedTextArea
-                  label="Placeholder text for other input"
+                  label={translations["Placeholder text for other input"]}
                   styles={{
                     input: {
                       border: "none",
@@ -530,7 +535,7 @@ function Choice({
   const resetRef = useRef<() => void>(null);
   let newWeightage = choice?.weightage;
   const choiceResetRef = useRef<() => void>(null);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (form?.values?.choices && isSubmited) {
       buttonRef?.current?.click();
@@ -674,7 +679,8 @@ function Choice({
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
       showErrorToast(
-        "Error converting file to Base64:" + JSON.stringify(error),
+        translations["Error converting file to Base64:"] +
+          JSON.stringify(error),
         "file-converting",
       );
     }
@@ -733,12 +739,21 @@ function Choice({
             }}
           >
             <>
-              <Text>Title: {choice.value?.title}</Text>
+              <Text>
+                {translations["Title: "]}
+                {choice.value?.title}
+              </Text>
               {choice.value?.description && (
-                <Text>Description: {choice.value?.description}</Text>
+                <Text>
+                  {translations["Description: "]}
+                  {choice.value?.description}
+                </Text>
               )}
               {choice.value?.metadata && (
-                <Text>Metadata: {choice.value?.metadata}</Text>
+                <Text>
+                  {translations["Metadata: "]}
+                  {choice.value?.metadata}
+                </Text>
               )}
             </>
           </Box>
@@ -772,7 +787,7 @@ function Choice({
       <FormModalLayout
         opened={openedEditModal}
         onClose={closeEditModal}
-        title="Edit Choice"
+        title={translations["Edit Choice"]}
         centered
       >
         <Stack justify="center">
@@ -783,8 +798,8 @@ function Choice({
             gap={4}
           >
             <ContainedTextField
-              placeholder="Enter title here"
-              label={"Title"}
+              placeholder={translations["Enter title here"]}
+              label={translations["Title"]}
               withAsterisk
               rightSection={
                 maxCharCount && (
@@ -799,8 +814,8 @@ function Choice({
             {surveyType !== SurveyType.Web && (
               <>
                 <ContainedTextField
-                  placeholder="Enter description here"
-                  label={"Description"}
+                  placeholder={translations["Enter description here"]}
+                  label={translations["Description"]}
                   rightSection={
                     MAX_DESCRIPTION_COUNT && (
                       <LengthTracker
@@ -812,8 +827,8 @@ function Choice({
                   {...choiceForm.getInputProps("description")}
                 />
                 <ContainedTextField
-                  placeholder="Enter metadata here"
-                  label={"Metadata"}
+                  placeholder={translations["Enter metadata here"]}
+                  label={translations["Metadata"]}
                   rightSection={
                     MAX_METADATA_COUNT && (
                       <LengthTracker
@@ -855,7 +870,7 @@ function Choice({
             </Stack>
           )}
           <RateupButtonBlue
-            title="Update Choice"
+            title={translations["Update Choice"]}
             onClick={handleEditChoice}
             loading={fileUploadLoading}
           />
@@ -863,9 +878,13 @@ function Choice({
       </FormModalLayout>
       <ConfirmationModal
         opened={opened}
-        confirmLabel="Yes"
-        headerTitle="Warning"
-        headerLabel="Editing the choice may affect previous result count.Do you still want to continue?"
+        confirmLabel={translations["Yes"]}
+        headerTitle={translations["Warning"]}
+        headerLabel={
+          translations[
+            "Editing the choice may affect previous result count.Do you still want to continue?"
+          ]
+        }
         onClose={close}
         onConfirm={openEditModal}
       />

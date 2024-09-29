@@ -15,6 +15,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { fallbackImage } from "../../../../../utils/constants";
@@ -53,7 +55,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, name: e.currentTarget.value });
   };
-
+  const { translations } = useTranslations();
   const handleJobTitleChange = (e) => {
     updateResponse({ ...response, jobTitle: e.currentTarget.value });
   };
@@ -85,7 +87,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast("Error uploading icon. Please try again.");
+        showErrorToast(translations["Error uploading icon. Please try again."]);
         setIsUploading(false);
       });
   }, [file]);
@@ -119,7 +121,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         </Text>
         <FormPaperLayout>
           <TextInput
-            placeholder="Enter name"
+            placeholder={translations["Enter name"]}
             value={response?.name}
             onChange={handleNameChange}
             style={{ maxWidth: "400px" }}
@@ -138,7 +140,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           </Text>
           <FormPaperLayout>
             <TextInput
-              placeholder="Enter job title"
+              placeholder={translations["Enter job title"]}
               value={response?.jobTitle}
               onChange={handleJobTitleChange}
               style={{ maxWidth: "400px" }}
@@ -157,7 +159,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         </Text>
         <FormPaperLayout>
           <Textarea
-            placeholder="Enter testimonial"
+            placeholder={translations["Enter testimonial"]}
             value={response?.testimonial}
             onChange={handleTestimonialChange}
             style={{ maxWidth: "400px" }}
@@ -186,7 +188,8 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <>
           <Stack gap={"xs"}>
             <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
-              {features?.[selectedLanguage]?.photoQn || "Upload Photo"}
+              {features?.[selectedLanguage]?.photoQn ||
+                translations["Upload Photo"]}
             </Text>
             <Group>
               <Box
@@ -195,7 +198,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 h={150}
               >
                 <FormModalLayout
-                  title="Camera"
+                  title={translations["Camera"]}
                   onClose={close}
                   opened={opened}
                   centered
@@ -226,11 +229,14 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                   disabled={isPreview}
                 >
                   {(props) => (
-                    <RateupButtonBlue {...props} title="Browse from device" />
+                    <RateupButtonBlue
+                      {...props}
+                      title={translations["Browse from device"]}
+                    />
                   )}
                 </FileButton>
                 <RateupButtonBlue
-                  title="Capture Photo"
+                  title={translations["Capture Photo"]}
                   onClick={() => open()}
                   disabled={isPreview}
                 />
