@@ -5,6 +5,7 @@ import {
   IntegratedApps,
   LogicAction,
   LogicCondition,
+  LogicConditionComponentLevel,
   LoyaltyCampaignType,
   MenuItemPriceType,
   NPSWeightage,
@@ -916,9 +917,22 @@ export interface FlowLogicCondition {
   condition: LogicCondition;
   response: any;
 }
+export interface FlowLogicConditionComponentLevel {
+  questionId: string;
+  condition: LogicConditionComponentLevel;
+  response: any;
+}
 export interface FlowLogicJump {
   conditions: Array<FlowLogicCondition>;
   action: LogicAction;
+}
+export interface LogicActionComponentLevel {
+  success: LogicAction;
+  fail: LogicAction;
+}
+export interface FlowLogicJumpComponentLevel {
+  conditions: Array<FlowLogicConditionComponentLevel>;
+  action: LogicActionComponentLevel;
 }
 
 type Profile = {
