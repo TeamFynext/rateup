@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
 import { useImmer } from "use-immer";
 
+import useTranslations from "@/dictionaries/useTranslation";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 
 import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
@@ -38,7 +39,7 @@ import { EditFlowContext } from "./EditFlow/EditFlowContext";
 import styles from "./FlowPage.module.css";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 
-function FlowPage(translations) {
+function FlowPage() {
   const router = useRouter();
   const { tab: tabView } = router.query;
   const { dbFlowId } = router.query as { dbFlowId: string };
@@ -57,6 +58,7 @@ function FlowPage(translations) {
   const [selectedLang, setSelectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
   const { update } = useRouteParams();
+  const { translations } = useTranslations();
 
   // initial data
   useEffect(() => {
