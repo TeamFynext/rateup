@@ -19,7 +19,7 @@
   height: 100vh;
   height: 100dvh;
   overflow-x: hidden;
-  background: light-dark(var(--light-grey-color-6), var(--mantine-color-body));
+  /* background: light-dark(var(--light-grey-color-6), var(--mantine-color-body)); */
 }
 
 .content-container > div {
