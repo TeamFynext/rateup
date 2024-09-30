@@ -604,7 +604,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
     ].includes(question.type as QuestionType)
       ? question.required
       : undefined;
-    Object.entries(question.extraConfig).forEach(([key, value]) => {
+    Object.entries(question?.extraConfig ?? {}).forEach(([key, value]) => {
       questionElement[key] = value;
     });
   }
