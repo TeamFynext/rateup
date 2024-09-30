@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import {
   Divider,
   Flex,
@@ -14,6 +12,8 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
 import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { QuestionType as Q } from "../../../../types/enums";
 import { extractText, isHtml } from "../../../../utils";
@@ -63,7 +63,7 @@ function ConfirmResponsesModal({
           {survey.questions
             .filter((q) => questionsHistory.includes(q.id))
             .map((question) => {
-              const response = responses.find(
+              const response: QuestionResponse = responses.find(
                 (response) => response.questionId === question.id,
               );
               return (
@@ -263,11 +263,15 @@ function ConfirmResponsesModal({
                             if (!answers) return null;
                             return (
                               <Stack>
-                                {Object.values(answers).map((ad, index) => (
-                                  <Text fw="300" key={index}>
-                                    {ad}
-                                  </Text>
-                                ))}
+                                {Object.values(answers).map(
+                                  (ad: any, index: number) => {
+                                    return (
+                                      <Text fw="300" key={index}>
+                                        {ad}
+                                      </Text>
+                                    );
+                                  },
+                                )}
                               </Stack>
                             );
                           case Q.MCQGrid:
@@ -276,11 +280,15 @@ function ConfirmResponsesModal({
                             )[0];
                             return (
                               <Stack>
-                                {Object.entries(results).map(([q, res]) => (
-                                  <Text fw="300" key={q}>
-                                    {q}: {res?.value}
-                                  </Text>
-                                ))}
+                                {Object.entries(results).map(
+                                  ([q, res]: any) => {
+                                    return (
+                                      <Text fw="300" key={q}>
+                                        {q}: {res?.value}
+                                      </Text>
+                                    );
+                                  },
+                                )}
                               </Stack>
                             );
                           default:

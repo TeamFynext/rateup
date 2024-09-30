@@ -105,7 +105,12 @@ function EditFlow() {
         "Only 50 components in a screen",
         "error-max-screen-elements",
       );
-    let qsType = questionTypeToFlowFormElementType(type as QuestionType);
+    let qsType = [
+      WaFlowFormElementType.nonInputText,
+      WaFlowFormElementType.image,
+    ].includes(type as WaFlowFormElementType)
+      ? type
+      : questionTypeToFlowFormElementType(type as QuestionType);
     if (
       [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(
         type as QuestionType,

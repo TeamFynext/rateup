@@ -1,8 +1,10 @@
-import { Box, Flex, Group, Transition, useMantineTheme } from "@mantine/core";
 import { useContext, useEffect, useState } from "react";
-import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext";
-import { getFlowJsonWithTitleAndDescription } from "../../../../utils/whatsapp/flow.utils";
+
+import { Box, Flex, Group, Transition, useMantineTheme } from "@mantine/core";
+
 import { WaFlowScreen } from "../../../../types/global";
+import { getFlowJsonWithTitleAndDescription } from "../../../../utils/whatsapp/flow.utils";
+import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext";
 import { FlowChatPreview } from "./FlowChatPreview";
 
 interface PreviewProps {
@@ -14,7 +16,9 @@ export function PreviewPanel({ previewOpened }: PreviewProps) {
   const [currentScreen, setCurrentScreen] = useState<WaFlowScreen>();
 
   useEffect(() => {
-    if (flowJson.screens.length === 0) return;
+    if (!flowJson || !flowJson.screens || flowJson.screens?.length === 0)
+      return;
+
     const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
     if (typeof screenNumber === "number")
       setCurrentScreen(json.screens?.[screenNumber ?? 0]);

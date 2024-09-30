@@ -4,6 +4,9 @@ import { useRouter } from "next/router";
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
 import { useImmer } from "use-immer";
 
+import useTranslations from "@/dictionaries/useTranslation";
+import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
+
 import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../../../backend/surveys/surveys.query";
 import {
@@ -15,13 +18,15 @@ import { useRouteParams } from "../../../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import SurveyContext from "../../../../context/SurveyContext";
 import { useUser } from "../../../../context/UserContext";
-import { WaFlowStatus } from "../../../../types/enums";
+import { QuestionType, WaFlowStatus } from "../../../../types/enums";
 import { WaFlowJson, WaFlowMap } from "../../../../types/global";
 import { UserRole } from "../../../../utils/enums";
 import { showErrorToast } from "../../../../utils/notifications";
 import {
   getFlowElementJsonFromQuestion,
+  getNewScreenObj,
   getQuestionFromFlowFormElementName,
+  getScreenObjById,
   updateFlowJsonNavigationAndDataPassing,
 } from "../../../../utils/whatsapp/flow.utils";
 import RateupLoader from "../../../Loaders/RateupLoader";
@@ -34,7 +39,7 @@ import { EditFlowContext } from "./EditFlow/EditFlowContext";
 import styles from "./FlowPage.module.css";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 
-function FlowPage(translations) {
+function FlowPage() {
   const router = useRouter();
   const { tab: tabView } = router.query;
   const { dbFlowId } = router.query as { dbFlowId: string };
@@ -53,6 +58,7 @@ function FlowPage(translations) {
   const [selectedLang, setSelectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
   const { update } = useRouteParams();
+  const { translations } = useTranslations();
 
   // initial data
   useEffect(() => {
@@ -95,7 +101,38 @@ function FlowPage(translations) {
         draft.questions = questions;
       });
       updateFlowJson((draft) => {
-        for (const screen of draft.screens) {
+        if (!flowJson.screens && questions?.length > 2) {
+          {
+            let id = getUniqueRandomAlphaId(6, []);
+            draft.screens = [
+              getNewScreenObj({
+                screenId: id,
+                screenTitle: "screen1",
+                footerBtnLabel: "Next",
+              }),
+            ];
+            updateFlowJsonNavigationAndDataPassing(draft, flow);
+            questions
+              ?.filter((data) =>
+                Object.values(QuestionType).includes(data.type as QuestionType),
+              )
+              .forEach((newQ) => {
+                const newElement = {
+                  type: newQ.type as any,
+                  name: newQ.id,
+                  id: newQ.id,
+                  label: newQ.label,
+                };
+                const screenToBeEdited = getScreenObjById(draft.screens, id);
+                screenToBeEdited.layout.children
+                  .find((se) => se.type === "Form")
+                  .children.push(newElement as any);
+                updateFlowJsonNavigationAndDataPassing(draft, flow);
+              });
+          }
+        }
+        if (!draft.screens) draft.screens = [];
+        for (const screen of draft?.screens) {
           const form = screen.layout.children.find((se) => se.type === "Form");
           for (let i = 0; i < form?.children?.length; i++) {
             const fe = form.children[i];

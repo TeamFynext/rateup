@@ -13,7 +13,7 @@ export function getUniqueRandomAlphaId(
   existingIds: string[],
 ): string {
   let id = generateRandomAlphaId(length);
-  while (existingIds.includes(id)) {
+  while (existingIds?.includes(id)) {
     id = generateRandomAlphaId(length);
   }
   return id;
