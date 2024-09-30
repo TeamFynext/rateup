@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from "react";
+
 import {
   Box,
   Group,
@@ -7,30 +9,32 @@ import {
   Tabs,
   Title,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
-import Heading from "../styled/Heading/Heading";
-import { IconPlus } from "@tabler/icons-react";
-import { RateupButtonPrimary } from "../Button/RateupButtons";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { IconPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useDeleteTicket,
   useTickets,
 } from "../../backend/tickets/tickets.query";
-import { SurveysPageError } from "../Survey/SurveysPage/SurveyPageError";
-import { SurveyCardLayout } from "../Card/SurveyCard/SurveyCardLayout";
-import NothingFound from "../NothingFound/NothingFound";
-import { TicketCard } from "./TicketCard";
-import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../Modal/ConfirmationModal";
-import { TeamSelector } from "../input/TeamSelector";
 import { useUser } from "../../context/UserContext";
-import { UserRole } from "../../utils/enums";
-import CreateTicketModal from "./CreateTicketModal";
-import { TicketStatus, TicketType } from "../../utils/enums/ticket";
-import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { docsPath } from "../../utils/constants";
+import { UserRole } from "../../utils/enums";
+import { TicketStatus, TicketType } from "../../utils/enums/ticket";
 import InfoButton from "../Button/InfoButton";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
 import RefreshButton from "../Button/RefreshButton";
+import { SurveyCardLayout } from "../Card/SurveyCard/SurveyCardLayout";
+import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
+import { TeamSelector } from "../input/TeamSelector";
+import ConfirmationModal from "../Modal/ConfirmationModal";
+import NothingFound from "../NothingFound/NothingFound";
+import Heading from "../styled/Heading/Heading";
+import { SurveysPageError } from "../Survey/SurveysPage/SurveyPageError";
+import CreateTicketModal from "./CreateTicketModal";
+import { TicketCard } from "./TicketCard";
 import styles from "./TicketsHome.module.css";
 
 const TicketsHome = () => {
@@ -52,7 +56,7 @@ const TicketsHome = () => {
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
   ] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     deleteTicketId && toggleDelete();
   }, [deleteTicketId]);
@@ -83,9 +87,9 @@ const TicketsHome = () => {
   }
   const TicketStatusValues = Object.values(TicketStatus) as string[];
   const sortOptions = [
-    { value: "deadline", label: "Sort by Deadline" },
-    { value: "latest", label: "Sort by Latest First" },
-    { value: "old", label: "Sort by Old First" },
+    { value: "deadline", label: translations["Sort by Deadline"] },
+    { value: "latest", label: translations["Sort by Latest First"] },
+    { value: "old", label: translations["Sort by Old First"] },
   ];
   const handleSortChange = (value) => setSortOption(value);
 
@@ -93,15 +97,17 @@ const TicketsHome = () => {
     <Stack>
       <ConfirmationModal
         forDeleteFunctionality
-        deleteQuotion="All the associated comments & actions will be deleted"
+        deleteQuotion={
+          translations["All the associated comments & actions will be deleted"]
+        }
         opened={opened}
         onClose={close}
         onConfirm={(e) => {
           notifications.show({
             id: "load-data",
             loading: true,
-            title: "Deleting ticket",
-            message: `Hold on, your Ticket is getting deleted...`,
+            title: translations["Deleting ticket"],
+            message: translations["Hold on, your Ticket is getting deleted..."],
             autoClose: false,
             withCloseButton: true,
           });
@@ -112,9 +118,9 @@ const TicketsHome = () => {
             },
           });
         }}
-        confirmLabel="Delete"
-        headerLabel="Are you sure to delete this ticket?"
-        headerTitle="Delete Ticket"
+        confirmLabel={translations["Delete"]}
+        headerLabel={translations["Are you sure to delete this ticket?"]}
+        headerTitle={translations["Delete Ticket"]}
       />
 
       <CreateTicketModal
@@ -127,13 +133,16 @@ const TicketsHome = () => {
 
       <Group justify="space-between">
         <Group gap={"md"}>
-          <Heading title="Tickets" titleprops={{ w: "fit-content" }} />
+          <Heading
+            title={translations["Tickets"]}
+            titleprops={{ w: "fit-content" }}
+          />
           <InfoButton docUrl={`${docsPath}/ticket`} />
           <RefreshButton queryKeys={["tickets"]} />
           {user?.role === UserRole.SUPADM && (
             <RateupButtonPrimary
               rightIcon={<IconPlus />}
-              title="Create Ticket"
+              title={translations["Create Ticket"]}
               onClick={openTicketModal}
             />
           )}
@@ -145,7 +154,7 @@ const TicketsHome = () => {
             defaultValue={sortOptions[0].value}
             value={sortOption}
             onChange={handleSortChange}
-            placeholder="Select Sort Option"
+            placeholder={translations["Select Sort Option"]}
           />
           <TeamSelector
             value={selectedTeamId}
@@ -158,7 +167,7 @@ const TicketsHome = () => {
       <Tabs defaultValue="all" mt="sm">
         <Tabs.List>
           <Tabs.Tab value="all" onClick={() => setFilterParam("all")}>
-            All
+            {translations["All"]}
           </Tabs.Tab>
           {TicketStatusValues.map((status) => (
             <Tabs.Tab

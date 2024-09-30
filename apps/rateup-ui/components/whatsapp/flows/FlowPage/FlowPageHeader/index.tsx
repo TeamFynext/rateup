@@ -1,9 +1,13 @@
-import { Box, MultiSelect, Tabs } from "@mantine/core";
-import styles from "./FlowPageHeader.module.css";
 import { useContext } from "react";
-import { EditFlowContext } from "../EditFlow/EditFlowContext";
+
+import { Box, MultiSelect, Tabs } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import SurveyContext from "../../../../../context/SurveyContext";
 import StyledTabs from "../../../../styled/StyledTabs/StyledTabs";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import styles from "./FlowPageHeader.module.css";
 
 export enum FlowTabEnum {
   Edit = "Edit",
@@ -17,6 +21,7 @@ function FlowPageHeader({ name, tab, setTabState }) {
   const multiSelectOptions = survey?.teams?.map((team) => {
     return { value: team?.mapId, label: team?.name };
   });
+  const { translations } = useTranslations();
   return (
     <Box className={styles["flow-page-header"]}>
       <Box className={styles["heading-container"]}>
@@ -55,7 +60,9 @@ function FlowPageHeader({ name, tab, setTabState }) {
             data={multiSelectOptions}
             value={filterTeams}
             onChange={setFilterTeams}
-            placeholder={filterTeams.length > 0 ? "" : "All Teams"}
+            placeholder={
+              filterTeams.length > 0 ? "" : translations["All Teams"]
+            }
           />
         ) : null}
       </Box>

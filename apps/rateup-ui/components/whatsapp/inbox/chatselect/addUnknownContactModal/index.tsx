@@ -11,6 +11,7 @@ import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import { importMethod } from "@/utils/enums";
 
 import ActionButtonTrigger from "./actionButtonTrigger";
@@ -28,6 +29,7 @@ export default function AddUnknownContactModal(
   const contactMutation = useCreateContactMutation();
   const [opened, { open, close: onClose }] = useDisclosure();
   const [loading, setLoading] = useState(false);
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       name: "",
@@ -37,12 +39,13 @@ export default function AddUnknownContactModal(
       source: importMethod.MANUAL,
     },
     validate: {
-      name: (value) => (value.length ? null : "Name cannot be blank"),
+      name: (value) =>
+        value.length ? null : translations["Name cannot be blank"],
       phone: (value) =>
         !value
-          ? "Phone Number cannot be blank"
+          ? translations["Phone Number cannot be blank"]
           : !isValidPhoneNumber(value)
-            ? "Invalid phone number"
+            ? translations["Invalid phone number"]
             : null,
     },
   });
@@ -81,33 +84,35 @@ export default function AddUnknownContactModal(
           {...{
             opened,
             onClose,
-            title: "Add New Contact",
+            title: translations["Add New Contact"],
             centered: true,
             size: "md",
             isLoading: loading,
             withCloseButton: true,
-            buttonTitle: "Add Contact",
-            cancelButtonTitle: "Cancel",
+            buttonTitle: translations["Add Contact"],
+            cancelButtonTitle: translations["Cancel"],
             includeCancelButton: true,
             onSubmit: form.onSubmit((values) => onSubmit(values)),
           }}
         >
           <Stack gap={5}>
             <ContainedTextField
-              label="Name"
+              label={translations["Name"]}
               withAsterisk
               {...form.getInputProps("name")}
             />
             <Stack gap={0}>
               <Group gap={3}>
-                <Text className={classes.inputLabel}>Phone Number</Text>
+                <Text className={classes.inputLabel}>
+                  {translations["Phone Number"]}
+                </Text>
                 <Text c="red">*</Text>
               </Group>
               <PhoneInputWithCountrySelect
                 international
                 defaultCountry="IN"
                 countryCallingCodeEditable={false}
-                placeholder="Enter phone number"
+                placeholder={translations["Enter phone number"]}
                 className={classes.inputPhone}
                 key={form.key("phone")}
                 {...form.getInputProps("phone")}
@@ -117,7 +122,7 @@ export default function AddUnknownContactModal(
               </Text>
             </Stack>
             <ContainedTextField
-              label="Email"
+              label={translations["Email"]}
               {...form.getInputProps("email")}
             />
           </Stack>

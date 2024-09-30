@@ -6,6 +6,7 @@ import { useForm } from "@mantine/form";
 import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
 
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import classes from "./styles.module.css";
 
@@ -65,6 +66,7 @@ function WaDropZoneInputComponent(props: Props) {
       return PDF_MIME_TYPE;
     }
   }
+  const { translations } = useTranslations();
   return (
     <Dropzone
       maxFiles={1}
@@ -103,10 +105,15 @@ function WaDropZoneInputComponent(props: Props) {
         </Dropzone.Idle>
         <div>
           <Text className={classes.dropzone_text}>
-            Drag {props?.type} here or click to select files
+            {translations["Drag"]} {props?.type}{" "}
+            {translations["here or click to select files"]}
           </Text>
           <Text className={classes.dropzone_text_note}>
-            Attach as many files as you like, each file should not exceed 5mb
+            {
+              translations[
+                "Attach as many files as you like, each file should not exceed 5mb"
+              ]
+            }
           </Text>
         </div>
       </Group>
@@ -127,11 +134,11 @@ function WaLocationInputComponent({
   const [longitude, setLongitude] = useState("");
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-
+  const { translations } = useTranslations();
   return (
     <>
       <ContainedTextField
-        label={"Latitude"}
+        label={translations["Latitude"]}
         value={latitude}
         onChange={(e) => {
           setLatitude(e.currentTarget.value);
@@ -144,7 +151,7 @@ function WaLocationInputComponent({
         }}
       />
       <ContainedTextField
-        label={"Longitude"}
+        label={translations["Longitude"]}
         value={longitude}
         onChange={(e) => {
           setLongitude(e.currentTarget.value);
@@ -157,7 +164,7 @@ function WaLocationInputComponent({
         }}
       />
       <ContainedTextField
-        label={"Name"}
+        label={translations["Name"]}
         value={name}
         onChange={(e) => {
           setName(e.currentTarget.value);
@@ -170,7 +177,7 @@ function WaLocationInputComponent({
         }}
       />
       <ContainedTextField
-        label={"Address"}
+        label={translations["Address"]}
         value={address}
         onChange={(e) => {
           setAddress(e.currentTarget.value);
@@ -205,14 +212,14 @@ function WaBodyVariableInputComponent({
       buildtemplatequerycomponent("BODY", "TEXT", e.dynamicTags);
     },
   });
-
+  const { translations } = useTranslations();
   return (
     <>
       {exampleParams?.map((_, i) => (
         <ContainedTextField
           key={i}
           label={`{{${i + 1}}}`}
-          placeholder="select a dynamic tag value"
+          placeholder={translations["select a dynamic tag value"]}
           {...form.getInputProps(`dynamicTags.${i}`)}
         />
       ))}

@@ -1,12 +1,16 @@
-import { Group, Image, Rating, Stack, Text, Title, Paper } from "@mantine/core";
 import React, { useContext, useEffect } from "react";
-import { mapSmileyIcon } from "../../Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { QuestionType as Q } from "../../../types/enums";
+
+import { Group, Image, Paper, Rating, Stack, Text, Title } from "@mantine/core";
 import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { QuestionType as Q } from "../../../types/enums";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { OpinionScaleForm } from "../../Survey/TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import { mapSmileyIcon } from "../../Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
 
 const SurveyResponsesView = ({
   question,
@@ -22,6 +26,7 @@ const SurveyResponsesView = ({
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       hoveractive
@@ -35,7 +40,7 @@ const SurveyResponsesView = ({
     >
       <Group>
         <Title order={5} style={{ maxWidth: "400px" }}>
-          Question {no} :{" "}
+          {translations["Question"]} {no} :{" "}
         </Title>
         <Title order={5} style={{ maxWidth: "400px" }}>
           {question?.title}
@@ -78,7 +83,7 @@ const SurveyResponsesView = ({
                       <Image radius="md" maw={240} mx="0px" src={imgUrl} />
                     ) : (
                       <Text pb="sm" c="dark.0" fz="xs">
-                        ... not answered...{" "}
+                        {translations["... not answered..."]}
                       </Text>
                     );
                   case Q.MSQ:
@@ -106,17 +111,19 @@ const SurveyResponsesView = ({
                     return (
                       <Stack>
                         <Group>
-                          <Text fw="400">Name: </Text>{" "}
+                          <Text fw="400">{translations["Name: "]}</Text>{" "}
                           <Text fw="300">{data.name}</Text>{" "}
                         </Group>
                         {data.jobTitle && (
                           <Group mt="-10px">
-                            <Text fw={"400"}>Job Title: </Text>
+                            <Text fw={"400"}>
+                              {translations["Job Title: "]}
+                            </Text>
                             <Text fw="300">{data.jobTitle}</Text>
                           </Group>
                         )}
                         <Group mt="-10px">
-                          <Text fw="400">Testimonial: </Text>{" "}
+                          <Text fw="400">{translations["Testimonial: "]}</Text>{" "}
                           <Text fw="300">{data.testimonial}</Text>{" "}
                         </Group>
                         {data.rating && <Rating value={data.rating} readOnly />}
@@ -126,6 +133,7 @@ const SurveyResponsesView = ({
                             radius="md"
                             maw={240}
                             mx="0px"
+                            alt=""
                           />
                         )}
                       </Stack>
@@ -167,6 +175,7 @@ const SurveyResponsesView = ({
                           src={getFileUrlFromKey(selectedPictureChoice?.image)}
                           w={50}
                           style={{ aspectRatio: 4 / 3 }}
+                          alt=""
                         />
                         <Text>{selectedPictureChoice?.value}</Text>
                       </Stack>
@@ -179,19 +188,19 @@ const SurveyResponsesView = ({
                       <Stack>
                         {res?.name && (
                           <Group>
-                            <Text fw="400">Name: </Text>
+                            <Text fw="400">{translations["Name: "]}</Text>
                             <Text fw="300">{res?.name}</Text>
                           </Group>
                         )}
                         {res?.phone && (
                           <Group>
-                            <Text fw="400">Phone: </Text>
+                            <Text fw="400">{translations["Phone: "]}</Text>
                             <Text fw="300">{res?.phone}</Text>
                           </Group>
                         )}
                         {res?.email && (
                           <Group>
-                            <Text fw="400">Email: </Text>
+                            <Text fw="400">{translations["Email: "]}</Text>
                             <Text fw="300">{res?.email}</Text>
                           </Group>
                         )}
@@ -212,7 +221,7 @@ const SurveyResponsesView = ({
             </Text>
           ) : (
             <Text c="dark.0" fz="xs">
-              ... not answered...{" "}
+              {translations["... not answered..."]}
             </Text>
           )}
         </Stack>

@@ -1,21 +1,24 @@
+import { useEffect, useState } from "react";
+import router from "next/router";
+
 import {
-  Stack,
-  Group,
+  ActionIcon,
   Avatar,
   Badge,
+  Group,
+  Stack,
   Text,
   Title,
   Tooltip,
-  ActionIcon,
 } from "@mantine/core";
-import { useState, useEffect } from "react";
-
-import router from "next/router";
-import { getTimeSince } from "../../utils";
-import { ITicket } from "../../backend/tickets/tickets";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { TicketStatus, TicketType } from "../../utils/enums/ticket";
 import { IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { ITicket } from "../../backend/tickets/tickets";
+import { getTimeSince } from "../../utils";
+import { TicketStatus, TicketType } from "../../utils/enums/ticket";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 interface TicketCardProps {
   ticket: ITicket;
@@ -30,6 +33,7 @@ export function TicketCard({
   setDeleteTicketId,
 }: TicketCardProps): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
+  const { translations } = useTranslations();
   useEffect(() => {
     if (ticket?.createdAt) {
       setTimeSince(getTimeSince(new Date(ticket?.createdAt).toString()));
@@ -88,7 +92,7 @@ export function TicketCard({
           <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
             {ticket?.title}
           </Text>
-          <Tooltip label="Delete ticket">
+          <Tooltip label={translations["Delete ticket"]}>
             <ActionIcon
               onClick={(e) => {
                 e.stopPropagation();
@@ -104,7 +108,7 @@ export function TicketCard({
         </Group>
         <Group justify="space-between">
           <Title order={5} c="gray.5">
-            TICKET: #{ticket.number}
+            {translations["TICKET: #"]} {ticket.number}
           </Title>
           <Badge variant="outline" color={color}>
             {ticket?.type}
@@ -114,7 +118,7 @@ export function TicketCard({
           <Group>
             <Avatar radius={"xl"} />
             <Text size="sm" c="dimmed">
-              Created {timeSince}
+              {translations["Created"]} {timeSince}
             </Text>
           </Group>
 
@@ -126,7 +130,7 @@ export function TicketCard({
         </Group>
         <Group justify="space-between">
           <Group>
-            <Text c="gray.3"> Priority Level : </Text>
+            <Text c="gray.3"> {translations["Priority Level : "]}</Text>
             <PriorityBadge priority={ticket?.priority} />
           </Group>
           <Group justify={"space-between"} align={"center"}>

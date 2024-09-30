@@ -1,27 +1,31 @@
+import { useContext, useEffect, useState } from "react";
+
 import {
-  Stack,
-  Divider,
-  Group,
   Badge,
-  ScrollArea,
-  FileButton,
   Button,
+  Divider,
+  FileButton,
+  Group,
   Image,
   NumberInput,
+  ScrollArea,
   ScrollAreaAutosize,
+  Stack,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
-import { useContext, useEffect, useState } from "react";
-import { EditFlowContext } from "./EditFlowContext";
+import { fileToBase64 } from "../../../../../utils/misc/base64.utils";
+import { showErrorToast } from "../../../../../utils/notifications";
 import {
   getFlowFormElementById,
   getFormObjFromScreenId,
 } from "../../../../../utils/whatsapp/flow.utils";
-import { fileToBase64 } from "../../../../../utils/misc/base64.utils";
-import { showErrorToast } from "../../../../../utils/notifications";
+import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { EditFlowContext } from "./EditFlowContext";
 
 export function FlowImageDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -44,7 +48,7 @@ export function FlowImageDetailedView() {
       src: (value) => (value?.length ? null : "Upload image to save"),
     },
   });
-
+  const { translations } = useTranslations();
   // TODO: figure out why this can't be set in initialValues above
   // init
   useEffect(() => {
@@ -63,7 +67,7 @@ export function FlowImageDetailedView() {
   }
   function handleSaveElement() {
     const { hasErrors } = form.validate();
-    if (hasErrors) return showErrorToast("Unable to Save Image");
+    if (hasErrors) return showErrorToast(translations["Unable to Save Image"]);
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
     const index = flowForm.children.findIndex(
       (fe) => fe === selectedFormElement,
@@ -130,7 +134,7 @@ export function FlowImageDetailedView() {
 function FlowImageElementEditor({ onChange, src, height, width }) {
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
-
+  const { translations } = useTranslations();
   useEffect(() => {
     onChange({
       src: base64.split(",")[1],
@@ -140,7 +144,7 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
   useEffect(() => {
     if (!file) return;
     if (file.size > 300 * 1024) {
-      showErrorToast("Size must be under 300kb");
+      showErrorToast(translations["Size must be under 300kb"]);
       return;
     }
 
@@ -154,7 +158,9 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
     <Stack>
       <FileButton onChange={setFile} accept="image/png,image/jpeg,image/jpg">
         {(props) => (
-          <Button {...props}>{file ? "Change Image" : "Upload image"}</Button>
+          <Button {...props}>
+            {file ? translations["Change Image"] : translations["Upload image"]}
+          </Button>
         )}
       </FileButton>
       {src && (
@@ -167,14 +173,14 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
             alt="flow Image"
           />
           <NumberInput
-            label="Width"
+            label={translations["Width"]}
             min={100}
             max={400}
             value={width}
             onChange={(width) => onChange({ width })}
           />
           <NumberInput
-            label="Height"
+            label={translations["Height"]}
             min={100}
             max={600}
             value={height}

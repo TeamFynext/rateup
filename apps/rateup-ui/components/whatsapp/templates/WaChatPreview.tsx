@@ -6,18 +6,22 @@ import {
   ScrollAreaAutosize,
   Text,
 } from "@mantine/core";
-import { IconWifi } from "@tabler/icons-react";
 import {
   IconAntennaBars5,
   IconBatteryFilled,
   IconInfoCircle,
+  IconWifi,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { lexend500 } from "../../../utils/fonts";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SendMessageMock } from "../MessageComponents";
-import dayjs from "dayjs";
 
 const WaChatPreview = ({ children }) => {
+  const { translations } = useTranslations();
   return (
     <PaperLayout p={7} h={"100%"} maw={280}>
       <BackgroundImage
@@ -62,8 +66,12 @@ const WaChatPreview = ({ children }) => {
                 borderRadius: 4,
               }}
             >
-              <IconInfoCircle size={8} /> This business uses a secure service
-              from Meta to manage this chat. Tap to learn more
+              <IconInfoCircle size={8} />
+              {
+                translations[
+                  "This business uses a secure service from Meta to manage this chat. Tap to learn more"
+                ]
+              }
             </Text>
             {children}
           </ScrollAreaAutosize>

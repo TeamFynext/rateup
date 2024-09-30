@@ -62,6 +62,7 @@ import {
   WA_FLOW_HEADING_CHAR_LIMIT,
 } from "@/components/whatsapp/whatsappConfig";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
+import useTranslations from "@/dictionaries/useTranslation";
 import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants";
 import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data";
 import { showErrorToast } from "@/utils/notifications";
@@ -181,9 +182,9 @@ function ElementEditor({
   const labelMaxLength = getFlowLabelLimit(
     questionTypeToFlowFormElementType(question.type as QuestionType),
   );
-
+  const { translations } = useTranslations();
   function validateLabel(value: string) {
-    if (!value) return "Label is required";
+    if (!value) return translations["Label is required"];
     if (value.trim().length > labelMaxLength) {
       return `Max ${labelMaxLength} characters allowed`;
     }
@@ -219,24 +220,24 @@ function ElementEditor({
     .object({
       "photo-source": z
         .nativeEnum(PhotoSource, {
-          required_error: "Photo source is required",
+          required_error: translations["Photo source is required"],
         })
         .optional()
         .nullable(),
       "max-file-size-kb": z
         .number()
-        .min(1, "File size must be at least 1 KB")
-        .max(25600, "File size cannot exceed 25600 KB"),
+        .min(1, translations["File size must be at least 1 KB"])
+        .max(25600, translations["File size cannot exceed 25600 KB"]),
       "min-uploaded-photos": z.number().min(0).max(30),
       "max-uploaded-photos": z
         .number()
-        .min(1, "Must upload at least 1 photo")
-        .max(30, "Cannot upload more than 30 photos"),
+        .min(1, translations["Must upload at least 1 photo"])
+        .max(30, translations["Cannot upload more than 30 photos"]),
       "min-uploaded-documents": z.number().min(0).max(30),
       "max-uploaded-documents": z
         .number()
-        .min(1, "Must upload at least 1 document")
-        .max(30, "Cannot upload more than 30 documents"),
+        .min(1, translations["Must upload at least 1 document"])
+        .max(30, translations["Cannot upload more than 30 documents"]),
       "allowed-mime-types": z.array(z.string()).optional(),
       "input-type": z.nativeEnum(InputType).optional().nullable(),
     })
@@ -245,7 +246,10 @@ function ElementEditor({
         ctx.addIssue({
           path: ["max-uploaded-photos"],
           code: z.ZodIssueCode.custom,
-          message: "Minimum uploaded photos cannot be greater than maximum",
+          message:
+            translations[
+              "Minimum uploaded photos cannot be greater than maximum"
+            ],
         });
       } else if (
         values["min-uploaded-documents"] > values["max-uploaded-documents"]
@@ -253,7 +257,10 @@ function ElementEditor({
         ctx.addIssue({
           path: ["min-uploaded-documents"],
           code: z.ZodIssueCode.custom,
-          message: "Minimum uploaded documents cannot be greater than maximum",
+          message:
+            translations[
+              "Minimum uploaded documents cannot be greater than maximum"
+            ],
         });
       }
     });
@@ -301,14 +308,14 @@ function ElementEditor({
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
     if (!flowEditable) {
-      showErrorToast("Published Flows cannot be edited");
+      showErrorToast(translations["Published Flows cannot be edited"]);
       return;
     }
 
     // Form validation
     const formValidation = form.validate();
     if (formValidation.hasErrors) {
-      showErrorToast("Fix errors before saving");
+      showErrorToast(translations["Fix errors before saving"]);
       return "error";
     }
 
@@ -402,8 +409,8 @@ function ElementEditor({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: "Updating question",
-      message: "Hold on, your changes are getting updated...",
+      title: translations["Updating question"],
+      message: translations["Hold on, your changes are getting updated..."],
       autoClose: false,
       withCloseButton: false,
     });
@@ -418,8 +425,8 @@ function ElementEditor({
           notifications.clean();
           notifications.show({
             id: "load-data",
-            title: "Success",
-            message: "Your question was updated successfully",
+            title: translations["Success"],
+            message: translations["Your question was updated successfully"],
             color: "green",
             autoClose: 3000,
           });
@@ -485,7 +492,7 @@ function ElementEditor({
                   variant="unstyled"
                   autosize
                   maxRows={3}
-                  placeholder="Enter question title here"
+                  placeholder={translations["Enter question title here"]}
                   maxValue={getFlowTextLimit(
                     WaFlowFormElementType.textSubHeading,
                   )}
@@ -501,7 +508,7 @@ function ElementEditor({
 
                 <TextareaWithLengthTracker
                   variant="unstyled"
-                  placeholder="Enter question description here"
+                  placeholder={translations["Enter question description here"]}
                   {...form.getInputProps(`description.${selectedLanguage}`)}
                   value={form.values.description[selectedLanguage]}
                   autosize
@@ -551,13 +558,13 @@ function ElementEditor({
         <Group justify="space-between" p="xs" px={"sm"}>
           <Group>
             <Checkbox
-              label="Required"
+              label={translations["Required"]}
               fw={600}
               {...form.getInputProps("required", { type: "checkbox" })}
             />
             {WaNPSQuestions.includes(question?.type as QuestionType) && (
               <Checkbox
-                label="NPS Analytics"
+                label={translations["NPS Analytics"]}
                 fw={600}
                 checked={form.values?.enableNpsAnalytics}
                 onChange={(e) => {
@@ -570,7 +577,7 @@ function ElementEditor({
           <Group>
             {logicSupportedTypes.includes(question?.type as QuestionType) && (
               <RateupButtonSecondary
-                title={"Logic Jump"}
+                title={translations["Logic Jump"]}
                 leftIcon={
                   <Image
                     src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
@@ -593,7 +600,7 @@ function ElementEditor({
               question?.type as QuestionType,
             ) && (
               <RateupButtonSecondary
-                title={"Google Review"}
+                title={translations["Google Review"]}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
                 color={theme.colors["whatsapp-green"][6]}
@@ -666,6 +673,7 @@ function FlowQuestionExtraProps({
   extraConfigForm,
 }: ExtraPropsProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
+  const { translations } = useTranslations();
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
@@ -679,7 +687,7 @@ function FlowQuestionExtraProps({
         <Stack gap={0} mt="xl">
           <Group justify="space-between">
             <Text fw="bold" c="dimmed">
-              Choices
+              {translations["Choices"]}
             </Text>
             <Divider style={{ flexGrow: 1 }} />
             <LengthTracker
@@ -705,8 +713,8 @@ function FlowQuestionExtraProps({
             value: data?.id,
           }))}
           {...form.getInputProps("optinScreenId")}
-          label={"Read more screen"}
-          placeholder="select next screen to show the details"
+          label={translations["Read more screen"]}
+          placeholder={translations["select next screen to show the details"]}
           w={300}
         />
       );
@@ -715,15 +723,15 @@ function FlowQuestionExtraProps({
         <Stack mt={"xs"}>
           <Switch
             size="md"
-            label={"Enable dynamic datepicker"}
+            label={translations["Enable dynamic datepicker"]}
             {...form.getInputProps("onSelectAction", {
               type: "checkbox",
             })}
           />
           {form.values.onSelectAction && (
             <ContainedSelection
-              label={"Integration App Name"}
-              placeholder="Select Integration App Name"
+              label={translations["Integration App Name"]}
+              placeholder={translations["Select Integration App Name"]}
               data={[IntegratedApps.amelia]}
               {...form.getInputProps("waAppName")}
               w={400}
@@ -735,41 +743,57 @@ function FlowQuestionExtraProps({
       return (
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
-            No more than 10 images or documents can be sent as part of the
-            response message.
+            {
+              translations[
+                "No more than 10 images or documents can be sent as part of the response message."
+              ]
+            }
           </Alert>
           <Alert variant="light" color="blue" title="Info">
-            Additionally, the maximum aggregated size of attached images or
-            documents cannot exceed 100 MiB.
+            {
+              translations[
+                "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB."
+              ]
+            }
           </Alert>
 
           <ContainedSelection
-            label={"Photo Source"}
-            placeholder="Select Photo Source"
-            description="source where the image can be selected from"
+            label={translations["Photo Source"]}
+            placeholder={translations["Select Photo Source"]}
+            description={
+              translations["source where the image can be selected from"]
+            }
             data={Object.values(PhotoSource)}
             {...extraConfigForm.getInputProps("photo-source")}
           />
           <ContainedNumberInput
-            label={"max file size in kb"}
-            description="maximum file size (in kilobytes) that can be uploaded"
-            placeholder="max file size in kb"
+            label={translations["max file size in kb"]}
+            description={
+              translations[
+                "maximum file size (in kilobytes) that can be uploaded"
+              ]
+            }
+            placeholder={translations["max file size in kb"]}
             min={1}
             max={25600}
             {...extraConfigForm.getInputProps("max-file-size-kb")}
           />
           <ContainedNumberInput
-            label={"min uploaded photos"}
-            description="minimum number of photos that are required"
-            placeholder="min uploaded photos"
+            label={translations["min uploaded photos"]}
+            description={
+              translations["minimum number of photos that are required"]
+            }
+            placeholder={translations["min uploaded photos"]}
             min={0}
             max={30}
             {...extraConfigForm.getInputProps("min-uploaded-photos")}
           />
           <ContainedNumberInput
-            label={"max uploaded photos"}
-            description="maximum number of photos that can be uploaded"
-            placeholder="max uploaded photos"
+            label={translations["max uploaded photos"]}
+            description={
+              translations["maximum number of photos that can be uploaded"]
+            }
+            placeholder={translations["max uploaded photos"]}
             min={1}
             max={30}
             {...extraConfigForm.getInputProps("max-uploaded-photos")}
@@ -780,42 +804,58 @@ function FlowQuestionExtraProps({
       return (
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
-            No more than 10 images or documents can be sent as part of the
-            response message.
+            {
+              translations[
+                "No more than 10 images or documents can be sent as part of the response message."
+              ]
+            }
           </Alert>
           <Alert variant="light" color="blue" title="Info">
-            Additionally, the maximum aggregated size of attached images or
-            documents cannot exceed 100 MiB.
+            {
+              translations[
+                "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB."
+              ]
+            }
           </Alert>
 
           <ContainedNumberInput
-            label={"max file size in kb"}
-            description="maximum file size (in kilobytes) that can be uploaded"
-            placeholder="max file size in kb"
+            label={translations["max file size in kb"]}
+            description={
+              translations[
+                "maximum file size (in kilobytes) that can be uploaded"
+              ]
+            }
+            placeholder={translations["max file size in kb"]}
             min={1}
             max={25600}
             {...extraConfigForm.getInputProps("max-file-size-kb")}
           />
           <ContainedNumberInput
-            label={"min uploaded documents"}
-            description="minimum number of documents that are required"
-            placeholder="min uploaded documents"
+            label={translations["min uploaded documents"]}
+            description={
+              translations["minimum number of documents that are required"]
+            }
+            placeholder={translations["min uploaded documents"]}
             min={0}
             max={30}
             {...extraConfigForm.getInputProps("min-uploaded-documents")}
           />
           <ContainedNumberInput
-            label={"max uploaded documents"}
-            description="maximum number of documents that can be uploaded"
-            placeholder="max uploaded documents"
+            label={translations["max uploaded documents"]}
+            description={
+              translations["maximum number of documents that can be uploaded"]
+            }
+            placeholder={translations["max uploaded documents"]}
             min={1}
             max={30}
             {...extraConfigForm.getInputProps("max-uploaded-documents")}
           />
           <ContainedMultiSelect
-            label={"allowed mime types"}
-            placeholder="Select allowed mime types"
-            description="by default all the mime types are allowed"
+            label={translations["allowed mime types"]}
+            placeholder={translations["Select allowed mime types"]}
+            description={
+              translations["by default all the mime types are allowed"]
+            }
             data={Object.entries(DocumentMimeType).map(([key, value]) => ({
               label: key,
               value: value,
@@ -828,8 +868,8 @@ function FlowQuestionExtraProps({
       return (
         <>
           <ContainedSelection
-            label={"Input Type"}
-            placeholder="Select Type"
+            label={translations["Input Type"]}
+            placeholder={translations["Select Type"]}
             data={Object.values(InputType)}
             {...extraConfigForm.getInputProps("input-type")}
           />

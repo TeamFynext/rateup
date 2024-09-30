@@ -1,51 +1,55 @@
 import React, { useEffect, useRef, useState } from "react";
+
+import {
+  ActionIcon,
+  Group,
+  rem,
+  ScrollArea,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconEdit, IconSend } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
+import {
+  IUpdateTicketRequest,
+  IUpdateTicketStatusRequest,
+} from "../../backend/tickets/tickets";
 import {
   useCreateCommentMutation,
   useTicket,
   useUpdateTicketMutation,
   useUpdateTicketStatusMutation,
 } from "../../backend/tickets/tickets.query";
-import {
-  Group,
-  Stack,
-  Text,
-  Title,
-  ActionIcon,
-  rem,
-  ScrollArea,
-} from "@mantine/core";
-import { titleStyle } from "../styled/Heading/Heading";
+import { useUser } from "../../context/UserContext";
+import { formatIsoDateString } from "../../utils/dateTime";
+import { UserRole } from "../../utils/enums";
+import { TicketType } from "../../utils/enums/ticket";
+import { showLoadingToast } from "../../utils/notifications";
 import {
   ContainedDateInput,
   ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { IconEdit, IconSend } from "@tabler/icons-react";
-import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
-import {
-  IUpdateTicketRequest,
-  IUpdateTicketStatusRequest,
-} from "../../backend/tickets/tickets";
-import { showLoadingToast } from "../../utils/notifications";
-import { formatIsoDateString } from "../../utils/dateTime";
+import RateupLoader from "../Loaders/RateupLoader";
+import FormModalLayout from "../Modal/FormModalLayout";
 import {
   PlatformIcon,
   RatingBadge,
 } from "../reputationManagement/panels/RM_Review";
+import { titleStyle } from "../styled/Heading/Heading";
 import PaperLayout from "../styled/Layouts/PaperLayout";
-import { StatusMenu } from "./SingleTicket/StatusMenu";
-import { TicketDetailBlock } from "./SingleTicket/TicketDetailBlock";
-import { PriorityMenu } from "./SingleTicket/PriorityMenu";
 import { CommentCard } from "./SingleTicket/CommentCard";
-import { TicketType } from "../../utils/enums/ticket";
+import { PriorityMenu } from "./SingleTicket/PriorityMenu";
+import { StatusMenu } from "./SingleTicket/StatusMenu";
 import SurveyResponsesView from "./SingleTicket/SurveyResponsesView";
-import RateupLoader from "../Loaders/RateupLoader";
-import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
-import { useUser } from "../../context/UserContext";
-import { UserRole } from "../../utils/enums";
-import { useDisclosure } from "@mantine/hooks";
-import FormModalLayout from "../Modal/FormModalLayout";
+import { TicketDetailBlock } from "./SingleTicket/TicketDetailBlock";
 
 const SingleTicket = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -75,7 +79,7 @@ const SingleTicket = ({ id }: { id: string }) => {
   const updateTicketStatus = useUpdateTicketStatusMutation(id);
   const [opened, { open: openDeadlineEdit, close: closeDeadlineModal }] =
     useDisclosure(false);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     setPriority(ticket?.priority);
     setStatus(ticket?.status);
@@ -106,10 +110,10 @@ const SingleTicket = ({ id }: { id: string }) => {
     if (priority && ticket?.priority !== priority) {
       let data: IUpdateTicketRequest = { priority };
       showLoadingToast(
-        "Hold..ticket is getting updated..",
+        translations["Hold..ticket is getting updated.."],
         "update-ticket",
         true,
-        "Updating Ticket",
+        translations["Updating Ticket"],
       );
       updateTicket.mutate(data, {
         onSuccess: () => {
@@ -130,10 +134,10 @@ const SingleTicket = ({ id }: { id: string }) => {
           "**",
       };
       showLoadingToast(
-        "Hold..ticket is getting updated..",
+        translations["Hold..ticket is getting updated.."],
         "update-ticket",
         true,
-        "Updating Ticket",
+        translations["Updating Ticket"],
       );
       updateTicket.mutate(data, {
         onSuccess: () => {
@@ -150,10 +154,10 @@ const SingleTicket = ({ id }: { id: string }) => {
         status: status,
       };
       showLoadingToast(
-        "Hold..ticket status is getting updated..",
+        translations["Hold..ticket status is getting updated.."],
         "update-status",
         true,
-        "Updating Ticket Status",
+        translations["Updating Ticket Status"],
       );
       updateTicketStatus.mutate(data, {
         onSuccess: () => {
@@ -170,10 +174,10 @@ const SingleTicket = ({ id }: { id: string }) => {
     if (deadline && new Date(ticket?.deadline) !== deadline) {
       let data: IUpdateTicketRequest = { deadline };
       showLoadingToast(
-        "Hold..ticket is getting updated..",
+        translations["Hold..ticket is getting updated.."],
         "update-ticket",
         true,
-        "Updating Ticket",
+        translations["Updating Ticket"],
       );
       updateTicket.mutate(data, {
         onSuccess: () => {
@@ -252,19 +256,21 @@ const SingleTicket = ({ id }: { id: string }) => {
       </Group>
       <Group justify="flex-start" gap="10" mt="-1px">
         <TicketDetailBlock mawInp="550" mihInput="85" pt="lg">
-          <Text>Team :</Text>
+          <Text>{translations["Team :"]}</Text>
           <Text size="xl" fw="700">
             {ticket?.teamName}
           </Text>
         </TicketDetailBlock>
         <TicketDetailBlock mawInp="550" mihInput="85">
-          <Text>Assigned To :</Text>
+          <Text>{translations["Assigned To :"]}</Text>
           <ContainedSelection
             allowDeselect={false}
             data={memberOptions}
             withAsterisk
             my="0"
-            placeholder="Select a team member to assign ticket to"
+            placeholder={
+              translations["Select a team member to assign ticket to"]
+            }
             value={ticket?.assignedToId}
             onChange={setValue}
             defaultChecked={ticket?.assignedTo}
@@ -274,17 +280,17 @@ const SingleTicket = ({ id }: { id: string }) => {
       </Group>
       <Group justify="flex-start" gap="10" mt="-1px">
         <TicketDetailBlock>
-          <Text>Status : </Text>
+          <Text>{translations["Status : "]}</Text>
           <StatusMenu status={status} setStatus={setStatus} />
         </TicketDetailBlock>
         <TicketDetailBlock>
-          <Text>Priority : </Text>
+          <Text>{translations["Priority : "]}</Text>
           <PriorityMenu priority={priority} setPriority={setPriority} />
         </TicketDetailBlock>
         <TicketDetailBlock mawInp="320">
           <Stack>
             <Group>
-              <Text>Deadline: </Text>
+              <Text>{translations["Deadline: "]}</Text>
               <Text
                 size="sm"
                 fw="700"
@@ -317,18 +323,18 @@ const SingleTicket = ({ id }: { id: string }) => {
       <FormModalLayout
         opened={opened}
         onClose={closeDeadlineModal}
-        title={"Update Deadline"}
+        title={translations["Update Deadline"]}
         centered
         onSubmit={updateDeadline}
-        buttonTitle={"Update"}
+        buttonTitle={translations["Update"]}
         includeCancelButton
       >
         <ContainedDateInput
           my="xl"
           minDate={new Date()}
           clearable
-          label={"Deadline:"}
-          placeholder="Select a deadline for the ticket"
+          label={translations["Deadline:"]}
+          placeholder={translations["Select a deadline for the ticket"]}
           defaultValue={ticket?.deadline && new Date(ticket?.deadline)}
           onChange={(date) => setDeadline(date)}
         />
@@ -351,26 +357,27 @@ const SingleTicket = ({ id }: { id: string }) => {
               {ticket?.type === TicketType.REVIEW ? (
                 <Stack justify="flex-start">
                   <Title order={2} c="gray.5" mb="md">
-                    Review Details
+                    {translations["Review Details"]}
                   </Title>
                   <Group>
                     <PlatformIcon platform={ticket?.review?.platform} />
                     <Text>
-                      {ticket?.review?.meta?.reviewedBy || "Anonymous"}
+                      {ticket?.review?.meta?.reviewedBy ||
+                        translations["Anonymous"]}
                     </Text>
                   </Group>
                   <Group>
-                    <Text>Rating : </Text>
+                    <Text>{translations["Rating : "]}</Text>
                     <RatingBadge rating={ticket?.review?.rating} />
                   </Group>
                   <Group>
-                    <Text>Posted on : </Text>
+                    <Text>{translations["Posted on : "]}</Text>
                     <Text>
                       {formatIsoDateString(ticket?.review?.reviewedAt)}
                     </Text>
                   </Group>
                   <Group>
-                    <Text>Comment : </Text>
+                    <Text>{translations["Comment : "]}</Text>
                     <Text> {ticket?.review?.review || "n/a"} </Text>
                   </Group>
                   <Text lineClamp={2}>{ticket?.review?.review}</Text>
@@ -378,7 +385,7 @@ const SingleTicket = ({ id }: { id: string }) => {
               ) : ticket?.type === TicketType.SURVEY_RESPONSE ? (
                 <Stack>
                   <Title order={2} c="gray.5">
-                    User Response Details
+                    {translations["User Response Details"]}
                   </Title>
                   <ScrollArea h={380} viewportRef={viewport}>
                     {ticket?.surveyResponse?.map((response: any, index) => {
@@ -399,7 +406,7 @@ const SingleTicket = ({ id }: { id: string }) => {
               ) : (
                 <Stack justify="flex-start">
                   <Title order={2} c="gray.5" mb="md">
-                    Ticket Description
+                    {translations["Ticket Description"]}
                   </Title>
                   <Group pl="md">
                     <Text c="dark.3">{ticket?.description}</Text>
@@ -449,7 +456,7 @@ const SingleTicket = ({ id }: { id: string }) => {
                 </ScrollArea>
                 <Group mt="md" align="flex-start">
                   <ContainedTextField
-                    placeholder={"Enter message here..."}
+                    placeholder={translations["Enter message here..."]}
                     withAsterisk
                     style={{ width: "83%" }}
                     {...form.getInputProps("msg")}
@@ -457,11 +464,13 @@ const SingleTicket = ({ id }: { id: string }) => {
                   />
                   <ActionIcon
                     onClick={onSubmit}
-                    title="Send message"
+                    title={translations["Send message"]}
                     style={{ width: "12%" }}
                     size={45}
                     variant="default"
-                    aria-label="ActionIcon with size as a number"
+                    aria-label={
+                      translations["ActionIcon with size as a number"]
+                    }
                   >
                     <IconSend style={{ width: rem(25), height: rem(25) }} />
                   </ActionIcon>
