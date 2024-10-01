@@ -185,7 +185,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           my="xs"
           py="xs"
         >
-          <Text>Component-Level Logic Jump</Text>
+          <Text>Question Jump</Text>
           {componentLeventLogicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
               key={index}
@@ -206,7 +206,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           >
             Add Logic Jump
           </Button>
-          <Text>Screen-Level Logic Jump</Text>
+          <Text>Screen Jump</Text>
           {logicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
               key={index}
@@ -555,7 +555,7 @@ function ConditionsActionMapBlock({
               )}
             </Fragment>
           ))}
-          {!isComponentLevel && (
+          {/* {!isComponentLevel && (
             <Button
               leftSection={<IconPlus />}
               variant={"subtle"}
@@ -583,7 +583,7 @@ function ConditionsActionMapBlock({
             >
               {translations["Add Condition"]}
             </Button>
-          )}
+          )} */}
         </Stack>
       </Box>
 
