@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+
 import {
   ActionIcon,
   Badge,
@@ -7,28 +10,30 @@ import {
   Loader,
   Text,
 } from "@mantine/core";
-import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import classes from "./styles.module.css";
-import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
-import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
-import {
-  WaInboxMessage,
-  WaTemplateComponent,
-} from "../../../../../types/global";
-import WaInboxText from "./components/text";
 import { useIntersection, useScrollIntoView } from "@mantine/hooks";
 import {
   IconBrandWhatsapp,
   IconSquareRoundedChevronDown,
 } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
-import WaInboxImage from "./components/image";
-import WaInboxTemplate from "./components/template";
-import WaInboxInteractive from "./components/interactive";
-import { useGetMessagesByContactId } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { useSearchParams } from "next/navigation";
 import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { useGetMessagesByContactId } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import {
+  WaInboxMessage,
+  WaTemplateComponent,
+} from "../../../../../types/global";
 import { formatDate } from "../../../../../utils/dateTime";
+import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
+import WaInboxImage from "./components/image";
+import WaInboxInteractive from "./components/interactive";
+import WaInboxTemplate from "./components/template";
+import WaInboxText from "./components/text";
+import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
+import classes from "./styles.module.css";
+
 interface Props {
   data: WaGetMessagesBody[];
 }
@@ -59,7 +64,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
     root: scrollableRef.current,
     threshold: 1,
   });
-
+  const { translations } = useTranslations();
   const singleMessage = (
     messageBody: WaInboxMessage,
     templateComponentParams: WaTemplateComponent[],
@@ -90,7 +95,8 @@ export default function WaInboxChatDisplayBody(props: Props) {
       default:
         return (
           <Text fz={"xs"} c={"red"}>
-            {messageType} message type display is not supported yet
+            {messageType}{" "}
+            {translations["message type display is not supported yet"]}
           </Text>
         );
     }
@@ -170,12 +176,13 @@ export default function WaInboxChatDisplayBody(props: Props) {
 }
 
 const EndofConversationComponent = () => {
+  const { translations } = useTranslations();
   return (
     <Center>
       <Group className={classes.indicator_wrapper}>
         <IconBrandWhatsapp size={20} color="gray" />
         <Text className={classes.indicator_text}>
-          This is the beginning of your conversation
+          {translations["This is the beginning of your conversation"]}
         </Text>
       </Group>
     </Center>

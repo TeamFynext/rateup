@@ -1,9 +1,13 @@
-import { ActionIcon, Indicator, Menu } from "@mantine/core";
-import { IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
-import classes from "./styles.module.css";
-import WaInboxTemplateDisplayModal from "../templateDisplayModal";
 import { useRef } from "react";
+
+import { ActionIcon, Indicator, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import WaInboxTemplateDisplayModal from "../templateDisplayModal";
+import classes from "./styles.module.css";
 
 interface Props {
   sessionExpired: boolean;
@@ -22,7 +26,7 @@ export default function WaInboxFooterMenu(props: Props) {
 
   const [isModalOpened, { close: onModalClose, open: openModal }] =
     useDisclosure(false);
-
+  const { translations } = useTranslations();
   return (
     <>
       <Menu
@@ -61,7 +65,7 @@ export default function WaInboxFooterMenu(props: Props) {
             }
             onClick={() => openModal()}
           >
-            Initiate conversation by sending a template
+            {translations["Initiate conversation by sending a template"]}
             {/* <WaInboxTemplateDisplayModal {...props} /> */}
           </Menu.Item>
         </Menu.Dropdown>

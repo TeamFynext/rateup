@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 
 import { useForm } from "@mantine/form";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
 import { showErrorToast } from "../../../../../utils/notifications";
@@ -19,7 +21,7 @@ function getInitialValues(screens) {
   return {
     screenId: getUniqueRandomAlphaId(
       6,
-      screens?.map(({ id }) => id),
+      screens.map(({ id }) => id),
     ),
     screenTitle: "",
     footerBtnLabel: "Next",
@@ -39,27 +41,30 @@ function CreateFlowScreenModal({
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: getInitialValues(flowJson.screens),
     validate: {
       screenId: (value) => {
         if (!/^[a-zA-Z,_]*$/.test(value)) {
           showErrorToast(
-            "Error Occured. Please report this bug to the developer. code: #flowsidval",
+            translations[
+              "Error Occured. Please report this bug to the developer. code: #flowsidval"
+            ],
           );
           return "Id should contain only alphabets and _";
         } else if (value === "") {
-          return "Screen Id is required";
+          return translations["Screen Id is required"];
         } else {
           return null;
         }
       },
       screenTitle: (value) => {
-        if (value === "") return "Screen Title is required";
+        if (value === "") return translations["Screen Title is required"];
         else return null;
       },
       footerBtnLabel: (value) => {
-        if (value === "") return "Screen Title is required";
+        if (value === "") return translations["Screen Title is required"];
         else return null;
       },
     },
@@ -95,14 +100,16 @@ function CreateFlowScreenModal({
   return (
     <FormModalLayout
       opened={opened}
-      title={screenId ? "Edit Screen" : "Create Screen"}
+      title={
+        screenId ? translations["Edit Screen"] : translations["Create Screen"]
+      }
       onClose={close}
       centered
       onSubmit={form.onSubmit(handleCreate)}
-      buttonTitle={screenId ? "Edit" : "Create"}
+      buttonTitle={screenId ? translations["Edit"] : translations["Create"]}
     >
       <ContainedTextField
-        placeholder="Enter Screen Title"
+        placeholder={translations["Enter Screen Title"]}
         {...form.getInputProps("screenTitle")}
       />
     </FormModalLayout>

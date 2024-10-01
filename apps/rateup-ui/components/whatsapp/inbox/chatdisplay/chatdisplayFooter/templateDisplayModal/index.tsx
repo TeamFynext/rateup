@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
 import useTemplatesAvailableForTeam from "../../../../../../hooks/team";
 import { TeamSelector } from "../../../../../input/TeamSelector";
@@ -45,7 +47,7 @@ export default function WaInboxTemplateDisplayModal({
     filteredTemplates &&
     filteredTemplates?.length > 0 &&
     searchFilteredTemplates?.find((data) => data.id === selectedTemplateId);
-
+  const { translations } = useTranslations();
   return (
     <>
       <SimpleModalLayout
@@ -54,8 +56,8 @@ export default function WaInboxTemplateDisplayModal({
           opened,
           onClose,
           title: sessionExpired
-            ? "Initiate conversation by sending a template"
-            : "Send a template",
+            ? translations["Initiate conversation by sending a template"]
+            : translations["Send a template"],
           noCustomHeader: true,
         }}
       >
@@ -67,7 +69,9 @@ export default function WaInboxTemplateDisplayModal({
                   multiline
                   w={300}
                   label={
-                    "Some templates might not be available for a team, since they may have Flows which are not available for the team."
+                    translations[
+                      "Some templates might not be available for a team, since they may have Flows which are not available for the team."
+                    ]
                   }
                 >
                   <div>
@@ -106,13 +110,13 @@ export default function WaInboxTemplateDisplayModal({
               ) : (
                 <NothingFound
                   className={classes.nothing_found}
-                  text="No templates Selected"
+                  text={translations["No templates Selected"]}
                 />
               )}
             </Group>
           </Stack>
         ) : (
-          <NothingFound text="No templates found" />
+          <NothingFound text={translations["No templates found"]} />
         )}
       </SimpleModalLayout>
     </>

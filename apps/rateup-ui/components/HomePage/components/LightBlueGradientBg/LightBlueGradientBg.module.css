@@ -64,11 +64,11 @@
 }
 
 @media screen and (max-width: 1024px) {
-  .light-blue-gradient-bg-div {
-    padding: 0 !important;
+  .withoutGradientForMobile {
+    clip-path: none;
     background-image: none;
     color: black;
-    clip-path: none;
     white-space: initial;
+    padding: 0 !important;
   }
 }

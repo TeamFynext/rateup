@@ -2,12 +2,15 @@ import { useState } from "react";
 
 import { Box, Skeleton } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 export default function YoutubeEmbed({ embedId, sx }) {
   const [loading, setLoading] = useState(true);
 
   const handleLoad = () => {
     setLoading(false);
   };
+  const { translations } = useTranslations();
   return (
     <Box>
       {loading && <Skeleton style={{ aspectRatio: 3 / 2, borderRadius: 12 }} />}
@@ -16,7 +19,7 @@ export default function YoutubeEmbed({ embedId, sx }) {
         src={`https://www.youtube.com/embed/${embedId}`}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        title="Embedded youtube"
+        title={translations["Embedded youtube"]}
         onLoad={handleLoad}
       />
     </Box>

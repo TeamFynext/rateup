@@ -1,3 +1,5 @@
+import { useContext, useEffect, useState } from "react";
+
 import {
   ActionIcon,
   Badge,
@@ -12,8 +14,10 @@ import {
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { EditableText } from "../../input/EditableText";
 
@@ -39,7 +43,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
       });
     });
   }
-
+  const { translations } = useTranslations();
   return (
     <Stack gap="4px" p="sm" w="100%">
       {sections?.map(({ rows, title }, sIndex) => {
@@ -64,7 +68,11 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
                 id={sectionId}
                 editMode={sectionId === editingItem}
                 setEditingItem={setEditingItem}
-                placeholder="Section title (Required if more than one section is added)"
+                placeholder={
+                  translations[
+                    "Section title (Required if more than one section is added)"
+                  ]
+                }
                 style={{
                   flexGrow: 1,
                   fontWeight: "bold",
@@ -72,7 +80,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
                 }}
               />
               <Group>
-                <Tooltip label="Delete section">
+                <Tooltip label={translations["Delete section"]}>
                   <ActionIcon
                     onClick={() => {
                       setSections((draft) => {
@@ -123,7 +131,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
                   );
                 })}
                 <Button onClick={() => handleAddItem(sIndex)} variant="outline">
-                  Add item
+                  {translations["Add item"]}
                 </Button>
               </Stack>
             </Collapse>
@@ -147,7 +155,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
         }}
         mt="xs"
       >
-        Add Section
+        {translations["Add Section"]}
       </Button>
     </Stack>
   );
@@ -165,7 +173,7 @@ function WaListItem({
   const row = `s${sIndex}r${rIndex}`;
   const titleIndex = `${row}-title`;
   const descriptionIndex = `${row}-description`;
-
+  const { translations } = useTranslations();
   const { hovered, ref } = useHover();
 
   function handleDeleteItem() {
@@ -188,7 +196,7 @@ function WaListItem({
       >
         <EditableText
           text={title}
-          placeholder="Title (Required)"
+          placeholder={translations["Title (Required)"]}
           setText={(value) => {
             handleUpdateItem("title", value);
           }}
@@ -198,14 +206,14 @@ function WaListItem({
         />
         <EditableText
           text={description}
-          placeholder="Description (Optional)"
+          placeholder={translations["Descriptio (Optinonal)"]}
           setText={(value) => handleUpdateItem("description", value)}
           id={descriptionIndex}
           editMode={descriptionIndex === editingItem}
           setEditingItem={setEditingItem}
         />
       </Box>
-      <Tooltip label="Delete item">
+      <Tooltip label={translations["Delete item"]}>
         <ActionIcon
           variant="subtle"
           onClick={handleDeleteItem}

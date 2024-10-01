@@ -1,17 +1,21 @@
+import { useState } from "react";
+
+import { Badge, Group, Loader, Radio, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
 import { IconSend } from "@tabler/icons-react";
-import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useSendFlowToUser,
   useWaFlowsFromDb,
 } from "../../../../../../backend/whatsapp/flow/flow.query";
-import { Badge, Group, Loader, Radio, Stack } from "@mantine/core";
+import { WaFlowStatus } from "../../../../../../types/enums";
+import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
+import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
 import NothingFound from "../../../../../NothingFound/NothingFound";
-import { useState } from "react";
 import WaInboxFlowSelectCard from "./flowSelectCard";
 import classes from "./styles.module.css";
-import { WaFlowStatus } from "../../../../../../types/enums";
 
 interface Props {
   sessionExpired: boolean;
@@ -23,6 +27,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   const [loading, setLoading] = useState<boolean>(false);
   const { data, isLoading, error } = useWaFlowsFromDb();
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
+  const { translations } = useTranslations();
   function onClose() {
     setSelectedDbFlowId("");
     close();
@@ -39,7 +44,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
     setLoading(false);
   }
   if (isLoading) return <Loader />;
-  if (error) return <Badge color="red">Error</Badge>;
+  if (error) return <Badge color="red">{translations["Error"]}</Badge>;
   const acceptedFlows = data?.filter(
     (flow) => flow?.status === WaFlowStatus.PUBLISHED,
   );
@@ -67,7 +72,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             </Stack>
             <Group className={classes.send_button_wrapper}>
               <RateupButtonPrimary
-                title={"Send"}
+                title={translations["Send"]}
                 loading={loading}
                 onClick={handleSendFlow}
                 rightIcon={<IconSend />}
@@ -76,13 +81,19 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             </Group>
           </>
         ) : (
-          <NothingFound text="No flows found, If you already have a flow, check if its PUBLISHED" />
+          <NothingFound
+            text={
+              translations[
+                "No flows found, If you already have a flow, check if its PUBLISHED"
+              ]
+            }
+          />
         )}
       </SimpleModalLayout>
       <RateupButtonPrimary
         variant="transparent"
         onClick={open}
-        title={"Send Flow"}
+        title={translations["Send Flow"]}
       />
     </>
   );

@@ -1,33 +1,38 @@
+import { useState } from "react";
+
 import {
+  ActionIcon,
+  Center,
   CopyButton,
+  Flex,
   Group,
+  Image,
   Modal,
   Paper,
   ScrollArea,
-  Stack,
-  Title,
-  Text,
-  Center,
-  Image,
   ScrollAreaAutosize,
-  Flex,
-  ActionIcon,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
+import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
-import { useState } from "react";
-import TestimonialCard from "./TestimonialCard";
 import NothingFound from "../NothingFound/NothingFound";
+import TestimonialCard from "./TestimonialCard";
 
 const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
   const filteredTestimonials = selectedTestimonials;
+  const { translations } = useTranslations();
   if (filteredTestimonials?.length <= 0)
     return (
       <Center mt={150}>
-        <NothingFound text={"No testimonials found"} />
+        <NothingFound text={translations["No testimonials found"]} />
       </Center>
     );
 
@@ -53,7 +58,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
-
+  const { translations } = useTranslations();
   return (
     <Modal
       opened={opened}
@@ -83,11 +88,15 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             </Flex>
             <Group gap={"xs"} justify="center" align="center">
               <Stack gap={0}>
-                <Title fw={400}>Share Your Testimonials</Title>
+                <Title fw={400}>
+                  {translations["Share Your Testimonials"]}
+                </Title>
                 <Title order={5} fw={400}>
-                  {" "}
-                  Follow the instruction to share your testimonials on your
-                  website
+                  {
+                    translations[
+                      "Follow the instruction to share your testimonials on your website"
+                    ]
+                  }
                 </Title>
               </Stack>
               <Image src={`../../images/Party Svg Icon.svg`} w={60} h={60} />
@@ -106,7 +115,11 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
               <CopyButton value={iframe}>
                 {({ copied, copy }) => (
                   <RateupButtonSecondary
-                    title={copied ? "Copied code" : "Copy code"}
+                    title={
+                      copied
+                        ? translations["Copied code"]
+                        : translations["Copy code"]
+                    }
                     onClick={copy}
                     rightIcon={<IconCopy />}
                     styles={{ root: { width: "fit-content" } }}
@@ -115,11 +128,14 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
               </CopyButton>
             </Stack>
             <Text c={"#494949"} fw={400}>
-              Place this code in the desired section of your website to display
-              the embed.
+              {
+                translations[
+                  "Place this code in the desired section of your website to display the embed."
+                ]
+              }
             </Text>
             <RateupButtonBlue
-              title="Preview"
+              title={translations["Preview"]}
               styles={{ root: { width: "fit-content" } }}
               onClick={() => setIsPreview(true)}
             />
@@ -134,7 +150,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
                 color: "var(--tertiary-color)",
               },
             }}
-            title="Back"
+            title={translations["Back"]}
             leftIcon={<IconChevronLeft />}
             onClick={() => setIsPreview(false)}
           />

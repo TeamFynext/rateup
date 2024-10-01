@@ -1,38 +1,42 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { Carousel } from "@mantine/carousel";
 import {
-  Group,
-  Stack,
-  Title,
-  Text,
-  Checkbox,
-  Radio,
-  CheckIcon,
   Box,
+  Checkbox,
+  CheckIcon,
+  Flex,
+  Grid,
+  Group,
+  Modal,
+  Radio,
   ScrollArea,
   SimpleGrid,
-  Grid,
-  Flex,
-  Modal,
+  Stack,
   Tabs,
+  Text,
+  Title,
 } from "@mantine/core";
+import { useImmer } from "use-immer";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
+import { Testimonial, TestimonialStyleType } from "../../types/global";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../Button/RateupButtons";
 import {
   ContainedColorInput,
   ContainedNumberInput,
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput";
-import { Carousel } from "@mantine/carousel";
-import TestimonialCard from "./TestimonialCard";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
-import { Testimonial, TestimonialStyleType } from "../../types/global";
-import { FontWeights } from "../Survey/SurveyTheme/SurveyTheme.constants";
-import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { useImmer } from "use-immer";
-import CustomColorPicker from "../Survey/SurveyTheme/components/customelements/CustomColorPicker";
 import TabsCommon from "../menu/landingPage/Tabs/TabsCommon";
+import CustomColorPicker from "../Survey/SurveyTheme/components/customelements/CustomColorPicker";
+import { FontWeights } from "../Survey/SurveyTheme/SurveyTheme.constants";
+import TestimonialCard from "./TestimonialCard";
 
 interface TestimonialEditModalProps {
   opened;
@@ -52,6 +56,7 @@ const TestimonialEditModal = ({
   theme,
 }: TestimonialEditModalProps) => {
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(theme);
+  const { translations } = useTranslations();
   const testimonialSample: Testimonial = {
     testimonial: {
       name: "Profile Name",
@@ -247,7 +252,7 @@ const TestimonialEditModal = ({
           <ScrollArea h={430}>
             <Stack justify="flex-start">
               <Stack>
-                <Title order={3}>Change Color</Title>
+                <Title order={3}>{translations["Change Color"]}</Title>
                 <TabsCommon
                   value={activeBlockTab}
                   onChange={(value) => setActiveBlockTab(value as BlockTabEnum)}
@@ -269,7 +274,7 @@ const TestimonialEditModal = ({
                 </TabsCommon>
               </Stack>
               <Stack w={470}>
-                <Title order={3}>Change Font</Title>
+                <Title order={3}>{translations["Change Font"]}</Title>
                 {fonts.map((f) => (
                   <Group justify="space-between" key={f?.name}>
                     <Text>{f.name}</Text>
@@ -306,7 +311,7 @@ const TestimonialEditModal = ({
                 ))}
               </Stack>
               <Stack w={450}>
-                <Title order={3}>Change Layout</Title>
+                <Title order={3}>{translations["Change Layout"]}</Title>
                 <Radio.Group
                   value={currentStyle?.layout}
                   onChange={(value) => handleLayout(value)}
@@ -316,7 +321,7 @@ const TestimonialEditModal = ({
                       <Radio
                         icon={CheckIcon}
                         value={"horizontal"}
-                        label="Horizontal"
+                        label={translations["Horizontal"]}
                       />
                       <Carousel
                         color="#E2E5ED"
@@ -339,7 +344,7 @@ const TestimonialEditModal = ({
                       <Radio
                         icon={CheckIcon}
                         value="vertical"
-                        label="Vertical"
+                        label={translations["Vertical"]}
                       />
                       <SimpleGrid
                         cols={4}
@@ -364,13 +369,16 @@ const TestimonialEditModal = ({
           </ScrollArea>
           <Flex gap={"sm"} mt={"xl"}>
             <RateupButtonSecondary
-              title="cancel"
+              title={translations["cancel"]}
               onClick={() => {
                 setCurrentstyle(theme);
                 onClose();
               }}
             />
-            <RateupButtonBlue title="Save" onClick={handleUpdate} />
+            <RateupButtonBlue
+              title={translations["Save"]}
+              onClick={handleUpdate}
+            />
           </Flex>
         </Grid.Col>
 
@@ -382,7 +390,7 @@ const TestimonialEditModal = ({
             />
             <Stack mt="xl">
               <Checkbox
-                label={"Remove Rating"}
+                label={translations["Remove Rating"]}
                 styles={{
                   label: {
                     fontWeight: "bold",
@@ -398,7 +406,7 @@ const TestimonialEditModal = ({
                 }}
               />
               <Checkbox
-                label={"Remove Date"}
+                label={translations["Remove Date"]}
                 radius={"xl"}
                 styles={{
                   label: {
@@ -414,7 +422,7 @@ const TestimonialEditModal = ({
                 }}
               />
               <Checkbox
-                label={"Remove Profile Picture"}
+                label={translations["Remove Profile Picture"]}
                 radius={"xl"}
                 styles={{
                   label: {

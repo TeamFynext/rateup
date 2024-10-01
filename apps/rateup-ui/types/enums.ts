@@ -99,6 +99,18 @@ export enum LogicCondition {
   IncludesAllOf = "Includes All Of",
   Submitted = "is Submitted",
 }
+export enum LogicConditionComponentLevel {
+  EqualsTo = "==",
+  NotEquals = "!=",
+  And = "&&",
+  Or = "||",
+  Not = "!",
+  LessThan = "<",
+  GreaterThan = ">",
+  LessThanOrEqual = "<=",
+  GreaterThanOrEqual = ">=",
+  Parentheses = "()",
+}
 export enum MenuItemPriceType {
   FIXED = "FIXED",
   VARIANT = "VARIANT",
@@ -228,6 +240,7 @@ export enum WaFlowFormElementType {
   optIn = "OptIn",
   photoPicker = "PhotoPicker",
   documentPicker = "DocumentPicker",
+  if = "If",
 }
 export enum WaFlowFormInputElementType {
   textInput = "TextInput",
@@ -239,6 +252,7 @@ export enum WaFlowFormInputElementType {
   dropDown = "Dropdown",
   photoPicker = "PhotoPicker",
   documentPicker = "DocumentPicker",
+
   // optIn = "OptIn",
 }
 export enum WaFlowFormNonInputElementType {
@@ -250,6 +264,7 @@ export enum WaFlowFormNonInputElementType {
   nonInputText = "NonText",
   embeddedLink = "EmbeddedLink",
   optIn = "OptIn",
+  if = "If",
 }
 
 export enum SaveStatus {

@@ -12,9 +12,12 @@ import { sectionValues } from "./sectionValues";
 const cx = classNames.bind(styles);
 const ssCx = classNames.bind(sectionsStyles);
 
-function Section() {
+function Section3() {
   return (
     <Stack className={cx("section-root-div")}>
+      <h1 className={cx("heading", "landing-page-s-h-c")}>
+        Benefits of using smart QR codes on product packaging
+      </h1>
       <Box className={cx("sections-container")}>
         {sectionValues.map(
           (
@@ -55,4 +58,4 @@ function Section() {
   );
 }
 
-export default Section;
+export default Section3;

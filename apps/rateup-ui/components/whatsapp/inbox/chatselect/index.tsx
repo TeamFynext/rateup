@@ -19,6 +19,7 @@ import {
 import { FixedSizeList as List } from "react-window";
 
 import { WaInboxMessage } from "@/types/global";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { ContactsWithLastMessage } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -56,7 +57,7 @@ export default function WaInboxChatSelect(props: {
     shouldFetchAgainFilteredContacts,
     setShouldFetchAgainFilteredContacts,
   ] = useState(true);
-
+  const { translations } = useTranslations();
   const {
     data: filteredContacts,
     isFetched: isFilteredContactsFetched,
@@ -186,7 +187,7 @@ export default function WaInboxChatSelect(props: {
               />
             )
           }
-          placeholder="Search Contacts"
+          placeholder={translations["Search Contacts"]}
           value={filter?.searchTerm || ""}
           onChange={(e) =>
             prepareFilters({ ...filter, searchTerm: e.currentTarget.value })
@@ -247,8 +248,8 @@ export default function WaInboxChatSelect(props: {
         ) : (
           <Card component={Group}>
             <Text c={"dimmed"} size="sm" ta={"center"}>
-              No chats found <br />
-              search for a valid phone number or contact name
+              {translations["No chats found"]} <br />
+              {translations["search for a valid phone number or contact name"]}
             </Text>
           </Card>
         )

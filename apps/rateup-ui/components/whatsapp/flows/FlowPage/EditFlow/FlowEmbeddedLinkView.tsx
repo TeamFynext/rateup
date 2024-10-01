@@ -1,3 +1,5 @@
+import { useContext, useState } from "react";
+
 import {
   Badge,
   Divider,
@@ -9,7 +11,9 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { WaFlowFormElementType } from "../../../../../types/enums";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
@@ -20,9 +24,9 @@ import {
   getFormObjFromScreenId,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
 import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { EditFlowContext } from "./EditFlowContext";
-import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
 
 export function FlowEmbeddedLinkDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
@@ -36,6 +40,7 @@ export function FlowEmbeddedLinkDetailedView() {
       ? WaFlowFormElementType.textHeading
       : selectedFormElement.type,
   );
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       text: selectedFormElement.text || "",
@@ -60,7 +65,7 @@ export function FlowEmbeddedLinkDetailedView() {
   function handleSaveElement() {
     const res = form.validate();
     if (res.hasErrors) {
-      showErrorToast("Fix errors before saving");
+      showErrorToast(translations["Fix errors before saving"]);
       return "error";
     } else {
       const flowForm = getFormObjFromScreenId(
@@ -135,7 +140,7 @@ export function FlowEmbeddedLinkDetailedView() {
               }))}
               {...form.getInputProps("embeddedLinkScreenId")}
               label={"Next screen"}
-              placeholder="select next screen"
+              placeholder={translations["select next screen"]}
               w={300}
             />
           </Stack>
@@ -165,6 +170,7 @@ function FlowTextElementEditor(
   },
 ) {
   const { fontNormal, ...otherProp } = props;
+  const { translations } = useTranslations();
   return (
     <TextareaWithLengthTracker
       fz="lg"
@@ -179,7 +185,7 @@ function FlowTextElementEditor(
       }}
       variant="unstyled"
       autosize
-      placeholder="Enter your text here *"
+      placeholder={translations["Enter your text here *"]}
       {...otherProp}
     />
   );

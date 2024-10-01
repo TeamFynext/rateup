@@ -1,14 +1,18 @@
 import { Text } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
+import { getLabel } from "../../../../utils/file-upload/upload";
 import { lexend500 } from "../../../../utils/fonts";
 import {
-  ContainedTextField,
   ContainedFileButton,
+  ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
-import { getLabel } from "../../../../utils/file-upload/upload";
 
 export const BroadCastTypeValue = ({ form, type }) => {
+  const { translations } = useTranslations();
   const style = {
     maxWidth: 400,
   };
@@ -22,7 +26,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
             </Text>
           }
           mt={"md"}
-          placeholder="Header"
+          placeholder={translations["Header"]}
           {...form.getInputProps("header")}
           rightSection={
             <LengthTracker
@@ -38,7 +42,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
         <ContainedFileButton
           label={getLabel(form.values.header, "Image")}
           mt={"xl"}
-          placeholder={"Select an image"}
+          placeholder={translations["Select an image"]}
           {...form.getInputProps("header")}
           accept="image/jpeg,image/jpg,image/png"
           style={style}
@@ -49,7 +53,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
         <ContainedFileButton
           label={getLabel(form.values.header, "Video")}
           mt={"xl"}
-          placeholder={"Select an Video"}
+          placeholder={translations["Select an Video"]}
           {...form.getInputProps("header")}
           accept="video/mp4"
           style={style}

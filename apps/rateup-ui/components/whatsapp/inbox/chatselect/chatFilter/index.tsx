@@ -13,6 +13,8 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { IconFilter } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
@@ -37,14 +39,14 @@ interface Props {
 export default function WaInboxChatFilter(props: Props) {
   const { data, isLoading, error } = useChatFilterData();
   const isMobile = useMediaQuery("(max-width: 768px)");
-
+  const { translations } = useTranslations();
   if (isLoading) {
     return <Loader size={"xs"} />;
   }
   if (error) {
     return (
       <Text size="xs" c={"red"}>
-        Failed to fetch filter data
+        {translations["Failed to fetch filter data"]}
       </Text>
     );
   }
@@ -145,14 +147,14 @@ export default function WaInboxChatFilter(props: Props) {
       <HoverCardDropdown>
         <Stack>
           <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
-            clear filters
+            {translations["clear filters"]}
           </Button>
           <SegmentedControl
             value={props.filter.messageType}
             onChange={(value) => setFilters("messageType", value)}
             data={[
-              { value: "all", label: "All" },
-              { value: "usermessages", label: "User Messages" },
+              { value: "all", label: translations["All"] },
+              { value: "usermessages", label: translations["User Messages"] },
             ]}
             color={"var(--mantine-primary-color-6)"}
             radius={"md"}

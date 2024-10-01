@@ -1,11 +1,15 @@
-import { Stack, Title, Text, Group, ActionIcon, Menu } from "@mantine/core";
 import { useRouter } from "next/router";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import { formatDate } from "../../utils/dateTime";
-import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useDeleteTestimonialCollection } from "../../backend/testimonials/testimonial.query";
-import ConfirmationModal from "../Modal/ConfirmationModal";
+
+import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useDeleteTestimonialCollection } from "../../backend/testimonials/testimonial.query";
+import { formatDate } from "../../utils/dateTime";
+import ConfirmationModal from "../Modal/ConfirmationModal";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const TestimonialCollectionCard = ({ collection }) => {
   const router = useRouter();
@@ -15,6 +19,7 @@ const TestimonialCollectionCard = ({ collection }) => {
   function deleteCollection() {
     deleteCollectionMutation.mutate(collection?.id);
   }
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       hoveractive
@@ -26,9 +31,9 @@ const TestimonialCollectionCard = ({ collection }) => {
       <Stack>
         <ConfirmationModal
           forDeleteFunctionality
-          confirmLabel="Delete"
-          headerLabel="Are you sure to delete this collection?"
-          headerTitle="Delete Testimonial Collection?"
+          confirmLabel={translations["Delete"]}
+          headerLabel={translations["Are you sure to delete this collection?"]}
+          headerTitle={translations["Delete Testimonial Collection?"]}
           opened={dialogOpened}
           onClose={closeDialog}
           onConfirm={deleteCollection}
@@ -54,6 +59,7 @@ const TestimonialCollectionCard = ({ collection }) => {
 
 const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
   const router = useRouter();
+  const { translations } = useTranslations();
   return (
     <Menu shadow="md" width={200}>
       <Menu.Target>
@@ -73,7 +79,7 @@ const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
             router.push(`${router.pathname}/${collectionId}?tab=Edit`);
           }}
         >
-          Edit
+          {translations["Edit"]}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconShare />}
@@ -82,7 +88,7 @@ const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
             router.push(`${router.pathname}/${collectionId}?tab=Share`);
           }}
         >
-          Share
+          {translations["Share"]}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconTrash />}
@@ -91,7 +97,7 @@ const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
             openDialog();
           }}
         >
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

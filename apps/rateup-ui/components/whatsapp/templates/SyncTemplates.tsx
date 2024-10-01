@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Box,
   Button,
@@ -18,18 +20,20 @@ import {
   IconChevronRight,
   IconRefresh,
 } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useRegisterTemplatesMutation,
   useSyncTemplatesMutation,
   useUnregisteredTemplates,
 } from "../../../backend/whatsapp/whatsapp.query";
-import classes from "./template.module.css";
 import { showErrorToast } from "../../../utils/notifications";
-import WaTemplateStatusBadge from "./WaTemplateStatusBadge";
-import { useEffect, useState } from "react";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { WaResponseMessage } from "../MessageComponents";
 import whatsappStyles from "../whatsapp.module.css";
+import classes from "./template.module.css";
+import WaTemplateStatusBadge from "./WaTemplateStatusBadge";
 
 export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
   const [selectedTemplates, handlers] = useListState([]);
@@ -40,7 +44,7 @@ export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
   }>([]);
 
   const registerTemplateMutation = useRegisterTemplatesMutation();
-
+  const { translations } = useTranslations();
   // When all templates are configured, send post request to backend to import templates.
   useEffect(() => {
     if (currentTemplateIndex === -1) return;
@@ -78,7 +82,7 @@ export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Sync Templates"
+      title={translations["Sync Templates"]}
       h="80vh"
       size={"lg"}
       closeOnClickOutside={false}
@@ -142,15 +146,16 @@ function ConfigureTemplate({
     });
     selectNextTemplate();
   }
+  const { translations } = useTranslations();
   return (
     <Stack>
       <Progress value={((templateIndex + 1) / totalTemplates) * 100} />
       <ContainedTextField
-        label="Template Name"
+        label={translations["Template Name"]}
         value={template.name}
         readOnly
       />
-      <InputLabel>Preview</InputLabel>
+      <InputLabel>{translations["Preview"]}</InputLabel>
       <Box
         className={whatsappStyles.chatBg}
         p="lg"
@@ -166,9 +171,13 @@ function ConfigureTemplate({
           quickReplyButtons={buttons}
         />
       </Box>
-      <Tooltip label={"Clicking on this acceptButton will start the survey"}>
+      <Tooltip
+        label={
+          translations["Clicking on this acceptButton will start the survey"]
+        }
+      >
         <Select
-          label="Choose Accept-Button"
+          label={translations["Choose Accept-Button"]}
           value={acceptButton}
           onChange={(value) => setAcceptButton(value)}
           data={buttons}
@@ -188,7 +197,7 @@ function ConfigureTemplate({
           disabled={templateIndex === 0}
           onClick={selectPreviousTemplate}
         >
-          Previous
+          {translations["Previous"]}
         </Button>
         <Button
           rightSection={
@@ -200,7 +209,9 @@ function ConfigureTemplate({
           onClick={handleNext}
           loading={isSubmitting}
         >
-          {templateIndex === totalTemplates - 1 ? "Import Templates" : "Next"}
+          {templateIndex === totalTemplates - 1
+            ? translations["Import Templates"]
+            : translations["Next"]}
         </Button>
       </Group>
     </Stack>
@@ -240,6 +251,7 @@ function DisplayTemplates({
     }
   }
   const allChecked = selectedTemplates.length === unregisteredTemplates?.length;
+  const { translations } = useTranslations();
   return (
     <Flex direction={"column"} h="80vh">
       <Table.ScrollContainer
@@ -269,8 +281,8 @@ function DisplayTemplates({
                   }
                 />
               </Table.Th>
-              <Table.Th>Template</Table.Th>
-              <Table.Th>Status</Table.Th>
+              <Table.Th>{translations["Template"]}</Table.Th>
+              <Table.Th>{translations["Status"]}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody w="100%">
@@ -302,10 +314,10 @@ function DisplayTemplates({
         pt="xs"
       >
         <Button variant="outline" onClick={onClose}>
-          Cancel
+          {translations["Cancel"]}
         </Button>
         <Button disabled={selectedTemplates.length === 0} onClick={onImport}>
-          Import
+          {translations["Import"]}
         </Button>
       </Group>
     </Flex>
@@ -314,6 +326,7 @@ function DisplayTemplates({
 
 export function ImportTemplatesButton() {
   const [openModal, { open, close }] = useDisclosure(false);
+  const { translations } = useTranslations();
   const {
     data: unregisteredTemplates,
     isLoading,
@@ -322,7 +335,7 @@ export function ImportTemplatesButton() {
   } = useUnregisteredTemplates(openModal);
 
   if (error) {
-    showErrorToast("Error syncing templates");
+    showErrorToast(translations["Error syncing templates"]);
     console.error(error);
   }
 
@@ -338,7 +351,7 @@ export function ImportTemplatesButton() {
         onClick={open}
         radius={"lg"}
       >
-        Import
+        {translations["Import"]}
       </Button>
       <SyncTemplatesModal
         opened={openModal && !isLoading && !isError}
@@ -351,7 +364,7 @@ export function ImportTemplatesButton() {
 
 export function SyncTemplatesButton({ disabled = false }) {
   const syncMutation = useSyncTemplatesMutation();
-
+  const { translations } = useTranslations();
   function handleSyncClick() {
     syncMutation.mutate();
   }
@@ -368,7 +381,7 @@ export function SyncTemplatesButton({ disabled = false }) {
       radius={"lg"}
       disabled={disabled}
     >
-      Sync
+      {translations["Sync"]}
     </Button>
   );
 }

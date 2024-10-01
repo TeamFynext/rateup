@@ -1,3 +1,5 @@
+import { useContext, useEffect, useState } from "react";
+
 import {
   Divider,
   Group,
@@ -10,7 +12,9 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   WaFlowFormElementType,
   WhatsappFlowFontWeight,
@@ -23,8 +27,8 @@ import {
   getFormObjFromScreenId,
 } from "../../../../../utils/whatsapp/flow.utils";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { ContainedSelection } from "../../../../input/ContainedInput/ContainedInput";
+import { TextareaWithLengthTracker } from "../../../../Survey/ShareSurvey/FlowShareTemplateEditor";
 import { EditFlowContext } from "./EditFlowContext";
 
 export function FlowTextDetailedView() {
@@ -56,6 +60,7 @@ export function FlowTextDetailedView() {
       },
     },
   });
+  const { translations } = useTranslations();
   useEffect(() => {
     if (form.isValid()) handleSaveElement();
   }, [form.values]);
@@ -68,7 +73,7 @@ export function FlowTextDetailedView() {
   function handleSaveElement() {
     const res = form.validate();
     if (res.hasErrors) {
-      showErrorToast("Fix errors before saving");
+      showErrorToast(translations["Fix errors before saving"]);
       return "error";
     } else {
       const flowForm = getFormObjFromScreenId(
@@ -108,19 +113,22 @@ export function FlowTextDetailedView() {
             data={[
               {
                 value: WaFlowFormElementType.textHeading,
-                label: "Large Heading",
+                label: translations["Large Heading"],
               },
               {
                 value: WaFlowFormElementType.textSubHeading,
-                label: "Sub Heading",
+                label: translations["Sub Heading"],
               },
-              { value: WaFlowFormElementType.textBody, label: "Body" },
+              {
+                value: WaFlowFormElementType.textBody,
+                label: translations["Body"],
+              },
               {
                 value: WaFlowFormElementType.textCaption,
-                label: "Caption",
+                label: translations["Caption"],
               },
             ]}
-            placeholder="Select text type"
+            placeholder={translations["Select text type"]}
             value={nonInputTextType}
             onChange={(e) => setNonInputTextType(e as any)}
             allowDeselect={false}
@@ -146,27 +154,27 @@ export function FlowTextDetailedView() {
                 <Group mt="xs">
                   <Radio
                     value={WhatsappFlowFontWeight.bold}
-                    label="Bold"
+                    label={translations["Bold"]}
                     size="xs"
                   />
                   <Radio
                     value={WhatsappFlowFontWeight.italic}
-                    label="Italics"
+                    label={translations["Italics"]}
                     size="xs"
                   />
                   <Radio
                     value={WhatsappFlowFontWeight.boldAndItalic}
-                    label="Bold and italic"
+                    label={translations["Bold and italic"]}
                   />
                   <Radio
                     value={WhatsappFlowFontWeight.normal}
-                    label="Normal"
+                    label={translations["Normal"]}
                     size="xs"
                   />
                 </Group>
               </Radio.Group>
               <Switch
-                label="Strike Through"
+                label={translations["Strike Through"]}
                 {...form.getInputProps("strikethrough")}
                 defaultChecked={form.values?.strikethrough}
                 size="xs"
@@ -195,7 +203,7 @@ export function FlowTextDetailedView() {
         <Divider />
         <Group justify="flex-end" p="xs" px={"sm"}>
           <RateupButtonPrimary
-            title={"Save"}
+            title={translations["Save"]}
             size="md"
             leftIcon={<IconDeviceSdCard />}
             onClick={handleSaveElement}
@@ -215,6 +223,7 @@ function FlowTextElementEditor(
   },
 ) {
   const { fontNormal, fontSize, ...otherProp } = props;
+  const { translations } = useTranslations();
   return (
     <TextareaWithLengthTracker
       fz={fontSize}
@@ -229,7 +238,7 @@ function FlowTextElementEditor(
       }}
       variant="unstyled"
       autosize
-      placeholder="Enter your text here *"
+      placeholder={translations["Enter your text here *"]}
       {...otherProp}
     />
   );

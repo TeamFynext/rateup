@@ -4,6 +4,7 @@ import { Divider, Paper, Stack, Text } from "@mantine/core";
 import { Updater } from "use-immer";
 
 import { WaTemplateFetchBody } from "@/types/global";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import WaTemplateFormComponents from "./components";
 import classes from "./styles.module.css";
@@ -13,6 +14,7 @@ interface Props {
   template: WaTemplateFetchBody;
 }
 export default function WaTemplateFormElements(props: Props) {
+  const { translations } = useTranslations();
   const buildtemplatequerycomponent = useCallback(
     (
       component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
@@ -78,7 +80,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label="Header parameters"
+                  label={translations["Header parameters"]}
                   labelPosition="left"
                   className={classes.divider}
                 />
@@ -103,7 +105,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label="Body parameters"
+                  label={translations["Body parameters"]}
                   labelPosition="left"
                   className={classes.divider}
                 />
@@ -122,7 +124,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label="Footer parameters"
+                  label={translations["Footer parameters"]}
                   labelPosition="left"
                   className={classes.divider}
                 />
@@ -133,7 +135,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label="Button parameters"
+                  label={translations["Button parameters"]}
                   labelPosition="left"
                   className={classes.divider}
                 />

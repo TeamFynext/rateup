@@ -34,8 +34,8 @@ const SaveTestimonialCollection = ({ opened, close }) => {
       theme: defaultTestimonialStyle,
     },
     validate: {
-      name: isNotEmpty("Name cannot be blank"),
-      teamId: isNotEmpty("Please select a team"),
+      name: isNotEmpty(translations["Name cannot be blank"]),
+      teamId: isNotEmpty(translations["Please select a team"]),
     },
   });
 
@@ -46,8 +46,8 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     notifications.show({
       id: "create-collection",
       loading: true,
-      title: "Creating survey..",
-      message: `Hold on, your collection is getting created...`,
+      title: translations["Creating survey.."],
+      message: translations["Hold on, your collection is getting created..."],
       autoClose: false,
       withCloseButton: true,
     });
@@ -63,10 +63,10 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title="Create Collection"
+      title={translations["Create Collection"]}
       centered
       onSubmit={onSubmit}
-      buttonTitle="Save"
+      buttonTitle={translations["Save"]}
       includeCancelButton
       cancelOnClick={() => {
         form.reset();
@@ -75,9 +75,9 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     >
       <Stack>
         <ContainedTextField
-          label="Name your collection"
+          label={translations["Name your collection"]}
           {...form.getInputProps("name")}
-          placeholder="Enter collection name "
+          placeholder={translations["Enter collection name "]}
           styles={{
             label: {
               fontWeight: "bold",
@@ -88,9 +88,9 @@ const SaveTestimonialCollection = ({ opened, close }) => {
         <ContainedSelection
           allowDeselect={false}
           data={teamOptions}
-          label={"Select Team"}
+          label={translations["Select Team"]}
           {...form.getInputProps("teamId")}
-          placeholder="Select Team"
+          placeholder={translations["Select Team"]}
         />
       </Stack>
     </FormModalLayout>

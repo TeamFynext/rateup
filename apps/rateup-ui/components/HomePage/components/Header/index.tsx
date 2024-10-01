@@ -1,24 +1,44 @@
-import { Flex, Group, Image } from "@mantine/core";
-import classNames from "classnames/bind";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { getNavLinksArray, rateupLogoBlueTextUrl } from "../../constants";
+
+import { Flex, Group, Image } from "@mantine/core";
+import { useWindowScroll } from "@mantine/hooks";
+import classNames from "classnames/bind";
+
+import {
+  getNavLinksArray,
+  rateupLogoBlueTextUrl,
+  rateupLogoWhiteTextUrl,
+} from "../../constants";
 import styles from "./Header.module.css";
 import LoginSignupLinks from "./LoginSignupLinks";
 import MobileNavDrawer from "./MobileNavDrawer/MobileNavDrawer";
 
 const cx = classNames.bind(styles);
 
-function Header({ className = "" }) {
+function Header({ className = "", withWhiteTextLogo = false }) {
+  const [scroll, scrollTo] = useWindowScroll();
+  const scrollY = scroll.y;
+
   const router = useRouter();
   const currentRoutePath = router.asPath;
 
+  const isProductPackagingPage = router.pathname === "/product-packaging-qr";
+
   return (
-    <Flex justify="space-between" className={cx(className, "header-container")}>
+    <Flex
+      justify="space-between"
+      className={cx(className, "header-container", {
+        isProductPackagingPage,
+        "header-visible": isProductPackagingPage && scrollY > 150,
+      })}
+    >
       <Group gap={"sm"} className={cx("logo-nav-container")} wrap="nowrap">
         <Link href="/">
           <Image
-            src={rateupLogoBlueTextUrl}
+            src={
+              withWhiteTextLogo ? rateupLogoWhiteTextUrl : rateupLogoBlueTextUrl
+            }
             alt="logo"
             w={"4.0625rem"}
             h={"3.125rem"}
