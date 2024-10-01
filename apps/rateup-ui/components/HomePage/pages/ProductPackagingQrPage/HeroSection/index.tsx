@@ -1,83 +1,57 @@
-import Image from "next/image";
-
-import { Flex, Group, List, Stack } from "@mantine/core";
+import { Box, Flex, Group, List, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import BookDemoContactForm from "@/components/HomePage/components/BookDemoContactForm";
+import Header from "@/components/HomePage/components/Header";
+import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 import TryFreePlanBtn from "@/components/HomePage/components/TryFreePlanBtn";
 import { imagesPath } from "@/utils/constants";
 
-import commonStyles from "../../QrStudioPage/HeroSection/HeroSection.module.css";
-import ListItemDot from "../../QrStudioPage/HeroSection/ListItemDot";
-import styles from "../../WhatsappFeedbackPage/HeroSection/HeroSection.module.css";
+import styles from "./HeroSection.module.css";
 
 const cx = classNames.bind(styles);
-const commonStylesCx = classNames.bind(commonStyles);
 
 function HeroSection() {
   return (
-    <Flex
-      className={commonStylesCx(
-        "hero-section-root-div",
-        cx("hero-section-root-div"),
-      )}
-    >
-      <Stack className={commonStylesCx("text-wrapper")}>
-        <Stack
-          className={commonStylesCx("text-container", cx("text-container"))}
-        >
-          <h1 className={commonStylesCx("heading", cx("heading"))}>
-            <span>Transform product packaging </span>
-            <span>into a customer engagement </span>
-            <span>hub with smart QR codes</span>
+    <Flex className={cx("hero-section-root-div", cx("hero-section-root-div"))}>
+      <Header
+        className={cx("product-packaging-page-navbar")}
+        withWhiteTextLogo
+      />
+      <Stack className={cx("content-cntainer")}>
+        <Stack className={cx("heading-and-btn-container")}>
+          <h1 className={cx("heading")}>
+            <LightBlueGradientBg withoutGradientForMobile={false}>
+              Turn packaging into a{" "}
+            </LightBlueGradientBg>
+            <span className={cx("customer-engagement-text-span")}>
+              Customer Engagement Hub
+            </span>
           </h1>
-          <List
-            className={commonStylesCx(
-              "qr-features-list",
-              cx("qr-features-list"),
-            )}
-          >
-            <List.Item icon={<ListItemDot color={"#FFD54C"} />}>
-              Instant feedback forms
-            </List.Item>
-            <List.Item icon={<ListItemDot color={"#FFD54C"} />}>
-              Engaging Product Videos
-            </List.Item>
-            <List.Item icon={<ListItemDot color={"#FFD54C"} />}>
-              Customizable to fit your brand
-            </List.Item>
-          </List>
-          <Group
-            className={commonStylesCx(
-              "book-demo-try-free-plan-btns-container",
-              cx("book-demo-try-free-plan-btns-container"),
-            )}
-          >
-            <BookDemoContactForm
-              buttonProps={{ whiteBackgroundGradientText: true }}
-            />
+
+          <Group className={cx("book-demo-try-free-plan-btns-container")}>
             <TryFreePlanBtn
-              className={commonStylesCx(
-                "try-free-plan-btn",
-                cx("try-free-plan-btn"),
-              )}
+              className={cx("try-freeplan-btn")}
+              gACategory={"try_free_plan"}
+              fbEventName={"TryFreePlanButtonClick"}
+              gALabel={"Clicked on try free plan button in home page"}
             />
+            <BookDemoContactForm className={cx("book-a-demo-btn-container")} />
           </Group>
         </Stack>
-      </Stack>
-
-      <Stack
-        className={commonStylesCx("image-container", cx("image-container"))}
-        mah={"26rem"}
-      >
-        <Image
-          className={commonStylesCx("hero-section-image")}
-          src={`${imagesPath}/product-packaging-qr-page/hero-section-image.png`}
-          width={1157}
-          height={910}
-          alt="Packages with rateup qr code"
-          priority
-        />
+        <Stack className={cx("image-container")}>
+          <picture className={cx("image-container-picture-ele")}>
+            <source
+              type="image/webp"
+              srcSet={`${imagesPath}/product-packaging-qr-page/hero-section-img/hero-section-img.webp`}
+            />
+            <img
+              className={cx("hero-section-img")}
+              src={`${imagesPath}/product-packaging-qr-page/hero-section-img/hero-section-img.png`}
+              alt="Turn packaging into a customer Engagement Hub"
+            />
+          </picture>
+        </Stack>
       </Stack>
     </Flex>
   );

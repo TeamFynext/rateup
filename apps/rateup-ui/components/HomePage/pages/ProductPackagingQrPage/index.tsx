@@ -3,9 +3,14 @@ import Head from "next/head";
 import { Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
+import HassleFree from "./HassleFree";
 import HeroSection from "./HeroSection";
 import styles from "./ProductPackagingQrPage.module.css";
-import Section from "./Section";
+import Section1 from "./Section1";
+import Section2 from "./Section2";
+import Section3 from "./Section3";
+import Section4 from "./Section4";
+import WhyUseSmartQRCode from "./WhyUseSmartQrcode";
 
 const cx = classNames.bind(styles);
 
@@ -47,7 +52,12 @@ function ProductPackagingQrPage() {
         />
       </Head>
       <HeroSection />
-      <Section />
+      <WhyUseSmartQRCode />
+      <Section1 />
+      <Section2 />
+      <Section3 />
+      <Section4 />
+      <HassleFree />
     </Stack>
   );
 }
