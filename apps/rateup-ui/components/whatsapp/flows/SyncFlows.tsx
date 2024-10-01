@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Button,
   Checkbox,
@@ -11,27 +13,29 @@ import {
   Table,
   Text,
 } from "@mantine/core";
+import { useForm, UseFormReturnType } from "@mantine/form";
 import { useDisclosure, useListState } from "@mantine/hooks";
 import {
   IconChevronLeft,
   IconChevronRight,
   IconRefresh,
 } from "@tabler/icons-react";
-import classes from "../templates/template.module.css";
-import { showErrorToast } from "../../../utils/notifications";
-import WaTemplateStatusBadge from "./WaTemplateStatusBadge";
-import { useEffect, useState } from "react";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useImportFlowsMutation,
   useUnsyncedFlows,
   useWaFlowJson,
 } from "../../../backend/whatsapp/flow/flow.query";
+import { WaFlowFormElementType } from "../../../types/enums";
 import {
   WaFlowFormChoice,
   WaFlowFormElement,
   WaFlowWa,
 } from "../../../types/global";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import { showErrorToast } from "../../../utils/notifications";
 import {
   getQuestionResponses,
   getQuestionTypesFromFlowElement,
@@ -39,11 +43,11 @@ import {
   validateOptions,
   waFlowFormToQuestionTypeMaps,
 } from "../../../utils/whatsapp/flow.utils";
-import { useForm, UseFormReturnType } from "@mantine/form";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { WaFlowFormElementType } from "../../../types/enums";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../../input/TeamSelector";
 import RateupLoader from "../../Loaders/RateupLoader";
+import classes from "../templates/template.module.css";
+import WaTemplateStatusBadge from "./WaTemplateStatusBadge";
 
 export function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
   const [selectedFlows, handlers] = useListState([]);
@@ -100,7 +104,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const flow = flows[currentFlowIndex];
   const importMutation = useImportFlowsMutation();
-
+  const { translations } = useTranslations();
   function handleNext() {
     if (currentFlowIndex !== flows.length - 1) {
       setCurrentFlowIndex(currentFlowIndex + 1);
@@ -147,7 +151,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
       <TeamSelector
         value={selectedTeam}
         onChange={setSelectedTeam}
-        label="Import Flows To"
+        label={translations["Import Flows To"]}
       />
       <Group
         justify="space-between"
@@ -163,7 +167,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
           disabled={currentFlowIndex === 0}
           onClick={handlePrevious}
         >
-          Previous
+          {translations["Previous"]}
         </Button>
         <Button
           rightSection={isLastFlow ? undefined : <IconChevronRight size={20} />}
@@ -171,7 +175,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
           onClick={handleNext}
           loading={importMutation.isPending}
         >
-          {isLastFlow ? "Import Flows" : "Next"}
+          {isLastFlow ? translations["Import Flows"] : translations["Next"]}
         </Button>
       </Group>
     </Stack>
@@ -189,7 +193,7 @@ function ConfigureFlow({
   handleNext: () => void;
 }) {
   const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (flowJson) {
       let interactiveQCount = 0;
@@ -226,8 +230,12 @@ function ConfigureFlow({
 
   return (
     <>
-      <ContainedTextField label="Flow Name" value={flow.name} disabled />
-      <InputLabel>Assign valid question types</InputLabel>
+      <ContainedTextField
+        label={translations["Flow Name"]}
+        value={flow.name}
+        disabled
+      />
+      <InputLabel>{translations["Assign valid question types"]}</InputLabel>
       <Stack
         bg="whitesmoke"
         p="md"
@@ -387,6 +395,7 @@ function DisplayTemplates({
     }
   }
   const allChecked = selectedTemplates.length === unregisteredTemplates?.length;
+  const { translations } = useTranslations();
   return (
     <Flex direction={"column"} h="80vh">
       <Table.ScrollContainer
@@ -416,7 +425,7 @@ function DisplayTemplates({
                   }
                 />
               </Table.Th>
-              <Table.Th>Template</Table.Th>
+              <Table.Th>{translations["Template"]}</Table.Th>
               <Table.Th>Status</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -448,9 +457,9 @@ function DisplayTemplates({
         }}
         pt="xs"
       >
-        <Button variant="outline">Cancel</Button>
+        <Button variant="outline">{translations["Cancel"]}</Button>
         <Button disabled={selectedTemplates.length === 0} onClick={onImport}>
-          Import
+          {translations["Import"]}
         </Button>
       </Group>
     </Flex>
@@ -470,7 +479,7 @@ export function SyncFlowsButton({ disabled = false }) {
     showErrorToast("Error syncing templates");
     console.error(error);
   }
-
+  const { translations } = useTranslations();
   return (
     <>
       <Button
@@ -484,7 +493,7 @@ export function SyncFlowsButton({ disabled = false }) {
         radius={"lg"}
         disabled={disabled}
       >
-        Sync
+        {translations["Sync"]}
       </Button>
       <SyncTemplatesModal
         opened={openModal && !isLoading && !isError}

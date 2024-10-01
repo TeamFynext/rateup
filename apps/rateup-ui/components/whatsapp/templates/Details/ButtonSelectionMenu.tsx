@@ -21,6 +21,8 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 import { lexend500 } from "../../../../utils/fonts";
 
@@ -37,21 +39,27 @@ export const ButtonSelection = ({
   disabled,
   ...restProps
 }: ButtonSelectionProps) => {
+  const { translations } = useTranslations();
   return (
     <Stack gap={4}>
       <Text fz={14} ff={lexend500.style.fontFamily}>
-        Buttons (Optional)
+        {translations["Buttons (Optional)"]}
       </Text>
       <Text fz={13}>
-        Insert buttons so your customers can take action and engage with your
-        message!
+        {
+          translations[
+            "Insert buttons so your customers can take action and engage with your message!"
+          ]
+        }
       </Text>
 
       <Menu shadow="md" width={200} {...restProps}>
         <Menu.Target>
           <Tooltip
             label={
-              "Only one button is supported for this type of template. The button text is not editable."
+              translations[
+                "Only one button is supported for this type of template. The button text is not editable."
+              ]
             }
             disabled={!disabled}
           >
@@ -63,17 +71,17 @@ export const ButtonSelection = ({
               rightSection={<IconChevronDown size={16} />}
               disabled={disabled}
             >
-              Add Action Button
+              {translations["Add Action Button"]}
             </Button>
           </Tooltip>
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Label>Rateup Interactive Buttons</Menu.Label>
+          <Menu.Label>{translations["Rateup Interactive Buttons"]}</Menu.Label>
           <Tooltip
             label={
               (btnLen > 0 || flowBtn) &&
-              "Remove all button to add a flow button"
+              translations["Remove all button to add a flow button"]
             }
             display={!flowBtn || btnLen === 0 ? "none" : "block"}
           >
@@ -85,12 +93,14 @@ export const ButtonSelection = ({
                 }
                 onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
               >
-                Whatsapp Flow
+                {translations["Whatsapp Flow"]}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Tooltip
-            label={flowBtn && "Remove flow button to add other buttons"}
+            label={
+              flowBtn && translations["Remove flow button to add other buttons"]
+            }
             display={!flowBtn ? "none" : "block"}
           >
             <Box>
@@ -103,14 +113,16 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)
                 }
               >
-                Rateup Web Survey
+                {translations["Rateup Web Survey"]}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Menu.Divider />
-          <Menu.Label>Quick Reply Buttons</Menu.Label>
+          <Menu.Label>{translations["Quick Reply Buttons"]}</Menu.Label>
           <Tooltip
-            label={flowBtn && "Remove flow button to add other buttons"}
+            label={
+              flowBtn && translations["Remove flow button to add other buttons"]
+            }
             display={!flowBtn ? "none" : "block"}
           >
             <Box>
@@ -125,15 +137,17 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)
                 }
               >
-                Custom
+                {translations["Custom"]}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Menu.Divider />
 
-          <Menu.Label>Call-To-Action Buttons</Menu.Label>
+          <Menu.Label>{translations["Call-To-Action Buttons"]}</Menu.Label>
           <Tooltip
-            label={flowBtn && "Remove flow button to add other buttons"}
+            label={
+              flowBtn && translations["Remove flow button to add other buttons"]
+            }
             display={!flowBtn ? "none" : "block"}
           >
             <Box>
@@ -146,12 +160,14 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)
                 }
               >
-                Call phone number
+                {translations["Call phone number"]}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Tooltip
-            label={flowBtn && "Remove flow button to add other buttons"}
+            label={
+              flowBtn && translations["Remove flow button to add other buttons"]
+            }
             display={!flowBtn ? "none" : "block"}
           >
             <Box>
@@ -164,12 +180,14 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)
                 }
               >
-                Copy offer code
+                {translations["Copy offer code"]}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Tooltip
-            label={flowBtn && "Remove flow button to add other buttons"}
+            label={
+              flowBtn && translations["Remove flow button to add other buttons"]
+            }
             display={!flowBtn ? "none" : "block"}
           >
             <Box>
@@ -182,7 +200,7 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
                 }
               >
-                Visit website
+                {translations["Visit website"]}
               </Menu.Item>
             </Box>
           </Tooltip>
@@ -190,7 +208,11 @@ export const ButtonSelection = ({
       </Menu>
       <Group fz={14} gap={"xs"} wrap="nowrap">
         <IconBulb size={16} />
-        If you add more than three buttons, they will appear in a list.
+        {
+          translations[
+            "If you add more than three buttons, they will appear in a list."
+          ]
+        }
       </Group>
     </Stack>
   );

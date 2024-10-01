@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from "react";
-import FormModalLayout from "../Modal/FormModalLayout";
+
 import { Group, Stack } from "@mantine/core";
-import { RateupButtonBlue } from "../Button/RateupButtons";
-import { notifications } from "@mantine/notifications";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
+import { useCreateTicketMutation } from "../../backend/tickets/tickets.query";
+import { TicketType } from "../../utils/enums/ticket";
+import { RateupButtonBlue } from "../Button/RateupButtons";
 import {
   ContainedDateInput,
   ContainedSelection,
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
-import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
-import { useCreateTicketMutation } from "../../backend/tickets/tickets.query";
-import { TicketType } from "../../utils/enums/ticket";
-import ConfirmationModal from "../Modal/ConfirmationModal";
-import { useDisclosure } from "@mantine/hooks";
 import { TeamSelector } from "../input/TeamSelector";
+import ConfirmationModal from "../Modal/ConfirmationModal";
+import FormModalLayout from "../Modal/FormModalLayout";
 
 interface iProps {
   createTicketOpened: boolean;
@@ -37,15 +41,15 @@ const CreateTicketModal = ({
   surveyResponseId,
 }: iProps) => {
   let isCustomTicket = type === TicketType.CUSTOM;
-
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       title:
         type === TicketType.REVIEW
-          ? "Review Ticket"
+          ? translations["Review Ticket"]
           : isCustomTicket
             ? ""
-            : "Survey Response Ticket",
+            : translations["Survey Response Ticket"],
       type:
         type === TicketType.REVIEW
           ? TicketType.REVIEW
@@ -62,13 +66,15 @@ const CreateTicketModal = ({
         type === TicketType.SURVEY_RESPONSE ? surveyResponseId : "",
     },
     validate: {
-      title: (value) => (value.length ? null : "Cannot be empty"),
+      title: (value) => (value.length ? null : translations["Cannot be empty"]),
       firstComment: (value) =>
-        value.trim().split(" ").length >= 2 ? null : "Minimum 2 words required",
+        value.trim().split(" ").length >= 2
+          ? null
+          : translations["Minimum 2 words required"],
       assignedToId: (value) =>
-        value.length ? null : "Team member selection is required",
+        value.length ? null : translations["Team member selection is required"],
       priority: (value) =>
-        value.length ? null : "Priority selection is required",
+        value.length ? null : translations["Priority selection is required"],
     },
   });
 
@@ -112,8 +118,8 @@ const CreateTicketModal = ({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: "Creating Ticket",
-      message: `Hold on, your ticket is getting created...`,
+      title: translations["Creating Ticket"],
+      message: translations["Hold on, your ticket is getting created..."],
       autoClose: false,
       withCloseButton: true,
     });
@@ -140,7 +146,7 @@ const CreateTicketModal = ({
     <FormModalLayout
       opened={createTicketOpened}
       onClose={closeAll}
-      title={"Create Ticket"}
+      title={translations["Create Ticket"]}
       centered
       size="xl"
     >
@@ -149,9 +155,9 @@ const CreateTicketModal = ({
         onClose={() => {
           closeAll();
         }}
-        headerLabel={`Successfully created ticket for the ${type === TicketType.SURVEY_RESPONSE ? "Survey Response" : "Review"}`}
-        headerTitle="Ticket Created"
-        confirmLabel="View Ticket"
+        headerLabel={` ${translations["Successfully created ticket for the"]} ${type === TicketType.SURVEY_RESPONSE ? translations["Survey Response"] : translations["Review"]}`}
+        headerTitle={translations["Ticket Created"]}
+        confirmLabel={translations["View Ticket"]}
         onConfirm={(e) => {
           if (createdTicketId) {
             let url = `/dashboard/tickets/${createdTicketId}`;
@@ -164,8 +170,8 @@ const CreateTicketModal = ({
       <Stack mt="lg">
         <Group>
           <ContainedTextField
-            placeholder={"Enter Ticket Name"}
-            label={"Name:"}
+            placeholder={translations["Enter Ticket Name"]}
+            label={translations["Name:"]}
             withAsterisk
             {...form.getInputProps("title")}
             style={{
@@ -178,7 +184,7 @@ const CreateTicketModal = ({
               value={form.values.teamId}
               onChange={(teamId) => form.setFieldValue("teamId", teamId)}
               enableAll={false}
-              label="Select Team"
+              label={translations["Select Team"]}
               style={{ minWidth: "32%" }}
               withAsterisk
             />
@@ -186,8 +192,16 @@ const CreateTicketModal = ({
         </Group>
 
         <ContainedTextArea
-          placeholder={isCustomTicket ? "Enter description" : "Enter Comment"}
-          label={isCustomTicket ? "Description" : "Comment"}
+          placeholder={
+            isCustomTicket
+              ? translations["Enter description"]
+              : translations["Enter Comment"]
+          }
+          label={
+            isCustomTicket
+              ? translations["Description"]
+              : translations["Comment"]
+          }
           withAsterisk
           autosize
           maxRows={4}
@@ -199,26 +213,28 @@ const CreateTicketModal = ({
             allowDeselect={false}
             data={memberOptions}
             withAsterisk
-            label={"Assign to"}
+            label={translations["Assign to"]}
             style={{ minWidth: "32%" }}
-            placeholder="Select a team member to assign ticket to"
+            placeholder={
+              translations["Select a team member to assign ticket to"]
+            }
             {...form.getInputProps("assignedToId")}
           />
           <ContainedSelection
             allowDeselect={false}
             data={["LOW", "MEDIUM", "HIGH", "CRITICAL"]}
             withAsterisk
-            label={"Priority"}
+            label={translations["Priority"]}
             style={{ minWidth: "30%" }}
-            placeholder="Select priority for the ticket"
+            placeholder={translations["Select priority for the ticket"]}
             {...form.getInputProps("priority")}
           />
           <ContainedDateInput
             minDate={new Date()}
             clearable
-            label={"Deadline:"}
+            label={translations["Deadline:"]}
             style={{ minWidth: "32%" }}
-            placeholder="Select a deadline for the ticket"
+            placeholder={translations["Select a deadline for the ticket"]}
             {...form.getInputProps("deadline")}
           />
         </Group>
@@ -226,7 +242,7 @@ const CreateTicketModal = ({
         <Group justify="flex-end" mt="sm">
           <RateupButtonBlue
             mt="xl"
-            title="Cancel"
+            title={translations["Cancel"]}
             onClick={() => {
               closeAll();
             }}
@@ -234,7 +250,7 @@ const CreateTicketModal = ({
 
           <RateupButtonBlue
             mt="xl"
-            title="Create"
+            title={translations["Create"]}
             leftIcon={<IconPlus />}
             onClick={onSubmit}
           />

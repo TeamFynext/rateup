@@ -1,26 +1,30 @@
-import { Box, Group, Text, useMantineTheme } from "@mantine/core";
-import ScreenListItem from "./ScreenListItem";
-import styles from "./FlowScreensList.module.css";
-import { IconAlertTriangle } from "@tabler/icons-react";
-import { useCounter, useDisclosure } from "@mantine/hooks";
-import CreateFlowScreenModal from "./CreateFlowScreenModal";
 import { useContext, useEffect, useRef } from "react";
-import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import { useRouter } from "next/router";
+
+import { Box, Group, Text, useMantineTheme } from "@mantine/core";
+import { useCounter, useDisclosure } from "@mantine/hooks";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
-import {
-  getFormObjFromScreenId,
-  getScreenObjById,
-} from "../../../../../utils/whatsapp/flow.utils";
-import { reorder } from "../../../../../utils/questions";
-import { getFlowFormElementsFromScreen } from "../../../../../utils/whatsapp/flow.utils";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
-import { FlowMaxScreens } from "../../../whatsappConfig";
 import { showErrorToast } from "../../../../../utils/notifications";
-import { useRouter } from "next/router";
-import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
+import { reorder } from "../../../../../utils/questions";
+import {
+  getFlowFormElementsFromScreen,
+  getFormObjFromScreenId,
+  getScreenObjById,
+} from "../../../../../utils/whatsapp/flow.utils";
+import { FlowMaxScreens } from "../../../whatsappConfig";
+import { EditFlowContext } from "../EditFlow/EditFlowContext";
+import CreateFlowScreenModal from "./CreateFlowScreenModal";
+import styles from "./FlowScreensList.module.css";
+import ScreenListItem from "./ScreenListItem";
 
 interface FlowScreensListProps {
   onAddElementClick: (screenId: string) => void;
@@ -49,7 +53,7 @@ function FlowScreensList({
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   function handleCreateScreenClick() {
     if (flowJson.screens.length >= FlowMaxScreens) {
       showErrorToast(`You can only have ${FlowMaxScreens} screens`);
@@ -119,7 +123,7 @@ function FlowScreensList({
               color: theme.colors.red[9],
             }}
           >
-            Cannot Edit a Published Flow
+            {translations["Cannot Edit a Published Flow"]}
           </Text>
         </Group>
       )}

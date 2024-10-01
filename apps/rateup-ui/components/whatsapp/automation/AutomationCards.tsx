@@ -18,6 +18,7 @@ import { useTimeSince } from "@/hooks/timeSince";
 import { useDeleteWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import classes from "./styles.module.css";
 
@@ -47,6 +48,7 @@ interface WaAutomationCardProps {
 function AutomationCard({ automation }: WaAutomationCardProps) {
   const timeSince = useTimeSince(automation.createdAt);
   const router = useRouter();
+  const { translations } = useTranslations();
   return (
     <PaperLayout
       p="md"
@@ -67,11 +69,11 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
           </CardMenu>
         </Group>
         <Text fz="sm" c="dimmed">
-          {`Created ${timeSince}`}
+          {` ${translations["Created"]} ${timeSince}`}
         </Text>
         <Group className={classes.card_footer}>
           <Text fz={"xs"} fw={600}>
-            For
+            {translations["For"]}
           </Text>
 
           {automation?.matchData?.exactText ? (
@@ -114,7 +116,7 @@ export function CardMenu({ children }) {
 function LCampaignCardMenuItems({ campaignId }) {
   const [deleteDialogOpened, { open, close }] = useDisclosure(false);
   const deleteMutation = useDeleteWaAutomatedReplyMutation();
-
+  const { translations } = useTranslations();
   function handleDelete() {
     deleteMutation.mutate(campaignId, {
       onSuccess: close,
@@ -125,16 +127,18 @@ function LCampaignCardMenuItems({ campaignId }) {
     <>
       <Menu.Dropdown>
         <Menu.Item leftSection={<IconTrash />} onClick={open}>
-          Delete
+          {translations["Delete"]}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel="Are you sure you want to delete this Automated Reply?"
-        headerTitle="Delete Automated Reply"
-        confirmLabel="Delete"
+        headerLabel={
+          translations["Are you sure you want to delete this Automated Reply?"]
+        }
+        headerTitle={translations["Delete Automated Reply"]}
+        confirmLabel={translations["Delete"]}
         onConfirm={handleDelete}
       />
     </>

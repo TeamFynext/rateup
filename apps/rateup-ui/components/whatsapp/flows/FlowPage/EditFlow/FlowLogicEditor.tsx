@@ -25,6 +25,7 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   useUpdateFlowMutation,
@@ -113,6 +114,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const updateFlowMutation = useUpdateFlowMutation();
   const dbFlowId = useRouter().query.dbFlowId as string;
   const { data: dbFlow, isLoading, isError } = useWaFlowFromDb(dbFlowId);
+  const { translations } = useTranslations();
   useEffect(() => {
     if (
       dbFlow &&
@@ -163,7 +165,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   return (
     <Flex style={{ flexDirection: "column", height: "100%" }}>
       <Group gap={"xs"}>
-        <Title order={3}>Logic Jumps for Screen:</Title>
+        <Title order={3}>{translations["Logic Jumps for Screen:"]}</Title>
         <Title c="whatsapp-green" className={lexend500.className} order={3}>
           {screen.title}
         </Title>{" "}
@@ -222,7 +224,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
               flexShrink: 0,
             }}
           >
-            Add Logic Jump
+            {translations["Add Logic Jump"]}
           </Button>
         </Stack>
       </ScrollAreaAutosize>
@@ -235,14 +237,14 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           }}
         >
           <RateupButtonSecondary
-            title={"Close"}
+            title={translations["Close"]}
             size="md"
             variant="outline"
             color="var(--tertiary-color)"
             onClick={() => afterSave()}
           />
           <RateupButtonBlue
-            title={"Save"}
+            title={translations["Save"]}
             size="md"
             onClick={handleSave}
             loading={updateFlowMutation.isPending}
@@ -289,12 +291,13 @@ function AtomicConditionBlock({
   const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
     logicSupportedTypes.includes(q.type as QuestionType),
   );
-
+  const { translations } = useTranslations();
   const [selectedQId, setSelectedQId] = useState(
     condition?.questionId || editingQuestion?.id,
   );
   const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
-  if (!selectedQ) throw new Error("Selected question not found in screen");
+  if (!selectedQ)
+    throw new Error(translations["Selected question not found in screen"]);
 
   const [matchData, setMatchData] = useState(condition.response);
 
@@ -320,7 +323,7 @@ function AtomicConditionBlock({
     >
       <Stack gap={"2px"}>
         <Select
-          label="For Question"
+          label={translations["For Question"]}
           data={logicSupportedQuestionsInScreen.map((q) => ({
             label: getQuestionLabel(q, selectedLanguage), //TODO: show index too
             value: q.id,
@@ -361,7 +364,7 @@ function AtomicConditionBlock({
             data={getResponses(selectedQ, selectedLanguage)}
             value={Array.isArray(matchData) ? matchData : []}
             onChange={setMatchData}
-            placeholder="Select Responses"
+            placeholder={translations["Select Responses"]}
             searchable
           />
         ) : isComponentLevel ? (
@@ -465,7 +468,7 @@ function ConditionsActionMapBlock({
   ];
 
   const { colors } = useMantineTheme();
-
+  const { translations } = useTranslations();
   useEffect(() => {
     updateLogicJumps((draft) => {
       draft[index].action = isComponentLevel
@@ -512,7 +515,7 @@ function ConditionsActionMapBlock({
       )}
       <Box style={{ flexGrow: 1, textAlign: "center" }}>
         <Title order={4} mb="sm">
-          Conditions
+          {translations["Conditions"]}
         </Title>
         <Stack
           style={{
@@ -548,7 +551,7 @@ function ConditionsActionMapBlock({
                     textAlign: "center",
                   }}
                 >
-                  AND
+                  {translations["AND"]}
                 </Text>
               )}
             </Fragment>
@@ -579,7 +582,7 @@ function ConditionsActionMapBlock({
                 });
               }}
             >
-              Add Condition
+              {translations["Add Condition"]}
             </Button>
           )}
         </Stack>
@@ -593,7 +596,7 @@ function ConditionsActionMapBlock({
             textAlign: "center",
           }}
         >
-          Action
+          {translations["Action"]}
         </Title>
         <Center
           style={{
@@ -622,7 +625,7 @@ function ConditionsActionMapBlock({
             </Stack>
           ) : (
             <Select
-              label="Action"
+              label={translations["Action"]}
               data={possibleActions}
               value={selectedAction as LogicAction}
               onChange={setSelectedAction as any}

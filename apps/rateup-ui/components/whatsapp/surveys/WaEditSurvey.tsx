@@ -1,5 +1,16 @@
-import { Flex, Tabs, Center, Text } from "@mantine/core";
-import { useState, useEffect, useContext } from "react";
+import { useContext, useEffect, useState } from "react";
+
+import { Center, Flex, Tabs, Text } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
+import SurveyContext from "../../../context/SurveyContext";
+import { QuestionType as Q, QuestionType } from "../../../types/enums";
+import { WaSurveyQuestionTypes } from "../../../utils/constants";
+import { createBlankQuestion } from "../../../utils/questions";
+import PaperLayout from "../../styled/Layouts/PaperLayout";
 import GoogleReviewEditor from "../../Survey/Question/GoogleReviewEditor";
 import LogicEditor from "../../Survey/Question/LogicEditor";
 import { QuestionTypeSelection } from "../../Survey/Question/QuestionTypeSelection";
@@ -7,13 +18,6 @@ import ValidationRulesEditor from "../../Survey/Question/ValidationRulesEditor";
 import { QuestionsSideBar } from "../../Survey/QuestionsSideBar";
 import classes from "./WaEditSurvey.module.css";
 import { WaQuestionDetailedView } from "./WaQuestionDetailedView";
-import { QuestionType as Q, QuestionType } from "../../../types/enums";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { WaSurveyQuestionTypes } from "../../../utils/constants";
-import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
-import { createBlankQuestion } from "../../../utils/questions";
-import SurveyContext from "../../../context/SurveyContext";
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -65,7 +69,7 @@ export function EditWhatsappSurvey({
       setActiveTab(QuestionTabsEnum.Edit);
     });
   };
-
+  const { translations } = useTranslations();
   return (
     <Flex w={"100%"} h={"100%"} p={5} gap={10} className={classes.root}>
       <PaperLayout
@@ -137,7 +141,9 @@ export function EditWhatsappSurvey({
           </Tabs.Panel>
           <Tabs.Panel value={QuestionTabsEnum.None}>
             <Center style={{ height: "100%" }}>
-              <Text c="dimmed">Select a question to edit</Text>
+              <Text c="dimmed">
+                {translations["Select a question to edit"]}
+              </Text>
             </Center>
           </Tabs.Panel>
         </Tabs>

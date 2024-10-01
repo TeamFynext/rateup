@@ -1,14 +1,18 @@
-import { IconSend } from "@tabler/icons-react";
-import classes from "./styles.module.css";
-import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
-import { useSendNewWaMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { useForm } from "@mantine/form";
-import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
-import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 import { useRef } from "react";
-import WaInboxFooterMenu from "./footerMenu";
+
+import { useForm } from "@mantine/form";
+import { IconSend } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
+import { useSendNewWaMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
+import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
+import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
+import WaInboxFooterMenu from "./footerMenu";
+import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
@@ -16,6 +20,7 @@ export default function WaInboxChatDisplayFooter({
   contact: ContactsWithLastMessage;
 }) {
   const inputRef = useRef(null);
+  const { translations } = useTranslations();
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const form = useForm({
     initialValues: {
@@ -25,7 +30,7 @@ export default function WaInboxChatDisplayFooter({
     validate: {
       text: (value) => {
         if (value.body.length === 0) {
-          return "Message can't be empty";
+          return translations["Message can't be empty"];
         }
       },
     },
@@ -78,7 +83,7 @@ export default function WaInboxChatDisplayFooter({
         <RateupButtonPrimary
           disabled={isSessionExpired}
           type={"submit"}
-          title="Send"
+          title={translations["Send"]}
           rightIcon={<IconSend />}
         />
       </form>

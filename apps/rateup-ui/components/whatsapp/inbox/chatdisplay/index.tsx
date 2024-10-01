@@ -1,14 +1,18 @@
-import classes from "./styles.module.css";
-import NothingFound from "../../../NothingFound/NothingFound";
-import WaInboxChatDisplayHeader from "./chatdisplayHeader";
-import WaInboxChatDisplayFooter from "./chatdisplayFooter";
-import WaInboxChatDisplayBody from "./chatdisplayBody";
+import { motion } from "framer-motion";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   ContactsWithLastMessage,
   WaGetMessagesBody,
 } from "../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { motion } from "framer-motion";
 import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
+import NothingFound from "../../../NothingFound/NothingFound";
+import WaInboxChatDisplayBody from "./chatdisplayBody";
+import WaInboxChatDisplayFooter from "./chatdisplayFooter";
+import WaInboxChatDisplayHeader from "./chatdisplayHeader";
+import classes from "./styles.module.css";
+
 export default function WaInboxChatDisplay({
   messages,
   contact,
@@ -30,7 +34,7 @@ export default function WaInboxChatDisplay({
   };
 
   const isChatDisplayOpen = useIsChatDisplayOpen();
-
+  const { translations } = useTranslations();
   return (
     <div
       className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""}`}
@@ -49,7 +53,7 @@ export default function WaInboxChatDisplay({
           <WaInboxChatDisplayFooter contact={contact} />
         </motion.div>
       ) : (
-        <NothingFound text="Select a chat to see messages" />
+        <NothingFound text={translations["Select a chat to see messages"]} />
       )}
     </div>
   );

@@ -1,10 +1,14 @@
 import React, { useContext, useEffect } from "react";
-import FormModalLayout from "../../../Modal/FormModalLayout";
-import { useListState } from "@mantine/hooks";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
-import { IconGripVertical } from "@tabler/icons-react";
+
 import { Card, Flex, Stack, Text } from "@mantine/core";
+import { useListState } from "@mantine/hooks";
+import { IconGripVertical } from "@tabler/icons-react";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
+import FormModalLayout from "../../../Modal/FormModalLayout";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext";
 
 interface Idata {
@@ -58,15 +62,15 @@ const SortDrawerFlow = ({ opened, close, data = [] }: ISortDrawerProps) => {
     });
     close();
   };
-
+  const { translations } = useTranslations();
   return (
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={"Swap the order of flow screens"}
+      title={translations["Swap the order of flow screens"]}
       centered
       onSubmit={handleSortOrder}
-      buttonTitle={"Save"}
+      buttonTitle={translations["Save"]}
       size={"lg"}
       includeCancelButton={true}
     >

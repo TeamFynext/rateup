@@ -1,3 +1,10 @@
+import { useContext } from "react";
+
+import { Stack } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType as Q } from "../../../types/enums";
 import {
   ResponseMessageContainer,
@@ -8,9 +15,6 @@ import {
   WaResponseMessage,
   WaSentMessage,
 } from "../MessageComponents";
-import { useContext } from "react";
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { Stack } from "@mantine/core";
 
 interface WaQuestionPreviewProps {
   question: Question;
@@ -23,7 +27,7 @@ export function WaQuestionPreview({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const title = question.title[selectedLanguage];
   const description = question.description[selectedLanguage];
-
+  const { translations } = useTranslations();
   switch (question.type) {
     case Q.Email:
     case Q.TextArea:
@@ -38,7 +42,7 @@ export function WaQuestionPreview({
           <WaResponseMessage
             header={title}
             body={description}
-            footer="Please enter in the format: dd/mm/yyyy"
+            footer={translations["Please enter in the format: dd/mm/yyyy"]}
           />
           <WaSentMessage body="12/12/2012" />
         </>
@@ -49,8 +53,12 @@ export function WaQuestionPreview({
         <WaResponseMessage
           header={title}
           body={description}
-          footer="Please enter phone number with country code: 91XXXXXXXXXX"
-          quickReplyButtons={["Use this number"]}
+          footer={
+            translations[
+              "Please enter phone number with country code: 91XXXXXXXXXX"
+            ]
+          }
+          quickReplyButtons={translations["Use this number"]}
         />
       );
     }
@@ -92,7 +100,7 @@ export function WaQuestionPreview({
               </WaMessageBody>
               {
                 <WaMessageFooter>
-                  {"Enter index of your choice"}
+                  {translations["Enter index of your choice"]}
                 </WaMessageFooter>
               }
             </Stack>
@@ -108,25 +116,40 @@ export function WaQuestionPreview({
           <WaResponseMessage
             header={title}
             body={description}
-            footer="Please share your name"
+            footer={translations["Please share your name"]}
           />
           <WaSentMessage body="John" />
           {features?.jobTitle && (
             <>
-              <WaResponseMessage body={"Please share your job title"} />
-              <WaSentMessage body="Marketing specialist" />
+              <WaResponseMessage
+                body={translations["Please share your job title"]}
+              />
+              <WaSentMessage body={translations["Marketing specialist"]} />
             </>
           )}
-          <WaResponseMessage body={"Please share details of your experience"} />
-          <WaSentMessage body="Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!" />
+          <WaResponseMessage
+            body={translations["Please share details of your experience"]}
+          />
+          <WaSentMessage
+            body={
+              translations[
+                "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!"
+              ]
+            }
+          />
           {features?.rating && (
             <>
-              <WaListMessage body="Rate us" openList={openList} />
+              <WaListMessage
+                body={translations["Rate us"]}
+                openList={openList}
+              />
             </>
           )}
           {features?.photo && (
             <>
-              <WaResponseMessage body={"Please share your photo"} />
+              <WaResponseMessage
+                body={translations["Please share your photo"]}
+              />
             </>
           )}
         </>

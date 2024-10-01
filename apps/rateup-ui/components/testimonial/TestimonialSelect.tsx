@@ -1,12 +1,16 @@
+import { useRouter } from "next/router";
+
 import {
   Center,
   Checkbox,
-  Loader,
-  Stack,
-  ScrollAreaAutosize,
   Group,
+  Loader,
+  ScrollAreaAutosize,
+  Stack,
 } from "@mantine/core";
-import TestimonialCard from "./TestimonialCard";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
@@ -15,7 +19,7 @@ import { filterType } from "../../pages/dashboard/testimonial/[collectionId]";
 import { getFilteredTestimonials } from "../../utils/testimonial";
 import NothingFound from "../NothingFound/NothingFound";
 import classes from "./testimonial.module.css";
-import { useRouter } from "next/router";
+import TestimonialCard from "./TestimonialCard";
 
 const TestimonialSelect = ({
   selectedTestimonialIds,
@@ -36,6 +40,7 @@ const TestimonialSelect = ({
     filters,
     type,
   );
+  const { translations } = useTranslations();
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   function checkIfTestimonialIdsAreIncludedInAllTestimonials(
     idtocheck: string,
@@ -47,7 +52,7 @@ const TestimonialSelect = ({
   if (filteredTestimonials?.length <= 0)
     return (
       <Center mt={150}>
-        <NothingFound text={"No testimonials found"} />
+        <NothingFound text={translations["No testimonials found"]} />
       </Center>
     );
   return (

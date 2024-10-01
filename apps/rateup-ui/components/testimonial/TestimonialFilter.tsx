@@ -1,23 +1,29 @@
+import { useEffect, useState } from "react";
+
 import {
+  ActionIcon,
   Button,
+  Divider,
   Group,
-  Rating,
-  Stack,
-  Text,
   MultiSelect,
   Paper,
   Radio,
-  Divider,
-  ActionIcon,
+  Rating,
   ScrollAreaAutosize,
+  Stack,
+  Text,
 } from "@mantine/core";
-import { useGetAllTestimonialsByOrg } from "../../backend/testimonials/testimonial.query";
-import { useTeamsByUser } from "../../backend/team/team.query";
-import { useEffect, useState } from "react";
 import { IconRestore } from "@tabler/icons-react";
-import { TestimonialTabs } from "../../pages/dashboard/testimonial/[collectionId]";
 import { produce } from "immer";
-import { filterType } from "../../pages/dashboard/testimonial/[collectionId]";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useTeamsByUser } from "../../backend/team/team.query";
+import { useGetAllTestimonialsByOrg } from "../../backend/testimonials/testimonial.query";
+import {
+  filterType,
+  TestimonialTabs,
+} from "../../pages/dashboard/testimonial/[collectionId]";
 
 const TestimonialFilter = ({
   filters,
@@ -41,7 +47,7 @@ const TestimonialFilter = ({
       filters?.teams?.length > 0 ? filters?.teams?.includes(teamId) : true,
     )
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
-
+  const { translations } = useTranslations();
   function removeDuplicates(surveyMultiSelectOptions) {
     const uniqueArray = [];
     const encounteredIds = [];
@@ -78,7 +84,7 @@ const TestimonialFilter = ({
       <Paper radius="md" withBorder p="sm" maw={200} miw={200}>
         <Group justify="space-between" mb={2}>
           <Text size="sm" c="dimmed" fw={500}>
-            Filters
+            {translations["Filters"]}
           </Text>
           <ActionIcon
             size="sm"
@@ -105,18 +111,20 @@ const TestimonialFilter = ({
                 radius={"10px"}
                 searchable
                 clearable
-                label="Select Team"
+                label={translations["Select Team"]}
                 styles={{ label: { fontSize: 12 } }}
                 data={teamMultiSelectOptions}
                 value={filters?.teams}
                 onChange={(value) => filterData("teams", value)}
-                placeholder={filters?.teams?.length > 0 ? "" : "All Teams"}
+                placeholder={
+                  filters?.teams?.length > 0 ? "" : translations["All Teams"]
+                }
               />
               <MultiSelect
                 radius={"10px"}
                 searchable
                 clearable
-                label="Select survey"
+                label={translations["Select survey"]}
                 styles={{ label: { fontSize: 12 } }}
                 data={removeDuplicates(
                   surveyMultiSelectOptions as {
@@ -126,47 +134,49 @@ const TestimonialFilter = ({
                 )}
                 value={filters?.surveys}
                 onChange={(value) => filterData("surveys", value)}
-                placeholder={filters?.teams?.length > 0 ? "" : "All Surveys"}
+                placeholder={
+                  filters?.teams?.length > 0 ? "" : translations["All Surveys"]
+                }
               />
             </>
           )}
           <Stack gap={"sm"}>
             {activeTab != TestimonialTabs.Share && (
               <>
-                <Divider label="Date" labelPosition="left" />
+                <Divider label={translations["Date"]} labelPosition="left" />
                 <Radio.Group
                   onChange={(value) => filterData("date", value)}
                   value={filters?.date}
                 >
                   <Group>
                     <Radio
-                      label="newest"
+                      label={translations["newest"]}
                       value="new"
                       size="xs"
                       styles={{ label: { fontSize: 12 } }}
                     />
                     <Radio
-                      label="older"
+                      label={translations["older"]}
                       value="old"
                       size="xs"
                       styles={{ label: { fontSize: 12 } }}
                     />
                   </Group>
                 </Radio.Group>
-                <Divider label="Length" labelPosition="left" />
+                <Divider label={translations["Length"]} labelPosition="left" />
                 <Radio.Group
                   onChange={(value) => filterData("length", value)}
                   value={filters?.length}
                 >
                   <Group>
                     <Radio
-                      label="longest"
+                      label={translations["longest"]}
                       value="longest"
                       size="xs"
                       styles={{ label: { fontSize: 12 } }}
                     />
                     <Radio
-                      label="shortest"
+                      label={translations["shortest"]}
                       value="shortest"
                       size="xs"
                       styles={{ label: { fontSize: 12 } }}
@@ -177,14 +187,14 @@ const TestimonialFilter = ({
                   label={
                     <Group gap={"xs"}>
                       <Text size="xs" c="dimmed">
-                        Rating
+                        {translations["Rating"]}
                       </Text>
                       <Button
                         size="compact-xs"
                         onClick={() => filterData("rating", null)}
                         variant="light"
                       >
-                        All
+                        {translations["All"]}
                       </Button>
                     </Group>
                   }

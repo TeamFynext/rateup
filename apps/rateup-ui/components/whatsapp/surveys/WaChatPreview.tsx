@@ -1,29 +1,34 @@
+import { useContext } from "react";
+
 import {
-  useMantineTheme,
-  Title,
-  Stack,
-  Transition,
-  Center,
-  Box,
-  Group,
   ActionIcon,
-  Text,
-  ScrollArea,
+  Box,
+  Center,
+  Group,
   Overlay,
+  ScrollArea,
+  Stack,
+  Text,
+  Title,
+  Transition,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-import { useContext } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { SendMessageMock } from "../MessageComponents";
-import { WaQuestionPreview } from "./WaQuestionPreview";
 import whatsappStyles from "../whatsapp.module.css";
+import { WaQuestionPreview } from "./WaQuestionPreview";
 
 export const WhatsappChatPreview = ({ selectedQ }) => {
   const [listOpened, { open, close }] = useDisclosure(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const theme = useMantineTheme();
   const sections = selectedQ?.sections?.[selectedLanguage];
+  const { translations } = useTranslations();
   return (
     <>
       <Title
@@ -35,7 +40,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
         order={3}
         c={"white"}
       >
-        Preview
+        {translations["Preview"]}
       </Title>
       <ScrollArea h={"100%"}>
         <Stack
@@ -112,7 +117,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
                     justifySelf: "center",
                   }}
                 >
-                  View Options
+                  {translations["View Options"]}
                 </Text>
               </Group>
               <Stack
@@ -127,7 +132,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
               </Stack>
               <Center>
                 <Text c="dimmed" fz="xs" p="sm">
-                  Tap to select an item
+                  {translations["Tap to select an item"]}
                 </Text>
               </Center>
             </Stack>
