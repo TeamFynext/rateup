@@ -137,7 +137,11 @@ function ScreenListItem({
       const updatedQuestions = survey.questions.filter(
         (q) => !qIds.includes(q.id),
       );
-      replaceQuestionsMutation.mutate(updatedQuestions);
+
+      replaceQuestionsMutation.mutate({
+        questions: updatedQuestions,
+        screenId: screen.id,
+      });
       updateSurvey((draft) => {
         draft.questions = updatedQuestions;
       });

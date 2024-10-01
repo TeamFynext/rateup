@@ -23,8 +23,12 @@ export async function reorderQuestions(surveyId: string, newOrder: string[]) {
 export async function replaceQuestions(
   surveyId: string,
   questions: Question[],
+  screenId?: string,
 ) {
-  return axiosClient.put(`${QUESTION_URL}/${surveyId}/replace`, questions);
+  return axiosClient.put(`${QUESTION_URL}/${surveyId}/replace`, {
+    questions,
+    screenId,
+  });
 }
 export async function updateQuestion(
   surveyId: string,

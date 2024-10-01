@@ -147,7 +147,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           return k !== selectedScreenId;
         }),
       ) || {}) as any),
-      [selectedScreenId]: componentLeventLogicJumps,
+      [selectedScreenId]: [...logicJumps, ...componentLeventLogicJumps],
     };
 
     updateFlowMutation.mutate({
@@ -296,8 +296,7 @@ function AtomicConditionBlock({
     condition?.questionId || editingQuestion?.id,
   );
   const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
-  if (!selectedQ)
-    throw new Error(translations["Selected question not found in screen"]);
+  if (!selectedQ) return;
 
   const [matchData, setMatchData] = useState(condition.response);
 
