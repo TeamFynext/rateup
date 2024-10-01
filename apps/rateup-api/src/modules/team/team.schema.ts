@@ -62,6 +62,7 @@ const editTeamSchema = z.object({
   name: z.string().min(4).optional(),
   code: z.string().min(2).optional(),
   googleLink: z.string().optional(),
+  reviewPageLinks: z.any().optional(),
   tags: z.array(z.string()).optional(),
 });
 

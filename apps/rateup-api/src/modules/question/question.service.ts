@@ -105,7 +105,9 @@ export async function updateQuestion(
   questions[index] = { ...questions[index], ...input } as Question;
 
   let hasGoogleReview = questions?.some(
-    (item) => item.googleReview !== null && item.googleReview !== undefined,
+    (item) =>
+      item["reviewPageOptions"] !== null &&
+      item["reviewPageOptions"] !== undefined,
   );
 
   if (hasGoogleReview) {

@@ -256,6 +256,7 @@ export async function getPublicSurveyById(id: string) {
           webSurveyTheme: true,
         },
       },
+      team: true,
     },
   });
 
@@ -279,6 +280,7 @@ export async function getPublicSurveyById(id: string) {
   let publicSurvey = {
     surveyTeamMapId,
     ...surveyTeamMap.survey,
+    reviewPageLinks: surveyTeamMap.team.reviewPageLinks,
     ...orgLogo,
   };
 
