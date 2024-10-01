@@ -186,6 +186,7 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
     flow.json as unknown as WaFlowJson,
     flow.map,
     flow.survey,
+    flow.logicJumps,
   );
   const response = await updateFlowJsonInWa(
     orgId,

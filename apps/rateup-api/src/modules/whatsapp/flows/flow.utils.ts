@@ -400,10 +400,11 @@ export function getFlowJsonWithTitleAndDescription(
   flowJson: WaFlowJson,
   map: any,
   survey: Survey,
+  logicJumps: any,
 ): WaFlowJson {
   let fj = JSON.parse(JSON.stringify(flowJson));
   for (const screen of fj.screens) {
-    for (const screenElement of screen.layout.children) {
+    for (let screenElement of screen.layout.children) {
       if (screenElement.type === "Form") {
         for (let i = 0; i < screenElement.children.length; i++) {
           const formElement = screenElement.children[i];
@@ -467,6 +468,50 @@ export function getFlowJsonWithTitleAndDescription(
             if (descriptionElement) {
               screenElement.children.splice(i, 0, descriptionElement);
               i++;
+            }
+
+            for (let logicJump of logicJumps?.[screen?.id]?.filter((item) =>
+              item.conditions.some(
+                (condition) => condition.questionId === formElement.id,
+              ),
+            )) {
+              if (!logicJump || typeof logicJump.action === "string") continue;
+              let { id, ...restFail } =
+                screenElement?.children?.find(
+                  (data) => data.id === logicJump.action.fail,
+                ) ?? {};
+              const { id: s_id, ...restSuccess } =
+                screenElement?.children.find(
+                  (data) => data.id === logicJump.action.success,
+                ) ?? {};
+              let conditions = logicJump.conditions?.map((condition) => {
+                const elementName = screenElement?.children?.[i]?.name;
+                const isNumberType = formElement?.["input-type"] === "number";
+                const responseValue = isNumberType
+                  ? condition.response
+                  : `'${condition.response}'`;
+
+                return `(\$\{form.${elementName}\} ${condition.condition} ${responseValue})`;
+              });
+
+              // Define the new element you want to insert
+              const newLogicElement = {
+                type: WaFlowFormElementType.if,
+                condition: conditions.join(" && "),
+                then: [restSuccess].filter(Boolean),
+                else: [restFail].filter(Boolean),
+              };
+
+              // First, insert the new element at the specified position
+              screenElement.children.splice(i + 1, 0, newLogicElement);
+
+              // Then, filter out any existing logic jumps
+              screenElement.children = screenElement.children.filter(
+                (child) =>
+                  ![logicJump.action.success, logicJump.action.fail].includes(
+                    child.id,
+                  ),
+              );
             }
           }
         }

@@ -215,6 +215,7 @@ export enum WaFlowFormElementType {
   optIn = "OptIn",
   photoPicker = "PhotoPicker",
   documentPicker = "DocumentPicker",
+  if = "If",
 }
 
 export const ChoiceTypeQuestions = [
