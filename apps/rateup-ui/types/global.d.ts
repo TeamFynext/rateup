@@ -106,6 +106,8 @@ declare global {
       maxUploadedDocuments?: number;
       allowedMimeTypes?: string[];
     };
+    reviewPageOptions?: any;
+    reviewPagePlatform?: string;
   }
   type ResponseSummary = {
     all: {
