@@ -237,7 +237,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           }}
         >
           <RateupButtonSecondary
-            title={translations["Close"]}
+            title={translations["Close "]}
             size="md"
             variant="outline"
             color="var(--tertiary-color)"
