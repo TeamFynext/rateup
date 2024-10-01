@@ -21,7 +21,7 @@ function getInitialValues(screens) {
   return {
     screenId: getUniqueRandomAlphaId(
       6,
-      screens.map(({ id }) => id),
+      screens?.map(({ id }) => id),
     ),
     screenTitle: "",
     footerBtnLabel: "Next",

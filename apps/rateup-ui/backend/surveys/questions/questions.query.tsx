@@ -103,8 +103,14 @@ export const useQuestionDeleteMutation = (
 export const useReplaceQuestionsMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   const replaceMutation = useMutation({
-    mutationFn: (questions: Question[]) => {
-      return replaceQuestions(surveyId, questions);
+    mutationFn: ({
+      questions,
+      screenId,
+    }: {
+      questions: Question[];
+      screenId?: string;
+    }) => {
+      return replaceQuestions(surveyId, questions, screenId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
