@@ -27,10 +27,10 @@ function BodyComp({
     >
       {enableGoogleReview && (
         <GoogleReview
-          googleLink={googleLink}
           reviewSuggestions={reviews}
           orgLogoUrl={orgLogoSrc}
           surveyTeamMapId={surveyId}
+          survey={undefined}
         />
       )}
 
