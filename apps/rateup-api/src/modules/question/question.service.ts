@@ -79,6 +79,34 @@ export async function deleteQuestionById(surveyId: string, id: string) {
   );
   await updateQuestionsOnSurvey(surveyId, updatedQuestions);
   await updateSurveyVariables(surveyId, updatedQuestions);
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      surveyId: surveyId,
+    },
+  });
+  function removeObjectsByQuestionId(data, questionIdToRemove) {
+    // Iterate through each key in the object
+    for (const key in data) {
+      if (data.hasOwnProperty(key)) {
+        // Filter out the objects where the questionId matches the one to remove
+        data[key] = data[key].filter(
+          (item) =>
+            !item.conditions.some(
+              (condition) => condition.questionId === questionIdToRemove,
+            ),
+        );
+      }
+    }
+    return data;
+  }
+  await prisma.waFlow.update({
+    where: {
+      dbFlowId: flow.dbFlowId,
+    },
+    data: {
+      logicJumps: removeObjectsByQuestionId(flow.logicJumps, id),
+    },
+  });
 }
 
 export async function reorderQuestions(
@@ -158,7 +186,26 @@ export async function updateQuestionsOnSurvey(
     }
   }
 }
-
+export async function updateLogicJump(screenId: string, surveyId: string) {
+  const flow = await prisma.waFlow.findFirst({
+    where: {
+      surveyId: surveyId,
+    },
+  });
+  if (!flow) {
+    throw new Error(`Flow not found for surveyId: ${surveyId}`);
+  }
+  let data = flow.logicJumps;
+  delete data[screenId];
+  await prisma.waFlow.update({
+    where: {
+      dbFlowId: flow.dbFlowId,
+    },
+    data: {
+      logicJumps: data,
+    },
+  });
+}
 export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
   const { mimetype } = fileBody;
   const csvType = ["text/csv", "application/vnd.ms-excel"];

@@ -13,6 +13,7 @@ import {
   getQuestionById,
   getQuestionsBySurveyId,
   reorderQuestions,
+  updateLogicJump,
   updateQuestion,
   updateQuestionsOnSurvey,
 } from "./question.service";
@@ -138,15 +139,16 @@ export async function updateQuestionHandler(
 
 export async function replaceQuestionsHandler(
   request: FastifyRequest<{
-    Body: Array<Question>;
+    Body: { questions: Array<Question>; screenId?: string };
     Params: QuestionsRouteParams;
   }>,
   reply: FastifyReply,
 ) {
   try {
     const surveyId = request.params.surveyId;
-    const questions = request.body;
+    const { questions, screenId } = request.body;
     await updateQuestionsOnSurvey(surveyId, questions);
+    screenId && (await updateLogicJump(screenId, surveyId));
     reply.code(200).send();
   } catch (e) {
     console.log(e);
