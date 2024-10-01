@@ -346,8 +346,18 @@ export const updateFlowJsonNavigationAndDataPassing = (
   let datePickerDynamicFlag = false;
 
   const screens = draft.screens;
-  const flowHasLogic = screens.some((screen) => !!dbFlow.logicJumps[screen.id]);
+  const flowHasLogic = screens.some((screen) => {
+    // Check if there are logic jumps for the screen
+    const logicJumps = dbFlow.logicJumps[screen.id];
 
+    // Ensure logicJumps exists and is an array
+    if (Array.isArray(logicJumps)) {
+      // Check if any object in logicJumps has an 'action' field that is a string
+      return logicJumps.some((jump) => typeof jump.action === "string");
+    }
+
+    return false;
+  });
   screens.forEach((screen, currentIndex) => {
     routing_model[screen.id] = draft.screens
       .slice(currentIndex + 1)
