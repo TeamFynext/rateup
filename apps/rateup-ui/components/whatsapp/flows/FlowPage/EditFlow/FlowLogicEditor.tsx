@@ -185,7 +185,10 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           my="xs"
           py="xs"
         >
-          <Text>Question Jump</Text>
+          {/* Todo: added again after fixing if conditon problem-now name includes hyphen
+            eg: if(form.rt-5) to if(form.rt_5)
+          */}
+          {/* <Text>Question Jump</Text>
           {componentLeventLogicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
               key={index}
@@ -205,7 +208,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
             }}
           >
             Add Logic Jump
-          </Button>
+          </Button> */}
           <Text>Screen Jump</Text>
           {logicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
