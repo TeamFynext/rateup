@@ -197,7 +197,6 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
     case sfpn.AI:
       return "AI";
     default:
-      return "";
       throw new Error("Invalid Subscription Feature" + feature);
   }
 }
