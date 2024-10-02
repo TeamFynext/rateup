@@ -1,8 +1,6 @@
 import { Group, Rating, Stack, Text } from "@mantine/core";
 
 function RatingQuestionCondition({ currentMinRating, setState }) {
-  console.log(currentMinRating);
-
   const handleChange = (newMinRating) => {
     setState({
       minRating: newMinRating,

@@ -4,8 +4,6 @@ import { SmileyResponse } from "@/types/enums";
 import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
 
 function SmileyQuestionCondition({ currentSelectedEmojis, setState }) {
-  console.log({ currentSelectedEmojis });
-
   const { primaryColor } = useMantineTheme();
 
   const updateSmileyResponse = (value) => {
