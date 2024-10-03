@@ -3,8 +3,10 @@
 }
 
 .cards-container {
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   width: 100%;
+  gap: 3rem;
+  max-width: 62.5rem;
 }
 
 .card {
@@ -22,4 +24,11 @@
 
 .card p {
   font-size: 1.125rem;
+}
+
+@media screen and (max-width: 1024px) {
+  .cards-container {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+  }
 }
