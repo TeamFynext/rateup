@@ -1,29 +1,28 @@
 .hero-section-root-div {
   position: relative;
-  padding: 3rem 5%;
+  padding: 5rem 5%;
   font-family: var(--font-rubik);
-  margin-bottom: 1rem;
+  margin-bottom: 4rem;
+  background-image: linear-gradient(#004f98, #001c57);
 }
 
 .hero-section-div {
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   flex-direction: column;
+  padding: 0 3rem;
   gap: 2.5rem;
-  padding: 1.5rem 0;
   border-radius: 1rem;
-  background-color: var(--tertiary-color);
 }
 
 .hero-section-heading {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
-  width: 70%;
-  text-align: center;
-  font-size: 2.5rem;
+  text-align: left;
+  font-size: 4rem;
   color: white;
 }
 
@@ -33,33 +32,39 @@
 
 .heading-small-text-span {
   font-size: 0.4em;
-  font-weight: 500;
-  color: var(--tertiary-color);
-  background-color: white;
-  width: auto;
-  padding: 0.3125rem 1rem;
-  border-radius: 2rem;
+  font-weight: 700;
 }
 
 .heading-large-text-span {
   font-size: 1em;
-  font-weight: 500;
+  font-weight: 700;
+  font-style: italic;
   line-height: normal;
+  letter-spacing: 0.25rem;
 }
 
 .hero-section-image-container {
   padding: 0 1rem;
   max-width: 100%;
-  height: 21.875rem;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 20vw;
+  max-height: 12.5rem;
 }
 
-.hero-section-image {
-  width: 100%;
+.hero-section-image-container picture {
   height: 100%;
+}
+
+.hero-section-img {
   object-fit: contain;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  /* width: 300px; */
+  max-width: 60%;
+  max-height: 28.125rem;
 }
 
 .book-demo-try-free-plan-btns-container {
@@ -69,19 +74,23 @@
 
 .book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
   background-color: white;
-  background-image: none;
-  color: var(--tertiary-color);
-  font-size: 0.875rem;
+  background-image: linear-gradient(90deg, #387adf, #50c4ed);
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border: 0;
+  border-radius: 0.3125rem;
 }
 
-.try-free-plan-btn {
+.book-demo-try-free-plan-btns-container .try-free-plan-btn {
   color: white;
   border: 1px solid white;
-  border-radius: 2rem;
+  border-radius: 0.3125rem;
   padding: 0.625rem 2rem;
   height: auto;
   font-weight: 430;
   line-height: normal;
+  font-weight: bold;
 }
 
 .try-free-plan-btn:hover {
@@ -91,34 +100,29 @@
 /* Media Queries */
 
 @media screen and (max-width: 1024px) {
-  .hero-section-div {
-    gap: 2rem;
-  }
   .hero-section-heading {
-    font-size: 2rem;
-  }
-
-  .hero-section-image-container {
-    height: 250px;
+    font-size: 3.25rem;
   }
 }
 
 @media screen and (max-width: 768px) {
+  .hero-section-div {
+    padding: 0;
+  }
   .hero-section-heading span {
     display: inline;
   }
+}
 
-  .hero-section-image {
-    object-fit: cover;
+@media screen and (max-width: 540px) {
+  .hero-section-heading {
+    font-size: 2rem;
   }
 }
 
 @media screen and (max-width: 425px) {
-  .hero-section-heading {
-    font-size: 1.65rem;
-  }
-  .hero-section-image {
-    height: 200px;
+  .hero-section-div {
+    gap: 1.5rem;
   }
   .book-demo-try-free-plan-btns-container {
     gap: 1rem;
@@ -127,14 +131,14 @@
   .book-demo-try-free-plan-btns-container :global(.book-a-demo-btn) {
     font-size: 0.75rem;
   }
-  .try-free-plan-btn {
+  .book-demo-try-free-plan-btns-container .try-free-plan-btn {
     font-size: 0.75rem;
-    padding: 0.5625rem 2rem;
+    padding: 0.375rem 1.125rem;
   }
 }
 
 @media screen and (min-width: 120rem) {
   .hero-section-root-div {
-    padding: 3rem 192px;
+    padding: 5rem 192px;
   }
 }
