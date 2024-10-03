@@ -27,7 +27,10 @@ import {
 } from "./response.service";
 import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
-import { getTeamIdsBySurveyMapId } from "../team/team.service";
+import {
+  getTeamIdsBySurveyMapId,
+  getTeamIdsByUserId,
+} from "../team/team.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
@@ -61,7 +64,9 @@ export async function getAllResponsesHandler(
 ) {
   try {
     const surveyId = request.params.surveyId;
-    const responses = await getAllResponses(surveyId);
+
+    const teamIds = await getTeamIdsByUserId(request.userId);
+    const responses = await getAllResponses(surveyId, teamIds);
     if (responses.length === 0)
       reply.code(404).send({ message: "No responses found" });
     reply.code(200).send(responses);
@@ -112,7 +117,7 @@ export async function downloadExcelResponseHandler(
     const teamIds =
       request.body.filterTeams?.length > 0
         ? await getTeamIdsBySurveyMapId(request.body.filterTeams)
-        : [];
+        : await getTeamIdsByUserId(request.userId);
     const campaignParticipantIds = await prisma.campaignParticipant.findMany({
       where: {
         campaignId: {
