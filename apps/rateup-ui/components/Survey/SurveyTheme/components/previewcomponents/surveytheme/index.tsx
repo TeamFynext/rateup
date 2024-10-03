@@ -58,11 +58,7 @@ function SurveyThemeView({
   let componentToBeRendered = null;
   if (isReviewPage && !isSurveyThemeEditView) {
     componentToBeRendered = (
-      <GoogleReview
-        googleLink={"https://rateup.app"}
-        isSurveyPreview
-        orgLogoUrl={orgLogoUrl}
-      />
+      <GoogleReview isSurveyPreview orgLogoUrl={orgLogoUrl} survey={survey} />
     );
   } else if (isThankyouPage && !isSurveyThemeEditView) {
     const thankyouTypePageQuestionObj = surveyCopy?.questions?.find(

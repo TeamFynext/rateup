@@ -93,9 +93,6 @@
   gap: 1rem;
 }
 
-.suggestion-content {
-}
-
 .suggestion-p {
   padding: 0 0.625rem;
   text-align: center;
@@ -115,6 +112,16 @@
   max-width: 320px;
   text-decoration: none;
   border-radius: 0.625rem;
+}
+
+.google-review-link-img-span {
+  display: flex;
+  align-items: center;
+}
+
+.google-review-link-container a img {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .suggestion-copied-modal {
