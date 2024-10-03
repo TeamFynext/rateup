@@ -1,12 +1,12 @@
 import Image from "next/image";
 
-import { Box, Button, Flex, Group, Stack } from "@mantine/core";
+import { Box, Flex, Group, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
-import MotionButtonGesture from "@/components/HomePage/components/MotionButtonGesture";
+import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 import TryFreePlanBtn from "@/components/HomePage/components/TryFreePlanBtn";
+import { imagesPath } from "@/utils/constants";
 
-import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import BookDemoContactForm from "../../../components/BookDemoContactForm";
 import { imagePath } from "../../constants";
 import styles from "./HeroSection.module.css";
@@ -18,33 +18,42 @@ function HeroSection() {
     <Stack className={`${styles["hero-section-root-div"]}`}>
       <Flex className={`${styles["hero-section-div"]}`}>
         <h1 className={styles["hero-section-heading"]}>
-          <span className={styles["heading-small-text-span"]}>
-            The Customer Feedback Management Platform
-          </span>
+          <LightBlueGradientBg
+            className={styles["heading-small-text-span"]}
+            withoutGradientForMobile={false}
+          >
+            The Customer Engagement Platform
+          </LightBlueGradientBg>
           <span className={styles["heading-large-text-span"]}>
-            <span>Get lots of quality customer{` `}</span>
-            <span>feedback automatically</span>
+            <span>Know Your Customer {` `}</span>
+            <span>Grow Your Business</span>
           </span>
         </h1>
-        <Box className={styles["hero-section-image-container"]}>
-          <Image
-            className={styles["hero-section-image"]}
-            src={`${imagePath}/homepage/hero-section-image.png`}
-            priority
-            alt={""}
-            width={2298}
-            height={924}
-          />
-        </Box>
         <Group className={styles["book-demo-try-free-plan-btns-container"]}>
           <BookDemoContactForm />
           <TryFreePlanBtn
+            className={cx("try-free-plan-btn")}
             gACategory={"try_free_plan"}
             fbEventName={"TryFreePlanButtonClick"}
             gALabel={"Clicked on try free plan button in home page"}
           />
         </Group>
       </Flex>
+
+      <Box className={styles["hero-section-image-container"]}>
+        <picture>
+          <source
+            type="image/webp"
+            srcSet={`${imagesPath}/homepage/hero-section-img.webp`}
+          />
+          <img
+            className={cx("hero-section-img")}
+            src={`${imagesPath}/homepage/hero-section-img.png`}
+            alt="qr"
+            loading="lazy"
+          />
+        </picture>
+      </Box>
     </Stack>
   );
 }
