@@ -5,6 +5,8 @@ import { GetSurveyByIdParams } from "./survey.schema";
 import prisma from "../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert";
+import dayjs from "dayjs";
+import { sendSubscriptionExpiryAlertEmail } from "../../utils/email/payments/subscriptionExpiryAlert";
 
 export async function verifySurveyAccess(
   request: FastifyRequest<{
@@ -61,7 +63,7 @@ export async function verifySurveyMaxCountRestriction(
     request.subscription.features[SubscriptionFeaturePathName.WebSurvey].count
       .max
   ) {
-    await sendUsageLimitMailAlert(orgId)
+    await sendUsageLimitMailAlert(orgId);
     reply.code(403).send({
       message: "You have reached the maximum limit of surveys",
       displayMessageInClient: true,
@@ -105,12 +107,21 @@ export async function verifySurveyMonthlyLimitRestriction(
     },
   });
 
+  //check subscription expiry
+  if (dayjs().isAfter(subscription.expiresAt)) {
+    await sendSubscriptionExpiryAlertEmail(subscription);
+    return reply.code(403).send({
+      message: "Your subscription has been expired",
+      displayMessageInClient: true,
+    });
+  }
+
   if (
     usage.monthlySurveyResponses >=
     subscription.features[SubscriptionFeaturePathName.WebSurvey].count
       .monthlyResponseLimit
   ) {
-    await sendUsageLimitMailAlert(orgId)
+    await sendUsageLimitMailAlert(orgId);
     reply.code(403).send({
       message:
         "You have reached the maximum monthly limit of surveys responses.",

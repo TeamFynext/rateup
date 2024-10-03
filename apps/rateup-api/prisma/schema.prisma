@@ -200,12 +200,13 @@ model OrgMember {
 }
 
 model Team {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt  DateTime @default(now())
-  name       String
-  code       String
-  googleLink String?
-  tags       String[] @default([])
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime @default(now())
+  name            String
+  code            String
+  googleLink      String?
+  reviewPageLinks Json?
+  tags            String[] @default([])
 
   org                    Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                  String                  @db.Uuid

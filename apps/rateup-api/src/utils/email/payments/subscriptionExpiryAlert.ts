@@ -160,16 +160,20 @@ async function reminderOnExpiry(subscriptions) {
       `....Sending Subcription Expiry Mail Alert......
           ${subscription?.org?.owner?.email}`,
     );
-    const expiryBody = subscriptionExpiredReminderBody(subscription);
-    const title = `Your Rateup Subscription has Expired`;
-    const msg = {
-      to: subscription?.org?.owner?.email,
-      subject: "Rateup Subscription Expiry Alert - Rateup.app",
-      text: `Your Rateup Subscription has Expired`,
-      html: beforeExpiryTemplate(subscription, expiryBody, title),
-    };
-    sendAWSEmail(msg);
+    await sendSubscriptionExpiryAlertEmail(subscription);
   }
+}
+
+export async function sendSubscriptionExpiryAlertEmail(subscription) {
+  const expiryBody = subscriptionExpiredReminderBody(subscription);
+  const title = `Your Rateup Subscription has Expired`;
+  const msg = {
+    to: subscription?.org?.owner?.email,
+    subject: "Rateup Subscription Expiry Alert - Rateup.app",
+    text: `Your Rateup Subscription has Expired`,
+    html: beforeExpiryTemplate(subscription, expiryBody, title),
+  };
+  sendAWSEmail(msg);
 }
 
 function subscriptionExpiryfriendlyReminderBody(subscription) {

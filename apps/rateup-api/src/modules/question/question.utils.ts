@@ -375,7 +375,8 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(
   });
 
   let hasGoogleReview = questionsArrCopy?.some(
-    (item) => item.googleReview !== null && item.googleReview !== undefined,
+    (item) =>
+      item.reviewPageOptions !== null && item.reviewPageOptions !== undefined,
   );
 
   if (hasGoogleReview) {

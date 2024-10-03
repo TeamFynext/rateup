@@ -133,7 +133,18 @@ const questionCore = {
     })
     .optional(),
   extraConfig: z.any(),
-
+  reviewPageOptions: z
+    .union([
+      z.null(),
+      z.object({
+        minRating: z.number().optional(),
+        minOpinion: z.number().optional(),
+        reqOptions: z.array(z.string()).optional(),
+        customPlatformName: z.string().optional(),
+      }),
+    ])
+    .optional(),
+  reviewPagePlatform: z.string().optional(),
   // For PageType Question objects like welcome, language, thankyoupage,
   subtitleText: z.string().optional(),
   titleText: z.string().optional(),
