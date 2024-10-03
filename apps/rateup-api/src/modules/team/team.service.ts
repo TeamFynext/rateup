@@ -595,6 +595,7 @@ export async function getTeamsByUserId(userId: string) {
           name: true, // Team name
           code: true,
           googleLink: true,
+          reviewPageLinks: true,
           _count: {
             select: {
               members: {
@@ -641,7 +642,7 @@ export async function getTeamIdsBySurveyMapId(mapId: string[]) {
   return teams.map(({ teamId }) => teamId);
 }
 export async function editTeam(
-  { name, code, googleLink }: EditTeamInput,
+  { name, code, googleLink, reviewPageLinks }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -659,6 +660,7 @@ export async function editTeam(
         name,
         code,
         googleLink,
+        reviewPageLinks,
       },
     });
     return team;

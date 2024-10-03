@@ -1,22 +1,22 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { updateWebSurveyPagesThemeInDB } from "./migrationFiles/update-web-survey-pages-theme";
+import { updateGoogleReviewQuestionsInDB } from "./migrationFiles/update-google-review-questions";
 import { log } from "../../utils/logger";
 import { updateFreePlanSubscriptionFeatures } from "./migrationFiles/update-free-plan-features";
 
-export async function updateWebSurveyPagesTheme(
+export async function updateGoogleReviewQuestions(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateWebSurveyPagesThemeInDB();
+    const result = await updateGoogleReviewQuestionsInDB();
     reply.status(200).send({
       success: true,
-      message: "update WebSurveyPagesTheme successfully.",
+      message: "update GoogleReviewQuestions successfully.",
     });
   } catch (err) {
     reply.status(500).send({
       success: false,
-      message: "Something went wrong while updating WebSurveyPagesTheme.",
+      message: "Something went wrong while updating GoogleReviewQuestions.",
     });
   }
 }

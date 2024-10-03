@@ -82,6 +82,8 @@ declare global {
     tnc?: TNC;
     waAppName?: string;
     responseSummary?: ResponseSummary;
+    reviewPageOptions?: any;
+    reviewPagePlatform?: string;
   }
 
   type ResponseSummary = {
