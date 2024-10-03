@@ -74,7 +74,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     },
     validate: {
       platformName: (value) => {
-        if (!value) {
+        if (!(value?.trim()?.length > 0)) {
           return "Please enter platform name.";
         }
       },
