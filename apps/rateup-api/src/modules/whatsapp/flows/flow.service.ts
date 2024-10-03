@@ -44,6 +44,7 @@ import {
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { getTeamIdsByUserId } from "../../team/team.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -136,10 +137,21 @@ export async function getFlowPreview(orgId: string, dbFlowId: string) {
  * @param orgId
  * @returns
  */
-export async function getFlowsFromDb(orgId: string) {
+export async function getFlowsFromDb(orgId: string, userId: string) {
+  const teamIds = await getTeamIdsByUserId(userId);
+
   const flows = await prisma.waFlow.findMany({
     where: {
       orgId,
+      survey: {
+        teams: {
+          some: {
+            teamId: {
+              in: teamIds,
+            },
+          },
+        },
+      },
     },
     include: {
       survey: {
@@ -153,6 +165,7 @@ export async function getFlowsFromDb(orgId: string) {
       },
     },
   });
+
   return flows;
 }
 
@@ -232,9 +245,9 @@ export async function getFlowWithSurveyTeamMapIds(
   });
 }
 
-export async function getUnsyncedFlows(orgId: string) {
+export async function getUnsyncedFlows(orgId: string, userId: string) {
   const waFlows = await getFlowsFromWa(orgId);
-  const dbFlows = await getFlowsFromDb(orgId);
+  const dbFlows = await getFlowsFromDb(orgId, userId);
 
   const unsyncedFlows = waFlows.filter(
     (waFlow) => !dbFlows.find((dbFlow) => dbFlow.flowId === waFlow.id),

@@ -58,12 +58,12 @@ export async function getFlowsHandler(
   }>,
   res: FastifyReply,
 ) {
-  const { orgId } = req.user;
+  const { orgId, userId } = req.user;
   if (req.query.source === "wa") {
     const flows = await getFlowsFromWa(orgId);
     res.send(flows);
   } else if (req.query.source === "db") {
-    const flows = await getFlowsFromDb(orgId);
+    const flows = await getFlowsFromDb(orgId, userId);
     res.send(flows);
   }
 }
@@ -107,7 +107,7 @@ export async function getUnsyncedFlowsHandler(
   req: FastifyRequest,
   res: FastifyReply,
 ) {
-  return await getUnsyncedFlows(req.user.orgId);
+  return await getUnsyncedFlows(req.user.orgId, req.userId);
 }
 
 export async function getFlowJsonHandler(

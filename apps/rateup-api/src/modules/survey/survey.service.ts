@@ -243,7 +243,10 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
 
   //check googlereview
   if (
-    !(await hasFeature(survey.orgId, SubscriptionFeaturePathName.GoogleReview))
+    !(await hasFeature(
+      survey.orgId ?? survey.webSurveyTheme.orgId,
+      SubscriptionFeaturePathName.GoogleReview,
+    ))
   ) {
     const questions = [...survey.questions];
     questions.forEach((question) => {
