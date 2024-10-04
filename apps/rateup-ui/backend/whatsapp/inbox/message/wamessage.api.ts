@@ -11,6 +11,10 @@ export type WaGetMessagesBody = {
   waCreatedAt: string;
   messageBody: WaInboxMessage;
   templateComponentParams: WaTemplateComponent[];
+  sender?: {
+    name?: string;
+    profile_photo?: string;
+  };
 };
 
 export type WaMessagePage = {
