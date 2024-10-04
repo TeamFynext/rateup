@@ -1314,7 +1314,7 @@ export type GoogleSheetIntegration = Integration & {
 
 export type petpoojaCredential = {
   restaurantId: string;
-  orderEvent: {
+  orderEvent?: {
     waTemplateId: string;
     teamId: string;
     scheduleLater: boolean;
