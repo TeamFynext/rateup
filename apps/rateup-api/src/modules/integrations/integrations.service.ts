@@ -399,7 +399,8 @@ export async function sendPetpoojaWaTemplateCronAction() {
 
     const schedules = history.filter(
       (hist) =>
-        hist.status === "SCHEDULED" && hist.scheduledAt <= fiveMinutesLater,
+        hist.status === "SCHEDULED" &&
+        new Date(hist.scheduledAt) <= fiveMinutesLater,
     );
 
     if (!schedules.length) return;
