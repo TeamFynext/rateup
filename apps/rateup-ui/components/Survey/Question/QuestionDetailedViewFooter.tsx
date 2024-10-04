@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
+  IconAppWindow,
   IconBrandGoogle,
   IconChevronDown,
   IconDeviceSdCard,
@@ -142,14 +143,16 @@ function QuestionDetailedViewFooter({
                 <Menu.Item>
                   {isGoogleReviewFeatureActive ? (
                     <RateupButtonSecondary
-                      title={translations["Google Review"]}
-                      leftIcon={<IconBrandGoogle stroke={4} size={"1rem"} />}
+                      title={"Review Page"}
+                      leftIcon={<IconAppWindow />}
                       size="sm"
                       fullWidth
                       onClick={async () => {
                         let save = await handleSave();
                         save === "saved" &&
-                          setActiveTab(QuestionTabsEnum.GoogleReviewEditor);
+                          setActiveTab(
+                            QuestionTabsEnum.QuestionReviewPageEditor,
+                          );
                       }}
                     />
                   ) : (
@@ -164,11 +167,9 @@ function QuestionDetailedViewFooter({
                         data-disabled
                         radius="lg"
                         onClick={(event) => event.preventDefault()}
-                        leftSection={
-                          <IconBrandGoogle stroke={4} size={"1rem"} />
-                        }
+                        leftSection={<IconAppWindow />}
                       >
-                        {translations["Google Review"]}
+                        Review Page
                       </Button>
                     </Tooltip>
                   )}

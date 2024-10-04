@@ -26,6 +26,7 @@ import { extractText } from "@/utils";
 
 import { pageIcons } from "../../Page/PageIcons";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util";
+import { reviewPageLogosObj } from "../QuestionReviewPageEditor/constants";
 import { questionIcons } from "../QuestionTypeSelection";
 import classes from "./DraggableQuestionCard.module.css";
 
@@ -159,16 +160,8 @@ export function DraggableQuestionCard({
                     alt="image of logic jump"
                   />
                 )}
-                {question.googleReview && (
-                  <GoogleIcon
-                    color={
-                      isWaSurvey == true
-                        ? theme.colors["whatsapp-green"][6]
-                        : "var(--tertiary-color)"
-                    }
-                    style={{ width: "2rem", height: "1rem" }}
-                  />
-                )}
+                {question.reviewPageOptions &&
+                  reviewPageLogosObj[question.reviewPagePlatform]}
 
                 {!nonDeletablePagetypeStrs.includes(question.type) && (
                   <ActionIcon

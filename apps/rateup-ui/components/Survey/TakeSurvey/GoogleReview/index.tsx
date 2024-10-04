@@ -20,15 +20,17 @@ import { shuffleArray } from "../../../../utils";
 import { lexend500 } from "../../../../utils/fonts";
 import { GoogleIcon } from "../../../Button/GoogleIcon";
 import RateupRedirectCard from "../../../Card/RateupRedirectCard";
+import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor";
+import { reviewPageLogosObj } from "../../Question/QuestionReviewPageEditor/constants";
 import styles from "./GoogleReview.module.css";
 import WandIcon from "./WandIcon";
 
 function GoogleReview({
-  googleLink,
   reviewSuggestions = [],
   orgLogoUrl = "",
   surveyTeamMapId = "",
   isSurveyPreview = false,
+  survey,
 }) {
   const [
     isSuggestionCopiedModalOpen,
@@ -90,6 +92,19 @@ function GoogleReview({
     }
   }, [isSuggestionCopiedModalOpen, shuffledArray, reviewIndex]);
 
+  const questionWithReviewPageOptions = survey?.questions?.find((question) => {
+    return Boolean(question?.reviewPageOptions);
+  });
+
+  const reviewPageLinks = survey?.reviewPageLinks;
+  let reviewPagePlatform = questionWithReviewPageOptions?.reviewPagePlatform;
+  if (reviewPagePlatform === ReviewPagePlatform.Custom) {
+    reviewPagePlatform =
+      questionWithReviewPageOptions?.reviewPageOptions?.customPlatformName;
+  }
+
+  const link = reviewPageLinks?.[reviewPagePlatform];
+
   return (
     <Stack mih={isSurveyPreview ? "100%" : "100dvh"}>
       <Box className={styles["google-review-div"]}>
@@ -101,7 +116,7 @@ function GoogleReview({
         <Box className={styles["happy-text-div"]}>
           <h2 className={lexend500.className}>Make us more happy!</h2>
           <Box className={styles["leave-review-paras-container"]}>
-            <p>{translations["Leave us a review on Google."]}</p>
+            <p>{`Leave us a review on ${reviewPagePlatform}`}</p>
           </Box>
         </Box>
         {reviewSuggestions?.length >= 3 && (
@@ -158,13 +173,13 @@ function GoogleReview({
         )}
         <Box className={styles["google-review-link-container"]}>
           <Link
-            href={`${googleLink}`}
+            href={`${link?.trim()?.length ? link : ""}`}
             target="_blank"
             onClick={handleGoToReviewPage}
           >
             <span>{translations["Go to Review Page"]}</span>
-            <span>
-              <GoogleIcon />
+            <span className={styles["google-review-link-img-span"]}>
+              {reviewPageLogosObj[reviewPagePlatform] || null}
             </span>
           </Link>
         </Box>
@@ -182,7 +197,7 @@ function GoogleReview({
           </p>
           <Box className={styles["google-review-link-container"]}>
             <Link
-              href={`${googleLink}`}
+              href={`${link?.trim()?.length ? link : ""}`}
               target="_blank"
               onClick={handleGoToReviewPage}
             >

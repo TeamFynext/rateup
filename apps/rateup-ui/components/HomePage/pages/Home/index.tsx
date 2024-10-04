@@ -2,9 +2,12 @@ import Head from "next/head";
 
 import { Box } from "@mantine/core";
 
+import BenefitsForBusiness from "./BenefitsForBusiness";
 import CompaniesUsingRateup from "./CompaniesUsingRateup";
 import CustomerFeedback from "./CustomerFeedback";
 import HeroSection from "./HeroSection";
+import HowRateupHelps from "./HowRateupHelps";
+import OurKeyFeatures from "./OurKeyFeatures";
 import UseCase from "./UseCase";
 import WhatCanYouDo from "./WhatCanYouDo";
 import WhyUseRateup from "./WhyUseRateup";
@@ -44,11 +47,10 @@ function Home() {
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
-      <CompaniesUsingRateup />
-      <WhyUseRateup />
-      <WhatCanYouDo />
+      <OurKeyFeatures />
+      <HowRateupHelps />
+      <BenefitsForBusiness />
       <CustomerFeedback />
-      <UseCase />
     </Box>
   );
 }

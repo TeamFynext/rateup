@@ -350,6 +350,7 @@ const GoogleReviewEditor = ({
                         team={team}
                         surveyId={surveyId}
                         key={team?.id}
+                        platform={""}
                       />
                     ))}
                 </Stack>

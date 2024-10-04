@@ -103,7 +103,7 @@
   font-weight: 600;
 }
 
-.try-freeplan-btn {
+.book-demo-try-free-plan-btns-container .try-freeplan-btn {
   border-radius: 0.3125rem;
   padding: 0.625rem 1rem;
   border: 2px solid var(--shade-of-blue-12);
@@ -145,8 +145,8 @@
     font-size: 0.75rem;
     padding: 0.4375rem 1.125rem;
   }
-  .try-freeplan-btn {
+  .book-demo-try-free-plan-btns-container .try-freeplan-btn {
     font-size: 0.75rem;
-    padding: 0.4375rem 1.125rem;
+    padding: 0.3125rem 1.125rem;
   }
 }
