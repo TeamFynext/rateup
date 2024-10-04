@@ -89,6 +89,13 @@ export type templateData = {
     image: {
       link: string;
     };
+    document: {
+      link: string;
+      filename: string;
+    };
+    video: {
+      link: string;
+    };
   } | null;
   orgId: string;
   templateType: $Enums.TemplateType;

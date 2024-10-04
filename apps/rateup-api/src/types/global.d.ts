@@ -397,6 +397,13 @@ declare global {
     image?: {
       link: string;
     };
+    document?: {
+      link: string;
+      filename?: string;
+    };
+    video?: {
+      link: string;
+    };
   };
   type WaFlowStartMessageConfig = {
     prefix: string;

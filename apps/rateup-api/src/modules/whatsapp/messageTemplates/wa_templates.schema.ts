@@ -45,6 +45,17 @@ const waTemplateInput = {
           link: z.string(),
         })
         .optional(),
+      document: z
+        .object({
+          link: z.string(),
+          filename: z.string().optional(),
+        })
+        .optional(),
+      video: z
+        .object({
+          link: z.string(),
+        })
+        .optional(),
     })
     .optional(),
   templateType: z.nativeEnum(TemplateType).optional(),
