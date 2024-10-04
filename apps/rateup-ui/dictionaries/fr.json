@@ -1695,5 +1695,6 @@
   "Clicking on this acceptButton will start the survey": "Cliquer sur ce bouton Accepter démarrera l'enquête",
   "Template Name": "Nom du modèle",
   "Sync Templates": "Synchroniser les modèles",
-  "This business uses a secure service from Meta to manage this chat. Tap to learn more": "Cette entreprise utilise un service sécurisé de Meta pour gérer cette conversation. Touchez pour en savoir plus"
+  "This business uses a secure service from Meta to manage this chat. Tap to learn more": "Cette entreprise utilise un service sécurisé de Meta pour gérer cette conversation. Touchez pour en savoir plus",
+  "WhatsApp Message scheduling": "Programmation de messages WhatsApp"
 }
