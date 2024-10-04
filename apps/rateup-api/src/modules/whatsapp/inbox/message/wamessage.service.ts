@@ -19,6 +19,7 @@ export async function addNewWaMessage(
   waCreatedAt: string,
   componentParams?: any,
   messageId?: string,
+  sendBy?: string,
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
@@ -27,6 +28,7 @@ export async function addNewWaMessage(
       waCreatedAt,
       templateComponentParams: componentParams,
       messageId,
+      sendBy,
     },
   });
   return newMessage;
@@ -47,6 +49,14 @@ export async function getWaMessagesByContactId(
       where: {
         contactId,
       },
+      include: {
+        sender: {
+          select: {
+            name: true,
+            profilePhoto: true,
+          },
+        },
+      },
       orderBy: {
         waCreatedAt: "desc",
       },
@@ -57,6 +67,14 @@ export async function getWaMessagesByContactId(
       where: {
         contactId,
       },
+      include: {
+        sender: {
+          select: {
+            name: true,
+            profilePhoto: true,
+          },
+        },
+      },
       orderBy: {
         waCreatedAt: "desc",
       },
@@ -64,6 +82,7 @@ export async function getWaMessagesByContactId(
   }
   const nextCursor =
     messages.length > 0 ? messages[messages.length - 1].id : null;
+
   return { messages, nextCursor };
 }
 

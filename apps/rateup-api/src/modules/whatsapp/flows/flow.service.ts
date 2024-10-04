@@ -392,8 +392,14 @@ interface sendFlowProps {
   orgId: string;
   dbFlowId: string;
   phone: string;
+  userId?: string;
 }
-export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
+export async function sendFlow({
+  orgId,
+  dbFlowId,
+  phone,
+  userId,
+}: sendFlowProps) {
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
     const dbFlow = await getFlowFromDb(dbFlowId);
@@ -402,7 +408,7 @@ export async function sendFlow({ orgId, dbFlowId, phone }: sendFlowProps) {
       to: phone,
       dbFlow,
     });
-    await sendMessage(orgId, { ...messageData, to: phone });
+    await sendMessage(orgId, { ...messageData, to: phone }, null, userId);
     return true;
   } catch (e) {
     log.error(e);

@@ -125,6 +125,7 @@ export async function sendCampaignHandler(
     request.params.campaignId,
     request.body.sendToStatuses,
     request.body.participantId,
+    request.user.userId,
   );
   return reply.status(204).send();
 }
