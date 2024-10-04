@@ -292,6 +292,7 @@ export enum ShopifyEvents {
 }
 
 export enum ShopifySendAfter {
+  OneHour = "1 Hour",
   TwoHour = "2 Hour",
   FiveHour = "5 Hour",
   TenHour = "10 hour",
@@ -309,6 +310,7 @@ export enum IntegratedApps {
   googlesheet = "googlesheet",
   amelia = "amelia",
   waPayment = "waPayment",
+  petpooja = "petpooja",
 }
 
 export enum PhotoSource {

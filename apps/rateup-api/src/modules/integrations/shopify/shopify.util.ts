@@ -22,6 +22,9 @@ export function getScheduledTime(sendAfter) {
   const currentTime = dayjs();
   let scheduledTime = dayjs();
   switch (sendAfter) {
+    case ShopifySendAfter.OneHour:
+      scheduledTime = currentTime.add(1, "hour");
+      break;
     case ShopifySendAfter.TwoHour:
       scheduledTime = currentTime.add(2, "hour");
       break;

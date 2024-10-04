@@ -7,10 +7,12 @@ import {
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
 } from "./integrations.schema";
-import { getDriveFolderId } from "../response/response.service";
 import { callWhatsappApi } from "../whatsapp/wa_axios";
 import { log } from "../../utils/logger";
 import { getWaSettings } from "../whatsapp/settings/wa_settings.service";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service";
+import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils";
+import { getScheduledTime } from "./shopify/shopify.util";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
@@ -356,5 +358,119 @@ export async function removeSurveySpreadSheetSheetId(orgId) {
     data: {
       spreadSheetId: null,
     },
+  });
+}
+
+export async function getIntegrationByPetPoojaRestaurantId(restaurantId) {
+  return (await prisma.integration.findFirst({
+    where: {
+      credential: {
+        path: ["restaurantId"],
+        equals: restaurantId,
+      },
+    },
+  })) as unknown as petPoojaIntegration;
+}
+
+export async function sendPetpoojaWaTemplateCronAction() {
+  try {
+    const currentTime = new Date();
+    const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000);
+
+    const integrations = (await prisma.integration.findMany({
+      where: {
+        name: IntegratedApps.petpooja,
+      },
+    })) as unknown as petPoojaIntegration[];
+
+    if (!integrations.length) return;
+
+    const history = integrations.flatMap((integration) => {
+      const history = integration.credential.history;
+      return history
+        ? history.map((hist) => ({
+            ...hist,
+            orgId: integration.orgId,
+            ...integration.credential.orderEvent,
+          }))
+        : [];
+    });
+    if (!history.length) return;
+
+    const schedules = history.filter(
+      (hist) =>
+        hist.status === "SCHEDULED" &&
+        new Date(hist.scheduledAt) <= fiveMinutesLater,
+    );
+
+    if (!schedules.length) return;
+
+    for (const schedule of schedules) {
+      const res = await sendWhatsAppTemplateToCustomer(
+        schedule.orgId,
+        schedule.phone,
+        schedule.waTemplateId,
+        schedule.teamId,
+        schedule.name,
+      );
+      const integration = integrations.find(
+        (integration) => integration.orgId === schedule.orgId,
+      );
+      const newHistory = [...integration.credential.history];
+      newHistory.forEach((hist) => {
+        if (hist.id === schedule.id)
+          hist.status = res
+            ? res.status
+              ? "SENT"
+              : `FAILED: ${res?.message}`
+            : "FAILED";
+      });
+      await updateIntegrationByName(
+        integration.orgId,
+        IntegratedApps.petpooja,
+        { credential: { ...integration.credential, newHistory } },
+      );
+    }
+  } catch (e) {
+    log.error(e);
+  }
+}
+
+export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
+  const { waTemplateId, teamId, scheduleLater, sendAfter } =
+    integration.credential.orderEvent;
+  const history = integration.credential.history;
+  const existingIds = history.map((hist) => hist.id);
+  const newHistory = {
+    id: getUniqueRandomAlphaId(6, existingIds),
+    name: customer.name,
+    phone: customer.phone,
+    createdAt: new Date(),
+  };
+  if (scheduleLater) {
+    history.push({
+      ...newHistory,
+      status: "SCHEDULED",
+      scheduledAt: getScheduledTime(sendAfter),
+    });
+  } else {
+    const res = await sendWhatsAppTemplateToCustomer(
+      integration.orgId,
+      customer.phone,
+      waTemplateId,
+      teamId,
+      customer.name,
+    );
+    history.push({
+      ...newHistory,
+      status: res
+        ? res.status
+          ? "SENT"
+          : `FAILED: ${res?.message}`
+        : "FAILED",
+    });
+  }
+  await updateIntegrationByName(integration.orgId, IntegratedApps.petpooja, {
+    credential: { ...integration.credential, history },
   });
 }

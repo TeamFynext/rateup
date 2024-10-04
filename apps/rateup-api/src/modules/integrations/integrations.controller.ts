@@ -7,11 +7,13 @@ import {
   getAllIntegrationsByOrgId,
   getGoogleAuthUrl,
   getIntegrationByName,
+  getIntegrationByPetPoojaRestaurantId,
   getRegenerateWaPaymentConfigOauth,
   getWaPaymentConfigByName,
   getWaPaymentConfigurations,
   initializeAuthClient,
   removeSurveySpreadSheetSheetId,
+  sendWaTemplateOnPetpoojaOrder,
   updateIntegrationByName,
 } from "./integrations.service";
 import { log } from "../../utils/logger";
@@ -24,6 +26,10 @@ import {
   WaPaymentCreateSchema,
 } from "./integrations.schema";
 import { IntegratedApps } from "../../types/enums";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service";
+import { parsePhoneNumber } from "libphonenumber-js";
+import { getScheduledTime } from "./shopify/shopify.util";
+import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils";
 
 export const getAllIntegrationsByOrgHandler = async (
   request: FastifyRequest,
@@ -235,6 +241,37 @@ export async function createGoogleSheetAuthToken(
     reply.code(201).send({ message: "success" });
   } catch (error) {
     console.error(error);
+    reply.code(500).send();
+  }
+}
+
+export async function petPoojaWebhookHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const {
+      properties: { Restaurant, Customer },
+    } = request.body as any;
+    const restaurantID = Restaurant.restID;
+    const integration =
+      await getIntegrationByPetPoojaRestaurantId(restaurantID);
+    const customerPhone = parsePhoneNumber(Customer.phone, "IN");
+    console.log("request.body petpooja", request.body);
+    if (customerPhone.isValid() === false) {
+      log.trace("Invalid phone number");
+      return reply.code(403).send("Invalid phone number");
+    }
+    if (!integration || !integration?.credential?.orderEvent)
+      return reply.code(404).send("No Integration or configuration found");
+    const customer = {
+      name: Customer.name,
+      phone: customerPhone.countryCallingCode + customerPhone.nationalNumber,
+    };
+    await sendWaTemplateOnPetpoojaOrder(integration, customer);
+    reply.code(200).send("success");
+  } catch (e) {
+    log.error(e);
     reply.code(500).send();
   }
 }

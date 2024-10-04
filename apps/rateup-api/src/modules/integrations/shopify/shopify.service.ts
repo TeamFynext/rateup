@@ -242,10 +242,11 @@ export async function sendShopifySurveyCronAction() {
 }
 
 export async function sendWhatsAppTemplateToCustomer(
-  orgId,
-  phone,
-  waTemplateId,
-  teamId,
+  orgId: string,
+  phone: string,
+  waTemplateId: string,
+  teamId: string,
+  customerName?: string,
 ) {
   try {
     if (!teamId) {
@@ -327,7 +328,7 @@ export async function sendWhatsAppTemplateToCustomer(
     const templateMessage = createTemplateMessage(phone, templateQuery);
     await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50);
-    return await sendMessage(orgId, templateMessage);
+    return await sendMessage(orgId, templateMessage, customerName);
   } catch (e) {
     console.error(e);
     // log.error(e);

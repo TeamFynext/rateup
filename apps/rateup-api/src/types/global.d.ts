@@ -126,6 +126,28 @@ declare global {
     credential: ShopifyCredential;
   };
 
+  type petPoojaCredential = {
+    restaurantId: string;
+    orderEvent: {
+      waTemplateId: string;
+      teamId: string;
+      scheduleLater: boolean;
+      sendAfter: string;
+    };
+    history?: {
+      id: string;
+      name: string;
+      phone: string;
+      status: string;
+      scheduledAt?: Date;
+      createdAt: Date;
+    }[];
+  };
+
+  type petPoojaIntegration = Integration & {
+    credential: petPoojaCredential;
+  };
+
   export type AmeliaCredential = {
     apiKey: string;
     baseUrl: string;
