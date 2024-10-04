@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 import {
   ActionIcon,
@@ -10,7 +10,12 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconCopy, IconReload, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCopy,
+  IconReload,
+  IconTrash,
+} from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -156,7 +161,7 @@ export function ApiCopyButton({ value }) {
             px={8}
             radius={0}
           >
-            <IconCopy />
+            {copied ? <IconCheck /> : <IconCopy />}
           </ActionIcon>
         </Tooltip>
       )}

@@ -1310,6 +1310,28 @@ export type GoogleSheetIntegration = Integration & {
   credential: GoogleSheetCredential;
 };
 
+export type petpoojaCredential = {
+  restaurantId: string;
+  orderEvent: {
+    waTemplateId: string;
+    teamId: string;
+    scheduleLater: boolean;
+    sendAfter: string;
+  };
+  history?: {
+    id: string;
+    name: string;
+    phone: string;
+    status: string;
+    scheduledAt?: Date;
+    createdAt: Date;
+  }[];
+};
+
+export type petpoojaIntegration = Integration & {
+  credential: petpoojaCredential;
+};
+
 export type ShopifyCredential = {
   session: Session;
   isWebhookRegistered: boolean;
