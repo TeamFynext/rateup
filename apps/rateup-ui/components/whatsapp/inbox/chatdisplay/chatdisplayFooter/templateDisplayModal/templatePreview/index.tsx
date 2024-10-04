@@ -53,6 +53,9 @@ export default function WaInboxTemplatePreview(props: Props) {
           const fileKey = await uploadFile(
             item?.parameters[0]?.[item?.parameters[0]?.type]?.link,
           );
+          let filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
+          const isDocument = item?.parameters?.[0]?.type === "document";
+
           return {
             ...item,
             parameters: item.parameters.map((param, paramIndex) =>
@@ -62,6 +65,7 @@ export default function WaInboxTemplatePreview(props: Props) {
                     [item?.parameters[0]?.type]: {
                       ...param[item?.parameters[0]?.type],
                       link: `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${fileKey}`,
+                      ...(isDocument && { filename }),
                     },
                   }
                 : param,

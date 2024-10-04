@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 
+import { WaTemplateComponentTypeUpperCase } from "@/types/enums";
+
 import { WaTemplateDefaultValues } from "../../components/whatsapp/templates/Schema/templateSchema";
 import {
   WaInboxMessage,
@@ -139,14 +141,14 @@ export function validateInboxTemplateSending(
             return hasDefaultImage || hasSelectedImage;
           case "VIDEO":
           case "DOCUMENT":
-            if (!sendHeaderComponent) return false;
-            if (
-              sendHeaderComponent?.parameters[0]?.[
+            const hasDefaultFile = !!createTemplateComponents.find(
+              (data) => data.type === WaTemplateComponentTypeUpperCase.HEADER,
+            )?.example?.header_handle?.[0];
+            const hasSelectedFile =
+              !!sendHeaderComponent?.parameters[0]?.[
                 componentC?.format.toLowerCase()
-              ]?.link
-            )
-              return true;
-            else return false;
+              ]?.link;
+            return hasDefaultFile || hasSelectedFile;
           case "LOCATION":
             if (!sendHeaderComponent) return false;
             if (
