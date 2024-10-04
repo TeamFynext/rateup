@@ -248,6 +248,7 @@ export async function sendCampaign(
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
   participantId?: string,
+  userId?: string,
 ) {
   await updateCampaign(campaignId, {
     status: CampaignStatus.ACTIVE,
@@ -257,7 +258,12 @@ export async function sendCampaign(
     scheduledStatuses: [],
   });
   log.trace("updated campaign status to active");
-  await sendCampaignToParticipants(campaignId, sendToStatuses, participantId);
+  await sendCampaignToParticipants(
+    campaignId,
+    sendToStatuses,
+    participantId,
+    userId,
+  );
   // add state indicating survey is sent to all participants?
 }
 

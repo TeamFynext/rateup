@@ -547,6 +547,7 @@ export async function sendCampaignToParticipants(
     CampaignParticipantStatus.FAILED,
   ],
   participantId?: string,
+  userId?: string,
 ) {
   try {
     log.trace(
@@ -618,6 +619,7 @@ export async function sendCampaignToParticipants(
       dbTemplate,
       campaign.dynamicTags,
       participantId,
+      userId,
     )
       .then(() => {
         log.trace("Template sent to all participants");
@@ -730,6 +732,7 @@ async function _sendCampaignToParticipants(
   dbTemplate: WaTemplateWithTypes,
   contactTags: string[],
   individualParticipantId?: string,
+  userId?: string,
 ) {
   const teamId = campaign.team.id;
   if (!teamId) {
@@ -871,7 +874,7 @@ async function _sendCampaignToParticipants(
 
     updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50); // wait 50ms (throughput will be ~20 messages per second)
-    sendMessage(orgId, templateMessage)
+    sendMessage(orgId, templateMessage, null, userId)
       .then(sendCampaignCallback)
       .catch((e) => {
         log.error("Could not send campaign to %s", contact.phone);

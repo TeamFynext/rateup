@@ -90,6 +90,7 @@ model User {
   linktree       Linktree[]
   generateQr     GenerateQr[]
   landingPage    LandingPage[]
+  WaMessage      WaMessage[]
 }
 
 model Org {
@@ -1071,6 +1072,8 @@ model WaMessage {
   messageId                       String?
   stats                           Json?                             @default("{\"failed\": \"\",\"sent\": \"\",\"delivered\": \"\" ,\"read\": \"\"}")
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
+  sendBy                          String?                           @db.Uuid
+  sender                          User?                             @relation(fields: [sendBy], references: [id], onDelete: Cascade)
 }
 
 model WaMessageCampaginParticipantMap {

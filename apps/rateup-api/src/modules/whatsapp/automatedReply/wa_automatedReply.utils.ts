@@ -10,10 +10,7 @@ import {
   parseMessage,
 } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
-import {
-  sendMessage,
-  sendTextMessage,
-} from "../whatsappSurvey/wasurvey.service";
+import { sendTextMessage } from "../whatsappSurvey/wasurvey.service";
 import { log } from "../../../utils/logger";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
 import prisma from "../../../utils/prisma";

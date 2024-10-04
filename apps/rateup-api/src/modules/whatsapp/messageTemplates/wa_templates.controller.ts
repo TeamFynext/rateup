@@ -340,6 +340,7 @@ export async function sendTemplateToUserCore(
   phone: string,
   parameterData: any[],
   teamId?: string,
+  userId?: string,
 ): Promise<void> {
   const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
   const { data, defaultValues } = dbTemplate;
@@ -521,7 +522,7 @@ export async function sendTemplateToUserCore(
   } else {
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
-  await sendMessage(orgId, templateMessage);
+  await sendMessage(orgId, templateMessage, null, userId);
   await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
 }
 
@@ -536,6 +537,7 @@ export async function sendTemplateToUserHandler(
     const { templateId } = request.params;
     const { phone, parameterData, teamId } = request.body;
     const orgId = request.user.orgId;
+    const userId = request.userId;
 
     await sendTemplateToUserCore(
       orgId,
@@ -543,6 +545,7 @@ export async function sendTemplateToUserHandler(
       phone,
       parameterData,
       teamId,
+      userId,
     );
 
     reply.code(200).send("Template sent to user successfully");
@@ -562,6 +565,7 @@ export async function sendTemplatesToContactsHandler(
   try {
     const { templateId } = req.params;
     const orgId = req.user.orgId;
+    const userId = req.userId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     const contacts = await prisma.contact.findMany({
       where: {
@@ -581,6 +585,7 @@ export async function sendTemplatesToContactsHandler(
         dbTemplate,
         teamId: req.body.teamId,
         header: req.body.header,
+        userId,
       });
     }
   } catch (error) {
@@ -599,6 +604,8 @@ export async function sendTemplatesToContactGroupsHandler(
   try {
     const { templateId } = req.params;
     const orgId = req.user.orgId;
+    const userId = req.userId;
+
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     // TODO: can we optimize this query?
     const contacts = await prisma.contact.findMany({
@@ -623,6 +630,7 @@ export async function sendTemplatesToContactGroupsHandler(
         dbTemplate,
         teamId: req.body.teamId,
         header: req.body.header,
+        userId,
       });
     }
   } catch (error) {

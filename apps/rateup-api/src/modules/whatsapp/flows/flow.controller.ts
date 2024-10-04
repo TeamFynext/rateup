@@ -445,13 +445,14 @@ export async function sendFlowHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
+    const { orgId, userId } = request.user;
     const { dbFlowId } = request.params;
     const { phone } = request.body;
     const serviceParam = {
       orgId,
       dbFlowId,
       phone,
+      userId,
     };
     orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await sendFlow(serviceParam);
