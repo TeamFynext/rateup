@@ -469,11 +469,11 @@ export function getFlowJsonWithTitleAndDescription(
               screenElement.children.splice(i, 0, descriptionElement);
               i++;
             }
-
-            for (let logicJump of logicJumps?.[screen?.id]?.filter((item) =>
-              item.conditions.some(
-                (condition) => condition.questionId === formElement.id,
-              ),
+            for (let logicJump of (logicJumps?.[screen?.id] ?? [])?.filter(
+              (item) =>
+                item.conditions.some(
+                  (condition) => condition.questionId === formElement.id,
+                ),
             )) {
               if (!logicJump || typeof logicJump.action === "string") continue;
               let { id, ...restFail } =

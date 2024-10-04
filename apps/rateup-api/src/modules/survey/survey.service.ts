@@ -11,6 +11,7 @@ import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
 import {
   PageType,
   QuestionType,
+  SubscriptionFeaturePathName,
   SurveyType,
   SurveyVariableType,
 } from "../../types/enums";
@@ -32,6 +33,8 @@ import {
   getQuestionsArrUpdatedWithLanguageTypeQuestion,
 } from "../question/question.utils";
 import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme";
+import { hasFeature } from "../subscription/subscription.service";
+import { updateQuestionsOnSurvey } from "../question/question.service";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -238,6 +241,19 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
     return teamData;
   });
 
+  //check googlereview
+  if (
+    !(await hasFeature(
+      survey.orgId ?? survey.webSurveyTheme.orgId,
+      SubscriptionFeaturePathName.GoogleReview,
+    ))
+  ) {
+    const questions = [...survey.questions];
+    questions.forEach((question) => {
+      question.googleReview = null;
+    });
+    await updateQuestionsOnSurvey(id, questions);
+  }
   return { ...survey, teams: teams };
   //return survey;
 }
@@ -256,6 +272,7 @@ export async function getPublicSurveyById(id: string) {
           webSurveyTheme: true,
         },
       },
+      team: true,
     },
   });
 
@@ -276,9 +293,24 @@ export async function getPublicSurveyById(id: string) {
 
   let orgLogo = { orgLogo: org?.org?.logo, orgName: org?.org?.name };
 
+  //check googlereview
+  if (
+    !(await hasFeature(
+      surveyTeamMap.survey.orgId,
+      SubscriptionFeaturePathName.GoogleReview,
+    ))
+  ) {
+    const questions = [...surveyTeamMap.survey.questions];
+    questions.forEach((question) => {
+      question.googleReview = null;
+    });
+    await updateQuestionsOnSurvey(surveyTeamMap.surveyId, questions);
+  }
+
   let publicSurvey = {
     surveyTeamMapId,
     ...surveyTeamMap.survey,
+    reviewPageLinks: surveyTeamMap.team.reviewPageLinks,
     ...orgLogo,
   };
 

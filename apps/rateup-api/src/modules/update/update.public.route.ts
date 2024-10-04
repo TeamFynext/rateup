@@ -4,11 +4,11 @@
 import { FastifyInstance } from "fastify";
 import {
   updateFreePlanSubscriptionFeaturesHandler,
-  updateWebSurveyPagesTheme,
+  updateGoogleReviewQuestions,
 } from "./update.controller";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
-  server.post("/updateWebSurveyPagesTheme", updateWebSurveyPagesTheme);
+  server.post("/updateGoogleReviewQuestions", updateGoogleReviewQuestions);
 
   server.post(
     "/subscription/freeplan",
