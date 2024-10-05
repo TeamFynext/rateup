@@ -21,6 +21,7 @@ import {
 import { sendCampaignCronAction } from "./modules/campaign/campaign.service";
 import { sendShopifySurveyCronAction } from "./modules/integrations/shopify/shopify.service";
 import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
+import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
 
 const server = Fastify({
   logger: logOptions,
@@ -74,13 +75,13 @@ server.register(fastifyCron, {
           ".......Running every 15min JOB --> Survey Publish Updations........",
           currentTime,
         );
-        await publishSurveyCronAction();
-
-        await endSurveyCronAction();
-
-        await sendCampaignCronAction();
-
-        await sendShopifySurveyCronAction();
+        await Promise.all([
+          publishSurveyCronAction(),
+          endSurveyCronAction(),
+          sendCampaignCronAction(),
+          sendShopifySurveyCronAction(),
+          sendPetpoojaWaTemplateCronAction(),
+        ]);
       },
       start: true,
       timeZone: "Etc/UTC", // Set to UTC+0

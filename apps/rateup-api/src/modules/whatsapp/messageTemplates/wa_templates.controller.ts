@@ -4,6 +4,7 @@ import {
   SubscriptionFeaturePathName,
   WaTemplateComponentType,
   WaTemplateStatus,
+  WaTemplateSupportedFormats,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { getOrgIdAndRole } from "../../user/user.service";
@@ -339,6 +340,7 @@ export async function sendTemplateToUserCore(
   phone: string,
   parameterData: any[],
   teamId?: string,
+  userId?: string,
 ): Promise<void> {
   const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
   const { data, defaultValues } = dbTemplate;
@@ -388,30 +390,73 @@ export async function sendTemplateToUserCore(
     });
   }
 
-  const containsImage =
-    dbTemplate.data.components.find(
-      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-    )?.format === `IMAGE`;
+  const headerComponent = dbTemplate.data.components.find(
+    (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+  );
 
-  if (containsImage) {
-    if (!components.some((c) => c.type === "header")) {
-      if (defaultValues?.image?.link) {
-        components.push({
-          type: "header",
-          parameters: [
-            {
-              type: "image",
-              image: {
-                link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
-              },
-            },
-          ],
-        });
-      } else {
-        throw new Error(
-          "Image not found in template. Please upload an image and try again",
-        );
-      }
+  const format = headerComponent?.format;
+
+  // Function to push a new HEADER component
+  const addHeaderComponent = (format, link, filename = null) => {
+    const newComponent = {
+      type: WaTemplateComponentType.HEADER,
+      parameters: [
+        {
+          type: format.toLowerCase(),
+          [format.toLowerCase()]: {
+            link,
+            ...(filename && { filename }),
+          },
+        },
+      ],
+    };
+    components.push(newComponent);
+  };
+
+  if (!components.some((c) => c.type === WaTemplateComponentType.HEADER)) {
+    switch (format) {
+      case WaTemplateSupportedFormats.IMAGE:
+        if (defaultValues?.image?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.IMAGE,
+            getFileUrlFromKey(defaultValues.image.link),
+          );
+        } else {
+          throw new Error(
+            "Image not found in template. Please upload an image and try again",
+          );
+        }
+        break;
+
+      case WaTemplateSupportedFormats.DOCUMENT:
+        if (defaultValues?.document?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.DOCUMENT,
+            getFileUrlFromKey(defaultValues.document.link),
+            defaultValues?.document?.filename,
+          );
+        } else {
+          throw new Error(
+            "File not found in template. Please upload a document and try again",
+          );
+        }
+        break;
+      case WaTemplateSupportedFormats.VIDEO:
+        if (defaultValues?.video?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.VIDEO,
+            getFileUrlFromKey(defaultValues.video.link),
+          );
+        } else {
+          throw new Error(
+            "Video not found in template. Please upload a video and try again",
+          );
+        }
+        break;
+
+      default:
+        // Handle unsupported formats if needed
+        break;
     }
   }
 
@@ -477,7 +522,7 @@ export async function sendTemplateToUserCore(
   } else {
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
-  await sendMessage(orgId, templateMessage);
+  await sendMessage(orgId, templateMessage, null, userId);
   await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
 }
 
@@ -492,6 +537,7 @@ export async function sendTemplateToUserHandler(
     const { templateId } = request.params;
     const { phone, parameterData, teamId } = request.body;
     const orgId = request.user.orgId;
+    const userId = request.userId;
 
     await sendTemplateToUserCore(
       orgId,
@@ -499,6 +545,7 @@ export async function sendTemplateToUserHandler(
       phone,
       parameterData,
       teamId,
+      userId,
     );
 
     reply.code(200).send("Template sent to user successfully");
@@ -518,6 +565,7 @@ export async function sendTemplatesToContactsHandler(
   try {
     const { templateId } = req.params;
     const orgId = req.user.orgId;
+    const userId = req.userId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     const contacts = await prisma.contact.findMany({
       where: {
@@ -537,6 +585,7 @@ export async function sendTemplatesToContactsHandler(
         dbTemplate,
         teamId: req.body.teamId,
         header: req.body.header,
+        userId,
       });
     }
   } catch (error) {
@@ -555,6 +604,8 @@ export async function sendTemplatesToContactGroupsHandler(
   try {
     const { templateId } = req.params;
     const orgId = req.user.orgId;
+    const userId = req.userId;
+
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     // TODO: can we optimize this query?
     const contacts = await prisma.contact.findMany({
@@ -579,6 +630,7 @@ export async function sendTemplatesToContactGroupsHandler(
         dbTemplate,
         teamId: req.body.teamId,
         header: req.body.header,
+        userId,
       });
     }
   } catch (error) {

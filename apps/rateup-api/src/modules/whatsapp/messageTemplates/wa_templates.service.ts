@@ -89,6 +89,13 @@ export type templateData = {
     image: {
       link: string;
     };
+    document: {
+      link: string;
+      filename: string;
+    };
+    video: {
+      link: string;
+    };
   } | null;
   orgId: string;
   templateType: $Enums.TemplateType;
@@ -501,6 +508,7 @@ interface SendTemplateToPhoneProps {
   phone: string;
   teamId: string | undefined;
   header: SendTemplateHeaderComponent;
+  userId: string;
 }
 export async function sendTemplateToPhone({
   orgId,
@@ -508,6 +516,7 @@ export async function sendTemplateToPhone({
   header,
   phone,
   teamId,
+  userId,
 }: SendTemplateToPhoneProps) {
   log.trace("Sending template to phone %s", phone);
 
@@ -609,6 +618,6 @@ export async function sendTemplateToPhone({
     components: components,
   };
   const templateMessage = createTemplateMessage(phone, templateQuery);
-  await sendMessage(orgId, templateMessage);
+  await sendMessage(orgId, templateMessage, null, userId);
   log.trace("Template send to user successfully");
 }
