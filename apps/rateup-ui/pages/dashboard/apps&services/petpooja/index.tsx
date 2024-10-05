@@ -175,7 +175,10 @@ const WaTemplateSendSettings = ({
     updateIntegration.mutate({
       credential: {
         ...integration.credential,
-        orderEvent: form.values,
+        orderEvent:
+          !form.values.scheduleLater && form.values.sendAfter
+            ? { ...form.values, sendAfter: undefined }
+            : form.values,
       },
     });
   };
@@ -261,7 +264,7 @@ const WaTemplateSentHistory = ({ integration }) => {
         status: hist.status,
         scheduledAt: hist.scheduledAt
           ? formatIsoDateStringWithTime(hist.scheduledAt)
-          : "------",
+          : formatIsoDateStringWithTime(hist.createdAt),
         createdAt: formatIsoDateStringWithTime(hist.createdAt),
       }))
     : [];
