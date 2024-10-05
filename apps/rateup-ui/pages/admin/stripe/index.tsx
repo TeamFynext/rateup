@@ -1,7 +1,11 @@
-import { Stack, Title, Tabs } from "@mantine/core";
 import { useState } from "react";
-import StripeSubscription from "./StripeSubscription";
+
+import { Stack, Tabs, Title } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import StripeProducts from "./StripeProducts";
+import StripeSubscription from "./StripeSubscription";
 
 enum StripeTabs {
   products = "Products",
@@ -9,6 +13,7 @@ enum StripeTabs {
 }
 const index = () => {
   const [activeTab, setActiveTab] = useState<StripeTabs>(StripeTabs.products);
+  const { translations } = useTranslations();
   return (
     <Stack>
       <Title order={3}>Stripe Dashboard</Title>
@@ -27,7 +32,7 @@ const index = () => {
                 : "GrayText"
             }
           >
-            Products
+            {translations["Products"]}
           </Tabs.Tab>
           <Tabs.Tab
             value={StripeTabs.subscriptions}
@@ -37,7 +42,7 @@ const index = () => {
                 : "GrayText"
             }
           >
-            Subscriptions
+            {translations["Subscriptions"]}
           </Tabs.Tab>
         </Tabs.List>
 

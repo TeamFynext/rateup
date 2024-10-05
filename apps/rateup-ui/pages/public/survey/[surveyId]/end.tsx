@@ -13,6 +13,7 @@ import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import Confetti from "react-confetti";
 
 import { PageType } from "@/types/enums";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   getPublicSurvey,
@@ -101,7 +102,7 @@ export default function ThankYou({
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
-
+  const { translations } = useTranslations();
   // const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
   // const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
   let err = router.query.err && router.query.err === "oops";
@@ -239,12 +240,14 @@ export default function ThankYou({
                     textAlign: "center",
                   }}
                 >
-                  {!!err ? "Thank You!" : titleText}
+                  {!!err ? translations["Thank You!"] : titleText}
                 </Title>
                 {(subtitleText || err) && (
                   <Text style={subtitleStyles}>
                     {!!err
-                      ? "You've already submitted a response earlier."
+                      ? translations[
+                          "You've already submitted a response earlier."
+                        ]
                       : subtitleText}
                   </Text>
                 )}

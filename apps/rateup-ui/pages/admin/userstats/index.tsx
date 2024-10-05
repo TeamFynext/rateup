@@ -12,6 +12,8 @@ import {
   GridToolbar,
 } from "@mui/x-data-grid";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
   useGetAllUsers,
@@ -39,6 +41,7 @@ const index = () => {
   const { data: users } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
   const updatePauseStatus = useUpdateUserPause();
+  const { translations } = useTranslations();
   const rows = users
     ? users?.map((user) => ({
         id: user?.email,
@@ -68,33 +71,37 @@ const index = () => {
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "Email ID", width: 300 },
-    { field: "name", headerName: "Name", width: 200 },
+    { field: "id", headerName: translations["Email ID"], width: 300 },
+    { field: "name", headerName: translations["Name"], width: 200 },
     {
       field: "orgName",
-      headerName: "Organization",
+      headerName: translations["Organization"],
       width: 200,
     },
     {
       field: "role",
-      headerName: "Role",
+      headerName: translations["Role"],
       renderCell: (params: GridRenderCellParams<any, any>) => {
         const role = params.value;
         return <Badge color={getUserRoleColor(role)}>{role}</Badge>;
       },
       width: 200,
     },
-    { field: "signupDate", headerName: "SignUp Date", width: 200 },
-    { field: "recipeName", headerName: "Recipe", width: 200 },
-    { field: "isPaused", headerName: "Is Paused", width: 200 },
+    {
+      field: "signupDate",
+      headerName: translations["SignUp Date"],
+      width: 200,
+    },
+    { field: "recipeName", headerName: translations["Recipe"], width: 200 },
+    { field: "isPaused", headerName: translations["Is Paused"], width: 200 },
     {
       field: "status",
-      headerName: "Status",
+      headerName: translations["Status"],
       renderCell: (params) => {
         const active = params.value;
         return (
           <Badge color={active ? "green" : "red"}>
-            {active ? "Active" : "Inactive"}
+            {active ? translations["Active"] : translations["Inactive"]}
           </Badge>
         );
       },
@@ -102,7 +109,7 @@ const index = () => {
     },
     {
       field: "action",
-      headerName: "Actions",
+      headerName: translations["Actions"],
       type: "actions",
       width: 200,
       getActions: (params) => [
@@ -119,7 +126,11 @@ const index = () => {
             setSelectedUser(user);
             openConfirmModal();
           }}
-          label={params.row.isPaused === "YES" ? "Resume" : "Pause"}
+          label={
+            params.row.isPaused === "YES"
+              ? translations["Resume"]
+              : translations["Pause"]
+          }
           showInMenu
         />,
       ],
@@ -136,7 +147,7 @@ const index = () => {
 
   const handleUpdateUserRecipe = () => {
     showLoadingToast(
-      "Recipes getting updated",
+      translations["Recipes getting updated"],
       "user-recipe",
       true,
       "Updating..",
@@ -173,32 +184,50 @@ const index = () => {
     <Stack gap={"xs"}>
       <Flex gap={"xl"} pr={"lg"}>
         <Group flex={1} align="flex-start">
-          <Title order={2}>User Stats</Title>
+          <Title order={2}>{translations["User Stats"]}</Title>
           <RefreshButton queryKeys={["allUsers", "org"]} />
         </Group>
         <RateupButtonBlue
-          title="Update User Recipe"
+          title={translations["Update User Recipe"]}
           onClick={handleUpdateUserRecipe}
           disabled={isUpdatedRecipe}
         />
         <PaperLayout w={300}>
-          <Title order={5}>Total</Title>
+          <Title order={5}>{translations["Total"]}</Title>
           <Group justify="space-between" px={"sm"}>
-            <CountStatsCard label={"Organizations"} count={orgs?.length} />
-            <CountStatsCard label={"Users"} count={users?.length} />
+            <CountStatsCard
+              label={translations["Organizations"]}
+              count={orgs?.length}
+            />
+            <CountStatsCard
+              label={translations["Users"]}
+              count={users?.length}
+            />
           </Group>
         </PaperLayout>
         <PaperLayout w={500}>
           <Title order={5}>User Stats</Title>
           <Group justify="space-between" px={"sm"}>
-            <CountStatsCard label={"Today"} count={userStats.today} />
-            <CountStatsCard label={"Yesterday"} count={userStats.yesterday} />
-            <CountStatsCard label={"Last 7 days"} count={userStats.lastWeek} />
-            <CountStatsCard label={"This Month"} count={userStats.thisMonth} />
+            <CountStatsCard
+              label={translations["Today"]}
+              count={userStats.today}
+            />
+            <CountStatsCard
+              label={translations["Yesterday"]}
+              count={userStats.yesterday}
+            />
+            <CountStatsCard
+              label={translations["Last 7 days"]}
+              count={userStats.lastWeek}
+            />
+            <CountStatsCard
+              label={translations["This Month"]}
+              count={userStats.thisMonth}
+            />
           </Group>
         </PaperLayout>
       </Flex>
-      <Title order={4}>Most Recent SignUps</Title>
+      <Title order={4}>{translations["Most Recent SignUps"]}</Title>
       <Box
         sx={{
           height: "60vh",
@@ -236,12 +265,16 @@ const index = () => {
         opened={openedConfirmModal}
         onClose={closeConfirmModal}
         confirmLabel="Yes"
-        headerTitle={selectedUser?.isPaused ? "Resume User" : "Pause User"}
+        headerTitle={
+          selectedUser?.isPaused
+            ? translations["Resume User"]
+            : translations["Pause User"]
+        }
         onConfirm={() => {
           handleUserStatus();
         }}
-        headerLabel={`Are you sure to ${selectedUser?.isPaused ? "resume" : "pause"} this user?`}
-        closeLabel="cancel"
+        headerLabel={` ${translations["Are you sure to"]} ${selectedUser?.isPaused ? translations["resume"] : translations["pause"]} ${translations["this user?"]}`}
+        closeLabel={translations["cancel"]}
       />
     </Stack>
   );

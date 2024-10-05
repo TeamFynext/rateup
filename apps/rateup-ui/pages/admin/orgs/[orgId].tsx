@@ -1,26 +1,30 @@
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+
+import { Button, Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
 } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useAllOrgs,
   useOrgStats,
   useUpdateOrgPause,
 } from "../../../backend/org/org.query";
-import { SubscriptionEditorModal } from "../../../components/adminPanel/Subscription/SubscriptionEditorModal";
 import { useSubscriptionByOrgId } from "../../../backend/subscription/subscription.query";
 import {
-  CountSectionContainer,
   CountCard,
+  CountSectionContainer,
 } from "../../../components/adminPanel/stats/Count";
+import { SubscriptionEditorModal } from "../../../components/adminPanel/Subscription/SubscriptionEditorModal";
+import RefreshButton from "../../../components/Button/RefreshButton";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import { useEffect, useState } from "react";
-import RefreshButton from "../../../components/Button/RefreshButton";
 
 export default function OrgById() {
   const [opened, { close, open }] = useDisclosure(false); // subscription editor
@@ -39,7 +43,7 @@ export default function OrgById() {
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
   const [orgDetails, setOrgDetails] = useState<Org>(null);
   const updatePauseStatus = useUpdateOrgPause();
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (orgs) {
       setOrgDetails(orgs.find((org) => org.id === orgId));
@@ -82,8 +86,8 @@ export default function OrgById() {
             }}
           >
             {orgDetails?.isPaused
-              ? "Resume Organization"
-              : "Pause Organization"}
+              ? translations["Resume Organization"]
+              : translations["Pause Organization"]}
           </Button>
         )}
         <Button
@@ -97,7 +101,7 @@ export default function OrgById() {
             },
           }}
         >
-          Manage Subscription
+          {translations["Manage Subscription"]}
         </Button>
       </Group>
       <Group>
@@ -108,7 +112,7 @@ export default function OrgById() {
             label={["Invitation", "Invitations"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label="Teams">
+        <CountSectionContainer label={translations["Teams"]}>
           <CountCard count={stats.teams.total} label={["Team", "Teams"]} />
           <CountCard
             count={stats.teams.members}
@@ -119,7 +123,7 @@ export default function OrgById() {
             label={["Invitation", "Invitations"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={"Web Surveys"}>
+        <CountSectionContainer label={translations["Web Surveys"]}>
           <CountCard count={stats.web.surveys} label={["Survey", "Surveys"]} />
           <CountCard
             count={stats.web.responses}
@@ -127,7 +131,7 @@ export default function OrgById() {
           />
           <CountCard count={stats.web.visited} label={["Visited", "Visited"]} />
         </CountSectionContainer>
-        <CountSectionContainer label={"WhatsApp Surveys"}>
+        <CountSectionContainer label={translations["WhatsApp Surveys"]}>
           <CountCard
             count={stats.whatsapp.surveys}
             label={["Survey", "Surveys"]}
@@ -145,14 +149,14 @@ export default function OrgById() {
             label={["Visited", "Visited"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={"Reputation Mangement"}>
+        <CountSectionContainer label={translations["Reputation Mangement"]}>
           <CountCard count={stats.rm.reviews} label={["Review", "Reviews"]} />
           <CountCard
             count={stats.rm.analyzedReviews}
             label={["Analyzed Review", "Analyzed Reviews"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={"Campaigns"}>
+        <CountSectionContainer label={translations["Campaigns"]}>
           <CountCard
             count={stats.campaigns.campaigns}
             label={["Campaign", "Campaigns"]}
@@ -162,7 +166,7 @@ export default function OrgById() {
             label={["Participant", "Participants"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={"Digitl Menu"}>
+        <CountSectionContainer label={translations["Digitl Menu"]}>
           <CountCard count={stats.menu.total} label={["Menu", "Menu"]} />
           <CountCard count={stats.menu.banners} label={["Banner", "Banners"]} />
         </CountSectionContainer>
@@ -180,15 +184,17 @@ export default function OrgById() {
       <ConfirmationModal
         opened={openedConfirmModal}
         onClose={closeConfirmModal}
-        confirmLabel="Yes"
+        confirmLabel={translations["Yes"]}
         headerTitle={
-          orgDetails?.isPaused ? "Resume Organization" : "Pause Organization"
+          orgDetails?.isPaused
+            ? translations["Resume Organization"]
+            : translations["Pause Organization"]
         }
         onConfirm={() => {
           handleOrgPauseStatus();
         }}
         headerLabel={`Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`}
-        closeLabel="cancel"
+        closeLabel={translations["cancel"]}
       />
     </Stack>
   );

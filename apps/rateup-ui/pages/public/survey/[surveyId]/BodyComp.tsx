@@ -5,6 +5,7 @@ import { IconHome } from "@tabler/icons-react";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
+import useTranslations from "@/dictionaries/useTranslation";
 
 function BodyComp({
   enableGoogleReview,
@@ -14,6 +15,7 @@ function BodyComp({
   surveyId,
   k,
 }) {
+  const { translations } = useTranslations();
   return (
     <Stack
       align="center"
@@ -40,7 +42,10 @@ function BodyComp({
             href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/cs`}
             target="_blank"
           >
-            <RateupButtonBlue leftIcon={<IconHome />} title="Go to Home" />
+            <RateupButtonBlue
+              leftIcon={<IconHome />}
+              title={translations["Go to Home"]}
+            />
           </Link>
         </Group>
       )}

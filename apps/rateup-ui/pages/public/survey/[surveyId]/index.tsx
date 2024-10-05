@@ -1,14 +1,18 @@
-import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
-import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
-import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
-import Head from "next/head";
 import { useEffect, useState } from "react";
-import ReviewUsOnGoogle from "./review-us-on-google";
-import { imagesPath, mimeTypesForImage } from "../../../../utils/constants";
-import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import Head from "next/head";
 import Link from "next/link";
+
 import { Button, Image } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
+import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
+import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
+import { imagesPath, mimeTypesForImage } from "../../../../utils/constants";
 import errorPageStyles from "../../../ws/[shortId]/ws.module.css";
+import ReviewUsOnGoogle from "./review-us-on-google";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -33,7 +37,7 @@ export const getServerSideProps = async (context: {
 export default function Page({ survey, error_occured, fromShortUrl = false }) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
-
+  const { translations } = useTranslations();
   const { data: gReview } = usePublicReviewSuggestions(
     !!isReviewPage && !!survey?.surveyTeamMapId,
     survey?.surveyTeamMapId,
@@ -83,13 +87,13 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
           <Image w={80} src={`${imagesPath}/rateup-logo-blue-text.svg`} />
         </Link>
         <p className={errorPageStyles["error-text"]}>
-          Unable to get survey, please try again later
+          {translations["Unable to get survey, please try again later"]}
         </p>
         <Button
           className={errorPageStyles["reload-btn"]}
           onClick={() => window.location.reload()}
         >
-          Reload the page
+          {translations["Reload the page"]}
         </Button>
       </div>
     );

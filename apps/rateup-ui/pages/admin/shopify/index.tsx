@@ -17,6 +17,7 @@ import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/sho
 import styles from "@/components/adminPanel/admin.module.css";
 import RefreshButton from "@/components/Button/RefreshButton";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import useTranslations from "@/dictionaries/useTranslation";
 import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 import { showLoadingToast } from "@/utils/notifications";
@@ -26,7 +27,7 @@ const index = () => {
   const [selectedShop, setSelectedShop] = useState("");
   const [opened, { open: openConfirmModal, close }] = useDisclosure(false);
   const deleteIntegration = useDeleteShopifyIntegrationByShop();
-
+  const { translations } = useTranslations();
   const rows = integrations
     ? integrations
         .filter((integration) => integration.name === IntegratedApps.shopify)
@@ -39,26 +40,31 @@ const index = () => {
         }))
     : [];
   const columns: GridColDef[] = [
-    { field: "id", headerName: "Id", width: 250, cellClassName: styles.idCell },
-    { field: "shop", headerName: "Shop", width: 250 },
+    {
+      field: "id",
+      headerName: translations["Id"],
+      width: 250,
+      cellClassName: styles.idCell,
+    },
+    { field: "shop", headerName: translations["Shop"], width: 250 },
     {
       field: "orgId",
-      headerName: "Org Id",
+      headerName: translations["Org Id"],
       width: 250,
       cellClassName: styles.idCell,
     },
     {
       field: "status",
-      headerName: "Status",
+      headerName: translations["Status"],
       width: 200,
       renderCell: (params: GridRenderCellParams<any, any>) => {
         return <ActiveStatusBadge active={params.value} />;
       },
     },
-    { field: "createdAt", headerName: "Created At", width: 200 },
+    { field: "createdAt", headerName: translations["Created At"], width: 200 },
     {
       field: "action",
-      headerName: "Actions",
+      headerName: translations["Actions"],
       type: "actions",
       width: 200,
       getActions: (params) => [
@@ -68,7 +74,7 @@ const index = () => {
             setSelectedShop(params.row.shop);
             openConfirmModal();
           }}
-          label="Delete"
+          label={translations["Delete"]}
           showInMenu
         />,
       ],
@@ -82,7 +88,7 @@ const index = () => {
   return (
     <Stack>
       <Group>
-        <Title order={2}>Integrated Shopify Stores</Title>
+        <Title order={2}>{translations["Integrated Shopify"]}"</Title>
         <RefreshButton queryKeys={["integrations"]} />
       </Group>
       <Box h={"70vh"}>
@@ -100,9 +106,9 @@ const index = () => {
         />
       </Box>
       <ConfirmationModal
-        confirmLabel="Yes"
-        headerLabel="Are you sure, you want to delete it?"
-        headerTitle="Delete"
+        confirmLabel={translations["Yes"]}
+        headerLabel={translations["Are you sure, you want to delete it?"]}
+        headerTitle={translations["Delete"]}
         onClose={close}
         onConfirm={handleDelete}
         forDeleteFunctionality
