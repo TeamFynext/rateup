@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import advancedFormat from "dayjs/plugin/advancedFormat";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import isBetween from "dayjs/plugin/isBetween";
 
 dayjs.extend(customParseFormat);
@@ -42,7 +42,7 @@ export const formatedTime = (category) => {
 
 export const formatToCustomTime = (timestamp) => {
   if (!timestamp) return "-- : --";
-  return dayjs(timestamp).format("HH:mm");
+  return dayjs(timestamp).format("hh:mm a");
 };
 
 export const formatUnixTimeStamp = (timestamp: number) => {

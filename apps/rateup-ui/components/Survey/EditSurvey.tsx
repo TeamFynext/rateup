@@ -41,6 +41,7 @@ import PageTypeSelection from "./Page/PageTypeSelection";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor";
 import LogicEditor from "./Question/LogicEditor";
 import { QuestionDetailedView } from "./Question/QuestionDetailedView";
+import QuestionReviewPageEditor from "./Question/QuestionReviewPageEditor";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor";
 import TicketIssueEditor from "./Question/TicketIssueEditor";
@@ -67,6 +68,7 @@ export enum QuestionTabsEnum {
   VariableEditor = "VariableEditor",
   None = "None",
   SurveyPreview = "SurveyPreview",
+  QuestionReviewPageEditor = "QuestionReviewPageEditor",
 }
 interface EditSurveyProps {
   questions: Array<Question>;
@@ -405,6 +407,13 @@ export function EditSurvey({
                   <GoogleReviewEditor
                     selectedQ={selectedQ}
                     setSelectedQ={setSelectedQ}
+                    setActiveTab={setActiveTab}
+                  />
+                </Tabs.Panel>
+                <Tabs.Panel value={QuestionTabsEnum.QuestionReviewPageEditor}>
+                  <QuestionReviewPageEditor
+                    selectedQ={selectedQ}
+                    survey={survey}
                     setActiveTab={setActiveTab}
                   />
                 </Tabs.Panel>

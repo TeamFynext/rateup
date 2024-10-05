@@ -1,14 +1,18 @@
-import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
-import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
-import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
-import Head from "next/head";
 import { useEffect, useState } from "react";
-import ReviewUsOnGoogle from "./review-us-on-google";
-import { imagesPath, mimeTypesForImage } from "../../../../utils/constants";
-import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import Head from "next/head";
 import Link from "next/link";
+
 import { Button, Image } from "@mantine/core";
+
+import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
+
+import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
+import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
+import { TakeSurveyLayoutWeb } from "../../../../components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb";
+import TakeSurvey from "../../../../components/Survey/TakeSurvey/TakeSurveyComponent";
+import { imagesPath, mimeTypesForImage } from "../../../../utils/constants";
 import errorPageStyles from "../../../ws/[shortId]/ws.module.css";
+import ReviewUsOnGoogle from "./review-us-on-google";
 
 type SurveyViewProp = {
   surveyId: string;
@@ -33,12 +37,6 @@ export const getServerSideProps = async (context: {
 export default function Page({ survey, error_occured, fromShortUrl = false }) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
-
-  const { data: gReview } = usePublicReviewSuggestions(
-    !!isReviewPage && !!survey?.surveyTeamMapId,
-    survey?.surveyTeamMapId,
-    isReviewPage,
-  );
 
   useEffect(() => {
     if (error_occured) {
@@ -123,16 +121,10 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Org Icon" />
       </Head>
-      {isReviewPage && gReview ? (
-        <ReviewUsOnGoogle
-          googleLink={gReview.reviewLink}
-          reviews={gReview.reviews}
-          surveyTeamMapId={survey.surveyTeamMapId}
-          orgLogoUrl={
-            survey.orgLogo && survey.orgLogo !== "REMOVED_PHOTO"
-              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
-              : null
-          }
+      {isReviewPage ? (
+        <GoogleReview
+          orgLogoUrl={survey?.webSurveyTheme?.surveyTheme?.logo?.logo}
+          survey={survey}
         />
       ) : (
         <TakeSurveyLayoutWeb survey={survey}>

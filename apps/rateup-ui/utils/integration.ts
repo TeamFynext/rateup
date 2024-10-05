@@ -10,6 +10,8 @@ export function getIntegrationDisplayName(name) {
       return "Amelia";
     case IntegratedApps.waPayment:
       return "Whatsapp Payment";
+    case IntegratedApps.petpooja:
+      return "Petpooja";
     default:
       return "Not defined";
   }

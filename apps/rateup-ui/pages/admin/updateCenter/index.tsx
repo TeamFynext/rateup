@@ -2,11 +2,11 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
   useUpdateFreePlanSubscription,
-  useUpdateWebSurveyPagesTheme,
+  useUpdateGoogleReviewQuestions,
 } from "@/backend/updations/update.query";
 
 function UpdateAllThemes() {
-  const updatePageTypeQuestionsMutations = useUpdateWebSurveyPagesTheme();
+  const updateGoogleReviewQuestionsMutation = useUpdateGoogleReviewQuestions();
   const updateFreePlanSubscription = useUpdateFreePlanSubscription();
 
   const isDev =
@@ -15,20 +15,20 @@ function UpdateAllThemes() {
   return (
     <Stack>
       <Stack mt="xl">
-        <Title order={2}>Update WebSurveyPagesTheme</Title>
+        <Title order={2}>Update Google Review Questions</Title>
         <Text>
-          Updates webSurveyPagesTheme column of survey table, which is used in
-          survey editor page.
+          Update Google Review Questions of all surveys with new property
+          reviewPageOptions, reviewPagePlatform
         </Text>
-
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}
           onClick={() => {
-            updatePageTypeQuestionsMutations.mutate();
+            updateGoogleReviewQuestionsMutation.mutate();
           }}
+          loading={updateGoogleReviewQuestionsMutation.isPending}
         >
-          Update WebSurveyPagesTheme
+          Update
         </Button>
       </Stack>
 

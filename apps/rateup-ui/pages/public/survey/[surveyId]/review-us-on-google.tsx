@@ -38,10 +38,10 @@ export function ReviewUsOnGoogle({
 }) {
   return (
     <GoogleReview
-      googleLink={googleLink}
       reviewSuggestions={reviews}
       orgLogoUrl={orgLogoUrl}
       surveyTeamMapId={surveyTeamMapId}
+      survey={null}
     />
   );
 }

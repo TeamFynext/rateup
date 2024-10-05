@@ -6,12 +6,12 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   updateFreePlanSubscription,
-  updateWebSurveyPagesTheme,
+  updateGoogleReviewQuestions,
 } from "./update.api";
 
-export const useUpdateWebSurveyPagesTheme = () => {
+export const useUpdateGoogleReviewQuestions = () => {
   return useMutation({
-    mutationFn: updateWebSurveyPagesTheme,
+    mutationFn: updateGoogleReviewQuestions,
     onSuccess: () => {
       showSuccessToast("Updated questions successfully");
     },
