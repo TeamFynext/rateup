@@ -1872,5 +1872,20 @@
   "Reload the page": "Reload the page",
   "Unable to get survey, please try again later": "Unable to get survey, please try again later",
   "I have No Aadhaar & Ration Card": "I have No Aadhaar & Ration Card",
-  "I have Aadhaar only [No Ration Card]": "I have Aadhaar only [No Ration Card]"
+  "I have Aadhaar only [No Ration Card]": "I have Aadhaar only [No Ration Card]",
+  "Home": "Home",
+  "Surveys": "Surveys",
+  "Templates": "Templates",
+  "WhatsApp": "WhatsApp",
+  "Flows": "Flows",
+  "Campaign": "Campaign",
+  "Automation": "Automation",
+  "Reputation": "Reputation",
+  "Testimonial": "Testimonial",
+  "Digital Menu": "Digital Menu",
+  "QR Studio": "QR Studio",
+  "Docs": "Docs",
+  "Loyalty": "Loyalty",
+  "API": "API",
+  "Apps & Services": "Apps & Services"
 }

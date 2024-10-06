@@ -1872,5 +1872,20 @@
   "Reload the page": "पृष्ठ को पुनः लोड करें",
   "Unable to get survey, please try again later": "सर्वेक्षण प्राप्त करने में असमर्थ, कृपया बाद में पुनः प्रयास करें",
   "I have No Aadhaar & Ration Card": "मेरे पास आधार और राशन कार्ड नहीं है",
-  "I have Aadhaar only [No Ration Card]": "मेरे पास केवल आधार है [राशन कार्ड नहीं है]"
+  "I have Aadhaar only [No Ration Card]": "मेरे पास केवल आधार है [राशन कार्ड नहीं है]",
+  "Home": "मुख पृष्ठ",
+  "Surveys": "सर्वेक्षण",
+  "Templates": "टेम्पलेट्स",
+  "WhatsApp": "व्हाट्सएप",
+  "Flows": "प्रवाह",
+  "Campaign": "अभियान",
+  "Automation": "स्वचालन",
+  "Reputation": "प्रतिष्ठा",
+  "Testimonial": "संदर्भ",
+  "Digital Menu": "डिजिटल मेनू",
+  "QR Studio": "QR स्टूडियो",
+  "Docs": "दस्तावेज़",
+  "Loyalty": "निष्ठा",
+  "API": "एपीआई",
+  "Apps & Services": "ऐप्स और सेवाएँ"
 }

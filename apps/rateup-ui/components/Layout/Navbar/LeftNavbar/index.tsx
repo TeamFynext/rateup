@@ -12,6 +12,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import classNames from "classnames/bind";
 import { motion } from "framer-motion";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useSubscription } from "../../../../backend/subscription/subscription.query";
 import { useUser } from "../../../../context/UserContext";
 import {
@@ -43,6 +45,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
   const [userProfileAvatar, setUserProfileAvatar] = useState(
     `${imagesPath}/user.png`,
   );
+  const { translations } = useTranslations();
   useEffect(() => {
     if (user?.profilePhoto && user?.profilePhoto !== "REMOVED_PHOTO") {
       const imgUrl = `${surveyUploadsPath}${user?.profilePhoto}`;
@@ -70,7 +73,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
 
   const { data: subscription, isPending } = useSubscription();
   if (isPending && opened) return <NavbarSkeleton className={cx("navbar")} />;
-  const navTopData = getNavTopData(subscription);
+  const navTopData = getNavTopData(subscription, translations);
 
   return (
     <motion.div

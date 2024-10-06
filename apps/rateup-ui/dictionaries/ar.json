@@ -1872,5 +1872,20 @@
   "Reload the page": "إعادة تحميل الصفحة",
   "Unable to get survey, please try again later": "غير قادر على الحصول على الاستبيان، يرجى المحاولة لاحقًا",
   "I have No Aadhaar & Ration Card": "ليس لدي بطاقة Aadhaar أو بطاقة تموين",
-  "I have Aadhaar only [No Ration Card]": "لدي بطاقة Aadhaar فقط [بدون بطاقة تموين]"
+  "I have Aadhaar only [No Ration Card]": "لدي بطاقة Aadhaar فقط [بدون بطاقة تموين]",
+  "Home": "الصفحة الرئيسية",
+  "Surveys": "استطلاعات",
+  "Templates": "قوالب",
+  "WhatsApp": "واتساب",
+  "Flows": "تدفقات",
+  "Campaign": "حملة",
+  "Automation": "أتمتة",
+  "Reputation": "سمعة",
+  "Testimonial": "شهادة",
+  "Digital Menu": "قائمة رقمية",
+  "QR Studio": "استوديو QR",
+  "Docs": "مستندات",
+  "Loyalty": "ولاء",
+  "API": "API",
+  "Apps & Services": "التطبيقات والخدمات"
 }

@@ -1871,5 +1871,20 @@
   "Reload the page": "Recharger la page",
   "Unable to get survey, please try again later": "Impossible d'obtenir l'enquête, veuillez réessayer plus tard",
   "I have No Aadhaar & Ration Card": "Je n'ai pas de carte Aadhaar ni de carte de rationnement",
-  "I have Aadhaar only [No Ration Card]": "Je n'ai que la carte Aadhaar [pas de carte de rationnement]"
+  "I have Aadhaar only [No Ration Card]": "Je n'ai que la carte Aadhaar [pas de carte de rationnement]",
+  "Home": "Accueil",
+  "Surveys": "Enquêtes",
+  "Templates": "Modèles",
+  "WhatsApp": "WhatsApp",
+  "Flows": "Flux",
+  "Campaign": "Campagne",
+  "Automation": "Automatisation",
+  "Reputation": "Réputation",
+  "Testimonial": "Témoignage",
+  "Digital Menu": "Menu numérique",
+  "QR Studio": "QR Studio",
+  "Docs": "Documents",
+  "Loyalty": "Fidélité",
+  "API": "API",
+  "Apps & Services": "Applications et services"
 }
