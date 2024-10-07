@@ -12,12 +12,14 @@ interface TeamSelectorProps extends SelectProps {
   onChange?: (teamId: string) => void;
   label?: string;
   enableAll?: boolean;
+  enableDefaultValue?: boolean;
 }
 export function TeamSelector({
   value,
   onChange,
   label = "",
   enableAll = false,
+  enableDefaultValue = true,
   ...props
 }: TeamSelectorProps) {
   // TODO: remove some nesting on results of the query?
@@ -33,7 +35,7 @@ export function TeamSelector({
     if (value) return;
     if (enableAll) {
       onChange("all");
-    } else if (teamRes?.data?.length > 0) {
+    } else if (teamRes?.data?.length > 0 && enableDefaultValue) {
       onChange(teamRes?.data[0]?.id);
     }
   }, [teamRes, value]);
@@ -65,9 +67,10 @@ export function TeamSelector({
     <ContainedSelection
       allowDeselect={false}
       data={teamOptions}
-      defaultValue={teamOptions[0].value}
+      defaultValue={enableDefaultValue && teamOptions[0].value}
       onChange={onChange}
       label={label}
+      value={value}
       {...props}
     />
   );
