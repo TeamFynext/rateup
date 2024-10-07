@@ -439,7 +439,7 @@ export async function sendPetpoojaWaTemplateCronAction() {
 export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
   const { waTemplateId, teamId, scheduleLater, sendAfter } =
     integration.credential.orderEvent;
-  const history = integration.credential.history;
+  const history = integration.credential.history ?? [];
   const existingIds = history.map((hist) => hist.id);
   const newHistory = {
     id: getUniqueRandomAlphaId(6, existingIds),
