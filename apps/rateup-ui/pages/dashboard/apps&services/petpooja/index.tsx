@@ -156,8 +156,8 @@ const WaTemplateSendSettings = ({
 }) => {
   const form = useForm({
     initialValues: {
-      teamId: "",
-      waTemplateId: "",
+      teamId: null,
+      waTemplateId: null,
       scheduleLater: false,
       sendAfter: "",
     },
@@ -184,17 +184,25 @@ const WaTemplateSendSettings = ({
   };
 
   useEffect(() => {
-    form.setValues({ ...integration?.credential?.orderEvent });
+    if (integration?.credential?.orderEvent)
+      form.setValues({ ...integration?.credential?.orderEvent });
   }, [integration]);
 
   const handleDelete = () => {
     showLoadingToast("Updating settings", "integration-update");
-    updateIntegration.mutate({
-      credential: {
-        ...integration.credential,
-        orderEvent: undefined,
+    updateIntegration.mutate(
+      {
+        credential: {
+          ...integration.credential,
+          orderEvent: undefined,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          form.reset();
+        },
+      },
+    );
   };
 
   return (
@@ -204,10 +212,10 @@ const WaTemplateSendSettings = ({
         <TeamSelector
           placeholder={translations["Select Team"]}
           withAsterisk
-          allowDeselect={false}
           {...form.getInputProps("teamId")}
           searchable
           label={translations["Team"]}
+          enableDefaultValue={false}
         />
         <WaTemplateSelector
           withAsterisk
