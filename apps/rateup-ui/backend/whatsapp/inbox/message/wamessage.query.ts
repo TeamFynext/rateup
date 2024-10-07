@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import {
   exportWaChats,
@@ -25,8 +30,12 @@ export const useGetMessagesByContactId = (contactId: string) => {
 };
 
 export const useSendNewWaMessage = (contactId: string) => {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (message: any) => sendNewWaMessage(contactId, message),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+    },
     onError: (error) => {
       console.error("Error sending message", error);
     },

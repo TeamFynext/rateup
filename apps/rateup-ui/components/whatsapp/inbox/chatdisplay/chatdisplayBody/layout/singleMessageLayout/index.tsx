@@ -66,7 +66,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
             </Text>
             {props?.children}
           </div>
-          <Text fz={10} c={"dimmed"} ml={"xl"}>
+          <Text fz={10} c={"dimmed"} ml={"xl"} ta={"end"}>
             {formatToCustomTime(props?.messageObject?.waCreatedAt)}
           </Text>
         </Paper>
