@@ -43,14 +43,16 @@ import { YNForm } from "./QuestionForms/YNForm";
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
     case QuestionType.Rating:
-      return userResponse.response.Rating >= question.googleReview.minRating;
+      return (
+        userResponse.response.Rating >= question.reviewPageOptions.minRating
+      );
     case QuestionType.Opinion:
       return (
         userResponse.response["Opinion Scale"] >=
-        question.googleReview.minOpinion
+        question.reviewPageOptions.minOpinion
       );
     case QuestionType.Smiley:
-      return question.googleReview.reqOptions.includes(
+      return question.reviewPageOptions.reqOptions.includes(
         userResponse.response.Smiley,
       );
     default:
@@ -60,7 +62,7 @@ const shouldShowGoogleReview = (question, userResponse) => {
 
 export const checkGoogleReviewForQuestion = (questions, responses) => {
   for (let question of questions) {
-    if (question?.googleReview) {
+    if (question?.reviewPageOptions) {
       let userResponse = responses.find((r) => r?.questionId === question?.id);
       if (userResponse && shouldShowGoogleReview(question, userResponse)) {
         return true;
@@ -380,21 +382,21 @@ function getFormattedResponseForVariable(response, questionType, variable) {
   switch (questionType) {
     case QuestionType.Contact:
       return variable.includes("name")
-        ? response?.name ?? ""
+        ? (response?.name ?? "")
         : variable.includes("phone")
-          ? response?.phone ?? ""
+          ? (response?.phone ?? "")
           : variable.includes("email")
-            ? response?.email ?? ""
+            ? (response?.email ?? "")
             : "";
     case QuestionType.Testimonial:
       return variable.includes("name")
-        ? response?.name ?? ""
+        ? (response?.name ?? "")
         : variable.includes("testimonial")
-          ? response?.testimonial ?? ""
+          ? (response?.testimonial ?? "")
           : variable.includes("jobTitle")
-            ? response?.jobTitle ?? ""
+            ? (response?.jobTitle ?? "")
             : variable.includes("rating")
-              ? response?.rating ?? ""
+              ? (response?.rating ?? "")
               : "";
     case QuestionType.Text:
     case QuestionType.Date:

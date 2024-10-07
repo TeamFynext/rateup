@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Button, Image } from "@mantine/core";
 
+import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
@@ -127,16 +128,10 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Org Icon" />
       </Head>
-      {isReviewPage && gReview ? (
-        <ReviewUsOnGoogle
-          googleLink={gReview.reviewLink}
-          reviews={gReview.reviews}
-          surveyTeamMapId={survey.surveyTeamMapId}
-          orgLogoUrl={
-            survey.orgLogo && survey.orgLogo !== "REMOVED_PHOTO"
-              ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
-              : null
-          }
+      {isReviewPage ? (
+        <GoogleReview
+          orgLogoUrl={survey?.webSurveyTheme?.surveyTheme?.logo?.logo}
+          survey={survey}
         />
       ) : (
         <TakeSurveyLayoutWeb survey={survey}>

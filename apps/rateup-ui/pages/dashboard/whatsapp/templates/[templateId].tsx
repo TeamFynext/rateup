@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -239,13 +239,12 @@ export default function WhatsappTemplateById() {
       ) {
         const file = await uploadTemplateMedia(values.header);
         const publicImageLink = await uploadFile(values.header);
+        let filename = values.header.name ?? "";
         values.header = file?.id ?? "";
-        // saving upload session id for image type
-        if (values.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE) {
-          defaultValues.image = {
-            link: publicImageLink,
-          };
-        }
+        defaultValues[values.format?.toLowerCase()] = {
+          link: publicImageLink,
+          filename,
+        };
         //@ts-ignore
         values.defaultValues = defaultValues;
       }
@@ -403,7 +402,7 @@ export default function WhatsappTemplateById() {
                   onClick={toggle}
                 />
               ) : (
-                <>
+                <React.Fragment>
                   {!isOrderCreate && (
                     <RateupButtonPrimary
                       title={translations["Save as draft"]}
@@ -418,7 +417,7 @@ export default function WhatsappTemplateById() {
                     loading={isSubmitting}
                     onClick={() => handleSubmit(false)}
                   />
-                </>
+                </React.Fragment>
               )}
             </Flex>
           </Flex>

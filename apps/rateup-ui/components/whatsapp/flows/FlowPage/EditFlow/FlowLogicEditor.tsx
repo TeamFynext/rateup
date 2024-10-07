@@ -185,7 +185,10 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           my="xs"
           py="xs"
         >
-          <Text>Component-Level Logic Jump</Text>
+          {/* Todo: added again after fixing if conditon problem-now name includes hyphen
+            eg: if(form.rt-5) to if(form.rt_5)
+          */}
+          {/* <Text>Question Jump</Text>
           {componentLeventLogicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
               key={index}
@@ -205,8 +208,8 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
             }}
           >
             Add Logic Jump
-          </Button>
-          <Text>Screen-Level Logic Jump</Text>
+          </Button> */}
+          <Text>Screen Jump</Text>
           {logicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
               key={index}
@@ -237,7 +240,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           }}
         >
           <RateupButtonSecondary
-            title={translations["Close"]}
+            title={translations["Close "]}
             size="md"
             variant="outline"
             color="var(--tertiary-color)"
@@ -555,7 +558,7 @@ function ConditionsActionMapBlock({
               )}
             </Fragment>
           ))}
-          {!isComponentLevel && (
+          {/* {!isComponentLevel && (
             <Button
               leftSection={<IconPlus />}
               variant={"subtle"}
@@ -583,7 +586,7 @@ function ConditionsActionMapBlock({
             >
               {translations["Add Condition"]}
             </Button>
-          )}
+          )} */}
         </Stack>
       </Box>
 

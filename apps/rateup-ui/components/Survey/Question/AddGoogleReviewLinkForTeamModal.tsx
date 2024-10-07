@@ -11,14 +11,14 @@ import { useEditTeamMutation } from "../../../backend/team/team.query";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
 
-const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
+const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
   const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
-      googleLink: team?.googleLink ?? "",
+      url: team?.reviewPageLinks?.[platform] ?? "",
     },
     validate: {
-      googleLink: (value) =>
+      url: (value) =>
         value.startsWith("https://") || value === ""
           ? null
           : translations["Please enter a valid url (https://...)"],
@@ -27,22 +27,31 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const editTeamMutation = useEditTeamMutation(team.id, () => {}, surveyId);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const res = form.validate();
     if (res.hasErrors) {
       return;
     }
-    editTeamMutation.mutate(form.values, {
-      onSettled: () => {
-        form.reset();
-        close();
-      },
-    });
+
+    let newReviewPageLinks = {};
+    if (!team.reviewPageLinks) {
+      newReviewPageLinks = {
+        [platform]: form.getValues().url,
+      };
+    } else if (team.reviewPageLinks) {
+      newReviewPageLinks = {
+        ...team.reviewPageLinks,
+        [platform]: form.getValues().url,
+      };
+    }
+    await editTeamMutation.mutateAsync({ reviewPageLinks: newReviewPageLinks });
+    form.reset();
+    close();
   };
 
   useEffect(() => {
-    form.setFieldValue("googleLink", team?.googleLink);
-  }, [team, opened]);
+    form.setFieldValue("url", team?.reviewPageLinks?.[platform] || "");
+  }, [team, opened, platform]);
 
   return (
     <Group justify="space-between" key={team.id}>
@@ -58,14 +67,15 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
         style={{
           flexGrow: 1,
         }}
-        value={team.googleLink}
+        onChange={() => {}}
+        value={form.getValues().url}
         readOnly
       />
       <ActionIcon onClick={open} variant="subtle">
         <IconEdit size={"1.5rem"} />
       </ActionIcon>
       <FormModalLayout
-        title={translations["Google Review Link"]}
+        title={`${platform} Url`}
         opened={opened}
         onClose={() => {
           form.reset();
@@ -80,8 +90,8 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId }) => {
         <Stack>
           <ContainedTextField
             label={team?.name}
-            {...form.getInputProps("googleLink")}
-            placeholder={`${translations["Enter google review link for"]} ${team?.name}`}
+            {...form.getInputProps("url")}
+            placeholder={`Enter review page url for ${team?.name}`}
           />
         </Stack>
       </FormModalLayout>

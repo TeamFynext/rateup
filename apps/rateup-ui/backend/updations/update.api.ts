@@ -2,9 +2,9 @@
 
 import { axiosClient } from "../apiClient";
 
-export const updateWebSurveyPagesTheme = async () => {
+export const updateGoogleReviewQuestions = async () => {
   const response = await axiosClient.post(
-    "/public/update/updateWebSurveyPagesTheme",
+    "/public/update/updateGoogleReviewQuestions",
   );
   return response.data;
 };

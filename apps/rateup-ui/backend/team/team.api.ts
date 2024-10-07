@@ -18,6 +18,7 @@ export interface IInviteMember {
 export interface IEditTeam {
   name?: string;
   googleLink?: string;
+  reviewPageLinks?: object;
   code?: string;
   tags?: string[];
 }

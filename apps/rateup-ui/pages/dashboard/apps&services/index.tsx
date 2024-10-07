@@ -26,6 +26,10 @@ const index = () => {
         return {
           src: "/images/whatsapp.png",
         };
+      case IntegratedApps.petpooja:
+        return {
+          src: "/images/petpooja.png",
+        };
     }
   }
 

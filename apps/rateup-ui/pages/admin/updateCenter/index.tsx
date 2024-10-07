@@ -2,12 +2,12 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
   useUpdateFreePlanSubscription,
-  useUpdateWebSurveyPagesTheme,
+  useUpdateGoogleReviewQuestions,
 } from "@/backend/updations/update.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 function UpdateAllThemes() {
-  const updatePageTypeQuestionsMutations = useUpdateWebSurveyPagesTheme();
+  const updateGoogleReviewQuestionsMutation = useUpdateGoogleReviewQuestions();
   const updateFreePlanSubscription = useUpdateFreePlanSubscription();
   const { translations } = useTranslations();
   const isDev =
@@ -24,13 +24,13 @@ function UpdateAllThemes() {
             ]
           }
         </Text>
-
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}
           onClick={() => {
-            updatePageTypeQuestionsMutations.mutate();
+            updateGoogleReviewQuestionsMutation.mutate();
           }}
+          loading={updateGoogleReviewQuestionsMutation.isPending}
         >
           {translations["Update WebSurveyPagesTheme"]}
         </Button>

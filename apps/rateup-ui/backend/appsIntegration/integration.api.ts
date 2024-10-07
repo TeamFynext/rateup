@@ -1,4 +1,5 @@
 import { IntegratedApps } from "@/types/enums";
+import { AmeliaCredential, petpoojaCredential } from "@/types/global";
 
 import { axiosClient } from "../apiClient";
 
@@ -15,11 +16,7 @@ export const getIntegrationByType = async (type: IntegratedApps) => {
 
 type integrationSchemaProps = {
   id?: string;
-  credential: {
-    apiKey: string;
-    baseUrl: string;
-    serviceId: number;
-  };
+  credential: AmeliaCredential | petpoojaCredential;
   name: string;
 };
 
