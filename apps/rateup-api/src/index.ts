@@ -80,7 +80,7 @@ server.register(fastifyCron, {
           endSurveyCronAction(),
           sendCampaignCronAction(),
           sendShopifySurveyCronAction(),
-          sendPetpoojaWaTemplateCronAction(),
+          // sendPetpoojaWaTemplateCronAction(),
         ]);
       },
       start: true,

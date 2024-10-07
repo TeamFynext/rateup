@@ -263,13 +263,19 @@ export async function petPoojaWebhookHandler(
       return reply.code(403).send("Invalid phone number");
     }
     if (!integration || !integration?.credential?.orderEvent)
-      return reply.code(404).send("No Integration or configuration found");
+      return reply
+        .code(404)
+        .send(
+          !integration
+            ? "No Integration found"
+            : "No order event configuration found",
+        );
     const customer = {
       name: Customer.name,
       phone: customerPhone.countryCallingCode + customerPhone.nationalNumber,
     };
-    await sendWaTemplateOnPetpoojaOrder(integration, customer);
-    reply.code(200).send("success");
+    // await sendWaTemplateOnPetpoojaOrder(integration, customer);
+    reply.code(200).send("Success: The API call executed successfully.");
   } catch (e) {
     log.error(e);
     reply.code(500).send();

@@ -428,7 +428,7 @@ export async function sendPetpoojaWaTemplateCronAction() {
       await updateIntegrationByName(
         integration.orgId,
         IntegratedApps.petpooja,
-        { credential: { ...integration.credential, newHistory } },
+        { credential: { ...integration.credential, history: newHistory } },
       );
     }
   } catch (e) {
