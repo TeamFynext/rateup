@@ -1555,6 +1555,7 @@
   "Select text type": "Texttyp auswählen",
   "Sub Heading": "Unterüberschrift",
   "Large Heading": "Große Überschrift",
+  "Caption": "Untertitel",
   "Enter Screen Title": "Bildschirmtitel eingeben",
   "Edit Screen": "Bildschirm bearbeiten",
   "Create Screen": "Bildschirm erstellen",
@@ -1763,7 +1764,6 @@
   "Phone ID": "Telefon-ID",
   "Enter your Whatsapp Business Account ID": "Geben Sie Ihre WhatsApp Business-Konto-ID ein",
   "WhatsApp Survey Templates": "WhatsApp-Umfragenvorlagen",
-
   "Wait..Connecting Shopify with Rateup": "Warten.. Shopify wird mit Rateup verbunden",
   "Something went wrong..": "Etwas ist schief gelaufen..",
   "Retry": "Erneut versuchen",
@@ -1889,5 +1889,9 @@
   "Docs": "Dokumente",
   "Loyalty": "Treue",
   "API": "API",
-  "Apps & Services": "Apps & Dienste"
+  "Apps & Services": "Apps & Dienste",
+  "WhatsApp Message scheduling": "WhatsApp-Nachrichtenplanung",
+  "French": "Französisch",
+  "Arabic": "Arabisch",
+  "Visit documentation": "Dokumentation besuchen"
 }

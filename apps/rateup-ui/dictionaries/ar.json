@@ -1554,6 +1554,7 @@
   "Select text type": "اختر نوع النص",
   "Sub Heading": "عنوان فرعي",
   "Large Heading": "عنوان كبير",
+  "Caption": "التسمية التوضيحية",
   "Enter Screen Title": "أدخل عنوان الشاشة",
   "Edit Screen": "تعديل الشاشة",
   "Create Screen": "إنشاء شاشة",
@@ -1887,5 +1888,9 @@
   "Docs": "مستندات",
   "Loyalty": "ولاء",
   "API": "API",
-  "Apps & Services": "التطبيقات والخدمات"
+  "Apps & Services": "التطبيقات والخدمات",
+  "WhatsApp Message scheduling": "جدولة رسائل واتساب",
+  "French": "فرنسي",
+  "Arabic": "عربي",
+  "Visit documentation": "زيارة التوثيق"
 }

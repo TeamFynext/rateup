@@ -1554,6 +1554,7 @@
   "Select text type": "Select text type",
   "Sub Heading": "Sub Heading",
   "Large Heading": "Large Heading",
+  "Caption": "Caption",
   "Enter Screen Title": "Enter Screen Title",
   "Edit Screen": "Edit Screen",
   "Create Screen": "Create Screen",
@@ -1887,5 +1888,9 @@
   "Docs": "Docs",
   "Loyalty": "Loyalty",
   "API": "API",
-  "Apps & Services": "Apps & Services"
+  "Apps & Services": "Apps & Services",
+  "WhatsApp Message scheduling": "WhatsApp Message scheduling",
+  "French": "French",
+  "Arabic": "Arabic",
+  "Visit documentation": "Visit documentation"
 }

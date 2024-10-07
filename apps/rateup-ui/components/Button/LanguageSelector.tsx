@@ -19,14 +19,15 @@ const LanguageSelector = () => {
   const handleLanguageChange = (selectedLanguage) => {
     setLanguage(selectedLanguage);
 
-    // Construct the new path based on the selected language
-    const newPath = `/${selectedLanguage}/dashboard`;
+    // Preserve the current pathname and query parameters
+    const { pathname, asPath, query } = router;
 
     updateUserLanguageMutation.mutate(
       { prefLanguage: selectedLanguage },
       {
         onSuccess: () => {
-          router.push(newPath, newPath, {
+          // Change only the locale while keeping the user on the same page
+          router.push({ pathname, query }, asPath, {
             locale: selectedLanguage,
           });
         },
@@ -61,6 +62,12 @@ const LanguageSelector = () => {
         </Menu.Item>
         <Menu.Item leftSection="🇮🇳" onClick={() => handleLanguageChange("hi")}>
           {translations["Hindi"]}
+        </Menu.Item>
+        <Menu.Item leftSection="🇫🇷" onClick={() => handleLanguageChange("fr")}>
+          {translations["French"]}
+        </Menu.Item>
+        <Menu.Item leftSection="🇸🇦" onClick={() => handleLanguageChange("ar")}>
+          {translations["Arabic"]}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
