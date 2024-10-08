@@ -1,4 +1,13 @@
+import { useState } from "react";
+
 import { Badge, Blockquote, Group, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  IconInfoCircle,
+  IconRefresh,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -6,28 +15,23 @@ import {
   GridPreProcessEditCellProps,
   GridRenderCellParams,
 } from "@mui/x-data-grid";
+import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useRateupPaymentsPlans } from "../../../backend/payment/payment.query";
 import {
   useDeleteStripeProduct,
   useGetStripeProducts,
   useSyncStripeProducts,
   useUpdateStripeProduct,
 } from "../../../backend/payment/stripe/stripe.query";
-import { PaymentPlanStatus } from "../../../types/enums";
-import dayjs from "dayjs";
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
-import {
-  IconInfoCircle,
-  IconRefresh,
-  IconTrash,
-  IconX,
-} from "@tabler/icons-react";
-import classes from "../../../components/Graph/graph.module.css";
-import { useDisclosure } from "@mantine/hooks";
-import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
-import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
-import { useState } from "react";
-import { useRateupPaymentsPlans } from "../../../backend/payment/payment.query";
 import RefreshButton from "../../../components/Button/RefreshButton";
+import classes from "../../../components/Graph/graph.module.css";
+import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import { PaymentPlanStatus } from "../../../types/enums";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 
 const StripeProducts = () => {
   const { data: products, isRefetching, refetch } = useGetStripeProducts();
@@ -40,7 +44,7 @@ const StripeProducts = () => {
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productId, setProductId] = useState("");
-
+  const { translations } = useTranslations();
   const handleDeleteProduct = () => {
     const product =
       products && products?.find((prod) => prod.productId == productId);
@@ -49,7 +53,7 @@ const StripeProducts = () => {
       rateupPlans?.find((plan) => plan?.stripeId === product?.id);
     if (productInRateupPlan) {
       showErrorToast(
-        "Unable to delete. Product is in use in rateup plan",
+        translations["Unable to delete. Product is in use in rateup plan"],
         "stripe",
         <IconX />,
         true,
@@ -60,14 +64,18 @@ const StripeProducts = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "Product ID", width: 200 },
-    { field: "name", headerName: "Name", width: 200 },
-    { field: "description", headerName: "Description", width: 200 },
-    { field: "type", headerName: "Type" },
-    { field: "amount", headerName: "Amount" },
-    { field: "currency", headerName: "Currency" },
-    { field: "interval", headerName: "Interval" },
-    { field: "intervalCount", headerName: "Interval Count" },
+    { field: "id", headerName: translations["Product ID"], width: 200 },
+    { field: "name", headerName: translations["Name"], width: 200 },
+    {
+      field: "description",
+      headerName: translations["Description"],
+      width: 200,
+    },
+    { field: "type", headerName: translations["Type"] },
+    { field: "amount", headerName: translations["Amount"] },
+    { field: "currency", headerName: translations["Currency"] },
+    { field: "interval", headerName: translations["Interval"] },
+    { field: "intervalCount", headerName: translations["Interval Count"] },
     {
       field: "livemod",
       headerName: "Live Mode",
@@ -75,26 +83,26 @@ const StripeProducts = () => {
         const liveMode = params.value;
         return (
           <Badge color={liveMode ? "green" : "red"}>
-            {liveMode ? "Live" : "Inactive"}
+            {liveMode ? translations["Live"] : translations["Inactive"]}
           </Badge>
         );
       },
     },
     {
       field: "active",
-      headerName: "Active",
+      headerName: translations["Active"],
       renderCell: (params: GridRenderCellParams<any, any>) => {
         const active = params.value;
         return (
           <Badge color={active ? "green" : "red"}>
-            {active ? "Active" : "Inactive"}
+            {active ? translations["Active"] : translations["Inactive"]}
           </Badge>
         );
       },
     },
     {
       field: "status",
-      headerName: "Status",
+      headerName: translations["Status"],
       type: "singleSelect",
       editable: true,
       preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
@@ -113,7 +121,7 @@ const StripeProducts = () => {
         PaymentPlanStatus.INACTIVE,
       ],
     },
-    { field: "createdAt", headerName: "Created At", width: 200 },
+    { field: "createdAt", headerName: translations["Created At"], width: 200 },
     {
       field: "actions",
       type: "actions",
@@ -124,7 +132,7 @@ const StripeProducts = () => {
         return [
           <GridActionsCellItem
             icon={<IconTrash />}
-            label="Delete"
+            label={translations["Delete"]}
             disabled={[
               PaymentPlanStatus.ACTIVE,
               PaymentPlanStatus.LIVE,
@@ -161,7 +169,7 @@ const StripeProducts = () => {
       <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
         <Group justify="space-between">
           <Group gap={"xs"}>
-            <Text>List of products from Stripe DB</Text>
+            <Text>{translations["List of products from Stripe DB"]}</Text>
             <RefreshButton queryKeys={["stripeProducts"]} />
           </Group>
           <RateupButtonSecondary
@@ -185,19 +193,21 @@ const StripeProducts = () => {
         opened={openedDeleteModal}
         onClose={closeDeleteModal}
         forDeleteFunctionality
-        confirmLabel="Delete"
-        headerTitle="Delete Stripe Product"
+        confirmLabel={translations["Delete"]}
+        headerTitle={translations["Delete Stripe Product"]}
         onConfirm={() => {
           showLoadingToast(
-            "Hold on..Stripe Product is getting deleted",
+            translations["Hold on..Stripe Product is getting deleted"],
             "stripe",
             true,
-            "Deleting Stripe product",
+            translations["Deleting Stripe product"],
           );
           handleDeleteProduct();
         }}
-        headerLabel="Are you sure to delete this stripe product?"
-        closeLabel="cancel"
+        headerLabel={
+          translations["Are you sure to delete this stripe product?"]
+        }
+        closeLabel={translations["cancel"]}
       />
     </Stack>
   );

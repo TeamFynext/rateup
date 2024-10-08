@@ -1,42 +1,66 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { LoadingOverlay, Paper, Text } from '@mantine/core';
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+
+import { LoadingOverlay, Paper, Text } from "@mantine/core";
+import { useQueryClient } from "@tanstack/react-query";
 //import { signOut } from "supertokens-auth-react/recipe/session";
 import Session from "supertokens-web-js/recipe/session";
-import { useQueryClient } from '@tanstack/react-query';
+
+import useTranslations from "@/dictionaries/useTranslation";
 
 const Logout = () => {
-    const router = useRouter();
-    const queryClient = useQueryClient();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { translations } = useTranslations();
+  useEffect(() => {
+    handleSignOut();
+    router.push("/login");
+  }, [router]);
 
-    useEffect(() => {
-        handleSignOut();
-        router.push('/login')
-    }, [router]);
-
-    async function handleSignOut() {
-       if (typeof window !== 'undefined') {
-        localStorage.clear();
-        queryClient.clear()
-        }
-       await Session.signOut(); 
-
-        router.push('/login');
+  async function handleSignOut() {
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+      queryClient.clear();
     }
+    await Session.signOut();
 
-    return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Paper shadow="xs" style={{ maxWidth: '300px', position: 'relative', padding: '20px', textAlign: 'center' }}>
-                <div style={{ position: 'relative', height: '40px' }}>
-                    <LoadingOverlay visible />
-                </div>
-                <Text size="xl" style={{ marginBottom: '10px', marginTop: '10px',  textAlign:'center' }}>
-                    Logging out...
-                </Text>
+    router.push("/login");
+  }
 
-            </Paper>
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Paper
+        shadow="xs"
+        style={{
+          maxWidth: "300px",
+          position: "relative",
+          padding: "20px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ position: "relative", height: "40px" }}>
+          <LoadingOverlay visible />
         </div>
-    );
+        <Text
+          size="xl"
+          style={{
+            marginBottom: "10px",
+            marginTop: "10px",
+            textAlign: "center",
+          }}
+        >
+          {translations["Logging out..."]}
+        </Text>
+      </Paper>
+    </div>
+  );
 };
 
 export default Logout;

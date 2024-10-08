@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import Script from "next/script";
+
 import {
   ActionIcon,
   Box,
@@ -23,7 +26,9 @@ import {
   IconLogout,
   IconTrash,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import {
   useDeleteWaSettingsMutation,
@@ -36,17 +41,16 @@ import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
 import {
   ContainedTextArea,
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
-import { SAVE_HOTKEY } from "../../../utils/constants";
-import Script from "next/script";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
+import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
 import { WaConfigType } from "../../../types/enums";
+import { SAVE_HOTKEY } from "../../../utils/constants";
 import styles from "./settings.style.module.css";
 
 function WhatsAppManualConfiguration({ waSettings }) {
@@ -83,7 +87,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
   const handleDelete = () => {
     deleteMutation.mutate();
   };
-
+  const { translations } = useTranslations();
   const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${WHATSAPP_URL}/webhook`;
   return (
     <>
@@ -97,26 +101,28 @@ function WhatsAppManualConfiguration({ waSettings }) {
         >
           <Stack px="md">
             <ContainedTextField
-              label="WABA ID"
-              placeholder="Enter your Whatsapp Business Account ID"
+              label={translations["WABA ID"]}
+              placeholder={
+                translations["Enter your Whatsapp Business Account ID"]
+              }
               {...form.getInputProps("wabaId")}
               required
             />
             <ContainedTextField
-              label="Phone ID"
-              placeholder="Enter your phone ID"
+              label={translations["Phone ID"]}
+              placeholder={translations["Enter your phone ID"]}
               required
               {...form.getInputProps("phoneId")}
             />
             <ContainedTextField
-              label="App Id"
-              placeholder="Enter your app ID"
+              label={translations["App Id"]}
+              placeholder={translations["Enter your app ID"]}
               required
               {...form.getInputProps("appId")}
             />
             <ContainedTextArea
-              label="Access Token"
-              placeholder="Enter your access token"
+              label={translations["Access Token"]}
+              placeholder={translations["Enter your access token"]}
               autosize
               minRows={2}
               maxRows={4}
@@ -124,8 +130,8 @@ function WhatsAppManualConfiguration({ waSettings }) {
               {...form.getInputProps("accessToken")}
             />
             <ContainedTextField
-              label="Webhook Password"
-              placeholder="Create a webhook password"
+              label={translations["Webhook Password"]}
+              placeholder={translations["Create a webhook password"]}
               required
               {...form.getInputProps("webhookPassword")}
             />
@@ -138,9 +144,12 @@ function WhatsAppManualConfiguration({ waSettings }) {
                 radius="lg"
                 disabled={!waSettings}
               >
-                Delete Configuration
+                {translations["Delete Configuration"]}
               </Button>
-              <RateupButtonPrimary type="submit" title={"Save Changes"} />
+              <RateupButtonPrimary
+                type="submit"
+                title={translations["Save Changes"]}
+              />
             </Group>
           </Stack>
         </form>
@@ -153,10 +162,12 @@ function WhatsAppManualConfiguration({ waSettings }) {
         <Stack style={{ flexGrow: 1 }} px="md">
           <Box>
             <Group>
-              <Text>Webhook URL</Text>
+              <Text>{translations["Webhook URL"]}</Text>
               <Tooltip
                 label={
-                  "Paste this url in your facebook app under whatsapp configuration @developers.facebook.com/apps/"
+                  translations[
+                    "Paste this url in your facebook app under whatsapp configuration @developers.facebook.com/apps/"
+                  ]
                 }
               >
                 <ActionIcon variant="transparent" color="gray">
@@ -255,7 +266,7 @@ function MetaLoginButton() {
       }
     });
   }
-
+  const { translations } = useTranslations();
   return (
     <Button
       onClick={login}
@@ -263,7 +274,7 @@ function MetaLoginButton() {
       size={"lg"}
       loading={registerMutation.isPending}
     >
-      Login with Facebook
+      {translations["Login with Facebook"]}
     </Button>
   );
 }
@@ -271,7 +282,7 @@ function MetaLoginButton() {
 export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
   const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
-
+  const { translations } = useTranslations();
   useEffect(() => {
     if (waSettings) {
       setTab(waSettings.type);
@@ -293,31 +304,37 @@ export default function WhatsAppSettingsPage() {
       ></Script>
       <StyledTabs value={tab} onChange={setTab as any}>
         <Flex className={styles.headerContainer} mb={"sm"}>
-          <h2>WhatsApp Settings</h2>
+          <h2>{translations["WhatsApp Settings"]}</h2>
           <Center pr={"xl"}>
             <Tabs.List>
               <Tooltip
                 label={
                   isManual
-                    ? "You need to delete the manually configured details to switch to Automated Configuration"
-                    : "Automated Configuration"
+                    ? translations[
+                        "You need to delete the manually configured details to switch to Automated Configuration"
+                      ]
+                    : translations["Automated Configuration"]
                 }
                 openDelay={300}
               >
                 <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
-                  Automated
+                  {translations["Automated"]}
                 </Tabs.Tab>
               </Tooltip>
               <Tooltip
                 label={
                   isAutomated
-                    ? "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
-                    : "Manually Configure WhatsApp Business Account"
+                    ? translations[
+                        "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
+                      ]
+                    : translations[
+                        "Manually Configure WhatsApp Business Account"
+                      ]
                 }
                 openDelay={300}
               >
                 <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
-                  Manual
+                  {translations["Manual"]}
                 </Tabs.Tab>
               </Tooltip>
             </Tabs.List>
@@ -338,7 +355,7 @@ export default function WhatsAppSettingsPage() {
 function MetaLoginStatus({ waSettings }) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   function handleDeRegister() {
     deRegisterMutation.mutate();
   }
@@ -355,9 +372,11 @@ function MetaLoginStatus({ waSettings }) {
               }}
               c="dimmed"
             >
-              Linked WhatsApp Business Account
+              {translations["Linked WhatsApp Business Account"]}
             </Text>
-            <Tooltip label={"Logout from WhatsApp Business Account"}>
+            <Tooltip
+              label={translations["Logout from WhatsApp Business Account"]}
+            >
               <ActionIcon variant="subtle" color="red" onClick={open}>
                 <IconLogout />
               </ActionIcon>
@@ -365,24 +384,26 @@ function MetaLoginStatus({ waSettings }) {
             <ConfirmationModal
               forDeleteFunctionality
               deleteQuotion={
-                "Are you sure you want to DeRegister from WhatsApp Business Account?"
+                translations[
+                  "Are you sure you want to DeRegister from WhatsApp Business Account?"
+                ]
               }
               opened={openDeleteConfirmation}
               onClose={close}
               onConfirm={handleDeRegister}
-              confirmLabel={"DeRegister"}
-              headerLabel={"DeRegister WhatsApp Business Account"}
-              headerTitle={"Confirmation Dialog"}
+              confirmLabel={translations["DeRegister"]}
+              headerLabel={translations["DeRegister WhatsApp Business Account"]}
+              headerTitle={translations["Confirmation Dialog"]}
             />
           </Group>
           <Group gap={"xl"}>
             <ContainedTextField
-              label="WhatsApp Business ID"
+              label={translations["WhatsApp Business ID"]}
               value={waSettings.wabaId}
               readOnly
             />
             <ContainedTextField
-              label="WhatsApp Phone Number"
+              label={translations["WhatsApp Phone Number"]}
               value={waSettings.phone}
               readOnly
             />

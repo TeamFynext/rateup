@@ -1,24 +1,28 @@
 import React, { useState } from "react";
+
+import { SimpleGrid, Stack } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useGenerateResponse } from "../../../backend/surveys/response/response.query";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import {
   ContainedNumberInput,
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
-import { SimpleGrid, Stack } from "@mantine/core";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { useGenerateResponse } from "../../../backend/surveys/response/response.query";
-import { notifications } from "@mantine/notifications";
 
 const GenerateData = () => {
   const [selectedSurveyTeamMapId, setSelectedSurveyTeamMapId] = useState("");
   const [batchSize, setBatchSize] = useState(1);
   const generateResponse = useGenerateResponse(selectedSurveyTeamMapId);
-
+  const { translations } = useTranslations();
   const handleSubmit = () => {
     notifications.show({
       id: "generateResponse",
       loading: true,
-      title: "Generate Response",
-      message: `Hold on, response is getting generated...`,
+      title: translations["Generate Response"],
+      message: translations["Hold on, response is getting generated..."],
       autoClose: false,
       withCloseButton: false,
     });
@@ -31,19 +35,19 @@ const GenerateData = () => {
     <SimpleGrid cols={{ base: 1, lg: 3 }}>
       <Stack>
         <ContainedTextField
-          label={"Enter surveyMapId"}
-          placeholder="Enter a surveyMapId"
+          label={translations["Enter surveyMapId"]}
+          placeholder={translations["Enter a surveyMapId"]}
           onChange={(value) => setSelectedSurveyTeamMapId(value?.target?.value)}
         />
         <ContainedNumberInput
-          label={"Number of generated data"}
-          placeholder="Enter the number of generated data"
+          label={translations["Number of generated data"]}
+          placeholder={translations["Enter the number of generated data"]}
           defaultValue={1}
           min={1}
           onChange={(value) => setBatchSize(Number(value))}
         />
         <RateupButtonPrimary
-          title="Generate"
+          title={translations["Generate"]}
           size="md"
           onClick={handleSubmit}
           disabled={!selectedSurveyTeamMapId}

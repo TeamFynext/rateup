@@ -1,11 +1,15 @@
-import { Badge, Blockquote, Text, Group, Stack } from "@mantine/core";
-import { GridColDef, DataGrid, GridRenderCellParams } from "@mui/x-data-grid";
-import { useGetAllStripeSubscriptions } from "../../../backend/payment/stripe/stripe.query";
-import dayjs from "dayjs";
+import { Badge, Blockquote, Group, Stack, Text } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import dayjs from "dayjs";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
+import { useGetAllStripeSubscriptions } from "../../../backend/payment/stripe/stripe.query";
 import RefreshButton from "../../../components/Button/RefreshButton";
 
 const StripeSubscription = () => {
+  const { translations } = useTranslations();
   const {
     data: subscriptions,
     refetch,
@@ -13,13 +17,17 @@ const StripeSubscription = () => {
   } = useGetAllStripeSubscriptions();
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "Subscription ID", width: 300 },
-    { field: "productName", headerName: "Product Name", width: 200 },
-    { field: "amount", headerName: "Amount" },
-    { field: "currency", headerName: "Currency" },
+    { field: "id", headerName: translations["Subscription ID"], width: 300 },
+    {
+      field: "productName",
+      headerName: translations["Product Name"],
+      width: 200,
+    },
+    { field: "amount", headerName: translations["Amount"] },
+    { field: "currency", headerName: translations["Currency"] },
     {
       field: "status",
-      headerName: "Status",
+      headerName: translations["Status"],
       renderCell: (params: GridRenderCellParams<any, any>) => {
         return (
           <Badge
@@ -33,9 +41,9 @@ const StripeSubscription = () => {
       },
       width: 200,
     },
-    { field: "createdAt", headerName: "Created At", width: 200 },
-    { field: "startsAt", headerName: "Starts At", width: 200 },
-    { field: "endsAt", headerName: "Ends At", width: 200 },
+    { field: "createdAt", headerName: translations["Created At"], width: 200 },
+    { field: "startsAt", headerName: translations["Starts At"], width: 200 },
+    { field: "endsAt", headerName: translations["Ends At"], width: 200 },
   ];
   const rows = subscriptions
     ? subscriptions?.map((sub) => ({
@@ -50,7 +58,7 @@ const StripeSubscription = () => {
       <Blockquote icon={<IconInfoCircle />} color="blue" p={"md"}>
         <Group justify="space-between">
           <Group gap={"xs"}>
-            <Text>List of subscriptions from stripe DB</Text>
+            <Text>{translations["List of subscriptions from stripe DB"]}</Text>
             <RefreshButton queryKeys={["stripeSubscriptions"]} />
           </Group>
         </Group>

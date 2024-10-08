@@ -1,8 +1,11 @@
 import { Avatar, Divider, Group, Stack, Text, Title } from "@mantine/core";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
 const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
+  const { translations } = useTranslations();
   return (
     <Stack gap={"xl"}>
       <Group justify="space-around">
@@ -16,7 +19,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
         <Stack>
           <Group gap={1}>
             <Text fw={600} size="sm" w={110}>
-              Email ID
+              {translations["Email ID"]}
             </Text>
             <Text size="sm" c={"dimmed"}>
               {selectedUser?.email}
@@ -24,7 +27,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
           </Group>
           <Group gap={1}>
             <Text fw={600} size="sm" w={110}>
-              User ID
+              {translations["User ID"]}
             </Text>
             <Text size="sm" c={"dimmed"}>
               {" "}
@@ -33,7 +36,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
           </Group>
           <Group gap={1}>
             <Text fw={600} size="sm" w={110}>
-              Phone Number
+              {translations["Phone Number"]}
             </Text>
             <Text size="sm" c={"dimmed"}>
               {selectedUser?.phone ?? "---"}
@@ -43,7 +46,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
       </Group>
 
       <PaperLayout>
-        <Title order={3}>Organization</Title>
+        <Title order={3}>{translations["Organization"]}</Title>
         <Divider my={"sm"} />
         <Group justify="space-around">
           <Stack gap={1}>
@@ -59,7 +62,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
           <Stack>
             <Group gap={1}>
               <Text fw={600} size="sm" w={110}>
-                Org ID
+                {translations["Org ID"]}
               </Text>
               <Text size="sm" c={"dimmed"}>
                 {selectedUser.orgId}
@@ -67,7 +70,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
             </Group>
             <Group gap={1}>
               <Text fw={600} size="sm" w={110}>
-                Phone Number
+                {translations["Phone Number"]}
               </Text>
               <Text size="sm" c={"dimmed"}>
                 {selectedUser.orgPhone ?? "---"}
@@ -75,7 +78,7 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
             </Group>
             <Group gap={1}>
               <Text fw={600} size="sm" w={110}>
-                Address
+                {translations["Address"]}
               </Text>
               <Text size="sm" c={"dimmed"}>
                 {selectedUser.orgAddress ?? "---"}

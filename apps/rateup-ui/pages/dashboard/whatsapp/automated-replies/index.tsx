@@ -11,6 +11,7 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import { WaAutomationCards } from "@/components/whatsapp/automation/AutomationCards";
+import useTranslations from "@/dictionaries/useTranslation";
 
 export default function AutomatedRepliesPage() {
   const router = useRouter();
@@ -18,13 +19,14 @@ export default function AutomatedRepliesPage() {
   function handleCreateClick() {
     router.push("automated-replies/create");
   }
+  const { translations } = useTranslations();
   return (
     <Stack mih={"80dvh"}>
       <Group justify={"space-between"}>
         <Group>
-          <Title>Automated Replies</Title>
+          <Title>{translations["Automated Replies"]}</Title>
           <RateupButtonBlue
-            title="Create automated reply"
+            title={translations["Create automated reply"]}
             rightIcon={<IconPlus size={"1rem"} />}
             onClick={handleCreateClick}
           />
@@ -43,7 +45,7 @@ export default function AutomatedRepliesPage() {
 
 const WaAutomationCardsList = ({ teamId }) => {
   const { data, isPending, isError, refetch } = useAllWaAutomatedReplies();
-
+  const { translations } = useTranslations();
   if (isPending) return <AutomatedReplyCardListSkeleton />;
   if (isError) return <ErrorComponent refetch={refetch} />;
 
@@ -53,6 +55,6 @@ const WaAutomationCardsList = ({ teamId }) => {
       : data?.filter((automation) => automation.teamId === teamId);
 
   if (automaton?.length === 0)
-    return <NothingFound text="No Automated Replies Found" />;
+    return <NothingFound text={translations["No Automated Replies Found"]} />;
   return <WaAutomationCards data={automaton} />;
 };

@@ -5,6 +5,8 @@ import { Group, MantineProvider, Stack, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   ContactsWithLastMessage,
   WaGetMessagesBody,
@@ -39,7 +41,7 @@ export default function WhatsAppInbox() {
   const { data, error } = useGetMessagesByContactId(
     searchParams.get("contactId") as string,
   );
-
+  const { translations } = useTranslations();
   const {
     data: contactsWithLastMessage,
     isLoading: isContactsFetching,
@@ -142,7 +144,7 @@ export default function WhatsAppInbox() {
     <MantineProvider theme={whatsappTheme}>
       <ChatDisplayContext>
         <Stack className={styles["whatsapp-inbox-root-div"]}>
-          {!isMobile && <Title>Inbox</Title>}
+          {!isMobile && <Title>{translations["Inbox"]}</Title>}
           <Group className={styles["chat-selector-and-chat-container"]}>
             <WaInboxChatSelect
               setNewlyAdddedContact={setNewlyAddedContact}
