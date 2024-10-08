@@ -29,16 +29,33 @@ export function TeamSelector({
     isError,
     error,
   } = useTeamsByUser();
+
   const { translations } = useTranslations();
+
+  const teams = teamRes?.data;
+
+  const teamOptions = teams
+    ? teams.map((team) => ({
+        value: team.id,
+        label: team.name,
+      }))
+    : [];
+  if (enableAll && teamOptions.length)
+    teamOptions.unshift({
+      value: "all",
+      label: translations["All Teams"] || "All Teams",
+    });
+
   useEffect(() => {
     // Setting the default teamId to the first team in the list
     if (value) return;
     if (enableAll) {
       onChange("all");
-    } else if (teamRes?.data?.length > 0 && enableDefaultValue) {
-      onChange(teamRes?.data[0]?.id);
+    } else if (teamOptions.length > 0 && enableDefaultValue) {
+      onChange(teamOptions[0].value);
     }
-  }, [teamRes, value]);
+  }, [teamOptions, value]);
+
   if (isError) {
     return <Text>{translations["Something went wrong!"]}</Text>;
   }
@@ -52,25 +69,16 @@ export function TeamSelector({
       </Card>
     );
   }
-  const teams = teamRes?.data;
-  if (!teams) {
-    return <Text>{translations["No teams found!"]}</Text>;
-  }
-  const teamOptions = teams.map((team) => ({
-    value: team.id,
-    label: team.name,
-  }));
-  if (enableAll)
-    teamOptions.unshift({ value: "all", label: translations["All Teams"] });
 
   return (
     <ContainedSelection
       allowDeselect={false}
       data={teamOptions}
-      defaultValue={enableDefaultValue && teamOptions[0].value}
+      defaultValue={enableDefaultValue ? teamOptions[0].value : null}
       onChange={onChange}
       label={label}
       value={value}
+      nothingFoundMessage={translations["No teams found!"]}
       {...props}
     />
   );
