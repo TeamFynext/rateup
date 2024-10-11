@@ -16,6 +16,7 @@ enum WaTemplateSendMediaTypes {
   video = "video",
   document = "document",
 }
+
 const templateHeaderComponent = z.object({
   type: z.nativeEnum(WaTemplateAllowedComponentTypes),
   parameters: z
@@ -46,7 +47,11 @@ const templateHeaderComponent = z.object({
     .optional(),
 });
 
-const sendTemplatesToContacts = z.object({
+const scheduleTemplate = z.object({
+  timeDelay: z.number().int().min(15).optional(),
+});
+
+const sendTemplatesToContacts = scheduleTemplate.extend({
   teamId: z.string().optional(),
   contactIds: z.array(z.string()),
   header: templateHeaderComponent.optional(),
@@ -59,12 +64,14 @@ const sendTemplateToContact = sendTemplatesToContacts
   .extend({
     body_variables: z.array(z.string()).optional(),
   });
-const sendTemplateByNameToPhone = z.object({
+
+const sendTemplateByNameToPhone = scheduleTemplate.extend({
   templateName: z.string(),
   phone: z.string(),
   body_variables: z.array(z.string()).optional(),
   teamId: z.string().optional(),
 });
+
 const sendTemplateToContactParams = z.object({
   templateId: z.string(),
   contactId: z.string(),
@@ -76,10 +83,10 @@ const sendTemplateToContactParamsWithOrgId = sendTemplateToContactParams.extend(
   },
 );
 
-const sendTemplatesToContactGroups = z.object({
+const sendTemplatesToContactGroups = scheduleTemplate.extend({
   teamId: z.string().optional(),
   contactGroupIds: z.array(z.string()),
-  header: templateHeaderComponent,
+  header: templateHeaderComponent.optional(),
 });
 
 const sendTemplateToContactGroupsParamsWithOrgId =

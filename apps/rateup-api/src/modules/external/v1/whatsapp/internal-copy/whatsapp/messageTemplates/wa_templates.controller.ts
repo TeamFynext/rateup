@@ -20,8 +20,10 @@ import {
   fetchTemplate,
   getDbTemplate,
   getTemplateByIdAndOrgId,
+  getTemplateComponents,
   getTemplatesByOrgId,
   getUnregisteredTemplates,
+  handleFlowComponents,
   registerTemplatesInDb,
   saveTemplate,
   sendTemplateToPhone,
@@ -394,6 +396,8 @@ export async function sendTemplateToContactHandler(
 ) {
   try {
     const { templateId } = req.params;
+    const { teamId, header, body_variables, timeDelay } = req.body;
+
     const orgId = req.user.orgId;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
 
@@ -405,14 +409,40 @@ export async function sendTemplateToContactHandler(
         phone: true,
       },
     });
-    await sendTemplateToPhone({
+
+    let { containsFlowButton, surveyTeamMap, components, dbFlow } =
+      await getTemplateComponents({
+        orgId,
+        dbTemplate,
+        body_variables,
+        teamId,
+        header,
+      });
+
+    if (containsFlowButton)
+      components = await handleFlowComponents(
+        contact.phone,
+        orgId,
+        surveyTeamMap,
+        dbFlow,
+        components,
+        timeDelay,
+      );
+    const response = await sendTemplateToPhone({
       orgId,
       phone: contact.phone,
       dbTemplate,
-      teamId: req.body.teamId,
-      header: req.body.header,
-      body_variables: req.body.body_variables,
+      timeDelay,
+      components,
+      surveyTeamMap,
     });
+    res
+      .code(200)
+      .send(
+        timeDelay
+          ? { status: response.status, scheduleId: response?.id }
+          : response,
+      );
   } catch (error) {
     log.error("Error sending template to contacts \n%o", error);
     res.code(500).send(error);
@@ -426,7 +456,8 @@ export async function sendTemplateByNameToPhoneHandler(
   rep: FastifyReply,
 ) {
   try {
-    const { templateName } = req.body;
+    const { templateName, timeDelay, teamId, body_variables } = req.body;
+
     const orgId = req.user.orgId;
     const dbTemplate = await prisma.waTemplate.findFirst({
       where: {
@@ -448,13 +479,40 @@ export async function sendTemplateByNameToPhoneHandler(
       return rep.code(400).send("Invalid phone number.");
     }
 
-    await sendTemplateToPhone({
+    let { containsFlowButton, surveyTeamMap, components, dbFlow } =
+      await getTemplateComponents({
+        orgId,
+        dbTemplate,
+        body_variables,
+        teamId,
+      });
+
+    if (containsFlowButton)
+      components = await handleFlowComponents(
+        phone.number,
+        orgId,
+        surveyTeamMap,
+        dbFlow,
+        components,
+        timeDelay,
+      );
+
+    const response = await sendTemplateToPhone({
       orgId,
       phone: phone.number,
       dbTemplate,
-      teamId: req.body.teamId,
-      body_variables: req.body.body_variables,
+      timeDelay,
+      components,
+      surveyTeamMap,
     });
+
+    rep
+      .code(200)
+      .send(
+        timeDelay
+          ? { status: response.status, scheduleId: response?.id }
+          : response,
+      );
   } catch (error) {
     log.error("Error sending template to contacts \n%o", error);
     rep.code(500).send(error);
@@ -471,6 +529,7 @@ export async function sendTemplatesToContactsHandler(
   try {
     const { templateId } = req.params;
     const orgId = req.user.orgId;
+    const { teamId, header, timeDelay } = req.body;
     const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
     const contacts = await prisma.contact.findMany({
       where: {
@@ -483,13 +542,32 @@ export async function sendTemplatesToContactsHandler(
       },
     });
 
+    const { containsFlowButton, surveyTeamMap, components, dbFlow } =
+      await getTemplateComponents({
+        orgId,
+        dbTemplate,
+        header,
+        teamId,
+      });
+
     for (const contact of contacts) {
+      let templateComponents = [...components];
+      if (containsFlowButton)
+        templateComponents = await handleFlowComponents(
+          contact.phone,
+          orgId,
+          surveyTeamMap,
+          dbFlow,
+          templateComponents,
+          timeDelay,
+        );
       await sendTemplateToPhone({
         orgId,
         phone: contact.phone,
         dbTemplate,
-        teamId: req.body.teamId,
-        header: req.body.header,
+        timeDelay,
+        components: templateComponents,
+        surveyTeamMap,
       });
     }
   } catch (error) {
@@ -525,13 +603,31 @@ export async function sendTemplatesToContactGroupsHandler(
       },
     });
 
+    let { containsFlowButton, surveyTeamMap, components, dbFlow } =
+      await getTemplateComponents({
+        orgId,
+        dbTemplate,
+        header: req.body.header,
+        teamId: req.body.teamId,
+      });
     for (const contact of contacts) {
+      let templateComponents = [...components];
+      if (containsFlowButton)
+        templateComponents = await handleFlowComponents(
+          contact.phone,
+          orgId,
+          surveyTeamMap,
+          dbFlow,
+          templateComponents,
+          req.body.timeDelay,
+        );
       await sendTemplateToPhone({
         orgId,
         phone: contact.phone,
         dbTemplate,
-        teamId: req.body.teamId,
-        header: req.body.header,
+        timeDelay: req.body.timeDelay,
+        components: templateComponents,
+        surveyTeamMap,
       });
     }
   } catch (error) {

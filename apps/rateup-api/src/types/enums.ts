@@ -318,3 +318,15 @@ export enum PhotoSource {
   gallery = "gallery",
   camera = "camera",
 }
+
+export enum WaMessageScheduleStatus {
+  SCHEDULED = "SCHEDULED",
+  SENT = "SENT",
+  FAILED = "FAILED",
+  READ = "READ",
+  DELIVERED = "DELIVERED",
+}
+
+export enum waMessageScheduleSource {
+  ExternalApi = "ExternalApi",
+}

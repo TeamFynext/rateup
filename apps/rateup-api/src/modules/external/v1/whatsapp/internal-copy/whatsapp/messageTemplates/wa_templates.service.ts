@@ -1,5 +1,5 @@
 import { MultipartFile } from "@fastify/multipart";
-import { WaTemplate } from "@prisma/client";
+import { WaFlow, WaTemplate } from "@prisma/client";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import { CreateWaTemplateInput } from "./wa_templates.schema";
@@ -17,8 +17,13 @@ import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import { SendTemplateHeaderComponent } from "../../../template/wa_templates.external.schema";
-import { WaTemplateComponentType } from "../../../../../../../types/enums";
+import {
+  waMessageScheduleSource,
+  WaTemplateComponentType,
+} from "../../../../../../../types/enums";
 import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
+import { createWaMessageSchedule } from "../../../../../../whatsapp/wa_message_scheduler";
+import { WaTemplateComponent } from "../../../../../../../types/whatsapp.types";
 
 /**
  * fetches templates from WhatsApp Business API
@@ -417,50 +422,78 @@ interface SendTemplateToPhoneProps {
   orgId: string;
   dbTemplate: WaTemplate;
   phone: string;
-  teamId?: string | undefined;
-  header?: SendTemplateHeaderComponent;
-  body_variables?: string[];
+  timeDelay: number; // number of minutes
+  components: any[];
+  surveyTeamMap?: string;
 }
 export async function sendTemplateToPhone({
   orgId,
   dbTemplate,
-  header,
   phone,
+  timeDelay,
+  components,
+  surveyTeamMap,
+}: SendTemplateToPhoneProps) {
+  const templateQuery = {
+    name: dbTemplate.data?.name,
+    language: {
+      code: dbTemplate.data?.language,
+    },
+    components: components,
+  };
+  const templateMessage = createTemplateMessage(phone, templateQuery);
+  let res;
+  if (timeDelay) {
+    res = await createWaMessageSchedule({
+      phone,
+      messageBody: templateMessage,
+      orgId,
+      waTemplateId: dbTemplate.id,
+      surveyTeamMapId: surveyTeamMap,
+      timeDelay,
+      source: waMessageScheduleSource.ExternalApi,
+    });
+    log.trace("Template schedule created successfully");
+  } else {
+    res = await sendMessage(orgId, templateMessage);
+    log.trace("Template send to user successfully");
+  }
+  return res;
+}
+
+interface TemplateComponentsProps {
+  orgId: string;
+  dbTemplate: WaTemplate;
+  header?: SendTemplateHeaderComponent;
+  teamId?: string;
+  body_variables?: string[];
+}
+
+export async function getTemplateComponents({
+  orgId,
+  dbTemplate,
+  header,
   teamId,
   body_variables,
-}: SendTemplateToPhoneProps) {
-  log.trace("Sending template to phone %s", phone);
-
-  const { data, defaultValues } = dbTemplate;
+}: TemplateComponentsProps) {
   const components = [];
   if (header) {
     components.push(header);
   }
-
+  let surveyTeamMap, dbFlow;
+  const { data, defaultValues } = dbTemplate;
   const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
-
   if (containsFlowButton) {
-    components.push({
-      type: "button",
-      sub_type: "flow",
-      index: 0,
-      parameters: [
-        {
-          type: "action",
-          action: {
-            flow_token: phone,
-          },
-        },
-      ],
-    });
-
     const flowId = getFlowIdFromTemplateComponents(data.components);
     if (!flowId) {
-      log.error("Flow id not found in template\n Template => %o", data);
+      log.error(
+        "Flow id not found in template\n Template => %o",
+        data.components,
+      );
       throw new Error("Flow id not found in template");
     }
     // getting flow with surveyTeamMapId
-    const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
+    dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
     if (!dbFlow) {
       log.error("Flow not found in db with id %s", flowId);
       throw new Error("Flow not found in db");
@@ -470,21 +503,11 @@ export async function sendTemplateToPhone({
       log.error("Team id not found in request");
       throw new Error("Team id not found in request");
     }
-    const surveyTeamMap = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)
-      ?.id;
+    surveyTeamMap = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)?.id;
     if (!surveyTeamMap) {
       log.error("Team not found in survey;\nteam => %s", teamId);
       throw new Error("Team not found in survey");
     }
-
-    await deleteSession(orgId, phone);
-    await createSession({
-      phone,
-      orgId,
-      surveyTeamMapId: surveyTeamMap,
-      language: dbFlow?.survey?.languages[0],
-    });
-    log.trace("Session created successfully");
   }
 
   const containsImageComponent =
@@ -506,7 +529,7 @@ export async function sendTemplateToPhone({
             {
               type: "image",
               image: {
-                link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
+                link: getFileUrlFromKey(defaultValues.image.link),
               },
             },
           ],
@@ -531,14 +554,39 @@ export async function sendTemplateToPhone({
       }),
     });
   }
-  const templateQuery = {
-    name: data?.name,
-    language: {
-      code: dbTemplate.data?.language,
-    },
-    components: components,
-  };
-  const templateMessage = createTemplateMessage(phone, templateQuery);
-  await sendMessage(orgId, templateMessage);
-  log.trace("Template send to user successfully");
+  return { components, containsFlowButton, surveyTeamMap, dbFlow };
+}
+
+export async function handleFlowComponents(
+  phone,
+  orgId,
+  surveyTeamMap,
+  dbFlow,
+  components,
+  timeDelay,
+) {
+  components.push({
+    type: "button",
+    sub_type: "flow",
+    index: 0,
+    parameters: [
+      {
+        type: "action",
+        action: {
+          flow_token: phone,
+        },
+      },
+    ],
+  });
+  if (!timeDelay) {
+    await deleteSession(orgId, phone);
+    await createSession({
+      phone: phone,
+      orgId,
+      surveyTeamMapId: surveyTeamMap,
+      language: dbFlow?.survey?.languages[0],
+    });
+    log.trace("Session created successfully");
+  }
+  return components;
 }
