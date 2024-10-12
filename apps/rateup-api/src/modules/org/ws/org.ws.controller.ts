@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { connectionManager } from "./org.ws.class";
 import { orgWsMessage } from "../../../types/global";
+import { log } from "../../../utils/logger";
 
 export async function orgWsAuthCheckHandler(
   request: FastifyRequest,
@@ -37,6 +38,7 @@ export async function sendViaWstoOrgHandler(
 ) {
   const connections = connectionManager.getConnectionsBasedOnOrgId(orgId);
   connections.forEach((connection) => {
+    log.info("🚀 ~ connection:", JSON.stringify(message));
     connection.send(JSON.stringify(message));
   });
 }
