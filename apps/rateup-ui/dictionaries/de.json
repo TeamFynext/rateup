@@ -1894,5 +1894,16 @@
   "WhatsApp Message scheduling": "WhatsApp-Nachrichtenplanung",
   "French": "Französisch",
   "Arabic": "Arabisch",
-  "Visit documentation": "Dokumentation besuchen"
+  "Visit documentation": "Dokumentation besuchen",
+  "Edit member role": "Mitgliedsrolle bearbeiten",
+  "Delete member": "Mitglied löschen",
+  "Pause member": "Mitglied pausieren",
+  "Resume member": "Mitglied fortsetzen",
+  "Resume User": "Benutzer fortsetzen",
+  "Are you sure to delete this team Member?": "Sind Sie sicher, dass Sie dieses Teammitglied löschen möchten?",
+  "Delete Member": "Mitglied löschen",
+  "Added participants successfully.": "Teilnehmer erfolgreich hinzugefügt.",
+  "Added group participants successfully.": "Gruppenmitglieder erfolgreich hinzugefügt.",
+  "Campaign participants added successfully.": "Teilnehmer der Kampagne erfolgreich hinzugefügt.",
+  "Participants removed from campaign successfully.": "Teilnehmer erfolgreich aus der Kampagne entfernt."
 }

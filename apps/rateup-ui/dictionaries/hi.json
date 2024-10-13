@@ -1893,5 +1893,16 @@
   "WhatsApp Message scheduling": "व्हाट्सएप संदेश अनुसूची",
   "French": "फ्रेंच",
   "Arabic": "अरबी",
-  "Visit documentation": "दस्तावेज़ देखें"
+  "Visit documentation": "दस्तावेज़ देखें",
+  "Edit member role": "सदस्य की भूमिका संपादित करें",
+  "Delete member": "सदस्य को हटाएँ",
+  "Pause member": "सदस्य को अस्थायी रूप से रोकें",
+  "Resume member": "सदस्य को फिर से शुरू करें",
+  "Resume User": "उपयोगकर्ता को फिर से शुरू करें",
+  "Are you sure to delete this team Member?": "क्या आप इस टीम सदस्य को हटाने के लिए सुनिश्चित हैं?",
+  "Delete Member": "सदस्य को हटाएँ",
+  "Added participants successfully.": "प्रतिभागियों को सफलतापूर्वक जोड़ा गया।",
+  "Added group participants successfully.": "ग्रुप प्रतिभागियों को सफलतापूर्वक जोड़ा गया।",
+  "Campaign participants added successfully.": "कैम्पेन के प्रतिभागियों को सफलतापूर्वक जोड़ा गया।",
+  "Participants removed from campaign successfully.": "प्रतिभागियों को सफलतापूर्वक कैम्पेन से हटाया गया।"
 }
