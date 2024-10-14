@@ -1,11 +1,4 @@
-import { Role } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  createSession,
-  deleteSession,
-  sendMessage,
-} from "../whatsappSurvey/wasurvey.service";
-import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import {
   ByTemplateIdParamsSchema,
   CreateWaTemplateInput,
@@ -27,21 +20,14 @@ import {
   registerTemplatesInDb,
   saveTemplate,
   sendTemplateToPhone,
+  sendTemplateToUserCore,
   syncTemplates,
   updateTemplate,
   updateTemplateInDb,
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
-import {
-  generateTemplate,
-  getFlowIdFromTemplateComponents,
-  waAllowedMimeTypes,
-} from "./wa_templates.utils";
-import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
-import {
-  WaTemplateStatus,
-  WaTemplateComponentType,
-} from "../../../../../../../types/enums";
+import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
+import { WaTemplateStatus } from "../../../../../../../types/enums";
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
@@ -53,6 +39,7 @@ import {
 } from "../../../template/wa_templates.external.schema";
 import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
 import { parsePhoneNumber } from "libphonenumber-js";
+import { templateData } from "../../../../../../whatsapp/messageTemplates/wa_templates.service";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -285,101 +272,18 @@ export async function sendTemplateToUserHandler(
 ) {
   try {
     const { templateId } = request.params;
-    const { phone, parameterData } = request.body;
-    const orgId = request.user.orgId;
-    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    const { data, defaultValues } = dbTemplate;
-    const components = parameterData;
-    log.trace("parameterData => %o", parameterData);
+    const { phone, parameterData, teamId } = request.body;
+    const { orgId, userId } = request.user;
 
-    const containsFlowButton = !!getFlowIdFromTemplateComponents(
-      data.components,
+    await sendTemplateToUserCore(
+      orgId,
+      templateId,
+      phone,
+      parameterData,
+      teamId,
+      userId,
     );
 
-    if (containsFlowButton) {
-      const teamId = request.body.teamId;
-      components.push({
-        type: "button",
-        sub_type: "flow",
-        index: 0,
-        parameters: [
-          {
-            type: "action",
-            action: {
-              flow_token: phone,
-            },
-          },
-        ],
-      });
-
-      const flowId = getFlowIdFromTemplateComponents(data.components);
-      if (!flowId) {
-        log.error("Flow id not found in template\n Template => %o", data);
-        reply.code(500).send("Flow id not found in template");
-        return;
-      }
-      // getting flow with surveyTeamMapId
-      const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
-      if (!dbFlow) {
-        log.error("Flow not found in db with id %s", flowId);
-        reply.code(500).send("Flow not found in db");
-        return;
-      }
-
-      const surveyTeamMap = dbFlow?.survey?.teams.find(
-        (t) => t.teamId === teamId,
-      )?.id;
-      if (!surveyTeamMap) {
-        log.error("Team not found in survey;\nteam => %s", teamId);
-        reply.code(500).send("Team not found in survey");
-        return;
-      }
-
-      await deleteSession(orgId, phone);
-      await createSession({
-        phone,
-        orgId,
-        surveyTeamMapId: surveyTeamMap,
-        language: dbFlow?.survey?.languages[0],
-      });
-      log.trace("Session created successfully");
-    }
-
-    const containsImage =
-      dbTemplate.data.components.find(
-        (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-      )?.format === `IMAGE`;
-    if (containsImage) {
-      if (!components.some((c) => c.type === "header")) {
-        if (defaultValues?.image?.link) {
-          components.push({
-            type: "header",
-            parameters: [
-              {
-                type: "image",
-                image: {
-                  link: getFileUrlFromKey(dbTemplate.defaultValues.image.link),
-                },
-              },
-            ],
-          });
-        } else {
-          throw new Error(
-            "Image not found in template. Please upload an image and try again",
-          );
-        }
-      }
-    }
-    const templateQuery = {
-      name: data?.name,
-      language: {
-        code: dbTemplate.data?.language,
-      },
-      components: components,
-    };
-    const templateMessage = createTemplateMessage(phone, templateQuery);
-
-    await sendMessage(orgId, templateMessage);
     reply.code(200).send("Template send to user successfully");
   } catch (error) {
     log.error("Error sending template to user \n%o", error);
@@ -459,7 +363,7 @@ export async function sendTemplateByNameToPhoneHandler(
     const { templateName, timeDelay, teamId, body_variables } = req.body;
 
     const orgId = req.user.orgId;
-    const dbTemplate = await prisma.waTemplate.findFirst({
+    const dbTemplate = (await prisma.waTemplate.findFirst({
       where: {
         data: {
           path: ["name"],
@@ -467,7 +371,7 @@ export async function sendTemplateByNameToPhoneHandler(
         },
         orgId,
       },
-    });
+    })) as templateData;
 
     if (!dbTemplate) {
       log.error("Template not found with name %s", templateName);

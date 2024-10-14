@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { WaSendMessageBody } from "../../types/whatsapp.types";
 import {
+  SubscriptionFeaturePathName,
   waMessageScheduleSource,
   WaMessageScheduleStatus,
 } from "../../types/enums";
@@ -14,6 +15,7 @@ import {
 } from "../external/v1/whatsapp/internal-copy/whatsapp/whatsappSurvey/wasurvey.service";
 import { getFlowWithSurveyTeamMapIds } from "../external/v1/whatsapp/internal-copy/whatsapp/flows/flow.service";
 import { getScheduleTime } from "../../utils/date";
+import { updateMonthlyStat } from "../stats/stats.service";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -129,6 +131,10 @@ export async function sendSchedulesWaMessages() {
             messageId: res.status ? res.message : undefined,
           },
         });
+        await updateMonthlyStat(
+          SubscriptionFeaturePathName.Whatsapp,
+          schedule.orgId,
+        );
       }),
     );
   } catch (e) {

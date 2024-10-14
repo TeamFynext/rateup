@@ -31,6 +31,7 @@ export async function handleWaMessages(
   orgId: string,
   userName?: string,
   messageId?: string,
+  userId?: string,
 ) {
   try {
     // Create the message body
@@ -73,6 +74,7 @@ export async function handleWaMessages(
       waTimeStamp,
       parameterData,
       messageId,
+      userId,
     );
 
     // Send the message to the connected clients
@@ -98,7 +100,7 @@ export async function sendNewWaMessageHandler(
   try {
     const { contactId } = request.params;
     const { type } = request.body;
-    const { orgId } = request.user;
+    const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     if (!contact) {
       log.error("Contact not found with id %s", contactId);
@@ -112,7 +114,7 @@ export async function sendNewWaMessageHandler(
           "",
           request?.body?.text?.body,
         );
-        await sendMessage(orgId, messageBody);
+        await sendMessage(orgId, messageBody, null, userId);
       }
     }
     reply.send("Message Sent");

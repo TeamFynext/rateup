@@ -1,5 +1,5 @@
 import { MultipartFile } from "@fastify/multipart";
-import { WaFlow, WaTemplate } from "@prisma/client";
+import { TemplateType } from "@prisma/client";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import { CreateWaTemplateInput } from "./wa_templates.schema";
@@ -18,12 +18,16 @@ import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import { SendTemplateHeaderComponent } from "../../../template/wa_templates.external.schema";
 import {
+  SubscriptionFeaturePathName,
   waMessageScheduleSource,
   WaTemplateComponentType,
+  WaTemplateSupportedFormats,
 } from "../../../../../../../types/enums";
 import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
 import { createWaMessageSchedule } from "../../../../../../whatsapp/wa_message_scheduler";
-import { WaTemplateComponent } from "../../../../../../../types/whatsapp.types";
+import { sendPaymentInitTemplate } from "../../../../../../whatsapp/automatedReply/wa_automatedReply.utils";
+import { templateData } from "../../../../../../whatsapp/messageTemplates/wa_templates.service";
+import { updateMonthlyStat } from "../../../../../../stats/stats.service";
 
 /**
  * fetches templates from WhatsApp Business API
@@ -83,7 +87,7 @@ export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
       id,
     },
   });
-  return template;
+  return template as templateData;
 }
 
 export async function getTemplateByNameAndOrgId(name: string, orgId: string) {
@@ -420,7 +424,7 @@ export async function uploadFileToWaTemplate(
 
 interface SendTemplateToPhoneProps {
   orgId: string;
-  dbTemplate: WaTemplate;
+  dbTemplate: templateData;
   phone: string;
   timeDelay: number; // number of minutes
   components: any[];
@@ -434,6 +438,26 @@ export async function sendTemplateToPhone({
   components,
   surveyTeamMap,
 }: SendTemplateToPhoneProps) {
+  dbTemplate.data.components.forEach((item) => {
+    if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+      item?.buttons.forEach((button, idx) => {
+        if (button.type === "URL" && button?.example?.length > 0) {
+          components.push({
+            type: "button",
+            sub_type: "url",
+            index: idx,
+            parameters: [
+              {
+                type: "text",
+                text: phone,
+              },
+            ],
+          });
+        }
+      });
+    }
+  });
+
   const templateQuery = {
     name: dbTemplate.data?.name,
     language: {
@@ -441,7 +465,43 @@ export async function sendTemplateToPhone({
     },
     components: components,
   };
-  const templateMessage = createTemplateMessage(phone, templateQuery);
+
+  const defaultValue = dbTemplate?.data?.components?.find(
+    (data) => data.example?.body_text,
+  )?.example?.body_text?.[0];
+
+  if (defaultValue?.length > 0) {
+    let params = templateQuery?.components.find(
+      (component) => component.type === "body",
+    )?.parameters;
+    params?.forEach((data, i) => {
+      if (data?.text?.trim().length === 0) {
+        data.text = defaultValue?.[i];
+      }
+    });
+    if (!params) {
+      templateQuery?.components?.push({
+        type: "body",
+        parameters: defaultValue?.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
+    }
+  }
+
+  let templateMessage;
+  if (dbTemplate.templateType === TemplateType.ORDER_DETAILS) {
+    templateMessage = await sendPaymentInitTemplate(
+      orgId,
+      phone,
+      templateQuery,
+      dbTemplate,
+    );
+  } else {
+    templateMessage = createTemplateMessage(phone, templateQuery);
+  }
+
   let res;
   if (timeDelay) {
     res = await createWaMessageSchedule({
@@ -456,6 +516,7 @@ export async function sendTemplateToPhone({
     log.trace("Template schedule created successfully");
   } else {
     res = await sendMessage(orgId, templateMessage);
+    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     log.trace("Template send to user successfully");
   }
   return res;
@@ -463,7 +524,7 @@ export async function sendTemplateToPhone({
 
 interface TemplateComponentsProps {
   orgId: string;
-  dbTemplate: WaTemplate;
+  dbTemplate: templateData;
   header?: SendTemplateHeaderComponent;
   teamId?: string;
   body_variables?: string[];
@@ -509,51 +570,124 @@ export async function getTemplateComponents({
       throw new Error("Team not found in survey");
     }
   }
+  /////////////////////////////////
 
-  const containsImageComponent =
-    dbTemplate.data.components.find(
-      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-    )?.format === `IMAGE`;
-  const containsImageOverrideInRequest = header?.parameters.some(
-    (p) => p.type === "image",
+  const headerComponent = dbTemplate.data.components.find(
+    (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
   );
-  if (
-    containsImageComponent &&
-    !containsImageOverrideInRequest // if the request has image then don't add default image
-  ) {
-    if (!components.some((c) => c.type === "header")) {
-      if (defaultValues?.image?.link) {
-        components.push({
-          type: "header",
-          parameters: [
-            {
-              type: "image",
-              image: {
-                link: getFileUrlFromKey(defaultValues.image.link),
-              },
-            },
-          ],
-        });
-      } else {
-        throw new Error(
-          "Image not found in template. Please upload an image and try again",
-        );
-      }
-    } else {
-      log.warn("A header component is already present in template");
+
+  const format = headerComponent?.format;
+
+  // Function to push a new HEADER component
+  const addHeaderComponent = (format, link, filename = null) => {
+    const newComponent = {
+      type: WaTemplateComponentType.HEADER,
+      parameters: [
+        {
+          type: format.toLowerCase(),
+          [format.toLowerCase()]: {
+            link,
+            ...(filename && { filename }),
+          },
+        },
+      ],
+    };
+    components.push(newComponent);
+  };
+
+  if (!components.some((c) => c.type === WaTemplateComponentType.HEADER)) {
+    switch (format) {
+      case WaTemplateSupportedFormats.IMAGE:
+        if (defaultValues?.image?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.IMAGE,
+            getFileUrlFromKey(defaultValues.image.link),
+          );
+        } else {
+          throw new Error(
+            "Image not found in template. Please upload an image and try again",
+          );
+        }
+        break;
+
+      case WaTemplateSupportedFormats.DOCUMENT:
+        if (defaultValues?.document?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.DOCUMENT,
+            getFileUrlFromKey(defaultValues.document.link),
+            defaultValues?.document?.filename,
+          );
+        } else {
+          throw new Error(
+            "File not found in template. Please upload a document and try again",
+          );
+        }
+        break;
+      case WaTemplateSupportedFormats.VIDEO:
+        if (defaultValues?.video?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.VIDEO,
+            getFileUrlFromKey(defaultValues.video.link),
+          );
+        } else {
+          throw new Error(
+            "Video not found in template. Please upload a video and try again",
+          );
+        }
+        break;
+
+      default:
+        // Handle unsupported formats if needed
+        break;
     }
   }
-  if (body_variables?.length > 0) {
-    components.push({
-      type: "body",
-      parameters: body_variables.map((variable) => {
-        return {
-          type: "text",
-          text: variable,
-        };
-      }),
-    });
-  }
+
+  //////////////////////////////////////////////
+
+  // const containsImageComponent =
+  //   dbTemplate.data.components.find(
+  //     (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+  //   )?.format === `IMAGE`;
+  // const containsImageOverrideInRequest = header?.parameters.some(
+  //   (p) => p.type === "image",
+  // );
+  // if (
+  //   containsImageComponent &&
+  //   !containsImageOverrideInRequest // if the request has image then don't add default image
+  // ) {
+  //   if (!components.some((c) => c.type === "header")) {
+  //     if (defaultValues?.image?.link) {
+  //       components.push({
+  //         type: "header",
+  //         parameters: [
+  //           {
+  //             type: "image",
+  //             image: {
+  //               link: getFileUrlFromKey(defaultValues.image.link),
+  //             },
+  //           },
+  //         ],
+  //       });
+  //     } else {
+  //       throw new Error(
+  //         "Image not found in template. Please upload an image and try again",
+  //       );
+  //     }
+  //   } else {
+  //     log.warn("A header component is already present in template");
+  //   }
+  // }
+  // if (body_variables?.length > 0) {
+  //   components.push({
+  //     type: "body",
+  //     parameters: body_variables.map((variable) => {
+  //       return {
+  //         type: "text",
+  //         text: variable,
+  //       };
+  //     }),
+  //   });
+  // }
   return { components, containsFlowButton, surveyTeamMap, dbFlow };
 }
 
@@ -589,4 +723,196 @@ export async function handleFlowComponents(
     log.trace("Session created successfully");
   }
   return components;
+}
+
+export async function sendTemplateToUserCore(
+  orgId: string,
+  templateId: string,
+  phone: string,
+  parameterData: any[],
+  teamId?: string,
+  userId?: string,
+): Promise<void> {
+  const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+  const { data, defaultValues } = dbTemplate;
+  const components = [...parameterData]; // Clone parameter data
+  log.trace("parameterData => %o", parameterData);
+
+  const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
+
+  if (containsFlowButton) {
+    components.push({
+      type: "button",
+      sub_type: "flow",
+      index: 0,
+      parameters: [
+        {
+          type: "action",
+          action: {
+            flow_token: phone,
+          },
+        },
+      ],
+    });
+
+    const flowId = getFlowIdFromTemplateComponents(data.components);
+    if (!flowId) {
+      throw new Error("Flow id not found in template");
+    }
+
+    const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
+    if (!dbFlow) {
+      throw new Error("Flow not found in db");
+    }
+
+    const surveyTeamMap = dbFlow?.survey?.teams.find(
+      (t) => t.teamId === teamId,
+    )?.id;
+    if (!surveyTeamMap) {
+      throw new Error("Team not found in survey");
+    }
+
+    await deleteSession(orgId, phone);
+    await createSession({
+      phone,
+      orgId,
+      surveyTeamMapId: surveyTeamMap,
+      language: dbFlow?.survey?.languages[0],
+    });
+  }
+
+  const headerComponent = dbTemplate.data.components.find(
+    (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
+  );
+
+  const format = headerComponent?.format;
+
+  // Function to push a new HEADER component
+  const addHeaderComponent = (format, link, filename = null) => {
+    const newComponent = {
+      type: WaTemplateComponentType.HEADER,
+      parameters: [
+        {
+          type: format.toLowerCase(),
+          [format.toLowerCase()]: {
+            link,
+            ...(filename && { filename }),
+          },
+        },
+      ],
+    };
+    components.push(newComponent);
+  };
+
+  if (!components.some((c) => c.type === WaTemplateComponentType.HEADER)) {
+    switch (format) {
+      case WaTemplateSupportedFormats.IMAGE:
+        if (defaultValues?.image?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.IMAGE,
+            getFileUrlFromKey(defaultValues.image.link),
+          );
+        } else {
+          throw new Error(
+            "Image not found in template. Please upload an image and try again",
+          );
+        }
+        break;
+
+      case WaTemplateSupportedFormats.DOCUMENT:
+        if (defaultValues?.document?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.DOCUMENT,
+            getFileUrlFromKey(defaultValues.document.link),
+            defaultValues?.document?.filename,
+          );
+        } else {
+          throw new Error(
+            "File not found in template. Please upload a document and try again",
+          );
+        }
+        break;
+      case WaTemplateSupportedFormats.VIDEO:
+        if (defaultValues?.video?.link) {
+          addHeaderComponent(
+            WaTemplateSupportedFormats.VIDEO,
+            getFileUrlFromKey(defaultValues.video.link),
+          );
+        } else {
+          throw new Error(
+            "Video not found in template. Please upload a video and try again",
+          );
+        }
+        break;
+
+      default:
+        // Handle unsupported formats if needed
+        break;
+    }
+  }
+
+  dbTemplate.data.components.forEach((item) => {
+    if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+      item?.buttons.forEach((button, idx) => {
+        if (button.type === "URL" && button?.example?.length > 0) {
+          components.push({
+            type: "button",
+            sub_type: "url",
+            index: idx,
+            parameters: [
+              {
+                type: "text",
+                text: phone,
+              },
+            ],
+          });
+        }
+      });
+    }
+  });
+
+  const templateQuery = {
+    name: data?.name,
+    language: {
+      code: dbTemplate.data?.language,
+    },
+    components: components,
+  };
+
+  const defaultValue = dbTemplate?.data?.components?.find(
+    (data) => data.example?.body_text,
+  )?.example?.body_text?.[0];
+
+  if (defaultValue?.length > 0) {
+    let params = templateQuery?.components.find(
+      (component) => component.type === "body",
+    )?.parameters;
+    params?.forEach((data, i) => {
+      if (data?.text?.trim().length === 0) {
+        data.text = defaultValue?.[i];
+      }
+    });
+    if (!params) {
+      templateQuery?.components?.push({
+        type: "body",
+        parameters: defaultValue?.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
+    }
+  }
+  let templateMessage;
+  if (dbTemplate.templateType === TemplateType.ORDER_DETAILS) {
+    templateMessage = await sendPaymentInitTemplate(
+      orgId,
+      phone,
+      templateQuery,
+      dbTemplate,
+    );
+  } else {
+    templateMessage = createTemplateMessage(phone, templateQuery);
+  }
+  await sendMessage(orgId, templateMessage, null, userId);
+  await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
 }
