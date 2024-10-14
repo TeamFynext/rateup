@@ -1556,7 +1556,6 @@
   "Sub Heading": "Unterüberschrift",
   "Large Heading": "Große Überschrift",
   "Caption": "Untertitel",
-  "Caption": "Untertitel",
   "Enter Screen Title": "Bildschirmtitel eingeben",
   "Edit Screen": "Bildschirm bearbeiten",
   "Create Screen": "Bildschirm erstellen",
@@ -1894,5 +1893,6 @@
   "WhatsApp Message scheduling": "WhatsApp-Nachrichtenplanung",
   "French": "Französisch",
   "Arabic": "Arabisch",
-  "Visit documentation": "Dokumentation besuchen"
+  "Visit documentation": "Dokumentation besuchen",
+  "Logs": "Protokolle"
 }

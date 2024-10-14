@@ -1555,7 +1555,6 @@
   "Sub Heading": "उप शीर्षक",
   "Large Heading": "बड़ा शीर्षक",
   "Caption": "कैप्शन",
-  "Caption": "कैप्शन",
   "Enter Screen Title": "स्क्रीन शीर्षक दर्ज करें",
   "Edit Screen": "स्क्रीन संपादित करें",
   "Create Screen": "स्क्रीन बनाएं",
@@ -1893,5 +1892,6 @@
   "WhatsApp Message scheduling": "व्हाट्सएप संदेश अनुसूची",
   "French": "फ्रेंच",
   "Arabic": "अरबी",
-  "Visit documentation": "दस्तावेज़ देखें"
+  "Visit documentation": "दस्तावेज़ देखें",
+  "Logs": "लॉग्स"
 }

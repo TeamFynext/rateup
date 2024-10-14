@@ -1555,7 +1555,6 @@
   "Sub Heading": "عنوان فرعي",
   "Large Heading": "عنوان كبير",
   "Caption": "التسمية التوضيحية",
-  "Caption": "التسمية التوضيحية",
   "Enter Screen Title": "أدخل عنوان الشاشة",
   "Edit Screen": "تعديل الشاشة",
   "Create Screen": "إنشاء شاشة",
@@ -1893,5 +1892,6 @@
   "WhatsApp Message scheduling": "جدولة رسائل واتساب",
   "French": "فرنسي",
   "Arabic": "عربي",
-  "Visit documentation": "زيارة التوثيق"
+  "Visit documentation": "زيارة التوثيق",
+  "Logs": "السجلات"
 }

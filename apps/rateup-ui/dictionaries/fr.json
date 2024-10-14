@@ -1554,7 +1554,6 @@
   "Sub Heading": "Sous-titre",
   "Large Heading": "Grand titre",
   "Caption": "légende",
-  "Caption": "légende",
   "Enter Screen Title": "Entrez le titre de l'écran",
   "Edit Screen": "Modifier l'écran",
   "Create Screen": "Créer un écran",
@@ -1892,5 +1891,6 @@
   "WhatsApp Message scheduling": "Planification des messages WhatsApp",
   "French": "Français",
   "Arabic": "Arabe",
-  "Visit documentation": "Visiter la documentation"
+  "Visit documentation": "Visiter la documentation",
+  "Logs": "Journaux"
 }

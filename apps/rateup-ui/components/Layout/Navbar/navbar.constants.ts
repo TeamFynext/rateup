@@ -16,6 +16,7 @@ import {
   IconKeyframes,
   IconLink,
   IconLogout,
+  IconLogs,
   IconMessage2Code,
   IconMessageChatbot,
   IconMessageCog,
@@ -164,6 +165,11 @@ export function getNavTopData(
                 Icon: IconMessageCog,
                 label: translations["Automation"],
                 href: "/dashboard/whatsapp/automated-replies",
+              },
+              {
+                Icon: IconLogs,
+                label: translations["Logs"],
+                href: "/dashboard/whatsapp/logs",
               },
               {
                 Icon: IconSettings,
