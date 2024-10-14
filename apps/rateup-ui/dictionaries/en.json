@@ -1893,5 +1893,16 @@
   "French": "French",
   "Arabic": "Arabic",
   "Visit documentation": "Visit documentation",
+  "Edit member role": "Edit member role",
+  "Delete member": "Delete member",
+  "Pause member": "Pause member",
+  "Resume member": "Resume member",
+  "Resume User": "Resume User",
+  "Are you sure to delete this team Member?": "Are you sure to delete this team Member?",
+  "Delete Member": "Delete Member",
+  "Added participants successfully.": "Added participants successfully.",
+  "Added group participants successfully.": "Added group participants successfully.",
+  "Campaign particiants added successfully.": "Campaign particiants added successfully.",
+  "Participants removed from campaign successfully.": "Participants removed from campaign successfully.",
   "Logs": "Logs"
 }

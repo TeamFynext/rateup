@@ -297,7 +297,11 @@ const LongMemberCard = ({
           </ScrollArea>
         </Stack>
         <Group>
-          <Tooltip label="Edit member role" position="top" withArrow>
+          <Tooltip
+            label={translations["Edit member role"]}
+            position="top"
+            withArrow
+          >
             <Button
               size="compact-md"
               onClick={openModal}
@@ -306,7 +310,11 @@ const LongMemberCard = ({
               <IconUserEdit size={15} />
             </Button>
           </Tooltip>
-          <Tooltip label="Delete member" position="top" withArrow>
+          <Tooltip
+            label={translations["Delete member"]}
+            position="top"
+            withArrow
+          >
             <Button
               size="compact-md"
               color="red"
@@ -317,7 +325,11 @@ const LongMemberCard = ({
             </Button>
           </Tooltip>
           <Tooltip
-            label={member.isPaused ? "Resume member" : "Pause member"}
+            label={
+              member.isPaused
+                ? translations["Resume member"]
+                : translations["Pause member"]
+            }
             position="top"
             withArrow
           >
@@ -338,17 +350,21 @@ const LongMemberCard = ({
       <ConfirmationModal
         forDeleteFunctionality
         opened={modalOpened}
-        confirmLabel="Delete"
-        headerTitle="Delete Member"
-        headerLabel="Are you sure to delete this team Member?"
+        confirmLabel={translations["Delete"]}
+        headerTitle={translations["Delete Member"]}
+        headerLabel={translations["Are you sure to delete this team Member?"]}
         onConfirm={onUpdateStatus}
         onClose={close}
       />
       <ConfirmationModal
         opened={pauseModalOpened}
         confirmLabel="Yes"
-        headerTitle={member?.isPaused ? "Resume User" : "Pause User"}
-        headerLabel={`Are you sure to ${member?.isPaused ? "resume" : "pause"} this user?`}
+        headerTitle={
+          member?.isPaused
+            ? translations["Resume User"]
+            : translations["Pause User"]
+        }
+        headerLabel={`${translations["Are you sure to"]} ${member?.isPaused ? translations["resume"] : translations["pause"]}  ${translations["this user?"]}`}
         onConfirm={handleUserStatus}
         onClose={closePauseModal}
       />

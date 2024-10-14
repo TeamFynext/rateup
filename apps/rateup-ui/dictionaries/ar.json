@@ -1893,5 +1893,16 @@
   "French": "فرنسي",
   "Arabic": "عربي",
   "Visit documentation": "زيارة التوثيق",
+  "Edit member role": "تعديل دور العضو",
+  "Delete member": "حذف العضو",
+  "Pause member": "إيقاف العضو مؤقتًا",
+  "Resume member": "استئناف العضو",
+  "Resume User": "استئناف المستخدم",
+  "Are you sure to delete this team Member?": "هل أنت متأكد من حذف هذا العضو من الفريق؟",
+  "Delete Member": "حذف العضو",
+  "Added participants successfully.": "تمت إضافة المشاركين بنجاح.",
+  "Added group participants successfully.": "تمت إضافة المشاركين في المجموعة بنجاح.",
+  "Campaign participants added successfully.": "تمت إضافة المشاركين في الحملة بنجاح.",
+  "Participants removed from campaign successfully.": "تمت إزالة المشاركين من الحملة بنجاح.",
   "Logs": "السجلات"
 }
