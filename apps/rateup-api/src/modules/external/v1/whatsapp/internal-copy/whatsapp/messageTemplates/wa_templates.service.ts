@@ -570,7 +570,6 @@ export async function getTemplateComponents({
       throw new Error("Team not found in survey");
     }
   }
-  /////////////////////////////////
 
   const headerComponent = dbTemplate.data.components.find(
     (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
@@ -642,52 +641,6 @@ export async function getTemplateComponents({
     }
   }
 
-  //////////////////////////////////////////////
-
-  // const containsImageComponent =
-  //   dbTemplate.data.components.find(
-  //     (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-  //   )?.format === `IMAGE`;
-  // const containsImageOverrideInRequest = header?.parameters.some(
-  //   (p) => p.type === "image",
-  // );
-  // if (
-  //   containsImageComponent &&
-  //   !containsImageOverrideInRequest // if the request has image then don't add default image
-  // ) {
-  //   if (!components.some((c) => c.type === "header")) {
-  //     if (defaultValues?.image?.link) {
-  //       components.push({
-  //         type: "header",
-  //         parameters: [
-  //           {
-  //             type: "image",
-  //             image: {
-  //               link: getFileUrlFromKey(defaultValues.image.link),
-  //             },
-  //           },
-  //         ],
-  //       });
-  //     } else {
-  //       throw new Error(
-  //         "Image not found in template. Please upload an image and try again",
-  //       );
-  //     }
-  //   } else {
-  //     log.warn("A header component is already present in template");
-  //   }
-  // }
-  // if (body_variables?.length > 0) {
-  //   components.push({
-  //     type: "body",
-  //     parameters: body_variables.map((variable) => {
-  //       return {
-  //         type: "text",
-  //         text: variable,
-  //       };
-  //     }),
-  //   });
-  // }
   return { components, containsFlowButton, surveyTeamMap, dbFlow };
 }
 
