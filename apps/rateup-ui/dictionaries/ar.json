@@ -1555,7 +1555,6 @@
   "Sub Heading": "عنوان فرعي",
   "Large Heading": "عنوان كبير",
   "Caption": "التسمية التوضيحية",
-  "Caption": "التسمية التوضيحية",
   "Enter Screen Title": "أدخل عنوان الشاشة",
   "Edit Screen": "تعديل الشاشة",
   "Create Screen": "إنشاء شاشة",
@@ -1904,5 +1903,6 @@
   "Added participants successfully.": "تمت إضافة المشاركين بنجاح.",
   "Added group participants successfully.": "تمت إضافة المشاركين في المجموعة بنجاح.",
   "Campaign participants added successfully.": "تمت إضافة المشاركين في الحملة بنجاح.",
-  "Participants removed from campaign successfully.": "تمت إزالة المشاركين من الحملة بنجاح."
+  "Participants removed from campaign successfully.": "تمت إزالة المشاركين من الحملة بنجاح.",
+  "Logs": "السجلات"
 }

@@ -1555,7 +1555,6 @@
   "Sub Heading": "Sub Heading",
   "Large Heading": "Large Heading",
   "Caption": "Caption",
-  "Caption": "Caption",
   "Enter Screen Title": "Enter Screen Title",
   "Edit Screen": "Edit Screen",
   "Create Screen": "Create Screen",
@@ -1904,5 +1903,6 @@
   "Added participants successfully.": "Added participants successfully.",
   "Added group participants successfully.": "Added group participants successfully.",
   "Campaign particiants added successfully.": "Campaign particiants added successfully.",
-  "Participants removed from campaign successfully.": "Participants removed from campaign successfully."
+  "Participants removed from campaign successfully.": "Participants removed from campaign successfully.",
+  "Logs": "Logs"
 }

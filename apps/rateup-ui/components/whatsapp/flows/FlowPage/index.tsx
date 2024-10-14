@@ -154,8 +154,7 @@ function FlowPage() {
         updateFlowJsonNavigationAndDataPassing(draft, flow);
       });
     }
-  }, [questions, flow?.logicJumps]);
-
+  }, [questions, flow]);
   // surveyId start
   // Things common to [surveyId].tsx
   const { user } = useUser();

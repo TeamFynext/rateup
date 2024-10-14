@@ -1556,7 +1556,6 @@
   "Sub Heading": "Unterüberschrift",
   "Large Heading": "Große Überschrift",
   "Caption": "Untertitel",
-  "Caption": "Untertitel",
   "Enter Screen Title": "Bildschirmtitel eingeben",
   "Edit Screen": "Bildschirm bearbeiten",
   "Create Screen": "Bildschirm erstellen",
@@ -1905,5 +1904,6 @@
   "Added participants successfully.": "Teilnehmer erfolgreich hinzugefügt.",
   "Added group participants successfully.": "Gruppenmitglieder erfolgreich hinzugefügt.",
   "Campaign participants added successfully.": "Teilnehmer der Kampagne erfolgreich hinzugefügt.",
-  "Participants removed from campaign successfully.": "Teilnehmer erfolgreich aus der Kampagne entfernt."
+  "Participants removed from campaign successfully.": "Teilnehmer erfolgreich aus der Kampagne entfernt.",
+  "Logs": "Protokolle"
 }
