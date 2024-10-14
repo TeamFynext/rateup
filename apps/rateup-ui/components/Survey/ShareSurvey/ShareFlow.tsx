@@ -16,6 +16,9 @@ import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { FlowChoiceQuestions } from "@/utils/constants";
+import { showErrorToast } from "@/utils/notifications";
+import { getQuestionsFromScreen } from "@/utils/whatsapp/flow.utils";
 
 import { updateSurvey } from "../../../backend/surveys/survey.api";
 import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -24,7 +27,7 @@ import {
   useWaFlowFromDb,
 } from "../../../backend/whatsapp/flow/flow.query";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
-import { SurveyType, WaFlowStatus } from "../../../types/enums";
+import { QuestionType, SurveyType, WaFlowStatus } from "../../../types/enums";
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import NothingFound from "../../NothingFound/NothingFound";
@@ -43,7 +46,7 @@ export const ShareFlow = ({
 }: {
   allowUnpublishedShare?: boolean;
 }) => {
-  const { survey } = useContext(EditFlowContext);
+  const { survey, flowJson, map } = useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -180,9 +183,29 @@ export const ShareFlow = ({
     );
   }
 
-  function handleSaveToWa() {
-    pushToWaMutation.mutate(dbFlowId);
-  }
+  const handleSaveToWa = () => {
+    let errorMessages = [];
+    for (const flScreen of flowJson?.screens) {
+      const questions = getQuestionsFromScreen(flScreen, survey, map);
+      for (const qs of questions) {
+        if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
+          let choice = Object.values(qs?.choices ?? {})?.[0];
+          if (!choice || choice?.length === 0) {
+            let title = Object.values(qs?.title ?? {})?.[0];
+            let label = Object.values(qs?.label ?? {})?.[0];
+            errorMessages.push(title || label);
+          }
+        }
+      }
+    }
+    if (errorMessages.length > 0) {
+      errorMessages?.map((error) =>
+        showErrorToast(`Atleast one choice in ${error} question needed`),
+      );
+    } else {
+      pushToWaMutation.mutate(dbFlowId);
+    }
+  };
 
   return (
     <Stack p={10} pr={16} h={"fit-content"}>
