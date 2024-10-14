@@ -94,16 +94,16 @@ model User {
 }
 
 model Org {
-  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt         DateTime           @default(now())
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime            @default(now())
   name              String
-  owner             User               @relation(fields: [ownerId], references: [id])
-  ownerId           String             @db.Uuid
+  owner             User                @relation(fields: [ownerId], references: [id])
+  ownerId           String              @db.Uuid
   logo              String?
   phone             String?
   address           String?
   encryptionKeys    Json? //{privateKey:string,publicKey:string}
-  isPaused          Boolean?           @default(false)
+  isPaused          Boolean?            @default(false)
   members           OrgMember[]
   teams             Team[]
   invitations       Invitation[]
@@ -127,6 +127,7 @@ model Org {
   generateQr        GenerateQr[]
   landingPage       LandingPage[]
   Integration       Integration[]
+  waMessageSchedule WaMessageSchedule[]
 }
 
 model UsageStats {
@@ -301,16 +302,17 @@ model Survey {
 }
 
 model SurveyTeamMap {
-  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyId    String           @db.Uuid
-  teamId      String           @db.Uuid
-  shortUrlId  String?          @unique
-  survey      Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  responses   SurveyResponse[]
-  sessions    WaSession[]
-  surveyStats SurveyStats?
-  menuLanding MenuLanding[]
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  surveyId          String              @db.Uuid
+  teamId            String              @db.Uuid
+  shortUrlId        String?             @unique
+  survey            Survey              @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  team              Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  responses         SurveyResponse[]
+  sessions          WaSession[]
+  surveyStats       SurveyStats?
+  menuLanding       MenuLanding[]
+  waMessageSchedule WaMessageSchedule[]
 
   @@unique([surveyId, teamId], name: "survey_team_unique")
 }
@@ -568,19 +570,20 @@ model Media {
 }
 
 model WaTemplate {
-  id            String       @id @default(uuid()) @db.Uuid
-  createdAt     DateTime     @default(now())
+  id                String              @id @default(uuid()) @db.Uuid
+  createdAt         DateTime            @default(now())
   /// [PWaTemplateWithTypesData]
-  data          Json
-  acceptButton  String? // QuickReplyButton text which on clicking will send the survey to the user
+  data              Json
+  acceptButton      String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
-  defaultValues Json? // default values for images and other fields
-  templateType  TemplateType @default(GENERAL_NOTIFICATION)
-  config        Json?
-  org           Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId         String       @db.Uuid
-  waSession     WaSession[]
-  Campaign      Campaign[]
+  defaultValues     Json? // default values for images and other fields
+  templateType      TemplateType        @default(GENERAL_NOTIFICATION)
+  config            Json?
+  org               Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId             String              @db.Uuid
+  waSession         WaSession[]
+  Campaign          Campaign[]
+  waMessageSchedule WaMessageSchedule[]
 }
 
 model MenuLanding {
@@ -1203,4 +1206,21 @@ model jobQueue {
   data      Json
   status    String   @default("pending")
   createdAt DateTime @default(now())
+}
+
+model WaMessageSchedule {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  messageBody     Json
+  phone           String
+  status          String         @default("SCHEDULED") // enums.ts: WaMessageScheduleStatus
+  scheduledAt     DateTime
+  createdAt       DateTime       @default(now())
+  source          String?
+  messageId       String?
+  waTemplateId    String?        @db.Uuid
+  waTemplate      WaTemplate?    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  orgId           String         @db.Uuid
+  org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  surveyTeamMapId String?        @db.Uuid
+  surveyTeamMap   SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
 }

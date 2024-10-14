@@ -22,6 +22,7 @@ import { sendCampaignCronAction } from "./modules/campaign/campaign.service";
 import { sendShopifySurveyCronAction } from "./modules/integrations/shopify/shopify.service";
 import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
 import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
+import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler";
 
 const server = Fastify({
   logger: logOptions,
@@ -81,6 +82,7 @@ server.register(fastifyCron, {
           sendCampaignCronAction(),
           sendShopifySurveyCronAction(),
           // sendPetpoojaWaTemplateCronAction(),
+          sendSchedulesWaMessages(),
         ]);
       },
       start: true,

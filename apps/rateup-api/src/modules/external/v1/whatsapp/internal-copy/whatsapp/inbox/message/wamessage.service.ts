@@ -7,6 +7,7 @@ export async function addNewWaMessage(
   waCreatedAt: string,
   componentParams?: any,
   messageId?: string,
+  sendBy?: string,
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
@@ -15,6 +16,7 @@ export async function addNewWaMessage(
       waCreatedAt,
       templateComponentParams: componentParams,
       messageId,
+      sendBy,
     },
   });
   return newMessage;

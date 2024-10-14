@@ -31,7 +31,7 @@ export function validateAutomationMatchCondition(
     [
       WaAutomatedReplyMatchType.ContainsAllOf,
       WaAutomatedReplyMatchType.ContainsAnyOf,
-    ]
+    ].includes(matchType as WaAutomatedReplyMatchType)
   ) {
     let comparator: "some" | "every";
 

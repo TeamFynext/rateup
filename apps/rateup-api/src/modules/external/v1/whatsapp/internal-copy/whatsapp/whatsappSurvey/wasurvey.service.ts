@@ -58,6 +58,8 @@ export const toBeIncludedWaSessionRelations = {
 export async function sendMessage(
   orgId: string,
   messageData: WaSendMessageBody,
+  userName?: string,
+  userId?: string,
 ) {
   const waSettings = await getWaSettings(orgId);
   const { to } = messageData;
@@ -75,8 +77,9 @@ export async function sendMessage(
       messageData,
       to,
       orgId,
-      null,
+      userName,
       res?.data?.messages?.[0]?.id,
+      userId,
     );
     return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
