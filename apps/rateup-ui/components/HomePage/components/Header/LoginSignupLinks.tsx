@@ -41,9 +41,15 @@ function LoginSignupLinks() {
           <Link href="/login" className={`${cx("login-link")} login-link`}>
             <span className={cx("login-link-text-span")}>Login</span>
           </Link>
-          <Link href="/signup" className={`${cx("signup-link")} signup-link`}>
-            Sign Up
-          </Link>
+          <BookDemoContactForm
+            className={`${cx("book-demo-btn-div")}`}
+            buttonText="Get a Demo"
+            clickedFromPage="digital-menu-page"
+            buttonProps={{
+              style: { fontSize: "1rem", padding: "0.625rem 1rem" },
+              animate: false,
+            }}
+          />
         </>
       )}
     </Group>

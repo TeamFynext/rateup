@@ -4,7 +4,7 @@ import classNames from "classnames/bind";
 import BookDemoContactForm from "@/components/HomePage/components/BookDemoContactForm";
 import Header from "@/components/HomePage/components/Header";
 import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
-import TryFreePlanBtn from "@/components/HomePage/components/TryFreePlanBtn";
+import StartForFreeBtn from "@/components/HomePage/components/StartForFreeBtn";
 import { imagesPath } from "@/utils/constants";
 
 import styles from "./HeroSection.module.css";
@@ -29,8 +29,8 @@ function HeroSection() {
             </span>
           </h1>
 
-          <Group className={cx("book-demo-try-free-plan-btns-container")}>
-            <TryFreePlanBtn
+          <Group className={cx("book-demo-start-for-free-btns-container")}>
+            <StartForFreeBtn
               className={cx("try-freeplan-btn")}
               gACategory={"try_free_plan"}
               fbEventName={"TryFreePlanButtonClick"}

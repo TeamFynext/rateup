@@ -6,11 +6,11 @@ import classNames from "classnames/bind";
 import { gAnalyticsAndFbEvent } from "@/utils/gtag";
 
 import MotionButtonGesture from "../MotionButtonGesture";
-import styles from "./TryFreePlanBtn.module.css";
+import styles from "./StartForFreeBtn.module.css";
 
 const cx = classNames.bind(styles);
 
-function TryFreePlanBtn({
+function StartForFreeBtn({
   className = "",
   gACategory = null,
   fbEventName = null,
@@ -30,14 +30,14 @@ function TryFreePlanBtn({
   return (
     <MotionButtonGesture>
       <Button
-        className={`${cx("try-free-plan-btn")} ${className}`}
+        className={`${cx("start-for-free-btn")} ${className}`}
         variant="subtle"
         onClick={handleClick}
       >
-        Try free plan!
+        Start for free
       </Button>
     </MotionButtonGesture>
   );
 }
 
-export default TryFreePlanBtn;
+export default StartForFreeBtn;
