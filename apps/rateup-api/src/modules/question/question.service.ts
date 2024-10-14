@@ -99,14 +99,16 @@ export async function deleteQuestionById(surveyId: string, id: string) {
     }
     return data;
   }
-  await prisma.waFlow.update({
-    where: {
-      dbFlowId: flow.dbFlowId,
-    },
-    data: {
-      logicJumps: removeObjectsByQuestionId(flow.logicJumps, id),
-    },
-  });
+  if (flow?.dbFlowId) {
+    await prisma.waFlow.update({
+      where: {
+        dbFlowId: flow.dbFlowId,
+      },
+      data: {
+        logicJumps: removeObjectsByQuestionId(flow.logicJumps, id),
+      },
+    });
+  }
 }
 
 export async function reorderQuestions(

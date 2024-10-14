@@ -4,6 +4,7 @@ import {
   LogicAction,
   QuestionType as Q,
   QuestionType,
+  WaEvent,
 } from "../../../types/enums";
 import {
   WaMessageBody,
@@ -635,8 +636,14 @@ export const handleMessageStatusUpdate = async (
   if (!msg) return;
   // Ensure msg.stats is initialized
   msg.stats = msg.stats || {};
+  if (status === WaEvent.DELIVERED) {
+    msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
+  } else if (status === WaEvent.READ) {
+    msg.stats[WaEvent.DELIVERED] = msg.stats[WaEvent.DELIVERED] || new Date();
+    msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
+  }
   msg.stats[status] = new Date();
-  const d = await prisma.waMessage.update({
+  await prisma.waMessage.update({
     where: {
       id: msg.id,
     },

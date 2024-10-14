@@ -5,14 +5,14 @@ class ConnectionManager {
   orgIdToAfterAuthIds = new Map<string, string[]>();
   afterAuthIdsToConnections = new Map<string, WebSocket[]>();
 
-  generateAfterAuthIdforOrgId(orgId: string) {
+  generateAfterAuthIdforOrgId(orgId: string): string {
     let afterAuthIds = this.orgIdToAfterAuthIds.get(orgId);
     let afterAuthId = crypto.randomBytes(16).toString("hex");
     if (!afterAuthIds) {
       afterAuthIds = [];
       this.orgIdToAfterAuthIds.set(orgId, afterAuthIds);
     } else {
-      while (this.orgIdToAfterAuthIds.get(afterAuthId)) {
+      while (this.afterAuthIdsToConnections.has(afterAuthId)) {
         afterAuthId = crypto.randomBytes(16).toString("hex");
       }
     }
@@ -20,7 +20,7 @@ class ConnectionManager {
     return afterAuthId;
   }
 
-  addConnection(afterAuthId: string, connection: WebSocket) {
+  addConnection(afterAuthId: string, connection: WebSocket): void {
     let connections = this.afterAuthIdsToConnections.get(afterAuthId);
     if (!connections) {
       connections = [];
@@ -29,7 +29,7 @@ class ConnectionManager {
     connections.push(connection);
   }
 
-  removeConnection(afterAuthId: string, connection: WebSocket) {
+  removeConnection(afterAuthId: string, connection: WebSocket): void {
     const connections = this.afterAuthIdsToConnections.get(afterAuthId);
     if (connections) {
       const index = connections.indexOf(connection);
@@ -39,12 +39,12 @@ class ConnectionManager {
     }
   }
 
-  getConnectionsBasedOnOrgId(orgId: string) {
+  getConnectionsBasedOnOrgId(orgId: string): WebSocket[] {
     const afterAuthIds = this.orgIdToAfterAuthIds.get(orgId) || [];
-    const connections = afterAuthIds.map((afterAuthId) =>
-      this.afterAuthIdsToConnections.get(afterAuthId),
+    const connections = afterAuthIds.flatMap(
+      (afterAuthId) => this.afterAuthIdsToConnections.get(afterAuthId) || [],
     );
-    return connections.flat();
+    return connections;
   }
 }
 
