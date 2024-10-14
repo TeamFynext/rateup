@@ -10,6 +10,7 @@ import {
   createWaSettings,
   deleteWaSettings,
   getContactTag,
+  getWaLogs,
   getWaSettings,
   updateContactTag,
   updateWaSettings,
@@ -126,6 +127,20 @@ export async function updateContactTagHandler(
     reply.code(204).send();
   } catch (error) {
     log.error("Error while updating contact tags", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function getWaLogsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getWaLogs(orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting wa logs", error);
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

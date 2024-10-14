@@ -87,6 +87,7 @@ export interface WaReceiveMessageBody {
           status?: string;
         };
       };
+      errors?: any;
     },
   ];
 }
