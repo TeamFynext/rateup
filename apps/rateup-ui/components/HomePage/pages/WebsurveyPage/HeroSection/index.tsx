@@ -4,7 +4,7 @@ import { Flex, Group, List, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import BookDemoContactForm from "@/components/HomePage/components/BookDemoContactForm";
-import TryFreePlanBtn from "@/components/HomePage/components/TryFreePlanBtn";
+import StartForFreeBtn from "@/components/HomePage/components/StartForFreeBtn";
 import { imagesPath } from "@/utils/constants";
 
 import commonStyles from "../../QrStudioPage/HeroSection/HeroSection.module.css";
@@ -49,17 +49,17 @@ function HeroSection() {
           </List>
           <Group
             className={commonStylesCx(
-              "book-demo-try-free-plan-btns-container",
-              cx("book-demo-try-free-plan-btns-container"),
+              "book-demo-start-for-free-btns-container",
+              cx("book-demo-start-for-free-btns-container"),
             )}
           >
             <BookDemoContactForm
               buttonProps={{ whiteBackgroundGradientText: true }}
             />
-            <TryFreePlanBtn
+            <StartForFreeBtn
               className={commonStylesCx(
-                "try-free-plan-btn",
-                cx("try-free-plan-btn"),
+                "start-for-free-btn",
+                cx("start-for-free-btn"),
               )}
             />
           </Group>

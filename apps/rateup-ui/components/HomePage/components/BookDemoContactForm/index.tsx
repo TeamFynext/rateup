@@ -1,6 +1,8 @@
+import { useCallback } from "react";
+
 import { Flex } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { useCallback } from "react";
+
 import { gAnalyticsAndFbEvent } from "../../../../utils/gtag";
 import modalStyles from "../../../Modal/ModalManagerModals/BookDemoModal/ModalStyles.module.css";
 import Button from "../Button";
@@ -8,6 +10,8 @@ import Button from "../Button";
 type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
   style?: any;
+  animate?: boolean;
+  variant?: string;
 };
 
 type BookDemoContactFormProps = {

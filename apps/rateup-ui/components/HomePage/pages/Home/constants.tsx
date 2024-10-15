@@ -1,8 +1,12 @@
 import Image from "next/image";
+
+import classNames from "classnames/bind";
+
+import textIllustrationStyles from "@/components/HomePage/components/TextIllustration/TextIllustration.module.css";
+
 import LightBlueGradientBg from "../../components/LightBlueGradientBg";
 import { imagesPath } from "../../constants";
-import textIllustrationStyles from "./TextIllustration/TextIllustration.module.css";
-import classNames from "classnames/bind";
+
 const tIStyles = classNames.bind(textIllustrationStyles);
 
 const Heading = ({ gradientBgSpanText, normalText = "" }) => {
@@ -24,7 +28,7 @@ const textIllustrationSections = [
     heading: (
       <Heading
         gradientBgSpanText={"Engage Directly, Convert Faster"}
-        normalText={"with rateup"}
+        normalText={"with RateUp"}
       />
     ),
     description: (
@@ -35,7 +39,7 @@ const textIllustrationSections = [
         </span>{" "}
         Reach your audience where they are and enjoy higher engagement and
         conversion rates. With customizable messaging and seamless integration,
-        connecting with your customers has never been easier."
+        connecting with your customers has never been easier.
       </p>
     ),
     image: (
@@ -53,7 +57,7 @@ const textIllustrationSections = [
     heading: (
       <Heading
         gradientBgSpanText={"Real Voices, Real Impact"}
-        normalText={"with rateup"}
+        normalText={"with RateUp"}
       />
     ),
     description: (
@@ -121,8 +125,8 @@ const textIllustrationSections = [
 const aIAnalyticsAndInsightsContent = {
   heading: (
     <Heading
-      gradientBgSpanText={"Ai Analytics & insights"}
-      normalText={"with Rateup"}
+      gradientBgSpanText={"AI Analytics & Insights"}
+      normalText={"with RateUp"}
     />
   ),
   description: (

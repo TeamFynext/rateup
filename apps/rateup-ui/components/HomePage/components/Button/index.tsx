@@ -1,8 +1,10 @@
 import React from "react";
+
 import { Button as MantineButton, Text } from "@mantine/core";
+
+import commonStyles from "../../index.module.css";
 import MotionButtonGesture from "../MotionButtonGesture";
 import styles from "./Button.module.css";
-import commonStyles from "../../index.module.css";
 
 type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
@@ -12,6 +14,7 @@ type ButtonProps = {
   onClick?: () => void;
   className?: string;
   leftSection?: React.ReactNode;
+  animate?: boolean;
 };
 
 function Button({
@@ -22,32 +25,36 @@ function Button({
   onClick,
   className,
   leftSection,
+  animate = true,
 }: ButtonProps) {
-  return (
-    <MotionButtonGesture>
-      <MantineButton
-        className={`${styles["button"]} ${
-          whiteBackgroundGradientText
-            ? styles["white-background-gradient-text-btn"]
-            : styles["gradient-background-white-text-btn"]
-        } ${className}`}
-        type={type ? type : "button"}
-        style={style}
-        onClick={onClick}
-        leftSection={leftSection}
+  let button = (
+    <MantineButton
+      className={`${styles["button"]} ${
+        whiteBackgroundGradientText
+          ? styles["white-background-gradient-text-btn"]
+          : styles["gradient-background-white-text-btn"]
+      } ${className}`}
+      type={type ? type : "button"}
+      style={style}
+      onClick={onClick}
+      leftSection={leftSection}
+    >
+      <Text
+        inherit
+        span
+        className={`${
+          whiteBackgroundGradientText ? commonStyles["gradient-text"] : ""
+        }`}
       >
-        <Text
-          inherit
-          span
-          className={`${
-            whiteBackgroundGradientText ? commonStyles["gradient-text"] : ""
-          }`}
-        >
-          {children}
-        </Text>
-      </MantineButton>
-    </MotionButtonGesture>
+        {children}
+      </Text>
+    </MantineButton>
   );
+
+  if (animate) {
+    return <MotionButtonGesture>{button}</MotionButtonGesture>;
+  }
+  return button;
 }
 
 export default Button;
