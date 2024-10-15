@@ -1,6 +1,7 @@
 import { Box, Button, Flex, Stack, Text } from "@mantine/core";
 import classNames from "classnames/bind";
 
+import BookDemoContactForm from "@/components/HomePage/components/BookDemoContactForm";
 import Picture from "@/components/HomePage/components/Picture";
 import { imagesPath } from "@/utils/constants";
 
@@ -30,12 +31,17 @@ function LoyaltyProgramBanner() {
           <span>for your business?</span>
         </Text>
         <Flex className={cx("btns-container")}>
-          <Button className={cx("enroll-btn")}>
-            Enroll for Loyalty Program
-          </Button>
-          <Button className={cx("know-more-btn")} variant="outline">
-            Know More
-          </Button>
+          <BookDemoContactForm
+            className={cx("enroll-form-div")}
+            buttonText="Enroll for Loyalty Program"
+          />
+          <BookDemoContactForm
+            className={cx("know-more-form-div")}
+            buttonProps={{
+              variant: "outline",
+            }}
+            buttonText="Know More"
+          />
         </Flex>
       </Stack>
     </Flex>

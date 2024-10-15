@@ -11,6 +11,7 @@ type ButtonProps = {
   whiteBackgroundGradientText?: boolean;
   style?: any;
   animate?: boolean;
+  variant?: string;
 };
 
 type BookDemoContactFormProps = {
