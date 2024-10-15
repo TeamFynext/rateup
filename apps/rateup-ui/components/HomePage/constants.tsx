@@ -14,12 +14,8 @@ export const rateupLogoUrl = rateupLogoBlueTextUrl;
 
 const headerNavLinks = [
   {
-    href: "/",
-    linkText: "Home",
-  },
-  {
-    href: "/#our-solutions",
-    linkText: "Solutions",
+    href: "/#platform",
+    linkText: "Platform",
     hasSublinks: true,
     sublinks: [
       {
@@ -42,6 +38,16 @@ const headerNavLinks = [
         iconLink: `${imagesPath}/homepage/header/desktop-icon.svg`,
       },
       {
+        id: 1002,
+        link: "/digital-menu",
+        content: {
+          heading: "Digital Menu",
+          description:
+            "Experience quick, delicious dining with our digital menus.",
+        },
+        iconLink: `${imagesPath}/homepage/header/clipboard.svg`,
+      },
+      {
         id: 1006,
         link: "/product-packaging-qr",
         content: {
@@ -62,16 +68,6 @@ const headerNavLinks = [
         iconLink: `${imagesPath}/homepage/header/target.svg`,
       },
       {
-        id: 1002,
-        link: "/digital-menu",
-        content: {
-          heading: "Digital Menu",
-          description:
-            "Experience quick, delicious dining with our digital menus.",
-        },
-        iconLink: `${imagesPath}/homepage/header/clipboard.svg`,
-      },
-      {
         id: 1003,
         link: "/qr-studio",
         content: {
@@ -83,16 +79,18 @@ const headerNavLinks = [
     ],
   },
   {
-    href: "/#our-features",
-    linkText: "Features",
+    href: "/pricing",
+    linkText: "Pricing",
+  },
+  {
+    href: "/#resources",
+    linkText: "Resources",
+    hasSublinks: true,
+    sublinks: [],
   },
   {
     href: "/about-us",
     linkText: "About Us",
-  },
-  {
-    href: "/pricing",
-    linkText: "Pricing",
   },
   {
     href: "https://blog.rateup.app/",
@@ -100,11 +98,7 @@ const headerNavLinks = [
   },
 ];
 
-const excludedOurCompanySectionLinks = [
-  "/pricing",
-  "/#our-features",
-  "/#our-solutions",
-];
+const excludedOurCompanySectionLinks = ["/pricing", "/#platform"];
 const ourCompanySectionLinks = [
   ...headerNavLinks.filter(
     (obj) => !excludedOurCompanySectionLinks.includes(obj.href),
@@ -121,19 +115,19 @@ export const footerNavLinks = {
     linksArray: [...ourCompanySectionLinks, ...blogLink],
   },
   product: {
-    heading: "Product",
+    heading: "Pricing",
     linksArray: [
       {
         href: "/pricing",
-        linkText: "Pricing",
+        linkText: "Basic Plan",
       },
       {
-        href: "/#our-solutions",
-        linkText: "Solutions",
+        href: "/pricing",
+        linkText: "Plus Plan",
       },
       {
-        href: "/#our-features",
-        linkText: "Features",
+        href: "/pricing",
+        linkText: "Premium Plan",
       },
     ],
   },

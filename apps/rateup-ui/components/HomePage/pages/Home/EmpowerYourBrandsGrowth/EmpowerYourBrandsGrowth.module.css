@@ -1,7 +1,7 @@
 .empower-your-brands-growth-section {
   align-items: center;
   font-family: var(--font-rubik);
-  margin-bottom: 6.25rem;
+  margin-bottom: 4rem;
   padding: 0 10%;
   gap: 0;
 }
@@ -13,6 +13,7 @@
   flex-wrap: wrap;
   justify-content: center;
   margin-bottom: 1rem;
+  font-size: 1.75rem;
 }
 
 .heading-h1 span {
@@ -41,7 +42,7 @@
 .desc-text-p {
   font-size: 1.5rem;
   text-align: center;
-  font-weight: 300;
+  font-weight: 350;
   padding: 0 10%;
 }
 
@@ -50,9 +51,9 @@
 }
 
 @media screen and (max-width: 768px) {
-  .empower-your-brands-growth-section {
+  /* .empower-your-brands-growth-section {
     margin-bottom: 4.375rem;
-  }
+  } */
   .heading-h1 {
     font-size: 1.25rem;
   }

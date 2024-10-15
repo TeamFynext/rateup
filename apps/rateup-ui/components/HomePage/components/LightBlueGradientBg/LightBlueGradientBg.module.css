@@ -69,6 +69,6 @@
     background-image: none;
     color: black;
     white-space: initial;
-    padding: 0 !important;
+    padding: 0;
   }
 }
