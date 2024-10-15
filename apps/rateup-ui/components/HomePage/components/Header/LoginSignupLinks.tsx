@@ -22,7 +22,7 @@ function LoginSignupLinks() {
           href="/dashboard"
           className={`${cx("go-to-dashboard-link")} go-to-dashboard-link`}
         >
-          Go To DashBoard
+          DashBoard
         </Link>
       ) : currentRoutePath === "/digital-menu" ? (
         <>
