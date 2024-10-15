@@ -20,8 +20,9 @@ function HeroSection() {
         <Stack className={cx("heading-and-book-demo-btns-container")}>
           <Stack gap={"1.5rem"}>
             <h1 className={styles["hero-section-heading"]}>
-              <span>Know Your Customer {` `}</span>
-              <span>& Grow Your Business</span>
+              <span>Know Your Customers &</span>
+              <span>Grow Your Business</span>
+              <span>with RateUp</span>
             </h1>
             <Stack className={cx("book-demo-no-credit-text-container")}>
               <Group className={cx("book-demo-start-for-free-btns-container")}>
@@ -57,7 +58,7 @@ function HeroSection() {
 
       <Stack className={cx("trusted-companies-container")}>
         <h1 className={cx("blue-bg-heading", "trusted-companies-h1")}>
-          Our Trusted Companies
+          Our Trusted Partners
         </h1>
         <TrustedByCompaniesCarousel />
       </Stack>

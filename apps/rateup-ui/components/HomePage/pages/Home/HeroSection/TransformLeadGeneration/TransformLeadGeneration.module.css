@@ -43,6 +43,14 @@
   width: 15.625rem;
   height: 11.875rem;
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.1) inset;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .icon-div {

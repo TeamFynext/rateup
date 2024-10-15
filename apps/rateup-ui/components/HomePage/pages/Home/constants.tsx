@@ -28,7 +28,7 @@ const textIllustrationSections = [
     heading: (
       <Heading
         gradientBgSpanText={"Engage Directly, Convert Faster"}
-        normalText={"with rateup"}
+        normalText={"with RateUp"}
       />
     ),
     description: (
@@ -57,7 +57,7 @@ const textIllustrationSections = [
     heading: (
       <Heading
         gradientBgSpanText={"Real Voices, Real Impact"}
-        normalText={"with rateup"}
+        normalText={"with RateUp"}
       />
     ),
     description: (
@@ -125,8 +125,8 @@ const textIllustrationSections = [
 const aIAnalyticsAndInsightsContent = {
   heading: (
     <Heading
-      gradientBgSpanText={"Ai Analytics & insights"}
-      normalText={"with Rateup"}
+      gradientBgSpanText={"AI Analytics & Insights"}
+      normalText={"with RateUp"}
     />
   ),
   description: (

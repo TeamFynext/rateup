@@ -24,7 +24,7 @@ function OneSmartQr() {
               gradient={{ from: "#387ADF", to: "#50C4ED", deg: 90 }}
               inherit
             >
-              ONE SMART QR
+              ONE SMART QR-Code
             </Text>
           </LightBlueGradientBg>{" "}
           <span>Endless Possibilites</span>
