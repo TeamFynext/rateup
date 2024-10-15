@@ -1,23 +1,27 @@
-import { Box, Stack, Title, Group } from "@mantine/core";
 import React, { useState } from "react";
+
+import { Box, Group, Stack, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconPlus } from "@tabler/icons-react";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   usePaymentsPlans,
   useRateupPaymentsPlanDeleteMutation,
   useRateupPaymentsPlanMutation,
-  useRateupPaymentsPlanUpdateMutation,
   useRateupPaymentsPlans,
+  useRateupPaymentsPlanUpdateMutation,
 } from "../../../backend/payment/payment.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
-import { IconPlus } from "@tabler/icons-react";
-import RateupPlanModal from "../../../components/Modal/RateupPlanModal";
-import { useDisclosure } from "@mantine/hooks";
-import { showLoadingToast } from "../../../utils/notifications";
-import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { ContainedTagInput } from "../../../components/input/ContainedInput/ContainedInput";
-import { generateColumns } from "../../../components/adminPanel/RateUpPlans/RateUpPlanColumn";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
 import { useGetStripeProducts } from "../../../backend/payment/stripe/stripe.query";
+import { generateColumns } from "../../../components/adminPanel/RateUpPlans/RateUpPlanColumn";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import { ContainedTagInput } from "../../../components/input/ContainedInput/ContainedInput";
+import RateupLoader from "../../../components/Loaders/RateupLoader";
+import FormModalLayout from "../../../components/Modal/FormModalLayout";
+import RateupPlanModal from "../../../components/Modal/RateupPlanModal";
+import { showLoadingToast } from "../../../utils/notifications";
 
 export enum PaymentPlans {
   razorpay = "Razorpay Plans",
@@ -31,7 +35,7 @@ const RateupPlan = () => {
     openedDescriptonModal,
     { toggle: toggleDescriptonModal, close: closeDescriptonModal },
   ] = useDisclosure(false);
-
+  const { translations } = useTranslations();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {
     data: razorPayPlans,
@@ -102,10 +106,10 @@ const RateupPlan = () => {
   const handleMutation = (updatedData) => {
     rateupPaymentsPlanUpdateMutation.mutate(updatedData);
     showLoadingToast(
-      "Hold.. your data is getting updated...",
+      translations["Hold.. your data is getting updated..."],
       "load-data",
       true,
-      "Updating RateUp Plan",
+      translations["Updating RateUp Plan"],
     );
     setUpdatedField("");
   };
@@ -117,9 +121,9 @@ const RateupPlan = () => {
   return (
     <Stack mah={"100%"}>
       <Group gap={"md"} justify="space-between" mr={"xl"}>
-        <Title order={2}>Rateup Plans</Title>
+        <Title order={2}>{translations["Rateup Plans"]}</Title>
         <RateupButtonPrimary
-          title={"Create A Plan"}
+          title={translations["Create A Plan"]}
           rightIcon={<IconPlus size={16} />}
           onClick={toggle}
         />
@@ -157,7 +161,7 @@ const RateupPlan = () => {
           setUpdatedField("");
         }}
         centered
-        title="Update Description"
+        title={translations["Update Description"]}
         buttonTitle="Update"
         includeCancelButton
         onSubmit={() => {
@@ -170,8 +174,8 @@ const RateupPlan = () => {
       >
         <Group mt="md" justify="space-between">
           <ContainedTagInput
-            label="Description"
-            placeholder="Type Description and press enter"
+            label={translations["Description"]}
+            placeholder={translations["Type Description and press enter"]}
             withAsterisk
             value={updatedField?.description ?? []}
             onChange={(e) => {

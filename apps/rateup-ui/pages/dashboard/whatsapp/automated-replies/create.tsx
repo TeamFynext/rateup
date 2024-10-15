@@ -12,6 +12,8 @@ import {
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
@@ -234,12 +236,12 @@ function ResponseSelector({ type, form }: ResponseSelectorProps) {
 
 function TemplateSelector(props: SelectProps) {
   const { data: templates } = useWaTemplates();
-
+  const { translations } = useTranslations();
   if (!templates || !Array.isArray(templates)) return <RateupLoader />;
   return (
     <ContainedSelection
       {...props}
-      label="Template"
+      label={translations["Template"]}
       required
       data={templates.map((t) => ({ label: t.data.name, value: t.id }))}
     />

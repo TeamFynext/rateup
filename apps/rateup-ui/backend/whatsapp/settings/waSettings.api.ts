@@ -59,3 +59,19 @@ export async function getContactTags() {
   return (await axiosClient.get(`${SettingsUrl}/contact_tag`))
     ?.data as getContactTagsRes;
 }
+type WaLogsRes = {
+  id: string;
+  createdAt: string;
+  logs?: {
+    code?: number;
+    title?: string;
+    message?: string;
+    error_data?: {
+      details?: string;
+    };
+  }[];
+};
+export const getWaLogs = async () => {
+  const res = await axiosClient.get(`${SettingsUrl}/logs`);
+  return res.data as WaLogsRes;
+};

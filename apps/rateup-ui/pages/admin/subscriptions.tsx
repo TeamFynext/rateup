@@ -6,6 +6,8 @@ import { IconSearch } from "@tabler/icons-react";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useRateupPaymentsPlans } from "../../backend/payment/payment.query";
 import {
   useAllSubscriptions,
@@ -24,7 +26,7 @@ export default function () {
     isLoading: isSubscriptionsLoading,
     isError: isSubscriptionsError,
   } = useAllSubscriptions();
-
+  const { translations } = useTranslations();
   const { data: rateupPlans } = useRateupPaymentsPlans();
   const updateSubscriptionMutation = useUpdateSubscriptionMutation();
   const plansData = rateupPlans?.map((plan) => ({
@@ -54,10 +56,10 @@ export default function () {
       width: 120,
       cellClassName: styles.idCell,
     },
-    { field: "orgName", headerName: "OrgName", width: 220 },
+    { field: "orgName", headerName: translations["OrgName"], width: 220 },
     {
       field: "plan",
-      headerName: "Plan Name",
+      headerName: translations["Plan Name"],
       width: 220,
       editable: true,
       type: "singleSelect",
@@ -72,14 +74,14 @@ export default function () {
     },
     {
       field: "features",
-      headerName: "Features",
+      headerName: translations["Features"],
       minWidth: 300,
       flex: 1,
       renderCell: renderFeatures,
     },
-    { field: "createdAt", headerName: "Created At", width: 120 },
-    { field: "renewedAt", headerName: "Renewed At", width: 120 },
-    { field: "expiresAt", headerName: "Expires At", width: 120 },
+    { field: "createdAt", headerName: translations["Created At"], width: 120 },
+    { field: "renewedAt", headerName: translations["Renewed At"], width: 120 },
+    { field: "expiresAt", headerName: translations["Expires At"], width: 120 },
   ];
 
   const rows = subscriptions?.map((subscription) => {
@@ -111,11 +113,11 @@ export default function () {
     <div>
       <Flex justify="space-between">
         <Group>
-          <h1>Subscriptions</h1>
+          <h1>{translations["Subscriptions"]}</h1>
           <RefreshButton queryKeys={["subscriptions"]} />
         </Group>
         <Input
-          placeholder="Search by OrgName or orgId"
+          placeholder={translations["Search by OrgName or orgId"]}
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.currentTarget.value)}
           rightSectionPointerEvents="all"
@@ -123,7 +125,7 @@ export default function () {
           leftSection={<IconSearch size={16} />}
           rightSection={
             <CloseButton
-              aria-label="Clear input"
+              aria-label={translations["Clear input"]}
               onClick={() => setSearchQuery("")}
               style={{ display: searchQuery ? undefined : "none" }}
             />
@@ -143,11 +145,11 @@ export default function () {
           <ConfirmationModal
             opened={openedDialog}
             onClose={closeDialog}
-            headerLabel={`Are you sure to update plan?`}
+            headerLabel={translations["Are you sure to update plan?"]}
             onConfirm={handleUpdateSubscriptionPlan}
-            confirmLabel="Yes"
-            closeLabel="Cancel"
-            headerTitle="Update Plan"
+            confirmLabel={translations["Yes"]}
+            closeLabel={translations["Cancel"]}
+            headerTitle={translations["Update Plan"]}
           />
         </>
       )}

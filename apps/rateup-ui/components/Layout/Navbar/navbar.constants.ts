@@ -16,6 +16,7 @@ import {
   IconKeyframes,
   IconLink,
   IconLogout,
+  IconLogs,
   IconMessage2Code,
   IconMessageChatbot,
   IconMessageCog,
@@ -30,6 +31,8 @@ import {
   IconUsers,
   IconWaveSine,
 } from "@tabler/icons-react";
+
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { useUserInfo } from "../../../backend/user/user.query";
 import {
@@ -49,9 +52,14 @@ export interface NavbarLinkProps {
   submenus?: NavbarLinkProps[];
   role?: string;
 }
-
+interface Translations {
+  [key: string]: string; // Allows for any string key with string values
+}
 //data Array consisting of NavbarTopData
-export function getNavTopData(subscription?: Subscription) {
+export function getNavTopData(
+  subscription?: Subscription,
+  translations?: Translations,
+) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
     if (!subscription) return false;
     return getNestedProperty(subscription.features, featurePath)?.active;
@@ -60,19 +68,19 @@ export function getNavTopData(subscription?: Subscription) {
   const navTopData: Array<NavbarLinkProps> = [
     {
       Icon: IconHome,
-      label: "Home",
+      label: translations["Home"],
       href: "/dashboard",
       role: "",
     },
     {
       Icon: IconSocial,
-      label: "Teams",
+      label: translations["Teams"],
       href: "",
       submenus: [
         { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
         {
           Icon: IconUsers,
-          label: "Members",
+          label: translations["Members"],
           href: "/dashboard/members",
           role: UserRole.SUPADM,
         },
@@ -82,17 +90,17 @@ export function getNavTopData(subscription?: Subscription) {
       ? [
           {
             Icon: IconBrowser,
-            label: "Web Survey",
+            label: translations["Web Survey"],
             href: "",
             submenus: [
               {
                 Icon: IconClipboardList,
-                label: "Surveys",
+                label: translations["Surveys"],
                 href: "/dashboard/surveys",
               },
               {
                 Icon: IconKeyframes,
-                label: "Templates",
+                label: translations["Templates"],
                 href: "/dashboard/surveys/templates",
               },
             ],
@@ -104,14 +112,14 @@ export function getNavTopData(subscription?: Subscription) {
       ? [
           {
             Icon: IconBrandWhatsapp,
-            label: "WhatsApp",
+            label: translations["WhatsApp"],
             submenus: [
               ...(whatsappOptions.includes("survey") &&
               hasFeature(sfpn.WhatsAppSurvey)
                 ? [
                     {
                       Icon: IconFileDescription,
-                      label: "Surveys",
+                      label: translations["Surveys"],
                       href: "/dashboard/whatsapp",
                     },
                   ]
@@ -120,7 +128,7 @@ export function getNavTopData(subscription?: Subscription) {
                 ? [
                     {
                       Icon: IconMessage2Code,
-                      label: "Templates",
+                      label: translations["Templates"],
                       href: "/dashboard/whatsapp/templates",
                     },
                   ]
@@ -129,38 +137,43 @@ export function getNavTopData(subscription?: Subscription) {
                 ? [
                     {
                       Icon: IconWaveSine,
-                      label: "Flows",
+                      label: translations["Flows"],
                       href: "/dashboard/whatsapp/flows",
                     },
                   ]
                 : []),
               {
                 Icon: IconInbox,
-                label: "Inbox",
+                label: translations["Inbox"],
                 href: "/dashboard/whatsapp/inbox",
               },
               ...(hasFeature(sfpn.WhatsAppCampaign)
                 ? [
                     {
                       Icon: IconSpeakerphone,
-                      label: "Campaign",
+                      label: translations["Campaign"],
                       href: "/dashboard/campaign",
                     },
                     {
                       Icon: IconAddressBook,
-                      label: "Contacts",
+                      label: translations["Contacts"],
                       href: "/dashboard/contacts",
                     },
                   ]
                 : []),
               {
                 Icon: IconMessageCog,
-                label: "Automation",
+                label: translations["Automation"],
                 href: "/dashboard/whatsapp/automated-replies",
               },
               {
+                Icon: IconLogs,
+                label: translations["Logs"],
+                href: "/dashboard/whatsapp/logs",
+              },
+              {
                 Icon: IconSettings,
-                label: "Settings",
+                label: translations["Settings"],
                 href: "/dashboard/whatsapp/settings",
               },
             ],
@@ -173,7 +186,7 @@ export function getNavTopData(subscription?: Subscription) {
       : [
           {
             Icon: IconComet,
-            label: "Reputation",
+            label: translations["Reputation"],
             href: "/dashboard/rm",
           },
         ]),
@@ -182,7 +195,7 @@ export function getNavTopData(subscription?: Subscription) {
       : [
           {
             Icon: IconTicket,
-            label: "Tickets",
+            label: translations["Tickets"],
             href: "/dashboard/tickets",
           },
         ]),
@@ -191,7 +204,7 @@ export function getNavTopData(subscription?: Subscription) {
       : [
           {
             Icon: IconMessageChatbot,
-            label: "Testimonial",
+            label: translations["Testimonial"],
             href: "/dashboard/testimonial",
           },
         ]),
@@ -199,7 +212,7 @@ export function getNavTopData(subscription?: Subscription) {
       ? [
           {
             Icon: IconClipboardList,
-            label: "Digital Menu",
+            label: translations["Digital Menu"],
             href: "/dashboard/menu",
           },
         ]
@@ -207,53 +220,57 @@ export function getNavTopData(subscription?: Subscription) {
     ...[
       {
         Icon: IconQrcode,
-        label: "QR Studio",
+        label: translations["QR Studio"],
         submenus: [
           {
             Icon: IconTools,
-            label: "QR Creator",
+            label: translations["QR Creator"],
             href: "/dashboard/qrCreator",
           },
           {
             Icon: IconLink,
-            label: "Quick Access Links",
+            label: translations["Quick Access Links"],
             href: "/dashboard/quickAccessLinks",
           },
           {
             Icon: IconAppWindow,
-            label: "Landing Pages",
+            label: translations["Landing Pages"],
             href: "/dashboard/landingPages",
           },
         ],
       },
     ],
-    { Icon: IconFileInfo, label: "Docs", href: "https://docs.rateup.app/" },
+    {
+      Icon: IconFileInfo,
+      label: translations["Docs"],
+      href: "https://docs.rateup.app/",
+    },
     ...(hiddenModules.includes("loyalty") || !true
       ? []
       : [
           {
             Icon: IconGift,
-            label: "Loyalty",
+            label: translations["Loyalty"],
             href: "/dashboard/loyalty",
             submenus: [
               {
                 Icon: IconSpeakerphone,
-                label: "Campaign",
+                label: translations["Campaign"],
                 href: "/dashboard/loyalty/campaign",
               },
               {
                 Icon: IconPigMoney,
-                label: "Rewards",
+                label: translations["Rewards"],
                 href: "/dashboard/loyalty/reward",
               },
               {
                 Icon: IconUsers,
-                label: "Customers",
+                label: translations["Customers"],
                 href: "/dashboard/loyalty/customer",
               },
               {
                 Icon: IconApi,
-                label: "API",
+                label: translations["API"],
                 href: "/dashboard/loyalty/api",
               },
             ],
@@ -264,7 +281,7 @@ export function getNavTopData(subscription?: Subscription) {
       : [
           {
             Icon: IconApps,
-            label: "Apps & Services",
+            label: translations["Apps & Services"],
             href: "/dashboard/apps&services",
           },
         ]),
@@ -273,15 +290,19 @@ export function getNavTopData(subscription?: Subscription) {
 }
 
 //data Array consisting of NavbarBottomData
-const navBottomData: Array<NavbarLinkProps> = [
-  { Icon: IconSettings, label: "Settings", href: "/dashboard/settings" },
-  { Icon: IconLogout, label: "Logout", href: "/logout" },
+const navBottomData = (translations?: Translations): Array<NavbarLinkProps> => [
+  {
+    Icon: IconSettings,
+    label: translations["Settings"],
+    href: "/dashboard/settings",
+  },
+  { Icon: IconLogout, label: translations["Logout"], href: "/logout" },
 ];
 
 export function useNavBottomData() {
   const { data, isError, isLoading } = useUserInfo();
-
-  if (isLoading || isError) return navBottomData;
+  const { translations } = useTranslations();
+  if (isLoading || isError) return navBottomData(translations);
 
   if (
     data &&
@@ -289,9 +310,9 @@ export function useNavBottomData() {
     data?.data?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
   ) {
     return [
-      { Icon: IconTerminal2, label: "Admin", href: "/admin" },
-      ...navBottomData,
+      { Icon: IconTerminal2, label: translations["Admin"], href: "/admin" },
+      ...navBottomData(translations),
     ];
   }
-  return navBottomData;
+  return navBottomData(translations);
 }

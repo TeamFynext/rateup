@@ -7,6 +7,7 @@ import { useRouteAndCartStore } from "components/HomePage/pages/Pricing/store/Ro
 import Session from "supertokens-web-js/recipe/session";
 
 import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import style from "../../../components/Graph/graph.module.css";
 
@@ -15,6 +16,7 @@ const ShopifyAuthCallback = () => {
   const { shop } = router.query;
   const updateShopifySession = useUpdateShopifySession();
   const { reset, updateRouteAndCart } = useRouteAndCartStore();
+  const { translations } = useTranslations();
   useEffect(() => {
     if (!router.isReady) return;
     if (!shop) {
@@ -54,7 +56,7 @@ const ShopifyAuthCallback = () => {
       {updateShopifySession.isPending && (
         <Stack justify="center" align="center">
           <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>Wait..Connecting Shopify with Rateup</Text>
+          <Text>{translations["Wait..Connecting Shopify with Rateup"]}</Text>
         </Stack>
       )}
     </Center>

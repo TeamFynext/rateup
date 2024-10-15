@@ -27,7 +27,7 @@
 
 .survey-features-title-h1 {
   font-weight: 500;
-  color: var(--grey-color);
+  color: black;
   text-transform: uppercase;
   display: flex;
   gap: 0.5rem;
@@ -35,6 +35,7 @@
   white-space: nowrap;
   flex-wrap: wrap;
   justify-content: center;
+  font-size: 1.75rem;
 }
 
 .subtitle-p {

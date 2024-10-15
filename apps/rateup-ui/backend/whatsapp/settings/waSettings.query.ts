@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { showErrorToastFromError } from "../../../utils/query";
 import {
   createWaSettings,
-  deRegisterBusinessClient,
   deleteWaSettings,
+  deRegisterBusinessClient,
   getContactTags,
+  getWaLogs,
   getWaSettings,
   registerBusinessClient,
   updateContactTags,
   upsertWaSettings,
 } from "./waSettings.api";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
-import { showErrorToastFromError } from "../../../utils/query";
 
 export const useWaSettings = (enabled = true) =>
   useQuery({
@@ -114,4 +116,11 @@ export const useGetContactTags = () =>
   useQuery({
     queryKey: ["contactTags"],
     queryFn: getContactTags,
+  });
+
+export const useWaLogs = (enabled = true) =>
+  useQuery({
+    queryKey: ["waLogs"],
+    queryFn: getWaLogs,
+    enabled,
   });

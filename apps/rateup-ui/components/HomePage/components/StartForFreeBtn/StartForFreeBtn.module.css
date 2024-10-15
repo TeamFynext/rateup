@@ -1,4 +1,4 @@
-.try-free-plan-btn {
+.start-for-free-btn {
   color: white;
   border: 1px solid white;
   border-radius: 2rem;
@@ -8,12 +8,12 @@
   line-height: normal;
 }
 
-.try-free-plan-btn:hover {
+.start-for-free-btn:hover {
   color: white;
 }
 
 @media screen and (max-width: 425px) {
-  .try-free-plan-btn {
+  .start-for-free-btn {
     font-size: 0.75rem;
     padding: 0.4375rem 1.125rem;
   }

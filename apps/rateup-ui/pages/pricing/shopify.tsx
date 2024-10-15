@@ -9,6 +9,7 @@ import { useUserOrgOrders } from "@/backend/payment/payment.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import style from "@/components/Graph/graph.module.css";
+import useTranslations from "@/dictionaries/useTranslation";
 
 const ShopifySubscriptionApprovalCallback = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const ShopifySubscriptionApprovalCallback = () => {
     shop: string;
     plan: string;
   };
+  const { translations } = useTranslations();
   const [isSessionExist, setIsSessionExist] = useState(false);
   useEffect(() => {
     if (!router.isReady) return;
@@ -64,7 +66,9 @@ const ShopifySubscriptionApprovalCallback = () => {
       <Center h={"100vh"}>
         <Stack justify="center" align="center">
           <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>Wait..Processing your subscription order</Text>
+          <Text>
+            {translations["Wait..Processing your subscription order"]}
+          </Text>
         </Stack>
       </Center>
     );

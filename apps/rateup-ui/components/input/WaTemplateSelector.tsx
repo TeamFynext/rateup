@@ -31,7 +31,7 @@ const WaTemplateSelector = ({
   });
 
   if (value?.length && !templates?.map((t) => t.id).includes(value)) {
-    onChange("");
+    onChange(null);
   }
   return (
     <ContainedSelection

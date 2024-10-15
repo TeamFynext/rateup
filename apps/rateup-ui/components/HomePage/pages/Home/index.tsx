@@ -1,16 +1,24 @@
 import Head from "next/head";
 
-import { Box } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
+import classNames from "classnames/bind";
 
-import BenefitsForBusiness from "./BenefitsForBusiness";
-import CompaniesUsingRateup from "./CompaniesUsingRateup";
-import CustomerFeedback from "./CustomerFeedback";
+import { imagesPath } from "@/utils/constants";
+
+import Banner from "../../components/Banner";
+import BookADemoSection from "../../components/BookADemoSection";
+import Picture from "../../components/Picture";
+import TextIllustration from "../../components/TextIllustration";
+import { textIllustrationSections } from "./constants";
+import EmpowerYourBrandsGrowth from "./EmpowerYourBrandsGrowth";
+import AIAnalyticsAndInsights from "./Features/AIAnalyticsAndInsights";
+import PerfectSurveyForYourNeeds from "./Features/PerfectSurveyForYourNeeds";
 import HeroSection from "./HeroSection";
-import HowRateupHelps from "./HowRateupHelps";
-import OurKeyFeatures from "./OurKeyFeatures";
-import UseCase from "./UseCase";
-import WhatCanYouDo from "./WhatCanYouDo";
-import WhyUseRateup from "./WhyUseRateup";
+import styles from "./Home.module.css";
+import LoyaltyProgramBanner from "./LoyaltyProgramBanner";
+import OneSmartQr from "./OneSmartQr";
+
+const cx = classNames.bind(styles);
 
 function Home() {
   return (
@@ -47,10 +55,150 @@ function Home() {
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
       </Head>
       <HeroSection />
-      <OurKeyFeatures />
-      <HowRateupHelps />
-      <BenefitsForBusiness />
-      <CustomerFeedback />
+      <EmpowerYourBrandsGrowth />
+      <Banner
+        title={"Discover Rateup!"}
+        subtitle={"Your Complete Customer Engagement Solution"}
+      />
+      <PerfectSurveyForYourNeeds />
+      <Banner
+        title={"Discover Rateup!"}
+        subtitle={"Your Complete Customer Engagement Solution"}
+      />
+      <Stack
+        className={cx(
+          "t-ill-section",
+          "landing-page-section-root-common-styles",
+        )}
+      >
+        {textIllustrationSections
+          .slice(0, 1)
+          .map(({ id, heading, description, image }, index) => {
+            return (
+              <TextIllustration
+                key={id}
+                imageAsFirstElement={(index + 1) % 2 === 1}
+              >
+                <>
+                  {heading}
+                  {description}
+                </>
+                <>
+                  <Picture
+                    src={`${imagesPath}/homepage/engage-directly.png`}
+                    alt={"Rateup's WhatsApp Campaigns"}
+                    sourcesArr={[
+                      {
+                        type: "image/webp",
+                        srcSet: `${imagesPath}/homepage/engage-directly.webp`,
+                      },
+                    ]}
+                  />
+                </>
+              </TextIllustration>
+            );
+          })}
+      </Stack>
+      <OneSmartQr />
+      <Stack
+        className={cx(
+          "t-ill-section",
+          "landing-page-section-root-common-styles",
+        )}
+      >
+        {textIllustrationSections
+          .slice(1, 2)
+          .map(({ id, heading, description, image }, index) => {
+            return (
+              <TextIllustration key={id}>
+                <>
+                  {heading}
+                  {description}
+                </>
+                <>
+                  <Picture
+                    src={`${imagesPath}/homepage/satisfied-customers.png`}
+                    alt={"Real Voices, Real Impact"}
+                    sourcesArr={[
+                      {
+                        type: "image/webp",
+                        srcSet: `${imagesPath}/homepage/satisfied-customers.png`,
+                      },
+                    ]}
+                  />
+                </>
+              </TextIllustration>
+            );
+          })}
+      </Stack>
+
+      <LoyaltyProgramBanner />
+
+      <AIAnalyticsAndInsights />
+      <Stack
+        className={cx(
+          "t-ill-section",
+          "landing-page-section-root-common-styles",
+        )}
+      >
+        {textIllustrationSections
+          .slice(2, 3)
+          .map(({ id, heading, description, image }, index) => {
+            return (
+              <TextIllustration key={id} imageAsFirstElement>
+                <>
+                  {heading}
+                  {description}
+                </>
+                <>
+                  <Picture
+                    src={`${imagesPath}/homepage/integrations.png`}
+                    alt={"Integrations"}
+                    sourcesArr={[
+                      {
+                        type: "image/webp",
+                        srcSet: `${imagesPath}/homepage/integrations.png`,
+                      },
+                    ]}
+                  />
+                </>
+              </TextIllustration>
+            );
+          })}
+      </Stack>
+
+      <Stack
+        className={cx(
+          "t-ill-section",
+          "landing-page-section-root-common-styles",
+        )}
+      >
+        {textIllustrationSections
+          .slice(3)
+          .map(({ id, heading, description, image }, index) => {
+            return (
+              <TextIllustration key={id}>
+                <>
+                  {heading}
+                  {description}
+                </>
+                <>
+                  <Picture
+                    src={`${imagesPath}/homepage/security-conscious-business.png`}
+                    alt={"Security Conscious Business"}
+                    sourcesArr={[
+                      {
+                        type: "image/webp",
+                        srcSet: `${imagesPath}/homepage/security-conscious-business.png`,
+                      },
+                    ]}
+                  />
+                </>
+              </TextIllustration>
+            );
+          })}
+      </Stack>
+      <BookADemoSection />
     </Box>
   );
 }

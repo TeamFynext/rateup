@@ -4,21 +4,25 @@ import {
   useUpdateFreePlanSubscription,
   useUpdateGoogleReviewQuestions,
 } from "@/backend/updations/update.query";
+import useTranslations from "@/dictionaries/useTranslation";
 
 function UpdateAllThemes() {
   const updateGoogleReviewQuestionsMutation = useUpdateGoogleReviewQuestions();
   const updateFreePlanSubscription = useUpdateFreePlanSubscription();
-
+  const { translations } = useTranslations();
   const isDev =
     process.env.NEXT_PUBLIC_FRONTEND_URL === "https://dev.rateup.app";
 
   return (
     <Stack>
       <Stack mt="xl">
-        <Title order={2}>Update Google Review Questions</Title>
+        <Title order={2}>{translations["Update WebSurveyPagesTheme"]}</Title>
         <Text>
-          Update Google Review Questions of all surveys with new property
-          reviewPageOptions, reviewPagePlatform
+          {
+            translations[
+              "Updates webSurveyPagesTheme column of survey table, which is used in survey editor page."
+            ]
+          }
         </Text>
         <Button
           ml="md"
@@ -28,14 +32,18 @@ function UpdateAllThemes() {
           }}
           loading={updateGoogleReviewQuestionsMutation.isPending}
         >
-          Update
+          {translations["Update WebSurveyPagesTheme"]}
         </Button>
       </Stack>
 
       {isDev && (
         <Stack mt="xl">
-          <Title order={2}>Update Free plan susbcription feature</Title>
-          <Text>Update free plan features since it is missing</Text>
+          <Title order={2}>
+            {translations["Update Free plan susbcription feature"]}
+          </Title>
+          <Text>
+            {translations["Update free plan features since it is missing"]}
+          </Text>
 
           <Button
             ml="md"
@@ -45,7 +53,7 @@ function UpdateAllThemes() {
             }}
             loading={updateFreePlanSubscription.isPending}
           >
-            Update
+            {translations["Update"]}
           </Button>
         </Stack>
       )}
