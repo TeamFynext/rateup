@@ -1,16 +1,13 @@
-import Image from "next/image";
-
 import { Box, Flex, Group, Stack, Text } from "@mantine/core";
 import classNames from "classnames/bind";
 
-import LightBlueGradientBg from "@/components/HomePage/components/LightBlueGradientBg";
 import Picture from "@/components/HomePage/components/Picture";
 import StartForFreeBtn from "@/components/HomePage/components/StartForFreeBtn";
-import { imagesPath } from "@/utils/constants";
 
 import BookDemoContactForm from "../../../components/BookDemoContactForm";
 import { imagePath } from "../../constants";
 import styles from "./HeroSection.module.css";
+import TransformLeadGeneration from "./TransformLeadGeneration";
 import TrustedByCompaniesCarousel from "./TrustedCompaniesCarousel";
 
 const cx = classNames.bind(styles);
@@ -64,6 +61,8 @@ function HeroSection() {
         </h1>
         <TrustedByCompaniesCarousel />
       </Stack>
+
+      <TransformLeadGeneration />
     </Stack>
   );
 }

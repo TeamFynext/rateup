@@ -1,5 +1,6 @@
 .carousel-container {
   position: relative;
+  user-select: none;
 }
 
 .carousel-container::before {

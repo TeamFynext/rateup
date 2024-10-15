@@ -151,6 +151,7 @@
   .hero-section-div > div:nth-child(1) {
     flex: 1.5 1 0;
   }
+
   .hero-section-heading {
     font-size: 2.5rem;
   }
@@ -166,6 +167,7 @@
   .hero-section-div > div:nth-child(2) {
     display: none;
   }
+
   .heading-and-book-demo-btns-container {
     align-items: center;
   }
