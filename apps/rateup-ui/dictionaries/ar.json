@@ -1904,5 +1904,15 @@
   "Added group participants successfully.": "تمت إضافة المشاركين في المجموعة بنجاح.",
   "Campaign participants added successfully.": "تمت إضافة المشاركين في الحملة بنجاح.",
   "Participants removed from campaign successfully.": "تمت إزالة المشاركين من الحملة بنجاح.",
-  "Logs": "السجلات"
+  "Logs": "السجلات",
+  "Click to disable Kiosk Mode": "انقر لتعطيل وضع الكشك",
+  "Click to enable Kiosk Mode": "انقر لتمكين وضع الكشك",
+  "Click to disable Fetch location": "انقر لتعطيل جلب الموقع",
+  "Click to enable Fetch location": "انقر لتمكين جلب الموقع",
+  "Click here to see preview screen": "انقر هنا لعرض شاشة المعاينة",
+  "Click here to skip preview screen": "انقر هنا لتخطي شاشة المعاينة",
+  "Click here to allow multiple user entry from a device": "انقر هنا للسماح بإدخال عدة مستخدمين من جهاز واحد",
+  "Click here to allow only Single user entry from a device": "انقر هنا للسماح بإدخال مستخدم واحد فقط من جهاز واحد",
+  "Click here to disable automatic transition": "انقر هنا لتعطيل الانتقال التلقائي",
+  "Click here to enable automatic transition": "انقر هنا لتمكين الانتقال التلقائي"
 }

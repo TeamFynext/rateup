@@ -1,6 +1,9 @@
-import { Box, Group, Switch, Tooltip } from "@mantine/core";
+import React from "react";
+
+import { Box, Group, Switch } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -11,7 +14,6 @@ import {
   updateSkipPreview,
   updatewebSurveyAutoTransitionToNextQues,
 } from "../updateSettings";
-import styles from "./KioskFetchLocSkipPreview.module.css";
 
 function KioskFetchLocSkipPreview({
   enabledModules,
@@ -37,12 +39,11 @@ function KioskFetchLocSkipPreview({
         <PaperLayout className={`section-div`}>
           {enabledModules.includes("kiosk") && (
             <Group>
-              <Switch
-                className={`switch ${kioskMode ? "on" : "off"}`}
-                size="md"
-                checked={kioskMode}
+              <RateupSwitch
+                offMessage={translations["Click to enable Kiosk Mode"]}
+                onMessage={translations["Click to disable Kiosk Mode"]}
                 onChange={() => updateKioskMode(setKioskMode, editSurvey)}
-                disabled={hasGoogleReview}
+                checked={kioskMode}
               />
 
               <Box className={"switch-heading-and-desc-container"}>
@@ -60,11 +61,11 @@ function KioskFetchLocSkipPreview({
 
           {enabledModules.includes("location") && (
             <Group>
-              <Switch
-                className={`switch ${location ? "on" : "off"}`}
-                size="md"
-                checked={location}
+              <RateupSwitch
+                offMessage={translations["Click to enable Fetch location"]}
+                onMessage={translations["Click to disable Fetch location"]}
                 onChange={(event) => updateGetLocation(setLocation, editSurvey)}
+                checked={location}
               />
               <Box className={"switch-heading-and-desc-container"}>
                 <h3>{translations["Fetch Location"]}</h3>
@@ -77,9 +78,9 @@ function KioskFetchLocSkipPreview({
 
           {enabledModules.includes("preview") && (
             <Group>
-              <Switch
-                className={`switch ${preview ? "on" : "off"}`}
-                size="md"
+              <RateupSwitch
+                offMessage={translations["Click here to skip preview screen"]}
+                onMessage={translations["Click here to see preview screen"]}
                 checked={preview}
                 onChange={() => updateSkipPreview(setPreview, editSurvey)}
               />
@@ -101,9 +102,13 @@ function KioskFetchLocSkipPreview({
           )}
 
           <Group>
-            <Switch
-              className={`switch ${webSurveyAutoTransitionToNextQues ? "on" : "off"}`}
-              size="md"
+            <RateupSwitch
+              offMessage={
+                translations["Click here to enable automatic transition"]
+              }
+              onMessage={
+                translations["Click here to disable automatic transition"]
+              }
               checked={webSurveyAutoTransitionToNextQues}
               onChange={() =>
                 updatewebSurveyAutoTransitionToNextQues(

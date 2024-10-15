@@ -1905,5 +1905,15 @@
   "Added group participants successfully.": "Gruppenmitglieder erfolgreich hinzugefügt.",
   "Campaign participants added successfully.": "Teilnehmer der Kampagne erfolgreich hinzugefügt.",
   "Participants removed from campaign successfully.": "Teilnehmer erfolgreich aus der Kampagne entfernt.",
-  "Logs": "Protokolle"
+  "Logs": "Protokolle",
+  "Click to disable Kiosk Mode": "Klicken Sie hier, um den Kioskmodus zu deaktivieren",
+  "Click to enable Kiosk Mode": "Klicken Sie hier, um den Kioskmodus zu aktivieren",
+  "Click to disable Fetch location": "Klicken Sie hier, um den Standortabruf zu deaktivieren",
+  "Click to enable Fetch location": "Klicken Sie hier, um den Standortabruf zu aktivieren",
+  "Click here to see preview screen": "Klicken Sie hier, um die Vorschau anzuzeigen",
+  "Click here to skip preview screen": "Klicken Sie hier, um die Vorschau zu überspringen",
+  "Click here to allow multiple user entry from a device": "Klicken Sie hier, um die Anmeldung mehrerer Benutzer auf einem Gerät zuzulassen",
+  "Click here to allow only Single user entry from a device": "Klicken Sie hier, um nur die Anmeldung eines einzelnen Benutzers auf einem Gerät zuzulassen",
+  "Click here to disable automatic transition": "Klicken Sie hier, um den automatischen Übergang zu deaktivieren",
+  "Click here to enable automatic transition": "Klicken Sie hier, um den automatischen Übergang zu aktivieren"
 }

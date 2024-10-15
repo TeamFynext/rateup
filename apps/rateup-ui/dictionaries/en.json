@@ -1904,5 +1904,15 @@
   "Added group participants successfully.": "Added group participants successfully.",
   "Campaign particiants added successfully.": "Campaign particiants added successfully.",
   "Participants removed from campaign successfully.": "Participants removed from campaign successfully.",
-  "Logs": "Logs"
+  "Logs": "Logs",
+  "Click to disable Kiosk Mode": "Click to disable Kiosk Mode",
+  "Click to enable Kiosk Mode": "Click to enable Kiosk Mode",
+  "Click to disable Fetch location": "Click to disable Fetch location",
+  "Click to enable Fetch location": "Click to enable Fetch location",
+  "Click here to see preview screen": "Click here to see preview screen",
+  "Click here to skip preview screen": "Click here to skip preview screen",
+  "Click here to allow multiple user entry from a device": "Click here to allow multiple user entry from a device",
+  "Click here to allow only Single user entry from a device": "Click here to allow only Single user entry from a device",
+  "Click here to disable automatic transition": "Click here to disable automatic transition",
+  "Click here to enable automatic transition": "Click here to enable automatic transition"
 }

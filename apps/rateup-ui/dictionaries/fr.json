@@ -1903,5 +1903,15 @@
   "Added group participants successfully.": "Participants du groupe ajoutés avec succès.",
   "Campaign participants added successfully.": "Participants de la campagne ajoutés avec succès.",
   "Participants removed from campaign successfully.": "Participants supprimés de la campagne avec succès.",
-  "Logs": "Journaux"
+  "Logs": "Journaux",
+  "Click to disable Kiosk Mode": "Cliquez pour désactiver le mode Kiosque",
+  "Click to enable Kiosk Mode": "Cliquez pour activer le mode Kiosque",
+  "Click to disable Fetch location": "Cliquez pour désactiver la récupération de la localisation",
+  "Click to enable Fetch location": "Cliquez pour activer la récupération de la localisation",
+  "Click here to see preview screen": "Cliquez ici pour voir l'écran de prévisualisation",
+  "Click here to skip preview screen": "Cliquez ici pour ignorer l'écran de prévisualisation",
+  "Click here to allow multiple user entry from a device": "Cliquez ici pour autoriser l'entrée de plusieurs utilisateurs depuis un appareil",
+  "Click here to allow only Single user entry from a device": "Cliquez ici pour autoriser uniquement l'entrée d'un seul utilisateur depuis un appareil",
+  "Click here to disable automatic transition": "Cliquez ici pour désactiver la transition automatique",
+  "Click here to enable automatic transition": "Cliquez ici pour activer la transition automatique"
 }
