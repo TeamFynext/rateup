@@ -221,7 +221,9 @@ export default function SurveyID() {
                 <TabsListComp value={activeTab} onChange={handleTabChange} />
               </Portal>
             )}
-            <SurveyIssueAlert questions={questions} survey={survey} />
+            {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
+            <div id="SurveyIssueAlert"> </div>
+
             <TabPanelsComp
               value={activeTab}
               survey={survey}
@@ -244,42 +246,3 @@ export default function SurveyID() {
     </MantineProvider>
   );
 }
-
-const SurveyIssueAlert = ({ questions, survey }) => {
-  const [issue, setIssue] = useState(null);
-  const { translations } = useTranslations();
-  useEffect(() => {
-    let flag = false;
-    if (survey?.isPublished || survey?.surveyPublishAt) {
-      questions?.forEach((question) => {
-        const missingLangs = validateAllLanguagesArePopulated(
-          question,
-          survey.languages,
-          ["title", "choices"],
-        );
-        if (missingLangs.length) {
-          setIssue(
-            translations[
-              "The survey contains incomplete questions. Please fix the issue."
-            ],
-          );
-          flag = true;
-          return false;
-        }
-      });
-    }
-    if (!flag && issue) setIssue(null);
-  }, [questions, survey]);
-  if (!issue) return null;
-  return (
-    <Alert
-      variant="light"
-      color="red"
-      title={translations["Issue with your survey"]}
-      icon={<IconAlertOctagon />}
-      m={"xs"}
-    >
-      {issue}
-    </Alert>
-  );
-};

@@ -1914,5 +1914,10 @@
   "Click here to allow multiple user entry from a device": "Click here to allow multiple user entry from a device",
   "Click here to allow only Single user entry from a device": "Click here to allow only Single user entry from a device",
   "Click here to disable automatic transition": "Click here to disable automatic transition",
-  "Click here to enable automatic transition": "Click here to enable automatic transition"
+  "Click here to enable automatic transition": "Click here to enable automatic transition",
+  "Enter Theme Name": "Enter Theme Name",
+  "Theme Name": "Theme Name",
+  "Create New Theme": "Create New Theme",
+  "Create Theme": "Create Theme",
+  "Name should be alphanumeric, should start with a letter, length should be greater than 0 characters": "Name should be alphanumeric, should start with a letter, length should be greater than 0 characters"
 }

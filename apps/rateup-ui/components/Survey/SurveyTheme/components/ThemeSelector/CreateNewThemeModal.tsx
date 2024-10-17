@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -14,13 +14,15 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import styles from "./ThemeSelector.module.css";
 
 function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
   const router = useRouter();
   const surveyId = router.query.surveyId;
-
+  const { translations } = useTranslations();
   const [opened, { open, close }] = useDisclosure();
 
   const form = useForm({
@@ -30,9 +32,11 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
     validate: {
       // must start with a letter, can contain underscores, numbers, spaces, length must be 6 or more characters.
       name: (value) =>
-        /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/.test(value)
+        /^[a-zA-Z][a-zA-Z0-9_\s]{0,}$/.test(value)
           ? null
-          : "Name should be alphanumeric, should start with a letter, length should be greater than 5 characters",
+          : translations[
+              "Name should be alphanumeric, should start with a letter, length should be greater than 0 characters"
+            ],
     },
   });
 
@@ -66,18 +70,18 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
 
   return (
     <>
-      <Tooltip label="Create New Theme">
+      <Tooltip label={translations["Create New Theme"]}>
         <Button
           className={`${styles["new-theme-btn"]} create-theme-btn`}
           onClick={open}
           rightSection={<IconPlus size={"1.25rem"} color="white" />}
         >
-          Create Theme
+          {translations["Create Theme"]}
         </Button>
       </Tooltip>
 
       <Modal
-        title={"Create New Theme"}
+        title={translations["Create New Theme"]}
         opened={opened}
         onClose={close}
         centered
@@ -89,8 +93,8 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
       >
         <form onSubmit={form.onSubmit(handleFormSubmit)}>
           <TextInput
-            label="Theme Name"
-            placeholder="Enter Theme Name"
+            label={translations["Theme Name"]}
+            placeholder={translations["Enter Theme Name"]}
             {...form.getInputProps("name")}
           />
           <Button
@@ -101,7 +105,7 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
         </form>
         <Box className={modalStyles["cancel-save-btns-container"]}>
           <Button onClick={close} className={modalStyles["cancel-btn"]}>
-            Cancel
+            {translations["Cancel"]}
           </Button>
           <Button onClick={handleCreateLinkBtnClick}>Create</Button>
         </Box>

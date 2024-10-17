@@ -1914,5 +1914,10 @@
   "Click here to allow multiple user entry from a device": "एक डिवाइस से कई उपयोगकर्ता प्रविष्टि की अनुमति देने के लिए यहां क्लिक करें",
   "Click here to allow only Single user entry from a device": "एक डिवाइस से केवल एकल उपयोगकर्ता प्रविष्टि की अनुमति देने के लिए यहां क्लिक करें",
   "Click here to disable automatic transition": "स्वचालित संक्रमण को निष्क्रिय करने के लिए यहां क्लिक करें",
-  "Click here to enable automatic transition": "स्वचालित संक्रमण को सक्रिय करने के लिए यहां क्लिक करें"
+  "Click here to enable automatic transition": "स्वचालित संक्रमण को सक्रिय करने के लिए यहां क्लिक करें",
+  "Enter Theme Name": "थीम का नाम दर्ज करें",
+  "Theme Name": "थीम का नाम",
+  "Create New Theme": "नई थीम बनाएं",
+  "Create Theme": "थीम बनाएं",
+  "Name should be alphanumeric, should start with a letter, length should be greater than 0 characters": "नाम अल्फ़ान्यूमेरिक होना चाहिए, एक अक्षर से शुरू होना चाहिए, और लंबाई 0 से अधिक होनी चाहिए"
 }

@@ -1913,5 +1913,10 @@
   "Click here to allow multiple user entry from a device": "Cliquez ici pour autoriser l'entrée de plusieurs utilisateurs depuis un appareil",
   "Click here to allow only Single user entry from a device": "Cliquez ici pour autoriser uniquement l'entrée d'un seul utilisateur depuis un appareil",
   "Click here to disable automatic transition": "Cliquez ici pour désactiver la transition automatique",
-  "Click here to enable automatic transition": "Cliquez ici pour activer la transition automatique"
+  "Click here to enable automatic transition": "Cliquez ici pour activer la transition automatique",
+  "Enter Theme Name": "Entrez le nom du thème",
+  "Theme Name": "Nom du thème",
+  "Create New Theme": "Créer un nouveau thème",
+  "Create Theme": "Créer un thème",
+  "Name should be alphanumeric, should start with a letter, length should be greater than 0 characters": "Le nom doit être alphanumérique, commencer par une lettre, et sa longueur doit être supérieure à 0 caractère"
 }

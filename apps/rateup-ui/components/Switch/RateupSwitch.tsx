@@ -1,15 +1,26 @@
 import React, { useState } from "react";
 
-import { Switch, Tooltip } from "@mantine/core";
+import { Switch, SwitchProps, Tooltip } from "@mantine/core";
 
-const RateupSwitch = ({ offMessage, onMessage, onChange, checked }) => {
+interface RateupSwitchProps extends SwitchProps {
+  offMessage: string;
+  onMessage: string;
+}
+
+const RateupSwitch = ({
+  offMessage,
+  onMessage,
+  onChange,
+  checked,
+  ...rest
+}: RateupSwitchProps) => {
   const [isOn, setIsOn] = useState(checked);
 
   const handleToggle = () => {
     const newState = !isOn;
     setIsOn(newState);
     if (onChange) {
-      onChange(newState);
+      onChange(newState as unknown as React.ChangeEvent<HTMLInputElement>);
     }
   };
 
@@ -19,10 +30,13 @@ const RateupSwitch = ({ offMessage, onMessage, onChange, checked }) => {
   }, [checked]);
 
   return (
-    <Tooltip label={isOn ? onMessage : offMessage} position="top" withArrow>
-      <div>
-        <Switch checked={isOn} onChange={handleToggle} />
-      </div>
+    <Tooltip
+      label={isOn ? onMessage : offMessage}
+      position="top"
+      withArrow
+      refProp="rootRef"
+    >
+      <Switch checked={isOn} onChange={handleToggle} {...rest} />
     </Tooltip>
   );
 };

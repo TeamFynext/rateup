@@ -1914,5 +1914,10 @@
   "Click here to allow multiple user entry from a device": "انقر هنا للسماح بإدخال عدة مستخدمين من جهاز واحد",
   "Click here to allow only Single user entry from a device": "انقر هنا للسماح بإدخال مستخدم واحد فقط من جهاز واحد",
   "Click here to disable automatic transition": "انقر هنا لتعطيل الانتقال التلقائي",
-  "Click here to enable automatic transition": "انقر هنا لتمكين الانتقال التلقائي"
+  "Click here to enable automatic transition": "انقر هنا لتمكين الانتقال التلقائي",
+  "Enter Theme Name": "أدخل اسم الموضوع",
+  "Theme Name": "اسم الموضوع",
+  "Create New Theme": "إنشاء موضوع جديد",
+  "Create Theme": "إنشاء موضوع",
+  "Name should be alphanumeric, should start with a letter, length should be greater than 0 characters": "يجب أن يكون الاسم أبجديًا رقميًا، ويجب أن يبدأ بحرف، ويجب أن يكون الطول أكبر من 0 أحرف"
 }
