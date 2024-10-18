@@ -9,6 +9,7 @@ import {
   Title,
 } from "@mantine/core";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import CustomSwitch from "../../../SurveyTheme/components/stylescomponent/CustomSwitch";
@@ -44,7 +45,9 @@ function LogoTabpanel({ state, dispatch }) {
               <Title order={4} className={styles["option-heading"]}>
                 {translations["Logo:"]}
               </Title>
-              <CustomSwitch
+              <RateupSwitch
+                offMessage={translations["Disabled"]}
+                onMessage={translations["Enabled"]}
                 checked={isLogoEnabled}
                 onChange={(e) => {
                   dispatch({
@@ -52,11 +55,6 @@ function LogoTabpanel({ state, dispatch }) {
                     payload: e.target.checked,
                   });
                 }}
-                label={
-                  isLogoEnabled
-                    ? translations["Enabled"]
-                    : translations["Disabled"]
-                }
               />
             </Group>
 
