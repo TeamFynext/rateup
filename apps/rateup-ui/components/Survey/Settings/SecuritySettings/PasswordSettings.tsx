@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { Box, Group, Overlay, Stack, Switch, Text } from "@mantine/core";
+import { Box, Group, Stack } from "@mantine/core";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useUpdateSurveyPwdMutation } from "../../../../backend/surveys/surveys.query";
@@ -31,9 +32,9 @@ const PasswordSettings = ({ survey, surveyId }) => {
   return (
     <Stack gap={"1rem"}>
       <Group>
-        <Switch
-          className={`switch ${passwordProtection ? "on" : "off"}`}
-          size="md"
+        <RateupSwitch
+          offMessage={translations["Click here to enable password protection"]}
+          onMessage={translations["Click here to disable password protection"]}
           checked={passwordProtection}
           onChange={() => {
             if (!passwordProtection) {
