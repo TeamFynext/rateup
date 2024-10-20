@@ -1,11 +1,19 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Box, Divider, Group, ScrollArea, Stack } from "@mantine/core";
+import {
+  Alert,
+  Box,
+  Divider,
+  Group,
+  Portal,
+  ScrollArea,
+  Stack,
+} from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEye } from "@tabler/icons-react";
+import { IconAlertOctagon, IconEye } from "@tabler/icons-react";
 
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -74,7 +82,7 @@ export function QuestionDetailedView({
 }: QuestionDetailedViewProps) {
   const router = useRouter();
   surveyId = surveyId || (router.query?.surveyId as string);
-
+  const [isSaved, setIsSaved] = useState(true);
   const [currentResponse, updateResponse] = useState(null);
   const [deleteFileLoading, setDeleteFileLoading] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -141,6 +149,7 @@ export function QuestionDetailedView({
         form.values.title[selectedLanguage] == ""
       ) {
         showErrorToast(translations["Question title is missing"]);
+        setIsSaved(false);
         return "error";
       } else {
         if (getIncompleteLanguages().length > 0) {
@@ -150,6 +159,7 @@ export function QuestionDetailedView({
               "Please Enter heading and choices for all languages before saving."
             ],
           );
+          setIsSaved(false);
           return "error";
         }
         if (imageToDelete?.length > 0) {
@@ -158,6 +168,7 @@ export function QuestionDetailedView({
           setDeleteFileLoading(false);
           resetImage();
         }
+        setIsSaved(true);
 
         // Checking if its a new question
         if (!question.id) {
@@ -165,6 +176,7 @@ export function QuestionDetailedView({
           questionCreateMutation.mutate(form.values, {
             onSuccess: (r) => {
               setSelectedQ(r.data);
+              setIsSaved(true);
             },
           });
         } else {
@@ -217,6 +229,9 @@ export function QuestionDetailedView({
         [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSave)(event)],
       ])}
     >
+      <Portal target={"#SurveyIssueAlert"}>
+        <SurveyIssueAlert isSaved={isSaved} />
+      </Portal>
       <Stack style={{ height: "100%" }} ref={formRef}>
         <ScrollArea
           className={styles["editor-scroll-area-div"]}
@@ -405,3 +420,28 @@ function ExtraProps({
       return null;
   }
 }
+
+const SurveyIssueAlert = ({ isSaved }: { isSaved: boolean }) => {
+  const { translations } = useTranslations();
+
+  if (isSaved) {
+    return null;
+  }
+
+  const issueMessage =
+    translations[
+      "The survey contains incomplete questions. Please fix the issue."
+    ];
+
+  return (
+    <Alert
+      variant="light"
+      color="red"
+      title={translations["Issue with your survey"]}
+      icon={<IconAlertOctagon />}
+      m={"xs"}
+    >
+      {issueMessage}
+    </Alert>
+  );
+};
