@@ -1724,6 +1724,7 @@
   "TemplateType": "نوع القالب",
   "Template ID": "معرف القالب",
   "Save & Submit": "احفظ وأرسل",
+  "Save as draft": "حفظ كمسودة",
   "Max number of button in buttons should be 12": "يجب أن يكون الحد الأقصى لعدد الأزرار 12",
   "Dynamic variables example values should be given": "يجب تقديم أمثلة لقيم المتغيرات الديناميكية",
   "Dynamic variables name should is numberic order": "يجب أن تكون أسماء المتغيرات الديناميكية مرتبة رقميًا",

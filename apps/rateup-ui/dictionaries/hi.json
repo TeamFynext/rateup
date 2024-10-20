@@ -1724,6 +1724,7 @@
   "TemplateType": "टेम्पलेट प्रकार",
   "Template ID": "टेम्पलेट ID",
   "Save & Submit": "सहेजें और जमा करें",
+  "Save as draft": "ड्राफ्ट के रूप में सहेजें",
   "Max number of button in buttons should be 12": "बटनों में अधिकतम 12 बटन होने चाहिए",
   "Dynamic variables example values should be given": "डायनामिक वैरिएबल्स के उदाहरण मान दिए जाने चाहिए",
   "Dynamic variables name should is numberic order": "डायनामिक वैरिएबल्स के नाम संख्यात्मक क्रम में होने चाहिए",

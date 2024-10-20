@@ -1723,6 +1723,7 @@
   "TemplateType": "Type de modèle",
   "Template ID": "ID du modèle",
   "Save & Submit": "Enregistrer et soumettre",
+  "Save as draft": "Enregistrer en tant que brouillon",
   "Max number of button in buttons should be 12": "Le nombre maximum de boutons dans les boutons doit être de 12",
   "Dynamic variables example values should be given": "Des exemples de valeurs de variables dynamiques doivent être donnés",
   "Dynamic variables name should is numberic order": "Les noms des variables dynamiques doivent être dans l'ordre numérique",
