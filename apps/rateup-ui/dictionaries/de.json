@@ -1725,6 +1725,7 @@
   "TemplateType": "Vorlagentyp",
   "Template ID": "Vorlagen-ID",
   "Save & Submit": "Speichern & Übermitteln",
+  "Save as draft": "Als Entwurf speichern",
   "Max number of button in buttons should be 12": "Die maximale Anzahl der Schaltflächen in Buttons sollte 12 betragen",
   "Dynamic variables example values should be given": "Beispielwerte für dynamische Variablen sollten angegeben werden",
   "Dynamic variables name should is numberic order": "Die Namen der dynamischen Variablen sollten numerisch geordnet sein",
