@@ -125,7 +125,7 @@ export const ShareFlow = ({
   }));
 
   const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
-  const canPublish = !isPublished && !dbFlow.pendingSave;
+  const canPublish = !isPublished;
   const disableShare = !(isPublished || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
@@ -169,7 +169,8 @@ export const ShareFlow = ({
   // TODO: allow user to deprecate the flow.
   // TODO: implement pause & resume
 
-  function handlePublish() {
+  async function handlePublish() {
+    await pushToWaMutation.mutateAsync(dbFlowId);
     surveyUpdateMutation.mutate(
       {
         surveyId: survey.id,
@@ -238,11 +239,9 @@ export const ShareFlow = ({
             <Tooltip
               label={
                 !isPublished
-                  ? dbFlow.pendingSave
-                    ? translations["Save your flow to WhatsApp first."]
-                    : translations[
-                        "Publish your flow to WhatsApp, so that you can share it."
-                      ]
+                  ? translations[
+                      "Publish your flow to WhatsApp, so that you can share it."
+                    ]
                   : translations["You can`t edit flows after publishing."]
               }
             >
