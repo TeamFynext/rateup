@@ -1905,5 +1905,11 @@
   "Added group participants successfully.": "Gruppenmitglieder erfolgreich hinzugefügt.",
   "Campaign participants added successfully.": "Teilnehmer der Kampagne erfolgreich hinzugefügt.",
   "Participants removed from campaign successfully.": "Teilnehmer erfolgreich aus der Kampagne entfernt.",
-  "Logs": "Protokolle"
+  "Logs": "Protokolle",
+  "Time Delay (in minutes)": "Zeitverzögerung (in Minuten)",
+  "Sent At": "Gesendet um",
+  "Repeat Interval": "Wiederholungsintervall",
+  "Scheduled To Send": "Geplant zu senden",
+  "After a delay of": "Nach einer Verzögerung von",
+  "minutes": "Minuten"
 }

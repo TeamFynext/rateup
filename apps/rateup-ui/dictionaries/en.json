@@ -1904,5 +1904,11 @@
   "Added group participants successfully.": "Added group participants successfully.",
   "Campaign particiants added successfully.": "Campaign particiants added successfully.",
   "Participants removed from campaign successfully.": "Participants removed from campaign successfully.",
-  "Logs": "Logs"
+  "Logs": "Logs",
+  "Time Delay (in minutes)": "Time Delay (in minutes)",
+  "Sent At": "Sent At",
+  "Repeat Interval": "Repeat Interval",
+  "Scheduled To Send": "Scheduled To Send",
+  "After a delay of": "After a delay of",
+  "minutes": "minutes"
 }

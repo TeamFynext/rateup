@@ -1360,17 +1360,27 @@ export type ShopifySurvey = {
   isProductSpecific: boolean;
   productId?: string;
   teamId: string;
-  sendAfter: ShopifySendAfter;
+  timeDelay: number;
   surveyId?: string;
   active: boolean;
   schedules: ShopifySchedule[];
   createdAt: Date;
+  repeatInterval: {
+    value: number;
+    unit: string; // "hour" | "day"
+  };
 };
 
-export type ShopifySchedule = {
-  phone: string;
-  scheduleTime: Date;
-  status?: string;
-  webhookId: string;
+type ScheduleObj = {
   createdAt: Date;
+  sentAt?: Date;
+  scheduledAt: Date;
+  status?: string;
+};
+
+export type ShopifySchedule = ScheduleObj & {
+  phone: string;
+  webhookId?: string;
+  checkoutId?: string;
+  history: ScheduleObj[];
 };

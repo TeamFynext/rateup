@@ -1904,5 +1904,11 @@
   "Added group participants successfully.": "ग्रुप प्रतिभागियों को सफलतापूर्वक जोड़ा गया।",
   "Campaign participants added successfully.": "कैम्पेन के प्रतिभागियों को सफलतापूर्वक जोड़ा गया।",
   "Participants removed from campaign successfully.": "प्रतिभागियों को सफलतापूर्वक कैम्पेन से हटाया गया।",
-  "Logs": "लॉग्स"
+  "Logs": "लॉग्स",
+  "Time Delay (in minutes)": "समय विलंब (मिनटों में)",
+  "Sent At": "भेजा गया समय",
+  "Repeat Interval": "पुनरावृत्ति अंतराल",
+  "Scheduled To Send": "भेजने के लिए निर्धारित",
+  "After a delay of": "विलंब के बाद",
+  "minutes": "मिनट"
 }

@@ -1904,5 +1904,11 @@
   "Added group participants successfully.": "تمت إضافة المشاركين في المجموعة بنجاح.",
   "Campaign participants added successfully.": "تمت إضافة المشاركين في الحملة بنجاح.",
   "Participants removed from campaign successfully.": "تمت إزالة المشاركين من الحملة بنجاح.",
-  "Logs": "السجلات"
+  "Logs": "السجلات",
+  "Time Delay (in minutes)": "التأخير الزمني (بالدقائق)",
+  "Sent At": "تم الإرسال في",
+  "Repeat Interval": "فاصل التكرار",
+  "Scheduled To Send": "مجدول للإرسال",
+  "After a delay of": "بعد تأخير لمدة",
+  "minutes": "دقائق"
 }
