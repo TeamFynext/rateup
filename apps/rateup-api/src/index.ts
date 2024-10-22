@@ -19,7 +19,10 @@ import {
   publishSurveyCronAction,
 } from "./modules/survey/survey.service";
 import { sendCampaignCronAction } from "./modules/campaign/campaign.service";
-import { sendShopifySurveyCronAction } from "./modules/integrations/shopify/shopify.service";
+import {
+  sendShopifySurveyCronAction,
+  sendTemplateForShopifyAbandonedCheckouts,
+} from "./modules/integrations/shopify/shopify.service";
 import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
 import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
 import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler";
@@ -114,6 +117,15 @@ server.register(fastifyCron, {
 
       // timeZone: 'UTC', // Specify the timezone if necessary
       //  cronTime: '* * * * *', // Every minute - for testing purpose
+    },
+    {
+      cronTime: "0 * * * *", // Every one hour
+      onTick: async () => {
+        const currentTime = new Date();
+        log.info(`......Running hourly Jobs --> .....${currentTime}`);
+        await sendTemplateForShopifyAbandonedCheckouts();
+      },
+      start: true,
     },
   ],
 });

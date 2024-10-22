@@ -57,6 +57,7 @@ import {
 } from "../wa_error_handler";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils";
+import { wait } from "../whatsappSurvey/wasurvey.controller";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -341,7 +342,7 @@ export async function sendTemplateToUserCore(
   parameterData: any[],
   teamId?: string,
   userId?: string,
-): Promise<void> {
+): Promise<{ status: boolean; message: string }> {
   const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
   const { data, defaultValues } = dbTemplate;
   const components = [...parameterData]; // Clone parameter data
@@ -522,8 +523,10 @@ export async function sendTemplateToUserCore(
   } else {
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
-  await sendMessage(orgId, templateMessage, null, userId);
+  await wait(50);
+  const res = await sendMessage(orgId, templateMessage, null, userId);
   await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+  return res;
 }
 
 export async function sendTemplateToUserHandler(
