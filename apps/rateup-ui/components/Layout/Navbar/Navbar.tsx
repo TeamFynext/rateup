@@ -93,7 +93,6 @@ export const Navbar = () => {
           </ExpiryComponent>
         )}
         {process.env.NEXT_PUBLIC_EXPERIMENT && <LanguageSelector />}
-        {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
       </Group>
     </Group>
   );

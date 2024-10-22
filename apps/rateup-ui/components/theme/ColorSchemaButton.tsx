@@ -1,11 +1,16 @@
 import {
   ActionIcon,
-  useMantineColorScheme,
-  useComputedColorScheme,
+  Group,
+  Switch,
   Tooltip,
+  useComputedColorScheme,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
-import { IconSun, IconMoon } from "@tabler/icons-react";
+import { IconMoon, IconSun } from "@tabler/icons-react";
 import cx from "clsx";
+
+import RateupSwitch from "../Switch/RateupSwitch";
 import classes from "./ColorSchemaButton.module.css";
 
 export default function ColorSchemaButton() {
@@ -14,27 +19,36 @@ export default function ColorSchemaButton() {
     getInitialValueInEffect: true,
   });
 
+  const theme = useMantineTheme();
+  const isLight = computedColorScheme === "light";
+
+  const toggleColorScheme = () => {
+    setColorScheme(isLight ? "dark" : "light");
+  };
+
   return (
-    <Tooltip
-      label={computedColorScheme === "light" ? "dark mode" : "light mode"}
-      position="top"
-      withArrow
-    >
-      <ActionIcon
-        onClick={() =>
-          setColorScheme(computedColorScheme === "light" ? "dark" : "light")
-        }
-        variant="default"
-        size="xl"
-        aria-label="Toggle color scheme"
-        mr={"xl"}
-      >
-        {computedColorScheme === "light" ? (
-          <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
-        ) : (
-          <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
-        )}
-      </ActionIcon>
-    </Tooltip>
+    <Group>
+      <IconSun
+        className={cx(classes.icon, isLight ? classes.active : "")}
+        size={18}
+        stroke={1.5}
+      />
+      <Switch
+        checked={!isLight} // checked is true when in dark mode
+        onChange={toggleColorScheme}
+        styles={{
+          track: {
+            backgroundColor: isLight
+              ? theme.colors.gray[6]
+              : theme.colors.dark[4],
+          },
+        }}
+      />
+      <IconMoon
+        className={cx(classes.icon, !isLight ? classes.active : "")}
+        size={18}
+        stroke={1.5}
+      />
+    </Group>
   );
 }
