@@ -40,12 +40,12 @@
   border-radius: 1rem;
 }
 
-.text-container .try-free-plan-btn {
+.text-container .start-for-free-btn {
   border-color: var(--tertiary-color);
   color: var(--tertiary-color);
 }
 
-.text-container .try-free-plan-btn:hover {
+.text-container .start-for-free-btn:hover {
   background-color: white;
   color: var(--tertiary-color);
 }
@@ -64,7 +64,7 @@
   .heading {
     text-align: center;
   }
-  .book-demo-try-free-plan-btns-container {
+  .book-demo-start-for-free-btns-container {
     justify-content: center;
   }
   .image-container {

@@ -85,7 +85,7 @@
   gap: 0.5rem;
 }
 
-.book-demo-try-free-plan-btns-container {
+.book-demo-start-for-free-btns-container {
   gap: 1.25rem;
 }
 
@@ -103,7 +103,7 @@
   font-weight: 600;
 }
 
-.book-demo-try-free-plan-btns-container .try-freeplan-btn {
+.book-demo-start-for-free-btns-container .start-for-free-btn {
   border-radius: 0.3125rem;
   padding: 0.625rem 1rem;
   border: 2px solid var(--shade-of-blue-12);
@@ -145,7 +145,7 @@
     font-size: 0.75rem;
     padding: 0.4375rem 1.125rem;
   }
-  .book-demo-try-free-plan-btns-container .try-freeplan-btn {
+  .book-demo-start-for-free-btns-container .try-freeplan-btn {
     font-size: 0.75rem;
     padding: 0.3125rem 1.125rem;
   }

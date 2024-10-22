@@ -4,7 +4,7 @@ import { Flex, Group, List, Stack } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import BookDemoContactForm from "@/components/HomePage/components/BookDemoContactForm";
-import TryFreePlanBtn from "@/components/HomePage/components/TryFreePlanBtn";
+import StartForFreeBtn from "@/components/HomePage/components/StartForFreeBtn";
 import { imagesPath } from "@/utils/constants";
 
 import styles from "./HeroSection.module.css";
@@ -32,9 +32,9 @@ function HeroSection() {
               Get customer insights from QR scans
             </List.Item>
           </List>
-          <Group className={cx("book-demo-try-free-plan-btns-container")}>
+          <Group className={cx("book-demo-start-for-free-btns-container")}>
             <BookDemoContactForm />
-            <TryFreePlanBtn className={cx("try-free-plan-btn")} />
+            <StartForFreeBtn className={cx("start-for-free-btn")} />
           </Group>
         </Stack>
       </Stack>

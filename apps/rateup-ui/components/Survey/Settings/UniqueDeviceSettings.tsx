@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Box, Group, Switch, Title, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -18,9 +19,17 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
   return (
     <Group justify="space-between">
       <Group>
-        <Switch
-          className={`switch ${enableUniqueDevice ? "on" : "off"}`}
-          size="md"
+        <RateupSwitch
+          offMessage={
+            translations[
+              "Click here to allow only Single user entry from a device"
+            ]
+          }
+          onMessage={
+            translations[
+              "Click here to allow multiple user entry from a device"
+            ]
+          }
           checked={enableUniqueDevice}
           onChange={() => updateUniqueDevice(setEnableUniqueDevice, editSurvey)}
         />

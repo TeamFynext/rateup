@@ -1,9 +1,11 @@
-import { Box, Stack } from "@mantine/core";
-import styles from "./EmpowerYourBrandsGrowth.module.css";
-import classNames from "classnames/bind";
-import LightBlueGradientBg from "../../../components/LightBlueGradientBg";
 import Image from "next/image";
+
+import { Box, Stack } from "@mantine/core";
+import classNames from "classnames/bind";
+
+import LightBlueGradientBg from "../../../components/LightBlueGradientBg";
 import { imagesPath } from "../../../constants";
+import styles from "./EmpowerYourBrandsGrowth.module.css";
 
 const cx = classNames.bind(styles);
 
@@ -30,11 +32,14 @@ function EmpowerYourBrandsGrowth() {
       </Box>
 
       <p className={cx("desc-text-p")}>
-        <span className={cx("bold-span")}>Our all-in-one SAAS platform</span>{" "}
-        empowers business with unparalleled tools for Reputation Management,
-        Surveys, WhatsApp Campaigns, Loyalty Programs, Testimonials, and AI
-        Automation. Elevate your brand's standing, engage with your audience
-        seamlessly, and cultivate enduring customer loyalty.
+        Experience{" "}
+        <span className={cx("bold-span")}>
+          The Ultimate Lead Generation And Customer Feedback Survey Solution
+        </span>{" "}
+        with RateUp's comprehensive SAAS platform. Seamlessly integrating
+        Whatsapp Cloud APIs, Surveys, WhatsApp Campaigns, Testimonials, and AI
+        Automation, RateUp empowers your business to elevate its brand, engage
+        audiences effortlessly, and foster long-lasting customer loyalty.
       </p>
     </Stack>
   );
