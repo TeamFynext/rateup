@@ -12,10 +12,10 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
 
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
 import useTranslations from "@/dictionaries/useTranslation";
+import { surveyUploadsPath } from "@/utils/constants";
 
 import { UserCardInterface } from "../..";
 import { UserRole } from "../../../../../../utils/enums";
@@ -36,7 +36,8 @@ const NavbarFooter = (props: UserCardInterface) => {
       router.push(`/logout`);
     }
   };
-
+  let isProfilePhotoAvailable =
+    props?.profilePhoto && props?.profilePhoto !== "REMOVED_PHOTO";
   return (
     <Group>
       <Menu
@@ -55,18 +56,20 @@ const NavbarFooter = (props: UserCardInterface) => {
             <Group>
               <Avatar
                 src={
-                  props.orgLogo &&
-                  `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${props.orgLogo}`
+                  isProfilePhotoAvailable &&
+                  `${surveyUploadsPath}${props.profilePhoto}`
                 }
-                radius="sm"
-                style={{ width: "20%", objectFit: "cover", aspectRatio: 1 / 1 }}
-                name={props?.orgName}
+                radius="xl"
+                onClick={() => {
+                  props.setOpened((o) => true);
+                }}
+                name={props?.userName}
                 color="initials"
               />
               {props.opened ? (
                 <div style={{ flex: 1 }}>
-                  <Text size="sm" fw={500} c="var(--mantine-color-gray-7">
-                    {props?.orgName}
+                  <Text size="sm" fw={500} c="var(--mantine-color-gray-6)">
+                    {props?.userName}
                   </Text>
                   <Badge variant="light" size="xs">
                     {props?.role === UserRole.SUPADM
