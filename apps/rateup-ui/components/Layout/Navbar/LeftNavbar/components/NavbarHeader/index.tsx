@@ -6,7 +6,6 @@ import { UserCardInterface } from "../..";
 import styles from "./NavbarHeader.module.css";
 
 const cx = classNames.bind(styles);
-
 const NavbarHeader = (props: UserCardInterface) => {
   return (
     <Box className={styles["avatar-org-name-chevron-burger-btn-container"]}>
@@ -23,7 +22,7 @@ const NavbarHeader = (props: UserCardInterface) => {
         />
         {props.opened && (
           <div style={{ flex: 1 }}>
-            <Text size="sm" fw={500}>
+            <Text size="sm" c="var(--mantine-color-gray-6)">
               {props?.orgName}
             </Text>
           </div>

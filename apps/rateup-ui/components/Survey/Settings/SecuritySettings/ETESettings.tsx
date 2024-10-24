@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -14,6 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconKey } from "@tabler/icons-react";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useAllResponses } from "../../../../backend/surveys/response/response.query";
@@ -75,15 +76,19 @@ export default function ETESettings(props: ETESettingsInterface) {
       <Stack gap={0}>
         <Group justify="space-between">
           <Group>
-            <Switch
-              className={styles.ete_swicth_enabled_style}
+            <RateupSwitch
+              offMessage={
+                translations["Click here to encrypt the response data"]
+              }
+              onMessage={
+                translations["Click here to disable End-to-End Encryption"]
+              }
               disabled={
                 (endtoendencryption && !!user?.encryptionKeys) ||
                 responses
                   ?.map((responses) => responses?.responses?.length)
                   .some((value) => value > 0)
               }
-              size="md"
               checked={endtoendencryption}
               onChange={onSwitched}
             />
