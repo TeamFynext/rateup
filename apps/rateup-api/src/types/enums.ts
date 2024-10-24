@@ -286,6 +286,7 @@ export enum ShopifyEvents {
   ORDERS_PARTIALLY_FULFILLED = "ORDERS_PARTIALLY_FULFILLED",
   APP_UNINSTALLED = "APP_UNINSTALLED",
   APP_SUBSCRIPTIONS_UPDATE = "APP_SUBSCRIPTIONS_UPDATE",
+  ABANDONED_CHECKOUTS = "ABANDONED_CHECKOUTS",
   // VARIANTS_IN_STOCK
   // VARIANTS_OUT_OF_STOCK
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
@@ -317,4 +318,16 @@ export enum PhotoSource {
   cameraGallery = "camera_gallery",
   gallery = "gallery",
   camera = "camera",
+}
+
+export enum WaMessageScheduleStatus {
+  SCHEDULED = "SCHEDULED",
+  SENT = "SENT",
+  FAILED = "FAILED",
+  READ = "READ",
+  DELIVERED = "DELIVERED",
+}
+
+export enum waMessageScheduleSource {
+  ExternalApi = "ExternalApi",
 }

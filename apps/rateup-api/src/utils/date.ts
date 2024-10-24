@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const formatDateT1 = (date) => {
   const dateString = new Date(date);
 
@@ -20,3 +22,6 @@ export const formatDateT2 = (dateString) => {
   };
   return date.toLocaleString("en-US", options);
 }; // March 31, 2024 at 12:00 AM.
+
+export const getScheduleTime = (minutes: number, fromDate: Date) =>
+  dayjs(fromDate).add(minutes, "minutes").toDate();

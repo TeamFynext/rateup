@@ -3,6 +3,7 @@ import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
   getContactTagHandler,
+  getWaLogsHandler,
   getWaSettingsHandler,
   updateContactTagHandler,
   upsertWaSettingsHandler,
@@ -52,4 +53,5 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     updateContactTagHandler,
   );
+  server.get("/logs", getWaLogsHandler);
 }

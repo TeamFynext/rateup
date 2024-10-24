@@ -173,3 +173,11 @@ export async function updateContactTag(orgId: string, tags: string[]) {
   });
   return res;
 }
+
+export function getWaLogs(orgId: string) {
+  return prisma.waLogs.findMany({
+    where: {
+      orgId,
+    },
+  });
+}

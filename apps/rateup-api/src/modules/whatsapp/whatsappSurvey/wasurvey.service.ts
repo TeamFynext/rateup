@@ -624,12 +624,20 @@ export async function handleTestimonialReply(
 export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,
+  errors?: any,
 ) => {
   if (!messageId) return;
 
   const msg = await prisma.waMessage.findFirst({
     where: {
       messageId,
+    },
+    include: {
+      contact: {
+        select: {
+          orgId: true,
+        },
+      },
     },
   });
 
@@ -641,6 +649,13 @@ export const handleMessageStatusUpdate = async (
   } else if (status === WaEvent.READ) {
     msg.stats[WaEvent.DELIVERED] = msg.stats[WaEvent.DELIVERED] || new Date();
     msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
+  } else if (status === WaEvent.FAILED) {
+    await prisma.waLogs.create({
+      data: {
+        orgId: msg?.contact?.orgId,
+        logs: errors,
+      },
+    });
   }
   msg.stats[status] = new Date();
   await prisma.waMessage.update({
