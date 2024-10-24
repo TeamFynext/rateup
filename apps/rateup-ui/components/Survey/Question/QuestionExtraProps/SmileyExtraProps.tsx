@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import {
   ActionIcon,
@@ -39,11 +39,39 @@ const SmileyExtraProps = ({ form }) => {
   const [opened, { toggle }] = useDisclosure(false);
 
   const handleChange = (field, value) => {
+    let updateData = {
+      [field]: value,
+    };
+    if (
+      field === "colorType" &&
+      value === SmileyColorType.Gradient &&
+      (!features?.iconStyle?.gradientStartColor ||
+        !features?.iconStyle?.gradientEndColor)
+    ) {
+      updateData["gradientStartColor"] = "#ff0000";
+      updateData["gradientEndColor"] = "#00ff00";
+    }
+    if (
+      field === "colorType" &&
+      value === SmileyColorType.Individual &&
+      !features?.iconStyle?.color
+    ) {
+      updateData["color"] = {
+        1: "#ff0000",
+        2: "#ffa500",
+        3: "#ffff00",
+        4: "#00ff00",
+        5: "#008000",
+      };
+    }
+    if (!features?.iconStyle?.variant) {
+      updateData["variant"] = SmileyVariantStyle.Default;
+    }
     form.setFieldValue("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
-        [field]: value,
+        ...updateData,
       },
     });
   };
@@ -85,6 +113,7 @@ const SmileyExtraProps = ({ form }) => {
             onChange={(value) => handleChange("variant", value)}
             value={features?.iconStyle?.variant}
             defaultValue={SmileyVariantStyle.Default}
+            allowDeselect={false}
           />
           <ContainedSelection
             data={Object.values(SmileyColorType)}
@@ -95,6 +124,7 @@ const SmileyExtraProps = ({ form }) => {
             disabled={
               features?.iconStyle?.variant === SmileyVariantStyle.Custom
             }
+            allowDeselect={false}
           />
         </Flex>
         <ActionIcon onClick={toggle} variant="transparent">
