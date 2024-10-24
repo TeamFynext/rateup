@@ -22,6 +22,7 @@ import {
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import {
+  ContainedNumberInput,
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
@@ -158,14 +159,15 @@ const WaTemplateSendSettings = ({
     initialValues: {
       teamId: null,
       waTemplateId: null,
-      scheduleLater: false,
-      sendAfter: "",
+      timeDelay: 0,
     },
     validate: {
       teamId: isNotEmpty("Team is required"),
       waTemplateId: isNotEmpty("WhatsApp Template is requied"),
-      sendAfter: (value, values) =>
-        values.scheduleLater && !value ? "Send After required" : null,
+      timeDelay: (value) =>
+        value !== 0 && value < 60
+          ? "Minimum time delay should be 60. You can set to 0 if not needed"
+          : null,
     },
   });
 
@@ -175,10 +177,7 @@ const WaTemplateSendSettings = ({
     updateIntegration.mutate({
       credential: {
         ...integration.credential,
-        orderEvent:
-          !form.values.scheduleLater && form.values.sendAfter
-            ? { ...form.values, sendAfter: undefined }
-            : form.values,
+        orderEvent: form.values,
       },
     });
   };
@@ -223,20 +222,12 @@ const WaTemplateSendSettings = ({
           {...form.getInputProps("waTemplateId")}
           teamId={form.values.teamId}
         />
-        <Checkbox
-          checked={form.values.scheduleLater}
-          {...form.getInputProps("scheduleLater")}
-          label={translations["Schedule Later"]}
+        <ContainedNumberInput
+          label={translations["Time Delay (in minutes)"]}
+          {...form.getInputProps("timeDelay")}
+          allowDecimal={false}
+          allowNegative={false}
         />
-        {form.values.scheduleLater && (
-          <ContainedSelection
-            data={Object.values(ShopifySendAfter)}
-            {...form.getInputProps("sendAfter")}
-            placeholder={translations["Select"]}
-            label={translations["Send After"]}
-            searchable
-          />
-        )}
         <Group justify="space-between">
           <RateupButtonBlue
             title="save"

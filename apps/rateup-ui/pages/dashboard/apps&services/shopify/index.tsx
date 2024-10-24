@@ -37,7 +37,6 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../../../../components/Button/RateupButtons";
-import ConnectShopifyModal from "../../../../components/shopify/ConnectShopifyModal";
 import ShopifySurveySchedules from "../../../../components/shopify/ShopifySurveySchedules";
 
 export const ActiveStatusBadge = ({ active }) => {
@@ -45,8 +44,8 @@ export const ActiveStatusBadge = ({ active }) => {
   return (
     <Badge color={active ? "green" : "red"}>
       {active
-        ? translations["ACTIVE"] ?? "ACTIVE"
-        : translations["INACTIVE"] ?? "INACTIVE"}
+        ? (translations["ACTIVE"] ?? "ACTIVE")
+        : (translations["INACTIVE"] ?? "INACTIVE")}
     </Badge>
   );
 };
@@ -104,10 +103,11 @@ const Shopify = () => {
           <RateupButtonBlue
             title={translations["Connect with shopify store"]}
             leftIcon={<IconPlus />}
-            onClick={openConnect}
+            onClick={() =>
+              window.open("https://apps.shopify.com/rateup", "_blank")
+            }
             color="#5e8e3e"
           />
-          <ConnectShopifyModal opened={connectOpened} close={closeConnect} />
         </Stack>
       </Center>
     );

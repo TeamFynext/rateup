@@ -61,6 +61,7 @@ export function formatIsoDateString(isoDateString) {
 
 //Like... Output: '13th Mar, 2024, 12:00 AM'
 export function formatIsoDateStringWithTime(isoDateString) {
+  if (!isoDateString) return null;
   return dayjs(isoDateString).format("Do MMM, YYYY, h:mm A");
 }
 

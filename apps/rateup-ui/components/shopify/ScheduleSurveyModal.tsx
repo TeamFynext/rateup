@@ -5,13 +5,15 @@ import {
   Alert,
   Checkbox,
   Group,
+  Input,
   Stack,
+  Text,
   TooltipFloating,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
-import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
+import { IntegratedApps, ShopifyEvents } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
@@ -20,7 +22,10 @@ import useTranslations from "@/dictionaries/useTranslation";
 import useTemplatesAvailableForTeam from "../../hooks/team";
 import { shopifyEventData } from "../../utils/constants";
 import { showLoadingToast } from "../../utils/notifications";
-import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedNumberInput,
+  ContainedSelection,
+} from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
 import FormModalLayout from "../Modal/FormModalLayout";
 
@@ -44,7 +49,11 @@ const ScheduleSurveyModal = ({
       isProductSpecific: false,
       productId: "",
       teamId: "",
-      sendAfter: ShopifySendAfter.TwoHour,
+      timeDelay: 0,
+      repeatInterval: {
+        value: 0,
+        unit: "hour",
+      },
     },
     validate: {
       waTemplateId: isNotEmpty("Template is required"),
@@ -52,7 +61,10 @@ const ScheduleSurveyModal = ({
       teamId: isNotEmpty("Team is required"),
       productId: (value, values) =>
         values.isProductSpecific && !value ? "Product is required" : null,
-      sendAfter: isNotEmpty("send After is required"),
+      timeDelay: (value) =>
+        value < 60 && value !== 0
+          ? "Minimum time delay should be 60 minutes. You can set to 0 if not needed"
+          : null,
     },
   });
   const { translations } = useTranslations();
@@ -141,13 +153,21 @@ const ScheduleSurveyModal = ({
       buttonTitle={translations["Create"]}
       includeCancelButton
       size="lg"
-      submitButtonDisabled={!shopifyInfo.credential.isWebhookRegistered}
+      submitButtonDisabled={
+        form.values.event &&
+        form.values.event !== ShopifyEvents.ABANDONED_CHECKOUTS &&
+        !shopifyInfo.credential.isWebhookRegistered
+      }
     >
       <Stack>
         <Alert
           title={translations["Important"]}
           display={
-            !shopifyInfo.credential.isWebhookRegistered ? "block" : "none"
+            form.values.event &&
+            form.values.event !== ShopifyEvents.ABANDONED_CHECKOUTS &&
+            !shopifyInfo.credential.isWebhookRegistered
+              ? "block"
+              : "none"
           }
           icon={<IconAlertCircle color="red" />}
           color="red"
@@ -182,35 +202,57 @@ const ScheduleSurveyModal = ({
           data={templatesData}
           {...form.getInputProps("waTemplateId")}
         />
-        <ContainedSelection
-          label={translations["Send After"]}
-          placeholder={translations["Select"]}
-          data={Object.values(ShopifySendAfter)}
-          {...form.getInputProps("sendAfter")}
+        <ContainedNumberInput
+          label={translations["Time Delay (in minutes)"]}
+          {...form.getInputProps("timeDelay")}
+          allowDecimal={false}
+          allowNegative={false}
         />
-        <Checkbox
-          label={translations["Product Specific"]}
-          {...form.getInputProps("isProductSpecific")}
-        />
-        {form.values.isProductSpecific && (
-          <Group>
-            <ContainedSelection
-              label={translations["Product"]}
-              data={productData}
-              placeholder={translations["Select a product"]}
-              flex={1}
-              {...form.getInputProps("productId")}
+
+        {form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS ? (
+          <Input.Wrapper>
+            <Input.Label>
+              <Text size="xs">Repeat interval</Text>
+            </Input.Label>
+            <Group>
+              <ContainedNumberInput
+                {...form.getInputProps("repeatInterval.value")}
+                allowDecimal={false}
+                allowNegative={false}
+              />
+              <ContainedSelection
+                data={["hour", "day"]}
+                {...form.getInputProps("repeatInterval.unit")}
+              />
+            </Group>
+          </Input.Wrapper>
+        ) : (
+          <Stack>
+            <Checkbox
+              label={translations["Product Specific"]}
+              {...form.getInputProps("isProductSpecific")}
             />
-            <TooltipFloating label={translations["Load products"]}>
-              <ActionIcon
-                onClick={loadShopifyProducts}
-                variant="subtle"
-                mt={"lg"}
-              >
-                <IconRefresh />
-              </ActionIcon>
-            </TooltipFloating>
-          </Group>
+            {form.values.isProductSpecific && (
+              <Group>
+                <ContainedSelection
+                  label={translations["Product"]}
+                  data={productData}
+                  placeholder={translations["Select a product"]}
+                  flex={1}
+                  {...form.getInputProps("productId")}
+                />
+                <TooltipFloating label={translations["Load products"]}>
+                  <ActionIcon
+                    onClick={loadShopifyProducts}
+                    variant="subtle"
+                    mt={"lg"}
+                  >
+                    <IconRefresh />
+                  </ActionIcon>
+                </TooltipFloating>
+              </Group>
+            )}
+          </Stack>
         )}
       </Stack>
     </FormModalLayout>

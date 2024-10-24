@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Anchor, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
+import dayjs from "dayjs";
 
 import {
   ShopifyIntegration,
@@ -39,6 +40,10 @@ const ShopifySchedules = ({
   const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] =
     useState<ShopifySurvey>(null);
   const [opened, { open, close }] = useDisclosure(false);
+  const [historyOpened, { open: openHistory, close: closeHistory }] =
+    useDisclosure(false);
+  const [selectedSchedule, setSelectedSchedule] =
+    useState<ShopifySchedule>(null);
   const { translations } = useTranslations();
   const templateAndteam = {
     templateName: waTemplates?.find(
@@ -57,6 +62,7 @@ const ShopifySchedules = ({
   const columns = [
     { key: "phone", value: translations["Customer Phone Number"] },
     { key: "scheduleTime", value: translations["Scheduled At"] },
+    { key: "sentAt", value: translations["Sent At"] },
     { key: "status", value: translations["Status"] },
     {
       key: "event_details",
@@ -74,15 +80,33 @@ const ShopifySchedules = ({
         />
       ),
     },
+    {
+      key: "history",
+      value: "History",
+      renderCell: (value) => (
+        <RateupButtonSecondary
+          variant="light"
+          title={translations["view"]}
+          size="xs"
+          onClick={() => {
+            setSelectedSchedule(value);
+            openHistory();
+          }}
+          leftIcon={<IconEye size={"1rem"} />}
+        />
+      ),
+    },
     { key: "createdAt", value: "Created At" },
   ];
 
   const rows = schedules
     ? schedules.map((schedule) => ({
         phone: schedule.phone,
-        scheduleTime: formatIsoDateStringWithTime(schedule.scheduleTime),
+        scheduleTime: formatIsoDateStringWithTime(schedule.scheduledAt),
+        sentAt: formatIsoDateStringWithTime(schedule.sentAt),
         status: schedule.status,
         createdAt: formatIsoDateStringWithTime(schedule.createdAt),
+        history: schedule,
         event_details: shopifyInfo.credential.shopifySurveys?.find((s) =>
           s.schedules.find((sc) => sc.webhookId === schedule.webhookId),
         ),
@@ -104,6 +128,11 @@ const ShopifySchedules = ({
         close={close}
         shopifySurvey={selectedShopifySurveyEvent}
         templateAndTeam={templateAndteam}
+      />
+      <ScheduleHistoryModal
+        opened={historyOpened}
+        schedule={selectedSchedule}
+        close={closeHistory}
       />
     </Stack>
   );
@@ -137,8 +166,9 @@ const EventDetailsModal = ({
           </Anchor>
         </Text>
         <Text>
-          {translations["Scheduled To: Send"]} {shopifySurvey?.sendAfter}{" "}
-          {translations[1]}
+          {translations["Scheduled To Send"]} :{" "}
+          {translations["After a delay of"]} {shopifySurvey?.timeDelay}{" "}
+          {translations["minutes"]}
         </Text>
         <Text>
           {translations["Team : "]}
@@ -159,6 +189,46 @@ const EventDetailsModal = ({
           {formatIsoDateStringWithTime(shopifySurvey?.createdAt)}{" "}
         </Text>
       </Stack>
+    </FormModalLayout>
+  );
+};
+
+const ScheduleHistoryModal = ({
+  schedule,
+  opened,
+  close,
+}: {
+  schedule: ShopifySchedule;
+  opened: boolean;
+  close: () => void;
+}) => {
+  const columns = [
+    { key: "createdAt", value: "Created At" },
+    { key: "scheduledAt", value: "Scheduled At" },
+    { key: "sentAt", value: "Sent At" },
+    { key: "status", value: "Status" },
+  ];
+
+  const rows =
+    schedule && schedule.history
+      ? schedule.history
+          .sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
+          .map((s) => ({
+            createdAt: formatIsoDateStringWithTime(s.createdAt),
+            scheduledAt: formatIsoDateStringWithTime(s.scheduledAt),
+            sentAt: formatIsoDateStringWithTime(s.sentAt),
+            status: s.status,
+          }))
+      : [];
+  return (
+    <FormModalLayout
+      opened={opened}
+      onClose={close}
+      title={"Schedule History"}
+      size="lg"
+      centered
+    >
+      <TableLayoutSecondary columns={columns} rows={rows} />
     </FormModalLayout>
   );
 };

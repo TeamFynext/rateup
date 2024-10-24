@@ -297,6 +297,10 @@ export const shopifyEventData = [
     label: "On fulfilled orders cancelled",
     value: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
   },
+  {
+    label: "On abandoned checkouts",
+    value: ShopifyEvents.ABANDONED_CHECKOUTS,
+  },
 ];
 
 export const defaultTitleSubtitleStartBtnTextsObj = {
