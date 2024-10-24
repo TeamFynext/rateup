@@ -53,6 +53,8 @@ import { createEmailBodySubscriptionActivated } from "../../../utils/email/payme
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import { pauseOrg } from "../../org/org.services";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
+import { getScheduleTime } from "../../../utils/date";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -129,14 +131,21 @@ export async function registerShopifyWebhook(session: Session) {
   }
 }
 
-export async function createScheduleOnShopifyEvent(
-  customerPhone: string,
-  event: ShopifyEvents,
-  shopifyInfo: ShopifyIntegration,
-  productIds: string[],
-  webhookId: string,
-  shop: string,
-) {
+export async function createScheduleOnShopifyEvent({
+  customerPhone,
+  event,
+  shopifyInfo,
+  productIds,
+  webhookId,
+  scheduleFromDate,
+}: {
+  customerPhone: string;
+  event: ShopifyEvents;
+  shopifyInfo: ShopifyIntegration;
+  productIds: string[];
+  webhookId?: string;
+  scheduleFromDate: Date;
+}) {
   log.info(`checking survey for shopify event ${event}`);
   const phone = parsePhoneNumber(customerPhone, "IN");
   if (phone.isValid() === false) {
@@ -164,15 +173,19 @@ export async function createScheduleOnShopifyEvent(
     log.trace(`No customer phone number found`);
     return;
   }
-  const data = {
-    scheduleTime: getScheduledTime(shopifySurvey.sendAfter),
-    phone: phoneWithoutPlus,
-    webhookId,
+
+  const schedules = [...shopifySurvey.schedules];
+  const scheduleObj = {
+    scheduledAt: getScheduleTime(shopifySurvey.timeDelay, scheduleFromDate),
     createdAt: new Date(),
     status: "SCHEDULED",
   };
-
-  const schedules = [...shopifySurvey.schedules];
+  const data = {
+    ...scheduleObj,
+    phone: phoneWithoutPlus,
+    webhookId,
+    history: [scheduleObj],
+  };
   schedules.push(data);
   shopifySurvey.schedules = schedules;
   const newShopifySurveys = [...shopifyInfo.credential.shopifySurveys];
@@ -181,7 +194,7 @@ export async function createScheduleOnShopifyEvent(
       s.schedules = schedules;
     }
   });
-  await updateShopifyIntegrationByShop(shop, {
+  await updateShopifyIntegrationByOrgId(shopifyInfo.orgId, {
     credential: {
       ...shopifyInfo.credential,
       shopifySurveys: newShopifySurveys,
@@ -201,43 +214,125 @@ export async function sendShopifySurveyCronAction() {
 
   if (!integrations.length) return;
 
-  const schedules = integrations.flatMap((i) =>
-    i.credential.shopifySurveys.flatMap((s) =>
-      s.schedules.map((sch) => ({ ...sch, orgId: i.orgId, event_details: s })),
-    ),
-  );
-  if (!schedules) return;
-  const schedulesNotSent = schedules.filter(
-    (s) =>
-      s.status === "SCHEDULED" && new Date(s.scheduleTime) <= fiveMinutesLater,
-  );
-  if (!schedulesNotSent || !schedulesNotSent.length) return;
+  for (const integration of integrations) {
+    const {
+      credential: { shopifySurveys, session },
+      orgId,
+    } = integration;
 
-  for (const schedule of schedulesNotSent) {
-    const res = await sendWhatsAppTemplateToCustomer(
-      schedule.orgId,
-      schedule.phone,
-      schedule.event_details.waTemplateId,
-      schedule.event_details.teamId,
+    if (!shopifySurveys || !shopifySurveys.length) {
+      log.trace("No config found");
+      return false;
+    }
+    let allCheckouts = [];
+    const newShopifySurveys = [...shopifySurveys];
+    const callShopifyApi = newShopifySurveys.some(
+      (s) =>
+        s.event === ShopifyEvents.ABANDONED_CHECKOUTS &&
+        s.schedules &&
+        s.schedules.some(
+          (sch) =>
+            sch.status === "SCHEDULED" ||
+            (s.repeatInterval.value &&
+              dayjs().diff(dayjs(sch.sentAt), s.repeatInterval.unit) >=
+                s.repeatInterval.value),
+        ),
     );
-    const integration = integrations.find(
-      (i) => i.orgId === schedule.orgId,
-    ) as ShopifyIntegration;
-    const shopifySurveys = integration.credential?.shopifySurveys;
-    shopifySurveys.forEach((s) => {
-      if (s.event === schedule.event_details.event) {
-        s.schedules.forEach((sch) => {
-          if (sch.webhookId === schedule.webhookId)
-            sch.status = res
-              ? res.status
-                ? "SENT"
-                : `FAILED: ${res?.message}`
-              : "FAILED";
-        });
+    if (callShopifyApi) {
+      allCheckouts = (
+        (await shopify.rest.AbandonedCheckout.checkouts({
+          session,
+        })) as any
+      ).checkouts?.filter((c) => !c.completed_at);
+    }
+
+    for (const config of newShopifySurveys) {
+      const {
+        event,
+        schedules,
+        repeatInterval: { unit, value },
+        waTemplateId,
+        teamId,
+        active,
+      } = config;
+      if (!schedules || !schedules.length || !active) {
+        log.trace("No schedules found");
+        return false;
       }
+      const newSchedules = [...schedules];
+      const isAbandonedEvent = event === ShopifyEvents.ABANDONED_CHECKOUTS;
+      if (isAbandonedEvent && !callShopifyApi) continue;
+      for (const sch of newSchedules) {
+        let tobeSent = false;
+        const isCheckoutNotExist =
+          isAbandonedEvent &&
+          !allCheckouts.find((c) => c.id.toString() === sch.checkoutId);
+        if (
+          sch.status === "SCHEDULED" &&
+          new Date(sch.scheduledAt) <= fiveMinutesLater
+        ) {
+          if (isCheckoutNotExist) {
+            sch.status = "CHECKOUT DELETED";
+            sch.history.forEach((h) => {
+              if (h.scheduledAt === sch.scheduledAt)
+                h.status = "CHECKOUT DELETED";
+            });
+          } else {
+            tobeSent = true;
+          }
+        } else {
+          if (isAbandonedEvent && !isCheckoutNotExist) {
+            if (value && dayjs().diff(dayjs(sch.sentAt), unit) >= value) {
+              tobeSent = true;
+              //add new schedule history and update
+              const newSchedule = {
+                createdAt: new Date(),
+                scheduledAt: new Date(),
+                sentAt: null,
+                status: null,
+              };
+              sch.createdAt = newSchedule.createdAt;
+              sch.scheduledAt = newSchedule.scheduledAt;
+              sch.sentAt = newSchedule.sentAt;
+              sch.history = [...sch.history, newSchedule];
+            }
+          }
+        }
+        if (tobeSent) {
+          const res = await sendTemplateToUserCore(
+            orgId,
+            waTemplateId,
+            sch.phone,
+            [],
+            teamId,
+          );
+          sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
+          let messageSentAt = null;
+          if (res.status) {
+            const message = await prisma.waMessage.findFirst({
+              where: {
+                messageId: res.message,
+              },
+            });
+            messageSentAt = message.waCreatedAt;
+          }
+          sch.sentAt = messageSentAt;
+          sch.history.forEach((h) => {
+            if (h.scheduledAt === sch.scheduledAt) {
+              h.status = sch.status;
+              h.sentAt = messageSentAt;
+            }
+          });
+        }
+      }
+      config.schedules = newSchedules;
+    }
+    await updateShopifyIntegrationByOrgId(orgId, {
+      credential: {
+        ...integration.credential,
+        shopifySurveys: newShopifySurveys,
+      },
     });
-    const updateData = { ...integration.credential, shopifySurveys };
-    updateShopifyIntegrationByOrgId(schedule.orgId, { credential: updateData });
   }
 }
 
@@ -672,14 +767,14 @@ export async function handleShopifyOrderEvents(webhook) {
     log.trace("No cutsomer phone number found");
     return;
   }
-  await createScheduleOnShopifyEvent(
+  await createScheduleOnShopifyEvent({
     customerPhone,
-    topic,
+    event: topic,
     shopifyInfo,
     productIds,
     webhookId,
-    shop,
-  );
+    scheduleFromDate: new Date(),
+  });
 }
 
 export async function handleShopifyAppUnistalled(webhook) {
@@ -702,4 +797,186 @@ export async function deleteShopifyIntegrationByShop(shop: string) {
       },
     },
   });
+}
+
+export async function sendTemplateForShopifyAbandonedCheckouts() {
+  try {
+    const integrations = (await prisma.integration.findMany({
+      where: {
+        name: IntegratedApps.shopify,
+      },
+    })) as unknown as ShopifyIntegration[];
+
+    await Promise.all(
+      integrations.map(async (integration) => {
+        const { orgId, credential } = integration;
+        const abandonedCheckoutConfig = credential.shopifySurveys.find(
+          (s) => s.event === ShopifyEvents.ABANDONED_CHECKOUTS,
+        );
+        if (!abandonedCheckoutConfig) {
+          log.trace("No abandoned checkout template config found");
+          return false;
+        }
+        const { waTemplateId, teamId } = abandonedCheckoutConfig;
+        const abandonedCheckouts =
+          (await shopify.rest.AbandonedCheckout.checkouts({
+            session: credential.session,
+          })) as { checkouts: any[] };
+        const allCheckouts = (abandonedCheckouts as any).checkouts.filter(
+          (checkout) => !checkout.completed_at,
+        );
+
+        if (!allCheckouts || !allCheckouts.length) {
+          log.trace("No abandoned checkouts found");
+          return false;
+        }
+        //checkouts created within one hour
+        const lastCheckouts = allCheckouts.filter(
+          (checkout) => dayjs().diff(checkout.created_at, "hours") < 1,
+        );
+
+        if (!lastCheckouts.length) {
+          log.trace("No recent checkouts ");
+          if (!abandonedCheckoutConfig.repeatInterval.value) return false;
+        }
+
+        let sentNowCheckoutList: Array<{ phone: string; checkoutId: string }> =
+          [];
+
+        const {
+          timeDelay,
+          schedules = [],
+          repeatInterval: { unit, value },
+        } = abandonedCheckoutConfig;
+        const shopifySurveys = [...credential.shopifySurveys];
+
+        lastCheckouts.map(async (checkout) => {
+          const phone = validateAndParseCheckoutPhone(checkout);
+
+          if (!phone) {
+            log.trace("invalid phone number");
+            return false;
+          }
+          if (timeDelay) {
+            const scheduledTime = getScheduleTime(
+              timeDelay,
+              checkout.created_at,
+            );
+            const schedule = {
+              status: "SCHEDULED",
+              createdAt: new Date(),
+              scheduledAt: scheduledTime,
+            };
+            schedules.push({
+              ...schedule,
+              history: [schedule],
+              phone,
+              checkoutId: checkout.id.toString(),
+            });
+          } else {
+            sentNowCheckoutList.push({
+              phone,
+              checkoutId: checkout.id.toString(),
+            });
+          }
+        });
+        if (value) {
+          allCheckouts
+            .filter((checkout) =>
+              schedules.find(
+                (c) =>
+                  checkout.id.toString() === c.checkoutId &&
+                  dayjs().diff(dayjs(c.sentAt), unit) >= value,
+              ),
+            )
+            .map((checkout) => {
+              const phone = validateAndParseCheckoutPhone(checkout);
+              if (phone)
+                sentNowCheckoutList.push({
+                  phone,
+                  checkoutId: checkout.id.toString(),
+                });
+            });
+        }
+
+        sentNowCheckoutList.map(async (checkout) => {
+          const res = await sendTemplateToUserCore(
+            orgId,
+            waTemplateId,
+            checkout.phone,
+            [],
+            teamId,
+          );
+
+          let messageSentAt = new Date();
+          if (res.status) {
+            const message = await prisma.waMessage.findFirst({
+              where: {
+                messageId: res.message,
+              },
+            });
+            messageSentAt = message.waCreatedAt;
+          }
+          const schedule = {
+            status: res.status ? "SENT" : `FAILED: ${res.message}`,
+            createdAt: messageSentAt,
+            scheduledAt: messageSentAt,
+            sentAt: res.status ? messageSentAt : null,
+          };
+          let index;
+          const existingSchedule = schedules.find((s, i) => {
+            if (s.checkoutId === checkout.checkoutId) {
+              index = i;
+              return s;
+            }
+          });
+          if (existingSchedule) {
+            const history = existingSchedule.history ?? [];
+            history.push(schedule);
+            schedules[index] = {
+              ...schedule,
+              phone: checkout.phone,
+              history,
+            };
+          } else {
+            schedules.push({
+              ...schedule,
+              history: [schedule],
+              phone: checkout.phone,
+              checkoutId: checkout.checkoutId,
+            });
+          }
+        });
+
+        shopifySurveys.forEach((s) => {
+          if (s.event === ShopifyEvents.ABANDONED_CHECKOUTS)
+            s.schedules = schedules;
+        });
+
+        const resp1 = await updateShopifyIntegrationByOrgId(orgId, {
+          credential: { ...credential, shopifySurveys },
+        });
+      }),
+    );
+  } catch (e) {
+    log.error(e);
+  }
+}
+
+function validateAndParseCheckoutPhone(checkout) {
+  const phoneNumber =
+    checkout.phone ||
+    checkout.customer.phone ||
+    checkout.customer.default_address.phone ||
+    checkout.billing_address.phone;
+  if (!phoneNumber) {
+    log.trace("No Phone Number found");
+    return false;
+  }
+  const phone = parsePhoneNumber(phoneNumber, "IN");
+  if (phone.isValid() === false) {
+    log.trace("Invalid Phone number");
+    return false;
+  }
+  return phone.number;
 }

@@ -132,7 +132,7 @@ declare global {
       waTemplateId: string;
       teamId: string;
       scheduleLater: boolean;
-      sendAfter: string;
+      timeDelay: number;
     };
     history?: {
       id: string;
@@ -164,18 +164,29 @@ declare global {
     isProductSpecific: boolean;
     productId?: string;
     teamId: string;
-    sendAfter: ShopifySendAfter;
+    // sendAfter: ShopifySendAfter;
+    timeDelay: number;
+    repeatInterval: {
+      value: number;
+      unit: "hour" | "day";
+    };
     surveyId?: string;
     active: boolean;
     schedules: ShopifySchedules[];
   };
 
-  type ShopifySchedules = {
-    phone: string;
-    scheduleTime: Date;
-    status?: string;
-    webhookId: string;
+  type ScheduleObj = {
     createdAt: Date;
+    sentAt?: Date;
+    scheduledAt: Date;
+    status?: string;
+  };
+
+  type ShopifySchedules = ScheduleObj & {
+    phone: string;
+    webhookId?: string;
+    checkoutId?: string;
+    history: ScheduleObj[];
   };
 
   type WaSectionsType = Array<{

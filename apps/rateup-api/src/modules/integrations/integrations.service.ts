@@ -12,7 +12,7 @@ import { log } from "../../utils/logger";
 import { getWaSettings } from "../whatsapp/settings/wa_settings.service";
 import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service";
 import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils";
-import { getScheduledTime } from "./shopify/shopify.util";
+import { getScheduleTime } from "../../utils/date";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
@@ -437,8 +437,7 @@ export async function sendPetpoojaWaTemplateCronAction() {
 }
 
 export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
-  const { waTemplateId, teamId, scheduleLater, sendAfter } =
-    integration.credential.orderEvent;
+  const { waTemplateId, teamId, timeDelay } = integration.credential.orderEvent;
   const history = integration.credential.history ?? [];
   const existingIds = history.map((hist) => hist.id);
   const newHistory = {
@@ -447,11 +446,11 @@ export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
     phone: customer.phone,
     createdAt: new Date(),
   };
-  if (scheduleLater) {
+  if (timeDelay) {
     history.push({
       ...newHistory,
       status: "SCHEDULED",
-      scheduledAt: getScheduledTime(sendAfter),
+      scheduledAt: getScheduleTime(timeDelay, new Date()),
     });
   } else {
     const res = await sendWhatsAppTemplateToCustomer(

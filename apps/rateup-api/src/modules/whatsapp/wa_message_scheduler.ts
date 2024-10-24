@@ -39,7 +39,7 @@ export async function createWaMessageSchedule({
   const res = await prisma.waMessageSchedule.create({
     data: {
       phone,
-      scheduledAt: getScheduleTime(timeDelay),
+      scheduledAt: getScheduleTime(timeDelay, new Date()),
       orgId,
       waTemplateId,
       messageBody: messageBody as any,
