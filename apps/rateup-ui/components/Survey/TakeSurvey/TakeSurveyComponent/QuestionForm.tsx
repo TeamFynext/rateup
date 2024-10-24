@@ -12,7 +12,7 @@ function QuestionForm() {
   const { type } = selectedQ;
   const className = type.toLowerCase().replaceAll(" ", "-") + "-container";
   return (
-    <Group className={classes[className]}>
+    <Group className={classes[className]} justify="center">
       {(() => {
         if (type in PageType) {
           return <></>;
