@@ -54,7 +54,7 @@ const SmileyExtraProps = ({ form }) => {
       iconStyle: {
         ...features?.iconStyle,
         color: {
-          ...features?.iconStyle.color,
+          ...features?.iconStyle?.color,
           [smiley]: value,
         },
       },
@@ -67,7 +67,7 @@ const SmileyExtraProps = ({ form }) => {
       iconStyle: {
         ...features?.iconStyle,
         emojies: {
-          ...features?.iconStyle.emojies,
+          ...features?.iconStyle?.emojies,
           [smiley]: value,
         },
       },
@@ -174,7 +174,7 @@ function rgbToHex(r, g, b) {
 
 export function generateGradient(startColor, endColor, steps, defaultColor) {
   if (!startColor || !endColor) {
-    return [1, 2, 3, 4, 5].map((a) => defaultColor);
+    return Array.from({ length: steps }, (_, i) => defaultColor);
   }
   let startRGB = hexToRgb(startColor);
   let endRGB = hexToRgb(endColor);
