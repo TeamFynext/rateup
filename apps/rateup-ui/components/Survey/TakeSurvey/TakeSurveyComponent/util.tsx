@@ -164,7 +164,7 @@ export function getQuestionForm(type, selectedQ) {
     case Q.Opinion:
       return <OpinionScaleForm key={selectedQ?.id} />;
     case Q.Smiley:
-      return <SmileyForm key={selectedQ?.id} />;
+      return <SmileyForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.Photo:
       return <ImageForm key={selectedQ?.id} />;
     case Q.MCQ:

@@ -38,6 +38,7 @@ import {
 } from "@mui/x-data-grid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { updateSurvey } from "../../../backend/surveys/survey.api";
@@ -270,9 +271,9 @@ const ShareSurvey = ({
       <PaperLayout>
         <Group justify="space-between">
           {isScheduled ? (
-            <Switch
-              fw={500}
-              size="lg"
+            <RateupSwitch
+              offMessage={translations["Click here to schedule the Survey"]}
+              onMessage={translations["Click here to unschedule the survey"]}
               checked={isScheduled}
               onChange={(event) => {
                 showLoadingToast(
@@ -294,9 +295,9 @@ const ShareSurvey = ({
               }
             />
           ) : (
-            <Switch
-              fw={500}
-              size="lg"
+            <RateupSwitch
+              offMessage={translations["Click here to Publish the Survey"]}
+              onMessage={translations["Click here to unpublish the survey"]}
               checked={isPublished}
               onChange={(event) => {
                 if (!isPublished) {

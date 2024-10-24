@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { Box, Group, Stack, Switch } from "@mantine/core";
+import { Box, Group, Stack } from "@mantine/core";
 
 import PremiumFeature from "@/components/Premium/PremiumFeature";
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -27,9 +28,9 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
       <Stack gap={"md"}>
         <PremiumFeature isSubscribed={enabledModules.includes("tickets")}>
           <Group>
-            <Switch
-              className={`switch ${enableTickets ? "on" : "off"}`}
-              size="md"
+            <RateupSwitch
+              offMessage={translations["Click here to enable ticketing"]}
+              onMessage={translations["Click here to disable ticketing"]}
               checked={enableTickets}
               onChange={() => {
                 editSurvey.mutate({
@@ -42,9 +43,13 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
             </Box>
           </Group>
           <Group>
-            <Switch
-              className={`switch ${enableTicketEmailAlerts ? "on" : "off"}`}
-              size="md"
+            <RateupSwitch
+              offMessage={
+                translations["Click here to enable Ticket Email Alerts"]
+              }
+              onMessage={
+                translations["Click here to disable Ticket Email Alerts"]
+              }
               checked={enableTicketEmailAlerts}
               onChange={() => {
                 editSurvey.mutate({

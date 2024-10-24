@@ -41,7 +41,8 @@ const ShopifySurveySchedules = ({
     { key: "whatsapp_template", value: translations["WhatsApp Template"] },
     { key: "isProductSpecific", value: translations["Product Specific"] },
     { key: "product", value: translations["Product"] },
-    { key: "sendAfter", value: translations["Send After"] },
+    { key: "timeDelay", value: translations["Time Delay (in minutes)"] },
+    { key: "repeatInterval", value: translations["Repeat Interval"] },
     {
       key: "status",
       value: translations["Status"],
@@ -78,7 +79,8 @@ const ShopifySurveySchedules = ({
                 (product) => product.id.toString() === row.productId,
               )?.title
             : "----",
-          sendAfter: row.sendAfter,
+          timeDelay: row.timeDelay,
+          repeatInterval: `${row.repeatInterval.value} ${row.repeatInterval.unit}`,
           status: row.active,
           team: team?.name,
           createdAt: formatIsoDateStringWithTime(row.createdAt),

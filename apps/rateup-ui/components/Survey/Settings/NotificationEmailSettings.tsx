@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Box, Group, Stack, Switch, Text, Title } from "@mantine/core";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -28,9 +29,9 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
   return (
     <Stack gap={"md"}>
       <Group>
-        <Switch
-          className={`switch ${enableNotificationEmail ? "on" : "off"}`}
-          size="md"
+        <RateupSwitch
+          offMessage={translations["Click here to enable email notification"]}
+          onMessage={translations["Click here to disable email notification"]}
           checked={enableNotificationEmail}
           onChange={() =>
             updateEmailSurvey(setEnabledNotificationEmail, editSurvey)
