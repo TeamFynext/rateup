@@ -22,8 +22,9 @@ import {
   RateupButtonBlackOutline,
   RateupButtonBlue,
 } from "../../../Button/RateupButtons";
+import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps";
 import modalStyles from "./ModalStyles.module.css";
-import { mapSmileyIcon } from "./SmileyRating";
+import { getCustomSmileyIcon, mapSmileyIcon } from "./SmileyRating";
 import styles from "./TakeSurvey.module.css";
 
 function ConfirmResponsesModal({
@@ -83,6 +84,15 @@ function ConfirmResponsesModal({
                               />
                             );
                           case Q.Smiley:
+                            if (
+                              question?.features?.iconStyle?.variant &&
+                              question?.features?.iconStyle?.variant ===
+                                SmileyVariantStyle.Custom
+                            )
+                              return getCustomSmileyIcon(
+                                Object.values(response?.response)[0],
+                                question,
+                              );
                             return mapSmileyIcon(
                               Object.values(response?.response)[0],
                               surveyThemeData?.surveyTheme?.input?.primaryColor,

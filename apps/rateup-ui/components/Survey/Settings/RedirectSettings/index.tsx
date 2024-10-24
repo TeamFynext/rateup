@@ -1,13 +1,6 @@
-import {
-  Box,
-  Group,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { Box, Group, SimpleGrid, Stack } from "@mantine/core";
 
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
@@ -45,9 +38,9 @@ function RedirectSettings({
     return (
       <PaperLayout className={`section-div`}>
         <Group>
-          <Switch
-            className={`switch ${(redirect?.enable ?? false) ? "on" : "off"}`}
-            size="md"
+          <RateupSwitch
+            offMessage={translations["Click here to enable Redirect option"]}
+            onMessage={translations["Click here to disable Redirect option"]}
             checked={redirect?.enable ?? false}
             onChange={() => updateRedirect(setRedirect, editSurvey)}
             disabled={kioskMode}

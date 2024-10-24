@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Switch, SwitchProps, Tooltip } from "@mantine/core";
 
@@ -16,17 +16,16 @@ const RateupSwitch = ({
 }: RateupSwitchProps) => {
   const [isOn, setIsOn] = useState(checked);
 
-  const handleToggle = () => {
-    const newState = !isOn;
+  const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newState = event.currentTarget.checked;
     setIsOn(newState);
     if (onChange) {
-      onChange(newState as unknown as React.ChangeEvent<HTMLInputElement>);
+      onChange(event); // Forward the change event to the parent handler
     }
   };
 
-  // Update local state based on the checked prop
-  React.useEffect(() => {
-    setIsOn(checked);
+  useEffect(() => {
+    setIsOn(checked || false);
   }, [checked]);
 
   return (

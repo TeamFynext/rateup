@@ -46,8 +46,8 @@ function LogoTabpanel({ state, dispatch }) {
                 {translations["Logo:"]}
               </Title>
               <RateupSwitch
-                offMessage={translations["Disabled"]}
-                onMessage={translations["Enabled"]}
+                offMessage={translations["Click here to enable the logo"]}
+                onMessage={translations["Click here to disable the logo"]}
                 checked={isLogoEnabled}
                 onChange={(e) => {
                   dispatch({
