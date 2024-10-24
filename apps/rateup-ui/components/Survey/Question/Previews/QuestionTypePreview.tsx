@@ -60,7 +60,7 @@ const QuestionTypePreview = ({
     case Q.Opinion:
       return <OpinionScaleForm />;
     case Q.Smiley:
-      return <SmileyForm />;
+      return <SmileyForm features={features} />;
     case Q.Photo:
       return <ImageForm isPreview={true} />;
     case Q.MCQ:

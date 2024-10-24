@@ -1,3 +1,19 @@
+import { useContext } from "react";
+
+import {
+  IconMoodAngry,
+  IconMoodCrazyHappy,
+  IconMoodCry,
+  IconMoodEmpty,
+  IconMoodHappy,
+  IconMoodSad,
+  IconMoodSmile,
+  IconMoodSmileBeam,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
+
+import { TeamWiseResponses } from "../backend/surveys/response/response.api";
+import SelectedLanguageContext from "../context/SelectedLanguage";
 import {
   LDResponse,
   NPSWeightage,
@@ -5,18 +21,7 @@ import {
   SmileyResponse,
   YNResponse,
 } from "../types/enums";
-import dayjs from "dayjs";
-import {
-  IconMoodCry,
-  IconMoodSad,
-  IconMoodSmile,
-  IconMoodCrazyHappy,
-  IconMoodSmileBeam,
-} from "@tabler/icons-react";
 import { decryptPrivateKey, decryptResponse } from "./encryption";
-import { TeamWiseResponses } from "../backend/surveys/response/response.api";
-import { useContext } from "react";
-import SelectedLanguageContext from "../context/SelectedLanguage";
 
 export function getResponse(q: any, response: any) {
   if (!response && response !== 0) return "";
@@ -268,17 +273,21 @@ export function getResponseArrayByQuestionType(
     }
     case QuestionType.Smiley: {
       return [
-        { value: SmileyResponse.VerySad, color: "#ff5c55", Icon: IconMoodCry },
+        {
+          value: SmileyResponse.VerySad,
+          color: "#ff5c55",
+          Icon: IconMoodAngry,
+        },
         { value: SmileyResponse.Sad, color: "#feb75c", Icon: IconMoodSad },
         {
           value: SmileyResponse.Neutral,
           color: "#fedc4e",
-          Icon: IconMoodSmile,
+          Icon: IconMoodEmpty,
         },
         {
           value: SmileyResponse.Happy,
           color: "#a6e346",
-          Icon: IconMoodSmileBeam,
+          Icon: IconMoodHappy,
         },
         {
           value: SmileyResponse.VeryHappy,

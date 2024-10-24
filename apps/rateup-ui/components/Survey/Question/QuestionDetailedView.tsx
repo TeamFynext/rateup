@@ -54,6 +54,7 @@ import ContactExtraProps from "./QuestionExtraProps/ContactExtraProps";
 import EmailOtpExtraProps from "./QuestionExtraProps/EmailOtpExtraProps";
 import MCQGridExtraProps from "./QuestionExtraProps/MCQGridExtraProps";
 import MultiTextInputExtraProps from "./QuestionExtraProps/MultiTextInputExtraProps";
+import SmileyExtraProps from "./QuestionExtraProps/SmileyExtraProps";
 import TestimonialExtraProps from "./QuestionExtraProps/TestimonialExtraProps";
 import TncExtraProps from "./QuestionExtraProps/TncExtraProps";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps";
@@ -416,6 +417,8 @@ function ExtraProps({
       );
     case QuestionType.WOP:
       return <WOPExtraProps form={form} />;
+    case QuestionType.Smiley:
+      return <SmileyExtraProps form={form} />;
     default:
       return null;
   }

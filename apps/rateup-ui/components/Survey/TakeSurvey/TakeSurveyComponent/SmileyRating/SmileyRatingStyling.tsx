@@ -1,26 +1,63 @@
-import { rem } from "@mantine/core";
+import { lighten, rem, Text } from "@mantine/core";
 import {
+  IconMoodAngry,
+  IconMoodAngryFilled,
+  IconMoodCrazyHappy,
+  IconMoodCrazyHappyFilled,
   IconMoodCry,
+  IconMoodEmpty,
+  IconMoodEmptyFilled,
+  IconMoodHappy,
+  IconMoodHappyFilled,
   IconMoodSad,
+  IconMoodSadFilled,
   IconMoodSmile,
   IconMoodSmileBeam,
-  IconMoodCrazyHappy,
 } from "@tabler/icons-react";
 
-export const getIconStyle = (color?: string, iconType?: string) => {
+import {
+  SmileyColorType,
+  SmileyVariantStyle,
+} from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps";
+
+export const getIconStyle = (
+  color?: string,
+  iconType: string = "neutral",
+  iconStyle = {
+    variant: SmileyVariantStyle.Filled,
+    colorType: SmileyColorType.Default,
+  },
+) => {
   let colorString = undefined;
+  const { variant, colorType } = iconStyle;
   if (color) {
     switch (iconType) {
       case "empty": {
-        colorString = `var(--mantine-color-${color}-3)`;
+        if (
+          variant === SmileyVariantStyle.Filled &&
+          (!colorType || colorType === SmileyColorType.Default)
+        ) {
+          colorString = `var(--mantine-color-${color}-3)`;
+        } else {
+          colorString =
+            colorType !== SmileyColorType.Default
+              ? lighten(color, 0.3)
+              : `var(--mantine-color-${color}-3)`;
+        }
         break;
       }
       case "full": {
-        colorString = `var(--mantine-color-${color}-7)`;
+        colorString =
+          colorType && colorType !== SmileyColorType.Default
+            ? color
+            : `var(--mantine-color-${color}-7)`;
         break;
       }
       default: {
-        colorString = `var(--mantine-color-${color}-9)`;
+        colorString =
+          colorType && colorType !== SmileyColorType.Default
+            ? color
+            : `var(--mantine-color-${color}-9)`;
       }
     }
   }
@@ -33,38 +70,120 @@ export const getIconStyle = (color?: string, iconType?: string) => {
   };
 };
 
-export const getEmptyIcon = (value: number, color: string) => {
-  const iconStyle = getIconStyle();
-
-  switch (value) {
-    case 1:
-      return <IconMoodCry style={getIconStyle(color, "empty")} />;
-    case 2:
-      return <IconMoodSad style={getIconStyle(color, "empty")} />;
-    case 3:
-      return <IconMoodSmile style={getIconStyle(color, "empty")} />;
-    case 4:
-      return <IconMoodSmileBeam style={getIconStyle(color, "empty")} />;
-    case 5:
-      return <IconMoodCrazyHappy style={getIconStyle(color, "empty")} />;
-    default:
-      return null;
+export const getEmptyIcon = (value: number, color: string, iconStyle) => {
+  const { variant, emojies } = iconStyle;
+  if (variant === SmileyVariantStyle.Custom) {
+    return <Text size={"3rem"}>{emojies?.[value]}</Text>;
+  } else if (variant === SmileyVariantStyle.Filled) {
+    switch (value) {
+      case 1:
+        return (
+          <IconMoodAngryFilled
+            style={getIconStyle(color, "empty", iconStyle)}
+          />
+        );
+      case 2:
+        return (
+          <IconMoodSadFilled style={getIconStyle(color, "empty", iconStyle)} />
+        );
+      case 3:
+        return (
+          <IconMoodEmptyFilled
+            style={getIconStyle(color, "empty", iconStyle)}
+          />
+        );
+      case 4:
+        return (
+          <IconMoodHappyFilled
+            style={getIconStyle(color, "empty", iconStyle)}
+          />
+        );
+      case 5:
+        return (
+          <IconMoodCrazyHappyFilled
+            style={getIconStyle(color, "empty", iconStyle)}
+          />
+        );
+      default:
+        return null;
+    }
+  } else {
+    switch (value) {
+      case 1:
+        return (
+          <IconMoodAngry style={getIconStyle(color, "empty", iconStyle)} />
+        );
+      case 2:
+        return <IconMoodSad style={getIconStyle(color, "empty", iconStyle)} />;
+      case 3:
+        return (
+          <IconMoodEmpty style={getIconStyle(color, "empty", iconStyle)} />
+        );
+      case 4:
+        return (
+          <IconMoodHappy style={getIconStyle(color, "empty", iconStyle)} />
+        );
+      case 5:
+        return (
+          <IconMoodCrazyHappy style={getIconStyle(color, "empty", iconStyle)} />
+        );
+      default:
+        return null;
+    }
   }
 };
 
-export const getFullIcon = (value: number, color: string) => {
-  switch (value) {
-    case 1:
-      return <IconMoodCry style={getIconStyle(color, "full")} />;
-    case 2:
-      return <IconMoodSad style={getIconStyle(color, "full")} />;
-    case 3:
-      return <IconMoodSmile style={getIconStyle(color, "full")} />;
-    case 4:
-      return <IconMoodSmileBeam style={getIconStyle(color, "full")} />;
-    case 5:
-      return <IconMoodCrazyHappy style={getIconStyle(color, "full")} />;
-    default:
-      return null;
+export const getFullIcon = (value: number, color: string, iconStyle) => {
+  const { variant, emojies } = iconStyle;
+  if (variant === SmileyVariantStyle.Custom) {
+    return <Text size={"3rem"}>{emojies?.[value]}</Text>;
+  } else if (
+    [SmileyVariantStyle.Filled, SmileyVariantStyle.FilledOnHover].includes(
+      variant,
+    )
+  ) {
+    switch (value) {
+      case 1:
+        return (
+          <IconMoodAngryFilled style={getIconStyle(color, "full", iconStyle)} />
+        );
+      case 2:
+        return (
+          <IconMoodSadFilled style={getIconStyle(color, "full", iconStyle)} />
+        );
+      case 3:
+        return (
+          <IconMoodEmptyFilled style={getIconStyle(color, "full", iconStyle)} />
+        );
+      case 4:
+        return (
+          <IconMoodHappyFilled style={getIconStyle(color, "full", iconStyle)} />
+        );
+      case 5:
+        return (
+          <IconMoodCrazyHappyFilled
+            style={getIconStyle(color, "full", iconStyle)}
+          />
+        );
+      default:
+        return null;
+    }
+  } else {
+    switch (value) {
+      case 1:
+        return <IconMoodAngry style={getIconStyle(color, "full", iconStyle)} />;
+      case 2:
+        return <IconMoodSad style={getIconStyle(color, "full", iconStyle)} />;
+      case 3:
+        return <IconMoodEmpty style={getIconStyle(color, "full", iconStyle)} />;
+      case 4:
+        return <IconMoodHappy style={getIconStyle(color, "full", iconStyle)} />;
+      case 5:
+        return (
+          <IconMoodCrazyHappy style={getIconStyle(color, "full", iconStyle)} />
+        );
+      default:
+        return null;
+    }
   }
 };
