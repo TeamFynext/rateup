@@ -40,7 +40,7 @@ export const getIconStyle = (
           colorString = `var(--mantine-color-${color}-3)`;
         } else {
           colorString =
-            colorType !== SmileyColorType.Default
+            colorType && colorType !== SmileyColorType.Default
               ? lighten(color, 0.3)
               : `var(--mantine-color-${color}-3)`;
         }
@@ -70,10 +70,25 @@ export const getIconStyle = (
   };
 };
 
-export const getEmptyIcon = (value: number, color: string, iconStyle) => {
+export const getEmptyIcon = (
+  value: number,
+  color: string,
+  iconStyle,
+  response,
+) => {
   const { variant, emojies } = iconStyle;
-  if (variant === SmileyVariantStyle.Custom) {
-    return <Text size={"3rem"}>{emojies?.[value]}</Text>;
+  if (variant === SmileyVariantStyle.Emojis) {
+    return (
+      <Text size={value === response ? "3rem" : "2.5rem"}>
+        {getSmileyEmojies(value)}
+      </Text>
+    );
+  } else if (variant === SmileyVariantStyle.Custom) {
+    return (
+      <Text size={value === response ? "3rem" : "2.5rem"}>
+        {emojies?.[value]}
+      </Text>
+    );
   } else if (variant === SmileyVariantStyle.Filled) {
     switch (value) {
       case 1:
@@ -135,7 +150,9 @@ export const getEmptyIcon = (value: number, color: string, iconStyle) => {
 
 export const getFullIcon = (value: number, color: string, iconStyle) => {
   const { variant, emojies } = iconStyle;
-  if (variant === SmileyVariantStyle.Custom) {
+  if (variant === SmileyVariantStyle.Emojis) {
+    return <Text size={"3rem"}>{getSmileyEmojies(value)}</Text>;
+  } else if (variant === SmileyVariantStyle.Custom) {
     return <Text size={"3rem"}>{emojies?.[value]}</Text>;
   } else if (
     [SmileyVariantStyle.Filled, SmileyVariantStyle.FilledOnHover].includes(
@@ -187,3 +204,20 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
     }
   }
 };
+
+export function getSmileyEmojies(value) {
+  switch (value) {
+    case 1:
+      return "😥";
+    case 2:
+      return "🙁";
+    case 3:
+      return "😐";
+    case 4:
+      return "🙂";
+    case 5:
+      return "😀";
+    default:
+      return null;
+  }
+}
