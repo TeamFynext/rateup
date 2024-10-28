@@ -71,6 +71,35 @@ export enum QuestionType {
   PhotoPicker = "Photo Picker",
 }
 
+export enum QuestionType2 {
+  Email = "Email",
+  Phone = "Phone",
+  Rating = "Rating",
+  Smiley = "Smiley",
+  LD = "Like or Dislike",
+  YN = "Yes or No",
+  Opinion = "Opinion Scale",
+  TextHeading = "Text Heading",
+  TextSubheading = "Text Subheading",
+  TextBody = "Text Body",
+  TextCaption = "Text Caption",
+  TextInput = "Text Input",
+  TextArea = "Text Area",
+  CheckboxGroup = "Multiple Select",
+  RadioButtonsGroup = "Single Select",
+  Footer = "Footer",
+  Dropdown = "Dropdown Single Select",
+  OptIn = "Opt In",
+  DatePicker = "DatePicker",
+  Image = "Image",
+  DocumentPicker = "Document Picker",
+  PhotoPicker = "Photo Picker",
+  RichText = "RichText",
+  // If = "If",
+  // Switch = "Switch",
+  // EmbeddedLink = "Embedded Link",
+}
+
 export enum LDResponse {
   Like = "Like",
   Dislike = "Dislike",

@@ -52,8 +52,6 @@ enum ResultTab {
 
 const Result = ({
   survey,
-  setSelectedLanguage,
-  setFilterTags,
   encryptionpassword,
   setEncryptionPassword,
   subscription = null,

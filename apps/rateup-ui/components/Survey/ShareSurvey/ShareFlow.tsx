@@ -46,7 +46,7 @@ export const ShareFlow = ({
 }: {
   allowUnpublishedShare?: boolean;
 }) => {
-  const { survey, flowJson, map } = useContext(EditFlowContext);
+  const { survey } = useContext(EditFlowContext);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
@@ -185,27 +185,7 @@ export const ShareFlow = ({
   }
 
   const handleSaveToWa = () => {
-    let errorMessages = [];
-    for (const flScreen of flowJson?.screens) {
-      const questions = getQuestionsFromScreen(flScreen, survey, map);
-      for (const qs of questions) {
-        if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
-          let choice = Object.values(qs?.choices ?? {})?.[0];
-          if (!choice || choice?.length === 0) {
-            let title = Object.values(qs?.title ?? {})?.[0];
-            let label = Object.values(qs?.label ?? {})?.[0];
-            errorMessages.push(title || label);
-          }
-        }
-      }
-    }
-    if (errorMessages.length > 0) {
-      errorMessages?.map((error) =>
-        showErrorToast(`Atleast one choice in ${error} question needed`),
-      );
-    } else {
-      pushToWaMutation.mutate(dbFlowId);
-    }
+    pushToWaMutation.mutate(dbFlowId);
   };
 
   return (

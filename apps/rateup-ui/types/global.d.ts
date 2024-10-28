@@ -752,6 +752,7 @@ declare global {
     startMessageConfig: WaFlowStartMessageConfig;
     pendingSave: boolean;
     anonymous: boolean;
+    version: number;
   };
 
   type LoyaltyCampaign = {

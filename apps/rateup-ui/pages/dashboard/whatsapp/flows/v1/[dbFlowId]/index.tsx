@@ -1,6 +1,7 @@
 import { MantineThemeProvider } from "@mantine/core";
-import WhatsappFlowPage from "../../../../../components/whatsapp/flows/FlowPage";
-import { whatsappTheme } from "../../../../../config/mantineTheme";
+
+import { whatsappTheme } from "@/config/mantineTheme";
+import WhatsappFlowPage from "@/components/whatsapp/flows/FlowPage";
 
 function FlowPage() {
   return (

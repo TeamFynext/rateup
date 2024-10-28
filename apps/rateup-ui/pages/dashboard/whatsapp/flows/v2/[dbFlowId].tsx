@@ -1,0 +1,102 @@
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
+
+import { WaFlowStatus } from "@/types/enums";
+import { whatsappTheme } from "@/config/mantineTheme";
+import { useSurvey } from "@/backend/surveys/surveys.query";
+import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
+import Result from "@/components/Survey/Result/Result";
+import SurveySettings from "@/components/Survey/Settings";
+import { ShareFlow } from "@/components/Survey/ShareSurvey/ShareFlow";
+import EditFlow from "@/components/whatsapp/flow-v2/EditFlow";
+import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
+import FlowPageHeader, {
+  FlowTabEnum,
+} from "@/components/whatsapp/flows/FlowPage/FlowPageHeader";
+import { useRouteParams } from "@/context/RouteParamsContext";
+import useTranslations from "@/dictionaries/useTranslation";
+
+import styles from "./FlowPage.module.css";
+
+const Flow = () => {
+  const [tab, setTab] = useState(FlowTabEnum.Edit);
+  const router = useRouter();
+  const { dbFlowId } = router.query as { dbFlowId: string };
+  const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
+  const { data: survey, isPending: isSurveyPending } = useSurvey(
+    flow?.surveyId,
+  );
+  const { update } = useRouteParams();
+  const { translations } = useTranslations();
+  const flowEditable = flow?.status === WaFlowStatus.DRAFT;
+  useEffect(() => {
+    update({ dbFlowId: flow?.name });
+  }, [flow, update]);
+  if (isPending || isSurveyPending) return <RateupLoader />;
+
+  return (
+    <MantineProvider theme={whatsappTheme}>
+      <Box className={styles["flow-page-container"]}>
+        <Stack className={styles["flow-page-content"]}>
+          <FlowPageHeader name={flow.name} tab={tab} setTabState={setTab} />
+          <StyledTabs
+            className={styles["flow-page-panels-container"]}
+            keepMounted={false}
+            value={tab}
+            h={"100%"}
+          >
+            <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
+              <EditFlow />
+            </Tabs.Panel>
+            <Tabs.Panel value={FlowTabEnum.Settings}>
+              <SurveySettings
+                surveyId={survey.id}
+                survey={survey}
+                enabledModules={["teams", "flow"]}
+                flowName={flow.name}
+                flowDbId={flow.dbFlowId}
+                anonymous={flow?.anonymous}
+              />
+            </Tabs.Panel>
+            <Tabs.Panel value={FlowTabEnum.Result}>
+              <Result
+                encryptionpassword={""}
+                setEncryptionPassword={() => {}}
+                survey={survey}
+                flowId={flow.flowId}
+                translations={translations}
+              />
+            </Tabs.Panel>
+            <Tabs.Panel value={FlowTabEnum.Share}>
+              <EditFlowContext.Provider
+                value={{
+                  flowJson: null,
+                  updateFlowJson: null,
+                  map: null,
+                  updateMap: null,
+                  survey,
+                  updateSurvey: null,
+                  selectedLang: null,
+                  selectedScreenId: null,
+                  setSelectedScreenId: null,
+                  setSelectedFormElementId: null,
+                  selectedFormElementId: null,
+                  screenNumber: null,
+                  setScreenNumber: null,
+                }}
+              >
+                <ShareFlow allowUnpublishedShare={true} />
+              </EditFlowContext.Provider>
+            </Tabs.Panel>
+          </StyledTabs>
+        </Stack>
+      </Box>
+    </MantineProvider>
+  );
+};
+
+export default Flow;
