@@ -223,30 +223,6 @@ export const getValidationSchema = (type: QuestionType2) => {
           .optional(),
       };
       break;
-    case QuestionType2.TextBody:
-      schema = {
-        type: z.string(),
-        text: z.string().trim().min(1).max(4096),
-      };
-      break;
-    case QuestionType2.TextCaption:
-      schema = {
-        type: z.string(),
-        text: z.string().trim().min(1).max(409),
-      };
-      break;
-    case QuestionType2.TextHeading:
-      schema = {
-        type: z.string(),
-        text: z.string().trim().min(1).max(80),
-      };
-      break;
-    case QuestionType2.TextSubheading:
-      schema = {
-        type: z.string(),
-        text: z.string().trim().min(1).max(80),
-      };
-      break;
     case QuestionType2.RichText:
       schema = {
         type: z.literal("RichText"),
@@ -259,7 +235,12 @@ export const getValidationSchema = (type: QuestionType2) => {
 type InitialValues = {
   [key: string]: {
     type: string;
-    value: string | number | boolean | string[];
+    value:
+      | string
+      | number
+      | boolean
+      | string[]
+      | { id: string; title: string }[];
     extra?: any;
   };
 };
@@ -349,14 +330,6 @@ export const getInitialValues = (type: QuestionType2) => {
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        "data-source": {
-          type: "select",
-          value: [],
-          extra: {
-            data: [],
-            defaultValue: [],
-          },
-        },
         name: { type: "text", value: generateId },
         "min-selected-items": { type: "number", value: 0 },
         "max-selected-items": { type: "number", value: 1 },
@@ -377,6 +350,10 @@ export const getInitialValues = (type: QuestionType2) => {
             data: ["regular", "large"],
             defaultValue: "regular",
           },
+        },
+        "data-source": {
+          type: "dataSource",
+          value: getDataSource(type),
         },
         enableNpsAnalytics: { type: "checkbox", value: false },
       };
@@ -418,11 +395,6 @@ export const getInitialValues = (type: QuestionType2) => {
         "data-source": {
           type: "dataSource",
           value: getDataSource(type),
-          extra: {
-            data: [],
-            defaultValue: [],
-            disable: true,
-          },
         },
         enableNpsAnalytics: { type: "checkbox", value: false },
       };
@@ -488,16 +460,12 @@ export const getInitialValues = (type: QuestionType2) => {
             required: true,
           },
         },
-        "data-source": {
-          type: "select",
-          value: [],
-          extra: {
-            data: [],
-            defaultValue: [],
-          },
-        },
         required: { type: "checkbox", value: true },
         "init-value": { type: "text", value: "" },
+        "data-source": {
+          type: "dataSource",
+          value: getDataSource(type),
+        },
         enableNpsAnalytics: { type: "checkbox", value: false },
       };
       break;
@@ -637,58 +605,6 @@ export const getInitialValues = (type: QuestionType2) => {
         },
       };
       break;
-    case QuestionType2.TextBody:
-      initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "TextBody" },
-        metaType: {
-          type: "text",
-          value: Object.keys(QuestionType2).find(
-            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
-          ),
-        },
-        text: { type: "text", value: "", extra: { required: true } },
-      };
-      break;
-    case QuestionType2.TextCaption:
-      initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "TextCaption" },
-        metaType: {
-          type: "text",
-          value: Object.keys(QuestionType2).find(
-            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
-          ),
-        },
-        text: { type: "text", value: "", extra: { required: true } },
-      };
-      break;
-    case QuestionType2.TextHeading:
-      initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "TextHeading" },
-        metaType: {
-          type: "text",
-          value: Object.keys(QuestionType2).find(
-            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
-          ),
-        },
-        text: { type: "text", value: "", extra: { required: true } },
-      };
-      break;
-    case QuestionType2.TextSubheading:
-      initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "TextSubheading" },
-        metaType: {
-          type: "text",
-          value: Object.keys(QuestionType2).find(
-            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
-          ),
-        },
-        text: { type: "text", value: "", extra: { required: true } },
-      };
-      break;
     case QuestionType2.RichText:
       initialValues = {
         id: { type: "text", value: generateId },
@@ -708,7 +624,6 @@ export const getInitialValues = (type: QuestionType2) => {
 
 const getDataSource = (type: QuestionType2) => {
   switch (type) {
-    case QuestionType2.RadioButtonsGroup:
     case QuestionType2.Rating:
       return [
         {
@@ -821,26 +736,7 @@ const getDataSource = (type: QuestionType2) => {
           title: "10",
         },
       ];
-    case QuestionType2.CheckboxGroup:
-      return [
-        {
-          id: "1",
-          title: "Option 1",
-          description: "",
-          metadata: "",
-          image: "",
-          "alt-text": "",
-          color: "",
-        },
-        {
-          id: "2",
-          title: "Option 2",
-          description: "",
-          metadata: "",
-          image: "",
-          "alt-text": "",
-          color: "",
-        },
-      ];
+    default:
+      return [];
   }
 };

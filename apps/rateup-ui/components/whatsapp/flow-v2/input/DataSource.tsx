@@ -5,6 +5,7 @@ import {
   Box,
   Card,
   Checkbox,
+  Flex,
   Group,
   Image,
   SimpleGrid,
@@ -17,6 +18,7 @@ import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
 
+import { QuestionType2 } from "@/types/enums";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -30,9 +32,11 @@ import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
   MAX_METADATA_COUNT,
+  WaNPSQuestions2,
 } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 
+import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar";
 import inputStyles from "../EditFlow.module.css";
 
 interface Choice {
@@ -49,7 +53,7 @@ export function DataSourceInput(props) {
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const resetRef = useRef<() => void>(null);
   const choiceResetRef = useRef<() => void>(null);
-  let choices = props.value;
+  let choices = props.value ?? [];
   let maxCharCount = props.maxCharCount ?? 30;
   let maxChoiceCount = props.maxChoice ?? 20;
   const choiceSchema = z.object({
@@ -79,7 +83,6 @@ export function DataSourceInput(props) {
     validate: zodResolver(choiceSchema),
   });
   const { translations } = useTranslations();
-
   const handleAddChoice = async () => {
     const { hasErrors } = choiceForm.validate();
     if (hasErrors) return;
@@ -124,7 +127,9 @@ export function DataSourceInput(props) {
     choiceForm.setFieldValue("image", null);
     choiceResetRef.current?.();
   };
-
+  let disabled = Object.values(WaNPSQuestions2).includes(
+    QuestionType2?.[props.form.getValues().metaType],
+  );
   return (
     <Card bg={"var(--bg-grey-color)"} radius={"lg"}>
       <Text td={"underline"}>CHOICES</Text>
@@ -132,7 +137,7 @@ export function DataSourceInput(props) {
         {props.error}
       </Text>
       <Stack gap={"xs"}>
-        {choices.map((choice, i) => (
+        {choices?.map((choice, i) => (
           <Choice
             key={choice.id}
             choice={choice}
@@ -141,32 +146,48 @@ export function DataSourceInput(props) {
             onDelete={() => handleRemoveChoice(i)}
             index={i}
             maxCharCount={maxCharCount}
+            disabled={disabled}
           />
         ))}
       </Stack>
 
-      {(!maxChoiceCount || choices.length < maxChoiceCount) && (
+      {(!maxChoiceCount || choices?.length < maxChoiceCount) && (
         <Group
           className={maxCharCount && inputStyles.lengthTrackerParent}
           mt={"xs"}
           onKeyDown={getHotkeyHandler([["Enter", handleAddChoice]])}
           style={{ flexDirection: "column" }}
+          display={disabled ? "none" : "flex"}
         >
           <Stack style={{ width: "100%", flexGrow: 1 }} gap={4}>
-            <ContainedTextField
-              placeholder={translations["Enter title here"]}
-              label={translations["Title"]}
-              withAsterisk
-              rightSection={
-                maxCharCount && (
-                  <LengthTracker
-                    length={choiceForm.getValues().title?.length}
-                    maxValue={maxCharCount}
-                  />
-                )
-              }
-              {...choiceForm.getInputProps("title")}
-            />
+            <Group>
+              <ContainedTextField
+                placeholder={translations["Enter title here"]}
+                label={translations["Title"]}
+                withAsterisk
+                w={"92%"}
+                rightSection={
+                  maxCharCount && (
+                    <LengthTracker
+                      length={choiceForm.getValues().title?.length}
+                      maxValue={maxCharCount}
+                    />
+                  )
+                }
+                {...choiceForm.getInputProps("title")}
+              />
+              <Box mt={24}>
+                <PopoverEmojiPicker
+                  onEmojiClick={(e) =>
+                    choiceForm.setFieldValue(
+                      "title",
+                      choiceForm.getValues().title + e,
+                    )
+                  }
+                  size="lg"
+                />
+              </Box>
+            </Group>
             <ContainedTextField
               placeholder={translations["Enter description here"]}
               label={translations["Description"]}
@@ -245,6 +266,7 @@ interface ChoiceProps {
   onDelete: () => void;
   index: number;
   maxCharCount?: number;
+  disabled: boolean;
 }
 
 function Choice({
@@ -254,6 +276,7 @@ function Choice({
   onDelete,
   index,
   maxCharCount,
+  disabled,
 }: ChoiceProps) {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
@@ -367,7 +390,12 @@ function Choice({
         </Box>
       </Group>
 
-      <ActionIcon variant="transparent" onClick={openEditModal} size={"sm"}>
+      <ActionIcon
+        variant="transparent"
+        onClick={openEditModal}
+        size={"sm"}
+        disabled={disabled}
+      >
         <IconEdit />
       </ActionIcon>
       <ActionIcon
@@ -375,6 +403,7 @@ function Choice({
         color="red"
         onClick={onDelete}
         size={"sm"}
+        disabled={disabled}
       >
         <IconTrash />
       </ActionIcon>

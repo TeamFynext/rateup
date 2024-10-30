@@ -195,7 +195,7 @@ function ScreenListItem({
                 ref={screenTitleInputRef}
                 className={styles["text-input"]}
                 label={`Screen ${pageNo + 1}`}
-                value={screenTitleInputState}
+                defaultValue={screenTitleInputState}
                 onChange={handleScreenTitleInputChange}
                 readOnly={!flowEditable}
                 placeholder={

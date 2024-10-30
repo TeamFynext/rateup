@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { ActionIcon, Box, Tooltip } from "@mantine/core";
@@ -35,7 +35,7 @@ function EditFlow() {
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
 
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
-  const { getCurrentScreen, getScreens } = useFlowStore();
+  const { getCurrentScreen, getScreens, screens } = useFlowStore();
   const updateFlow = useUpdateFlowMutation();
 
   function handleNewQuestionCreated({
@@ -46,13 +46,16 @@ function EditFlow() {
     id: string;
   }) {
     setSelectedQuestion({ type: QuestionType2?.[type], id });
+  }
+
+  useEffect(() => {
     updateFlow.mutate({
       dbFlowId,
       data: {
         json: { screens: getScreens() as any },
       },
     });
-  }
+  }, [dbFlowId, screens]);
 
   const handleTypeSelection = (type: QuestionType2) => {
     const screenToBeEdited = getCurrentScreen();

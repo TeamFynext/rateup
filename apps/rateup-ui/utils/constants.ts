@@ -159,10 +159,6 @@ const flowNonInputElements = [
   // wft.embeddedLink,
 ];
 export const flowNonInputElements2 = [
-  QuestionType2.TextHeading,
-  QuestionType2.TextSubheading,
-  QuestionType2.TextBody,
-  QuestionType2.TextCaption,
   QuestionType2.RichText,
   QuestionType2.Image,
 ];

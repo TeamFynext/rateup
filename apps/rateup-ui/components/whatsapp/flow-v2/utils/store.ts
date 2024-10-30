@@ -147,7 +147,10 @@ const useFlowStore = create<StoreState>()(
       }),
     updateScreen: (updatedScreen) =>
       set((state) => {
-        const screen = state.getCurrentScreen();
+        let { currentScreenId } = state;
+        const screen = state.screens.find(
+          (screen) => screen.id === currentScreenId,
+        );
         if (screen) {
           Object.assign(screen, updatedScreen);
         }

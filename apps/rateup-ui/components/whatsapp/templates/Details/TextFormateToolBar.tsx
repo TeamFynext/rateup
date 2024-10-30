@@ -113,18 +113,23 @@ export const TextFormateToolBar = ({
 export const PopoverEmojiPicker = ({
   onEmojiClick,
   showIcon,
+  size = "xs",
 }: {
   onEmojiClick: (emoji: string) => void;
   showIcon?: React.ReactNode;
+  size?: "xs" | "sm" | "md" | "lg";
 }) => {
   const { translations } = useTranslations();
   return (
-    <Popover withArrow shadow="md">
+    <Popover withArrow shadow="md" keepMounted floatingStrategy="fixed">
       <Popover.Target>
         <Tooltip label={translations["Insert an emoji"]}>
           {showIcon ?? (
-            <ActionIcon variant={"transparent"} size={"xs"}>
-              <IconMoodHappy color="var(--grey-color)" size={14} />
+            <ActionIcon variant={"transparent"} size={size}>
+              <IconMoodHappy
+                color="var(--grey-color)"
+                size={size === "xs" ? 14 : 30}
+              />
             </ActionIcon>
           )}
         </Tooltip>
