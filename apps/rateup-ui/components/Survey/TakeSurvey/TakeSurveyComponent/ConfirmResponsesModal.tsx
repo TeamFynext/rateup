@@ -84,10 +84,14 @@ function ConfirmResponsesModal({
                               />
                             );
                           case Q.Smiley:
+                            const variant =
+                              question?.features?.iconStyle?.variant;
                             if (
-                              question?.features?.iconStyle?.variant &&
-                              question?.features?.iconStyle?.variant ===
-                                SmileyVariantStyle.Custom
+                              variant &&
+                              [
+                                SmileyVariantStyle.Custom,
+                                SmileyVariantStyle.Emojis,
+                              ].includes(variant)
                             )
                               return getCustomSmileyIcon(
                                 Object.values(response?.response)[0],

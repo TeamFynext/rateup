@@ -25,6 +25,7 @@ export enum SmileyVariantStyle {
   Default = "Default",
   Filled = "Filled",
   FilledOnHover = "FilledOnHover",
+  Emojis = "Emojis",
   Custom = "Custom",
 }
 
@@ -36,7 +37,7 @@ export enum SmileyColorType {
 
 const SmileyExtraProps = ({ form }) => {
   const features = form.values.features ? { ...form.values.features } : {};
-  const [opened, { toggle }] = useDisclosure(false);
+  const [opened, { toggle, open }] = useDisclosure(true);
 
   const handleChange = (field, value) => {
     let updateData = {
@@ -64,7 +65,7 @@ const SmileyExtraProps = ({ form }) => {
         5: "#008000",
       };
     }
-    if (!features?.iconStyle?.variant) {
+    if (field !== "variant" && !features?.iconStyle?.variant) {
       updateData["variant"] = SmileyVariantStyle.Default;
     }
     form.setFieldValue("features", {
@@ -74,6 +75,8 @@ const SmileyExtraProps = ({ form }) => {
         ...updateData,
       },
     });
+
+    if (value !== "Default" && !opened) open();
   };
 
   const updateSmileyColor = (smiley, value) => {
@@ -121,9 +124,10 @@ const SmileyExtraProps = ({ form }) => {
             onChange={(value) => handleChange("colorType", value)}
             value={features?.iconStyle?.colorType}
             defaultValue={SmileyColorType.Default}
-            disabled={
-              features?.iconStyle?.variant === SmileyVariantStyle.Custom
-            }
+            disabled={[
+              SmileyVariantStyle.Custom,
+              SmileyVariantStyle.Emojis,
+            ].includes(features?.iconStyle?.variant)}
             allowDeselect={false}
           />
         </Flex>
@@ -133,26 +137,36 @@ const SmileyExtraProps = ({ form }) => {
       </Group>
 
       <Collapse in={opened}>
-        {features?.iconStyle?.variant === SmileyVariantStyle.Custom ? (
-          Object.values(SmileyResponse)
-            .reverse()
-            .map((smiley, i) => {
-              return (
-                <Group>
-                  <Text w={100}>{smiley}</Text> :{" "}
-                  <PopoverEmojiPicker
-                    showIcon={
-                      features?.iconStyle?.emojies?.[i + 1] ? (
-                        <Text size={"md"}>
-                          {features?.iconStyle?.emojies?.[i + 1]}
-                        </Text>
-                      ) : null
-                    }
-                    onEmojiClick={(emoji) => updateSmileyEmoji(i + 1, emoji)}
-                  />
-                </Group>
-              );
-            })
+        {features?.iconStyle?.variant ===
+        SmileyVariantStyle.Emojis ? null : features?.iconStyle?.variant ===
+          SmileyVariantStyle.Custom ? (
+          <Stack>
+            <Text size="sm">
+              Click on each smiley to insert corresponding emoji
+            </Text>
+            {Object.values(SmileyResponse)
+              .reverse()
+              .map((smiley, i) => {
+                return (
+                  <Group>
+                    <Text w={100} size="sm" fw={"bold"}>
+                      {smiley}
+                    </Text>{" "}
+                    :{" "}
+                    <PopoverEmojiPicker
+                      showIcon={
+                        features?.iconStyle?.emojies?.[i + 1] ? (
+                          <Text size={"md"}>
+                            {features?.iconStyle?.emojies?.[i + 1]}
+                          </Text>
+                        ) : null
+                      }
+                      onEmojiClick={(emoji) => updateSmileyEmoji(i + 1, emoji)}
+                    />
+                  </Group>
+                );
+              })}
+          </Stack>
         ) : features?.iconStyle?.colorType === SmileyColorType.Individual ? (
           Object.values(SmileyResponse)
             .reverse()

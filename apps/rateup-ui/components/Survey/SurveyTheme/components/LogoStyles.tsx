@@ -108,7 +108,7 @@ function LogoStyles() {
       >
         <NumberInput
           min={10}
-          max={100}
+          max={200}
           placeholder="Height"
           label="Height (px)"
           name="height"
@@ -118,7 +118,7 @@ function LogoStyles() {
         />
         <NumberInput
           min={10}
-          max={100}
+          max={200}
           placeholder="Width"
           label="Width (px)"
           name="Width"

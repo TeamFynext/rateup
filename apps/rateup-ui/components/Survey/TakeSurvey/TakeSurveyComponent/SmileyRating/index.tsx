@@ -22,7 +22,12 @@ import {
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 import { SmileyResponse } from "../../../../../types/enums";
-import { getEmptyIcon, getFullIcon, getIconStyle } from "./SmileyRatingStyling";
+import {
+  getEmptyIcon,
+  getFullIcon,
+  getIconStyle,
+  getSmileyEmojies,
+} from "./SmileyRatingStyling";
 
 const SmileyRating = ({ updateResponse, response, features }) => {
   const [scope, animate] = useAnimate();
@@ -127,6 +132,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
           number,
           customColor ? iconColor?.[number] : theme.primaryColor,
           iconStyle,
+          response,
         )
       }
       fullSymbol={(number) =>
@@ -201,18 +207,40 @@ export function getSmileyIcon(value: SmileyResponse, color = "black") {
 export function getCustomSmileyIcon(response: SmileyResponse, question) {
   const iconStyle = question?.features?.iconStyle;
   if (!iconStyle) return null;
+  let emoji;
   switch (response) {
     case SmileyResponse.VerySad:
-      return <Text size="2rem">{iconStyle?.emojies?.[1]}</Text>;
+      if (iconStyle?.variant === SmileyVariantStyle.Custom)
+        emoji = iconStyle?.emojies?.[1];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
+        emoji = getSmileyEmojies(1);
+      break;
     case SmileyResponse.Sad:
-      return <Text size="2rem">{iconStyle?.emojies?.[2]}</Text>;
+      if (iconStyle?.variant === SmileyVariantStyle.Custom)
+        emoji = iconStyle?.emojies?.[2];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
+        emoji = getSmileyEmojies(2);
+      break;
     case SmileyResponse.Neutral:
-      return <Text size="2rem">{iconStyle?.emojies?.[3]}</Text>;
+      if (iconStyle?.variant === SmileyVariantStyle.Custom)
+        emoji = iconStyle?.emojies?.[3];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
+        emoji = getSmileyEmojies(3);
+      break;
     case SmileyResponse.Happy:
-      return <Text size="2rem">{iconStyle?.emojies?.[4]}</Text>;
+      if (iconStyle?.variant === SmileyVariantStyle.Custom)
+        emoji = iconStyle?.emojies?.[4];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
+        emoji = getSmileyEmojies(4);
+      break;
     case SmileyResponse.VeryHappy:
-      return <Text size="2rem">{iconStyle?.emojies?.[5]}</Text>;
+      if (iconStyle?.variant === SmileyVariantStyle.Custom)
+        emoji = iconStyle?.emojies?.[5];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
+        emoji = getSmileyEmojies(5);
+      break;
     default:
-      null;
+      break;
   }
+  return <Text size="2rem">{emoji}</Text>;
 }

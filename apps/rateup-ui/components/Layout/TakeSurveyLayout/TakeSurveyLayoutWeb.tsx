@@ -257,8 +257,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
                     src={orgLogoSrc}
                     alt="Logo"
                     style={{ ...orgLogoStyles }}
-                    mah={100}
-                    maw={100}
+                    mah={200}
+                    maw={200}
                     fit="contain"
                   />
                 )}

@@ -90,7 +90,7 @@ const TeamMemberCard = ({
                 variant="dot"
                 size="sm"
               >
-                {translations[member?.role]}
+                {member?.role}
               </Badge>
             )}
             <Badge
@@ -98,7 +98,7 @@ const TeamMemberCard = ({
               variant="light"
               p={"sm"}
             >
-              {translations[member.active ? "ACTIVE" : member?.status]}
+              {member.active ? "ACTIVE" : member?.status}
             </Badge>
           </Flex>
         </Stack>
