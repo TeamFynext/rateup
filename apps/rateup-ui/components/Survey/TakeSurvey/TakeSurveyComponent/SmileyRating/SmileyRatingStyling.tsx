@@ -208,15 +208,15 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
 export function getSmileyEmojies(value) {
   switch (value) {
     case 1:
-      return "😥";
+      return "😥\u00A0";
     case 2:
-      return "🙁";
+      return "🙁\u00A0";
     case 3:
-      return "😐";
+      return "😐\u00A0";
     case 4:
-      return "🙂";
+      return "🙂\u00A0";
     case 5:
-      return "😀";
+      return "😀\u00A0";
     default:
       return null;
   }
