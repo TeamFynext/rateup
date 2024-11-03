@@ -228,7 +228,12 @@ export function QuestionsSideBar({
               variant="light"
               onClick={openSurveyPreviewModal}
             >
-              <IconPlayerPlay />
+              <Group
+                style={{ display: "flex", alignItems: "center", gap: "2px" }}
+              >
+                <Text>{translations["Preview"]}</Text>
+                <IconPlayerPlay />
+              </Group>
             </ActionIcon>
           </Tooltip>
 
@@ -266,7 +271,12 @@ export function QuestionsSideBar({
                 openSurveyEditPreview();
               }}
             >
-              <IconEdit />
+              <Group
+                style={{ display: "flex", alignItems: "center", gap: "2px" }}
+              >
+                <Text>{translations["Edit"]}</Text>
+                <IconEdit />
+              </Group>
             </ActionIcon>
           </Tooltip>
         </Group>
