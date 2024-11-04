@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { lighten, rem, Text } from "@mantine/core";
 import {
   IconMoodAngry,
@@ -77,15 +79,31 @@ export const getEmptyIcon = (
   response,
 ) => {
   const { variant, emojies } = iconStyle;
-  if (variant === SmileyVariantStyle.Emojis) {
+  if (variant === SmileyVariantStyle.Default) {
     return (
-      <Text size={value === response ? "3rem" : "2.5rem"}>
+      <Image
+        src={getDefaultSmileySrc(value)}
+        alt={"smiley icon"}
+        width={40}
+        height={40}
+        style={{ margin: "0px 5px 5px" }}
+      />
+    );
+  } else if (variant === SmileyVariantStyle.Emojis) {
+    return (
+      <Text
+        size={value === response ? "3rem" : "2.3rem"}
+        style={{ margin: "0px 4px 4px" }}
+      >
         {getSmileyEmojies(value)}
       </Text>
     );
   } else if (variant === SmileyVariantStyle.Custom) {
     return (
-      <Text size={value === response ? "3rem" : "2.5rem"}>
+      <Text
+        size={value === response ? "3rem" : "2.3rem"}
+        style={{ margin: "0px 4px 4px" }}
+      >
         {emojies?.[value]}
       </Text>
     );
@@ -150,10 +168,28 @@ export const getEmptyIcon = (
 
 export const getFullIcon = (value: number, color: string, iconStyle) => {
   const { variant, emojies } = iconStyle;
-  if (variant === SmileyVariantStyle.Emojis) {
-    return <Text size={"3rem"}>{getSmileyEmojies(value)}</Text>;
+  if (variant === SmileyVariantStyle.Default) {
+    return (
+      <Image
+        src={getDefaultSmileySrc(value)}
+        alt={"smiley icon"}
+        width={55}
+        height={55}
+        style={{ margin: "-8px 5px 5px" }}
+      />
+    );
+  } else if (variant === SmileyVariantStyle.Emojis) {
+    return (
+      <Text size={"3rem"} style={{ margin: "-8px 4px 4px" }}>
+        {getSmileyEmojies(value)}
+      </Text>
+    );
   } else if (variant === SmileyVariantStyle.Custom) {
-    return <Text size={"3rem"}>{emojies?.[value]}</Text>;
+    return (
+      <Text size={"3rem"} style={{ margin: "-8px 4px 4px" }}>
+        {emojies?.[value]}
+      </Text>
+    );
   } else if (
     [SmileyVariantStyle.Filled, SmileyVariantStyle.FilledOnHover].includes(
       variant,
@@ -208,16 +244,33 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
 export function getSmileyEmojies(value) {
   switch (value) {
     case 1:
-      return "😥\u00A0";
+      return "😥";
     case 2:
-      return "🙁\u00A0";
+      return "🙁";
     case 3:
-      return "😐\u00A0";
+      return "😐";
     case 4:
-      return "🙂\u00A0";
+      return "🙂";
     case 5:
-      return "😀\u00A0";
+      return "😀";
     default:
       return null;
+  }
+}
+
+export function getDefaultSmileySrc(value: number) {
+  switch (value) {
+    case 1:
+      return "/images/smiley-icons/Very_Sad.svg";
+    case 2:
+      return "/images/smiley-icons/Sad.svg";
+    case 3:
+      return "/images/smiley-icons/Neutral.svg";
+    case 4:
+      return "/images/smiley-icons/Happy.svg";
+    case 5:
+      return "/images/smiley-icons/Very_Happy.svg";
+    default:
+      return "";
   }
 }
