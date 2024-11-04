@@ -79,7 +79,7 @@ export const getEmptyIcon = (
   response,
 ) => {
   const { variant, emojies } = iconStyle;
-  if (variant === SmileyVariantStyle.Default) {
+  if (!variant || variant === SmileyVariantStyle.Default) {
     return (
       <Image
         src={getDefaultSmileySrc(value)}
@@ -168,7 +168,7 @@ export const getEmptyIcon = (
 
 export const getFullIcon = (value: number, color: string, iconStyle) => {
   const { variant, emojies } = iconStyle;
-  if (variant === SmileyVariantStyle.Default) {
+  if (!variant || variant === SmileyVariantStyle.Default) {
     return (
       <Image
         src={getDefaultSmileySrc(value)}
