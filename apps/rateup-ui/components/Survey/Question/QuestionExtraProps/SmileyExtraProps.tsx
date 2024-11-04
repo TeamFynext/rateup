@@ -125,11 +125,14 @@ const SmileyExtraProps = ({ form }) => {
             onChange={(value) => handleChange("colorType", value)}
             value={features?.iconStyle?.colorType}
             defaultValue={SmileyColorType.Default}
-            disabled={[
-              SmileyVariantStyle.Custom,
-              SmileyVariantStyle.Emojis,
-              SmileyVariantStyle.Default,
-            ].includes(features?.iconStyle?.variant)}
+            disabled={
+              !features?.iconStyle?.variant ||
+              [
+                SmileyVariantStyle.Custom,
+                SmileyVariantStyle.Emojis,
+                SmileyVariantStyle.Default,
+              ].includes(features?.iconStyle?.variant)
+            }
             allowDeselect={false}
           />
         </Flex>
