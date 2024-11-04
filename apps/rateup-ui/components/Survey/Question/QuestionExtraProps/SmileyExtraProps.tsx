@@ -23,6 +23,7 @@ import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating
 
 export enum SmileyVariantStyle {
   Default = "Default",
+  Outline = "Outline",
   Filled = "Filled",
   FilledOnHover = "FilledOnHover",
   Emojis = "Emojis",
@@ -127,6 +128,7 @@ const SmileyExtraProps = ({ form }) => {
             disabled={[
               SmileyVariantStyle.Custom,
               SmileyVariantStyle.Emojis,
+              SmileyVariantStyle.Default,
             ].includes(features?.iconStyle?.variant)}
             allowDeselect={false}
           />

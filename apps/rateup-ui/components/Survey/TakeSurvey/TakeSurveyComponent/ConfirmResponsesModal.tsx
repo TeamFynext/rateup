@@ -1,3 +1,5 @@
+import NextImage from "next/image";
+
 import {
   Divider,
   Flex,
@@ -24,7 +26,12 @@ import {
 } from "../../../Button/RateupButtons";
 import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps";
 import modalStyles from "./ModalStyles.module.css";
-import { getCustomSmileyIcon, mapSmileyIcon } from "./SmileyRating";
+import {
+  getCustomSmileyIcon,
+  getNumericValue,
+  mapSmileyIcon,
+} from "./SmileyRating";
+import { getDefaultSmileySrc } from "./SmileyRating/SmileyRatingStyling";
 import styles from "./TakeSurvey.module.css";
 
 function ConfirmResponsesModal({
@@ -96,6 +103,19 @@ function ConfirmResponsesModal({
                               return getCustomSmileyIcon(
                                 Object.values(response?.response)[0],
                                 question,
+                              );
+                            if (!variant || SmileyVariantStyle.Default)
+                              return (
+                                <NextImage
+                                  src={getDefaultSmileySrc(
+                                    getNumericValue(
+                                      Object.values(response?.response)[0],
+                                    ),
+                                  )}
+                                  alt={"smiley icon"}
+                                  width={30}
+                                  height={30}
+                                />
                               );
                             return mapSmileyIcon(
                               Object.values(response?.response)[0],

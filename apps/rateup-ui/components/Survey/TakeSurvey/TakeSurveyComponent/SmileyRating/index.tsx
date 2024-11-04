@@ -61,22 +61,6 @@ const SmileyRating = ({ updateResponse, response, features }) => {
     return stringValue;
   };
 
-  const getNumericValue = (stringValue) => {
-    switch (stringValue) {
-      case SmileyResponse.VerySad:
-        return 1;
-      case SmileyResponse.Sad:
-        return 2;
-      case SmileyResponse.Neutral:
-        return 3;
-      case SmileyResponse.Happy:
-        return 4;
-      case SmileyResponse.VeryHappy:
-        return 5;
-      default:
-        return -1;
-    }
-  };
   const theme = useMantineTheme();
 
   const iconStyle = features?.iconStyle || {
@@ -164,6 +148,23 @@ const SmileyRating = ({ updateResponse, response, features }) => {
 };
 
 export default SmileyRating;
+
+export const getNumericValue = (stringValue) => {
+  switch (stringValue) {
+    case SmileyResponse.VerySad:
+      return 1;
+    case SmileyResponse.Sad:
+      return 2;
+    case SmileyResponse.Neutral:
+      return 3;
+    case SmileyResponse.Happy:
+      return 4;
+    case SmileyResponse.VeryHappy:
+      return 5;
+    default:
+      return -1;
+  }
+};
 
 export function mapSmileyIcon(value, color) {
   switch (value) {
