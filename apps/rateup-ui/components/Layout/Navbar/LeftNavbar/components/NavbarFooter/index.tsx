@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 import {
-  ActionIcon,
   Avatar,
   Badge,
   Box,
@@ -60,26 +59,21 @@ const NavbarFooter = (props: UserCardInterface) => {
                   `${surveyUploadsPath}${props.profilePhoto}`
                 }
                 radius="xl"
-                onClick={() => {
-                  props.setOpened((o) => true);
-                }}
                 name={props?.userName}
                 color="initials"
               />
-              {props.opened ? (
-                <div style={{ flex: 1 }}>
-                  <Text size="sm" fw={500} c="var(--mantine-color-gray-6)">
-                    {props?.userName}
-                  </Text>
-                  <Badge variant="light" size="xs">
-                    {props?.role === UserRole.SUPADM
-                      ? "Super Admin"
-                      : props?.role === UserRole.ADM
-                        ? "Admin"
-                        : "Member"}
-                  </Badge>
-                </div>
-              ) : null}
+              <div style={{ flex: 1 }}>
+                <Text size="sm" fw={500} c="var(--mantine-color-gray-6)">
+                  {props?.userName}
+                </Text>
+                <Badge variant="light" size="xs">
+                  {props?.role === UserRole.SUPADM
+                    ? "Super Admin"
+                    : props?.role === UserRole.ADM
+                      ? "Admin"
+                      : "Member"}
+                </Badge>
+              </div>
             </Group>
           </Box>
         </Menu.Target>

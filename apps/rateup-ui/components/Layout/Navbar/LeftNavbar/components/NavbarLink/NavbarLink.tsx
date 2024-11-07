@@ -15,25 +15,16 @@ import { NavbarLinkProps as NavbarLinkData } from "../../../navbar.constants";
 
 interface NavbarLinkProps {
   data: Array<NavbarLinkData>;
-  opened: boolean;
   currentRole:
     | typeof UserRole.ADM
     | typeof UserRole.MEMBER
     | typeof UserRole.SUPADM
     | "...error...";
-  setOpened?: React.Dispatch<React.SetStateAction<boolean>>;
   active: number;
   setActive?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-function NavbarLink({
-  data,
-  opened,
-  currentRole,
-  setOpened,
-  active,
-  setActive,
-}: NavbarLinkProps) {
+function NavbarLink({ data, currentRole, active, setActive }: NavbarLinkProps) {
   const router = useRouter();
   const { colorScheme } = useMantineColorScheme();
   const colorBasedOnLightMode = colorScheme === "light" ? "gray" : "white";
@@ -43,15 +34,15 @@ function NavbarLink({
         if (role && currentRole !== role) return null;
         return (
           <Tooltip
-            label={!opened ? label : ""}
+            label={label}
             position="right"
-            styles={{ tooltip: { display: opened && "none" } }}
+            // styles={{ tooltip: { display: opened && "none" } }}
             key={parentIndex}
           >
             <NavLink
               mt={5}
               styles={{
-                children: { display: !opened && "none", marginTop: 5 },
+                // children: { display: !opened && "none", marginTop: 5 },
                 root: {
                   borderRadius: 5,
                 },
@@ -71,7 +62,7 @@ function NavbarLink({
                 },
               }}
               p={5}
-              label={opened && label}
+              label={label}
               leftSection={
                 <Icon
                   size={21}
@@ -85,7 +76,6 @@ function NavbarLink({
                   }
                 />
               }
-              rightSection={!opened && <Burger opened={opened} size={0} />}
               active={
                 submenus?.length > 0
                   ? active === parentIndex
@@ -99,12 +89,6 @@ function NavbarLink({
                     router.push(href);
                   }
                 } else if (submenus?.length > 0) {
-                  if (!opened) {
-                    if (router.pathname !== submenus[0].href) {
-                      router.push(submenus[0].href);
-                    }
-                    setOpened((o) => true);
-                  }
                   if (active === parentIndex) {
                     setActive(null);
                     return;
@@ -119,40 +103,34 @@ function NavbarLink({
                   if (role && currentRole !== role) return null;
                   return (
                     <React.Fragment key={index}>
-                      <Tooltip
-                        label={!opened ? label : ""}
-                        position="right"
-                        styles={{ tooltip: { display: opened && "none" } }}
-                      >
-                        <NavLink
-                          styles={{
-                            children: { display: !opened && "none" },
-                            root: {
-                              borderRadius: 5,
-                            },
-                            label: {
-                              color: router.pathname !== href && "gray",
-                            },
-                          }}
-                          p={5}
-                          label={opened && label}
-                          leftSection={
-                            <Icon
-                              size={18}
-                              color={
-                                router.pathname !== href
-                                  ? "grey"
-                                  : "var(--tertiary-color)"
-                              }
-                            />
-                          }
-                          onClick={() => {
-                            href && router.push(href);
-                            setActive(parentIndex);
-                          }}
-                          active={router.pathname === href}
-                        />
-                      </Tooltip>
+                      <NavLink
+                        styles={{
+                          // children: { display: !opened && "none" },
+                          root: {
+                            borderRadius: 5,
+                          },
+                          label: {
+                            color: router.pathname !== href && "gray",
+                          },
+                        }}
+                        p={5}
+                        label={label}
+                        leftSection={
+                          <Icon
+                            size={18}
+                            color={
+                              router.pathname !== href
+                                ? "grey"
+                                : "var(--tertiary-color)"
+                            }
+                          />
+                        }
+                        onClick={() => {
+                          href && router.push(href);
+                          setActive(parentIndex);
+                        }}
+                        active={router.pathname === href}
+                      />
                       <Divider opacity={0.5} />
                     </React.Fragment>
                   );

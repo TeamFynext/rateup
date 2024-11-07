@@ -22,7 +22,6 @@ import {
   surveyUploadsPath,
 } from "../../../../utils/constants";
 import { UserRole } from "../../../../utils/enums";
-import NavbarSkeleton from "../../../animation/skeleton/Navbar.Skeleton";
 import ExpiryComponent from "../../../Premium/ExpiryComponent";
 import { getNavTopData } from "../navbar.constants";
 import NavbarFooter from "./components/NavbarFooter";
@@ -33,12 +32,10 @@ import styles from "./LeftNavbar.module.css";
 const cx = classNames.bind(styles);
 
 interface iProps {
-  opened: boolean;
-  setOpened: React.Dispatch<React.SetStateAction<boolean>>;
   focus: boolean;
 }
 
-const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
+const LeftNavbar = ({ focus }: iProps) => {
   const [active, setActive] = useState(0);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { user } = useUser();
@@ -72,21 +69,19 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
   };
 
   const { data: subscription, isPending } = useSubscription();
-  if (isPending && opened) return <NavbarSkeleton className={cx("navbar")} />;
   const navTopData = getNavTopData(subscription, translations);
 
   return (
     <motion.div
       className={cx("navbar", {
         mobile: isMobile,
-        closed: !opened,
         focused: focus,
       })}
       layout="position"
       transition={{ duration: 0.3, ease: "linear" }}
     >
       <header>
-        <NavbarHeader {...user} {...{ opened, setOpened }} />
+        <NavbarHeader {...user} />
       </header>
       <Divider />
       <ScrollArea
@@ -105,27 +100,19 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
       >
         <NavbarLink
           data={navTopData}
-          opened={opened}
           currentRole={userInfo.role}
-          setOpened={setOpened}
           active={active}
           setActive={setActive}
         />
 
         <ExpiryComponent expiryDate={subscription?.expiresAt}>
-          <Tooltip
-            label={!opened ? "Buy Rateup Premium" : ""}
-            position="right"
-            styles={{ tooltip: { display: opened && "none" } }}
-          >
+          <Tooltip label={"Buy Rateup Premium"} position="right">
             <Box mt="sm" ml="1px">
               <Anchor href="/dashboard/settings?activeTab=account&view=billing">
                 <Image
-                  src={`${localImagesPath}/${
-                    opened ? "rateup-pro-ad.png" : "premium-icon.svg"
-                  }`}
+                  src={`${localImagesPath}/${"rateup-pro-ad.png"}`}
                   alt=""
-                  height={opened ? 180 : 20}
+                  height={180}
                 />
               </Anchor>
             </Box>
@@ -134,7 +121,7 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
       </ScrollArea>
       <Divider />
       <footer className={styles.navbarfooter}>
-        <NavbarFooter {...user} {...{ opened, setOpened }} />
+        <NavbarFooter {...user} />
       </footer>
     </motion.div>
   );
@@ -142,7 +129,4 @@ const LeftNavbar = ({ opened, setOpened, focus }: iProps) => {
 
 export default LeftNavbar;
 
-export interface UserCardInterface extends UserData {
-  opened: boolean;
-  setOpened: React.Dispatch<React.SetStateAction<boolean>>;
-}
+export interface UserCardInterface extends UserData {}
