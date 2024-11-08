@@ -159,11 +159,7 @@ export default function Layout({ children, appProps }) {
     <SessionAuth>
       <RouteParamsProvider>
         <Flex className={styles["dashboard-layout-root-div"]}>
-          <LeftNavbar
-            opened={navOpened}
-            setOpened={setNavOpened}
-            focus={focus}
-          />
+          <LeftNavbar focus={focus} />
 
           <Box className={styles["mobile-hamburger-icon-div"]}>
             <ActionIcon
