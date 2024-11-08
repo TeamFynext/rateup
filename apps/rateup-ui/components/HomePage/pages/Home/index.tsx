@@ -53,13 +53,6 @@ function Home() {
         <meta property="og:image:height" content="832" />
         <meta property="og:image:alt" content="Star Icon" />
         <link rel="canonical" href="https://www.rateup.app/" key="canonical" />
-        <script
-          id="vtag-ai-js"
-          async
-          src="https://r2.leadsy.ai/tag.js"
-          data-pid="1xU4sczwLDEZ5B6Q6"
-          data-version="062024"
-        ></script>
       </Head>
       <HeroSection />
       <EmpowerYourBrandsGrowth />

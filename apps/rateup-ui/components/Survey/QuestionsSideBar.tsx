@@ -274,7 +274,7 @@ export function QuestionsSideBar({
               <Group
                 style={{ display: "flex", alignItems: "center", gap: "2px" }}
               >
-                <Text>{translations["Theme"]}</Text>
+                <Text>{translations["Edit"]}</Text>
                 <IconEdit />
               </Group>
             </ActionIcon>
