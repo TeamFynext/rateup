@@ -45,16 +45,17 @@ const CookieConsentBanner = () => {
       opened={opened}
       withCloseButton
       onClose={close}
-      w={"100%"}
+      w={"850px"}
       p={"xl"}
       style={{ border: "1px solid var(--tertiary-color)" }}
       shadow="xl"
+      mx="auto"
       position={{ bottom: 20, right: isMobile ? undefined : 90, left: 30 }}
       zIndex={150}
     >
       <Group justify="space-between">
         <Text fw={"bold"} fz={isMobile ? 14 : 16}>
-          {translations["We use cookies in our site. See"]}
+          {translations["We use cookies in our site. See "]}
           <Link href={"/privacy-policy"} style={{ textDecoration: "none" }}>
             {translations["our Privacy and policy"]}
           </Link>{" "}
