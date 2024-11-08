@@ -1,4 +1,5 @@
-import { Avatar, Box, Group, Text } from "@mantine/core";
+import { ActionIcon, Avatar, Box, Group, Text } from "@mantine/core";
+import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import { UserCardInterface } from "../..";
@@ -19,11 +20,23 @@ const NavbarHeader = (props: UserCardInterface) => {
           name={props?.orgName}
           color="initials"
         />
-        <div style={{ flex: 1 }}>
-          <Text size="sm" c="var(--mantine-color-gray-6)">
-            {props?.orgName}
-          </Text>
-        </div>
+        {props.opened && (
+          <div style={{ flex: 1 }}>
+            <Text size="sm" c="var(--mantine-color-gray-6)">
+              {props?.orgName}
+            </Text>
+          </div>
+        )}
+        <ActionIcon
+          className={cx("chevron-burger-btn", {
+            "navbar-closed": !props.opened,
+          })}
+          onClick={() => {
+            props?.setOpened((o) => !o);
+          }}
+        >
+          {props.opened ? <IconChevronLeft /> : <IconMenu2 />}
+        </ActionIcon>
       </Group>
     </Box>
   );
