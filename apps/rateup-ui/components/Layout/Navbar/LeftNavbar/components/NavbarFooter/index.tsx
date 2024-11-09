@@ -6,6 +6,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Divider,
   Group,
   Menu,
   rem,
@@ -39,88 +40,82 @@ const NavbarFooter = (props: UserCardInterface) => {
   let isProfilePhotoAvailable =
     props?.profilePhoto && props?.profilePhoto !== "REMOVED_PHOTO";
   return (
-    <Group>
-      <Menu
-        onClose={() => setMenuOpen(false)}
-        position="top-start"
-        shadow="xs"
-        offset={20}
-        withinPortal
-      >
-        <Menu.Target>
-          <Box
-            className={`${styles.user}`}
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{ cursor: "pointer" }}
+    <Box>
+      <Box style={{ margin: "auto", marginLeft: "5rem", marginTop: "1px" }}>
+        <Text size="sm" c="var(--mantine-color-gray-7">
+          {translations["Account"]}
+        </Text>
+      </Box>
+
+      <Box style={{ margin: "auto", width: "15rem" }}>
+        {bottomNavData.map(({ Icon, label, href }, index) => (
+          <Group
+            key={index}
+            onClick={() => handleItemClick(label)}
+            style={{
+              cursor: "pointer",
+              marginLeft: "1rem",
+              marginBottom: "10px",
+              marginTop: "15px",
+            }}
           >
-            <Group>
-              <Avatar
-                src={
-                  isProfilePhotoAvailable &&
-                  `${surveyUploadsPath}${props.profilePhoto}`
-                }
-                radius="xl"
-                onClick={() => {
-                  props.setOpened((o) => true);
-                }}
-                name={props?.userName}
-                color="initials"
-              />
-              {props.opened ? (
-                <div style={{ flex: 1 }}>
-                  <Text size="sm" fw={500} c="var(--mantine-color-gray-6)">
-                    {props?.userName}
-                  </Text>
-                  <Badge variant="light" size="xs">
-                    {props?.role === UserRole.SUPADM
-                      ? "Super Admin"
-                      : props?.role === UserRole.ADM
-                        ? "Admin"
-                        : "Member"}
-                  </Badge>
-                </div>
-              ) : null}
-            </Group>
-          </Box>
-        </Menu.Target>
-        <Menu.Dropdown
-          style={{
-            width: "15rem",
-          }}
-        >
-          <Menu.Item>
-            <Group>
-              <Text size="sm" c="var(--mantine-color-gray-7">
-                {translations["Account"]}
-              </Text>
-            </Group>
-          </Menu.Item>
-          {bottomNavData.map(({ Icon, label, href }, index) => (
-            <Menu.Item
-              key={index}
-              onClick={() => handleItemClick(label)}
-              leftSection={
-                <ThemeIcon variant="transparent" size={20}>
-                  <Icon color="gray" />
-                </ThemeIcon>
-              }
+            <ThemeIcon variant="transparent" size={20}>
+              <Icon color="gray" />
+            </ThemeIcon>
+            <Text
+              size="sm"
+              fw={500}
+              onClick={() => router.push(href)}
+              c="var(--mantine-color-gray-7"
             >
-              <Text
-                size="sm"
-                fw={500}
-                onClick={() => router.push(href)}
-                c="var(--mantine-color-gray-7"
-              >
-                {label}
-              </Text>
-            </Menu.Item>
-          ))}
-          <Menu.Item>
-            {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    </Group>
+              {label}
+            </Text>
+          </Group>
+        ))}
+      </Box>
+      <Box
+        style={{ marginLeft: "15px", marginTop: "15px", marginBottom: "10px" }}
+      >
+        {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
+      </Box>
+      <Divider />
+
+      <Group>
+        <Box
+          className={`${styles.user}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <Group className={styles.userSection}>
+            <Avatar
+              src={
+                isProfilePhotoAvailable &&
+                `${surveyUploadsPath}${props.profilePhoto}`
+              }
+              radius="xl"
+              onClick={() => {
+                props.setOpened((o) => true);
+              }}
+              name={props?.userName}
+              color="initials"
+            />
+            {props.opened ? (
+              <div style={{ flex: 1 }}>
+                <Text size="sm" fw={500} c="var(--mantine-color-gray-6)">
+                  {props?.userName}
+                </Text>
+                <Badge variant="light" size="xs">
+                  {props?.role === UserRole.SUPADM
+                    ? "Super Admin"
+                    : props?.role === UserRole.ADM
+                      ? "Admin"
+                      : "Member"}
+                </Badge>
+              </div>
+            ) : null}
+          </Group>
+        </Box>
+      </Group>
+    </Box>
   );
 };
 export default NavbarFooter;
