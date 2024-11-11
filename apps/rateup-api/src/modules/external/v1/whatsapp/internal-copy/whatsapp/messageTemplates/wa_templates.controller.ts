@@ -20,7 +20,6 @@ import {
   registerTemplatesInDb,
   saveTemplate,
   sendTemplateToPhone,
-  sendTemplateToUserCore,
   syncTemplates,
   updateTemplate,
   updateTemplateInDb,
@@ -43,6 +42,7 @@ import {
 import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { templateData } from "../../../../../../whatsapp/messageTemplates/wa_templates.service";
+import { sendTemplateToUserCore } from "../../../../../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -367,21 +367,7 @@ export async function sendTemplateByNameToPhoneHandler(
       req.body;
 
     const orgId = req.user.orgId;
-    const dbTemplate = (await prisma.waTemplate.findFirst({
-      where: {
-        data: {
-          path: ["name"],
-          equals: templateName,
-        },
-        orgId,
-      },
-    })) as templateData;
-
-    if (!dbTemplate) {
-      log.error("Template not found with name %s", templateName);
-      return rep.code(404).send("Template not found with name " + templateName);
-    }
-
+    const userId = req.user.userId;
     let reqNumber = "+" + req.body.phone;
     let phone = parsePhoneNumber(reqNumber);
     if (phone.isValid() === false) {
@@ -389,8 +375,8 @@ export async function sendTemplateByNameToPhoneHandler(
     }
     let phoneNumber = phone.number.replace("+", "");
     let header: any = [];
-    for (let { filename, link, type } of parameterData) {
-      header = {
+    for (let { filename, link, type } of parameterData || []) {
+      header.push({
         type: WaTemplateComponentType.HEADER,
         parameters: [
           {
@@ -401,36 +387,29 @@ export async function sendTemplateByNameToPhoneHandler(
             },
           },
         ],
-      };
-    }
-
-    let { containsFlowButton, surveyTeamMap, components, dbFlow } =
-      await getTemplateComponents({
-        orgId,
-        dbTemplate,
-        body_variables,
-        teamId,
-        header,
       });
-
-    if (containsFlowButton)
-      components = await handleFlowComponents(
-        phoneNumber,
-        orgId,
-        surveyTeamMap,
-        dbFlow,
-        components,
-        timeDelay,
-      );
-    const response = await sendTemplateToPhone({
+    }
+    if (body_variables?.length > 0) {
+      header.push({
+        type: WaTemplateComponentType.BODY,
+        parameters: body_variables.map((variable) => {
+          return {
+            type: "text",
+            text: variable,
+          };
+        }),
+      });
+    }
+    const response = await sendTemplateToUserCore(
       orgId,
-      phone: phoneNumber,
-      dbTemplate,
+      templateName,
+      phoneNumber,
+      header,
+      teamId,
+      userId,
       timeDelay,
-      components,
-      surveyTeamMap,
-    });
-
+      true,
+    );
     rep
       .code(200)
       .send(

@@ -70,15 +70,15 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
   phone: z.number(),
   body_variables: z.array(z.string()).optional(),
   teamId: z.string().optional(),
-  parameterData: z.array(
-    z
-      .object({
+  parameterData: z
+    .array(
+      z.object({
         type: z.nativeEnum(WaTemplateSendMediaTypes),
         link: z.string(),
         filename: z.string().optional(),
-      })
-      .optional(),
-  ),
+      }),
+    )
+    .optional(),
 });
 
 const sendTemplateToContactParams = z.object({

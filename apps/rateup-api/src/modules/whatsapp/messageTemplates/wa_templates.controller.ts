@@ -2,6 +2,7 @@ import { Role, TemplateType } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   SubscriptionFeaturePathName,
+  waMessageScheduleSource,
   WaTemplateComponentType,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
@@ -28,6 +29,7 @@ import {
   fetchTemplate,
   getDbTemplate,
   getTemplateByIdAndOrgId,
+  getTemplateByNameAndOrgId,
   getTemplatesByOrgId,
   getUnregisteredTemplates,
   registerTemplatesInDb,
@@ -58,6 +60,7 @@ import {
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils";
 import { wait } from "../whatsappSurvey/wasurvey.controller";
+import { createWaMessageSchedule } from "../wa_message_scheduler";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -342,14 +345,26 @@ export async function sendTemplateToUserCore(
   parameterData: any[],
   teamId?: string,
   userId?: string,
-): Promise<{ status: boolean; message: string }> {
-  const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+  timeDelay?: number,
+  isTemplateName = false,
+): Promise<{ status: boolean; message: string; id?: string }> {
+  let dbTemplate = null;
+  if (isTemplateName) {
+    dbTemplate = await getTemplateByNameAndOrgId(templateId, orgId);
+    if (!dbTemplate) {
+      log.error("Template not found with name %s", templateId);
+      return { status: false, message: "Template not found with name" };
+    }
+  } else {
+    dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
+  }
+
   const { data, defaultValues } = dbTemplate;
   const components = [...parameterData]; // Clone parameter data
   log.trace("parameterData => %o", parameterData);
 
   const containsFlowButton = !!getFlowIdFromTemplateComponents(data.components);
-
+  let surveyTeamMapId = null;
   if (containsFlowButton) {
     components.push({
       type: "button",
@@ -375,10 +390,10 @@ export async function sendTemplateToUserCore(
       throw new Error("Flow not found in db");
     }
 
-    const surveyTeamMap = dbFlow?.survey?.teams.find(
+    surveyTeamMapId = dbFlow?.survey?.teams.find(
       (t) => t.teamId === teamId,
     )?.id;
-    if (!surveyTeamMap) {
+    if (!surveyTeamMapId) {
       throw new Error("Team not found in survey");
     }
 
@@ -386,7 +401,7 @@ export async function sendTemplateToUserCore(
     await createSession({
       phone,
       orgId,
-      surveyTeamMapId: surveyTeamMap,
+      surveyTeamMapId,
       language: dbFlow?.survey?.languages[0],
     });
   }
@@ -497,15 +512,25 @@ export async function sendTemplateToUserCore(
     let params = templateQuery?.components.find(
       (component) => component.type === "body",
     )?.parameters;
-    params?.forEach((data, i) => {
-      if (data?.text?.trim().length === 0) {
-        data.text = defaultValue?.[i];
+    if (params) {
+      params.forEach((data, i) => {
+        if (!data?.text?.trim()) {
+          data.text = defaultValue?.[i];
+        }
+      });
+      if (params.length < defaultValue?.length) {
+        const remainingValues = defaultValue.slice(params.length);
+        remainingValues.forEach((value) => {
+          params.push({
+            type: "text",
+            text: value,
+          });
+        });
       }
-    });
-    if (!params) {
-      templateQuery?.components?.push({
+    } else {
+      templateQuery.components.push({
         type: "body",
-        parameters: defaultValue?.map((data: string) => ({
+        parameters: defaultValue.map((data: string) => ({
           type: "text",
           text: data,
         })),
@@ -523,9 +548,24 @@ export async function sendTemplateToUserCore(
   } else {
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
-  await wait(50);
-  const res = await sendMessage(orgId, templateMessage, null, userId);
-  await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+  let res;
+  if (timeDelay) {
+    res = await createWaMessageSchedule({
+      phone,
+      messageBody: templateMessage,
+      orgId,
+      waTemplateId: dbTemplate.id,
+      surveyTeamMapId: surveyTeamMapId,
+      timeDelay,
+      source: waMessageScheduleSource.ExternalApi,
+    });
+    log.trace("Template schedule created successfully");
+  } else {
+    await wait(50);
+    res = await sendMessage(orgId, templateMessage, null, userId);
+    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    log.trace("Template send to user successfully");
+  }
   return res;
 }
 
