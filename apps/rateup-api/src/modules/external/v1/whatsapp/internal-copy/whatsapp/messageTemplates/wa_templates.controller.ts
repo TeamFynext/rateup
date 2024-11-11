@@ -27,7 +27,10 @@ import {
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
 import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
-import { WaTemplateStatus } from "../../../../../../../types/enums";
+import {
+  WaTemplateComponentType,
+  WaTemplateStatus,
+} from "../../../../../../../types/enums";
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
@@ -360,7 +363,8 @@ export async function sendTemplateByNameToPhoneHandler(
   rep: FastifyReply,
 ) {
   try {
-    const { templateName, timeDelay, teamId, body_variables } = req.body;
+    const { templateName, timeDelay, teamId, body_variables, parameterData } =
+      req.body;
 
     const orgId = req.user.orgId;
     const dbTemplate = (await prisma.waTemplate.findFirst({
@@ -378,9 +382,26 @@ export async function sendTemplateByNameToPhoneHandler(
       return rep.code(404).send("Template not found with name " + templateName);
     }
 
-    const phone = parsePhoneNumber(req.body.phone, "IN");
+    let reqNumber = "+" + req.body.phone;
+    let phone = parsePhoneNumber(reqNumber);
     if (phone.isValid() === false) {
       return rep.code(400).send("Invalid phone number.");
+    }
+    let phoneNumber = phone.number.replace("+", "");
+    let header: any = [];
+    for (let { filename, link, type } of parameterData) {
+      header = {
+        type: WaTemplateComponentType.HEADER,
+        parameters: [
+          {
+            type,
+            [type]: {
+              link,
+              filename,
+            },
+          },
+        ],
+      };
     }
 
     let { containsFlowButton, surveyTeamMap, components, dbFlow } =
@@ -389,21 +410,21 @@ export async function sendTemplateByNameToPhoneHandler(
         dbTemplate,
         body_variables,
         teamId,
+        header,
       });
 
     if (containsFlowButton)
       components = await handleFlowComponents(
-        phone.number,
+        phoneNumber,
         orgId,
         surveyTeamMap,
         dbFlow,
         components,
         timeDelay,
       );
-
     const response = await sendTemplateToPhone({
       orgId,
-      phone: phone.number,
+      phone: phoneNumber,
       dbTemplate,
       timeDelay,
       components,

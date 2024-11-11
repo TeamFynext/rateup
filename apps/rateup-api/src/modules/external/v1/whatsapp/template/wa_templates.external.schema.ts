@@ -12,9 +12,9 @@ enum WaTemplateAllowedComponentTypes {
   header = "header",
 }
 enum WaTemplateSendMediaTypes {
+  document = "document",
   image = "image",
   video = "video",
-  document = "document",
 }
 
 const templateHeaderComponent = z.object({
@@ -67,9 +67,18 @@ const sendTemplateToContact = sendTemplatesToContacts
 
 const sendTemplateByNameToPhone = scheduleTemplate.extend({
   templateName: z.string(),
-  phone: z.string(),
+  phone: z.number(),
   body_variables: z.array(z.string()).optional(),
   teamId: z.string().optional(),
+  parameterData: z.array(
+    z
+      .object({
+        type: z.nativeEnum(WaTemplateSendMediaTypes),
+        link: z.string(),
+        filename: z.string().optional(),
+      })
+      .optional(),
+  ),
 });
 
 const sendTemplateToContactParams = z.object({
