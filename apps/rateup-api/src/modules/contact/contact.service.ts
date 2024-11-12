@@ -33,7 +33,7 @@ export async function createMultipleContacts(
     skipDuplicates: true,
     data: contactsData,
   });
-  return result;
+  return result?.count;
 }
 
 export async function getContactById(contactId: string) {
@@ -376,36 +376,43 @@ export async function getExistingContactCountByPhno(
   ids: string[],
   orgId: string,
 ) {
-  return await prisma.contact.count({
-    where: {
-      phone: {
-        in: ids,
+  const BATCH_SIZE = 30000; // Keep it below the database limit
+  let totalCount = 0;
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const count = await prisma.contact.count({
+      where: {
+        phone: {
+          in: batch,
+        },
+        orgId,
       },
-      orgId,
-    },
-  });
+    });
+    totalCount += count;
+  }
+
+  return totalCount;
 }
 
 export async function updateMulitplceContacts(
   contacts: createMultipleContactInput,
   orgId: string,
 ) {
-  return await prisma.$transaction(async (tx) => {
-    return Promise.all(
-      contacts.map((contact) =>
-        prisma.contact.updateMany({
-          where: {
-            phone: contact.phone,
-            orgId,
-          },
-          data: {
-            tags: contact.tags,
-            name: contact.name,
-          },
-        }),
-      ),
-    );
-  });
+  return Promise.all(
+    contacts.map((contact) =>
+      prisma.contact.updateMany({
+        where: {
+          phone: contact.phone,
+          orgId,
+        },
+        data: {
+          tags: contact.tags,
+          name: contact.name,
+        },
+      }),
+    ),
+  );
 }
 
 export const handleContactConsent = async (

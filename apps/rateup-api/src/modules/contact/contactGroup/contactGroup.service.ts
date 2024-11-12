@@ -4,6 +4,7 @@ import prisma from "../../../utils/prisma";
 import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
+  PaginationQuery,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
 } from "./contactGroup.schema";
@@ -98,7 +99,130 @@ export async function getContactsByContactGroupId(contactGroupId: string) {
 
   return group.contacts.map((c) => c.contact);
 }
+export async function getContactsByContactGroupIdWithPagination(
+  contactGroupId: string,
+  query?: PaginationQuery,
+) {
+  const {
+    page = 0,
+    limit = 500,
+    search = "",
+    sort = "createdAt",
+    desc = "asc",
+    ...filter
+  } = query ?? {
+    page: 0,
+    limit: 500,
+    search: "",
+    sort: "createdAt",
+    desc: "asc",
+  };
+  let filterData = [];
+  if (filter) {
+    const params = new URLSearchParams(filter as any);
+    for await (const [key, value] of params.entries()) {
+      if (["name", "phone", "source"].includes(key)) {
+        filterData.push({
+          [key]: {
+            contains: value,
+            mode: "insensitive",
+          },
+        });
+      } else if ("consent" === key) {
+        filterData.push({
+          [key]: {
+            equals: value?.toLocaleLowerCase() === "true",
+          },
+        });
+      } else if ("createdAt" === key) {
+        filterData.push({
+          [key]: {
+            equal: value,
+            mode: "insensitive",
+          },
+        });
+      } else if ("filterGroupName" === key) {
+        let splitValue = [...new Set(value?.split(","))];
+        filterData.push({
+          contactGroups: {
+            some: {
+              contactGroupId: {
+                in: splitValue,
+              },
+            },
+          },
+        });
+      } else {
+        filterData.push({
+          tags: {
+            path: [key],
+            string_contains: value,
+          },
+        });
+      }
+    }
+  }
+  if (search?.length > 0) {
+    filterData.push({
+      name: {
+        contains: search,
+        mode: "insensitive",
+      },
+    });
+    filterData.push({
+      phone: {
+        contains: search,
+        mode: "insensitive",
+      },
+    });
+  }
+  const searchCondition: any = filterData.reduce((acc, curr) => {
+    return { ...acc, ...curr };
+  }, {});
 
+  const totalCount = await prisma.contact.count({
+    where: {
+      contactGroups: {
+        some: {
+          contactGroupId,
+        },
+      },
+      AND: filterData,
+    },
+  });
+  const group = await prisma.contactGroup.findUnique({
+    where: {
+      id: contactGroupId,
+    },
+    include: {
+      contacts: {
+        include: {
+          contact: true,
+        },
+        where: {
+          contact: searchCondition,
+        },
+        take: limit,
+        skip: page * limit,
+        orderBy: {
+          contact: {
+            [sort]: desc,
+          },
+        },
+      },
+    },
+  });
+
+  return { group: group.contacts.map((c) => c.contact), totalCount };
+}
+
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
 export async function addNewContactsToGroup(
   contactGroupId: string,
   contactsBody: AddNewContactsToGroupInput,
@@ -113,39 +237,42 @@ export async function addNewContactsToGroup(
   );
   // TODO: we could create uuid manually and skip the findMany query.
   // TODO: check if below query can be optimized
-  await prisma.$transaction(async (tx) => {
-    // create contacts
-    await tx.contact.createMany({
-      skipDuplicates: true,
-      data: contacts.map((contact) => ({
-        ...contact,
-        orgId,
-      })),
-    });
+  // await prisma.$transaction(async (tx) => {
+  // create contacts
+  await prisma.contact.createMany({
+    skipDuplicates: true,
+    data: contacts.map((contact) => ({
+      ...contact,
+      orgId,
+    })),
+  });
+  const MAX_BIND_VARS = 30000;
+  const phoneChunks = chunkArray(
+    contacts.map((contact) => contact.phone).filter((phone) => phone),
+    MAX_BIND_VARS,
+  );
 
-    const createdContacts = await tx.contact.findMany({
+  let createdContacts: any[] = [];
+
+  for (const chunk of phoneChunks) {
+    const result = await prisma.contact.findMany({
       where: {
-        OR: [
-          {
-            phone: {
-              in: contacts
-                .map((contact) => contact.phone)
-                .filter((phone) => phone),
-            },
-          },
-        ],
+        phone: { in: chunk },
         orgId,
       },
     });
-    // create contact group map
-    await tx.contactGroupMap.createMany({
-      skipDuplicates: true,
-      data: createdContacts.map((contact) => ({
-        contactId: contact.id,
-        contactGroupId,
-      })),
-    });
+    createdContacts = createdContacts.concat(result);
+  }
+
+  // create contact group map
+  await prisma.contactGroupMap.createMany({
+    skipDuplicates: true,
+    data: createdContacts.map((contact) => ({
+      contactId: contact.id,
+      contactGroupId,
+    })),
   });
+  // });
 }
 
 export async function addExistingContactsToGroup(

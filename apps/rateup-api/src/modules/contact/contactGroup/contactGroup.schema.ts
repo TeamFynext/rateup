@@ -19,6 +19,17 @@ const updateContactGroupInputSchema = z.object({
 const byContactGroupIdParamsSchema = z.object({
   contactGroupId: z.string(),
 });
+const paginationQuery = z.object({
+  page: z.number().optional(),
+  limit: z.number().optional(),
+  search: z.string().optional(),
+  sort: z.string().optional(),
+  desc: z.string().optional(),
+  phone: z.number().optional(),
+  name: z.string().optional(),
+  source: z.string().optional(),
+  consent: z.string().optional(),
+});
 const byContactGroupIdWithOrgIdParamsSchema =
   byContactGroupIdParamsSchema.extend({
     orgId: z.string(),
@@ -69,6 +80,7 @@ export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
       contactGroupResponseSchema,
       byContactGroupIdWithOrgIdParamsSchema,
       extAddNewContactsToGroupInputSchema,
+      paginationQuery,
     },
     {
       $id: "contactGroupSchema",
@@ -98,3 +110,4 @@ export type RemoveGroupContactsSchema = z.infer<
   typeof removeGroupContactsSchema
 >;
 export type DeleteManyGroupsInput = z.infer<typeof deleteManyGroupSchema>;
+export type PaginationQuery = z.infer<typeof paginationQuery>;
