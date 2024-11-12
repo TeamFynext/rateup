@@ -1,4 +1,9 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
+
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   addExistingContactsToGroup,
   addExistingContactsToMultipleGroups,
@@ -13,8 +18,6 @@ import {
   removeContactsFromGroup,
   updateContactGroup,
 } from "./contactGroup.api";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 export const useContactGroup = () => {
   return useQuery({
@@ -23,10 +26,21 @@ export const useContactGroup = () => {
   });
 };
 
-export const useContactGroupById = (groupId: string, enabled = false) => {
+export const useContactGroupById = (
+  groupId: string,
+  enabled = false,
+  pagination,
+  searchData?,
+  sorting?,
+  columnFilters?,
+) => {
+  let sort = sorting ?? CONTACT_SORT;
+  let filters = columnFilters ?? [];
+  let search = searchData ?? "";
   return useQuery({
-    queryKey: ["contactGroupById", groupId],
-    queryFn: () => getContactGroupById(groupId),
+    queryKey: ["contactGroupById", groupId, pagination, search, sort, filters],
+    queryFn: () =>
+      getContactGroupById(groupId, pagination, search, sort, filters),
     enabled: !!groupId && enabled,
   });
 };
