@@ -13,6 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
+import { QuestionType2 } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
@@ -38,10 +39,12 @@ import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInpu
 import SimpleModalLayout from "../../Modal/SimpleModalLayout";
 import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import Responses from "../Response/Responses";
+import WaResponses from "../Response/WaResponses";
 import styles from "./Result.module.css";
 import ResultComparison from "./ResultComparison";
 import ResultsOverview from "./ResultsOverview";
 import SurveyStats from "./SurveyStats";
+import WaResultsOverviewV2 from "./WaResultsOverview";
 
 enum ResultTab {
   OverView = "overview",
@@ -57,6 +60,8 @@ const Result = ({
   subscription = null,
   flowId = null,
   translations,
+  flow,
+  version = 1,
 }) => {
   const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -104,6 +109,21 @@ const Result = ({
 
   if (isLoading) return <Loader type="bars" />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
+  const questions = flow?.json?.screens?.flatMap((screen) =>
+    screen.layout.children
+      .filter((child) => child.type !== QuestionType2.Footer)
+      .map(
+        ({ id, label, metaType, name, "data-source": dataSource, header }) => ({
+          id,
+          label,
+          metaType,
+          dataSource,
+          name,
+          header,
+        }),
+      )
+      .filter(({ name }) => name),
+  );
 
   return (
     <StyledTabs
@@ -158,17 +178,33 @@ const Result = ({
           />
         </Tabs.Panel>
         <Tabs.Panel value="responses">
-          <Responses
-            survey={survey}
-            responses={filteredResponses}
-            defaultLanguage={defaultLanguage}
-            isLoading={isLoading}
-            selectedTeamId={selectedTeamId}
-            subscription={subscription}
-          />
+          {version === 1 ? (
+            <Responses
+              survey={survey}
+              responses={filteredResponses}
+              defaultLanguage={defaultLanguage}
+              isLoading={isLoading}
+              selectedTeamId={selectedTeamId}
+              subscription={subscription}
+            />
+          ) : (
+            <WaResponses
+              survey={survey}
+              responses={filteredResponses}
+              defaultLanguage={defaultLanguage}
+              isLoading={isLoading}
+              selectedTeamId={selectedTeamId}
+              subscription={subscription}
+              questions={questions}
+            />
+          )}
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
-          <ResultsOverview surveyId={survey?.id} />
+          {version === 1 ? (
+            <ResultsOverview surveyId={survey?.id} />
+          ) : (
+            <WaResultsOverviewV2 surveyId={survey?.id} />
+          )}
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
           <ResultComparison surveyId={survey?.id} />

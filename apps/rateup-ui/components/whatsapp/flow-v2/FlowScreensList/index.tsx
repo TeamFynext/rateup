@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 
 import { Box, Group, Text, useMantineTheme } from "@mantine/core";
-import { useCounter, useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
 
@@ -20,35 +20,43 @@ import CreateFlowScreenModal from "./CreateFlowScreenModal";
 import styles from "./FlowScreensList.module.css";
 import ScreenListItem from "./ScreenListItem";
 
-interface FlowScreensListProps {
-  onAddElementClick: (screenId: string) => void;
-  onElementClick: (id: string, screenId: string) => void;
-}
-function FlowScreensList({
-  onAddElementClick,
-  onElementClick,
-}: FlowScreensListProps) {
+function FlowScreensList() {
   const router = useRouter();
   const theme = useMantineTheme();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow, isPending } = useWaFlowFromDb(dbFlowId);
-  const [pageNo, handlers] = useCounter(0, {
-    min: 0,
-    max: 1,
-  });
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
   const { translations } = useTranslations();
-  const { addScreens, setCurrentScreenId, screens, updateComponentsInScreen } =
-    useFlowStore();
+  const {
+    addScreens,
+    setCurrentScreenId,
+    screens,
+    getScreens,
+    updateComponentsInScreen,
+    currentScreenId,
+    setFlowEditable,
+  } = useFlowStore();
 
   useEffect(() => {
     if (dbFlow) {
       addScreens((dbFlow.json.screens || []) as any);
-      setCurrentScreenId(dbFlow.json.screens?.[0]?.id);
+      setFlowEditable(dbFlow.status === WaFlowStatus.DRAFT);
+      if (currentScreenId) {
+        const screenExists = getScreens().some(
+          (screen) => screen.id === currentScreenId,
+        );
+        if (!screenExists) {
+          setCurrentScreenId(dbFlow.json.screens?.[0]?.id);
+        } else {
+          setCurrentScreenId(currentScreenId);
+        }
+      } else {
+        setCurrentScreenId(dbFlow.json.screens?.[0]?.id);
+      }
     }
   }, [dbFlow]);
 
@@ -106,10 +114,7 @@ function FlowScreensList({
       <DragDropContext onDragEnd={onDragEnd}>
         <Box className={styles["screens-list-div"]}>
           <ScreenListItem
-            onElementClick={onElementClick}
-            onAddElementClick={onAddElementClick}
             handleCreateScreenClick={handleCreateScreenClick}
-            handlers={handlers}
             pendingSave={dbFlow?.pendingSave}
           />
         </Box>

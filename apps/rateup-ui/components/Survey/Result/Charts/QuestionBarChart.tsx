@@ -130,7 +130,6 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
     })?.length,
     fill: choice?.color,
   }));
-
   if (mcqOtherFeature?.isEnabled) {
     let otherValueCount = data?.filter((item) => {
       const response = item?.response[questionType];
@@ -210,3 +209,90 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
 };
 
 export default QuestionBarChart;
+
+export const QuestionBarChart2 = ({
+  question,
+  choices,
+  data,
+  questionType,
+  no,
+}) => {
+  let choicesToUse = choices;
+  if (!choicesToUse) {
+    if (getResponseArrayByQuestionType(questionType)) {
+      choicesToUse = getResponseArrayByQuestionType(questionType);
+    }
+  }
+  const { translations } = useTranslations();
+  const choiceCounts = choicesToUse?.map((choice) => ({
+    name: choice?.label,
+    count: data?.filter((item) =>
+      Array.isArray(item?.response)
+        ? item?.response?.includes(choice?.value)
+        : item?.response === choice?.value,
+    )?.length,
+    fill: choice?.color,
+  }));
+  return (
+    <Stack miw={300}>
+      <Flex justify="space-between">
+        <Flex gap={"xs"} w={"85%"}>
+          <Text fw={800} c={"dark.3"}>
+            {" "}
+            {no}.{" "}
+          </Text>
+          <Text fw={800} c={"dark.3"}>
+            {getContent(question)}
+          </Text>
+        </Flex>
+        {questionType !== QuestionType.MCQGrid && (
+          <Badge variant="dot">{questionType}</Badge>
+        )}
+      </Flex>
+      <Group align="center" justify="center">
+        <Stack style={{ flex: 1 }} align="center">
+          <PaperLayout miw={200} maw={230}>
+            <Stack align="center" gap={10}>
+              <Heading
+                title={`${data?.length}`}
+                titleprops={{ w: "fit-content" }}
+              />
+              <Text c={"dimmed"} fw={900} size="sm">
+                {translations["Responses"]}
+              </Text>
+            </Stack>
+          </PaperLayout>
+          <SurveySummaryNew
+            response={data}
+            questionType={questionType}
+            choices={choices}
+            choiceCounts={choiceCounts}
+          />
+        </Stack>
+        <Stack style={{ flex: 1 }} align="center">
+          <Stack miw={300} align="center">
+            <BarChart
+              width={500}
+              height={300}
+              data={choiceCounts}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+              maxBarSize={50}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Bar dataKey="count" fill="#fff" radius={10} isAnimationActive />
+            </BarChart>
+          </Stack>
+        </Stack>
+      </Group>
+    </Stack>
+  );
+};

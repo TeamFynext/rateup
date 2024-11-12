@@ -843,9 +843,9 @@ export type ReviewSuggestion = {
 };
 
 export type WaFlowJson = {
-  version: string;
+  version?: string;
   screens: Array<WaFlowScreen>;
-  routing_model: {
+  routing_model?: {
     [screenId: string]: Array<string>;
   };
   data_api_version?: string;

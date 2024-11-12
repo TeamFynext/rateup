@@ -16,12 +16,14 @@ interface Layout {
   children: FormElement[];
 }
 
-interface FormElement {
+export interface FormElement {
   id: string;
   type: QuestionType2;
   required?: boolean;
   label: string;
   name?: string;
+  metaType?: string;
+  header?: string;
   "input-type"?: string;
   "left-caption"?: string;
   "right-caption"?: string;
@@ -34,10 +36,18 @@ interface FormElement {
     payload: Record<string, unknown>;
   };
 }
+export enum EditFlowRightPanel {
+  ElementEditor = "element-editor",
+  TypeSelection = "type-selection",
+}
 
 interface StoreState {
   screens: Screen[];
   currentScreenId: string | null;
+  currentElementId: string | null;
+  currentElementType: QuestionType2 | null;
+  activeEditor: EditFlowRightPanel | null;
+  flowEditable: boolean;
   getScreens: () => Screen[];
   addScreens: (screens: Screen[]) => void;
   addScreenWithTitle: (title: string) => void;
@@ -49,17 +59,25 @@ interface StoreState {
   getScreen: (screenId: string) => Screen | undefined;
   getComponent: (componentName: string) => FormElement | undefined;
   setCurrentScreenId: (screenId: string) => void;
+  setCurrentElement: (elementId?: string, type?: QuestionType2) => void;
+  setFlowEditable: (editable: boolean) => void;
+  setActiveEditor: (editor: EditFlowRightPanel) => void;
   getCurrentScreen: () => Screen | undefined;
+  getCurrentElement: () => FormElement | undefined;
   updateScreen: (updatedScreen: Partial<Screen>) => void;
   updateComponentsInScreen: (updatedComponents: FormElement[]) => void;
   addComponentToScreen: (omponent: FormElement) => void;
-  deleteComponentFromScreen: (index: number) => void;
+  deleteComponentFromScreen: (feId: string) => void;
 }
 
 const useFlowStore = create<StoreState>()(
   immer((set, get) => ({
     screens: [],
     currentScreenId: null,
+    currentElementId: null,
+    currentElementType: null,
+    activeEditor: null,
+    flowEditable: true,
     getScreens: () => {
       return get().screens;
     },
@@ -90,7 +108,40 @@ const useFlowStore = create<StoreState>()(
           },
         };
         state.screens.push(newScreen);
+        let screenIndex = state.screens.length - 1;
+        const nextScreen = state.screens[screenIndex];
+        state.screens.forEach((s, index) => {
+          s.terminal = index === state.screens.length - 1;
+          if (index === screenIndex - 1) {
+            const footer = s.layout.children.find(
+              (child) => child.type === "Footer",
+            );
+            if (footer) {
+              footer["on-click-action"] = {
+                name: "navigate",
+                next: {
+                  type: "screen",
+                  name: nextScreen.id,
+                },
+                payload: {},
+              };
+            }
+          }
+        });
         state.currentScreenId = newScreenId;
+      }),
+    setCurrentElement: (elementId, type) =>
+      set((state) => {
+        state.currentElementId = elementId;
+        state.currentElementType = type;
+      }),
+    setFlowEditable: (editable) =>
+      set((state) => {
+        state.flowEditable = editable;
+      }),
+    setActiveEditor: (editor) =>
+      set((state) => {
+        state.activeEditor = editor;
       }),
     setCurrentScreenId: (screenId) =>
       set((state) => {
@@ -102,6 +153,12 @@ const useFlowStore = create<StoreState>()(
         (screen) => screen.id === state.currentScreenId,
       );
     },
+    getCurrentElement: () => {
+      const state = get();
+      return state
+        .getCurrentScreen()
+        ?.layout.children.find((el) => el.id === state.currentElementId);
+    },
     deleteScreen: () =>
       set((state) => {
         const screenId = state.currentScreenId;
@@ -111,6 +168,7 @@ const useFlowStore = create<StoreState>()(
         state.screens = state.screens.filter(
           (screen) => screen.id !== screenId,
         );
+        state.currentElementType = null;
 
         if (screenIndex > 0 && screenIndex < state.screens.length) {
           const previousScreen = state.screens[screenIndex - 1];
@@ -180,10 +238,11 @@ const useFlowStore = create<StoreState>()(
         );
         if (screen) {
           screen.layout.children.push(component);
+          state.currentElementId = component.id;
         }
       }),
 
-    deleteComponentFromScreen: (index) =>
+    deleteComponentFromScreen: (id) =>
       set((state) => {
         let { currentScreenId } = state;
         const screen = state.screens.find(
@@ -191,8 +250,12 @@ const useFlowStore = create<StoreState>()(
         );
         if (screen) {
           screen.layout.children = screen.layout.children.filter(
-            (_, i) => i !== index,
+            (el) => el.id !== id,
           );
+          if (state.currentElementId === id) {
+            state.currentElementId = null;
+            state.currentElementType = null;
+          }
         }
       }),
     updateComponentInScreen: (id, updatedComponent) =>

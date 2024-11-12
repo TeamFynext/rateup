@@ -1,13 +1,18 @@
+import dayjs from "dayjs";
 import { z } from "zod";
 
-import { QuestionType2 } from "@/types/enums";
+import {
+  LDResponse2,
+  QuestionType2,
+  RatingScale,
+  SmileyResponse2,
+  YNResponse,
+} from "@/types/enums";
 
 export const getValidationSchema = (type: QuestionType2) => {
   let schema = {};
   switch (type) {
     case QuestionType2.TextInput:
-    case QuestionType2.Email:
-    case QuestionType2.Phone:
       schema = {
         type: z.string(),
         label: z.string().trim().min(1).max(20),
@@ -59,11 +64,8 @@ export const getValidationSchema = (type: QuestionType2) => {
       };
       break;
     case QuestionType2.RadioButtonsGroup:
-    case QuestionType2.Rating:
-    case QuestionType2.Smiley:
     case QuestionType2.LD:
     case QuestionType2.YN:
-    case QuestionType2.Opinion:
       schema = {
         type: z.string(),
         "data-source": z
@@ -107,6 +109,9 @@ export const getValidationSchema = (type: QuestionType2) => {
       };
       break;
     case QuestionType2.Dropdown:
+    case QuestionType2.Rating:
+    case QuestionType2.Smiley:
+    case QuestionType2.Opinion:
       schema = {
         type: z.string(),
         label: z.string().trim().min(1).max(20),
@@ -117,7 +122,6 @@ export const getValidationSchema = (type: QuestionType2) => {
               title: z.string().max(30),
               description: z.string().max(300).optional(),
               metadata: z.string().max(20).optional(),
-              enabled: z.boolean(),
               image: z.string().optional(),
               "alt-text": z.string().optional(),
               color: z.string().optional(),
@@ -128,32 +132,20 @@ export const getValidationSchema = (type: QuestionType2) => {
         required: z.boolean(),
         "init-value": z.string().optional(),
       };
+      break;
     case QuestionType2.DatePicker:
       schema = {
         type: z.string(),
         label: z.string().trim().min(1).max(40),
-        "min-date": z
-          .date()
-          .transform((d) => d.toISOString().split("T")[0])
-          .optional()
-          .nullable(),
-        "max-date": z
-          .date()
-          .transform((d) => d.toISOString().split("T")[0])
-          .optional()
-          .nullable(),
+        "min-date": z.date().optional().nullable(),
+        "max-date": z.date().optional().nullable(),
         name: z.string(),
-        "unavailable-dates": z.array(
-          z
-            .date()
-            .transform((d) => d.toISOString().split("T")[0])
-            .optional()
-            .nullable(),
-        ),
+        "unavailable-dates": z.array(z.date().optional().nullable()),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
       };
       break;
+
     case QuestionType2.Image:
       schema = {
         type: z.string(),
@@ -223,13 +215,56 @@ export const getValidationSchema = (type: QuestionType2) => {
           .optional(),
       };
       break;
+    case QuestionType2.TextBody:
+      schema = {
+        type: z.string(),
+        text: z.string().trim().min(1).max(4096),
+      };
+      break;
+    case QuestionType2.TextCaption:
+      schema = {
+        type: z.string(),
+        text: z.string().trim().min(1).max(409),
+      };
+      break;
+    case QuestionType2.TextHeading:
+      schema = {
+        type: z.string(),
+        text: z.string().trim().min(1).max(80),
+      };
+      break;
+    case QuestionType2.TextSubheading:
+      schema = {
+        type: z.string(),
+        text: z.string().trim().min(1).max(80),
+      };
+      break;
     case QuestionType2.RichText:
       schema = {
         type: z.literal("RichText"),
         text: z.union([z.string().trim().min(1), z.array(z.string()).min(1)]),
       };
   }
-  return z.object(schema);
+  return z.object(schema).superRefine((data, ctx) => {
+    if (data["min-date"] || data["max-date"]) {
+      data["unavailable-dates"].forEach((date) => {
+        if (date && dayjs(date).isBefore(data["min-date"])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Unavailable dates must be after min-date",
+            path: ["unavailable-dates"],
+          });
+        }
+        if (date && dayjs(date).isAfter(data["max-date"])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Unavailable dates must be before max-date",
+            path: ["unavailable-dates"],
+          });
+        }
+      });
+    }
+  });
 };
 
 type InitialValues = {
@@ -242,48 +277,57 @@ type InitialValues = {
       | string[]
       | { id: string; title: string }[];
     extra?: any;
+    metaType?: string;
   };
 };
 
 export const getInitialValues = (type: QuestionType2) => {
   let initialValues: InitialValues = {};
+  let validation = getValidationSchema(type);
+  let shape: any = validation?._def?.schema?._def?.shape();
+  let LABEL_MAX = shape?.label?._def?.checks?.find(
+    (data) => data.kind === "max",
+  ).value;
+  let TEXT_MAX = shape?.text?._def?.checks?.find(
+    (data) => data.kind === "max",
+  ).value;
+  let TITLE_MAX = 4090;
+
   const generateId = Math.random().toString(36).substr(2, 9);
   switch (type) {
     case QuestionType2.TextInput:
-    case QuestionType2.Email:
-    case QuestionType2.Phone:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "TextInput" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "TextInput" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
+        },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
         },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         "input-type": {
           type: "select",
-          value:
-            type === QuestionType2.Email
-              ? "email"
-              : type === QuestionType2.Phone
-                ? "phone"
-                : "text",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
           extra: {
             data: ["text", "number", "email", "password", "passcode", "phone"],
-            defaultValue:
-              type === QuestionType2.Email
-                ? "email"
-                : type === QuestionType2.Phone
-                  ? "phone"
-                  : "text",
+            defaultValue: Object.keys(QuestionType2).find(
+              (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+            ),
             disabled: type !== QuestionType2.TextInput,
           },
         },
@@ -291,30 +335,36 @@ export const getInitialValues = (type: QuestionType2) => {
         "min-chars": { type: "number", value: 0 },
         "max-chars": { type: "number", value: 80 },
         "helper-text": { type: "text", value: "" },
-        name: { type: "text", value: generateId },
+        name: { type: "hidden", value: generateId },
         "init-value": { type: "text", value: "" },
       };
       break;
     case QuestionType2.TextArea:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "TextArea" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "TextArea" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
+        },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
         },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         required: { type: "checkbox", value: true },
         "max-length": { type: "number", value: 600 },
-        name: { type: "text", value: generateId },
+        name: { type: "hidden", value: generateId },
         "helper-text": { type: "text", value: "" },
         "init-value": { type: "text", value: "" },
         enableNpsAnalytics: { type: "checkbox", value: false },
@@ -322,26 +372,31 @@ export const getInitialValues = (type: QuestionType2) => {
       break;
     case QuestionType2.CheckboxGroup:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "CheckboxGroup" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "CheckboxGroup" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        name: { type: "text", value: generateId },
-        "min-selected-items": { type: "number", value: 0 },
-        "max-selected-items": { type: "number", value: 1 },
+        name: { type: "hidden", value: generateId },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
+        },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         required: { type: "checkbox", value: true },
         description: { type: "text", value: "" },
+        "min-selected-items": { type: "number", value: 1 },
         "init-value": { type: "text", value: [] },
         "media-size": {
           type: "select",
@@ -359,26 +414,29 @@ export const getInitialValues = (type: QuestionType2) => {
       };
       break;
     case QuestionType2.RadioButtonsGroup:
-    case QuestionType2.Rating:
-    case QuestionType2.Smiley:
     case QuestionType2.LD:
     case QuestionType2.YN:
-    case QuestionType2.Opinion:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "RadioButtonsGroup" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "RadioButtonsGroup" },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
+        },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        name: { type: "text", value: generateId },
+        name: { type: "hidden", value: generateId },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         required: { type: "checkbox", value: true },
@@ -401,10 +459,10 @@ export const getInitialValues = (type: QuestionType2) => {
       break;
     case QuestionType2.Footer:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "Footer" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "Footer" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
@@ -414,6 +472,7 @@ export const getInitialValues = (type: QuestionType2) => {
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         "left-caption": { type: "text", value: "" },
@@ -423,41 +482,51 @@ export const getInitialValues = (type: QuestionType2) => {
       break;
     case QuestionType2.OptIn:
       initialValues = {
-        id: { type: "text", value: generateId },
+        id: { type: "hidden", value: generateId },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        type: { type: "text", value: "OptIn" },
+        type: { type: "hidden", value: "OptIn" },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         required: { type: "checkbox", value: true },
-        name: { type: "text", value: generateId },
+        name: { type: "hidden", value: generateId },
         "init-value": { type: "checkbox", value: false },
       };
       break;
     case QuestionType2.Dropdown:
+    case QuestionType2.Rating:
+    case QuestionType2.Smiley:
+    case QuestionType2.Opinion:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "Dropdown" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "Dropdown" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
+        },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
         },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         required: { type: "checkbox", value: true },
@@ -466,30 +535,56 @@ export const getInitialValues = (type: QuestionType2) => {
           type: "dataSource",
           value: getDataSource(type),
         },
+        name: { type: "hidden", value: generateId },
         enableNpsAnalytics: { type: "checkbox", value: false },
       };
       break;
     case QuestionType2.DatePicker:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "DatePicker" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "DatePicker" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
+        },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
         },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
-        "min-date": { type: "date", value: null },
-        "max-date": { type: "date", value: null },
-        name: { type: "text", value: generateId },
-        "unavailable-dates": { type: "multiselect", value: [] },
+        "min-date": {
+          type: "date",
+          value: null,
+          extra: {
+            clearable: true,
+          },
+        },
+        "max-date": {
+          type: "date",
+          value: null,
+          extra: {
+            clearable: true,
+          },
+        },
+        name: { type: "hidden", value: generateId },
+        "unavailable-dates": {
+          type: "date",
+          value: [],
+          extra: {
+            type: "multiple",
+            clearable: true,
+          },
+        },
         "helper-text": { type: "text", value: "" },
         "init-value": { type: "text", value: "" },
         enableNpsAnalytics: { type: "checkbox", value: false },
@@ -497,17 +592,17 @@ export const getInitialValues = (type: QuestionType2) => {
       break;
     case QuestionType2.Image:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "Image" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "Image" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        src: { type: "text", value: "" },
-        width: { type: "number", value: 0 },
-        height: { type: "number", value: 0 },
+        src: { type: "image", value: "" },
+        width: { type: "number", value: 300 },
+        height: { type: "number", value: 200 },
         "scale-type": {
           type: "select",
           value: "contain",
@@ -522,20 +617,26 @@ export const getInitialValues = (type: QuestionType2) => {
       break;
     case QuestionType2.PhotoPicker:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "PhotoPicker" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "PhotoPicker" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        name: { type: "text", value: generateId },
+        name: { type: "hidden", value: generateId },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
+        },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         description: { type: "text", value: "" },
@@ -554,20 +655,26 @@ export const getInitialValues = (type: QuestionType2) => {
       break;
     case QuestionType2.DocumentPicker:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "DocumentPicker" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "DocumentPicker" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        name: { type: "text", value: generateId },
+        name: { type: "hidden", value: generateId },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
+        },
         label: {
           type: "text",
           value: "",
           extra: {
             required: true,
+            max: LABEL_MAX,
           },
         },
         description: { type: "text", value: "" },
@@ -605,12 +712,83 @@ export const getInitialValues = (type: QuestionType2) => {
         },
       };
       break;
+    case QuestionType2.TextBody:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "TextBody" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        text: {
+          type: "richText",
+          value: "",
+          extra: { required: true, max: TEXT_MAX },
+        },
+
+        markdown: { type: "hidden", value: true },
+      };
+      break;
+    case QuestionType2.TextCaption:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "TextCaption" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        text: {
+          type: "richText",
+          value: "",
+          extra: { required: true, max: TEXT_MAX },
+        },
+        markdown: { type: "hidden", value: true },
+      };
+      break;
+    case QuestionType2.TextHeading:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "TextHeading" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        text: {
+          type: "text",
+          value: "",
+          extra: { required: true, max: TEXT_MAX },
+        },
+      };
+      break;
+    case QuestionType2.TextSubheading:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "TextSubheading" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        text: {
+          type: "text",
+          value: "",
+          extra: { required: true, max: TEXT_MAX },
+        },
+      };
+      break;
     case QuestionType2.RichText:
       initialValues = {
-        id: { type: "text", value: generateId },
-        type: { type: "text", value: "RichText" },
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "RichText" },
         metaType: {
-          type: "text",
+          type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
@@ -618,124 +796,38 @@ export const getInitialValues = (type: QuestionType2) => {
         text: { type: "richText", value: "", extra: { required: true } },
       };
       break;
+    default:
+      initialValues = {};
+      break;
   }
   return initialValues;
 };
 
 const getDataSource = (type: QuestionType2) => {
+  const mapEnumToDataSource = (enumObj: object) =>
+    Object.values(enumObj).map((value, index) => ({
+      id: (index + 1).toString(),
+      title: value,
+    }));
+
   switch (type) {
     case QuestionType2.Rating:
-      return [
-        {
-          id: "5",
-          title: "★★★★★• Excellent (5/5)",
-        },
-        {
-          id: "4",
-          title: "★★★★☆• Good (4/5)",
-        },
-        {
-          id: "3",
-          title: "★★★☆☆• Average (3/5)",
-        },
-        {
-          id: "2",
-          title: "★★☆☆☆• Poor (2/5)",
-        },
-        {
-          id: "1",
-          title: "★☆☆☆☆• Very Poor (1/5)",
-        },
-      ];
+      return Object.entries(RatingScale).map(([description, title], index) => ({
+        id: (index + 1).toString(),
+        title,
+        description,
+      }));
     case QuestionType2.Smiley:
-      return [
-        {
-          id: "1",
-          title: "😡",
-        },
-        {
-          id: "2",
-          title: "😕",
-        },
-        {
-          id: "3",
-          title: "😐",
-        },
-        {
-          id: "4",
-          title: "😊",
-        },
-        {
-          id: "5",
-          title: "😃",
-        },
-      ];
-
+      return mapEnumToDataSource(SmileyResponse2);
     case QuestionType2.LD:
-      return [
-        {
-          id: "1",
-          title: "👍",
-        },
-        {
-          id: "2",
-          title: "👎",
-        },
-      ];
+      return mapEnumToDataSource(LDResponse2);
     case QuestionType2.YN:
-      return [
-        {
-          id: "1",
-          title: "Yes",
-        },
-        {
-          id: "2",
-          title: "No",
-        },
-      ];
+      return mapEnumToDataSource(YNResponse);
     case QuestionType2.Opinion:
-      return [
-        {
-          id: "1",
-          title: "1",
-        },
-        {
-          id: "2",
-          title: "2",
-        },
-        {
-          id: "3",
-          title: "3",
-        },
-        {
-          id: "4",
-          title: "4",
-        },
-        {
-          id: "5",
-          title: "5",
-        },
-        {
-          id: "6",
-          title: "6",
-        },
-        {
-          id: "7",
-          title: "7",
-        },
-        {
-          id: "8",
-          title: "8",
-        },
-        {
-          id: "9",
-          title: "9",
-        },
-        {
-          id: "10",
-          title: "10",
-        },
-      ];
+      return Array.from({ length: 10 }).map((_, index) => ({
+        id: (index + 1).toString(),
+        title: (index + 1).toString(),
+      }));
     default:
       return [];
   }

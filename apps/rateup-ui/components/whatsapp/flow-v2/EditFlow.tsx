@@ -3,59 +3,52 @@ import { useRouter } from "next/router";
 
 import { ActionIcon, Box, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
+import _ from "lodash";
 
-import { QuestionType2, WaFlowStatus } from "@/types/enums";
+import { QuestionType2 } from "@/types/enums";
 import {
   useUpdateFlowMutation,
   useWaFlowFromDb,
 } from "@/backend/whatsapp/flow/flow.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import { FlowQuestionTypes2 } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 
+import { PreviewPanel } from "../flows/Preview/PreviewPanel";
 import styles from "./EditFlow.module.css";
-import { FlowQuestionDetailedView } from "./FlowQuestionDetailedView";
 import FlowScreensList from "./FlowScreensList";
 import { QuestionTypeSelection } from "./QuestionTypeSelection";
-import useFlowStore from "./utils/store";
+import { FlowQuestionDetailedView } from "./RightSide/FlowQuestionDetailedView";
+import useFlowStore, { EditFlowRightPanel } from "./utils/store";
 
-enum EditFlowRightPanel {
-  ElementEditor = "element-editor",
-  TypeSelection = "type-selection",
-}
 function EditFlow() {
   const [previewOpened, setPreviewOpened] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<{
-    type: QuestionType2;
-    id: string;
-  }>(null);
-  const [activeEditor, setActiveEditor] = useState<EditFlowRightPanel>(null);
-
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
-  const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-
-  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
-  const { getCurrentScreen, getScreens, screens } = useFlowStore();
+  const { data: dbFlow, isPending } = useWaFlowFromDb(dbFlowId);
+  const {
+    getCurrentScreen,
+    getScreens,
+    screens,
+    activeEditor,
+    setActiveEditor,
+    setCurrentElement,
+  } = useFlowStore();
   const updateFlow = useUpdateFlowMutation();
 
-  function handleNewQuestionCreated({
-    type,
-    id,
-  }: {
-    type: QuestionType2;
-    id: string;
-  }) {
-    setSelectedQuestion({ type: QuestionType2?.[type], id });
-  }
-
   useEffect(() => {
-    updateFlow.mutate({
-      dbFlowId,
-      data: {
-        json: { screens: getScreens() as any },
-      },
-    });
-  }, [dbFlowId, screens]);
+    if (!isPending && !_.isEqual(dbFlow.json.screens, getScreens())) {
+      updateFlow.mutate({
+        dbFlowId,
+        data: {
+          json: {
+            screens: getScreens() as any,
+            version: "5.1",
+          },
+        },
+      });
+    }
+  }, [dbFlowId, screens, isPending]);
 
   const handleTypeSelection = (type: QuestionType2) => {
     const screenToBeEdited = getCurrentScreen();
@@ -65,7 +58,6 @@ function EditFlow() {
         "Only 50 components in a screen",
         "error-max-screen-elements",
       );
-
     if (
       [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
         type as QuestionType2,
@@ -81,9 +73,7 @@ function EditFlow() {
         type as QuestionType2,
       ) &&
       formElementChildren.some((child) =>
-        [QuestionType2.PhotoPicker, QuestionType2.DocumentPicker].includes(
-          child.type,
-        ),
+        ["DocumentPicker", "PhotoPicker"].includes(child.type),
       )
     ) {
       return showErrorToast(
@@ -91,18 +81,10 @@ function EditFlow() {
         "error-max-screen-elements",
       );
     }
-    setSelectedQuestion({ type, id: "" });
+    setCurrentElement(null, type);
     setActiveEditor(EditFlowRightPanel.ElementEditor);
   };
-
-  function handleFormElementClick(id: string, type: QuestionType2) {
-    setSelectedQuestion({ type: QuestionType2?.[type], id });
-    setActiveEditor(EditFlowRightPanel.ElementEditor);
-  }
-  function handleAddElementClick() {
-    if (!flowEditable) return;
-    setActiveEditor(EditFlowRightPanel.TypeSelection);
-  }
+  if (isPending) return <RateupLoader />;
 
   return (
     <Box
@@ -119,10 +101,7 @@ function EditFlow() {
         }}
         p="0"
       >
-        <FlowScreensList
-          onAddElementClick={handleAddElementClick}
-          onElementClick={handleFormElementClick}
-        />
+        <FlowScreensList />
       </Box>
       {/* Center panel containing type-selection & questionEditor */}
       <Box
@@ -139,14 +118,11 @@ function EditFlow() {
           />
         )}
         {activeEditor === EditFlowRightPanel.ElementEditor && (
-          <FlowQuestionDetailedView
-            selectedQuestion={selectedQuestion}
-            onCreated={handleNewQuestionCreated}
-          />
+          <FlowQuestionDetailedView />
         )}
       </Box>
       {/* Right sidebar containing preview */}
-      {/* <PreviewPanel previewOpened={previewOpened} /> */}
+      <PreviewPanel previewOpened={previewOpened} version={2} />
       <Tooltip label={"Open Preview"}>
         <ActionIcon
           style={{

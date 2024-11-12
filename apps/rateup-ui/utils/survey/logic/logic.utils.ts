@@ -4,6 +4,7 @@ import {
   LogicCondition,
   PageType,
   QuestionType as Q,
+  QuestionType2 as Q2,
   QuestionType,
   SmileyResponse,
   YNResponse,
@@ -178,6 +179,41 @@ export function getResponses(
     return [];
   }
 }
+export function getResponses2(
+  question,
+): Array<string | { label: string; value: string }> {
+  try {
+    switch (question.type as Q2) {
+      case Q2.LD:
+        return Object.values(LDResponse);
+      case Q2.RadioButtonsGroup:
+      case Q2.Dropdown:
+      case Q2.CheckboxGroup:
+        return [];
+        // question.choices[selectedLanguage].map((choice, index) => ({
+        //   label:
+        //     typeof choice.value === "object"
+        //       ? choice.value?.title
+        //       : choice.value,
+        //   value: index.toString(),
+        // })) || []
+      case Q2.YN:
+        return Object.values(YNResponse);
+      case Q2.Opinion:
+        return OpinionResponse;
+      case Q2.Rating:
+        return RatingResponse;
+      case Q2.Smiley:
+        return Object.values(SmileyResponse);
+      default:
+        console.log("type", question.type);
+        throw new Error("Logic not implemented for question type");
+    }
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
+}
 
 export function getConditions(qType: Q): Array<any> {
   switch (qType) {
@@ -222,6 +258,58 @@ export function getConditions(qType: Q): Array<any> {
       ];
     case Q.MSQ:
     case Q.DDMS:
+      return [
+        LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
+        LogicCondition.IncludesAllOf,
+        LogicCondition.Submitted,
+      ];
+    default:
+      return [LogicCondition.Submitted];
+  }
+}
+export function getConditionsv2(qType: Q2): Array<any> {
+  switch (qType) {
+    case Q2.LD:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q2.RadioButtonsGroup:
+    case Q2.Dropdown:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
+        LogicCondition.Submitted,
+      ];
+    case Q2.YN:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q2.Opinion:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q2.Rating:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q2.Smiley:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case Q2.CheckboxGroup:
       return [
         LogicCondition.IncludesNoneOf,
         LogicCondition.IncludesAnyOf,

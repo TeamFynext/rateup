@@ -168,10 +168,15 @@ export function* waFlowFormElementIterator(
 export function getFlowFormElementsFromScreen(
   screen: WaFlowScreen,
   onlyInteractive = false,
+  version = 0,
 ) {
-  const elementsWithoutFooter = screen?.layout?.children
-    ?.find((se) => se.type === "Form")
-    ?.children?.filter((fe) => fe.type !== WaFlowFormElementType.footer);
+  let children = screen?.layout?.children;
+  const elementsWithoutFooter =
+    version === 0
+      ? children
+          ?.find((se) => se.type === "Form")
+          ?.children?.filter((fe) => fe.type !== WaFlowFormElementType.footer)
+      : children?.filter((fe) => fe.type !== WaFlowFormElementType.footer);
 
   if (onlyInteractive) {
     return elementsWithoutFooter?.filter((fe) => fe.name !== undefined);
@@ -180,10 +185,17 @@ export function getFlowFormElementsFromScreen(
   }
 }
 
-export function getFlowFooterElementsFromScreen(screen: WaFlowScreen) {
-  const elementsWithoutFooter = screen?.layout?.children
-    ?.find((se) => se.type === "Form")
-    ?.children.filter((fe) => fe.type === WaFlowFormElementType.footer);
+export function getFlowFooterElementsFromScreen(
+  screen: WaFlowScreen,
+  version = 0,
+) {
+  let children = screen?.layout?.children;
+  const elementsWithoutFooter =
+    version === 0
+      ? children
+          ?.find((se) => se.type === "Form")
+          ?.children?.filter((fe) => fe.type === WaFlowFormElementType.footer)
+      : children?.filter((fe) => fe.type === WaFlowFormElementType.footer);
   return elementsWithoutFooter;
 }
 

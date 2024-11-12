@@ -72,13 +72,15 @@ export enum QuestionType {
 }
 
 export enum QuestionType2 {
-  Email = "Email",
-  Phone = "Phone",
   Rating = "Rating",
   Smiley = "Smiley",
   LD = "Like or Dislike",
   YN = "Yes or No",
   Opinion = "Opinion Scale",
+  TextHeading = "Text Heading",
+  TextSubheading = "Text Subheading",
+  TextBody = "Text Body",
+  TextCaption = "Text Caption",
   TextInput = "Text Input",
   TextArea = "Text Area",
   CheckboxGroup = "Multiple Select",
@@ -95,10 +97,40 @@ export enum QuestionType2 {
   // Switch = "Switch",
   // EmbeddedLink = "Embedded Link",
 }
+export enum WaQuestions {
+  Rating = "Rating",
+  Smiley = "Smiley",
+  LD = "LD",
+  YN = "YN",
+  Opinion = "Opinion",
+  TextHeading = "TextHeading",
+  TextSubheading = "TextSubheading",
+  TextBody = "TextBody",
+  TextCaption = "TextCaption",
+  TextInput = "TextInput",
+  TextArea = "TextArea",
+  CheckboxGroup = "CheckboxGroup",
+  RadioButtonsGroup = "RadioButtonsGroup",
+  Footer = "Footer",
+  Dropdown = "Dropdown",
+  OptIn = "OptIn",
+  DatePicker = "DatePicker",
+  Image = "Image",
+  DocumentPicker = "DocumentPicker",
+  PhotoPicker = "PhotoPicker",
+  RichText = "RichText",
+  // If = "If",
+  // Switch = "Switch",
+  // EmbeddedLink = "Embedded Link",
+}
 
 export enum LDResponse {
   Like = "Like",
   Dislike = "Dislike",
+}
+export enum LDResponse2 {
+  Like = "👍",
+  Dislike = "👎",
 }
 export enum YNResponse {
   Yes = "Yes",
@@ -112,6 +144,21 @@ export enum SmileyResponse {
   Sad = "Sad",
   VerySad = "Very Sad",
 }
+export enum SmileyResponse2 {
+  VerySad = "😡",
+  Sad = "😕",
+  Neutral = "😐",
+  Happy = "😊",
+  VeryHappy = "😃",
+}
+export enum RatingScale {
+  VeryPoor = "⭐️",
+  Poor = "⭐️⭐️",
+  Average = "⭐️⭐️⭐️",
+  Good = "⭐️⭐️⭐️⭐️",
+  Excellent = "⭐️⭐️⭐️⭐️⭐️",
+}
+
 export enum LogicAction {
   NextQ = "NextQ",
   EndSurvey = "EndSurvey",

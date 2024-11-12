@@ -4,28 +4,33 @@ import { Box, Flex, Group, Transition, useMantineTheme } from "@mantine/core";
 
 import { WaFlowScreen } from "../../../../types/global";
 import { getFlowJsonWithTitleAndDescription } from "../../../../utils/whatsapp/flow.utils";
+import useFlowStore from "../../flow-v2/utils/store";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext";
 import { FlowChatPreview } from "./FlowChatPreview";
 
 interface PreviewProps {
   previewOpened: boolean;
+  version?: number;
 }
-export function PreviewPanel({ previewOpened }: PreviewProps) {
+export function PreviewPanel({ previewOpened, version = 1 }: PreviewProps) {
   const { survey, map, flowJson, screenNumber } = useContext(EditFlowContext);
   const theme = useMantineTheme();
   const [currentScreen, setCurrentScreen] = useState<WaFlowScreen>();
-
+  const { getCurrentScreen, currentScreenId, screens } = useFlowStore();
   useEffect(() => {
-    if (!flowJson || !flowJson.screens || flowJson.screens?.length === 0)
-      return;
+    if (version === 2) {
+      setCurrentScreen(getCurrentScreen() as any);
+    } else {
+      if (!flowJson || !flowJson.screens || flowJson.screens?.length === 0)
+        return;
 
-    const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
-    if (typeof screenNumber === "number")
-      setCurrentScreen(json.screens?.[screenNumber ?? 0]);
-  }, [flowJson, map, screenNumber, survey]);
+      const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
+      if (typeof screenNumber === "number")
+        setCurrentScreen(json.screens?.[screenNumber ?? 0]);
+    }
+  }, [flowJson, map, screenNumber, survey, currentScreenId, screens]);
 
   if (!currentScreen) return null;
-  const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
 
   return (
     <Transition
@@ -62,7 +67,10 @@ export function PreviewPanel({ previewOpened }: PreviewProps) {
                 position: "relative",
               }}
             >
-              <FlowChatPreview currentScreen={currentScreen} />
+              <FlowChatPreview
+                currentScreen={currentScreen}
+                version={version}
+              />
             </Box>
           </Flex>
         </Box>

@@ -35,36 +35,26 @@ import useTranslations from "@/dictionaries/useTranslation";
 
 import dndClasses from "../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import SortDrawerFlow from "../../flows/sortDrawer/SortDrawerFlow";
-import useFlowStore from "../utils/store";
+import { FlowMaxScreens } from "../../whatsappConfig";
+import useFlowStore, { EditFlowRightPanel } from "../utils/store";
 import styles from "./ScreenListIem.module.css";
 
 const cx = classNames.bind(styles);
 
 interface ScreenListItemProps {
-  onAddElementClick: (screenId: string) => void;
-  onElementClick: (feId: string, screenId: string) => void;
   handleCreateScreenClick: () => void;
-  handlers: {
-    readonly increment: () => void;
-    readonly decrement: () => void;
-    readonly set: (value: number) => void;
-    readonly reset: () => void;
-  };
   pendingSave: boolean;
 }
 function ScreenListItem({
-  onAddElementClick,
-  onElementClick,
   handleCreateScreenClick,
-  handlers,
   pendingSave,
 }: Readonly<ScreenListItemProps>) {
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
-  // const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
-  const flowEditable = true;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isOpen, { open, close }] = useDisclosure(false);
+  const screenTitleInputRef = useRef(null);
+  const footerLabelInputRef = useRef(null);
   const {
     screens,
     deleteScreen,
@@ -73,6 +63,9 @@ function ScreenListItem({
     deleteComponentFromScreen,
     getCurrentScreen,
     setCurrentScreenId,
+    setCurrentElement,
+    setActiveEditor,
+    flowEditable,
   } = useFlowStore();
   const screen = getCurrentScreen();
   const footerElement = screen?.layout.children.find(
@@ -93,19 +86,21 @@ function ScreenListItem({
 
   const handleDeleteScreen = () => {
     if (!flowEditable) return;
-    handlers.decrement();
     deleteScreen();
   };
 
-  function handleDeleteFormElement(index: number) {
+  function handleDeleteFormElement(feId: string) {
     if (!flowEditable) return;
-    deleteComponentFromScreen(index);
+    deleteComponentFromScreen(feId);
   }
 
-  function handleElementClick(index: number) {
-    const element = screen.layout.children[index];
-    onElementClick(element.id, element.type);
+  function handleElementClick(feId: string, feType: QuestionType2) {
+    setCurrentElement(feId, QuestionType2[feType]);
+    setActiveEditor(EditFlowRightPanel.ElementEditor);
   }
+  const onAddElementClick = () => {
+    setActiveEditor(EditFlowRightPanel.TypeSelection);
+  };
 
   function handleScreenTitleInputChange(e) {
     if (!flowEditable) return;
@@ -130,10 +125,7 @@ function ScreenListItem({
     pushToWaMutation.mutate(dbFlowId);
   };
 
-  const screenTitleInputRef = useRef(null);
-  const footerLabelInputRef = useRef(null);
-
-  const pageNo = screens.findIndex((s) => s.id === screen.id);
+  const pageNo = screens.findIndex((s) => s.id === screen?.id);
   return (
     <Stack p="xs" key={screen?.id} justify="space-between" h={"100%"}>
       {screens?.length === 0 ? (
@@ -160,7 +152,6 @@ function ScreenListItem({
       ) : (
         <>
           <Box mah={"85%"}>
-            {/* <Text w={"100%"}></Text> */}
             <ConfirmationModal
               forDeleteFunctionality
               opened={dialogOpened}
@@ -182,6 +173,7 @@ function ScreenListItem({
                 <ActionIcon
                   onClick={() => {
                     setCurrentScreenId(screens?.[pageNo - 1]?.id);
+                    setCurrentElement(null, null);
                   }}
                   radius={"lg"}
                   disabled={pageNo === 0}
@@ -190,12 +182,11 @@ function ScreenListItem({
                   <IconChevronLeft size={20} />
                 </ActionIcon>
               </Tooltip>
-
               <TextInput
                 ref={screenTitleInputRef}
                 className={styles["text-input"]}
                 label={`Screen ${pageNo + 1}`}
-                defaultValue={screenTitleInputState}
+                value={screenTitleInputState}
                 onChange={handleScreenTitleInputChange}
                 readOnly={!flowEditable}
                 placeholder={
@@ -224,6 +215,7 @@ function ScreenListItem({
                 <ActionIcon
                   onClick={() => {
                     setCurrentScreenId(screens?.[pageNo + 1]?.id);
+                    setCurrentElement(null, null);
                   }}
                   radius={"lg"}
                   disabled={pageNo === screens?.length - 1}
@@ -283,7 +275,7 @@ function ScreenListItem({
                   </ActionIcon>
                 </Tooltip>
                 <Text c={"dimmed"}>
-                  {/* {`${flowJson.screens.length}/${FlowMaxScreens}`} */}
+                  {`${screens.length}/${FlowMaxScreens}`}
                 </Text>
               </Group>
             </Group>
@@ -303,9 +295,14 @@ function ScreenListItem({
                         <DraggableFormElementCard
                           feId={element.id}
                           key={element.id}
-                          text={element.label}
+                          text={
+                            element.header ||
+                            element.label ||
+                            element.type?.toUpperCase()
+                          }
                           screen={screen.id}
                           selected={false}
+                          feType={element.metaType}
                           index={index}
                           handleOpen={handleElementClick}
                           handleDelete={handleDeleteFormElement}
@@ -357,11 +354,12 @@ function ScreenListItem({
           </Flex>
           <SortDrawerFlow
             close={close}
-            data={[]?.map((data) => ({
+            data={screens?.map((data) => ({
               id: data.id,
               name: data.title,
             }))}
             opened={isOpen}
+            v={2}
           />
         </>
       )}
@@ -371,11 +369,12 @@ function ScreenListItem({
 
 interface FormElementCardProps {
   feId: string;
+  feType: string;
   text: string;
   selected: boolean;
   index: number;
-  handleOpen: (index: number) => void;
-  handleDelete: (index: number) => void;
+  handleOpen: (feId: string, feType: string) => void;
+  handleDelete: (feId: string) => void;
   dragHandleProps?: any;
   screen: string;
 }
@@ -395,6 +394,13 @@ export function DraggableFormElementCard(
     </Draggable>
   );
 }
+export function markdownToPlainText(markdown) {
+  return markdown
+    .replace(/[#_*~>]/g, "")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/!\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/`{1,3}.*?`{1,3}/g, "");
+}
 
 // maybe give a name for all text and then remove when uploading to whatsap
 function FormElementCard({
@@ -404,13 +410,15 @@ function FormElementCard({
   handleOpen,
   handleDelete,
   screen,
+  feId,
+  feType,
   dragHandleProps,
 }: Readonly<FormElementCardProps>) {
   const flowEditable = true;
 
   return (
     <Box
-      onClick={() => handleOpen(index)}
+      onClick={() => handleOpen(feId, feType)}
       style={{
         backgroundColor: selected
           ? "light-dark(var(--light-grey-color),var(--mantine-color-dark-7))"
@@ -429,10 +437,10 @@ function FormElementCard({
         <IconGripVertical size={20} stroke={1.5} />
       </div>
       <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
-        {index + 1}
+        {index}
       </Badge>
       <Text px="xs" fw={500} style={{ flex: 1 }} lineClamp={2}>
-        {text}
+        {markdownToPlainText(text)}
       </Text>
       {/* {Object.keys(dbFlow.logicJumps).includes(screen) && (
         <Image
@@ -448,7 +456,7 @@ function FormElementCard({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleDelete(index);
+            handleDelete(feId);
           }}
           variant="subtle"
           color="gray"

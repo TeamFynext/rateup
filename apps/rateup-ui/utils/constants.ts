@@ -18,7 +18,6 @@ export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const ContactQuestions = [QuestionType.Contact];
 
 export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
-export const WaContactQuestions2 = [QuestionType2.Email, QuestionType2.Phone];
 
 export const NPSQuestions = [
   QuestionType.Rating,
@@ -159,7 +158,11 @@ const flowNonInputElements = [
   // wft.embeddedLink,
 ];
 export const flowNonInputElements2 = [
-  QuestionType2.RichText,
+  QuestionType2.TextHeading,
+  QuestionType2.TextSubheading,
+  QuestionType2.TextBody,
+  QuestionType2.TextCaption,
+  // QuestionType2.RichText,
   QuestionType2.Image,
 ];
 export const FlowQuestionTypes = [
@@ -173,7 +176,6 @@ export const FlowQuestionTypes = [
 
 export const FlowQuestionTypes2 = [
   // also includes non-input elements like text & links
-  { title: "Contact Questions", questionTypes: WaContactQuestions2 },
   { title: "NPS Questions", questionTypes: FlowNpsQ2 },
   { title: "Choice Questions", questionTypes: FlowChoiceQuestions2 },
   { title: "Input Questions", questionTypes: FlowInputQuestions2 },

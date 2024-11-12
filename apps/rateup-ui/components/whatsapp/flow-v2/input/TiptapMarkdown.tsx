@@ -2,7 +2,9 @@ import { useEffect } from "react";
 
 import { Group } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
+import CharacterCount from "@tiptap/extension-character-count";
 import Image from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
 import Table from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
@@ -11,12 +13,13 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 
-import InsertTable from "@/components/RichTextEditor/InsertTable";
+// import InsertBase64Image from "@/components/RichTextEditor/InsertImage/insertBase64Image";
+// import InsertTable from "@/components/RichTextEditor/InsertTable";
 
 import styles from "./TiptapMarkdown.module.css";
 
-function TiptapMarkdown({ form }) {
-  let content = form.values?.text || "";
+function TiptapMarkdown({ value, onChange, label, max }) {
+  let content = value || "";
   const editor = useEditor({
     content: content,
     extensions: [
@@ -32,9 +35,15 @@ function TiptapMarkdown({ form }) {
       TableRow,
       TableHeader,
       TableCell,
+      Placeholder.configure({
+        placeholder: `Enter your ${label === "text" ? "text" : "title"} here`,
+      }),
+      CharacterCount.configure({
+        limit: max,
+      }),
     ],
-    onUpdate: ({ editor }) => {
-      form.setFieldValue("text", editor.storage.markdown.getMarkdown());
+    onBlur: ({ editor }) => {
+      onChange(editor.storage.markdown.getMarkdown());
     },
     editorProps: {
       attributes: {
@@ -49,7 +58,9 @@ function TiptapMarkdown({ form }) {
       editor.commands.setTextSelection(selection);
     }
   }, [content, editor]);
-
+  const percentage = editor
+    ? Math.round((100 / max) * editor.storage.characterCount.characters())
+    : 0;
   return (
     <RichTextEditor editor={editor} className={styles["root-div"]}>
       <RichTextEditor.Toolbar
@@ -64,14 +75,15 @@ function TiptapMarkdown({ form }) {
             <RichTextEditor.Strikethrough />
             <RichTextEditor.ClearFormatting />
           </RichTextEditor.ControlsGroup>
-          <RichTextEditor.ControlsGroup>
+          {/* Todo: add this again when richtext can be included with other component */}
+          {/* <RichTextEditor.ControlsGroup>
             <RichTextEditor.H1 />
             <RichTextEditor.H2 />
             <RichTextEditor.H3 />
             <RichTextEditor.H4 />
             <RichTextEditor.H5 />
             <RichTextEditor.H6 />
-          </RichTextEditor.ControlsGroup>
+          </RichTextEditor.ControlsGroup> */}
 
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.BulletList />
@@ -88,12 +100,32 @@ function TiptapMarkdown({ form }) {
             <RichTextEditor.Redo />
           </RichTextEditor.ControlsGroup>
           <RichTextEditor.ControlsGroup>
-            {/* <InsertBase64Image /> */}
-            <InsertTable />
+            {/* Todo: add this again when richtext can be included with other component */}
+            {/* <InsertBase64Image /> 
+            <InsertTable /> */}
           </RichTextEditor.ControlsGroup>
         </Group>
       </RichTextEditor.Toolbar>
-      <RichTextEditor.Content mih={120} className={styles["editor-content"]} />
+      <RichTextEditor.Content className={styles["editor-content"]} />
+      <div
+        className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
+      >
+        <svg height="20" width="20" viewBox="0 0 20 20">
+          <circle r="10" cx="10" cy="10" fill="#e9ecef" />
+          <circle
+            r="5"
+            cx="10"
+            cy="10"
+            fill="transparent"
+            stroke="currentColor"
+            strokeWidth="10"
+            strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
+            transform="rotate(-90) translate(-20)"
+          />
+          <circle r="6" cx="10" cy="10" fill="white" />
+        </svg>
+        {editor?.storage?.characterCount?.characters()} / {max} characters
+      </div>
     </RichTextEditor>
   );
 }
