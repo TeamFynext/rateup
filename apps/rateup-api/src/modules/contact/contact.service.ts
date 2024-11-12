@@ -399,22 +399,20 @@ export async function updateMulitplceContacts(
   contacts: createMultipleContactInput,
   orgId: string,
 ) {
-  return await prisma.$transaction(async (tx) => {
-    return Promise.all(
-      contacts.map((contact) =>
-        prisma.contact.updateMany({
-          where: {
-            phone: contact.phone,
-            orgId,
-          },
-          data: {
-            tags: contact.tags,
-            name: contact.name,
-          },
-        }),
-      ),
-    );
-  });
+  return Promise.all(
+    contacts.map((contact) =>
+      prisma.contact.updateMany({
+        where: {
+          phone: contact.phone,
+          orgId,
+        },
+        data: {
+          tags: contact.tags,
+          name: contact.name,
+        },
+      }),
+    ),
+  );
 }
 
 export const handleContactConsent = async (
