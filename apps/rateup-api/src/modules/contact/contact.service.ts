@@ -13,6 +13,7 @@ import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
 import { addNewContactsToGroup } from "./contactGroup/contactGroup.service";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { BATCH_SIZE } from "../../utils/constants/constants";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -29,11 +30,10 @@ export async function createMultipleContacts(
   orgId: string,
 ) {
   const contactsData = contacts.map((contact) => ({ ...contact, orgId }));
-  const result = await prisma.contact.createMany({
+  return await prisma.contact.createMany({
     skipDuplicates: true,
     data: contactsData,
   });
-  return result?.count;
 }
 
 export async function getContactById(contactId: string) {
@@ -363,13 +363,14 @@ export async function createContactsFromCsv(
     );
     if (filterNewContacts === (data?.length ?? 0))
       throw new Error("All contacts already exist");
+    await createMultipleContacts(data, orgId);
   }
   if (contactGroupId) {
     const res = await addNewContactsToGroup(contactGroupId, data, orgId);
     return res;
   }
-  const res = await createMultipleContacts(data, orgId);
-  return res;
+
+  return "sucess";
 }
 
 export async function getExistingContactCountByPhno(
@@ -399,20 +400,29 @@ export async function updateMulitplceContacts(
   contacts: createMultipleContactInput,
   orgId: string,
 ) {
-  return Promise.all(
-    contacts.map((contact) =>
-      prisma.contact.updateMany({
-        where: {
-          phone: contact.phone,
-          orgId,
-        },
-        data: {
-          tags: contact.tags,
-          name: contact.name,
-        },
-      }),
-    ),
-  );
+  for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
+    const batch = contacts.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map((contact) =>
+        prisma.contact.upsert({
+          where: {
+            contact_phone_org_id_unique: {
+              phone: contact.phone,
+              orgId,
+            },
+          },
+          update: {
+            tags: contact.tags,
+            name: contact.name,
+          },
+          create: {
+            ...contact,
+            orgId,
+          },
+        }),
+      ),
+    );
+  }
 }
 
 export const handleContactConsent = async (

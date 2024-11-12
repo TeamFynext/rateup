@@ -8,6 +8,7 @@ import {
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
 } from "./contactGroup.schema";
+import { BATCH_SIZE } from "../../../utils/constants/constants";
 
 export async function getContactGroupById(contactGroupId: string) {
   const contactGroup = await prisma.contactGroup.findUnique({
@@ -235,21 +236,9 @@ export async function addNewContactsToGroup(
   const contacts = contactsBody.filter((data) =>
     isValidPhoneNumber(`+${data.phone}`),
   );
-  // TODO: we could create uuid manually and skip the findMany query.
-  // TODO: check if below query can be optimized
-  // await prisma.$transaction(async (tx) => {
-  // create contacts
-  await prisma.contact.createMany({
-    skipDuplicates: true,
-    data: contacts.map((contact) => ({
-      ...contact,
-      orgId,
-    })),
-  });
-  const MAX_BIND_VARS = 30000;
   const phoneChunks = chunkArray(
     contacts.map((contact) => contact.phone).filter((phone) => phone),
-    MAX_BIND_VARS,
+    BATCH_SIZE,
   );
 
   let createdContacts: any[] = [];
@@ -264,7 +253,6 @@ export async function addNewContactsToGroup(
     createdContacts = createdContacts.concat(result);
   }
 
-  // create contact group map
   await prisma.contactGroupMap.createMany({
     skipDuplicates: true,
     data: createdContacts.map((contact) => ({
@@ -272,7 +260,6 @@ export async function addNewContactsToGroup(
       contactGroupId,
     })),
   });
-  // });
 }
 
 export async function addExistingContactsToGroup(
