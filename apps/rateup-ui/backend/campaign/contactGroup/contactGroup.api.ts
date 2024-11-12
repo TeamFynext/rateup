@@ -84,6 +84,7 @@ export const addNewContactFromCSV = ({ data, groupId }) => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 60000,
     },
   );
   return res;
