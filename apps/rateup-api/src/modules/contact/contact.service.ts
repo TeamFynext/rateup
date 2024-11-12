@@ -33,7 +33,7 @@ export async function createMultipleContacts(
     skipDuplicates: true,
     data: contactsData,
   });
-  return result;
+  return result?.count;
 }
 
 export async function getContactById(contactId: string) {
@@ -313,8 +313,8 @@ export async function importCSVContacts(
     } else {
       const workSheetsFromFile = xlsx.parse(file);
       const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map(
-          (header) => header?.toString().toLowerCase(),
+        workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
+          header?.toString().toLowerCase(),
         ) ?? [];
       const headerIndices = headers.map((header, index) => ({ header, index }));
 
@@ -376,14 +376,23 @@ export async function getExistingContactCountByPhno(
   ids: string[],
   orgId: string,
 ) {
-  return await prisma.contact.count({
-    where: {
-      phone: {
-        in: ids,
+  const BATCH_SIZE = 30000; // Keep it below the database limit
+  let totalCount = 0;
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const count = await prisma.contact.count({
+      where: {
+        phone: {
+          in: batch,
+        },
+        orgId,
       },
-      orgId,
-    },
-  });
+    });
+    totalCount += count;
+  }
+
+  return totalCount;
 }
 
 export async function updateMulitplceContacts(

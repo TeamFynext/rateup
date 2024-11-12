@@ -47,6 +47,7 @@ export async function contactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $contactGroupRef("byContactGroupIdParamsSchema"),
+        querystring: $contactGroupRef("paginationQuery"),
       },
     },
     getContactsByContactGroupIdHandler,

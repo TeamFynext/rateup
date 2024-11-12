@@ -24,11 +24,13 @@ import {
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
+  getContactsByContactGroupIdWithPagination,
 } from "./contactGroup.service";
 import { verifyRole } from "../../../utils/auth";
 import { Prisma, Role } from "@prisma/client";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
 import { importCSVContacts } from "../contact.service";
+import { PaginationQuery } from "../contact.schema";
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{
@@ -59,12 +61,16 @@ export async function getContactGroupsHandler(
 }
 
 export async function getContactsByContactGroupIdHandler(
-  request: FastifyRequest<{ Params: ByContactGroupIdParams }>,
+  request: FastifyRequest<{
+    Params: ByContactGroupIdParams;
+    Querystring: PaginationQuery;
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const contacts = await getContactsByContactGroupId(
+    const contacts = await getContactsByContactGroupIdWithPagination(
       request.params.contactGroupId,
+      request.query,
     );
     reply.code(200).send(contacts);
   } catch (error) {
