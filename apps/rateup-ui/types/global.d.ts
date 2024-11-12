@@ -601,6 +601,7 @@ declare global {
       id?: string;
       name?: string;
     };
+    totalCount?: number;
   }
   interface RM_Topic {
     id: string;
