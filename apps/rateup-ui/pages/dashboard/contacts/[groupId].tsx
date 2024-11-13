@@ -49,12 +49,17 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import useTranslations from "@/dictionaries/useTranslation";
+import { PAGE_SIZE } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
   const { translations } = useTranslations();
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
@@ -74,7 +79,14 @@ export default function ContactGroup() {
     error: groupByIderror,
     refetch: refetchgroupById,
     isRefetching,
-  } = useContactGroupById(groupId?.toString(), true);
+  } = useContactGroupById(
+    groupId?.toString(),
+    true,
+    pagination,
+    searchTerm,
+    sorting?.[0],
+    columnFilters,
+  );
 
   const deleteGroupMutation = useDeleteGroupMutation();
 
@@ -214,7 +226,7 @@ export default function ContactGroup() {
               <Stack gap={0}>
                 <Center>
                   <Title c="var(--tertiary-color)" order={3}>
-                    {groupDetails?.contacts?.length ?? 0}
+                    {groupDetails?._count?.contacts ?? 0}
                   </Title>
                 </Center>
                 <Text>{translations["members"]}</Text>
@@ -248,7 +260,10 @@ export default function ContactGroup() {
               groupId={groupDetails?.id}
               refetch={refetchgroupById}
               setSorting={setSorting}
+              pagination={pagination}
+              setPagination={setPagination}
               sorting={sorting}
+              totalCount={groupDetails?.totalCount}
               columnFilters={columnFilters}
               setColumnFilters={setColumnFilters}
               isPending={loadingState}

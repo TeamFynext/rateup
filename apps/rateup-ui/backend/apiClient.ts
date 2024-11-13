@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+
 import { showErrorToast } from "../utils/notifications";
 
 const axiosClient = axios.create({

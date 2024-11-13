@@ -26,18 +26,39 @@ export const getContactGroupsByTeamId = async (teamId: string) => {
   return contactGroupsData;
 };
 
-export const getContactGroupById = async (groupId: string) => {
+export const getContactGroupById = async (
+  groupId: string,
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  },
+  search: string,
+  sort: {
+    id: string;
+    desc: boolean;
+  },
+  columnFilters: { id: string; value: string }[],
+) => {
+  let filter = columnFilters
+    .map((data) => `&${data.id}=${data.value}`)
+    .join("&");
+  let desc = sort.desc ? "desc" : "asc";
   let groupDataById = await axiosClient.get(
     `${CONTACT_GROUP_BASE_URL}?contactGroupId=${groupId}`,
   );
-  let contacts = await getContactsByGroupId(groupId);
-  groupDataById.data.contacts = contacts;
+  let paginationParams = `page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
+  let contacts = await getContactsByGroupId(groupId, paginationParams);
+  groupDataById.data.contacts = contacts?.group;
+  groupDataById.data.totalCount = contacts?.totalCount;
   return groupDataById?.data as ContactGroupwithContacts;
 };
 
-export const getContactsByGroupId = async (groupId: string) => {
+export const getContactsByGroupId = async (
+  groupId: string,
+  paginationParams: string,
+) => {
   let contacts = await axiosClient.get(
-    `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts`,
+    `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts?${paginationParams}`,
   );
   return contacts?.data;
 };
@@ -63,6 +84,7 @@ export const addNewContactFromCSV = ({ data, groupId }) => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      timeout: 60000,
     },
   );
   return res;

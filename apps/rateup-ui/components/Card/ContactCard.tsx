@@ -6,6 +6,7 @@ import { modals } from "@mantine/modals";
 import { IconChevronDown, IconEdit, IconTrash } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { PAGE_SIZE } from "@/utils/constants";
 
 import {
   useContactGroupById,
@@ -92,7 +93,10 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
 export const ContactGroupMenu = ({ groupId }) => {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
-  const { data } = useContactGroupById(groupId?.toString(), openedEditModal);
+  const { data } = useContactGroupById(groupId?.toString(), openedEditModal, {
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
   const deleteGroupMutation = useDeleteGroupMutation();
   const router = useRouter();
   const { translations } = useTranslations();

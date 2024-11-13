@@ -48,7 +48,9 @@ export const importContacts = async (data) => {
 };
 
 export const importCSVContacts = async (data) => {
-  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data);
+  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
+    timeout: 60000,
+  });
   return res;
 };
 
