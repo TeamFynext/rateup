@@ -52,12 +52,10 @@ const NavbarFooter = (props: UserCardInterface) => {
           <Group
             key={index}
             onClick={() => handleItemClick(label)}
-            style={{
-              cursor: "pointer",
-              marginLeft: "1rem",
-              marginBottom: "10px",
-              marginTop: "15px",
-            }}
+            ml="1rem"
+            mb="10px"
+            mt="15px"
+            style={{ cursor: "pointer" }}
           >
             <ThemeIcon variant="transparent" size={20}>
               <Icon color="gray" />
@@ -73,9 +71,7 @@ const NavbarFooter = (props: UserCardInterface) => {
           </Group>
         ))}
       </Box>
-      <Box
-        style={{ marginLeft: "15px", marginTop: "15px", marginBottom: "10px" }}
-      >
+      <Box ml="15px" mt="15px" mb="10px">
         {process.env.NEXT_PUBLIC_EXPERIMENT && <ColorSchemaButton />}
       </Box>
       <Divider />
