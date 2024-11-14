@@ -84,6 +84,11 @@ import { generateQrSchemas } from "./modules/generateQr/generateQr.schema";
 import { integrationSchemas } from "./modules/integrations/integrations.schema";
 import { integrationsRoutes } from "./modules/integrations/integrations.route";
 import { integrationPublicRoutes } from "./modules/integrations/integration.public.route";
+import { loyaltyPublicRoutes } from "./modules/loyalty/loyalty.public.route";
+import { loyaltyActionSchemas } from "./modules/loyalty/actions/actions.schema";
+import { loyaltyCustomerSchemas } from "./modules/loyalty/customer/customer.schema";
+import { loyaltyRewardSchemas } from "./modules/loyalty/rewards/rewards.schema";
+import { loyaltyRedeemSchemas } from "./modules/loyalty/redeems/redeem.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -120,6 +125,10 @@ export function registerRoutes(server: FastifyInstance): void {
     emailSchema,
     generateQrSchemas,
     integrationSchemas,
+    loyaltyActionSchemas,
+    loyaltyRewardSchemas,
+    loyaltyCustomerSchemas,
+    loyaltyRedeemSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -191,4 +200,5 @@ export function registerRoutes(server: FastifyInstance): void {
     prefix: "/api/public/integrations",
   });
   server.register(integrationsRoutes, { prefix: "api/integrations" });
+  server.register(loyaltyPublicRoutes, { prefix: "api/public/loyalty" });
 }

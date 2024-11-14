@@ -53,7 +53,7 @@ import {
   updateVisitedSurvey,
 } from "../../survey/survey.service";
 import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
-import { handleRegisterMessage } from "../../loyalty/internal/campaign/campaign.service";
+// import { handleRegisterMessage } from "../../loyalty/internal/campaign/campaign.service";
 import {
   checkIfMessageMatchesAnyAutomation,
   sendAutomatedReplyMessage,
@@ -252,9 +252,11 @@ async function whatsappMessageHandler(
 
   if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
-  } else if (message.startsWith("/register")) {
-    await handleRegisterMessage(orgId, waMessage);
-  } else if (parsedMessage.type === "nfm_reply") {
+  }
+  // else if (message.startsWith("/register")) {
+  //   await handleRegisterMessage(orgId, waMessage);
+  // }
+  else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else if (
     messageLowerCase === WA_SUBSCRIBE_STATUS.STOP ||
