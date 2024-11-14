@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import { createLoyaltyCustomer, getAllCustomers } from "./customer.api";
-import { showErrorToast } from "../../../utils/notifications";
 
 export const useCreateLoyaltyCustomerMutation = () => {
   const qc = useQueryClient();
@@ -16,5 +17,5 @@ export const useCreateLoyaltyCustomerMutation = () => {
 export const useLoyaltyCustomers = () =>
   useQuery({
     queryFn: getAllCustomers,
-    queryKey: ["loyaltyCustomer"],
+    queryKey: ["loyaltyCustomers"],
   });

@@ -112,3 +112,8 @@ export function roundOffMinutesAndSeconds(dateString) {
 
   return date;
 }
+
+// 11-12-2024 11:20 PM
+export function formatDateWithTime(date: string | Date) {
+  return dayjs(date).format("DD-MM-YYYY hh:mm A");
+}

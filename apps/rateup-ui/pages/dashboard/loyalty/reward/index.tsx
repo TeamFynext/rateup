@@ -1,15 +1,32 @@
-import { Button, Flex, Group, Stack, Title } from "@mantine/core";
+import { useState } from "react";
+
+import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { CreateRewardModal } from "../../../../components/loyalty/reward/CreateRewardModal";
-import { useRewards } from "../../../../backend/loyalty/reward/reward.query";
+
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import NothingFound from "@/components/NothingFound/NothingFound";
+
+import { useGetLoyaltyRewards } from "../../../../backend/loyalty/reward/reward.query";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
+import { CreateRewardModal } from "../../../../components/loyalty/reward/CreateRewardModal";
 import { RewardCard } from "../../../../components/loyalty/reward/RewardCard";
+
+enum rewardSortData {
+  defaultPointsOrder = "Default Points Order",
+  highToLowPoints = "Hight to Low Points",
+  lowToHighPoints = "Low to High Points",
+}
 
 export default function () {
   const [opened, { open, close }] = useDisclosure(false);
 
-  const { data: rewards, isLoading, isError, error } = useRewards(true);
+  const { data: rewards, isLoading, isError, error } = useGetLoyaltyRewards();
+
+  const [selectedOrder, setSelectedOrder] = useState(
+    rewardSortData.defaultPointsOrder,
+  );
 
   if (isError) {
     console.error(error);
@@ -18,19 +35,45 @@ export default function () {
     return <RateupLoader />;
   }
 
+  const rewardsCopy = [...rewards];
+
+  const sortedRewards =
+    selectedOrder === rewardSortData.defaultPointsOrder
+      ? rewards
+      : rewardsCopy?.sort((a, b) =>
+          selectedOrder === rewardSortData.highToLowPoints
+            ? b.points - a.points
+            : a.points - b.points,
+        );
+
   return (
     <Stack>
-      <Group>
-        <Title order={2}>Loyalty Rewards</Title>
-        <Button onClick={open} leftSection={<IconPlus />}>
-          Create Reward
-        </Button>
+      <Group justify="space-between">
+        <Group>
+          <Title>Rewards</Title>
+          <RateupButtonBlue
+            title="New Reward"
+            rightIcon={<IconPlus />}
+            onClick={open}
+          />
+        </Group>
+        <ContainedSelection
+          data={Object.values(rewardSortData)}
+          value={selectedOrder}
+          onChange={(value) => setSelectedOrder(value as rewardSortData)}
+        />
       </Group>
-      <Flex wrap={"wrap"} gap={"md"}>
-        {rewards.map((reward) => (
-          <RewardCard key={reward.id} reward={reward} />
-        ))}
-      </Flex>
+      {rewards?.length ? (
+        <SimpleGrid cols={3}>
+          {sortedRewards?.map((reward) => (
+            <RewardCard key={reward.id} reward={reward} />
+          ))}
+        </SimpleGrid>
+      ) : (
+        <NothingFound
+          text={"No Rewards found. Click New Reward to create a reward"}
+        />
+      )}
       <CreateRewardModal opened={opened} close={close} />
     </Stack>
   );

@@ -1,1 +1,1 @@
-export const LOYALTY_BASE = "/loyalty/internal";
+export const LOYALTY_BASE = "/loyalty";

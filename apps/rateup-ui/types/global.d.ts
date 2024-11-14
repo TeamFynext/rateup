@@ -777,6 +777,7 @@ declare global {
     points: number;
     orgId: string;
   };
+
   type LoyaltyCampaignRewardEvent = {
     id: string;
     createdAt: Date;
