@@ -41,12 +41,13 @@ const NavbarFooter = (props: UserCardInterface) => {
     props?.profilePhoto && props?.profilePhoto !== "REMOVED_PHOTO";
   return (
     <Box>
-      <Box style={{ margin: "auto", marginLeft: "5rem", marginTop: "1px" }}>
-        <Text size="sm" c="var(--mantine-color-gray-7">
-          {translations["Account"]}
-        </Text>
-      </Box>
-
+      {props.opened && (
+        <Box style={{ margin: "auto", marginLeft: "5rem", marginTop: "1px" }}>
+          <Text size="sm" c="var(--mantine-color-gray-7">
+            {translations["Account"]}
+          </Text>
+        </Box>
+      )}
       <Box style={{ margin: "auto", width: "15rem" }}>
         {bottomNavData.map(({ Icon, label, href }, index) => (
           <Group
@@ -60,14 +61,16 @@ const NavbarFooter = (props: UserCardInterface) => {
             <ThemeIcon variant="transparent" size={20}>
               <Icon color="gray" />
             </ThemeIcon>
-            <Text
-              size="sm"
-              fw={500}
-              onClick={() => router.push(href)}
-              c="var(--mantine-color-gray-7"
-            >
-              {label}
-            </Text>
+            {props.opened && (
+              <Text
+                size="sm"
+                fw={500}
+                onClick={() => router.push(href)}
+                c="var(--mantine-color-gray-7"
+              >
+                {label}
+              </Text>
+            )}
           </Group>
         ))}
       </Box>

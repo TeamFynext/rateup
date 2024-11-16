@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Grid, Menu, Text } from "@mantine/core";
@@ -16,8 +16,17 @@ const LanguageSelector = () => {
   const updateUserLanguageMutation =
     useUpdateUserLanguageMutation(setIsLoading);
 
+  useEffect(() => {
+    // Load the selected language from localStorage on component mount
+    const savedLanguage = localStorage.getItem("selectedLanguage");
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
+
   const handleLanguageChange = (selectedLanguage) => {
     setLanguage(selectedLanguage);
+    localStorage.setItem("selectedLanguage", selectedLanguage); // Save to localStorage
 
     // Preserve the current pathname and query parameters
     const { pathname, asPath, query } = router;
@@ -39,7 +48,7 @@ const LanguageSelector = () => {
     <Menu width={200}>
       <Menu.Target>
         <Grid
-          align="center" // Align items vertically in the center
+          align="center"
           style={{
             cursor: "pointer",
             padding: "15px",
