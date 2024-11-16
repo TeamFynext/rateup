@@ -3,17 +3,17 @@ import { LOYALTY_BASE } from "../base";
 
 const base = LOYALTY_BASE + "/reward";
 
-export async function getRewards() {
+export async function getLoyaltyRewards() {
   return (await axiosClient.get(base)).data;
 }
-export async function createReward(reward) {
+export async function createLoyaltyReward(reward) {
   return await axiosClient.post(base, reward);
 }
-export async function getReward(rewardId: string) {
+export async function getLoyaltyRewardById(rewardId: string) {
   return (await axiosClient.get(base + "/" + rewardId)).data;
 }
-export async function updateReward(reward) {
-  return await axiosClient.put(`${base}/${reward.id}`, reward);
+export async function updateLoyaltyReward(rewardId: string, data) {
+  return await axiosClient.put(`${base}/${rewardId}`, data);
 }
 export async function deleteReward(id: string) {
   return await axiosClient.delete(base + "/" + id);
