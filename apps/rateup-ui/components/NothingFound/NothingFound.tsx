@@ -24,7 +24,7 @@ export default function NothingFound({ className, text }: NothingFoundProps) {
         opacity={0.35}
       />
       <Text c={"dimmed"} fw={500}>
-        {text ? translations[text] : translations["Nothing found"]}
+        {text ?? translations["Nothing found"]}
       </Text>
     </Stack>
   );

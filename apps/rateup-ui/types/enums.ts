@@ -433,3 +433,9 @@ export enum TemplateType {
 export enum OrderType {
   QUICK_PAY = "quick_pay",
 }
+
+export enum LoyaltyActionType {
+  ReferFriend = "Refer a Friend",
+  ReferralPurchase = "Referral Purchase",
+  DirectPurchase = "Direct Purchase",
+}

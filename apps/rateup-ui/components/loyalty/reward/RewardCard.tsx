@@ -1,49 +1,50 @@
 import { useRouter } from "next/router";
 
-import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  Menu,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.query";
 import { useTimeSince } from "../../../hooks/timeSince";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { CardMenu } from "../campaign/LCampaignCard";
-import { RewardTypeBadge } from "./RewardTypeBadge";
+import { LoyaltyPoint } from "../actions/LoyaltyActionCard";
+import { CreateRewardModal } from "./CreateRewardModal";
 
 export function RewardCard({ reward }) {
-  const timeSince = useTimeSince(reward.createdAt);
   const router = useRouter();
   const { translations } = useTranslations();
+  const [opened, { open, close }] = useDisclosure(false);
   return (
     <PaperLayout
-      maw="300px"
-      h="150px"
       style={{
         cursor: "pointer",
       }}
-      onClick={() => router.push(`/dashboard/loyalty/reward/${reward.id}`)}
+      onClick={open}
     >
-      <Stack>
+      <Stack gap={"lg"}>
         <Group justify="space-between">
           <Title order={3}>{reward.name}</Title>
           <CardMenu>
             <RewardCardMenuItems rewardId={reward.id} />
           </CardMenu>
         </Group>
-        <RewardTypeBadge type={reward.type} />
-        <Text
-          style={{
-            alignSelf: "flex-end",
-          }}
-          fz="sm"
-          c="dimmed"
-        >
-          {`${translations["Created"]} ${timeSince}`}
-        </Text>
+        <LoyaltyPoint points={reward?.points} />
+        <CreatedSinceText createdAt={reward.createdAt} />
       </Stack>
+      <CreateRewardModal opened={opened} close={close} reward={reward} />
     </PaperLayout>
   );
 }

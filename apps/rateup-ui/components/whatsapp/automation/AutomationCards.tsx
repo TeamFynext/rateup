@@ -1,8 +1,10 @@
+import { ReactNode } from "react";
 import { useRouter } from "next/router";
 
 import {
   ActionIcon,
   Badge,
+  FloatingPosition,
   Group,
   Menu,
   SimpleGrid,
@@ -94,17 +96,23 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
   );
 }
 
-export function CardMenu({ children }) {
+export function CardMenu({
+  children,
+  position,
+}: {
+  children: ReactNode;
+  position?: FloatingPosition;
+}) {
   return (
     <div
       onClick={(e) => {
         e.stopPropagation();
       }}
     >
-      <Menu>
+      <Menu position={position ?? "bottom-start"}>
         <Menu.Target>
           <ActionIcon variant="subtle">
-            <IconDots />
+            <IconDots color="gray" />
           </ActionIcon>
         </Menu.Target>
         {children}

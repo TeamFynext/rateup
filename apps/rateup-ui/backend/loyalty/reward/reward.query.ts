@@ -1,33 +1,33 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  getRewards,
-  getReward,
-  createReward,
-  updateReward,
-  deleteReward,
-} from "./reward.api";
-import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
-export const useRewards = (enabled: boolean) =>
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import {
+  createLoyaltyReward,
+  deleteReward,
+  getLoyaltyRewardById,
+  getLoyaltyRewards,
+  updateLoyaltyReward,
+} from "./reward.api";
+
+export const useGetLoyaltyRewards = () =>
   useQuery({
-    queryKey: ["rewards"],
-    queryFn: () => getRewards(),
-    enabled,
+    queryKey: ["loyaltyRewards"],
+    queryFn: () => getLoyaltyRewards(),
   });
 
-export const useReward = (rewardId: string) =>
+export const useGetLoyaltyRewardById = (rewardId: string) =>
   useQuery({
-    queryKey: ["rewards", rewardId],
-    queryFn: () => getReward(rewardId),
+    queryKey: ["loyaltyRewards", rewardId],
+    queryFn: () => getLoyaltyRewardById(rewardId),
     enabled: !!rewardId,
   });
 
-export const useCreateRewardMutation = () => {
+export const useCreateLoyaltyRewardMutation = () => {
   const qc = useQueryClient();
   const createMutation = useMutation({
-    mutationFn: createReward,
+    mutationFn: createLoyaltyReward,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["rewards"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
       showSuccessToast("Reward created successfully");
     },
     onError: () => {
@@ -37,12 +37,21 @@ export const useCreateRewardMutation = () => {
   return createMutation;
 };
 
-export const useUpdateRewardMutation = () => {
+type UpdateReward = {
+  name?: string;
+  points?: number;
+  description?: string;
+  tnc?: string;
+  maxPerUser?: number;
+};
+
+export const useUpdateLoyaltyRewardMutation = (rewardId) => {
   const qc = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: updateReward,
+    mutationFn: (data: UpdateReward) => updateLoyaltyReward(rewardId, data),
     onSuccess: (_, reward) => {
-      qc.invalidateQueries({ queryKey: ["rewards", reward.id] });
+      qc.invalidateQueries({ queryKey: ["loyaltyRewards", rewardId] });
+      qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
       showSuccessToast("Reward updated successfully");
     },
     onError: () => {
@@ -57,7 +66,7 @@ export const useDeleteRewardMutation = () => {
   const deleteMutation = useMutation({
     mutationFn: deleteReward,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["rewards"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
       showSuccessToast("Reward deleted successfully");
     },
     onError: () => {
