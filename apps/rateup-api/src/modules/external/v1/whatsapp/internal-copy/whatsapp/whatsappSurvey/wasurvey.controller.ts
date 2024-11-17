@@ -56,7 +56,7 @@ import {
   updateStartedSurvey,
   updateVisitedSurvey,
 } from "../../../../../../survey/survey.service";
-import { handleRegisterMessage } from "../../../../../../loyalty/internal/campaign/campaign.service";
+// import { handleRegisterMessage } from "../../../../../../loyalty/internal/campaign/campaign.service";
 import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
@@ -190,9 +190,11 @@ async function whatsappMessageHandler(
 
   if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
-  } else if (message.startsWith("/register")) {
-    await handleRegisterMessage(orgId, waMessage);
-  } else if (parsedMessage.type === "nfm_reply") {
+  }
+  // else if (message.startsWith("/register")) {
+  //   await handleRegisterMessage(orgId, waMessage);
+  // }
+  else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else {
     let session = await getSession(orgId, from);

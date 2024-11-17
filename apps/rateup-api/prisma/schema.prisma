@@ -113,10 +113,6 @@ model Org {
   Order             Order[]
   WaFlow            WaFlow[]
   contacts          Contact[]
-  loyaltyCampaigns  LoyaltyCampaign[]
-  loyaltyCustomers  LoyaltyCustomer[]
-  LcReward          LcReward[]
-  LcReferralCode    LcReferralCode[]
   linktree          Linktree[]
   ApiAccessToken    ApiAccessToken?
   surveyThemes      WebSurveyTheme[]
@@ -129,6 +125,9 @@ model Org {
   Integration       Integration[]
   waMessageSchedule WaMessageSchedule[]
   WaLogs            WaLogs[]
+  loyaltyActions    LoyaltyAction[]
+  loyaltyRewards    LoyaltyReward[]
+  loyaltyCustomers  LoyaltyCustomer[]
 }
 
 model UsageStats {
@@ -942,118 +941,6 @@ model TicketComment {
   ticketId    String   @db.Uuid
 }
 
-model LoyaltyCampaign {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt      DateTime @default(now())
-  name           String   @unique
-  type           String // enums.ts: LoyaltyCampaignType
-  maxPerReferrer Int? // max number of referrals a referrer can make
-  maxPerUser     Int? // max number of referralCode-redeems/transactions a user can make
-  // for eg: if maxPerReferrer is 1, then a referrer can only refer a user once
-  // for eg: if maxPerUser is 1, then a user can only redeem a referralCode once
-  active         Boolean  @default(true)
-
-  referrerReward   LcReward? @relation("ReferrerReward", fields: [referrerRewardId], references: [id])
-  referrerRewardId String?   @db.Uuid
-  userReward       LcReward? @relation("UserReward", fields: [userRewardId], references: [id])
-  userRewardId     String?   @db.Uuid
-
-  org                  Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                String                 @db.Uuid
-  LcReferralCode       LcReferralCode[]
-  LCampaignRewardEvent LCampaignRewardEvent[]
-}
-
-model LcReward {
-  // Loyalty Campaign Reward
-
-  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String
-  createdAt               DateTime @default(now())
-  type                    String // enums.ts: CampaignRewardType
-  fixedAmount             Int?
-  percentage              Float?
-  maxPointsPerTransaction Int?
-
-  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId String @db.Uuid
-
-  ReferrerLoyaltyCampaign LoyaltyCampaign[] @relation("ReferrerReward")
-  UserLoyaltyCampaign     LoyaltyCampaign[] @relation("UserReward")
-}
-
-model LoyaltyCustomer {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-
-  name  String?
-  phone String
-  email String?
-
-  points Int @default(0)
-
-  org            Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId          String           @db.Uuid
-  LcReferralCode LcReferralCode[]
-
-  ReferrerEvent LCampaignRewardEvent[] @relation("Referrer")
-  CustomerEvent LCampaignRewardEvent[] @relation("User")
-
-  LCustomerRewardEvent LCustomerRewardEvent[]
-
-  @@unique([phone, orgId], name: "loyalty_customer_phone_org_unique")
-  @@unique([email, orgId], name: "loyalty_customer_email_org_unique")
-}
-
-model LcReferralCode {
-  createdAt DateTime @default(now())
-
-  loyaltyCampaign   LoyaltyCampaign @relation(fields: [loyaltyCampaignId], references: [id], onDelete: Cascade)
-  loyaltyCampaignId String          @db.Uuid
-
-  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId String          @db.Uuid
-
-  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId String @db.Uuid
-
-  referralCode String @unique
-
-  @@unique([loyaltyCampaignId, customerId], name: "loyalty_campaign_customer_unique")
-}
-
-model LCampaignRewardEvent {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-
-  loyaltyCampaign   LoyaltyCampaign @relation(fields: [loyaltyCampaignId], references: [id], onDelete: Cascade)
-  loyaltyCampaignId String          @db.Uuid
-
-  referrer   LoyaltyCustomer? @relation(name: "Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referrerId String?          @db.Uuid
-  customer   LoyaltyCustomer? @relation(name: "User", fields: [customerId], references: [id], onDelete: Cascade)
-  customerId String?          @db.Uuid
-
-  transactionAmount Float?
-
-  LCustomerRewardEvent LCustomerRewardEvent[]
-}
-
-model LCustomerRewardEvent {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-
-  LCampaignRewardEvent   LCampaignRewardEvent @relation(fields: [lCampaignRewardEventId], references: [id], onDelete: Cascade)
-  lCampaignRewardEventId String               @db.Uuid
-
-  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId String          @db.Uuid
-
-  type String // enums.ts: LoyaltyCustomerRewardType
-
-  pointsEarned Int
-}
-
 model Linktree {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name           String
@@ -1232,4 +1119,64 @@ model WaMessageSchedule {
   org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
   surveyTeamMapId String?        @db.Uuid
   surveyTeamMap   SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+}
+
+model LoyaltyAction {
+   id   String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+   type String  // enum LoyaltyActionType
+   name String
+   points Int
+   startDate DateTime
+   endDate   DateTime
+   createdAt DateTime @default(now())
+   orgId   String  @db.Uuid
+   org    Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+   customers  LoyaltyActionCustomerMap[]
+}
+
+model LoyaltyReward {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  points  Int
+  description String
+  tnc String
+  maxPerUser  Int
+  createdAt DateTime @default(now())
+  orgId   String  @db.Uuid
+  org    Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  redeems LoyaltyRedeem[]
+}
+
+model LoyaltyCustomer {
+  id   String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String?
+  phone  String @unique
+  email  String?
+  orgId   String  @db.Uuid
+  org    Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  totalEarnedPoints  Int @default(0)
+  redeemedPoints  Int @default(0)
+  createdAt  DateTime @default(now())
+  redeems  LoyaltyRedeem[]
+  actions  LoyaltyActionCustomerMap[]
+}
+
+model LoyaltyRedeem {
+  id  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rewardId String @db.Uuid
+  reward  LoyaltyReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  status  String
+  createdAt  DateTime @default(now())
+  customerId  String @db.Uuid
+  customer  LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model LoyaltyActionCustomerMap {
+   id  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+   customerId  String @db.Uuid
+   customer  LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+   actionId  String @db.Uuid
+   action  LoyaltyAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+   createdAt  DateTime @default(now())
+   @@unique([customerId,actionId], name: "customer_action_unique")
 }
