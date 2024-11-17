@@ -3,14 +3,20 @@ import prisma from "../../../utils/prisma";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import {
+  convertHeaderToNewQuestion,
   generateFlowMessageData,
   generateQuestionResponsesFromFlowResponse,
   getFlowFormElementNameFromQuestionId,
   getFlowJsonWithTitleAndDescription,
   injectIdToFlowJson,
   parseFlowResponse,
+  parseFlowResponseV2,
   parseResponseFromCurrentScreenResponse,
+  parseResponseFromCurrentScreenResponseV2,
+  removeEmptyStrings,
   removeIdFromFlowJson,
+  sanitizeScreenData,
+  transformFlowAndLogicJumps,
 } from "./flow.utils";
 import { WaFlow } from "@prisma/client";
 import { UpdateFlowInput } from "./flow.schema";
@@ -25,9 +31,10 @@ import {
   saveResponses,
   sendMessage,
   shouldShowGoogleReview,
+  shouldShowGoogleReviewV2,
   updateSession,
 } from "../whatsappSurvey/wasurvey.service";
-import { validateLogic } from "../../question/question.utils";
+import { validateLogic, validateLogicV2 } from "../../question/question.utils";
 import {
   createCTAButtonMessage,
   parseMessage,
@@ -187,7 +194,7 @@ export async function getFlowFromDb(dbFlowId: string) {
 
 // updates flow json of a flow from db to whatsapp
 export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
-  const flow = await prisma.waFlow.findFirst({
+  const flow: any = await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
     },
@@ -195,12 +202,41 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
       survey: true,
     },
   });
-  const jsonWithTitle = getFlowJsonWithTitleAndDescription(
-    flow.json as unknown as WaFlowJson,
-    flow.map,
-    flow.survey,
-    flow.logicJumps,
-  );
+  let jsonWithTitle;
+  if (flow.version === 2) {
+    const screenIds = flow.json.screens.flatMap((screen) =>
+      screen.layout.children
+        .filter((child) => child.type !== "Footer")
+        .map(({ name }) => ({ id: name, screenId: screen.id }))
+        .filter(({ id }) => id),
+    );
+
+    const footer = flow.json.screens?.[
+      flow.json.screens.length - 1
+    ]?.layout.children.find((child) => child.type === "Footer");
+
+    if (footer) {
+      footer["on-click-action"] = {
+        name: "complete",
+        payload: screenIds.reduce((acc, data) => {
+          acc[data.id] = `\${screen.${data.screenId}.form.${data.id}}`;
+          return acc;
+        }, {}),
+      };
+    }
+    jsonWithTitle = convertHeaderToNewQuestion(flow.json);
+    transformFlowAndLogicJumps(jsonWithTitle, flow.logicJumps);
+    sanitizeScreenData(jsonWithTitle);
+    removeEmptyStrings(jsonWithTitle);
+  } else {
+    jsonWithTitle = getFlowJsonWithTitleAndDescription(
+      flow.json as unknown as WaFlowJson,
+      flow.map,
+      flow.survey,
+      flow.logicJumps,
+    );
+  }
+
   const response = await updateFlowJsonInWa(
     orgId,
     flow.flowId,
@@ -456,6 +492,7 @@ export async function createFlowCopyInDb({
       surveyId: surveyId,
       status: status,
       name: name,
+      version: 2,
     },
   });
 
@@ -639,7 +676,6 @@ export const handleDecryptedFlowRequest = async (
   dbFlow: WaFlow,
 ) => {
   const { screen, data, version, action, flow_token } = decryptedBody;
-
   try {
     log.trace("action: %s", action);
     // handle health check request
@@ -679,11 +715,10 @@ export const handleDecryptedFlowRequest = async (
     if (action === "data_exchange") {
       // save responses
       log.trace("Received data exchange request");
-      const currentScreenResponses = parseResponseFromCurrentScreenResponse(
-        dbFlow,
-        questions,
-        data,
-      );
+      let versionCheck = dbFlow.version === 1;
+      const currentScreenResponses = versionCheck
+        ? parseResponseFromCurrentScreenResponse(dbFlow, questions, data)
+        : parseResponseFromCurrentScreenResponseV2(dbFlow.json.screens, data);
       let noSlot = {
         version,
         screen,
@@ -732,6 +767,7 @@ export const handleDecryptedFlowRequest = async (
       // handle the request based on the current screen
       let nextScreen = null;
       const currentIndex = json.screens.findIndex((s) => s.id === screen);
+      const currentScreen = json.screens[currentIndex];
 
       if (Object.keys(dbFlow.logicJumps[screen] || {}).length > 0) {
         log.trace(
@@ -744,39 +780,57 @@ export const handleDecryptedFlowRequest = async (
         ] as unknown as FlowLogicJump[];
         for (const logicJump of logicJumps) {
           let logicPassed = logicJump.conditions.every((condition) => {
-            const flowElementName = getFlowFormElementNameFromQuestionId(
-              condition.questionId,
-              dbFlow.map,
-            );
-            const question = questions.find(
-              (q) => q.id === condition.questionId,
-            );
-            log.trace("raw response: %o", data[flowElementName]);
-            if (!data[flowElementName]) {
-              // TODO: add logicCondition for skipped questions
-              return false;
+            if (versionCheck) {
+              const flowElementName = getFlowFormElementNameFromQuestionId(
+                condition.questionId,
+                dbFlow.map,
+              );
+              const question = questions.find(
+                (q) => q.id === condition.questionId,
+              );
+              log.trace("raw response: %o", data[flowElementName]);
+              if (!data[flowElementName]) {
+                // TODO: add logicCondition for skipped questions
+                return false;
+              }
+              const response = parseFlowResponse({
+                flowJson: json,
+                flowMap: dbFlow.map,
+                elementName: flowElementName,
+                response: data[flowElementName],
+              });
+              log.trace("parsed response: %s", response);
+              return validateLogic(
+                question,
+                response,
+                "en", //TODO
+                condition.condition,
+                condition.response,
+              );
+            } else {
+              let question: any = currentScreen.layout.children.find(
+                (data) => data.name === condition.questionId,
+              );
+              let response = parseFlowResponseV2(
+                question?.metaType,
+                currentScreenResponses.find(
+                  (screen) => screen.questionId === condition.questionId,
+                ).response,
+                question?.["data-source"],
+              );
+              return validateLogicV2(
+                question,
+                response,
+                condition.condition,
+                condition.response,
+              );
             }
-            const response = parseFlowResponse({
-              flowJson: json,
-              flowMap: dbFlow.map,
-              elementName: flowElementName,
-              response: data[flowElementName],
-            });
-            log.trace("parsed response: %s", response);
-            return validateLogic(
-              question,
-              response,
-              "en", //TODO
-              condition.condition,
-              condition.response,
-            );
           });
 
           if (logicPassed) {
             if (logicJump.action === LogicAction.NextQ) {
               log.trace("Logic passed, moving to next question");
               nextScreen = json.screens[currentIndex + 1]?.id;
-              console.log("nextScreen", nextScreen, currentIndex);
             } else if (logicJump.action === LogicAction.EndSurvey) {
               return await handleFlowEnd({
                 session,
@@ -846,10 +900,17 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
   const uniqueResponses = removeDuplicateResponses(session.responses);
   session.responses = uniqueResponses;
   await saveResponses(session);
-  const sendGRLink = shouldShowGoogleReview({
-    questions: session.surveyTeamMap.survey.questions,
-    responses: uniqueResponses,
-  });
+  let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
+
+  const sendGRLink = versionCheck
+    ? shouldShowGoogleReview({
+        questions: session.surveyTeamMap.survey.questions,
+        responses: uniqueResponses,
+      })
+    : shouldShowGoogleReviewV2({
+        screens: session.surveyTeamMap.survey.WaFlow.json.screens,
+        responses: uniqueResponses,
+      });
 
   if (sendGRLink) {
     sendGReviewLink({
@@ -934,13 +995,18 @@ export async function handleStaticFlowReply(
   const uniqueResponses = removeDuplicateResponses(questionResponses);
   session.responses = uniqueResponses;
   await saveResponses(session);
+  let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
 
-  if (
-    shouldShowGoogleReview({
-      questions: session.surveyTeamMap.survey.questions,
-      responses: uniqueResponses,
-    })
-  ) {
+  const sendGRLink = versionCheck
+    ? shouldShowGoogleReview({
+        questions: session.surveyTeamMap.survey.questions,
+        responses: uniqueResponses,
+      })
+    : shouldShowGoogleReviewV2({
+        screens: session.surveyTeamMap.survey.WaFlow.json.screens,
+        responses: uniqueResponses,
+      });
+  if (sendGRLink) {
     await sendGReviewLink({
       phone: session.phone,
       surveyTeamMapId: session.surveyTeamMapId,

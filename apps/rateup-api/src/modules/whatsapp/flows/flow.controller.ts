@@ -191,7 +191,7 @@ export async function createFlowHandler(
       orgId,
       flowId,
       json: {
-        version: "5.0",
+        version: "5.1",
         screens: [],
       } as WaFlowJson,
       flowMap: {},
@@ -222,10 +222,6 @@ export async function updateFlowHandler(
   const previousFlow = await getFlowFromDb(dbFlowId);
   const updatedFlow = await updateFlowInDb(orgId, dbFlowId, {
     ...req.body,
-    json: {
-      ...req.body.json,
-      version: "5.0",
-    },
     pendingSave: true,
   });
   const updatedWaAppIntegration = updatedFlow?.survey?.questions?.some(

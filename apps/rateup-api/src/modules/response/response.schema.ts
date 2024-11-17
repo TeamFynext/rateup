@@ -93,11 +93,12 @@ const generateBodySchema = z.object({
 });
 const generateXlsxSchema = z.object({
   surveyId: z.string().min(1),
-  defaultLanguage: z.string().min(1),
+  defaultLanguage: z.string(),
   visibleColumn: z.array(z.string()),
   tz: z.string().default("Asia/Calcutta"),
   filterTeams: z.array(z.string()),
   campaignIds: z.array(z.string()),
+  dbFlowId: z.string().optional(),
 });
 
 export const summarizeSchema = z.object({
