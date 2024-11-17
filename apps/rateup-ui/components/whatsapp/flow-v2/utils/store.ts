@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-import { QuestionType2 } from "@/types/enums";
+import { QuestionType2, WaQuestions } from "@/types/enums";
 
 interface Screen {
   id: string;
@@ -16,17 +16,26 @@ interface Layout {
   children: FormElement[];
 }
 
+type GoogleReview = {
+  minRating?: number;
+  minOpinion?: number;
+  reqOptions?: Array<string>;
+} | null;
+
 export interface FormElement {
   id: string;
   type: QuestionType2;
   required?: boolean;
   label: string;
   name?: string;
-  metaType?: string;
+  text?: string;
+  metaType?: WaQuestions;
   header?: string;
+  googleReview?: GoogleReview;
   "input-type"?: string;
   "left-caption"?: string;
   "right-caption"?: string;
+  "data-source"?: Array<{ title: string; id: string }>;
   "on-click-action"?: {
     name: string;
     next?: {
@@ -40,6 +49,11 @@ export enum EditFlowRightPanel {
   ElementEditor = "element-editor",
   TypeSelection = "type-selection",
 }
+export enum EditorType {
+  LogicEditor = "logic-editor",
+  GoogleReviewEditor = "google-review-editor",
+  ElementEditor = "element-editor",
+}
 
 interface StoreState {
   screens: Screen[];
@@ -48,6 +62,7 @@ interface StoreState {
   currentElementType: QuestionType2 | null;
   activeEditor: EditFlowRightPanel | null;
   flowEditable: boolean;
+  detailActiveEditor: EditorType;
   getScreens: () => Screen[];
   addScreens: (screens: Screen[]) => void;
   addScreenWithTitle: (title: string) => void;
@@ -62,6 +77,7 @@ interface StoreState {
   setCurrentElement: (elementId?: string, type?: QuestionType2) => void;
   setFlowEditable: (editable: boolean) => void;
   setActiveEditor: (editor: EditFlowRightPanel) => void;
+  setDetailActiveEditor: (editor: EditorType) => void;
   getCurrentScreen: () => Screen | undefined;
   getCurrentElement: () => FormElement | undefined;
   updateScreen: (updatedScreen: Partial<Screen>) => void;
@@ -78,6 +94,8 @@ const useFlowStore = create<StoreState>()(
     currentElementType: null,
     activeEditor: null,
     flowEditable: true,
+    detailActiveEditor: EditorType.ElementEditor,
+    googleReview: null,
     getScreens: () => {
       return get().screens;
     },
@@ -129,11 +147,14 @@ const useFlowStore = create<StoreState>()(
           }
         });
         state.currentScreenId = newScreenId;
+        state.activeEditor = null;
       }),
     setCurrentElement: (elementId, type) =>
       set((state) => {
         state.currentElementId = elementId;
         state.currentElementType = type;
+        state.detailActiveEditor = EditorType.ElementEditor;
+        state.activeEditor = EditFlowRightPanel.ElementEditor;
       }),
     setFlowEditable: (editable) =>
       set((state) => {
@@ -142,6 +163,10 @@ const useFlowStore = create<StoreState>()(
     setActiveEditor: (editor) =>
       set((state) => {
         state.activeEditor = editor;
+      }),
+    setDetailActiveEditor: (editor) =>
+      set((state) => {
+        state.detailActiveEditor = editor;
       }),
     setCurrentScreenId: (screenId) =>
       set((state) => {

@@ -130,8 +130,6 @@ export function QuestionTypeSelection({
 const questionIcons = {
   [QuestionType2.TextInput]: IconTextSize,
   [QuestionType2.TextArea]: IconAlignBoxLeftMiddleFilled,
-  [QuestionType2.Email]: IconMailFilled,
-  [QuestionType2.Phone]: IconPhoneFilled,
   [QuestionType2.DatePicker]: IconCalendarTime,
   [QuestionType2.LD]: IconThumbUpFilled,
   [QuestionType2.YN]: IconClick,

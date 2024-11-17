@@ -60,7 +60,7 @@ const Result = ({
   subscription = null,
   flowId = null,
   translations,
-  flow,
+  flow = null,
   version = 1,
 }) => {
   const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);

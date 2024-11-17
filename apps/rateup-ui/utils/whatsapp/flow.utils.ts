@@ -387,7 +387,10 @@ export const updateFlowJsonNavigationAndDataPassing = (
     const footerObject = layoutForm?.children?.find(
       (c) => c.type === WaFlowFormElementType.footer,
     );
-    const formElements = getFlowFormElementsFromScreen(screen, true);
+    const formElements = getFlowFormElementsFromScreen(
+      screen,
+      true,
+    ) as WaFlowFormElement[];
     if (!formElements) return;
     const currentScreenIsNotLast = currentIndex !== screens.length - 1;
 

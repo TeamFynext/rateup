@@ -121,7 +121,7 @@ export const PopoverEmojiPicker = ({
 }) => {
   const { translations } = useTranslations();
   return (
-    <Popover withArrow shadow="md" keepMounted floatingStrategy="fixed">
+    <Popover withArrow shadow="md" floatingStrategy="fixed">
       <Popover.Target>
         <Tooltip label={translations["Insert an emoji"]}>
           {showIcon ?? (

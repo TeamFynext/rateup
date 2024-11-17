@@ -96,7 +96,7 @@ function ScreenListItem({
 
   function handleElementClick(feId: string, feType: QuestionType2) {
     setCurrentElement(feId, QuestionType2[feType]);
-    setActiveEditor(EditFlowRightPanel.ElementEditor);
+    // setActiveEditor(EditFlowRightPanel.ElementEditor);
   }
   const onAddElementClick = () => {
     setActiveEditor(EditFlowRightPanel.TypeSelection);

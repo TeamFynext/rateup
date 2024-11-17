@@ -1,60 +1,51 @@
-import { useState } from "react";
+import { useContext } from "react";
 
 import { QuestionType2 } from "@/types/enums";
 import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor";
+import SurveyContext from "@/context/SurveyContext";
 
-import useFlowStore from "../utils/store";
+import useFlowStore, { EditorType } from "../utils/store";
 import ElementEditor from "./ElementEditor";
 import { FlowLogicEditorV2 } from "./FlowLogicEditorV2";
 
-export enum EditorType {
-  LogicEditor = "logic-editor",
-  GoogleReviewEditor = "google-review-editor",
-  ElementEditor = "element-editor",
-}
 export function FlowQuestionDetailedView() {
-  const [activeEditor, setActiveEditor] = useState<EditorType>(
-    EditorType.ElementEditor,
-  );
-  const { currentElementType } = useFlowStore();
-  switch (activeEditor) {
+  const { currentElementType, detailActiveEditor } = useFlowStore();
+
+  switch (detailActiveEditor) {
     case EditorType.ElementEditor:
-      return (
-        currentElementType && <ElementEditor setActiveTab={setActiveEditor} />
-      );
+      return currentElementType && <ElementEditor />;
     case EditorType.LogicEditor:
-      return (
-        <FlowLogicEditorV2
-          afterSave={() => setActiveEditor(EditorType.ElementEditor)}
-        />
-      );
+      return <FlowLogicEditorV2 />;
     case EditorType.GoogleReviewEditor:
-      return (
-        <GoogleReviewEditor2
-          setActiveEditor={setActiveEditor}
-          surveyId={null}
-        />
-      );
+      return <GoogleReviewEditor2 />;
   }
 }
 
-const GoogleReviewEditor2 = ({ setActiveEditor, surveyId }) => {
-  const { getCurrentScreen } = useFlowStore();
+const GoogleReviewEditor2 = () => {
+  const {
+    getCurrentScreen,
+    setDetailActiveEditor,
+    getCurrentElement,
+    updateComponentInScreen,
+    currentElementId,
+  } = useFlowStore();
+  const { surveyId } = useContext(SurveyContext);
+
   const screen = getCurrentScreen();
   if (!screen) return null;
-  const question = screen?.layout.children
-    .filter((child) => child.type !== QuestionType2.Footer)
-    .map(({ id, label, type }) => ({ id, label, type }));
   return (
     <GoogleReviewEditor
-      selectedQ={question as any}
+      selectedQ={getCurrentElement() as any}
       setSelectedQ={(e) => {
-        console.log(e, "e");
+        updateComponentInScreen(currentElementId, {
+          googleReview: e?.googleReview,
+        });
       }}
       setActiveTab={() => {
-        setActiveEditor(EditorType.ElementEditor);
+        setDetailActiveEditor(EditorType.ElementEditor);
       }}
       surveyId={surveyId}
+      waFlowSave
     />
   );
 };

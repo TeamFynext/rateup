@@ -84,6 +84,7 @@ declare global {
     sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
     label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;
+    metaType?: WaQuestions;
     googleReview?: GoogleReview;
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;

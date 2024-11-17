@@ -89,8 +89,6 @@ function TabPanelsComp({
       <TabsPanel value={TabEnum.Result}>
         <Result
           survey={survey}
-          setSelectedLanguage={setSelectedLanguage}
-          setFilterTags={setFilterTags}
           encryptionpassword={encryptionpassword}
           setEncryptionPassword={setEncryptionPassword}
           subscription={subscription}

@@ -6,6 +6,7 @@ import { useCounter, useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
 
+import { WaFlowFormElement } from "@/types/global";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
@@ -82,7 +83,9 @@ function FlowScreensList({
         flowJson.screens,
         destination.droppableId,
       );
-      const elements = getFlowFormElementsFromScreen(screen);
+      const elements = getFlowFormElementsFromScreen(
+        screen,
+      ) as WaFlowFormElement[];
 
       const newOrder = reorder(elements, source.index, destination.index);
 

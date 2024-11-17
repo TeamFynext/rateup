@@ -95,7 +95,7 @@ export function DataSourceInput(props) {
           ),
         ),
       };
-      props.form.insertListItem("data-source", choiceObj);
+      props.insertListItem("data-source", choiceObj);
       choiceForm.reset();
     } catch (error) {
       choiceForm.reset();
@@ -104,7 +104,7 @@ export function DataSourceInput(props) {
   };
 
   const handleRemoveChoice = (index: string) => {
-    props.form.removeListItem("data-source", index);
+    props.removeListItem("data-source", index);
   };
 
   const handleFileChange = async (file: File) => {
@@ -127,9 +127,8 @@ export function DataSourceInput(props) {
     choiceForm.setFieldValue("image", null);
     choiceResetRef.current?.();
   };
-  let disabled = Object.values(WaNPSQuestions2).includes(
-    QuestionType2?.[props.form.getValues().metaType],
-  );
+  let disabled = Object.values(WaNPSQuestions2).includes(props?.metaType);
+
   return (
     <Card bg={"var(--bg-grey-color)"} radius={"lg"}>
       <Text td={"underline"}>CHOICES</Text>

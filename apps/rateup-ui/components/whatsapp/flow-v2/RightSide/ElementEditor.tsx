@@ -38,9 +38,8 @@ import { showErrorToast } from "@/utils/notifications";
 import { DataSourceInput } from "../input/DataSource";
 import ImageInput from "../input/ImageInput";
 import TiptapMarkdown from "../input/TiptapMarkdown";
-import useFlowStore from "../utils/store";
+import useFlowStore, { EditorType } from "../utils/store";
 import { getInitialValues, getValidationSchema } from "../utils/util";
-import { EditorType } from "./FlowQuestionDetailedView";
 
 // Memoize field components to prevent re-renders
 const FieldComponentMap = {
@@ -54,13 +53,14 @@ const FieldComponentMap = {
   image: memo(ImageInput),
 };
 
-function ElementEditor({ setActiveTab }) {
+function ElementEditor() {
   const {
     addComponentToScreen,
     updateComponentInScreen,
     getCurrentElement,
     currentElementType,
     flowEditable,
+    setDetailActiveEditor,
   } = useFlowStore();
   const { translations } = useTranslations();
   const element = getCurrentElement();
@@ -156,7 +156,11 @@ function ElementEditor({ setActiveTab }) {
           placeholder={`Enter ${field}`}
           {...extra}
           {...form2.getInputProps(field)}
-          form={form2}
+          {...(field === "data-source" && {
+            insertListItem: form2.insertListItem,
+            removeListItem: form2.removeListItem,
+            metaType: currentElementType,
+          })}
         />
       </Grid.Col>
     );
@@ -228,7 +232,7 @@ function ElementEditor({ setActiveTab }) {
               }
               size="sm"
               variant="outline"
-              onClick={() => setActiveTab(EditorType.LogicEditor)}
+              onClick={() => setDetailActiveEditor(EditorType.LogicEditor)}
             />
           )}
 
@@ -239,7 +243,9 @@ function ElementEditor({ setActiveTab }) {
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
                 variant="outline"
-                onClick={() => setActiveTab(EditorType.GoogleReviewEditor)}
+                onClick={() =>
+                  setDetailActiveEditor(EditorType.GoogleReviewEditor)
+                }
               />
             )}
           </Group>
