@@ -228,10 +228,10 @@ export function QuestionsSideBar({
               variant="light"
               onClick={openSurveyPreviewModal}
             >
-              <Group
-                style={{ display: "flex", alignItems: "center", gap: "2px" }}
-              >
-                <Text>{translations["Preview"]}</Text>
+              <Group className={styles["icon-text-group"]}>
+                <Text className={styles["icon-text"]}>
+                  {translations["Preview"]}
+                </Text>
                 <IconPlayerPlay />
               </Group>
             </ActionIcon>
@@ -272,9 +272,12 @@ export function QuestionsSideBar({
               }}
             >
               <Group
+                className={styles["icon-text-group"]}
                 style={{ display: "flex", alignItems: "center", gap: "2px" }}
               >
-                <Text>{translations["Theme"]}</Text>
+                <Text className={styles["icon-text"]}>
+                  {translations["Theme"]}
+                </Text>
                 <IconEdit />
               </Group>
             </ActionIcon>
