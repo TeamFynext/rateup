@@ -18,9 +18,10 @@ import { Markdown } from "tiptap-markdown";
 
 import styles from "./TiptapMarkdown.module.css";
 
-function TiptapMarkdown({ value, onChange, label, max }) {
+function TiptapMarkdown({ value, onChange, label, max, disabled }) {
   let content = value || "";
   const editor = useEditor({
+    editable: !disabled,
     content: content,
     extensions: [
       StarterKit,
@@ -67,6 +68,7 @@ function TiptapMarkdown({ value, onChange, label, max }) {
         sticky
         tabIndex={-1}
         className={styles["toolbar-div"]}
+        display={disabled ? "none" : "block"}
       >
         <Group gap={"xs"}>
           <RichTextEditor.ControlsGroup>

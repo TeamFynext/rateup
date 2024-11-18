@@ -41,6 +41,7 @@ import {
 import useTranslations from "@/dictionaries/useTranslation";
 import { logicSupportedTypes2 } from "@/utils/data";
 import { lexend500 } from "@/utils/fonts";
+import { showErrorToast } from "@/utils/notifications";
 import {
   getConditionsv2,
   getResponses2,
@@ -55,8 +56,12 @@ export const FlowLogicEditorV2 = () => {
     [],
   );
 
-  const { getCurrentScreen, currentScreenId, setDetailActiveEditor } =
-    useFlowStore();
+  const {
+    getCurrentScreen,
+    currentScreenId,
+    setDetailActiveEditor,
+    flowEditable,
+  } = useFlowStore();
 
   const screen = getCurrentScreen();
 
@@ -108,7 +113,9 @@ export const FlowLogicEditorV2 = () => {
       ) || {}) as any),
       [currentScreenId]: [...logicJumps, ...logicJumpsComponentLevel],
     };
-
+    if (!flowEditable) {
+      return showErrorToast("Flow is not editable", "error-flow-not-editable");
+    }
     updateFlowMutation.mutate({
       dbFlowId,
       data: {

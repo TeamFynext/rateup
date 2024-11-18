@@ -1,6 +1,7 @@
 import {
   QuestionType as Q,
   QuestionType2 as Q2,
+  QuestionType2,
   WaQuestions as W,
 } from "../types/enums";
 
@@ -31,4 +32,20 @@ export const logicSupportedTypes2 = [
   W.OptIn,
   W.DocumentPicker,
   W.PhotoPicker,
+];
+export const logicSupportedTypes3 = [
+  QuestionType2.Rating,
+  QuestionType2.Smiley,
+  QuestionType2.Opinion,
+  QuestionType2.CheckboxGroup,
+  QuestionType2.DatePicker,
+  QuestionType2.Dropdown,
+  QuestionType2.LD,
+  QuestionType2.YN,
+  QuestionType2.TextInput,
+  QuestionType2.TextArea,
+  QuestionType2.RadioButtonsGroup,
+  QuestionType2.OptIn,
+  QuestionType2.DocumentPicker,
+  QuestionType2.PhotoPicker,
 ];

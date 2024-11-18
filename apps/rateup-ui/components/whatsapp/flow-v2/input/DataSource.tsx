@@ -127,7 +127,8 @@ export function DataSourceInput(props) {
     choiceForm.setFieldValue("image", null);
     choiceResetRef.current?.();
   };
-  let disabled = Object.values(WaNPSQuestions2).includes(props?.metaType);
+  let disabled =
+    Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
 
   return (
     <Card bg={"var(--bg-grey-color)"} radius={"lg"}>

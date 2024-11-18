@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
@@ -105,7 +104,7 @@ const useFlowStore = create<StoreState>()(
       }),
     addScreenWithTitle: (title) =>
       set((state) => {
-        const newScreenId = `screen_${uuidv4().replace(/[^a-zA-Z_]/g, "")}`;
+        const newScreenId = `${crypto.randomUUID().replace(/[^a-zA-Z_]/g, "")}_${crypto.randomUUID().replace(/[^a-zA-Z_]/g, "")}`;
         const newScreen: Screen = {
           id: newScreenId,
           title,

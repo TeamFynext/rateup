@@ -164,6 +164,7 @@ export const flowNonInputElements2 = [
   QuestionType2.TextCaption,
   // QuestionType2.RichText,
   QuestionType2.Image,
+  // QuestionType2.EmbeddedLink,
 ];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links

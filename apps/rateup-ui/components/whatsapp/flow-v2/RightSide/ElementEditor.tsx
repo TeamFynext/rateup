@@ -26,13 +26,17 @@ import {
   ContainedTextField,
   ContainedTextInputWithCounter,
 } from "@/components/input/ContainedInput/ContainedInput";
+import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
 import {
   flowNonInputElements2,
   SAVE_HOTKEY,
   WaNPSQuestions2,
 } from "@/utils/constants";
-import { googleReviewSupportedTypes2, logicSupportedTypes } from "@/utils/data";
+import {
+  googleReviewSupportedTypes2,
+  logicSupportedTypes3,
+} from "@/utils/data";
 import { showErrorToast } from "@/utils/notifications";
 
 import { DataSourceInput } from "../input/DataSource";
@@ -51,6 +55,7 @@ const FieldComponentMap = {
   dataSource: memo(DataSourceInput),
   richText: memo(TiptapMarkdown),
   image: memo(ImageInput),
+  checkbox: memo(RateupSwitch),
 };
 
 function ElementEditor() {
@@ -133,20 +138,16 @@ function ElementEditor() {
   );
 
   const renderField = (field) => {
-    const FieldComponent =
-      FieldComponentMap[initialValues[field].type] || ContainedTextField;
+    const fieldType = initialValues[field].type;
+    const FieldComponent = FieldComponentMap[fieldType] || ContainedTextField;
     const extra = initialValues[field]?.extra || {};
 
-    if (["hidden", "checkbox"].includes(initialValues[field].type)) return null;
+    if (["hidden"].includes(fieldType)) return null;
 
     return (
       <Grid.Col
         key={field}
-        span={
-          field === "data-source" || initialValues[field].type === "richText"
-            ? 12
-            : 6
-        }
+        span={field === "data-source" || fieldType === "richText" ? 12 : 6}
       >
         <FieldComponent
           label={
@@ -155,12 +156,15 @@ function ElementEditor() {
           }
           placeholder={`Enter ${field}`}
           {...extra}
-          {...form2.getInputProps(field)}
+          {...form2.getInputProps(field, {
+            type: fieldType === "checkbox" ? "checkbox" : "input",
+          })}
           {...(field === "data-source" && {
             insertListItem: form2.insertListItem,
             removeListItem: form2.removeListItem,
             metaType: currentElementType,
           })}
+          disabled={!flowEditable}
         />
       </Grid.Col>
     );
@@ -218,7 +222,7 @@ function ElementEditor() {
             )}
           </Group>
 
-          {logicSupportedTypes.includes(currentElementType as any) && (
+          {logicSupportedTypes3.includes(currentElementType) && (
             <RateupButtonPrimary
               title={translations["Logic Jump"]}
               leftIcon={
@@ -235,7 +239,6 @@ function ElementEditor() {
               onClick={() => setDetailActiveEditor(EditorType.LogicEditor)}
             />
           )}
-
           <Group>
             {googleReviewSupportedTypes2.includes(currentElementType) && (
               <RateupButtonPrimary

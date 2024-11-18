@@ -148,7 +148,7 @@ const questionIcons = {
   [QuestionType2.TextCaption]: IconTextSize,
 
   [QuestionType2.Image]: IconPhoto,
-  // [QuestionType2.embeddedLink]: IconLink,
+  [QuestionType2.EmbeddedLink]: IconLink,
   [QuestionType2.OptIn]: IconLink,
   [QuestionType2.RichText]: IconLink,
 };

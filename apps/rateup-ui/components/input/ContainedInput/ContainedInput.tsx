@@ -21,6 +21,8 @@ import {
   rem,
   Select,
   SelectProps,
+  Switch,
+  SwitchProps,
   TagsInput,
   TagsInputProps,
   Text,
@@ -126,6 +128,9 @@ export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
+export function ContainedSwitchInput(props: SwitchProps) {
+  return <Switch classNames={classes} {...props} />;
+}
 export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
   props: FileInputProps,
   ref: React.Ref<HTMLButtonElement>,

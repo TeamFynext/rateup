@@ -23,6 +23,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "max-chars": z.number().optional(),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.TextArea:
@@ -34,6 +35,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         name: z.string(),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.CheckboxGroup:
@@ -61,6 +63,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         description: z.string().optional(),
         "init-value": z.array(z.string()).optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.RadioButtonsGroup:
@@ -88,6 +91,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         description: z.string().optional(),
         "init-value": z.string().optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.Footer:
@@ -106,6 +110,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         required: z.boolean(),
         name: z.string(),
         "init-value": z.boolean().optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.Dropdown:
@@ -131,6 +136,7 @@ export const getValidationSchema = (type: QuestionType2) => {
           .max(300, { message: "Maximum 300 options allowed" }),
         required: z.boolean(),
         "init-value": z.string().optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.DatePicker:
@@ -143,6 +149,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "unavailable-dates": z.array(z.date().optional().nullable()),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
+        visible: z.boolean(),
       };
       break;
 
@@ -172,6 +179,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "max-file-size-kb": z.number().min(1).max(25600).default(25600),
         "min-uploaded-photos": z.number().min(0).max(30).default(0),
         "max-uploaded-photos": z.number().min(1).max(30).default(30),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.DocumentPicker:
@@ -213,30 +221,35 @@ export const getValidationSchema = (type: QuestionType2) => {
             ]),
           )
           .optional(),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.TextBody:
       schema = {
         type: z.string(),
         text: z.string().trim().min(1).max(4096),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.TextCaption:
       schema = {
         type: z.string(),
         text: z.string().trim().min(1).max(409),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.TextHeading:
       schema = {
         type: z.string(),
         text: z.string().trim().min(1).max(80),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.TextSubheading:
       schema = {
         type: z.string(),
         text: z.string().trim().min(1).max(80),
+        visible: z.boolean(),
       };
       break;
     case QuestionType2.RichText:
@@ -244,8 +257,23 @@ export const getValidationSchema = (type: QuestionType2) => {
         type: z.literal("RichText"),
         text: z.union([z.string().trim().min(1), z.array(z.string()).min(1)]),
       };
+    case QuestionType2.EmbeddedLink:
+      schema = {
+        type: z.literal("EmbeddedLink"),
+        url: z.string().url(),
+        visible: z.boolean(),
+      };
   }
   return z.object(schema).superRefine((data, ctx) => {
+    if (data["visible"] === false) {
+      if (data["required"]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "If the component is hidden, it cannot be required",
+          path: ["visible"],
+        });
+      }
+    }
     if (data["min-date"] || data["max-date"]) {
       data["unavailable-dates"].forEach((date) => {
         if (date && dayjs(date).isBefore(data["min-date"])) {
@@ -292,8 +320,8 @@ export const getInitialValues = (type: QuestionType2) => {
     (data) => data.kind === "max",
   ).value;
   let TITLE_MAX = 4090;
-
-  const generateId = Math.random().toString(36).substr(2, 9);
+  let HELPER_TEXT_MAX = 80;
+  const generateId = crypto.randomUUID().replace(/-/g, "_");
   switch (type) {
     case QuestionType2.TextInput:
       initialValues = {
@@ -320,23 +348,32 @@ export const getInitialValues = (type: QuestionType2) => {
         },
         "input-type": {
           type: "select",
-          value: Object.keys(QuestionType2).find(
-            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
-          ),
+          value: "text",
           extra: {
             data: ["text", "number", "email", "password", "passcode", "phone"],
-            defaultValue: Object.keys(QuestionType2).find(
-              (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
-            ),
+            allowDeselect: false,
             disabled: type !== QuestionType2.TextInput,
           },
         },
-        required: { type: "checkbox", value: true },
+        required: { type: "hidden", value: true },
         "min-chars": { type: "number", value: 0 },
         "max-chars": { type: "number", value: 80 },
-        "helper-text": { type: "text", value: "" },
+        "helper-text": {
+          type: "text",
+          value: "",
+          extra: { max: HELPER_TEXT_MAX },
+        },
         name: { type: "hidden", value: generateId },
         "init-value": { type: "text", value: "" },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
       };
       break;
     case QuestionType2.TextArea:
@@ -362,12 +399,25 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        required: { type: "checkbox", value: true },
+        required: { type: "hidden", value: true },
         "max-length": { type: "number", value: 600 },
         name: { type: "hidden", value: generateId },
-        "helper-text": { type: "text", value: "" },
+        "helper-text": {
+          type: "text",
+          value: "",
+          extra: { max: HELPER_TEXT_MAX },
+        },
         "init-value": { type: "text", value: "" },
-        enableNpsAnalytics: { type: "checkbox", value: false },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
+        enableNpsAnalytics: { type: "hidden", value: false },
       };
       break;
     case QuestionType2.CheckboxGroup:
@@ -394,7 +444,7 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        required: { type: "checkbox", value: true },
+        required: { type: "hidden", value: true },
         description: { type: "text", value: "" },
         "min-selected-items": { type: "number", value: 1 },
         "init-value": { type: "text", value: [] },
@@ -406,11 +456,20 @@ export const getInitialValues = (type: QuestionType2) => {
             defaultValue: "regular",
           },
         },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
         "data-source": {
           type: "dataSource",
           value: getDataSource(type),
         },
-        enableNpsAnalytics: { type: "checkbox", value: false },
+        enableNpsAnalytics: { type: "hidden", value: false },
       };
       break;
     case QuestionType2.RadioButtonsGroup:
@@ -439,7 +498,7 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        required: { type: "checkbox", value: true },
+        required: { type: "hidden", value: true },
         description: { type: "text", value: "" },
         "init-value": { type: "text", value: "" },
         "media-size": {
@@ -450,11 +509,20 @@ export const getInitialValues = (type: QuestionType2) => {
             defaultValue: "regular",
           },
         },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
         "data-source": {
           type: "dataSource",
           value: getDataSource(type),
         },
-        enableNpsAnalytics: { type: "checkbox", value: false },
+        enableNpsAnalytics: { type: "hidden", value: false },
       };
       break;
     case QuestionType2.Footer:
@@ -498,9 +566,19 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        required: { type: "checkbox", value: true },
+        required: { type: "hidden", value: true },
         name: { type: "hidden", value: generateId },
-        "init-value": { type: "checkbox", value: false },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+            mt: "xl",
+          },
+        },
+        "init-value": { type: "hidden", value: false },
       };
       break;
     case QuestionType2.Dropdown:
@@ -529,14 +607,23 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        required: { type: "checkbox", value: true },
+        required: { type: "hidden", value: true },
         "init-value": { type: "text", value: "" },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
         "data-source": {
           type: "dataSource",
           value: getDataSource(type),
         },
         name: { type: "hidden", value: generateId },
-        enableNpsAnalytics: { type: "checkbox", value: false },
+        enableNpsAnalytics: { type: "hidden", value: false },
       };
       break;
     case QuestionType2.DatePicker:
@@ -585,9 +672,22 @@ export const getInitialValues = (type: QuestionType2) => {
             clearable: true,
           },
         },
-        "helper-text": { type: "text", value: "" },
+        "helper-text": {
+          type: "text",
+          value: "",
+          extra: { max: HELPER_TEXT_MAX },
+        },
         "init-value": { type: "text", value: "" },
-        enableNpsAnalytics: { type: "checkbox", value: false },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
+        enableNpsAnalytics: { type: "hidden", value: false },
       };
       break;
     case QuestionType2.Image:
@@ -651,6 +751,15 @@ export const getInitialValues = (type: QuestionType2) => {
         "max-file-size-kb": { type: "number", value: 25600 },
         "min-uploaded-photos": { type: "number", value: 1 },
         "max-uploaded-photos": { type: "number", value: 1 },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
       };
       break;
     case QuestionType2.DocumentPicker:
@@ -710,6 +819,16 @@ export const getInitialValues = (type: QuestionType2) => {
             "video/mpeg",
           ],
         },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+            mt: "xl",
+          },
+        },
       };
       break;
     case QuestionType2.TextBody:
@@ -729,6 +848,16 @@ export const getInitialValues = (type: QuestionType2) => {
         },
 
         markdown: { type: "hidden", value: true },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+            mt: "xl",
+          },
+        },
       };
       break;
     case QuestionType2.TextCaption:
@@ -747,6 +876,16 @@ export const getInitialValues = (type: QuestionType2) => {
           extra: { required: true, max: TEXT_MAX },
         },
         markdown: { type: "hidden", value: true },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+            mt: "xl",
+          },
+        },
       };
       break;
     case QuestionType2.TextHeading:
@@ -763,6 +902,16 @@ export const getInitialValues = (type: QuestionType2) => {
           type: "text",
           value: "",
           extra: { required: true, max: TEXT_MAX },
+        },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+            mt: "xl",
+          },
         },
       };
       break;
@@ -781,6 +930,16 @@ export const getInitialValues = (type: QuestionType2) => {
           value: "",
           extra: { required: true, max: TEXT_MAX },
         },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+            mt: "xl",
+          },
+        },
       };
       break;
     case QuestionType2.RichText:
@@ -794,6 +953,42 @@ export const getInitialValues = (type: QuestionType2) => {
           ),
         },
         text: { type: "richText", value: "", extra: { required: true } },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
+      };
+      break;
+    case QuestionType2.EmbeddedLink:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "EmbeddedLink" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        text: { type: "text", value: "", extra: { required: true, max: 25 } },
+        url: {
+          type: "text",
+          value: "",
+          extra: { required: true, type: "url" },
+        },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
       };
       break;
     default:
