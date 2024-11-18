@@ -66,6 +66,7 @@ function TakeSurvey({
   );
 
   const [selectedQ, setSelectedQ] = useState<Question>(null);
+  const [alignment, setAlignment] = useState("left");
   const [
     isConfirmResponsesModalOpen,
     { open: openConfirmationResponsesModal, close: closeConfirmResponsesModal },
@@ -370,7 +371,7 @@ function TakeSurvey({
       value={{ response: currentResponse, updateResponse }}
     >
       <SurveyContextProvider survey={survey}>
-        <SelectedQContext.Provider value={{ selectedQ }}>
+        <SelectedQContext.Provider value={{ selectedQ, alignment }}>
           <SurveyThemeContextProvider surveyThemeObj={surveyThemeData}>
             <NextPrevFuncsAndLastQuestionContextProvider
               nextFn={handleNext}
@@ -454,6 +455,7 @@ function TakeSurvey({
                                     smallScreen={smallScreen}
                                     responses={responsesRef.current}
                                     surveyId={survey?.id}
+                                    setAlignment={setAlignment}
                                   />
                                   {!isHtml(
                                     selectedQ?.title[selectedLanguage],

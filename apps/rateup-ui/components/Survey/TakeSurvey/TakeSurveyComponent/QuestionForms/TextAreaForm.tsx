@@ -26,7 +26,6 @@ export function TextAreaForm() {
   return (
     <FormPaperLayout>
       <ContainedTextArea
-        placeholder={translations["Enter your answer"]}
         value={inputValue}
         onChange={handleChange}
         variant="unstyled"
