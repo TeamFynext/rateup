@@ -811,6 +811,9 @@ export const handleDecryptedFlowRequest = async (
               let question: any = currentScreen.layout.children.find(
                 (data) => data.name === condition.questionId,
               );
+              if (!question || currentScreenResponses.length === 0) {
+                return false;
+              }
               let response = parseFlowResponseV2(
                 question?.metaType,
                 currentScreenResponses.find(

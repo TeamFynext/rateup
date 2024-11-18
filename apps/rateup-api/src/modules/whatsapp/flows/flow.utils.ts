@@ -876,6 +876,13 @@ export function sanitizeScreenData(data: any) {
       delete child.metaType;
       delete child.enableNpsAnalytics;
       delete child.googleReview;
+      if (child.url) {
+        child["on-click-action"] = {
+          name: "open_url",
+          url: child.url,
+        };
+        delete child.url;
+      }
     });
   });
   return data;
@@ -884,7 +891,7 @@ export function removeEmptyStrings(obj) {
   for (const key in obj) {
     if (obj[key] && typeof obj[key] === "object") {
       removeEmptyStrings(obj[key]);
-    } else if (obj[key] === "" || !obj[key]) {
+    } else if ((obj[key] === "" || !obj[key]) && key !== "visible") {
       delete obj[key];
     }
   }
