@@ -42,3 +42,21 @@
 .questions-list-container :global(.mantine-ScrollArea-viewport) > div {
   display: block !important;
 }
+
+.icon-text-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+}
+
+.icon-text {
+  display: inline-block;
+  position: relative;
+}
+
+@media (max-width: 1568px) {
+  .icon-text {
+    display: none;
+  }
+}
