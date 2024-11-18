@@ -18,7 +18,6 @@ export function TextForm() {
   return (
     <FormPaperLayout>
       <Input
-        placeholder={translations["Enter your answer"]}
         value={response || ""}
         onChange={(e) => updateResponse(e.currentTarget.value)}
         variant="unstyled"

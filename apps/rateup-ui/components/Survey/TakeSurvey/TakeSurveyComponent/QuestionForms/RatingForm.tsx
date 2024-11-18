@@ -1,12 +1,14 @@
 import { useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { Rating, useMantineTheme } from "@mantine/core";
-import classes from "../TakeSurvey.module.css";
 import { useMediaQuery } from "@mantine/hooks";
-import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { useAnimate } from "framer-motion";
-import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import classes from "../TakeSurvey.module.css";
 
 export function RatingForm() {
   const selectedPreview = useSelectedPreview();
