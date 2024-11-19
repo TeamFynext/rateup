@@ -14,6 +14,7 @@ import {
   QuestionType,
   ResponseSummaryType,
   SubscriptionFeaturePathName,
+  WaQuestions,
 } from "../../types/enums";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
@@ -44,6 +45,13 @@ import {
 } from "../contact/contactGroup/contactGroup.service";
 import { sendWebhook } from "../../utils/webhook";
 import { getFileUrlFromKey } from "../../utils/upload/s3Upload";
+import {
+  LDResponseMap,
+  RatingScaleMap,
+  SmileyResponseMap,
+  YNResponseMap,
+} from "../../utils/enumMap";
+import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -483,6 +491,88 @@ export async function downloadExcelResponse(
     return [fileName, buffer];
   }
 }
+export async function downloadExcelResponseV2(
+  allResponses,
+  questions,
+  visibleColumn = [],
+  tz = "Asia/Calcutta",
+) {
+  const responses =
+    (allResponses && allResponses?.flatMap((data) => data?.responses)) || [];
+
+  const filteredSecondArray = questions.filter((item) =>
+    visibleColumn.includes(item?.label || ""),
+  );
+
+  if (filteredSecondArray && responses) {
+    const headerArray = filteredSecondArray.map((question) =>
+      markdownToPlainText(question?.header || question?.label || ""),
+    );
+    const createdAt = "Date";
+    const responseTag = "tag";
+    let whatsappRespondentNumber = "Respondent Mobile";
+    if (visibleColumn.includes("createdAt")) {
+      headerArray.unshift(createdAt);
+      filteredSecondArray.unshift(createdAt);
+    }
+    if (visibleColumn.includes(whatsappRespondentNumber)) {
+      headerArray.push(whatsappRespondentNumber);
+      filteredSecondArray.push(whatsappRespondentNumber);
+    }
+    if (visibleColumn.includes(responseTag)) {
+      headerArray.push(responseTag);
+      filteredSecondArray.push(responseTag);
+    }
+
+    const bodyArray = [];
+    filteredSecondArray.forEach((question) => {
+      const questionId = question.id;
+      responses.forEach((response, answerIndex) => {
+        bodyArray.push([]);
+        const responses = response.responses;
+        const responseObj = responses.find(
+          (answerObj) => answerObj.questionId === questionId,
+        );
+        let responseValue;
+
+        if (responseObj) {
+          responseValue = getCellData(responseObj.response, question);
+        } else if (question === createdAt) {
+          const createdAtFormatted = dayjs(response.createdAt)
+            .tz(tz)
+            .format("DD-MM-YYYY hh:mm A");
+          responseValue = createdAtFormatted;
+        } else if (question === "Respondent Mobile") {
+          responseValue = response?.Contact?.phone;
+        } else if (question === responseTag) {
+          responseValue = response.tag;
+        } else {
+          responseValue = "";
+        }
+        bodyArray[answerIndex].push(responseValue);
+      });
+    });
+    let options = [];
+    headerArray.map((data, i) => {
+      const headingWidth = String(data)?.length + 2;
+      const dataWidth = getMaxContentWidth(bodyArray, i);
+      const width = Math.max(headingWidth, dataWidth);
+      options.push({ width: width > 40 ? 40 : width });
+    });
+    let fileName = allResponses?.[0].survey?.title ?? "download";
+    let buffer = xlsx.build([
+      {
+        name: "Sheet1",
+        data: [headerArray, ...bodyArray],
+        options: {
+          "!cols": options,
+        },
+      },
+    ]);
+
+    return [fileName, buffer];
+  }
+}
 function getMaxContentWidth(data, columnIndex: number) {
   let maxWidth = 0;
   for (const row of data) {
@@ -815,191 +905,287 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     await saveSheetIdToSurvey(doc.spreadsheetId, surveyId);
   }
   await doc.loadInfo();
-  const languages = survey?.languages;
-  let questions = survey?.questions as unknown as Array<Question>;
-  questions = questions.filter((q) => q.type !== QuestionType.InfoMessage);
-  //TODO REMOVE LATER: MYG GIFT VISHU
-  if (process.env.VISHU_SURVEY === surveyId) {
-    questions.push({
-      id: "win_item",
-      type: QuestionType.WinItem,
-      title: { English: "Gift won" },
-      description: {},
-      required: true,
-    });
-  }
   const allResponses = await getAllResponses(surveyId);
-  const formattedResByTeam = allResponses.map((res) => ({
-    team: res.team.name,
-    responses: res.responses,
-  }));
-  const languageWiseResponse = {};
-  languages.map((lang) => {
-    const teamAndResponse = [];
-    formattedResByTeam.map((teamRes) => {
-      const langRes = teamRes?.responses.filter((res) => res.language === lang);
-      teamAndResponse.push({
-        team: teamRes.team,
-        teamWiseResponses: langRes
-          .map((res) => ({
-            createdAt: res.createdAt,
-            responses: res.responses,
-            respondentPhone: res?.Contact?.phone,
-            tag: res?.tag,
-          }))
-          .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
-      });
-    });
-    languageWiseResponse[lang] = teamAndResponse;
-  });
-  for (const lang of languages) {
-    let questionTitles = [];
-    questions.map((q: Question, index: number) => {
-      let qsTitle =
-        q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
-      const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
-      if (
-        [QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(
-          q.type,
-        )
-      )
-        Object.entries(q.features?.[lang]).map(([key, value]) =>
-          value?.isEnabled
-            ? questionTitles.push((qstnTitle + ":" + key).trim())
-            : null,
-        );
-      else if (q.type === QuestionType.Testimonial) {
-        questionTitles.push((qstnTitle + ":name").trim());
-        questionTitles.push((qstnTitle + ":testimonial").trim());
-        Object.entries(q.features?.[lang]).map(([key, value]) =>
-          value ? questionTitles.push((qstnTitle + ":" + key).trim()) : null,
-        );
-      } else if (q.type === QuestionType.MCQGrid) {
-        const subQs = q.features?.[lang]?.questions;
-        subQs.map((qstn) =>
-          questionTitles.push((qstnTitle + ":" + qstn).trim()),
-        );
-      } else if (q.type === QuestionType.MultiTextInput) {
-        const fields = q.features?.[lang]?.fields;
-        fields?.map((field) =>
-          questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()),
-        );
-      } else questionTitles.push(qstnTitle);
-    });
+  let flow = await getFlowBySurveyId(surveyId);
+  const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
+    screen?.layout?.children?.filter(
+      (child) => child?.type !== "Footer" && child.name,
+    ),
+  ) as any[];
+  const checkVersion = flow.version === 1;
 
-    const totalColumnCount = questionTitles.length + 3;
-    const sheet =
-      (await doc.sheetsByTitle[lang]) ??
-      (await doc.addSheet({
-        title: lang,
-        headerValues: [
-          "Created At",
-          ...questionTitles,
-          "team",
-          "Respondent's Mobile Number",
-          "tag",
-        ],
-        gridProperties:
-          totalColumnCount > 26
-            ? {
-                columnCount: totalColumnCount,
-              }
-            : undefined,
-      }));
-    const initialRowCount = await sheet.rowCount;
-    if (totalColumnCount > sheet.columnCount)
-      await sheet.resize({
-        columnCount: totalColumnCount,
-        rowCount: initialRowCount,
+  if (checkVersion) {
+    const languages = survey?.languages;
+    let questions = survey?.questions as unknown as Array<Question>;
+    questions = questions.filter((q) => q.type !== QuestionType.InfoMessage);
+    //TODO REMOVE LATER: MYG GIFT VISHU
+    if (process.env.VISHU_SURVEY === surveyId) {
+      questions.push({
+        id: "win_item",
+        type: QuestionType.WinItem,
+        title: { English: "Gift won" },
+        description: {},
+        required: true,
       });
-    await sheet.setHeaderRow([
-      "Created At",
-      ...questionTitles,
-      "team",
-      "Respondent's Mobile Number",
-      "tag",
-    ]);
-    await sheet.loadCells();
-    const columnCount = await sheet.columnCount;
-    for (var i = 0; i < columnCount; i++) {
-      sheet.getCell(0, i).textFormat = { bold: true };
     }
-    await sheet.saveUpdatedCells();
-    await sheet.clearRows();
-    const responseForSheet = [];
-    for (const langRes of languageWiseResponse[lang]) {
-      langRes.teamWiseResponses.map((response) => {
-        const resObj = { team: langRes.team };
-        resObj["Created At"] = dayjs(response.createdAt).format(
-          "DD-MM-YYYY hh:mm A",
+    const formattedResByTeam = allResponses.map((res) => ({
+      team: res.team.name,
+      responses: res.responses,
+    }));
+    const languageWiseResponse = {};
+    languages.map((lang) => {
+      const teamAndResponse = [];
+      formattedResByTeam.map((teamRes) => {
+        const langRes = teamRes?.responses.filter(
+          (res) => res.language === lang,
         );
-        response.responses.map((res: QuestionResponse) => {
-          let QIndex;
-          let qstn = questions.find((q: Question, index: number) => {
-            if (q.id === res.questionId) {
-              QIndex = index + 1;
-              return q;
+        teamAndResponse.push({
+          team: teamRes.team,
+          teamWiseResponses: langRes
+            .map((res) => ({
+              createdAt: res.createdAt,
+              responses: res.responses,
+              respondentPhone: res?.Contact?.phone,
+              tag: res?.tag,
+            }))
+            .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
+        });
+      });
+      languageWiseResponse[lang] = teamAndResponse;
+    });
+    for (const lang of languages) {
+      let questionTitles = [];
+      questions.map((q: Question, index: number) => {
+        let qsTitle =
+          q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
+        const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
+        if (
+          [
+            QuestionType.Contact,
+            QuestionType.Email,
+            QuestionType.Phone,
+          ].includes(q.type)
+        )
+          Object.entries(q.features?.[lang]).map(([key, value]) =>
+            value?.isEnabled
+              ? questionTitles.push((qstnTitle + ":" + key).trim())
+              : null,
+          );
+        else if (q.type === QuestionType.Testimonial) {
+          questionTitles.push((qstnTitle + ":name").trim());
+          questionTitles.push((qstnTitle + ":testimonial").trim());
+          Object.entries(q.features?.[lang]).map(([key, value]) =>
+            value ? questionTitles.push((qstnTitle + ":" + key).trim()) : null,
+          );
+        } else if (q.type === QuestionType.MCQGrid) {
+          const subQs = q.features?.[lang]?.questions;
+          subQs.map((qstn) =>
+            questionTitles.push((qstnTitle + ":" + qstn).trim()),
+          );
+        } else if (q.type === QuestionType.MultiTextInput) {
+          const fields = q.features?.[lang]?.fields;
+          fields?.map((field) =>
+            questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()),
+          );
+        } else questionTitles.push(qstnTitle);
+      });
+
+      const totalColumnCount = questionTitles.length + 3;
+      const sheet =
+        (await doc.sheetsByTitle[lang]) ??
+        (await doc.addSheet({
+          title: lang,
+          headerValues: [
+            "Created At",
+            ...questionTitles,
+            "team",
+            "Respondent's Mobile Number",
+            "tag",
+          ],
+          gridProperties:
+            totalColumnCount > 26
+              ? {
+                  columnCount: totalColumnCount,
+                }
+              : undefined,
+        }));
+      const initialRowCount = await sheet.rowCount;
+      if (totalColumnCount > sheet.columnCount)
+        await sheet.resize({
+          columnCount: totalColumnCount,
+          rowCount: initialRowCount,
+        });
+      await sheet.setHeaderRow([
+        "Created At",
+        ...questionTitles,
+        "team",
+        "Respondent's Mobile Number",
+        "tag",
+      ]);
+      await sheet.loadCells();
+      const columnCount = await sheet.columnCount;
+      for (var i = 0; i < columnCount; i++) {
+        sheet.getCell(0, i).textFormat = { bold: true };
+      }
+      await sheet.saveUpdatedCells();
+      await sheet.clearRows();
+      const responseForSheet = [];
+      for (const langRes of languageWiseResponse[lang]) {
+        langRes.teamWiseResponses.map((response) => {
+          const resObj = { team: langRes.team };
+          resObj["Created At"] = dayjs(response.createdAt).format(
+            "DD-MM-YYYY hh:mm A",
+          );
+          response.responses.map((res: QuestionResponse) => {
+            let QIndex;
+            let qstn = questions.find((q: Question, index: number) => {
+              if (q.id === res.questionId) {
+                QIndex = index + 1;
+                return q;
+              }
+            });
+            if (qstn) {
+              let qsTitle =
+                qstn?.title[lang] ||
+                qstn?.description[lang] ||
+                qstn?.label?.[lang] ||
+                "";
+              let qstnTitle = QIndex + "_" + getContent(qsTitle)?.trim();
+              if (
+                [
+                  QuestionType.Contact,
+                  QuestionType.Email,
+                  QuestionType.Phone,
+                ].includes(qstn.type)
+              )
+                Object.entries(res.response[res.type]).map(
+                  ([key, value]) =>
+                    (resObj[(qstnTitle + ":" + key).trim()] = value),
+                );
+              else if (qstn.type === QuestionType.Testimonial)
+                Object.entries(res.response[res.type]).map(
+                  ([key, value]) =>
+                    (resObj[(qstnTitle + ":" + key).trim()] =
+                      key == "photo"
+                        ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                        : value),
+                );
+              else if (qstn.type === QuestionType.MCQGrid)
+                Object.entries(res.response[res.type]).map(
+                  ([key, value]: [string, Choice]) =>
+                    (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+                );
+              else if (qstn.type === QuestionType.MultiTextInput)
+                Object.entries(res.response[res.type]).map(
+                  ([key, value]) =>
+                    (resObj[(qstnTitle + ":" + key).trim()] = value),
+                );
+              else
+                resObj[qstnTitle] = getFormattedResponse(
+                  res.response[res.type],
+                  qstn,
+                  lang,
+                );
             }
           });
-          if (qstn) {
-            let qsTitle =
-              qstn?.title[lang] ||
-              qstn?.description[lang] ||
-              qstn?.label?.[lang] ||
-              "";
-            let qstnTitle = QIndex + "_" + getContent(qsTitle)?.trim();
-            if (
-              [
-                QuestionType.Contact,
-                QuestionType.Email,
-                QuestionType.Phone,
-              ].includes(qstn.type)
-            )
-              Object.entries(res.response[res.type]).map(
-                ([key, value]) =>
-                  (resObj[(qstnTitle + ":" + key).trim()] = value),
-              );
-            else if (qstn.type === QuestionType.Testimonial)
-              Object.entries(res.response[res.type]).map(
-                ([key, value]) =>
-                  (resObj[(qstnTitle + ":" + key).trim()] =
-                    key == "photo"
-                      ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                      : value),
-              );
-            else if (qstn.type === QuestionType.MCQGrid)
-              Object.entries(res.response[res.type]).map(
-                ([key, value]: [string, Choice]) =>
-                  (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
-              );
-            else if (qstn.type === QuestionType.MultiTextInput)
-              Object.entries(res.response[res.type]).map(
-                ([key, value]) =>
-                  (resObj[(qstnTitle + ":" + key).trim()] = value),
-              );
-            else
-              resObj[qstnTitle] = getFormattedResponse(
-                res.response[res.type],
-                qstn,
-                lang,
-              );
-          }
+          resObj["Respondent's Mobile Number"] = response?.respondentPhone;
+          resObj["tag"] = response?.tag;
+          responseForSheet.push(resObj);
         });
-        resObj["Respondent's Mobile Number"] = response?.respondentPhone;
-        resObj["tag"] = response?.tag;
-        responseForSheet.push(resObj);
+      }
+
+      await sheet.addRows(responseForSheet);
+      const dateColumnIndex = sheet.headerValues.indexOf("Created At");
+      await sheet.loadCells();
+      for (var i = 0; i <= responseForSheet.length; i++) {
+        sheet.getCell(i, dateColumnIndex).numberFormat = {
+          type: "DATE",
+          pattern: 'dd-mm-yyyy hh:mm A/P"M"',
+        };
+      }
+      await sheet.saveUpdatedCells();
+    }
+  } else {
+    const responses =
+      (allResponses && allResponses?.flatMap((data) => data?.responses)) || [];
+
+    if (filteredSecondArray && responses) {
+      const headerArray = filteredSecondArray.map((question) =>
+        markdownToPlainText(question?.header || question?.label || ""),
+      );
+      const createdAt = "Created At";
+      const responseTag = "Tag";
+      let whatsappRespondentNumber = "Respondent's Mobile Number";
+      let teamTag = "Team";
+      headerArray.unshift(createdAt);
+      filteredSecondArray.unshift(createdAt);
+      headerArray.push(whatsappRespondentNumber);
+      filteredSecondArray.push(whatsappRespondentNumber);
+      headerArray.push(responseTag);
+      filteredSecondArray.push(responseTag);
+      headerArray.push(teamTag);
+      filteredSecondArray.push(teamTag);
+
+      const bodyArray: string[][] = [];
+      responses.forEach((response, answerIndex) => {
+        bodyArray.push([]);
+        filteredSecondArray.forEach((question) => {
+          const questionId = question.id;
+          const responseObj = response.responses.find(
+            (answerObj) => answerObj.questionId === questionId,
+          );
+          let responseValue: string;
+          if (responseObj) {
+            responseValue = getCellData(responseObj.response, question);
+          } else if (question === createdAt) {
+            const createdAtFormatted = dayjs(response.createdAt).format(
+              "DD-MM-YYYY hh:mm A",
+            );
+            responseValue = createdAtFormatted;
+          } else if (question === whatsappRespondentNumber) {
+            responseValue = response?.Contact?.phone || "";
+          } else if (question === responseTag) {
+            responseValue = response.tag || "";
+          } else if (question === teamTag) {
+            responseValue = survey.teams.map((t) => t.team.id).join("\n") || "";
+          } else {
+            responseValue = "";
+          }
+          bodyArray[answerIndex].push(responseValue);
+        });
       });
+
+      const totalColumnCount = filteredSecondArray.length;
+      let lang = "en";
+      const sheet =
+        (await doc.sheetsByTitle[lang]) ??
+        (await doc.addSheet({
+          title: lang,
+          headerValues: headerArray,
+          gridProperties:
+            totalColumnCount > 26
+              ? {
+                  columnCount: totalColumnCount,
+                }
+              : undefined,
+        }));
+      const initialRowCount = await sheet.rowCount;
+      if (totalColumnCount > sheet.columnCount)
+        await sheet.resize({
+          columnCount: totalColumnCount,
+          rowCount: initialRowCount,
+        });
+      await sheet.setHeaderRow(headerArray);
+      await sheet.loadCells();
+      const columnCount = await sheet.columnCount;
+      for (var i = 0; i < columnCount; i++) {
+        sheet.getCell(0, i).textFormat = { bold: true };
+      }
+      await sheet.saveUpdatedCells();
+      await sheet.clearRows();
+      await sheet.addRows(bodyArray);
+      await sheet.saveUpdatedCells();
     }
-    await sheet.addRows(responseForSheet);
-    const dateColumnIndex = sheet.headerValues.indexOf("Created At");
-    await sheet.loadCells();
-    for (var i = 0; i <= responseForSheet.length; i++) {
-      sheet.getCell(i, dateColumnIndex).numberFormat = {
-        type: "DATE",
-        pattern: 'dd-mm-yyyy hh:mm A/P"M"',
-      };
-    }
-    await sheet.saveUpdatedCells();
   }
   const sheetToRemove = await doc.sheetsByTitle["Sheet1"];
   if (sheetToRemove) sheetToRemove.delete();
@@ -1112,58 +1298,87 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       resObj["Created At"] = dayjs(response.createdAt).format(
         "DD-MM-YYYY hh:mm A",
       );
+      let flow = await getFlowBySurveyId(surveyId);
+      const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
+        screen?.layout?.children?.filter(
+          (child) => child?.type !== "Footer" && child.name,
+        ),
+      ) as unknown as Question2[];
+      const checkVersion = flow.version === 1;
       response.responses.map((res: QuestionResponse) => {
-        let QIndex;
-        let qstn = (questions as unknown as Question[]).find(
-          (q: Question, index: number) => {
-            if (q.id === res.questionId) {
-              QIndex = index + 1;
-              return q;
-            }
-          },
-        );
-        let qsTitle =
-          qstn?.title[response.language] ||
-          qstn?.description[response.language] ||
-          qstn?.label?.[response.language] ||
-          "";
-        let qstnTitle = QIndex + "_" + getContent(qsTitle).trim();
-        if (
-          [
-            QuestionType.Contact,
-            QuestionType.Email,
-            QuestionType.Phone,
-          ].includes(qstn.type)
-        )
-          Object.entries(res.response[res.type]).map(
-            ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
+        if (checkVersion) {
+          let QIndex;
+          let qstn = (questions as unknown as Question[]).find(
+            (q: Question, index: number) => {
+              if (q.id === res.questionId) {
+                QIndex = index + 1;
+                return q;
+              }
+            },
           );
-        else if (qstn.type === QuestionType.Testimonial)
-          Object.entries(res.response[res.type]).map(
-            ([key, value]) =>
-              (resObj[(qstnTitle + ":" + key).trim()] =
-                key == "photo"
-                  ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                  : value),
+          let qsTitle =
+            qstn?.title[response.language] ||
+            qstn?.description[response.language] ||
+            qstn?.label?.[response.language] ||
+            "";
+          let qstnTitle = QIndex + "_" + getContent(qsTitle).trim();
+          if (
+            [
+              QuestionType.Contact,
+              QuestionType.Email,
+              QuestionType.Phone,
+            ].includes(qstn.type)
+          )
+            Object.entries(res.response[res.type]).map(
+              ([key, value]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] = value),
+            );
+          else if (qstn.type === QuestionType.Testimonial)
+            Object.entries(res.response[res.type]).map(
+              ([key, value]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] =
+                  key == "photo"
+                    ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
+                    : value),
+            );
+          else if (qstn.type === QuestionType.MCQGrid)
+            Object.entries(res.response[res.type]).map(
+              ([key, value]: [string, Choice]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+            );
+          else if (qstn.type === QuestionType.MultiTextInput)
+            Object.entries(res.response[res.type]).map(
+              ([key, value]) =>
+                (resObj[(qstnTitle + ":" + key).trim()] = value),
+            );
+          else
+            resObj[qstnTitle] = getFormattedResponse(
+              res.response[res.type],
+              qstn,
+              response.language,
+            );
+        } else {
+          const questionId = res.questionId;
+          let question = filteredSecondArray.find(
+            (q) => q.id === questionId,
+          ) as unknown as Question2;
+          let qstnTitle = markdownToPlainText(
+            question?.header || question?.label || "",
           );
-        else if (qstn.type === QuestionType.MCQGrid)
-          Object.entries(res.response[res.type]).map(
-            ([key, value]: [string, Choice]) =>
-              (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+          const responseObj = response.responses.find(
+            (answerObj) => answerObj.questionId === questionId,
           );
-        else if (qstn.type === QuestionType.MultiTextInput)
-          Object.entries(res.response[res.type]).map(
-            ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
-          );
-        else
-          resObj[qstnTitle] = getFormattedResponse(
-            res.response[res.type],
-            qstn,
-            response.language,
-          );
+          let responseValue: string;
+          if (responseObj) {
+            responseValue = getCellData(responseObj.response, question);
+          } else {
+            responseValue = "";
+          }
+          resObj[qstnTitle] = responseValue;
+        }
       });
       resObj["Respondent's Mobile Number"] = respondent;
-      resObj["tag"] = tag;
+      resObj["Tag"] = tag;
       const newRow = await sheet.addRow(resObj);
       const dateColumnIndex = sheet.headerValues.indexOf("Created At");
       await sheet.loadCells();
@@ -1402,3 +1617,52 @@ export async function sendResponseToWebhook(responseObj) {
   const orgId = responseObj.surveyTeamMap.team.orgId;
   await sendWebhook(endpoint, payload, orgId);
 }
+
+export function markdownToPlainText(markdown) {
+  return markdown
+    .replace(/[#_*~>]/g, "")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/!\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/`{1,3}.*?`{1,3}/g, "");
+}
+
+const getCellData = (response, question) => {
+  switch (question.metaType) {
+    case WaQuestions.LD:
+      return LDResponseMap[response] || "";
+    case WaQuestions.YN:
+      return YNResponseMap[response] || "";
+    case WaQuestions.Smiley:
+      return SmileyResponseMap[response] || "";
+    case WaQuestions.Rating:
+      return RatingScaleMap[response] || "";
+    case WaQuestions.Opinion:
+      return response || "";
+    case WaQuestions.RadioButtonsGroup:
+    case WaQuestions.Dropdown:
+      return (
+        question["data-source"]?.find((data) => data.id === response)?.title ||
+        ""
+      );
+    case WaQuestions.CheckboxGroup:
+      return (
+        (Array.isArray(response) &&
+          response
+            ?.map(
+              (i) =>
+                question["data-source"]?.find((data) => data.id === i)?.title,
+            )
+            ?.join(",")) ||
+        ""
+      );
+    case WaQuestions.DocumentPicker:
+    case WaQuestions.PhotoPicker:
+      return (
+        response && `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`
+      );
+    case WaQuestions.DatePicker:
+      return response ? dayjs(response).format("DD-MM-YYYY") : "";
+    default:
+      return response.toString() || "";
+  }
+};

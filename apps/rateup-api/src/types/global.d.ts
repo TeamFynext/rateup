@@ -85,6 +85,29 @@ declare global {
     reviewPageOptions?: any;
     reviewPagePlatform?: string;
   }
+  interface Question2 {
+    id: string;
+    type: QuestionType2;
+    required?: boolean;
+    label: string;
+    name?: string;
+    text?: string;
+    metaType?: WaQuestions;
+    header?: string;
+    googleReview?: GoogleReview;
+    "input-type"?: string;
+    "left-caption"?: string;
+    "right-caption"?: string;
+    "data-source"?: Array<{ title: string; id: string }>;
+    "on-click-action"?: {
+      name: string;
+      next?: {
+        type: string;
+        name: string;
+      };
+      payload: Record<string, unknown>;
+    };
+  }
 
   type ResponseSummary = {
     all: {

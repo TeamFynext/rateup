@@ -11,6 +11,7 @@ import {
   createResponse,
   deleteResponse,
   downloadExcelResponse,
+  downloadExcelResponseV2,
   exportContactResponseToContacts,
   generateResponse,
   getAllResponses,
@@ -39,6 +40,7 @@ import { log } from "../../utils/logger";
 import { updateInvoice } from "../survey/survey.service";
 import prisma from "../../utils/prisma";
 import { getSubscription } from "../subscription/subscription.service";
+import { getFlowFromDb } from "../whatsapp/flows/flow.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -131,17 +133,35 @@ export async function downloadExcelResponseHandler(
       teamIds,
       campaignParticipantIds.map((data) => data.contactId),
     );
-    const question = await getQuestionsBySurveyId(surveyId);
-    const [title, data] = await downloadExcelResponse(
-      surveyId,
-      allResponse,
-      question,
-      request.body.defaultLanguage,
-      request.body.visibleColumn,
-      request.body.tz,
-    );
-    reply.header("filename", `${title}.xlsx`);
-    reply.status(200).type("application/xlsx").send(data);
+    let question;
+    if (request.body.dbFlowId) {
+      let flow = await getFlowFromDb(request.body.dbFlowId);
+      question = flow?.json?.screens?.flatMap((screen) =>
+        screen?.layout?.children?.filter(
+          (child) => child?.type !== "Footer" && child.name,
+        ),
+      );
+      const [title, data] = await downloadExcelResponseV2(
+        allResponse,
+        question,
+        request.body.visibleColumn,
+        request.body.tz,
+      );
+      reply.header("filename", `${title}.xlsx`);
+      reply.status(200).type("application/xlsx").send(data);
+    } else {
+      question = await getQuestionsBySurveyId(surveyId);
+      const [title, data] = await downloadExcelResponse(
+        surveyId,
+        allResponse,
+        question,
+        request.body.defaultLanguage,
+        request.body.visibleColumn,
+        request.body.tz,
+      );
+      reply.header("filename", `${title}.xlsx`);
+      reply.status(200).type("application/xlsx").send(data);
+    }
   } catch (e) {
     log.error("Error downloading excel", e);
     reply.status(500).send(e);
