@@ -377,7 +377,7 @@ function BadgeorTextorPreview({
   }
 }
 
-function ActionMenu({
+export function ActionMenu({
   resId,
   resTeamId,
   open,

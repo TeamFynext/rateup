@@ -18,6 +18,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
 
+import useFlowStore, {
+  EditorType,
+} from "@/components/whatsapp/flow-v2/utils/store";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
@@ -37,6 +40,7 @@ interface IProps {
   setSelectedQ: (Q: Question) => void;
   setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
   surveyId?: string;
+  waFlowSave?: boolean;
 }
 
 const GoogleReviewEditor = ({
@@ -44,10 +48,13 @@ const GoogleReviewEditor = ({
   setSelectedQ,
   setActiveTab,
   surveyId,
+  waFlowSave = false,
 }: IProps) => {
   surveyId = surveyId || (useRouter().query.surveyId as string);
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const { data: survey } = useSurvey(surveyId);
+  const { updateComponentInScreen, currentElementId, setDetailActiveEditor } =
+    useFlowStore();
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
@@ -70,6 +77,7 @@ const GoogleReviewEditor = ({
     selectedQ && setSelectedQ({ ...selectedQ, googleReview });
   };
   const { translations } = useTranslations();
+  const switchCondition = waFlowSave ? selectedQ?.metaType : selectedQ?.type;
   useEffect(() => {
     if (
       selectedQ?.hasOwnProperty("googleReview") &&
@@ -98,7 +106,7 @@ const GoogleReviewEditor = ({
   useEffect(() => {
     let googleReview = null;
     if (enableGoogleReview) {
-      switch (selectedQ?.type) {
+      switch (switchCondition) {
         case Q.Rating:
           googleReview = { minRating: minRating };
           break;
@@ -152,14 +160,15 @@ const GoogleReviewEditor = ({
       });
       return;
     }
-    notifications.show({
-      id: "load-data",
-      loading: true,
-      title: translations["Enabling google review"],
-      message: translations["Hold on, your changes are getting updated.."],
-      autoClose: false,
-      withCloseButton: false,
-    });
+    if (!waFlowSave)
+      notifications.show({
+        id: "load-data",
+        loading: true,
+        title: translations["Enabling google review"],
+        message: translations["Hold on, your changes are getting updated.."],
+        autoClose: false,
+        withCloseButton: false,
+      });
 
     try {
       setLinkUpdateStatus(true);
@@ -185,12 +194,18 @@ const GoogleReviewEditor = ({
   }, [linkUpdateStatus]);
 
   const finishQuestionOptionsUpdate = async () => {
-    await questionUpdateMutation.mutateAsync({
-      qId: selectedQ.id,
-      data: { googleReview: selectedQ?.googleReview },
-    });
-
-    setActiveTab(QuestionTabsEnum.Edit);
+    if (waFlowSave) {
+      updateComponentInScreen(currentElementId, {
+        googleReview: selectedQ?.googleReview,
+      });
+      setDetailActiveEditor(EditorType.ElementEditor);
+    } else {
+      await questionUpdateMutation.mutateAsync({
+        qId: selectedQ.id,
+        data: { googleReview: selectedQ?.googleReview },
+      });
+      setActiveTab(QuestionTabsEnum.Edit);
+    }
     setLinkUpdateStatus(false);
   };
 
@@ -216,13 +231,12 @@ const GoogleReviewEditor = ({
                 },
               }}
             />
-
             {enableGoogleReview && (
               <>
                 <Stack>
                   <Group>
                     {(() => {
-                      switch (selectedQ?.type) {
+                      switch (switchCondition) {
                         case Q.Smiley:
                           return (
                             <SimpleGrid cols={3} spacing={30}>

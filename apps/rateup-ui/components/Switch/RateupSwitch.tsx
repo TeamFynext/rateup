@@ -34,8 +34,14 @@ const RateupSwitch = ({
       position="top"
       withArrow
       refProp="rootRef"
+      disabled={isOn ? !onMessage : !offMessage}
     >
-      <Switch checked={isOn} onChange={handleToggle} {...rest} />
+      <Switch
+        checked={isOn}
+        onChange={handleToggle}
+        w={"fit-content"}
+        {...rest}
+      />
     </Tooltip>
   );
 };
