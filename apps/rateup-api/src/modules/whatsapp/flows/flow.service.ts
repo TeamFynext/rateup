@@ -236,7 +236,6 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
       flow.logicJumps,
     );
   }
-
   const response = await updateFlowJsonInWa(
     orgId,
     flow.flowId,
@@ -389,6 +388,7 @@ export async function cloneFlow(
       templateMessage,
       name: title,
       surveyId: newClonedSurvey.id,
+      version: previousFlow?.version ?? 1,
     },
   });
   return newClonedSurvey;

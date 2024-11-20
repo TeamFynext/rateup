@@ -947,7 +947,8 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
       conditions?: Array<{
         field?: string;
         operator?: string;
-        element?: string;
+        value?: string | number;
+        isNumber?: boolean;
       }>;
     }>) {
       if (typeof element.action === "string") {
@@ -970,11 +971,14 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
           let logicJumpObject = {
             type: "If",
             condition: element.conditions
-              ?.map(
-                (condition) =>
-                  `(\${form.${condition.field}} ${condition.operator} '${condition.element}')`,
-              )
-              .join("&&"),
+              ?.map((condition) => {
+                const value =
+                  (condition?.isNumber ?? false)
+                    ? condition?.value
+                    : `'${condition?.value}'`;
+                return `(\${form.${condition.field}} ${condition.operator} ${value})`;
+              })
+              .join(" && "),
             then: element.then
               .map((action) => {
                 let childIndex = screen.layout.children.findIndex(
@@ -983,7 +987,13 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
                 if (childIndex !== -1) {
                   let child = screen.layout.children[childIndex];
                   screen.layout.children.splice(childIndex, 1);
-                  let { id, metaType, enableNpsAnalytics, ...rest } = child;
+                  let {
+                    id,
+                    metaType,
+                    enableNpsAnalytics,
+                    googleReview,
+                    ...rest
+                  } = child;
                   return { ...rest };
                 }
                 return null;
