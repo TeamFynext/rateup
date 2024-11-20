@@ -18,6 +18,7 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { Updater, useImmer } from "use-immer";
+import { z } from "zod";
 
 import {
   LogicAction,
@@ -104,7 +105,47 @@ export const FlowLogicEditorV2 = () => {
   }, [dbFlow]);
 
   if (isPending || isError) return null;
+
+  // Define the condition schema
+  const conditionSchema = z.object({
+    field: z.string().min(1, "Field must not be empty"),
+    logic: z.string().optional(), // logic can be empty or undefined
+    value: z.union([
+      z.string().min(1, "Value must not be empty"),
+      z.number().min(1, "Value must not be empty"),
+    ]),
+    isNumber: z.boolean(),
+    operator: z.string().min(1, "Operator must not be empty"),
+  });
+
+  // Define the main schema for each element
+  const elementSchema = z.object({
+    else: z
+      .array(z.string())
+      .min(1, "'else' array must contain at least one object."),
+    then: z
+      .array(z.string())
+      .min(1, "'then' array must contain at least one object."),
+    type: z.string().min(1, "Type must not be empty"),
+    screenId: z.string().min(1, "ScreenId must not be empty"),
+    conditions: z
+      .array(conditionSchema)
+      .min(1, "'conditions' array must contain at least one object."),
+  });
+
+  // Define the array schema
+  const arraySchema = z.array(elementSchema);
+
   const handleSave = () => {
+    let { success, error } = arraySchema.safeParse(logicJumpsComponentLevel);
+    let message =
+      "Invalid input" === error?.errors[0]?.message
+        ? "All field must be filled"
+        : error?.errors[0]?.message;
+    if (!success) {
+      showErrorToast(message, "error-invalid-logic-jumps");
+    }
+
     const updatedLogicJumps = {
       ...((Object.fromEntries(
         Object.entries(dbFlow.logicJumps).filter(([k, _v]) => {

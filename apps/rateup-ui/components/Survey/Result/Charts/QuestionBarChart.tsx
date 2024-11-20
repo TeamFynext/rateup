@@ -14,7 +14,7 @@ import {
 import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { QuestionType } from "../../../../types/enums";
+import { QuestionType, QuestionType2 } from "../../../../types/enums";
 import { getContent } from "../../../../utils";
 import { ChoiceTypeQuestions } from "../../../../utils/constants";
 import { stringToColour } from "../../../../utils/essential";
@@ -22,6 +22,7 @@ import { getResponseArrayByQuestionType } from "../../../../utils/response";
 import Heading from "../../../styled/Heading/Heading";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import SurveySummaryNew from "../SurveySummaryNew";
+import WaSummary from "../WaSummary";
 
 interface QuestionBarChartProps {
   question: string;
@@ -238,16 +239,13 @@ export const QuestionBarChart2 = ({
       <Flex justify="space-between">
         <Flex gap={"xs"} w={"85%"}>
           <Text fw={800} c={"dark.3"}>
-            {" "}
             {no}.{" "}
           </Text>
           <Text fw={800} c={"dark.3"}>
             {getContent(question)}
           </Text>
         </Flex>
-        {questionType !== QuestionType.MCQGrid && (
-          <Badge variant="dot">{questionType}</Badge>
-        )}
+        <Badge variant="dot">{QuestionType2[questionType]}</Badge>
       </Flex>
       <Group align="center" justify="center">
         <Stack style={{ flex: 1 }} align="center">
@@ -262,17 +260,16 @@ export const QuestionBarChart2 = ({
               </Text>
             </Stack>
           </PaperLayout>
-          <SurveySummaryNew
+          <WaSummary
             response={data}
             questionType={questionType}
-            choices={choices}
             choiceCounts={choiceCounts}
           />
         </Stack>
         <Stack style={{ flex: 1 }} align="center">
           <Stack miw={300} align="center">
             <BarChart
-              width={500}
+              width={600}
               height={300}
               data={choiceCounts}
               margin={{

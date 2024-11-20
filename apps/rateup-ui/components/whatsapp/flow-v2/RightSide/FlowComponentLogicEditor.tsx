@@ -77,7 +77,7 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
       type,
       conditions:
         type === "If"
-          ? [{ field: "", operator: "", value: "", logic: "" }]
+          ? [{ field: "", operator: "", value: "", logic: "", isNumber: false }]
           : [],
       then: type === "If" ? [] : undefined,
       else: type === "If" ? [] : undefined,
@@ -95,6 +95,11 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
       updatedBlocks[blockIndex].conditions[conditionIndex].value = null;
     }
     updatedBlocks[blockIndex].conditions[conditionIndex][field] = value;
+    if (!isNaN(value)) {
+      updatedBlocks[blockIndex].conditions[conditionIndex].isNumber = true;
+    }
+    updatedBlocks[blockIndex].conditions[conditionIndex][field] = value;
+
     setBlocks(updatedBlocks);
   };
 
@@ -264,11 +269,15 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
                               value={condition.value}
                               type={q?.["input-type"] || "text"}
                               onChange={(e) => {
+                                let value =
+                                  q?.["input-type"] === "number"
+                                    ? Number(e.target.value)
+                                    : e.target.value;
                                 updateCondition(
                                   index,
                                   condIndex,
                                   "value",
-                                  e.target.value,
+                                  value,
                                 );
                               }}
                             />
@@ -385,9 +394,15 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
                       <MultiSelect
                         label="Add Then Component"
                         placeholder="Select component"
-                        data={componentsList.filter(
-                          (data) => !block.else?.includes(data.value),
-                        )}
+                        data={componentsList.filter((component) => {
+                          const isInElse = block.else?.includes(
+                            component.value,
+                          );
+                          const isInConditions = block.conditions?.some(
+                            (condition) => condition?.field === component.value,
+                          );
+                          return !isInElse && !isInConditions;
+                        })}
                         value={block.then}
                         onChange={(value) => addComponent(index, "then", value)}
                       />
@@ -398,9 +413,15 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
                       <MultiSelect
                         label="Add Else Component"
                         placeholder="Select component"
-                        data={componentsList.filter(
-                          (data) => !block.then?.includes(data.value),
-                        )}
+                        data={componentsList.filter((component) => {
+                          const isInElse = block.then?.includes(
+                            component.value,
+                          );
+                          const isInConditions = block.conditions?.some(
+                            (condition) => condition?.field === component.value,
+                          );
+                          return !isInElse && !isInConditions;
+                        })}
                         value={block.else}
                         onChange={(value) => addComponent(index, "else", value)}
                       />

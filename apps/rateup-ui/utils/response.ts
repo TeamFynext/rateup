@@ -16,12 +16,16 @@ import { TeamWiseResponses } from "../backend/surveys/response/response.api";
 import SelectedLanguageContext from "../context/SelectedLanguage";
 import {
   LDResponse,
+  LDResponse2,
   NPSWeightage,
   QuestionType,
   SmileyResponse,
+  SmileyResponse2,
+  WaQuestions,
   YNResponse,
 } from "../types/enums";
 import { decryptPrivateKey, decryptResponse } from "./encryption";
+import { RatingScaleMap } from "./whatsapp/enumMap";
 
 export function getResponse(q: any, response: any) {
   console.log("🚀 ~ getResponse ~ response:", response);
@@ -321,7 +325,79 @@ export function getResponseArrayByQuestionType(
     }
   }
 }
-
+export function getResponseArrayByQuestionTypeV2(
+  questionType: WaQuestions,
+): Array<{
+  value: string | number;
+  color: string;
+  Icon?: any;
+}> {
+  switch (questionType) {
+    case WaQuestions.Rating: {
+      return [
+        { value: 1, color: "#ff5c55" },
+        { value: 2, color: "#feb75c" },
+        { value: 3, color: "#fedc4e" },
+        { value: 4, color: "#a6e346" },
+        { value: 5, color: "#52ba66" },
+      ];
+    }
+    case WaQuestions.Opinion: {
+      return [
+        { value: 1, color: "#ff5c55" },
+        { value: 2, color: "#ff8580" },
+        { value: 3, color: "#FEB75C" },
+        { value: 4, color: "#FEC985" },
+        { value: 5, color: "#FEDC4E" },
+        { value: 6, color: "#FEE57A" },
+        { value: 7, color: "#BCEA74" },
+        { value: 8, color: "#A6E346" },
+        { value: 9, color: "#7DCB8C" },
+        { value: 10, color: "#52BA66" },
+      ];
+    }
+    case WaQuestions.Smiley: {
+      return [
+        {
+          value: SmileyResponse2.VerySad,
+          color: "#ff5c55",
+          Icon: IconMoodAngry,
+        },
+        { value: SmileyResponse2.Sad, color: "#feb75c", Icon: IconMoodSad },
+        {
+          value: SmileyResponse2.Neutral,
+          color: "#fedc4e",
+          Icon: IconMoodEmpty,
+        },
+        {
+          value: SmileyResponse2.Happy,
+          color: "#a6e346",
+          Icon: IconMoodHappy,
+        },
+        {
+          value: SmileyResponse2.VeryHappy,
+          color: "#52ba66",
+          Icon: IconMoodCrazyHappy,
+        },
+      ];
+    }
+    case WaQuestions.YN: {
+      return [
+        { value: YNResponse.No, color: "#ff5c55" },
+        { value: YNResponse.Yes, color: "#52ba66" },
+      ];
+    }
+    case WaQuestions.LD: {
+      return [
+        { value: LDResponse2.Dislike, color: "#ff5c55" },
+        { value: LDResponse2.Like, color: "#52ba66" },
+      ];
+    }
+    default: {
+      return null;
+    }
+  }
+}
 export function getfilteredResponseUsingLanguage(
   responses: SurveyResponse[],
   language: string,
