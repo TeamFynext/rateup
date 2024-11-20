@@ -21,6 +21,8 @@ import {
   rem,
   Select,
   SelectProps,
+  Switch,
+  SwitchProps,
   TagsInput,
   TagsInputProps,
   Text,
@@ -30,15 +32,20 @@ import {
   TextInputProps,
 } from "@mantine/core";
 import {
+  DateFormatter,
   DateInput,
   DateInputProps,
+  DatePickerInput,
+  DatePickerInputProps,
   DateTimePicker,
   DateTimePickerProps,
   TimeInput,
   TimeInputProps,
 } from "@mantine/dates";
 import { IconClock } from "@tabler/icons-react";
+import dayjs from "dayjs";
 
+import { LengthTracker } from "../LengthTracker";
 import classes from "./ContainedInput.module.css";
 
 export const ContainedTextField = React.forwardRef(function ContainedTextField(
@@ -61,6 +68,34 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
     />
   );
 });
+export const ContainedTextInputWithCounter = (props: TextInputProps) => {
+  return (
+    <TextInput
+      classNames={classes}
+      {...props}
+      rightSection={
+        props.max && (
+          <LengthTracker
+            length={
+              typeof props.value === "string" || Array.isArray(props.value)
+                ? props.value.length
+                : 0
+            }
+            maxValue={props.max as number}
+          />
+        )
+      }
+      styles={{
+        input: {
+          paddingRight: props.max ? 70 : 0,
+        },
+        section: {
+          width: props.max && "fit-content",
+        },
+      }}
+    />
+  );
+};
 
 export function ContainedTextArea(props: TextareaProps) {
   return (
@@ -93,6 +128,9 @@ export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
+export function ContainedSwitchInput(props: SwitchProps) {
+  return <Switch classNames={classes} {...props} />;
+}
 export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
   props: FileInputProps,
   ref: React.Ref<HTMLButtonElement>,
@@ -149,6 +187,31 @@ export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
 export function ContainedDateInput(props: DateInputProps) {
   return (
     <DateInput classNames={classes} getDayProps={getDayProps} {...props} />
+  );
+}
+const formatter: DateFormatter = ({ type, date, locale, format }) => {
+  if (!date) return null;
+
+  if (type === "multiple" && Array.isArray(date)) {
+    const dateCount = date.length;
+    if (dateCount === 1) {
+      return dayjs(date[0]).locale(locale).format(format);
+    }
+    return dateCount > 1 ? `${dateCount} dates selected` : "";
+  }
+
+  return Array.isArray(date)
+    ? `${date.length} dates selected`
+    : dayjs(date).locale(locale).format(format);
+};
+export function ContainedDatePickerInput(props: DatePickerInputProps) {
+  return (
+    <DatePickerInput
+      classNames={classes}
+      getDayProps={getDayProps}
+      valueFormatter={formatter}
+      {...props}
+    />
   );
 }
 

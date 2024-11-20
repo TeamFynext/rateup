@@ -243,7 +243,7 @@ export function FlowImagePreview({
         marginBottom: 0,
       }}
       src={`data:image/png;base64,${src}`}
-      w={width}
+      maw={width}
       h={height}
     />
   );

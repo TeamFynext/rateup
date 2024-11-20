@@ -1,5 +1,6 @@
 import { Flex, RangeSlider, Stack } from "@mantine/core";
 import { Column } from "@tanstack/react-table";
+
 import { QuestionType, SmileyResponse } from "../../../types/enums";
 import {
   ContainedMultiSelect,
@@ -26,7 +27,7 @@ export const Filter = ({
   let selectValue: any = ["LIKE", "DISLIKE"];
   if (responseType === QuestionType.Rating) {
     min = 1;
-    max = 4;
+    max = 5;
   }
   if (responseType === QuestionType.Smiley) {
     selectValue = Object.keys(SmileyResponse).map((key) => ({

@@ -7,6 +7,7 @@ import {
   Divider,
   Flex,
   Group,
+  HoverCard,
   Pagination,
   rem,
   ScrollArea,
@@ -57,6 +58,42 @@ type ExtendedHeader = Header<any, unknown> & {
     };
   };
 };
+const renderHeader = (header) => {
+  const headerText = flexRender(
+    header.column.columnDef.header,
+    header.getContext(),
+  );
+
+  if (String(headerText).length <= 50) {
+    return (
+      <Text miw={200} maw={200} fw={"bold"}>
+        {headerText}
+      </Text>
+    );
+  }
+
+  return (
+    <HoverCard
+      width={"fit-content"}
+      shadow="md"
+      withArrow
+      styles={{ dropdown: { maxWidth: 400 } }}
+      position="bottom-start"
+    >
+      <HoverCard.Target>
+        {/* <span className="truncated-header">{headerText}</span> */}
+        <Text miw={200} maw={200} lineClamp={1} fw={"bold"}>
+          {headerText}
+        </Text>
+      </HoverCard.Target>
+      <HoverCard.Dropdown>
+        <div style={{ wordWrap: "break-word", maxWidth: "100%" }}>
+          {headerText}
+        </div>
+      </HoverCard.Dropdown>
+    </HoverCard>
+  );
+};
 const TableLayout = ({
   table,
   enableFilter,
@@ -100,11 +137,12 @@ const TableLayout = ({
                                     header.column.getToggleSortingHandler(),
                                 }}
                               >
-                                <Flex justify="space-between" gap={"md"}>
-                                  {flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext(),
-                                  )}
+                                <Flex
+                                  justify="space-between"
+                                  gap={"md"}
+                                  w={"100%"}
+                                >
+                                  {renderHeader(header)}
                                   {header.column.getCanSort() && (
                                     <Center>
                                       {{

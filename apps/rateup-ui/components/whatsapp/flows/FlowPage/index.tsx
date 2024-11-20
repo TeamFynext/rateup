@@ -282,8 +282,6 @@ function FlowPage() {
                       encryptionpassword={""}
                       setEncryptionPassword={() => {}}
                       survey={survey}
-                      setSelectedLanguage={setSelectedLanguage}
-                      setFilterTags={setFilterTags}
                       flowId={flow.flowId}
                       translations={translations}
                     />

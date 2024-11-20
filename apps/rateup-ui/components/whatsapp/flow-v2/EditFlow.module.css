@@ -1,0 +1,89 @@
+.edit-flow-root-div {
+  height: 100%;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  overflow: hidden;
+}
+
+.edit-flow-root-div > div {
+  min-width: 200px;
+  height: 100%;
+  border-radius: 1rem;
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0px 1px 0px,
+    rgba(0, 0, 0, 0.11) 0px 0px 8px;
+  padding: 1rem;
+  background-color: light-dark(
+    var(--mantine-color-body),
+    var(--mantine-color-dark-6)
+  );
+}
+
+.edit-flow-tabs-root {
+  height: 100%;
+}
+
+.edit-flow-tabs-root :global(.mantine-Tabs-panel) {
+  height: 100%;
+}
+
+.preview-container {
+  flex: 7 1 0;
+}
+
+.questionTypeButton:hover {
+  border: 1px solid var(--tertiary-color);
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.editor-scroll-area-div > div > div {
+  display: block !important;
+}
+
+.html-editor-div :global(.mantine-RichTextEditor-root),
+.rich-text-editor {
+  width: 100%;
+}
+
+.text-input input {
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.text-input input:focus {
+  cursor: initial;
+}
+
+.text-input input:focus + :global(.mantine-TextInput-section) {
+  display: none;
+}
+
+/* Length Tracker Styles BEGIN */
+/* Displays a char count at right side of input */
+.lengthTrackerParent :global(.mantine-TextInput-section) {
+  min-width: 70px;
+}
+
+.lengthTrackerParent :global(.mantine-Textarea-section) {
+  min-width: 70px;
+}
+
+.lengthTrackerParent :global(.mantine-TextInput-input) {
+  padding-right: 70px;
+}
+
+.lengthTrackerParent :global(.mantine-Textarea-input) {
+  padding-right: 70px;
+}
+
+/* Length Tracker Styles END */
+
+.editableTextDisplay {
+  padding: 4px;
+  border: 0.5px solid transparent;
+}
+.editableTextDisplay:hover {
+  border-radius: 8px;
+  border-color: rgba(0, 0, 0, 0.2);
+}

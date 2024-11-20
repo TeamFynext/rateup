@@ -2,6 +2,7 @@ import MMImageCropModalStyles from "../components/Modal/ModalManagerModals/Image
 import {
   PageType,
   QuestionType,
+  QuestionType2,
   ShopifyEvents,
   WaFlowFormElementType as wft,
 } from "../types/enums";
@@ -35,6 +36,13 @@ export const WaNPSQuestions = [
   QuestionType.Opinion,
   QuestionType.CustomNPS,
 ];
+export const WaNPSQuestions2 = [
+  QuestionType2.Rating,
+  QuestionType2.Smiley,
+  QuestionType2.LD,
+  QuestionType2.YN,
+  QuestionType2.Opinion,
+];
 export const FlowNpsQ = [
   QuestionType.Rating,
   QuestionType.Smiley,
@@ -42,7 +50,13 @@ export const FlowNpsQ = [
   QuestionType.YN,
   QuestionType.Opinion,
 ];
-
+export const FlowNpsQ2 = [
+  QuestionType2.Rating,
+  QuestionType2.Smiley,
+  QuestionType2.LD,
+  QuestionType2.YN,
+  QuestionType2.Opinion,
+];
 export const ChoiceQuestions = [
   QuestionType.MCQ,
   QuestionType.MSQ,
@@ -85,6 +99,11 @@ export const FlowChoiceQuestions = [
   QuestionType.DDSS,
 ];
 
+export const FlowChoiceQuestions2 = [
+  QuestionType2.RadioButtonsGroup,
+  QuestionType2.CheckboxGroup,
+  QuestionType2.Dropdown,
+];
 const FlowInputQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
@@ -94,7 +113,15 @@ const FlowInputQuestions = [
   QuestionType.PhotoPicker,
   QuestionType.DocumentPicker,
 ];
-
+const FlowInputQuestions2 = [
+  QuestionType2.TextInput,
+  QuestionType2.TextArea,
+  QuestionType2.DatePicker,
+  QuestionType2.OptIn,
+  // QuestionType2.WaTimeSlot,
+  QuestionType2.PhotoPicker,
+  QuestionType2.DocumentPicker,
+];
 export const BasicPages = [
   PageType.Welcome,
   PageType.ThankYou,
@@ -130,6 +157,15 @@ const flowNonInputElements = [
   // not currectly working
   // wft.embeddedLink,
 ];
+export const flowNonInputElements2 = [
+  QuestionType2.TextHeading,
+  QuestionType2.TextSubheading,
+  QuestionType2.TextBody,
+  QuestionType2.TextCaption,
+  // QuestionType2.RichText,
+  QuestionType2.Image,
+  // QuestionType2.EmbeddedLink,
+];
 export const FlowQuestionTypes = [
   // also includes non-input elements like text & links
   { title: "Contact Questions", questionTypes: WaContactQuestions },
@@ -139,6 +175,13 @@ export const FlowQuestionTypes = [
   { title: "Non-Input Elements", questionTypes: flowNonInputElements },
 ];
 
+export const FlowQuestionTypes2 = [
+  // also includes non-input elements like text & links
+  { title: "NPS Questions", questionTypes: FlowNpsQ2 },
+  { title: "Choice Questions", questionTypes: FlowChoiceQuestions2 },
+  { title: "Input Questions", questionTypes: FlowInputQuestions2 },
+  { title: "Non-Input Elements", questionTypes: flowNonInputElements2 },
+];
 export const ChoiceTypeQuestions = [
   QuestionType.MCQ,
   QuestionType.MSQ,

@@ -8,7 +8,7 @@ function FlowCardsList({
 }: Readonly<{ flows: DbFlow[]; teamsData }>) {
   return (
     <Box className="cards-grid-global-class">
-      {flows?.map(({ dbFlowId, name, status, createdAt }) => {
+      {flows?.map(({ dbFlowId, name, status, createdAt, version }) => {
         return (
           <FlowCard
             dbFlowId={dbFlowId}
@@ -17,6 +17,7 @@ function FlowCardsList({
             createdAt={createdAt}
             key={dbFlowId}
             teamsData={teamsData}
+            version={version}
           />
         );
       })}

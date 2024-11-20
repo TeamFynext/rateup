@@ -24,6 +24,7 @@ import { useGetLargeTextResponseSummaryByAI } from "@/backend/surveys/response/r
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { FormElement } from "@/components/whatsapp/flow-v2/utils/store";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import SurveyContext from "@/context/SurveyContext";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -37,8 +38,9 @@ import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/
 
 interface LargeTextResponseSummaryProp {
   surveyId: string;
-  questions: Question[];
+  questions: Question[] | FormElement[];
   subscription: Subscription;
+  version?: number;
 }
 
 enum ResponseSummaryType {
@@ -50,6 +52,7 @@ const LargeTextResponseSummary = ({
   surveyId,
   questions,
   subscription,
+  version = 1,
 }: LargeTextResponseSummaryProp) => {
   const getSummary = useGetLargeTextResponseSummaryByAI(surveyId);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -193,10 +196,12 @@ const LargeTextResponseSummary = ({
               <Flex gap={"xs"}>
                 <Text fw={800}>{index + 1}.</Text>
                 <Text fw={800}>
-                  {getReplacedTitleFromVariable({
-                    title: question?.title[defaultLanguage],
-                    surveyId,
-                  })}
+                  {version === 1
+                    ? getReplacedTitleFromVariable({
+                        title: question?.title?.[defaultLanguage],
+                        surveyId,
+                      })
+                    : question?.label}
                 </Text>
                 <Tooltip label={translations["Generate Summary by AI"]}>
                   <ActionIcon
