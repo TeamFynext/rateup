@@ -8,6 +8,7 @@ import {
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
+  WaQuestions,
   YNResponse,
 } from "../../../types/enums";
 import { CreateSurveyInput } from "../../survey/survey.schema";
@@ -155,18 +156,27 @@ export function generateQuestionResponsesFromFlowResponse({
         flow.json as any,
       );
 
-      const questionResponse: QuestionResponse = {
-        questionId: flowMap[elementName].questionId,
-        type: flowMap[elementName].type,
-        response: {
-          [flowMap[elementName].type]: parseFlowResponse({
-            elementName,
-            flowMap,
-            flowJson: flow.json as any,
-            response: value,
-          }),
-        },
-      };
+      let questionResponse;
+
+      if (flow.version === 1) {
+        questionResponse = {
+          questionId: flowMap[elementName].questionId,
+          type: flowMap[elementName].type,
+          response: {
+            [flowMap[elementName].type]: parseFlowResponse({
+              elementName,
+              flowMap,
+              flowJson: flow.json as any,
+              response: value,
+            }),
+          },
+        };
+      } else {
+        questionResponse = {
+          questionId: payloadName,
+          response: value,
+        };
+      }
 
       responses.push(questionResponse);
     } catch (e) {
@@ -249,6 +259,43 @@ export function parseFlowResponse({
     }
     default:
       log.error(`Unhandled question type ${qType}`);
+      return response;
+  }
+}
+export function parseFlowResponseV2(metaType, response, dataSource) {
+  log.trace("Parsing response for element %s\nresponse => %o", response);
+
+  if (!response) {
+    log.fatal("Unhandled empty response found for element %s", metaType);
+  }
+  switch (metaType) {
+    case WaQuestions.TextInput:
+    case WaQuestions.TextArea:
+    case WaQuestions.PhotoPicker:
+    case WaQuestions.DocumentPicker:
+      return response;
+    case WaQuestions.DatePicker:
+      return new Date(parseInt(response));
+    case WaQuestions.YN:
+    case WaQuestions.LD:
+    case WaQuestions.Smiley:
+    case WaQuestions.Rating:
+    case WaQuestions.Opinion:
+    case WaQuestions.RadioButtonsGroup:
+    case WaQuestions.Dropdown: {
+      const choice = dataSource.find((c) => c.id === response);
+      if (!choice) {
+        log.error("Choice not found for response %s", response);
+        return undefined;
+      }
+      return choice.title;
+    }
+    case WaQuestions.CheckboxGroup: {
+      const choices = dataSource.filter((c) => response.includes(c.id));
+      return choices.map((c) => c.title);
+    }
+    default:
+      log.error(`Unhandled question type ${metaType}`);
       return response;
   }
 }
@@ -803,4 +850,179 @@ export function parseResponseFromCurrentScreenResponse(
   }
   log.trace("responses", responses);
   return responses;
+}
+export function parseResponseFromCurrentScreenResponseV2(
+  screens,
+  response_data,
+) {
+  const responses = Object.keys(response_data).map((questionId) => {
+    const question = screens
+      .flatMap((screen) => screen.layout.children)
+      .find((child) => child.id === questionId);
+
+    return {
+      questionId: question.id,
+      response: response_data[questionId],
+    };
+  });
+  log.trace("responses", responses);
+  return responses;
+}
+
+export function sanitizeScreenData(data: any) {
+  data.screens.forEach((screen: any) => {
+    screen.layout.children.forEach((child: any) => {
+      delete child.id;
+      delete child.metaType;
+      delete child.enableNpsAnalytics;
+      delete child.googleReview;
+      if (child.url) {
+        child["on-click-action"] = {
+          name: "open_url",
+          url: child.url,
+        };
+        delete child.url;
+      }
+    });
+  });
+  return data;
+}
+export function removeEmptyStrings(obj) {
+  for (const key in obj) {
+    if (obj[key] && typeof obj[key] === "object") {
+      removeEmptyStrings(obj[key]);
+    } else if ((obj[key] === "" || !obj[key]) && key !== "visible") {
+      delete obj[key];
+    }
+  }
+}
+export function convertHeaderToNewQuestion(flow) {
+  let transformedFlow = JSON.parse(JSON.stringify(flow));
+  transformedFlow.screens.forEach((screen) => {
+    screen.layout.children = screen.layout.children.reduce((acc, child) => {
+      if (child.header) {
+        acc.push({
+          text: child.header,
+          type: "TextBody",
+          markdown: true,
+        });
+        delete child.header;
+      }
+      acc.push(child);
+      return acc;
+    }, []);
+  });
+  return transformedFlow;
+}
+export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
+  // Clone the flow object to avoid mutating the original
+  const routing_model = transformedFlow.screens.reduce(
+    (acc, screen, index, array) => {
+      acc[screen.id] = array.slice(index + 1).map((s) => s.id);
+      return acc;
+    },
+    {},
+  );
+
+  let flag = false;
+  Object.entries(logicJump).forEach(([key, value]) => {
+    let screen = transformedFlow?.screens?.find((screen) => screen.id === key);
+    const currentScreenPayload = screen?.layout?.children?.reduce(
+      (prev, fe) => {
+        if (fe.name) {
+          return {
+            ...prev,
+            [fe.name]: `\${form.${fe.name}}`,
+          };
+        }
+        return prev;
+      },
+      {},
+    );
+
+    for (const element of value as Array<{
+      action?: string;
+      else?: string[];
+      then?: string[];
+      conditions?: Array<{
+        field?: string;
+        operator?: string;
+        value?: string | number;
+        isNumber?: boolean;
+      }>;
+    }>) {
+      if (typeof element.action === "string") {
+        let footer = screen.layout.children.find(
+          (child) => child.type === "Footer",
+        );
+        footer["on-click-action"] = {
+          name: "data_exchange",
+          payload: currentScreenPayload,
+        };
+        flag = true;
+      } else {
+        // Find the index of the field in the screen's children
+
+        let fieldIndex = screen.layout.children.findIndex(
+          (child) => child.id === element.conditions[0].field,
+        );
+        if (fieldIndex !== -1) {
+          // Create the logic jump object
+          let logicJumpObject = {
+            type: "If",
+            condition: element.conditions
+              ?.map((condition) => {
+                const value =
+                  (condition?.isNumber ?? false)
+                    ? condition?.value
+                    : `'${condition?.value}'`;
+                return `(\${form.${condition.field}} ${condition.operator} ${value})`;
+              })
+              .join(" && "),
+            then: element.then
+              .map((action) => {
+                let childIndex = screen.layout.children.findIndex(
+                  (child) => child.id === action,
+                );
+                if (childIndex !== -1) {
+                  let child = screen.layout.children[childIndex];
+                  screen.layout.children.splice(childIndex, 1);
+                  let {
+                    id,
+                    metaType,
+                    enableNpsAnalytics,
+                    googleReview,
+                    ...rest
+                  } = child;
+                  return { ...rest };
+                }
+                return null;
+              })
+              .filter(Boolean),
+            else: element.else
+              .map((action) => {
+                let childIndex = screen.layout.children.findIndex(
+                  (child) => child.id === action,
+                );
+                if (childIndex !== -1) {
+                  let child = screen.layout.children[childIndex];
+                  screen.layout.children.splice(childIndex, 1); // Remove the child from the main array
+                  let { id, metaType, enableNpsAnalytics, ...rest } = child;
+                  return { ...rest };
+                }
+                return null;
+              })
+              .filter(Boolean),
+          };
+
+          // Insert the logic jump object into the screen's children
+          screen.layout.children.splice(fieldIndex + 1, 0, logicJumpObject);
+        }
+      }
+    }
+  });
+  if (flag) {
+    transformedFlow["routing_model"] = routing_model;
+    transformedFlow["data_api_version"] = "3.0";
+  }
 }
