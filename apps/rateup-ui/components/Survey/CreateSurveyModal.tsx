@@ -36,7 +36,16 @@ interface FormValues {
   type: string;
   getLocation: boolean;
 }
-let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
+let Languages = new Set([
+  "English",
+  "Malayalam",
+  "German",
+  "Hindi",
+  "Kannada",
+  "French",
+  "Arabic",
+  "Tamil",
+]);
 const defaultLanguage = "English";
 
 interface CreateSurveyModalProps {
