@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import { useRouter } from "next/router";
+
 import {
   Box,
   FocusTrap,
@@ -8,15 +9,16 @@ import {
   Stack,
   useMantineTheme,
 } from "@mantine/core";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
+import { animate, AnimatePresence, motion, useAnimate } from "framer-motion";
+
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
 import classes from "../TakeSurvey.module.css";
-import { useRouter } from "next/router";
-import { animate, AnimatePresence, motion, useAnimate } from "framer-motion";
-import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
-import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -97,7 +99,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   if (selectedFeature?.other?.isEnabled) {
     data.push(selectedFeature?.other?.title);
   } else {
-    data.filter((op) => op !== selectedFeature?.other?.title);
+    data?.filter((op) => op !== selectedFeature?.other?.title);
   }
 
   return (
