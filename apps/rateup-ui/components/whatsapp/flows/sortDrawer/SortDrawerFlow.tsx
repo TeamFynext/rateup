@@ -9,6 +9,7 @@ import useTranslations from "@/dictionaries/useTranslation";
 
 import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
 import FormModalLayout from "../../../Modal/FormModalLayout";
+import useFlowStore from "../../flow-v2/utils/store";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext";
 
 interface Idata {
@@ -19,11 +20,18 @@ interface ISortDrawerProps {
   opened: boolean;
   close: () => void;
   data: Idata[];
+  v?: number;
 }
 
-const SortDrawerFlow = ({ opened, close, data = [] }: ISortDrawerProps) => {
+const SortDrawerFlow = ({
+  opened,
+  close,
+  data = [],
+  v = 1,
+}: ISortDrawerProps) => {
   const [state, handlers] = useListState(data);
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
+  const { screens, addScreens } = useFlowStore();
 
   useEffect(() => {
     handlers.setState(data);
@@ -52,14 +60,24 @@ const SortDrawerFlow = ({ opened, close, data = [] }: ISortDrawerProps) => {
     </Draggable>
   ));
   const handleSortOrder = () => {
-    const sortedScreens = flowJson?.screens?.toSorted((a, b) => {
-      const indexA = state.findIndex((item) => item.id === a.id);
-      const indexB = state.findIndex((item) => item.id === b.id);
-      return indexA - indexB;
-    });
-    updateFlowJson((draft) => {
-      draft.screens = sortedScreens;
-    });
+    if (v === 2) {
+      const sortedScreens = screens?.toSorted((a, b) => {
+        const indexA = state.findIndex((item) => item.id === a.id);
+        const indexB = state.findIndex((item) => item.id === b.id);
+        return indexA - indexB;
+      });
+      addScreens(sortedScreens);
+    } else {
+      const sortedScreens = flowJson?.screens?.toSorted((a, b) => {
+        const indexA = state.findIndex((item) => item.id === a.id);
+        const indexB = state.findIndex((item) => item.id === b.id);
+        return indexA - indexB;
+      });
+      updateFlowJson((draft) => {
+        draft.screens = sortedScreens;
+      });
+    }
+
     close();
   };
   const { translations } = useTranslations();

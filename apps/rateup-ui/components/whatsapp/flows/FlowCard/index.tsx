@@ -37,6 +37,7 @@ interface FlowCardProps {
   dbFlowId: string;
   createdAt: Date;
   teamsData?: any;
+  version: number;
 }
 function FlowCard({
   name,
@@ -44,6 +45,7 @@ function FlowCard({
   dbFlowId,
   createdAt,
   teamsData,
+  version,
 }: Readonly<FlowCardProps>) {
   const router = useRouter();
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
@@ -96,7 +98,7 @@ function FlowCard({
       layoutAnimation
       onClick={() =>
         router.push(
-          `/dashboard/whatsapp/flows/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,
+          `/dashboard/whatsapp/flows/v${version}/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,
         )
       }
     >

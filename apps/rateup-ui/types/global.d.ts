@@ -84,6 +84,7 @@ declare global {
     sections?: Zod.RecordType<string, WaSectionsType>; // only for whatsapp surveys
     label?: Zod.RecordType<string, string>; // only for whatsapp-flow surveys
     id: string;
+    metaType?: WaQuestions;
     googleReview?: GoogleReview;
     ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
@@ -753,6 +754,7 @@ declare global {
     startMessageConfig: WaFlowStartMessageConfig;
     pendingSave: boolean;
     anonymous: boolean;
+    version: number;
   };
 
   type LoyaltyCampaign = {
@@ -844,9 +846,9 @@ export type ReviewSuggestion = {
 };
 
 export type WaFlowJson = {
-  version: string;
+  version?: string;
   screens: Array<WaFlowScreen>;
-  routing_model: {
+  routing_model?: {
     [screenId: string]: Array<string>;
   };
   data_api_version?: string;

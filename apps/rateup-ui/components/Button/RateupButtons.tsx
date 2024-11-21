@@ -257,6 +257,7 @@ type RateupFileUploadButtonProps = {
   accept?: string;
   error?: string;
   style?: MantineStyleProp;
+  size?: "xs" | "sm" | "md" | "lg";
 };
 export const RateupFileUploadButton = ({
   resetRef,
@@ -269,6 +270,7 @@ export const RateupFileUploadButton = ({
   clearFile,
   error,
   style,
+  size = "sm",
 }: RateupFileUploadButtonProps) => {
   return (
     <Group gap={4} style={style}>
@@ -302,6 +304,7 @@ export const RateupFileUploadButton = ({
             rightSection={<IconUpload size={18} />}
             radius={"md"}
             color={error && "red"}
+            size={size}
             style={{
               flexGrow: 1,
             }}
@@ -317,6 +320,7 @@ export const RateupFileUploadButton = ({
         color="red"
         radius={"md"}
         onClick={clearFile}
+        size={size}
         {...resetButton}
       >
         reset

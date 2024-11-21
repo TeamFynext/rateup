@@ -79,7 +79,6 @@ const Responses = ({
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
-  const [verifyEmail, setVerifyEmail] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -179,10 +178,6 @@ const Responses = ({
   ]);
 
   useEffect(() => {
-    setVerifyEmail("");
-  }, [opened]);
-
-  useEffect(() => {
     selectedResponseId && responseTeamId && openTicketModal();
   }, [selectedResponseId, responseTeamId]);
 
@@ -190,7 +185,7 @@ const Responses = ({
     !createTicketOpened && setSelectedResponseId("");
   }, [createTicketOpened]);
 
-  const confirmDelete = () => {
+  const confirmDelete = (verifyEmail: string) => {
     if (user?.email === verifyEmail) {
       notifications.show({
         id: "load-data",
@@ -451,36 +446,12 @@ const Responses = ({
             data={handleCampaignFlowFilter(filteredResponses)}
             columns={columns}
           />
-          <FormModalLayout
+          <DeleteModal
+            confirmDelete={confirmDelete}
+            translations={translations}
             opened={opened}
-            onClose={close}
-            title={translations["Delete Response"]}
-            centered
-            buttonTitle={translations["Delete"]}
-            includeCancelButton
-            onSubmit={confirmDelete}
-          >
-            <Stack py={"sm"}>
-              <Text>
-                {translations["To proceed further, verify your email id."]}
-              </Text>
-              <ContainedTextField
-                withAsterisk
-                label={translations["Verify email"]}
-                placeholder={translations["Enter your login email"]}
-                required
-                value={verifyEmail}
-                onChange={(e) => setVerifyEmail(e.target.value)}
-              />
-              <Text c="red">
-                {
-                  translations[
-                    "Once deleted, response entry data will be lost."
-                  ]
-                }
-              </Text>
-            </Stack>
-          </FormModalLayout>
+            close={close}
+          />
         </Box>
       ) : (
         <NothingFound text={translations["No responses yet"]} />
@@ -490,3 +461,35 @@ const Responses = ({
 };
 
 export default Responses;
+const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
+  const [verifyEmail, setVerifyEmail] = useState("");
+  return (
+    <FormModalLayout
+      opened={opened}
+      onClose={close}
+      title={translations["Delete Response"]}
+      centered
+      buttonTitle={translations["Delete"]}
+      includeCancelButton
+      onSubmit={() => {
+        confirmDelete(verifyEmail);
+        setVerifyEmail("");
+      }}
+    >
+      <Stack py={"sm"}>
+        <Text>{translations["To proceed further, verify your email id."]}</Text>
+        <ContainedTextField
+          withAsterisk
+          label={translations["Verify email"]}
+          placeholder={translations["Enter your login email"]}
+          required
+          value={verifyEmail}
+          onChange={(e) => setVerifyEmail(e.target.value)}
+        />
+        <Text c="red">
+          {translations["Once deleted, response entry data will be lost."]}
+        </Text>
+      </Stack>
+    </FormModalLayout>
+  );
+};

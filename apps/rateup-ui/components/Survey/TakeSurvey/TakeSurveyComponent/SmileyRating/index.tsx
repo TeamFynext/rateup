@@ -143,6 +143,11 @@ const SmileyRating = ({ updateResponse, response, features }) => {
           nextFn?.(updateStringResponse(value));
         }
       }}
+      styles={{
+        symbolBody: {
+          paddingRight: 10,
+        },
+      }}
     />
   );
 };

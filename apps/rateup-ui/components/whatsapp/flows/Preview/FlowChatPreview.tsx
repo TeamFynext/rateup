@@ -1,22 +1,35 @@
-import { useMantineTheme, Title } from "@mantine/core";
-import { WaFlowScreen } from "../../../../types/global";
-import {
-  FlowPreviewContainer,
-  FlowFormElementPreview,
-} from "./FlowPreviewComponents";
+import { Title, useMantineTheme } from "@mantine/core";
+
+import { WaFlowFormElement, WaFlowScreen } from "../../../../types/global";
 import {
   getFlowFooterElementsFromScreen,
   getFlowFormElementsFromScreen,
 } from "../../../../utils/whatsapp/flow.utils";
+import {
+  FlowFormElementPreview,
+  FlowPreviewContainer,
+} from "./FlowPreviewComponents";
 
 interface FlowChatPreviewProps {
   currentScreen: WaFlowScreen;
+  version: number;
 }
-export const FlowChatPreview = ({ currentScreen }: FlowChatPreviewProps) => {
+export const FlowChatPreview = ({
+  currentScreen,
+  version,
+}: FlowChatPreviewProps) => {
   const theme = useMantineTheme();
 
-  const elementsInScreen = getFlowFormElementsFromScreen(currentScreen) ?? [];
-  const footerElement = getFlowFooterElementsFromScreen(currentScreen)?.[0];
+  const elementsInScreen =
+    (getFlowFormElementsFromScreen(
+      currentScreen,
+      false,
+      version,
+    ) as WaFlowFormElement[]) ?? [];
+  const footerElement = getFlowFooterElementsFromScreen(
+    currentScreen,
+    version,
+  )?.[0] as { label: string };
 
   return (
     <>

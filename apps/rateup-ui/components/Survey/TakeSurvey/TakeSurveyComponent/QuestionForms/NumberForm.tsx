@@ -19,7 +19,6 @@ export function NumberForm() {
     <FormPaperLayout>
       <NumberInput
         size="sm"
-        placeholder={translations["Enter number input"]}
         value={parseInt(response) === 0 ? 0 : parseInt(response) || null}
         onChange={(value) => updateResponse(value)}
         variant="unstyled"
