@@ -1,14 +1,14 @@
 import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
-  useUpdateFreePlanSubscription,
   useUpdateGoogleReviewQuestions,
+  useUpdateThemeTitleSt,
 } from "@/backend/updations/update.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 function UpdateAllThemes() {
   const updateGoogleReviewQuestionsMutation = useUpdateGoogleReviewQuestions();
-  const updateFreePlanSubscription = useUpdateFreePlanSubscription();
+  const updateThemest = useUpdateThemeTitleSt();
   const { translations } = useTranslations();
   const isDev =
     process.env.NEXT_PUBLIC_FRONTEND_URL === "https://dev.rateup.app";
@@ -36,27 +36,20 @@ function UpdateAllThemes() {
         </Button>
       </Stack>
 
-      {isDev && (
-        <Stack mt="xl">
-          <Title order={2}>
-            {translations["Update Free plan susbcription feature"]}
-          </Title>
-          <Text>
-            {translations["Update free plan features since it is missing"]}
-          </Text>
+      <Stack mt="xl">
+        <Title order={2}>Update Web survey Theme title structure</Title>
 
-          <Button
-            ml="md"
-            style={{ alignSelf: "flex-start" }}
-            onClick={() => {
-              updateFreePlanSubscription.mutate();
-            }}
-            loading={updateFreePlanSubscription.isPending}
-          >
-            {translations["Update"]}
-          </Button>
-        </Stack>
-      )}
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateThemest.mutate();
+          }}
+          loading={updateThemest.isPending}
+        >
+          {translations["Update"]}
+        </Button>
+      </Stack>
     </Stack>
   );
 }

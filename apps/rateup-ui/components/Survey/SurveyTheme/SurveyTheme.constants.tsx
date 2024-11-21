@@ -114,16 +114,16 @@ const commonSupportedPageEditors = [
     value: "background-styles",
     label: "Background",
   },
+];
+
+const surveyPageEditors = [
+  ...commonSupportedPageEditors,
   {
     id: "title-styles-comp",
     Component: HeaderStyles,
     value: "title-styles",
     label: "Title",
   },
-];
-
-const surveyPageEditors = [
-  ...commonSupportedPageEditors,
   {
     id: "button-styles-comp",
     Component: ButtonStyles,
@@ -147,12 +147,6 @@ const surveyPageEditors = [
 const welcomePageEditors = [
   ...commonSupportedPageEditors,
   {
-    id: "desc-styles-comp",
-    Component: DescStyles,
-    value: "desc-styles",
-    label: "Subtitle",
-  },
-  {
     id: "button-styles-comp",
     Component: ButtonStyles,
     value: "button-styles",
@@ -160,24 +154,10 @@ const welcomePageEditors = [
   },
 ];
 
-const thankyouPageEditors = [
-  ...commonSupportedPageEditors,
-  {
-    id: "desc-styles-comp",
-    Component: DescStyles,
-    value: "desc-styles",
-    label: "Subtitle",
-  },
-];
+const thankyouPageEditors = [...commonSupportedPageEditors];
 
 const languagePageEditors = [
   ...commonSupportedPageEditors,
-  {
-    id: "desc-styles-comp",
-    Component: DescStyles,
-    value: "desc-styles",
-    label: "Subtitle",
-  },
   {
     id: "button-styles-comp",
     Component: ButtonStyles,

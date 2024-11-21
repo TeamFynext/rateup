@@ -27,14 +27,12 @@ export const getServerSideProps = async (context) => {
     } = await getPublicSurvey(shortId);
 
     const defaultTitleSubtitleTexts = {
-      titleText: "Thank you",
-      subtitleText: "Thank you for taking the survey",
+      titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
     };
 
-    const { titleText, subtitleText } =
-      questions?.find(
-        (questionObj) => questionObj.type === PageType.ThankYou,
-      ) || defaultTitleSubtitleTexts;
+    const texts = questions?.find(
+      (questionObj) => questionObj.type === PageType.ThankYou,
+    );
 
     return {
       props: {
@@ -50,8 +48,8 @@ export const getServerSideProps = async (context) => {
           error,
           price,
         },
-        titleText,
-        subtitleText,
+        titleText: texts?.titleText || defaultTitleSubtitleTexts.titleText,
+        subtitleText: texts?.subtitleText || null,
       },
     };
   } catch (error) {
