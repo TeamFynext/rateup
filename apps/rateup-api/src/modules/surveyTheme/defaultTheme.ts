@@ -67,8 +67,9 @@ export const defaultThemeOld = {
     bg: {
       ...background,
     },
-    title: { ...title, title: "Welcome" },
-    subtitle: { ...subtitle, subtitle: "Welcome to the survey" },
+    title: {
+      title: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
+    },
     button: {
       ...button,
       label: "Start Survey",
@@ -90,8 +91,9 @@ export const defaultThemeOld = {
     bg: {
       ...background,
     },
-    title: { ...title, title: "Thank you" },
-    subtitle: { ...subtitle, subtitle: "Thank you for taking the survey" },
+    title: {
+      title: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
+    },
     confettiEnabled: false,
   },
   languageTheme: {
@@ -99,20 +101,7 @@ export const defaultThemeOld = {
       ...background,
     },
     title: {
-      title: "Select a Language",
-      styles: {
-        fontWeight: "300",
-        fontSize: 34,
-        textAlign: "center",
-      },
-    },
-    subtitle: {
-      subtitle: "Let's Begin!",
-      styles: {
-        fontWeight: "600",
-        fontSize: 20,
-        textAlign: "center",
-      },
+      title: `<h3 style="text-align: center">Select a Language</h3>`,
     },
     button: { ...button, label: "Start Survey" },
     input,

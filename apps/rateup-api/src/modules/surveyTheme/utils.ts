@@ -128,20 +128,12 @@ export const verifyAndConvertSurveyThemeObj = (surveyTheme) => {
         useSurveyBackground: true,
       },
       title: {
-        title: "Select a Language",
-        styles: {
-          fontWeight: "300",
-          fontSize: 34,
-          textAlign: "center",
-        },
-      },
-      subtitle: {
-        subtitle: "Let's Begin!",
-        styles: {
-          fontWeight: "600",
-          fontSize: 20,
-          textAlign: "center",
-        },
+        title: `<h3 style="text-align: center">Select a Language</h3>`,
+        // styles: {
+        //   fontWeight: "300",
+        //   fontSize: 34,
+        //   textAlign: "center",
+        // },
       },
       input: {
         primaryColor: "#1C518E",

@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { updateGoogleReviewQuestionsInDB } from "./migrationFiles/update-google-review-questions";
 import { log } from "../../utils/logger";
-import { updateFreePlanSubscriptionFeatures } from "./migrationFiles/update-free-plan-features";
+import { updateWebSurveyPagesThemeTitle } from "./migrationFiles/update-theme-title";
 
 export async function updateGoogleReviewQuestions(
   request: FastifyRequest,
@@ -21,14 +21,13 @@ export async function updateGoogleReviewQuestions(
   }
 }
 
-//update free plan subscription features in dev since it is missing
-export async function updateFreePlanSubscriptionFeaturesHandler(
+export async function updateWebSurveyThemePageTitleHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const res = await updateFreePlanSubscriptionFeatures();
-    reply.code(200).send(res);
+    await updateWebSurveyPagesThemeTitle();
+    reply.code(200).send("success");
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

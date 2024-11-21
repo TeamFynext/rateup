@@ -287,8 +287,7 @@ export function getPageQuestions(languages) {
       required: true,
       enableNpsAnalytics: false,
       ...getTitleAndDescriptionObjs(languages, PageType.Language),
-      titleText: "Select a Language",
-      subtitleText: "Let's Begin!",
+      titleText: `<h3 style="text-align: center">Select a Language</h3>`,
       startButtonText: "Start Survey",
     });
   }
@@ -399,24 +398,23 @@ export const getInitialSurveyQuestions = (languages) => {
   const arr = [];
   arr.push(
     getPageTypeQuestionObj(languages, PageType.Welcome, {
+      // titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
       titleText: "Welcome",
-      subtitleText: "Welcome to the survey",
+      subtitleText: "Welcome to the survey", // to remove
       startButtonText: "Start Survey",
     }),
   );
   if (languages.length > 1) {
     arr.push(
       getPageTypeQuestionObj(languages, PageType.Language, {
-        titleText: "Select a Language",
-        subtitleText: "Let's Begin!",
+        titleText: `<h3 style="text-align: center">Select a Language</h3>`,
         startButtonText: "Start Survey",
       }),
     );
   }
   arr.push(
     getPageTypeQuestionObj(languages, PageType.ThankYou, {
-      titleText: "Thank you",
-      subtitleText: "Thank you for taking the survey",
+      titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
     }),
   );
   return arr;
