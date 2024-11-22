@@ -13,7 +13,7 @@ export async function updateWebSurveyPagesThemeTitle() {
           q.type as unknown as PageType,
         ),
       );
-      const theme = { ...(survey.webSurveyPagesTheme as JSON) };
+      const theme = { ...(survey.webSurveyPagesTheme as unknown as JSON) };
       const updatedQuestions = [...survey.questions];
 
       for (const page of themePages) {

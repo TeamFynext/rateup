@@ -94,32 +94,14 @@ export const defaultThemeOld = {
     title: {
       title: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
     },
-    // title: { ...title, title: "Thank you" },
-    // subtitle: { ...subtitle, subtitle: "Thank you for taking the survey" },
     confettiEnabled: false,
   },
   languageTheme: {
     bg: {
       ...background,
     },
-    // title: {
-    //   title: `<h3 style="text-align: center">Select a Language</h3>`,
-    // },
     title: {
-      title: "Select a Language",
-      styles: {
-        fontWeight: "300",
-        fontSize: 34,
-        textAlign: "center",
-      },
-    },
-    subtitle: {
-      subtitle: "Let's Begin!",
-      styles: {
-        fontWeight: "600",
-        fontSize: 20,
-        textAlign: "center",
-      },
+      title: `<h3 style="text-align: center">Select a Language</h3>`,
     },
     button: { ...button, label: "Start Survey" },
     input,
