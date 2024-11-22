@@ -398,16 +398,16 @@ export const getInitialSurveyQuestions = (languages) => {
   const arr = [];
   arr.push(
     getPageTypeQuestionObj(languages, PageType.Welcome, {
-      // titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
-      titleText: "Welcome",
-      subtitleText: "Welcome to the survey", // to remove
+      titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
       startButtonText: "Start Survey",
     }),
   );
   if (languages.length > 1) {
     arr.push(
       getPageTypeQuestionObj(languages, PageType.Language, {
-        titleText: `<h3 style="text-align: center">Select a Language</h3>`,
+        // titleText: `<h3 style="text-align: center">Select a Language</h3>`,
+        titleText: "Select a Language",
+        subtitleText: "Let's Begin!",
         startButtonText: "Start Survey",
       }),
     );
@@ -415,6 +415,8 @@ export const getInitialSurveyQuestions = (languages) => {
   arr.push(
     getPageTypeQuestionObj(languages, PageType.ThankYou, {
       titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
+      // titleText: "Thank you",
+      // subtitleText: "Thank you for taking the survey",
     }),
   );
   return arr;

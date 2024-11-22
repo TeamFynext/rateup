@@ -33,6 +33,8 @@ export async function updateWebSurveyPagesThemeTitle() {
           newPage["titleText"] =
             `<p style="text-align:center;"><span style="${titleStyles}">${newPage["titleText"]}</span></p>`;
         }
+        theme[getThemekey(page.type as unknown as PageType)].title.title =
+          newPage["titleText"];
         delete theme[getThemekey(page.type as unknown as PageType)].title
           .styles;
         delete theme[getThemekey(page.type as unknown as PageType)].subtitle;
