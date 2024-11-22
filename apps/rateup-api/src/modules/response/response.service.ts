@@ -11,6 +11,7 @@ import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
 import {
   ChoiceTypeQuestions,
   IntegratedApps,
+  PageType,
   QuestionType,
   ResponseSummaryType,
   SubscriptionFeaturePathName,
@@ -912,12 +913,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       (child) => child?.type !== "Footer" && child.name,
     ),
   ) as any[];
-  const checkVersion = flow.version === 1;
+  const checkVersion = flow ? flow.version === 1 : true;
 
   if (checkVersion) {
     const languages = survey?.languages;
     let questions = survey?.questions as unknown as Array<Question>;
-    questions = questions.filter((q) => q.type !== QuestionType.InfoMessage);
     //TODO REMOVE LATER: MYG GIFT VISHU
     if (process.env.VISHU_SURVEY === surveyId) {
       questions.push({
@@ -956,6 +956,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     for (const lang of languages) {
       let questionTitles = [];
       questions.map((q: Question, index: number) => {
+        if (
+          [QuestionType.InfoMessage, ...Object.values(PageType)].includes(
+            q.type,
+          )
+        )
+          return false;
         let qsTitle =
           q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
         const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
@@ -1304,7 +1310,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
           (child) => child?.type !== "Footer" && child.name,
         ),
       ) as unknown as Question2[];
-      const checkVersion = flow.version === 1;
+      const checkVersion = flow ? flow.version === 1 : true;
       response.responses.map((res: QuestionResponse) => {
         if (checkVersion) {
           let QIndex;
