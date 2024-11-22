@@ -38,13 +38,13 @@ interface FormValues {
 }
 let Languages = new Set([
   "English",
-  "Malayalam",
-  "German",
-  "Hindi",
-  "Kannada",
-  "French",
-  "Arabic",
-  "Tamil",
+  "മലയാളം",
+  "Deutsch",
+  "हिन्दी",
+  "ಕನ್ನಡ",
+  "Français",
+  "عربي",
+  "தமிழ்",
 ]);
 const defaultLanguage = "English";
 
