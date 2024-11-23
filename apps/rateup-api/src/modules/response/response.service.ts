@@ -995,19 +995,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           );
         } else questionTitles.push(qstnTitle);
       });
-
-      const totalColumnCount = questionTitles.length + 3;
+      const additionalColumns = ["team", "Respondent's Mobile Number", "tag"];
+      const totalColumnCount =
+        questionTitles.length + additionalColumns.length + 1;
       const sheet =
         (await doc.sheetsByTitle[lang]) ??
         (await doc.addSheet({
           title: lang,
-          headerValues: [
-            "Created At",
-            ...questionTitles,
-            "team",
-            "Respondent's Mobile Number",
-            "tag",
-          ],
+          headerValues: ["Created At", ...questionTitles, ...additionalColumns],
           gridProperties:
             totalColumnCount > 26
               ? {
@@ -1024,9 +1019,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       await sheet.setHeaderRow([
         "Created At",
         ...questionTitles,
-        "team",
-        "Respondent's Mobile Number",
-        "tag",
+        ...additionalColumns,
       ]);
       await sheet.loadCells();
       const columnCount = await sheet.columnCount;
