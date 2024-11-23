@@ -28,7 +28,6 @@ export default function CustomTextEditor({ content, onUpdate }) {
     ],
     content,
     onUpdate: ({ editor }) => {
-      console.log("editor.getHTML()", editor.getHTML());
       onUpdate(editor.getHTML());
     },
   });
