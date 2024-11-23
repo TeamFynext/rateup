@@ -4,8 +4,10 @@ import {
   LogicCondition,
   PageType,
   QuestionType as Q,
+  QuestionType2 as Q2,
   QuestionType,
   SmileyResponse,
+  WaQuestions,
   YNResponse,
 } from "../../../types/enums";
 import { ChoiceTypeQuestions } from "../../constants";
@@ -178,6 +180,38 @@ export function getResponses(
     return [];
   }
 }
+export function getResponses2(
+  question,
+): Array<string | { label: string; value: string }> {
+  try {
+    switch (question.metaType) {
+      case WaQuestions.LD:
+        return Object.values(LDResponse);
+      case WaQuestions.RadioButtonsGroup:
+      case WaQuestions.Dropdown:
+      case WaQuestions.CheckboxGroup:
+      case WaQuestions.Rating:
+      case WaQuestions.Opinion:
+      case WaQuestions.YN:
+      case WaQuestions.Smiley:
+        return (
+          question?.["data-source"]?.map((source, index) => ({
+            label: source.title,
+            value: (index + 1)?.toString(),
+          })) ||
+          question?.dataSource?.map((source, index) => ({
+            label: source.title,
+            value: (index + 1)?.toString(),
+          }))
+        );
+      default:
+        return null;
+    }
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
+}
 
 export function getConditions(qType: Q): Array<any> {
   switch (qType) {
@@ -222,6 +256,38 @@ export function getConditions(qType: Q): Array<any> {
       ];
     case Q.MSQ:
     case Q.DDMS:
+      return [
+        LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
+        LogicCondition.IncludesAllOf,
+        LogicCondition.Submitted,
+      ];
+    default:
+      return [LogicCondition.Submitted];
+  }
+}
+export function getConditionsv2(qType: WaQuestions): Array<any> {
+  switch (qType) {
+    case WaQuestions.LD:
+    case WaQuestions.YN:
+    case WaQuestions.Opinion:
+    case WaQuestions.Rating:
+    case WaQuestions.Smiley:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.Submitted,
+      ];
+    case WaQuestions.RadioButtonsGroup:
+    case WaQuestions.Dropdown:
+      return [
+        LogicCondition.Equals,
+        LogicCondition.NotEquals,
+        LogicCondition.IncludesNoneOf,
+        LogicCondition.IncludesAnyOf,
+        LogicCondition.Submitted,
+      ];
+    case WaQuestions.CheckboxGroup:
       return [
         LogicCondition.IncludesNoneOf,
         LogicCondition.IncludesAnyOf,

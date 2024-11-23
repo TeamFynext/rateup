@@ -106,8 +106,12 @@ function ScreenListItem({
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isOpen, { open, close }] = useDisclosure(false);
-  const elements = getFlowFormElementsFromScreen(flowJson?.screens?.[pageNo]);
-  const footerElement = getFlowFooterElementsFromScreen(screen)?.[0];
+  const elements = getFlowFormElementsFromScreen(
+    flowJson?.screens?.[pageNo],
+  ) as WaFlowFormElement[];
+  const footerElement = getFlowFooterElementsFromScreen(
+    screen,
+  )?.[0] as WaFlowFormElement;
   const { translations } = useTranslations();
   const [screenTitleInputState, setScreenTitleInputState] = useState(
     screen?.title,
@@ -172,7 +176,9 @@ function ScreenListItem({
 
   function handleAddElementClick() {
     if (!flowEditable) return;
-    const elements = getFlowFormElementsFromScreen(screen);
+    const elements = getFlowFormElementsFromScreen(
+      screen,
+    ) as WaFlowFormElement[];
     if (elements?.length >= FlowMaxElementsPerScreen) {
       showErrorToast(
         `Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`,

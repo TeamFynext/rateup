@@ -1,0 +1,692 @@
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
+
+import {
+  Anchor,
+  Box,
+  Button,
+  Center,
+  Flex,
+  Group,
+  Popover,
+  rem,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import {
+  IconCheck,
+  IconDatabaseImport,
+  IconFileDownload,
+  IconRefresh,
+  IconTableExport,
+  IconTicket,
+  IconX,
+} from "@tabler/icons-react";
+import dayjs, { Dayjs } from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { Range } from "react-date-range";
+
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
+import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
+import useTranslations from "@/dictionaries/useTranslation";
+import { hasFeature } from "@/utils/subscription/subscription";
+import {
+  LDResponseMap,
+  RatingScaleMap,
+  SmileyResponseMap,
+  YNResponseMap,
+} from "@/utils/whatsapp/enumMap";
+
+import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
+import {
+  useDeleteResponse,
+  useDownloadExcelResponse,
+  useExportContactResponses,
+  useSyncResponseToGoogleSheet,
+} from "../../../backend/surveys/response/response.query";
+import SurveyContext from "../../../context/SurveyContext";
+import { useUser } from "../../../context/UserContext";
+import {
+  IntegratedApps,
+  QuestionType,
+  QuestionType2,
+  SubscriptionFeaturePathName,
+  WaQuestions,
+} from "../../../types/enums";
+import { docsPath } from "../../../utils/constants";
+import { TicketType } from "../../../utils/enums/ticket";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "../../../utils/notifications";
+import InfoButton from "../../Button/InfoButton";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import RefreshButton from "../../Button/RefreshButton";
+import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
+import {
+  ContainedMultiSelect,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
+import RateupLoader from "../../Loaders/RateupLoader";
+import ConfirmationModal from "../../Modal/ConfirmationModal";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import NothingFound from "../../NothingFound/NothingFound";
+import Heading from "../../styled/Heading/Heading";
+import TanstackTable from "../../Table/TanstackTable";
+import CreateTicketModal from "../../Tickets/CreateTicketModal";
+import { WaHoverCardComponent } from "../HoverCard/WaHoverCard";
+import { ActionMenu } from "./Columns";
+import { fuzzyFilter } from "./Filter";
+import styles from "./Responses.module.css";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const WaResponses = ({
+  survey,
+  responses,
+  defaultLanguage,
+  isLoading,
+  selectedTeamId,
+  subscription,
+  questions,
+}) => {
+  const surveyId = survey?.id;
+  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
+  const [selectedRowId, setSelectedRowId] = useState("");
+  const { user } = useUser();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [
+    createTicketOpened,
+    { open: openTicketModal, close: closeTicketModal },
+  ] = useDisclosure(false);
+  const [selectedResponseId, setSelectedResponseId] = useState("");
+  const [responseTeamId, setResponseTeamId] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
+  const { data: googleAccessToken } = useIntegrationByType(
+    IntegratedApps.googlesheet,
+  );
+  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
+    useDisclosure(false);
+  const [
+    redirectModalOpened,
+    { open: redirectModalOpen, close: redirectModalClose },
+  ] = useDisclosure(false);
+  const [opened, { open, close }] = useDisclosure(false);
+  const [openedExport, { toggle }] = useDisclosure(false);
+  const [alertMsg, setAlertMsg] = useState("");
+  const [ranges, setRange] = useState<Range[]>([]);
+  const router = useRouter();
+  const dbFlowId = router.query.dbFlowId as string;
+  const hasContactQuestion = useMemo(
+    () =>
+      responses?.some((response) =>
+        response?.responses?.some((res) => QuestionType.Contact === res.type),
+      ),
+    [responses],
+  );
+  const enableTicket =
+    survey?.enableTickets &&
+    hasFeature(subscription, SubscriptionFeaturePathName.Ticket);
+
+  const deleteResponse = useDeleteResponse(
+    surveyId,
+    surveyTeamMapId,
+    close,
+    setIsDeleting,
+  );
+  const { translations } = useTranslations();
+
+  if (Array.isArray(surveyId)) {
+    throw new Error(translations["surveyId is an array"]);
+  }
+
+  const exportContactMutation = useExportContactResponses(surveyId);
+
+  const [campaignFlowFilter, setCampaignFlowFilter] = useState([]);
+  const { data: CFData } = useCampaignFilterForFlows(surveyId);
+
+  const handleCampaignFlowFilter = useCallback(
+    (responses) => {
+      if (campaignFlowFilter.length === 0) return responses;
+      return responses.filter((response) =>
+        campaignFlowFilter.some((campaign) =>
+          campaign.participantsContactIds.includes(response.contactId),
+        ),
+      );
+    },
+    [campaignFlowFilter],
+  );
+
+  const downloadExcelResponse = useDownloadExcelResponse();
+  const handleExportContacts = useCallback(() => {
+    showLoadingToast(
+      translations["Exporting Contact responses to Contacts..."],
+      "export-contacts",
+      true,
+    );
+    exportContactMutation.mutate();
+  }, [exportContactMutation, translations]);
+
+  const handleExcelDownload = useCallback(() => {
+    downloadExcelResponse.mutate({
+      defaultLanguage,
+      surveyId,
+      visibleColumn: Array.from(
+        new Set(useVisibleColumnStore.getState().visibleColumn),
+      ),
+      title: survey?.title,
+      tz: dayjs.tz.guess(),
+      filterTeams,
+      campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
+      dbFlowId,
+    });
+  }, [
+    campaignFlowFilter,
+    defaultLanguage,
+    downloadExcelResponse,
+    filterTeams,
+    survey?.title,
+    surveyId,
+  ]);
+
+  useEffect(() => {
+    if (selectedResponseId && responseTeamId) openTicketModal();
+  }, [selectedResponseId, responseTeamId, openTicketModal]);
+
+  useEffect(() => {
+    if (!createTicketOpened) setSelectedResponseId("");
+  }, [createTicketOpened]);
+
+  const confirmDelete = useCallback(
+    (verifyEmail: string) => {
+      if (user?.email === verifyEmail) {
+        notifications.show({
+          id: "load-data",
+          loading: true,
+          title: translations["Deleting Response"],
+          message: translations["Hold on, response is getting deleted..."],
+          autoClose: false,
+          withCloseButton: false,
+        });
+        setIsDeleting(true);
+        deleteResponse.mutate(selectedRowId);
+      } else {
+        notifications.show({
+          id: "load-data",
+          color: "red",
+          title: translations["Error"],
+          message: translations["Incorrect email"],
+          icon: <IconX size="1rem" />,
+          autoClose: 3000,
+        });
+      }
+    },
+    [deleteResponse, selectedRowId, translations, user?.email],
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "createdAt",
+        header: "Created At",
+        cell: (info) =>
+          dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+      },
+      ...questions?.map((question) => ({
+        id:
+          question.label +
+          "_,_" +
+          QuestionType2[question.metaType] +
+          "_,_" +
+          question.id,
+        accessorKey: question.id,
+        accessorFn: (row) => {
+          const response = row?.[question.id];
+          if (
+            [QuestionType.Rating, QuestionType.Opinion].includes(
+              question.metaType,
+            )
+          ) {
+            return Number(response);
+          }
+          return response;
+        },
+        header: markdownToPlainText(question.header || question.label),
+        enableColumnFilter: ![
+          WaQuestions.DocumentPicker,
+          WaQuestions.PhotoPicker,
+        ].includes(question.metaType),
+        enableSorting: ![
+          WaQuestions.DocumentPicker,
+          WaQuestions.PhotoPicker,
+        ].includes(question.metaType),
+        cell: (info) => getCellData(info, question),
+      })),
+      {
+        accessorKey: "mobile",
+        header: "Respondent Mobile",
+        id: "Respondent Mobile",
+      },
+      {
+        header: translations["Tags"],
+        accessorKey: "tag",
+      },
+      ...(enableTicket
+        ? [
+            {
+              header: () => (
+                <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
+                  {translations["Ticket"]}
+                </Text>
+              ),
+              enableColumnFilter: false,
+              enableSorting: false,
+              accessorKey: "ticket",
+              cell: (info) => {
+                let ticketData = info.row.original.Ticket;
+                let ticketExist = ticketData?.length > 0;
+                return (
+                  <Center
+                    pr="80px"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      if (ticketExist) {
+                        let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                        window.open(url, "_blank");
+                      }
+                    }}
+                  >
+                    {ticketExist && (
+                      <Tooltip
+                        withArrow
+                        label={translations["View Ticket"]}
+                        position="right-start"
+                      >
+                        <Stack>
+                          <IconTicket
+                            color="orange"
+                            style={{ width: rem(35), height: rem(35) }}
+                          />
+                        </Stack>
+                      </Tooltip>
+                    )}
+                  </Center>
+                );
+              },
+            },
+          ]
+        : []),
+      {
+        accessorKey: "action",
+        header: "Action",
+        id: "Action",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: (info) => (
+          <ActionMenu
+            open={open}
+            resId={info.row.original.id}
+            resTeamId={info.row.original.teamId}
+            setSelectedResponseId={setSelectedResponseId}
+            setResponseTeamId={setResponseTeamId}
+            setSelectedRowId={setSelectedRowId}
+            ticketData={info.row.original.Ticket}
+            enableTicket={enableTicket}
+          />
+        ),
+      },
+    ],
+    [open, questions],
+  );
+
+  const handleSyncGoogleSheet = useCallback(() => {
+    setIsSyncing(true);
+    if (!googleAccessToken) {
+      setIsSyncing(false);
+      setAlertMsg(
+        translations["Please sync your Google account in the App & Services."],
+      );
+      redirectModalOpen();
+    } else {
+      syncResponseToGoogleSheet.mutate(
+        { surveyId },
+        {
+          onSuccess: () => {
+            setIsSyncing(false);
+            showSuccessToast(
+              translations["Response synced to Google sheet successfully"],
+              "success",
+              <IconCheck />,
+            );
+            toggle();
+          },
+          onError: (error: any) => {
+            setIsSyncing(false);
+            console.log(error);
+            if (error.response.data?.error === "invalid_grant") {
+              setAlertMsg(
+                translations[
+                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services"
+                ],
+              );
+              redirectModalOpen();
+            } else {
+              toggle();
+              showErrorToast(translations["Error in syncing response"]);
+            }
+          },
+        },
+      );
+    }
+  }, [
+    googleAccessToken,
+    redirectModalOpen,
+    syncResponseToGoogleSheet,
+    surveyId,
+    toggle,
+    translations,
+  ]);
+
+  useEffect(() => {
+    if (refreshing) {
+      setRefreshing(false);
+    }
+  }, [refreshing]);
+
+  useEffect(() => {
+    if (!responses || !responses?.length) return;
+    if (ranges.length === 0) {
+      const endDate = dayjs();
+      let startDate = dayjs();
+      responses
+        ?.map((res) => dayjs(res.createdAt))
+        .forEach((responseDate) => {
+          if (responseDate.isBefore(startDate)) startDate = responseDate;
+        });
+      setRange([
+        {
+          startDate: startDate?.toDate(),
+          endDate: endDate.toDate(),
+          key: "selection",
+        },
+      ]);
+    }
+  }, [ranges, responses]);
+
+  const data = useMemo(() => {
+    const filteredResponses = ranges?.[0]
+      ? responses.filter((response) =>
+          dayjs(response.createdAt).isBetween(
+            ranges[0].startDate,
+            ranges[0].endDate,
+            "day",
+            "[]",
+          ),
+        )
+      : responses;
+
+    let t = filteredResponses?.map((item) => {
+      const row = {
+        id: item.id,
+        contactId: item.contactId,
+        language: item.language,
+        createdAt: item.createdAt,
+        mobile: item.Contact?.phone || "N/A",
+      };
+
+      questions.forEach((question) => {
+        const response = item.responses.find(
+          (res) => res.questionId === question.id,
+        );
+        row[question.id] = response ? response.response : "";
+      });
+
+      return row;
+    });
+    return handleCampaignFlowFilter(t);
+  }, [ranges, responses, questions]);
+  if (isLoading) return <RateupLoader />;
+
+  const responseCount = responses?.length;
+  return (
+    <Stack className={styles["responses-root-div"]}>
+      <CreateTicketModal
+        createTicketOpened={createTicketOpened}
+        openTicketModal={openTicketModal}
+        closeTicketModal={closeTicketModal}
+        selectedTeamId={responseTeamId}
+        type={TicketType.SURVEY_RESPONSE}
+        surveyResponseId={selectedResponseId}
+      />
+
+      <Group className={styles["total-responses-export-btn-container"]}>
+        <Flex align={"center"}>
+          <Heading
+            subtitle={`${translations["Total Responses :"]} ${responseCount}`}
+          />
+          <RefreshButton queryKeys={["allresponses"]} />
+        </Flex>
+
+        <DateRangePickerButton
+          onChange={(r) => setRange(r ? [r["selection"]] : [])}
+          ranges={ranges}
+        />
+
+        <Group>
+          {CFData && CFData.length > 0 && (
+            <ContainedMultiSelect
+              placeholder={translations["Filter By Campaign"]}
+              onChange={(value) =>
+                setCampaignFlowFilter(
+                  CFData.filter((c) => value.includes(c.campaignId)),
+                )
+              }
+              data={CFData.map(({ campaignName, campaignId }) => ({
+                value: campaignId,
+                label: campaignName,
+              }))}
+            />
+          )}
+          {!survey?.isEncrypted && (
+            <Popover
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              classNames={{
+                dropdown: styles["filters-popover-dropdown-div"],
+              }}
+              opened={openedExport}
+            >
+              <Popover.Target>
+                <Button
+                  className={styles["export-btn"]}
+                  leftSection={<IconTableExport />}
+                  radius={"lg"}
+                  fw={400}
+                  onClick={toggle}
+                >
+                  {translations["Export"]}
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Stack>
+                  <RateupButtonSecondary
+                    title={
+                      survey.spreadSheetId
+                        ? translations["Resync with Google Sheet"]
+                        : translations["Sync with Google Sheet"]
+                    }
+                    onClick={() => {
+                      if (survey.spreadSheetId) alertModalOpen();
+                      else handleSyncGoogleSheet();
+                    }}
+                    leftIcon={
+                      <IconRefresh
+                        className={
+                          isSyncing ? styles.rotateInfinitely : undefined
+                        }
+                        style={{ width: "90%", height: "90%" }}
+                        stroke={1.5}
+                      />
+                    }
+                  />
+                  <RateupButtonSecondary
+                    onClick={() => {
+                      handleExcelDownload();
+                      toggle();
+                    }}
+                    title={translations["Download Excel"]}
+                    radius={"lg"}
+                    leftIcon={<IconFileDownload stroke={1.5} />}
+                  />
+                  {hasContactQuestion && (
+                    <RateupButtonSecondary
+                      onClick={handleExportContacts}
+                      title={translations["Export Contacts"]}
+                      radius={"lg"}
+                      leftIcon={<IconDatabaseImport stroke={1.5} />}
+                    />
+                  )}
+                  <ConfirmationModal
+                    opened={alertModalOpened}
+                    onClose={alertModalClose}
+                    headerTitle={translations["Resync Google Sheet"]}
+                    headerLabel={
+                      translations[
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
+                      ]
+                    }
+                    confirmLabel={translations["Yes"]}
+                    onConfirm={handleSyncGoogleSheet}
+                  />
+                  <ConfirmationModal
+                    opened={redirectModalOpened}
+                    onClose={redirectModalClose}
+                    headerTitle={translations["Sync Google Sheet"]}
+                    headerLabel={alertMsg}
+                    confirmLabel={translations["Continue"]}
+                    onConfirm={() => {
+                      router.push("/dashboard/apps&services/googlesheet");
+                    }}
+                  />
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          )}
+          <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
+        </Group>
+      </Group>
+
+      {responseCount > 0 ? (
+        <Box className={styles["responses-table-container"]}>
+          <TanstackTable data={data} columns={columns} />
+          <DeleteModal
+            confirmDelete={confirmDelete}
+            translations={translations}
+            opened={opened}
+            close={close}
+          />
+        </Box>
+      ) : (
+        <NothingFound text={translations["No responses yet"]} />
+      )}
+    </Stack>
+  );
+};
+
+export default WaResponses;
+const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
+  const [verifyEmail, setVerifyEmail] = useState("");
+  return (
+    <FormModalLayout
+      opened={opened}
+      onClose={close}
+      title={translations["Delete Response"]}
+      centered
+      buttonTitle={translations["Delete"]}
+      includeCancelButton
+      onSubmit={() => {
+        confirmDelete(verifyEmail);
+        setVerifyEmail("");
+      }}
+    >
+      <Stack py={"sm"}>
+        <Text>{translations["To proceed further, verify your email id."]}</Text>
+        <ContainedTextField
+          withAsterisk
+          label={translations["Verify email"]}
+          placeholder={translations["Enter your login email"]}
+          required
+          value={verifyEmail}
+          onChange={(e) => setVerifyEmail(e.target.value)}
+        />
+        <Text c="red">
+          {translations["Once deleted, response entry data will be lost."]}
+        </Text>
+      </Stack>
+    </FormModalLayout>
+  );
+};
+const getCellData = (info, question) => {
+  switch (question.metaType) {
+    case WaQuestions.LD:
+      return LDResponseMap[info.getValue()] || "";
+    case WaQuestions.YN:
+      return YNResponseMap[info.getValue()] || "";
+    case WaQuestions.Smiley:
+      return SmileyResponseMap[info.getValue()] || "";
+    case WaQuestions.Rating:
+      return RatingScaleMap[info.getValue()] || "";
+    case WaQuestions.Opinion:
+      return info.getValue() || "";
+    case WaQuestions.RadioButtonsGroup:
+    case WaQuestions.Dropdown:
+      return (
+        question.dataSource?.find((data) => data.id === info.getValue())
+          ?.title || ""
+      );
+    case WaQuestions.CheckboxGroup:
+      return (
+        (Array.isArray(info.getValue()) &&
+          info
+            ?.getValue()
+            ?.map(
+              (i) => question.dataSource?.find((data) => data.id === i)?.title,
+            )
+            ?.join(",")) ||
+        ""
+      );
+    case WaQuestions.DocumentPicker:
+      return (
+        info.getValue() && (
+          <Anchor
+            href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${info.getValue()}`}
+            download
+          >
+            Download
+          </Anchor>
+        )
+      );
+    case WaQuestions.DatePicker:
+      return info.getValue() ? dayjs(info.getValue()).format("DD-MM-YYYY") : "";
+    case WaQuestions.TextArea:
+    case WaQuestions.PhotoPicker:
+      return (
+        <WaHoverCardComponent
+          content={info.getValue()}
+          type={question.metaType}
+        />
+      );
+    default:
+      return info.getValue().toString() || "";
+  }
+};
