@@ -1,4 +1,4 @@
-import { QuestionType } from "../../../types/enums";
+import { QuestionType, WaQuestions } from "../../../types/enums";
 
 export const ChoiceTypeQuestions = [
   QuestionType.MCQ,
@@ -7,6 +7,11 @@ export const ChoiceTypeQuestions = [
   QuestionType.DDSS,
   QuestionType.CustomNPS,
   QuestionType.WaButtons,
+];
+export const ChoiceTypeQuestionsV2 = [
+  WaQuestions.CheckboxGroup,
+  WaQuestions.Dropdown,
+  WaQuestions.RadioButtonsGroup,
 ];
 
 export function getChoiceIndex(

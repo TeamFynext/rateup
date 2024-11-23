@@ -3,12 +3,14 @@ import {
   LogicCondition,
   PageType,
   QuestionType,
+  WaQuestions,
 } from "../../types/enums";
 import { QuestionType as Q } from "../../types/enums";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
   ChoiceTypeQuestions,
+  ChoiceTypeQuestionsV2,
   getChoiceIndex,
 } from "../../utils/survey/question/question.utils";
 import { cloneDeep } from "lodash";
@@ -251,6 +253,126 @@ export function validateLogic(
       }
     }
 
+    return flag;
+  } catch (e) {
+    log.error(e);
+    return false;
+  }
+}
+export function validateLogicV2(
+  question,
+  userResponse: Choice | string | Choice[] | number,
+  condition: LogicCondition,
+  conditionResponse: string | string[],
+): boolean {
+  // TODO: make use of this function in parseLogicAction
+  // Any modifications to logic-jump algorithm should be reflected in frontend & backend (questions/questions.util & whatsappSurvey module).
+
+  try {
+    if (typeof userResponse === "number") {
+      userResponse = userResponse.toString();
+    }
+    const { type } = question;
+    if (!userResponse) {
+      return false;
+    }
+
+    let flag = false;
+    let iterator: "map" | "some" | "every";
+    let comparator: (value: string) => boolean;
+
+    if (ChoiceTypeQuestionsV2.includes(type)) {
+      let userResponseIndices: string[];
+      if (Array.isArray(userResponse)) {
+        userResponseIndices = userResponse.map((choice) =>
+          (
+            question?.["data-source"].findIndex((q) => q.title === choice) + 1
+          )?.toString(),
+        );
+      } else {
+        userResponseIndices = [
+          (
+            question?.["data-source"].findIndex(
+              (q) => q.title === userResponse,
+            ) + 1
+          )?.toString(),
+        ];
+      }
+      switch (condition) {
+        case LogicCondition.IncludesAllOf:
+          iterator = "every";
+          comparator = (choiceIndex) =>
+            userResponseIndices.includes(choiceIndex);
+          break;
+
+        case LogicCondition.IncludesAnyOf:
+          iterator = "some";
+          comparator = (choiceIndex) =>
+            userResponseIndices.includes(choiceIndex);
+          break;
+
+        case LogicCondition.IncludesNoneOf:
+          iterator = "every";
+          comparator = (choiceIndex) =>
+            !userResponseIndices.includes(choiceIndex);
+          break;
+
+        case LogicCondition.Equals:
+          iterator = "every";
+          comparator = (choiceIndex) =>
+            userResponseIndices.includes(choiceIndex);
+          break;
+        case LogicCondition.NotEquals:
+          iterator = "every";
+          comparator = (choiceIndex) =>
+            !userResponseIndices.includes(choiceIndex);
+          break;
+
+        default:
+          break;
+      }
+      switch (condition) {
+        case LogicCondition.NotEquals:
+        case LogicCondition.Equals:
+          if (type === WaQuestions.CheckboxGroup) {
+            flag = conditionResponse[iterator as string](comparator);
+          } else {
+            flag = [conditionResponse][iterator as string](comparator);
+          }
+          break;
+
+        case LogicCondition.IncludesAllOf:
+        case LogicCondition.IncludesAnyOf:
+        case LogicCondition.IncludesNoneOf:
+          if (Array.isArray(conditionResponse)) {
+            flag = conditionResponse[iterator as string](comparator);
+          } else {
+            throw new Error("Logic response should be an array");
+          }
+          break;
+
+        case LogicCondition.Submitted:
+          flag = true;
+          break;
+
+        default:
+          log.warn("Invalid logic condition %o", condition);
+          break;
+      }
+    } else {
+      // non-choice type questions
+      switch (condition) {
+        case LogicCondition.Equals:
+          flag = userResponse === conditionResponse;
+          break;
+        case LogicCondition.NotEquals:
+          flag = userResponse !== conditionResponse;
+          break;
+        case LogicCondition.Submitted:
+          flag = true;
+          break;
+      }
+    }
     return flag;
   } catch (e) {
     log.error(e);
