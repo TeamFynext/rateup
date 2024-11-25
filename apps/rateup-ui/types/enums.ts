@@ -58,9 +58,6 @@ export enum QuestionType {
   File = "File",
   EmailOtp = "EmailOtp",
   WOP = "Wheel of Price",
-  //TODO REMOVE LATER: MYG GIFT VISHU
-  WinItem = "Win_item",
-  Invoice_Id = "invoice_id",
 
   // WhatsApp exclusive
   Optin = "OptIn",

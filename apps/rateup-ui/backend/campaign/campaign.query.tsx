@@ -1,5 +1,11 @@
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
+  campaignResponseDownloadById,
   createCampaign,
   deleteCampaign,
   getCampaignById,
@@ -9,10 +15,6 @@ import {
   sendCampaign,
   updateCampaign,
 } from "./campaign.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
-import { notifications } from "@mantine/notifications";
 
 export const useCampaignData = () => {
   return useQuery({
@@ -150,7 +152,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
             : "Campaign started successfully",
         message:
           res?.data?.code === "MSG_SCHEDULED"
-            ? res?.data?.message ?? "Campaign scheduled successfully"
+            ? (res?.data?.message ?? "Campaign scheduled successfully")
             : "It may take a few minutes to send to all participants.",
         autoClose: 5000,
         loading: false,
@@ -173,5 +175,27 @@ export const useCampaignFilterForFlows = (surveyId: string) => {
     queryFn: () => getCampaignFilterForFlows(surveyId),
     queryKey: ["campaignFilterForFlows", surveyId],
     enabled: !!surveyId,
+  });
+};
+export const useCampaignResponseDownloadById = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: campaignResponseDownloadById,
+    onSuccess: () => {
+      // queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
+      // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      showSuccessToast(
+        "Campaign deleted successfully.",
+        "campaign-delete",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error deleting campaign: ${error?.response?.data.error}`,
+        "campaign-delete",
+        <IconX />,
+      );
+    },
   });
 };

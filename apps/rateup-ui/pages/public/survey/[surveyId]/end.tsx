@@ -13,6 +13,7 @@ import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import Confetti from "react-confetti";
 
 import { PageType } from "@/types/enums";
+import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import {
@@ -34,8 +35,7 @@ export async function getServerSideProps(context) {
   };
 
   const defaultTitleSubtitleTexts = {
-    titleText: "Thank you",
-    subtitleText: "Thank you for taking the survey",
+    titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
   };
 
   if (msg == "thanks") {
@@ -45,10 +45,9 @@ export async function getServerSideProps(context) {
       getPublicSurvey(surveyId),
     ]);
     const questions = survey.questions;
-    const thankyouPageTypeObj =
-      questions?.find(
-        (questionObj) => questionObj.type === PageType.ThankYou,
-      ) || defaultTitleSubtitleTexts;
+    const thankyouPageTypeObj = questions?.find(
+      (questionObj) => questionObj.type === PageType.ThankYou,
+    );
     propsToPass.googleLink = googleLink;
     propsToPass.reviews = reviews;
     if (googleLink) propsToPass.enableGoogleReview = true;
@@ -58,24 +57,25 @@ export async function getServerSideProps(context) {
       // @ts-ignore
       propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
       propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
-      propsToPass.titleText = thankyouPageTypeObj.titleText;
-      propsToPass.subtitleText = thankyouPageTypeObj.subtitleText;
+      propsToPass.titleText =
+        thankyouPageTypeObj.titleText || defaultTitleSubtitleTexts.titleText;
+      propsToPass.subtitleText = thankyouPageTypeObj?.subtitleText || null;
     }
   } else {
     const survey = await getPublicSurvey(surveyId);
     const questions = survey.questions;
-    const thankyouPageTypeObj =
-      questions?.find(
-        (questionObj) => questionObj.type === PageType.ThankYou,
-      ) || defaultTitleSubtitleTexts;
+    const thankyouPageTypeObj = questions?.find(
+      (questionObj) => questionObj.type === PageType.ThankYou,
+    );
     if (survey) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
       // @ts-ignore
       propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
       propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
-      propsToPass.titleText = thankyouPageTypeObj.titleText;
-      propsToPass.subtitleText = thankyouPageTypeObj.subtitleText;
+      propsToPass.titleText =
+        thankyouPageTypeObj.titleText || defaultTitleSubtitleTexts?.titleText;
+      propsToPass.subtitleText = thankyouPageTypeObj?.subtitleText ?? null;
     }
   }
   return {
@@ -191,6 +191,13 @@ export default function ThankYou({
   }
   const confettiEnabled = requiredThemeObj?.confettiEnabled;
 
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitleText
+    ? `<p style="text-align:center;"><span style="${titleStyleNew}">${titleText}</span></p><p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitleText}</span></p>`
+    : titleText;
+
   return (
     <CreditsCard
       enableCredits={backgroundImageSrc?.startsWith(
@@ -233,23 +240,23 @@ export default function ThankYou({
           {!enableGoogleReview && (
             <ScrollAreaAutosize p="sm">
               <Stack gap={"1.5rem"}>
-                <Title
-                  order={1}
-                  style={{
-                    ...titleStyles,
-                    textAlign: "center",
-                  }}
-                >
-                  {!!err ? translations["Thank You!"] : titleText}
-                </Title>
-                {(subtitleText || err) && (
-                  <Text style={subtitleStyles}>
-                    {!!err
-                      ? translations[
-                          "You've already submitted a response earlier."
-                        ]
-                      : subtitleText}
-                  </Text>
+                {!!err ? (
+                  <Title
+                    order={1}
+                    style={{
+                      ...titleStyles,
+                      textAlign: "center",
+                    }}
+                  >
+                    {translations["Thank You!"]}
+                  </Title>
+                ) : (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: newTitle,
+                    }}
+                    style={{ color: titleStyles?.color }}
+                  />
                 )}
               </Stack>
             </ScrollAreaAutosize>

@@ -28,6 +28,7 @@ import {
   WaFlowFormNonInputElementType,
 } from "../../../../types/enums";
 import { WaFlowFormElement } from "../../../../types/global";
+import { markdownToPlainText } from "../../flow-v2/FlowScreensList/ScreenListItem";
 import { getTextStyle } from "../FlowPage/EditFlow/FlowTextDetailedView";
 import styles from "./preview.module.css";
 
@@ -313,6 +314,7 @@ function FlowContainerHeader(onClose: any) {
 }
 
 export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
+  let label = fe.header ? markdownToPlainText(fe.header) : fe.label;
   switch (fe.type) {
     case WaFlowFormElementType.textHeading:
     case WaFlowFormElementType.textSubHeading:
@@ -329,15 +331,15 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       );
 
     case WaFlowFormElementType.textInput:
-      return <FlowTextInputPreview label={fe.label} />;
+      return <FlowTextInputPreview label={label} />;
     case WaFlowFormElementType.textArea:
-      return <FlowTextAreaPreview label={fe.label} />;
+      return <FlowTextAreaPreview label={label} />;
     case WaFlowFormElementType.datePicker:
-      return <FlowDateInputPreview label={fe.label} />;
+      return <FlowDateInputPreview label={label} />;
     case WaFlowFormElementType.radioButtonsGroup:
       return (
         <FlowRadioPreview
-          label={fe.label}
+          label={label}
           options={
             typeof fe["data-source"] !== "string" &&
             fe["data-source"]?.map((ds) => ds.title)
@@ -347,7 +349,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
     case WaFlowFormElementType.checkboxGroup:
       return (
         <FlowCheckBoxPreview
-          label={fe.label}
+          label={label}
           options={
             typeof fe["data-source"] !== "string" &&
             fe["data-source"]?.map((ds) => ds.title)
@@ -357,7 +359,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
     case WaFlowFormElementType.dropDown:
       return (
         <DropDownPreview
-          label={fe.label}
+          label={label}
           options={
             typeof fe["data-source"] !== "string" &&
             fe["data-source"]?.map((ds) => ds.title)
@@ -365,7 +367,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         />
       );
     case WaFlowFormElementType.optIn:
-      return <FlowOptInPreview label={fe.label} />;
+      return <FlowOptInPreview label={label} />;
     case WaFlowFormElementType.embeddedLink:
       return (
         <Text c={"blue"} ta={"center"}>
@@ -377,9 +379,9 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />
       );
     case WaFlowFormElementType.photoPicker:
-      return <FlowFileInputPreview label={fe.label} type={"photo"} />;
+      return <FlowFileInputPreview label={label} type={"photo"} />;
     case WaFlowFormElementType.documentPicker:
-      return <FlowFileInputPreview label={fe.label} type={"document"} />;
+      return <FlowFileInputPreview label={label} type={"document"} />;
     default:
       throw new Error("Invalid form element type");
   }

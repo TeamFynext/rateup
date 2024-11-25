@@ -1,3 +1,5 @@
+import { saveAs } from "file-saver";
+
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
@@ -57,4 +59,18 @@ export const getCampaignFilterForFlows = async (surveyId: string) => {
     participantsContactIds: string[];
   }[];
 };
-//
+
+export const campaignResponseDownloadById = async (campaignId) => {
+  const response = await axiosClient.post(
+    `/campaign/${campaignId}/download`,
+    {},
+    {
+      responseType: "blob",
+    },
+  );
+  const blob = new Blob([response.data], {
+    type: response.headers["content-type"],
+  });
+
+  return saveAs(blob, response?.headers?.filename ?? "file.xlsx");
+};

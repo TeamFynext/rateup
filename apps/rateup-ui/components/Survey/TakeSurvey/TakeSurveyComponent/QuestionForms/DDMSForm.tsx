@@ -71,7 +71,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   }, []);
 
   const handleSelectedOp = (values) => {
-    const res = options?.filter((op) => values?.includes(op?.value));
+    const res = values?.map((val) => options?.find((op) => op?.value === val));
     updateResponse(res);
   };
   const theme = useMantineTheme();

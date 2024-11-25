@@ -4,6 +4,7 @@ import { Button, Flex, Image, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 
 import { PageType } from "@/types/enums";
+import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
 import { cordinateStyle } from "../../../utils";
 import { lexend } from "../../../utils/fonts";
@@ -37,8 +38,7 @@ function WelcomePage({
   isMobile: boolean;
 }) {
   const defaultTitleSubtitleStartButtonTexts = {
-    titleText: "Welcome",
-    subtitleText: "Welcome to the survey",
+    titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
     startButtonText: "Start Survey",
   };
 
@@ -62,11 +62,19 @@ function WelcomePage({
       textAlign: "center",
     };
   }
+
   let buttonStyles = requiredThemeObj?.button?.styles;
   let buttonPosition = requiredThemeObj?.button?.position;
   if (!buttonPosition) {
     buttonPosition = { x: "CENTER", y: "DEFAULT" };
   }
+
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitleText
+    ? `<p style="text-align:center;"><span style="${titleStyleNew}">${titleText}</span></p><p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitleText}</span></p>`
+    : titleText;
 
   return (
     <Flex justify={"center"} align={"center"} h={"100%"}>
@@ -88,8 +96,12 @@ function WelcomePage({
             style={{ ...orgLogoStyles }}
           />
         )}
-        <Text style={titleStyles}>{titleText}</Text>
-        <Text style={subtitleStyles}>{subtitleText}</Text>
+        <div
+          dangerouslySetInnerHTML={{
+            __html: newTitle,
+          }}
+          style={{ color: titleStyles?.color }}
+        />
         <div
           style={{
             display: "flex",

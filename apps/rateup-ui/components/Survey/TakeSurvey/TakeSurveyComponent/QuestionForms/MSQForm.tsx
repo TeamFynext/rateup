@@ -58,7 +58,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
 
   const handleSelectedOp = (values: string[]) => {
     setSelectedOp(values);
-    const res = options?.filter((op) => values?.includes(op?.value as string));
+    const res = values?.map((val) => options?.find((op) => op?.value === val));
     if (values.includes(selectedFeature?.other?.title)) {
       if (otherInput?.length) updateResponse([...res, { other: otherInput }]);
       else updateResponse(null);

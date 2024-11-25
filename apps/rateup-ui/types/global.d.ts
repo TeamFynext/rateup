@@ -321,9 +321,6 @@ declare global {
       [QuestionType.CustomNPS]?: Choice;
       [QuestionType.TnC]?: boolean;
       [QuestionType.WaList]?: { title: string; description?: string };
-      //TODO REMOVE LATER: MYG GIFT VISHU
-      [QuestionType.WinItem]?: string;
-      [QuestionType.Invoice_Id]?: string;
     };
   };
 
@@ -895,6 +892,7 @@ export type WaFlowFormElement = {
   "alt-text"?: string; // for accessibility (Talkback, voice over)
   "font-weight"?: string;
   strikethrough?: boolean;
+  header?: string;
 };
 
 export type WaFlowMap = {

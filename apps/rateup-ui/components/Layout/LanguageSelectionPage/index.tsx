@@ -14,6 +14,7 @@ import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import { PageType } from "@/types/enums";
+import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
 import { lexend } from "../../../utils/fonts";
 import { CreditsCard } from "../../Card/CreditsCard";
@@ -44,8 +45,7 @@ function LanguageSelectionPage({
   } = surveyThemeData;
 
   const defaultTitleSubtitleStartButtonTexts = {
-    titleText: "Select a Language",
-    subtitleText: "Let's Begin!",
+    titleText: `<h3 style="text-align: center">Select a Language</h3>`,
     startButtonText: "Start Survey",
   };
 
@@ -86,6 +86,13 @@ function LanguageSelectionPage({
     "https://images.unsplash.com",
   );
 
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitleText
+    ? `<p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitleText ?? ""}</span></p><p style="text-align:center;"><span style="${titleStyleNew}">${titleText}</span></p>`
+    : titleText;
+
   return (
     <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
       <Flex
@@ -112,31 +119,12 @@ function LanguageSelectionPage({
 
         <Stack className={cx("header-radio-grp-start-btn-container")}>
           <Stack className={cx("header")}>
-            <Stack className={surveyThemeStylesCx("titleBox")}>
-              <p
-                style={{
-                  ...subtitleStyles,
-                  fontFamily: `var(--font-lexend)`,
-                  height: "fit-content",
-                  textAlign: "center",
-                }}
-              >
-                {subtitleText}
-              </p>
-            </Stack>
-
-            <Stack className={surveyThemeStylesCx("titleBox")} align="center">
-              <p
-                style={{
-                  ...titleStyles,
-                  fontFamily: `var(--font-lexend)`,
-                  height: "fit-content",
-                  textAlign: "center",
-                }}
-              >
-                {titleText}
-              </p>
-            </Stack>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: newTitle,
+              }}
+              style={{ color: titleStyles?.color }}
+            />
           </Stack>
 
           <Flex className={cx("languages-list-radio-grp-container")}>

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import { BackgroundImage, Box, Flex, Image, Tooltip } from "@mantine/core";
+import { isNumber } from "@tiptap/react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput";
@@ -17,6 +18,7 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
+import ThemeTitle from "../../ThemeTitle";
 
 export default function WelcomePageThemeView({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
@@ -73,6 +75,8 @@ export default function WelcomePageThemeView({ survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
+          if (editSurveySelectedQuestion["subtitleText"])
+            data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -99,6 +103,13 @@ export default function WelcomePageThemeView({ survey }) {
     shouldUseSurveyTheme ? "surveyTheme" : "welcomeTheme",
     selectedPreview === "mobile",
   );
+
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitle
+    ? `<p style="text-align:center;"><span style="${titleStyleNew}">${title}</span></p><p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitle ?? ""}</span></p>`
+    : title;
 
   return (
     <Flex
@@ -134,33 +145,13 @@ export default function WelcomePageThemeView({ survey }) {
               />
             )}
 
-            <Tooltip label="Edit title">
-              <Box className={classes.titleBox}>
-                <AutosaveInput
-                  name="title"
-                  value={title}
-                  onSave={handleSaveTitleSubtitleStartTextSave}
-                  style={{
-                    ...titleStyles,
-                  }}
-                />
-              </Box>
-            </Tooltip>
-            {/* //--------------------------- */}
-            <Tooltip label="Edit subtitle">
-              <Box className={classes.titleBox}>
-                <AutosaveInput
-                  isTextArea
-                  name="subtitle"
-                  value={subtitle}
-                  onSave={handleSaveTitleSubtitleStartTextSave}
-                  style={{
-                    ...subtitleStyles,
-                  }}
-                />
-              </Box>
-            </Tooltip>
-
+            <ThemeTitle
+              value={newTitle}
+              onChange={(value) =>
+                handleSaveTitleSubtitleStartTextSave(value, "title")
+              }
+              styles={{ color: titleStyles?.color }}
+            />
             <Box
               className={classes.titleBox}
               style={{
@@ -192,4 +183,15 @@ export default function WelcomePageThemeView({ survey }) {
       </CreditsCard>
     </Flex>
   );
+}
+
+export function getInlineStyleFromStyleObj(styles) {
+  if (!styles) return "text-align:center";
+  let newStyles = [];
+  for (const key in styles) {
+    const kebabKey = key.replace(/([A-Z])/g, "-$1").toLowerCase();
+    const value = isNumber(styles[key]) ? `${styles[key]}px` : `${styles[key]}`;
+    newStyles.push(`${kebabKey}:${value}`);
+  }
+  return newStyles.join(";") + ";";
 }
