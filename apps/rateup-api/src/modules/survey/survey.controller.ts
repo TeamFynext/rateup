@@ -5,11 +5,7 @@ import {
   deleteSurveyById,
   deleteSurveyFromTeam,
   getSurveysSummmaryByUserId,
-  getGiftByPhone,
-  getGiftByPrice,
   getGoogleUrlBySurveyTeamMapId,
-  getInvoicesByPhone,
-  getIsResponseExist,
   getPhoneBySurveyTeamMapId,
   getPublicSurveyById,
   getSurveyById,
@@ -41,8 +37,6 @@ import {
   DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   GetSurveyTemplatesParams,
-  GiftByPhoneInput,
-  GiftInput,
   IdParamInput,
   PhoneParamInput,
   surveyVariableInput,
@@ -552,99 +546,6 @@ export async function getSurveyLanguagesByTeamIdHandler(
 ) {
   const languages = await getSurveyLanguagesFromTeamId(req.params.teamId);
   reply.send(languages);
-}
-
-//TODO REMOVE LATER: MYG GIFT VISHU
-
-export async function giftHandler(
-  request: FastifyRequest<{
-    Body: GiftInput;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    if (!request.body.price || isNaN(request.body.price)) {
-      reply.code(400).send("Gift failed. invalid params");
-    }
-    const resAlreadyExist = await getIsResponseExist(
-      request.body.surveyTeamMapId,
-      request.body.phoneNumber,
-    );
-    if (resAlreadyExist !== 0) {
-      return reply
-        .code(400)
-        .send(
-          "You've already entered this lucky draw using this phone number.",
-        );
-    }
-    const gift = await getGiftByPrice(request.body.price);
-    if (!gift) {
-      reply.code(404).send("Failed to generate gift.");
-    } else {
-      reply.code(200).send(gift);
-    }
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send("Gift generation Failed");
-  }
-}
-
-export async function giftByPhoneNoHandler(
-  request: FastifyRequest<{
-    Body: GiftByPhoneInput;
-  }>,
-  reply: FastifyReply,
-) {
-  let phoneNumber = request.body.phoneNumber;
-  try {
-    const gift = await getGiftByPhone(Number(phoneNumber));
-    if (!gift) {
-      log.error(".....Gift...Error....404..." + phoneNumber);
-      reply.code(404).send("Failed to generate gift.");
-    } else {
-      console.log(".....Success......Gift.........");
-      console.log(".....Gift.....:" + phoneNumber + "....." + gift);
-      reply.code(200).send(gift);
-    }
-  } catch (e) {
-    console.log("....Gift Error......." + phoneNumber + "........" + e.message);
-    log.error(e + "....." + phoneNumber);
-    if (e.message === "NO_INVOICE_ERROR") {
-      reply
-        .code(404)
-        .send(
-          `We could not find any invoices linked to the phone number ${phoneNumber}. Please check back later or contact myG support.`,
-        );
-    } else if (e.message.startsWith("GIFT CLAIMED")) {
-      reply.code(400).send(e.message);
-    } else if (e.message === "LESS_AMOUNT_ERROR") {
-      reply
-        .code(400)
-        .send("Not Eligible..! Your total purchase amount is less that 5000.");
-    } else {
-      reply.code(500).send("Something Went Wrong! Try again.");
-    }
-  }
-}
-
-export async function getInvoicesByPhoneNoHandler(
-  request: FastifyRequest<{
-    Params: PhoneParamInput;
-  }>,
-  reply: FastifyReply,
-) {
-  let phoneNumber = request.params.phoneNumber;
-  try {
-    const invoices = await getInvoicesByPhone(Number(phoneNumber));
-    if (!invoices) {
-      reply.code(400).send(invoices);
-    } else {
-      reply.code(200).send(invoices);
-    }
-  } catch (e) {
-    reply.code(500).send("Something Went Wrong! Try again.");
-    log.error(e);
-  }
 }
 
 export async function createSurveyVariableHandler(

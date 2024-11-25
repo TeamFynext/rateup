@@ -3,12 +3,9 @@ import { $Sref } from "./survey.schema";
 import {
   completedSurveyHandler,
   fetchGoogleUrlBySurveyIdHandler,
-  getInvoicesByPhoneNoHandler,
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
   getSurveyVariablesHandler,
-  giftByPhoneNoHandler,
-  giftHandler,
   startedSurveyHandler,
   verifySurveyPasswordHandler,
   visitedSurveyHandler,
@@ -79,37 +76,6 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     fetchGoogleUrlBySurveyIdHandler,
   );
 
-  //TODO REMOVE LATER: MYG GIFT VISHU
-  server.post(
-    "/generateGift",
-    {
-      schema: {
-        body: $Sref("giftRequestSchema"),
-      },
-    },
-    giftHandler,
-  );
-
-  server.post(
-    "/generateGiftByPhone",
-    {
-      schema: {
-        body: $Sref("giftByPhoneRequestSchema"),
-      },
-    },
-    giftByPhoneNoHandler,
-  );
-
-  server.get(
-    "/invoices/:phoneNumber",
-    {
-      schema: {
-        params: $Sref("phoneParamsSchema"),
-      },
-    },
-    getInvoicesByPhoneNoHandler,
-  );
-
   server.get(
     "/survey-variables/:id",
     {
@@ -119,6 +85,4 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     },
     getSurveyVariablesHandler,
   );
-
-  //MYG
 }

@@ -303,11 +303,6 @@ export async function downloadExcelResponse(
       headerArray.push(whatsappRespondentNumber);
       filteredSecondArray.push(whatsappRespondentNumber);
     }
-    //TODO REMOVE LATER: MYG GIFT VISHU
-    if (process.env.VISHU_SURVEY === surveyId) {
-      headerArray.push("Gift won");
-      filteredSecondArray.push({ id: "win_item", type: QuestionType.WinItem });
-    }
     if (visibleColumn.includes(responseTag)) {
       headerArray.push(responseTag);
       filteredSecondArray.push(responseTag);
@@ -345,7 +340,6 @@ export async function downloadExcelResponse(
               responseValue = responseValue?.value?.value;
               break;
             }
-            case QuestionType.WinItem:
             case QuestionType.TnC: {
               responseValue = responseValue?.toString();
               break;
@@ -918,16 +912,6 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   if (checkVersion) {
     const languages = survey?.languages;
     let questions = survey?.questions as unknown as Array<Question>;
-    //TODO REMOVE LATER: MYG GIFT VISHU
-    if (process.env.VISHU_SURVEY === surveyId) {
-      questions.push({
-        id: "win_item",
-        type: QuestionType.WinItem,
-        title: { English: "Gift won" },
-        description: {},
-        required: true,
-      });
-    }
     const formattedResByTeam = allResponses.map((res) => ({
       team: res.team.name,
       responses: res.responses,
@@ -1273,16 +1257,6 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
         },
       },
     });
-    //TODO REMOVE LATER: MYG GIFT VISHU
-    if (process.env.VISHU_SURVEY === surveyId) {
-      questions.push({
-        id: "win_item",
-        type: QuestionType.WinItem,
-        title: { English: "Gift won" },
-        description: {},
-        required: true,
-      });
-    }
     if (spreadSheetId) {
       const authClient = await initializeAuthClient();
       const token = (await getIntegrationByName(

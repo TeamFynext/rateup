@@ -63,8 +63,6 @@ import { linktreeSchemas } from "./modules/linktree/linktree.schema";
 import { statsSchemas } from "./modules/stats/stats.schema";
 import { statsRoutes } from "./modules/stats/stats.route";
 import { chatbotRoutes } from "./modules/chatbot/chatbot.rout";
-import { mygRoutes } from "./modules/myg/myg.route";
-import { mygSchemas } from "./modules/myg/myg.schema";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route";
 import { chatbotSchemas } from "./modules/chatbot/chatbot.schema";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route";
@@ -120,7 +118,6 @@ export function registerRoutes(server: FastifyInstance): void {
     statsSchemas,
     chatbotSchemas,
     orgWsSchemas,
-    mygSchemas, //TODO MYG
     campaignParticipantsSchemas,
     emailSchema,
     generateQrSchemas,
@@ -191,7 +188,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(chatbotRoutes, { prefix: "api/chatbot" });
   server.register(chatbotPublicRoute, { prefix: "api/public/chatbot" });
   server.register(orgWsRoutes, { prefix: "api/org/ws" });
-  server.register(mygRoutes, { prefix: "api/myg" }); //TODO  MYG
   server.register(apiAccessTokenRoutes, { prefix: "api/api-access-token" });
   server.register(externalRoutes, { prefix: "api/external" });
   server.register(emailPublicRoutes, { prefix: "api/email" });
