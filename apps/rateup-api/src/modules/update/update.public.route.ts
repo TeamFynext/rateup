@@ -3,15 +3,13 @@
 
 import { FastifyInstance } from "fastify";
 import {
-  updateFreePlanSubscriptionFeaturesHandler,
   updateGoogleReviewQuestions,
+  updateWebSurveyThemePageTitleHandler,
 } from "./update.controller";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/updateGoogleReviewQuestions", updateGoogleReviewQuestions);
 
-  server.post(
-    "/subscription/freeplan",
-    updateFreePlanSubscriptionFeaturesHandler,
-  );
+  //update title and subtitle structure of welcome, language and thank you page
+  server.post("/update-theme-title", updateWebSurveyThemePageTitleHandler);
 }
