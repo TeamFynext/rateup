@@ -66,7 +66,7 @@ function SurveyThemeView({
     );
 
     const titleText = thankyouTypePageQuestionObj?.titleText;
-    const subtitleText = thankyouTypePageQuestionObj?.subtitleText;
+    const subtitleText = thankyouTypePageQuestionObj?.subtitleText || null;
 
     componentToBeRendered = (
       <ThankYou

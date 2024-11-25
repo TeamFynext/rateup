@@ -24,6 +24,7 @@
   overflow: hidden;
   justify-content: center;
   gap: 2rem;
+  align-items: center;
 }
 
 .header {

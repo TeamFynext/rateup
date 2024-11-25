@@ -9,6 +9,6 @@ export const updateGoogleReviewQuestions = async () => {
   return response.data;
 };
 
-export async function updateFreePlanSubscription() {
-  return await axiosClient.post(`/public/update/subscription/freeplan`);
+export async function updateThemeTitleSt() {
+  return await axiosClient.post(`/public/update/update-theme-title`);
 }

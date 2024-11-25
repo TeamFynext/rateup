@@ -28,6 +28,8 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
+import ThemeTitle from "../../ThemeTitle";
+import { getInlineStyleFromStyleObj } from "../welcomepage";
 import styles from "./languagePage.module.css";
 
 const cx = classNames.bind(styles);
@@ -108,6 +110,8 @@ function LanguagePage({ survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
+          if (editSurveySelectedQuestion["subtitleText"])
+            data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -128,6 +132,13 @@ function LanguagePage({ survey }) {
     },
     [editSurveySelectedQuestion],
   );
+
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitle
+    ? `<p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitle ?? ""}</span></p><p style="text-align:center;"><span style="${titleStyleNew}">${title}</span></p>`
+    : title;
 
   return (
     <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
@@ -153,31 +164,15 @@ function LanguagePage({ survey }) {
 
         <Stack className={cx("header-radio-grp-start-btn-container")}>
           <Stack className={cx("header")}>
-            <Tooltip label="Edit Subtitle">
-              <Stack className={surveyThemeStylesCx("titleBox")}>
-                <AutosaveInput
-                  name="subtitle"
-                  value={subtitle}
-                  onSave={handleSaveTitleSubtitleStartTextSave}
-                  style={{
-                    ...subtitleStyles,
-                  }}
-                />
-              </Stack>
-            </Tooltip>
-
-            <Tooltip label={"Edit Title"}>
-              <Stack className={surveyThemeStylesCx("titleBox")}>
-                <AutosaveInput
-                  name="title"
-                  value={title}
-                  onSave={handleSaveTitleSubtitleStartTextSave}
-                  style={{
-                    ...titleStyles,
-                  }}
-                />
-              </Stack>
-            </Tooltip>
+            <Stack className={surveyThemeStylesCx("titleBox")}>
+              <ThemeTitle
+                value={newTitle}
+                onChange={(value) =>
+                  handleSaveTitleSubtitleStartTextSave(value, "title")
+                }
+                styles={{ color: titleStyles?.color }}
+              />
+            </Stack>
           </Stack>
 
           <Flex className={cx("languages-list-radio-grp-container")}>

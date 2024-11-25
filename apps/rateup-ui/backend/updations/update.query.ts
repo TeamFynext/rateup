@@ -4,10 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
-import {
-  updateFreePlanSubscription,
-  updateGoogleReviewQuestions,
-} from "./update.api";
+import { updateGoogleReviewQuestions, updateThemeTitleSt } from "./update.api";
 
 export const useUpdateGoogleReviewQuestions = () => {
   return useMutation({
@@ -18,9 +15,9 @@ export const useUpdateGoogleReviewQuestions = () => {
   });
 };
 
-export const useUpdateFreePlanSubscription = () => {
+export const useUpdateThemeTitleSt = () => {
   return useMutation({
-    mutationFn: updateFreePlanSubscription,
+    mutationFn: updateThemeTitleSt,
     onSuccess: () => {
       showSuccessToast("Update Success");
     },

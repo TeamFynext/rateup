@@ -28,6 +28,8 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext";
+import ThemeTitle from "../../ThemeTitle";
+import { getInlineStyleFromStyleObj } from "../welcomepage";
 
 export default function ThankyouPageThemeView({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
@@ -77,6 +79,8 @@ export default function ThankyouPageThemeView({ survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
+          if (editSurveySelectedQuestion["subtitleText"])
+            data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -93,6 +97,13 @@ export default function ThankyouPageThemeView({ survey }) {
     },
     [editSurveySelectedQuestion],
   );
+
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitle
+    ? `<p style="text-align:center;"><span style="${titleStyleNew}">${title}</span></p><p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitle ?? ""}</span></p>`
+    : title;
 
   return (
     <Flex
@@ -122,32 +133,13 @@ export default function ThankyouPageThemeView({ survey }) {
               h={"100%"}
               direction={"column"}
             >
-              <Tooltip label="Edit title">
-                <Box className={classes.titleBox}>
-                  <AutosaveInput
-                    name="title"
-                    value={title}
-                    onSave={handleSaveTitleSubtitleStartTextSave}
-                    style={{
-                      ...titleStyles,
-                    }}
-                  />
-                </Box>
-              </Tooltip>
-              {/* //--------------------------- */}
-              <Tooltip label="Edit subtitle">
-                <Box className={classes.titleBox} mt={20} w={"50%"}>
-                  <AutosaveInput
-                    isTextArea
-                    name="subtitle"
-                    value={subtitle}
-                    onSave={handleSaveTitleSubtitleStartTextSave}
-                    style={{
-                      ...subtitleStyles,
-                    }}
-                  />
-                </Box>
-              </Tooltip>
+              <ThemeTitle
+                value={newTitle}
+                onChange={(value) =>
+                  handleSaveTitleSubtitleStartTextSave(value, "title")
+                }
+                styles={{ color: titleStyles?.color }}
+              />
             </Flex>
           </form>
         </BackgroundImage>
