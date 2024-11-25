@@ -53,18 +53,6 @@ export const useSurveyResponseColumns = ({
 }) => {
   const { translations } = useTranslations();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  //TODO REMOVE LATER: MYG GIFT VISHU
-  if (surveyId === process.env.NEXT_PUBLIC_VISHU_SURVEY) {
-    questions.push({
-      id: "win_item",
-      title: {
-        [selectedLanguage ? selectedLanguage : defaultLanguage]:
-          translations["Gift won"],
-      },
-      type: QuestionType.WinItem,
-      description: "",
-    });
-  }
   const column: ColumnDef<any>[] = [
     {
       header: () => (

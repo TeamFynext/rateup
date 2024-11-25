@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { AXIOS_TIMEOUT } from "../../utils/constants";
 import { axiosClient, axiosClientIP } from "../apiClient";
 
@@ -232,65 +233,6 @@ export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
     `${SURVEYURL}/surveyStats/${surveyTeamMapId}`,
   );
   return res.data as STStats;
-}
-//TODO REMOVE LATER: MYG GIFT VISHU
-type generateGiftRes = {
-  name: string;
-  sumOfInvoiceValues: number;
-  image: string;
-};
-type generateGiftProps = {
-  phoneNumber: string;
-};
-export async function generateGift(data: generateGiftProps) {
-  try {
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api${SURVEY_PUBLIC_URL}/generateGiftByPhone`,
-      data,
-    );
-    return res.data as generateGiftRes;
-  } catch (error) {
-    if (error?.code === "ECONNABORTED") {
-      throw Error(AXIOS_TIMEOUT);
-    } else if (error?.response?.data?.message) {
-      throw Error(error?.response?.data?.message);
-    } else if (typeof error?.response?.data === "string") {
-      throw Error(error?.response?.data);
-    } else {
-      throw Error("There was an error, please try again later");
-    }
-  }
-}
-export type Invoice = {
-  gift: string | null;
-  giftRedeemed: boolean;
-  id: string;
-  invoiceBranch: string;
-  invoiceDate: string;
-  invoiceNumber: string;
-  invoiceValue: number;
-  mobileNumber: string;
-  redeemAttempt: number;
-  invoiceDiscount: number;
-};
-
-export async function getInvoicesByPhNo(phoneNumber: string) {
-  try {
-    const res = await axiosClient.get(
-      `${SURVEY_PUBLIC_URL}/invoices/${phoneNumber}`,
-    );
-    return res.data as Invoice[];
-  } catch (error) {
-    if (error?.code === "ECONNABORTED") {
-      throw Error(AXIOS_TIMEOUT);
-    } else if (error?.response?.data?.message) {
-      throw Error(error?.response?.data?.message);
-    } else if (typeof error?.response?.data === "string") {
-      throw Error(error?.response?.data);
-    } else {
-      throw Error("There was an error, please try again later");
-    }
-  }
 }
 
 export async function getSurveyVariables(surveyId, isPublic) {
