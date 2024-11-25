@@ -30,7 +30,7 @@ export const FlowChatPreview = ({
     currentScreen,
     version,
   )?.[0] as { label: string };
-
+  console.log(elementsInScreen, "elementsInScreen");
   return (
     <>
       <Title

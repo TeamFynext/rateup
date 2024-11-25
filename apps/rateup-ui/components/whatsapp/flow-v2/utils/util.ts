@@ -364,7 +364,7 @@ export const getInitialValues = (type: QuestionType2) => {
           extra: { max: HELPER_TEXT_MAX },
         },
         name: { type: "hidden", value: generateId },
-        "init-value": { type: "text", value: "" },
+        "init-value": { type: "init", value: "" },
         visible: {
           type: "checkbox",
           value: true,
@@ -407,7 +407,7 @@ export const getInitialValues = (type: QuestionType2) => {
           value: "",
           extra: { max: HELPER_TEXT_MAX },
         },
-        "init-value": { type: "text", value: "" },
+        "init-value": { type: "init", value: "" },
         visible: {
           type: "checkbox",
           value: true,
@@ -500,7 +500,7 @@ export const getInitialValues = (type: QuestionType2) => {
         },
         required: { type: "hidden", value: true },
         description: { type: "text", value: "" },
-        "init-value": { type: "text", value: "" },
+        "init-value": { type: "init", value: "" },
         "media-size": {
           type: "select",
           value: "regular",
@@ -608,7 +608,7 @@ export const getInitialValues = (type: QuestionType2) => {
           },
         },
         required: { type: "hidden", value: true },
-        "init-value": { type: "text", value: "" },
+        "init-value": { type: "init", value: "" },
         visible: {
           type: "checkbox",
           value: true,
@@ -677,7 +677,7 @@ export const getInitialValues = (type: QuestionType2) => {
           value: "",
           extra: { max: HELPER_TEXT_MAX },
         },
-        "init-value": { type: "text", value: "" },
+        "init-value": { type: "init", value: "" },
         visible: {
           type: "checkbox",
           value: true,

@@ -41,6 +41,7 @@ import { showErrorToast } from "@/utils/notifications";
 
 import { DataSourceInput } from "../input/DataSource";
 import ImageInput from "../input/ImageInput";
+import InitInput from "../input/InitInput";
 import TiptapMarkdown from "../input/TiptapMarkdown";
 import useFlowStore, { EditorType } from "../utils/store";
 import { getInitialValues, getValidationSchema } from "../utils/util";
@@ -56,6 +57,7 @@ const FieldComponentMap = {
   richText: memo(TiptapMarkdown),
   image: memo(ImageInput),
   checkbox: memo(RateupSwitch),
+  init: memo(InitInput),
 };
 
 function ElementEditor() {
@@ -165,6 +167,9 @@ function ElementEditor() {
             metaType: currentElementType,
           })}
           disabled={!flowEditable}
+          {...(field === "init-value" && {
+            dataSource: form2?.values?.["data-source"],
+          })}
         />
       </Grid.Col>
     );

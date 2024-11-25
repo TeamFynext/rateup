@@ -895,6 +895,7 @@ export type WaFlowFormElement = {
   "alt-text"?: string; // for accessibility (Talkback, voice over)
   "font-weight"?: string;
   strikethrough?: boolean;
+  header?: string;
 };
 
 export type WaFlowMap = {

@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+
 import {
   Badge,
   Box,
@@ -9,18 +11,18 @@ import {
   Select,
   Text,
 } from "@mantine/core";
-import dayjs from "dayjs";
-import Link from "next/link";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { IconCheck, IconEye, IconUsersGroup, IconX } from "@tabler/icons-react";
-import { ContactGroupMenu } from "../../Card/ContactCard";
-import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { fallbackImage } from "../../../utils/constants";
-import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
-import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
-import { ColumnDef } from "@tanstack/react-table";
-import { CampaignParticipantStatus } from "../../../types/enums";
 import { rankItem } from "@tanstack/match-sorter-utils";
+import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
+
+import { CampaignParticipantStatus } from "../../../types/enums";
+import { fallbackImage } from "../../../utils/constants";
+import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
+import { RateupButtonPrimary } from "../../Button/RateupButtons";
+import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
+import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
+import { ContactGroupMenu } from "../../Card/ContactCard";
 
 export const DETAIL_BTN = "detail_btn_link_123";
 
@@ -212,7 +214,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   {
     header: () => "Responses",
     id: "flow",
-    accessorKey: "flowId",
+    accessorFn: (row) => row?.flowId && `v1/${row.flowId}`,
     enableColumnFilter: false,
     cell: (info) =>
       info.getValue() && (

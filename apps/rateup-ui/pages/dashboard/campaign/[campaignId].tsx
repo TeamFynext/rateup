@@ -37,11 +37,13 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import { z } from "zod";
 
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { SearchInput } from ".";
 import {
   useCampaignById,
+  useCampaignResponseDownloadById,
   useSendCampaign,
 } from "../../../backend/campaign/campaign.query";
 import ErrorComponent from "../../../components/404/ErrorComponent";
@@ -91,6 +93,7 @@ const CampaignById = () => {
     tab: string;
   };
   let activeTab = tab?.toString() as CampaignParticipantsTabs;
+  const mut = useCampaignResponseDownloadById();
 
   const {
     data: campaignData,
@@ -167,6 +170,12 @@ const CampaignById = () => {
               setSearchText={setSearchText}
             />
           )}
+          <RateupButtonPrimary
+            title="download stats"
+            onClick={() => {
+              mut.mutate(campaignId);
+            }}
+          />
         </Group>
         <Alert
           variant="filled"
