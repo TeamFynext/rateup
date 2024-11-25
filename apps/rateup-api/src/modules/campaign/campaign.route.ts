@@ -5,6 +5,7 @@ import {
   getCampaignFilterForFlowsHandler,
   getCampaignsHandler,
   getResponseByCampaignByIdHandler,
+  getResponseExcelByCampaignByIdHandler,
   sendCampaignHandler,
   updateCampaignByIdHandler,
 } from "./campaign.controller";
@@ -88,5 +89,14 @@ export async function campaignRoutes(server: FastifyInstance) {
       },
     },
     getResponseByCampaignByIdHandler,
+  );
+  server.post(
+    "/:campaignId/download",
+    {
+      schema: {
+        params: $campaignRef("byCampaignIdParamsSchema"),
+      },
+    },
+    getResponseExcelByCampaignByIdHandler,
   );
 }

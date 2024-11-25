@@ -1011,23 +1011,6 @@ model ApiAccessToken {
   createdAt   DateTime @default(now())
 }
 
-// TODO remove later: FOR myg vishu gift
-model MyGInvoice {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  invoiceDate     DateTime
-  invoiceNumber   String
-  invoiceValue    Float
-  mobileNumber    String
-  invoiceBranch   String
-  giftRedeemed    Boolean   @default(false)
-  gift            String?
-  redeemAttempt   Int       @default(0)
-  invoiceDiscount Float?    @default(0)
-  createdAt       DateTime? @default(now())
-  updatedAt       DateTime? @updatedAt
-
-  @@unique([invoiceNumber, mobileNumber])
-}
 
 model Chatbot {
   id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

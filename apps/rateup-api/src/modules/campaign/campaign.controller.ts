@@ -15,6 +15,7 @@ import {
   getCampaignsByOrgId,
   getCampaignsByTeamId,
   getResponseByCampaignById,
+  getResponseExcelByCampaignById,
   sendCampaign,
   updateCampaign,
 } from "./campaign.service";
@@ -152,6 +153,25 @@ export async function getResponseByCampaignByIdHandler(
     return reply.status(200).send(res);
   } catch (error) {
     log.error("Error while handling getResponseByCampaignById", error);
+    return reply.code(500).send(error);
+  }
+}
+
+export async function getResponseExcelByCampaignByIdHandler(
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const [title, data] = await getResponseExcelByCampaignById(
+      request.params.campaignId,
+    );
+    reply.header("filename", `${title}.xlsx`);
+    reply.header("Access-Control-Expose-Headers", "filename");
+    reply.status(200).type("application/xlsx").send(data);
+  } catch (error) {
+    log.error("Error while handling getResponseExcelByCampaignById", error);
     return reply.code(500).send(error);
   }
 }

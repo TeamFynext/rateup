@@ -43,10 +43,6 @@ export enum QuestionType {
   OptIn = "OptIn",
   EmailOtp = "EmailOtp",
   WOP = "Wheel of Price",
-  //TODO REMOVE LATER: MYG GIFT VISHU
-  WinItem = "Win_item",
-  Invoice_Id = "invoice_id",
-
   // WhatsApp exclusive
   WaList = "Wa_List", // Interactive > List
   WaButtons = "Wa_Buttons", // Interactive > Quick Reply Buttons

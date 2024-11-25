@@ -57,23 +57,6 @@ const deleteTeamSurveyRequestSchema = z.object({
   teamId: z.string().uuid(),
 });
 
-//TODO REMOVE LATER: MYG GIFT VISHU
-const giftRequestSchema = z.object({
-  price: z.number().min(5000, { message: "Price must be at least 5000" }),
-  phoneNumber: z.string(),
-  surveyTeamMapId: z.string(),
-});
-
-const giftByPhoneRequestSchema = z.object({
-  phoneNumber: z
-    .string()
-    .min(10, { message: "Phone number must be at least 10 digits" })
-    .max(10, { message: "Phone number must not exceed 10 digits" })
-    .refine((value) => /^[+]?[0-9]+$/.test(value), {
-      message: "Must be a valid number",
-    }),
-});
-
 const phoneParamsSchema = z.object({
   phoneNumber: z
     .string()
@@ -216,8 +199,6 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     cloneSurveySchema,
     updateGoogleLinkRequestSchema,
     deleteTeamSurveyRequestSchema,
-    giftRequestSchema,
-    giftByPhoneRequestSchema,
     phoneParamsSchema,
     surveyVariableSchema,
     surveyVariableUpdateSchema,
@@ -225,10 +206,7 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   { $id: "surveySchema" },
 );
 
-//MYG
 export type PhoneParamInput = z.infer<typeof phoneParamsSchema>;
-export type GiftInput = z.infer<typeof giftRequestSchema>;
-export type GiftByPhoneInput = z.infer<typeof giftByPhoneRequestSchema>;
 
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
 export type CreateSurveyLandingInput = z.infer<
