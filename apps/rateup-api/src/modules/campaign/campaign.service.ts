@@ -10,6 +10,7 @@ import { log } from "../../utils/logger";
 import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import { getSubscription, getUsageStats } from "./campaign.auth";
+import xlsx from "node-xlsx";
 
 type campaginExtentend = {
   team: {
@@ -34,10 +35,24 @@ type campaginExtentend = {
     status: string;
     WaMessageCampaginParticipantMap: any[];
     waStatus?: string;
+    createdAt: Date;
+    sentAt?: Date;
+    contact?: {
+      name: string;
+      phone: string;
+    };
   }[];
   flowId?: string;
-  stats?: {};
+  stats?: {
+    countRead?: number;
+    countSent?: number;
+    countFailed?: number;
+    countDelivered?: number;
+    countPending?: number;
+    countCompleted?: number;
+  };
   contactTags?: string[];
+  name?: string;
 };
 export function getLatestStatus(participant) {
   let latestStatus = null;
@@ -420,4 +435,54 @@ export const getResponseByCampaignById = async (id: string) => {
   );
 
   return responsesWithTitles;
+};
+
+export const getResponseExcelByCampaignById = async (id: string) => {
+  const campaign = await getCampaignById(id);
+  const headerArray = [
+    "Created At",
+    "Participant Name",
+    "Phone",
+    "Status",
+    "Sent At",
+  ];
+  const bodyArray = campaign.campaignParticipants.map((participant) => [
+    participant?.createdAt,
+    participant?.contact?.name,
+    participant?.contact?.phone,
+    participant?.status,
+    participant?.sentAt,
+  ]);
+
+  const statsHeaderArray = [
+    "Count Pending",
+    "Count Read",
+    "Count Sent",
+    "Count Failed",
+    "Count Delivered",
+    "Count Completed",
+  ];
+  const statsBodyArray = [
+    campaign?.stats?.countPending,
+    campaign?.stats?.countRead,
+    campaign?.stats?.countSent,
+    campaign?.stats?.countFailed,
+    campaign?.stats?.countDelivered,
+    campaign?.stats?.countCompleted,
+  ];
+
+  const buffer = xlsx.build([
+    {
+      name: "Stats",
+      data: [statsHeaderArray, statsBodyArray],
+      options: {},
+    },
+    {
+      name: "Participants",
+      data: [headerArray, ...bodyArray],
+      options: {},
+    },
+  ]);
+
+  return [campaign?.name, buffer];
 };
