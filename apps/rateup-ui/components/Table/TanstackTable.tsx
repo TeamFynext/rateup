@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 
 import { Box, Divider, Flex, Group } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
@@ -35,7 +35,7 @@ function TanstackTable({
   btnTitle,
   toggle,
   disableFuzzyFnCustom = false,
-  toggleOffContent,
+  toggleOffContent = <></>,
   detailBtn = false,
   isPending = false,
 }: Readonly<{
@@ -60,7 +60,7 @@ function TanstackTable({
     [DETAIL_BTN]: false,
     ["tag"]: !!data?.find((item) => item?.tag),
   });
-  const largeScreen = useMediaQuery("(min-width: 40em)");
+  const largeScreen = useMediaQuery("(min-width: 40em)") || true;
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -73,6 +73,22 @@ function TanstackTable({
         .getState()
         .updateVisibleColumnArray(tempVisibleColumnArray);
   }, [tempVisibleColumnArray]);
+
+  const handleSortingChange = useCallback((newSorting) => {
+    setSorting(newSorting);
+  }, []);
+
+  const handleColumnFiltersChange = useCallback((newFilters) => {
+    setColumnFilters(newFilters);
+  }, []);
+
+  const handleColumnVisibilityChange = useCallback((newVisibility) => {
+    setColumnVisibility(newVisibility);
+  }, []);
+
+  const handleRowSelectionChange = useCallback((newSelection) => {
+    setRowSelection(newSelection);
+  }, []);
 
   const table = useReactTable({
     data,
@@ -89,14 +105,14 @@ function TanstackTable({
         pageSize: Number(PAGE_SIZE[0]),
       },
     },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: handleColumnFiltersChange,
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    onRowSelectionChange: handleRowSelectionChange,
   });
 
   return (
@@ -130,6 +146,7 @@ function TanstackTable({
             </Box>
           )}
         </Group>
+
         <FilterToggles
           enableFilter={enableFilter}
           filterVisibility={filterVisibility}

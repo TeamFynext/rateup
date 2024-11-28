@@ -28,7 +28,6 @@ import { decryptPrivateKey, decryptResponse } from "./encryption";
 import { RatingScaleMap } from "./whatsapp/enumMap";
 
 export function getResponse(q: any, response: any) {
-  console.log("🚀 ~ getResponse ~ response:", response);
   if (!response && response !== 0) return "";
 
   switch (q?.type) {
