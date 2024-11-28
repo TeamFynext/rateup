@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
 
 import { Box, Button, Flex, Group, Popover, Stack, Text } from "@mantine/core";
@@ -426,11 +433,13 @@ const Responses = ({
 
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
-          <TanstackTable
-            data={filteredResponses}
-            columns={columns}
-            isPending={isTableLoading}
-          />
+          {isTableLoading ? (
+            <RateupLoader />
+          ) : (
+            <Suspense fallback={<RateupLoader />}>
+              <TanstackTable data={filteredResponses} columns={columns} />
+            </Suspense>
+          )}
           <DeleteModal
             confirmDelete={confirmDelete}
             translations={translations}

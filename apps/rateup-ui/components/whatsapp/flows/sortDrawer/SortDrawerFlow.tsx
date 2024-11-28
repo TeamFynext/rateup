@@ -66,7 +66,28 @@ const SortDrawerFlow = ({
         const indexB = state.findIndex((item) => item.id === b.id);
         return indexA - indexB;
       });
-      addScreens(sortedScreens);
+      let cloneScreens = JSON.parse(JSON.stringify(sortedScreens));
+      for (const screenIndex in cloneScreens) {
+        let footer = cloneScreens[screenIndex].layout.children.find(
+          (child) => child.type === "Footer",
+        );
+        let nextScreenId = cloneScreens?.[parseInt(screenIndex) + 1]?.id;
+        cloneScreens[screenIndex].terminal = nextScreenId ? undefined : true;
+        footer["on-click-action"] = !!nextScreenId
+          ? {
+              name: "navigate",
+              next: {
+                type: "screen",
+                name: nextScreenId,
+              },
+              payload: {},
+            }
+          : {
+              name: "complete",
+              payload: {},
+            };
+      }
+      addScreens(cloneScreens);
     } else {
       const sortedScreens = flowJson?.screens?.toSorted((a, b) => {
         const indexA = state.findIndex((item) => item.id === a.id);
