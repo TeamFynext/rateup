@@ -22,10 +22,10 @@ type GoogleReview = {
 } | null;
 
 export interface FormElement {
-  id: string;
-  type: QuestionType2;
+  id?: string;
+  type?: QuestionType2;
   required?: boolean;
-  label: string;
+  label?: string;
   name?: string;
   text?: string;
   metaType?: WaQuestions;
