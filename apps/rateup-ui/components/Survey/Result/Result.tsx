@@ -20,6 +20,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
 import { QuestionType2 } from "@/types/enums";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
@@ -85,7 +86,7 @@ const Result = ({
   const {
     data: teamWiseResponses,
     error: responseFetchError,
-    isLoading: isLoading,
+    isPending: isLoading,
   } = useAllResponses(survey?.id);
 
   const filteredResponsesByTeam = useMemo(() => {
@@ -132,7 +133,7 @@ const Result = ({
     );
   }, [flow]);
 
-  if (isLoading) return <Loader type="bars" />;
+  if (isLoading) return <RateupLoader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
   return (
     <StyledTabs

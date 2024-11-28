@@ -13,7 +13,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -71,12 +71,14 @@ function ScreenListItem({
   const footerElement = screen?.layout.children.find(
     (el) => el.type === QuestionType2.Footer,
   );
+  const [footerLabel, setFooterLabel] = useDebouncedState(
+    footerElement?.label ?? "Continue",
+    200,
+  );
+
   const { translations } = useTranslations();
   const [screenTitleInputState, setScreenTitleInputState] = useState(
     screen?.title,
-  );
-  const [footerLabelInputState, setFooterLabelInputState] = useState(
-    footerElement?.label ?? "Continue",
   );
   const pushToWaMutation = usePushToWaMutation();
 
@@ -96,7 +98,6 @@ function ScreenListItem({
 
   function handleElementClick(feId: string, feType: QuestionType2) {
     setCurrentElement(feId, QuestionType2[feType]);
-    // setActiveEditor(EditFlowRightPanel.ElementEditor);
   }
   const onAddElementClick = () => {
     setActiveEditor(EditFlowRightPanel.TypeSelection);
@@ -111,14 +112,10 @@ function ScreenListItem({
     updateScreen({ title: screenTitleInputState });
   }
 
-  function handleFooterLabelInputChange(e) {
-    setFooterLabelInputState(e.target.value);
-  }
-
   function handleFooterLabelInputBlur() {
     if (!flowEditable) return;
-    updateComponentInScreen(screen.id, {
-      label: footerLabelInputState,
+    updateComponentInScreen("slfkdj", {
+      label: footerLabel,
     });
   }
   const handleSaveJsonToWa = () => {
@@ -298,6 +295,7 @@ function ScreenListItem({
                           text={
                             element.header ||
                             element.label ||
+                            element?.text ||
                             element.type?.toUpperCase()
                           }
                           screen={screen.id}
@@ -328,8 +326,8 @@ function ScreenListItem({
               <TextInput
                 ref={footerLabelInputRef}
                 className={cx("text-input", "footer-label-input")}
-                value={footerLabelInputState}
-                onChange={handleFooterLabelInputChange}
+                defaultValue={footerLabel}
+                onChange={(event) => setFooterLabel(event.currentTarget.value)}
                 readOnly={!flowEditable}
                 placeholder={translations["Next button text"]}
                 onBlur={handleFooterLabelInputBlur}
