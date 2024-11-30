@@ -514,7 +514,7 @@ export async function sendTemplateToUserCore(
     )?.parameters;
     if (params) {
       params.forEach((data, i) => {
-        if (!data?.text?.trim()) {
+        if (!data?.text || !data?.text?.trim()) {
           data.text = defaultValue?.[i];
         }
       });

@@ -87,6 +87,7 @@ import { loyaltyActionSchemas } from "./modules/loyalty/actions/actions.schema";
 import { loyaltyCustomerSchemas } from "./modules/loyalty/customer/customer.schema";
 import { loyaltyRewardSchemas } from "./modules/loyalty/rewards/rewards.schema";
 import { loyaltyRedeemSchemas } from "./modules/loyalty/redeems/redeem.schema";
+import { loyaltySettingSchemas } from "./modules/loyalty/settings/settings.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -126,6 +127,7 @@ export function registerRoutes(server: FastifyInstance): void {
     loyaltyRewardSchemas,
     loyaltyCustomerSchemas,
     loyaltyRedeemSchemas,
+    loyaltySettingSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {

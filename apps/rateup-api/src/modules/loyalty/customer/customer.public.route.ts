@@ -1,8 +1,21 @@
 import { FastifyInstance } from "fastify";
 import { $lCustomerRef } from "./customer.schema";
-import { customerActionHandler } from "./customer.controller";
+import {
+  createLCustomerHandler,
+  customerActionHandler,
+} from "./customer.controller";
 
 export async function loyaltyCustomerPublicRoutes(server: FastifyInstance) {
+  server.post(
+    "/",
+    {
+      schema: {
+        body: $lCustomerRef("LCustomerSchema"),
+      },
+    },
+    createLCustomerHandler,
+  );
+
   server.post(
     "/:customerId/:actionId",
     {

@@ -7,15 +7,44 @@ import {
   getLoyaltyCustomers,
   updateLCustomerPoint,
 } from "./customer.service";
+import { getLoyaltyTemplate } from "../settings/settings.service";
+import {
+  LoyaltyTemplateTypes,
+  WaTemplateComponentType,
+} from "../../../types/enums";
+import { sendTemplateToPhone } from "../../whatsapp/messageTemplates/wa_templates.service";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const res = await createLCustomer(request.body, orgId);
+    const { orgId } = request.body;
+    const res = await createLCustomer(request.body);
+    const template = await getLoyaltyTemplate(
+      LoyaltyTemplateTypes.CustomerRegistration,
+      orgId,
+    );
     reply.code(200).send(res);
+    const header: any = [];
+    const customerInfo = [res.name, res.totalEarnedPoints.toString()];
+    header.push({
+      type: WaTemplateComponentType.BODY,
+      parameters: customerInfo.map((variable) => {
+        return {
+          type: "text",
+          text: variable,
+        };
+      }),
+    });
+    await sendTemplateToUserCore(
+      orgId,
+      template.waTemplateId,
+      res.phone,
+      header,
+      template.teamId,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

@@ -3,13 +3,13 @@ import { LoyaltyActionType } from "../actions/actions.schema";
 import { RedeemStatus } from "../redeems/redeem.service";
 import { LCustomerInput } from "./customer.schema";
 
-export async function createLCustomer(input: LCustomerInput, orgId: string) {
+export async function createLCustomer(input: LCustomerInput) {
   return await prisma.loyaltyCustomer.create({
     data: {
-      name: input?.name,
-      phone: input?.phone,
-      email: input?.email,
-      orgId,
+      name: input.name,
+      phone: input.phone,
+      email: input.email,
+      orgId: input.orgId,
     },
   });
 }
