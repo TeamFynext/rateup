@@ -8,6 +8,7 @@ import {
   IconPremiumRights,
   IconQrcode,
   IconShoppingBag,
+  IconTicket,
   IconUser,
   IconWallet,
   IconWorld,
@@ -68,5 +69,10 @@ export const adminNavItems = [
     Icon: IconShoppingBag,
     label: "Shopify Stores",
     href: "/admin/shopify",
+  },
+  {
+    Icon: IconTicket,
+    label: "Loyalty",
+    href: "/admin/loyalty",
   },
 ];
