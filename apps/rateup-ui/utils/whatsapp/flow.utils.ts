@@ -168,11 +168,11 @@ export function* waFlowFormElementIterator(
 export function getFlowFormElementsFromScreen(
   screen: WaFlowScreen,
   onlyInteractive = false,
-  version = 0,
+  version = 1,
 ) {
   let children = screen?.layout?.children;
   const elementsWithoutFooter =
-    version === 0
+    version === 1
       ? children
           ?.find((se) => se.type === "Form")
           ?.children?.filter((fe) => fe.type !== WaFlowFormElementType.footer)
@@ -187,11 +187,11 @@ export function getFlowFormElementsFromScreen(
 
 export function getFlowFooterElementsFromScreen(
   screen: WaFlowScreen,
-  version = 0,
+  version = 1,
 ) {
   let children = screen?.layout?.children;
   const elementsWithoutFooter =
-    version === 0
+    version === 1
       ? children
           ?.find((se) => se.type === "Form")
           ?.children?.filter((fe) => fe.type === WaFlowFormElementType.footer)
