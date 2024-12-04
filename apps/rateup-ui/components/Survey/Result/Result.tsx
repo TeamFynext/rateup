@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -14,6 +20,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
 import { QuestionType2 } from "@/types/enums";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
@@ -67,11 +74,6 @@ const Result = ({
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  const [resultTab, setActiveResultTab] = useState<ResultTab>(
-    flowId ? ResultTab.Responses : ResultTab.OverView,
-  );
-  //.
-  //.
   //end to end encryption logic for result page begins here
   const passwordModalOpenedCondition =
     (survey?.isEncrypted || !!survey?.publicKey) && !encryptionpassword;
@@ -84,52 +86,58 @@ const Result = ({
   const {
     data: teamWiseResponses,
     error: responseFetchError,
-    isLoading: isLoading,
+    isPending: isLoading,
   } = useAllResponses(survey?.id);
-  const [filteredResponses, setFilteredResponses] = useState(null);
-  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
-    filterTeams,
-    teamWiseResponses,
-  );
-  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
-    filteredResponsesByTeam,
-  );
-  const { filteredResponsesByLanguage } = getfilteredResponseUsingLanguage(
-    mergedResponses,
-    selectedLanguage,
-  );
-  const { filteredResponsesByTags } = getFilteredResponseUsingTags(
-    filteredResponsesByLanguage,
-    filterTags,
-  );
-  //this useEffect is used to set the filtered responses to the responses when the responses are fetched
-  useEffect(() => {
-    setFilteredResponses(filteredResponsesByTags);
-  }, [teamWiseResponses, filterTeams, selectedLanguage, filterTags]);
 
-  if (isLoading) return <Loader type="bars" />;
+  const filteredResponsesByTeam = useMemo(() => {
+    return getFilteredResponsesUsingTeam(filterTeams, teamWiseResponses)
+      .filteredResponsesByTeam;
+  }, [filterTeams, teamWiseResponses]);
+
+  const mergedResponses = useMemo(() => {
+    return mergeResponsesFromTeams(filteredResponsesByTeam).mergedResponses;
+  }, [filteredResponsesByTeam]);
+
+  const filteredResponsesByLanguage = useMemo(() => {
+    return getfilteredResponseUsingLanguage(mergedResponses, selectedLanguage)
+      .filteredResponsesByLanguage;
+  }, [mergedResponses, selectedLanguage]);
+
+  const filteredResponsesByTags = useMemo(() => {
+    return getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags)
+      .filteredResponsesByTags;
+  }, [filteredResponsesByLanguage, filterTags]);
+
+  const questions = useMemo(() => {
+    return flow?.json?.screens?.flatMap((screen) =>
+      screen.layout.children
+        .filter((child) => child.type !== QuestionType2.Footer)
+        .map(
+          ({
+            id,
+            label,
+            metaType,
+            name,
+            "data-source": dataSource,
+            header,
+          }) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          }),
+        )
+        .filter(({ name }) => name),
+    );
+  }, [flow]);
+
+  if (isLoading) return <RateupLoader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
-  const questions = flow?.json?.screens?.flatMap((screen) =>
-    screen.layout.children
-      .filter((child) => child.type !== QuestionType2.Footer)
-      .map(
-        ({ id, label, metaType, name, "data-source": dataSource, header }) => ({
-          id,
-          label,
-          metaType,
-          dataSource,
-          name,
-          header,
-        }),
-      )
-      .filter(({ name }) => name),
-  );
-
   return (
     <StyledTabs
-      value={resultTab}
-      onChange={(value) => setActiveResultTab(value as ResultTab)}
-      defaultValue="overview"
+      defaultValue={flowId ? ResultTab.Responses : ResultTab.OverView}
       placement="left"
       orientation="horizontal"
       styles={{
@@ -181,16 +189,15 @@ const Result = ({
           {version === 1 ? (
             <Responses
               survey={survey}
-              responses={filteredResponses}
+              responses={filteredResponsesByTags}
               defaultLanguage={defaultLanguage}
               isLoading={isLoading}
-              selectedTeamId={selectedTeamId}
               subscription={subscription}
             />
           ) : (
             <WaResponses
               survey={survey}
-              responses={filteredResponses}
+              responses={filteredResponsesByTags}
               defaultLanguage={defaultLanguage}
               isLoading={isLoading}
               selectedTeamId={selectedTeamId}
@@ -240,7 +247,8 @@ function EncryptionPasswordModal({
   const { translations } = useTranslations();
   const router = useRouter();
   const [encryptionpassword, setEncryptionPassword] = useState("");
-  async function onSubmitPassword() {
+
+  const onSubmitPassword = useCallback(async () => {
     const { privateKey } = await decryptPrivateKey(
       encryptionKeys?.privateKey,
       encryptionpassword,
@@ -252,11 +260,18 @@ function EncryptionPasswordModal({
     } else {
       showErrorToast(translations["Invalid Password"]);
     }
-  }
+  }, [
+    encryptionpassword,
+    encryptionKeys,
+    close,
+    setPassword,
+    surveyId,
+    translations,
+  ]);
 
-  const handleGoback = () => {
+  const handleGoback = useCallback(() => {
     router.push(`/dashboard/surveys`);
-  };
+  }, [router]);
 
   return (
     <SimpleModalLayout
@@ -279,15 +294,11 @@ function EncryptionPasswordModal({
           <RateupButtonSecondary
             title={translations["Go back"]}
             leftIcon={<IconArrowLeft />}
-            onClick={() => {
-              handleGoback();
-            }}
+            onClick={handleGoback}
           />
           <RateupButtonBlue
             title={translations["Submit"]}
-            onClick={() => {
-              onSubmitPassword();
-            }}
+            onClick={onSubmitPassword}
           />
         </Flex>
       </Stack>

@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
 
 import { Box, Button, Flex, Group, Popover, Stack, Text } from "@mantine/core";
@@ -72,7 +79,6 @@ const Responses = ({
   responses,
   defaultLanguage,
   isLoading,
-  selectedTeamId,
   subscription,
 }) => {
   const surveyId = survey?.id;
@@ -81,7 +87,6 @@ const Responses = ({
   const [opened, { open, close }] = useDisclosure(false);
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -140,15 +145,6 @@ const Responses = ({
     error: CFError,
     isLoading: CFLoading,
   } = useCampaignFilterForFlows(surveyId);
-  function handleCampaignFlowFilter(responses) {
-    if (campaignFlowFilter.length === 0) return responses;
-    return responses.filter((response) =>
-      campaignFlowFilter.some((campaign) =>
-        campaign.participantsContactIds.includes(response.contactId),
-      ),
-    );
-  }
-  //
   const downloadExcelResponse = useDownloadExcelResponse();
   function handleExportContacts() {
     showLoadingToast(
@@ -269,48 +265,43 @@ const Responses = ({
     }
   };
 
-  useEffect(() => {
-    if (refreshing) {
-      setRefreshing(false);
-    }
-  }, [refreshing]);
+  const [isTableLoading, setIsTableLoading] = useState(true);
 
   useEffect(() => {
-    if (!responses || !responses?.length) return;
+    if (!responses || responses?.length === 0) return;
     if (ranges.length === 0) {
-      const endDate = dayjs();
-      let startDate = dayjs();
-      responses
-        ?.map((res) => dayjs(res.createdAt))
-        .forEach((responseDate) => {
-          if (responseDate.isBefore(startDate)) startDate = responseDate;
-        });
-      setRange([
-        {
-          startDate: startDate?.toDate(),
-          endDate: endDate.toDate(),
-          key: "selection",
-        },
-      ]);
+      const dates = responses.map((res) => dayjs(res.createdAt));
+      const startDate = dates
+        .reduce((min, date) => (date.isBefore(min) ? date : min))
+        .toDate();
+      const endDate = dayjs().toDate();
+      setRange([{ startDate, endDate, key: "selection" }]);
     }
-  }, [ranges, responses]);
+    setIsTableLoading(false);
+  }, [responses, ranges]);
 
-  if (isQLoading || isLoading) return <RateupLoader />;
+  const filteredResponses = useMemo(() => {
+    if (!responses) return [];
+    const result = responses.filter((response) => {
+      const responseDate = dayjs(response.createdAt);
+      const matchesDateRange = ranges.some((range) =>
+        responseDate.isBetween(range.startDate, range.endDate, "day", "[]"),
+      );
+
+      const matchesCampaignFlow =
+        campaignFlowFilter.length === 0 ||
+        campaignFlowFilter.some((campaign) =>
+          campaign.participantsContactIds.includes(response.contactId),
+        );
+
+      return matchesDateRange && matchesCampaignFlow;
+    });
+    return result;
+  }, [responses, ranges, campaignFlowFilter]);
+  if (isQLoading || isLoading || CFLoading) return <RateupLoader />;
   if (QError) return <Text>An error has occurred</Text>;
 
   const responseCount = responses?.length;
-
-  const filteredResponses = ranges[0]
-    ? responses.filter((response) =>
-        dayjs(response.createdAt).isBetween(
-          ranges[0].startDate,
-          ranges[0].endDate,
-          "day",
-          "[]",
-        ),
-      )
-    : responses;
-
   return (
     <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
@@ -442,10 +433,13 @@ const Responses = ({
 
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
-          <TanstackTable
-            data={handleCampaignFlowFilter(filteredResponses)}
-            columns={columns}
-          />
+          {isTableLoading ? (
+            <RateupLoader />
+          ) : (
+            <Suspense fallback={<RateupLoader />}>
+              <TanstackTable data={filteredResponses} columns={columns} />
+            </Suspense>
+          )}
           <DeleteModal
             confirmDelete={confirmDelete}
             translations={translations}

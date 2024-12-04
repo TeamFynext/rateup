@@ -81,9 +81,7 @@ function ElementEditor() {
   );
 
   const form2 = useForm({
-    initialValues: Object.fromEntries(
-      Object.entries(initialValues).map(([key, { value }]) => [key, value]),
-    ),
+    initialValues: {},
     validate: zodResolver(validationSchema),
   });
   useEffect(() => {
@@ -100,9 +98,14 @@ function ElementEditor() {
       }
       form2.reset();
       form2.setValues(updatedValues);
+    } else {
+      form2.setValues(
+        Object.fromEntries(
+          Object.entries(initialValues).map(([key, { value }]) => [key, value]),
+        ),
+      );
     }
-  }, [element]);
-
+  }, [element, initialValues]);
   const onSubmit = useCallback(
     (values) => {
       const updatedValues = { ...values };
@@ -207,7 +210,7 @@ function ElementEditor() {
         <Divider />
         <Group justify="space-between" p="xs" px={"sm"}>
           <Group>
-            {!flowNonInputElements2.includes(currentElementType) && (
+            {form2?.values?.required?.toString() && (
               <Checkbox
                 label={translations["Required"]}
                 fw={600}
