@@ -7,6 +7,7 @@ import {
 } from "./redeem.service";
 import { updateLCustomerRedeemPoint } from "../customer/customer.service";
 import { log } from "../../../utils/logger";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function redeemPointsHandler(
   request: FastifyRequest<{ Params: CustomerRewardInput }>,
@@ -20,19 +21,22 @@ export async function redeemPointsHandler(
         customerId,
         redeem.reward.points,
       );
-      reply
-        .code(200)
-        .send({
-          message: "Success",
-          totalRedeemedPoints: customer.redeemedPoints,
-        });
+      reply.code(200).send({
+        message: "Success",
+        totalRedeemedPoints: customer.redeemedPoints,
+      });
+      await sendTemplateToUserCore(
+        customer.orgId,
+        redeem.reward.waTemplateId,
+        customer.phone,
+        [],
+        redeem.reward.teamId,
+      );
     } else {
-      reply
-        .code(403)
-        .send({
-          message:
-            "Failed: Customer do not have enough points to redeem the reward",
-        });
+      reply.code(403).send({
+        message:
+          "Failed: Customer do not have enough points to redeem the reward",
+      });
     }
   } catch (e) {
     log.error(e);

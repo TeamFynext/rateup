@@ -13,6 +13,8 @@ const lActionSchema = z.object({
   points: z.number(),
   startDate: z.date(),
   endDate: z.date(),
+  teamId: z.string().optional(),
+  waTemplateId: z.string().optional(),
 });
 
 const lActionUpdateSchema = z.object({
@@ -20,6 +22,8 @@ const lActionUpdateSchema = z.object({
   points: z.number().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
+  teamId: z.string().optional(),
+  waTemplateId: z.string().optional(),
 });
 
 const byLActiondIdParamSchema = z.object({

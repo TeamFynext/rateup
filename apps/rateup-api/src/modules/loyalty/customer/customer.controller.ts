@@ -8,11 +8,7 @@ import {
   updateLCustomerPoint,
 } from "./customer.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
-import {
-  LoyaltyTemplateTypes,
-  WaTemplateComponentType,
-} from "../../../types/enums";
-import { sendTemplateToPhone } from "../../whatsapp/messageTemplates/wa_templates.service";
+import { LoyaltyTemplateTypes } from "../../../types/enums";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function createLCustomerHandler(
@@ -27,22 +23,11 @@ export async function createLCustomerHandler(
       orgId,
     );
     reply.code(200).send(res);
-    const header: any = [];
-    const customerInfo = [res.name, res.totalEarnedPoints.toString()];
-    header.push({
-      type: WaTemplateComponentType.BODY,
-      parameters: customerInfo.map((variable) => {
-        return {
-          type: "text",
-          text: variable,
-        };
-      }),
-    });
     await sendTemplateToUserCore(
       orgId,
       template.waTemplateId,
       res.phone,
-      header,
+      [],
       template.teamId,
     );
   } catch (e) {
@@ -66,6 +51,13 @@ export async function customerActionHandler(
       message: "Success",
       totlaEarnedPoints: customer.totalEarnedPoints,
     });
+    await sendTemplateToUserCore(
+      customer.orgId,
+      customerAction.action.waTemplateId,
+      customer.phone,
+      [],
+      customerAction.action.teamId,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

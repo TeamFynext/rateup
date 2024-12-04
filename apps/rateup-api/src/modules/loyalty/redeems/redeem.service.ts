@@ -21,8 +21,13 @@ export async function createRedeem(customerId, rewardId) {
   });
   const isBalance =
     reward.points <= customer.totalEarnedPoints - customer.redeemedPoints;
+
+  const isUsedMax =
+    (await getLoyaltyRedeemsByCustomerReward(customerId, rewardId)).length >=
+    reward.maxPerUser;
   return await updateLoyaltyRedeem(id, {
-    status: isBalance ? RedeemStatus.COMPLETED : RedeemStatus.FAILED,
+    status:
+      isBalance || !isUsedMax ? RedeemStatus.COMPLETED : RedeemStatus.FAILED,
   });
 }
 
@@ -58,6 +63,19 @@ export async function getLoyaltyRedeems(orgId: string) {
           phone: true,
         },
       },
+    },
+  });
+}
+
+export async function getLoyaltyRedeemsByCustomerReward(
+  customerId: string,
+  rewardId: string,
+) {
+  return await prisma.loyaltyRedeem.findMany({
+    where: {
+      customerId,
+      rewardId,
+      status: RedeemStatus.COMPLETED,
     },
   });
 }
