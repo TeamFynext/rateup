@@ -8,6 +8,8 @@ import {
   ContainedTextArea,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import { TeamSelector } from "@/components/input/TeamSelector";
+import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -37,6 +39,8 @@ export function CreateRewardModal({
       description: "",
       maxPerUser: 1,
       tnc: "",
+      teamId: "",
+      waTemplateId: "",
     },
     validate: {
       name: isNotEmpty("Name cannot be empty"),
@@ -130,6 +134,17 @@ export const LoyaltyRewardForm = ({ form }) => {
         {...form.getInputProps("tnc")}
         autosize
         minRows={5}
+      />
+      <TeamSelector
+        label="Team"
+        {...form.getInputProps("teamId")}
+        enableDefaultValue={false}
+        placeholder="select a team"
+      />
+      <WaTemplateSelector
+        label="WhatsApp Template(to send after action)"
+        {...form.getInputProps("waTemplateId")}
+        teamId={form.values.teamId}
       />
     </Stack>
   );
