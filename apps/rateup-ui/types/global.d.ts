@@ -211,6 +211,7 @@ declare global {
     }[];
     WaFlow?: {
       dbFlowId?: string;
+      version?: number;
     };
   }
 

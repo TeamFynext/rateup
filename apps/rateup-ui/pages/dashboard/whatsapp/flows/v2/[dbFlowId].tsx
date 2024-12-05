@@ -38,6 +38,8 @@ const Flow = () => {
   const { data: survey, isPending: isSurveyPending } = useSurvey(
     flow?.surveyId,
   );
+  const { tab: tabView } = router.query;
+
   const { update } = useRouteParams();
   const { translations } = useTranslations();
   useEffect(() => {
@@ -68,6 +70,12 @@ const Flow = () => {
       setTeamOptions(options);
     }
   }, [survey]);
+
+  useEffect(() => {
+    if (tabView && Object.values(FlowTabEnum).includes(tabView as any)) {
+      setTab(tabView as any);
+    }
+  }, [tabView]);
 
   if (isPending || isSurveyPending) return <RateupLoader />;
 
