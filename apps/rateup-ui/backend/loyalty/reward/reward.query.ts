@@ -43,6 +43,8 @@ type UpdateReward = {
   description?: string;
   tnc?: string;
   maxPerUser?: number;
+  teamId: string;
+  waTemplateId?: string;
 };
 
 export const useUpdateLoyaltyRewardMutation = (rewardId) => {
