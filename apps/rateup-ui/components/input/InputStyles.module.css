@@ -26,3 +26,21 @@
   border-radius: 8px;
   border-color: rgba(0, 0, 0, 0.2);
 }
+
+.inputPhone > input {
+  border: none;
+  font-size: 16px;
+  outline: none;
+  height: 3.125rem;
+  border-radius: 1rem;
+}
+
+.inputBox {
+  background-color: var(--input-background-color, white);
+  color: var(--input-text-color, black);
+  border-radius: 1rem;
+  padding: 0px var(--input-padding, 12px);
+  border-color: var(--mantine-color-gray-4);
+  border-width: 1px;
+  border-style: solid;
+}

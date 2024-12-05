@@ -31,6 +31,8 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import { TeamSelector } from "@/components/input/TeamSelector";
+import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 
 import classes from "./Actions.module.css";
@@ -52,6 +54,8 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       endDate: z.date().refine((date) => date !== null, {
         message: "End date cannot be empty",
       }),
+      teamId: z.string(),
+      waTemplateId: z.string(),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -69,6 +73,8 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       points: action?.points || 0,
       startDate: action?.startDate || null,
       endDate: action?.endDate || null,
+      teamId: action?.teamId || null,
+      waTemplateId: action?.waTemplateId || null,
     },
     validate: zodResolver(schema),
   });
@@ -149,6 +155,17 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
             {...form.getInputProps("endDate")}
           />
         </Group>
+        <TeamSelector
+          label="Team"
+          {...form.getInputProps("teamId")}
+          enableDefaultValue={false}
+          placeholder="select a team"
+        />
+        <WaTemplateSelector
+          label="WhatsApp Template(to send after action)"
+          {...form.getInputProps("waTemplateId")}
+          teamId={form.values.teamId}
+        />
       </Stack>
     </FormModalLayout>
   );
