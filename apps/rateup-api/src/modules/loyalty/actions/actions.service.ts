@@ -12,6 +12,8 @@ export async function createLoyaltyAction(
       endDate: data.endDate,
       type: data.type,
       startDate: data.startDate,
+      waTemplateId: data.waTemplateId,
+      teamId: data.teamId,
       orgId: orgId,
     },
   });

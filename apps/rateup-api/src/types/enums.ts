@@ -384,3 +384,7 @@ export enum WaMessageScheduleStatus {
 export enum waMessageScheduleSource {
   ExternalApi = "ExternalApi",
 }
+
+export enum LoyaltyTemplateTypes {
+  CustomerRegistration = "CustomerRegistration",
+}

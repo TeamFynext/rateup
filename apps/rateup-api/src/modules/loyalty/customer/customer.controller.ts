@@ -7,15 +7,29 @@ import {
   getLoyaltyCustomers,
   updateLCustomerPoint,
 } from "./customer.service";
+import { getLoyaltyTemplate } from "../settings/settings.service";
+import { LoyaltyTemplateTypes } from "../../../types/enums";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const res = await createLCustomer(request.body, orgId);
+    const { orgId } = request.body;
+    const res = await createLCustomer(request.body);
+    const template = await getLoyaltyTemplate(
+      LoyaltyTemplateTypes.CustomerRegistration,
+      orgId,
+    );
     reply.code(200).send(res);
+    await sendTemplateToUserCore(
+      orgId,
+      template.waTemplateId,
+      res.phone,
+      [],
+      template.teamId,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
@@ -37,6 +51,13 @@ export async function customerActionHandler(
       message: "Success",
       totlaEarnedPoints: customer.totalEarnedPoints,
     });
+    await sendTemplateToUserCore(
+      customer.orgId,
+      customerAction.action.waTemplateId,
+      customer.phone,
+      [],
+      customerAction.action.teamId,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

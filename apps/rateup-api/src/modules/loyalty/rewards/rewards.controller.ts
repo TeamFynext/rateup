@@ -7,7 +7,7 @@ import {
   getLoyaltyRewards,
   updateLoyaltyRewardById,
 } from "./rewards.service";
-import { lRewardIdParamInput, lRewardIdUpdateInput } from "./rewards.schema";
+import { lRewardIdParamInput, lRewardUpdateInput } from "./rewards.schema";
 import { loyaltyActionInput } from "../actions/actions.schema";
 
 export async function createLoyaltyRewardHandler(
@@ -56,7 +56,7 @@ export async function getLoyaltyRewardByIdHandler(
 export async function updateLoyaltyRewardByIdHandler(
   request: FastifyRequest<{
     Params: lRewardIdParamInput;
-    Body: lRewardIdUpdateInput;
+    Body: lRewardUpdateInput;
   }>,
   reply: FastifyReply,
 ) {
