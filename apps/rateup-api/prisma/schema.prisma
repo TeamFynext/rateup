@@ -128,6 +128,7 @@ model Org {
   loyaltyActions    LoyaltyAction[]
   loyaltyRewards    LoyaltyReward[]
   loyaltyCustomers  LoyaltyCustomer[]
+  loyaltyTemplates  LoyaltyTemplate[]
 }
 
 model UsageStats {
@@ -232,6 +233,9 @@ model Team {
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
   WaAutomatedReply       WaAutomatedReply[]
+  loyaltyTemplates       LoyaltyTemplate[]
+  loyaltyActions         LoyaltyAction[]
+  loyaltyRewards         LoyaltyReward[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -592,6 +596,9 @@ model WaTemplate {
   waSession         WaSession[]
   Campaign          Campaign[]
   waMessageSchedule WaMessageSchedule[]
+  loyaltyTemplates  LoyaltyTemplate[]
+  loyaltyActions    LoyaltyAction[]
+  loyaltyRewards    LoyaltyReward[]
 }
 
 model MenuLanding {
@@ -1116,6 +1123,10 @@ model LoyaltyAction {
   orgId     String                     @db.Uuid
   org       Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   customers LoyaltyActionCustomerMap[]
+  waTemplateId  String?         @db.Uuid
+  waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
+  teamId  String?              @db.Uuid
+  team    Team?    @relation(fields: [teamId], references: [id])
 }
 
 model LoyaltyReward {
@@ -1129,6 +1140,10 @@ model LoyaltyReward {
   orgId       String          @db.Uuid
   org         Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
   redeems     LoyaltyRedeem[]
+  waTemplateId  String?   @db.Uuid
+  waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
+  teamId  String?  @db.Uuid
+  team    Team?    @relation(fields: [teamId], references: [id])
 }
 
 model LoyaltyCustomer {
@@ -1164,4 +1179,18 @@ model LoyaltyActionCustomerMap {
   createdAt  DateTime        @default(now())
 
   @@unique([customerId, actionId], name: "customer_action_unique")
+}
+
+model LoyaltyTemplate {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId      String          @db.Uuid @unique
+  org        Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)  
+  type       String          //enum LoyaltyTemplateTypes 
+  waTemplateId    String        @db.Uuid
+  waTemplate      WaTemplate    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  team      Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String?      @db.Uuid
+
+  @@unique([type, orgId], name: "type_org_unique")
 }

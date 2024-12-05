@@ -1,5 +1,5 @@
 import prisma from "../../../utils/prisma";
-import { loyaltyRewardInput } from "./rewards.schema";
+import { loyaltyRewardInput, lRewardUpdateInput } from "./rewards.schema";
 
 export async function createLoyaltyReward(
   reward: loyaltyRewardInput,
@@ -12,6 +12,8 @@ export async function createLoyaltyReward(
       description: reward.description,
       tnc: reward.tnc,
       maxPerUser: reward.maxPerUser,
+      waTemplateId: reward.waTemplateId,
+      teamId: reward.teamId,
       orgId,
     },
   });
@@ -33,7 +35,10 @@ export async function getLoyaltyRewardById(id: string) {
   });
 }
 
-export async function updateLoyaltyRewardById(data, id: string) {
+export async function updateLoyaltyRewardById(
+  data: lRewardUpdateInput,
+  id: string,
+) {
   return await prisma.loyaltyReward.update({
     where: {
       id,

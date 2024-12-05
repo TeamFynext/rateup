@@ -7,6 +7,8 @@ const lRewardSchema = z.object({
   maxPerUser: z.number().int(),
   description: z.string(),
   tnc: z.string(),
+  teamId: z.string().optional(),
+  waTemplateId: z.string().optional(),
 });
 
 const byLRewardIdParamSchema = z.object({
@@ -19,6 +21,8 @@ const lRewardUpdateSchema = z.object({
   maxPerUser: z.number().int().optional(),
   description: z.string().optional(),
   tnc: z.string().optional(),
+  teamId: z.string().optional(),
+  waTemplateId: z.string().optional(),
 });
 
 export const { schemas: loyaltyRewardSchemas, $ref: $lRewardRef } =
@@ -35,4 +39,4 @@ export const { schemas: loyaltyRewardSchemas, $ref: $lRewardRef } =
 
 export type loyaltyRewardInput = z.infer<typeof lRewardSchema>;
 export type lRewardIdParamInput = z.infer<typeof byLRewardIdParamSchema>;
-export type lRewardIdUpdateInput = z.infer<typeof lRewardUpdateSchema>;
+export type lRewardUpdateInput = z.infer<typeof lRewardUpdateSchema>;
