@@ -46,7 +46,7 @@ export default function ActiveSurveyCard({
         if (survey?.type === "waFlow") {
           survey?.WaFlow?.dbFlowId &&
             router.push(
-              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/flows/${survey?.WaFlow?.dbFlowId}?tab=Result`,
+              `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/whatsapp/flows/v${survey?.WaFlow?.version ?? 0}/${survey?.WaFlow?.dbFlowId}?tab=Result`,
             );
         } else {
           router.push(
