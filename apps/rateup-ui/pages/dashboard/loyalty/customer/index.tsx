@@ -7,6 +7,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { LoyaltyActionType } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -24,7 +25,7 @@ export default function LoyaltyCampaignCustomersPage() {
     refetch,
   } = useSubscription();
 
-  if (isSubscriptionLoading) return <Loader />;
+  if (isSubscriptionLoading) return <RateupLoader />;
 
   if (
     !subscription?.features?.loyalty?.active ||
