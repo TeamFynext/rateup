@@ -2,6 +2,7 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
   useUpdateGoogleReviewQuestions,
+  useUpdateLoyaltySubscription,
   useUpdateThemeTitleSt,
 } from "@/backend/updations/update.query";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -9,6 +10,8 @@ import useTranslations from "@/dictionaries/useTranslation";
 function UpdateAllThemes() {
   const updateGoogleReviewQuestionsMutation = useUpdateGoogleReviewQuestions();
   const updateThemest = useUpdateThemeTitleSt();
+
+  const updateLoyaltySubMut = useUpdateLoyaltySubscription();
   const { translations } = useTranslations();
   const isDev =
     process.env.NEXT_PUBLIC_FRONTEND_URL === "https://dev.rateup.app";
@@ -46,6 +49,21 @@ function UpdateAllThemes() {
             updateThemest.mutate();
           }}
           loading={updateThemest.isPending}
+        >
+          {translations["Update"]}
+        </Button>
+      </Stack>
+
+      <Stack mt="xl">
+        <Title order={2}>Update Loyalty Subscription</Title>
+
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateLoyaltySubMut.mutate();
+          }}
+          loading={updateLoyaltySubMut.isPending}
         >
           {translations["Update"]}
         </Button>

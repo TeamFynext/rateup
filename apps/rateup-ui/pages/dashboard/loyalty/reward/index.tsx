@@ -4,6 +4,8 @@ import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import NothingFound from "@/components/NothingFound/NothingFound";
@@ -24,6 +26,12 @@ export default function () {
 
   const { data: rewards, isLoading, isError, error } = useGetLoyaltyRewards();
 
+  const {
+    data: subscription,
+    isLoading: isSubscriptionLoading,
+    refetch,
+  } = useSubscription();
+
   const [selectedOrder, setSelectedOrder] = useState(
     rewardSortData.defaultPointsOrder,
   );
@@ -31,9 +39,15 @@ export default function () {
   if (isError) {
     console.error(error);
     return;
-  } else if (isLoading || !rewards) {
+  } else if (isLoading || !rewards || isSubscriptionLoading) {
     return <RateupLoader />;
   }
+
+  if (
+    !subscription?.features?.loyalty?.active ||
+    !subscription?.features?.loyalty?.reward?.active
+  )
+    return <ErrorComponent refetch={refetch} />;
 
   const rewardsCopy = [...rewards];
 

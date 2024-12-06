@@ -1,6 +1,7 @@
 import { SelectProps } from "@mantine/core";
 
 import useTemplatesAvailableForTeam from "@/hooks/team";
+import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
@@ -22,7 +23,10 @@ const WaTemplateSelector = ({
   ...props
 }: WaTemplateSelector) => {
   const { translations } = useTranslations();
-  const templates = useTemplatesAvailableForTeam(teamId);
+  const { data: allTemplates } = useWaTemplates();
+  const templates = teamId
+    ? useTemplatesAvailableForTeam(teamId)
+    : allTemplates;
   const templatesData = templates?.map((t) => {
     return {
       value: t?.id,

@@ -10,7 +10,6 @@ export async function createLoyaltyTemplate(data) {
 }
 export type UpdateLoyaltyTemplate = {
   waTemplateId?: string;
-  teamId?: string;
 };
 
 export async function updateLoyaltyTemplate(

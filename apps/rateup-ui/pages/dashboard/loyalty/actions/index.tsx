@@ -6,6 +6,8 @@ import { IconPlus } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
@@ -14,6 +16,11 @@ import LoyaltyActionCard from "@/components/loyalty/actions/LoyaltyActionCard";
 import NothingFound from "@/components/NothingFound/NothingFound";
 
 const index = () => {
+  const {
+    data: subscription,
+    isLoading: isSubscriptionLoading,
+    refetch,
+  } = useSubscription();
   const { data: loyaltyActions, isLoading } = useGetLoyaltyActions();
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedAction, setSelectedAction] = useState("All Actions");
@@ -24,6 +31,14 @@ const index = () => {
     selectedAction === "All Actions"
       ? loyaltyActions
       : loyaltyActions?.filter((action) => action?.type === selectedAction);
+
+  if (isLoading || isSubscriptionLoading) return <RateupLoader />;
+
+  if (
+    !subscription?.features?.loyalty?.active ||
+    !subscription?.features?.loyalty?.action?.active
+  )
+    return <ErrorComponent refetch={refetch} />;
 
   return (
     <Stack>

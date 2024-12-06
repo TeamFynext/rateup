@@ -249,7 +249,7 @@ export function getNavTopData(
       label: translations["Docs"],
       href: "https://docs.rateup.app/",
     },
-    ...(hiddenModules.includes("loyalty") || !true
+    ...(hiddenModules.includes("loyalty") || !hasFeature(sfpn.Loyalty)
       ? []
       : [
           {
