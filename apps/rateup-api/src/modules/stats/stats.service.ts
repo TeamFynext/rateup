@@ -29,6 +29,18 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.WhatsAppSurvey
             ? { increment: 1 }
             : undefined,
+        loyaltyActionCount:
+          stat === SubscriptionFeaturePathName.LoyaltyAction
+            ? { increment: 1 }
+            : undefined,
+        loyaltyRewardCount:
+          stat === SubscriptionFeaturePathName.LoyaltyReward
+            ? { increment: 1 }
+            : undefined,
+        loyaltyCustomerCount:
+          stat === SubscriptionFeaturePathName.LoyaltyCustomer
+            ? { increment: 1 }
+            : undefined,
       },
       create: {
         orgId: orgId,
@@ -44,7 +56,12 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
         waSurveyResponsesCount:
           stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
-
+        loyaltyActionCount:
+          stat === SubscriptionFeaturePathName.LoyaltyAction ? 1 : 0,
+        loyaltyRewardCount:
+          stat === SubscriptionFeaturePathName.LoyaltyReward ? 1 : 0,
+        loyaltyCustomerCount:
+          stat === SubscriptionFeaturePathName.LoyaltyCustomer ? 1 : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },

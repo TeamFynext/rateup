@@ -1,13 +1,19 @@
 import { FastifyInstance } from "fastify";
 import { loyaltyActionsRoutes } from "./actions/actions.route";
-import { loyaltyRewardsRoutes } from "./rewards/rerwards.route";
+import { loyaltyRewardsRoutes } from "./rewards/rewards.route";
 import { checkSession } from "../../utils/checkSession";
 import { loyaltyCustomerRoutes } from "./customer/customer.route";
 import { loyaltyRedeemRoutes } from "./redeems/redeem.route";
 import { LoyaltySettingsRoutes } from "./settings/settings.route";
+import { getVerifySubscriptionHandler } from "../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export async function loyaltyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Loyalty]),
+  );
   server.register(loyaltyActionsRoutes, { prefix: "/action" });
   server.register(loyaltyRewardsRoutes, { prefix: "/reward" });
   server.register(loyaltyCustomerRoutes, { prefix: "/customer" });

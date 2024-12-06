@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { updateGoogleReviewQuestionsInDB } from "./migrationFiles/update-google-review-questions";
 import { log } from "../../utils/logger";
 import { updateWebSurveyPagesThemeTitle } from "./migrationFiles/update-theme-title";
+import { updateLoyaltySubscription } from "./migrationFiles/update-loyalty-subscription";
 
 export async function updateGoogleReviewQuestions(
   request: FastifyRequest,
@@ -27,6 +28,19 @@ export async function updateWebSurveyThemePageTitleHandler(
 ) {
   try {
     await updateWebSurveyPagesThemeTitle();
+    reply.code(200).send("success");
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updateLoyaltySubscriptionHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    await updateLoyaltySubscription();
     reply.code(200).send("success");
   } catch (e) {
     log.error(e);

@@ -5,13 +5,21 @@ import {
   getLoyaltyRewardByIdHandler,
   updateLoyaltyRewardByIdHandler,
   deleteLoyaltyRewardByIdHandler,
+  verifyLRewardctionMaxCountRestriction,
 } from "./rewards.controller";
 import { $lRewardRef } from "./rewards.schema";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export async function loyaltyRewardsRoutes(server: FastifyInstance) {
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.LoyaltyReward]),
+  );
   server.post(
     "/",
     {
+      preHandler: [verifyLRewardctionMaxCountRestriction],
       schema: {
         body: $lRewardRef("lRewardSchema"),
       },
