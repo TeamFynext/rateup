@@ -353,6 +353,11 @@ declare global {
         promptTokens: number;
       };
     };
+    [sfpn.Loyalty]: subscriptionActiveField & {
+      action: subscriptionWithActiveAndCount;
+      reward: subscriptionWithActiveAndCount;
+      customer: subscriptionWithActiveAndCount;
+    };
   }
 
   interface SPlan {

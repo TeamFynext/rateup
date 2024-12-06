@@ -8,8 +8,14 @@ import {
   updateLCustomerPoint,
 } from "./customer.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
-import { LoyaltyTemplateTypes } from "../../../types/enums";
+import {
+  LoyaltyTemplateTypes,
+  SubscriptionFeaturePathName,
+} from "../../../types/enums";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
+import prisma from "../../../utils/prisma";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
@@ -18,18 +24,14 @@ export async function createLCustomerHandler(
   try {
     const { orgId } = request.body;
     const res = await createLCustomer(request.body);
+    reply.code(200).send(res);
     const template = await getLoyaltyTemplate(
       LoyaltyTemplateTypes.CustomerRegistration,
       orgId,
     );
-    reply.code(200).send(res);
-    await sendTemplateToUserCore(
-      orgId,
-      template.waTemplateId,
-      res.phone,
-      [],
-      template.teamId,
-    );
+    if (template)
+      await sendTemplateToUserCore(orgId, template.waTemplateId, res.phone, []);
+    await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
@@ -56,7 +58,6 @@ export async function customerActionHandler(
       customerAction.action.waTemplateId,
       customer.phone,
       [],
-      customerAction.action.teamId,
     );
   } catch (e) {
     log.error(e);
@@ -71,6 +72,42 @@ export async function getLoyaltyCustomersHandler(
   try {
     const customers = await getLoyaltyCustomers(request.user.orgId);
     reply.code(200).send(customers);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function verifyLCustomerMaxCountRestriction(
+  request: FastifyRequest<{ Body: LCustomerInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.body.orgId;
+    const count = await prisma.loyaltyCustomer.count({
+      where: {
+        orgId,
+      },
+    });
+
+    const subscription = await prisma.subscription.findUnique({
+      where: {
+        orgId,
+      },
+    });
+
+    if (
+      count >=
+      getNestedProperty(
+        request.subscription.features,
+        SubscriptionFeaturePathName.LoyaltyCustomer,
+      ).count.max
+    ) {
+      reply.code(403).send({
+        message: "Registration limit reached",
+        displayMessageInClient: true,
+      });
+    }
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

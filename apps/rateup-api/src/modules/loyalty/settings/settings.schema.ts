@@ -3,7 +3,6 @@ import z from "zod";
 import { LoyaltyTemplateTypes } from "../../../types/enums";
 
 const loyaltyTemplateSchema = z.object({
-  teamId: z.string(),
   waTemplateId: z.string(),
   type: z.nativeEnum(LoyaltyTemplateTypes),
 });
@@ -13,7 +12,6 @@ const byTypeQuerySchema = z.object({
 });
 
 const updateLoyaltyTemplateSchema = z.object({
-  teamId: z.string().optional(),
   waTemplateId: z.string().optional(),
 });
 

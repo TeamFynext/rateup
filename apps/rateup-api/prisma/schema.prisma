@@ -149,6 +149,9 @@ model UsageStats {
   messagesCount           Int @default(0)
   aiPromptTokensCount     Int @default(0)
   aiCompletionTokensCount Int @default(0)
+  loyaltyActionCount      Int @default(0)
+  loyaltyRewardCount      Int @default(0)
+  loyaltyCustomerCount    Int @default(0)
 
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)
@@ -233,9 +236,6 @@ model Team {
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
   WaAutomatedReply       WaAutomatedReply[]
-  loyaltyTemplates       LoyaltyTemplate[]
-  loyaltyActions         LoyaltyAction[]
-  loyaltyRewards         LoyaltyReward[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -1125,8 +1125,6 @@ model LoyaltyAction {
   customers LoyaltyActionCustomerMap[]
   waTemplateId  String?         @db.Uuid
   waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
-  teamId  String?              @db.Uuid
-  team    Team?    @relation(fields: [teamId], references: [id])
 }
 
 model LoyaltyReward {
@@ -1142,8 +1140,6 @@ model LoyaltyReward {
   redeems     LoyaltyRedeem[]
   waTemplateId  String?   @db.Uuid
   waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
-  teamId  String?  @db.Uuid
-  team    Team?    @relation(fields: [teamId], references: [id])
 }
 
 model LoyaltyCustomer {
@@ -1189,8 +1185,6 @@ model LoyaltyTemplate {
   waTemplateId    String        @db.Uuid
   waTemplate      WaTemplate    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   createdAt   DateTime        @default(now())
-  team      Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String?      @db.Uuid
 
   @@unique([type, orgId], name: "type_org_unique")
 }
