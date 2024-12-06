@@ -41,12 +41,10 @@ const LoyaltyWaTemplateConfig = ({ type, label }) => {
 
   const form = useForm({
     initialValues: {
-      teamId: "",
       type: LoyaltyTemplateTypes.CustomerRegistration,
       waTemplateId: "",
     },
     validate: {
-      teamId: isNotEmpty("Team required"),
       waTemplateId: isNotEmpty("Template required"),
     },
   });
@@ -71,11 +69,9 @@ const LoyaltyWaTemplateConfig = ({ type, label }) => {
 
   return (
     <Stack>
-      <TeamSelector {...form.getInputProps("teamId")} label="Team" />
       <WaTemplateSelector
         label={label}
         {...form.getInputProps("waTemplateId")}
-        teamId={form.values.teamId}
       />
       <RateupButtonBlue
         title="Save"

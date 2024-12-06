@@ -39,7 +39,6 @@ export function CreateRewardModal({
       description: "",
       maxPerUser: 1,
       tnc: "",
-      teamId: "",
       waTemplateId: "",
     },
     validate: {
@@ -135,16 +134,9 @@ export const LoyaltyRewardForm = ({ form }) => {
         autosize
         minRows={5}
       />
-      <TeamSelector
-        label="Team"
-        {...form.getInputProps("teamId")}
-        enableDefaultValue={false}
-        placeholder="select a team"
-      />
       <WaTemplateSelector
-        label="WhatsApp Template(to send after action)"
+        label="WhatsApp Template(to send after reward redemption)"
         {...form.getInputProps("waTemplateId")}
-        teamId={form.values.teamId}
       />
     </Stack>
   );

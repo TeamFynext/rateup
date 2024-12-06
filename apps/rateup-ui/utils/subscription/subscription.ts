@@ -64,5 +64,11 @@ export function getSampleSubscriptionFeatures(
       count: { completionTokens: 120000, promptTokens: 120000 },
       active: false,
     },
+    loyalty: {
+      action: { count: { max: count }, active: true },
+      reward: { count: { max: count }, active: true },
+      customer: { count: { max: count }, active: true },
+      active: true,
+    },
   };
 }

@@ -272,6 +272,10 @@ export enum SubscriptionFeaturePathName {
   TeamMember = "team.teamMember",
   Ticket = "ticket",
   AI = "ai",
+  Loyalty = "loyalty",
+  LoyaltyCustomer = "loyalty.customer",
+  LoyaltyAction = "loyalty.action",
+  LoyaltyReward = "loyalty.reward",
 }
 
 export enum PaymentType {

@@ -196,6 +196,14 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Ticket";
     case sfpn.AI:
       return "AI";
+    case sfpn.Loyalty:
+      return "Loyalty";
+    case sfpn.LoyaltyAction:
+      return "Action";
+    case sfpn.LoyaltyCustomer:
+      return "Customer";
+    case sfpn.LoyaltyReward:
+      return "Reward";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
   }

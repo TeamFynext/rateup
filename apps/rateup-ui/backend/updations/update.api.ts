@@ -12,3 +12,7 @@ export const updateGoogleReviewQuestions = async () => {
 export async function updateThemeTitleSt() {
   return await axiosClient.post(`/public/update/update-theme-title`);
 }
+
+export async function updateLoyaltySubscription() {
+  return await axiosClient.post(`/public/update/loyalty-subscription`);
+}

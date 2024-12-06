@@ -1,8 +1,10 @@
 import { SelectProps } from "@mantine/core";
 
 import useTemplatesAvailableForTeam from "@/hooks/team";
+import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
+import RateupLoader from "../Loaders/RateupLoader";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface WaTemplateSelector extends SelectProps {
@@ -22,7 +24,13 @@ const WaTemplateSelector = ({
   ...props
 }: WaTemplateSelector) => {
   const { translations } = useTranslations();
-  const templates = useTemplatesAvailableForTeam(teamId);
+  const { data: allTemplates, isLoading } = useWaTemplates();
+  const templates = teamId
+    ? useTemplatesAvailableForTeam(teamId)
+    : allTemplates;
+
+  if (isLoading) return <RateupLoader />;
+
   const templatesData = templates?.map((t) => {
     return {
       value: t?.id,

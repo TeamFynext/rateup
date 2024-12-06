@@ -12,4 +12,9 @@ export const subscriptionColorMap = {
   [sfpn.WhatsAppCampaign]: "lime",
   [sfpn.TeamMember]: "yellow",
   [sfpn.Ticket]: "orange",
+  [sfpn.AI]: "black",
+  [sfpn.Loyalty]: "darkblue",
+  [sfpn.LoyaltyCustomer]: "indigo",
+  [sfpn.LoyaltyReward]: "cyan",
+  [sfpn.LoyaltyAction]: "violet",
 };
