@@ -576,6 +576,7 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
       WaFlow: {
         select: {
           dbFlowId: true,
+          version: true,
         },
       },
     },
@@ -652,6 +653,7 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       WaFlow: {
         select: {
           dbFlowId: true,
+          version: true,
         },
       },
     },
