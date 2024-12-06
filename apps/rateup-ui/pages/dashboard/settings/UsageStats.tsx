@@ -1,11 +1,13 @@
 import { Center, Group, Loader, Stack, Title } from "@mantine/core";
 import {
+  IconAward,
   IconBrandOpenai,
   IconCategoryFilled,
   IconCheck,
   IconClipboardList,
   IconClockFilled,
   IconEyeFilled,
+  IconHandClick,
   IconMessage,
   IconMessageCircle2Filled,
   IconRefresh,
@@ -260,6 +262,42 @@ const AIStats = ({ stats, totalStats }) => {
     </Stack>
   );
 };
+
+const LoyaltyStats = ({ stats, totalStats }) => {
+  const { translations } = useTranslations();
+  const loyalty = totalStats?.loyalty;
+  if (!loyalty || !loyalty?.active) return;
+  const statsArray = [
+    {
+      Icon: IconHandClick as unknown as string,
+      count: stats?.loyaltyActionCount,
+      totalCount: totalStats?.loyalty?.action?.count?.max,
+      stats: "Actions",
+    },
+    {
+      Icon: IconAward as unknown as string,
+      count: stats?.loyaltyRewardCount,
+      totalCount: totalStats?.loyalty?.reward?.count?.max,
+      stats: "Rewards",
+    },
+    {
+      Icon: IconUsers as unknown as string,
+      count: stats?.loyaltyCustomerCount,
+      totalCount: totalStats?.loyalty?.customer?.count?.max,
+      stats: "Customers",
+    },
+  ];
+  return (
+    <Stack gap={"xs"}>
+      <Title order={4}>{translations["Loyalty"]}</Title>
+      <Group>
+        {statsArray.map((item, index) => (
+          <StatsCard {...item} key={index} />
+        ))}
+      </Group>
+    </Stack>
+  );
+};
 const UsageStats = ({ subscription }) => {
   const { data: stats, refetch, isRefetching, isLoading } = useUsageStats();
   return (
@@ -278,6 +316,7 @@ const UsageStats = ({ subscription }) => {
           <MenuStats stats={stats} totalStats={subscription?.features} />
           <WhatsappStats stats={stats} totalStats={subscription?.features} />
           <AIStats stats={stats} totalStats={subscription?.features} />
+          <LoyaltyStats stats={stats} totalStats={subscription?.features} />
         </Stack>
       )}
     </>

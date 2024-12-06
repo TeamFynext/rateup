@@ -46,7 +46,6 @@ export type LoyaltyAction = {
   points?: number;
   startDate?: Date;
   endDate?: Date;
-  teamId?: string;
   waTemplateId?: string;
 };
 

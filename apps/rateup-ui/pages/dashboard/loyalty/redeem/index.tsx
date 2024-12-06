@@ -4,7 +4,10 @@ import { IconAward } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { useGetLoyaltyRedeems } from "@/backend/loyalty/redeems/redeems.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import ManualRedeemModal from "@/components/loyalty/reward/ManualRedeemModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
@@ -12,10 +15,20 @@ import { formatDateWithTime } from "@/utils/dateTime";
 
 export default function redeems() {
   const { data: redeems, isPending } = useGetLoyaltyRedeems();
+  const {
+    data: subscription,
+    isLoading: isSubscriptionLoading,
+    refetch,
+  } = useSubscription();
 
   const [opened, { open, close }] = useDisclosure(false);
 
   const columns = generateColumns();
+
+  if (isSubscriptionLoading) return <RateupLoader />;
+
+  if (!subscription?.features?.loyalty?.active)
+    return <ErrorComponent refetch={refetch} />;
 
   return (
     <Stack>

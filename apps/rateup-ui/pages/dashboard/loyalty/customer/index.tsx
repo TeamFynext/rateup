@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 
-import { Anchor, Button, Stack, Text, Title } from "@mantine/core";
+import { Anchor, Button, Loader, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { LoyaltyActionType } from "@/types/enums";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -16,6 +19,20 @@ import TanstackTable from "../../../../components/Table/TanstackTable";
 
 export default function LoyaltyCampaignCustomersPage() {
   const { translations } = useTranslations();
+  const {
+    data: subscription,
+    isLoading: isSubscriptionLoading,
+    refetch,
+  } = useSubscription();
+
+  if (isSubscriptionLoading) return <RateupLoader />;
+
+  if (
+    !subscription?.features?.loyalty?.active ||
+    !subscription?.features?.loyalty?.customer?.active
+  )
+    return <ErrorComponent refetch={refetch} />;
+
   return (
     <Stack h={"100%"}>
       <Title>{translations["Customers"]}</Title>
