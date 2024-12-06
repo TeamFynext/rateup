@@ -30,7 +30,6 @@ export async function redeemPointsHandler(
         redeem.reward.waTemplateId,
         customer.phone,
         [],
-        redeem.reward.teamId,
       );
     } else {
       reply.code(403).send({

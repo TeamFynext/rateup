@@ -5,13 +5,21 @@ import {
   getLoyaltyActionByIdHandler,
   getLoyaltyActionsHandler,
   updateLoyaltyActionByIdHandler,
+  verifyLActionMaxCountRestriction,
 } from "./actions.controller";
 import { $lActionRef } from "./actions.schema";
+import { getVerifySubscriptionHandler } from "../../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export async function loyaltyActionsRoutes(server: FastifyInstance) {
+  server.addHook(
+    "preHandler",
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.LoyaltyAction]),
+  );
   server.post(
     "/",
     {
+      preHandler: [verifyLActionMaxCountRestriction],
       schema: {
         body: $lActionRef("lActionSchema"),
       },

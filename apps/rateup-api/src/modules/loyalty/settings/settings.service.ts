@@ -10,7 +10,6 @@ export async function createLoyaltyTemplate(
       type: data.type,
       waTemplateId: data.waTemplateId,
       orgId: data.orgId,
-      teamId: data.teamId,
     },
   });
 }

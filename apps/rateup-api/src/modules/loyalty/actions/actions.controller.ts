@@ -12,6 +12,10 @@ import {
   lActionUpdateInput,
   loyaltyActionInput,
 } from "./actions.schema";
+import prisma from "../../../utils/prisma";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function createLoyaltyActionHandler(
   request: FastifyRequest,
@@ -20,6 +24,10 @@ export async function createLoyaltyActionHandler(
   try {
     const res = await createLoyaltyAction(request.body, request.user.orgId);
     reply.code(200).send(res);
+    await updateMonthlyStat(
+      SubscriptionFeaturePathName.LoyaltyAction,
+      request.user.orgId,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
@@ -83,6 +91,37 @@ export async function deleteLoyaltyActionByIdHandler(
   try {
     const res = await deleteLoyaltyActionById(request.params.actionId);
     reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function verifyLActionMaxCountRestriction(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user.orgId;
+
+    const count = await prisma.loyaltyAction.count({
+      where: {
+        orgId,
+      },
+    });
+
+    if (
+      count >=
+      getNestedProperty(
+        request.subscription.features,
+        SubscriptionFeaturePathName.LoyaltyAction,
+      ).count.max
+    ) {
+      reply.code(403).send({
+        message: "You have reached the maximum limit of loyalty actions",
+        displayMessageInClient: true,
+      });
+    }
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

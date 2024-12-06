@@ -7,7 +7,6 @@ const lRewardSchema = z.object({
   maxPerUser: z.number().int(),
   description: z.string(),
   tnc: z.string(),
-  teamId: z.string().optional(),
   waTemplateId: z.string().optional(),
 });
 
@@ -21,7 +20,6 @@ const lRewardUpdateSchema = z.object({
   maxPerUser: z.number().int().optional(),
   description: z.string().optional(),
   tnc: z.string().optional(),
-  teamId: z.string().optional(),
   waTemplateId: z.string().optional(),
 });
 

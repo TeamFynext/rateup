@@ -13,7 +13,6 @@ export async function createLoyaltyAction(
       type: data.type,
       startDate: data.startDate,
       waTemplateId: data.waTemplateId,
-      teamId: data.teamId,
       orgId: orgId,
     },
   });
