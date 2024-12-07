@@ -21,13 +21,12 @@ export async function createRedeem(customerId, rewardId) {
   });
   const isBalance =
     reward.points <= customer.totalEarnedPoints - customer.redeemedPoints;
-
   const isUsedMax =
     (await getLoyaltyRedeemsByCustomerReward(customerId, rewardId)).length >=
     reward.maxPerUser;
   return await updateLoyaltyRedeem(id, {
     status:
-      isBalance || !isUsedMax ? RedeemStatus.COMPLETED : RedeemStatus.FAILED,
+      !isBalance || isUsedMax ? RedeemStatus.FAILED : RedeemStatus.COMPLETED,
   });
 }
 

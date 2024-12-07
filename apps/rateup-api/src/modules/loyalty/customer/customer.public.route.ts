@@ -5,12 +5,19 @@ import {
   customerActionHandler,
   verifyLCustomerMaxCountRestriction,
 } from "./customer.controller";
+import { getVerifySubscriptionForPublicHandler } from "../../../utils/auth";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export async function loyaltyCustomerPublicRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: [verifyLCustomerMaxCountRestriction],
+      preHandler: [
+        getVerifySubscriptionForPublicHandler([
+          SubscriptionFeaturePathName.LoyaltyCustomer,
+        ]),
+        verifyLCustomerMaxCountRestriction,
+      ],
       schema: {
         body: $lCustomerRef("LCustomerSchema"),
       },
