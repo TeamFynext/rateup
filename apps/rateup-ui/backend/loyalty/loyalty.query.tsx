@@ -28,8 +28,8 @@ export const useLCRedeem = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       showSuccessToast("success redeem");
     },
-    onError: () => {
-      showErrorToast("Error");
+    onError: (e: any) => {
+      showErrorToast(`Error: ${e.response.data.message}`);
     },
   });
 };

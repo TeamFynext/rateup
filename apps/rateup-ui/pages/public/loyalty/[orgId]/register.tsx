@@ -45,7 +45,7 @@ const CustomerRegister = () => {
   });
 
   const handleRegister = () => {
-    console.log("form.values", form.values);
+    if (isError) setIsError(null);
     if (form.validate().hasErrors) {
       if (form.validate().errors.phone) setError(form.validate().errors.phone);
       return;
@@ -56,7 +56,6 @@ const CustomerRegister = () => {
       {
         onSuccess: () => {
           form.reset();
-          console.log("form.value", form.values);
           open();
         },
         onError: () => {

@@ -1,19 +1,34 @@
 import { useMemo, useState } from "react";
 
-import { Anchor, Button, Loader, Stack, Text, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Anchor,
+  Button,
+  Loader,
+  Menu,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import { getLabelsforConfirmModal } from "@/components/shopify/ShopifySettings";
 import useTranslations from "@/dictionaries/useTranslation";
 import { formatDate, formatDateWithTime } from "@/utils/dateTime";
 
-import { useLoyaltyCustomers } from "../../../../backend/loyalty/customer/customer.query";
+import {
+  useDeleteLoyaltyCustomerMutation,
+  useLoyaltyCustomers,
+} from "../../../../backend/loyalty/customer/customer.query";
 import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
 import TanstackTable from "../../../../components/Table/TanstackTable";
 
@@ -109,6 +124,7 @@ type LoyaltyCustomerTable = {
   totalPoints: number;
   balancePoints: number;
   redeems: LoyaltyRedeem[];
+  action: any;
 };
 
 function generateColumns(
@@ -183,13 +199,64 @@ function generateColumns(
           );
         },
       }),
+      columnHelper.accessor((row) => row, {
+        id: "action",
+        header: () => <span></span>,
+        cell: ({ getValue }) => {
+          return <CustomerMenu row={getValue()} />;
+        },
+      }),
     ],
     [],
   );
 
   return defaultColumns;
 }
+const CustomerMenu = ({ row }) => {
+  const [opened, { open, close }] = useDisclosure(false);
+  const { translations } = useTranslations();
+  const deleteMut = useDeleteLoyaltyCustomerMutation();
+  const handleDelete = () => {
+    deleteMut.mutate(row.id, {
+      onSettled: () => {
+        close();
+      },
+    });
+  };
 
+  return (
+    <Menu position="bottom-end">
+      <Menu.Target>
+        <ActionIcon variant="subtle">
+          <IconDotsVertical size={"1rem"} />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          color="red"
+          leftSection={<IconTrash size={"1rem"} />}
+          onClick={() => {
+            open();
+          }}
+        >
+          {translations["Delete"]}
+        </Menu.Item>
+      </Menu.Dropdown>
+      <ConfirmationModal
+        confirmLabel={translations["Delete"]}
+        headerTitle={translations["Delete"]}
+        headerLabel={translations["Are you sure to delete this"]}
+        onClose={close}
+        opened={opened}
+        onConfirm={() => handleDelete()}
+        closeLabel={translations["Cancel"]}
+        forDeleteFunctionality
+        deleteQuotion={""}
+        key={row?.id}
+      />
+    </Menu>
+  );
+};
 const LoyaltyCustomerAction = ({ actions }) => {
   const columnHelper = createColumnHelper<LoyaltyAction>();
 

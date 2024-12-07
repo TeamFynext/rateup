@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
+  Card,
   Group,
   Radio,
   RadioGroup,
   SelectProps,
   SimpleGrid,
+  Skeleton,
   Stack,
   Text,
 } from "@mantine/core";
@@ -44,9 +46,6 @@ export default index;
 
 //for demo
 const LCACtionRedeemButtons = () => {
-  const { data: customers, isPending: isLCP } = useLoyaltyCustomers();
-  const { data: rewards, isPending: isLRP } = useGetLoyaltyRewards();
-  const { data: actions, isPending: isLAP } = useGetLoyaltyActions();
   const [type, setType] = useState("action");
 
   const lcActionMut = useLCAction();
@@ -60,37 +59,6 @@ const LCACtionRedeemButtons = () => {
       actionId: "",
     },
   });
-
-  const customerList = customers
-    ? customers?.map((c) => ({
-        label: c.customerInfo.phone,
-        value: c.id,
-      }))
-    : [];
-  const rewardList = rewards
-    ? rewards?.map((r) => ({
-        label: r.name,
-        value: r.id,
-      }))
-    : [];
-  const actionList = actions
-    ? actions?.map((a) => ({
-        label: a.name,
-        value: a.id,
-      }))
-    : [];
-
-  const LCSelector = (props: SelectProps) => {
-    return <ContainedSelection data={customerList} {...props} />;
-  };
-
-  const LRSelector = (props: SelectProps) => {
-    return <ContainedSelection data={rewardList} {...props} />;
-  };
-
-  const LASelector = (props: SelectProps) => {
-    return <ContainedSelection data={actionList} {...props} />;
-  };
 
   const handleCall = () => {
     const { customerId, actionId, rewardId } = form.values;
@@ -114,6 +82,11 @@ const LCACtionRedeemButtons = () => {
       },
     );
   };
+
+  useEffect(() => {
+    form.reset();
+  }, [type]);
+
   return (
     <Group>
       <Stack>
@@ -142,8 +115,59 @@ const LCACtionRedeemButtons = () => {
           />
         )}
 
-        <RateupButtonBlue title="Call" onClick={handleCall} />
+        <RateupButtonBlue
+          title="Call"
+          onClick={handleCall}
+          loading={lcActionMut.isPending || lcRedeemMut.isPending}
+        />
       </Stack>
     </Group>
+  );
+};
+
+const LCSelector = (props: SelectProps) => {
+  const { data: customers, isLoading } = useLoyaltyCustomers();
+  const customerList = customers
+    ? customers?.map((c) => ({
+        label: c.customerInfo.phone,
+        value: c.id,
+      }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  return <ContainedSelection data={customerList} {...props} />;
+};
+
+const LRSelector = (props: SelectProps) => {
+  const { data: rewards, isLoading } = useGetLoyaltyRewards();
+  const rewardList = rewards
+    ? rewards?.map((r) => ({
+        label: r.name,
+        value: r.id,
+      }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  return <ContainedSelection data={rewardList} {...props} />;
+};
+
+const LASelector = (props: SelectProps) => {
+  const { data: actions, isLoading } = useGetLoyaltyActions();
+  const actionList = actions
+    ? actions?.map((a) => ({
+        label: a.name,
+        value: a.id,
+      }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  return <ContainedSelection data={actionList} {...props} />;
+};
+
+const SelectSkeleton = () => {
+  return (
+    <Card h={46} w={240} radius={"md"} withBorder p={0}>
+      <Group justify="space-between" w={"100%"} my={"auto"}>
+        <Skeleton w={100} h={20} ml={"xs"} />
+        <Skeleton w={20} h={20} mr={"xs"} />
+      </Group>
+    </Card>
   );
 };
