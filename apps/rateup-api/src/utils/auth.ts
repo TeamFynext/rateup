@@ -181,3 +181,58 @@ export function assertRootOrg(
   }
   done();
 }
+
+export function getVerifySubscriptionForPublicHandler(
+  featurePathNames: Array<SubscriptionFeaturePathName>,
+) {
+  return async function verifySubscription(
+    request: FastifyRequest<{ Body: { orgId: string } & object }>,
+    reply: FastifyReply,
+  ) {
+    try {
+      const subscription = await getSubscription(request.body.orgId);
+
+      if (!subscription) {
+        log.trace("No subscription found");
+        reply.code(403).send({
+          message: "Unauthorized",
+          displayMessageInClient: true,
+        });
+        return;
+      }
+      if (
+        dayjs(subscription.expiresAt).isBefore(dayjs()) &&
+        ["POST", "PUT"].includes(request.method)
+      ) {
+        log.error(
+          "Subscription expired\n%o\nrequest.body => %o",
+          subscription,
+          request.body,
+        );
+        reply.code(403).send({
+          message: "Subscription expired",
+          displayMessageInClient: true,
+        });
+        return;
+      }
+      const missingFeatures = featurePathNames.filter(
+        (feature) => !getNestedProperty(subscription.features, feature).active,
+      );
+      if (missingFeatures.length > 0) {
+        log.error(
+          "Subscription missing features\n%o\nrequest.body => %o",
+          missingFeatures,
+          request.body,
+        );
+        reply.code(403).send({
+          message: "This feature is not included in your subscription",
+        });
+        return;
+      }
+      request.subscription = subscription;
+    } catch (err) {
+      log.error(err);
+      reply.code(403).send({ message: "Error while verifying subscription" });
+    }
+  };
+}

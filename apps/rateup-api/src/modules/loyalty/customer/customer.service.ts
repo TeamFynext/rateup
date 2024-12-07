@@ -99,3 +99,11 @@ export async function getLoyaltyCustomers(orgId) {
     };
   });
 }
+
+export async function deleteLoyaltyCustomer(id: string) {
+  await prisma.loyaltyCustomer.delete({
+    where: {
+      id,
+    },
+  });
+}

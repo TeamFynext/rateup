@@ -4,6 +4,7 @@ import { CustomerActionParamInput, LCustomerInput } from "./customer.schema";
 import {
   createCustomerAction,
   createLCustomer,
+  deleteLoyaltyCustomer,
   getLoyaltyCustomers,
   updateLCustomerPoint,
 } from "./customer.service";
@@ -90,24 +91,31 @@ export async function verifyLCustomerMaxCountRestriction(
       },
     });
 
-    const subscription = await prisma.subscription.findUnique({
-      where: {
-        orgId,
-      },
-    });
-
     if (
       count >=
       getNestedProperty(
-        request.subscription.features,
+        request.subscription?.features as unknown as object,
         SubscriptionFeaturePathName.LoyaltyCustomer,
       ).count.max
     ) {
-      reply.code(403).send({
+      return reply.code(403).send({
         message: "Registration limit reached",
         displayMessageInClient: true,
       });
     }
+  } catch (e) {
+    log.error(e);
+    return reply.code(500).send(e);
+  }
+}
+
+export async function deleteLoyaltyCustomersHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const customer = await deleteLoyaltyCustomer(request.params.id);
+    reply.code(200).send(customer);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
