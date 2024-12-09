@@ -1,7 +1,8 @@
 import { SelectProps, Skeleton } from "@mantine/core";
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
+
 import { useSurveys } from "../../../../backend/surveys/surveys.query";
 import { SurveyType } from "../../../../types/enums";
+import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 
 interface WebsurveySelectorProps extends SelectProps {
   value?: string;
@@ -22,7 +23,7 @@ export function WebsurveySelector({
   const { isPending, data } = useSurveys();
 
   if (isPending || !data) {
-    return <Skeleton h={46} mt={"sm"} />;
+    return <Skeleton h={46} mt={"sm"} w={50} />;
   }
 
   const filteredWebSurvey = Array.isArray(data)
@@ -35,17 +36,15 @@ export function WebsurveySelector({
 
   const selectOptions = filteredWebSurvey.map((survey) => ({
     value: survey.teams?.[0]?.shortUrlId
-      ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/${survey.teams?.[0]?.shortUrlId}?tag={{1}}`
-      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/${survey.teams?.[0]?.mapId}?tag={{1}}`,
+      ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/?:${survey.id}`
+      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/?:${survey.id}`,
     label: survey?.title,
   }));
 
   const handleChange = (url) => {
-    form.setFieldValue(`buttons.${index}.url`, url);
-    form.insertListItem(
-      `buttons.${index}.example`,
-      Math.floor(1000000000 + Math.random() * 9000000000)?.toString(),
-    );
+    let arr = url?.split("?");
+    form.setFieldValue(`buttons.${index}.url`, `${arr?.[0]}{{1}}`);
+    form.setFieldValue(`buttons.${index}.example`, [arr?.[1]]);
   };
   return (
     <ContainedSelection
@@ -53,7 +52,10 @@ export function WebsurveySelector({
       placeholder="Select websurvey"
       label="Websurvey"
       allowDeselect={false}
-      {...form.getInputProps(`buttons.${index}.url`)}
+      value={form.values.buttons[index].url?.replace(
+        "{{1}}",
+        `?${form.values.buttons[index].example}`,
+      )}
       onChange={handleChange}
       {...props}
     />
