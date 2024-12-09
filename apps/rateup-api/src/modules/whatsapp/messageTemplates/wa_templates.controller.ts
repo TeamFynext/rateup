@@ -478,19 +478,42 @@ export async function sendTemplateToUserCore(
 
   dbTemplate.data.components.forEach((item) => {
     if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-      item?.buttons.forEach((button, idx) => {
+      item?.buttons.forEach(async (button, idx) => {
         if (button.type === "URL" && button?.example?.length > 0) {
-          components.push({
-            type: "button",
-            sub_type: "url",
-            index: idx,
-            parameters: [
-              {
-                type: "text",
-                text: phone,
+          if (button?.example?.[0]?.startsWith(":")) {
+            let btnVal = button?.example?.[0]?.slice(1);
+
+            let publicSurvey2 = await prisma.surveyTeamMap.findFirst({
+              where: {
+                surveyId: btnVal,
+                ...(teamId && { teamId }),
               },
-            ],
-          });
+            });
+            let url = publicSurvey2?.shortUrlId || publicSurvey2?.id;
+            components.push({
+              type: "button",
+              sub_type: "url",
+              index: idx,
+              parameters: [
+                {
+                  type: "text",
+                  text: `${url}?tag=${phone}`,
+                },
+              ],
+            });
+          } else {
+            components.push({
+              type: "button",
+              sub_type: "url",
+              index: idx,
+              parameters: [
+                {
+                  type: "text",
+                  text: phone,
+                },
+              ],
+            });
+          }
         }
       });
     }
