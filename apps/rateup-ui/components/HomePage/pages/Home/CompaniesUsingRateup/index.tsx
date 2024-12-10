@@ -13,7 +13,11 @@ const cx = classNames.bind(styles);
 
 function CompaniesUsingRateup({ className = "" }) {
   const isVpLeq768px = useMediaQuery("(max-width: 768px)");
-  const autoScrollRef = useRef(AutoScroll({ speed: 1 }));
+  const autoScrollRef: any = useRef(
+    AutoScroll({
+      speed: 1,
+    }),
+  );
   return (
     <Stack className={cx("companies-using-rateup-root-div", className)}>
       <h1 className={cx("heading")}>Top companies using RateUp platform</h1>
@@ -26,7 +30,7 @@ function CompaniesUsingRateup({ className = "" }) {
         <Carousel
           className={styles["companies-logos-carousel"]}
           height={isVpLeq768px ? 100 : 120}
-          plugins={[autoScrollRef.current]}
+          plugins={[autoScrollRef?.current]}
           loop
           slideSize={{
             base: "36%",

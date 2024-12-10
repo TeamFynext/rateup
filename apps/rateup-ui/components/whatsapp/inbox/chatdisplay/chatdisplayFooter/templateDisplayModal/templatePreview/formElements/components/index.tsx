@@ -17,9 +17,14 @@ interface Props {
     component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT",
     component_data: any,
   ) => void;
-  exampleParams?: string[];
+  exampleParams?: Array<{ type: string }> | string[];
 }
 export default function WaTemplateFormComponents(props: Props) {
+  let header = props.exampleParams?.find(
+    (item) =>
+      typeof item === "object" && item.type === props?.type?.toLowerCase(),
+  )?.[props?.type?.toLowerCase()];
+
   switch (props?.type) {
     case "IMAGE":
     case "VIDEO":
@@ -41,6 +46,7 @@ export default function WaTemplateFormComponents(props: Props) {
           <Divider variant="dotted" />
           <WaLocationInputComponent
             buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
+            defaultValue={header}
           />
         </Paper>
       );
@@ -123,17 +129,19 @@ function WaDropZoneInputComponent(props: Props) {
 
 function WaLocationInputComponent({
   buildtemplatequerycomponent,
+  defaultValue,
 }: {
   buildtemplatequerycomponent: (
     component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
     component_format: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION",
     component_data: any,
   ) => void;
+  defaultValue?: any;
 }) {
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState(defaultValue?.latitude || "");
+  const [longitude, setLongitude] = useState(defaultValue?.longitude || "");
+  const [name, setName] = useState(defaultValue?.name || "");
+  const [address, setAddress] = useState(defaultValue?.address || "");
   const { translations } = useTranslations();
   return (
     <>
@@ -202,7 +210,7 @@ function WaBodyVariableInputComponent({
     component_format: "TEXT",
     component_data: any,
   ) => void;
-  exampleParams?: string[];
+  exampleParams?: Array<{ type: string }> | string[];
 }) {
   const form = useForm({
     initialValues: {

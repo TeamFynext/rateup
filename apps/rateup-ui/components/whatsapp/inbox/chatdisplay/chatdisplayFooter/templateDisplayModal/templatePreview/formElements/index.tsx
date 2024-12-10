@@ -12,6 +12,7 @@ import classes from "./styles.module.css";
 interface Props {
   setParameterData: Updater<any>;
   template: WaTemplateFetchBody;
+  parameters?: Array<any>;
 }
 export default function WaTemplateFormElements(props: Props) {
   const { translations } = useTranslations();
@@ -75,6 +76,10 @@ export default function WaTemplateFormElements(props: Props) {
   return (
     <Stack className={classes.wrapper}>
       {props?.template?.components?.map((component, i) => {
+        let exampleParams = props.parameters?.find(
+          (data) => data.type === component.type?.toLowerCase(),
+        )?.parameters;
+
         switch (component.type) {
           case "HEADER":
             return (
@@ -90,11 +95,13 @@ export default function WaTemplateFormElements(props: Props) {
                   <WaTemplateFormComponents
                     type={component?.format}
                     buildtemplatequerycomponent={buildtemplatequerycomponent}
+                    exampleParams={exampleParams}
                   />
                 ) : component?.format === "LOCATION" ? (
                   <WaTemplateFormComponents
                     type={component?.format}
                     buildtemplatequerycomponent={buildtemplatequerycomponent}
+                    exampleParams={exampleParams}
                   />
                 ) : (
                   <NoParams type={"Header"} />
@@ -113,7 +120,11 @@ export default function WaTemplateFormElements(props: Props) {
                   <WaTemplateFormComponents
                     type={"TEXT"}
                     buildtemplatequerycomponent={buildtemplatequerycomponent}
-                    exampleParams={component?.example?.body_text?.[0]}
+                    exampleParams={
+                      exampleParams?.length > 0
+                        ? exampleParams?.map((ep) => ep?.text)
+                        : component?.example?.body_text?.[0]
+                    }
                   />
                 ) : (
                   <NoParams type={"Body"} />
@@ -149,7 +160,11 @@ export default function WaTemplateFormElements(props: Props) {
   );
 }
 
-function NoParams({ type }: { type: "Header" | "Body" | "Footer" | "Button" }) {
+export function NoParams({
+  type,
+}: {
+  type: "Header" | "Body" | "Footer" | "Button";
+}) {
   return (
     <Paper className={classes.no_params_wrapper}>
       <Text className={classes.no_params_text}>No {type} Parameters</Text>

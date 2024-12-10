@@ -1,4 +1,5 @@
 import { Tabs, TabsProps } from "@mantine/core";
+
 import classes from "./StyledTabs.module.css";
 import classesRateUp from "./StyledTabsRateUp.module.css";
 
@@ -14,8 +15,10 @@ export default function StyledTabs(props: Readonly<StyledTabsProps>) {
         ...classes,
         ...(enableRateUpBlueTheme ? classesRateUp : {}),
       }}
-      styles={{ list: { margin: "auto" } }}
-      unstyled
+      styles={{
+        list: { margin: "auto" },
+      }}
+      variant="unstyled"
       {...rest}
     />
   );
