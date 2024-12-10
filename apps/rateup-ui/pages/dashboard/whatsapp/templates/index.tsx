@@ -216,7 +216,7 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
     <PaperLayout hoveractive={true} onClick={onClick} layoutAnimation>
       <Stack>
         <Flex justify={"space-between"} align={"center"}>
-          <Text mr={"sm"} truncate size="lg" fw={600} tt={"capitalize"}>
+          <Text mr={"sm"} truncate size="lg" fw={600}>
             {template.data.name}
           </Text>
           <Group>
