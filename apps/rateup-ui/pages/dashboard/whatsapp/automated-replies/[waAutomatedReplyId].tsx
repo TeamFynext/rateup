@@ -47,10 +47,12 @@ import {
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
+import LinkWithCopyBtn from "@/components/adminPanel/ShareQRPage/LinkWithCopyBtn";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
+import ShareQR from "@/components/Survey/ShareSurvey/ShareQR";
 import { CopyLinkComponent } from "@/components/Survey/ShareSurvey/ShareSurvey";
 import TanstackTable from "@/components/Table/TanstackTable";
 import WaTemplateFormElements, {
@@ -167,7 +169,7 @@ const App = () => {
   }, [nodes]);
 
   if (isPending || isLoading || waPending) return <RateupLoader />;
-
+  let link = `https://api.whatsapp.com/send/?phone=${encodeURIComponent(waSettings?.phone?.replace("+", ""))}&text=${encodeURIComponent(data?.matchData?.keywords?.[0] ?? "")}`;
   return (
     <StyledTabs
       keepMounted={false}
@@ -248,12 +250,10 @@ const App = () => {
         </Stack>
       </Tabs.Panel>
       <Tabs.Panel value="share">
-        <Flex justify={"center"} mt={100}>
-          <CopyLinkComponent
-            value={`https://api.whatsapp.com/send/?phone=${encodeURIComponent(waSettings?.phone?.replace("+", ""))}&text=${encodeURIComponent(data?.matchData?.keywords?.[0] ?? "")}`}
-            disabled={false}
-          />
-        </Flex>
+        <Stack p={"xs"} flex={1} align="center">
+          <LinkWithCopyBtn link={link} />
+          <ShareQR url={link} title={`New`} isPublished={true} />
+        </Stack>
       </Tabs.Panel>
       <Tabs.Panel value="result">
         <PaperLayout p={0} h={"96%"} w={"98%"} mah={"800px"} m={"xs"}>
