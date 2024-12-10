@@ -37,7 +37,7 @@ export function WebsurveySelector({
   const selectOptions = filteredWebSurvey.map((survey) => ({
     value: survey.teams?.[0]?.shortUrlId
       ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/ws/?:${survey?.teams?.[0]?.shortUrlId}`
-      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/?:error`,
+      : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/public/survey/?:error${Math.floor(100000 + Math.random() * 900000).toString()}`,
     label: survey?.title,
   }));
 
