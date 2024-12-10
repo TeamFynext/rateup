@@ -347,6 +347,7 @@ export async function sendTemplateToUserCore(
   userId?: string,
   timeDelay?: number,
   isTemplateName = false,
+  tag?: string,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
   if (isTemplateName) {
@@ -503,7 +504,7 @@ export async function sendTemplateToUserCore(
               parameters: [
                 {
                   type: "text",
-                  text: `${url}?tag=${phone}`,
+                  text: `${url}?tag=${phone}${tag ? `,${tag}` : ""}`,
                 },
               ],
             });
