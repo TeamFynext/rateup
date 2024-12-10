@@ -62,7 +62,9 @@ export const getServerSideProps = async ({
 
 export default function MenuLandingPage({ fullMenu, menuBanner }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  const autoplay = useRef(Autoplay({ delay: 2000, stopOnInteraction: false }));
+  const autoplay: any = useRef(
+    Autoplay({ delay: 2000, stopOnInteraction: false }),
+  );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const categoryRefs = useRef({});
 

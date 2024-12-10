@@ -54,7 +54,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
     matchType: WaAutomatedReplyMatchType.ContainsAnyOf,
     matchData: {
       keywords: [],
-      exactText: "",
+      json: {},
       caseSensitive: false,
     },
   };
@@ -63,10 +63,12 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
 interface AutoPilotFormProps {
   initialValues?: WaAutomatedReply;
   editMode?: boolean;
+  close?: () => void;
 }
 export function AutomatedReplyForm({
   initialValues,
   editMode,
+  close,
 }: AutoPilotFormProps) {
   const rootForm = useForm({
     initialValues: getInitialValues(initialValues),
@@ -83,14 +85,15 @@ export function AutomatedReplyForm({
     matchDataForm.setInitialValues(init.matchData);
   }, [initialValues]);
 
-  const createMutation = useCreateWaAutomatedReplyMutation();
-  const updateMutation = useUpdateWaAutomatedReplyMutation();
   const router = useRouter();
+  let automatedId = router.query.waAutomatedReplyId as string;
+  const createMutation = useCreateWaAutomatedReplyMutation();
+  const updateMutation = useUpdateWaAutomatedReplyMutation(automatedId);
 
   function handleCancelClick() {
     rootForm.reset();
     matchDataForm.reset();
-    router.push("../automated-replies");
+    close();
   }
 
   function handleSubmitClick() {
@@ -100,7 +103,7 @@ export function AutomatedReplyForm({
       updateMutation.mutate(data);
     } else {
       createMutation.mutate(data, {
-        onSuccess: () => {
+        onSettled: () => {
           handleCancelClick();
         },
       });
@@ -109,7 +112,7 @@ export function AutomatedReplyForm({
 
   return (
     <form onSubmit={rootForm.onSubmit((values) => handleSubmitClick())}>
-      <Stack pl={"md"}>
+      <Stack>
         <Group>
           <ContainedTextField
             label="Name"
@@ -151,12 +154,12 @@ export function AutomatedReplyForm({
           matchDataForm={matchDataForm}
           type={rootForm.values.matchType}
         />
-        <ContainedSelection
+        {/* <ContainedSelection
           label="Response Type"
           data={Object.values(WaAutomatedReplyResponseType)}
           {...rootForm.getInputProps("responseType")}
-        />
-        <ResponseSelector type={rootForm.values.responseType} form={rootForm} />
+        /> */}
+        {/* <ResponseSelector type={rootForm.values.responseType} form={rootForm} /> */}
 
         <Group justify={"space-between"}>
           <Button onClick={handleCancelClick} variant="light">

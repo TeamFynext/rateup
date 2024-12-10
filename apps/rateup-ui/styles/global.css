@@ -140,3 +140,11 @@ body {
   background: light-dark(white, var(--mantine-color-body)) !important;
   color: light-dark(black, white) !important;
 }
+.react-flow {
+  --xy-edge-stroke-default: rgb(129, 126, 126) !important;
+  --xy-edge-stroke-selected-default: rgb(0, 0, 0) !important;
+  --xy-controls-button-background-color: light-dark(
+    white,
+    rgb(129, 126, 126)
+  ) !important;
+}

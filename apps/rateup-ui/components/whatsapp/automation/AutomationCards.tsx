@@ -13,7 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDots, IconTrash } from "@tabler/icons-react";
+import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useTimeSince } from "@/hooks/timeSince";
