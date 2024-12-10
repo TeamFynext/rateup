@@ -482,7 +482,7 @@ export async function sendTemplateToUserCore(
         if (button.type === "URL" && button?.example?.length > 0) {
           if (button?.example?.[0]?.startsWith(":")) {
             let shortUrlId = button?.example?.[0]?.slice(1);
-            if (shortUrlId === "error") return;
+            if (shortUrlId?.startsWith("error")) return;
             let surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
               where: {
                 shortUrlId,
