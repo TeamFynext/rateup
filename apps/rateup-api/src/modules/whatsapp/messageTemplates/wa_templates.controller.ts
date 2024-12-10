@@ -481,15 +481,21 @@ export async function sendTemplateToUserCore(
       item?.buttons.forEach(async (button, idx) => {
         if (button.type === "URL" && button?.example?.length > 0) {
           if (button?.example?.[0]?.startsWith(":")) {
-            let btnVal = button?.example?.[0]?.slice(1);
-
-            let publicSurvey2 = await prisma.surveyTeamMap.findFirst({
+            let shortUrlId = button?.example?.[0]?.slice(1);
+            if (shortUrlId === "error") return;
+            let surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
               where: {
-                surveyId: btnVal,
+                shortUrlId,
+              },
+            });
+            let surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
+              where: {
+                surveyId: surveyTeamMapData.surveyId,
                 ...(teamId && { teamId }),
               },
             });
-            let url = publicSurvey2?.shortUrlId || publicSurvey2?.id;
+            let url =
+              surveyTeamMapWithTeam?.shortUrlId || surveyTeamMapWithTeam?.id;
             components.push({
               type: "button",
               sub_type: "url",
