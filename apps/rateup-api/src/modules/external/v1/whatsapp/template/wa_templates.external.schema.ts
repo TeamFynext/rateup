@@ -70,6 +70,7 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
   phone: z.number(),
   body_variables: z.array(z.string()).optional(),
   teamId: z.string().optional(),
+  tag: z.string().optional(),
   parameterData: z
     .array(
       z.object({

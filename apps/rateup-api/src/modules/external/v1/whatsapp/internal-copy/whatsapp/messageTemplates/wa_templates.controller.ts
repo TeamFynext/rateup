@@ -41,7 +41,6 @@ import {
 } from "../../../template/wa_templates.external.schema";
 import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
 import { parsePhoneNumber } from "libphonenumber-js";
-import { templateData } from "../../../../../../whatsapp/messageTemplates/wa_templates.service";
 import { sendTemplateToUserCore } from "../../../../../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function getTemplatesHandler(
@@ -363,8 +362,14 @@ export async function sendTemplateByNameToPhoneHandler(
   rep: FastifyReply,
 ) {
   try {
-    const { templateName, timeDelay, teamId, body_variables, parameterData } =
-      req.body;
+    const {
+      templateName,
+      timeDelay,
+      teamId,
+      body_variables,
+      parameterData,
+      tag,
+    } = req.body;
 
     const orgId = req.user.orgId;
     const userId = req.user.userId;
@@ -409,6 +414,7 @@ export async function sendTemplateByNameToPhoneHandler(
       userId,
       timeDelay,
       true,
+      tag,
     );
     rep
       .code(200)
