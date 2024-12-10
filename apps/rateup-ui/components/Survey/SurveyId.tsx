@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Alert, MantineProvider, Portal, Text } from "@mantine/core";
+import {
+  Group,
+  MantineProvider,
+  MultiSelect,
+  Portal,
+  Text,
+} from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconAlertOctagon } from "@tabler/icons-react";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast } from "@/utils/notifications";
-import { validateAllLanguagesArePopulated } from "@/utils/questions";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
@@ -56,6 +60,10 @@ export default function SurveyID() {
 
   const { data: surveyVariables } = useGetSurveyVariables(surveyId, false);
   const { update } = useRouteParams();
+
+  const multiSelectOptions = survey?.teams?.map((team) => {
+    return { value: team?.mapId, label: team?.name };
+  });
   useEffect(() => {
     update({ surveyId: survey?.title });
   }, [survey?.title]);
@@ -223,6 +231,21 @@ export default function SurveyID() {
             )}
             {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
             <div id="SurveyIssueAlert"> </div>
+            {activeTab === TabEnum.Result && (
+              <Group pos={"absolute"} right={30}>
+                <MultiSelect
+                  radius={"10px"}
+                  searchable
+                  clearable
+                  data={multiSelectOptions}
+                  value={filterTeams}
+                  onChange={setFilterTeams}
+                  placeholder={
+                    filterTeams.length > 0 ? "" : translations["All Teams"]
+                  }
+                />
+              </Group>
+            )}
 
             <TabPanelsComp
               value={activeTab}
