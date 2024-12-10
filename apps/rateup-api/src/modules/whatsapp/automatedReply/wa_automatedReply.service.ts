@@ -9,6 +9,16 @@ export async function getAutomatedRepliesByTeamId(teamId: string) {
   return automatedReplies;
 }
 
+export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
+  const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
+    where: {
+      waAutomatedReplyId: id,
+      orgId,
+    },
+  });
+  return automatedReplies;
+}
+
 export async function getAutomatedRepliesByOrgId(orgId: string) {
   const automatedReplies = await prisma.waAutomatedReply.findMany({
     where: {

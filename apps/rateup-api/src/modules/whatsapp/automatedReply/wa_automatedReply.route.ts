@@ -6,12 +6,14 @@ import {
   deleteAutomatedReplyHandler,
   getAutomatedRepliesByIdHandler,
   getAllAutomatedRepliesByOrgIdHandler,
+  getAutomatedRepliesMessagIdHandler,
 } from "./wa_automatedReply.controller";
 import { checkSession } from "../../../utils/checkSession";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.addHook("preHandler", checkSession);
   fastify.get("/team/:teamId", getAutomatedRepliesByTeamIdHandler);
+  fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
   fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
   fastify.post("/", createAutomatedReplyHandler);
   fastify.get("/:waAutomatedReplyId", getAutomatedRepliesByIdHandler);

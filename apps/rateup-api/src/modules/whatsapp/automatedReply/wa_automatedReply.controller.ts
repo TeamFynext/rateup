@@ -9,6 +9,7 @@ import {
   deleteAutomatedReply,
   getAutomatedRepliesByOrgId,
   getAutomatedRepliesByTeamId,
+  getAutomatedRepliesMessagId,
   getAutomatedReplyById,
   updateAutomatedReply,
 } from "./wa_automatedReply.service";
@@ -20,6 +21,17 @@ export async function getAutomatedRepliesByTeamIdHandler(
   reply: FastifyReply,
 ) {
   const automatedReplies = await getAutomatedRepliesByTeamId(req.params.teamId);
+  reply.send(automatedReplies);
+}
+
+export async function getAutomatedRepliesMessagIdHandler(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  const automatedReplies = await getAutomatedRepliesMessagId(
+    req.params.id,
+    req.user.orgId,
+  );
   reply.send(automatedReplies);
 }
 

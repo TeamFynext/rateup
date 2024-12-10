@@ -1,5 +1,6 @@
 import { WaAutomatedReply } from "@prisma/client";
 import {
+  SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
   WaAutomatedReplyResponseType,
   WaTemplateComponentType,
@@ -7,14 +8,22 @@ import {
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import {
   WaParsedMessage,
+  createReplyButtonsMessage,
+  createReplyImageMessage,
   parseMessage,
 } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
-import { sendTextMessage } from "../whatsappSurvey/wasurvey.service";
+import {
+  sendMessage,
+  sendTextMessage,
+} from "../whatsappSurvey/wasurvey.service";
 import { log } from "../../../utils/logger";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
 import prisma from "../../../utils/prisma";
 import { templateData } from "../messageTemplates/wa_templates.service";
+import { updateMonthlyStat } from "../../stats/stats.service";
+import { sendFlow } from "../flows/flow.service";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 
 export function validateAutomationMatchCondition(
   automation: WaAutomatedReply,
@@ -73,25 +82,173 @@ export async function checkIfMessageMatchesAnyAutomation(
     }
   }
 }
-
+type prevIntractionProps = {
+  id: string;
+  createdAt: Date;
+  message: string;
+  phone: string;
+  currentScreen: string;
+  waAutomatedReplyId: string | null;
+  orgId: string;
+};
+type matchDataProps = {
+  json: {
+    nodes: Array<{
+      id: string;
+      data: {
+        components: Array<{
+          type: string;
+          name:
+            | Array<{ value: string; id: string }>
+            | string
+            | { image: string };
+          parameter?: any;
+        }>;
+      };
+    }>;
+    edges: Array<{}>;
+  };
+};
 export async function sendAutomatedReplyMessage(
   orgId: string,
-  { from }: WaParsedMessage,
+  { from, buttonId, message }: WaParsedMessage,
   automation: WaAutomatedReply,
+  prevIntraction: prevIntractionProps,
 ) {
-  const { responseType, responseText, responseTemplateId, teamId, name } =
+  const { responseType, responseTemplateId, teamId, name, matchData } =
     automation;
 
+  let nodes = (matchData as unknown as matchDataProps)?.json?.nodes;
   if (responseType === WaAutomatedReplyResponseType.Template) {
     // TODO: improve template sending
     await sendTemplateToUserCore(orgId, responseTemplateId, from, [], teamId);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    await sendTextMessage({ phone: from, orgId }, "", responseText);
+    const nextScreenId = prevIntraction
+      ? getNextScreen(
+          (matchData as unknown as matchDataProps)?.json,
+          prevIntraction?.currentScreen,
+          buttonId,
+        ) || nodes?.[0]?.id
+      : nodes?.[0]?.id;
+    const node = nodes?.find((node) => node.id === nextScreenId);
+
+    await prisma.waAutomatedReplyMessage.create({
+      data: {
+        orgId,
+        waAutomatedReplyId: automation?.id,
+        phone: from,
+        currentScreen: nextScreenId ?? "",
+        message: message ?? "",
+      },
+    });
+    if (!node) return;
+
+    let components = node?.data?.components;
+    if (!components?.length) throw new Error("Components not found");
+
+    for (const component of components) {
+      orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+      if (
+        component?.type === ReplyComponentType.BasicText &&
+        Array.isArray(component?.name)
+      ) {
+        let buttons = component?.name?.splice(1);
+        if (buttons?.length === 0) {
+          await sendTextMessage(
+            { phone: from, orgId },
+            "",
+            component?.name[0]?.value,
+          );
+        } else {
+          await sendMessage(
+            orgId,
+            createReplyButtonsMessage(
+              from,
+              "",
+              component?.name?.[0]?.value,
+              buttons,
+            ),
+            teamId,
+          );
+        }
+      } else if (
+        component?.type === ReplyComponentType?.Template &&
+        typeof component?.name === "string"
+      ) {
+        await sendTemplateToUserCore(
+          orgId,
+          component?.name,
+          from,
+          component?.parameter ?? [],
+          teamId,
+        );
+      } else if (
+        component?.type === ReplyComponentType?.Flow &&
+        typeof component?.name === "string"
+      ) {
+        const serviceParam = {
+          orgId,
+          dbFlowId: component?.name,
+          phone: from,
+        };
+        await sendFlow(serviceParam);
+      } else if (
+        component?.type === ReplyComponentType?.Image &&
+        typeof component?.name === "object" &&
+        !Array.isArray(component?.name)
+      ) {
+        await sendMessage(
+          orgId,
+          createReplyImageMessage(
+            from,
+            getFileUrlFromKey(component?.name?.image),
+          ),
+          teamId,
+        );
+      }
+    }
   } else {
     throw new Error("Not implemented");
   }
 }
 
+function getNextScreen(data, screenId, buttonId) {
+  // Find the screen node
+  const screenNode = data.nodes.find((node) => node.id === screenId);
+  if (!screenNode) {
+    return null;
+  }
+
+  if (!buttonId) return null;
+  // Find the component with the given text value
+  const component = screenNode.data.components.find((comp) =>
+    comp?.name?.some((name) => name.id === buttonId),
+  );
+  if (!component) {
+    return null;
+  }
+
+  // Find the name object with the given text value to get the id
+  const nameObject = component.name.find((name) => name.id === buttonId);
+  if (!nameObject) {
+    return null;
+  }
+
+  // Find the edge with the sourceHandle matching the id
+  const edge = data.edges.find(
+    (edge) =>
+      edge.source === screenId &&
+      edge.sourceHandle === nameObject.id.toString(),
+  );
+  if (!edge) {
+    return null;
+  }
+
+  // Return the target screen id
+  return edge.target;
+}
+
+// Example usage:
 function generateOrderReferenceId() {
   const timestamp = Date.now().toString(36); // Convert timestamp to base36 for shorter representation
   const randomPart = Math.random().toString(36).substring(2, 7); // Generate a random 5-character string
@@ -195,4 +352,11 @@ export async function sendPaymentInitTemplate(
     },
   };
   return t;
+}
+
+export enum ReplyComponentType {
+  BasicText = "BasicText",
+  Flow = "Flow",
+  Template = "Template",
+  Image = "Image",
 }

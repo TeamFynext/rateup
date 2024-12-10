@@ -32,26 +32,31 @@ const smileyEmojiMap = {
 };
 export const ratingEmoji = "⭐️";
 
-export function getEventType(data: WaMessageBody) {
+export function getEventType(data: WaMessageBody): WaEvent | null | "captured" {
+  const change = data.entry?.[0]?.changes?.[0];
+  const value = change?.value;
+  const statuses = value?.statuses?.[0];
+
   if (data.object === "whatsapp_business_account") {
-    if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
-      return WaEvent.TemplateStatusChange;
-    } else if (
-      data.entry[0].changes[0].field === WaEvent.Message &&
-      data.entry[0].changes[0].value.messages?.length > 0
-    ) {
-      return WaEvent.Message;
-    } else if (
-      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status ===
-        "captured" &&
-      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.payment?.transaction
-        ?.status === "success" &&
-      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.type === "payment"
-    ) {
-      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status;
-    } else if (data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status) {
-      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]
-        ?.status as WaEvent;
+    switch (change?.field) {
+      case WaEvent.TemplateStatusChange:
+        return WaEvent.TemplateStatusChange;
+      case WaEvent.Message:
+        if (value?.messages?.length > 0) {
+          return WaEvent.Message;
+        }
+        break;
+      default:
+        if (
+          statuses?.status === "captured" &&
+          statuses?.payment?.transaction?.status === "success" &&
+          statuses?.type === "payment"
+        ) {
+          return statuses.status;
+        }
+        if (statuses?.status) {
+          return statuses.status as WaEvent;
+        }
     }
   }
   return null;
@@ -115,6 +120,7 @@ export type WaParsedMessage = {
   flowResponse: any;
   type: string;
   completeMessageObject: any;
+  buttonId: string;
 };
 export function parseMessage(data: WaMessageBody): WaParsedMessage {
   if (!getMessageObject(data)) {
@@ -127,6 +133,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
 
   let flowResponse;
   let body = "";
+  let buttonId = "";
   message[type];
   switch (message.type) {
     case WaMessageTypes.interactive:
@@ -137,6 +144,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
         subtype = message.interactive.type;
       } else {
         body = message.interactive[message.interactive.type].title;
+        buttonId = message.interactive[message.interactive.type]?.id;
       }
       break;
     case WaMessageTypes.text:
@@ -157,6 +165,21 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
     flowResponse,
     type: subtype,
     completeMessageObject,
+    buttonId,
+  };
+}
+export function createReplyImageMessage(
+  to: string,
+  imageId: string,
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "image",
+    image: {
+      link: imageId,
+    },
   };
 }
 
@@ -164,7 +187,7 @@ export function createReplyButtonsMessage(
   to: string,
   questionTitle: string,
   questionDescription: string,
-  choices: Array<string>,
+  choices: any[],
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -184,10 +207,16 @@ export function createReplyButtonsMessage(
         buttons:
           //TODO: title have a 24char limit. Description may have 200chars
           choices.map((choice, index) => ({
-            reply: {
-              title: choice,
-              id: index.toString(),
-            },
+            reply:
+              typeof choice === "string"
+                ? {
+                    title: choice,
+                    id: index.toString(),
+                  }
+                : {
+                    title: choice?.value,
+                    id: choice?.id?.toString(),
+                  },
             type: "reply",
           })),
       },
