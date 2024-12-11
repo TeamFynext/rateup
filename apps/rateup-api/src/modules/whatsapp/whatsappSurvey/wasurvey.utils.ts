@@ -32,31 +32,26 @@ const smileyEmojiMap = {
 };
 export const ratingEmoji = "⭐️";
 
-export function getEventType(data: WaMessageBody): WaEvent | null | "captured" {
-  const change = data.entry?.[0]?.changes?.[0];
-  const value = change?.value;
-  const statuses = value?.statuses?.[0];
-
+export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {
-    switch (change?.field) {
-      case WaEvent.TemplateStatusChange:
-        return WaEvent.TemplateStatusChange;
-      case WaEvent.Message:
-        if (value?.messages?.length > 0) {
-          return WaEvent.Message;
-        }
-        break;
-      default:
-        if (
-          statuses?.status === "captured" &&
-          statuses?.payment?.transaction?.status === "success" &&
-          statuses?.type === "payment"
-        ) {
-          return statuses.status;
-        }
-        if (statuses?.status) {
-          return statuses.status as WaEvent;
-        }
+    if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
+      return WaEvent.TemplateStatusChange;
+    } else if (
+      data.entry[0].changes[0].field === WaEvent.Message &&
+      data.entry[0].changes[0].value.messages?.length > 0
+    ) {
+      return WaEvent.Message;
+    } else if (
+      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status ===
+        "captured" &&
+      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.payment?.transaction
+        ?.status === "success" &&
+      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.type === "payment"
+    ) {
+      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status;
+    } else if (data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status) {
+      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]
+        ?.status as WaEvent;
     }
   }
   return null;
