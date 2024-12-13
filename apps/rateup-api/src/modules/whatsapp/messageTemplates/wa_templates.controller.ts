@@ -347,6 +347,7 @@ export async function sendTemplateToUserCore(
   userId?: string,
   timeDelay?: number,
   isTemplateName = false,
+  tag?: string,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
   if (isTemplateName) {
@@ -478,19 +479,48 @@ export async function sendTemplateToUserCore(
 
   dbTemplate.data.components.forEach((item) => {
     if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-      item?.buttons.forEach((button, idx) => {
+      item?.buttons.forEach(async (button, idx) => {
         if (button.type === "URL" && button?.example?.length > 0) {
-          components.push({
-            type: "button",
-            sub_type: "url",
-            index: idx,
-            parameters: [
-              {
-                type: "text",
-                text: phone,
+          if (button?.example?.[0]?.startsWith(":")) {
+            let shortUrlId = button?.example?.[0]?.slice(1);
+            if (shortUrlId?.startsWith("error")) return;
+            let surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
+              where: {
+                shortUrlId,
               },
-            ],
-          });
+            });
+            let surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
+              where: {
+                surveyId: surveyTeamMapData.surveyId,
+                ...(teamId && { teamId }),
+              },
+            });
+            let url =
+              surveyTeamMapWithTeam?.shortUrlId || surveyTeamMapWithTeam?.id;
+            components.push({
+              type: "button",
+              sub_type: "url",
+              index: idx,
+              parameters: [
+                {
+                  type: "text",
+                  text: `${url}?tag=${phone}${tag ? `,${tag}` : ""}`,
+                },
+              ],
+            });
+          } else {
+            components.push({
+              type: "button",
+              sub_type: "url",
+              index: idx,
+              parameters: [
+                {
+                  type: "text",
+                  text: phone,
+                },
+              ],
+            });
+          }
         }
       });
     }

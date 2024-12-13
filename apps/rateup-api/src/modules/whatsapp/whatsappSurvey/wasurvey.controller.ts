@@ -107,98 +107,149 @@ export async function whatsappEventHandler(
 ) {
   try {
     const body = request.body as WaMessageBody;
-    log.trace("WaEvent => %o", body); // Log all events
+    log.trace("WaEvent => %o", body); // Log the entire event payload
 
     const eventType = getEventType(body);
     if (!eventType) {
-      // Probably a message delivery status. Ignoring...
       return;
-    } else if (eventType === "captured") {
-      const promises = [];
-      for (const entry of body?.entry || []) {
-        for (const change of entry?.changes || []) {
-          for (const status of change?.value?.statuses || []) {
-            promises.push(
-              handlePaymentConfirmation(
-                status?.recipient_id,
-                status?.payment?.reference_id,
-              ).catch((error) => {
-                log.error(
-                  `Error handling payment confirmation for recipient_id ${status?.recipient_id}:`,
-                  error,
-                );
-              }),
-            );
-          }
-        }
-      }
-
-      await Promise.all(promises);
-    } else if (
-      [WaEvent.DELIVERED, WaEvent.READ, WaEvent.FAILED, WaEvent.SENT].includes(
-        eventType,
-      )
-    ) {
-      const promises = [];
-      for (const entry of body?.entry || []) {
-        for (const change of entry?.changes || []) {
-          for (const status of change?.value?.statuses || []) {
-            promises.push(
-              handleMessageStatusUpdate(
-                eventType,
-                status?.id,
-                status?.errors,
-              ).catch((error) => {
-                log.error(
-                  `Error handling message status update for status id ${status?.id}:`,
-                  error,
-                );
-              }),
-            );
-          }
-        }
-      }
-      await Promise.all(promises);
-      return;
-    } else if (eventType === WaEvent.Message) {
-      log.trace("messageObject => %o", getMessageObject(body));
-
-      for (const entry of body?.entry || []) {
-        for (const change of entry?.changes || []) {
-          const phone_id = change?.value?.metadata?.phone_number_id;
-          const waSettings = await getWaSettingsByPhoneId(phone_id);
-          if (!waSettings) {
-            log.error("WaSettings not found for phone_id %s", phone_id);
-            continue;
-          }
-
-          await whatsappMessageHandler(waSettings, body);
-        }
-      }
-    } else if (eventType === WaEvent.TemplateStatusChange) {
-      log.trace("template status change => %o", body);
-      const promises = [];
-      for (const entry of body?.entry || []) {
-        for (const change of entry?.changes || []) {
-          promises.push(
-            templateStatusChangeHandler(change?.value as any).catch((error) => {
-              log.error(
-                `Error handling template status change for template id ${JSON.stringify(change?.value)}:`,
-                error,
-              );
-            }),
-          );
-        }
-      }
-      await Promise.all(promises);
     }
-  } catch (e) {
-    log.error(e);
-    log.trace("Error caught successfully");
+
+    switch (eventType) {
+      case "captured":
+        await handleCapturedEvent(body);
+        break;
+
+      case WaEvent.Message:
+        await handleMessageEvent(body);
+        break;
+
+      case WaEvent.TemplateStatusChange:
+        await handleTemplateStatusChange(body);
+        break;
+
+      case WaEvent.DELIVERED:
+      case WaEvent.READ:
+      case WaEvent.FAILED:
+      case WaEvent.SENT:
+        await handleMessageStatusEvent(body, eventType);
+        break;
+
+      default:
+        log.warn("Unhandled event type: %s", eventType);
+    }
+  } catch (error) {
+    log.error("Error in whatsappEventHandler: %o", error);
   } finally {
     reply.code(200).send();
   }
 }
+
+// Utility: Wrap async functions to handle errors
+async function safeAsyncOperation<T>(
+  operation: () => Promise<T>,
+  errorHandler: (error: any) => void,
+): Promise<T | void> {
+  try {
+    return await operation();
+  } catch (error) {
+    errorHandler(error);
+  }
+}
+
+// Handler: Payment confirmation for captured events
+async function handleCapturedEvent(body: WaMessageBody) {
+  const promises = (body.entry || []).flatMap((entry) =>
+    (entry.changes || []).flatMap((change) =>
+      (change.value?.statuses || []).map((status) =>
+        safeAsyncOperation(
+          () =>
+            handlePaymentConfirmation(
+              status.recipient_id,
+              status.payment?.reference_id,
+            ),
+          (error) =>
+            log.error(
+              `Error handling payment confirmation for recipient_id ${status.recipient_id}: %o`,
+              error,
+            ),
+        ),
+      ),
+    ),
+  );
+
+  await Promise.all(promises);
+}
+
+// Handler: Manage incoming WhatsApp messages
+async function handleMessageEvent(body: WaMessageBody) {
+  log.trace("messageObject => %o", getMessageObject(body));
+
+  for (const entry of body.entry || []) {
+    for (const change of entry.changes || []) {
+      const phoneId = change.value?.metadata?.phone_number_id;
+      const waSettings = await getWaSettingsByPhoneId(phoneId);
+
+      if (!waSettings) {
+        log.error("WaSettings not found for phone_id: %s", phoneId);
+        continue;
+      }
+
+      await safeAsyncOperation(
+        () => whatsappMessageHandler(waSettings, body),
+        (error) =>
+          log.error(
+            "Error processing WhatsApp message for phone_id %s: %o",
+            phoneId,
+            error,
+          ),
+      );
+    }
+  }
+}
+
+// Handler: Manage template status changes
+async function handleTemplateStatusChange(body: WaMessageBody) {
+  const promises = (body.entry || []).flatMap((entry) =>
+    (entry.changes || []).map((change) =>
+      safeAsyncOperation(
+        () => templateStatusChangeHandler(change.value as any),
+        (error) =>
+          log.error(
+            `Error handling template status change for template id ${JSON.stringify(
+              change.value,
+            )}: %o`,
+            error,
+          ),
+      ),
+    ),
+  );
+
+  await Promise.all(promises);
+}
+
+// Handler: Update message statuses
+async function handleMessageStatusEvent(
+  body: WaMessageBody,
+  eventType: WaEvent,
+) {
+  const promises = (body.entry || []).flatMap((entry) =>
+    (entry.changes || []).flatMap((change) =>
+      (change.value?.statuses || []).map((status) =>
+        safeAsyncOperation(
+          () => handleMessageStatusUpdate(eventType, status.id, status.errors),
+          (error) =>
+            log.error(
+              `Error handling message status update for status id ${status.id}: %o`,
+              error,
+            ),
+        ),
+      ),
+    ),
+  );
+
+  await Promise.all(promises);
+}
+
 interface changeValue {
   event: WaTemplateStatus;
   message_template_id: number;
@@ -260,7 +311,7 @@ async function whatsappMessageHandler(
   );
   if (loyaltyTemplate) {
     await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
-  } else if (parseStartMessage(message)) {
+  } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
@@ -288,12 +339,39 @@ async function whatsappMessageHandler(
         session = undefined;
       }
     }
+    let prevIntraction = await prisma.waAutomatedReplyMessage.findFirst({
+      where: {
+        phone: from,
+        orgId: orgId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
     const automation = await checkIfMessageMatchesAnyAutomation(
       orgId,
       waMessage,
     );
     if (automation) {
-      await sendAutomatedReplyMessage(orgId, parsedMessage, automation);
+      await sendAutomatedReplyMessage(
+        orgId,
+        parsedMessage,
+        automation,
+        prevIntraction,
+      );
+    } else if (prevIntraction) {
+      let a = await prisma.waAutomatedReply.findFirst({
+        where: {
+          id: prevIntraction?.message,
+        },
+      });
+      if (a)
+        await sendAutomatedReplyMessage(
+          orgId,
+          parsedMessage,
+          a,
+          prevIntraction,
+        );
     }
     if (session) {
       await handleWaSurveySession(orgId, waMessage, session);
@@ -306,16 +384,23 @@ async function handleWaSurveySession(
   waMessage: WaMessageBody,
   session: WaSessionWithRelations,
 ) {
+  console.log("🚀 ~ session:", JSON.stringify(session, null, 2));
   const parsedMessage = parseMessage(waMessage);
 
   const { message } = parsedMessage;
   if (!session.currentQuestionId) {
+    console.log(1);
+
     // If no current question, then we assume this is the consent message (template)
     await handleSurveyConsentReply(orgId, parsedMessage, session);
   } else if (!session.language) {
+    console.log(2);
+
     // If no language is set, then we assume this is the language selection
     await handleLanguageResponse(session, message);
   } else {
+    console.log(3);
+
     // WaCustomer is in the middle of a survey
     await handleReplyMessage(orgId, waMessage);
   }

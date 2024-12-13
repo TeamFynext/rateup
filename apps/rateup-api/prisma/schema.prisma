@@ -94,41 +94,42 @@ model User {
 }
 
 model Org {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt         DateTime            @default(now())
-  name              String
-  owner             User                @relation(fields: [ownerId], references: [id])
-  ownerId           String              @db.Uuid
-  logo              String?
-  phone             String?
-  address           String?
-  encryptionKeys    Json? //{privateKey:string,publicKey:string}
-  isPaused          Boolean?            @default(false)
-  members           OrgMember[]
-  teams             Team[]
-  invitations       Invitation[]
-  whatsappSettings  WhatsappSettings?
-  templates         WaTemplate[]
-  Subscription      Subscription?
-  Order             Order[]
-  WaFlow            WaFlow[]
-  contacts          Contact[]
-  linktree          Linktree[]
-  ApiAccessToken    ApiAccessToken?
-  surveyThemes      WebSurveyTheme[]
-  UsageStats        UsageStats?
-  chatbot           Chatbot?
-  Survey            Survey[]
-  WaAccountSettings WaAccountSettings?
-  generateQr        GenerateQr[]
-  landingPage       LandingPage[]
-  Integration       Integration[]
-  waMessageSchedule WaMessageSchedule[]
-  WaLogs            WaLogs[]
-  loyaltyActions    LoyaltyAction[]
-  loyaltyRewards    LoyaltyReward[]
-  loyaltyCustomers  LoyaltyCustomer[]
-  loyaltyTemplates  LoyaltyTemplate[]
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime                  @default(now())
+  name                    String
+  owner                   User                      @relation(fields: [ownerId], references: [id])
+  ownerId                 String                    @db.Uuid
+  logo                    String?
+  phone                   String?
+  address                 String?
+  encryptionKeys          Json? //{privateKey:string,publicKey:string}
+  isPaused                Boolean?                  @default(false)
+  members                 OrgMember[]
+  teams                   Team[]
+  invitations             Invitation[]
+  whatsappSettings        WhatsappSettings?
+  templates               WaTemplate[]
+  Subscription            Subscription?
+  Order                   Order[]
+  WaFlow                  WaFlow[]
+  contacts                Contact[]
+  linktree                Linktree[]
+  ApiAccessToken          ApiAccessToken?
+  surveyThemes            WebSurveyTheme[]
+  UsageStats              UsageStats?
+  chatbot                 Chatbot?
+  Survey                  Survey[]
+  WaAccountSettings       WaAccountSettings?
+  generateQr              GenerateQr[]
+  landingPage             LandingPage[]
+  Integration             Integration[]
+  waMessageSchedule       WaMessageSchedule[]
+  WaLogs                  WaLogs[]
+  loyaltyActions          LoyaltyAction[]
+  loyaltyRewards          LoyaltyReward[]
+  loyaltyCustomers        LoyaltyCustomer[]
+  loyaltyTemplates        LoyaltyTemplate[]
+  WaAutomatedReplyMessage WaAutomatedReplyMessage[]
 }
 
 model UsageStats {
@@ -1004,9 +1005,22 @@ model WaAutomatedReply {
   matchData Json
   matchType String // enums.ts: WaAutomatedReplyMatchType
 
-  responseType       String // enums.ts: WaAutomatedReplyResponseType
-  responseText       String?
-  responseTemplateId String?
+  responseType             String // enums.ts: WaAutomatedReplyResponseType
+  responseText             String?
+  responseTemplateId       String?
+  waAutomatedReplyMessages WaAutomatedReplyMessage[]
+}
+
+model WaAutomatedReplyMessage {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime          @default(now())
+  message            String
+  phone              String
+  currentScreen      String
+  waAutomatedReplyId String?           @db.Uuid
+  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  orgId              String            @db.Uuid
+  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
 model ApiAccessToken {
@@ -1017,7 +1031,6 @@ model ApiAccessToken {
   accessToken String
   createdAt   DateTime @default(now())
 }
-
 
 model Chatbot {
   id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1113,34 +1126,34 @@ model WaMessageSchedule {
 }
 
 model LoyaltyAction {
-  id        String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type      String // enum LoyaltyActionType
-  name      String
-  points    Int
-  startDate DateTime
-  endDate   DateTime
-  createdAt DateTime                   @default(now())
-  orgId     String                     @db.Uuid
-  org       Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  customers LoyaltyActionCustomerMap[]
-  waTemplateId  String?         @db.Uuid
-  waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
-  referralCodes     LoyaltyReferralCode[]
+  id            String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type          String // enum LoyaltyActionType
+  name          String
+  points        Int
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime                   @default(now())
+  orgId         String                     @db.Uuid
+  org           Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customers     LoyaltyActionCustomerMap[]
+  waTemplateId  String?                    @db.Uuid
+  waTemplate    WaTemplate?                @relation(fields: [waTemplateId], references: [id])
+  referralCodes LoyaltyReferralCode[]
 }
 
 model LoyaltyReward {
-  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  points      Int
-  description String
-  tnc         String
-  maxPerUser  Int
-  createdAt   DateTime        @default(now())
-  orgId       String          @db.Uuid
-  org         Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  redeems     LoyaltyRedeem[]
-  waTemplateId  String?   @db.Uuid
-  waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  points       Int
+  description  String
+  tnc          String
+  maxPerUser   Int
+  createdAt    DateTime        @default(now())
+  orgId        String          @db.Uuid
+  org          Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  redeems      LoyaltyRedeem[]
+  waTemplateId String?         @db.Uuid
+  waTemplate   WaTemplate?     @relation(fields: [waTemplateId], references: [id])
 }
 
 model LoyaltyCustomer {
@@ -1178,25 +1191,25 @@ model LoyaltyActionCustomerMap {
 }
 
 model LoyaltyTemplate {
-  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId      String          @db.Uuid
-  org        Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)  
-  type       String          //enum LoyaltyTemplateTypes 
-  waTemplateId    String        @db.Uuid
-  waTemplate      WaTemplate    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
-  requestMessage   String?
-  createdAt   DateTime        @default(now())
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String     @db.Uuid
+  org            Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  type           String //enum LoyaltyTemplateTypes 
+  waTemplateId   String     @db.Uuid
+  waTemplate     WaTemplate @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  requestMessage String?
+  createdAt      DateTime   @default(now())
 
   @@unique([type, orgId], name: "type_org_unique")
   @@unique([requestMessage, orgId], name: "request_message_org_unique")
 }
 
-
 model LoyaltyReferralCode {
-  referralCode String        @unique
-  customerId String          @db.Uuid
-  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  actionId   String          @db.Uuid
-  action     LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  referralCode String          @unique
+  customerId   String          @db.Uuid
+  customer     LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  actionId     String          @db.Uuid
+  action       LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
   @@unique([customerId, actionId], name: "customer_action_unique")
 }

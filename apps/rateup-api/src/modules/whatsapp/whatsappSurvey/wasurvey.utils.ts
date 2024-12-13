@@ -115,6 +115,7 @@ export type WaParsedMessage = {
   flowResponse: any;
   type: string;
   completeMessageObject: any;
+  buttonId: string;
 };
 export function parseMessage(data: WaMessageBody): WaParsedMessage {
   if (!getMessageObject(data)) {
@@ -127,6 +128,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
 
   let flowResponse;
   let body = "";
+  let buttonId = "";
   message[type];
   switch (message.type) {
     case WaMessageTypes.interactive:
@@ -137,6 +139,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
         subtype = message.interactive.type;
       } else {
         body = message.interactive[message.interactive.type].title;
+        buttonId = message.interactive[message.interactive.type]?.id;
       }
       break;
     case WaMessageTypes.text:
@@ -157,6 +160,21 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
     flowResponse,
     type: subtype,
     completeMessageObject,
+    buttonId,
+  };
+}
+export function createReplyImageMessage(
+  to: string,
+  imageId: string,
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "image",
+    image: {
+      link: imageId,
+    },
   };
 }
 
@@ -164,7 +182,7 @@ export function createReplyButtonsMessage(
   to: string,
   questionTitle: string,
   questionDescription: string,
-  choices: Array<string>,
+  choices: any[],
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -184,10 +202,16 @@ export function createReplyButtonsMessage(
         buttons:
           //TODO: title have a 24char limit. Description may have 200chars
           choices.map((choice, index) => ({
-            reply: {
-              title: choice,
-              id: index.toString(),
-            },
+            reply:
+              typeof choice === "string"
+                ? {
+                    title: choice,
+                    id: index.toString(),
+                  }
+                : {
+                    title: choice?.value,
+                    id: choice?.id?.toString(),
+                  },
             type: "reply",
           })),
       },
