@@ -70,9 +70,4 @@ export const adminNavItems = [
     label: "Shopify Stores",
     href: "/admin/shopify",
   },
-  {
-    Icon: IconTicket,
-    label: "Loyalty",
-    href: "/admin/loyalty",
-  },
 ];

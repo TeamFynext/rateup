@@ -8,6 +8,7 @@ import {
   deleteLoyaltyActionById,
   getLoyaltyActionById,
   getLoyaltyActions,
+  referralLoyaltyAction,
   updateLoyaltyAction,
 } from "./actions.api";
 
@@ -75,6 +76,20 @@ export const useDeleteLoyaltyAction = (actionId) => {
     },
     onError: () => {
       showErrorToast("Error in deleting loyalty action");
+    },
+  });
+};
+
+export const useReferralLoyaltyAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: referralLoyaltyAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      showSuccessToast("Refer successfull");
+    },
+    onError: () => {
+      showErrorToast("Refer failed");
     },
   });
 };

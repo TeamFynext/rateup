@@ -4,15 +4,18 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   createLoyaltyTemplate,
+  getAllLoyaltyTemplates,
   getLoyaltyTemplate,
   UpdateLoyaltyTemplate,
   updateLoyaltyTemplate,
 } from "./settings.api";
 
 export const useCreateLoyaltyTemplate = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createLoyaltyTemplate,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
       showSuccessToast("Template configured");
     },
     onError: () => {
@@ -28,6 +31,7 @@ export const useUpdateLoyaltyTemplate = (type) => {
       updateLoyaltyTemplate(type, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
+      queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
       showSuccessToast("Template configuration updated");
     },
     onError: () => {
@@ -41,5 +45,12 @@ export const useGetLoyaltyTemplate = (type) => {
     queryFn: () => getLoyaltyTemplate(type),
     queryKey: ["LoyaltyTemplate"],
     enabled: !!type,
+  });
+};
+
+export const useGetAllLoyaltyTemplates = () => {
+  return useQuery({
+    queryFn: getAllLoyaltyTemplates,
+    queryKey: ["allLoyaltyTemplates"],
   });
 };
