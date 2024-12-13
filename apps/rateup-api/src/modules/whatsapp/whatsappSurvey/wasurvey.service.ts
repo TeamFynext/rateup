@@ -681,6 +681,7 @@ export const handleMessageStatusUpdate = async (
       contact: {
         select: {
           orgId: true,
+          phone: true,
         },
       },
     },
@@ -699,6 +700,7 @@ export const handleMessageStatusUpdate = async (
       data: {
         orgId: msg?.contact?.orgId,
         logs: errors,
+        phone: msg?.contact?.phone,
       },
     });
   }

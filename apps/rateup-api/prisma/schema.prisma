@@ -197,6 +197,7 @@ model WaAccountSettings {
 model WaLogs {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now())
+  phone     String?
   org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId     String   @db.Uuid
   logs      Json[]
