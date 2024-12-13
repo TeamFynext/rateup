@@ -12,6 +12,7 @@ import {
 import { IconUpload } from "@tabler/icons-react";
 
 import { DEFAULT_IMAGE_BASE64_START } from "@/utils/constants";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 interface Props {
   title: string;
@@ -253,7 +254,7 @@ type RateupFileUploadButtonProps = {
   fileButton?: ButtonProps;
   resetButton?: ButtonProps;
   type?: "file" | "image";
-  fileSrc?: string;
+  fileSrc?: string | { id: string; image: string };
   accept?: string;
   error?: string;
   style?: MantineStyleProp;
@@ -278,14 +279,22 @@ export const RateupFileUploadButton = ({
         <HoverCard width={280} shadow="md" position="top" withArrow>
           <HoverCard.Target>
             <Image
-              src={`${DEFAULT_IMAGE_BASE64_START}${fileSrc}`}
+              src={
+                typeof fileSrc === "object"
+                  ? getFileUrlFromKey(fileSrc?.image)
+                  : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`
+              }
               h={35}
               alt="choice-preview"
             />
           </HoverCard.Target>
           <HoverCard.Dropdown>
             <Image
-              src={`${DEFAULT_IMAGE_BASE64_START}${fileSrc}`}
+              src={
+                typeof fileSrc === "object"
+                  ? getFileUrlFromKey(fileSrc?.image)
+                  : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`
+              }
               alt="choice-preview"
               mah={400}
             />

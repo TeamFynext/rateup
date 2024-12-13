@@ -35,3 +35,8 @@ export async function deleteWaAutomatedReply(waAutomatedReplyId: string) {
   const res = await axiosClient.delete(`${base}/${waAutomatedReplyId}`);
   return res.data as WaAutomatedReply;
 }
+
+export async function getAutomatedRepliesMessageById(id: string) {
+  const res = await axiosClient.get(`${base}/message/${id}`);
+  return res.data;
+}

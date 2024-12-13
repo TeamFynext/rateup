@@ -1024,6 +1024,7 @@ export type WaAutomatedReplyMatchData = {
   keywords?: Array<string>;
   caseSensitive: boolean;
   exactText?: string;
+  json?: any;
 };
 export type WaAutomatedReply = {
   id: string;

@@ -13,7 +13,7 @@ const cx = classNames.bind(styles);
 
 function TrustedByCompaniesCarousel() {
   const isVPLeq768px = useMediaQuery("(max-width: 768px)");
-  const autoplay = useRef(Autoplay({ delay: 2000 }));
+  const autoplay: any = useRef(Autoplay({ delay: 2000 }));
 
   return (
     <Box className={cx("carousel-container")}>

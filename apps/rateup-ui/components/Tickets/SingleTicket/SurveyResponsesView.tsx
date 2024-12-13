@@ -46,7 +46,6 @@ const SurveyResponsesView = ({
           {question?.title}
         </Title>
       </Group>
-
       <Paper
         style={{ background: "#F3F3F3" }}
         mah={500}

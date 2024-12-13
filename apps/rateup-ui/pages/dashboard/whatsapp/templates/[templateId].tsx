@@ -383,7 +383,7 @@ export default function WhatsappTemplateById() {
             wrap="wrap"
             mb={"1rem"}
           >
-            <Title order={1} c={"var(--grey-color)"} tt={"capitalize"}>
+            <Title order={1} c={"var(--grey-color)"}>
               {editingItem
                 ? editingItem?.data?.name
                 : translations["Create Template"]}

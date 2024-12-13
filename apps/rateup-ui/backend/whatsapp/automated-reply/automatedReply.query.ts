@@ -5,6 +5,7 @@ import {
   createWaAutomatedReply,
   deleteWaAutomatedReply,
   getAllWaAutomatedReplies,
+  getAutomatedRepliesMessageById,
   getWaAutomatedRepliesById,
   getWaAutomatedRepliesByTeamId,
   updateWaAutomatedReply,
@@ -15,6 +16,13 @@ export const useWaAutomatedReplies = (teamId: string) =>
     queryKey: ["waAutomatedReplies", { teamId }],
     queryFn: () => getWaAutomatedRepliesByTeamId(teamId),
     enabled: !!teamId,
+  });
+
+export const useWaAutomatedRepliesMessageById = (id: string) =>
+  useQuery({
+    queryKey: ["waAutomatedRepliesMessageById", { id }],
+    queryFn: () => getAutomatedRepliesMessageById(id),
+    enabled: !!id,
   });
 
 export const useAllWaAutomatedReplies = () =>
@@ -35,9 +43,7 @@ export const useCreateWaAutomatedReplyMutation = () => {
   return useMutation({
     mutationFn: (data: any) => createWaAutomatedReply(data),
     onSuccess: (_, data) => {
-      qc.invalidateQueries({
-        queryKey: ["waAutomatedReplies", { teamId: data.teamId }],
-      });
+      qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       showSuccessToast("Automated Reply Created Successfully");
     },
   });
@@ -49,29 +55,20 @@ export const useDeleteWaAutomatedReplyMutation = () => {
     mutationFn: (waAutomatedReplyId: string) =>
       deleteWaAutomatedReply(waAutomatedReplyId),
     onSuccess: (res) => {
-      qc.invalidateQueries({
-        queryKey: ["waAutomatedReplies", { teamId: res.teamId }],
-      });
-      qc.invalidateQueries({
-        queryKey: ["waAutomatedReply", { waAutomatedReplyId: res.id }],
-      });
+      qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       showSuccessToast("Automated Reply Deleted Successfully");
     },
   });
 };
 
-export const useUpdateWaAutomatedReplyMutation = () => {
+export const useUpdateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
     onSuccess: (res) => {
-      console.log("res => ", res);
       qc.invalidateQueries({
-        queryKey: ["waAutomatedReply", { waAutomatedReplyId: res.id }],
-      });
-      qc.invalidateQueries({
-        queryKey: ["waAutomatedReplies", { teamId: res.teamId }],
+        queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
       });
       showSuccessToast("Automated Reply Updated Successfully");
     },
