@@ -3,7 +3,7 @@ import { $lCustomerRef } from "./customer.schema";
 import {
   createLCustomerHandler,
   customerActionHandler,
-  verifyLCustomerMaxCountRestriction,
+  verifyLCustomerMaxCountRestrictionHandler,
 } from "./customer.controller";
 import { getVerifySubscriptionForPublicHandler } from "../../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
@@ -16,7 +16,7 @@ export async function loyaltyCustomerPublicRoutes(server: FastifyInstance) {
         getVerifySubscriptionForPublicHandler([
           SubscriptionFeaturePathName.LoyaltyCustomer,
         ]),
-        verifyLCustomerMaxCountRestriction,
+        verifyLCustomerMaxCountRestrictionHandler,
       ],
       schema: {
         body: $lCustomerRef("LCustomerSchema"),

@@ -28,12 +28,17 @@ const byLActiondIdParamSchema = z.object({
   actionId: z.string(),
 });
 
+const byReferralCodeParamsSchema = z.object({
+  referralCode: z.string(),
+});
+
 export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
   buildJsonSchemas(
     {
       lActionSchema,
       byLActiondIdParamSchema,
       lActionUpdateSchema,
+      byReferralCodeParamsSchema,
     },
     {
       $id: "loyaltyActionSchema",
@@ -43,3 +48,6 @@ export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
 export type loyaltyActionInput = z.infer<typeof lActionSchema>;
 export type lActionIdParamInput = z.infer<typeof byLActiondIdParamSchema>;
 export type lActionUpdateInput = z.infer<typeof lActionUpdateSchema>;
+export type ByReferralCodeParamInput = z.infer<
+  typeof byReferralCodeParamsSchema
+>;

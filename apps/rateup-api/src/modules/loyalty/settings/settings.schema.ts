@@ -5,6 +5,7 @@ import { LoyaltyTemplateTypes } from "../../../types/enums";
 const loyaltyTemplateSchema = z.object({
   waTemplateId: z.string(),
   type: z.nativeEnum(LoyaltyTemplateTypes),
+  requestMessage: z.string().optional(),
 });
 
 const byTypeQuerySchema = z.object({
@@ -13,6 +14,7 @@ const byTypeQuerySchema = z.object({
 
 const updateLoyaltyTemplateSchema = z.object({
   waTemplateId: z.string().optional(),
+  requestMessage: z.string().optional(),
 });
 
 export const { schemas: loyaltySettingSchemas, $ref: $lsRef } =
