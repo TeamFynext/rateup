@@ -95,7 +95,6 @@ export const LoyaltyWaTemplateConfig = ({
       });
       return;
     }
-    console.log("form.values", form.values);
     templateMut.mutate(form.values, {
       onSettled: () => {
         form.reset();
