@@ -75,6 +75,7 @@ export type downloadExcelResponseType = {
   filterTeams: string[];
   campaignIds: string[];
   dbFlowId?: string;
+  columnFilters?: { id: string; value: unknown }[];
 };
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {

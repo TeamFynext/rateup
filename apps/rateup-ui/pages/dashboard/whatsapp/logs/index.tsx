@@ -1,13 +1,12 @@
 import React from "react";
 
-import { ActionIcon, List, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, List, Tooltip } from "@mantine/core";
 import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
 import { useWaLogs } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import ContactTable from "@/components/Table/ContactTable";
 import TanstackTable from "@/components/Table/TanstackTable";
 import useTranslations from "@/dictionaries/useTranslation";
 import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
@@ -24,22 +23,6 @@ const Logs = () => {
         dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
     },
     {
-      header: () => "Error code",
-      id: "error_code",
-      accessorFn: (row) => row?.logs,
-      enableColumnFilter: false,
-      cell: (info) => {
-        const logs = info.getValue() as { code: number }[];
-        return (
-          <List size="sm" icon={logs?.length > 0 && <></>}>
-            {logs?.map((data, index) => (
-              <List.Item key={data?.code || index}>{data?.code}</List.Item>
-            ))}
-          </List>
-        );
-      },
-    },
-    {
       header: () => "Message",
       id: "logs",
       enableColumnFilter: false,
@@ -54,6 +37,10 @@ const Logs = () => {
           </List>
         );
       },
+    },
+    {
+      header: () => "Phone",
+      accessorKey: "phone",
     },
   ];
   const refreshButton = (

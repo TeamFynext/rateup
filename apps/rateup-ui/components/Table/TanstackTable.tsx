@@ -38,6 +38,8 @@ function TanstackTable({
   toggleOffContent = <></>,
   detailBtn = false,
   isPending = false,
+  columnFiltersE,
+  setColumnFiltersE,
 }: Readonly<{
   className?: string;
   data: any;
@@ -52,6 +54,8 @@ function TanstackTable({
   disableFuzzyFnCustom?: boolean;
   detailBtn?: boolean;
   isPending?: boolean;
+  columnFiltersE?: ColumnFiltersState;
+  setColumnFiltersE?: (newFilters: ColumnFiltersState) => void;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -79,7 +83,11 @@ function TanstackTable({
   }, []);
 
   const handleColumnFiltersChange = useCallback((newFilters) => {
-    setColumnFilters(newFilters);
+    if (columnFiltersE) {
+      setColumnFiltersE(newFilters);
+    } else {
+      setColumnFilters(newFilters);
+    }
   }, []);
 
   const handleColumnVisibilityChange = useCallback((newVisibility) => {
@@ -97,7 +105,7 @@ function TanstackTable({
     state: {
       columnVisibility,
       sorting,
-      columnFilters,
+      columnFilters: columnFiltersE || columnFilters,
       rowSelection,
     },
     initialState: {

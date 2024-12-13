@@ -1,4 +1,11 @@
 import { Avatar, Group, Paper, Stack, Text } from "@mantine/core";
+import {
+  IconCheck,
+  IconChecks,
+  IconClock,
+  IconExclamationCircleFilled,
+} from "@tabler/icons-react";
+import dayjs from "dayjs";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { formatToCustomTime } from "../../../../../../../utils/dateTime";
@@ -51,6 +58,35 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     const colorIndex = Math.abs(hash) % colors.length;
     return colors[colorIndex];
   };
+  const getLatestStatus = (statuses: { [key: string]: string }) => {
+    const statusKeys = Object.keys(statuses).filter(
+      (key) => statuses[key] !== "",
+    );
+    if (statusKeys.length === 0) return getStatusIcon("pending");
+
+    const latestStatus = statusKeys.reduce((latest, key) => {
+      return dayjs(statuses[key]).isAfter(dayjs(statuses[latest]))
+        ? key
+        : latest;
+    }, statusKeys?.[0]);
+
+    return getStatusIcon(latestStatus);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "read":
+        return <IconChecks size={14} color="#34B7F1" />;
+      case "delivered":
+        return <IconChecks size={14} color="gray" />;
+      case "sent":
+        return <IconCheck size={14} color="gray" />;
+      case "error":
+        return <IconExclamationCircleFilled size={14} color="red" />;
+      default:
+        return <IconClock size={13} color="gray" />;
+    }
+  };
   return (
     <Stack className={classes.wrapper} {...getWrapperProps()}>
       <Group gap={4}>
@@ -66,9 +102,14 @@ export default function WaInboxSingleMessageLayout(props: Props) {
             </Text>
             {props?.children}
           </div>
-          <Text fz={10} c={"dimmed"} ml={"xl"} ta={"end"}>
-            {formatToCustomTime(props?.messageObject?.waCreatedAt)}
-          </Text>
+          <Group justify="flex-end" gap={4}>
+            <Text fz={10} c={"dimmed"}>
+              {formatToCustomTime(props?.messageObject?.waCreatedAt)}
+            </Text>
+            {exchangeProcess === "send" && (
+              <Text>{getLatestStatus(props?.messageObject?.stats)}</Text>
+            )}
+          </Group>
         </Paper>
         {exchangeProcess === "send" && (
           <Avatar
