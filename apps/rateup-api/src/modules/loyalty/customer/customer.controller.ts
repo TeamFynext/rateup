@@ -2,11 +2,11 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "../../../utils/logger";
 import { CustomerActionParamInput, LCustomerInput } from "./customer.schema";
 import {
-  createCustomerAction,
   createLCustomer,
   deleteLoyaltyCustomer,
   getLoyaltyCustomers,
-  updateLCustomerPoint,
+  handleLCustomerAction,
+  verifyLCustomerMaxCountRestriction,
 } from "./customer.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
 import {
@@ -14,8 +14,6 @@ import {
   SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
-import prisma from "../../../utils/prisma";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function createLCustomerHandler(
@@ -45,10 +43,9 @@ export async function customerActionHandler(
 ) {
   try {
     const { actionId, customerId } = request.params;
-    const customerAction = await createCustomerAction(customerId, actionId);
-    const customer = await updateLCustomerPoint(
+    const { customer, customerAction } = await handleLCustomerAction(
       customerId,
-      customerAction.action.points,
+      actionId,
     );
     reply.code(200).send({
       message: "Success",
@@ -79,24 +76,14 @@ export async function getLoyaltyCustomersHandler(
   }
 }
 
-export async function verifyLCustomerMaxCountRestriction(
+export async function verifyLCustomerMaxCountRestrictionHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
   reply: FastifyReply,
 ) {
   try {
     const orgId = request.body.orgId;
-    const count = await prisma.loyaltyCustomer.count({
-      where: {
-        orgId,
-      },
-    });
-
     if (
-      count >=
-      getNestedProperty(
-        request.subscription?.features as unknown as object,
-        SubscriptionFeaturePathName.LoyaltyCustomer,
-      ).count.max
+      !(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))
     ) {
       return reply.code(403).send({
         message: "Registration limit reached",

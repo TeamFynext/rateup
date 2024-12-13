@@ -67,6 +67,10 @@ import { getOrgById } from "../../org/org.services";
 import { checkMessageLimitExceeded } from "./wasurvey.auth";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { getLatestStatus } from "../../campaign/campaign.service";
+import {
+  getLoyaltyTemplateByRequestMessage,
+  handleLoyaltyTemplate,
+} from "../../loyalty/settings/settings.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -250,13 +254,15 @@ async function whatsappMessageHandler(
   const messageLowerCase =
     type === "text" ? message?.trim()?.toLocaleLowerCase() : "";
 
-  if (parseStartMessage(message)) {
+  const loyaltyTemplate = await getLoyaltyTemplateByRequestMessage(
+    orgId,
+    message,
+  );
+  if (loyaltyTemplate) {
+    await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
+  } else if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
-  }
-  // else if (message.startsWith("/register")) {
-  //   await handleRegisterMessage(orgId, waMessage);
-  // }
-  else if (parsedMessage.type === "nfm_reply") {
+  } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else if (
     messageLowerCase === WA_SUBSCRIBE_STATUS.STOP ||

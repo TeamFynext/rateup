@@ -1125,6 +1125,7 @@ model LoyaltyAction {
   customers LoyaltyActionCustomerMap[]
   waTemplateId  String?         @db.Uuid
   waTemplate    WaTemplate?    @relation(fields: [waTemplateId], references: [id])
+  referralCodes     LoyaltyReferralCode[]
 }
 
 model LoyaltyReward {
@@ -1154,6 +1155,7 @@ model LoyaltyCustomer {
   createdAt         DateTime                   @default(now())
   redeems           LoyaltyRedeem[]
   actions           LoyaltyActionCustomerMap[]
+  referralCodes     LoyaltyReferralCode[]
 }
 
 model LoyaltyRedeem {
@@ -1173,18 +1175,28 @@ model LoyaltyActionCustomerMap {
   actionId   String          @db.Uuid
   action     LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
   createdAt  DateTime        @default(now())
-
-  @@unique([customerId, actionId], name: "customer_action_unique")
 }
 
 model LoyaltyTemplate {
   id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId      String          @db.Uuid @unique
+  orgId      String          @db.Uuid
   org        Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)  
   type       String          //enum LoyaltyTemplateTypes 
   waTemplateId    String        @db.Uuid
   waTemplate      WaTemplate    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  requestMessage   String?
   createdAt   DateTime        @default(now())
 
   @@unique([type, orgId], name: "type_org_unique")
+  @@unique([requestMessage, orgId], name: "request_message_org_unique")
+}
+
+
+model LoyaltyReferralCode {
+  referralCode String        @unique
+  customerId String          @db.Uuid
+  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  actionId   String          @db.Uuid
+  action     LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  @@unique([customerId, actionId], name: "customer_action_unique")
 }

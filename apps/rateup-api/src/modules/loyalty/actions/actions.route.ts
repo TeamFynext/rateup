@@ -4,6 +4,7 @@ import {
   deleteLoyaltyActionByIdHandler,
   getLoyaltyActionByIdHandler,
   getLoyaltyActionsHandler,
+  referActionHandler,
   updateLoyaltyActionByIdHandler,
   verifyLActionMaxCountRestriction,
 } from "./actions.controller";
@@ -58,5 +59,15 @@ export async function loyaltyActionsRoutes(server: FastifyInstance) {
       },
     },
     deleteLoyaltyActionByIdHandler,
+  );
+
+  server.post(
+    "/:referralCode",
+    {
+      schema: {
+        params: $lActionRef("byReferralCodeParamsSchema"),
+      },
+    },
+    referActionHandler,
   );
 }

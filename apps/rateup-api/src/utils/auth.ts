@@ -236,3 +236,28 @@ export function getVerifySubscriptionForPublicHandler(
     }
   };
 }
+
+export async function verifySubscription(orgId, featurePathNames) {
+  const subscription = await getSubscription(orgId);
+
+  if (!subscription) {
+    log.trace("No subscription found");
+    return false;
+  }
+  if (dayjs(subscription.expiresAt).isBefore(dayjs())) {
+    log.error("Subscription expired\n%o\norgId => %s", subscription, orgId);
+    return false;
+  }
+  const missingFeatures = featurePathNames.filter(
+    (feature) => !getNestedProperty(subscription.features, feature).active,
+  );
+  if (missingFeatures.length > 0) {
+    log.error(
+      "Subscription missing features\n%o\norgId => %s",
+      missingFeatures,
+      orgId,
+    );
+    return false;
+  }
+  return subscription;
+}

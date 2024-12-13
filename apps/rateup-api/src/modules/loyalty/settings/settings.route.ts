@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   createLoyaltyTemplateHandler,
+  getAllLoyaltyTemplateHandler,
   getLoyaltyTemplateHandler,
   updateLoyaltyTemplateHandler,
 } from "./settings.controller";
@@ -37,4 +38,6 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     },
     getLoyaltyTemplateHandler,
   );
+
+  server.get("/template/all", getAllLoyaltyTemplateHandler);
 }
