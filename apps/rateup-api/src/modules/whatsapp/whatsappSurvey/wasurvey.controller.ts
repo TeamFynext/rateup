@@ -34,6 +34,7 @@ import {
   QuestionType,
   WaTemplateComponentType,
   SubscriptionFeaturePathName,
+  WaTemplateSupportedFormats,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import {
@@ -778,6 +779,21 @@ export function convertComponentForSenting(dbTemplate) {
     )?.format === "IMAGE";
 
   const components = [];
+  const addHeaderComponent = (format, link, filename = null) => {
+    const newComponent = {
+      type: WaTemplateComponentType.HEADER,
+      parameters: [
+        {
+          type: format.toLowerCase(),
+          [format.toLowerCase()]: {
+            link,
+            ...(filename && { filename }),
+          },
+        },
+      ],
+    };
+    components.push(newComponent);
+  };
 
   if (containsImage) {
     if (!dbTemplate.defaultValues?.image?.link) {
@@ -797,6 +813,13 @@ export function convertComponentForSenting(dbTemplate) {
         },
       ],
     });
+  }
+  if (dbTemplate.defaultValues?.document?.link) {
+    addHeaderComponent(
+      WaTemplateSupportedFormats.DOCUMENT,
+      getFileUrlFromKey(dbTemplate.defaultValues.document.link),
+      dbTemplate.defaultValues?.document?.filename,
+    );
   }
 
   dbTemplate.data.components.forEach((item) => {
@@ -922,6 +945,7 @@ async function _sendCampaignToParticipants(
       // TODO: handle this case. maybe send email?
       continue;
     }
+
     const defaultValue = dbTemplate?.data?.components?.find(
       (data) => data.example?.body_text,
     )?.example?.body_text?.[0];

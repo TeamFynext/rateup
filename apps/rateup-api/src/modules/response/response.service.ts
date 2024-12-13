@@ -77,6 +77,7 @@ export async function getAllResponses(
   surveyId: string,
   teamIds?: Array<string>,
   contactIds?: Array<string>,
+  columnFilters?: Array<{ id?: string; value?: string }>,
 ) {
   let whereCondtion =
     teamIds?.length > 0

@@ -99,6 +99,12 @@ const generateXlsxSchema = z.object({
   filterTeams: z.array(z.string()),
   campaignIds: z.array(z.string()),
   dbFlowId: z.string().optional(),
+  columnFilters: z.array(
+    z.object({
+      id: z.string().optional(),
+      value: z.string().optional(),
+    }),
+  ),
 });
 
 export const summarizeSchema = z.object({
