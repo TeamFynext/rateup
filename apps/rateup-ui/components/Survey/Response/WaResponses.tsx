@@ -188,6 +188,7 @@ const WaResponses = ({
       filterTeams,
       campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
       dbFlowId,
+      columnFilters: [],
     });
   }, [
     campaignFlowFilter,

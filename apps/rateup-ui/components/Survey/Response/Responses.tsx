@@ -9,7 +9,7 @@ import {
 import { useRouter } from "next/router";
 
 import { Box, Button, Flex, Group, Popover, Stack, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
@@ -19,6 +19,7 @@ import {
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
+import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
@@ -107,6 +108,8 @@ const Responses = ({
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
   const [ranges, setRange] = useState<Range[]>([]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
   const hasContactQuestion =
     responses &&
@@ -158,11 +161,14 @@ const Responses = ({
     downloadExcelResponse.mutate({
       defaultLanguage,
       surveyId,
-      visibleColumn: useVisibleColumnStore.getState().visibleColumn,
+      visibleColumn: Array.from(
+        new Set(useVisibleColumnStore.getState().visibleColumn),
+      ),
       title: survey?.title,
       tz: dayjs.tz.guess(),
       filterTeams,
       campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
+      columnFilters,
     });
   }, [
     campaignFlowFilter,
@@ -171,6 +177,7 @@ const Responses = ({
     filterTeams,
     survey?.title,
     surveyId,
+    columnFilters,
   ]);
 
   useEffect(() => {
@@ -437,7 +444,12 @@ const Responses = ({
             <RateupLoader />
           ) : (
             <Suspense fallback={<RateupLoader />}>
-              <TanstackTable data={filteredResponses} columns={columns} />
+              <TanstackTable
+                data={filteredResponses}
+                columns={columns}
+                columnFiltersE={columnFilters}
+                setColumnFiltersE={setColumnFilters}
+              />
             </Suspense>
           )}
           <DeleteModal
