@@ -450,7 +450,7 @@ export const getResponseExcelByCampaignById = async (id: string) => {
     participant?.createdAt,
     participant?.contact?.name,
     participant?.contact?.phone,
-    participant?.status,
+    participant?.waStatus || participant?.status,
     participant?.sentAt,
   ]);
 
