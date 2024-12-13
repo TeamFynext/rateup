@@ -277,6 +277,11 @@ export function getNavTopData(
                 label: translations["Redeems"],
                 href: "/dashboard/loyalty/redeem",
               },
+              {
+                Icon: IconSettings,
+                label: translations["Settings"],
+                href: "/dashboard/loyalty/settings",
+              },
             ],
           },
         ]),

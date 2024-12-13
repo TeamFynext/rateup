@@ -4,7 +4,7 @@ import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import RateupLoader from "../Loaders/RateupLoader";
+import { SelectSkeleton } from "../loyalty/utils";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface WaTemplateSelector extends SelectProps {
@@ -29,8 +29,6 @@ const WaTemplateSelector = ({
     ? useTemplatesAvailableForTeam(teamId)
     : allTemplates;
 
-  if (isLoading) return <RateupLoader />;
-
   const templatesData = templates?.map((t) => {
     return {
       value: t?.id,
@@ -41,6 +39,9 @@ const WaTemplateSelector = ({
   if (value?.length && !templates?.map((t) => t.id).includes(value)) {
     onChange(null);
   }
+
+  if (isLoading) return <SelectSkeleton />;
+
   return (
     <ContainedSelection
       label={label || translations["whatsApp Template"]}

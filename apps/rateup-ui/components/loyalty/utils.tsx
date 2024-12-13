@@ -1,0 +1,54 @@
+import { Card, Group, SelectProps, Skeleton } from "@mantine/core";
+
+import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
+import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
+import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
+
+import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
+
+export const LCSelector = (props: SelectProps) => {
+  const { data: customers, isLoading } = useLoyaltyCustomers();
+  const customerList = customers
+    ? customers?.map((c) => ({
+        label: c.customerInfo.phone,
+        value: c.id,
+      }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  return <ContainedSelection data={customerList} {...props} />;
+};
+
+export const LRSelector = (props: SelectProps) => {
+  const { data: rewards, isLoading } = useGetLoyaltyRewards();
+  const rewardList = rewards
+    ? rewards?.map((r) => ({
+        label: r.name,
+        value: r.id,
+      }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  return <ContainedSelection data={rewardList} {...props} />;
+};
+
+export const LASelector = (props: SelectProps) => {
+  const { data: actions, isLoading } = useGetLoyaltyActions();
+  const actionList = actions
+    ? actions?.map((a) => ({
+        label: a.name,
+        value: a.id,
+      }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  return <ContainedSelection data={actionList} {...props} />;
+};
+
+export const SelectSkeleton = () => {
+  return (
+    <Card h={46} w={240} radius={"md"} withBorder p={0}>
+      <Group justify="space-between" w={"100%"} my={"auto"}>
+        <Skeleton w={100} h={20} ml={"xs"} />
+        <Skeleton w={20} h={20} mr={"xs"} />
+      </Group>
+    </Card>
+  );
+};

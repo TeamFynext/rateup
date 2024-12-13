@@ -17,6 +17,7 @@ export const useRedeemReward = () => {
     mutationFn: redeemReward,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       showSuccessToast("Reward redeemed successfully");
     },
     onError: () => {
