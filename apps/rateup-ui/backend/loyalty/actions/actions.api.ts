@@ -23,3 +23,7 @@ export async function getLoyaltyActionById(actionId) {
 export async function deleteLoyaltyActionById(actionId) {
   await axiosClient.delete(`${actionBaseUrl}/${actionId}`);
 }
+
+export async function referralLoyaltyAction({ referralCode }) {
+  await axiosClient.post(`${actionBaseUrl}/${referralCode}`);
+}

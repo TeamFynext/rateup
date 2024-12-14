@@ -760,19 +760,6 @@ declare global {
     version: number;
   };
 
-  type LoyaltyCampaign = {
-    id: string;
-    createdAt: Date;
-    name: string;
-    type: LoyaltyCampaignType;
-    active: boolean;
-    maxPerReferrer: number | null;
-    maxPerUser: number | null;
-    referrerRewardId: string | null;
-    userRewardId: string | null;
-    orgId: string;
-  };
-
   type LoyaltyCustomer = {
     id: string;
     createdAt: Date;
@@ -783,15 +770,34 @@ declare global {
     orgId: string;
   };
 
-  type LoyaltyCampaignRewardEvent = {
-    id: string;
+  type LoyaltyAction = {
+    name: string;
+    points: number;
     createdAt: Date;
-    loyaltyCampaignId: string;
-    referrerId: string | null;
-    referrer?: { phone: string };
-    customerId: string | null;
-    customer?: { phone: string };
-    transactionAmount: number | null;
+  };
+
+  type LoyaltyRedeem = {
+    reward: {
+      name: string;
+      points: number;
+    };
+    createdAt: Date;
+  };
+
+  type LoyaltyCustomerTable = {
+    id: string;
+    customerInfo: {
+      name: string;
+      phone: string;
+      createdAt: Date;
+    };
+    [LoyaltyActionType.ReferFriend]: LoyaltyAction[];
+    [LoyaltyActionType.DirectPurchase]: LoyaltyAction[];
+    [LoyaltyActionType.ReferralPurchase]: LoyaltyAction[];
+    totalPoints: number;
+    balancePoints: number;
+    redeems: LoyaltyRedeem[];
+    action: any;
   };
 }
 export interface MenuLanding {

@@ -1,5 +1,5 @@
 import { axiosClient } from "@/backend/apiClient";
-import { LoyaltyTemplateTypes } from "@/pages/admin/loyalty/LoyaltySettings";
+import { LoyaltyTemplateTypes } from "@/components/loyalty/LoyaltySettings";
 
 import { LOYALTY_BASE } from "../base";
 
@@ -21,4 +21,8 @@ export async function updateLoyaltyTemplate(
 
 export async function getLoyaltyTemplate(type: LoyaltyTemplateTypes) {
   return (await axiosClient.get(`${base}/template?type=${type}`)).data;
+}
+
+export async function getAllLoyaltyTemplates() {
+  return (await axiosClient.get(`${base}/template/all`)).data;
 }

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Stack, Text } from "@mantine/core";
+import { Stack, Text, Title } from "@mantine/core";
 
 import { useUserInfo } from "@/backend/user/user.query";
 import { CopyLinkComponent } from "@/components/Survey/ShareSurvey/ShareSurvey";
@@ -13,7 +13,7 @@ const RegisterPageShare = () => {
 
   return (
     <Stack>
-      <Text>Loylaty Customer Regsitration page link</Text>
+      <Title order={3}>Customer Regsitration page link</Title>
       <CopyLinkComponent
         value={`${FRONTEND_URL}/public/loyalty/${orgId}/register`}
       />

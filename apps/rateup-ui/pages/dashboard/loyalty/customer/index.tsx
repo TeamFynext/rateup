@@ -3,25 +3,27 @@ import { useMemo, useState } from "react";
 import {
   ActionIcon,
   Anchor,
-  Button,
-  Loader,
+  Group,
   Menu,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { LoyaltyActionType } from "@/types/enums";
+import { useLCAction } from "@/backend/loyalty/loyalty.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import ReferralAction from "@/components/loyalty/ReferralAction";
+import { LASelector, LCSelector } from "@/components/loyalty/utils";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import NothingFound from "@/components/NothingFound/NothingFound";
-import { getLabelsforConfirmModal } from "@/components/shopify/ShopifySettings";
 import useTranslations from "@/dictionaries/useTranslation";
 import { formatDate, formatDateWithTime } from "@/utils/dateTime";
 
@@ -32,8 +34,11 @@ import {
 import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
 import TanstackTable from "../../../../components/Table/TanstackTable";
 
-export default function LoyaltyCampaignCustomersPage() {
+export default function LoyaltyCustomersPage() {
   const { translations } = useTranslations();
+  const [opened, { open, close }] = useDisclosure(false);
+  const [referModalOpened, { open: openReferModal, close: closeReferModal }] =
+    useDisclosure(false);
   const {
     data: subscription,
     isLoading: isSubscriptionLoading,
@@ -50,8 +55,15 @@ export default function LoyaltyCampaignCustomersPage() {
 
   return (
     <Stack h={"100%"}>
-      <Title>{translations["Customers"]}</Title>
+      <Group>
+        <Title>{translations["Customers"]}</Title>
+        <RateupButtonBlue title="Points Issuance" onClick={open} />
+        <RateupButtonBlue title="Refer" onClick={openReferModal} />
+      </Group>
+
       <LoyaltyCustomers />
+      <LoyaltyManualCustomerActionModal opened={opened} close={close} />
+      <ReferralAction opened={referModalOpened} close={closeReferModal} />
     </Stack>
   );
 }
@@ -97,34 +109,54 @@ function LoyaltyCustomers() {
   );
 }
 
-type LoyaltyAction = {
-  name: string;
-  points: number;
-  createdAt: Date;
-};
+const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
+  const lcActionMut = useLCAction();
 
-type LoyaltyRedeem = {
-  reward: {
-    name: string;
-    points: number;
-  };
-  createdAt: Date;
-};
+  const form = useForm({
+    initialValues: {
+      customerId: "",
+      actionId: "",
+    },
+  });
 
-type LoyaltyCustomerTable = {
-  id: string;
-  customerInfo: {
-    name: string;
-    phone: string;
-    createdAt: Date;
+  const handleCall = () => {
+    lcActionMut.mutate(form.values, {
+      onSettled: () => {
+        form.reset();
+        close();
+      },
+    });
   };
-  [LoyaltyActionType.ReferFriend]: LoyaltyAction[];
-  [LoyaltyActionType.DirectPurchase]: LoyaltyAction[];
-  [LoyaltyActionType.ReferralPurchase]: LoyaltyAction[];
-  totalPoints: number;
-  balancePoints: number;
-  redeems: LoyaltyRedeem[];
-  action: any;
+
+  return (
+    <FormModalLayout
+      opened={opened}
+      onClose={close}
+      title={"Points Issuance"}
+      centered
+      includeCancelButton
+      cancelOnClick={() => {
+        form.reset();
+        close();
+      }}
+      buttonTitle="Issue"
+      onSubmit={handleCall}
+      isLoading={lcActionMut.isPending}
+    >
+      <Stack>
+        <LCSelector
+          label={"Customer"}
+          {...form.getInputProps("customerId")}
+          placeholder="Select"
+        />
+        <LASelector
+          label={"Action"}
+          {...form.getInputProps("actionId")}
+          placeholder="Select"
+        />
+      </Stack>
+    </FormModalLayout>
+  );
 };
 
 function generateColumns(
