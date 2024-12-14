@@ -521,6 +521,18 @@ export async function sendTemplateToUserCore(
               ],
             });
           }
+        } else if (button.type === "COPY_CODE") {
+          components.push({
+            type: "button",
+            sub_type: button.type,
+            index: 0,
+            parameters: [
+              {
+                type: "coupon_code",
+                coupon_code: button?.example?.[0],
+              },
+            ],
+          });
         }
       });
     }
