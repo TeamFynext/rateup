@@ -59,7 +59,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     return colors[colorIndex];
   };
   const getLatestStatus = (statuses: { [key: string]: string }) => {
-    const statusKeys = Object.keys(statuses).filter(
+    const statusKeys = Object.keys(statuses ?? []).filter(
       (key) => statuses[key] !== "",
     );
     if (statusKeys.length === 0) return getStatusIcon("pending");
