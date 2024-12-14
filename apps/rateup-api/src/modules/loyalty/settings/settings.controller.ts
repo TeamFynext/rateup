@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger";
 import {
   createLoyaltyTemplate,
+  getAllLoyaltyTemplates,
   getLoyaltyTemplate,
   updateLoyaltyTemplate,
 } from "./settings.service";
@@ -51,6 +52,20 @@ export async function getLoyaltyTemplateHandler(
     const { orgId } = request.user;
     const { type } = request.query;
     const res = await getLoyaltyTemplate(type, orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getAllLoyaltyTemplateHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await getAllLoyaltyTemplates(orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

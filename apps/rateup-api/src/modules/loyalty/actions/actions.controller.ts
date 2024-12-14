@@ -8,6 +8,7 @@ import {
 } from "./actions.service";
 import { log } from "../../../utils/logger";
 import {
+  ByReferralCodeParamInput,
   lActionIdParamInput,
   lActionUpdateInput,
   loyaltyActionInput,
@@ -16,6 +17,11 @@ import prisma from "../../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
+import {
+  getLoyaltyCustomerOrActionByReferralCode,
+  handleLCustomerAction,
+} from "../customer/customer.service";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
 export async function createLoyaltyActionHandler(
   request: FastifyRequest,
@@ -122,6 +128,31 @@ export async function verifyLActionMaxCountRestriction(
         displayMessageInClient: true,
       });
     }
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function referActionHandler(
+  request: FastifyRequest<{ Params: ByReferralCodeParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { referralCode } = request.params;
+    const { customerId, actionId } =
+      await getLoyaltyCustomerOrActionByReferralCode(referralCode);
+    const { customer, customerAction } = await handleLCustomerAction(
+      customerId,
+      actionId,
+    );
+    reply.code(200).send(customerAction);
+    await sendTemplateToUserCore(
+      customer.orgId,
+      customerAction.action.waTemplateId,
+      customer.phone,
+      [],
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
