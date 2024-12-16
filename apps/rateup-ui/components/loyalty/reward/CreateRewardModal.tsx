@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 
+import { TemplateType } from "@/types/enums";
 import {
   ContainedDateInput,
   ContainedNumberInput,
@@ -147,6 +148,7 @@ export const LoyaltyRewardForm = ({ form }) => {
         minRows={5}
       />
       <WaTemplateSelector
+        templateType={TemplateType.LOYALTY}
         label="WhatsApp Template(to send after reward redemption)"
         {...form.getInputProps("waTemplateId")}
       />

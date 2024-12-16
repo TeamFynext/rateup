@@ -4,6 +4,7 @@ import { Badge, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 
+import { TemplateType } from "@/types/enums";
 import {
   useCreateLoyaltyTemplate,
   useGetAllLoyaltyTemplates,
@@ -136,6 +137,7 @@ export const LoyaltyWaTemplateConfig = ({
       <Stack>
         <ContainedSelection data={typeData} {...form.getInputProps("type")} />
         <WaTemplateSelector
+          templateType={TemplateType.LOYALTY}
           label={getLoyaltyTemplateLabel(form.values.type).templateLabel}
           description={
             getLoyaltyTemplateLabel(form.values.type).templateDescription

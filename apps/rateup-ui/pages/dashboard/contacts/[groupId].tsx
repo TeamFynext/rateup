@@ -121,14 +121,6 @@ export default function ContactGroup() {
     update({ groupId: groupDetails?.name });
   }, [groupDetails?.name]);
 
-  const filteredCustomerList = searchTerm
-    ? groupDetails?.contacts?.filter((contact) => {
-        return (
-          contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          contact?.phone?.startsWith(searchTerm)
-        );
-      })
-    : groupDetails?.contacts;
   const column: ColumnDef<any>[] = [
     ...contactColumn(cTags?.contactTags ?? []),
     {
@@ -243,7 +235,7 @@ export default function ContactGroup() {
               size="md"
               placeholder={translations["Search member"]}
               rightSectionWidth={60}
-              value={searchTerm}
+              defaultValue={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               w={500}
             />
@@ -253,7 +245,7 @@ export default function ContactGroup() {
           <PaperLayout p={0} flex={1} mah={800}>
             <ContactTable
               columns={column}
-              data={filteredCustomerList}
+              data={groupDetails?.contacts}
               cTags={cTags?.contactTags}
               tab={WhatsappTableType.MEMBERS}
               open={open}

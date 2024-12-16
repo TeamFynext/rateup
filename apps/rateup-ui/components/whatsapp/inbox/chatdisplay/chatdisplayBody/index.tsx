@@ -27,10 +27,12 @@ import {
 } from "../../../../../types/global";
 import { formatDate } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
+import WaInboxAudio from "./components/audio/indext";
 import WaInboxImage from "./components/image";
 import WaInboxInteractive from "./components/interactive";
 import WaInboxTemplate from "./components/template";
 import WaInboxText from "./components/text";
+import WaInboxVideo from "./components/video";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
 import classes from "./styles.module.css";
 
@@ -92,6 +94,10 @@ export default function WaInboxChatDisplayBody(props: Props) {
             messageContent={messageContent}
           />
         );
+      case "audio":
+        return <WaInboxAudio messageContent={messageContent} />;
+      case "video":
+        return <WaInboxVideo messageContent={messageContent} />;
       default:
         return (
           <Text fz={"xs"} c={"red"}>

@@ -5,6 +5,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { showErrorToast } from "@/utils/notifications";
+
 import {
   exportWaChats,
   getChatFilterData,
@@ -12,6 +14,7 @@ import {
   getFilteredContacts,
   getMessageCount,
   getMessagesByContactId,
+  getWaChatMediaFile,
   sendNewWaMessage,
 } from "./wamessage.api";
 
@@ -84,6 +87,15 @@ export const useExportWaChats = () => {
     mutationFn: exportWaChats,
     onError: (error) => {
       console.error("Error exporting chats", error);
+    },
+  });
+};
+
+export const useGetMediaFile = () => {
+  return useMutation({
+    mutationFn: getWaChatMediaFile,
+    onError: (error) => {
+      showErrorToast(error?.message || "Error fetching media file");
     },
   });
 };

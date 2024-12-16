@@ -17,13 +17,17 @@ const Logs = () => {
 
   const columns: ColumnDef<any>[] = [
     {
-      header: () => "Created",
+      header: () => "Time",
       accessorKey: "createdAt",
       cell: (info) =>
         dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
     },
     {
-      header: () => "Message",
+      header: () => "Phone",
+      accessorKey: "phone",
+    },
+    {
+      header: () => "Error",
       id: "logs",
       enableColumnFilter: false,
       accessorFn: (row) => row?.logs,
@@ -37,10 +41,6 @@ const Logs = () => {
           </List>
         );
       },
-    },
-    {
-      header: () => "Phone",
-      accessorKey: "phone",
     },
   ];
   const refreshButton = (

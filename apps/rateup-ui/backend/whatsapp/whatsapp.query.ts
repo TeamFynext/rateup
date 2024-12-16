@@ -1,4 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { getErrorMessage } from "../../utils";
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createWaTemplate,
   deleteWaTemplate,
@@ -12,13 +15,11 @@ import {
   syncTemplates,
   updateWaTemplate,
 } from "./whatsapp.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { getErrorMessage } from "../../utils";
 
-export const useWaTemplates = () =>
+export const useWaTemplates = (templateType?) =>
   useQuery({
-    queryKey: ["watemplates"],
-    queryFn: getWaTemplates,
+    queryKey: ["watemplates", templateType],
+    queryFn: () => getWaTemplates(templateType),
   });
 
 export const useWaTemplateById = (id: string) =>

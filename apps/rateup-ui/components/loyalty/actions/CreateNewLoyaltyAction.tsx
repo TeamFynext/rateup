@@ -20,7 +20,7 @@ import {
 } from "@tabler/icons-react";
 import { z } from "zod";
 
-import { LoyaltyActionType } from "@/types/enums";
+import { LoyaltyActionType, TemplateType } from "@/types/enums";
 import {
   useCreateLoyaltyAction,
   useUpdateLoyaltyAction,
@@ -170,6 +170,7 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
           />
         </Group>
         <WaTemplateSelector
+          templateType={TemplateType.LOYALTY}
           label="WhatsApp Template(to send after action)"
           {...form.getInputProps("waTemplateId")}
         />

@@ -1,5 +1,6 @@
 import { SelectProps } from "@mantine/core";
 
+import { TemplateType } from "@/types/enums";
 import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -13,6 +14,7 @@ interface WaTemplateSelector extends SelectProps {
   label?: string;
   teamId?: string;
   placeholder?: string;
+  templateType?: TemplateType;
 }
 
 const WaTemplateSelector = ({
@@ -21,20 +23,19 @@ const WaTemplateSelector = ({
   label,
   placeholder,
   onChange,
+  templateType,
   ...props
 }: WaTemplateSelector) => {
   const { translations } = useTranslations();
-  const { data: allTemplates, isLoading } = useWaTemplates();
+  const { data: allTemplates, isLoading } = useWaTemplates(templateType);
   const templates = teamId
     ? useTemplatesAvailableForTeam(teamId)
     : allTemplates;
 
-  const templatesData = templates?.map((t) => {
-    return {
-      value: t?.id,
-      label: t?.data?.name,
-    };
-  });
+  const templatesData = templates?.map((t) => ({
+    value: t?.id,
+    label: t?.data?.name,
+  }));
 
   if (value?.length && !templates?.map((t) => t.id).includes(value)) {
     onChange(null);

@@ -54,7 +54,6 @@ export enum ContactTabs {
 }
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
-  const [filterByTag, setFilterByTag] = useState<string[]>([]);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [contactTags, setContactTags] = useState([]);
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
@@ -95,13 +94,6 @@ export default function Contacts() {
     selectedTeamID == "all" || !selectedTeamID
       ? contactGroupData
       : contactGroupData?.filter((group) => group?.teamId === selectedTeamID);
-  const filteredGroups = (
-    searchTerm
-      ? contactGroups.filter((group) => {
-          return group?.name.toLowerCase().includes(searchTerm.toLowerCase());
-        })
-      : contactGroups
-  )?.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)));
 
   const column = useMemo(
     () => [
@@ -224,7 +216,7 @@ export default function Contacts() {
             <PaperLayout p={0} h={"100%"}>
               <ContactTable
                 columns={columnGroup}
-                data={filteredGroups}
+                data={contactGroups}
                 cTags={cTags?.contactTags}
                 tab={activeTab}
                 refetch={refetchGroups}
