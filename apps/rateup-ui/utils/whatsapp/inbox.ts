@@ -44,6 +44,7 @@ export function parseWaMessage(
       case "interactive":
         messageContent = "";
         interactive = send.interactive;
+        break;
     }
   }
   if (messageBody?.exchangeProcess === "receive") {
@@ -59,6 +60,12 @@ export function parseWaMessage(
         break;
       case "button":
         messageContent = receive.messages[0].button.text;
+        break;
+      case "audio":
+        messageContent = receive.messages[0].audio.id;
+        break;
+      case "video":
+        messageContent = receive.messages[0].video.id;
         break;
       case "interactive":
         switch (receive.messages[0].interactive.type) {

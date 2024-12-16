@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import { WA_INBOX_BASE_PATH } from "..";
 import { WaInboxMessage, WaTemplateComponent } from "../../../../types/global";
 import { axiosClient } from "../../../apiClient";
@@ -84,4 +86,45 @@ export async function exportWaChats({
       { responseType: "arraybuffer" },
     )
   ).data;
+}
+
+export async function getWaChatMediaFile(mediaId: string) {
+  const cachedData = getFromLocalStorage(`mediaUrl_${mediaId}`);
+
+  if (cachedData && dayjs().isBefore(dayjs(cachedData.expiry))) {
+    return cachedData.url;
+  }
+
+  try {
+    const url = (
+      await axiosClient.get(`${WA_CONTACT_BASE_PATH}/mediafile/${mediaId}`)
+    ).data;
+
+    saveToLocalStorage(`mediaUrl_${mediaId}`, {
+      url,
+      expiry: new Date(new Date().getTime() + 5 * 60 * 1000).toISOString(),
+    });
+
+    setTimeout(
+      () => {
+        localStorage.removeItem(`mediaUrl_${mediaId}`);
+      },
+      5 * 60 * 1000,
+    );
+
+    return url;
+  } catch (error) {
+    console.error("Failed to fetch audio file:", error);
+    throw new Error(error);
+  }
+}
+
+function saveToLocalStorage(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// Function to get data from local storage
+function getFromLocalStorage(key) {
+  const value = localStorage.getItem(key);
+  return value ? JSON.parse(value) : null;
 }

@@ -1101,6 +1101,17 @@ export type WaReceiveMessageBody = {
         link?: string;
         caption?: string;
       };
+      audio: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        voice?: boolean;
+      };
+      video: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+      };
       button?: {
         text: string;
         payload: string;

@@ -23,8 +23,11 @@ export type WaTemplate = {
 /**
  * Fetches whatsapp templates using orgId user belongs to.
  */
-export const getWaTemplates = async () => {
-  const res = await axiosClient.get(TEMPLATES_URL);
+export const getWaTemplates = async (templatType) => {
+  const url = templatType
+    ? `${TEMPLATES_URL}?templateType=${templatType}`
+    : TEMPLATES_URL;
+  const res = await axiosClient.get(url);
   return res.data as WaTemplate[];
 };
 
