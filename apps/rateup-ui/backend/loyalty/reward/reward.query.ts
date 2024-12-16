@@ -44,6 +44,7 @@ type UpdateReward = {
   tnc?: string;
   maxPerUser?: number;
   waTemplateId?: string;
+  expireAt?: Date;
 };
 
 export const useUpdateLoyaltyRewardMutation = (rewardId) => {
