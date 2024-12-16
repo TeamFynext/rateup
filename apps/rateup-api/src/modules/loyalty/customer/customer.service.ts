@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import {
   LoyaltyTemplateTypes,
   SubscriptionFeaturePathName,
@@ -10,7 +11,10 @@ import prisma from "../../../utils/prisma";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 import { LoyaltyActionType } from "../actions/actions.schema";
-import { getLoyaltyActions } from "../actions/actions.service";
+import {
+  getLoyaltyActionById,
+  getLoyaltyActions,
+} from "../actions/actions.service";
 import { RedeemStatus } from "../redeems/redeem.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
@@ -185,7 +189,7 @@ export async function updateLCustomer(phone, data) {
 export async function getLCustomerByPhone(phone) {
   return await prisma.loyaltyCustomer.findUnique({
     where: {
-      phone,
+      phone: phone[0] !== "+" ? `+${phone}` : phone,
     },
     include: {
       referralCodes: true,
@@ -201,7 +205,7 @@ export async function getLoyaltyDetailsToCustomer(phone) {
       LoyaltyActionType.ReferralPurchase,
     ].includes(a.type as LoyaltyActionType),
   );
-  const customerReferralCodes = await getLCustomerReferralCodes(customer.id);
+  const customerReferralCodes = customer.referralCodes;
   const referralCodeActions = customerReferralCodes.map((c) => c.actionId);
   let referralCodes = customerReferralCodes.map((c) => c.referralCode);
   for (const action of actions) {
@@ -218,30 +222,36 @@ export async function getLoyaltyDetailsToCustomer(phone) {
 }
 
 export async function handleCustomerInfoWaRequest(phone) {
-  const { customer, referralCodes } = await getLoyaltyDetailsToCustomer(phone);
-  const template = await getLoyaltyTemplate(
-    LoyaltyTemplateTypes.CustomerInfo,
-    customer.orgId,
-  );
-  if (template) {
-    const dynamicVariables = [
-      customer.name,
-      customer.totalEarnedPoints - customer.redeemedPoints,
-    ];
-    let components = [];
-    components.push({
-      type: "body",
-      parameters: dynamicVariables.map((data: string) => ({
-        type: "text",
-        text: data,
-      })),
-    });
-    await sendTemplateToUserCore(
+  try {
+    const { customer, referralCodes } =
+      await getLoyaltyDetailsToCustomer(phone);
+    const template = await getLoyaltyTemplate(
+      LoyaltyTemplateTypes.CustomerInfo,
       customer.orgId,
-      template.waTemplateId,
-      phone,
-      components,
     );
+    if (template) {
+      const dynamicVariables = [
+        customer.name,
+        customer.totalEarnedPoints - customer.redeemedPoints,
+        referralCodes.join(","),
+      ];
+      let components = [];
+      components.push({
+        type: "body",
+        parameters: dynamicVariables.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
+      await sendTemplateToUserCore(
+        customer.orgId,
+        template.waTemplateId,
+        phone,
+        components,
+      );
+    }
+  } catch (e) {
+    log.error(e);
   }
 }
 
@@ -277,6 +287,13 @@ export async function getLoyaltyCustomerOrActionByReferralCode(referralCode) {
 }
 
 export async function handleLCustomerAction(customerId, actionId) {
+  const action = await getLoyaltyActionById(actionId);
+  if (
+    dayjs().isBefore(dayjs(action.startDate)) ||
+    dayjs().isAfter(dayjs(action.endDate))
+  ) {
+    throw new Error("Action Not available on this date");
+  }
   const customerAction = await createCustomerAction(customerId, actionId);
   const customer = await updateLCustomerPoint(
     customerId,
