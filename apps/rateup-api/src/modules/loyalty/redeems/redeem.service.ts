@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import prisma from "../../../utils/prisma";
 import { getLCustomerById } from "../customer/customer.service";
 
@@ -19,15 +20,28 @@ export async function createRedeem(customerId, rewardId) {
       customer: true,
     },
   });
+  const isExpired = dayjs().isAfter(dayjs(reward.expireAt));
   const isBalance =
     reward.points <= customer.totalEarnedPoints - customer.redeemedPoints;
   const isUsedMax =
     (await getLoyaltyRedeemsByCustomerReward(customerId, rewardId)).length >=
     reward.maxPerUser;
-  return await updateLoyaltyRedeem(id, {
+  const redeem = await updateLoyaltyRedeem(id, {
     status:
-      !isBalance || isUsedMax ? RedeemStatus.FAILED : RedeemStatus.COMPLETED,
+      isExpired || !isBalance || isUsedMax
+        ? RedeemStatus.FAILED
+        : RedeemStatus.COMPLETED,
   });
+  return {
+    redeem,
+    message: isExpired
+      ? "Reward has expired"
+      : !isBalance
+        ? "Customer do not have enough points"
+        : isUsedMax
+          ? "Customer has reached reward limit"
+          : "",
+  };
 }
 
 export async function updateLoyaltyRedeem(id, data) {

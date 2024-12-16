@@ -6,6 +6,7 @@ export const LCustomerSchema = z.object({
   phone: z.string(),
   email: z.string().optional(),
   orgId: z.string(),
+  totalEarnedPoints: z.number().optional(),
 });
 
 const actionCustomerIdParamSchema = z.object({

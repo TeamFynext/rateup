@@ -15,7 +15,7 @@ export async function redeemPointsHandler(
 ) {
   try {
     const { customerId, rewardId } = request.params;
-    const redeem = await createRedeem(customerId, rewardId);
+    const { redeem, message } = await createRedeem(customerId, rewardId);
     if (redeem.status === RedeemStatus.COMPLETED) {
       const customer = await updateLCustomerRedeemPoint(
         customerId,
@@ -32,10 +32,7 @@ export async function redeemPointsHandler(
         [],
       );
     } else {
-      reply.code(403).send({
-        message:
-          "Failed: Customer do not have enough points to redeem the reward",
-      });
+      reply.code(403).send(message);
     }
   } catch (e) {
     log.error(e);

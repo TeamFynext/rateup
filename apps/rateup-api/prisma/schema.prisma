@@ -1131,6 +1131,7 @@ model LoyaltyAction {
   type          String // enum LoyaltyActionType
   name          String
   points        Int
+  refereePoints  Int?
   startDate     DateTime
   endDate       DateTime
   createdAt     DateTime                   @default(now())
@@ -1149,6 +1150,7 @@ model LoyaltyReward {
   description  String
   tnc          String
   maxPerUser   Int
+  expireAt     DateTime?
   createdAt    DateTime        @default(now())
   orgId        String          @db.Uuid
   org          Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1160,7 +1162,7 @@ model LoyaltyReward {
 model LoyaltyCustomer {
   id                String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String?
-  phone             String                     @unique
+  phone             String        
   email             String?
   orgId             String                     @db.Uuid
   org               Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1170,6 +1172,7 @@ model LoyaltyCustomer {
   redeems           LoyaltyRedeem[]
   actions           LoyaltyActionCustomerMap[]
   referralCodes     LoyaltyReferralCode[]
+  @@unique([phone, orgId], name: "loyalty_phone_org_id_unique")
 }
 
 model LoyaltyRedeem {
@@ -1188,6 +1191,7 @@ model LoyaltyActionCustomerMap {
   customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   actionId   String          @db.Uuid
   action     LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  refereePhone String?
   createdAt  DateTime        @default(now())
 }
 

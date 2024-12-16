@@ -135,18 +135,37 @@ export async function verifyLActionMaxCountRestriction(
 }
 
 export async function referActionHandler(
-  request: FastifyRequest<{ Params: ByReferralCodeParamInput }>,
+  request: FastifyRequest<{
+    Params: ByReferralCodeParamInput;
+    Body: { refereePhone?: string; refereeName?: string };
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { referralCode } = request.params;
+    const { refereePhone, refereeName } = request.body;
     const { customerId, actionId } =
       await getLoyaltyCustomerOrActionByReferralCode(referralCode);
-    const { customer, customerAction } = await handleLCustomerAction(
+    const { success, data, message } = await handleLCustomerAction(
       customerId,
       actionId,
+      refereePhone,
+      refereeName,
     );
+    if (!success) {
+      return reply.code(403).send(message);
+    }
+    const { customer, customerAction, referee } = data;
+
     reply.code(200).send(customerAction);
+    if (referee) {
+      await sendTemplateToUserCore(
+        referee.orgId,
+        customerAction.action.waTemplateId,
+        referee.phone,
+        [],
+      );
+    }
     await sendTemplateToUserCore(
       customer.orgId,
       customerAction.action.waTemplateId,
