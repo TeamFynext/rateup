@@ -4,15 +4,19 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { useReferralLoyaltyAction } from "@/backend/loyalty/actions/actions.query";
 
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ReferralAction = ({ opened, close }) => {
   const form = useForm({
     initialValues: {
       referralCode: "",
+      refereePhone: "",
+      refereeName: "",
     },
     validate: {
       referralCode: isNotEmpty("Referral Code required"),
+      refereePhone: isNotEmpty("Phone number required"),
     },
   });
   const referActionMut = useReferralLoyaltyAction();
@@ -45,6 +49,14 @@ const ReferralAction = ({ opened, close }) => {
       isLoading={referActionMut.isPending}
     >
       <Stack>
+        <PhoneInputWithCountry
+          label={"Phone Number"}
+          {...form.getInputProps("refereePhone")}
+        />
+        <ContainedTextField
+          label={"Name"}
+          {...form.getInputProps("refereeName")}
+        />
         <ContainedTextField
           label={"Referral Code"}
           {...form.getInputProps("referralCode")}

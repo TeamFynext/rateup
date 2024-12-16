@@ -88,8 +88,8 @@ export const useReferralLoyaltyAction = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       showSuccessToast("Refer successfull");
     },
-    onError: () => {
-      showErrorToast("Refer failed");
+    onError: (e: any) => {
+      showErrorToast(`Refer failed: ${e?.response?.data ?? ""}`);
     },
   });
 };

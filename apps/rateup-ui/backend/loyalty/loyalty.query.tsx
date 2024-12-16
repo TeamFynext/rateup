@@ -14,8 +14,8 @@ export const useLCAction = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       showSuccessToast("success action");
     },
-    onError: () => {
-      showErrorToast("Error");
+    onError: (e: any) => {
+      showErrorToast(`Error:${e?.response?.data ?? ""}`);
     },
   });
 };

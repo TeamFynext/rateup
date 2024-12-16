@@ -20,8 +20,9 @@ export const useRedeemReward = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       showSuccessToast("Reward redeemed successfully");
     },
-    onError: () => {
-      showErrorToast("Reward redeem failed");
+    onError: (e: any) => {
+      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      showErrorToast(`Reward redeem failed: ${e?.response?.data ?? ""}`);
     },
   });
 };
