@@ -43,10 +43,14 @@ export async function customerActionHandler(
 ) {
   try {
     const { actionId, customerId } = request.params;
-    const { customer, customerAction } = await handleLCustomerAction(
+    const { success, data, message } = await handleLCustomerAction(
       customerId,
       actionId,
     );
+    if (!success) {
+      return reply.code(403).send(message);
+    }
+    const { customer, customerAction } = data;
     reply.code(200).send({
       message: "Success",
       totlaEarnedPoints: customer.totalEarnedPoints,

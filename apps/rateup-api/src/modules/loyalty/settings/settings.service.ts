@@ -68,7 +68,7 @@ export async function handleLoyaltyTemplate(
 ) {
   switch (template.type) {
     case LoyaltyTemplateTypes.CustomerInfo:
-      await handleCustomerInfoWaRequest(phone);
+      await handleCustomerInfoWaRequest(phone, orgId);
       break;
     case LoyaltyTemplateTypes.CustomerRegistration:
       await handleLoyaltyRegister(phone, name, orgId);

@@ -18,6 +18,7 @@ import {
 import { RedeemStatus } from "../redeems/redeem.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
+import { isLReferralAction } from "../util";
 
 export async function createLCustomer(input: LCustomerInput) {
   return await prisma.loyaltyCustomer.create({
@@ -27,14 +28,22 @@ export async function createLCustomer(input: LCustomerInput) {
       email: input.email,
       orgId: input.orgId,
     },
+    include: {
+      referralCodes: true,
+    },
   });
 }
 
-export async function createCustomerAction(customerId, actionId) {
+export async function createCustomerAction(
+  customerId,
+  actionId,
+  refereePhone?,
+) {
   return await prisma.loyaltyActionCustomerMap.create({
     data: {
       customerId,
       actionId,
+      refereePhone,
     },
     include: {
       action: true,
@@ -177,19 +186,25 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
   return true;
 }
 
-export async function updateLCustomer(phone, data) {
+export async function updateLCustomer(phone, orgId, data) {
   return await prisma.loyaltyCustomer.update({
     where: {
-      phone,
+      loyalty_phone_org_id_unique: {
+        phone,
+        orgId,
+      },
     },
     data,
   });
 }
 
-export async function getLCustomerByPhone(phone) {
+export async function getLCustomerByPhone(phone, orgId) {
   return await prisma.loyaltyCustomer.findUnique({
     where: {
-      phone: phone[0] !== "+" ? `+${phone}` : phone,
+      loyalty_phone_org_id_unique: {
+        phone: phone[0] !== "+" ? `+${phone}` : phone,
+        orgId,
+      },
     },
     include: {
       referralCodes: true,
@@ -197,8 +212,8 @@ export async function getLCustomerByPhone(phone) {
   });
 }
 
-export async function getLoyaltyDetailsToCustomer(phone) {
-  let customer = await getLCustomerByPhone(phone);
+export async function getLoyaltyDetailsToCustomer(phone, orgId) {
+  let customer = await getLCustomerByPhone(phone, orgId);
   const actions = (await getLoyaltyActions(customer.orgId)).filter((a) =>
     [
       LoyaltyActionType.ReferFriend,
@@ -221,10 +236,12 @@ export async function getLoyaltyDetailsToCustomer(phone) {
   return { customer, referralCodes };
 }
 
-export async function handleCustomerInfoWaRequest(phone) {
+export async function handleCustomerInfoWaRequest(phone, orgId) {
   try {
-    const { customer, referralCodes } =
-      await getLoyaltyDetailsToCustomer(phone);
+    const { customer, referralCodes } = await getLoyaltyDetailsToCustomer(
+      phone,
+      orgId,
+    );
     const template = await getLoyaltyTemplate(
       LoyaltyTemplateTypes.CustomerInfo,
       customer.orgId,
@@ -232,7 +249,7 @@ export async function handleCustomerInfoWaRequest(phone) {
     if (template) {
       const dynamicVariables = [
         customer.name,
-        customer.totalEarnedPoints - customer.redeemedPoints,
+        (customer.totalEarnedPoints - customer.redeemedPoints).toString(),
         referralCodes.join(","),
       ];
       let components = [];
@@ -286,18 +303,65 @@ export async function getLoyaltyCustomerOrActionByReferralCode(referralCode) {
   });
 }
 
-export async function handleLCustomerAction(customerId, actionId) {
+export async function handleLCustomerAction(
+  customerId,
+  actionId,
+  refereePhone?,
+  refereeName?,
+) {
   const action = await getLoyaltyActionById(actionId);
   if (
     dayjs().isBefore(dayjs(action.startDate)) ||
     dayjs().isAfter(dayjs(action.endDate))
   ) {
-    throw new Error("Action Not available on this date");
+    return { success: false, message: "Action Not available on this date" };
   }
-  const customerAction = await createCustomerAction(customerId, actionId);
+  let referee;
+  if (isLReferralAction(action.type) && refereePhone) {
+    referee = await getLCustomerByPhone(refereePhone, action.orgId);
+    if (!referee) {
+      referee = await createLCustomer({
+        phone: refereePhone,
+        orgId: action.orgId,
+        name: refereeName,
+      });
+    }
+    const res = await getLCustomerActionByRefereePhone(
+      customerId,
+      actionId,
+      refereePhone,
+    );
+    if (res) {
+      return { success: false, message: "Already referred by this number" };
+    }
+    const refereeAction = await createCustomerAction(referee.id, actionId);
+    referee = await updateLCustomerPoint(referee.id, action.refereePoints);
+  }
+  const customerAction = await createCustomerAction(
+    customerId,
+    actionId,
+    refereePhone,
+  );
   const customer = await updateLCustomerPoint(
     customerId,
     customerAction.action.points,
   );
-  return { customer, customerAction };
+  return { success: true, data: { customer, customerAction, referee } };
+}
+
+export async function getLCustomerActionByRefereePhone(
+  customerId,
+  actionId,
+  refereePhone,
+) {
+  return await prisma.loyaltyActionCustomerMap.findFirst({
+    where: {
+      customerId,
+      actionId,
+      refereePhone,
+    },
+    include: {
+      customer: true,
+    },
+  });
 }

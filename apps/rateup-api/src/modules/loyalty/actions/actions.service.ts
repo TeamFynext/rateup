@@ -11,6 +11,7 @@ export async function createLoyaltyAction(
       points: data.points,
       endDate: data.endDate,
       type: data.type,
+      refereePoints: data.refereePoints,
       startDate: data.startDate,
       waTemplateId: data.waTemplateId,
       orgId: orgId,

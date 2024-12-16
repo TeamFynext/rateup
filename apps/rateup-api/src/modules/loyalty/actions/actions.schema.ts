@@ -11,6 +11,7 @@ const lActionSchema = z.object({
   name: z.string(),
   type: z.nativeEnum(LoyaltyActionType),
   points: z.number(),
+  refereePoints: z.number().optional(),
   startDate: z.date(),
   endDate: z.date(),
   waTemplateId: z.string().optional(),
@@ -22,6 +23,7 @@ const lActionUpdateSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   waTemplateId: z.string().optional(),
+  refereePoints: z.number().optional(),
 });
 
 const byLActiondIdParamSchema = z.object({

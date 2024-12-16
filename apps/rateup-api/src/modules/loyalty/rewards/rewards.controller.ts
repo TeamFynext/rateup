@@ -7,7 +7,11 @@ import {
   getLoyaltyRewards,
   updateLoyaltyRewardById,
 } from "./rewards.service";
-import { lRewardIdParamInput, lRewardUpdateInput } from "./rewards.schema";
+import {
+  loyaltyRewardInput,
+  lRewardIdParamInput,
+  lRewardUpdateInput,
+} from "./rewards.schema";
 import { loyaltyActionInput } from "../actions/actions.schema";
 import prisma from "../../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
@@ -15,7 +19,7 @@ import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function createLoyaltyRewardHandler(
-  request: FastifyRequest<{ Body: loyaltyActionInput }>,
+  request: FastifyRequest<{ Body: loyaltyRewardInput }>,
   reply: FastifyReply,
 ) {
   try {
