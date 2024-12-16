@@ -4,6 +4,7 @@ import {
   generateChatFilterDataHandler,
   getContactsWithLastMessageHandler,
   getFilteredContactsHandler,
+  getMediaFileByMediaId,
   getMessageCountHandler,
   getWaMessagesByContactIdHandler,
   sendNewWaMessageHandler,
@@ -56,4 +57,5 @@ export async function waMessageRoutes(server: FastifyInstance) {
     },
     exportWhatsappChatsHandler,
   );
+  server.get("/mediafile/:mediaId", getMediaFileByMediaId);
 }

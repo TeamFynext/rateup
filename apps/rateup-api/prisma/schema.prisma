@@ -63,6 +63,7 @@ enum TemplateType {
   GENERAL_NOTIFICATION
   ORDER_DETAILS
   PAYMENT_CONFIRMATION
+  LOYALTY
 }
 
 model User {

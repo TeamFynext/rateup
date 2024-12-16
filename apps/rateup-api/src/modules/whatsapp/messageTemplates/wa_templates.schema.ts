@@ -100,6 +100,7 @@ const waTemplateFormattedInput = {
   ),
   language: z.string(),
   category: z.nativeEnum(WaTemplateCategory),
+  allow_category_change: z.boolean().optional().nullable(),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
 export const waTemplateFormattedInputSchema = z.object(
@@ -126,6 +127,9 @@ export const waTemplateFormattedSchema = z.object(waTemplateFormattedCore);
 const byTemplateIdParamsSchema = z.object({
   templateId: z.string(),
 });
+const templateTypeParamsSchema = z.object({
+  templateType: z.nativeEnum(TemplateType).optional(),
+});
 
 const registerTemplatesInDbBodySchema = z.array(
   z.object({
@@ -145,6 +149,7 @@ export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
     waTemplateInputSchema,
     waTemplateSchema,
     byTemplateIdParamsSchema,
+    templateTypeParamsSchema,
     registerTemplatesInDbBodySchema,
     waUserSendTemplateBodySchema,
   },
@@ -158,6 +163,7 @@ export type CreateWaTemplateFormattedInput = z.infer<
 export type WaTemplate = z.infer<typeof waTemplateSchema>;
 export type WaTemplateFormatted = z.infer<typeof waTemplateFormattedSchema>;
 export type ByTemplateIdParamsSchema = z.infer<typeof byTemplateIdParamsSchema>;
+export type TemplateTypeParamsSchema = z.infer<typeof templateTypeParamsSchema>;
 export type RegisterTemplatesInDbBodySchema = z.infer<
   typeof registerTemplatesInDbBodySchema
 >;

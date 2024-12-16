@@ -25,6 +25,10 @@ const PaginateQuerySchema = z.object({
   page: z.string().optional(),
 });
 
+const waMediaFileByMediaIdBody = z.object({
+  mediaId: z.string(),
+});
+
 const WaChatFilterSchema = z.object({
   messageType: z.string().default("all"),
   strictFilter: z.boolean().default(false),
@@ -65,6 +69,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
     waChatFilterQuerySchema,
     waChatExportConstraints,
     waChatExportQuerySchema,
+    waMediaFileByMediaIdBody,
   },
   { $id: "waMessage" },
 );
@@ -75,3 +80,4 @@ export type WaChatFilterSchema = z.infer<typeof WaChatFilterSchema>;
 export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;
 export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
+export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;

@@ -5,6 +5,7 @@ import {
   WaChatFilterQuerySchema,
   WaChatExportQuerySchema,
   WaChatExportConstraints,
+  WaMediaFileByMediaIdBody,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
@@ -12,6 +13,7 @@ import {
   filterChats,
   generateChatFilterData,
   getContactsWithLastMessage,
+  getMediaFile,
   getMessageCount,
   getWaMessagesByContactId,
 } from "./wamessage.service";
@@ -70,7 +72,7 @@ export async function handleWaMessages(
             orgId,
           );
           parameterData = messageBody.template.components;
-          waMessageBody.send.template = template.data;
+          waMessageBody.send.template = template.data as unknown as any;
         }
       }
       case "receive": {
@@ -207,6 +209,25 @@ export async function getFilteredContactsHandler(
     reply.status(200).send(contacts);
   } catch (error) {
     console.log(error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+export async function getMediaFileByMediaId(
+  request: FastifyRequest<{
+    Params: WaMediaFileByMediaIdBody;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { mediaId } = request.params;
+    const orgId = request.user.orgId;
+    const media = await getMediaFile(mediaId, orgId);
+    if (media) {
+      reply.status(200).send(media);
+    } else {
+      reply.status(404).send("Media not found");
+    }
+  } catch (error) {
     reply.status(500).send("Internal Server Error");
   }
 }

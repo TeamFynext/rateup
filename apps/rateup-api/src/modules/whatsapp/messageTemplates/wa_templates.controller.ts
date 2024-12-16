@@ -19,6 +19,7 @@ import {
   ByTemplateIdParamsSchema,
   CreateWaTemplateInput,
   RegisterTemplatesInDbBodySchema,
+  TemplateTypeParamsSchema,
   WaTemplateFormatted,
   WaUserSendTemplateBodySchema,
 } from "./wa_templates.schema";
@@ -31,6 +32,7 @@ import {
   getTemplateByIdAndOrgId,
   getTemplateByNameAndOrgId,
   getTemplatesByOrgId,
+  getTemplatesByOrgIdAndTemplateType,
   getUnregisteredTemplates,
   registerTemplatesInDb,
   saveTemplate,
@@ -63,11 +65,16 @@ import { wait } from "../whatsappSurvey/wasurvey.controller";
 import { createWaMessageSchedule } from "../wa_message_scheduler";
 
 export async function getTemplatesHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Querystring: TemplateTypeParamsSchema;
+  }>,
   reply: FastifyReply,
 ) {
   const { orgId } = await getOrgIdAndRole({ id: request.userId });
-  const templates = await getTemplatesByOrgId(orgId);
+  const templates = await getTemplatesByOrgIdAndTemplateType(
+    orgId,
+    request.query.templateType,
+  );
   reply.code(200).send(templates);
 }
 

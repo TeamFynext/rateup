@@ -385,23 +385,16 @@ async function handleWaSurveySession(
   waMessage: WaMessageBody,
   session: WaSessionWithRelations,
 ) {
-  console.log("🚀 ~ session:", JSON.stringify(session, null, 2));
   const parsedMessage = parseMessage(waMessage);
 
   const { message } = parsedMessage;
   if (!session.currentQuestionId) {
-    console.log(1);
-
     // If no current question, then we assume this is the consent message (template)
     await handleSurveyConsentReply(orgId, parsedMessage, session);
   } else if (!session.language) {
-    console.log(2);
-
     // If no language is set, then we assume this is the language selection
     await handleLanguageResponse(session, message);
   } else {
-    console.log(3);
-
     // WaCustomer is in the middle of a survey
     await handleReplyMessage(orgId, waMessage);
   }

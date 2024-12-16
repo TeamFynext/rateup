@@ -12,6 +12,8 @@ import {
   WaChatFilterSchema,
 } from "./wamessage.schema";
 import { log } from "../../../../utils/logger";
+import { callWhatsappApi } from "../../wa_axios";
+import { getWaSettings } from "../../settings/wa_settings.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -405,6 +407,16 @@ export async function filterChats(
     log.error("Error in inbox chat filter api", error);
     return [];
   }
+}
+
+export async function getMediaFile(mediaId: string, orgId: string) {
+  const waSettings = await getWaSettings(orgId);
+  const fileUrl = await callWhatsappApi(
+    `/${mediaId}`,
+    "GET",
+    waSettings.accessToken,
+  );
+  return fileUrl?.data.url;
 }
 
 export async function exportWhatsapChats(
