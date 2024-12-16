@@ -169,8 +169,10 @@ const LTemplateConfigCard = ({ config, setSelectedConfig, open }) => {
               {config?.templateName}
             </Badge>
           </Group>
-          <Group gap={1}>
-            <Text size="sm">Request Message</Text>
+          <Group gap={"sm"}>
+            <Text size="sm" fw={"bold"}>
+              Request Message:
+            </Text>
             <Text>{config?.requestMessage}</Text>
           </Group>
         </Group>
@@ -193,7 +195,7 @@ function getLoyaltyTemplateLabel(type) {
         label: "Customer Information Request",
         templateLabel: "WhatsApp Template for Customer Info request",
         templateDescription:
-          "Dynamic variables representation - {{1}} - customer name, {{2}} - points",
+          "Dynamic variables representation - {{1}} - customer name, {{2}} - points, {{3}} - ReferralCodes seperated by commas if any",
       };
   }
 }
