@@ -34,7 +34,15 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     ]),
   );
 
-  server.get("/", getTemplatesHandler);
+  server.get(
+    "/",
+    {
+      schema: {
+        querystring: $WTref("templateTypeParamsSchema"),
+      },
+    },
+    getTemplatesHandler,
+  );
   server.get(
     "/:templateId",
     {

@@ -76,6 +76,19 @@ export async function getTemplatesByOrgId(orgId: string) {
   return templates as WaTemplateWithTypes[];
 }
 
+export async function getTemplatesByOrgIdAndTemplateType(
+  orgId: string,
+  templateType?: TemplateType,
+) {
+  const templates = await prisma.waTemplate.findMany({
+    where: {
+      orgId: orgId,
+      ...(templateType ? { templateType } : {}),
+    },
+  });
+  return templates as WaTemplateWithTypes[];
+}
+
 export type templateData = {
   id: string;
   createdAt: Date;

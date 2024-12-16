@@ -148,6 +148,7 @@ export async function getCampaignById(campaignId: string) {
       });
     }
     if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
+      countSent--;
       countFailed++;
     }
     const FlowId = campaign?.flowId;
