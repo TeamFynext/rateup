@@ -8,6 +8,7 @@ const lRewardSchema = z.object({
   description: z.string(),
   tnc: z.string(),
   waTemplateId: z.string().optional(),
+  expireAt: z.date().optional(),
 });
 
 const byLRewardIdParamSchema = z.object({
@@ -21,6 +22,7 @@ const lRewardUpdateSchema = z.object({
   description: z.string().optional(),
   tnc: z.string().optional(),
   waTemplateId: z.string().optional(),
+  expireAt: z.date().optional(),
 });
 
 export const { schemas: loyaltyRewardSchemas, $ref: $lRewardRef } =
