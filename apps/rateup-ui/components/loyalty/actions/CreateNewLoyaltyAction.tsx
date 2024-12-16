@@ -37,6 +37,11 @@ import FormModalLayout from "@/components/Modal/FormModalLayout";
 
 import classes from "./Actions.module.css";
 
+const isLReferralAction = (actionType) =>
+  [LoyaltyActionType.ReferFriend, LoyaltyActionType.ReferralPurchase].includes(
+    actionType,
+  );
+
 const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
   const createLoyaltyActionMutation = useCreateLoyaltyAction();
   const updateLoyaltyActionMut = useUpdateLoyaltyAction(action?.id);
@@ -55,6 +60,9 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
         message: "End date cannot be empty",
       }),
       waTemplateId: z.string(),
+      refereePoints: z
+        .number()
+        .min(1, { message: "Points should be minimum of zero" }),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -73,6 +81,7 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       startDate: action?.startDate || null,
       endDate: action?.endDate || null,
       waTemplateId: action?.waTemplateId || null,
+      refereePoints: action?.refereePoints || 0,
     },
     validate: zodResolver(schema),
   });
@@ -141,6 +150,13 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
           {...form.getInputProps("points")}
           allowDecimal={false}
           allowNegative={false}
+        />
+        <ContainedNumberInput
+          label={"Points for referee"}
+          {...form.getInputProps("refereePoints")}
+          allowDecimal={false}
+          allowNegative={false}
+          display={isLReferralAction(form.values.type) ? "block" : "none"}
         />
         <Group>
           <ContainedDateInput

@@ -4,6 +4,7 @@ import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 
 import {
+  ContainedDateInput,
   ContainedNumberInput,
   ContainedTextArea,
   ContainedTextField,
@@ -40,6 +41,7 @@ export function CreateRewardModal({
       maxPerUser: 1,
       tnc: "",
       waTemplateId: "",
+      expireAt: null,
     },
     validate: {
       name: isNotEmpty("Name cannot be empty"),
@@ -70,8 +72,14 @@ export function CreateRewardModal({
 
   useEffect(() => {
     if (reward) {
-      form.setInitialValues({ ...reward });
-      form.setValues({ ...reward });
+      form.setInitialValues({
+        ...reward,
+        expireAt: reward?.expireAt ? new Date(reward?.expireAt) : null,
+      });
+      form.setValues({
+        ...reward,
+        expireAt: reward?.expireAt ? new Date(reward?.expireAt) : null,
+      });
     }
   }, [reward]);
 
@@ -121,6 +129,10 @@ export const LoyaltyRewardForm = ({ form }) => {
         {...form.getInputProps("maxPerUser")}
         allowDecimal={false}
         allowNegative={false}
+      />
+      <ContainedDateInput
+        label={"Expiry Date"}
+        {...form.getInputProps("expireAt")}
       />
       <ContainedTextArea
         label={"Description"}
