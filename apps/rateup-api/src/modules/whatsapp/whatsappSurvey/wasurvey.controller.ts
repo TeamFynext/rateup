@@ -127,6 +127,9 @@ export async function whatsappEventHandler(
       case WaEvent.TemplateStatusChange:
         await handleTemplateStatusChange(body);
         break;
+      case WaEvent.TemplateCategoryUpdate:
+        await handleTemplateCategoryChange(body);
+        break;
 
       case WaEvent.DELIVERED:
       case WaEvent.READ:
@@ -228,6 +231,25 @@ async function handleTemplateStatusChange(body: WaMessageBody) {
   await Promise.all(promises);
 }
 
+async function handleTemplateCategoryChange(body: WaMessageBody) {
+  const promises = (body.entry || []).flatMap((entry) =>
+    (entry.changes || []).map((change) =>
+      safeAsyncOperation(
+        () => templateCategoryChangeHandler(change.value as any),
+        (error) =>
+          log.error(
+            `Error handling template category change for template id ${JSON.stringify(
+              change.value,
+            )}: %o`,
+            error,
+          ),
+      ),
+    ),
+  );
+
+  await Promise.all(promises);
+}
+
 // Handler: Update message statuses
 async function handleMessageStatusEvent(
   body: WaMessageBody,
@@ -273,6 +295,30 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
       return false;
     }
     waTemplate.status = changeValue.event;
+    await updateTemplateInDb(dbTemplate.id, waTemplate);
+    return true;
+  }
+}
+
+interface TemplateCategoryChange {
+  message_template_id: number;
+  message_template_name: string;
+  message_template_language: string;
+  previous_category: string;
+  new_category: string;
+}
+async function templateCategoryChangeHandler(
+  changeValue: TemplateCategoryChange,
+) {
+  const dbTemplate = await getTemplateWithHSMId(
+    changeValue.message_template_id.toString(),
+  );
+  if (!dbTemplate || !changeValue.new_category) {
+    log.error("Template not found in db");
+    return false;
+  } else {
+    const waTemplate = dbTemplate.data;
+    waTemplate.category = changeValue.new_category;
     await updateTemplateInDb(dbTemplate.id, waTemplate);
     return true;
   }

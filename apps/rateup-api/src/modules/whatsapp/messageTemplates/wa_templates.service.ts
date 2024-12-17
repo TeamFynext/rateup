@@ -360,6 +360,7 @@ export async function updateTemplate(
   let res;
   switch (data.templateType) {
     case TemplateType.GENERAL_NOTIFICATION:
+    case TemplateType.LOYALTY:
       res = await editTemplate(
         template.orgId,
         template.data.id,

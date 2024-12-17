@@ -108,6 +108,7 @@ export async function createTemplateHandler(
     let fetchedTemplate;
     switch (request.body.templateType) {
       case TemplateType.GENERAL_NOTIFICATION:
+      case TemplateType.LOYALTY:
         const template = await createTemplate(orgId, formattedTemplate);
         //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
         fetchedTemplate = await fetchTemplate(template?.name, orgId);
@@ -221,7 +222,6 @@ export async function updateTemplateHandler(
       reply.status(403);
       return;
     }
-
     const updatedTemplate = await updateTemplate(
       request.params.templateId,
       request.body,
