@@ -48,7 +48,7 @@ const WaTemplateSelector = ({
       label={label || translations["whatsApp Template"]}
       placeholder={placeholder || translations["Select a template"]}
       data={templatesData}
-      value={value}
+      value={templatesData?.find((t) => t.value === value)?.value}
       onChange={onChange}
       {...props}
       nothingFoundMessage={"No templates found"}

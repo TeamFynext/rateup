@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  Checkbox,
   Combobox,
   Group,
   Input,
@@ -42,6 +43,11 @@ const isLReferralAction = (actionType) =>
     actionType,
   );
 
+const isLPurchaseAction = (actionType) =>
+  [
+    LoyaltyActionType.DirectPurchase,
+    LoyaltyActionType.ReferralPurchase,
+  ].includes(actionType);
 const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
   const createLoyaltyActionMutation = useCreateLoyaltyAction();
   const updateLoyaltyActionMut = useUpdateLoyaltyAction(action?.id);
@@ -60,9 +66,10 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
         message: "End date cannot be empty",
       }),
       waTemplateId: z.string(),
-      refereePoints: z
-        .number()
-        .min(1, { message: "Points should be minimum of zero" }),
+      refereePoints: z.number().optional(),
+      isAmountBased: z.boolean().optional(),
+      amount: z.number().optional(),
+      maxPoints: z.number().optional(),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -82,6 +89,9 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       endDate: action?.endDate || null,
       waTemplateId: action?.waTemplateId || null,
       refereePoints: action?.refereePoints || 0,
+      isAmountBased: action?.isAmountBased || false,
+      amount: action?.amount || 0,
+      maxPoints: action?.maxPoints,
     },
     validate: zodResolver(schema),
   });
@@ -130,7 +140,7 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       centered
       includeCancelButton
       buttonTitle={action ? "Update" : "Create"}
-      onSubmit={form.onSubmit(handleSubmit)}
+      onSubmit={handleSubmit}
       cancelOnClick={() => {
         form.reset();
         close();
@@ -145,18 +155,58 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
           disabled={!!action}
         />
         <ContainedTextField label={"Name"} {...form.getInputProps("name")} />
+        <Checkbox
+          label={"Amount Based"}
+          {...form.getInputProps("isAmountBased")}
+          checked={form.values.isAmountBased}
+          display={
+            form.values.type && isLPurchaseAction(form.values.type)
+              ? "block"
+              : "none"
+          }
+        />
         <ContainedNumberInput
-          label={"Points"}
+          label={"Amount"}
+          {...form.getInputProps("amount")}
+          allowNegative={false}
+          display={
+            form.values.type &&
+            isLPurchaseAction(form.values.type) &&
+            form.values.isAmountBased
+              ? "block"
+              : "none"
+          }
+        />
+        <ContainedNumberInput
+          label={form.values.isAmountBased ? "Points per amount" : "Points"}
           {...form.getInputProps("points")}
           allowDecimal={false}
           allowNegative={false}
         />
+
         <ContainedNumberInput
           label={"Points for referee"}
           {...form.getInputProps("refereePoints")}
           allowDecimal={false}
           allowNegative={false}
-          display={isLReferralAction(form.values.type) ? "block" : "none"}
+          display={
+            form.values.type && isLReferralAction(form.values.type)
+              ? "block"
+              : "none"
+          }
+        />
+        <ContainedNumberInput
+          label={"Max Points Per Transaction"}
+          {...form.getInputProps("maxPoints")}
+          allowDecimal={false}
+          allowNegative={false}
+          display={
+            form.values.type &&
+            isLPurchaseAction(form.values.type) &&
+            form.values.isAmountBased
+              ? "block"
+              : "none"
+          }
         />
         <Group>
           <ContainedDateInput
@@ -172,6 +222,7 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
         <WaTemplateSelector
           templateType={TemplateType.LOYALTY}
           label="WhatsApp Template(to send after action)"
+          description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
           {...form.getInputProps("waTemplateId")}
         />
       </Stack>

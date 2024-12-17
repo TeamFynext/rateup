@@ -3,7 +3,10 @@ import { isNotEmpty, useForm } from "@mantine/form";
 
 import { useReferralLoyaltyAction } from "@/backend/loyalty/actions/actions.query";
 
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedNumberInput,
+  ContainedTextField,
+} from "../input/ContainedInput/ContainedInput";
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
 import FormModalLayout from "../Modal/FormModalLayout";
 
@@ -13,6 +16,7 @@ const ReferralAction = ({ opened, close }) => {
       referralCode: "",
       refereePhone: "",
       refereeName: "",
+      amount: 0,
     },
     validate: {
       referralCode: isNotEmpty("Referral Code required"),
@@ -60,6 +64,10 @@ const ReferralAction = ({ opened, close }) => {
         <ContainedTextField
           label={"Referral Code"}
           {...form.getInputProps("referralCode")}
+        />
+        <ContainedNumberInput
+          label={"Amount (optional)"}
+          {...form.getInputProps("amount")}
         />
       </Stack>
     </FormModalLayout>

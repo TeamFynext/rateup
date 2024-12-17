@@ -3,9 +3,11 @@ import { useMemo, useState } from "react";
 import {
   ActionIcon,
   Anchor,
+  Flex,
   Group,
   Menu,
   Stack,
+  Tabs,
   Text,
   Title,
 } from "@mantine/core";
@@ -19,11 +21,14 @@ import { useLCAction } from "@/backend/loyalty/loyalty.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import RefreshButton from "@/components/Button/RefreshButton";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import LoyaltyManualCustomerActionModal from "@/components/loyalty/actions/PointsIssuance";
 import ReferralAction from "@/components/loyalty/ReferralAction";
 import { LASelector, LCSelector } from "@/components/loyalty/utils";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import styles from "@/components/Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
 import useTranslations from "@/dictionaries/useTranslation";
 import { formatDate, formatDateWithTime } from "@/utils/dateTime";
 
@@ -33,12 +38,19 @@ import {
 } from "../../../../backend/loyalty/customer/customer.query";
 import PaperLayout from "../../../../components/styled/Layouts/PaperLayout";
 import TanstackTable from "../../../../components/Table/TanstackTable";
+import Redeems from "../redeem";
+
+enum LoyaltyCustomerPageTabs {
+  Customers = "Customers",
+  Redeems = "Redeems",
+}
 
 export default function LoyaltyCustomersPage() {
   const { translations } = useTranslations();
   const [opened, { open, close }] = useDisclosure(false);
   const [referModalOpened, { open: openReferModal, close: closeReferModal }] =
     useDisclosure(false);
+  const [activeTab, setActiveTab] = useState(LoyaltyCustomerPageTabs.Customers);
   const {
     data: subscription,
     isLoading: isSubscriptionLoading,
@@ -54,17 +66,35 @@ export default function LoyaltyCustomersPage() {
     return <ErrorComponent refetch={refetch} />;
 
   return (
-    <Stack h={"100%"}>
-      <Group>
-        <Title>{translations["Customers"]}</Title>
-        <RateupButtonBlue title="Points Issuance" onClick={open} />
-        <RateupButtonBlue title="Refer" onClick={openReferModal} />
-      </Group>
-
-      <LoyaltyCustomers />
+    <Tabs
+      classNames={styles}
+      value={activeTab}
+      onChange={(value) => setActiveTab(value as LoyaltyCustomerPageTabs)}
+    >
+      <Flex justify={"center"}>
+        <Tabs.List justify="center">
+          {Object.values(LoyaltyCustomerPageTabs).map((tab) => (
+            <Tabs.Tab px={"xl"} py={"sm"} value={tab}>
+              {tab}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+      </Flex>
+      <Tabs.Panel value={LoyaltyCustomerPageTabs.Customers} mt={"sm"}>
+        <Stack>
+          <Group>
+            <RateupButtonBlue title="Points Issuance" onClick={open} />
+            <RateupButtonBlue title="Refer" onClick={openReferModal} />
+          </Group>
+          <LoyaltyCustomers />
+        </Stack>
+      </Tabs.Panel>
+      <Tabs.Panel value={LoyaltyCustomerPageTabs.Redeems} mt={"sm"}>
+        <Redeems />
+      </Tabs.Panel>
       <LoyaltyManualCustomerActionModal opened={opened} close={close} />
       <ReferralAction opened={referModalOpened} close={closeReferModal} />
-    </Stack>
+    </Tabs>
   );
 }
 
@@ -85,7 +115,7 @@ function LoyaltyCustomers() {
   );
 
   return (
-    <PaperLayout p={0} flex={1} mah={800}>
+    <PaperLayout h={"65vh"}>
       <TanstackTable columns={columns} data={customers} isPending={isPending} />
       <FormModalLayout
         opened={openedActions}
@@ -108,56 +138,6 @@ function LoyaltyCustomers() {
     </PaperLayout>
   );
 }
-
-const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
-  const lcActionMut = useLCAction();
-
-  const form = useForm({
-    initialValues: {
-      customerId: "",
-      actionId: "",
-    },
-  });
-
-  const handleCall = () => {
-    lcActionMut.mutate(form.values, {
-      onSettled: () => {
-        form.reset();
-        close();
-      },
-    });
-  };
-
-  return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={"Points Issuance"}
-      centered
-      includeCancelButton
-      cancelOnClick={() => {
-        form.reset();
-        close();
-      }}
-      buttonTitle="Issue"
-      onSubmit={handleCall}
-      isLoading={lcActionMut.isPending}
-    >
-      <Stack>
-        <LCSelector
-          label={"Customer"}
-          {...form.getInputProps("customerId")}
-          placeholder="Select"
-        />
-        <LASelector
-          label={"Action"}
-          {...form.getInputProps("actionId")}
-          placeholder="Select"
-        />
-      </Stack>
-    </FormModalLayout>
-  );
-};
 
 function generateColumns(
   openActions,
@@ -299,7 +279,7 @@ const LoyaltyCustomerAction = ({ actions }) => {
     }),
     columnHelper.accessor((row) => row.points, {
       id: "points",
-      header: "Points Earned",
+      header: "Points/Points per amount",
     }),
     columnHelper.accessor((row) => formatDateWithTime(row.createdAt), {
       id: "createdAt",

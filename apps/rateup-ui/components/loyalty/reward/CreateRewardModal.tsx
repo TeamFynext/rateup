@@ -151,6 +151,7 @@ export const LoyaltyRewardForm = ({ form }) => {
         templateType={TemplateType.LOYALTY}
         label="WhatsApp Template(to send after reward redemption)"
         {...form.getInputProps("waTemplateId")}
+        description="Dynamic variable {{1}} - customer name, {{2}} - current redeemed points"
       />
     </Stack>
   );

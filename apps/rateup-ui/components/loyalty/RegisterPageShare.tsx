@@ -13,7 +13,7 @@ const RegisterPageShare = () => {
 
   return (
     <Stack>
-      <Title order={3}>Customer Regsitration page link</Title>
+      <Title order={4}>Customer Regsitration page link</Title>
       <CopyLinkComponent
         value={`${FRONTEND_URL}/public/loyalty/${orgId}/register`}
       />

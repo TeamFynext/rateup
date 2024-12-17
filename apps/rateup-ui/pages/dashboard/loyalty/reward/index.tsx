@@ -64,7 +64,7 @@ export default function () {
     <Stack>
       <Group justify="space-between">
         <Group>
-          <Title>Rewards</Title>
+          {/* <Title>Rewards</Title> */}
           <RateupButtonBlue
             title="New Reward"
             rightIcon={<IconPlus />}
