@@ -148,7 +148,23 @@ export default function WhatsappTemplateById() {
         form.setFieldValue("buttons", []);
         break;
       default:
-        form.setFieldValue("buttons", []);
+        const currentTemplateType = form.getValues().templateType;
+        const previousTemplateType = editingItem?.templateType;
+
+        if (
+          (currentTemplateType === TemplateType.LOYALTY &&
+            previousTemplateType === TemplateType.GENERAL_NOTIFICATION) ||
+          (currentTemplateType === TemplateType.GENERAL_NOTIFICATION &&
+            previousTemplateType === TemplateType.LOYALTY) ||
+          currentTemplateType === previousTemplateType
+        ) {
+          const buttons = editingItem?.data?.components?.find(
+            (component) => component.type === "BUTTONS",
+          )?.buttons;
+          form.setFieldValue("buttons", buttons || []);
+        } else {
+          form.setFieldValue("buttons", []);
+        }
         break;
     }
   }, [form.getValues().templateType]);
