@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from "react";
 
-import { Badge, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { IconEdit, IconPlus } from "@tabler/icons-react";
+import { createColumnHelper } from "@tanstack/react-table";
 
 import { TemplateType } from "@/types/enums";
 import {
@@ -19,20 +29,27 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../Modal/FormModalLayout";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import TanstackTable from "../Table/TanstackTable";
 
 const LoyaltySettings = () => {
-  const { data: templateConfigs } = useGetAllLoyaltyTemplates();
+  const { data: templateConfigs, isPending } = useGetAllLoyaltyTemplates();
   const [opened, { open, close }] = useDisclosure(false);
 
   const [selectedConfig, setSelectedConfig] = useState(null);
 
+  const columns = generateColumnsForLoyaltyTemplate(setSelectedConfig, open);
+
   return (
-    <Stack p="xl">
+    <Stack>
       <Group>
-        <Title order={3}>Loyalty Template Configuration</Title>
-        <RateupButtonBlue title={"config"} onClick={open} />
+        <Title order={4}>Loyalty Template Configuration</Title>
+        <RateupButtonBlue
+          title={"New"}
+          leftIcon={<IconPlus />}
+          onClick={open}
+        />
       </Group>
-      <SimpleGrid cols={2}>
+      {/* <SimpleGrid cols={2}>
         {templateConfigs?.map((config) => {
           return (
             <LTemplateConfigCard
@@ -43,7 +60,14 @@ const LoyaltySettings = () => {
             />
           );
         })}
-      </SimpleGrid>
+      </SimpleGrid> */}
+      <PaperLayout>
+        <TanstackTable
+          columns={columns}
+          data={templateConfigs}
+          isPending={isPending}
+        />
+      </PaperLayout>
       <LoyaltyWaTemplateConfig
         config={selectedConfig}
         opened={opened}
@@ -106,7 +130,7 @@ export const LoyaltyWaTemplateConfig = ({
 
   useEffect(() => {
     if (config) {
-      const { createdAt, id, orgId, ...rest } = config;
+      const { createdAt, id, orgId, templateName, ...rest } = config;
       form.setValues({ ...rest });
     }
   }, [config]);
@@ -190,7 +214,8 @@ function getLoyaltyTemplateLabel(type) {
         label: "Customer Registration",
         templateLabel:
           "WhatsApp Template for Successfull Customer Registration",
-        templateDescription: "",
+        templateDescription:
+          "Dynamic variables representation - {{1}} - customer name",
       };
     case LoyaltyTemplateTypes.CustomerInfo:
       return {
@@ -200,4 +225,45 @@ function getLoyaltyTemplateLabel(type) {
           "Dynamic variables representation - {{1}} - customer name, {{2}} - points, {{3}} - ReferralCodes seperated by commas if any",
       };
   }
+}
+
+type LoyaltyTemplate = {
+  type: string;
+  templateName: string;
+  requestMessage: string;
+};
+function generateColumnsForLoyaltyTemplate(setSelectedConfig, open) {
+  const columnHelper = createColumnHelper<LoyaltyTemplate>();
+
+  return [
+    columnHelper.accessor((row) => getLoyaltyTemplateLabel(row.type).label, {
+      id: "type",
+      header: () => <span>Type</span>,
+    }),
+    columnHelper.accessor((row) => row.templateName, {
+      id: "templateName",
+      header: "WhatsApp Template",
+    }),
+    columnHelper.accessor((row) => row.requestMessage, {
+      id: "requestMessage",
+      header: "Request Message",
+    }),
+    columnHelper.accessor((row) => row, {
+      id: "action",
+      header: "",
+      cell: ({ getValue }) => {
+        return (
+          <ActionIcon
+            variant="subtle"
+            onClick={() => {
+              setSelectedConfig(getValue());
+              open();
+            }}
+          >
+            <IconEdit />
+          </ActionIcon>
+        );
+      },
+    }),
+  ];
 }

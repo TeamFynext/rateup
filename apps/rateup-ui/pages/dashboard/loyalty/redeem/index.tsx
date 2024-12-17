@@ -33,14 +33,14 @@ export default function redeems() {
   return (
     <Stack>
       <Group>
-        <Title>Redeems</Title>
+        {/* <Title>Redeems</Title> */}
         <RateupButtonBlue
           title="Redeem Reward"
           rightIcon={<IconAward />}
           onClick={open}
         />
       </Group>
-      <PaperLayout>
+      <PaperLayout h={"65vh"}>
         <TanstackTable columns={columns} data={redeems} isPending={isPending} />
       </PaperLayout>
       <ManualRedeemModal opened={opened} close={close} />

@@ -3,9 +3,10 @@
 import { axiosClient } from "../apiClient";
 import { PUBLIC_LOYALTY_BASE } from "./base";
 
-export async function createLCAction({ customerId, actionId }) {
+export async function createLCAction({ customerId, actionId, amount }) {
   await axiosClient.post(
     `${PUBLIC_LOYALTY_BASE}/customer/${customerId}/${actionId}`,
+    { amount },
   );
 }
 

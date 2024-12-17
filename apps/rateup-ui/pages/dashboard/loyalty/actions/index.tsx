@@ -44,7 +44,7 @@ const index = () => {
     <Stack>
       <Group justify="space-between">
         <Group>
-          <Title>Actions</Title>
+          {/* <Title>Actions</Title> */}
           <RateupButtonBlue
             title="New Action"
             rightIcon={<IconPlus />}
