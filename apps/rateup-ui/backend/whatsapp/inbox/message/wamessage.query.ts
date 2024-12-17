@@ -1,3 +1,4 @@
+import { IconDeviceAudioTape } from "@tabler/icons-react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -94,8 +95,5 @@ export const useExportWaChats = () => {
 export const useGetMediaFile = () => {
   return useMutation({
     mutationFn: getWaChatMediaFile,
-    onError: (error) => {
-      showErrorToast(error?.message || "Error fetching media file");
-    },
   });
 };

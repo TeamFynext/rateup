@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+
 import { ActionIcon, Group } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
 
@@ -9,7 +11,9 @@ interface Props {
 }
 
 export default function WaInboxAudio({ messageContent }: Props) {
-  const { data, mutate, isSuccess, isPending } = useGetMediaFile();
+  const { mutate, isPending } = useGetMediaFile();
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleAudioError = () => {
     showErrorToast(
@@ -20,35 +24,54 @@ export default function WaInboxAudio({ messageContent }: Props) {
   };
 
   const handleDownload = () => {
-    mutate(messageContent);
+    mutate(messageContent, {
+      onSuccess: (fileData) => {
+        // Create a Blob URL from the fetched audio data
+        const blob = new Blob([fileData], { type: "audio/ogg" });
+        const url = URL.createObjectURL(blob);
+        setAudioSrc(url);
+
+        // Play the audio automatically
+        if (audioRef.current) {
+          audioRef.current.load();
+          audioRef.current.play().catch((err) => {
+            console.error("Failed to play audio:", err);
+          });
+        }
+      },
+      onError: () => {
+        showErrorToast(
+          "Failed to download audio file",
+          "error-audio-download",
+          <IconDeviceAudioTape />,
+        );
+      },
+    });
   };
 
   return (
     <Group pt={"xs"} align="center" pos={"relative"}>
-      {data && isSuccess ? (
-        <audio controls style={{ flex: 1 }} onError={handleAudioError}>
-          <source src={data} type="audio/mpeg" />
-          Your browser does not support the audio element.
-        </audio>
-      ) : (
-        <>
-          <audio controls style={{ flex: 1 }}>
-            <source src={data || ""} type="audio/mpeg" />
-            Your browser does not support the audio element.
-          </audio>
-          <ActionIcon
-            pos={"absolute"}
-            right={10}
-            radius={"xl"}
-            size={"lg"}
-            onClick={handleDownload}
-            aria-label="Download Audio"
-            loading={isPending}
-          >
-            <IconDownload />
-          </ActionIcon>
-        </>
-      )}
+      <audio
+        ref={audioRef}
+        controls
+        style={{ flex: 1 }}
+        onError={audioSrc ? handleAudioError : undefined}
+      >
+        <source src={audioSrc || ""} type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
+      <ActionIcon
+        pos={"absolute"}
+        right={10}
+        radius={"xl"}
+        size={"lg"}
+        onClick={handleDownload}
+        aria-label="Download Audio"
+        loading={isPending}
+        display={audioSrc ? "none" : "flex"}
+      >
+        <IconDownload />
+      </ActionIcon>
     </Group>
   );
 }

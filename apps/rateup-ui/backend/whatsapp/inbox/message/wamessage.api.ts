@@ -89,42 +89,18 @@ export async function exportWaChats({
 }
 
 export async function getWaChatMediaFile(mediaId: string) {
-  const cachedData = getFromLocalStorage(`mediaUrl_${mediaId}`);
-
-  if (cachedData && dayjs().isBefore(dayjs(cachedData.expiry))) {
-    return cachedData.url;
-  }
-
   try {
-    const url = (
-      await axiosClient.get(`${WA_CONTACT_BASE_PATH}/mediafile/${mediaId}`)
-    ).data;
-
-    saveToLocalStorage(`mediaUrl_${mediaId}`, {
-      url,
-      expiry: new Date(new Date().getTime() + 5 * 60 * 1000).toISOString(),
-    });
-
-    setTimeout(
-      () => {
-        localStorage.removeItem(`mediaUrl_${mediaId}`);
+    const response = await axiosClient.get(
+      `${WA_CONTACT_BASE_PATH}/mediafile/${mediaId}`,
+      {
+        responseType: "arraybuffer", // Ensure the response is returned as raw binary data
       },
-      5 * 60 * 1000,
     );
 
-    return url;
+    // Convert the binary data to a Blob and return it
+    return new Blob([response.data]);
   } catch (error) {
-    console.error("Failed to fetch audio file:", error);
-    throw new Error(error);
+    console.error("Error fetching media file:", error);
+    throw error;
   }
-}
-
-function saveToLocalStorage(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-// Function to get data from local storage
-function getFromLocalStorage(key) {
-  const value = localStorage.getItem(key);
-  return value ? JSON.parse(value) : null;
 }
