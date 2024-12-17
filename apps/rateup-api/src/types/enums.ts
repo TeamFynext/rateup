@@ -182,6 +182,7 @@ export enum WaFlowStatus {
 // changes.field
 export enum WaEvent {
   TemplateStatusChange = "message_template_status_update",
+  TemplateCategoryUpdate = "template_category_update",
   Message = "messages",
   DELIVERED = "delivered",
   SENT = "sent",

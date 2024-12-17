@@ -14,6 +14,7 @@ import {
 import { log } from "../../../../utils/logger";
 import { callWhatsappApi } from "../../wa_axios";
 import { getWaSettings } from "../../settings/wa_settings.service";
+import axios from "axios";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -416,7 +417,19 @@ export async function getMediaFile(mediaId: string, orgId: string) {
     "GET",
     waSettings.accessToken,
   );
-  return fileUrl?.data.url;
+  if (fileUrl?.data) {
+    // Step 2: Convert the downloaded media to a Buffer (for binary data)
+    const fileResponse = await axios.get(fileUrl?.data.url, {
+      responseType: "arraybuffer",
+      headers: {
+        Authorization: `Bearer ${waSettings.accessToken}`,
+      },
+    });
+    // const imageBuffer = Buffer.from(fileResponse.data, "binary");
+    return fileResponse.data;
+  } else {
+    log.error("Failed to download media file from WhatsApp API.");
+  }
 }
 
 export async function exportWhatsapChats(
