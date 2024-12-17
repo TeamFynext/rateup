@@ -158,8 +158,24 @@ export async function handleLoyaltyRegister(phone, name, orgId) {
     LoyaltyTemplateTypes.CustomerRegistration,
     orgId,
   );
-  if (template)
-    await sendTemplateToUserCore(orgId, template.waTemplateId, res.phone, []);
+  if (template) {
+    const dynamicVariables = [res.name];
+    const components = [];
+    components.push({
+      type: "body",
+      parameters: dynamicVariables.map((data: string) => ({
+        type: "text",
+        text: data,
+      })),
+    });
+    await sendTemplateToUserCore(
+      orgId,
+      template.waTemplateId,
+      res.phone,
+      components,
+    );
+  }
+
   await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
 }
 
