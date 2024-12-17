@@ -257,26 +257,26 @@ export function getNavTopData(
             label: translations["Loyalty"],
             href: "",
             submenus: [
-              {
-                Icon: IconHandClick,
-                label: translations["Actions"],
-                href: "/dashboard/loyalty/actions",
-              },
-              {
-                Icon: IconAward,
-                label: translations["Rewards"],
-                href: "/dashboard/loyalty/reward",
-              },
+              // {
+              //   Icon: IconHandClick,
+              //   label: translations["Actions"],
+              //   href: "/dashboard/loyalty/actions",
+              // },
+              // {
+              //   Icon: IconAward,
+              //   label: translations["Rewards"],
+              //   href: "/dashboard/loyalty/reward",
+              // },
               {
                 Icon: IconUsers,
                 label: translations["Customers"],
                 href: "/dashboard/loyalty/customer",
               },
-              {
-                Icon: IconStar,
-                label: translations["Redeems"],
-                href: "/dashboard/loyalty/redeem",
-              },
+              // {
+              //   Icon: IconStar,
+              //   label: translations["Redeems"],
+              //   href: "/dashboard/loyalty/redeem",
+              // },
               {
                 Icon: IconSettings,
                 label: translations["Settings"],

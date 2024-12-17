@@ -41,8 +41,10 @@ export function RewardCard({ reward }) {
             <RewardCardMenuItems rewardId={reward.id} />
           </CardMenu>
         </Group>
-        <LoyaltyPoint points={reward?.points} />
-        <CreatedSinceText createdAt={reward.createdAt} />
+        <Group justify="space-between">
+          <LoyaltyPoint points={reward?.points} />
+          <CreatedSinceText createdAt={reward.createdAt} />
+        </Group>
       </Stack>
       <CreateRewardModal opened={opened} close={close} reward={reward} />
     </PaperLayout>
