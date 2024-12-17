@@ -11,6 +11,7 @@ import {
 import { $lActionRef } from "./actions.schema";
 import { getVerifySubscriptionHandler } from "../../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { $lCustomerRef } from "../customer/customer.schema";
 
 export async function loyaltyActionsRoutes(server: FastifyInstance) {
   server.addHook(
@@ -66,6 +67,7 @@ export async function loyaltyActionsRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $lActionRef("byReferralCodeParamsSchema"),
+        body: $lActionRef("referSchema"),
       },
     },
     referActionHandler,

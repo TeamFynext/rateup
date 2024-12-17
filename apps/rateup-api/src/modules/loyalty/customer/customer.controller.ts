@@ -1,6 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "../../../utils/logger";
-import { CustomerActionParamInput, LCustomerInput } from "./customer.schema";
+import {
+  AmountInput,
+  CustomerActionParamInput,
+  LCustomerInput,
+} from "./customer.schema";
 import {
   createLCustomer,
   deleteLoyaltyCustomer,
@@ -28,8 +32,23 @@ export async function createLCustomerHandler(
       LoyaltyTemplateTypes.CustomerRegistration,
       orgId,
     );
-    if (template)
-      await sendTemplateToUserCore(orgId, template.waTemplateId, res.phone, []);
+    if (template) {
+      const dynamicVariables = [res.name];
+      const components = [];
+      components.push({
+        type: "body",
+        parameters: dynamicVariables.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
+      await sendTemplateToUserCore(
+        orgId,
+        template.waTemplateId,
+        res.phone,
+        components,
+      );
+    }
     await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
   } catch (e) {
     log.error(e);
@@ -38,28 +57,42 @@ export async function createLCustomerHandler(
 }
 
 export async function customerActionHandler(
-  request: FastifyRequest<{ Params: CustomerActionParamInput }>,
+  request: FastifyRequest<{
+    Params: CustomerActionParamInput;
+    Body: AmountInput;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { actionId, customerId } = request.params;
-    const { success, data, message } = await handleLCustomerAction(
+    const { amount } = request.body;
+    const { success, data, message } = await handleLCustomerAction({
       customerId,
       actionId,
-    );
+      amount,
+    });
     if (!success) {
       return reply.code(403).send(message);
     }
-    const { customer, customerAction } = data;
+    const { customer, customerAction, customerPoints } = data;
     reply.code(200).send({
       message: "Success",
       totlaEarnedPoints: customer.totalEarnedPoints,
+    });
+    const dynamicVariables = [customer.name, customerPoints?.toString()];
+    const components = [];
+    components.push({
+      type: "body",
+      parameters: dynamicVariables.map((data: string) => ({
+        type: "text",
+        text: data,
+      })),
     });
     await sendTemplateToUserCore(
       customer.orgId,
       customerAction.action.waTemplateId,
       customer.phone,
-      [],
+      components,
     );
   } catch (e) {
     log.error(e);

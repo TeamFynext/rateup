@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "LoyaltyAction" ADD COLUMN     "amount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "isAmountBased" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "maxPoints" INTEGER;
