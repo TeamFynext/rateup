@@ -214,7 +214,8 @@ function getLoyaltyTemplateLabel(type) {
         label: "Customer Registration",
         templateLabel:
           "WhatsApp Template for Successfull Customer Registration",
-        templateDescription: "",
+        templateDescription:
+          "Dynamic variables representation - {{1}} - customer name",
       };
     case LoyaltyTemplateTypes.CustomerInfo:
       return {
