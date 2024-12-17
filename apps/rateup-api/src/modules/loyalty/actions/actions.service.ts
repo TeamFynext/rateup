@@ -1,5 +1,7 @@
+import { LoyaltyAction } from "@prisma/client";
 import prisma from "../../../utils/prisma";
 import { lActionUpdateInput, loyaltyActionInput } from "./actions.schema";
+import { string } from "zod";
 
 export async function createLoyaltyAction(
   data: loyaltyActionInput,
@@ -15,6 +17,9 @@ export async function createLoyaltyAction(
       startDate: data.startDate,
       waTemplateId: data.waTemplateId,
       orgId: orgId,
+      amount: data.amount,
+      isAmountBased: data.isAmountBased ?? false,
+      maxPoints: data.maxPoints,
     },
   });
 }

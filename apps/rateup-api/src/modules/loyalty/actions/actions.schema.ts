@@ -11,6 +11,9 @@ const lActionSchema = z.object({
   name: z.string(),
   type: z.nativeEnum(LoyaltyActionType),
   points: z.number(),
+  isAmountBased: z.boolean().optional(),
+  amount: z.number().optional(),
+  maxPoints: z.number().optional(),
   refereePoints: z.number().optional(),
   startDate: z.date(),
   endDate: z.date(),
@@ -34,6 +37,11 @@ const byReferralCodeParamsSchema = z.object({
   referralCode: z.string(),
 });
 
+const referSchema = z.object({
+  refereePhone: z.string(),
+  refereeName: z.string().optional(),
+  amount: z.number().optional(),
+});
 export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
   buildJsonSchemas(
     {
@@ -41,6 +49,7 @@ export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
       byLActiondIdParamSchema,
       lActionUpdateSchema,
       byReferralCodeParamsSchema,
+      referSchema,
     },
     {
       $id: "loyaltyActionSchema",
@@ -53,3 +62,4 @@ export type lActionUpdateInput = z.infer<typeof lActionUpdateSchema>;
 export type ByReferralCodeParamInput = z.infer<
   typeof byReferralCodeParamsSchema
 >;
+export type ReferralInput = z.infer<typeof referSchema>;

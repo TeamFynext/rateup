@@ -30,6 +30,7 @@ export async function loyaltyCustomerPublicRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $lCustomerRef("actionCustomerIdParamSchema"),
+        body: $lCustomerRef("amountSchema"),
       },
     },
     customerActionHandler,

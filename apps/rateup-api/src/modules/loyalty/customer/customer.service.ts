@@ -18,7 +18,7 @@ import {
 import { RedeemStatus } from "../redeems/redeem.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
-import { isLReferralAction } from "../util";
+import { isLReferralAction, isPurchaseAction } from "../util";
 
 export async function createLCustomer(input: LCustomerInput) {
   return await prisma.loyaltyCustomer.create({
@@ -303,12 +303,19 @@ export async function getLoyaltyCustomerOrActionByReferralCode(referralCode) {
   });
 }
 
-export async function handleLCustomerAction(
+export async function handleLCustomerAction({
   customerId,
   actionId,
-  refereePhone?,
-  refereeName?,
-) {
+  refereePhone,
+  refereeName,
+  amount,
+}: {
+  customerId: string;
+  actionId: string;
+  refereePhone?: string;
+  refereeName?: string;
+  amount?: number;
+}) {
   const action = await getLoyaltyActionById(actionId);
   if (
     dayjs().isBefore(dayjs(action.startDate)) ||
@@ -317,6 +324,7 @@ export async function handleLCustomerAction(
     return { success: false, message: "Action Not available on this date" };
   }
   let referee;
+  let refereePoints = action.refereePoints;
   if (isLReferralAction(action.type) && refereePhone) {
     referee = await getLCustomerByPhone(refereePhone, action.orgId);
     if (!referee) {
@@ -335,18 +343,27 @@ export async function handleLCustomerAction(
       return { success: false, message: "Already referred by this number" };
     }
     const refereeAction = await createCustomerAction(referee.id, actionId);
-    referee = await updateLCustomerPoint(referee.id, action.refereePoints);
+    if (isPurchaseAction(action.type) && action.isAmountBased) {
+      const points = Math.round((action.points / action.amount) * amount);
+      refereePoints = points > action?.maxPoints ? action.maxPoints : points;
+    }
+    referee = await updateLCustomerPoint(referee.id, refereePoints);
+  }
+  let customerPoints = action.points;
+  if (isPurchaseAction(action.type) && action.isAmountBased) {
+    const points = Math.round((action.points / action.amount) * amount);
+    customerPoints = points > action?.maxPoints ? action.maxPoints : points;
   }
   const customerAction = await createCustomerAction(
     customerId,
     actionId,
     refereePhone,
   );
-  const customer = await updateLCustomerPoint(
-    customerId,
-    customerAction.action.points,
-  );
-  return { success: true, data: { customer, customerAction, referee } };
+  const customer = await updateLCustomerPoint(customerId, customerPoints);
+  return {
+    success: true,
+    data: { customer, customerAction, referee, customerPoints, refereePoints },
+  };
 }
 
 export async function getLCustomerActionByRefereePhone(

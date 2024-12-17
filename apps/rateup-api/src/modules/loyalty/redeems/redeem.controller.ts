@@ -25,11 +25,23 @@ export async function redeemPointsHandler(
         message: "Success",
         totalRedeemedPoints: customer.redeemedPoints,
       });
+      const dynamicVariables = [
+        customer.name,
+        redeem.reward.points?.toString(),
+      ];
+      const components = [];
+      components.push({
+        type: "body",
+        parameters: dynamicVariables.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
       await sendTemplateToUserCore(
         customer.orgId,
         redeem.reward.waTemplateId,
         customer.phone,
-        [],
+        components,
       );
     } else {
       reply.code(403).send(message);

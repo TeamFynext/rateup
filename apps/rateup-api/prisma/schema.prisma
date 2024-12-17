@@ -1133,6 +1133,9 @@ model LoyaltyAction {
   name          String
   points        Int
   refereePoints  Int?
+  isAmountBased  Boolean                  @default(false)
+  amount        Float                     @default(0)
+  maxPoints     Int?  //Max points per transaction                           
   startDate     DateTime
   endDate       DateTime
   createdAt     DateTime                   @default(now())
