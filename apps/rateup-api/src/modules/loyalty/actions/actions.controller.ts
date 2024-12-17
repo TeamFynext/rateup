@@ -12,6 +12,7 @@ import {
   lActionIdParamInput,
   lActionUpdateInput,
   loyaltyActionInput,
+  ReferralInput,
 } from "./actions.schema";
 import prisma from "../../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
@@ -137,40 +138,61 @@ export async function verifyLActionMaxCountRestriction(
 export async function referActionHandler(
   request: FastifyRequest<{
     Params: ByReferralCodeParamInput;
-    Body: { refereePhone?: string; refereeName?: string };
+    Body: ReferralInput;
   }>,
   reply: FastifyReply,
 ) {
   try {
     const { referralCode } = request.params;
-    const { refereePhone, refereeName } = request.body;
+    const { refereePhone, refereeName, amount } = request.body;
     const { customerId, actionId } =
       await getLoyaltyCustomerOrActionByReferralCode(referralCode);
-    const { success, data, message } = await handleLCustomerAction(
+    const { success, data, message } = await handleLCustomerAction({
       customerId,
       actionId,
       refereePhone,
       refereeName,
-    );
+      amount,
+    });
     if (!success) {
       return reply.code(403).send(message);
     }
-    const { customer, customerAction, referee } = data;
+    const { customer, customerAction, referee, customerPoints, refereePoints } =
+      data;
 
     reply.code(200).send(customerAction);
+
     if (referee) {
+      const dynamicVariables = [referee.name, refereePoints?.toString()];
+      const components = [];
+      components.push({
+        type: "body",
+        parameters: dynamicVariables.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
       await sendTemplateToUserCore(
         referee.orgId,
         customerAction.action.waTemplateId,
         referee.phone,
-        [],
+        components,
       );
     }
+    const dynamicVariables = [customer.name, customerPoints?.toString()];
+    const components = [];
+    components.push({
+      type: "body",
+      parameters: dynamicVariables.map((data: string) => ({
+        type: "text",
+        text: data,
+      })),
+    });
     await sendTemplateToUserCore(
       customer.orgId,
       customerAction.action.waTemplateId,
       customer.phone,
-      [],
+      components,
     );
   } catch (e) {
     log.error(e);
