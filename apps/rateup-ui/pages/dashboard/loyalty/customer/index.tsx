@@ -281,6 +281,17 @@ const LoyaltyCustomerAction = ({ actions }) => {
       id: "points",
       header: "Points/Points per amount",
     }),
+    columnHelper.accessor((row) => row.amountSpent, {
+      id: "amountSpent",
+      header: "Amount Spent",
+    }),
+    columnHelper.accessor(
+      (row) => Math.round((row.points / row.amount) * row.amountSpent),
+      {
+        id: "totalPoints",
+        header: "TotalPoints",
+      },
+    ),
     columnHelper.accessor((row) => formatDateWithTime(row.createdAt), {
       id: "createdAt",
       header: "Date Completed",
