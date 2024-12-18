@@ -769,10 +769,12 @@ declare global {
     points: number;
     orgId: string;
   };
-
+  //for customer table
   type LoyaltyAction = {
     name: string;
     points: number;
+    amount?: number;
+    amountSpent?: number;
     createdAt: Date;
   };
 

@@ -162,9 +162,9 @@ export const LoyaltyWaTemplateConfig = ({
         <ContainedSelection data={typeData} {...form.getInputProps("type")} />
         <WaTemplateSelector
           templateType={TemplateType.LOYALTY}
-          label={getLoyaltyTemplateLabel(form.values.type).templateLabel}
+          label={getLoyaltyTemplateLabel(form.values.type)?.templateLabel}
           description={
-            getLoyaltyTemplateLabel(form.values.type).templateDescription
+            getLoyaltyTemplateLabel(form.values.type)?.templateDescription
           }
           {...form.getInputProps("waTemplateId")}
         />
@@ -187,7 +187,7 @@ const LTemplateConfigCard = ({ config, setSelectedConfig, open }) => {
       style={{ cursor: "pointer" }}
     >
       <Stack>
-        <Title order={5}>{getLoyaltyTemplateLabel(config?.type).label}</Title>
+        <Title order={5}>{getLoyaltyTemplateLabel(config?.type)?.label}</Title>
         <Group justify="space-between">
           <Group gap={1}>
             <Text size="sm">WhatsApp Template:</Text>
@@ -223,6 +223,12 @@ function getLoyaltyTemplateLabel(type) {
         templateLabel: "WhatsApp Template for Customer Info request",
         templateDescription:
           "Dynamic variables representation - {{1}} - customer name, {{2}} - points, {{3}} - ReferralCodes seperated by commas if any",
+      };
+    default:
+      return {
+        label: "",
+        templateLabel: "",
+        templateDescription: "",
       };
   }
 }
