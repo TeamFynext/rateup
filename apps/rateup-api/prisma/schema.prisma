@@ -1194,8 +1194,9 @@ model LoyaltyActionCustomerMap {
   customerId String          @db.Uuid
   customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   actionId   String          @db.Uuid
-  action     LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  action     LoyaltyAction   @relation(fields: [actionId], references: [id])
   refereePhone String?
+  amount     Float?  //amount spent on action
   createdAt  DateTime        @default(now())
 }
 

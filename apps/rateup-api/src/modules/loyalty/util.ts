@@ -8,5 +8,8 @@ export const isLReferralAction = (actionType) =>
 export const isPurchaseAction = (actionType) =>
   [
     LoyaltyActionType.ReferralPurchase,
-    LoyaltyActionType.ReferralPurchase,
+    LoyaltyActionType.DirectPurchase,
   ].includes(actionType);
+
+export const parsePhoneforWa = (phone: string) =>
+  phone && phone.startsWith("+") ? phone.slice(1) : phone;

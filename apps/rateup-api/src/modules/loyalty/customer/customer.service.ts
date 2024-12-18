@@ -18,13 +18,13 @@ import {
 import { RedeemStatus } from "../redeems/redeem.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
-import { isLReferralAction, isPurchaseAction } from "../util";
+import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
 
 export async function createLCustomer(input: LCustomerInput) {
   return await prisma.loyaltyCustomer.create({
     data: {
       name: input.name,
-      phone: input.phone.startsWith("+") ? input.phone.slice(1) : input.phone,
+      phone: parsePhoneforWa(input.phone),
       email: input.email,
       orgId: input.orgId,
     },
@@ -34,16 +34,23 @@ export async function createLCustomer(input: LCustomerInput) {
   });
 }
 
-export async function createCustomerAction(
+export async function createCustomerAction({
   customerId,
   actionId,
-  refereePhone?,
-) {
+  refereePhone,
+  amount,
+}: {
+  customerId: string;
+  actionId: string;
+  refereePhone?: string;
+  amount?: number;
+}) {
   return await prisma.loyaltyActionCustomerMap.create({
     data: {
       customerId,
       actionId,
-      refereePhone,
+      refereePhone: parsePhoneforWa(refereePhone),
+      amount,
     },
     include: {
       action: true,
@@ -110,6 +117,7 @@ export async function getLoyaltyCustomers(orgId) {
       actionObj[action.action.type].push({
         ...action.action,
         createdAt: action.createdAt,
+        amountSpent: action.amount,
       });
     });
     return {
@@ -206,7 +214,7 @@ export async function updateLCustomer(phone, orgId, data) {
   return await prisma.loyaltyCustomer.update({
     where: {
       loyalty_phone_org_id_unique: {
-        phone,
+        phone: parsePhoneforWa(phone),
         orgId,
       },
     },
@@ -218,7 +226,7 @@ export async function getLCustomerByPhone(phone, orgId) {
   return await prisma.loyaltyCustomer.findUnique({
     where: {
       loyalty_phone_org_id_unique: {
-        phone: phone.startsWith("+") ? phone.slice(1) : phone,
+        phone: parsePhoneforWa(phone),
         orgId,
       },
     },
@@ -359,7 +367,11 @@ export async function handleLCustomerAction({
     if (res) {
       return { success: false, message: "Already referred by this number" };
     }
-    const refereeAction = await createCustomerAction(referee.id, actionId);
+    const refereeAction = await createCustomerAction({
+      customerId: referee.id,
+      actionId,
+      amount,
+    });
     if (isPurchaseAction(action.type) && action.isAmountBased) {
       const points = Math.round((action.points / action.amount) * amount);
       refereePoints = points > action?.maxPoints ? action.maxPoints : points;
@@ -371,11 +383,12 @@ export async function handleLCustomerAction({
     const points = Math.round((action.points / action.amount) * amount);
     customerPoints = points > action?.maxPoints ? action.maxPoints : points;
   }
-  const customerAction = await createCustomerAction(
+  const customerAction = await createCustomerAction({
     customerId,
     actionId,
     refereePhone,
-  );
+    amount,
+  });
   const customer = await updateLCustomerPoint(customerId, customerPoints);
   return {
     success: true,
