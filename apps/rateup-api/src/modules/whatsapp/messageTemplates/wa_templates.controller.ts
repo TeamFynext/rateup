@@ -585,6 +585,8 @@ export async function sendTemplateToUserCore(
         })),
       });
     }
+  } else {
+    templateQuery.components = components.filter((c) => c.type !== "body");
   }
   let templateMessage;
   if (dbTemplate.templateType === TemplateType.ORDER_DETAILS) {
