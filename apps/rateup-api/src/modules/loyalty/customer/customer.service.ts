@@ -24,7 +24,7 @@ export async function createLCustomer(input: LCustomerInput) {
   return await prisma.loyaltyCustomer.create({
     data: {
       name: input.name,
-      phone: input.phone,
+      phone: input.phone.startsWith("+") ? input.phone.slice(1) : input.phone,
       email: input.email,
       orgId: input.orgId,
     },
@@ -218,7 +218,7 @@ export async function getLCustomerByPhone(phone, orgId) {
   return await prisma.loyaltyCustomer.findUnique({
     where: {
       loyalty_phone_org_id_unique: {
-        phone: phone[0] !== "+" ? `+${phone}` : phone,
+        phone: phone.startsWith("+") ? phone.slice(1) : phone,
         orgId,
       },
     },
@@ -230,7 +230,7 @@ export async function getLCustomerByPhone(phone, orgId) {
 
 export async function getLoyaltyDetailsToCustomer(phone, orgId) {
   let customer = await getLCustomerByPhone(phone, orgId);
-  const actions = (await getLoyaltyActions(customer.orgId)).filter((a) =>
+  const actions = (await getLoyaltyActions(orgId)).filter((a) =>
     [
       LoyaltyActionType.ReferFriend,
       LoyaltyActionType.ReferralPurchase,
@@ -260,7 +260,7 @@ export async function handleCustomerInfoWaRequest(phone, orgId) {
     );
     const template = await getLoyaltyTemplate(
       LoyaltyTemplateTypes.CustomerInfo,
-      customer.orgId,
+      orgId,
     );
     if (template) {
       const dynamicVariables = [
@@ -285,6 +285,7 @@ export async function handleCustomerInfoWaRequest(phone, orgId) {
     }
   } catch (e) {
     log.error(e);
+    throw e;
   }
 }
 
