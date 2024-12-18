@@ -66,10 +66,10 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
         message: "End date cannot be empty",
       }),
       waTemplateId: z.string(),
-      refereePoints: z.number().optional(),
-      isAmountBased: z.boolean().optional(),
-      amount: z.number().optional(),
-      maxPoints: z.number().optional(),
+      refereePoints: z.number().optional().nullable(),
+      isAmountBased: z.boolean().optional().nullable(),
+      amount: z.number().optional().nullable(),
+      maxPoints: z.number().optional().nullable(),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -91,12 +91,13 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       refereePoints: action?.refereePoints || 0,
       isAmountBased: action?.isAmountBased || false,
       amount: action?.amount || 0,
-      maxPoints: action?.maxPoints,
+      maxPoints: action?.maxPoints || 0,
     },
     validate: zodResolver(schema),
   });
 
   function handleSubmit() {
+    console.log("form.validate()", form.validate());
     if (form.validate().hasErrors) return;
     if (action) {
       const { type, ...rest } = form.values;
@@ -146,7 +147,10 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
         close();
       }}
       size={"500px"}
-      isLoading={createLoyaltyActionMutation.isPending}
+      isLoading={
+        createLoyaltyActionMutation.isPending ||
+        updateLoyaltyActionMut.isPending
+      }
     >
       <Stack>
         <LoyaltyActionSelect
