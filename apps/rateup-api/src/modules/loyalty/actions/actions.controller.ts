@@ -162,7 +162,7 @@ export async function referActionHandler(
 
     reply.code(200).send(customerAction);
 
-    if (referee) {
+    if (referee && customerAction.action.refereeWaTemplateId) {
       const dynamicVariables = [referee.name, refereePoints?.toString()];
       const components = [];
       components.push({
@@ -174,26 +174,28 @@ export async function referActionHandler(
       });
       await sendTemplateToUserCore(
         referee.orgId,
-        customerAction.action.waTemplateId,
+        customerAction.action.refereeWaTemplateId,
         referee.phone,
         components,
       );
     }
-    const dynamicVariables = [customer.name, customerPoints?.toString()];
-    const components = [];
-    components.push({
-      type: "body",
-      parameters: dynamicVariables.map((data: string) => ({
-        type: "text",
-        text: data,
-      })),
-    });
-    await sendTemplateToUserCore(
-      customer.orgId,
-      customerAction.action.waTemplateId,
-      customer.phone,
-      components,
-    );
+    if (customerAction.action.waTemplateId) {
+      const dynamicVariables = [customer.name, customerPoints?.toString()];
+      const components = [];
+      components.push({
+        type: "body",
+        parameters: dynamicVariables.map((data: string) => ({
+          type: "text",
+          text: data,
+        })),
+      });
+      await sendTemplateToUserCore(
+        customer.orgId,
+        customerAction.action.waTemplateId,
+        customer.phone,
+        components,
+      );
+    }
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

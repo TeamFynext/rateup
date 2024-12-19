@@ -18,6 +18,7 @@ const lActionSchema = z.object({
   startDate: z.date(),
   endDate: z.date(),
   waTemplateId: z.string().optional(),
+  refereeWaTemplateId: z.string().optional(),
 });
 
 const lActionUpdateSchema = z.object({
@@ -27,6 +28,7 @@ const lActionUpdateSchema = z.object({
   endDate: z.date().optional(),
   waTemplateId: z.string().optional(),
   refereePoints: z.number().optional(),
+  refereeWaTemplateId: z.string().optional(),
 });
 
 const byLActiondIdParamSchema = z.object({

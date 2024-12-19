@@ -600,8 +600,11 @@ model WaTemplate {
   Campaign          Campaign[]
   waMessageSchedule WaMessageSchedule[]
   loyaltyTemplates  LoyaltyTemplate[]
-  loyaltyActions    LoyaltyAction[]
   loyaltyRewards    LoyaltyReward[]
+
+  LoyaltyAction LoyaltyAction[] @relation("customer_relation")
+
+  loyaltyRefereeActions LoyaltyAction[] @relation("referee_relation")
 }
 
 model MenuLanding {
@@ -1143,8 +1146,10 @@ model LoyaltyAction {
   org           Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   customers     LoyaltyActionCustomerMap[]
   waTemplateId  String?                    @db.Uuid
-  waTemplate    WaTemplate?                @relation(fields: [waTemplateId], references: [id])
+  waTemplate    WaTemplate?                @relation("customer_relation",fields: [waTemplateId], references: [id])
   referralCodes LoyaltyReferralCode[]
+  refereeWaTemplateId String?   @db.Uuid
+  refereeWaTemplate  WaTemplate? @relation("referee_relation", fields: [refereeWaTemplateId], references: [id])
 }
 
 model LoyaltyReward {
