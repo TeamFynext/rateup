@@ -2,7 +2,6 @@ import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export enum LoyaltyActionType {
-  ReferFriend = "Refer a Friend",
   ReferralPurchase = "Referral Purchase",
   DirectPurchase = "Direct Purchase",
 }
@@ -19,6 +18,8 @@ const lActionSchema = z.object({
   endDate: z.date(),
   waTemplateId: z.string().optional(),
   refereeWaTemplateId: z.string().optional(),
+  isAmountBasedForReferee: z.boolean().optional(),
+  maxPointsForReferee: z.number().optional(),
 });
 
 const lActionUpdateSchema = z.object({
@@ -29,6 +30,8 @@ const lActionUpdateSchema = z.object({
   waTemplateId: z.string().optional(),
   refereePoints: z.number().optional(),
   refereeWaTemplateId: z.string().optional(),
+  isAmountBasedForReferee: z.boolean().optional(),
+  maxPointsForReferee: z.number().optional(),
 });
 
 const byLActiondIdParamSchema = z.object({

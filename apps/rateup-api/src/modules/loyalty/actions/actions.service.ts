@@ -23,6 +23,8 @@ export async function createLoyaltyAction(
       refereeWaTemplateId: data.refereeWaTemplateId?.length
         ? data.refereeWaTemplateId
         : undefined,
+      isAmountBasedForReferee: data.isAmountBasedForReferee,
+      maxPointsForReferee: data.maxPointsForReferee,
     },
   });
 }

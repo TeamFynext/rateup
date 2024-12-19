@@ -239,10 +239,7 @@ export async function getLCustomerByPhone(phone, orgId) {
 export async function getLoyaltyDetailsToCustomer(phone, orgId) {
   let customer = await getLCustomerByPhone(phone, orgId);
   const actions = (await getLoyaltyActions(orgId)).filter((a) =>
-    [
-      LoyaltyActionType.ReferFriend,
-      LoyaltyActionType.ReferralPurchase,
-    ].includes(a.type as LoyaltyActionType),
+    [LoyaltyActionType.ReferralPurchase].includes(a.type as LoyaltyActionType),
   );
   const customerReferralCodes = customer.referralCodes;
   const referralCodeActions = customerReferralCodes.map((c) => c.actionId);
@@ -372,9 +369,12 @@ export async function handleLCustomerAction({
       actionId,
       amount,
     });
-    if (isPurchaseAction(action.type) && action.isAmountBased) {
+    if (isPurchaseAction(action.type) && action.isAmountBasedForReferee) {
       const points = Math.round((action.points / action.amount) * amount);
-      refereePoints = points > action?.maxPoints ? action.maxPoints : points;
+      refereePoints =
+        points > action.maxPointsForReferee
+          ? action.maxPointsForReferee
+          : points;
     }
     referee = await updateLCustomerPoint(referee.id, refereePoints);
   }
