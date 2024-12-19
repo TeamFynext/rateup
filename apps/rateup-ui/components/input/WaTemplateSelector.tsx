@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { SelectProps } from "@mantine/core";
 
 import { TemplateType } from "@/types/enums";
@@ -37,9 +39,15 @@ const WaTemplateSelector = ({
     label: t?.data?.name,
   }));
 
-  if (value?.length && !templates?.map((t) => t.id).includes(value)) {
-    onChange(null);
-  }
+  useEffect(() => {
+    if (
+      value?.length &&
+      templatesData &&
+      !templatesData?.map((t) => t.value).includes(value)
+    ) {
+      onChange(null);
+    }
+  }, [value, templatesData]);
 
   if (isLoading) return <SelectSkeleton />;
 
@@ -48,7 +56,7 @@ const WaTemplateSelector = ({
       label={label || translations["whatsApp Template"]}
       placeholder={placeholder || translations["Select a template"]}
       data={templatesData}
-      value={templatesData?.find((t) => t.value === value)?.value}
+      value={value}
       onChange={onChange}
       {...props}
       nothingFoundMessage={"No templates found"}
