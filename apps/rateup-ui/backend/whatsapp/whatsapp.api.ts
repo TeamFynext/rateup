@@ -1,5 +1,9 @@
 import { WHATSAPP_URL } from ".";
-import { WaTemplateCategory, WaTemplateStatus } from "../../types/enums";
+import {
+  TemplateType,
+  WaTemplateCategory,
+  WaTemplateStatus,
+} from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 const TEMPLATES_URL = `${WHATSAPP_URL}/templates`;
@@ -18,6 +22,7 @@ export type WaTemplate = {
   };
   acceptButton: string;
   orgId: string;
+  templateType?: TemplateType;
 };
 
 /**

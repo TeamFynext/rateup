@@ -24,6 +24,9 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RefreshButton from "@/components/Button/RefreshButton";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyManualCustomerActionModal from "@/components/loyalty/actions/PointsIssuance";
+import LoyaltyCustomerAction from "@/components/loyalty/Customer/LoyaltyCustomerAction";
+import LoyaltyCustomerRedeems from "@/components/loyalty/Customer/LoyaltyCustomerRedeems";
+import LoyaltyUtilityMenu from "@/components/loyalty/Customer/LoyaltyUtilityMenu";
 import ReferralAction from "@/components/loyalty/ReferralAction";
 import { LASelector, LCSelector } from "@/components/loyalty/utils";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
@@ -82,9 +85,9 @@ export default function LoyaltyCustomersPage() {
       </Flex>
       <Tabs.Panel value={LoyaltyCustomerPageTabs.Customers} mt={"sm"}>
         <Stack>
-          <Group>
-            <RateupButtonBlue title="Points Issuance" onClick={open} />
-            <RateupButtonBlue title="Refer" onClick={openReferModal} />
+          <Group ml={"sm"}>
+            <LoyaltyUtilityMenu />
+            <RefreshButton queryKeys={["loyaltyCustomers"]} />
           </Group>
           <LoyaltyCustomers />
         </Stack>
@@ -268,57 +271,4 @@ const CustomerMenu = ({ row }) => {
       />
     </Menu>
   );
-};
-const LoyaltyCustomerAction = ({ actions }) => {
-  const columnHelper = createColumnHelper<LoyaltyAction>();
-
-  const columns = [
-    columnHelper.accessor((row) => row.name, {
-      id: "name",
-      header: () => <span>Action Name</span>,
-    }),
-    columnHelper.accessor((row) => row.points, {
-      id: "points",
-      header: "Points/Points per amount",
-    }),
-    columnHelper.accessor((row) => row.amountSpent, {
-      id: "amountSpent",
-      header: "Amount Spent",
-    }),
-    columnHelper.accessor(
-      (row) => Math.round((row.points / row.amount) * row.amountSpent),
-      {
-        id: "totalPoints",
-        header: "TotalPoints",
-      },
-    ),
-    columnHelper.accessor((row) => formatDateWithTime(row.createdAt), {
-      id: "createdAt",
-      header: "Date Completed",
-    }),
-  ];
-  return <TanstackTable columns={columns} data={actions} />;
-};
-
-const LoyaltyCustomerRedeems = ({ redeems }) => {
-  const columnHelper = createColumnHelper<LoyaltyRedeem>();
-
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor((row) => row.reward.name, {
-        id: "rewardName",
-        header: () => <span>Reward</span>,
-      }),
-      columnHelper.accessor((row) => row.reward.points, {
-        id: "points",
-        header: "Requird Points",
-      }),
-      columnHelper.accessor((row) => formatDateWithTime(row.createdAt), {
-        id: "createdAt",
-        header: "Redeemed On",
-      }),
-    ],
-    [],
-  );
-  return <TanstackTable columns={columns} data={redeems} />;
 };
