@@ -64,6 +64,7 @@ enum TemplateType {
   ORDER_DETAILS
   PAYMENT_CONFIRMATION
   LOYALTY
+  LOYALTY_REGISTRATION
 }
 
 model User {

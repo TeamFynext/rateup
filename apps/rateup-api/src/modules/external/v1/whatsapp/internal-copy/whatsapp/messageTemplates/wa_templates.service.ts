@@ -77,7 +77,7 @@ export async function getTemplatesByOrgId(orgId: string) {
       orgId: orgId,
     },
   });
-  return templates as WaTemplateWithTypes[];
+  return templates as unknown as WaTemplateWithTypes[];
 }
 
 export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
@@ -109,7 +109,7 @@ export async function getDbTemplate(templateId: string) {
         id: templateId,
       },
     });
-    return res as WaTemplateWithTypes;
+    return res as unknown as WaTemplateWithTypes;
   } catch (e: any) {
     log.error("Error getting template from db \n%o", e);
     return null;
@@ -126,7 +126,7 @@ export async function getTemplateWithHSMId(hsmId: string) {
         },
       },
     });
-    return res as WaTemplateWithTypes;
+    return res as unknown as WaTemplateWithTypes;
   } catch (e: any) {
     log.error("Error getting template from db \n%o", e);
     return null;
