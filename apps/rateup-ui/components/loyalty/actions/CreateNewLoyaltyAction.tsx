@@ -38,17 +38,21 @@ import FormModalLayout from "@/components/Modal/FormModalLayout";
 
 import classes from "./Actions.module.css";
 
-const isLReferralAction = (actionType) =>
-  [LoyaltyActionType.ReferFriend, LoyaltyActionType.ReferralPurchase].includes(
-    actionType,
-  );
+export const isLReferralAction = (actionType) =>
+  actionType && [LoyaltyActionType.ReferralPurchase].includes(actionType);
 
-const isLPurchaseAction = (actionType) =>
+export const isLPurchaseAction = (actionType) =>
+  actionType &&
   [
     LoyaltyActionType.DirectPurchase,
     LoyaltyActionType.ReferralPurchase,
   ].includes(actionType);
-const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
+const CreateNewLoyaltyAction = ({
+  opened,
+  close,
+  action = null,
+  isReferralAvailable = true,
+}) => {
   const createLoyaltyActionMutation = useCreateLoyaltyAction();
   const updateLoyaltyActionMut = useUpdateLoyaltyAction(action?.id);
 
@@ -65,11 +69,14 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       endDate: z.date().refine((date) => date !== null, {
         message: "End date cannot be empty",
       }),
-      waTemplateId: z.string(),
+      waTemplateId: z.string().optional().nullable(),
+      refereeWaTemplateId: z.string().optional().nullable(),
       refereePoints: z.number().optional().nullable(),
       isAmountBased: z.boolean().optional().nullable(),
       amount: z.number().optional().nullable(),
       maxPoints: z.number().optional().nullable(),
+      isAmountBasedForReferee: z.boolean().optional().nullable(),
+      maxPointsForReferee: z.number().optional().nullable(),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -92,6 +99,9 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
       isAmountBased: action?.isAmountBased || false,
       amount: action?.amount || 0,
       maxPoints: action?.maxPoints || 0,
+      refereeWaTemplateId: action?.refereeWaTemplateId || null,
+      isAmountBasedForReferee: action?.isAmountBasedForReferee || false,
+      maxPointsForReferee: action?.maxPointsForReferee || 0,
     },
     validate: zodResolver(schema),
   });
@@ -146,7 +156,7 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
         form.reset();
         close();
       }}
-      size={"500px"}
+      size={"lg"}
       isLoading={
         createLoyaltyActionMutation.isPending ||
         updateLoyaltyActionMut.isPending
@@ -157,47 +167,54 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
           onChange={(value) => form.setFieldValue("type", value)}
           value={form.values.type}
           disabled={!!action}
+          isReferralAvailable={isReferralAvailable}
         />
         <ContainedTextField label={"Name"} {...form.getInputProps("name")} />
-        <Checkbox
-          label={"Amount Based"}
-          {...form.getInputProps("isAmountBased")}
-          checked={form.values.isAmountBased}
-          display={
-            form.values.type && isLPurchaseAction(form.values.type)
-              ? "block"
-              : "none"
-          }
-        />
+        <Group>
+          <Checkbox
+            label={
+              isLReferralAction(form.values.type)
+                ? "Amount Based for Referrer"
+                : "Amount Based"
+            }
+            {...form.getInputProps("isAmountBased")}
+            checked={form.values.isAmountBased}
+            display={isLPurchaseAction(form.values.type) ? "block" : "none"}
+          />
+          <Checkbox
+            label={"Amount Based for Referee"}
+            {...form.getInputProps("isAmountBasedForReferee")}
+            checked={form.values.isAmountBasedForReferee}
+            display={
+              isLPurchaseAction(form.values.type) &&
+              isLReferralAction(form.values.type)
+                ? "block"
+                : "none"
+            }
+          />
+        </Group>
         <ContainedNumberInput
           label={"Amount"}
           {...form.getInputProps("amount")}
           allowNegative={false}
           display={
-            form.values.type &&
-            isLPurchaseAction(form.values.type) &&
-            form.values.isAmountBased
+            (isLPurchaseAction(form.values.type) &&
+              form.values.isAmountBased) ||
+            form.values.isAmountBasedForReferee
               ? "block"
               : "none"
           }
         />
+        {isLReferralAction(form.values.type) && (
+          <Text size="sm" fw="bold">
+            Referrer
+          </Text>
+        )}
         <ContainedNumberInput
           label={form.values.isAmountBased ? "Points per amount" : "Points"}
           {...form.getInputProps("points")}
           allowDecimal={false}
           allowNegative={false}
-        />
-
-        <ContainedNumberInput
-          label={"Points for referee"}
-          {...form.getInputProps("refereePoints")}
-          allowDecimal={false}
-          allowNegative={false}
-          display={
-            form.values.type && isLReferralAction(form.values.type)
-              ? "block"
-              : "none"
-          }
         />
         <ContainedNumberInput
           label={"Max Points Per Transaction"}
@@ -205,13 +222,53 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
           allowDecimal={false}
           allowNegative={false}
           display={
-            form.values.type &&
-            isLPurchaseAction(form.values.type) &&
-            form.values.isAmountBased
+            isLReferralAction(form.values.type) && form.values.isAmountBased
               ? "block"
               : "none"
           }
         />
+        <WaTemplateSelector
+          templateType={TemplateType.LOYALTY}
+          label={
+            isLReferralAction(form.values.type)
+              ? "WhatsApp Template for referrer(to send after action)"
+              : "WhatsApp Template(to send after action)"
+          }
+          description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
+          {...form.getInputProps("waTemplateId")}
+        />
+        {isLReferralAction(form.values.type) && (
+          <Text size="sm" fw="bold">
+            Referee
+          </Text>
+        )}
+        <ContainedNumberInput
+          label={"Points"}
+          {...form.getInputProps("refereePoints")}
+          allowDecimal={false}
+          allowNegative={false}
+          display={isLReferralAction(form.values.type) ? "block" : "none"}
+        />
+        <ContainedNumberInput
+          label={"Max Points Per Transaction"}
+          {...form.getInputProps("maxPointsForReferee")}
+          allowDecimal={false}
+          allowNegative={false}
+          display={
+            isLPurchaseAction(form.values.type) &&
+            form.values.isAmountBasedForReferee
+              ? "block"
+              : "none"
+          }
+        />
+        {isLReferralAction(form.values.type) && (
+          <WaTemplateSelector
+            templateType={TemplateType.LOYALTY}
+            label="WhatsApp Template for referee(to send after action)"
+            description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
+            {...form.getInputProps("refereeWaTemplateId")}
+          />
+        )}
         <Group>
           <ContainedDateInput
             label={"Start Date"}
@@ -223,12 +280,6 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
             {...form.getInputProps("endDate")}
           />
         </Group>
-        <WaTemplateSelector
-          templateType={TemplateType.LOYALTY}
-          label="WhatsApp Template(to send after action)"
-          description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
-          {...form.getInputProps("waTemplateId")}
-        />
       </Stack>
     </FormModalLayout>
   );
@@ -236,20 +287,18 @@ const CreateNewLoyaltyAction = ({ opened, close, action = null }) => {
 
 export default CreateNewLoyaltyAction;
 
-const LoyaltyActionSelect = ({ onChange, value, disabled }) => {
+const LoyaltyActionSelect = ({
+  onChange,
+  value,
+  disabled,
+  isReferralAvailable = true,
+}) => {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
   function getActionIcon(type, color?) {
     switch (type) {
-      case LoyaltyActionType.ReferFriend:
-        return (
-          <IconFriends
-            size={"1.2rem"}
-            color={color ?? "var(--mantine-color-gray-7)"}
-          />
-        );
       case LoyaltyActionType.ReferralPurchase:
         return (
           <Box style={{ position: "relative", display: "inline-block" }}>
@@ -276,14 +325,16 @@ const LoyaltyActionSelect = ({ onChange, value, disabled }) => {
         );
     }
   }
-  const options = Object.values(LoyaltyActionType).map((type) => (
-    <Combobox.Option value={type} key={type}>
-      <Group>
-        {getActionIcon(type)}
-        <Text size={"sm"}>{type}</Text>
-      </Group>
-    </Combobox.Option>
-  ));
+  const options = Object.values(LoyaltyActionType)
+    .filter((type) => (!isReferralAvailable ? !isLReferralAction(type) : true))
+    .map((type) => (
+      <Combobox.Option value={type} key={type}>
+        <Group>
+          {getActionIcon(type)}
+          <Text size={"sm"}>{type}</Text>
+        </Group>
+      </Combobox.Option>
+    ));
   return (
     <Combobox
       store={combobox}

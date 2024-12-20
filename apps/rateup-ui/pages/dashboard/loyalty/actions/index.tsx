@@ -11,7 +11,9 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import CreateNewLoyaltyAction from "@/components/loyalty/actions/CreateNewLoyaltyAction";
+import CreateNewLoyaltyAction, {
+  isLReferralAction,
+} from "@/components/loyalty/actions/CreateNewLoyaltyAction";
 import LoyaltyActionCard from "@/components/loyalty/actions/LoyaltyActionCard";
 import NothingFound from "@/components/NothingFound/NothingFound";
 
@@ -69,7 +71,13 @@ const index = () => {
         <NothingFound text={"No actions found"} />
       )}
 
-      <CreateNewLoyaltyAction opened={opened} close={close} />
+      <CreateNewLoyaltyAction
+        opened={opened}
+        close={close}
+        isReferralAvailable={
+          !loyaltyActions?.some((a) => isLReferralAction(a?.type))
+        }
+      />
     </Stack>
   );
 };

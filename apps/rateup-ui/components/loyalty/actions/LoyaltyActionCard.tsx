@@ -6,10 +6,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconClock, IconStarFilled } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
-import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
-import { formatDate, formatIsoDateString } from "@/utils/dateTime";
+import { formatIsoDateString } from "@/utils/dateTime";
 
 import classes from "./Actions.module.css";
 import CreateNewLoyaltyAction from "./CreateNewLoyaltyAction";
@@ -24,8 +23,6 @@ const LoyaltyActionCard = ({ action }) => {
     switch (type) {
       case LoyaltyActionType.ReferralPurchase:
         return "#2942CC";
-      case LoyaltyActionType.ReferFriend:
-        return "#0097CC";
       case LoyaltyActionType.DirectPurchase:
         return "#CC2960";
     }

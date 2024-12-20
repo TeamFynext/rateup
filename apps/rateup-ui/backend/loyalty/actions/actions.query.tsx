@@ -48,6 +48,12 @@ export type LoyaltyAction = {
   startDate?: Date;
   endDate?: Date;
   waTemplateId?: string;
+  isAmountBased?: boolean;
+  amount?: number;
+  maxPoints?: number;
+  refereeWaTemplateId?: string;
+  isAmountBasedForReferee?: boolean;
+  maxPointsForReferee?: number;
 };
 
 export const useUpdateLoyaltyAction = (actionId) => {
