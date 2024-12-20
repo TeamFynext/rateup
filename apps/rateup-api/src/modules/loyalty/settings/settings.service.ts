@@ -91,7 +91,7 @@ export async function getAllLoyaltyTemplates(orgId) {
   });
   return templates.map((t) => ({
     ...t,
-    templateName: t.waTemplate.data.name,
+    templateName: (t.waTemplate.data as WaTemplateWithTypes["data"]).name,
     waTemplate: undefined,
   }));
 }
