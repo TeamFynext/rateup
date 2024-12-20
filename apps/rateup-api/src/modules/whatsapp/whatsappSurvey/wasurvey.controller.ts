@@ -363,7 +363,7 @@ async function whatsappMessageHandler(
     await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
-  } else if (message.startsWith("Refer a Friend")) {
+  } else if (message.startsWith("Referral Code")) {
     await handleReferralCommand(from, orgId);
   } else if (message.startsWith("Loyalty Points")) {
     await handleLoyaltyPointsCommand(from, orgId);
