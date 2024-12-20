@@ -15,11 +15,16 @@ export async function createLoyaltyAction(
       type: data.type,
       refereePoints: data.refereePoints,
       startDate: data.startDate,
-      waTemplateId: data.waTemplateId,
+      waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
       orgId: orgId,
       amount: data.amount,
       isAmountBased: data.isAmountBased ?? false,
       maxPoints: data.maxPoints,
+      refereeWaTemplateId: data.refereeWaTemplateId?.length
+        ? data.refereeWaTemplateId
+        : undefined,
+      isAmountBasedForReferee: data.isAmountBasedForReferee,
+      maxPointsForReferee: data.maxPointsForReferee,
     },
   });
 }

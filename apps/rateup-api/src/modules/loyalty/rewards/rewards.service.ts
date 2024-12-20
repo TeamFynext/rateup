@@ -13,7 +13,9 @@ export async function createLoyaltyReward(
       tnc: reward.tnc,
       expireAt: reward.expireAt,
       maxPerUser: reward.maxPerUser,
-      waTemplateId: reward.waTemplateId,
+      waTemplateId: reward.waTemplateId?.length
+        ? reward.waTemplateId
+        : undefined,
       orgId,
     },
   });
