@@ -1152,6 +1152,7 @@ model LoyaltyAction {
   referralCodes LoyaltyReferralCode[]
   refereeWaTemplateId String?   @db.Uuid
   refereeWaTemplate  WaTemplate? @relation("referee_relation", fields: [refereeWaTemplateId], references: [id])
+  isExistingUserReferralAllowed  Boolean?  @default(false)
 }
 
 model LoyaltyReward {

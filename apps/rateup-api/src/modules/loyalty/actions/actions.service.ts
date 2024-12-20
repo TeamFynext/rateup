@@ -1,6 +1,10 @@
 import { LoyaltyAction } from "@prisma/client";
 import prisma from "../../../utils/prisma";
-import { lActionUpdateInput, loyaltyActionInput } from "./actions.schema";
+import {
+  lActionUpdateInput,
+  loyaltyActionInput,
+  LoyaltyActionType,
+} from "./actions.schema";
 import { string } from "zod";
 
 export async function createLoyaltyAction(
@@ -53,7 +57,13 @@ export async function updateLoyaltyActionById(
     where: {
       id,
     },
-    data,
+    data: {
+      ...data,
+      waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
+      refereeWaTemplateId: data.refereeWaTemplateId?.length
+        ? data.refereeWaTemplateId
+        : undefined,
+    },
   });
 }
 
@@ -61,6 +71,15 @@ export async function deleteLoyaltyActionById(id: string) {
   return await prisma.loyaltyAction.delete({
     where: {
       id,
+    },
+  });
+}
+
+export async function getReferralLoyaltyAction(orgId) {
+  return await prisma.loyaltyAction.findFirst({
+    where: {
+      type: LoyaltyActionType.ReferralPurchase,
+      orgId,
     },
   });
 }
