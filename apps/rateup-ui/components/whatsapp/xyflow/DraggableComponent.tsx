@@ -50,8 +50,8 @@ const DraggableComponent = ({
   const [imageError, setImageError] = useState("");
   const resetRef = useRef(null);
 
-  const handleAddField = () => {
-    if (component.name.length < 4) {
+  const handleAddField = (len) => {
+    if (component.name.length < len) {
       setNodes((nodes) =>
         nodes.map((node) =>
           node.id === id
@@ -203,7 +203,7 @@ const DraggableComponent = ({
       );
     }
   };
-  const renderDynamicTextFields = () => (
+  const renderDynamicTextFields = (len = 4) => (
     <Stack gap={"xs"} onClick={(e) => e.stopPropagation()}>
       {component.name.map((field, i) => (
         <Group key={field.id} gap={4}>
@@ -235,12 +235,12 @@ const DraggableComponent = ({
           />
         </Group>
       ))}
-      {component.name.length < 4 && (
+      {component.name.length < len && (
         <RateupButtonPrimary
           title="Add Button"
           radius={"sm"}
           leftIcon={<IconPlus />}
-          onClick={handleAddField}
+          onClick={() => handleAddField(len)}
         />
       )}
     </Stack>
@@ -250,6 +250,8 @@ const DraggableComponent = ({
     switch (type) {
       case ComponentType.BasicText:
         return renderDynamicTextFields();
+      case ComponentType.List:
+        return renderDynamicTextFields(11);
       case ComponentType.Image:
         return (
           <Stack>

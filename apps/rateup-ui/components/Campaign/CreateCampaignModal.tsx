@@ -1,4 +1,14 @@
-import { Box, Flex, Group, SimpleGrid, Title } from "@mantine/core";
+import { useEffect } from "react";
+
+import {
+  Box,
+  Flex,
+  Group,
+  SimpleGrid,
+  Switch,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
@@ -42,6 +52,7 @@ const CreateCampaignModal = ({
       surveyTeamMapId: z.string().optional(),
       flowId: z.string().optional(),
       dynamicTags: z.array(z.string().trim().nullable()),
+      useUserConsent: z.boolean(),
     })
     .superRefine((values, ctx) => {
       dynamicVariables?.map((_, i) => {
@@ -63,9 +74,23 @@ const CreateCampaignModal = ({
       waTemplateId: campaign?.waTemplateId || "",
       flowId: campaign?.flowId || "",
       dynamicTags: campaign?.dynamicTags || [],
+      useUserConsent: campaign?.useUserConsent ?? true,
     },
     validate: zodResolver(schema),
   });
+  useEffect(() => {
+    if (campaign)
+      form.setValues({
+        name: campaign?.name || "",
+        type: campaign?.type || CampaignType.WHATSAPP,
+        teamId: campaign?.teamId || "",
+        surveyTeamMapId: campaign?.surveyTeamMapId || "",
+        waTemplateId: campaign?.waTemplateId || "",
+        flowId: campaign?.flowId || "",
+        dynamicTags: campaign?.dynamicTags || [],
+        useUserConsent: campaign?.useUserConsent ?? true,
+      });
+  }, [campaign]);
 
   let dynamicVariableData = ["name", ...(campaign?.contactTags || [])];
 
@@ -181,16 +206,39 @@ const CreateCampaignModal = ({
               },
             }}
           />
-          {isEdit && (
-            <Box mt={26}>
-              <RateupButtonPrimary
-                loading={updateCampaignMutation.isPending}
-                title={translations["Update"]}
-                disabled={!form.isDirty()}
-                type={"submit"}
+          <Group>
+            <Tooltip
+              label={
+                <span style={{ fontSize: "1.2em" }}>
+                  {form.values.useUserConsent
+                    ? "User consent will be valued"
+                    : "User consent will not be considered"}
+                </span>
+              }
+              refProp="rootRef"
+            >
+              <Switch
+                mt={"lg"}
+                size="lg"
+                {...form.getInputProps("useUserConsent", { type: "checkbox" })}
+                label={
+                  form.values.useUserConsent
+                    ? "Consent valued"
+                    : "Consent not considered"
+                }
               />
-            </Box>
-          )}
+            </Tooltip>
+            {isEdit && (
+              <Box mt={26}>
+                <RateupButtonPrimary
+                  loading={updateCampaignMutation.isPending}
+                  title={translations["Update"]}
+                  disabled={!form.isDirty()}
+                  type={"submit"}
+                />
+              </Box>
+            )}
+          </Group>
         </SimpleGrid>
         <SimpleGrid cols={{ base: 2, lg: 4 }} pl={"lg"}>
           {dynamicVariables?.map((_, i) => (

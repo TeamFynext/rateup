@@ -63,11 +63,16 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       (key) => statuses[key] !== "",
     );
     if (statusKeys.length === 0) return getStatusIcon("pending");
-
     const latestStatus = statusKeys.reduce((latest, key) => {
-      return dayjs(statuses[key]).isAfter(dayjs(statuses[latest]))
-        ? key
-        : latest;
+      const latestDate = dayjs(statuses[latest]).startOf("minute");
+      const currentDate = dayjs(statuses[key]).startOf("minute");
+      if (currentDate.isAfter(latestDate)) {
+        return key;
+      } else if (currentDate.isSame(latestDate)) {
+        const order = ["sent", "delivered", "read", "failed"];
+        return order.indexOf(key) > order.indexOf(latest) ? key : latest;
+      }
+      return latest;
     }, statusKeys?.[0]);
 
     return getStatusIcon(latestStatus);
@@ -81,7 +86,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         return <IconChecks size={14} color="gray" />;
       case "sent":
         return <IconCheck size={14} color="gray" />;
-      case "error":
+      case "failed":
         return <IconExclamationCircleFilled size={14} color="red" />;
       default:
         return <IconClock size={13} color="gray" />;

@@ -54,6 +54,7 @@ export type LoyaltyAction = {
   refereeWaTemplateId?: string;
   isAmountBasedForReferee?: boolean;
   maxPointsForReferee?: number;
+  isExistingUserReferralAllowed?: boolean;
 };
 
 export const useUpdateLoyaltyAction = (actionId) => {

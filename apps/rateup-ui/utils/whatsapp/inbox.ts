@@ -67,6 +67,9 @@ export function parseWaMessage(
       case "video":
         messageContent = receive.messages[0].video.id;
         break;
+      case "document":
+        messageContent = receive.messages[0].document.id;
+        break;
       case "interactive":
         switch (receive.messages[0].interactive.type) {
           case "button_reply":

@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Breadcrumbs, Flex, Group, Text } from "@mantine/core";
-import { IconChevronRight, IconCrown, IconHome } from "@tabler/icons-react";
+import { ActionIcon, Breadcrumbs, Flex, Group, Text } from "@mantine/core";
+import {
+  IconChevronRight,
+  IconCrown,
+  IconHeadset,
+  IconHome,
+} from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -93,6 +98,15 @@ export const Navbar = () => {
           </ExpiryComponent>
         )}
         <LanguageSelector />
+        <ActionIcon
+          variant="light"
+          size={"lg"}
+          onClick={() => {
+            router.push("https://wa.me/919744668658?text=support");
+          }}
+        >
+          <IconHeadset />
+        </ActionIcon>
       </Group>
     </Group>
   );

@@ -1114,6 +1114,9 @@ export type WaReceiveMessageBody = {
         mime_type: string;
         sha256: string;
       };
+      document: {
+        id: string;
+      };
       button?: {
         text: string;
         payload: string;
