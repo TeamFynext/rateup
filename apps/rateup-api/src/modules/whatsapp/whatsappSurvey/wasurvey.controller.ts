@@ -70,7 +70,10 @@ import { updateMonthlyStat } from "../../stats/stats.service";
 import { getLatestStatus } from "../../campaign/campaign.service";
 import {
   getLoyaltyTemplateByRequestMessage,
+  handleLoyaltyPointsCommand,
+  handleLoyaltyRewardsCommand,
   handleLoyaltyTemplate,
+  handleReferralCommand,
 } from "../../loyalty/settings/settings.service";
 
 // TODO: add as fastify schema
@@ -360,6 +363,12 @@ async function whatsappMessageHandler(
     await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
+  } else if (message.startsWith("Referral Code")) {
+    await handleReferralCommand(from, orgId);
+  } else if (message.startsWith("Loyalty Points")) {
+    await handleLoyaltyPointsCommand(from, orgId);
+  } else if (message.startsWith("Loyalty Rewards")) {
+    await handleLoyaltyRewardsCommand(from, orgId);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else if (

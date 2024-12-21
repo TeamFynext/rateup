@@ -232,6 +232,11 @@ export async function getLCustomerByPhone(phone, orgId) {
     },
     include: {
       referralCodes: true,
+      org: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 }
@@ -349,6 +354,11 @@ export async function handleLCustomerAction({
   let refereePoints = action.refereePoints;
   if (isLReferralAction(action.type) && refereePhone) {
     referee = await getLCustomerByPhone(refereePhone, action.orgId);
+    if (referee && !action.isExistingUserReferralAllowed)
+      return {
+        success: false,
+        message: "Existing Customers are not allowed to use referral",
+      };
     if (!referee) {
       referee = await createLCustomer({
         phone: refereePhone,
@@ -405,7 +415,7 @@ export async function getLCustomerActionByRefereePhone(
     where: {
       customerId,
       actionId,
-      refereePhone,
+      refereePhone: parsePhoneforWa(refereePhone),
     },
     include: {
       customer: true,

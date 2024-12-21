@@ -147,7 +147,7 @@ export async function getDbTemplate(templateId: string) {
         id: templateId,
       },
     });
-    return res as WaTemplateWithTypes;
+    return res as unknown as WaTemplateWithTypes;
   } catch (e: any) {
     log.error("Error getting template from db \n%o", e);
     return null;
@@ -164,7 +164,7 @@ export async function getTemplateWithHSMId(hsmId: string) {
         },
       },
     });
-    return res as WaTemplateWithTypes;
+    return res as unknown as WaTemplateWithTypes;
   } catch (e: any) {
     log.error("Error getting template from db \n%o", e);
     return null;
@@ -634,4 +634,13 @@ export async function sendTemplateToPhone({
   const templateMessage = createTemplateMessage(phone, templateQuery);
   await sendMessage(orgId, templateMessage, null, userId);
   log.trace("Template send to user successfully");
+}
+
+export async function getTemplateByTemplateType(templateType, orgId) {
+  return await prisma.waTemplate.findMany({
+    where: {
+      templateType,
+      orgId,
+    },
+  });
 }
