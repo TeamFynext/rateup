@@ -64,7 +64,6 @@ enum TemplateType {
   ORDER_DETAILS
   PAYMENT_CONFIRMATION
   LOYALTY
-  LOYALTY_REGISTRATION
 }
 
 model User {
@@ -1197,7 +1196,7 @@ model LoyaltyActionCustomerMap {
   customerId String          @db.Uuid
   customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   actionId   String          @db.Uuid
-  action     LoyaltyAction   @relation(fields: [actionId], references: [id])
+  action     LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
   refereePhone String?
   amount     Float?  //amount spent on action
   createdAt  DateTime        @default(now())
