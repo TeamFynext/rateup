@@ -3,6 +3,7 @@ import {
   WA_SUBSCRIBE_STATUS,
   WaParsedMessage,
   createListMessage,
+  createReplyButtonsMessage,
   createTemplateMessage,
   getEventType,
   getMessageObject,
@@ -70,8 +71,12 @@ import { updateMonthlyStat } from "../../stats/stats.service";
 import { getLatestStatus } from "../../campaign/campaign.service";
 import {
   getLoyaltyTemplateByRequestMessage,
+  handleLoyaltyPointsCommand,
+  handleLoyaltyRewardsCommand,
   handleLoyaltyTemplate,
+  handleReferralCommand,
 } from "../../loyalty/settings/settings.service";
+import dayjs from "dayjs";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -350,8 +355,9 @@ async function whatsappMessageHandler(
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   const messageLowerCase =
-    type === "text" ? message?.trim()?.toLocaleLowerCase() : "";
-
+    type === "text" || type === "interactive"
+      ? message?.trim()?.toLocaleLowerCase()
+      : "";
   const loyaltyTemplate = await getLoyaltyTemplateByRequestMessage(
     orgId,
     message,
@@ -360,23 +366,19 @@ async function whatsappMessageHandler(
     await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
+  } else if (message.startsWith("Referral Code")) {
+    await handleReferralCommand(from, orgId);
+  } else if (message.startsWith("Loyalty Points")) {
+    await handleLoyaltyPointsCommand(from, orgId);
+  } else if (message.startsWith("Loyalty Rewards")) {
+    await handleLoyaltyRewardsCommand(from, orgId);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else if (
     messageLowerCase === WA_SUBSCRIBE_STATUS.STOP ||
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
-    const isSubscribe = messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE;
-    const consent = await handleContactConsent(orgId, from, isSubscribe);
-    if (!consent) return;
-    const org = await getOrgById(orgId);
-    await sendTextMessage(
-      { phone: from, orgId },
-      "",
-      isSubscribe
-        ? `Great! You will now receive notifications from ${org.name}.`
-        : `You have successfully opted out from receiving notifications from ${org.name}.If you wish to re-subscribe to notifications reply "SUBSCRIBE"`,
-    );
+    await handleSubscriptionStatus(orgId, from, messageLowerCase);
   } else {
     let session = await getSession(orgId, from);
     // deleting session after 24hrs
@@ -386,42 +388,114 @@ async function whatsappMessageHandler(
         session = undefined;
       }
     }
-    let prevIntraction = await prisma.waAutomatedReplyMessage.findFirst({
-      where: {
-        phone: from,
-        orgId: orgId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    // handle automated reply
+    await handleAutomatedReply(orgId, waMessage, parsedMessage, from);
+
+    if (session) {
+      await handleWaSurveySession(orgId, waMessage, session);
+    }
+  }
+}
+
+async function handleSubscriptionStatus(
+  orgId: string,
+  phone: string,
+  message: string,
+) {
+  const isSubscribe = message === WA_SUBSCRIBE_STATUS.SUBSCRIBE;
+  const consent = await handleContactConsent(orgId, phone, isSubscribe);
+  if (!consent) return;
+  const org = await getOrgById(orgId);
+  if (isSubscribe) {
+    await sendTextMessage(
+      { phone, orgId },
+      "",
+      `Great! You will now receive notifications from ${org.name}.`,
+    );
+  } else {
+    await sendMessage(
+      orgId,
+      createReplyButtonsMessage(
+        phone,
+        "",
+        `You have successfully opted out from receiving notifications from ${org.name}.If you wish to re-subscribe to notifications click on "SUBSCRIBE" button`,
+        ["SUBSCRIBE"],
+      ),
+    );
+  }
+}
+
+async function handleAutomatedReply(
+  orgId: string,
+  waMessage: WaMessageBody,
+  parsedMessage: WaParsedMessage,
+  phone: string,
+) {
+  try {
     const automation = await checkIfMessageMatchesAnyAutomation(
       orgId,
       waMessage,
     );
+    const prevInteraction = await prisma.waAutomatedReplyMessage.findFirst({
+      where: { phone, orgId },
+      orderBy: { createdAt: "desc" },
+    });
+
     if (automation) {
       await sendAutomatedReplyMessage(
         orgId,
         parsedMessage,
         automation,
-        prevIntraction,
+        prevInteraction?.waAutomatedReplyId === automation.id
+          ? prevInteraction
+          : undefined,
       );
-    } else if (prevIntraction) {
-      let a = await prisma.waAutomatedReply.findFirst({
-        where: {
-          id: prevIntraction?.message,
-        },
+    } else if (prevInteraction) {
+      const previousAutomation = await prisma.waAutomatedReply.findFirst({
+        where: { id: prevInteraction.waAutomatedReplyId },
       });
-      if (a)
-        await sendAutomatedReplyMessage(
+
+      if (previousAutomation) {
+        const result = await sendAutomatedReplyMessage(
           orgId,
           parsedMessage,
-          a,
-          prevIntraction,
+          previousAutomation,
+          prevInteraction,
         );
+
+        if (!result) {
+          await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
+        }
+      }
+    } else {
+      await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
     }
-    if (session) {
-      await handleWaSurveySession(orgId, waMessage, session);
+  } catch (error) {
+    log.error("Error handling automated reply: %o", error);
+  }
+}
+
+async function handleInitialInteraction(
+  orgId: string,
+  parsedMessage: WaParsedMessage,
+  prevInteraction: any,
+) {
+  const isInitialInteraction =
+    !prevInteraction ||
+    dayjs(prevInteraction.createdAt).isBefore(dayjs().subtract(1, "day"));
+
+  if (isInitialInteraction) {
+    const initialAutomation = await prisma.waAutomatedReply.findFirst({
+      where: { team: { orgId }, name: "initial" },
+    });
+
+    if (initialAutomation) {
+      await sendAutomatedReplyMessage(
+        orgId,
+        parsedMessage,
+        initialAutomation,
+        prevInteraction,
+      );
     }
   }
 }
@@ -925,6 +999,7 @@ type _campaign = {
   campaignParticipants: (CampaignParticipant & {
     contact: Contact;
   })[];
+  useUserConsent: boolean;
 };
 // TODO: use batch sending
 async function _sendCampaignToParticipants(
@@ -981,7 +1056,7 @@ async function _sendCampaignToParticipants(
       log.warn("Campaign already sent to participant %o. Skipping...", contact);
       continue;
     }
-    if (!contact.consent) {
+    if (!contact.consent && campaign.useUserConsent) {
       log.warn("contact has no consent to sent %o. Skipping...", contact);
       continue;
     }

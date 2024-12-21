@@ -20,19 +20,10 @@ const lActionSchema = z.object({
   refereeWaTemplateId: z.string().optional(),
   isAmountBasedForReferee: z.boolean().optional(),
   maxPointsForReferee: z.number().optional(),
+  isExistingUserReferralAllowed: z.boolean().optional(),
 });
 
-const lActionUpdateSchema = z.object({
-  name: z.string().optional(),
-  points: z.number().optional(),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
-  waTemplateId: z.string().optional(),
-  refereePoints: z.number().optional(),
-  refereeWaTemplateId: z.string().optional(),
-  isAmountBasedForReferee: z.boolean().optional(),
-  maxPointsForReferee: z.number().optional(),
-});
+const lActionUpdateSchema = lActionSchema.omit({ type: true }).partial();
 
 const byLActiondIdParamSchema = z.object({
   actionId: z.string(),

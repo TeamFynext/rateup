@@ -31,6 +31,7 @@ import {
   getDbTemplate,
   getTemplateByIdAndOrgId,
   getTemplateByNameAndOrgId,
+  getTemplateByTemplateType,
   getTemplatesByOrgId,
   getTemplatesByOrgIdAndTemplateType,
   getUnregisteredTemplates,
@@ -109,6 +110,17 @@ export async function createTemplateHandler(
     switch (request.body.templateType) {
       case TemplateType.GENERAL_NOTIFICATION:
       case TemplateType.LOYALTY:
+      case TemplateType.LOYALTY_REGISTRATION:
+        if (request.body.templateType === TemplateType.LOYALTY_REGISTRATION) {
+          const templates = await getTemplateByTemplateType(
+            request.body.templateType,
+            orgId,
+          );
+          if (templates.length)
+            return reply
+              .code(403)
+              .send("Loyalty Registration template alreday exist");
+        }
         const template = await createTemplate(orgId, formattedTemplate);
         //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
         fetchedTemplate = await fetchTemplate(template?.name, orgId);

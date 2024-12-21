@@ -253,18 +253,21 @@ export async function importCSVContacts(
     let errorContact = [];
 
     const processContact = (contact) => {
-      let phno = contact.phone?.startsWith("+")
-        ? contact.phone
-        : `+${contact.phone}`;
-      if (!contact?.phone || !isValidPhoneNumber(phno)) {
+      const formattedPhone = contact.phone?.startsWith("+")
+        ? contact.phone.replace(/\s+/g, "")
+        : `+${contact.phone.replace(/\s+/g, "")}`;
+
+      if (
+        !contact?.phone ||
+        !isValidPhoneNumber(formattedPhone) ||
+        !contact?.name
+      ) {
         errorContact.push({
-          name: contact?.name ? contact.name : "name is missing/invalid",
-          phone: contact?.phone ? contact.phone : "phone is missing/invalid",
+          name: contact?.name || "name is missing/invalid",
+          phone: contact?.phone || "phone is missing/invalid",
         });
       } else {
-        if (contact.phone?.startsWith("+")) {
-          contact.phone = contact.phone?.slice(1);
-        }
+        contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
         contacts.push(contact);
       }
     };
