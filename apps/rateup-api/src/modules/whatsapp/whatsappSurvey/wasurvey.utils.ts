@@ -305,7 +305,7 @@ export function createListMessage(
   questionTitle: string,
   questionDescription: string,
   buttonTitle: string,
-  choices: Array<string>,
+  choices: any,
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -314,22 +314,32 @@ export function createListMessage(
     type: "interactive",
     interactive: {
       type: "list",
-      header: {
-        type: "text",
-        text: questionTitle,
-      },
+      ...(questionTitle && {
+        header: {
+          type: "text",
+          text: questionTitle,
+        },
+      }),
       body: {
         text: questionDescription,
       },
       action: {
         button: buttonTitle,
+
         sections: [
           {
             //TODO: title have a 24char limit. Description may have 200chars
-            rows: choices.map((choice, index) => ({
-              id: index.toString(),
-              title: choice,
-            })),
+            rows: choices.map((choice, index) =>
+              typeof choice === "string"
+                ? {
+                    title: choice,
+                    id: index.toString(),
+                  }
+                : {
+                    title: choice?.value,
+                    id: choice?.id?.toString(),
+                  },
+            ),
           },
         ],
       },

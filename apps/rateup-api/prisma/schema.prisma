@@ -468,6 +468,7 @@ model Campaign {
   scheduledStatuses    String[]              @default([])
   errorMessage         String?
   dynamicTags          String[]              @default([])
+  useUserConsent       Boolean               @default(true)
 }
 
 model CampaignParticipant {
@@ -576,14 +577,7 @@ model ContactForm {
   message   String
 }
 
-//media associated with the election
-model Media {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now())
-  type      String
-  name      String
-  image     String
-}
+
 
 model WaTemplate {
   id                String              @id @default(uuid()) @db.Uuid

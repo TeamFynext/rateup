@@ -376,6 +376,7 @@ export async function updateTemplate(
           templateId,
           updatedTemplate,
           data.defaultValues as WaTemplateDefaultValues,
+          data.templateType,
         );
         break;
       }

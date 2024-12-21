@@ -25,7 +25,6 @@ import { menuItemRoutes } from "./modules/menu/item/item.route";
 import { menuPublicRoutes } from "./modules/menu/menu.public.route";
 import { contactFormSchemas } from "./modules/contactForm/contact.schema";
 import { contactFormPublicRoutes } from "./modules/contactForm/contact.public.route";
-import { electionPublicRoutes } from "./modules/election/election.public.routes";
 import { whatsappRoutes } from "./modules/whatsapp/wa_routes";
 import { contactSchemas } from "./modules/contact/contact.schema";
 import { contactRoutes } from "./modules/contact/contact.route";
@@ -164,7 +163,6 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(menuBannerPublicRoutes, { prefix: "api/public/mbanner" });
   server.register(unsplashRoutes, { prefix: "api/unsplash" });
   server.register(contactFormPublicRoutes, { prefix: "api/public/contact" });
-  server.register(electionPublicRoutes, { prefix: "api/public/election" });
   server.register(contactRoutes, { prefix: "api/contact" });
   server.register(campaignRoutes, { prefix: "api/campaign" });
   server.register(reviewSuggestionRoutes, { prefix: "api/reviewSuggestion" });

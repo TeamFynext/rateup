@@ -30,6 +30,7 @@ const updateCampaignInputSchema = z.object({
     .nullable(),
   errorMessage: z.string().optional(),
   dynamicTags: z.array(z.string().nullable()).optional(),
+  useUserConsent: z.boolean().optional(),
 });
 
 const byCampaignIdParamsSchema = z.object({

@@ -8,6 +8,7 @@ import {
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import {
   WaParsedMessage,
+  createListMessage,
   createReplyButtonsMessage,
   createReplyImageMessage,
   parseMessage,
@@ -141,10 +142,16 @@ export async function sendAutomatedReplyMessage(
         message: message ?? "",
       },
     });
-    if (!node) return;
+    if (
+      prevIntraction &&
+      prevIntraction?.currentScreen === nextScreenId &&
+      automation?.id === prevIntraction?.waAutomatedReplyId
+    )
+      return false;
+    if (!node) return false;
 
     let components = node?.data?.components;
-    if (!components?.length) throw new Error("Components not found");
+    if (!components?.length) return false;
 
     for (const component of components) {
       orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
@@ -205,8 +212,33 @@ export async function sendAutomatedReplyMessage(
           ),
           teamId,
         );
+      } else if (
+        component?.type === ReplyComponentType.List &&
+        Array.isArray(component?.name)
+      ) {
+        let buttons = component?.name?.splice(1);
+        if (buttons?.length === 0) {
+          await sendTextMessage(
+            { phone: from, orgId },
+            "",
+            component?.name[0]?.value,
+          );
+        } else {
+          await sendMessage(
+            orgId,
+            createListMessage(
+              from,
+              null,
+              component?.name?.[0]?.value,
+              "options",
+              buttons,
+            ),
+            teamId,
+          );
+        }
       }
     }
+    return true;
   } else {
     throw new Error("Not implemented");
   }
@@ -220,9 +252,12 @@ function getNextScreen(data, screenId, buttonId) {
   }
 
   if (!buttonId) return null;
+
   // Find the component with the given text value
-  const component = screenNode.data.components.find((comp) =>
-    comp?.name?.some((name) => name.id === buttonId),
+  const component = screenNode.data.components.find(
+    (comp) =>
+      Array.isArray(comp?.name) &&
+      comp?.name?.some((name) => name.id === buttonId),
   );
   if (!component) {
     return null;
@@ -359,4 +394,5 @@ export enum ReplyComponentType {
   Flow = "Flow",
   Template = "Template",
   Image = "Image",
+  List = "List",
 }
