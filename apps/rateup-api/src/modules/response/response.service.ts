@@ -236,146 +236,256 @@ export async function downloadExcelResponse(
   tz = "Asia/Calcutta",
 ) {
   const responses =
-    (allResponses && allResponses.flatMap((data) => data?.responses)) || [];
-  const platform = responses?.[0]?.platform;
+    (allResponses && allResponses?.flatMap((data) => data?.responses)) || [];
 
-  // Filter questions based on visibleColumn
-  const filteredQuestions = questions.filter((item) => {
-    const qsTitle =
+  const platform = responses?.[0]?.platform;
+  const filteredSecondArray = questions.filter((item) => {
+    let qsTitle =
       item?.title[defaultLanguage] ||
       item?.description[defaultLanguage] ||
       item?.label?.[defaultLanguage] ||
       "";
     return visibleColumn.includes(
-      getReplacedTitleFromVariable({ title: qsTitle }) || getContent(qsTitle),
+      getReplacedTitleFromVariable({
+        title: qsTitle,
+      }) || getContent(qsTitle),
     );
   });
 
-  if (!filteredQuestions.length || !responses.length) return null;
-
-  // Generate headers
-  const headerArray = filteredQuestions.flatMap((question) => {
-    const qsTitle =
-      question?.title[defaultLanguage] ||
-      question?.description[defaultLanguage] ||
-      question?.label?.[defaultLanguage] ||
-      "";
-
-    switch (question.type) {
-      case QuestionType.Contact:
-        return Object.entries(question.features?.[defaultLanguage] || {})
-          .filter(
-            ([_, feature]: [string, { isEnabled: boolean }]) =>
-              feature?.isEnabled,
-          )
-          .map(([key]) => `${getContent(qsTitle)}: ${key}`);
-      case QuestionType.MCQGrid:
-        return (question.features?.[defaultLanguage]?.questions || []).map(
-          (q) => `${getContent(qsTitle)}: ${q}`,
-        );
-      case QuestionType.MultiTextInput:
-        return (question.features?.[defaultLanguage]?.fields || []).map(
-          (field) => `${getContent(qsTitle)}: ${field?.fieldKey}`,
-        );
-      case QuestionType.Testimonial:
-        const testimonialHeaders = [
-          `${getContent(qsTitle)}: name`,
-          `${getContent(qsTitle)}: testimonial`,
-        ];
-        const extraFeatures = Object.keys(
-          question.features?.[defaultLanguage] || {},
-        ).map((key) => `${getContent(qsTitle)}: ${key}`);
-        return [...testimonialHeaders, ...extraFeatures];
-      default:
-        return [getContent(qsTitle)];
-    }
-  });
-
-  // Add standard headers if visible
-  if (visibleColumn.includes("createdAt")) {
-    headerArray.unshift("Date");
-  }
-  if (
-    platform === "WHATSAPP" &&
-    visibleColumn.includes("Respondent's Mobile Number")
-  ) {
-    headerArray.push("Respondent's Mobile Number");
-  }
-
-  // Add dynamic columns for response tags
-  const tagHeaderIndex = headerArray.length;
-  if (visibleColumn.includes("tag")) {
-    const maxTagCount = Math.max(
-      ...responses.map((r) => (r.tag ? r.tag.split(",").length : 1)),
-    );
-    for (let i = 0; i < maxTagCount; i++) {
-      headerArray.push(`Tag ${i + 1}`);
-    }
-  }
-
-  // Build body array
-  const bodyArray = responses.map((response) => {
-    const row = filteredQuestions.map((question) => {
-      const responseObj = response.responses.find(
-        (answer) => answer.questionId === question.id,
-      );
-      if (!responseObj) return "";
-
-      let responseValue = responseObj.response[question.type];
-      if (ChoiceTypeQuestions.includes(question.type)) {
-        return Array.isArray(responseValue)
-          ? responseValue.map((res) => res.value || "").join(", ")
-          : responseValue?.value || "";
-      }
-      // Handle other types similarly
-      return responseValue || "";
+  if (filteredSecondArray && responses) {
+    const headerArray = filteredSecondArray.flatMap((question) => {
+      let qsTitle =
+        question?.title[defaultLanguage] ||
+        question?.description[defaultLanguage] ||
+        question?.label?.[defaultLanguage] ||
+        "";
+      return question.type === QuestionType.Contact
+        ? (Object.entries(question.features?.[defaultLanguage])
+            ?.filter((data: any) => data[1].isEnabled)
+            .map((data) => `${getContent(qsTitle)}: ${data[0]}`) ?? [])
+        : question.type === QuestionType.MCQGrid
+          ? (question.features?.[defaultLanguage]?.questions?.map(
+              (q) => `${getContent(qsTitle)}: ${q}`,
+            ) ?? [])
+          : question.type === QuestionType.MultiTextInput
+            ? (question.features?.[defaultLanguage]?.fields?.map(
+                (field) =>
+                  `${getContent(
+                    question.title[defaultLanguage],
+                  )}: ${field?.fieldKey}`,
+              ) ?? [])
+            : question.type === QuestionType.Testimonial
+              ? [
+                  `${getContent(question.title[defaultLanguage])}: name`,
+                  `${getContent(question.title[defaultLanguage])}: testimonial`,
+                  ...(question?.features?.[defaultLanguage]
+                    ? Object.entries(question.features?.[defaultLanguage])
+                        ?.filter(([key, value]) => value)
+                        .map(
+                          ([key, value]) =>
+                            `${getContent(question.title[defaultLanguage])}: ${key}`,
+                        )
+                    : []),
+                ]
+              : [getContent(qsTitle)];
     });
 
-    // Add standard columns
+    const createdAt = "Date";
+    const responseTag = "tag";
+    let whatsappRespondentNumber = "Respondent's Mobile Number";
     if (visibleColumn.includes("createdAt")) {
-      row.unshift(
-        dayjs(response.createdAt).tz(tz).format("DD-MM-YYYY hh:mm A"),
-      );
+      headerArray.unshift(createdAt);
+      filteredSecondArray.unshift(createdAt);
     }
     if (
       platform === "WHATSAPP" &&
-      visibleColumn.includes("Respondent's Mobile Number")
+      visibleColumn.includes(whatsappRespondentNumber)
     ) {
-      row.push(response.Contact?.phone || "");
+      headerArray.push(whatsappRespondentNumber);
+      filteredSecondArray.push(whatsappRespondentNumber);
+    }
+    if (visibleColumn.includes(responseTag)) {
+      headerArray.push(responseTag);
+      filteredSecondArray.push(responseTag);
     }
 
-    // Add tag columns
-    if (visibleColumn.includes("tag")) {
-      const tags = response.tag?.split(",") || [""];
-      for (let i = 0; i < tags.length; i++) {
-        row[tagHeaderIndex + i] = tags[i].trim();
-      }
-    }
+    const bodyArray = [];
+    filteredSecondArray.forEach((question) => {
+      const questionId = question.id;
+      let tempArray = [];
+      responses.forEach((response, answerIndex) => {
+        bodyArray.push([]);
 
-    return row;
-  });
+        const responses = response.responses;
+        const responseObj = responses.find(
+          (answerObj) => answerObj.questionId === questionId,
+        );
+        let responseValue;
+        let flag = true;
+        if (responseObj) {
+          responseValue = responseObj.response[question.type];
+          const responseType = responseObj.type;
+          switch (responseType) {
+            case QuestionType.Photo:
+            case QuestionType.File: {
+              responseValue = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue}`;
+              break;
+            }
+            case QuestionType.Date: {
+              responseValue = dayjs(responseValue)
+                .tz(tz)
+                .format("DD-MM-YYYY hh:mm A");
+              break;
+            }
+            case QuestionType.PCQ: {
+              responseValue = responseValue?.value?.value;
+              break;
+            }
+            case QuestionType.TnC: {
+              responseValue = responseValue?.toString();
+              break;
+            }
+            case QuestionType.PhotoPicker:
+            case QuestionType.DocumentPicker: {
+              responseValue = getFileUrlFromKey(responseValue?.toString());
+              break;
+            }
+          }
+          if (
+            QuestionType.Contact === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            Object.values(responseValue)?.map((value) =>
+              bodyArray[answerIndex].push(value),
+            );
+            flag = false;
+          } else if (
+            QuestionType.MCQGrid === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            question?.features?.[defaultLanguage]?.questions?.map((q) =>
+              responseValue?.[q]
+                ? bodyArray[answerIndex].push(responseValue?.[q]?.value)
+                : bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          } else if (
+            QuestionType.MultiTextInput === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            question?.features?.[defaultLanguage]?.fields?.map((field) =>
+              responseValue?.[field?.fieldKey]
+                ? bodyArray[answerIndex].push(responseValue?.[field?.fieldKey])
+                : bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          } else if (
+            QuestionType.Testimonial === responseType &&
+            !tempArray.includes({ [answerIndex]: questionId })
+          ) {
+            tempArray.push({ [answerIndex]: questionId });
+            bodyArray[answerIndex].push(responseValue?.name ?? "");
+            bodyArray[answerIndex].push(responseValue?.testimonial ?? "");
+            question?.features?.[defaultLanguage] &&
+              Object.entries(question?.features?.[defaultLanguage])
+                .filter(([key, value]) => value)
+                .map(([key, value]) =>
+                  responseValue?.[key]
+                    ? bodyArray[answerIndex].push(
+                        key == "photo"
+                          ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
+                          : responseValue?.[key],
+                      )
+                    : bodyArray[answerIndex].push(""),
+                );
+            flag = false;
+          } else if (!tempArray.includes({ [answerIndex]: questionId })) {
+            if (ChoiceTypeQuestions.includes(responseType)) {
+              responseValue = Array.isArray(responseValue)
+                ? responseValue
+                    ?.map(
+                      (res) =>
+                        res?.value ||
+                        `${question?.features?.[defaultLanguage]?.other?.title}:${res?.other}`,
+                    )
+                    .join(", ")
+                : responseType == QuestionType.MCQ
+                  ? responseValue?.value ||
+                    `${question?.features?.[defaultLanguage]?.other?.title}:${responseValue?.other}`
+                  : responseValue?.value;
+            } else if (typeof responseValue === "object") {
+              responseValue = responseValue?.value
+                ? Object.values(responseValue?.value).join(", ")
+                : Object.values(responseValue).join(", ");
+            }
+          }
+        } else if (question === createdAt) {
+          const createdAtFormatted = dayjs(response.createdAt)
+            .tz(tz)
+            .format("DD-MM-YYYY hh:mm A");
+          responseValue = createdAtFormatted;
+        } else if (question === "Respondent's Mobile Number") {
+          responseValue = response?.Contact?.phone;
+        } else if (question === responseTag) {
+          responseValue = response.tag;
+        } else {
+          if (question.type === QuestionType.MCQGrid) {
+            question?.features?.[defaultLanguage]?.questions?.map((q) =>
+              bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          } else if (question.type === QuestionType.Contact) {
+            Object.values(question.features?.[defaultLanguage]).forEach(
+              (key: any) => {
+                if (key?.isEnabled) bodyArray[answerIndex].push("");
+              },
+            );
+            flag = false;
+          } else if (question.type === QuestionType.Testimonial) {
+            bodyArray[answerIndex].push("", "");
+            const features = question.features?.[defaultLanguage];
+            if (features) {
+              Object.values(features).forEach((key: any) => {
+                if (key) bodyArray[answerIndex].push("");
+              });
+              flag = false;
+            }
+          } else if (question.type === QuestionType.MultiTextInput) {
+            question?.features?.[defaultLanguage]?.fields?.forEach((field) =>
+              bodyArray[answerIndex].push(""),
+            );
+            flag = false;
+          }
+          responseValue = "";
+        }
+        if (flag) {
+          bodyArray[answerIndex].push(responseValue);
+        }
+      });
+    });
+    let options = [];
+    headerArray.map((data, i) => {
+      const headingWidth = String(data)?.length + 2;
+      const dataWidth = getMaxContentWidth(bodyArray, i);
+      const width = Math.max(headingWidth, dataWidth);
+      options.push({ width: width > 40 ? 40 : width });
+    });
+    let fileName = allResponses?.[0].survey?.title ?? "download";
+    let buffer = xlsx.build([
+      {
+        name: "Sheet1",
+        data: [headerArray, ...bodyArray],
+        options: {
+          "!cols": options,
+        },
+      },
+    ]);
 
-  // Generate column widths
-  const options = headerArray.map((header, i) => {
-    const headerWidth = String(header).length + 2;
-    const maxContentWidth = Math.max(
-      ...bodyArray.map((row) => String(row[i] || "").length),
-    );
-    const width = Math.max(headerWidth, maxContentWidth);
-    return { width: Math.min(width, 40) };
-  });
-
-  // Build Excel file
-  const fileName = allResponses?.[0]?.survey?.title || "download";
-  const buffer = xlsx.build([
-    {
-      name: "Sheet1",
-      data: [headerArray, ...bodyArray],
-      options: { "!cols": options },
-    },
-  ]);
-
-  return [fileName, buffer];
+    return [fileName, buffer];
+  }
 }
 
 export async function downloadExcelResponseV2(
