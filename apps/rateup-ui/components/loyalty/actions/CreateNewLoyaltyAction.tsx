@@ -77,6 +77,7 @@ const CreateNewLoyaltyAction = ({
       maxPoints: z.number().optional().nullable(),
       isAmountBasedForReferee: z.boolean().optional().nullable(),
       maxPointsForReferee: z.number().optional().nullable(),
+      isExistingUserReferralAllowed: z.boolean().optional().nullable(),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -102,12 +103,13 @@ const CreateNewLoyaltyAction = ({
       refereeWaTemplateId: action?.refereeWaTemplateId || null,
       isAmountBasedForReferee: action?.isAmountBasedForReferee || false,
       maxPointsForReferee: action?.maxPointsForReferee || 0,
+      isExistingUserReferralAllowed:
+        action?.isExistingUserReferralAllowed || false,
     },
     validate: zodResolver(schema),
   });
 
   function handleSubmit() {
-    console.log("form.validate()", form.validate());
     if (form.validate().hasErrors) return;
     if (action) {
       const { type, ...rest } = form.values;
@@ -262,12 +264,19 @@ const CreateNewLoyaltyAction = ({
           }
         />
         {isLReferralAction(form.values.type) && (
-          <WaTemplateSelector
-            templateType={TemplateType.LOYALTY}
-            label="WhatsApp Template for referee(to send after action)"
-            description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
-            {...form.getInputProps("refereeWaTemplateId")}
-          />
+          <>
+            <WaTemplateSelector
+              templateType={TemplateType.LOYALTY}
+              label="WhatsApp Template for referee(to send after action)"
+              description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
+              {...form.getInputProps("refereeWaTemplateId")}
+            />
+            <Checkbox
+              label={"Referral allowed for existing customer"}
+              {...form.getInputProps("isExistingUserReferralAllowed")}
+              checked={form.values.isExistingUserReferralAllowed}
+            />
+          </>
         )}
         <Group>
           <ContainedDateInput

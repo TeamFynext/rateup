@@ -1,12 +1,10 @@
-import { Badge, Group, Stack, Title } from "@mantine/core";
+import { Badge, Group, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconAward } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { useGetLoyaltyRedeems } from "@/backend/loyalty/redeems/redeems.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ManualRedeemModal from "@/components/loyalty/reward/ManualRedeemModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
@@ -32,14 +30,7 @@ export default function redeems() {
 
   return (
     <Stack>
-      <Group>
-        {/* <Title>Redeems</Title> */}
-        <RateupButtonBlue
-          title="Redeem Reward"
-          rightIcon={<IconAward />}
-          onClick={open}
-        />
-      </Group>
+      <Group></Group>
       <PaperLayout h={"65vh"}>
         <TanstackTable columns={columns} data={redeems} isPending={isPending} />
       </PaperLayout>

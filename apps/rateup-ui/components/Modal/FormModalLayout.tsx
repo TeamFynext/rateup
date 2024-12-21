@@ -28,6 +28,7 @@ interface FormModalLayoutProps {
   customHeader?: React.ReactNode;
   submitButtonDisabled?: boolean;
   submitBtnColor?: string;
+  submitButtonLeftIcon?: React.ReactNode;
 }
 export default function FormModalLayout({
   centered,
@@ -46,6 +47,7 @@ export default function FormModalLayout({
   submitButtonDisabled,
   cancelButtonTitle,
   submitBtnColor,
+  submitButtonLeftIcon,
 }: FormModalLayoutProps) {
   const { translations } = useTranslations();
   return (
@@ -105,6 +107,7 @@ export default function FormModalLayout({
               type="submit"
               title={buttonTitle}
               disabled={submitButtonDisabled}
+              leftIcon={submitButtonLeftIcon}
             />
           )}
         </Group>
