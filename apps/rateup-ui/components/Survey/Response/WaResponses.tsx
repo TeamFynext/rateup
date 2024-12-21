@@ -278,7 +278,7 @@ const WaResponses = ({
         id: "Respondent Mobile",
       },
       {
-        header: translations["Tags"],
+        header: "Tag",
         accessorKey: "tag",
       },
       ...(enableTicket
@@ -442,6 +442,7 @@ const WaResponses = ({
         language: item.language,
         createdAt: item.createdAt,
         mobile: item.Contact?.phone || "N/A",
+        tag: item.tag,
       };
 
       questions.forEach((question) => {

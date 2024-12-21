@@ -107,6 +107,24 @@ export function getNavTopData(
                 label: translations["Templates"],
                 href: "/dashboard/surveys/templates",
               },
+              ...(hiddenModules.includes("tickets") || !hasFeature(sfpn.Ticket)
+                ? []
+                : [
+                    {
+                      Icon: IconTicket,
+                      label: translations["Tickets"],
+                      href: "/dashboard/tickets",
+                    },
+                  ]),
+              ...(hiddenModules.includes("testimonial")
+                ? []
+                : [
+                    {
+                      Icon: IconMessageChatbot,
+                      label: translations["Testimonial"],
+                      href: "/dashboard/testimonial",
+                    },
+                  ]),
             ],
           },
         ]
@@ -192,24 +210,6 @@ export function getNavTopData(
             Icon: IconComet,
             label: translations["Reputation"],
             href: "/dashboard/rm",
-          },
-        ]),
-    ...(hiddenModules.includes("tickets") || !hasFeature(sfpn.Ticket)
-      ? []
-      : [
-          {
-            Icon: IconTicket,
-            label: translations["Tickets"],
-            href: "/dashboard/tickets",
-          },
-        ]),
-    ...(hiddenModules.includes("testimonial")
-      ? []
-      : [
-          {
-            Icon: IconMessageChatbot,
-            label: translations["Testimonial"],
-            href: "/dashboard/testimonial",
           },
         ]),
     ...(hasFeature(sfpn.Menu)

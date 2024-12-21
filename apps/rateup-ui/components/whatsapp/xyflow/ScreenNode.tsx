@@ -27,6 +27,7 @@ export enum ComponentType {
   Image = "Image",
   Flow = "Flow",
   Template = "Template",
+  List = "List",
 }
 
 const getItemStyle = (isDragging, draggableStyle) => ({
@@ -250,6 +251,11 @@ export function RenderMenuDropdown({
             onClick={() => addComponentNode(ComponentType.Template, index)}
           >
             Template
+          </Menu.Item>
+          <Menu.Item
+            onClick={() => addComponentNode(ComponentType.List, index)}
+          >
+            List
           </Menu.Item>
         </ScrollAreaAutosize>
       </Menu.Dropdown>

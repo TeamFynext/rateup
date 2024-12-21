@@ -171,7 +171,7 @@ const CampaignById = () => {
             />
           )}
           <RateupButtonPrimary
-            title="download stats"
+            title="Delivery Report"
             onClick={() => {
               mut.mutate(campaignId);
             }}
