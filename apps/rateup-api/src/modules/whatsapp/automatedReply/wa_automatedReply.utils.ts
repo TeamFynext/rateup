@@ -114,8 +114,6 @@ export async function sendAutomatedReplyMessage(
   orgId: string,
   { from, buttonId, message }: WaParsedMessage,
   automation: WaAutomatedReply,
-  prevIntraction: prevIntractionProps,
-  isAutomationValid: boolean = true, // in the case of chained automations, automation will be invalid and automation prop will contain previous automation
 ) {
   const { responseType, responseTemplateId, teamId, name, matchData } =
     automation;
@@ -125,13 +123,9 @@ export async function sendAutomatedReplyMessage(
     // TODO: improve template sending
     await sendTemplateToUserCore(orgId, responseTemplateId, from, [], teamId);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    const nextScreenId = prevIntraction
-      ? getNextScreen(
-          (matchData as unknown as matchDataProps)?.json,
-          prevIntraction?.currentScreen,
-          buttonId,
-        ) || nodes?.[0]?.id
-      : nodes?.[0]?.id;
+    const nextScreenId =
+      getNextScreen((matchData as unknown as matchDataProps)?.json, buttonId) ||
+      nodes?.[0]?.id;
     const node = nodes?.find((node) => node.id === nextScreenId);
 
     await prisma.waAutomatedReplyMessage.create({
@@ -143,13 +137,6 @@ export async function sendAutomatedReplyMessage(
         message: message ?? "",
       },
     });
-    if (
-      prevIntraction &&
-      prevIntraction?.currentScreen === nextScreenId &&
-      automation?.id === prevIntraction?.waAutomatedReplyId &&
-      !isAutomationValid
-    )
-      return false;
     if (!node) return false;
 
     let components = node?.data?.components;
@@ -246,31 +233,30 @@ export async function sendAutomatedReplyMessage(
   }
 }
 
-function getNextScreen(data, screenId, buttonId) {
-  // Find the screen node
-  const screenNode = data.nodes.find((node) => node.id === screenId);
+function getNextScreen(data, buttonId) {
+  // Find the screen node that contains the buttonId in its components
+  const screenNode = data.nodes.find((node) =>
+    node.data.components.some(
+      (comp) =>
+        Array.isArray(comp?.name) &&
+        comp?.name.some((name) => name.id === buttonId),
+    ),
+  );
   if (!screenNode) {
     return null;
   }
 
-  if (!buttonId) return null;
-
-  // Find the component with the given text value
+  // Find the component with the given buttonId
   const component = screenNode.data.components.find(
     (comp) =>
       Array.isArray(comp?.name) &&
       comp?.name?.some((name) => name.id === buttonId),
   );
   if (!component) {
-    // If component doesn't exist, check in previous screen
-    const previousEdge = data.edges.find((edge) => edge.target === screenId);
-    if (!previousEdge) {
-      return null;
-    }
-    return getNextScreen(data, previousEdge.source, buttonId);
+    return null;
   }
 
-  // Find the name object with the given text value to get the id
+  // Find the name object with the given buttonId to get the id
   const nameObject = component.name.find((name) => name.id === buttonId);
   if (!nameObject) {
     return null;
@@ -279,7 +265,7 @@ function getNextScreen(data, screenId, buttonId) {
   // Find the edge with the sourceHandle matching the id
   const edge = data.edges.find(
     (edge) =>
-      edge.source === screenId &&
+      edge.source === screenNode.id &&
       edge.sourceHandle === nameObject.id.toString(),
   );
   if (!edge) {
