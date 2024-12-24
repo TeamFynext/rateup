@@ -19,6 +19,7 @@ import { RedeemStatus } from "../redeems/redeem.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
 import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
+import { LoyaltyAction } from "@prisma/client";
 
 export async function createLCustomer(input: LCustomerInput) {
   return await prisma.loyaltyCustomer.create({
@@ -32,6 +33,30 @@ export async function createLCustomer(input: LCustomerInput) {
       referralCodes: true,
     },
   });
+}
+
+export async function handlePostRegisterAction(orgId, customerId) {
+  const actions = await getLoyaltyActions(orgId);
+  const registerActions = actions.filter(
+    (a) => a.type === LoyaltyActionType.CustomerRegistration,
+  );
+  if (!registerActions.length) return;
+  for (const action of registerActions) {
+    const { success, data, message } = await handleLCustomerAction({
+      action,
+      customerId,
+      actionId: action.id,
+    });
+    if (success) {
+      const { customerAction, customer, customerPoints } = data;
+      await handleSendTemplate(
+        customerAction.action.waTemplateId,
+        orgId,
+        customer.phone,
+        [customer.name, customerPoints?.toString()],
+      );
+    }
+  }
 }
 
 export async function createCustomerAction({
@@ -167,24 +192,12 @@ export async function handleLoyaltyRegister(phone, name, orgId) {
     orgId,
   );
   if (template) {
-    const dynamicVariables = [res.name];
-    const components = [];
-    components.push({
-      type: "body",
-      parameters: dynamicVariables.map((data: string) => ({
-        type: "text",
-        text: data,
-      })),
-    });
-    await sendTemplateToUserCore(
-      orgId,
-      template.waTemplateId,
-      res.phone,
-      components,
-    );
+    await handleSendTemplate(template.waTemplateId, orgId, res.phone, [
+      res.name,
+    ]);
   }
-
   await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
+  await handlePostRegisterAction(orgId, res.id);
 }
 
 export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
@@ -331,19 +344,21 @@ export async function getLoyaltyCustomerOrActionByReferralCode(referralCode) {
 }
 
 export async function handleLCustomerAction({
+  action,
   customerId,
   actionId,
   refereePhone,
   refereeName,
   amount,
 }: {
+  action?: LoyaltyAction;
   customerId: string;
   actionId: string;
   refereePhone?: string;
   refereeName?: string;
   amount?: number;
 }) {
-  const action = await getLoyaltyActionById(actionId);
+  if (!action) action = await getLoyaltyActionById(actionId);
   if (
     dayjs().isBefore(dayjs(action.startDate)) ||
     dayjs().isAfter(dayjs(action.endDate))
@@ -421,4 +436,25 @@ export async function getLCustomerActionByRefereePhone(
       customer: true,
     },
   });
+}
+
+export async function handleSendTemplate(
+  waTemplateId,
+  orgId,
+  phone,
+  dynamicVariables,
+) {
+  if (!waTemplateId) {
+    log.trace("No template Id found");
+    return;
+  }
+  const components = [];
+  components.push({
+    type: "body",
+    parameters: dynamicVariables.map((data: string) => ({
+      type: "text",
+      text: data,
+    })),
+  });
+  await sendTemplateToUserCore(orgId, waTemplateId, phone, components);
 }

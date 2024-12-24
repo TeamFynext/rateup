@@ -4,6 +4,7 @@ import z from "zod";
 export enum LoyaltyActionType {
   ReferralPurchase = "Referral Purchase",
   DirectPurchase = "Direct Purchase",
+  CustomerRegistration = "Customer Registration",
 }
 
 const lActionSchema = z.object({
@@ -21,6 +22,8 @@ const lActionSchema = z.object({
   isAmountBasedForReferee: z.boolean().optional(),
   maxPointsForReferee: z.number().optional(),
   isExistingUserReferralAllowed: z.boolean().optional(),
+  active: z.boolean().optional(),
+  description: z.string(),
 });
 
 const lActionUpdateSchema = lActionSchema.omit({ type: true }).partial();

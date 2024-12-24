@@ -13,7 +13,10 @@ import {
   handleLoyaltyRegister,
 } from "../customer/customer.service";
 import { createTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
-import { getReferralLoyaltyAction } from "../actions/actions.service";
+import {
+  getLoyaltyActions,
+  getReferralLoyaltyAction,
+} from "../actions/actions.service";
 import {
   sendMessage,
   sendTextMessage,
@@ -137,7 +140,8 @@ export async function handleReferralCommand(phone, orgId) {
     id,
     customer.id,
   );
-  const copyMessage = `I would like to invite you to *${customer.org.name}!*. Using the following code, You will get ${isAmountBasedForReferee ? `${refereePoints} points per amount of ${amount}` : `${refereePoints} points`}.\n\n code: *${referralCode}*\n`;
+  const copyMessage = `I would like to invite you to *${customer.org.name}!*. Using the following code, You will get ${isAmountBasedForReferee ? `${refereePoints} points per amount of ${amount}` : `${refereePoints} points`}.
+  \n\n code: *${referralCode}*\n`;
   await sendTextMessageAndUpdateStats(phone, orgId, null, message);
   await sendTextMessageAndUpdateStats(phone, orgId, null, copyMessage);
 }
@@ -149,7 +153,19 @@ export async function handleLoyaltyPointsCommand(phone, orgId) {
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
-  const message = `Total Earned Points: ${customer.totalEarnedPoints}\n\nTotal Redeemed Points: ${customer.redeemedPoints}\n\nCurrent Balance Points: ${customer.totalEarnedPoints - customer.redeemedPoints}`;
+  const actions = await getLoyaltyActions(orgId);
+  const activeActions = actions.filter((ac) => ac.active);
+  const message = `Total Earned Points: ${customer.totalEarnedPoints}\n
+  \nTotal Redeemed Points: ${customer.redeemedPoints}\n
+  \nCurrent Balance Points: ${customer.totalEarnedPoints - customer.redeemedPoints}
+  ${
+    !activeActions?.length
+      ? ""
+      : `\n\n------------------------------------\n
+  \nHere is how to earn points:
+  \n${activeActions.map((a, index) => `${index + 1}. *${a.name}*\n ${a.description}\n`).join("\n")}`
+  }
+  `;
   await sendTextMessageAndUpdateStats(phone, orgId, "Loyalty Points", message);
 }
 
@@ -170,7 +186,7 @@ export async function handleLoyaltyRewardsCommand(phone, orgId) {
     : rewards
         .map(
           (r, index) =>
-            `${index + 1}. *${r.name}* ( Required  points: ${r.points} ), Expiry Date: ${r.expireAt ? formatDateT1(r.expireAt) : "No Expiry"}`,
+            `${index + 1}. *${r.name}*\n${r.description}\n_Required  points_: ${r.points},  _Expiry Date_: ${r.expireAt ? formatDateT1(r.expireAt) : "No Expiry"}`,
         )
         .join("\n");
   await sendTextMessageAndUpdateStats(phone, orgId, "Loyalty Rewards", message);
