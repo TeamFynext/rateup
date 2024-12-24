@@ -115,6 +115,7 @@ export async function sendAutomatedReplyMessage(
   { from, buttonId, message }: WaParsedMessage,
   automation: WaAutomatedReply,
   prevIntraction: prevIntractionProps,
+  isAutomationValid: boolean = true, // in the case of chained automations, automation will be invalid and automation prop will contain previous automation
 ) {
   const { responseType, responseTemplateId, teamId, name, matchData } =
     automation;
@@ -145,7 +146,8 @@ export async function sendAutomatedReplyMessage(
     if (
       prevIntraction &&
       prevIntraction?.currentScreen === nextScreenId &&
-      automation?.id === prevIntraction?.waAutomatedReplyId
+      automation?.id === prevIntraction?.waAutomatedReplyId &&
+      !isAutomationValid
     )
       return false;
     if (!node) return false;
@@ -260,7 +262,12 @@ function getNextScreen(data, screenId, buttonId) {
       comp?.name?.some((name) => name.id === buttonId),
   );
   if (!component) {
-    return null;
+    // If component doesn't exist, check in previous screen
+    const previousEdge = data.edges.find((edge) => edge.target === screenId);
+    if (!previousEdge) {
+      return null;
+    }
+    return getNextScreen(data, previousEdge.source, buttonId);
   }
 
   // Find the name object with the given text value to get the id
