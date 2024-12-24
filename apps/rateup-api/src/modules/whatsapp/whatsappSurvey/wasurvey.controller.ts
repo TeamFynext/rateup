@@ -461,6 +461,7 @@ async function handleAutomatedReply(
           parsedMessage,
           previousAutomation,
           prevInteraction,
+          false,
         );
 
         if (!result) {
