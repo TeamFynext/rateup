@@ -442,7 +442,14 @@ async function handleAutomatedReply(
     });
 
     if (automation) {
-      await sendAutomatedReplyMessage(orgId, parsedMessage, automation);
+      await sendAutomatedReplyMessage(
+        orgId,
+        parsedMessage,
+        automation,
+        prevInteraction?.waAutomatedReplyId === automation.id
+          ? prevInteraction
+          : undefined,
+      );
     } else if (prevInteraction) {
       const previousAutomation = await prisma.waAutomatedReply.findFirst({
         where: { id: prevInteraction.waAutomatedReplyId },
@@ -453,6 +460,8 @@ async function handleAutomatedReply(
           orgId,
           parsedMessage,
           previousAutomation,
+          prevInteraction,
+          false,
         );
 
         if (!result) {
@@ -482,7 +491,12 @@ async function handleInitialInteraction(
     });
 
     if (initialAutomation) {
-      await sendAutomatedReplyMessage(orgId, parsedMessage, initialAutomation);
+      await sendAutomatedReplyMessage(
+        orgId,
+        parsedMessage,
+        initialAutomation,
+        prevInteraction,
+      );
     }
   }
 }

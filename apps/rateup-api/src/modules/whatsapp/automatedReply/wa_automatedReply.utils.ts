@@ -114,6 +114,8 @@ export async function sendAutomatedReplyMessage(
   orgId: string,
   { from, buttonId, message }: WaParsedMessage,
   automation: WaAutomatedReply,
+  prevIntraction: prevIntractionProps,
+  isAutomationValid: boolean = true, // in the case of chained automations, automation will be invalid and automation prop will contain previous automation
 ) {
   const { responseType, responseTemplateId, teamId, name, matchData } =
     automation;
@@ -123,9 +125,13 @@ export async function sendAutomatedReplyMessage(
     // TODO: improve template sending
     await sendTemplateToUserCore(orgId, responseTemplateId, from, [], teamId);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    const nextScreenId =
-      getNextScreen((matchData as unknown as matchDataProps)?.json, buttonId) ||
-      nodes?.[0]?.id;
+    let nextScreenId = prevIntraction
+      ? getNextScreen((matchData as unknown as matchDataProps)?.json, buttonId)
+      : nodes?.[0]?.id;
+    if (isAutomationValid && !nextScreenId) {
+      nextScreenId = nodes?.[0]?.id;
+    }
+    if (!nextScreenId) return false;
     const node = nodes?.find((node) => node.id === nextScreenId);
 
     await prisma.waAutomatedReplyMessage.create({
