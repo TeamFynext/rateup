@@ -9,18 +9,14 @@ import {
   Stack,
   Tabs,
   Text,
-  Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
 import { LoyaltyActionType } from "@/types/enums";
-import { useLCAction } from "@/backend/loyalty/loyalty.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RefreshButton from "@/components/Button/RefreshButton";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyManualCustomerActionModal from "@/components/loyalty/actions/PointsIssuance";
@@ -28,12 +24,11 @@ import LoyaltyCustomerAction from "@/components/loyalty/Customer/LoyaltyCustomer
 import LoyaltyCustomerRedeems from "@/components/loyalty/Customer/LoyaltyCustomerRedeems";
 import LoyaltyUtilityMenu from "@/components/loyalty/Customer/LoyaltyUtilityMenu";
 import ReferralAction from "@/components/loyalty/ReferralAction";
-import { LASelector, LCSelector } from "@/components/loyalty/utils";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import styles from "@/components/Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
 import useTranslations from "@/dictionaries/useTranslation";
-import { formatDate, formatDateWithTime } from "@/utils/dateTime";
+import { formatDate } from "@/utils/dateTime";
 
 import {
   useDeleteLoyaltyCustomerMutation,

@@ -11,10 +11,9 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import CreateNewLoyaltyAction, {
-  isLReferralAction,
-} from "@/components/loyalty/actions/CreateNewLoyaltyAction";
+import CreateNewLoyaltyAction from "@/components/loyalty/actions/CreateNewLoyaltyAction";
 import LoyaltyActionCard from "@/components/loyalty/actions/LoyaltyActionCard";
+import { isLReferralAction } from "@/components/loyalty/utils";
 import NothingFound from "@/components/NothingFound/NothingFound";
 
 const index = () => {
@@ -46,7 +45,6 @@ const index = () => {
     <Stack>
       <Group justify="space-between">
         <Group>
-          {/* <Title>Actions</Title> */}
           <RateupButtonBlue
             title="New Action"
             rightIcon={<IconPlus />}

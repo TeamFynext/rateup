@@ -55,6 +55,8 @@ export type LoyaltyAction = {
   isAmountBasedForReferee?: boolean;
   maxPointsForReferee?: number;
   isExistingUserReferralAllowed?: boolean;
+  active?: boolean;
+  description?: string;
 };
 
 export const useUpdateLoyaltyAction = (actionId) => {
@@ -81,8 +83,8 @@ export const useDeleteLoyaltyAction = (actionId) => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
       showSuccessToast("Loyalty Action deleted successfully");
     },
-    onError: () => {
-      showErrorToast("Error in deleting loyalty action");
+    onError: (e: any) => {
+      showErrorToast(`Deletion Failed: ${e?.response?.data ?? "Try again"}`);
     },
   });
 };

@@ -8,6 +8,7 @@ import { IconClock, IconStarFilled } from "@tabler/icons-react";
 import { LoyaltyActionType } from "@/types/enums";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
+import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateString } from "@/utils/dateTime";
 
 import classes from "./Actions.module.css";
@@ -39,14 +40,17 @@ const LoyaltyActionCard = ({ action }) => {
         <Group justify="space-between">
           <Title order={3}>{action?.name}</Title>
           <CardMenu>
-            <LoyaltyActionMenu actionId={action?.id} />
+            <LoyaltyActionMenu action={action} />
           </CardMenu>
         </Group>
         <LoyaltyPoint points={action?.points} />
         <ValidFromTo from={action?.startDate} to={action?.endDate} />
-        <Badge variant={"light"} color={getActionColor(action?.type)}>
-          {action?.type}
-        </Badge>
+        <Group justify="space-between">
+          <Badge variant={"light"} color={getActionColor(action?.type)}>
+            {action?.type}
+          </Badge>
+          <ActiveStatusBadge active={action?.active} />
+        </Group>
         <CreateNewLoyaltyAction opened={opened} close={close} action={action} />
       </Stack>
     </PaperLayout>

@@ -511,4 +511,5 @@ export enum OrderType {
 export enum LoyaltyActionType {
   ReferralPurchase = "Referral Purchase",
   DirectPurchase = "Direct Purchase",
+  CustomerRegistration = "Customer Registration",
 }
