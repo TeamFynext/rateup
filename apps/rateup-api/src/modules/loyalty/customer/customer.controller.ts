@@ -10,6 +10,8 @@ import {
   deleteLoyaltyCustomer,
   getLoyaltyCustomers,
   handleLCustomerAction,
+  handlePostRegisterAction,
+  handleSendTemplate,
   verifyLCustomerMaxCountRestriction,
 } from "./customer.service";
 import { getLoyaltyTemplate } from "../settings/settings.service";
@@ -33,23 +35,12 @@ export async function createLCustomerHandler(
       orgId,
     );
     if (template) {
-      const dynamicVariables = [res.name];
-      const components = [];
-      components.push({
-        type: "body",
-        parameters: dynamicVariables.map((data: string) => ({
-          type: "text",
-          text: data,
-        })),
-      });
-      await sendTemplateToUserCore(
-        orgId,
-        template.waTemplateId,
-        res.phone,
-        components,
-      );
+      await handleSendTemplate(template.waTemplateId, orgId, res.phone, [
+        res.name,
+      ]);
     }
     await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
+    await handlePostRegisterAction(orgId, res.id);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
@@ -79,20 +70,11 @@ export async function customerActionHandler(
       message: "Success",
       totlaEarnedPoints: customer.totalEarnedPoints,
     });
-    const dynamicVariables = [customer.name, customerPoints?.toString()];
-    const components = [];
-    components.push({
-      type: "body",
-      parameters: dynamicVariables.map((data: string) => ({
-        type: "text",
-        text: data,
-      })),
-    });
-    await sendTemplateToUserCore(
-      customer.orgId,
+    await handleSendTemplate(
       customerAction.action.waTemplateId,
+      customer.orgId,
       customer.phone,
-      components,
+      [customer.name, customerPoints?.toString()],
     );
   } catch (e) {
     log.error(e);

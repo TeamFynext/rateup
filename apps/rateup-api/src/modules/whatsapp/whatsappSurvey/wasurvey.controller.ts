@@ -366,11 +366,11 @@ async function whatsappMessageHandler(
     await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
-  } else if (message.startsWith("Referral Code")) {
+  } else if (message.trim().toLowerCase().startsWith("referral")) {
     await handleReferralCommand(from, orgId);
-  } else if (message.startsWith("Loyalty Points")) {
+  } else if (message.trim().toLowerCase().startsWith("points")) {
     await handleLoyaltyPointsCommand(from, orgId);
-  } else if (message.startsWith("Loyalty Rewards")) {
+  } else if (message.trim().toLowerCase().startsWith("rewards")) {
     await handleLoyaltyRewardsCommand(from, orgId);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);

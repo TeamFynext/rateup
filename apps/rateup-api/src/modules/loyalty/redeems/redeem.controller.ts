@@ -5,7 +5,10 @@ import {
   getLoyaltyRedeems,
   RedeemStatus,
 } from "./redeem.service";
-import { updateLCustomerRedeemPoint } from "../customer/customer.service";
+import {
+  handleSendTemplate,
+  updateLCustomerRedeemPoint,
+} from "../customer/customer.service";
 import { log } from "../../../utils/logger";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
@@ -25,23 +28,11 @@ export async function redeemPointsHandler(
         message: "Success",
         totalRedeemedPoints: customer.redeemedPoints,
       });
-      const dynamicVariables = [
-        customer.name,
-        redeem.reward.points?.toString(),
-      ];
-      const components = [];
-      components.push({
-        type: "body",
-        parameters: dynamicVariables.map((data: string) => ({
-          type: "text",
-          text: data,
-        })),
-      });
-      await sendTemplateToUserCore(
-        customer.orgId,
+      await handleSendTemplate(
         redeem.reward.waTemplateId,
+        customer.orgId,
         customer.phone,
-        components,
+        [customer.name, redeem.reward.points?.toString()],
       );
     } else {
       reply.code(403).send(message);

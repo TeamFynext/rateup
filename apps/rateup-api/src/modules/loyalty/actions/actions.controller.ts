@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createLoyaltyAction,
   deleteLoyaltyActionById,
+  getCustomerActions,
   getLoyaltyActionById,
   getLoyaltyActions,
   updateLoyaltyActionById,
@@ -21,6 +22,7 @@ import { updateMonthlyStat } from "../../stats/stats.service";
 import {
   getLoyaltyCustomerOrActionByReferralCode,
   handleLCustomerAction,
+  handleSendTemplate,
 } from "../customer/customer.service";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 
@@ -96,7 +98,15 @@ export async function deleteLoyaltyActionByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await deleteLoyaltyActionById(request.params.actionId);
+    const { actionId } = request.params;
+    const customerActions = await getCustomerActions(actionId);
+    if (customerActions.length)
+      return reply
+        .code(403)
+        .send(
+          "Cannot delete the action used by active customer. Deactivate action instead",
+        );
+    const res = await deleteLoyaltyActionById(actionId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -162,40 +172,22 @@ export async function referActionHandler(
 
     reply.code(200).send(customerAction);
 
-    if (referee && customerAction.action.refereeWaTemplateId) {
-      const dynamicVariables = [referee.name, refereePoints?.toString()];
-      const components = [];
-      components.push({
-        type: "body",
-        parameters: dynamicVariables.map((data: string) => ({
-          type: "text",
-          text: data,
-        })),
-      });
-      await sendTemplateToUserCore(
-        referee.orgId,
+    if (referee) {
+      await handleSendTemplate(
         customerAction.action.refereeWaTemplateId,
+        referee.orgId,
         referee.phone,
-        components,
+        [referee.name, refereePoints?.toString()],
       );
     }
-    if (customerAction.action.waTemplateId) {
-      const dynamicVariables = [customer.name, customerPoints?.toString()];
-      const components = [];
-      components.push({
-        type: "body",
-        parameters: dynamicVariables.map((data: string) => ({
-          type: "text",
-          text: data,
-        })),
-      });
-      await sendTemplateToUserCore(
-        customer.orgId,
-        customerAction.action.waTemplateId,
-        customer.phone,
-        components,
-      );
-    }
+    const dynamicVariables = [customer.name, customerPoints?.toString()];
+    if (referee) dynamicVariables.push(referee?.name, referee?.phone);
+    await handleSendTemplate(
+      customerAction.action.waTemplateId,
+      customer.orgId,
+      customer.phone,
+      dynamicVariables,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

@@ -64,6 +64,7 @@ import { updateMonthlyStat } from "../../stats/stats.service";
 import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils";
 import { wait } from "../whatsappSurvey/wasurvey.controller";
 import { createWaMessageSchedule } from "../wa_message_scheduler";
+import { parsePhoneforWa } from "../../loyalty/util";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -349,7 +350,7 @@ export async function uploadHandler(
 export async function sendTemplateToUserCore(
   orgId: string,
   templateId: string,
-  phone: string,
+  phoneNumber: string,
   parameterData: any[],
   teamId?: string,
   userId?: string,
@@ -358,6 +359,7 @@ export async function sendTemplateToUserCore(
   tag?: string,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
+  const phone = parsePhoneforWa(phoneNumber);
   if (isTemplateName) {
     dbTemplate = await getTemplateByNameAndOrgId(templateId, orgId);
     if (!dbTemplate) {

@@ -83,3 +83,11 @@ export async function getReferralLoyaltyAction(orgId) {
     },
   });
 }
+
+export async function getCustomerActions(actionId) {
+  return await prisma.loyaltyActionCustomerMap.findMany({
+    where: {
+      actionId,
+    },
+  });
+}
