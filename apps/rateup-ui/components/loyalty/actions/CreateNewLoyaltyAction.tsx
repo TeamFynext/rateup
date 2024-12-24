@@ -18,6 +18,7 @@ import {
   IconFriends,
   IconShoppingCart,
   IconUserFilled,
+  IconUserPlus,
 } from "@tabler/icons-react";
 import { z } from "zod";
 
@@ -30,23 +31,17 @@ import {
   ContainedDateInput,
   ContainedNumberInput,
   ContainedSelection,
+  ContainedTextArea,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 
+import { isLPurchaseAction, isLReferralAction } from "../utils";
 import classes from "./Actions.module.css";
 
-export const isLReferralAction = (actionType) =>
-  actionType && [LoyaltyActionType.ReferralPurchase].includes(actionType);
-
-export const isLPurchaseAction = (actionType) =>
-  actionType &&
-  [
-    LoyaltyActionType.DirectPurchase,
-    LoyaltyActionType.ReferralPurchase,
-  ].includes(actionType);
 const CreateNewLoyaltyAction = ({
   opened,
   close,
@@ -55,6 +50,8 @@ const CreateNewLoyaltyAction = ({
 }) => {
   const createLoyaltyActionMutation = useCreateLoyaltyAction();
   const updateLoyaltyActionMut = useUpdateLoyaltyAction(action?.id);
+
+  const { translations } = useTranslations();
 
   const schema = z
     .object({
@@ -78,6 +75,10 @@ const CreateNewLoyaltyAction = ({
       isAmountBasedForReferee: z.boolean().optional().nullable(),
       maxPointsForReferee: z.number().optional().nullable(),
       isExistingUserReferralAllowed: z.boolean().optional().nullable(),
+      description: z
+        .string()
+        .trim()
+        .min(1, { message: "Description required" }),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -105,6 +106,7 @@ const CreateNewLoyaltyAction = ({
       maxPointsForReferee: action?.maxPointsForReferee || 0,
       isExistingUserReferralAllowed:
         action?.isExistingUserReferralAllowed || false,
+      description: action?.description || "",
     },
     validate: zodResolver(schema),
   });
@@ -172,6 +174,13 @@ const CreateNewLoyaltyAction = ({
           isReferralAvailable={isReferralAvailable}
         />
         <ContainedTextField label={"Name"} {...form.getInputProps("name")} />
+        <ContainedTextArea
+          label={translations["Description"]}
+          {...form.getInputProps("description")}
+          autosize
+          minRows={3}
+          description={"Used in whatsapp message to describe action"}
+        />
         <Group>
           <Checkbox
             label={
@@ -223,11 +232,7 @@ const CreateNewLoyaltyAction = ({
           {...form.getInputProps("maxPoints")}
           allowDecimal={false}
           allowNegative={false}
-          display={
-            isLReferralAction(form.values.type) && form.values.isAmountBased
-              ? "block"
-              : "none"
-          }
+          display={form.values.isAmountBased ? "block" : "none"}
         />
         <WaTemplateSelector
           templateType={TemplateType.LOYALTY}
@@ -236,7 +241,8 @@ const CreateNewLoyaltyAction = ({
               ? "WhatsApp Template for referrer(to send after action)"
               : "WhatsApp Template(to send after action)"
           }
-          description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
+          description={`Dynamic variable {{1}} - customer name, {{2}} - 
+            current earned points ${isLReferralAction(form.values.type) ? " ,{{3}} - referee name, {{4}} - referee phone number" : ""} `}
           {...form.getInputProps("waTemplateId")}
         />
         {isLReferralAction(form.values.type) && (
@@ -328,6 +334,13 @@ const LoyaltyActionSelect = ({
       case LoyaltyActionType.DirectPurchase:
         return (
           <IconShoppingCart
+            size={"1.2rem"}
+            color={color ?? "var(--mantine-color-gray-7)"}
+          />
+        );
+      case LoyaltyActionType.CustomerRegistration:
+        return (
+          <IconUserPlus
             size={"1.2rem"}
             color={color ?? "var(--mantine-color-gray-7)"}
           />

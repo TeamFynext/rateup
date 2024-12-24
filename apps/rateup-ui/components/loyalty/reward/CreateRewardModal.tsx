@@ -139,13 +139,14 @@ export const LoyaltyRewardForm = ({ form }) => {
         label={"Description"}
         {...form.getInputProps("description")}
         autosize
-        minRows={5}
+        minRows={3}
+        description={"Used in whatsapp message to describe reward"}
       />
       <ContainedTextArea
         label={"Terms and Condition"}
         {...form.getInputProps("tnc")}
         autosize
-        minRows={5}
+        minRows={3}
       />
       <WaTemplateSelector
         templateType={TemplateType.LOYALTY}

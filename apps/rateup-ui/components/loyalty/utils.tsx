@@ -1,5 +1,6 @@
 import { Card, Group, SelectProps, Skeleton } from "@mantine/core";
 
+import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
@@ -15,7 +16,13 @@ export const LCSelector = (props: SelectProps) => {
       }))
     : [];
   if (isLoading) return <SelectSkeleton />;
-  return <ContainedSelection data={customerList} {...props} />;
+  return (
+    <ContainedSelection
+      data={customerList}
+      {...props}
+      nothingFoundMessage="No customers found"
+    />
+  );
 };
 
 export const LRSelector = (props: SelectProps) => {
@@ -27,19 +34,33 @@ export const LRSelector = (props: SelectProps) => {
       }))
     : [];
   if (isLoading) return <SelectSkeleton />;
-  return <ContainedSelection data={rewardList} {...props} />;
+  return (
+    <ContainedSelection
+      data={rewardList}
+      {...props}
+      nothingFoundMessage="No rewards found"
+    />
+  );
 };
 
 export const LASelector = (props: SelectProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
   const actionList = actions
-    ? actions?.map((a) => ({
-        label: a.name,
-        value: a.id,
-      }))
+    ? actions
+        .filter((a) => a.active)
+        .map((a) => ({
+          label: a.name,
+          value: a.id,
+        }))
     : [];
   if (isLoading) return <SelectSkeleton />;
-  return <ContainedSelection data={actionList} {...props} />;
+  return (
+    <ContainedSelection
+      data={actionList}
+      {...props}
+      nothingFoundMessage="No actions found"
+    />
+  );
 };
 
 export const SelectSkeleton = () => {
@@ -52,3 +73,13 @@ export const SelectSkeleton = () => {
     </Card>
   );
 };
+
+export const isLReferralAction = (actionType) =>
+  actionType && [LoyaltyActionType.ReferralPurchase].includes(actionType);
+
+export const isLPurchaseAction = (actionType) =>
+  actionType &&
+  [
+    LoyaltyActionType.DirectPurchase,
+    LoyaltyActionType.ReferralPurchase,
+  ].includes(actionType);

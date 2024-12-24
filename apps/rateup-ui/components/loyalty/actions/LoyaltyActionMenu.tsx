@@ -4,13 +4,17 @@ import { Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 
-import { useDeleteLoyaltyAction } from "@/backend/loyalty/actions/actions.query";
+import {
+  useDeleteLoyaltyAction,
+  useUpdateLoyaltyAction,
+} from "@/backend/loyalty/actions/actions.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import useTranslations from "@/dictionaries/useTranslation";
 
-const LoyaltyActionMenu = ({ actionId }) => {
+const LoyaltyActionMenu = ({ action }) => {
   const { translations } = useTranslations();
-  const deleteMutation = useDeleteLoyaltyAction(actionId);
+  const deleteMutation = useDeleteLoyaltyAction(action.id);
+  const updateMut = useUpdateLoyaltyAction(action.id);
   const [deleteDialogOpened, { open, close }] = useDisclosure();
 
   function handleDelete() {
@@ -18,11 +22,24 @@ const LoyaltyActionMenu = ({ actionId }) => {
       onSuccess: close,
     });
   }
+
+  function handleActivate() {
+    updateMut.mutate({ active: !action.active });
+  }
   return (
     <>
       <Menu.Dropdown>
-        <Menu.Item leftSection={<IconTrash />} onClick={open}>
+        <Menu.Item
+          leftSection={<IconTrash size={"1rem"} color="red" />}
+          c={"red"}
+          onClick={open}
+        >
           {translations["Delete"]}
+        </Menu.Item>
+        <Menu.Item onClick={handleActivate}>
+          {action?.active
+            ? translations["Deactivate"]
+            : translations["Activate"]}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
