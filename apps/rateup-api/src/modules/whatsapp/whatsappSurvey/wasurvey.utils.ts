@@ -181,7 +181,7 @@ export function createReplyImageMessage(
 export function createReplyButtonsMessage(
   to: string,
   questionTitle: string,
-  questionDescription: string,
+  questionDescription: string | Object,
   choices: any[],
 ): WaSendMessageBody {
   return {
@@ -196,7 +196,10 @@ export function createReplyButtonsMessage(
         text: questionTitle,
       },
       body: {
-        text: questionDescription,
+        text:
+          typeof questionDescription === "string"
+            ? questionDescription
+            : parseToWhatsAppFormat(questionDescription),
       },
       action: {
         buttons:
@@ -217,6 +220,66 @@ export function createReplyButtonsMessage(
       },
     },
   };
+}
+
+export function parseToWhatsAppFormat(editorContent) {
+  function formatText(text, type = "*") {
+    let trimmedEnd = text.trimEnd();
+    let trimmedStart = text.trimStart();
+    let trimmed = text.trim();
+
+    let leadingSpaces = " ".repeat(text.length - trimmedStart.length);
+    let trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
+    let formattedText =
+      trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
+    return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
+  }
+  const parseNode = (node) => {
+    if (!node) return "";
+    switch (node.type) {
+      case "paragraph":
+        return node?.content?.map(parseNode).join("");
+      case "text":
+        let text = node.text;
+        if (node.marks) {
+          node.marks.forEach((mark) => {
+            switch (mark.type) {
+              case "bold":
+                text = formatText(text, "*");
+                break;
+              case "italic":
+                text = formatText(text, "_");
+                break;
+              case "strike":
+                text = formatText(text, "~");
+                break;
+              case "code":
+                text = `\`${text}\``;
+                break;
+              default:
+                break;
+            }
+          });
+        }
+        return text;
+      case "bulletList":
+        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
+      case "orderedList":
+        return node.content
+          .map((item, index) => `${index + 1}. ${parseNode(item)}`)
+          .join("\n");
+      case "blockquote":
+        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
+      case "codeBlock":
+        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
+      case "listItem":
+        return node.content.map(parseNode).join("");
+      default:
+        return "";
+    }
+  };
+
+  return editorContent.content.map(parseNode).join("\n");
 }
 
 interface createCTAButtonMessageParams {
@@ -282,7 +345,13 @@ export function createTextMessage(
     type: "text",
     text: {
       preview_url: false,
-      body: (title ? `*${title}*\n\n` : "") + description,
+      body:
+        (title ? `*${title}*\n\n` : "") +
+        `${
+          typeof description === "string"
+            ? description
+            : parseToWhatsAppFormat(description)
+        }`,
     },
   };
 }
@@ -303,7 +372,7 @@ export function createTemplateMessage(
 export function createListMessage(
   to: string,
   questionTitle: string,
-  questionDescription: string,
+  questionDescription: string | object,
   buttonTitle: string,
   choices: any,
 ): WaSendMessageBody {
@@ -321,7 +390,10 @@ export function createListMessage(
         },
       }),
       body: {
-        text: questionDescription,
+        text:
+          typeof questionDescription === "string"
+            ? questionDescription
+            : parseToWhatsAppFormat(questionDescription),
       },
       action: {
         button: buttonTitle,
