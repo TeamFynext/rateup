@@ -12,6 +12,7 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -19,11 +20,11 @@ import {
   Box,
   Button,
   Card,
-  Flex,
   Group,
   ScrollAreaAutosize,
   Stack,
   Tabs,
+  TextInput,
   Title,
   Tooltip,
   Transition,
@@ -50,10 +51,10 @@ import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 import LinkWithCopyBtn from "@/components/adminPanel/ShareQRPage/LinkWithCopyBtn";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import WaTextEditor from "@/components/RichTextEditor/waTextEditor";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR";
-import { CopyLinkComponent } from "@/components/Survey/ShareSurvey/ShareSurvey";
 import TanstackTable from "@/components/Table/TanstackTable";
 import WaTemplateFormElements, {
   NoParams,
@@ -61,7 +62,7 @@ import WaTemplateFormElements, {
 import ScreenNode from "@/components/whatsapp/xyflow/ScreenNode";
 
 import { AutomatedReplyForm } from "./create";
-import useReplyStore from "./store";
+import useReplyStore, { ReplyType } from "./store";
 
 const column: ColumnDef<any>[] = [
   {
@@ -288,39 +289,7 @@ const Type3Node = ({ data }) => (
 export default App;
 
 export const RightSection = ({ setNodes, nodes }) => {
-  const { id, opened, close } = useReplyStore();
-  const { data, isPending } = useWaTemplateById(id);
-  const [parameterData, setParameterData] = useImmer<any>([]);
-
-  useEffect(() => {
-    const parameters = nodes.map(
-      (node) =>
-        node.data.components?.find((comp) => comp.name === id)?.parameter,
-    );
-    let d = parameters?.length > 0 ? (parameters?.[0] ?? []) : [];
-    setParameterData(d);
-  }, [id]);
-
-  if (!id) return null;
-  const saveParameter = () => {
-    setNodes((nodes) =>
-      nodes.map((node) => {
-        if (node.data.components.some((comp) => comp.name === id)) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              components: node.data.components.map((comp) =>
-                comp.name === id ? { ...comp, parameter: parameterData } : comp,
-              ),
-            },
-          };
-        }
-        return node;
-      }),
-    );
-  };
-
+  const { id, type, opened, close } = useReplyStore();
   return (
     <Transition
       mounted={opened}
@@ -341,41 +310,218 @@ export const RightSection = ({ setNodes, nodes }) => {
             ...styles,
             zIndex: 4,
           }}
-          w={350}
+          w={type === ReplyType.Editor ? 450 : 350}
         >
-          {isPending ? (
-            <RateupLoader />
+          <Group gap="xs" justify="space-between">
+            <Title order={2}>
+              {type === ReplyType.Editor
+                ? "Editor"
+                : type === ReplyType.Template
+                  ? "Template Parameters"
+                  : "Text"}
+            </Title>
+            <ActionIcon onClick={close} variant="light">
+              <IconX />
+            </ActionIcon>
+          </Group>
+          {type === ReplyType.Editor ? (
+            <RichTextEditor id={id} setNodes={setNodes} nodes={nodes} />
+          ) : type === ReplyType.Template ? (
+            <TemplateEditor id={id} setNodes={setNodes} nodes={nodes} />
           ) : (
-            <>
-              <Group gap="xs" justify="space-between">
-                <Title order={2}>Template Parameters</Title>
-                <ActionIcon onClick={close} variant="light">
-                  <IconX />
-                </ActionIcon>
-              </Group>
-              <Box my={"xs"}>
-                <RateupButtonPrimary title="Save" onClick={saveParameter} />
-              </Box>
-              <ScrollAreaAutosize mah={"60dvh"}>
-                <Box pr={"sm"}>
-                  {data?.data?.components?.length <= 1 &&
-                  data?.data?.components?.[0]?.example === undefined ? (
-                    <Stack justify="center" align="center" h={"60dvh"}>
-                      <NoParams type={"Body"} />
-                    </Stack>
-                  ) : (
-                    <WaTemplateFormElements
-                      setParameterData={setParameterData}
-                      template={data?.data}
-                      parameters={parameterData}
-                    />
-                  )}
-                </Box>
-              </ScrollAreaAutosize>
-            </>
+            <TextEditor id={id} setNodes={setNodes} nodes={nodes} />
           )}
         </Card>
       )}
     </Transition>
+  );
+};
+
+const TemplateEditor = ({ id, setNodes, nodes }) => {
+  const { data, isPending } = useWaTemplateById(id);
+  const [parameterData, setParameterData] = useImmer<any>([]);
+
+  useEffect(() => {
+    if (id) {
+      const parameters = nodes.map(
+        (node) =>
+          node.data.components?.find((comp) => comp.name === id)?.parameter,
+      );
+      let d = parameters?.length > 0 ? (parameters?.[0] ?? []) : [];
+      setParameterData(d);
+    }
+  }, [id]);
+
+  if (!id) return null;
+  if (isPending) return <RateupLoader />;
+
+  const saveParameter = () => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.data.components.some((comp) => comp.name === id)) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              components: node.data.components.map((comp) =>
+                comp.name === id ? { ...comp, parameter: parameterData } : comp,
+              ),
+            },
+          };
+        }
+        return node;
+      }),
+    );
+  };
+
+  return (
+    <>
+      <Box my={"xs"}>
+        <RateupButtonPrimary title="Save" onClick={saveParameter} />
+      </Box>
+      <ScrollAreaAutosize mah={"60dvh"}>
+        <Box pr={"sm"}>
+          {data?.data?.components?.length <= 1 &&
+          data?.data?.components?.[0]?.example === undefined ? (
+            <Stack justify="center" align="center" h={"60dvh"}>
+              <NoParams type={"Body"} />
+            </Stack>
+          ) : (
+            <WaTemplateFormElements
+              setParameterData={setParameterData}
+              template={data?.data}
+              parameters={parameterData}
+            />
+          )}
+        </Box>
+      </ScrollAreaAutosize>
+    </>
+  );
+};
+
+const RichTextEditor = ({ setNodes, nodes, id }) => {
+  // Find content using useMemo to cache the result
+  const content = useMemo(() => {
+    return nodes.reduce((found, node) => {
+      if (found) return found; // Early return if already found
+
+      return node.data.components?.reduce((fieldFound, comp) => {
+        if (fieldFound) return fieldFound;
+        return comp.name?.find((name) => name.id === id);
+      }, null);
+    }, null);
+  }, [nodes, id]);
+
+  // Memoize the change handler
+  const handleInputChange = useCallback(
+    (value) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          // Skip nodes that don't have matching components
+          const hasMatchingComponent = node.data.components?.some((comp) =>
+            comp.name?.some((field) => field.id === id),
+          );
+
+          if (!hasMatchingComponent) return node;
+
+          // Update matching node
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              components: node.data.components.map((comp) => {
+                const hasMatchingField = comp.name?.some(
+                  (field) => field.id === id,
+                );
+
+                if (!hasMatchingField) return comp;
+
+                return {
+                  ...comp,
+                  name: comp.name.map((field) =>
+                    field.id === id ? { ...field, value } : field,
+                  ),
+                };
+              }),
+            },
+          };
+        }),
+      );
+    },
+    [id, setNodes],
+  );
+
+  // Don't render if no content found
+  if (!content) return null;
+
+  return (
+    <WaTextEditor
+      handleInputChange={handleInputChange}
+      content={content.value}
+    />
+  );
+};
+
+const TextEditor = ({ setNodes, nodes, id }) => {
+  const content = useMemo(() => {
+    return nodes.reduce((found, node) => {
+      if (found) return found; // Early return if already found
+
+      return node.data.components?.reduce((fieldFound, comp) => {
+        if (fieldFound) return fieldFound;
+        return comp.name?.find((name) => name.id === id);
+      }, null);
+    }, null);
+  }, [nodes, id]);
+
+  // Memoize the change handler
+  const handleInputChange = useCallback(
+    (value) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          // Skip nodes that don't have matching components
+          const hasMatchingComponent = node.data.components?.some((comp) =>
+            comp.name?.some((field) => field.id === id),
+          );
+
+          if (!hasMatchingComponent) return node;
+
+          // Update matching node
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              components: node.data.components.map((comp) => {
+                const hasMatchingField = comp.name?.some(
+                  (field) => field.id === id,
+                );
+
+                if (!hasMatchingField) return comp;
+
+                return {
+                  ...comp,
+                  name: comp.name.map((field) =>
+                    field.id === id ? { ...field, value } : field,
+                  ),
+                };
+              }),
+            },
+          };
+        }),
+      );
+    },
+    [id, setNodes],
+  );
+
+  // Don't render if no content found
+  if (!content) return null;
+  return (
+    <TextInput
+      placeholder="Enter the button text"
+      maxLength={20}
+      onChange={(e) => handleInputChange(e.target.value)}
+      description="Max 20 characters"
+      value={content?.value}
+    />
   );
 };

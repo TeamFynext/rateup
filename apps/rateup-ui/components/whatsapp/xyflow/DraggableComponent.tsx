@@ -8,7 +8,7 @@ import {
   HoverCard,
   Select,
   Stack,
-  TextInput,
+  Text,
 } from "@mantine/core";
 import {
   IconEdit,
@@ -23,8 +23,11 @@ import {
   RateupButtonPrimary,
   RateupFileUploadButton,
 } from "@/components/Button/RateupButtons";
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import useTranslations from "@/dictionaries/useTranslation";
-import useReplyStore from "@/pages/dashboard/whatsapp/automated-replies/store";
+import useReplyStore, {
+  ReplyType,
+} from "@/pages/dashboard/whatsapp/automated-replies/store";
 import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
@@ -42,7 +45,7 @@ const DraggableComponent = ({
   index,
   options,
 }) => {
-  const { setId, toggle, close } = useReplyStore();
+  const { setId, close, setType, open } = useReplyStore();
   const { translations } = useTranslations();
   const [image, setImage] = useState(data.components[index].name ?? null);
   const [loading, setLoading] = useState(false);
@@ -76,31 +79,6 @@ const DraggableComponent = ({
         ),
       );
     }
-  };
-
-  const handleInputChange = (fieldId, value) => {
-    setNodes((nodes) =>
-      nodes.map((node) =>
-        node.id === id
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                components: node.data.components.map((comp, compIndex) =>
-                  compIndex === index
-                    ? {
-                        ...comp,
-                        name: comp.name.map((field) =>
-                          field.id === fieldId ? { ...field, value } : field,
-                        ),
-                      }
-                    : comp,
-                ),
-              },
-            }
-          : node,
-      ),
-    );
   };
 
   const handleRemoveField = (fieldId) => {
@@ -205,36 +183,51 @@ const DraggableComponent = ({
   };
   const renderDynamicTextFields = (len = 4) => (
     <Stack gap={"xs"} onClick={(e) => e.stopPropagation()}>
-      {component.name.map((field, i) => (
-        <Group key={field.id} gap={4}>
-          {i > 0 && (
-            <ActionIcon
-              title="Delete"
-              radius={"sm"}
-              variant="light"
-              onClick={() => handleRemoveField(field.id)}
+      {component.name.map((field, i) => {
+        let parsedValue = parseJsonToReact(field.value);
+        return (
+          <Group key={field.id} gap={4}>
+            {i > 0 && (
+              <ActionIcon
+                title="Delete"
+                radius={"sm"}
+                variant="light"
+                onClick={() => handleRemoveField(field.id)}
+              >
+                <IconMinus />
+              </ActionIcon>
+            )}
+            <Card
+              shadow="sm"
+              radius="md"
+              p={"xs"}
+              flex={1}
+              withBorder
+              onClick={() => {
+                setId(field.id);
+                setType(i === 0 ? ReplyType.Editor : ReplyType.Text);
+                open();
+              }}
             >
-              <IconMinus />
-            </ActionIcon>
-          )}
-          <TextInput
-            placeholder={i === 0 ? "Add Text" : "Add Button Name"}
-            value={field.value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            flex={1}
-            rightSection={
-              i > 0 && (
+              {parsedValue ? (
+                parsedValue
+              ) : (
+                <Text c={"dimmed"} fz={"sm"}>
+                  {i === 0 ? "Enter Text" : "Enter button name"}
+                </Text>
+              )}
+              {i > 0 && (
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={field.id}
                   className={styles.handle_style}
                 />
-              )
-            }
-          />
-        </Group>
-      ))}
+              )}
+            </Card>
+          </Group>
+        );
+      })}
       {component.name.length < len && (
         <RateupButtonPrimary
           title="Add Button"
@@ -309,7 +302,7 @@ const DraggableComponent = ({
               variant="light"
               onClick={() => {
                 setId(component.name);
-                toggle();
+                open();
               }}
             >
               <IconEdit />
