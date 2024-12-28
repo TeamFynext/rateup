@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import InsertEmoji from "./InsertEmoji";
-import styles from "./WaTextEditor.module.css";
+import styles from "./waTextEditor.module.css";
 
 function WaTextEditor({ handleInputChange, content = "", className = "" }) {
   let max = 1024;
