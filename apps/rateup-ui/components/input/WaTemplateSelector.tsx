@@ -7,7 +7,7 @@ import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { SelectSkeleton } from "../loyalty/utils";
+import { SelectSkeleton } from "../Loyalty/utils";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface WaTemplateSelector extends SelectProps {

@@ -327,12 +327,15 @@ export const RightSection = ({ setNodes, nodes }) => {
               <IconX />
             </ActionIcon>
           </Group>
-          {type === ReplyType.Editor ? (
-            <RichTextEditor id={id} setNodes={setNodes} nodes={nodes} />
-          ) : type === ReplyType.Template ? (
+          {type === ReplyType.Template ? (
             <TemplateEditor id={id} setNodes={setNodes} nodes={nodes} />
           ) : (
-            <TextEditor id={id} setNodes={setNodes} nodes={nodes} />
+            <RichTextEditor
+              id={id}
+              setNodes={setNodes}
+              nodes={nodes}
+              type={type}
+            />
           )}
         </Card>
       )}
@@ -402,7 +405,7 @@ const TemplateEditor = ({ id, setNodes, nodes }) => {
   );
 };
 
-const RichTextEditor = ({ setNodes, nodes, id }) => {
+const RichTextEditor = ({ setNodes, nodes, id, type }) => {
   // Find content using useMemo to cache the result
   const content = useMemo(() => {
     return nodes?.reduce((found, node) => {
@@ -423,8 +426,10 @@ const RichTextEditor = ({ setNodes, nodes, id }) => {
       setNodes((prevNodes) =>
         prevNodes.map((node) => {
           // Skip nodes that don't have matching components
-          const hasMatchingComponent = node.data.components?.some((comp) =>
-            comp.name?.some((field) => field.id === id),
+          const hasMatchingComponent = node.data.components?.some(
+            (comp) =>
+              Array.isArray(comp?.name) &&
+              comp.name?.some((field) => field.id === id),
           );
 
           if (!hasMatchingComponent) return node;
@@ -435,9 +440,9 @@ const RichTextEditor = ({ setNodes, nodes, id }) => {
             data: {
               ...node.data,
               components: node.data.components.map((comp) => {
-                const hasMatchingField = comp.name?.some(
-                  (field) => field.id === id,
-                );
+                const hasMatchingField =
+                  Array.isArray(comp?.name) &&
+                  comp.name?.some((field) => field.id === id);
 
                 if (!hasMatchingField) return comp;
 
@@ -459,70 +464,12 @@ const RichTextEditor = ({ setNodes, nodes, id }) => {
   // Don't render if no content found
   if (!content) return null;
 
-  return (
+  return type === ReplyType.Editor ? (
     <WaTextEditor
       handleInputChange={handleInputChange}
       content={content.value}
     />
-  );
-};
-
-const TextEditor = ({ setNodes, nodes, id }) => {
-  const content = useMemo(() => {
-    return nodes?.reduce((found, node) => {
-      if (found) return found; // Early return if already found
-
-      return node?.data?.components?.reduce((fieldFound, comp) => {
-        if (fieldFound) return fieldFound;
-        return Array.isArray(comp?.name)
-          ? comp?.name?.find((name) => name?.id === id)
-          : null;
-      }, null);
-    }, null);
-  }, [nodes, id]);
-
-  // Memoize the change handler
-  const handleInputChange = useCallback(
-    (value) => {
-      setNodes((prevNodes) =>
-        prevNodes.map((node) => {
-          // Skip nodes that don't have matching components
-          const hasMatchingComponent = node.data.components?.some((comp) =>
-            comp.name?.some((field) => field.id === id),
-          );
-
-          if (!hasMatchingComponent) return node;
-
-          // Update matching node
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              components: node.data.components.map((comp) => {
-                const hasMatchingField = comp.name?.some(
-                  (field) => field.id === id,
-                );
-
-                if (!hasMatchingField) return comp;
-
-                return {
-                  ...comp,
-                  name: comp.name.map((field) =>
-                    field.id === id ? { ...field, value } : field,
-                  ),
-                };
-              }),
-            },
-          };
-        }),
-      );
-    },
-    [id, setNodes],
-  );
-
-  // Don't render if no content found
-  if (!content) return null;
-  return (
+  ) : (
     <TextInput
       placeholder="Enter the button text"
       maxLength={20}

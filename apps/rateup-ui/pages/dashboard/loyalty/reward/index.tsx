@@ -12,8 +12,8 @@ import NothingFound from "@/components/NothingFound/NothingFound";
 
 import { useGetLoyaltyRewards } from "../../../../backend/loyalty/reward/reward.query";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import { CreateRewardModal } from "../../../../components/loyalty/reward/CreateRewardModal";
-import { RewardCard } from "../../../../components/loyalty/reward/RewardCard";
+import { CreateRewardModal } from "../../../../components/Loyalty/Reward/CreateRewardModal";
+import { RewardCard } from "../../../../components/Loyalty/Reward/RewardCard";
 
 enum rewardSortData {
   defaultPointsOrder = "Default Points Order",

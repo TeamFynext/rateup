@@ -1,5 +1,5 @@
 import { axiosClient } from "@/backend/apiClient";
-import { LoyaltyTemplateTypes } from "@/components/loyalty/LoyaltySettings";
+import { LoyaltyTemplateTypes } from "@/components/Loyalty/LoyaltySettings";
 
 import { LOYALTY_BASE } from "../base";
 

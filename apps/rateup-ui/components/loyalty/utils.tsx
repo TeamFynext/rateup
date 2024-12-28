@@ -1,11 +1,11 @@
-import { Card, Group, SelectProps, Skeleton } from "@mantine/core";
+import { Card, Group, MultiSelectProps, SelectProps, Skeleton } from "@mantine/core";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 
-import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
+import { ContainedMultiSelect, ContainedSelection } from "../input/ContainedInput/ContainedInput";
 
 export const LCSelector = (props: SelectProps) => {
   const { data: customers, isLoading } = useLoyaltyCustomers();
@@ -43,22 +43,37 @@ export const LRSelector = (props: SelectProps) => {
   );
 };
 
-export const LASelector = (props: SelectProps) => {
+interface LAProps extends SelectProps {
+  multiSelect?: boolean;
+  multiSelectProps?: MultiSelectProps
+}
+
+export const LASelector = ({ multiSelect=false, multiSelectProps, ...props }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
   const actionList = actions
     ? actions
-        .filter((a) => a.active)
+        .filter((a) => a.active && (multiSelect ? !isLReferralAction(a.type) : true))
         .map((a) => ({
-          label: a.name,
+          label: `${a.name} (${a.type})`,
           value: a.id,
         }))
     : [];
   if (isLoading) return <SelectSkeleton />;
-  return (
+  if(multiSelect) 
+    return (
+     <ContainedMultiSelect
+      data={actionList}
+      {...multiSelectProps}
+      nothingFoundMessage="No actions found"
+      placeholder={multiSelectProps.placeholder || "Select"}
+     />
+  )
+  return  (
     <ContainedSelection
       data={actionList}
       {...props}
       nothingFoundMessage="No actions found"
+      placeholder={props.placeholder || "Select"}
     />
   );
 };
@@ -83,3 +98,11 @@ export const isLPurchaseAction = (actionType) =>
     LoyaltyActionType.DirectPurchase,
     LoyaltyActionType.ReferralPurchase,
   ].includes(actionType);
+
+export enum RewardTypes {
+  FixedAmountDiscount = "Fixed Amount Discount",
+  VariableDiscount = "Variable Discount",
+  PercentageOff = "Percentage Off",
+  FreeProduct = "Free Product",
+  GiftCard = "Gift Card"
+}

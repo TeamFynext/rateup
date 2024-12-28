@@ -1,4 +1,4 @@
-import { Stack } from "@mantine/core";
+import { Checkbox, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 
 import { useReferralLoyaltyAction } from "@/backend/loyalty/actions/actions.query";
@@ -9,6 +9,7 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
 import FormModalLayout from "../Modal/FormModalLayout";
+import { LASelector } from "./utils";
 
 const ReferralAction = ({ opened, close }) => {
   const form = useForm({
@@ -17,17 +18,20 @@ const ReferralAction = ({ opened, close }) => {
       refereePhone: "",
       refereeName: "",
       amount: 0,
+      actionIds: [],
+      issuePurchasePoints:false
     },
     validate: {
       referralCode: isNotEmpty("Referral Code required"),
       refereePhone: isNotEmpty("Phone number required"),
+      actionIds: (value, { issuePurchasePoints }) => issuePurchasePoints && !value.length ? "Select actions" : null
     },
   });
   const referActionMut = useReferralLoyaltyAction();
   const handleRefer = () => {
     if (form.validate().hasErrors) return;
-
-    referActionMut.mutate(form.values, {
+    const { referralCode, ...rest } = form.values
+    referActionMut.mutate({ referralCode, data: rest }, {
       onSettled: () => {
         form.reset();
         close();
@@ -68,6 +72,14 @@ const ReferralAction = ({ opened, close }) => {
         <ContainedNumberInput
           label={"Amount (optional)"}
           {...form.getInputProps("amount")}
+        />
+        <Checkbox  {...form.getInputProps("issuePurchasePoints")} label="Issue Direct Purchase Points" />
+        <LASelector multiSelect={true} multiSelectProps={{
+          label:"Select Actions",
+          display: form.values.issuePurchasePoints ? "block" : "none",
+           ...form.getInputProps("actionIds"),
+           mb:"sm"
+          }}
         />
       </Stack>
     </FormModalLayout>

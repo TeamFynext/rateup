@@ -1,8 +1,5 @@
-import { useRouter } from "next/router";
 
 import {
-  ActionIcon,
-  Badge,
   Group,
   Menu,
   Stack,
@@ -17,14 +14,12 @@ import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.query";
-import { useTimeSince } from "../../../hooks/timeSince";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { LoyaltyPoint } from "../actions/LoyaltyActionCard";
+import { LoyaltyPoint } from "../Actions/LoyaltyActionCard";
 import { CreateRewardModal } from "./CreateRewardModal";
 
 export function RewardCard({ reward }) {
-  const router = useRouter();
   const { translations } = useTranslations();
   const [opened, { open, close }] = useDisclosure(false);
   return (

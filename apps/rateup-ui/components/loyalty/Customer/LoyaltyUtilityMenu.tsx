@@ -14,9 +14,9 @@ import {
 import { useUser } from "@/context/UserContext";
 import { FRONTEND_URL } from "@/utils/constants";
 
-import LoyaltyManualCustomerActionModal from "../actions/PointsIssuance";
+import LoyaltyManualCustomerActionModal from "../Actions/PointsIssuance";
 import ReferralAction from "../ReferralAction";
-import ManualRedeemModal from "../reward/ManualRedeemModal";
+import ManualRedeemModal from "../Reward/ManualRedeemModal";
 import SendLoyaltyTemplate from "./SendLoyaltyTemplate";
 
 const LoyaltyUtilityMenu = () => {

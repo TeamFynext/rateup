@@ -786,6 +786,20 @@ declare global {
     createdAt: Date;
   };
 
+  type LoyaltyReward = {
+    id: string;
+    name: string;
+    points: number;
+    description: string;
+    tnc: string;
+    maxPerUser: number;
+    expireAt: Date;
+    createdAt: Date;
+    waTemplateId: string;
+    rewardType: string;
+    rewardValue: any;
+  };
+
   type LoyaltyCustomerTable = {
     id: string;
     customerInfo: {
@@ -793,6 +807,7 @@ declare global {
       phone: string;
       createdAt: Date;
     };
+    referralCodes: string[];
     [LoyaltyActionType.ReferFriend]: LoyaltyAction[];
     [LoyaltyActionType.DirectPurchase]: LoyaltyAction[];
     [LoyaltyActionType.ReferralPurchase]: LoyaltyAction[];

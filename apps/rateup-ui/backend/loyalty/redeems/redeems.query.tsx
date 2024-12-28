@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
-import { getLoyaltyRedeems, redeemReward } from "./redeems.api";
+import { getLoyaltyRedeems, redeemReward, updateRedeem } from "./redeems.api";
 
 export const useGetLoyaltyRedeems = () => {
   return useQuery({
@@ -23,6 +23,22 @@ export const useRedeemReward = () => {
     onError: (e: any) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       showErrorToast(`Reward redeem failed: ${e?.response?.data ?? ""}`);
+    },
+  });
+};
+
+export const useUpdateRedeem = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateRedeem,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      showSuccessToast("Redeem updated successfully");
+    },
+    onError: (e: any) => {
+      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      showErrorToast(`Redeem updation failed: ${e?.response?.data ?? ""}`);
     },
   });
 };
