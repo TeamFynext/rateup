@@ -233,7 +233,7 @@ const App = () => {
               <Background
                 gap={12}
                 size={1}
-                bgColor="light-dark(rgba(0, 0, 255, 0.2), var(--mantine-color-body))"
+                bgColor="light-dark(#D3D3D3, var(--mantine-color-body))"
               />
               <Controls />
 
@@ -402,12 +402,12 @@ const TemplateEditor = ({ id, setNodes, nodes }) => {
 const RichTextEditor = ({ setNodes, nodes, id }) => {
   // Find content using useMemo to cache the result
   const content = useMemo(() => {
-    return nodes.reduce((found, node) => {
+    return nodes?.reduce((found, node) => {
       if (found) return found; // Early return if already found
 
-      return node.data.components?.reduce((fieldFound, comp) => {
+      return node?.data?.components?.reduce((fieldFound, comp) => {
         if (fieldFound) return fieldFound;
-        return comp.name?.find((name) => name.id === id);
+        return comp?.name?.find((name) => name?.id === id);
       }, null);
     }, null);
   }, [nodes, id]);
@@ -464,12 +464,12 @@ const RichTextEditor = ({ setNodes, nodes, id }) => {
 
 const TextEditor = ({ setNodes, nodes, id }) => {
   const content = useMemo(() => {
-    return nodes.reduce((found, node) => {
+    return nodes?.reduce((found, node) => {
       if (found) return found; // Early return if already found
 
-      return node.data.components?.reduce((fieldFound, comp) => {
+      return node?.data?.components?.reduce((fieldFound, comp) => {
         if (fieldFound) return fieldFound;
-        return comp.name?.find((name) => name.id === id);
+        return comp?.name?.find((name) => name?.id === id);
       }, null);
     }, null);
   }, [nodes, id]);
