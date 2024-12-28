@@ -410,7 +410,9 @@ const RichTextEditor = ({ setNodes, nodes, id }) => {
 
       return node?.data?.components?.reduce((fieldFound, comp) => {
         if (fieldFound) return fieldFound;
-        return comp?.name?.find((name) => name?.id === id);
+        return Array.isArray(comp?.name)
+          ? comp?.name?.find((name) => name?.id === id)
+          : null;
       }, null);
     }, null);
   }, [nodes, id]);
@@ -472,7 +474,9 @@ const TextEditor = ({ setNodes, nodes, id }) => {
 
       return node?.data?.components?.reduce((fieldFound, comp) => {
         if (fieldFound) return fieldFound;
-        return comp?.name?.find((name) => name?.id === id);
+        return Array.isArray(comp?.name)
+          ? comp?.name?.find((name) => name?.id === id)
+          : null;
       }, null);
     }, null);
   }, [nodes, id]);
