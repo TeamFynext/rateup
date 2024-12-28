@@ -60,6 +60,7 @@ import WaTemplateFormElements, {
   NoParams,
 } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/templatePreview/formElements";
 import ScreenNode from "@/components/whatsapp/xyflow/ScreenNode";
+import { useRouteParams } from "@/context/RouteParamsContext";
 
 import { AutomatedReplyForm } from "./create";
 import useReplyStore, { ReplyType } from "./store";
@@ -100,6 +101,7 @@ const App = () => {
     useWaAutomatedRepliesMessageById(automatedId);
   const { data: waSettings, isPending: waPending } = useWaSettings();
   const { close } = useReplyStore();
+  const { update } = useRouteParams();
 
   const updateWaReplyMutation = useUpdateWaAutomatedReplyMutation(
     router.query.waAutomatedReplyId,
@@ -157,9 +159,10 @@ const App = () => {
   );
   useEffect(() => {
     if (!isPending) {
-      const { nodes = [], edges = [] } = data.matchData.json;
+      const { nodes = [], edges = [] } = data.matchData?.json || {};
       setNodes(nodes);
       setEdges(edges);
+      update({ waAutomatedReplyId: data?.name });
     }
   }, [data]);
 
