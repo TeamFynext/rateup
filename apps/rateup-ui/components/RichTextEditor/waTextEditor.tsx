@@ -1,0 +1,354 @@
+import React, { useEffect } from "react";
+
+import { Group, ScrollArea, ScrollAreaAutosize } from "@mantine/core";
+import { RichTextEditor } from "@mantine/tiptap";
+import CharacterCount from "@tiptap/extension-character-count";
+import Placeholder from "@tiptap/extension-placeholder";
+import { generateHTML, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import parse from "html-react-parser";
+
+import InsertEmoji from "./InsertEmoji";
+import styles from "./WaTextEditor.module.css";
+
+function WaTextEditor({ handleInputChange, content = "", className = "" }) {
+  let max = 1024;
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: "Enter your text",
+      }),
+      CharacterCount.configure({
+        limit: max,
+      }),
+    ],
+
+    onUpdate: ({ editor }) => {
+      handleInputChange(editor.getJSON());
+    },
+  });
+
+  useEffect(() => {
+    if (editor) {
+      const selection = editor.state.selection;
+      editor.commands.setContent(content, null, {
+        preserveWhitespace: "full",
+      });
+      editor.commands.setTextSelection(selection);
+    }
+  }, [content, editor]);
+
+  const percentage = editor
+    ? Math.round((100 / max) * editor.storage.characterCount.characters())
+    : 0;
+
+  return (
+    <RichTextEditor editor={editor} className={className}>
+      <RichTextEditor.Toolbar sticky tabIndex={-1}>
+        <Group gap={"xs"}>
+          <RichTextEditor.ControlsGroup>
+            <RichTextEditor.Bold />
+            <RichTextEditor.Italic />
+            <RichTextEditor.Strikethrough />
+            <RichTextEditor.ClearFormatting />
+            <RichTextEditor.Code />
+          </RichTextEditor.ControlsGroup>
+
+          <RichTextEditor.ControlsGroup>
+            <RichTextEditor.Blockquote />
+            <RichTextEditor.BulletList />
+            <RichTextEditor.OrderedList />
+          </RichTextEditor.ControlsGroup>
+
+          <RichTextEditor.ControlsGroup>
+            <RichTextEditor.Undo />
+            <RichTextEditor.Redo />
+          </RichTextEditor.ControlsGroup>
+          <RichTextEditor.ControlsGroup>
+            <InsertEmoji />
+          </RichTextEditor.ControlsGroup>
+        </Group>
+      </RichTextEditor.Toolbar>
+      <ScrollAreaAutosize mah={350}>
+        <RichTextEditor.Content mih={120} />
+      </ScrollAreaAutosize>
+      <div
+        className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
+      >
+        <svg height="20" width="20" viewBox="0 0 20 20">
+          <circle r="10" cx="10" cy="10" fill="#e9ecef" />
+          <circle
+            r="5"
+            cx="10"
+            cy="10"
+            fill="transparent"
+            stroke="currentColor"
+            strokeWidth="10"
+            strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
+            transform="rotate(-90) translate(-20)"
+          />
+          <circle r="6" cx="10" cy="10" fill="white" />
+        </svg>
+        {editor?.storage?.characterCount?.characters()} / {max} characters
+      </div>
+    </RichTextEditor>
+  );
+}
+
+export default WaTextEditor;
+
+export function parseToWhatsAppFormat(editorContent) {
+  function formatText(text, type = "*") {
+    let trimmedEnd = text.trimEnd();
+    let trimmedStart = text.trimStart();
+    let trimmed = text.trim();
+
+    let leadingSpaces = " ".repeat(text.length - trimmedStart.length);
+    let trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
+    let formattedText =
+      trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
+    return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
+  }
+  const parseNode = (node) => {
+    if (!node) return "";
+    switch (node.type) {
+      case "paragraph":
+        return node?.content?.map(parseNode).join("");
+      case "text":
+        let text = node.text;
+        if (node.marks) {
+          node.marks.forEach((mark) => {
+            switch (mark.type) {
+              case "bold":
+                text = formatText(text, "*");
+                break;
+              case "italic":
+                text = formatText(text, "_");
+                break;
+              case "strike":
+                text = formatText(text, "~");
+                break;
+              case "code":
+                text = `\`${text}\``;
+                break;
+              default:
+                break;
+            }
+          });
+        }
+        return text;
+      case "bulletList":
+        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
+      case "orderedList":
+        return node.content
+          .map((item, index) => `${index + 1}. ${parseNode(item)}`)
+          .join("\n");
+      case "blockquote":
+        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
+      case "codeBlock":
+        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
+      case "listItem":
+        return node.content.map(parseNode).join("");
+      default:
+        return "";
+    }
+  };
+
+  return editorContent.content.map(parseNode).join("\n");
+}
+interface TiptapNode {
+  type: string;
+  content?: TiptapNode[];
+  marks?: { type: string }[];
+  text?: string;
+}
+
+function parseFromWhatsAppFormat(text: string): {
+  type: "doc";
+  content: TiptapNode[];
+} {
+  // Helper to create text node with marks
+  const createTextNode = (text: string, marks: string[] = []): TiptapNode => ({
+    type: "text",
+    text,
+    ...(marks.length && { marks: marks.map((type) => ({ type })) }),
+  });
+
+  const paragraphs = text.split("\n\n");
+  const content: TiptapNode[] = [];
+
+  for (const paragraph of paragraphs) {
+    if (!paragraph.trim()) continue;
+
+    const paragraphNode: TiptapNode = {
+      type: "paragraph",
+      content: [],
+    };
+
+    let currentIndex = 0;
+    let currentText = "";
+    const activeMarks: string[] = [];
+
+    while (currentIndex < paragraph.length) {
+      const char = paragraph[currentIndex];
+
+      // Handle WhatsApp style formatting
+      switch (char) {
+        case "*": {
+          // Check if it's opening or closing bold
+          const isClosing = activeMarks.includes("bold");
+          if (currentText) {
+            paragraphNode.content?.push(
+              createTextNode(currentText, [...activeMarks]),
+            );
+            currentText = "";
+          }
+          if (isClosing) {
+            activeMarks.splice(activeMarks.indexOf("bold"), 1);
+          } else {
+            activeMarks.push("bold");
+          }
+          break;
+        }
+        case "_": {
+          // Check for italic
+          const isClosing = activeMarks.includes("italic");
+          if (currentText) {
+            paragraphNode.content?.push(
+              createTextNode(currentText, [...activeMarks]),
+            );
+            currentText = "";
+          }
+          if (isClosing) {
+            activeMarks.splice(activeMarks.indexOf("italic"), 1);
+          } else {
+            activeMarks.push("italic");
+          }
+          break;
+        }
+        case "~": {
+          // Check for strikethrough
+          const isClosing = activeMarks.includes("strike");
+          if (currentText) {
+            paragraphNode.content?.push(
+              createTextNode(currentText, [...activeMarks]),
+            );
+            currentText = "";
+          }
+          if (isClosing) {
+            activeMarks.splice(activeMarks.indexOf("strike"), 1);
+          } else {
+            activeMarks.push("strike");
+          }
+          break;
+        }
+        case "`": {
+          // Check for code
+          const isClosing = activeMarks.includes("code");
+          if (currentText) {
+            paragraphNode.content?.push(
+              createTextNode(currentText, [...activeMarks]),
+            );
+            currentText = "";
+          }
+          if (isClosing) {
+            activeMarks.splice(activeMarks.indexOf("code"), 1);
+          } else {
+            activeMarks.push("code");
+          }
+          break;
+        }
+        default:
+          currentText += char;
+      }
+
+      currentIndex++;
+    }
+
+    // Add any remaining text
+    if (currentText) {
+      paragraphNode.content?.push(
+        createTextNode(currentText, [...activeMarks]),
+      );
+    }
+
+    // Add paragraph if it has content
+    if (paragraphNode.content?.length) {
+      content.push(paragraphNode);
+    }
+  }
+
+  return {
+    type: "doc",
+    content,
+  };
+}
+
+export function parseWhatsAppToReact(text: string): React.ReactNode {
+  const parseNode = (node: TiptapNode): React.ReactNode => {
+    if (!node) return null;
+    switch (node.type) {
+      case "paragraph":
+        return <p>{node.content?.map(parseNode)}</p>;
+      case "text":
+        let text = node.text;
+        if (node.marks) {
+          return node.marks.reduce((acc, mark) => {
+            switch (mark.type) {
+              case "bold":
+                return <strong>{acc}</strong>;
+              case "italic":
+                return <em>{acc}</em>;
+              case "strike":
+                return <s>{acc}</s>;
+              case "code":
+                return <code>{acc}</code>;
+              default:
+                return acc;
+            }
+          }, text);
+        }
+        return text;
+      case "bulletList":
+        return (
+          <ul>
+            {node.content?.map((item, index) => (
+              <li key={index}>{parseNode(item)}</li>
+            ))}
+          </ul>
+        );
+      case "orderedList":
+        return (
+          <ol>
+            {node.content?.map((item, index) => (
+              <li key={index}>{parseNode(item)}</li>
+            ))}
+          </ol>
+        );
+      case "blockquote":
+        return <blockquote>{node.content?.map(parseNode)}</blockquote>;
+      case "codeBlock":
+        return (
+          <pre>
+            <code>{node.content?.map(parseNode)}</code>
+          </pre>
+        );
+      case "listItem":
+        return node.content?.map(parseNode);
+      default:
+        return null;
+    }
+  };
+
+  const parsedContent = parseFromWhatsAppFormat(text);
+  return parsedContent.content.map((node, index) => (
+    <React.Fragment key={index}>{parseNode(node)}</React.Fragment>
+  ));
+}
+
+export function parseJsonToReact(value) {
+  if (typeof value === "string") return value;
+  if (!value?.content?.[0]?.content) return "";
+  return parse(generateHTML(value, [StarterKit]));
+}
