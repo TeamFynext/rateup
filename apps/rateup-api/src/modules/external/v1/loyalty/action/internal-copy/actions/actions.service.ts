@@ -11,8 +11,19 @@ export async function createLoyaltyAction(
       points: data.points,
       endDate: data.endDate,
       type: data.type,
+      refereePoints: data.refereePoints,
       startDate: data.startDate,
+      waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
       orgId: orgId,
+      amount: data.amount,
+      isAmountBased: data.isAmountBased ?? false,
+      maxPoints: data.maxPoints,
+      refereeWaTemplateId: data.refereeWaTemplateId?.length
+        ? data.refereeWaTemplateId
+        : undefined,
+      isAmountBasedForReferee: data.isAmountBasedForReferee,
+      maxPointsForReferee: data.maxPointsForReferee,
+      message: data.message,
     },
   });
 }

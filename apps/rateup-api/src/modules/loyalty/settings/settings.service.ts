@@ -8,21 +8,13 @@ import { LoyaltyTemplateInput } from "./settings.schema";
 import {
   createLoyaltyReferralCode,
   getLCustomerByPhone,
-  getLCustomerReferralCodes,
-  handleCustomerInfoWaRequest,
   handleLoyaltyRegister,
 } from "../customer/customer.service";
-import { createTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
 import {
   getLoyaltyActions,
   getReferralLoyaltyAction,
 } from "../actions/actions.service";
-import {
-  sendMessage,
-  sendTextMessage,
-} from "../../whatsapp/whatsappSurvey/wasurvey.service";
-import { getLoyaltyRewards } from "../rewards/rewards.service";
-import { formatDateT1 } from "../../../utils/date";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function createLoyaltyTemplate(
@@ -85,9 +77,6 @@ export async function handleLoyaltyTemplate(
   template: LoyaltyTemplate,
 ) {
   switch (template.type) {
-    case LoyaltyTemplateTypes.CustomerInfo:
-      await handleCustomerInfoWaRequest(phone, orgId);
-      break;
     case LoyaltyTemplateTypes.CustomerRegistration:
       await handleLoyaltyRegister(phone, name, orgId);
       break;
@@ -127,22 +116,21 @@ export async function handleReferralCommand(phone, orgId) {
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
-  const {
-    id,
-    isAmountBased,
-    amount,
-    points,
-    isAmountBasedForReferee,
-    refereePoints,
-  } = res;
-  const message = `Please forward the following message to your Friends & Family. For each successful referrel you will earn ${isAmountBased ? `${points} points per amount of ${amount}` : `${points} points`}`;
+  const { id, message } = res as unknown as {
+    id: string;
+    message: LoyaltyActionMessage;
+  };
   const { referralCode } = await getReferralCodeByActionAndCustomer(
     id,
     customer.id,
   );
-  const copyMessage = `I would like to invite you to *${customer.org.name}!*. Using the following code, You will get ${isAmountBasedForReferee ? `${refereePoints} points per amount of ${amount}` : `${refereePoints} points`}.
-  \n\n code: *${referralCode}*\n`;
-  await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+
+  const firstMessage = message?.message;
+  const copyMessage = message?.forwardMessage?.replace(
+    "{{code}}",
+    referralCode,
+  );
+  await sendTextMessageAndUpdateStats(phone, orgId, null, firstMessage);
   await sendTextMessageAndUpdateStats(phone, orgId, null, copyMessage);
 }
 
@@ -155,9 +143,9 @@ export async function handleLoyaltyPointsCommand(phone, orgId) {
   }
   const actions = await getLoyaltyActions(orgId);
   const activeActions = actions.filter((ac) => ac.active);
-  const message = `Total Earned Points: ${customer.totalEarnedPoints}\n
-  \nTotal Redeemed Points: ${customer.redeemedPoints}\n
-  \nCurrent Balance Points: ${customer.totalEarnedPoints - customer.redeemedPoints}
+  const message = `Current Point Balance: ${customer.totalEarnedPoints - customer.redeemedPoints}
+  \n\nRedeemed Points: ${customer.redeemedPoints}
+  \n\nTotal Earned Points: ${customer.totalEarnedPoints}
   ${
     !activeActions?.length
       ? ""
@@ -167,29 +155,6 @@ export async function handleLoyaltyPointsCommand(phone, orgId) {
   }
   `;
   await sendTextMessageAndUpdateStats(phone, orgId, "Loyalty Points", message);
-}
-
-export async function handleLoyaltyRewardsCommand(phone, orgId) {
-  const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer) {
-    const textMessage = createTextMessage(
-      phone,
-      null,
-      `You are not a member of loyalty program yet`,
-    );
-    await sendMessage(orgId, textMessage);
-    return;
-  }
-  const rewards = await getLoyaltyRewards(orgId);
-  const message = !rewards.length
-    ? `No rewards yet`
-    : rewards
-        .map(
-          (r, index) =>
-            `${index + 1}. *${r.name}*\n${r.description}\n_Required  points_: ${r.points},  _Expiry Date_: ${r.expireAt ? formatDateT1(r.expireAt) : "No Expiry"}`,
-        )
-        .join("\n");
-  await sendTextMessageAndUpdateStats(phone, orgId, "Loyalty Rewards", message);
 }
 
 export async function getReferralCodeByActionAndCustomer(actionId, customerId) {

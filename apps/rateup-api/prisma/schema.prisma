@@ -1149,6 +1149,7 @@ model LoyaltyAction {
   isExistingUserReferralAllowed  Boolean?  @default(false)
   active        Boolean    @default(true)
   description   String?
+  message       Json
 }
 
 model LoyaltyReward {
@@ -1165,6 +1166,8 @@ model LoyaltyReward {
   redeems      LoyaltyRedeem[]
   waTemplateId String?         @db.Uuid
   waTemplate   WaTemplate?     @relation(fields: [waTemplateId], references: [id])
+  rewardType   String?
+  rewardValue  Json?
 }
 
 model LoyaltyCustomer {
@@ -1191,6 +1194,7 @@ model LoyaltyRedeem {
   createdAt  DateTime        @default(now())
   customerId String          @db.Uuid
   customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  code       String?         @unique
 }
 
 model LoyaltyActionCustomerMap {

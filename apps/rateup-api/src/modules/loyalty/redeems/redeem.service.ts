@@ -1,19 +1,35 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma";
 import { getLCustomerById } from "../customer/customer.service";
+import { getShortUrlId } from "../../../utils/commnUtils";
+import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
 
 export enum RedeemStatus {
   PROCESSING = "PROCESSING",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
+  ISSUED = "ISSUED",
+  CLAIMED = "CLAIMED",
 }
 
 export async function createRedeem(customerId, rewardId) {
+  const existingCodes = (
+    await prisma.loyaltyRedeem.findMany({
+      where: {
+        code: {
+          not: null,
+        },
+      },
+    })
+  ).map((r) => r.code);
+
+  const uniqueCode = getUniqueRandomAlphaId(8, existingCodes);
   const { reward, customer, id } = await prisma.loyaltyRedeem.create({
     data: {
       customerId,
       rewardId,
       status: RedeemStatus.PROCESSING,
+      code: uniqueCode,
     },
     include: {
       reward: true,
@@ -30,7 +46,7 @@ export async function createRedeem(customerId, rewardId) {
     status:
       isExpired || !isBalance || isUsedMax
         ? RedeemStatus.FAILED
-        : RedeemStatus.COMPLETED,
+        : RedeemStatus.ISSUED,
   });
   return {
     redeem,
@@ -64,12 +80,7 @@ export async function getLoyaltyRedeems(orgId: string) {
       },
     },
     include: {
-      reward: {
-        select: {
-          name: true,
-          points: true,
-        },
-      },
+      reward: true,
       customer: {
         select: {
           name: true,

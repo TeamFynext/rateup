@@ -1,5 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
+import { RewardTypes } from "../util";
 
 const lRewardSchema = z.object({
   name: z.string(),
@@ -8,22 +9,19 @@ const lRewardSchema = z.object({
   description: z.string(),
   tnc: z.string(),
   waTemplateId: z.string().optional(),
-  expireAt: z.date().optional(),
+  expireAt: z.date().optional().nullable(),
+  rewardType: z.nativeEnum(RewardTypes),
+  rewardValue: z.object({
+    value: z.any(),
+    amount: z.number().optional(),
+  }),
 });
 
 const byLRewardIdParamSchema = z.object({
   rewardId: z.string(),
 });
 
-const lRewardUpdateSchema = z.object({
-  name: z.string().optional(),
-  points: z.number().int().optional(),
-  maxPerUser: z.number().int().optional(),
-  description: z.string().optional(),
-  tnc: z.string().optional(),
-  waTemplateId: z.string().optional(),
-  expireAt: z.date().optional(),
-});
+const lRewardUpdateSchema = lRewardSchema.partial();
 
 export const { schemas: loyaltyRewardSchemas, $ref: $lRewardRef } =
   buildJsonSchemas(

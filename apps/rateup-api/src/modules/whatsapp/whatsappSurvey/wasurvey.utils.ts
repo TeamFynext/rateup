@@ -230,9 +230,7 @@ export function parseToWhatsAppFormat(editorContent) {
 
     let leadingSpaces = " ".repeat(text.length - trimmedStart.length);
     let trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
-    let formattedText =
-      trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
-    return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
+    return `${leadingSpaces}${type}${trimmed}${type}${trailingSpaces}`;
   }
   const parseNode = (node) => {
     if (!node) return "";
@@ -376,6 +374,8 @@ export function createListMessage(
   buttonTitle: string,
   choices: any,
 ): WaSendMessageBody {
+  console.log(parseToWhatsAppFormat(questionDescription));
+
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",

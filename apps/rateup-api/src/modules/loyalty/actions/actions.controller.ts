@@ -12,7 +12,6 @@ import {
   ByReferralCodeParamInput,
   lActionIdParamInput,
   lActionUpdateInput,
-  loyaltyActionInput,
   ReferralInput,
 } from "./actions.schema";
 import prisma from "../../../utils/prisma";
@@ -21,10 +20,13 @@ import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import {
   getLoyaltyCustomerOrActionByReferralCode,
+  getLoyaltyCustomers,
   handleLCustomerAction,
   handleSendTemplate,
 } from "../customer/customer.service";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { isLReferralAction } from "../util";
+import { getReferralCodeByActionAndCustomer } from "../settings/settings.service";
 
 export async function createLoyaltyActionHandler(
   request: FastifyRequest,
@@ -37,8 +39,14 @@ export async function createLoyaltyActionHandler(
       SubscriptionFeaturePathName.LoyaltyAction,
       request.user.orgId,
     );
+    if (!isLReferralAction(res.type)) return;
+    const customers = await getLoyaltyCustomers(request.user.orgId);
+    for (const customer of customers)
+      await getReferralCodeByActionAndCustomer(res.id, customer.id);
   } catch (e) {
     log.error(e);
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002")
+      return reply.code(500).send("Customer already exist");
     reply.code(500).send(e);
   }
 }
@@ -154,7 +162,13 @@ export async function referActionHandler(
 ) {
   try {
     const { referralCode } = request.params;
-    const { refereePhone, refereeName, amount } = request.body;
+    const {
+      refereePhone,
+      refereeName,
+      amount,
+      issuePurchasePoints,
+      actionIds,
+    } = request.body;
     const { customerId, actionId } =
       await getLoyaltyCustomerOrActionByReferralCode(referralCode);
     const { success, data, message } = await handleLCustomerAction({
@@ -188,6 +202,24 @@ export async function referActionHandler(
       customer.phone,
       dynamicVariables,
     );
+    if (issuePurchasePoints && actionIds.length) {
+      for (const actionId of actionIds) {
+        const { success, data, message } = await handleLCustomerAction({
+          customerId: referee.id,
+          actionId,
+          amount,
+        });
+        const { customerAction, customerPoints: refereeNewPoints } = data;
+        if (success) {
+          await handleSendTemplate(
+            customerAction.action.waTemplateId,
+            referee.orgId,
+            referee.phone,
+            [referee.name, refereeNewPoints?.toString()],
+          );
+        }
+      }
+    }
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

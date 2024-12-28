@@ -72,7 +72,6 @@ import { getLatestStatus } from "../../campaign/campaign.service";
 import {
   getLoyaltyTemplateByRequestMessage,
   handleLoyaltyPointsCommand,
-  handleLoyaltyRewardsCommand,
   handleLoyaltyTemplate,
   handleReferralCommand,
 } from "../../loyalty/settings/settings.service";
@@ -370,8 +369,6 @@ async function whatsappMessageHandler(
     await handleReferralCommand(from, orgId);
   } else if (message.trim().toLowerCase().startsWith("points")) {
     await handleLoyaltyPointsCommand(from, orgId);
-  } else if (message.trim().toLowerCase().startsWith("rewards")) {
-    await handleLoyaltyRewardsCommand(from, orgId);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else if (
