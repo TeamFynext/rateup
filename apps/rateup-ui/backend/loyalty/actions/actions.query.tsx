@@ -98,7 +98,9 @@ export const useReferralLoyaltyAction = () => {
       showSuccessToast("Refer successfull");
     },
     onError: (e: any) => {
-      showErrorToast(`Refer failed: ${e?.response?.data ?? ""}`);
+      showErrorToast(
+        `Refer failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
+      );
     },
   });
 };

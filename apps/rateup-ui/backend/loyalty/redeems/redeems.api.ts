@@ -12,3 +12,7 @@ export async function getLoyaltyRedeems() {
 export async function redeemReward({ rewardId, customerId }) {
   await axiosClient.post(`${publicBase}/${customerId}/${rewardId}`);
 }
+
+export async function updateRedeem({ redeemId, data }) {
+  await axiosClient.put(`${publicBase}/${redeemId}`, data);
+}

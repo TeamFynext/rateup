@@ -49,18 +49,6 @@ const LoyaltySettings = () => {
           onClick={open}
         />
       </Group>
-      {/* <SimpleGrid cols={2}>
-        {templateConfigs?.map((config) => {
-          return (
-            <LTemplateConfigCard
-              config={config}
-              key={config?.id}
-              setSelectedConfig={setSelectedConfig}
-              open={open}
-            />
-          );
-        })}
-      </SimpleGrid> */}
       <PaperLayout>
         <TanstackTable
           columns={columns}
@@ -81,7 +69,6 @@ export default LoyaltySettings;
 
 export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
-  CustomerInfo = "CustomerInfo",
 }
 
 export const LoyaltyWaTemplateConfig = ({
@@ -177,36 +164,6 @@ export const LoyaltyWaTemplateConfig = ({
   );
 };
 
-const LTemplateConfigCard = ({ config, setSelectedConfig, open }) => {
-  return (
-    <PaperLayout
-      onClick={() => {
-        setSelectedConfig(config);
-        open();
-      }}
-      style={{ cursor: "pointer" }}
-    >
-      <Stack>
-        <Title order={5}>{getLoyaltyTemplateLabel(config?.type)?.label}</Title>
-        <Group justify="space-between">
-          <Group gap={1}>
-            <Text size="sm">WhatsApp Template:</Text>
-            <Badge variant="light" color="teal">
-              {config?.templateName}
-            </Badge>
-          </Group>
-          <Group gap={"sm"}>
-            <Text size="sm" fw={"bold"}>
-              Request Message:
-            </Text>
-            <Text>{config?.requestMessage}</Text>
-          </Group>
-        </Group>
-      </Stack>
-    </PaperLayout>
-  );
-};
-
 function getLoyaltyTemplateLabel(type) {
   switch (type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
@@ -216,13 +173,6 @@ function getLoyaltyTemplateLabel(type) {
           "WhatsApp Template for Successfull Customer Registration",
         templateDescription:
           "Dynamic variables representation - {{1}} - customer name",
-      };
-    case LoyaltyTemplateTypes.CustomerInfo:
-      return {
-        label: "Customer Information Request",
-        templateLabel: "WhatsApp Template for Customer Info request",
-        templateDescription:
-          "Dynamic variables representation - {{1}} - customer name, {{2}} - points, {{3}} - ReferralCodes seperated by commas if any",
       };
     default:
       return {

@@ -1,4 +1,6 @@
-import { Badge, Group, Stack } from "@mantine/core";
+import { useState } from "react";
+
+import { Badge, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { createColumnHelper } from "@tanstack/react-table";
 
@@ -6,7 +8,8 @@ import { useGetLoyaltyRedeems } from "@/backend/loyalty/redeems/redeems.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import ManualRedeemModal from "@/components/loyalty/reward/ManualRedeemModal";
+import UpdateRedeemStatusModal from "@/components/Loyalty/Redeem/UpdateRedeemStatusModal";
+import { CreateRewardModal } from "@/components/Loyalty/Reward/CreateRewardModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
 import { formatDateWithTime } from "@/utils/dateTime";
@@ -19,9 +22,23 @@ export default function redeems() {
     refetch,
   } = useSubscription();
 
-  const [opened, { open, close }] = useDisclosure(false);
+  const [
+    redeemUpdateStOpened,
+    { open: openStatusUpdate, close: closeStatusUpdate },
+  ] = useDisclosure(false);
+  const [
+    openedRewardModal,
+    { open: openRewardModal, close: closeRewardModal },
+  ] = useDisclosure(false);
+  const [redeem, setRedeem] = useState(null);
+  const [reward, setReward] = useState(null);
 
-  const columns = generateColumns();
+  const columns = generateColumns(
+    openStatusUpdate,
+    setRedeem,
+    openRewardModal,
+    setReward,
+  );
 
   if (isSubscriptionLoading) return <RateupLoader />;
 
@@ -34,7 +51,17 @@ export default function redeems() {
       <PaperLayout h={"65vh"}>
         <TanstackTable columns={columns} data={redeems} isPending={isPending} />
       </PaperLayout>
-      <ManualRedeemModal opened={opened} close={close} />
+      <UpdateRedeemStatusModal
+        opened={redeemUpdateStOpened}
+        close={closeStatusUpdate}
+        redeem={redeem}
+      />
+      <CreateRewardModal
+        opened={openedRewardModal}
+        close={closeRewardModal}
+        reward={reward}
+        disableButton
+      />
     </Stack>
   );
 }
@@ -44,15 +71,13 @@ type Redeem = {
     name: string;
     phone: string;
   };
-  reward: {
-    name: string;
-    points: number;
-  };
+  reward: LoyaltyReward;
   status: string;
   createdAt: Date;
+  code: string;
 };
 
-function generateColumns() {
+function generateColumns(open, setRedeem, openReward, setReward) {
   const columnHelper = createColumnHelper<Redeem>();
 
   const defaultColumns = [
@@ -64,21 +89,45 @@ function generateColumns() {
       id: "phone",
       header: "Phone",
     }),
-    columnHelper.accessor((row) => row.reward.name, {
+    columnHelper.accessor((row) => row.code, {
+      id: "code",
+      header: "Redeem Code",
+    }),
+    columnHelper.accessor((row) => row.reward, {
       id: "rewardName",
       header: "Reward",
+      cell: ({ getValue }) => {
+        return (
+          <Text
+            size="sm"
+            onClick={() => {
+              setReward(getValue());
+              openReward();
+            }}
+          >
+            {getValue().name}
+          </Text>
+        );
+      },
     }),
     columnHelper.accessor((row) => row.reward.points, {
       id: "points",
       header: "Required Points",
     }),
-    columnHelper.accessor((row) => row.status, {
+    columnHelper.accessor((row) => row, {
       id: "status",
       header: "Status",
       cell: ({ getValue }) => {
         return (
-          <Badge color={getRedeemsStatusColor(getValue())} variant={"light"}>
-            {getValue()}
+          <Badge
+            color={getRedeemsStatusColor(getValue().status)}
+            variant={"light"}
+            onClick={() => {
+              setRedeem(getValue());
+              open();
+            }}
+          >
+            {getValue().status}
           </Badge>
         );
       },
@@ -92,9 +141,11 @@ function generateColumns() {
   return defaultColumns;
 }
 
-enum RedeemStatus {
+export enum RedeemStatus {
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
+  ISSUED = "ISSUED",
+  CLAIMED = "CLAIMED",
 }
 
 function getRedeemsStatusColor(status) {
@@ -103,6 +154,10 @@ function getRedeemsStatusColor(status) {
       return "green";
     case RedeemStatus.FAILED:
       return "red";
+    case RedeemStatus.ISSUED:
+      return "yellow";
+    case RedeemStatus.CLAIMED:
+      return "cyan";
     default:
       return "var(--tertiary-color)";
   }

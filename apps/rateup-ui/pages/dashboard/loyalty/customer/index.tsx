@@ -19,11 +19,11 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RefreshButton from "@/components/Button/RefreshButton";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import LoyaltyManualCustomerActionModal from "@/components/loyalty/actions/PointsIssuance";
-import LoyaltyCustomerAction from "@/components/loyalty/Customer/LoyaltyCustomerAction";
-import LoyaltyCustomerRedeems from "@/components/loyalty/Customer/LoyaltyCustomerRedeems";
-import LoyaltyUtilityMenu from "@/components/loyalty/Customer/LoyaltyUtilityMenu";
-import ReferralAction from "@/components/loyalty/ReferralAction";
+import LoyaltyManualCustomerActionModal from "@/components/Loyalty/Actions/PointsIssuance";
+import LoyaltyCustomerAction from "@/components/Loyalty/Customer/LoyaltyCustomerAction";
+import LoyaltyCustomerRedeems from "@/components/Loyalty/Customer/LoyaltyCustomerRedeems";
+import LoyaltyUtilityMenu from "@/components/Loyalty/Customer/LoyaltyUtilityMenu";
+import ReferralAction from "@/components/Loyalty/ReferralAction";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import styles from "@/components/Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
@@ -72,7 +72,7 @@ export default function LoyaltyCustomersPage() {
       <Flex justify={"center"}>
         <Tabs.List justify="center">
           {Object.values(LoyaltyCustomerPageTabs).map((tab) => (
-            <Tabs.Tab px={"xl"} py={"sm"} value={tab}>
+            <Tabs.Tab px={"xl"} py={"sm"} value={tab} key={tab}>
               {tab}
             </Tabs.Tab>
           ))}
@@ -163,6 +163,10 @@ function generateColumns(
             </Stack>
           );
         },
+      }),
+      columnHelper.accessor((row) => row.referralCodes.join(","), {
+        id: "referralCode",
+        header: "Referral Code",
       }),
       ...Object.entries(LoyaltyActionType).map(([key, value]) =>
         columnHelper.accessor((row) => row[value], {

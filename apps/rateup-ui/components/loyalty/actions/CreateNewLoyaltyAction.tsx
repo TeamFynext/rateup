@@ -79,6 +79,10 @@ const CreateNewLoyaltyAction = ({
         .string()
         .trim()
         .min(1, { message: "Description required" }),
+      message: z.object({
+        message: z.string(),
+        forwardMessage: z.string()
+      }).nullable()
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -88,7 +92,24 @@ const CreateNewLoyaltyAction = ({
           message: "End date must be after start date",
         });
       }
+      if(isLReferralAction(values.type)){
+        if(!values.message.message)
+        ctx.addIssue({
+          path: ["message.message"],
+          code: z.ZodIssueCode.custom,
+          message: "Message cannot be blank",
+        }); 
+        if(!values.message.forwardMessage){
+          if(!values.message.message)
+            ctx.addIssue({
+              path: ["message.forwardMessage"],
+              code: z.ZodIssueCode.custom,
+              message: "Forward Message cannot be blank",
+            });
+        }
+      }
     });
+  
   const form = useForm<z.infer<typeof schema>>({
     initialValues: {
       type: action?.type || "",
@@ -107,6 +128,7 @@ const CreateNewLoyaltyAction = ({
       isExistingUserReferralAllowed:
         action?.isExistingUserReferralAllowed || false,
       description: action?.description || "",
+      message: action?.message || null
     },
     validate: zodResolver(schema),
   });
@@ -130,6 +152,15 @@ const CreateNewLoyaltyAction = ({
   }
 
   useEffect(() => {
+    if(isLReferralAction(form.values.type) && !action){
+      const message = `Please forward the following message to your Friends & Family. For each successful referral you will earn ${form.values.isAmountBased ? `${form.values.points} points per amount of ${form.values.amount}` : `${form.values.points} points`}`
+      const forwardMessage = `I would like to invite you to *[Your Organization Name]*. Using the following code, You will get ${form.values.isAmountBasedForReferee ? `${form.values.refereePoints} points per amount of ${form.values.amount}` : `${form.values.refereePoints} points`}.
+      \n code: *{{code}}*`
+      form.setFieldValue("message",{
+        message,
+        forwardMessage
+     })
+    }
     if (action) {
       form.setInitialValues({
         ...action,
@@ -193,7 +224,7 @@ const CreateNewLoyaltyAction = ({
             display={isLPurchaseAction(form.values.type) ? "block" : "none"}
           />
           <Checkbox
-            label={"Amount Based for Referee"}
+            label={"Amount Based for Friends"}
             {...form.getInputProps("isAmountBasedForReferee")}
             checked={form.values.isAmountBasedForReferee}
             display={
@@ -242,12 +273,12 @@ const CreateNewLoyaltyAction = ({
               : "WhatsApp Template(to send after action)"
           }
           description={`Dynamic variable {{1}} - customer name, {{2}} - 
-            current earned points ${isLReferralAction(form.values.type) ? " ,{{3}} - referee name, {{4}} - referee phone number" : ""} `}
+            current earned points ${isLReferralAction(form.values.type) ? " ,{{3}} - Friend name, {{4}} - Friend phone number" : ""} `}
           {...form.getInputProps("waTemplateId")}
         />
         {isLReferralAction(form.values.type) && (
           <Text size="sm" fw="bold">
-            Referee
+            Friends
           </Text>
         )}
         <ContainedNumberInput
@@ -269,21 +300,6 @@ const CreateNewLoyaltyAction = ({
               : "none"
           }
         />
-        {isLReferralAction(form.values.type) && (
-          <>
-            <WaTemplateSelector
-              templateType={TemplateType.LOYALTY}
-              label="WhatsApp Template for referee(to send after action)"
-              description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
-              {...form.getInputProps("refereeWaTemplateId")}
-            />
-            <Checkbox
-              label={"Referral allowed for existing customer"}
-              {...form.getInputProps("isExistingUserReferralAllowed")}
-              checked={form.values.isExistingUserReferralAllowed}
-            />
-          </>
-        )}
         <Group>
           <ContainedDateInput
             label={"Start Date"}
@@ -295,6 +311,35 @@ const CreateNewLoyaltyAction = ({
             {...form.getInputProps("endDate")}
           />
         </Group>
+        {isLReferralAction(form.values.type) && (
+          <>
+            <WaTemplateSelector
+              templateType={TemplateType.LOYALTY}
+              label="WhatsApp Template for friends(to send after action)"
+              description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
+              {...form.getInputProps("refereeWaTemplateId")}
+            />
+            <Checkbox
+              label={"Referral allowed for existing customer"}
+              {...form.getInputProps("isExistingUserReferralAllowed")}
+              checked={form.values.isExistingUserReferralAllowed}
+            />
+        <ContainedTextArea
+          label={"Referral Message"}
+          {...form.getInputProps("message.message")}
+          autosize
+          minRows={3}
+          description={"Used in whatsapp message to send for referral"}
+        />
+         <ContainedTextArea
+          label={"Referral forwarding Message with referral code"}
+          {...form.getInputProps("message.forwardMessage")}
+          autosize
+          minRows={3}
+          description={"Used in whatsapp message for forwarding to friends. Use {{code}} to replace with referral code"}
+        />
+          </>
+        )}
       </Stack>
     </FormModalLayout>
   );
