@@ -11,3 +11,11 @@ export const isPurchaseAction = (actionType) =>
 
 export const parsePhoneforWa = (phone: string) =>
   phone && phone.startsWith("+") ? phone.slice(1) : phone;
+
+export enum RewardTypes {
+  FixedAmountDiscount = "Fixed Amount Discount",
+  VariableDiscount = "Variable Discount",
+  PercentageOff = "Percentage Off",
+  FreeProduct = "Free Product",
+  GiftCard = "Gift Card",
+}

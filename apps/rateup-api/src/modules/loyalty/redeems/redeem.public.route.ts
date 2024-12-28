@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { redeemPointsHandler } from "./redeem.controller";
+import { redeemPointsHandler, updateRedeemHandler } from "./redeem.controller";
 import { $lRedeemRef } from "./redeem.schema";
 
 export async function loyaltyRedeemPublicRoutes(server: FastifyInstance) {
@@ -11,5 +11,14 @@ export async function loyaltyRedeemPublicRoutes(server: FastifyInstance) {
       },
     },
     redeemPointsHandler,
+  );
+  server.put(
+    "/:redeemId",
+    {
+      schema: {
+        params: $lRedeemRef("redeemIdParamSchema"),
+      },
+    },
+    updateRedeemHandler,
   );
 }

@@ -37,7 +37,6 @@ const lCustomerResponseSchema = z.object({
     createdAt: z.string(),
   }),
   [LoyaltyActionType.DirectPurchase]: z.array(z.any()),
-  [LoyaltyActionType.ReferFriend]: z.array(z.any()),
   [LoyaltyActionType.ReferralPurchase]: z.array(z.any()),
   redeems: z.array(z.any()),
   totalPoints: z.number(),

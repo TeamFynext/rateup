@@ -11,7 +11,7 @@ export async function createLoyaltyAction(
   data: loyaltyActionInput,
   orgId: string,
 ) {
-  await prisma.loyaltyAction.create({
+  return await prisma.loyaltyAction.create({
     data: {
       name: data.name,
       points: data.points,
@@ -29,6 +29,7 @@ export async function createLoyaltyAction(
         : undefined,
       isAmountBasedForReferee: data.isAmountBasedForReferee,
       maxPointsForReferee: data.maxPointsForReferee,
+      message: data.message,
     },
   });
 }

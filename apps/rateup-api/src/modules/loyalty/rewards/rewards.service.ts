@@ -17,6 +17,8 @@ export async function createLoyaltyReward(
         ? reward.waTemplateId
         : undefined,
       orgId,
+      rewardType: reward.rewardType,
+      rewardValue: reward.rewardValue,
     },
   });
 }

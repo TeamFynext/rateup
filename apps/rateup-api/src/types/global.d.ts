@@ -475,6 +475,11 @@ declare global {
     privateKey: string;
     passphrase: string;
   };
+
+  type LoyaltyActionMessage = {
+    message: string;
+    forwardMessage?: string;
+  };
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;

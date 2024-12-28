@@ -24,6 +24,13 @@ const lActionSchema = z.object({
   isExistingUserReferralAllowed: z.boolean().optional(),
   active: z.boolean().optional(),
   description: z.string(),
+  message: z
+    .object({
+      message: z.string(),
+      forwardMessage: z.string().optional(),
+    })
+    .optional()
+    .nullable(),
 });
 
 const lActionUpdateSchema = lActionSchema.omit({ type: true }).partial();
@@ -40,6 +47,8 @@ const referSchema = z.object({
   refereePhone: z.string(),
   refereeName: z.string().optional(),
   amount: z.number().optional(),
+  issuePurchasePoints: z.boolean().optional(),
+  actionIds: z.array(z.string()),
 });
 export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
   buildJsonSchemas(

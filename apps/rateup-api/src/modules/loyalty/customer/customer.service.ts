@@ -14,15 +14,21 @@ import { LoyaltyActionType } from "../actions/actions.schema";
 import {
   getLoyaltyActionById,
   getLoyaltyActions,
+  getReferralLoyaltyAction,
 } from "../actions/actions.service";
 import { RedeemStatus } from "../redeems/redeem.service";
-import { getLoyaltyTemplate } from "../settings/settings.service";
+import {
+  getLoyaltyTemplate,
+  getReferralCodeByActionAndCustomer,
+  sendTextMessageAndUpdateStats,
+} from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
 import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
 import { LoyaltyAction } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export async function createLCustomer(input: LCustomerInput) {
-  return await prisma.loyaltyCustomer.create({
+  const customer = await prisma.loyaltyCustomer.create({
     data: {
       name: input.name,
       phone: parsePhoneforWa(input.phone),
@@ -33,6 +39,9 @@ export async function createLCustomer(input: LCustomerInput) {
       referralCodes: true,
     },
   });
+  const action = await getReferralLoyaltyAction(input.orgId);
+  await getReferralCodeByActionAndCustomer(action.id, customer.id);
+  return customer;
 }
 
 export async function handlePostRegisterAction(orgId, customerId) {
@@ -133,6 +142,7 @@ export async function getLoyaltyCustomers(orgId) {
           action: true,
         },
       },
+      referralCodes: true,
     },
   });
   return customers?.map((c) => {
@@ -154,6 +164,7 @@ export async function getLoyaltyCustomers(orgId) {
         createdAt: c.createdAt,
       },
       ...actionObj,
+      referralCodes: c.referralCodes.map((r) => r.referralCode),
       redeems: c.redeems.filter((r) => r.status === RedeemStatus.COMPLETED),
       totalPoints: c.totalEarnedPoints,
       balancePoints: c.totalEarnedPoints - c.redeemedPoints,
@@ -170,34 +181,45 @@ export async function deleteLoyaltyCustomer(id: string) {
 }
 
 export async function handleLoyaltyRegister(phone, name, orgId) {
-  //subscription and usage check
-  const subscription = await verifySubscription(orgId, [
-    SubscriptionFeaturePathName.LoyaltyCustomer,
-  ]);
-  const isAllowed = await verifyLCustomerMaxCountRestriction(
-    orgId,
-    subscription,
-  );
-  if (!isAllowed) {
-    log.trace("max count reached/ subscription not found");
-    return;
-  }
-  const res = await createLCustomer({
-    phone,
-    name,
-    orgId,
-  });
-  const template = await getLoyaltyTemplate(
-    LoyaltyTemplateTypes.CustomerRegistration,
-    orgId,
-  );
-  if (template) {
-    await handleSendTemplate(template.waTemplateId, orgId, res.phone, [
-      res.name,
+  try {
+    //subscription and usage check
+    const subscription = await verifySubscription(orgId, [
+      SubscriptionFeaturePathName.LoyaltyCustomer,
     ]);
+    const isAllowed = await verifyLCustomerMaxCountRestriction(
+      orgId,
+      subscription,
+    );
+    if (!isAllowed) {
+      log.trace("max count reached/ subscription not found");
+      return;
+    }
+    const res = await createLCustomer({
+      phone,
+      name,
+      orgId,
+    });
+    const template = await getLoyaltyTemplate(
+      LoyaltyTemplateTypes.CustomerRegistration,
+      orgId,
+    );
+    if (template) {
+      await handleSendTemplate(template.waTemplateId, orgId, res.phone, [
+        res.name,
+      ]);
+    }
+    await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
+    await handlePostRegisterAction(orgId, res.id);
+  } catch (e) {
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
+      await sendTextMessageAndUpdateStats(
+        phone,
+        orgId,
+        null,
+        "You are already a member of our loyalty program\n\n Reply *Points* to know the current points details",
+      );
+    }
   }
-  await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
-  await handlePostRegisterAction(orgId, res.id);
 }
 
 export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
@@ -252,64 +274,6 @@ export async function getLCustomerByPhone(phone, orgId) {
       },
     },
   });
-}
-
-export async function getLoyaltyDetailsToCustomer(phone, orgId) {
-  let customer = await getLCustomerByPhone(phone, orgId);
-  const actions = (await getLoyaltyActions(orgId)).filter((a) =>
-    [LoyaltyActionType.ReferralPurchase].includes(a.type as LoyaltyActionType),
-  );
-  const customerReferralCodes = customer.referralCodes;
-  const referralCodeActions = customerReferralCodes.map((c) => c.actionId);
-  let referralCodes = customerReferralCodes.map((c) => c.referralCode);
-  for (const action of actions) {
-    if (!referralCodeActions.includes(action.id)) {
-      const res = await createLoyaltyReferralCode(
-        action.id,
-        customer.id,
-        referralCodes,
-      );
-      referralCodes.push(res.referralCode);
-    }
-  }
-  return { customer, referralCodes };
-}
-
-export async function handleCustomerInfoWaRequest(phone, orgId) {
-  try {
-    const { customer, referralCodes } = await getLoyaltyDetailsToCustomer(
-      phone,
-      orgId,
-    );
-    const template = await getLoyaltyTemplate(
-      LoyaltyTemplateTypes.CustomerInfo,
-      orgId,
-    );
-    if (template) {
-      const dynamicVariables = [
-        customer.name,
-        (customer.totalEarnedPoints - customer.redeemedPoints).toString(),
-        referralCodes.join(","),
-      ];
-      let components = [];
-      components.push({
-        type: "body",
-        parameters: dynamicVariables.map((data: string) => ({
-          type: "text",
-          text: data,
-        })),
-      });
-      await sendTemplateToUserCore(
-        customer.orgId,
-        template.waTemplateId,
-        phone,
-        components,
-      );
-    }
-  } catch (e) {
-    log.error(e);
-    throw e;
-  }
 }
 
 export async function getLCustomerReferralCodes(customerId) {
