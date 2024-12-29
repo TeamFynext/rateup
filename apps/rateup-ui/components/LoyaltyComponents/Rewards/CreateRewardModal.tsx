@@ -26,12 +26,12 @@ export function CreateRewardModal({
   opened,
   close,
   reward,
-  disableButton
+  disableButton,
 }: {
   opened: boolean;
   close: () => void;
   reward?: any;
-  disableButton?: boolean
+  disableButton?: boolean;
 }) {
   const { translations } = useTranslations();
 
@@ -50,8 +50,8 @@ export function CreateRewardModal({
       rewardType: "",
       rewardValue: {
         value: "",
-        amount: 0
-      }
+        amount: 0,
+      },
     },
     validate: {
       name: isNotEmpty("Name cannot be empty"),
@@ -59,8 +59,12 @@ export function CreateRewardModal({
       maxPerUser: (value) => (!value ? "Max Per User required" : null),
       description: isNotEmpty("description cannot be empty"),
       rewardType: isNotEmpty("Select Reward Type"),
-      rewardValue: (value, values) => !value.value ? "Provide reward value" : 
-      values.rewardType === RewardTypes.VariableDiscount && !value.amount ? "Provide amount" : null
+      rewardValue: (value, values) =>
+        !value.value
+          ? "Provide reward value"
+          : values.rewardType === RewardTypes.VariableDiscount && !value.amount
+            ? "Provide amount"
+            : null,
     },
   });
 
@@ -89,7 +93,7 @@ export function CreateRewardModal({
         ...reward,
         rewardValue: reward.rewardValue ?? {
           value: "",
-          amount: 0
+          amount: 0,
         },
         expireAt: reward?.expireAt ? new Date(reward?.expireAt) : null,
       });
@@ -97,7 +101,7 @@ export function CreateRewardModal({
         ...reward,
         rewardValue: reward.rewardValue ?? {
           value: "",
-          amount: 0
+          amount: 0,
         },
         expireAt: reward?.expireAt ? new Date(reward?.expireAt) : null,
       });
@@ -105,8 +109,8 @@ export function CreateRewardModal({
   }, [reward]);
 
   form.watch("rewardType", ({ touched }) => {
-    if(touched) form.setFieldValue("rewardValue.value","")
-  })
+    if (touched) form.setFieldValue("rewardValue.value", "");
+  });
 
   return (
     <FormModalLayout
@@ -116,10 +120,14 @@ export function CreateRewardModal({
         close();
       }}
       title={
-        reward ? disableButton ? reward.name : translations["Update Reward"] : translations["Create Reward"]
+        reward
+          ? disableButton
+            ? reward.name
+            : translations["Update Reward"]
+          : translations["Create Reward"]
       }
       centered
-      buttonTitle={disableButton ? undefined: reward ? "Update" : "Create"}
+      buttonTitle={disableButton ? undefined : reward ? "Update" : "Create"}
       onSubmit={form.onSubmit(handleSubmit)}
       cancelOnClick={() => {
         form.reset();
@@ -145,13 +153,13 @@ export const LoyaltyRewardForm = ({ form, disabled }) => {
         readOnly={disabled}
       />
       <ContainedSelection
-       data={Object.values(RewardTypes)} 
-       {...form.getInputProps("rewardType")}
-       label="Reward Type"
-       placeholder="Choose Reward Type"
-       readOnly={disabled}
-       />
-      <RewardValueInput form={form} readOnly={disabled}/>
+        data={Object.values(RewardTypes)}
+        {...form.getInputProps("rewardType")}
+        label="Reward Type"
+        placeholder="Choose Reward Type"
+        readOnly={disabled}
+      />
+      <RewardValueInput form={form} readOnly={disabled} />
       <ContainedNumberInput
         label={"Points"}
         {...form.getInputProps("points")}
@@ -198,21 +206,58 @@ export const LoyaltyRewardForm = ({ form, disabled }) => {
 };
 
 const RewardValueInput = ({ form, readOnly }) => {
-   switch(form.values.rewardType){
-     case RewardTypes.FixedAmountDiscount:
-       return <ContainedNumberInput label="Discount Amount" allowNegative={false} readOnly={readOnly} {...form.getInputProps("rewardValue.value")}/>
-     case RewardTypes.VariableDiscount:
+  switch (form.values.rewardType) {
+    case RewardTypes.FixedAmountDiscount:
+      return (
+        <ContainedNumberInput
+          label="Discount Amount"
+          allowNegative={false}
+          readOnly={readOnly}
+          {...form.getInputProps("rewardValue.value")}
+        />
+      );
+    case RewardTypes.VariableDiscount:
       return (
         <>
-         <ContainedNumberInput label="Amount" {...form.getInputProps("rewardValue.amount")}  readOnly={readOnly}  allowNegative={false}/>
-         <ContainedNumberInput label="Discout Amount"  readOnly={readOnly}  allowNegative={false} {...form.getInputProps("rewardValue.value")} />
+          <ContainedNumberInput
+            label="Amount"
+            {...form.getInputProps("rewardValue.amount")}
+            readOnly={readOnly}
+            allowNegative={false}
+          />
+          <ContainedNumberInput
+            label="Discout Amount"
+            readOnly={readOnly}
+            allowNegative={false}
+            {...form.getInputProps("rewardValue.value")}
+          />
         </>
-      )
-     case RewardTypes.FreeProduct:
-      return <ContainedTextField label="Product Name"  readOnly={readOnly}  {...form.getInputProps("rewardValue.value")}/>
-     case RewardTypes.PercentageOff:
-      return <ContainedNumberInput label="Percentage (%)"  readOnly={readOnly}  max={100} allowNegative={false} {...form.getInputProps("rewardValue.value")}/>
-     case RewardTypes.GiftCard:
-      return <ContainedNumberInput label="Discount Amount"  readOnly={readOnly}  {...form.getInputProps("rewardValue.value")} />
-   }
-}
+      );
+    case RewardTypes.FreeProduct:
+      return (
+        <ContainedTextField
+          label="Product Name"
+          readOnly={readOnly}
+          {...form.getInputProps("rewardValue.value")}
+        />
+      );
+    case RewardTypes.PercentageOff:
+      return (
+        <ContainedNumberInput
+          label="Percentage (%)"
+          readOnly={readOnly}
+          max={100}
+          allowNegative={false}
+          {...form.getInputProps("rewardValue.value")}
+        />
+      );
+    case RewardTypes.GiftCard:
+      return (
+        <ContainedNumberInput
+          label="Discount Amount"
+          readOnly={readOnly}
+          {...form.getInputProps("rewardValue.value")}
+        />
+      );
+  }
+};

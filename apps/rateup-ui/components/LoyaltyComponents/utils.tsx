@@ -1,11 +1,20 @@
-import { Card, Group, MultiSelectProps, SelectProps, Skeleton } from "@mantine/core";
+import {
+  Card,
+  Group,
+  MultiSelectProps,
+  SelectProps,
+  Skeleton,
+} from "@mantine/core";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 
-import { ContainedMultiSelect, ContainedSelection } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+} from "../input/ContainedInput/ContainedInput";
 
 export const LCSelector = (props: SelectProps) => {
   const { data: customers, isLoading } = useLoyaltyCustomers();
@@ -45,30 +54,36 @@ export const LRSelector = (props: SelectProps) => {
 
 interface LAProps extends SelectProps {
   multiSelect?: boolean;
-  multiSelectProps?: MultiSelectProps
+  multiSelectProps?: MultiSelectProps;
 }
 
-export const LASelector = ({ multiSelect=false, multiSelectProps, ...props }: LAProps) => {
+export const LASelector = ({
+  multiSelect = false,
+  multiSelectProps,
+  ...props
+}: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
   const actionList = actions
     ? actions
-        .filter((a) => a.active && (multiSelect ? !isLReferralAction(a.type) : true))
+        .filter(
+          (a) => a.active && (multiSelect ? !isLReferralAction(a.type) : true),
+        )
         .map((a) => ({
           label: `${a.name} (${a.type})`,
           value: a.id,
         }))
     : [];
   if (isLoading) return <SelectSkeleton />;
-  if(multiSelect) 
+  if (multiSelect)
     return (
-     <ContainedMultiSelect
-      data={actionList}
-      {...multiSelectProps}
-      nothingFoundMessage="No actions found"
-      placeholder={multiSelectProps.placeholder || "Select"}
-     />
-  )
-  return  (
+      <ContainedMultiSelect
+        data={actionList}
+        {...multiSelectProps}
+        nothingFoundMessage="No actions found"
+        placeholder={multiSelectProps.placeholder || "Select"}
+      />
+    );
+  return (
     <ContainedSelection
       data={actionList}
       {...props}
@@ -104,5 +119,5 @@ export enum RewardTypes {
   VariableDiscount = "Variable Discount",
   PercentageOff = "Percentage Off",
   FreeProduct = "Free Product",
-  GiftCard = "Gift Card"
+  GiftCard = "Gift Card",
 }

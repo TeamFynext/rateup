@@ -79,10 +79,12 @@ const CreateNewLoyaltyAction = ({
         .string()
         .trim()
         .min(1, { message: "Description required" }),
-      message: z.object({
-        message: z.string(),
-        forwardMessage: z.string()
-      }).nullable()
+      message: z
+        .object({
+          message: z.string(),
+          forwardMessage: z.string(),
+        })
+        .nullable(),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -92,15 +94,15 @@ const CreateNewLoyaltyAction = ({
           message: "End date must be after start date",
         });
       }
-      if(isLReferralAction(values.type)){
-        if(!values.message.message)
-        ctx.addIssue({
-          path: ["message.message"],
-          code: z.ZodIssueCode.custom,
-          message: "Message cannot be blank",
-        }); 
-        if(!values.message.forwardMessage){
-          if(!values.message.message)
+      if (isLReferralAction(values.type)) {
+        if (!values.message.message)
+          ctx.addIssue({
+            path: ["message.message"],
+            code: z.ZodIssueCode.custom,
+            message: "Message cannot be blank",
+          });
+        if (!values.message.forwardMessage) {
+          if (!values.message.message)
             ctx.addIssue({
               path: ["message.forwardMessage"],
               code: z.ZodIssueCode.custom,
@@ -109,7 +111,7 @@ const CreateNewLoyaltyAction = ({
         }
       }
     });
-  
+
   const form = useForm<z.infer<typeof schema>>({
     initialValues: {
       type: action?.type || "",
@@ -128,7 +130,7 @@ const CreateNewLoyaltyAction = ({
       isExistingUserReferralAllowed:
         action?.isExistingUserReferralAllowed || false,
       description: action?.description || "",
-      message: action?.message || null
+      message: action?.message || null,
     },
     validate: zodResolver(schema),
   });
@@ -152,14 +154,14 @@ const CreateNewLoyaltyAction = ({
   }
 
   useEffect(() => {
-    if(isLReferralAction(form.values.type) && !action){
-      const message = `Please forward the following message to your Friends & Family. For each successful referral you will earn ${form.values.isAmountBased ? `${form.values.points} points per amount of ${form.values.amount}` : `${form.values.points} points`}`
+    if (isLReferralAction(form.values.type) && !action) {
+      const message = `Please forward the following message to your Friends & Family. For each successful referral you will earn ${form.values.isAmountBased ? `${form.values.points} points per amount of ${form.values.amount}` : `${form.values.points} points`}`;
       const forwardMessage = `I would like to invite you to *[Your Organization Name]*. Using the following code, You will get ${form.values.isAmountBasedForReferee ? `${form.values.refereePoints} points per amount of ${form.values.amount}` : `${form.values.refereePoints} points`}.
-      \n code: *{{code}}*`
-      form.setFieldValue("message",{
+      \n code: *{{code}}*`;
+      form.setFieldValue("message", {
         message,
-        forwardMessage
-     })
+        forwardMessage,
+      });
     }
     if (action) {
       form.setInitialValues({
@@ -324,20 +326,22 @@ const CreateNewLoyaltyAction = ({
               {...form.getInputProps("isExistingUserReferralAllowed")}
               checked={form.values.isExistingUserReferralAllowed}
             />
-        <ContainedTextArea
-          label={"Referral Message"}
-          {...form.getInputProps("message.message")}
-          autosize
-          minRows={3}
-          description={"Used in whatsapp message to send for referral"}
-        />
-         <ContainedTextArea
-          label={"Referral forwarding Message with referral code"}
-          {...form.getInputProps("message.forwardMessage")}
-          autosize
-          minRows={3}
-          description={"Used in whatsapp message for forwarding to friends. Use {{code}} to replace with referral code"}
-        />
+            <ContainedTextArea
+              label={"Referral Message"}
+              {...form.getInputProps("message.message")}
+              autosize
+              minRows={3}
+              description={"Used in whatsapp message to send for referral"}
+            />
+            <ContainedTextArea
+              label={"Referral forwarding Message with referral code"}
+              {...form.getInputProps("message.forwardMessage")}
+              autosize
+              minRows={3}
+              description={
+                "Used in whatsapp message for forwarding to friends. Use {{code}} to replace with referral code"
+              }
+            />
           </>
         )}
       </Stack>

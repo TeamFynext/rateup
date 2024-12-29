@@ -1,11 +1,4 @@
-
-import {
-  Group,
-  Menu,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 
@@ -16,7 +9,7 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.query";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { LoyaltyPoint } from "../Actions/LoyaltyActionCard";
+import { LoyaltyPoint } from "../Action/LoyaltyActionCard";
 import { CreateRewardModal } from "./CreateRewardModal";
 
 export function RewardCard({ reward }) {
