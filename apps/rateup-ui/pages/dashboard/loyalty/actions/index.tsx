@@ -11,9 +11,9 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import CreateNewLoyaltyAction from "@/components/Loyalty/Actions/CreateNewLoyaltyAction";
-import LoyaltyActionCard from "@/components/Loyalty/Actions/LoyaltyActionCard";
-import { isLReferralAction } from "@/components/Loyalty/utils";
+import CreateNewLoyaltyAction from "@/components/LoyaltyComponents/Action/CreateNewLoyaltyAction";
+import LoyaltyActionCard from "@/components/LoyaltyComponents/Action/LoyaltyActionCard";
+import { isLReferralAction } from "@/components/LoyaltyComponents/utils";
 import NothingFound from "@/components/NothingFound/NothingFound";
 
 const index = () => {

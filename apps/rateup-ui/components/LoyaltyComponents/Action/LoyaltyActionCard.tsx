@@ -11,8 +11,8 @@ import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
 import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateString } from "@/utils/dateTime";
 
+import CreateNewLoyaltyAction from "../../LoyaltyComponents/Action/CreateNewLoyaltyAction";
 import classes from "./Actions.module.css";
-import CreateNewLoyaltyAction from "./CreateNewLoyaltyAction";
 import LoyaltyActionMenu from "./LoyaltyActionMenu";
 
 const LoyaltyActionCard = ({ action }) => {

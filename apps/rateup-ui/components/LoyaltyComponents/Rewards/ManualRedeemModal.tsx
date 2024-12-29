@@ -13,7 +13,7 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 
-import { LoyaltyPointIcon } from "../Actions/LoyaltyActionCard";
+import { LoyaltyPointIcon } from "../Action/LoyaltyActionCard";
 
 const ManualRedeemModal = ({ opened, close }) => {
   const [phone, setPhone] = useState("");

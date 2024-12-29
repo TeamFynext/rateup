@@ -1,4 +1,5 @@
 import { Badge } from "@mantine/core";
+
 import { CampaignRewardType } from "../../../types/enums";
 
 export function RewardTypeBadge({ type }: { type: CampaignRewardType }) {

@@ -1,7 +1,7 @@
 import { Stack } from "@mantine/core";
 
-import LoyaltySettings from "@/components/Loyalty/LoyaltySettings";
-import RegisterPageShare from "@/components/Loyalty/RegisterPageShare";
+import LoyaltySettings from "@/components/LoyaltyComponents/LoyaltySettings";
+import RegisterPageShare from "@/components/LoyaltyComponents/RegisterPageShare";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const index = () => {
