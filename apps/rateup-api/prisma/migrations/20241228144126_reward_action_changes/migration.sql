@@ -5,7 +5,9 @@
 
 */
 -- AlterTable
-ALTER TABLE "LoyaltyAction" ADD COLUMN     "message" JSONB;
+ALTER TABLE "LoyaltyAction" ADD COLUMN     "active" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "description" TEXT,
+ADD COLUMN     "message" JSONB;
 
 -- AlterTable
 ALTER TABLE "LoyaltyRedeem" ADD COLUMN     "code" TEXT;
