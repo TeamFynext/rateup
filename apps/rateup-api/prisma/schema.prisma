@@ -1149,7 +1149,7 @@ model LoyaltyAction {
   isExistingUserReferralAllowed  Boolean?  @default(false)
   active        Boolean    @default(true)
   description   String?
-  message       Json
+  message       Json?
 }
 
 model LoyaltyReward {
