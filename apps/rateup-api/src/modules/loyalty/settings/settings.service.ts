@@ -141,19 +141,9 @@ export async function handleLoyaltyPointsCommand(phone, orgId) {
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
-  const actions = await getLoyaltyActions(orgId);
-  const activeActions = actions.filter((ac) => ac.active);
   const message = `Current Point Balance: ${customer.totalEarnedPoints - customer.redeemedPoints}
   \n\nRedeemed Points: ${customer.redeemedPoints}
-  \n\nTotal Earned Points: ${customer.totalEarnedPoints}
-  ${
-    !activeActions?.length
-      ? ""
-      : `\n\n------------------------------------\n
-  \nHere is how to earn points:
-  \n${activeActions.map((a, index) => `${index + 1}. *${a.name}*\n ${a.description}\n`).join("\n")}`
-  }
-  `;
+  \n\nTotal Earned Points: ${customer.totalEarnedPoints}`;
   await sendTextMessageAndUpdateStats(phone, orgId, "Loyalty Points", message);
 }
 
