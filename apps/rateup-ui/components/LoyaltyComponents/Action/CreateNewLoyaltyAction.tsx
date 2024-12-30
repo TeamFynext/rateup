@@ -79,12 +79,10 @@ const CreateNewLoyaltyAction = ({
         .string()
         .trim()
         .min(1, { message: "Description required" }),
-      message: z
-        .object({
-          message: z.string(),
-          forwardMessage: z.string(),
-        })
-        .nullable(),
+      message: z.object({
+        message: z.string(),
+        forwardMessage: z.string(),
+      }),
     })
     .superRefine((values, ctx) => {
       if (values.endDate <= values.startDate) {
@@ -95,19 +93,18 @@ const CreateNewLoyaltyAction = ({
         });
       }
       if (isLReferralAction(values.type)) {
-        if (!values.message.message)
+        if (!values.message?.message)
           ctx.addIssue({
             path: ["message.message"],
             code: z.ZodIssueCode.custom,
             message: "Message cannot be blank",
           });
-        if (!values.message.forwardMessage) {
-          if (!values.message.message)
-            ctx.addIssue({
-              path: ["message.forwardMessage"],
-              code: z.ZodIssueCode.custom,
-              message: "Forward Message cannot be blank",
-            });
+        if (!values.message?.forwardMessage) {
+          ctx.addIssue({
+            path: ["message.forwardMessage"],
+            code: z.ZodIssueCode.custom,
+            message: "Forward Message cannot be blank",
+          });
         }
       }
     });
@@ -130,7 +127,10 @@ const CreateNewLoyaltyAction = ({
       isExistingUserReferralAllowed:
         action?.isExistingUserReferralAllowed || false,
       description: action?.description || "",
-      message: action?.message || null,
+      message: action?.message || {
+        message: "",
+        forwardMessage: "",
+      },
     },
     validate: zodResolver(schema),
   });
@@ -168,15 +168,24 @@ const CreateNewLoyaltyAction = ({
         ...action,
         startDate: new Date(action?.startDate),
         endDate: new Date(action?.endDate),
+        description: action?.description || "",
+        message: action?.message || {
+          message: "",
+          forwardMessage: "",
+        },
       });
       form.setValues({
         ...action,
         startDate: new Date(action?.startDate),
         endDate: new Date(action?.endDate),
+        description: action?.description || "",
+        message: action?.message || {
+          message: "",
+          forwardMessage: "",
+        },
       });
     }
-  }, [action]);
-
+  }, [action, form.values.type]);
   return (
     <FormModalLayout
       opened={opened}
