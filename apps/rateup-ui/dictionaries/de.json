@@ -1952,5 +1952,7 @@
   "Are you sure you want to delete this action?": "Sind Sie sicher, dass Sie diese Aktion löschen möchten?",
   "Delete Action": "Aktion löschen",
   "Redeems": "Einlösungen",
-  "Update Reward": "Belohnung aktualisieren"
+  "Update Reward": "Belohnung aktualisieren",
+  "Inactivive": "Inaktiv",
+  "Session Inactive": "Sitzung inaktiv"
 }

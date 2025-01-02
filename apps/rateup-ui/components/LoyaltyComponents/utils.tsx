@@ -4,7 +4,9 @@ import {
   MultiSelectProps,
   SelectProps,
   Skeleton,
+  Text,
 } from "@mantine/core";
+import { IconAward } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
@@ -121,3 +123,14 @@ export enum RewardTypes {
   FreeProduct = "Free Product",
   GiftCard = "Gift Card",
 }
+
+export const LoyaltyReward = ({ rewardName }) => {
+  return (
+    <Group gap={2}>
+      <IconAward size={"1.5rem"} color="#F9861E" />
+      <Text c={"#F9861E"} fw={"bold"} fz={14}>
+        {rewardName}
+      </Text>
+    </Group>
+  );
+};

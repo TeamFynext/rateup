@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { Stack } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, matches, useForm } from "@mantine/form";
 
 import { TemplateType } from "@/types/enums";
 import {
@@ -27,11 +27,13 @@ export function CreateRewardModal({
   close,
   reward,
   disableButton,
+  existingRewardIds = [],
 }: {
   opened: boolean;
   close: () => void;
   reward?: any;
   disableButton?: boolean;
+  existingRewardIds?: string[];
 }) {
   const { translations } = useTranslations();
 
@@ -52,6 +54,7 @@ export function CreateRewardModal({
         value: "",
         amount: 0,
       },
+      reward_id: "",
     },
     validate: {
       name: isNotEmpty("Name cannot be empty"),
@@ -64,6 +67,12 @@ export function CreateRewardModal({
           ? "Provide reward value"
           : values.rewardType === RewardTypes.VariableDiscount && !value.amount
             ? "Provide amount"
+            : null,
+      reward_id: (value) =>
+        !/^[A-Za-z0-9_]+$/.test(value)
+          ? "Reward Id can only have alphanumerics and underscore"
+          : !reward && existingRewardIds.includes(value)
+            ? "Reward Id already taken"
             : null,
     },
   });
@@ -112,6 +121,16 @@ export function CreateRewardModal({
     if (touched) form.setFieldValue("rewardValue.value", "");
   });
 
+  useEffect(() => {
+    if (
+      !reward &&
+      form.values.reward_id &&
+      existingRewardIds.includes(form.values.reward_id)
+    ) {
+      form.setFieldError("reward_id", "Reward Id already taken");
+    }
+  }, [form.values.reward_id]);
+
   return (
     <FormModalLayout
       opened={opened}
@@ -137,12 +156,12 @@ export function CreateRewardModal({
       isLoading={createReward.isPending}
       includeCancelButton={!disableButton}
     >
-      <LoyaltyRewardForm form={form} disabled={disableButton} />
+      <LoyaltyRewardForm form={form} disabled={disableButton} reward={reward} />
     </FormModalLayout>
   );
 }
 
-export const LoyaltyRewardForm = ({ form, disabled }) => {
+export const LoyaltyRewardForm = ({ form, disabled, reward }) => {
   const { translations } = useTranslations();
   return (
     <Stack>
@@ -151,6 +170,13 @@ export const LoyaltyRewardForm = ({ form, disabled }) => {
         {...form.getInputProps("name")}
         placeholder={translations["Enter Reward Name"]}
         readOnly={disabled}
+      />
+      <ContainedTextField
+        label={"Reward Id"}
+        {...form.getInputProps("reward_id")}
+        placeholder={"Enter reward id"}
+        readOnly={disabled}
+        disabled={reward && reward.reward_id?.length}
       />
       <ContainedSelection
         data={Object.values(RewardTypes)}

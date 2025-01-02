@@ -16,3 +16,7 @@ export async function getAllCustomers() {
 export async function deleteLoyaltyCustomer(id) {
   return (await axiosClient.delete(`${base}/${id}`)).data;
 }
+
+export async function createLCAction({ customerId, actionId, amount }) {
+  await axiosClient.post(`${base}/${customerId}/${actionId}`, { amount });
+}

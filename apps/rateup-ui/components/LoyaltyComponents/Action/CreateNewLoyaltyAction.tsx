@@ -8,6 +8,8 @@ import {
   Group,
   Input,
   InputBase,
+  Radio,
+  RadioGroup,
   rgba,
   Stack,
   Text,
@@ -39,42 +41,44 @@ import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { isLPurchaseAction, isLReferralAction } from "../utils";
+import {
+  isLPurchaseAction,
+  isLReferralAction,
+  LCSelector,
+  LRSelector,
+} from "../utils";
 import classes from "./Actions.module.css";
+
+enum ActionRewadTypes {
+  Point = "Point",
+  Reward = "Reward",
+}
 
 const CreateNewLoyaltyAction = ({
   opened,
   close,
   action = null,
   isReferralAvailable = true,
+  existingActionIds = [],
 }) => {
   const createLoyaltyActionMutation = useCreateLoyaltyAction();
   const updateLoyaltyActionMut = useUpdateLoyaltyAction(action?.id);
+
+  console.log("action", action);
 
   const { translations } = useTranslations();
 
   const schema = z
     .object({
       type: z.string().trim().min(1, { message: "Select the action type" }),
-      name: z.string().trim().min(1, { message: "Name cannot be empty" }),
-      points: z
-        .number()
-        .min(1, { message: "Points should be minimum of zero" }),
-      startDate: z.date().refine((date) => date !== null, {
-        message: "Start date cannot be empty",
-      }),
-      endDate: z.date().refine((date) => date !== null, {
-        message: "End date cannot be empty",
-      }),
-      waTemplateId: z.string().optional().nullable(),
-      refereeWaTemplateId: z.string().optional().nullable(),
-      refereePoints: z.number().optional().nullable(),
-      isAmountBased: z.boolean().optional().nullable(),
-      amount: z.number().optional().nullable(),
-      maxPoints: z.number().optional().nullable(),
-      isAmountBasedForReferee: z.boolean().optional().nullable(),
-      maxPointsForReferee: z.number().optional().nullable(),
-      isExistingUserReferralAllowed: z.boolean().optional().nullable(),
+      name: z.string().trim().min(1, { message: "Name cannot be blank" }),
+      action_id: z
+        .string()
+        .trim()
+        .min(1, { message: "Action Id cannot be blank" })
+        .regex(/^[a-zA-Z0-9_]+$/, {
+          message: "Action Id can only have alphanumerics and underscores",
+        }),
       description: z
         .string()
         .trim()
@@ -83,8 +87,60 @@ const CreateNewLoyaltyAction = ({
         message: z.string(),
         forwardMessage: z.string(),
       }),
+      rewardId: z.string().optional().nullable(),
+      points: z.number(),
+      isAmountBased: z.boolean().optional().nullable(),
+      amount: z.number().optional().nullable(),
+      maxPoints: z.number().optional().nullable(),
+      refereeRewardId: z.string().optional().nullable(),
+      refereePoints: z.number().optional().nullable(),
+      isAmountBasedForReferee: z.boolean().optional().nullable(),
+      maxPointsForReferee: z.number().optional().nullable(),
+      waTemplateId: z.string().optional().nullable(),
+      refereeWaTemplateId: z.string().optional().nullable(),
+      startDate: z.date().refine((date) => date !== null, {
+        message: "Start date cannot be empty",
+      }),
+      endDate: z.date().refine((date) => date !== null, {
+        message: "End date cannot be empty",
+      }),
+      isExistingUserReferralAllowed: z.boolean().optional().nullable(),
+      actionRewardType: z.nativeEnum(ActionRewadTypes),
+      refereeActionRewardType: z.nativeEnum(ActionRewadTypes),
     })
     .superRefine((values, ctx) => {
+      if (
+        !action &&
+        values.action_id &&
+        existingActionIds.includes(form.values.action_id)
+      ) {
+        ctx.addIssue({
+          path: ["action_id"],
+          code: z.ZodIssueCode.custom,
+          message: "Action Id already taken",
+        });
+      }
+      if (
+        values.actionRewardType === ActionRewadTypes.Point &&
+        !values.points
+      ) {
+        ctx.addIssue({
+          path: ["points"],
+          code: z.ZodIssueCode.custom,
+          message: "Points should be minimum of one",
+        });
+      }
+      if (
+        isLReferralAction(values.type) &&
+        values.refereeActionRewardType === ActionRewadTypes.Point &&
+        !values.refereePoints
+      ) {
+        ctx.addIssue({
+          path: ["refereePoints"],
+          code: z.ZodIssueCode.custom,
+          message: "Points should be minimum of one",
+        });
+      }
       if (values.endDate <= values.startDate) {
         ctx.addIssue({
           path: ["endDate"],
@@ -107,38 +163,64 @@ const CreateNewLoyaltyAction = ({
           });
         }
       }
+      if (
+        values.actionRewardType === ActionRewadTypes.Reward &&
+        !values.rewardId.length
+      ) {
+        ctx.addIssue({
+          path: ["rewardId"],
+          code: z.ZodIssueCode.custom,
+          message: "Select the reward",
+        });
+      }
+      if (
+        values.refereeActionRewardType === ActionRewadTypes.Reward &&
+        !values.refereeRewardId.length
+      ) {
+        ctx.addIssue({
+          path: ["refereeRewardId"],
+          code: z.ZodIssueCode.custom,
+          message: "Select the reward",
+        });
+      }
     });
 
   const form = useForm<z.infer<typeof schema>>({
     initialValues: {
-      type: action?.type || "",
-      name: action?.name || "",
-      points: action?.points || 0,
-      startDate: action?.startDate || null,
-      endDate: action?.endDate || null,
-      waTemplateId: action?.waTemplateId || null,
-      refereePoints: action?.refereePoints || 0,
-      isAmountBased: action?.isAmountBased || false,
-      amount: action?.amount || 0,
-      maxPoints: action?.maxPoints || 0,
-      refereeWaTemplateId: action?.refereeWaTemplateId || null,
-      isAmountBasedForReferee: action?.isAmountBasedForReferee || false,
-      maxPointsForReferee: action?.maxPointsForReferee || 0,
-      isExistingUserReferralAllowed:
-        action?.isExistingUserReferralAllowed || false,
-      description: action?.description || "",
-      message: action?.message || {
+      type: "",
+      name: "",
+      points: 0,
+      startDate: null,
+      endDate: null,
+      waTemplateId: "",
+      refereePoints: 0,
+      isAmountBased: false,
+      amount: 0,
+      maxPoints: 0,
+      refereeWaTemplateId: "",
+      isAmountBasedForReferee: false,
+      maxPointsForReferee: 0,
+      isExistingUserReferralAllowed: false,
+      description: "",
+      message: {
         message: "",
         forwardMessage: "",
       },
+      rewardId: "",
+      refereeRewardId: "",
+      action_id: "",
+      actionRewardType: ActionRewadTypes.Point,
+      refereeActionRewardType: ActionRewadTypes.Point,
     },
     validate: zodResolver(schema),
   });
 
   function handleSubmit() {
+    console.log("form.validate()", form.validate());
     if (form.validate().hasErrors) return;
     if (action) {
-      const { type, ...rest } = form.values;
+      const { type, actionRewardType, refereeActionRewardType, ...rest } =
+        form.values;
       updateLoyaltyActionMut.mutate(rest, {
         onSuccess: () => {
           form.reset(), close();
@@ -146,7 +228,8 @@ const CreateNewLoyaltyAction = ({
       });
       return;
     }
-    createLoyaltyActionMutation.mutate(form.values, {
+    const { actionRewardType, refereeActionRewardType, ...rest } = form.values;
+    createLoyaltyActionMutation.mutate(rest, {
       onSuccess: () => {
         form.reset(), close();
       },
@@ -173,6 +256,13 @@ const CreateNewLoyaltyAction = ({
           message: "",
           forwardMessage: "",
         },
+        action_id: action?.action_id || "",
+        actionRewardType: action?.rewardId
+          ? ActionRewadTypes.Reward
+          : ActionRewadTypes.Point,
+        refereeActionRewardType: action?.refereeRewardId
+          ? ActionRewadTypes.Reward
+          : ActionRewadTypes.Point,
       });
       form.setValues({
         ...action,
@@ -183,9 +273,27 @@ const CreateNewLoyaltyAction = ({
           message: "",
           forwardMessage: "",
         },
+        action_id: action?.action_id || "",
+        actionRewardType: action?.rewardId
+          ? ActionRewadTypes.Reward
+          : ActionRewadTypes.Point,
+        refereeActionRewardType: action?.refereeRewardId
+          ? ActionRewadTypes.Reward
+          : ActionRewadTypes.Point,
       });
     }
   }, [action, form.values.type]);
+
+  useEffect(() => {
+    if (
+      !action &&
+      form.values.action_id &&
+      existingActionIds.includes(form.values.action_id)
+    ) {
+      form.setFieldError("action_id", "Action Id already taken");
+    }
+  }, [form.values.action_id]);
+
   return (
     <FormModalLayout
       opened={opened}
@@ -216,6 +324,11 @@ const CreateNewLoyaltyAction = ({
           isReferralAvailable={isReferralAvailable}
         />
         <ContainedTextField label={"Name"} {...form.getInputProps("name")} />
+        <ContainedTextField
+          label={"Action Id"}
+          {...form.getInputProps("action_id")}
+          disabled={action && action.action_id?.length}
+        />
         <ContainedTextArea
           label={translations["Description"]}
           {...form.getInputProps("description")}
@@ -223,6 +336,7 @@ const CreateNewLoyaltyAction = ({
           minRows={3}
           description={"Used in whatsapp message to describe action"}
         />
+
         <Group>
           <Checkbox
             label={
@@ -258,24 +372,38 @@ const CreateNewLoyaltyAction = ({
               : "none"
           }
         />
+        <RadioGroup {...form.getInputProps("actionRewardType")}>
+          <Group>
+            {Object.values(ActionRewadTypes).map((type) => (
+              <Radio value={type} label={type} key={type} />
+            ))}
+          </Group>
+        </RadioGroup>
         {isLReferralAction(form.values.type) && (
           <Text size="sm" fw="bold">
             Referrer
           </Text>
         )}
-        <ContainedNumberInput
-          label={form.values.isAmountBased ? "Points per amount" : "Points"}
-          {...form.getInputProps("points")}
-          allowDecimal={false}
-          allowNegative={false}
-        />
-        <ContainedNumberInput
-          label={"Max Points Per Transaction"}
-          {...form.getInputProps("maxPoints")}
-          allowDecimal={false}
-          allowNegative={false}
-          display={form.values.isAmountBased ? "block" : "none"}
-        />
+
+        {form.values.actionRewardType === ActionRewadTypes.Reward ? (
+          <LRSelector {...form.getInputProps("rewardId")} label="Reward" />
+        ) : (
+          <>
+            <ContainedNumberInput
+              label={form.values.isAmountBased ? "Points per amount" : "Points"}
+              {...form.getInputProps("points")}
+              allowDecimal={false}
+              allowNegative={false}
+            />
+            <ContainedNumberInput
+              label={"Max Points Per Transaction"}
+              {...form.getInputProps("maxPoints")}
+              allowDecimal={false}
+              allowNegative={false}
+              display={form.values.isAmountBased ? "block" : "none"}
+            />
+          </>
+        )}
         <WaTemplateSelector
           templateType={TemplateType.LOYALTY}
           label={
@@ -288,42 +416,44 @@ const CreateNewLoyaltyAction = ({
           {...form.getInputProps("waTemplateId")}
         />
         {isLReferralAction(form.values.type) && (
-          <Text size="sm" fw="bold">
-            Friends
-          </Text>
-        )}
-        <ContainedNumberInput
-          label={"Points"}
-          {...form.getInputProps("refereePoints")}
-          allowDecimal={false}
-          allowNegative={false}
-          display={isLReferralAction(form.values.type) ? "block" : "none"}
-        />
-        <ContainedNumberInput
-          label={"Max Points Per Transaction"}
-          {...form.getInputProps("maxPointsForReferee")}
-          allowDecimal={false}
-          allowNegative={false}
-          display={
-            isLPurchaseAction(form.values.type) &&
-            form.values.isAmountBasedForReferee
-              ? "block"
-              : "none"
-          }
-        />
-        <Group>
-          <ContainedDateInput
-            label={"Start Date"}
-            {...form.getInputProps("startDate")}
-          />{" "}
-          -
-          <ContainedDateInput
-            label={"End Date"}
-            {...form.getInputProps("endDate")}
-          />
-        </Group>
-        {isLReferralAction(form.values.type) && (
           <>
+            <Text size="sm" fw="bold">
+              Friends
+            </Text>
+            <RadioGroup {...form.getInputProps("refereeActionRewardType")}>
+              <Group>
+                {Object.values(ActionRewadTypes).map((type) => (
+                  <Radio value={type} label={type} key={type} />
+                ))}
+              </Group>
+            </RadioGroup>
+            {form.values.refereeActionRewardType === ActionRewadTypes.Reward ? (
+              <LRSelector
+                {...form.getInputProps("refereeRewardId")}
+                label={"Reward"}
+              />
+            ) : (
+              <>
+                <ContainedNumberInput
+                  label={"Points"}
+                  {...form.getInputProps("refereePoints")}
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <ContainedNumberInput
+                  label={"Max Points Per Transaction"}
+                  {...form.getInputProps("maxPointsForReferee")}
+                  allowDecimal={false}
+                  allowNegative={false}
+                  display={
+                    isLPurchaseAction(form.values.type) &&
+                    form.values.isAmountBasedForReferee
+                      ? "block"
+                      : "none"
+                  }
+                />
+              </>
+            )}
             <WaTemplateSelector
               templateType={TemplateType.LOYALTY}
               label="WhatsApp Template for friends(to send after action)"
@@ -353,6 +483,17 @@ const CreateNewLoyaltyAction = ({
             />
           </>
         )}
+        <Group>
+          <ContainedDateInput
+            label={"Start Date"}
+            {...form.getInputProps("startDate")}
+          />{" "}
+          -
+          <ContainedDateInput
+            label={"End Date"}
+            {...form.getInputProps("endDate")}
+          />
+        </Group>
       </Stack>
     </FormModalLayout>
   );

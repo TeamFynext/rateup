@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
 
-import { WaFlowStatus } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";

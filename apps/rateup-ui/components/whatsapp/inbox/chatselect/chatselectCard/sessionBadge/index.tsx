@@ -16,7 +16,7 @@ export default function WaInboxSessionBadge({
       position="top-start"
       label={
         isInboxSessionExpired(timeStamp)
-          ? translations["Session Expired"]
+          ? translations["Session Inactive"]
           : translations["Session Active"]
       }
     >
@@ -24,7 +24,7 @@ export default function WaInboxSessionBadge({
         className={`${classes.session_expiry_badge} ${isInboxSessionExpired(timeStamp) ? classes.session_expiry_badge_expired : classes.session_expiry_badge_active}`}
       >
         {isInboxSessionExpired(timeStamp)
-          ? translations["Expired"]
+          ? translations["Inactive"]
           : translations["Active"]}
       </Badge>
     </Tooltip>

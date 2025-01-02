@@ -75,6 +75,9 @@ const index = () => {
         isReferralAvailable={
           !loyaltyActions?.some((a) => isLReferralAction(a?.type))
         }
+        existingActionIds={loyaltyActions
+          ?.filter((a) => a?.action_id)
+          .map((a) => a?.action_id)}
       />
     </Stack>
   );
