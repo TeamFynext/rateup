@@ -41,6 +41,7 @@ export const Navbar = () => {
       title: replaceRouteParameter(data, query, routeParams),
       href: getUrl(index, data),
     }))
+    .filter((item) => !["v1", "v2"].includes(item.title))
     ?.map((item, index) => (
       <Link href={item.href} key={index} className={styles.breadcrumbsLink}>
         <Text

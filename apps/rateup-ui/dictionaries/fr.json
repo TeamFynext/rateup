@@ -1950,5 +1950,7 @@
   "Are you sure you want to delete this action?": "Êtes-vous sûr de vouloir supprimer cette action?",
   "Delete Action": "Supprimer l'action",
   "Redeems": "Échanges",
-  "Update Reward": "Mettre à jour la récompense"
+  "Update Reward": "Mettre à jour la récompense",
+  "Inactivive": "Inactif",
+  "Session Inactive": "Session inactive"
 }
