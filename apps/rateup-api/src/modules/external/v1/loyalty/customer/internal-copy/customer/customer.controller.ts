@@ -1,55 +1,52 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { CustomerActionParamInput, LCustomerInput } from "./customer.schema";
-import {
-  createCustomerAction,
-  createLCustomer,
-  getLoyaltyCustomers,
-  updateLCustomerPoint,
-} from "./customer.service";
 import { log } from "../../../../../../../utils/logger";
-
-export async function createLCustomerHandler(
-  request: FastifyRequest<{ Body: LCustomerInput }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const res = await createLCustomer(request.body, orgId);
-    reply.code(200).send(res);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send(e);
-  }
-}
+import {
+  getLCustomerByPhone,
+  handleLCustomerAction,
+  handleSendTemplate,
+} from "../../../../../../loyalty/customer/customer.service";
+import { getLoyaltyActionByActionId } from "../../../action/internal-copy/actions/actions.service";
+import { CustomerActionQueryInput } from "../../../loyalty.external.schema";
+import { AmountInput } from "../../../../../../loyalty/customer/customer.schema";
 
 export async function customerActionHandler(
-  request: FastifyRequest<{ Params: CustomerActionParamInput }>,
+  request: FastifyRequest<{
+    Querystring: CustomerActionQueryInput;
+    Body: AmountInput;
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const { actionId, customerId } = request.params;
-    const customerAction = await createCustomerAction(customerId, actionId);
-    const customer = await updateLCustomerPoint(
-      customerId,
-      customerAction.action.points,
-    );
+    const { action_id, phone } = request.query;
+    const { orgId } = request.user;
+    const { amount } = request.body;
+    let [customer, action] = await Promise.all([
+      getLCustomerByPhone(phone, orgId),
+      getLoyaltyActionByActionId(action_id, orgId),
+    ]);
+    const { success, data, message } = await handleLCustomerAction({
+      customerId: customer.id,
+      actionId: action.id,
+      amount,
+    });
+    if (!success) {
+      return reply.code(403).send(message);
+    }
+    let { customerAction, customerPoints } = data;
     reply.code(200).send({
       message: "Success",
-      totlaEarnedPoints: customer.totalEarnedPoints,
     });
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send(e);
-  }
-}
-
-export async function getLoyaltyCustomersHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const customers = await getLoyaltyCustomers(request.user.orgId);
-    reply.code(200).send(customers);
+    await handleSendTemplate(
+      customerAction.action.waTemplateId,
+      customer.orgId,
+      customer.phone,
+      [
+        customer.name,
+        customerAction.action.rewardId
+          ? customerAction.action.reward.name
+          : customerPoints?.toString(),
+      ],
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

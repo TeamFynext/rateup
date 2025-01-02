@@ -24,15 +24,4 @@ export async function loyaltyCustomerPublicRoutes(server: FastifyInstance) {
     },
     createLCustomerHandler,
   );
-
-  server.post(
-    "/:customerId/:actionId",
-    {
-      schema: {
-        params: $lCustomerRef("actionCustomerIdParamSchema"),
-        body: $lCustomerRef("amountSchema"),
-      },
-    },
-    customerActionHandler,
-  );
 }

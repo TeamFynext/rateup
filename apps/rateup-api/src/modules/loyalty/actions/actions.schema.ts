@@ -7,7 +7,7 @@ export enum LoyaltyActionType {
   CustomerRegistration = "Customer Registration",
 }
 
-const lActionSchema = z.object({
+export const lActionSchema = z.object({
   name: z.string(),
   type: z.nativeEnum(LoyaltyActionType),
   points: z.number(),
@@ -31,6 +31,9 @@ const lActionSchema = z.object({
     })
     .optional()
     .nullable(),
+  action_id: z.string(),
+  rewardId: z.string().optional(),
+  refereeRewardId: z.string().optional(),
 });
 
 const lActionUpdateSchema = lActionSchema.omit({ type: true }).partial();

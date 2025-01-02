@@ -1,25 +1,13 @@
 import { FastifyInstance } from "fastify";
+import { $extLoyaltyRef } from "../loyalty.external.schema";
 import {
   createLCustomerHandler,
   getLoyaltyCustomersHandler,
-} from "./internal-copy/customer/customer.controller";
-import { $lCustomerRef } from "./internal-copy/customer/customer.schema";
-import { $extLoyaltyRef } from "../loyalty.external.schema";
+} from "../../../../loyalty/customer/customer.controller";
+import { customerActionHandler } from "./internal-copy/customer/customer.controller";
+import { $lCustomerRef } from "../../../../loyalty/customer/customer.schema";
 
 export async function externalLoyaltyCustomerRoutes(server: FastifyInstance) {
-  server.post(
-    "/",
-    {
-      schema: {
-        tags: ["Loyalty/Customer"],
-        description: "Create a new loyalty customer",
-        summary: "Create a new customer",
-        body: $lCustomerRef("LCustomerSchema"),
-      },
-    },
-    createLCustomerHandler,
-  );
-
   server.get(
     "/",
     {
@@ -36,5 +24,19 @@ export async function externalLoyaltyCustomerRoutes(server: FastifyInstance) {
       },
     },
     getLoyaltyCustomersHandler,
+  );
+
+  server.post(
+    "/action",
+    {
+      schema: {
+        tags: ["Loyalty/Customer"],
+        description: "Customer Action",
+        summary: "Appy action to customer",
+        body: $lCustomerRef("amountSchema"),
+        querystring: $extLoyaltyRef("customerActionQuerySchema"),
+      },
+    },
+    customerActionHandler,
   );
 }
