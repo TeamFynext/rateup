@@ -1,7 +1,7 @@
 import { Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
-import { useLCAction } from "@/backend/loyalty/loyalty.query";
+import { useLCAction } from "@/backend/loyalty/customer/customer.query";
 import {
   ContainedNumberInput,
   ContainedTextField,

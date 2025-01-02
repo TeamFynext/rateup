@@ -88,7 +88,13 @@ export default function () {
           text={"No Rewards found. Click New Reward to create a reward"}
         />
       )}
-      <CreateRewardModal opened={opened} close={close} />
+      <CreateRewardModal
+        opened={opened}
+        close={close}
+        existingRewardIds={rewards
+          ?.filter((r) => r.reward_id)
+          .map((r) => r.reward_id)}
+      />
     </Stack>
   );
 }

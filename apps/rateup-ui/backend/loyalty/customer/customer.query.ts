@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
+  createLCAction,
   createLoyaltyCustomer,
   deleteLoyaltyCustomer,
   getAllCustomers,
@@ -35,6 +36,21 @@ export const useDeleteLoyaltyCustomerMutation = () => {
     },
     onError: () => {
       showErrorToast("Error");
+    },
+  });
+};
+
+export const useLCAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createLCAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      showSuccessToast("success action");
+    },
+    onError: (e: any) => {
+      showErrorToast(`Failed:${e?.response?.data ?? ""}`);
     },
   });
 };

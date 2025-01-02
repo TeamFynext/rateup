@@ -95,6 +95,7 @@ export const useReferralLoyaltyAction = () => {
     mutationFn: referralLoyaltyAction,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       showSuccessToast("Refer successfull");
     },
     onError: (e: any) => {
