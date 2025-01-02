@@ -74,7 +74,12 @@ export async function customerActionHandler(
       customerAction.action.waTemplateId,
       customer.orgId,
       customer.phone,
-      [customer.name, customerPoints?.toString()],
+      [
+        customer.name,
+        customerAction.action.rewardId
+          ? customerAction.action.reward.name
+          : customerPoints?.toString(),
+      ],
     );
   } catch (e) {
     log.error(e);

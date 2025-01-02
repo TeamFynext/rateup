@@ -12,7 +12,7 @@ export enum RedeemStatus {
   CLAIMED = "CLAIMED",
 }
 
-export async function createRedeem(customerId, rewardId) {
+export async function createRedeem(customerId, rewardId, byAction = false) {
   const existingCodes = (
     await prisma.loyaltyRedeem.findMany({
       where: {
@@ -44,7 +44,7 @@ export async function createRedeem(customerId, rewardId) {
     reward.maxPerUser;
   const redeem = await updateLoyaltyRedeem(id, {
     status:
-      isExpired || !isBalance || isUsedMax
+      isExpired || (!byAction && !isBalance) || isUsedMax
         ? RedeemStatus.FAILED
         : RedeemStatus.ISSUED,
   });

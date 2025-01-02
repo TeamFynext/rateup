@@ -1150,6 +1150,13 @@ model LoyaltyAction {
   active        Boolean    @default(true)
   description   String?
   message       Json?
+  action_id     String?
+  rewardId      String?        @db.Uuid
+  reward        LoyaltyReward?  @relation("referrer_reward",fields: [rewardId], references: [id], onDelete: Cascade)
+  refereeRewardId  String?        @db.Uuid
+  refereeReward    LoyaltyReward?   @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
+
+  @@unique([action_id, orgId], name: "action_id_org_id_unique")
 }
 
 model LoyaltyReward {
@@ -1168,6 +1175,10 @@ model LoyaltyReward {
   waTemplate   WaTemplate?     @relation(fields: [waTemplateId], references: [id])
   rewardType   String?
   rewardValue  Json?
+  reward_id    String?
+  actions      LoyaltyAction[]  @relation("referrer_reward")
+  loyaltyRefereeActions  LoyaltyAction[] @relation("referee_reward")
+  @@unique([reward_id,orgId], name: "reward_id_org_id_unique")
 }
 
 model LoyaltyCustomer {

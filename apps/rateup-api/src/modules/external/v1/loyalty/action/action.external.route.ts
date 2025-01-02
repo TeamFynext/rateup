@@ -1,28 +1,16 @@
 import { FastifyInstance } from "fastify";
-import { $lActionRef } from "./internal-copy/actions/actions.schema";
+import { $extLoyaltyRef } from "../loyalty.external.schema";
 import {
   createLoyaltyActionHandler,
   deleteLoyaltyActionByIdHandler,
   getLoyaltyActionByIdHandler,
   getLoyaltyActionsHandler,
+  referActionHandler,
   updateLoyaltyActionByIdHandler,
-} from "./internal-copy/actions/actions.controller";
-import { $extLoyaltyRef } from "../loyalty.external.schema";
+} from "../../../../loyalty/actions/actions.controller";
+import { $lActionRef } from "../../../../loyalty/actions/actions.schema";
 
 export async function externalLoyaltyActionRoutes(server: FastifyInstance) {
-  server.post(
-    "/",
-    {
-      schema: {
-        tags: ["Loyalty/Action"],
-        description: "Create a new action",
-        summary: "Create a new loyalty action",
-        body: $lActionRef("lActionSchema"),
-      },
-    },
-    createLoyaltyActionHandler,
-  );
-
   server.get(
     "/",
     {
@@ -57,36 +45,17 @@ export async function externalLoyaltyActionRoutes(server: FastifyInstance) {
     getLoyaltyActionByIdHandler,
   );
 
-  server.put(
-    "/:actionId",
+  server.post(
+    "/:referralCode",
     {
       schema: {
         tags: ["Loyalty/Action"],
-        description: "Update a loyalty action by id",
-        summary: "Update a action by id",
-        params: $lActionRef("byLActiondIdParamSchema"),
-        body: $lActionRef("lActionUpdateSchema"),
-        response: {
-          200: $extLoyaltyRef("lActionSchemaResponseSchema"),
-        },
+        description: "Apply Referral Action",
+        summary: "Referral action for friends using  referral code",
+        params: $lActionRef("byReferralCodeParamsSchema"),
+        body: $lActionRef("referSchema"),
       },
     },
-    updateLoyaltyActionByIdHandler,
-  );
-
-  server.delete(
-    "/:actionId",
-    {
-      schema: {
-        tags: ["Loyalty/Action"],
-        description: "Delete a loyalty action by id",
-        summary: "Delete a action by id",
-        params: $lActionRef("byLActiondIdParamSchema"),
-        response: {
-          200: $extLoyaltyRef("lActionSchemaResponseSchema"),
-        },
-      },
-    },
-    deleteLoyaltyActionByIdHandler,
+    referActionHandler,
   );
 }

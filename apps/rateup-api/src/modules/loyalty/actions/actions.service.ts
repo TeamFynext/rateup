@@ -30,6 +30,12 @@ export async function createLoyaltyAction(
       isAmountBasedForReferee: data.isAmountBasedForReferee,
       maxPointsForReferee: data.maxPointsForReferee,
       message: data.message,
+      description: data.description,
+      action_id: data.action_id,
+      rewardId: data.rewardId?.length ? data?.rewardId : undefined,
+      refereeRewardId: data.refereeRewardId?.length
+        ? data.refereeRewardId
+        : undefined,
     },
   });
 }
@@ -38,6 +44,13 @@ export async function getLoyaltyActions(orgId: string) {
   return await prisma.loyaltyAction.findMany({
     where: {
       orgId,
+    },
+    include: {
+      reward: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 }
@@ -64,6 +77,10 @@ export async function updateLoyaltyActionById(
       refereeWaTemplateId: data.refereeWaTemplateId?.length
         ? data.refereeWaTemplateId
         : undefined,
+      rewardId: data.rewardId?.length ? data.rewardId : undefined,
+      refereeRewardId: data.refereeRewardId?.length
+        ? data.refereeRewardId
+        : undefined,
     },
   });
 }
@@ -89,6 +106,19 @@ export async function getCustomerActions(actionId) {
   return await prisma.loyaltyActionCustomerMap.findMany({
     where: {
       actionId,
+    },
+  });
+}
+
+export async function deactivateExpiredActions() {
+  await prisma.loyaltyAction.updateMany({
+    where: {
+      endDate: {
+        lt: new Date(),
+      },
+    },
+    data: {
+      active: false,
     },
   });
 }
