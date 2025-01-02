@@ -389,7 +389,6 @@ export async function handleLCustomerAction({
     });
 
     if (!action.refereeRewardId) {
-      console.log("here");
       referee = await updateLCustomerPoint(referee.id, refereePoints);
       if (isPurchaseAction(action.type) && action.isAmountBasedForReferee) {
         const points = Math.round((action.points / action.amount) * amount);
@@ -403,7 +402,6 @@ export async function handleLCustomerAction({
   //handling referrer/customer action having reward
   if (action.rewardId) {
     if (action.isAmountBased && (!amount || amount < action.amount)) {
-      console.log("here er");
       return {
         success: false,
         message: "Minimum " + action.amount + " required",

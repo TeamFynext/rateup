@@ -89,7 +89,6 @@ export async function updateLoyaltyActionByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    console.log("request.body", request.body);
     const res = await updateLoyaltyActionById(
       request.params.actionId,
       request.body,
