@@ -12,6 +12,7 @@ import {
   ByReferralCodeParamInput,
   lActionIdParamInput,
   lActionUpdateInput,
+  loyaltyActionInput,
   ReferralInput,
 } from "./actions.schema";
 import prisma from "../../../utils/prisma";
@@ -29,7 +30,7 @@ import { isLReferralAction } from "../util";
 import { getReferralCodeByActionAndCustomer } from "../settings/settings.service";
 
 export async function createLoyaltyActionHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: loyaltyActionInput }>,
   reply: FastifyReply,
 ) {
   try {
@@ -88,6 +89,7 @@ export async function updateLoyaltyActionByIdHandler(
   reply: FastifyReply,
 ) {
   try {
+    console.log("request.body", request.body);
     const res = await updateLoyaltyActionById(
       request.params.actionId,
       request.body,
@@ -171,6 +173,7 @@ export async function referActionHandler(
     } = request.body;
     const { customerId, actionId } =
       await getLoyaltyCustomerOrActionByReferralCode(referralCode);
+    //handling referee and referrer action
     const { success, data, message } = await handleLCustomerAction({
       customerId,
       actionId,
@@ -181,27 +184,42 @@ export async function referActionHandler(
     if (!success) {
       return reply.code(403).send(message);
     }
-    const { customer, customerAction, referee, customerPoints, refereePoints } =
-      data;
+    const {
+      customer,
+      customerAction: { action },
+      referee,
+      customerPoints,
+      refereePoints,
+    } = data;
 
-    reply.code(200).send(customerAction);
-
+    reply.code(200).send(customer);
+    //sending template to referee
     if (referee) {
       await handleSendTemplate(
-        customerAction.action.refereeWaTemplateId,
+        action.refereeWaTemplateId,
         referee.orgId,
         referee.phone,
-        [referee.name, refereePoints?.toString()],
+        [
+          referee.name,
+          action.refereeRewardId
+            ? action.refereeReward.name
+            : refereePoints?.toString(),
+        ],
       );
     }
-    const dynamicVariables = [customer.name, customerPoints?.toString()];
+    const dynamicVariables = [
+      customer.name,
+      action.rewardId ? action.reward.name : customerPoints?.toString(),
+    ];
     if (referee) dynamicVariables.push(referee?.name, referee?.phone);
+    //sending template to referrer
     await handleSendTemplate(
-      customerAction.action.waTemplateId,
+      action.waTemplateId,
       customer.orgId,
       customer.phone,
       dynamicVariables,
     );
+    //performing other actions on referee if present
     if (issuePurchasePoints && actionIds.length) {
       for (const actionId of actionIds) {
         const { success, data, message } = await handleLCustomerAction({
@@ -215,7 +233,12 @@ export async function referActionHandler(
             customerAction.action.waTemplateId,
             referee.orgId,
             referee.phone,
-            [referee.name, refereeNewPoints?.toString()],
+            [
+              referee.name,
+              customerAction.action.rewardId
+                ? customerAction.action.reward.name
+                : refereeNewPoints?.toString(),
+            ],
           );
         }
       }

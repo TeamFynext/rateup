@@ -16,7 +16,7 @@ import {
   getLoyaltyActions,
   getReferralLoyaltyAction,
 } from "../actions/actions.service";
-import { RedeemStatus } from "../redeems/redeem.service";
+import { createRedeem, RedeemStatus } from "../redeems/redeem.service";
 import {
   getLoyaltyTemplate,
   getReferralCodeByActionAndCustomer,
@@ -87,7 +87,13 @@ export async function createCustomerAction({
       amount,
     },
     include: {
-      action: true,
+      action: {
+        include: {
+          reward: true,
+          refereeReward: true,
+        },
+      },
+      customer: true,
     },
   });
 }
@@ -329,6 +335,7 @@ export async function handleLCustomerAction({
   ) {
     return { success: false, message: "Action Not available on this date" };
   }
+  //handling referee action
   let referee;
   let refereePoints = action.refereePoints;
   if (isLReferralAction(action.type) && refereePhone) {
@@ -338,6 +345,15 @@ export async function handleLCustomerAction({
         success: false,
         message: "Existing Customers are not allowed to use referral",
       };
+    if (
+      (action.refereeRewardId && action.isAmountBasedForReferee && !amount) ||
+      amount < action.amount
+    ) {
+      return {
+        success: false,
+        message: "Minimum " + action.amount + " required",
+      };
+    }
     if (!referee) {
       referee = await createLCustomer({
         phone: refereePhone,
@@ -353,20 +369,74 @@ export async function handleLCustomerAction({
     if (res) {
       return { success: false, message: "Already referred by this number" };
     }
+    if (action.refereeRewardId) {
+      const { redeem, message } = await createRedeem(
+        referee.id,
+        action.rewardId,
+        true,
+      );
+      if (redeem.status === RedeemStatus.FAILED) {
+        return {
+          success: false,
+          message,
+        };
+      }
+    }
     const refereeAction = await createCustomerAction({
       customerId: referee.id,
       actionId,
       amount,
     });
-    if (isPurchaseAction(action.type) && action.isAmountBasedForReferee) {
-      const points = Math.round((action.points / action.amount) * amount);
-      refereePoints =
-        points > action.maxPointsForReferee
-          ? action.maxPointsForReferee
-          : points;
+
+    if (!action.refereeRewardId) {
+      console.log("here");
+      referee = await updateLCustomerPoint(referee.id, refereePoints);
+      if (isPurchaseAction(action.type) && action.isAmountBasedForReferee) {
+        const points = Math.round((action.points / action.amount) * amount);
+        refereePoints =
+          points > action.maxPointsForReferee
+            ? action.maxPointsForReferee
+            : points;
+      }
     }
-    referee = await updateLCustomerPoint(referee.id, refereePoints);
   }
+  //handling referrer/customer action having reward
+  if (action.rewardId) {
+    if (action.isAmountBased && (!amount || amount < action.amount)) {
+      console.log("here er");
+      return {
+        success: false,
+        message: "Minimum " + action.amount + " required",
+      };
+    }
+    const { redeem, message } = await createRedeem(
+      customerId,
+      action.rewardId,
+      true,
+    );
+    if (redeem.status === RedeemStatus.FAILED) {
+      return {
+        success: false,
+        message,
+      };
+    }
+    const customerAction = await createCustomerAction({
+      customerId,
+      actionId,
+      refereePhone,
+      amount,
+    });
+    return {
+      success: true,
+      data: {
+        customer: customerAction.customer,
+        customerAction,
+        referee,
+        refereePoints,
+      },
+    };
+  }
+  //handling referrer/customer action having points
   let customerPoints = action.points;
   if (isPurchaseAction(action.type) && action.isAmountBased) {
     const points = Math.round((action.points / action.amount) * amount);

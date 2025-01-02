@@ -1,7 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { getLoyaltyRedeemsHandler } from "./internal-copy/redeems/redeem.controller";
-import { $lRedeemRef } from "./internal-copy/redeems/redeem.schema";
 import { $extLoyaltyRef } from "../loyalty.external.schema";
+import { getLoyaltyRedeemsHandler } from "../../../../loyalty/redeems/redeem.controller";
+import { $lRedeemRef } from "../../../../loyalty/redeems/redeem.schema";
+import { redeemPointsHandler } from "./internal-copy/redeems/redeem.controller";
 
 export async function externalLoyaltyRedeemRoutes(server: FastifyInstance) {
   server.get(
@@ -20,5 +21,18 @@ export async function externalLoyaltyRedeemRoutes(server: FastifyInstance) {
       },
     },
     getLoyaltyRedeemsHandler,
+  );
+
+  server.post(
+    "/",
+    {
+      schema: {
+        tags: ["Loyalty/Redeem"],
+        description: "Redeem Points",
+        summary: "Redeem customer point using phone number and reward id",
+        querystring: $extLoyaltyRef("customerRedeemQuerySchema"),
+      },
+    },
+    redeemPointsHandler,
   );
 }

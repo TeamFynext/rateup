@@ -1,11 +1,11 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { lRewardSchema } from "./reward/internal-copy/rewards/rewards.schema";
-import { RedeemStatus } from "./redeem/internal-copy/redeems/redeem.service";
 import {
   lActionSchema,
   LoyaltyActionType,
-} from "./action/internal-copy/actions/actions.schema";
+} from "../../../loyalty/actions/actions.schema";
+import { lRewardSchema } from "../../../loyalty/rewards/rewards.schema";
+import { RedeemStatus } from "../../../loyalty/redeems/redeem.service";
 
 const lRewardResponseSchema = z
   .object({
@@ -50,6 +50,16 @@ const lActionSchemaResponseSchema = z
   })
   .merge(lActionSchema);
 
+const customerActionQuerySchema = z.object({
+  phone: z.string(),
+  action_id: z.string(),
+});
+
+const customerRedeemQuerySchema = z.object({
+  phone: z.string(),
+  reward_id: z.string(),
+});
+
 export const { schemas: extLoyaltySchemas, $ref: $extLoyaltyRef } =
   buildJsonSchemas(
     {
@@ -57,8 +67,16 @@ export const { schemas: extLoyaltySchemas, $ref: $extLoyaltyRef } =
       lRewardResponseSchema,
       lCustomerResponseSchema,
       lActionSchemaResponseSchema,
+      customerActionQuerySchema,
+      customerRedeemQuerySchema,
     },
     {
       $id: "extLoyaltySchemas",
     },
   );
+export type CustomerActionQueryInput = z.infer<
+  typeof customerActionQuerySchema
+>;
+export type customerRedeemQueryInput = z.infer<
+  typeof customerRedeemQuerySchema
+>;

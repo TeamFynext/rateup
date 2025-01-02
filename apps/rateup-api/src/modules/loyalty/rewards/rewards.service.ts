@@ -19,6 +19,7 @@ export async function createLoyaltyReward(
       orgId,
       rewardType: reward.rewardType,
       rewardValue: reward.rewardValue,
+      reward_id: reward.reward_id,
     },
   });
 }

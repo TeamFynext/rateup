@@ -26,6 +26,7 @@ import {
 import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
 import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
 import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler";
+import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
 
 const server = Fastify({
   logger: logOptions,
@@ -97,6 +98,7 @@ server.register(fastifyCron, {
         const currentTime = new Date();
         log.info(`......Running Daily Jobs --> .....${currentTime}`);
         await subscriptionExpiryAlert();
+        await deactivateExpiredActions();
       },
       start: true,
     },
