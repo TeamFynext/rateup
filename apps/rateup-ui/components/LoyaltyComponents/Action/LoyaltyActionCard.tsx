@@ -12,6 +12,7 @@ import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateString } from "@/utils/dateTime";
 
 import CreateNewLoyaltyAction from "../../LoyaltyComponents/Action/CreateNewLoyaltyAction";
+import { LoyaltyReward } from "../utils";
 import classes from "./Actions.module.css";
 import LoyaltyActionMenu from "./LoyaltyActionMenu";
 
@@ -43,7 +44,11 @@ const LoyaltyActionCard = ({ action }) => {
             <LoyaltyActionMenu action={action} />
           </CardMenu>
         </Group>
-        <LoyaltyPoint points={action?.points} />
+        {action?.rewardId ? (
+          <LoyaltyReward rewardName={action?.reward?.name} />
+        ) : (
+          <LoyaltyPoint points={action?.points} />
+        )}
         <ValidFromTo from={action?.startDate} to={action?.endDate} />
         <Group justify="space-between">
           <Badge variant={"light"} color={getActionColor(action?.type)}>
