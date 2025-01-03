@@ -40,7 +40,7 @@ export async function createLCustomer(input: LCustomerInput) {
     },
   });
   const action = await getReferralLoyaltyAction(input.orgId);
-  await getReferralCodeByActionAndCustomer(action.id, customer.id);
+  if (action) await getReferralCodeByActionAndCustomer(action.id, customer.id);
   return customer;
 }
 
