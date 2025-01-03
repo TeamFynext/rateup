@@ -20,7 +20,10 @@ const LoyaltyCustomerAction = ({ actions }) => {
       header: "Amount Spent",
     }),
     columnHelper.accessor(
-      (row) => Math.round((row.points / row.amount) * row.amountSpent),
+      (row) =>
+        row.amount
+          ? Math.round((row.points / row.amount) * row.amountSpent)
+          : row.points,
       {
         id: "totalPoints",
         header: "TotalPoints",

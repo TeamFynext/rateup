@@ -10,6 +10,7 @@ import {
   IconBrowser,
   IconClipboardList,
   IconComet,
+  IconDashboard,
   IconFileDescription,
   IconFileInfo,
   IconGift,
@@ -257,6 +258,11 @@ export function getNavTopData(
             label: translations["Loyalty"],
             href: "",
             submenus: [
+              {
+                Icon: IconDashboard,
+                label: translations["Dashboard"],
+                href: "/dashboard/loyalty/dashboard",
+              },
               {
                 Icon: IconHandClick,
                 label: translations["Actions"],

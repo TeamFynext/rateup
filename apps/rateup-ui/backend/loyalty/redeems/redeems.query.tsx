@@ -18,6 +18,7 @@ export const useRedeemReward = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Reward redeemed successfully");
     },
     onError: (e: any) => {
@@ -34,6 +35,7 @@ export const useUpdateRedeem = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Redeem updated successfully");
     },
     onError: (e: any) => {

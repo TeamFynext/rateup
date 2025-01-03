@@ -33,6 +33,7 @@ export const useCreateLoyaltyAction = () => {
     mutationFn: createLoyaltyAction,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Loyalty Action created successfully");
     },
     onError: () => {
@@ -81,6 +82,7 @@ export const useDeleteLoyaltyAction = (actionId) => {
     mutationFn: () => deleteLoyaltyActionById(actionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Loyalty Action deleted successfully");
     },
     onError: (e: any) => {
