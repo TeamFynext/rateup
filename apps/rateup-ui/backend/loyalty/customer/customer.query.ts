@@ -15,6 +15,7 @@ export const useCreateLoyaltyCustomerMutation = () => {
     mutationFn: createLoyaltyCustomer,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
     },
   });
 };
@@ -32,6 +33,7 @@ export const useDeleteLoyaltyCustomerMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Success");
     },
     onError: () => {

@@ -28,6 +28,7 @@ export const useCreateLoyaltyRewardMutation = () => {
     mutationFn: createLoyaltyReward,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Reward created successfully");
     },
     onError: () => {
@@ -69,6 +70,7 @@ export const useDeleteRewardMutation = () => {
     mutationFn: deleteReward,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Reward deleted successfully");
     },
     onError: () => {
