@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
@@ -10,17 +12,17 @@ import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { LoyaltyPoint } from "../Action/LoyaltyActionCard";
-import { CreateRewardModal } from "./CreateRewardModal";
 
 export function RewardCard({ reward }) {
   const { translations } = useTranslations();
   const [opened, { open, close }] = useDisclosure(false);
+  const router = useRouter();
   return (
     <PaperLayout
       style={{
         cursor: "pointer",
       }}
-      onClick={open}
+      onClick={() => router.push(`/dashboard/loyalty/rewards/${reward.id}`)}
     >
       <Stack gap={"lg"}>
         <Group justify="space-between">
@@ -34,7 +36,6 @@ export function RewardCard({ reward }) {
           <CreatedSinceText createdAt={reward.createdAt} />
         </Group>
       </Stack>
-      <CreateRewardModal opened={opened} close={close} reward={reward} />
     </PaperLayout>
   );
 }

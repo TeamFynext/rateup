@@ -1,7 +1,7 @@
 import React, { useState } from "react";
+import { useRouter } from "next/router";
 
-import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { Group, SimpleGrid, Stack } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
@@ -11,9 +11,7 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import CreateNewLoyaltyAction from "@/components/LoyaltyComponents/Action/CreateNewLoyaltyAction";
 import LoyaltyActionCard from "@/components/LoyaltyComponents/Action/LoyaltyActionCard";
-import { isLReferralAction } from "@/components/LoyaltyComponents/utils";
 import NothingFound from "@/components/NothingFound/NothingFound";
 
 const index = () => {
@@ -22,8 +20,9 @@ const index = () => {
     isLoading: isSubscriptionLoading,
     refetch,
   } = useSubscription();
+
+  const router = useRouter();
   const { data: loyaltyActions, isLoading } = useGetLoyaltyActions();
-  const [opened, { open, close }] = useDisclosure(false);
   const [selectedAction, setSelectedAction] = useState("All Actions");
 
   const actionFilterData = ["All Actions", ...Object.values(LoyaltyActionType)];
@@ -48,7 +47,9 @@ const index = () => {
           <RateupButtonBlue
             title="New Action"
             rightIcon={<IconPlus />}
-            onClick={open}
+            onClick={() => {
+              router.push("/dashboard/loyalty/actions/create");
+            }}
           />
         </Group>
         <ContainedSelection
@@ -68,17 +69,6 @@ const index = () => {
       ) : (
         <NothingFound text={"No actions found"} />
       )}
-
-      <CreateNewLoyaltyAction
-        opened={opened}
-        close={close}
-        isReferralAvailable={
-          !loyaltyActions?.some((a) => isLReferralAction(a?.type))
-        }
-        existingActionIds={loyaltyActions
-          ?.filter((a) => a?.action_id)
-          .map((a) => a?.action_id)}
-      />
     </Stack>
   );
 };

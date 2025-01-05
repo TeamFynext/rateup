@@ -18,6 +18,8 @@ interface RouteParamsState {
   templateId: string;
   dbFlowId: string;
   waAutomatedReplyId: string;
+  actionId: string;
+  rewardId: string;
 }
 
 interface RouteParamsContextData {
@@ -36,6 +38,8 @@ const initialState: RouteParamsState = {
   templateId: "",
   dbFlowId: "",
   waAutomatedReplyId: "",
+  actionId: "",
+  rewardId: "",
 };
 
 const RouteParamsContext = createContext<RouteParamsContextData>({

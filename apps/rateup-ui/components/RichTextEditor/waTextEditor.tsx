@@ -11,7 +11,12 @@ import parse from "html-react-parser";
 import InsertEmoji from "./InsertEmoji";
 import styles from "./waTextEditor.module.css";
 
-function WaTextEditor({ handleInputChange, content = "", className = "" }) {
+function WaTextEditor({
+  handleInputChange,
+  content = "",
+  className = "",
+  mah = 350,
+}) {
   let max = 1024;
   const editor = useEditor({
     extensions: [
@@ -70,7 +75,7 @@ function WaTextEditor({ handleInputChange, content = "", className = "" }) {
           </RichTextEditor.ControlsGroup>
         </Group>
       </RichTextEditor.Toolbar>
-      <ScrollAreaAutosize mah={350}>
+      <ScrollAreaAutosize mah={mah}>
         <RichTextEditor.Content mih={120} />
       </ScrollAreaAutosize>
       <div
