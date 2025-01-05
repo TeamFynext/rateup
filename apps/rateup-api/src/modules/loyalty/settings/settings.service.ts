@@ -10,12 +10,10 @@ import {
   getLCustomerByPhone,
   handleLoyaltyRegister,
 } from "../customer/customer.service";
-import {
-  getLoyaltyActions,
-  getReferralLoyaltyAction,
-} from "../actions/actions.service";
+import { getReferralLoyaltyAction } from "../actions/actions.service";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 import { updateMonthlyStat } from "../../stats/stats.service";
+import { log } from "../../../utils/logger";
 
 export async function createLoyaltyTemplate(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -104,34 +102,50 @@ export async function getAllLoyaltyTemplates(orgId) {
 }
 
 export async function handleReferralCommand(phone, orgId) {
-  const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer) {
-    const message = `You are not a member of loyalty program yet`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
-    return;
-  }
-  const res = await getReferralLoyaltyAction(orgId);
-  if (!res) {
-    const message = `Thank you for reaching out. Unfortunately, there is no referral program yet`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
-    return;
-  }
-  const { id, message } = res as unknown as {
-    id: string;
-    message: LoyaltyActionMessage;
-  };
-  const { referralCode } = await getReferralCodeByActionAndCustomer(
-    id,
-    customer.id,
-  );
+  try {
+    const customer = await getLCustomerByPhone(phone, orgId);
+    if (!customer) {
+      const message = `You are not a member of loyalty program yet`;
+      await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+      return;
+    }
+    const res = await getReferralLoyaltyAction(orgId);
+    if (!res) {
+      const message = `Thank you for reaching out. Unfortunately, there is no referral program yet`;
+      await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+      return;
+    }
+    const { id, message } = res as unknown as {
+      id: string;
+      message: LoyaltyActionMessage;
+    };
+    const { referralCode } = await getReferralCodeByActionAndCustomer(
+      id,
+      customer.id,
+    );
 
-  const firstMessage = message?.message;
-  const copyMessage = message?.forwardMessage?.replace(
-    "{{code}}",
-    referralCode,
-  );
-  await sendTextMessageAndUpdateStats(phone, orgId, null, firstMessage);
-  await sendTextMessageAndUpdateStats(phone, orgId, null, copyMessage);
+    for (const para of message.forwardMessage) {
+      const contents = para.content;
+      if (contents) {
+        for (const content of contents) {
+          if (content.text) {
+            content.text = content.text.replace("{{code}}", referralCode);
+          }
+        }
+      }
+    }
+
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message.message);
+    await sendTextMessageAndUpdateStats(
+      phone,
+      orgId,
+      null,
+      message.forwardMessage,
+    );
+  } catch (e) {
+    log.error(e);
+    throw e;
+  }
 }
 
 export async function handleLoyaltyPointsCommand(phone, orgId) {

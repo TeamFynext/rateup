@@ -22,7 +22,7 @@ const byLRewardIdParamSchema = z.object({
   rewardId: z.string(),
 });
 
-const lRewardUpdateSchema = lRewardSchema.omit({ reward_id: true }).partial();
+const lRewardUpdateSchema = lRewardSchema.partial();
 
 export const { schemas: loyaltyRewardSchemas, $ref: $lRewardRef } =
   buildJsonSchemas(

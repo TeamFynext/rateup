@@ -477,8 +477,8 @@ declare global {
   };
 
   type LoyaltyActionMessage = {
-    message: string;
-    forwardMessage?: string;
+    message: any;
+    forwardMessage?: any;
   };
   // PRISMA JSON TYPES
   namespace PrismaJson {

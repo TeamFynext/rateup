@@ -48,7 +48,10 @@ export async function updateLoyaltyRewardById(
     where: {
       id,
     },
-    data,
+    data: {
+      ...data,
+      waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
+    },
   });
 }
 
