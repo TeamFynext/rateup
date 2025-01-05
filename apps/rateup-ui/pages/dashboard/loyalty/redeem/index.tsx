@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import { Badge, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -9,7 +10,6 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import UpdateRedeemStatusModal from "@/components/LoyaltyComponents/Redeem/UpdateRedeemStatusModal";
-import { CreateRewardModal } from "@/components/LoyaltyComponents/Rewards/CreateRewardModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
 import { formatDateWithTime } from "@/utils/dateTime";
@@ -26,19 +26,9 @@ export default function redeems() {
     redeemUpdateStOpened,
     { open: openStatusUpdate, close: closeStatusUpdate },
   ] = useDisclosure(false);
-  const [
-    openedRewardModal,
-    { open: openRewardModal, close: closeRewardModal },
-  ] = useDisclosure(false);
   const [redeem, setRedeem] = useState(null);
-  const [reward, setReward] = useState(null);
 
-  const columns = generateColumns(
-    openStatusUpdate,
-    setRedeem,
-    openRewardModal,
-    setReward,
-  );
+  const columns = generateColumns(openStatusUpdate, setRedeem);
 
   if (isSubscriptionLoading) return <RateupLoader />;
 
@@ -56,12 +46,6 @@ export default function redeems() {
         close={closeStatusUpdate}
         redeem={redeem}
       />
-      <CreateRewardModal
-        opened={openedRewardModal}
-        close={closeRewardModal}
-        reward={reward}
-        disableButton
-      />
     </Stack>
   );
 }
@@ -77,8 +61,9 @@ type Redeem = {
   code: string;
 };
 
-function generateColumns(open, setRedeem, openReward, setReward) {
+function generateColumns(open, setRedeem) {
   const columnHelper = createColumnHelper<Redeem>();
+  const router = useRouter();
 
   const defaultColumns = [
     columnHelper.accessor((row) => row.customer.name, {
@@ -101,8 +86,7 @@ function generateColumns(open, setRedeem, openReward, setReward) {
           <Text
             size="sm"
             onClick={() => {
-              setReward(getValue());
-              openReward();
+              router.push(`/dashboard/loyalty/rewards/${getValue().id}`);
             }}
           >
             {getValue().name}

@@ -2,7 +2,6 @@ import React from "react";
 import { useRouter } from "next/router";
 
 import { Badge, Box, Group, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconClock, IconStarFilled } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
@@ -11,15 +10,12 @@ import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
 import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateString } from "@/utils/dateTime";
 
-import CreateNewLoyaltyAction from "../../LoyaltyComponents/Action/CreateNewLoyaltyAction";
+import classes from "../Loyalty.module.css";
 import { LoyaltyReward } from "../utils";
-import classes from "./Actions.module.css";
 import LoyaltyActionMenu from "./LoyaltyActionMenu";
 
 const LoyaltyActionCard = ({ action }) => {
   const router = useRouter();
-
-  const [opened, { open, close }] = useDisclosure(false);
 
   function getActionColor(type) {
     switch (type) {
@@ -32,7 +28,9 @@ const LoyaltyActionCard = ({ action }) => {
 
   return (
     <PaperLayout
-      onClick={open}
+      onClick={() => {
+        router.push(`/dashboard/loyalty/actions/${action.id}`);
+      }}
       style={{
         cursor: "pointer",
       }}
@@ -56,7 +54,6 @@ const LoyaltyActionCard = ({ action }) => {
           </Badge>
           <ActiveStatusBadge active={action?.active} />
         </Group>
-        <CreateNewLoyaltyAction opened={opened} close={close} action={action} />
       </Stack>
     </PaperLayout>
   );

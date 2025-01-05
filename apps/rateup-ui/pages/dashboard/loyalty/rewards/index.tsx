@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -12,7 +13,6 @@ import NothingFound from "@/components/NothingFound/NothingFound";
 
 import { useGetLoyaltyRewards } from "../../../../backend/loyalty/reward/reward.query";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import { CreateRewardModal } from "../../../../components/LoyaltyComponents/Rewards/CreateRewardModal";
 import { RewardCard } from "../../../../components/LoyaltyComponents/Rewards/RewardCard";
 
 enum rewardSortData {
@@ -22,7 +22,7 @@ enum rewardSortData {
 }
 
 export default function () {
-  const [opened, { open, close }] = useDisclosure(false);
+  const router = useRouter();
 
   const { data: rewards, isLoading, isError, error } = useGetLoyaltyRewards();
 
@@ -64,11 +64,10 @@ export default function () {
     <Stack>
       <Group justify="space-between">
         <Group>
-          {/* <Title>Rewards</Title> */}
           <RateupButtonBlue
             title="New Reward"
             rightIcon={<IconPlus />}
-            onClick={open}
+            onClick={() => router.push("/dashboard/loyalty/rewards/create")}
           />
         </Group>
         <ContainedSelection
@@ -88,13 +87,6 @@ export default function () {
           text={"No Rewards found. Click New Reward to create a reward"}
         />
       )}
-      <CreateRewardModal
-        opened={opened}
-        close={close}
-        existingRewardIds={rewards
-          ?.filter((r) => r.reward_id)
-          .map((r) => r.reward_id)}
-      />
     </Stack>
   );
 }

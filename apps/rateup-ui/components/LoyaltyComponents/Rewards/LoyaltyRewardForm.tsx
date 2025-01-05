@@ -1,9 +1,14 @@
 import { useEffect } from "react";
+import router from "next/router";
 
-import { Stack } from "@mantine/core";
-import { isNotEmpty, matches, useForm } from "@mantine/form";
+import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
+import { isNotEmpty, useForm } from "@mantine/form";
 
 import { TemplateType } from "@/types/enums";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
 import {
   ContainedDateInput,
   ContainedNumberInput,
@@ -11,9 +16,8 @@ import {
   ContainedTextArea,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
-import { TeamSelector } from "@/components/input/TeamSelector";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
-import FormModalLayout from "@/components/Modal/FormModalLayout";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import {
@@ -22,19 +26,17 @@ import {
 } from "../../../backend/loyalty/reward/reward.query";
 import { RewardTypes } from "../utils";
 
-export function CreateRewardModal({
-  opened,
-  close,
+const LoyaltyRewardForm = ({
+  disabled,
   reward,
-  disableButton,
-  existingRewardIds = [],
+  existingRewardIds,
+  title,
 }: {
-  opened: boolean;
-  close: () => void;
-  reward?: any;
-  disableButton?: boolean;
+  disabled?: boolean;
+  reward: any;
   existingRewardIds?: string[];
-}) {
+  title: string;
+}) => {
   const { translations } = useTranslations();
 
   const createReward = useCreateLoyaltyRewardMutation();
@@ -83,7 +85,8 @@ export function CreateRewardModal({
       updateReward.mutate(form.values, {
         onSuccess: () => {
           form.reset();
-          close();
+          // close();
+          router.push("/dashboard/loyalty/rewards");
         },
       });
       return;
@@ -91,7 +94,8 @@ export function CreateRewardModal({
     createReward.mutate(form.values, {
       onSuccess: () => {
         form.reset();
-        close();
+        // close();
+        router.push("/dashboard/loyalty/rewards");
       },
     });
   }
@@ -132,104 +136,94 @@ export function CreateRewardModal({
   }, [form.values.reward_id]);
 
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={() => {
-        form.reset();
-        close();
-      }}
-      title={
-        reward
-          ? disableButton
-            ? reward.name
-            : translations["Update Reward"]
-          : translations["Create Reward"]
-      }
-      centered
-      buttonTitle={disableButton ? undefined : reward ? "Update" : "Create"}
-      onSubmit={form.onSubmit(handleSubmit)}
-      cancelOnClick={() => {
-        form.reset();
-        close();
-      }}
-      size="lg"
-      isLoading={createReward.isPending}
-      includeCancelButton={!disableButton}
-    >
-      <LoyaltyRewardForm form={form} disabled={disableButton} reward={reward} />
-    </FormModalLayout>
-  );
-}
-
-export const LoyaltyRewardForm = ({ form, disabled, reward }) => {
-  const { translations } = useTranslations();
-  return (
     <Stack>
-      <ContainedTextField
-        label={"Name"}
-        {...form.getInputProps("name")}
-        placeholder={translations["Enter Reward Name"]}
-        readOnly={disabled}
-      />
-      <ContainedTextField
-        label={"Reward Id"}
-        {...form.getInputProps("reward_id")}
-        placeholder={"Enter reward id"}
-        readOnly={disabled}
-        disabled={reward && reward.reward_id?.length}
-      />
-      <ContainedSelection
-        data={Object.values(RewardTypes)}
-        {...form.getInputProps("rewardType")}
-        label="Reward Type"
-        placeholder="Choose Reward Type"
-        readOnly={disabled}
-      />
-      <RewardValueInput form={form} readOnly={disabled} />
-      <ContainedNumberInput
-        label={"Points"}
-        {...form.getInputProps("points")}
-        allowDecimal={false}
-        allowNegative={false}
-        readOnly={disabled}
-      />
-      <ContainedNumberInput
-        label={"Max Per User"}
-        {...form.getInputProps("maxPerUser")}
-        allowDecimal={false}
-        allowNegative={false}
-        readOnly={disabled}
-      />
-      <ContainedDateInput
-        label={"Expiry Date"}
-        {...form.getInputProps("expireAt")}
-        readOnly={disabled}
-      />
-      <ContainedTextArea
-        label={"Description"}
-        {...form.getInputProps("description")}
-        autosize
-        minRows={3}
-        description={"Used in whatsapp message to describe reward"}
-        readOnly={disabled}
-      />
-      <ContainedTextArea
-        label={"Terms and Condition"}
-        {...form.getInputProps("tnc")}
-        autosize
-        minRows={3}
-        readOnly={disabled}
-      />
-      <WaTemplateSelector
-        templateType={TemplateType.LOYALTY}
-        label="WhatsApp Template(to send after reward redemption)"
-        {...form.getInputProps("waTemplateId")}
-        description="Dynamic variable {{1}} - customer name, {{2}} - current redeemed points"
-        readOnly={disabled}
-      />
+      <Group justify="space-between">
+        <Title>{title}</Title>
+        <Group>
+          <RateupButtonSecondary
+            title={"Cancel"}
+            onClick={() => {
+              form.reset();
+              router.push("/dashboard/loyalty/rewards");
+            }}
+          />
+          <RateupButtonPrimary
+            title="Save"
+            onClick={handleSubmit}
+            loading={createReward.isPending || updateReward.isPending}
+          />
+        </Group>
+      </Group>
+      <PaperLayout>
+        <SimpleGrid cols={2}>
+          <ContainedTextField
+            label={"Name"}
+            {...form.getInputProps("name")}
+            placeholder={translations["Enter Reward Name"]}
+            readOnly={disabled}
+          />
+          <ContainedTextField
+            label={"Reward Id"}
+            {...form.getInputProps("reward_id")}
+            placeholder={"Enter reward id"}
+            readOnly={disabled}
+            disabled={reward && reward.reward_id?.length}
+          />
+          <ContainedTextArea
+            label={"Description"}
+            {...form.getInputProps("description")}
+            autosize
+            minRows={3}
+            readOnly={disabled}
+          />
+          <ContainedTextArea
+            label={"Terms and Condition"}
+            {...form.getInputProps("tnc")}
+            autosize
+            minRows={3}
+            readOnly={disabled}
+          />
+          <ContainedSelection
+            data={Object.values(RewardTypes)}
+            {...form.getInputProps("rewardType")}
+            label="Reward Type"
+            placeholder="Choose Reward Type"
+            readOnly={disabled}
+          />
+          <RewardValueInput form={form} readOnly={disabled} />
+          <ContainedNumberInput
+            label={"Points"}
+            {...form.getInputProps("points")}
+            allowDecimal={false}
+            allowNegative={false}
+            readOnly={disabled}
+          />
+          <ContainedNumberInput
+            label={"Max Per User"}
+            {...form.getInputProps("maxPerUser")}
+            allowDecimal={false}
+            allowNegative={false}
+            readOnly={disabled}
+          />
+          <ContainedDateInput
+            label={"Expiry Date"}
+            {...form.getInputProps("expireAt")}
+            readOnly={disabled}
+          />
+          <WaTemplateSelector
+            templateType={TemplateType.LOYALTY}
+            label="WhatsApp Template(to send after reward redemption)"
+            {...form.getInputProps("waTemplateId")}
+            description="Dynamic variable {{1}} - customer name, {{2}} - current redeemed points"
+            readOnly={disabled}
+          />
+        </SimpleGrid>
+      </PaperLayout>
     </Stack>
   );
 };
+
+export default LoyaltyRewardForm;
 
 const RewardValueInput = ({ form, readOnly }) => {
   switch (form.values.rewardType) {

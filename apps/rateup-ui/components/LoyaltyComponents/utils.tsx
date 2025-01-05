@@ -1,12 +1,22 @@
 import {
+  Box,
   Card,
+  Combobox,
   Group,
+  Input,
+  InputBase,
   MultiSelectProps,
   SelectProps,
   Skeleton,
   Text,
+  useCombobox,
 } from "@mantine/core";
-import { IconAward } from "@tabler/icons-react";
+import {
+  IconAward,
+  IconShoppingCart,
+  IconUserFilled,
+  IconUserPlus,
+} from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
@@ -17,6 +27,7 @@ import {
   ContainedMultiSelect,
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput";
+import classes from "./Loyalty.module.css";
 
 export const LCSelector = (props: SelectProps) => {
   const { data: customers, isLoading } = useLoyaltyCustomers();
@@ -132,5 +143,100 @@ export const LoyaltyReward = ({ rewardName }) => {
         {rewardName}
       </Text>
     </Group>
+  );
+};
+
+export enum ActionRewadTypes {
+  Point = "Point",
+  Reward = "Reward",
+}
+
+export const LoyaltyActionSelect = ({
+  onChange,
+  value,
+  disabled,
+  isReferralAvailable = true,
+  w = "auto",
+}) => {
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+  });
+
+  function getActionIcon(type, color?) {
+    switch (type) {
+      case LoyaltyActionType.ReferralPurchase:
+        return (
+          <Box style={{ position: "relative", display: "inline-block" }}>
+            <IconShoppingCart
+              size={"1.2rem"}
+              color={color ?? "var(--mantine-color-gray-7)"}
+            />
+            <IconUserFilled
+              size={"0.7rem"}
+              color="white"
+              style={{
+                backgroundColor: color ?? "var(--mantine-color-gray-7)",
+              }}
+              className={classes["icon-user"]}
+            />
+          </Box>
+        );
+      case LoyaltyActionType.DirectPurchase:
+        return (
+          <IconShoppingCart
+            size={"1.2rem"}
+            color={color ?? "var(--mantine-color-gray-7)"}
+          />
+        );
+      case LoyaltyActionType.CustomerRegistration:
+        return (
+          <IconUserPlus
+            size={"1.2rem"}
+            color={color ?? "var(--mantine-color-gray-7)"}
+          />
+        );
+    }
+  }
+  const options = Object.values(LoyaltyActionType)
+    .filter((type) => (!isReferralAvailable ? !isLReferralAction(type) : true))
+    .map((type) => (
+      <Combobox.Option value={type} key={type}>
+        <Group>
+          {getActionIcon(type)}
+          <Text size={"sm"}>{type}</Text>
+        </Group>
+      </Combobox.Option>
+    ));
+  return (
+    <Combobox
+      store={combobox}
+      onOptionSubmit={(val) => {
+        onChange(val);
+        combobox.closeDropdown();
+      }}
+    >
+      <Combobox.Target>
+        <InputBase
+          component="button"
+          type="button"
+          pointer
+          rightSection={<Combobox.Chevron c={"var(--tertiary-color)"} />}
+          rightSectionPointerEvents="none"
+          onClick={() => combobox.toggleDropdown()}
+          radius={"md"}
+          leftSection={getActionIcon(value, "var(--tertiary-color)")}
+          classNames={{ input: classes["input"] }}
+          disabled={disabled}
+          label={"Select Action"}
+          w={w}
+        >
+          {value || <Input.Placeholder>Select action</Input.Placeholder>}
+        </InputBase>
+      </Combobox.Target>
+
+      <Combobox.Dropdown>
+        <Combobox.Options>{options}</Combobox.Options>
+      </Combobox.Dropdown>
+    </Combobox>
   );
 };

@@ -9,10 +9,11 @@ import {
   updateLoyaltyReward,
 } from "./reward.api";
 
-export const useGetLoyaltyRewards = () =>
+export const useGetLoyaltyRewards = (enabled = true) =>
   useQuery({
     queryKey: ["loyaltyRewards"],
     queryFn: () => getLoyaltyRewards(),
+    enabled: !!enabled,
   });
 
 export const useGetLoyaltyRewardById = (rewardId: string) =>

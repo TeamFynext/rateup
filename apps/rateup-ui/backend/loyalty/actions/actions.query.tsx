@@ -12,14 +12,17 @@ import {
   updateLoyaltyAction,
 } from "./actions.api";
 
-export const useGetLoyaltyActions = () => {
+export const useGetLoyaltyActions = (enabled = true) => {
   return useQuery({
     queryKey: ["loyaltyActions"],
     queryFn: getLoyaltyActions,
+    enabled: !!enabled,
   });
 };
 
 export const useGetLoyaltyActionById = (actionId) => {
+  console.log("actionId", actionId);
+  console.log("!!actionId", !!actionId);
   return useQuery({
     queryKey: ["loyaltyActions", actionId],
     queryFn: () => getLoyaltyActionById(actionId),
