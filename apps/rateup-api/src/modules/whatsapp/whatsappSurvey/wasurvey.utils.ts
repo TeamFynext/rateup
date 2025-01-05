@@ -277,7 +277,9 @@ export function parseToWhatsAppFormat(editorContent) {
     }
   };
 
-  return editorContent.content.map(parseNode).join("\n");
+  return editorContent.content
+    ? editorContent.content.map(parseNode).join("\n")
+    : editorContent.map(parseNode).join("\n");
 }
 
 interface createCTAButtonMessageParams {

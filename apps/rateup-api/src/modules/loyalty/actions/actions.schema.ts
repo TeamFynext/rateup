@@ -26,8 +26,8 @@ export const lActionSchema = z.object({
   description: z.string(),
   message: z
     .object({
-      message: z.string(),
-      forwardMessage: z.string().optional(),
+      message: z.any(),
+      forwardMessage: z.any().optional(),
     })
     .optional()
     .nullable(),
