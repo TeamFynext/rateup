@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 import {
+  checkIfCommandExistInAutomation,
   createLoyaltyTemplateHandler,
+  deleteLoyaltyTemplateHandler,
   getAllLoyaltyTemplateHandler,
   getLoyaltyTemplateHandler,
   updateLoyaltyTemplateHandler,
@@ -11,6 +13,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
   server.post(
     "/template",
     {
+      preHandler: [checkIfCommandExistInAutomation],
       schema: {
         body: $lsRef("loyaltyTemplateSchema"),
       },
@@ -19,21 +22,31 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
   );
 
   server.put(
-    "/template",
+    "/template/:id",
     {
       schema: {
-        querystring: $lsRef("byTypeQuerySchema"),
+        params: $lsRef("byIdSchema"),
         body: $lsRef("updateLoyaltyTemplateSchema"),
       },
     },
     updateLoyaltyTemplateHandler,
   );
 
-  server.get(
-    "/template",
+  server.delete(
+    "/template/:id",
     {
       schema: {
-        querystring: $lsRef("byTypeQuerySchema"),
+        params: $lsRef("byIdSchema"),
+      },
+    },
+    deleteLoyaltyTemplateHandler,
+  );
+
+  server.get(
+    "/template/:id",
+    {
+      schema: {
+        params: $lsRef("byIdSchema"),
       },
     },
     getLoyaltyTemplateHandler,

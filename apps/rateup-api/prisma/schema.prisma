@@ -129,7 +129,7 @@ model Org {
   loyaltyActions          LoyaltyAction[]
   loyaltyRewards          LoyaltyReward[]
   loyaltyCustomers        LoyaltyCustomer[]
-  loyaltyTemplates        LoyaltyTemplate[]
+  loyaltyTemplates        LoyaltyWaCommand[]
   WaAutomatedReplyMessage WaAutomatedReplyMessage[]
 }
 
@@ -593,7 +593,7 @@ model WaTemplate {
   waSession         WaSession[]
   Campaign          Campaign[]
   waMessageSchedule WaMessageSchedule[]
-  loyaltyTemplates  LoyaltyTemplate[]
+  loyaltyTemplates  LoyaltyWaCommand[]
   loyaltyRewards    LoyaltyReward[]
 
   LoyaltyAction LoyaltyAction[] @relation("customer_relation")
@@ -1155,6 +1155,7 @@ model LoyaltyAction {
   reward        LoyaltyReward?  @relation("referrer_reward",fields: [rewardId], references: [id], onDelete: Cascade)
   refereeRewardId  String?        @db.Uuid
   refereeReward    LoyaltyReward?   @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
+  loyaltyWaCommand  LoyaltyWaCommand?
 
   @@unique([action_id, orgId], name: "action_id_org_id_unique")
 }
@@ -1219,17 +1220,20 @@ model LoyaltyActionCustomerMap {
   createdAt  DateTime        @default(now())
 }
 
-model LoyaltyTemplate {
+model LoyaltyWaCommand {
   id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId          String     @db.Uuid
   org            Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   type           String //enum LoyaltyTemplateTypes 
-  waTemplateId   String     @db.Uuid
-  waTemplate     WaTemplate @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  waTemplateId   String?     @db.Uuid
+  waTemplate     WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   requestMessage String?
   createdAt      DateTime   @default(now())
+  content        Json?
+  responseType   String      @default("Template")// enum WaAutomatedReplyResponseType
+  actionId       String?      @unique @db.Uuid
+  action         LoyaltyAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
-  @@unique([type, orgId], name: "type_org_unique")
   @@unique([requestMessage, orgId], name: "request_message_org_unique")
 }
 

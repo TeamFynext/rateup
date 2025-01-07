@@ -392,5 +392,6 @@ export enum waMessageScheduleSource {
 
 export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
-  CustomerInfo = "CustomerInfo",
+  PointInformation = "PointInformation",
+  Referral = "Referral",
 }

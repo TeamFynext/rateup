@@ -65,3 +65,17 @@ export async function deleteAutomatedReply(id: string) {
   });
   return automatedReply;
 }
+
+export async function getAutomatedRepliesByKeyWeords(orgId, keyword) {
+  return await prisma.waAutomatedReply.findFirst({
+    where: {
+      team: {
+        orgId,
+      },
+      matchData: {
+        path: ["keywords"],
+        array_contains: [keyword],
+      },
+    },
+  });
+}

@@ -70,10 +70,8 @@ import { checkMessageLimitExceeded } from "./wasurvey.auth";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { getLatestStatus } from "../../campaign/campaign.service";
 import {
-  getLoyaltyTemplateByRequestMessage,
-  handleLoyaltyPointsCommand,
-  handleLoyaltyTemplate,
-  handleReferralCommand,
+  getLoyaltyWaCommandByRequestMessage,
+  handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service";
 import dayjs from "dayjs";
 
@@ -357,18 +355,14 @@ async function whatsappMessageHandler(
     type === "text" || type === "interactive"
       ? message?.trim()?.toLocaleLowerCase()
       : "";
-  const loyaltyTemplate = await getLoyaltyTemplateByRequestMessage(
+  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
     orgId,
     message,
   );
-  if (loyaltyTemplate) {
-    await handleLoyaltyTemplate(from, userName, orgId, loyaltyTemplate);
+  if (loyaltyWaCommand) {
+    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
-  } else if (message.trim().toLowerCase().startsWith("referral")) {
-    await handleReferralCommand(from, orgId);
-  } else if (message.trim().toLowerCase().startsWith("points")) {
-    await handleLoyaltyPointsCommand(from, orgId);
   } else if (parsedMessage.type === "nfm_reply") {
     await handleStaticFlowReply(orgId, waMessage);
   } else if (

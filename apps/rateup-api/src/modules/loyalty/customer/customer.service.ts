@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import {
   LoyaltyTemplateTypes,
   SubscriptionFeaturePathName,
+  WaAutomatedReplyResponseType,
 } from "../../../types/enums";
 import { verifySubscription } from "../../../utils/auth";
 import { log } from "../../../utils/logger";
@@ -18,8 +19,8 @@ import {
 } from "../actions/actions.service";
 import { createRedeem, RedeemStatus } from "../redeems/redeem.service";
 import {
-  getLoyaltyTemplate,
   getReferralCodeByActionAndCustomer,
+  replacedContentByDynamicVariable,
   sendTextMessageAndUpdateStats,
 } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
@@ -186,9 +187,19 @@ export async function deleteLoyaltyCustomer(id: string) {
   });
 }
 
-export async function handleLoyaltyRegister(phone, name, orgId) {
+export async function handleLoyaltyRegister(phone, name, loyaltyWaCommand) {
+  const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   try {
     //subscription and usage check
+    const customer = await getLCustomerByPhone(phone, orgId);
+    if (customer) {
+      return await sendTextMessageAndUpdateStats(
+        phone,
+        orgId,
+        null,
+        "You are already a member of our loyalty program\n\nReply *Points* to know the current points details",
+      );
+    }
     const subscription = await verifySubscription(orgId, [
       SubscriptionFeaturePathName.LoyaltyCustomer,
     ]);
@@ -205,18 +216,25 @@ export async function handleLoyaltyRegister(phone, name, orgId) {
       name,
       orgId,
     });
-    const template = await getLoyaltyTemplate(
-      LoyaltyTemplateTypes.CustomerRegistration,
-      orgId,
-    );
-    if (template) {
-      await handleSendTemplate(template.waTemplateId, orgId, res.phone, [
-        res.name,
-      ]);
+    const dynamicVariables = [res.name];
+    if (responseType === WaAutomatedReplyResponseType.Template) {
+      await handleSendTemplate(
+        waTemplateId,
+        orgId,
+        res.phone,
+        dynamicVariables,
+      );
+    } else if (responseType === WaAutomatedReplyResponseType.Text) {
+      const message = replacedContentByDynamicVariable(
+        content,
+        dynamicVariables,
+      );
+      await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     }
     await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
     await handlePostRegisterAction(orgId, res.id);
   } catch (e) {
+    log.error(e);
     if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
       await sendTextMessageAndUpdateStats(
         phone,
