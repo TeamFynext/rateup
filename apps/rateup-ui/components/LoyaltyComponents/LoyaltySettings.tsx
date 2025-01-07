@@ -4,19 +4,21 @@ import {
   ActionIcon,
   Badge,
   Group,
-  SimpleGrid,
+  Radio,
+  RadioGroup,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
 
-import { TemplateType } from "@/types/enums";
+import { TemplateType, WaAutomatedReplyResponseType } from "@/types/enums";
 import {
   useCreateLoyaltyTemplate,
+  useDeleteLoyaltyTemplate,
   useGetAllLoyaltyTemplates,
   useUpdateLoyaltyTemplate,
 } from "@/backend/loyalty/settings/settings.query";
@@ -27,22 +29,33 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
+import ConfirmationModal from "../Modal/ConfirmationModal";
 import FormModalLayout from "../Modal/FormModalLayout";
+import WaTextEditor from "../RichTextEditor/waTextEditor";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import TanstackTable from "../Table/TanstackTable";
+import { LReferralSelector } from "./utils";
 
 const LoyaltySettings = () => {
   const { data: templateConfigs, isPending } = useGetAllLoyaltyTemplates();
   const [opened, { open, close }] = useDisclosure(false);
+  const [dialogOpened, { open: openDialog, close: closeDialog }] =
+    useDisclosure(false);
 
   const [selectedConfig, setSelectedConfig] = useState(null);
 
-  const columns = generateColumnsForLoyaltyTemplate(setSelectedConfig, open);
+  const columns = generateColumnsForLoyaltyTemplate(
+    setSelectedConfig,
+    open,
+    openDialog,
+  );
+
+  const deleteMutation = useDeleteLoyaltyTemplate();
 
   return (
     <Stack>
       <Group>
-        <Title order={4}>Loyalty Template Configuration</Title>
+        <Title order={4}>Loyalty WhatsApp Command Configuration</Title>
         <RateupButtonBlue
           title={"New"}
           leftIcon={<IconPlus />}
@@ -59,7 +72,26 @@ const LoyaltySettings = () => {
       <LoyaltyWaTemplateConfig
         config={selectedConfig}
         opened={opened}
-        close={close}
+        close={() => {
+          setSelectedConfig(null);
+          close();
+        }}
+      />
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={dialogOpened}
+        onClose={closeDialog}
+        headerLabel={"Are you sure to delete this Command Configuration?"}
+        headerTitle={"Delete Command"}
+        confirmLabel={"Delete"}
+        onConfirm={(e) => {
+          deleteMutation.mutate(selectedConfig?.id, {
+            onSettled: () => {
+              setSelectedConfig(null);
+              closeDialog();
+            },
+          });
+        }}
       />
     </Stack>
   );
@@ -69,6 +101,8 @@ export default LoyaltySettings;
 
 export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
+  PointInformation = "PointInformation",
+  Referral = "Referral",
 }
 
 export const LoyaltyWaTemplateConfig = ({
@@ -81,24 +115,46 @@ export const LoyaltyWaTemplateConfig = ({
   close: () => void;
 }) => {
   const templateMut = useCreateLoyaltyTemplate();
+  const updateTempMut = useUpdateLoyaltyTemplate(config?.id);
 
-  const updateTempMut = useUpdateLoyaltyTemplate(config?.type);
+  let initialValues = {
+    type: LoyaltyTemplateTypes.CustomerRegistration,
+    waTemplateId: "",
+    requestMessage: "",
+    content: null,
+    responseType: WaAutomatedReplyResponseType.Template,
+    actionId: "",
+  };
 
   const form = useForm({
-    initialValues: {
-      type: LoyaltyTemplateTypes.CustomerRegistration,
-      waTemplateId: "",
-      requestMessage: "",
-    },
+    initialValues,
     validate: {
-      waTemplateId: isNotEmpty("Template required"),
+      requestMessage: isNotEmpty("required"),
+      waTemplateId: (value, values) =>
+        values.type !== LoyaltyTemplateTypes.Referral &&
+        values.responseType === WaAutomatedReplyResponseType.Template &&
+        !value?.length
+          ? "Template required"
+          : null,
+      content: (value, values) =>
+        values.type !== LoyaltyTemplateTypes.Referral &&
+        values.responseType === WaAutomatedReplyResponseType.Text &&
+        !value
+          ? "content cannot be blank"
+          : null,
+      actionId: (value, values) =>
+        values.type === LoyaltyTemplateTypes.Referral && !value?.length
+          ? "Select action"
+          : null,
     },
   });
 
   const hanldeTemplateConfig = () => {
     if (form.validate().hasErrors) return;
+    const { type, ...rest } = form.values;
+    if (type === LoyaltyTemplateTypes.Referral)
+      rest.responseType = WaAutomatedReplyResponseType.Text;
     if (config) {
-      const { type, ...rest } = form.values;
       updateTempMut.mutate(rest, {
         onSettled: () => {
           form.reset();
@@ -107,19 +163,24 @@ export const LoyaltyWaTemplateConfig = ({
       });
       return;
     }
-    templateMut.mutate(form.values, {
-      onSettled: () => {
-        form.reset();
-        close();
+    templateMut.mutate(
+      { type, ...rest },
+      {
+        onSettled: () => {
+          form.reset();
+          close();
+        },
       },
-    });
+    );
   };
 
   useEffect(() => {
     if (config) {
       const { createdAt, id, orgId, templateName, ...rest } = config;
-      form.setValues({ ...rest });
+      initialValues = { ...rest };
     }
+    form.setInitialValues(initialValues);
+    form.setValues(initialValues);
   }, [config]);
 
   const typeData = Object.values(LoyaltyTemplateTypes).map((t) => ({
@@ -134,7 +195,7 @@ export const LoyaltyWaTemplateConfig = ({
         form.reset();
         close();
       }}
-      title="Template Config"
+      title=""
       buttonTitle="Save"
       cancelOnClick={() => {
         form.reset();
@@ -144,21 +205,72 @@ export const LoyaltyWaTemplateConfig = ({
       onSubmit={hanldeTemplateConfig}
       isLoading={templateMut.isPending || updateTempMut.isPending}
       centered
+      size="lg"
     >
       <Stack>
-        <ContainedSelection data={typeData} {...form.getInputProps("type")} />
-        <WaTemplateSelector
-          templateType={TemplateType.LOYALTY}
-          label={getLoyaltyTemplateLabel(form.values.type)?.templateLabel}
-          description={
-            getLoyaltyTemplateLabel(form.values.type)?.templateDescription
-          }
-          {...form.getInputProps("waTemplateId")}
+        <Title order={4} ta={"center"}>
+          Loyalty WhatsApp Command Configuration
+        </Title>
+        <ContainedSelection
+          data={typeData}
+          {...form.getInputProps("type")}
+          label={"Service Type"}
+          disabled={!!config}
         />
         <ContainedTextField
           label="Request Message"
           {...form.getInputProps("requestMessage")}
         />
+        {form.values.type !== LoyaltyTemplateTypes.Referral ? (
+          <>
+            <RadioGroup {...form.getInputProps("responseType")}>
+              <Group>
+                <Radio
+                  value={WaAutomatedReplyResponseType.Template}
+                  label={WaAutomatedReplyResponseType.Template}
+                />
+                <Radio
+                  value={WaAutomatedReplyResponseType.Text}
+                  label={WaAutomatedReplyResponseType.Text}
+                />
+              </Group>
+            </RadioGroup>
+            {form.values.responseType ===
+            WaAutomatedReplyResponseType.Template ? (
+              <WaTemplateSelector
+                templateType={TemplateType.LOYALTY}
+                label={getLoyaltyTemplateLabel(form.values.type)?.templateLabel}
+                description={
+                  getLoyaltyTemplateLabel(form.values.type)?.templateDescription
+                }
+                {...form.getInputProps("waTemplateId")}
+              />
+            ) : (
+              <Stack gap={1}>
+                <Text size="sm">Reply Message</Text>
+                <Text size="xs" c="dimmed">
+                  {
+                    getLoyaltyTemplateLabel(form.values.type)
+                      .templateDescription
+                  }
+                </Text>
+                <WaTextEditor
+                  handleInputChange={(value) => {
+                    form.setFieldValue("content", value.content);
+                  }}
+                  content={form.values.content}
+                />
+              </Stack>
+            )}
+          </>
+        ) : (
+          <>
+            <LReferralSelector
+              {...form.getInputProps("actionId")}
+              label={"Referral Action"}
+            />
+          </>
+        )}
       </Stack>
     </FormModalLayout>
   );
@@ -174,6 +286,17 @@ function getLoyaltyTemplateLabel(type) {
         templateDescription:
           "Dynamic variables representation - {{1}} - customer name",
       };
+    case LoyaltyTemplateTypes.PointInformation:
+      return {
+        label: "Point Information",
+        templateLabel: "WhatsApp Template for Point Information",
+        templateDescription:
+          "Dynamic variables representation - {{1}} - Current point balance , {{2}} - Redeemed points, {{3}} - Total earned points",
+      };
+    case LoyaltyTemplateTypes.Referral:
+      return {
+        label: "Referral",
+      };
     default:
       return {
         label: "",
@@ -185,10 +308,14 @@ function getLoyaltyTemplateLabel(type) {
 
 type LoyaltyTemplate = {
   type: string;
-  templateName: string;
   requestMessage: string;
+  responseType: string;
 };
-function generateColumnsForLoyaltyTemplate(setSelectedConfig, open) {
+function generateColumnsForLoyaltyTemplate(
+  setSelectedConfig,
+  open,
+  openDialog,
+) {
   const columnHelper = createColumnHelper<LoyaltyTemplate>();
 
   return [
@@ -196,30 +323,60 @@ function generateColumnsForLoyaltyTemplate(setSelectedConfig, open) {
       id: "type",
       header: () => <span>Type</span>,
     }),
-    columnHelper.accessor((row) => row.templateName, {
-      id: "templateName",
-      header: "WhatsApp Template",
-    }),
     columnHelper.accessor((row) => row.requestMessage, {
       id: "requestMessage",
       header: "Request Message",
+    }),
+    columnHelper.accessor((row) => row.responseType, {
+      id: "responseType",
+      header: () => <span>Response Type</span>,
+      cell: ({ getValue }) => {
+        return (
+          <Badge variant="light" color={getResponseTypeColor(getValue())}>
+            {getValue()}
+          </Badge>
+        );
+      },
     }),
     columnHelper.accessor((row) => row, {
       id: "action",
       header: "",
       cell: ({ getValue }) => {
         return (
-          <ActionIcon
-            variant="subtle"
-            onClick={() => {
-              setSelectedConfig(getValue());
-              open();
-            }}
-          >
-            <IconEdit />
-          </ActionIcon>
+          <Group>
+            <ActionIcon
+              variant="subtle"
+              onClick={() => {
+                setSelectedConfig(getValue());
+                open();
+              }}
+              size={"sm"}
+            >
+              <IconEdit />
+            </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              onClick={() => {
+                setSelectedConfig(getValue());
+                openDialog();
+              }}
+              color="red"
+              size={"sm"}
+            >
+              <IconTrash />
+            </ActionIcon>
+          </Group>
         );
       },
     }),
   ];
+}
+
+function getResponseTypeColor(value) {
+  switch (value) {
+    case WaAutomatedReplyResponseType.Template:
+      return "var(--wa-green)";
+    case WaAutomatedReplyResponseType.Text:
+      return "var(--wa-blue)";
+  }
 }

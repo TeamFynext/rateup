@@ -4,9 +4,9 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   createLoyaltyTemplate,
+  deleteLoyaltyTemplate,
   getAllLoyaltyTemplates,
   getLoyaltyTemplate,
-  UpdateLoyaltyTemplate,
   updateLoyaltyTemplate,
 } from "./settings.api";
 
@@ -16,35 +16,51 @@ export const useCreateLoyaltyTemplate = () => {
     mutationFn: createLoyaltyTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
-      showSuccessToast("Template configured");
+      showSuccessToast("Command configured");
     },
-    onError: () => {
-      showErrorToast("template config failed");
+    onError: (e: any) => {
+      showErrorToast(
+        `Command configuration failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
+      );
     },
   });
 };
 
-export const useUpdateLoyaltyTemplate = (type) => {
+export const useUpdateLoyaltyTemplate = (commandId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateLoyaltyTemplate) =>
-      updateLoyaltyTemplate(type, data),
+    mutationFn: (data: any) => updateLoyaltyTemplate(commandId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
-      showSuccessToast("Template configuration updated");
+      showSuccessToast("Command configuration updated");
     },
     onError: () => {
-      showErrorToast("template config updation failed");
+      showErrorToast("Command config updation failed");
     },
   });
 };
 
-export const useGetLoyaltyTemplate = (type) => {
+export const useDeleteLoyaltyTemplate = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteLoyaltyTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
+      queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
+      showSuccessToast("Command configuration deleted");
+    },
+    onError: () => {
+      showErrorToast("Command config deletion failed");
+    },
+  });
+};
+
+export const useGetLoyaltyTemplate = (commandId) => {
   return useQuery({
-    queryFn: () => getLoyaltyTemplate(type),
+    queryFn: () => getLoyaltyTemplate(commandId),
     queryKey: ["LoyaltyTemplate"],
-    enabled: !!type,
+    enabled: !!commandId,
   });
 };
 
