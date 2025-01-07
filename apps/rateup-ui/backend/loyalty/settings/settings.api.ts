@@ -8,19 +8,17 @@ const base = LOYALTY_BASE + "/settings";
 export async function createLoyaltyTemplate(data) {
   await axiosClient.post(`${base}/template`, data);
 }
-export type UpdateLoyaltyTemplate = {
-  waTemplateId?: string;
-};
 
-export async function updateLoyaltyTemplate(
-  type: LoyaltyTemplateTypes,
-  data: UpdateLoyaltyTemplate,
-) {
-  await axiosClient.put(`${base}/template?type=${type}`, data);
+export async function updateLoyaltyTemplate(id: string, data: any) {
+  await axiosClient.put(`${base}/template/${id}`, data);
 }
 
-export async function getLoyaltyTemplate(type: LoyaltyTemplateTypes) {
-  return (await axiosClient.get(`${base}/template?type=${type}`)).data;
+export async function deleteLoyaltyTemplate(id: string) {
+  await axiosClient.delete(`${base}/template/${id}`);
+}
+
+export async function getLoyaltyTemplate(id) {
+  return (await axiosClient.get(`${base}/template/${id}`)).data;
 }
 
 export async function getAllLoyaltyTemplates() {

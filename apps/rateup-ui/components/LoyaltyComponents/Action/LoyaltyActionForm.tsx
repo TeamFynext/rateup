@@ -508,7 +508,6 @@ const LoyaltyActionForm = ({
                 </Text>
                 <WaTextEditor
                   handleInputChange={(value) => {
-                    console.log("cc", value);
                     form.setFieldValue("message.message", value.content);
                   }}
                   content={form.values.message.message}

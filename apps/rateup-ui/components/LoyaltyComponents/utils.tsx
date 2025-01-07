@@ -106,6 +106,40 @@ export const LASelector = ({
   );
 };
 
+export const LReferralSelector = ({
+  multiSelect = false,
+  multiSelectProps,
+  ...props
+}: LAProps) => {
+  const { data: actions, isLoading } = useGetLoyaltyActions();
+  const actionList = actions
+    ? actions
+        .filter((a) => a.active && isLReferralAction(a.type))
+        .map((a) => ({
+          label: `${a.name} (${a.type})`,
+          value: a.id,
+        }))
+    : [];
+  if (isLoading) return <SelectSkeleton />;
+  if (multiSelect)
+    return (
+      <ContainedMultiSelect
+        data={actionList}
+        {...multiSelectProps}
+        nothingFoundMessage="No actions found"
+        placeholder={multiSelectProps.placeholder || "Select"}
+      />
+    );
+  return (
+    <ContainedSelection
+      data={actionList}
+      {...props}
+      nothingFoundMessage="No actions found"
+      placeholder={props.placeholder || "Select"}
+    />
+  );
+};
+
 export const SelectSkeleton = () => {
   return (
     <Card h={46} w={240} radius={"md"} withBorder p={0}>
