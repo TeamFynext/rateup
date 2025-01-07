@@ -14,13 +14,19 @@ import {
   handleSendTemplate,
   verifyLCustomerMaxCountRestriction,
 } from "./customer.service";
-import { getLoyaltyTemplate } from "../settings/settings.service";
 import {
   LoyaltyTemplateTypes,
   SubscriptionFeaturePathName,
+  WaAutomatedReplyResponseType,
 } from "../../../types/enums";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 import { updateMonthlyStat } from "../../stats/stats.service";
+import {
+  getLoyaltyWaCommand,
+  getLoyaltyWaCommandByType,
+  replacedContentByDynamicVariable,
+  sendTextMessageAndUpdateStats,
+} from "../settings/settings.service";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
@@ -30,14 +36,27 @@ export async function createLCustomerHandler(
     const { orgId } = request.body;
     const res = await createLCustomer(request.body);
     reply.code(200).send(res);
-    const template = await getLoyaltyTemplate(
+    const loyaltyWaCommand = await getLoyaltyWaCommandByType(
       LoyaltyTemplateTypes.CustomerRegistration,
       orgId,
     );
-    if (template) {
-      await handleSendTemplate(template.waTemplateId, orgId, res.phone, [
-        res.name,
-      ]);
+    if (loyaltyWaCommand) {
+      const { responseType, waTemplateId, content } = loyaltyWaCommand;
+      const dynamicVariables = [res.name];
+      if (responseType === WaAutomatedReplyResponseType.Template)
+        await handleSendTemplate(
+          waTemplateId,
+          orgId,
+          res.phone,
+          dynamicVariables,
+        );
+      else if (responseType === WaAutomatedReplyResponseType.Text) {
+        const message = replacedContentByDynamicVariable(
+          content,
+          dynamicVariables,
+        );
+        await sendTextMessageAndUpdateStats(res.phone, orgId, null, message);
+      }
     }
     await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
     await handlePostRegisterAction(orgId, res.id);

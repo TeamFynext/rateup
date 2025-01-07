@@ -1,16 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger";
+
 import {
-  createLoyaltyTemplate,
-  getAllLoyaltyTemplates,
-  getLoyaltyTemplate,
-  updateLoyaltyTemplate,
-} from "./settings.service";
-import {
-  ByTypeQueryInput,
+  IdParamInput,
   LoyaltyTemplateInput,
   UpdateLoyaltyTemplateInput,
 } from "./settings.schema";
+import {
+  createLoyaltyWaCommand,
+  deleteLoyaltyWaCommandById,
+  getAllLoyaltyWaCommands,
+  getLoyaltyWaCommand,
+  updateLoyaltyWaCommand,
+} from "./settings.service";
+import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service";
 
 export async function createLoyaltyTemplateHandler(
   request: FastifyRequest<{ Body: LoyaltyTemplateInput }>,
@@ -18,7 +21,7 @@ export async function createLoyaltyTemplateHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const res = await createLoyaltyTemplate({ orgId, ...request.body });
+    const res = await createLoyaltyWaCommand({ orgId, ...request.body });
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -29,14 +32,13 @@ export async function createLoyaltyTemplateHandler(
 export async function updateLoyaltyTemplateHandler(
   request: FastifyRequest<{
     Body: UpdateLoyaltyTemplateInput;
-    Querystring: ByTypeQueryInput;
+    Params: IdParamInput;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const { type } = request.query;
-    const res = await updateLoyaltyTemplate(type, orgId, request.body);
+    const { id } = request.params;
+    const res = await updateLoyaltyWaCommand(id, request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -45,13 +47,12 @@ export async function updateLoyaltyTemplateHandler(
 }
 
 export async function getLoyaltyTemplateHandler(
-  request: FastifyRequest<{ Querystring: ByTypeQueryInput }>,
+  request: FastifyRequest<{ Params: IdParamInput }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const { type } = request.query;
-    const res = await getLoyaltyTemplate(type, orgId);
+    const { id } = request.params;
+    const res = await getLoyaltyWaCommand(id);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -65,7 +66,39 @@ export async function getAllLoyaltyTemplateHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const res = await getAllLoyaltyTemplates(orgId);
+    const res = await getAllLoyaltyWaCommands(orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function checkIfCommandExistInAutomation(
+  request: FastifyRequest<{ Body: LoyaltyTemplateInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { requestMessage } = request.body;
+    const res = await getAutomatedRepliesByKeyWeords(orgId, requestMessage);
+    if (res)
+      return reply
+        .code(403)
+        .send("The request message already used in automation");
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteLoyaltyTemplateHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params;
+    const res = await deleteLoyaltyWaCommandById(id);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
