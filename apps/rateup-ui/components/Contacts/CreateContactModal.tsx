@@ -36,6 +36,9 @@ import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 
 import "react-phone-number-input/style.css";
 
+import { DatePickerInput } from "@mantine/dates";
+
+import { ContactGroupType } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./contact.module.css";
@@ -44,6 +47,7 @@ export interface ImportContact {
   name: string;
   phone?: string;
   email?: string;
+  type?: ContactGroupType;
 }
 
 const CreateContactModal = ({
@@ -51,6 +55,7 @@ const CreateContactModal = ({
   close,
   cTags = [],
   importCSVContactMutation,
+  type = ContactGroupType.NORMAL,
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -61,6 +66,8 @@ const CreateContactModal = ({
     initialValues: {
       name: "",
       phone: "",
+      email: "",
+      dob: null,
       source: importMethod.MANUAL,
       contactType: cTags ?? [],
       countryCode: "91",
@@ -119,6 +126,10 @@ const CreateContactModal = ({
       let contactData: ICreateContact = {
         ...form.getValues(),
         phone: form.getValues().phone.slice(1),
+        source:
+          type === ContactGroupType.LOYALTY
+            ? ContactGroupType.LOYALTY
+            : form.getValues().source,
       };
       createContactMutation.mutate(contactData, {
         onSuccess: () => {
@@ -210,7 +221,26 @@ const CreateContactModal = ({
                   {form?.errors?.phone}
                 </Text>
               </Stack>
-
+              {type === ContactGroupType.LOYALTY && (
+                <>
+                  <TextInput
+                    label={translations["email"]}
+                    placeholder={translations["Enter the email"]}
+                    radius={"md"}
+                    size="md"
+                    type="email"
+                    {...form.getInputProps("email")}
+                  />
+                  <DatePickerInput
+                    label={translations["dob"]}
+                    placeholder={translations["Enter the dob"]}
+                    radius={"md"}
+                    size="md"
+                    maxDate={new Date()}
+                    {...form.getInputProps("dob")}
+                  />
+                </>
+              )}
               {form
                 .getValues()
                 .contactType?.map(

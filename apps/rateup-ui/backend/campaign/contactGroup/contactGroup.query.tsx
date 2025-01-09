@@ -1,6 +1,7 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { ContactGroupType } from "@/types/enums";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -19,10 +20,12 @@ import {
   updateContactGroup,
 } from "./contactGroup.api";
 
-export const useContactGroup = () => {
+export const useContactGroup = (
+  type: ContactGroupType = ContactGroupType.NORMAL,
+) => {
   return useQuery({
-    queryKey: ["campaignContactGroupsData"],
-    queryFn: () => getContactGroupList(),
+    queryKey: ["campaignContactGroupsData", type],
+    queryFn: () => getContactGroupList(type),
   });
 };
 

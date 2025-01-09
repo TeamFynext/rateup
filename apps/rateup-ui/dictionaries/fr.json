@@ -1952,5 +1952,9 @@
   "Redeems": "Échanges",
   "Update Reward": "Mettre à jour la récompense",
   "Inactivive": "Inactif",
-  "Session Inactive": "Session inactive"
+  "Session Inactive": "Session inactive",
+  "dob": "date de naissance",
+  "email": "e-mail",
+  "Enter the email": "Entrez l'e-mail",
+  "Enter the dob": "Entrez la date de naissance"
 }

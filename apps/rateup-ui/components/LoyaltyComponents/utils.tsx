@@ -30,7 +30,9 @@ import {
 import classes from "./Loyalty.module.css";
 
 export const LCSelector = (props: SelectProps) => {
-  const { data: customers, isLoading } = useLoyaltyCustomers();
+  const { data: customers, isLoading } = useLoyaltyCustomers({
+    pagination: false,
+  });
   const customerList = customers
     ? customers?.map((c) => ({
         label: c.customerInfo.phone,

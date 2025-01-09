@@ -513,3 +513,8 @@ export enum LoyaltyActionType {
   DirectPurchase = "Direct Purchase",
   CustomerRegistration = "Customer Registration",
 }
+
+export enum ContactGroupType {
+  NORMAL = "NORMAL",
+  LOYALTY = "LOYALTY",
+}

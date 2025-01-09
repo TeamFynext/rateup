@@ -50,6 +50,7 @@ const ICONS = [
 const DashboardLoyalty = () => {
   const { data, isPending, isError, refetch } = useLoyaltyDashboardData();
   if (isPending) return <RateupLoader />;
+  if (isError) return <ErrorComponent refetch={refetch} />;
   return (
     <>
       <SummaryCards data={data.summaryData} icons={ICONS} />
@@ -85,8 +86,8 @@ const SummaryCards = ({ data, icons }) => (
       xs: 2,
       sm: 3,
       md: 4,
-      lg: 5,
-      xl: 6,
+      lg: 4,
+      xl: 5,
     }}
   >
     {data.map((item, i) => (
@@ -94,8 +95,8 @@ const SummaryCards = ({ data, icons }) => (
         key={item.id}
         flex={1}
         style={{ borderRadius: "12px" }}
-        bg={[4, 5, 6].includes(i) ? "var(--grey-color-5)" : ""}
-        c={[4, 5, 6].includes(i) ? "var(--grey-color-7)" : ""}
+        bg={[3, 4, 5].includes(i) ? "var(--grey-color-5)" : ""}
+        c={[3, 4, 5].includes(i) ? "var(--grey-color-7)" : ""}
       >
         <Group justify="space-between" gap={0}>
           <Text ff={lexend500.style.fontFamily}>{item.title}</Text>

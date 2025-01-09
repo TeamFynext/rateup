@@ -1,5 +1,7 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
@@ -7,6 +9,7 @@ import {
   createLoyaltyCustomer,
   deleteLoyaltyCustomer,
   getAllCustomers,
+  importCustomers,
 } from "./customer.api";
 
 export const useCreateLoyaltyCustomerMutation = () => {
@@ -20,11 +23,20 @@ export const useCreateLoyaltyCustomerMutation = () => {
   });
 };
 
-export const useLoyaltyCustomers = () =>
-  useQuery({
-    queryFn: getAllCustomers,
-    queryKey: ["loyaltyCustomers"],
+export const useLoyaltyCustomers = (
+  pagination,
+  searchData?,
+  sorting?,
+  columnFilters?,
+) => {
+  let sort = sorting ?? CONTACT_SORT;
+  let filters = columnFilters ?? [];
+  let search = searchData ?? "";
+  return useQuery({
+    queryFn: () => getAllCustomers(pagination, search, sort, filters),
+    queryKey: ["loyaltyCustomers", pagination, search, sort, filters],
   });
+};
 
 export const useDeleteLoyaltyCustomerMutation = () => {
   const qc = useQueryClient();
@@ -53,6 +65,28 @@ export const useLCAction = () => {
     },
     onError: (e: any) => {
       showErrorToast(`Failed:${e?.response?.data ?? ""}`);
+    },
+  });
+};
+
+export const useImportCSVCustomerMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: importCustomers,
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      showSuccessToast(
+        "Contacts imported successfully",
+        "Customer-create",
+        // <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error creating the Customer: ${error?.response?.data?.error}`,
+        "contact-create",
+        // <IconX />,
+      );
     },
   });
 };
