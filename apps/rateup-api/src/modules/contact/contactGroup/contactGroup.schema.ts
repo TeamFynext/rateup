@@ -6,9 +6,14 @@ const coreContactGroupSchema = z.object({
   name: z.string(),
   icon: z.string().optional(),
 });
+export enum ContactGroupType {
+  NORMAL = "NORMAL",
+  LOYALTY = "LOYALTY",
+}
 
 const createContactGroupInputSchema = coreContactGroupSchema.extend({
   teamId: z.string(),
+  type: z.nativeEnum(ContactGroupType),
 });
 
 const updateContactGroupInputSchema = z.object({
@@ -46,6 +51,7 @@ const addExistingContactsToMultipleGroupsInputSchema =
 const getContactGroupsQuerySchema = z.object({
   contactGroupId: z.string().optional(),
   teamId: z.string().optional(),
+  type: z.nativeEnum(ContactGroupType).optional(),
 });
 
 const removeGroupContactsSchema = z.array(z.string());

@@ -82,9 +82,13 @@ export async function getLoyaltyRedeems(orgId: string) {
     include: {
       reward: true,
       customer: {
-        select: {
-          name: true,
-          phone: true,
+        include: {
+          Contact: {
+            select: {
+              name: true,
+              phone: true,
+            },
+          },
         },
       },
     },

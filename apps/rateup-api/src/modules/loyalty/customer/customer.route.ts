@@ -4,11 +4,28 @@ import {
   customerActionHandler,
   deleteLoyaltyCustomersHandler,
   getLoyaltyCustomersHandler,
+  importCSVContactsHandler,
 } from "./customer.controller";
 import { $lCustomerRef } from "./customer.schema";
+import fastifyMultipart from "@fastify/multipart";
+import { $contactRef } from "../../contact/contact.schema";
 
 export async function loyaltyCustomerRoutes(server: FastifyInstance) {
-  server.get("/", getLoyaltyCustomersHandler);
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 10,
+    },
+    throwFileSizeLimit: true,
+  });
+  server.get(
+    "/",
+    {
+      schema: {
+        params: $contactRef("paginationQuery"),
+      },
+    },
+    getLoyaltyCustomersHandler,
+  );
   server.delete("/:id", deleteLoyaltyCustomersHandler);
   server.post(
     "/:customerId/:actionId",
@@ -19,5 +36,14 @@ export async function loyaltyCustomerRoutes(server: FastifyInstance) {
       },
     },
     customerActionHandler,
+  );
+  server.post(
+    "/importcsv",
+    {
+      schema: {
+        consumes: ["multipart/form-data"],
+      },
+    },
+    importCSVContactsHandler,
   );
 }

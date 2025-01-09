@@ -9,6 +9,7 @@ import {
   UpdateContactGroupInput,
 } from "./contactGroup.schema";
 import { BATCH_SIZE } from "../../../utils/constants/constants";
+import { ContactGroupType } from "@prisma/client";
 
 export async function getContactGroupById(contactGroupId: string) {
   const contactGroup = await prisma.contactGroup.findUnique({
@@ -34,6 +35,7 @@ export async function getContactGroupsByTeamId(teamId: string) {
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       teamId,
+      type: "NORMAL",
     },
     include: {
       team: {
@@ -48,14 +50,42 @@ export async function getContactGroupsByTeamId(teamId: string) {
       },
     },
   });
-  return contactGroups;
+
+  const loyaltyCustomerCounts: Array<{
+    id: string;
+    createdAt: Date;
+    name: string;
+    icon: string;
+    teamId: string;
+    type: string;
+    loyaltyCustomerCount: number;
+  }> = await prisma.$queryRaw`
+    SELECT "ContactGroup".*, COUNT("LoyaltyCustomerMap".*) as "loyaltyCustomerCount"
+    FROM "LoyaltyCustomerMap"
+    LEFT JOIN "ContactGroup" ON "LoyaltyCustomerMap"."contactGroupId" = "ContactGroup"."id"
+    GROUP BY "ContactGroup"."id"
+  `;
+  let loyaltyCustomer = loyaltyCustomerCounts.map(
+    ({ loyaltyCustomerCount, ...rest }) => ({
+      ...rest,
+      _count: {
+        contacts: Number(loyaltyCustomerCount),
+      },
+    }),
+  );
+
+  return [...contactGroups, ...loyaltyCustomer];
 }
-export async function getContactGroupsByOrgId(orgId: string) {
+export async function getContactGroupsByOrgId(
+  orgId: string,
+  type?: ContactGroupType,
+) {
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       team: {
         orgId,
       },
+      type,
     },
     include: {
       team: {
@@ -80,6 +110,7 @@ export async function createContactGroup(
       name: contactGroup.name,
       icon: contactGroup.icon,
       teamId: contactGroup.teamId,
+      type: contactGroup.type,
     },
   });
 }
@@ -196,6 +227,20 @@ export async function getContactsByContactGroupIdWithPagination(
       id: contactGroupId,
     },
     include: {
+      LoyaltyCustomerMap: {
+        include: {
+          loyaltyCustomer: {
+            include: {
+              Contact: {
+                select: {
+                  name: true,
+                  phone: true,
+                },
+              },
+            },
+          },
+        },
+      },
       contacts: {
         include: {
           contact: true,
@@ -213,8 +258,11 @@ export async function getContactsByContactGroupIdWithPagination(
       },
     },
   });
-
-  return { group: group.contacts.map((c) => c.contact), totalCount };
+  return {
+    group: group.contacts.map((c) => c.contact),
+    totalCount,
+    loyaltyCustomers: group.LoyaltyCustomerMap.map((c) => c.loyaltyCustomer),
+  };
 }
 
 function chunkArray<T>(array: T[], chunkSize: number): T[][] {
@@ -270,9 +318,15 @@ export async function addExistingContactsToGroup(
   if (!contactGroup) {
     throw new Error("Contact group not found");
   }
+  console.log("🚀 ~ contactGroupId:", contactGroupId);
+  console.log("🚀 ~ contactIds:", contactIds);
   // TODO: check if contactIds belong to the same team?
-  return await prisma.contactGroupMap.createMany({
-    data: contactIds.map((contactId) => ({ contactId, contactGroupId })),
+  // FIXME:
+  return await prisma.loyaltyCustomerMap.createMany({
+    data: contactIds.map((contactId) => ({
+      loyaltyCustomerId: contactId,
+      contactGroupId,
+    })),
   });
 }
 

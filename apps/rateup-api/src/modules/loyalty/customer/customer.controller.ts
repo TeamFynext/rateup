@@ -12,6 +12,7 @@ import {
   handleLCustomerAction,
   handlePostRegisterAction,
   handleSendTemplate,
+  importCSVContacts,
   verifyLCustomerMaxCountRestriction,
 } from "./customer.service";
 import {
@@ -19,14 +20,14 @@ import {
   SubscriptionFeaturePathName,
   WaAutomatedReplyResponseType,
 } from "../../../types/enums";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import {
-  getLoyaltyWaCommand,
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
   sendTextMessageAndUpdateStats,
 } from "../settings/settings.service";
+import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
+import { PaginationQuery } from "../../contact/contact.schema";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
@@ -92,9 +93,9 @@ export async function customerActionHandler(
     await handleSendTemplate(
       customerAction.action.waTemplateId,
       customer.orgId,
-      customer.phone,
+      customer.Contact.phone,
       [
-        customer.name,
+        customer.Contact.name,
         customerAction.action.rewardId
           ? customerAction.action.reward.name
           : customerPoints?.toString(),
@@ -107,11 +108,16 @@ export async function customerActionHandler(
 }
 
 export async function getLoyaltyCustomersHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Params: PaginationQuery;
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const customers = await getLoyaltyCustomers(request.user.orgId);
+    const customers = await getLoyaltyCustomers(
+      request.user.orgId,
+      request.query,
+    );
     reply.code(200).send(customers);
   } catch (e) {
     log.error(e);
@@ -149,5 +155,36 @@ export async function deleteLoyaltyCustomersHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function importCSVContactsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const file = await request.file();
+    const orgId = request.user.orgId;
+    if (!dataExtractFileMimeTypes.includes(file?.mimetype))
+      return reply
+        .code(400)
+        .send({ error: "This file type is not permitted." });
+    const tags = [];
+    let update = false;
+    for (const key in file?.fields) {
+      if (key.startsWith("tags[")) {
+        tags.push(file?.fields?.[key]?.["value"]);
+      } else if (key === "update") {
+        update = file?.fields?.[key]?.["value"] === "true";
+      }
+    }
+    const res: any = await importCSVContacts(file, orgId, tags, update);
+    if (res.status === "error") {
+      return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
+    }
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e?.message || "Something went wrong" });
   }
 }

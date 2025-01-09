@@ -37,8 +37,8 @@ export async function redeemPointsHandler(
       await handleSendTemplate(
         redeem.reward.waTemplateId,
         customer.orgId,
-        customer.phone,
-        [customer.name, redeem.reward.points?.toString()],
+        customer.Contact.phone,
+        [customer.Contact.name, redeem.reward.points?.toString()],
       );
     } else {
       reply.code(403).send(message);
