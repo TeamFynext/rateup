@@ -10,6 +10,7 @@ export const getLoyaltyDashboardStatsHandler = async (
     const response = await getLoyaltyDashboardStats(orgId);
     res.code(200).send(response);
   } catch (error) {
+    console.log("🚀 ~ error:", error);
     res.code(500).send("Internal Server Error");
   }
 };
