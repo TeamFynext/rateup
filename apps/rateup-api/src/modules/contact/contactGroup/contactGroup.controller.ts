@@ -5,6 +5,7 @@ import {
   AddExistingContactsToMultipleGroupsInput,
   AddNewContactsToGroupInput,
   ByContactGroupIdParams,
+  ContactGroupType,
   CreateContactGroupInput,
   DeleteManyGroupsInput,
   GetContactGroupsQuery,
@@ -31,6 +32,10 @@ import { Prisma, Role } from "@prisma/client";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
 import { importCSVContacts } from "../contact.service";
 import { PaginationQuery } from "../contact.schema";
+import {
+  addNewCustomersToGroup,
+  createMultipleCustomers,
+} from "../../loyalty/customer/customer.service";
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{
@@ -50,7 +55,10 @@ export async function getContactGroupsHandler(
     } else {
       // get all contact groups for all teams
       if (verifyRole(request, reply, Role.SUPER_ADMIN)) {
-        res = await getContactGroupsByOrgId(request.user.orgId);
+        res = await getContactGroupsByOrgId(
+          request.user.orgId,
+          request.query.type,
+        );
       }
     }
     reply.code(200).send(res);
@@ -128,11 +136,21 @@ export async function addNewContactsToGroupHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const contactGroup = await addNewContactsToGroup(
-      request.params.contactGroupId,
-      request.body,
-      orgId,
-    );
+    let contactGroup;
+    if (request.body.find((c) => c.source === ContactGroupType.LOYALTY)) {
+      await createMultipleCustomers(request.body, orgId);
+      contactGroup = await addNewCustomersToGroup(
+        request.params.contactGroupId,
+        request.body,
+        orgId,
+      );
+    } else {
+      contactGroup = await addNewContactsToGroup(
+        request.params.contactGroupId,
+        request.body,
+        orgId,
+      );
+    }
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);

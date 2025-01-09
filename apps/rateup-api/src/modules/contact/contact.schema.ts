@@ -1,3 +1,4 @@
+import { ContactGroupType } from "@prisma/client";
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
@@ -6,6 +7,8 @@ export const contactCoreSchema = z.object({
   phone: z.string().optional(),
   tags: z.any(),
   source: z.string(),
+  email: z.string().optional(),
+  dob: z.date().optional().nullable(),
 });
 
 export const createMultipleContactSchema = z.array(contactCoreSchema);
@@ -22,6 +25,7 @@ const paginationQuery = z.object({
   search: z.string().optional(),
   sort: z.string().optional(),
   desc: z.string().optional(),
+  type: z.nativeEnum(ContactGroupType).optional(),
 });
 
 const byContactIdSchema = z.object({

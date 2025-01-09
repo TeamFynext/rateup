@@ -19,9 +19,10 @@ import {
   importCSVContacts,
   updateContactById,
 } from "./contact.service";
-import { Prisma } from "@prisma/client";
+import { ContactGroupType, Prisma } from "@prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { createLCustomer } from "../loyalty/customer/customer.service";
 
 export async function createContactHandler(
   request: FastifyRequest<{ Body: ContactCore }>,
@@ -31,9 +32,16 @@ export async function createContactHandler(
     const { orgId } = request.user;
     if (!isValidPhoneNumber(`+${request.body.phone}`))
       return reply.code(400).send({ error: "Phone number is not valid" });
-
-    const contact = await createContact({ ...request.body, orgId });
-    reply.code(201).send(contact);
+    if (request.body.source === ContactGroupType.LOYALTY) {
+      const contact = await createLCustomer({
+        ...request.body,
+        orgId,
+      });
+      reply.code(201).send(contact);
+    } else {
+      const contact = await createContact({ ...request.body, orgId });
+      reply.code(201).send(contact);
+    }
   } catch (error) {
     log.error(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

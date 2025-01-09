@@ -47,34 +47,28 @@ export const getLoyaltyDashboardStats = async (
 ): Promise<LoyaltyDashboardStats> => {
   const results = await prisma.$queryRaw<
     {
-      data0: number;
       data1: number;
       data2: number;
       data3: number;
       data4: number;
-      count4: number;
-      count5: number;
+      data5: number;
     }[]
   >`SELECT 
-    (SELECT COUNT(*) FROM "LoyaltyAction" WHERE "orgId" = ${orgId}::uuid) AS data0,
     (SELECT COUNT(*) FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid) AS data1,
-    (SELECT COUNT(*) FROM "LoyaltyReward" WHERE "orgId" = ${orgId}::uuid) AS data2,
-    (SELECT SUM("totalEarnedPoints") FROM "LoyaltyCustomer" lc WHERE lc."orgId" = ${orgId}::uuid) AS count4,
+    (SELECT SUM("totalEarnedPoints") FROM "LoyaltyCustomer" lc WHERE lc."orgId" = ${orgId}::uuid) AS data2,
     (SELECT COUNT(*) FROM "LoyaltyRedeem" WHERE "status" != 'FAILED' AND "customerId" IN (SELECT id FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid)) AS data3,
     (SELECT COUNT(*) FROM "LoyaltyRedeem" WHERE "status" = 'CLAIMED' AND "customerId" IN (SELECT id FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid)) AS data4,
-    (SELECT SUM("redeemedPoints") FROM "LoyaltyCustomer" lc WHERE lc."orgId" = ${orgId}::uuid) AS count5
+    (SELECT SUM("redeemedPoints") FROM "LoyaltyCustomer" lc WHERE lc."orgId" = ${orgId}::uuid) AS data5
     `;
 
-  const { data0, data1, data2, data3, data4, count4, count5 } = results?.[0];
+  const { data1, data2, data3, data4, data5 } = results?.[0];
 
   const summaryData = [
-    { title: "Total Actions", id: 1, value: Number(data0) || 0 },
     { title: "Total Customers", id: 2, value: Number(data1) || 0 },
-    { title: "Total Rewards", id: 3, value: Number(data2) || 0 },
-    { title: "Point Issued", id: 5, value: Number(count4) || 0 },
-    { title: "Total Redeems", id: 4, value: Number(data3) || 0 },
+    { title: "Point Issued", id: 5, value: Number(data2) || 0 },
+    { title: "Point Redeemed", id: 7, value: Number(data5) || 0 },
+    { title: "Reward Redeems", id: 4, value: Number(data3) || 0 },
     { title: "Redeem Claimed", id: 6, value: Number(data4) || 0 },
-    { title: "Point Redeemed", id: 7, value: Number(count5) || 0 },
   ];
 
   const overallActionsResult = await prisma.$queryRaw<

@@ -39,9 +39,9 @@ export async function customerActionHandler(
     await handleSendTemplate(
       customerAction.action.waTemplateId,
       customer.orgId,
-      customer.phone,
+      customer.Contact.phone,
       [
-        customer.name,
+        customer.Contact.name,
         customerAction.action.rewardId
           ? customerAction.action.reward.name
           : customerPoints?.toString(),

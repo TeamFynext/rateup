@@ -25,24 +25,84 @@ import {
 } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
 import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
-import { LoyaltyAction } from "@prisma/client";
+import { ContactGroupType, LoyaltyAction } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import {
+  createContact,
+  getOrcreateContact,
+} from "../../contact/contact.service";
+import { MultipartFile } from "@fastify/multipart";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import Papa from "papaparse";
+import xlsx from "node-xlsx";
+import { BATCH_SIZE } from "../../../utils/constants/constants";
+import {
+  createMultipleContactInput,
+  PaginationQuery,
+} from "../../contact/contact.schema";
+import { getContactGroupById } from "../../contact/contactGroup/contactGroup.service";
+import { AddNewContactsToGroupInput } from "../../contact/contactGroup/contactGroup.schema";
+import { getContactTag } from "../../whatsapp/settings/wa_settings.service";
 
+let includeContact = {
+  Contact: {
+    select: {
+      phone: true,
+      name: true,
+      source: true,
+    },
+  },
+};
 export async function createLCustomer(input: LCustomerInput) {
-  const customer = await prisma.loyaltyCustomer.create({
-    data: {
+  const contact = await prisma.contact.upsert({
+    where: {
+      contact_phone_org_id_unique: {
+        phone: parsePhoneforWa(input.phone),
+        orgId: input.orgId,
+      },
+    },
+    update: {
+      source: ContactGroupType.LOYALTY,
       name: input.name,
-      phone: parsePhoneforWa(input.phone),
+      dob: input.dob ?? null,
       email: input.email,
+      tags: input.tags,
+      loyaltyCustomer: {
+        create: {
+          orgId: input.orgId,
+        },
+      },
+    },
+    create: {
+      phone: parsePhoneforWa(input.phone),
+      name: input.name,
+      source: ContactGroupType.LOYALTY,
       orgId: input.orgId,
+      dob: input.dob ?? null,
+      email: input.email,
+      tags: input.tags,
+      loyaltyCustomer: {
+        create: {
+          orgId: input.orgId,
+        },
+      },
     },
     include: {
-      referralCodes: true,
+      loyaltyCustomer: true,
     },
   });
+  console.log(contact);
+
+  const customer = contact.loyaltyCustomer;
   const action = await getReferralLoyaltyAction(input.orgId);
   if (action) await getReferralCodeByActionAndCustomer(action.id, customer.id);
-  return customer;
+  return {
+    ...customer,
+    name: contact.name,
+    phone: contact.phone,
+    email: contact?.email,
+    dob: contact?.dob,
+  };
 }
 
 export async function handlePostRegisterAction(orgId, customerId) {
@@ -62,8 +122,8 @@ export async function handlePostRegisterAction(orgId, customerId) {
       await handleSendTemplate(
         customerAction.action.waTemplateId,
         orgId,
-        customer.phone,
-        [customer.name, customerPoints?.toString()],
+        customer.Contact.phone,
+        [customer.Contact.name, customerPoints?.toString()],
       );
     }
   }
@@ -94,7 +154,9 @@ export async function createCustomerAction({
           refereeReward: true,
         },
       },
-      customer: true,
+      customer: {
+        include: includeContact,
+      },
     },
   });
 }
@@ -109,6 +171,7 @@ export async function updateLCustomerPoint(id, points) {
         increment: points,
       },
     },
+    include: includeContact,
   });
 }
 
@@ -122,6 +185,7 @@ export async function updateLCustomerRedeemPoint(id, points) {
         increment: points,
       },
     },
+    include: includeContact,
   });
 }
 
@@ -130,32 +194,124 @@ export async function getLCustomerById(id) {
     where: {
       id,
     },
+    include: includeContact,
   });
 }
 
-export async function getLoyaltyCustomers(orgId) {
+export async function getLoyaltyCustomers(
+  orgId: string,
+  query?: PaginationQuery,
+) {
+  const {
+    page = 0,
+    limit = 500,
+    search = "",
+    sort = "createdAt",
+    desc = "asc",
+    type = ContactGroupType.NORMAL,
+    ...filter
+  } = query ?? {
+    page: 0,
+    limit: 500,
+    search: "",
+    sort: "createdAt",
+    desc: "asc",
+  };
+  let filterData = [];
+  if (filter) {
+    const params = new URLSearchParams(filter);
+    for await (const [key, value] of params.entries()) {
+      if ("customerInfo" === key) {
+        filterData.push({
+          Contact: {
+            name: {
+              contains: value,
+              mode: "insensitive",
+            },
+          },
+        });
+        filterData.push({
+          Contact: {
+            phone: {
+              contains: value,
+              mode: "insensitive",
+            },
+          },
+        });
+      } else if ("createdAt" === key) {
+        filterData.push({
+          [key]: {
+            equal: value,
+            mode: "insensitive",
+          },
+        });
+      } else if ("filterGroupName" === key) {
+        let splitValue = [...new Set(value?.split(","))];
+        filterData.push({
+          LoyaltyCustomerMap: {
+            some: {
+              contactGroupId: {
+                in: splitValue,
+              },
+            },
+          },
+        });
+      }
+    }
+  }
+  if (search?.length > 0) {
+    filterData.push({
+      Contact: {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+    });
+    filterData.push({
+      Contact: {
+        phone: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+    });
+  }
+  // Define the search condition
+  const searchCondition: any =
+    filterData?.length > 0
+      ? {
+          orgId,
+          OR: filterData,
+        }
+      : { orgId };
+
+  // Count total matching contacts
+  const totalCount = await prisma.loyaltyCustomer.count({
+    where: searchCondition,
+  });
+  const includeCondition = {
+    redeems: {
+      include: {
+        reward: true,
+      },
+    },
+    actions: {
+      include: {
+        action: true,
+      },
+    },
+    referralCodes: true,
+    ...includeContact,
+  };
   const customers = await prisma.loyaltyCustomer.findMany({
-    where: {
-      orgId,
-    },
-    include: {
-      redeems: {
-        include: {
-          reward: true,
-        },
-      },
-      actions: {
-        include: {
-          action: true,
-        },
-      },
-      referralCodes: true,
-    },
+    where: searchCondition,
+    include: includeCondition,
   });
   return customers?.map((c) => {
     const actionObj = {};
     Object.values(LoyaltyActionType).map((a) => (actionObj[a] = []));
-    const actions = c.actions.map((action) => {
+    c.actions.map((action) => {
       actionObj[action.action.type].push({
         ...action.action,
         createdAt: action.createdAt,
@@ -165,11 +321,13 @@ export async function getLoyaltyCustomers(orgId) {
     return {
       id: c.id,
       customerInfo: {
-        name: c.name,
-        phone: c.phone,
-        email: c.email,
+        name: c.Contact.name,
+        phone: c.Contact.phone,
+        // email: c.Contact?.email,
+        // dob: c.Contact?.dob,
         createdAt: c.createdAt,
       },
+      totalCount,
       ...actionObj,
       referralCodes: c.referralCodes.map((r) => r.referralCode),
       redeems: c.redeems.filter((r) => r.status === RedeemStatus.COMPLETED),
@@ -270,21 +428,26 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
 }
 
 export async function updateLCustomer(phone, orgId, data) {
-  return await prisma.loyaltyCustomer.update({
+  const contact = await prisma.contact.findUnique({
     where: {
-      loyalty_phone_org_id_unique: {
+      contact_phone_org_id_unique: {
         phone: parsePhoneforWa(phone),
         orgId,
       },
+    },
+  });
+  return await prisma.loyaltyCustomer.update({
+    where: {
+      contactId: contact.id,
     },
     data,
   });
 }
 
 export async function getLCustomerByPhone(phone, orgId) {
-  return await prisma.loyaltyCustomer.findUnique({
+  return await prisma.loyaltyCustomer.findFirst({
     where: {
-      loyalty_phone_org_id_unique: {
+      Contact: {
         phone: parsePhoneforWa(phone),
         orgId,
       },
@@ -294,6 +457,14 @@ export async function getLCustomerByPhone(phone, orgId) {
       org: {
         select: {
           name: true,
+        },
+      },
+      Contact: {
+        select: {
+          name: true,
+          phone: true,
+          email: true,
+          dob: true,
         },
       },
     },
@@ -507,4 +678,317 @@ export async function handleSendTemplate(
     })),
   });
   await sendTemplateToUserCore(orgId, waTemplateId, phone, components);
+}
+
+export async function importCSVContacts(
+  fileBody: MultipartFile,
+  orgId: string,
+  tags: string[],
+  updateExisting: boolean = false,
+  contactGroupId?: string,
+) {
+  const { mimetype } = fileBody;
+  const csvType = ["text/csv", "application/vnd.ms-excel"];
+  const file = csvType.includes(mimetype)
+    ? fileBody.file
+    : await fileBody.toBuffer();
+
+  return new Promise(async (resolve, reject) => {
+    let contacts = [];
+    let errorContact = [];
+
+    const processContact = (contact) => {
+      const formattedPhone = contact.phone?.startsWith("+")
+        ? contact.phone.replace(/\s+/g, "")
+        : `+${contact.phone.replace(/\s+/g, "")}`;
+
+      if (
+        !contact?.phone ||
+        !isValidPhoneNumber(formattedPhone) ||
+        !contact?.name
+      ) {
+        errorContact.push({
+          name: contact?.name || "name is missing/invalid",
+          phone: contact?.phone || "phone is missing/invalid",
+        });
+      } else {
+        contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
+        if (contact.dob) {
+          contact.dob = dayjs(contact.dob).add(10, "second").format();
+        } else {
+          contact.dob = null;
+        }
+
+        contacts.push(contact);
+      }
+    };
+
+    const finalizeProcessing = async () => {
+      try {
+        if (contacts.length === 0 && errorContact.length > 0) {
+          resolve({ data: errorContact, status: "error" });
+        } else if (contacts.length > 0) {
+          const res = await createCustomersFromCsv(
+            contacts,
+            orgId,
+            tags,
+            updateExisting,
+            contactGroupId,
+          );
+          if (errorContact.length > 0) {
+            resolve({ data: errorContact, status: "error" });
+          } else {
+            resolve({ data: res, status: "success" });
+          }
+        } else {
+          throw new Error("No contacts found");
+        }
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    if (csvType.includes(mimetype)) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        chunkSize: 1024 * 1024,
+        transformHeader: (header) => header?.trim()?.toLowerCase(),
+        chunk: (results) => {
+          if (results?.data) {
+            results.data.forEach(processContact);
+          }
+        },
+        complete: finalizeProcessing,
+        error: (error) => {
+          reject(error);
+        },
+      });
+    } else {
+      const workSheetsFromFile = xlsx.parse(file, {
+        cellDates: true,
+      });
+
+      const headers =
+        workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
+          header?.toString().toLowerCase(),
+        ) ?? [];
+      const headerIndices = headers.map((header, index) => ({ header, index }));
+
+      workSheetsFromFile?.[0]?.data?.slice(1).forEach((row) => {
+        let contact = {};
+        headerIndices.forEach(({ header, index }) => {
+          contact[header] = row[index]?.toString()?.trim();
+        });
+        processContact(contact);
+      });
+      await finalizeProcessing();
+    }
+  });
+}
+
+export async function createCustomersFromCsv(
+  contacts,
+  orgId,
+  cTags,
+  updateExisting = false,
+  contactGroupId,
+) {
+  const tags = (await getContactTag(orgId))?.contactTags ?? [];
+  let data = contacts?.map(
+    ({ name, phone, email = "", dob = null, ...obj }) => {
+      const result = {};
+      if (tags?.length > 0) {
+        for (const key of tags) {
+          if (obj?.hasOwnProperty(key) && cTags.includes(key)) {
+            result[key] = obj[key];
+          }
+        }
+      }
+      return {
+        name,
+        phone,
+        email,
+        dob,
+        source: "CSV IMPORT",
+        tags: result ?? undefined,
+      };
+    },
+  );
+  if (updateExisting) {
+    await updateMulitplceContacts(data, orgId);
+  } else {
+    const filterNewContacts = await getExistingContactCountByPhno(
+      data.map((item) => item.phone),
+      orgId,
+    );
+    if (filterNewContacts === (data?.length ?? 0))
+      throw new Error("All contacts already exist");
+    await createMultipleCustomers(data, orgId);
+  }
+  if (contactGroupId) {
+    const res = await addNewCustomersToGroup(contactGroupId, data, orgId);
+    return res;
+  }
+
+  return "sucess";
+}
+
+export async function getExistingContactCountByPhno(
+  ids: string[],
+  orgId: string,
+) {
+  const BATCH_SIZE = 30000; // Keep it below the database limit
+  let totalCount = 0;
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const count = await prisma.contact.count({
+      where: {
+        phone: {
+          in: batch,
+        },
+        orgId,
+        loyaltyCustomer: {
+          isNot: null,
+        },
+      },
+    });
+    totalCount += count;
+  }
+
+  return totalCount;
+}
+
+export async function updateMulitplceContacts(
+  contacts: createMultipleContactInput,
+  orgId: string,
+) {
+  for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
+    const batch = contacts.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(({ phone, ...restContact }) =>
+        prisma.contact.upsert({
+          where: {
+            contact_phone_org_id_unique: {
+              phone,
+              orgId,
+            },
+          },
+          update: {
+            ...restContact,
+            loyaltyCustomer: {
+              upsert: {
+                create: {
+                  orgId,
+                },
+                update: {},
+              },
+            },
+          },
+          create: {
+            phone,
+            ...restContact,
+            orgId,
+            loyaltyCustomer: {
+              create: {
+                orgId,
+              },
+            },
+          },
+        }),
+      ),
+    );
+  }
+}
+
+export async function createMultipleCustomers(
+  contacts: createMultipleContactInput,
+  orgId: string,
+) {
+  const contactsData = contacts.map((contact) => ({
+    ...contact,
+    orgId,
+    dob: contact.dob || null,
+  }));
+
+  for (const contactData of contactsData) {
+    await prisma.contact.upsert({
+      where: {
+        contact_phone_org_id_unique: {
+          phone: contactData.phone,
+          orgId,
+        },
+      },
+      create: {
+        ...contactData,
+        orgId,
+        loyaltyCustomer: {
+          create: {
+            orgId,
+          },
+        },
+      },
+      update: {
+        dob: contactData.dob,
+        email: contactData.email,
+        orgId,
+        loyaltyCustomer: {
+          create: {
+            orgId,
+          },
+        },
+      },
+    });
+  }
+
+  return;
+}
+
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+export async function addNewCustomersToGroup(
+  contactGroupId: string,
+  contactsBody: AddNewContactsToGroupInput,
+  orgId: string,
+) {
+  const contactGroup = await getContactGroupById(contactGroupId);
+  if (!contactGroup) {
+    throw new Error("Contact group not found");
+  }
+  const contacts = contactsBody.filter((data) =>
+    isValidPhoneNumber(`+${data.phone}`),
+  );
+  const phoneChunks = chunkArray(
+    contacts.map((contact) => contact.phone).filter((phone) => phone),
+    BATCH_SIZE,
+  );
+
+  let createdContacts: any[] = [];
+
+  for (const chunk of phoneChunks) {
+    const result = await prisma.contact.findMany({
+      where: {
+        phone: { in: chunk },
+        orgId,
+      },
+      include: {
+        loyaltyCustomer: true,
+      },
+    });
+    createdContacts = createdContacts.concat(result);
+  }
+  await prisma.loyaltyCustomerMap.createMany({
+    skipDuplicates: true,
+    data: createdContacts.map((contact) => ({
+      contactGroupId: contactGroupId,
+      loyaltyCustomerId: contact?.loyaltyCustomer?.id,
+    })),
+  });
 }

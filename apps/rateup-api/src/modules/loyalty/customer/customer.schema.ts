@@ -5,8 +5,11 @@ export const LCustomerSchema = z.object({
   name: z.string().optional(),
   phone: z.string(),
   email: z.string().optional(),
+  dob: z.date().optional().nullable(),
   orgId: z.string(),
   totalEarnedPoints: z.number().optional(),
+  tags: z.any(),
+  source: z.string().optional(),
 });
 
 const actionCustomerIdParamSchema = z.object({

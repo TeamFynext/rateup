@@ -23,9 +23,31 @@ export async function createCampaignParticipantsFromGroup(
       },
     },
   });
+  const loyaltyGroupMaps = await prisma.loyaltyCustomerMap.findMany({
+    where: {
+      contactGroupId: {
+        in: data.groupIds,
+      },
+    },
+    include: {
+      loyaltyCustomer: {
+        select: {
+          contactId: true,
+        },
+      },
+    },
+  });
+
+  let combined = [
+    ...contactGroupMaps,
+    ...loyaltyGroupMaps?.map(({ loyaltyCustomer, contactGroupId }) => ({
+      contactId: loyaltyCustomer.contactId,
+      contactGroupId,
+    })),
+  ];
   // TODO: handle duplicate contactIds
   const campaignParticipants = await prisma.campaignParticipant.createMany({
-    data: contactGroupMaps.map(({ contactId, contactGroupId }) => ({
+    data: combined.map(({ contactId, contactGroupId }) => ({
       campaignId,
       contactId: contactId,
       source: CampaignParticipantSource.GROUP,

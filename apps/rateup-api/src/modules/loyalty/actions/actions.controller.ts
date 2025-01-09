@@ -207,7 +207,7 @@ export async function referActionHandler(
       );
     }
     const dynamicVariables = [
-      customer.name,
+      customer.Contact.name,
       action.rewardId ? action.reward.name : customerPoints?.toString(),
     ];
     if (referee) dynamicVariables.push(referee?.name, referee?.phone);
@@ -215,7 +215,7 @@ export async function referActionHandler(
     await handleSendTemplate(
       action.waTemplateId,
       customer.orgId,
-      customer.phone,
+      customer.Contact.phone,
       dynamicVariables,
     );
     //performing other actions on referee if present

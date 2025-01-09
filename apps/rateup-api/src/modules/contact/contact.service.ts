@@ -1,4 +1,4 @@
-import { Contact } from "@prisma/client";
+import { Contact, ContactGroupType } from "@prisma/client";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
@@ -11,15 +11,38 @@ import Papa from "papaparse";
 import { getContactTag } from "../whatsapp/settings/wa_settings.service";
 import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
-import { addNewContactsToGroup } from "./contactGroup/contactGroup.service";
+import {
+  addNewContactsToGroup,
+  getContactGroupById,
+} from "./contactGroup/contactGroup.service";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants";
+import { AddNewContactsToGroupInput } from "./contactGroup/contactGroup.schema";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
   const user = await prisma.contact.create({
+    data: contact,
+  });
+  return user;
+}
+
+export async function getOrcreateContact(
+  contact: ContactCore & { orgId: string },
+) {
+  if (!contact.phone) {
+    throw new Error("Phone must be provided");
+  }
+  let user = await prisma.contact.findFirst({
+    where: {
+      phone: contact.phone,
+      orgId: contact.orgId,
+    },
+  });
+  if (user) return user;
+  user = await prisma.contact.create({
     data: contact,
   });
   return user;
@@ -54,6 +77,7 @@ export async function getContactsByOrgId(
     search = "",
     sort = "createdAt",
     desc = "asc",
+    type = ContactGroupType.NORMAL,
     ...filter
   } = query ?? {
     page: 0,
@@ -122,13 +146,33 @@ export async function getContactsByOrgId(
     });
   }
   // Define the search condition
+  let groupTypeCondition =
+    query.type === ContactGroupType.LOYALTY
+      ? {
+          AND: {
+            loyaltyCustomer: {
+              isNot: null,
+            },
+          },
+        }
+      : {};
   const searchCondition: any =
-    filterData?.length > 0 ? { orgId, OR: filterData } : { orgId };
+    filterData?.length > 0
+      ? {
+          orgId,
+          OR: filterData,
+          ...groupTypeCondition,
+        }
+      : {
+          orgId,
+          ...groupTypeCondition,
+        };
   // Count total matching contacts
   const totalCount = await prisma.contact.count({
     where: searchCondition,
   });
   const includeCondition = {
+    loyaltyCustomer: true,
     contactGroups: {
       select: {
         contactGroup: {
