@@ -127,7 +127,7 @@ LIMIT 10`;
   const result = await prisma.$queryRaw<
     { name: string; total_actions: bigint; recent_actions: bigint }[]
   >`SELECT 
-c.name AS name,
+co.name AS name,
 COUNT(lacm."actionId") AS total_actions,
 COUNT(CASE 
         WHEN lacm."createdAt" >= NOW() - INTERVAL '7 days' 
@@ -137,10 +137,12 @@ FROM
 "LoyaltyActionCustomerMap" lacm
 JOIN 
 "LoyaltyCustomer" c ON lacm."customerId" = c.id
+JOIN
+"Contact" co on c."contactId" = co.id
 WHERE 
 c."orgId" = ${orgId}::uuid
 GROUP BY 
-c.id, c.name
+c.id, co.name
 ORDER BY 
 total_actions DESC
 LIMIT 10`;
