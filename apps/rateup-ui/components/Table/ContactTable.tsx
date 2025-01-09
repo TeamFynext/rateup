@@ -17,6 +17,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+import { ContactGroupType } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -64,6 +65,8 @@ function ContactTable({
   setColumnFilters,
   detailBtn = false,
   isPending = false,
+  leftSection = null,
+  contactGroupType = ContactGroupType.NORMAL,
 }: Readonly<{
   data: any;
   columns: ColumnDef<any, any>[];
@@ -86,6 +89,8 @@ function ContactTable({
   setColumnFilters;
   detailBtn?: boolean;
   isPending?: boolean;
+  leftSection?: React.ReactNode;
+  contactGroupType?: ContactGroupType;
 }>) {
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
@@ -250,9 +255,9 @@ function ContactTable({
                 rightIcon={<IconPlus />}
                 onClick={toggle}
               />
-              {groupId && (
-                <RefreshButton queryKeys={["campaignById", groupId]} />
-              )}
+              <ActionIcon onClick={refetch} variant="light" loading={isPending}>
+                <IconRefresh />
+              </ActionIcon>
             </Group>
           ) : (
             <Group gap={"sm"}>
@@ -261,6 +266,7 @@ function ContactTable({
                 tab={tab}
                 toggle={open}
                 isPending={isPending}
+                type={contactGroupType}
               />
               <Tooltip label={translations["Refresh"]}>
                 <ActionIcon

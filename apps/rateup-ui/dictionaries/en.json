@@ -1953,5 +1953,9 @@
   "Redeems": "Redeems",
   "Update Reward": "Update Reward",
   "Inactivive": "Inactivive",
-  "Session Inactive": "Session INACTIVE"
+  "Session Inactive": "Session INACTIVE",
+  "dob": "Date of Birth",
+  "email": "Email",
+  "Enter the email": "Enter the email",
+  "Enter the dob": "Enter the dob"
 }

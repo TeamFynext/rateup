@@ -1,6 +1,7 @@
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 
+import { ContactGroupType } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
@@ -17,6 +18,7 @@ const OpenCreateMenu = ({
   tab,
   toggle = () => {},
   isPending = false,
+  type = ContactGroupType.NORMAL,
 }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
     useDisclosure(false);
@@ -66,10 +68,14 @@ const OpenCreateMenu = ({
         centered
         opened={groupOpened}
         onClose={groupClose}
-        title={translations["Create contact group"]}
+        title={
+          type === ContactGroupType.LOYALTY
+            ? "Create Customer Group"
+            : translations["Create contact group"]
+        }
         size="lg"
       >
-        <CreateGroupModal groupClose={groupClose} close={close} />
+        <CreateGroupModal groupClose={groupClose} close={close} type={type} />
       </FormModalLayout>
     </>
   );

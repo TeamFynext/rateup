@@ -77,20 +77,121 @@ export function getNavTopData(
       href: "/dashboard",
       role: "",
     },
-    {
-      Icon: IconSocial,
-      label: translations["Teams"],
-      href: "",
-      submenus: [
-        { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
-        {
-          Icon: IconUsers,
-          label: translations["Members"],
-          href: "/dashboard/members",
-          role: UserRole.SUPADM,
-        },
-      ],
-    },
+    ...(hasFeature(sfpn.Whatsapp)
+      ? [
+          {
+            Icon: IconBrandWhatsapp,
+            label: translations["WhatsApp"],
+            submenus: [
+              {
+                Icon: IconInbox,
+                label: translations["Inbox"],
+                href: "/dashboard/whatsapp/inbox",
+              },
+              ...(whatsappOptions.includes("survey") &&
+              hasFeature(sfpn.WhatsAppSurvey)
+                ? [
+                    {
+                      Icon: IconFileDescription,
+                      label: translations["Surveys"],
+                      href: "/dashboard/whatsapp",
+                    },
+                  ]
+                : []),
+              ...(hasFeature(sfpn.WhatsAppTemplate)
+                ? [
+                    {
+                      Icon: IconMessage2Code,
+                      label: translations["Templates"],
+                      href: "/dashboard/whatsapp/templates",
+                    },
+                  ]
+                : []),
+              ...(hasFeature(sfpn.WhatsAppFlow)
+                ? [
+                    {
+                      Icon: IconWaveSine,
+                      label: translations["Flows"],
+                      href: "/dashboard/whatsapp/flows",
+                    },
+                  ]
+                : []),
+
+              ...(hasFeature(sfpn.WhatsAppCampaign)
+                ? [
+                    {
+                      Icon: IconSpeakerphone,
+                      label: translations["Campaign"],
+                      href: "/dashboard/campaign",
+                    },
+                    {
+                      Icon: IconAddressBook,
+                      label: translations["Contacts"],
+                      href: "/dashboard/contacts",
+                    },
+                  ]
+                : []),
+              {
+                Icon: IconMessageCog,
+                label: translations["Automation"],
+                href: "/dashboard/whatsapp/automated-replies",
+              },
+              {
+                Icon: IconLogs,
+                label: translations["Logs"],
+                href: "/dashboard/whatsapp/logs",
+              },
+              {
+                Icon: IconSettings,
+                label: translations["Settings"],
+                href: "/dashboard/whatsapp/settings",
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(hiddenModules.includes("loyalty") || !hasFeature(sfpn.Loyalty)
+      ? []
+      : [
+          {
+            Icon: IconGift,
+            label: translations["Loyalty"],
+            href: "",
+            submenus: [
+              {
+                Icon: IconDashboard,
+                label: translations["Dashboard"],
+                href: "/dashboard/loyalty/dashboard",
+              },
+              {
+                Icon: IconUsers,
+                label: translations["Customers"],
+                href: "/dashboard/loyalty/customer",
+              },
+              {
+                Icon: IconHandClick,
+                label: translations["Actions"],
+                href: "/dashboard/loyalty/actions",
+              },
+              {
+                Icon: IconAward,
+                label: translations["Rewards"],
+                href: "/dashboard/loyalty/reward",
+              },
+              // {
+              //   Icon: IconStar,
+              //   label: translations["Redeems"],
+              //   href: "/dashboard/loyalty/redeem",
+              // },
+              {
+                Icon: IconSettings,
+                label: translations["Settings"],
+                href: "/dashboard/loyalty/settings",
+              },
+            ],
+          },
+        ]),
+
     ...(hasFeature(sfpn.WebSurvey)
       ? [
           {
@@ -130,79 +231,31 @@ export function getNavTopData(
           },
         ]
       : []),
-    // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
-    ...(hasFeature(sfpn.Whatsapp)
-      ? [
+    {
+      Icon: IconSocial,
+      label: translations["Teams"],
+      href: "",
+      submenus: [
+        { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
+        {
+          Icon: IconUsers,
+          label: translations["Members"],
+          href: "/dashboard/members",
+          role: UserRole.SUPADM,
+        },
+      ],
+    },
+    ...(hiddenModules.includes("appsAndServices")
+      ? []
+      : [
           {
-            Icon: IconBrandWhatsapp,
-            label: translations["WhatsApp"],
-            submenus: [
-              ...(whatsappOptions.includes("survey") &&
-              hasFeature(sfpn.WhatsAppSurvey)
-                ? [
-                    {
-                      Icon: IconFileDescription,
-                      label: translations["Surveys"],
-                      href: "/dashboard/whatsapp",
-                    },
-                  ]
-                : []),
-              ...(hasFeature(sfpn.WhatsAppTemplate)
-                ? [
-                    {
-                      Icon: IconMessage2Code,
-                      label: translations["Templates"],
-                      href: "/dashboard/whatsapp/templates",
-                    },
-                  ]
-                : []),
-              ...(hasFeature(sfpn.WhatsAppFlow)
-                ? [
-                    {
-                      Icon: IconWaveSine,
-                      label: translations["Flows"],
-                      href: "/dashboard/whatsapp/flows",
-                    },
-                  ]
-                : []),
-              {
-                Icon: IconInbox,
-                label: translations["Inbox"],
-                href: "/dashboard/whatsapp/inbox",
-              },
-              ...(hasFeature(sfpn.WhatsAppCampaign)
-                ? [
-                    {
-                      Icon: IconSpeakerphone,
-                      label: translations["Campaign"],
-                      href: "/dashboard/campaign",
-                    },
-                    {
-                      Icon: IconAddressBook,
-                      label: translations["Contacts"],
-                      href: "/dashboard/contacts",
-                    },
-                  ]
-                : []),
-              {
-                Icon: IconMessageCog,
-                label: translations["Automation"],
-                href: "/dashboard/whatsapp/automated-replies",
-              },
-              {
-                Icon: IconLogs,
-                label: translations["Logs"],
-                href: "/dashboard/whatsapp/logs",
-              },
-              {
-                Icon: IconSettings,
-                label: translations["Settings"],
-                href: "/dashboard/whatsapp/settings",
-              },
-            ],
+            Icon: IconApps,
+            label: translations["Apps & Services"],
+            href: "/dashboard/apps&services",
           },
-        ]
-      : []),
+        ]),
+    // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
+
     ...(hiddenModules.includes("reputation_management") ||
     !hasFeature(sfpn.ReputationManagement)
       ? []
@@ -245,61 +298,12 @@ export function getNavTopData(
         ],
       },
     ],
+
     {
       Icon: IconFileInfo,
       label: translations["Docs"],
       href: "https://docs.rateup.app/",
     },
-    ...(hiddenModules.includes("loyalty") || !hasFeature(sfpn.Loyalty)
-      ? []
-      : [
-          {
-            Icon: IconGift,
-            label: translations["Loyalty"],
-            href: "",
-            submenus: [
-              {
-                Icon: IconDashboard,
-                label: translations["Dashboard"],
-                href: "/dashboard/loyalty/dashboard",
-              },
-              {
-                Icon: IconHandClick,
-                label: translations["Actions"],
-                href: "/dashboard/loyalty/actions",
-              },
-              {
-                Icon: IconAward,
-                label: translations["Rewards"],
-                href: "/dashboard/loyalty/rewards",
-              },
-              {
-                Icon: IconUsers,
-                label: translations["Customers"],
-                href: "/dashboard/loyalty/customer",
-              },
-              // {
-              //   Icon: IconStar,
-              //   label: translations["Redeems"],
-              //   href: "/dashboard/loyalty/redeem",
-              // },
-              {
-                Icon: IconSettings,
-                label: translations["Settings"],
-                href: "/dashboard/loyalty/settings",
-              },
-            ],
-          },
-        ]),
-    ...(hiddenModules.includes("appsAndServices")
-      ? []
-      : [
-          {
-            Icon: IconApps,
-            label: translations["Apps & Services"],
-            href: "/dashboard/apps&services",
-          },
-        ]),
   ];
   return navTopData;
 }

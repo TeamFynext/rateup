@@ -121,6 +121,7 @@ export const contactGroupColumn = [
   {
     header: () => "image",
     accessorKey: "icon",
+    size: 10,
     cell: (info) =>
       info.getValue() ? (
         <Image
@@ -162,6 +163,61 @@ export const contactGroupColumn = [
   {
     header: () => "Action",
     accessorFn: (row) => row,
+    maxSize: 10,
+    enableSorting: false,
+    enableColumnFilter: false,
+    id: "action",
+    cell: (info) => <ContactGroupMenu groupId={info?.row.original?.id} />,
+  },
+];
+export const loyaltyGroupColumn = [
+  ...selectCheckBox,
+  {
+    header: () => "image",
+    accessorKey: "icon",
+    size: 10,
+    cell: (info) =>
+      info.getValue() ? (
+        <Image
+          src={getFileUrlFromKey(info.getValue())}
+          alt="group image"
+          h={50}
+          w={50}
+          fallbackSrc={fallbackImage}
+        />
+      ) : (
+        <IconUsersGroup />
+      ),
+  },
+  ...contactDetailsColumn,
+  {
+    header: () => "Team",
+    accessorKey: "team.name",
+    id: "Team",
+    cell: (info) => (
+      <Badge size="md" variant="light" color="green" mt={"auto"}>
+        {(info.getValue() as string) ?? "NA"}
+      </Badge>
+    ),
+  },
+  {
+    header: () => "Created",
+    accessorKey: "createdAt",
+    cell: (info) =>
+      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+  },
+  {
+    header: () => "Detail View",
+    id: DETAIL_BTN,
+    accessorFn: (row) => `test/${row.id}`,
+    enableSorting: false,
+    enableColumnFilter: false,
+  },
+
+  {
+    header: () => "Action",
+    accessorFn: (row) => row,
+    maxSize: 10,
     enableSorting: false,
     enableColumnFilter: false,
     id: "action",

@@ -48,8 +48,11 @@ import PaperLayout from "../styled/Layouts/PaperLayout";
 
 import "react-phone-number-input/style.css";
 
+import { DatePicker, DatePickerInput } from "@mantine/dates";
 import { ColumnFiltersState } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
+import { ContactGroupType } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { FilterSelect } from "../../pages/dashboard/contacts";
@@ -63,16 +66,18 @@ export interface IAddCustomer {
   email?: string;
   phone?: string;
   source?: string;
+  dob?: Date;
   tags: any;
+  type?: ContactGroupType;
 }
 
 const AddCustomerModal = ({
   groupId,
   close,
-  teamId,
   existingContactIds,
   tags = [],
   createNewContactsFromCSV,
+  type = ContactGroupType.NORMAL,
 }) => {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [isCreating, setIsCreating] = useState(false);
@@ -93,6 +98,7 @@ const AddCustomerModal = ({
     searchTerm,
     null,
     columnFilters,
+    type,
   );
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
@@ -101,6 +107,8 @@ const AddCustomerModal = ({
     initialValues: {
       name: "",
       phone: "",
+      email: "",
+      dob: null,
       importMethod: importMethod.MANUAL,
       contactType: tags ?? [],
       countryCode: "91",
@@ -183,7 +191,6 @@ const AddCustomerModal = ({
         );
       } else {
         let contactData: IAddCustomer[] = [form.values];
-        const phone = form.values.phone.slice(1);
         const result = {};
         for await (const key of form.getValues().contactType) {
           if (form.getValues()?.tags?.hasOwnProperty(key)) {
@@ -192,10 +199,12 @@ const AddCustomerModal = ({
         }
         contactData = [
           {
-            name: form.values.name,
-            phone: phone,
-            source: importMethod.MANUAL,
-            tags: result,
+            ...form.getValues(),
+            phone: form.getValues().phone.slice(1),
+            source:
+              type === ContactGroupType.LOYALTY
+                ? ContactGroupType.LOYALTY
+                : "manual",
           },
         ];
         createNewContactMutation.mutate(
@@ -230,36 +239,85 @@ const AddCustomerModal = ({
       fontSize: "14px",
     },
   };
-  const rows = contactData?.map((contact) => (
-    <Table.Tr
-      key={contact?.id}
-      bg={
-        customerList.includes(contact?.id)
-          ? "var(--mantine-color-blue-light)"
-          : undefined
-      }
-    >
-      <Table.Td>
-        <Checkbox
-          aria-label={translations["Select row"]}
-          checked={
-            customerList?.includes(contact?.id) ||
-            existingContactIds?.includes(contact?.id)
+  const rows = contactData?.map((contact) => {
+    if (type === ContactGroupType.LOYALTY) {
+      return (
+        <Table.Tr
+          key={contact?.loyaltyCustomer?.id}
+          bg={
+            customerList.includes(contact?.loyaltyCustomer?.id)
+              ? "var(--mantine-color-blue-light)"
+              : undefined
           }
-          disabled={existingContactIds?.includes(contact?.id)}
-          onChange={(event) =>
-            setCustomerList(
-              event.currentTarget.checked
-                ? [...customerList, contact?.id]
-                : customerList.filter((id) => id !== contact?.id),
-            )
+        >
+          <Table.Td>
+            <Checkbox
+              aria-label={translations["Select row"]}
+              checked={
+                customerList?.includes(contact?.loyaltyCustomer?.id) ||
+                existingContactIds?.includes(contact?.loyaltyCustomer?.id)
+              }
+              disabled={existingContactIds?.includes(
+                contact?.loyaltyCustomer?.id,
+              )}
+              onChange={(event) =>
+                setCustomerList(
+                  event.currentTarget.checked
+                    ? [...customerList, contact?.loyaltyCustomer?.id]
+                    : customerList.filter(
+                        (id) => id !== contact?.loyaltyCustomer?.id,
+                      ),
+                )
+              }
+            />
+          </Table.Td>
+          <Table.Td>{contact?.name}</Table.Td>
+          <Table.Td>{contact?.phone}</Table.Td>
+          {type === ContactGroupType.LOYALTY && (
+            <>
+              <Table.Td>{contact?.email}</Table.Td>
+              <Table.Td>
+                {contact?.dob && dayjs(contact?.dob)?.format("DD/MM/YYYY")}
+              </Table.Td>
+            </>
+          )}
+        </Table.Tr>
+      );
+    } else {
+      return (
+        <Table.Tr
+          key={contact?.id}
+          bg={
+            customerList.includes(contact?.id)
+              ? "var(--mantine-color-blue-light)"
+              : undefined
           }
-        />
-      </Table.Td>
-      <Table.Td>{contact?.name}</Table.Td>
-      <Table.Td>{contact?.phone}</Table.Td>
-    </Table.Tr>
-  ));
+        >
+          <Table.Td>
+            <Checkbox
+              aria-label={translations["Select row"]}
+              checked={
+                customerList?.includes(contact?.id) ||
+                existingContactIds?.includes(contact?.id)
+              }
+              disabled={existingContactIds?.includes(contact?.id)}
+              onChange={(event) =>
+                setCustomerList(
+                  event.currentTarget.checked
+                    ? [...customerList, contact?.id]
+                    : customerList.filter(
+                        (id) => id !== contact?.loyaltyCustomer?.id,
+                      ),
+                )
+              }
+            />
+          </Table.Td>
+          <Table.Td>{contact?.name}</Table.Td>
+          <Table.Td>{contact?.phone}</Table.Td>
+        </Table.Tr>
+      );
+    }
+  });
   if (isPending) return <RateupLoader />;
   let totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
@@ -368,6 +426,28 @@ const AddCustomerModal = ({
                       {form?.errors?.phone}
                     </Text>
                   </Stack>
+                  {type === ContactGroupType.LOYALTY && (
+                    <>
+                      <TextInput
+                        label={translations["email"]}
+                        placeholder={translations["Enter the email"]}
+                        radius={"md"}
+                        size="md"
+                        type="email"
+                        styles={custominputstyle}
+                        {...form.getInputProps("email")}
+                      />
+                      <DatePickerInput
+                        label={translations["dob"]}
+                        placeholder={translations["Enter the dob"]}
+                        radius={"md"}
+                        size="md"
+                        styles={custominputstyle}
+                        maxDate={new Date()}
+                        {...form.getInputProps("dob")}
+                      />
+                    </>
+                  )}
                   {form
                     .getValues()
                     ?.contactType?.map(
@@ -496,6 +576,12 @@ const AddCustomerModal = ({
                         </Table.Th>
                         <Table.Th>{translations["Name"]}</Table.Th>
                         <Table.Th>{translations["Phone Number"]}</Table.Th>
+                        {type === ContactGroupType.LOYALTY && (
+                          <>
+                            <Table.Th>{translations["email"]}</Table.Th>
+                            <Table.Th>{translations["dob"]}</Table.Th>
+                          </>
+                        )}
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>{rows}</Table.Tbody>

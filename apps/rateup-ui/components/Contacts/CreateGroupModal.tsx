@@ -16,6 +16,7 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconUpload } from "@tabler/icons-react";
 
+import { ContactGroupType } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import {
@@ -36,6 +37,7 @@ interface GroupModalProps {
   close?: () => void;
   isEdit?: boolean;
   groupDetails?: ContactGroup;
+  type?: ContactGroupType;
 }
 
 const CreateGroupModal = ({
@@ -43,6 +45,7 @@ const CreateGroupModal = ({
   close,
   isEdit,
   groupDetails,
+  type,
 }: GroupModalProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -84,8 +87,9 @@ const CreateGroupModal = ({
       return;
     }
     setIsCreating(true);
+    let updatedValues = { ...form.values, type };
     if (isEdit) {
-      editContactGroupMutation.mutate(form.values, {
+      editContactGroupMutation.mutate(updatedValues, {
         onSuccess: () => {
           groupClose();
           setIsCreating(false);
@@ -98,13 +102,15 @@ const CreateGroupModal = ({
         },
       });
     } else {
-      createContactGroupMutation.mutate(form.values, {
+      createContactGroupMutation.mutate(updatedValues, {
         onSuccess: (data) => {
           groupClose();
           close();
           setIsCreating(false);
           form.reset();
-          router.push(`/dashboard/contacts/${data?.data?.id}`);
+          router.push(
+            `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer" : "contacts"}/${data?.data?.id}`,
+          );
         },
         onError: () => {
           groupClose();

@@ -1,4 +1,10 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { ContactGroupType } from "@/types/enums";
+
+import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createContact,
   deleteContact,
@@ -9,22 +15,22 @@ import {
   importContacts,
   importCSVContacts,
 } from "./contacts.api";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 
 export const useContacts = (
   pagination,
   searchData?,
   sorting?,
   columnFilters?,
+  type?,
 ) => {
   let sort = sorting ?? CONTACT_SORT;
   let filters = columnFilters ?? [];
   let search = searchData ?? "";
+  let groupType = type ?? ContactGroupType.NORMAL;
   return useQuery({
-    queryKey: ["contacts", pagination, search, sort, filters],
-    queryFn: () => getContactsList(pagination, search, sort, filters),
+    queryKey: ["contacts", pagination, search, sort, filters, groupType],
+    queryFn: () =>
+      getContactsList(pagination, search, sort, filters, groupType),
   });
 };
 

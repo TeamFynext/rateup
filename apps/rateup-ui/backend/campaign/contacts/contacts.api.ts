@@ -1,3 +1,5 @@
+import { ContactGroupType } from "@/types/enums";
+
 import { axiosClient } from "../../apiClient";
 
 export interface ICreateContact {
@@ -22,12 +24,13 @@ export const getContactsList = async (
     desc: boolean;
   },
   columnFilters: { id: string; value: string }[],
+  type?: string,
 ) => {
   let filter = columnFilters
     .map((data) => `&${data.id}=${data.value}`)
     .join("&");
   let desc = sort.desc ? "desc" : "asc";
-  let contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
+  let contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}&type=${type}`;
   let contactsData = await axiosClient.get(contactUrl);
   return contactsData.data as { users: ContactsData[]; totalCount: number };
 };

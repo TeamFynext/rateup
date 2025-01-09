@@ -29,7 +29,7 @@ const ManualRedeemModal = ({ opened, close }) => {
     },
   });
 
-  const { data: customers } = useLoyaltyCustomers();
+  const { data: customers } = useLoyaltyCustomers({ pagination: false });
   const { data: rewards } = useGetLoyaltyRewards();
 
   const redeemReward = useRedeemReward();

@@ -556,10 +556,24 @@ declare global {
     name: string;
     phone: string;
     email: string;
+    dob?: Date;
     source: string;
     createdAt: Date;
     tags?: any;
     consent: boolean;
+    loyaltyCustomer?: {
+      id: string;
+      email?: string;
+      createdAt: Date;
+      referralCodes: Array<{
+        referralCode: string;
+      }>;
+      redeems: Array<{
+        status: string;
+      }>;
+      totalEarnedPoints: number;
+      redeemedPoints: number;
+    };
     org: {
       whatsappSettings: {
         contactTags: string[];
@@ -601,6 +615,7 @@ declare global {
       name?: string;
     };
     totalCount?: number;
+    loyaltyCustomers?: any;
   }
   interface RM_Topic {
     id: string;

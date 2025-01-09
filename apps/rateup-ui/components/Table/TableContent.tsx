@@ -126,7 +126,11 @@ const TableLayout = ({
                         <Table.Th
                           key={header.id}
                           colSpan={header.colSpan}
-                          style={{ width: `${header.getSize()}px` }}
+                          style={
+                            header.getSize() === 10
+                              ? { maxWidth: `50px` }
+                              : { width: `${header.getSize()}px` }
+                          }
                         >
                           {header.isPlaceholder ? null : (
                             <>

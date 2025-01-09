@@ -1,3 +1,5 @@
+import { ContactGroupType } from "@/types/enums";
+
 import { axiosClient } from "../../apiClient";
 
 export interface ICreateContactGroup {
@@ -12,9 +14,9 @@ export interface ICreateNewContact {
   email?: string;
 }
 const CONTACT_GROUP_BASE_URL = "/contact/group";
-export const getContactGroupList = async () => {
+export const getContactGroupList = async (type: ContactGroupType) => {
   let contactGroupData: ContactGroupResponse = await axiosClient.get(
-    CONTACT_GROUP_BASE_URL,
+    `${CONTACT_GROUP_BASE_URL}?type=${type}`,
   );
   return contactGroupData?.data;
 };
@@ -50,6 +52,7 @@ export const getContactGroupById = async (
   let contacts = await getContactsByGroupId(groupId, paginationParams);
   groupDataById.data.contacts = contacts?.group;
   groupDataById.data.totalCount = contacts?.totalCount;
+  groupDataById.data.loyaltyCustomers = contacts?.loyaltyCustomers;
   return groupDataById?.data as ContactGroupwithContacts;
 };
 

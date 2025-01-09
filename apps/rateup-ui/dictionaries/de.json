@@ -1954,5 +1954,9 @@
   "Redeems": "Einlösungen",
   "Update Reward": "Belohnung aktualisieren",
   "Inactivive": "Inaktiv",
-  "Session Inactive": "Sitzung inaktiv"
+  "Session Inactive": "Sitzung inaktiv",
+  "dob": "Geburtsdatum",
+  "email": "E-Mail",
+  "Enter the email": "Geben Sie die E-Mail-Adresse ein",
+  "Enter the dob": "Geben Sie das Geburtsdatum ein"
 }

@@ -14,7 +14,7 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
 import { formatDateWithTime } from "@/utils/dateTime";
 
-export default function redeems() {
+export default function Redeems() {
   const { data: redeems, isPending } = useGetLoyaltyRedeems();
   const {
     data: subscription,
@@ -39,7 +39,11 @@ export default function redeems() {
     <Stack>
       <Group></Group>
       <PaperLayout h={"65vh"}>
-        <TanstackTable columns={columns} data={redeems} isPending={isPending} />
+        <TanstackTable
+          columns={columns}
+          data={redeems ?? []}
+          isPending={isPending}
+        />
       </PaperLayout>
       <UpdateRedeemStatusModal
         opened={redeemUpdateStOpened}

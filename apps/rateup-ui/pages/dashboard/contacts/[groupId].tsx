@@ -273,7 +273,6 @@ export default function ContactGroup() {
         <AddCustomerModal
           groupId={groupDetails?.id}
           close={close}
-          teamId={groupDetails?.teamId}
           existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
           tags={cTags?.contactTags}
           createNewContactsFromCSV={createNewContactsFromCSV}

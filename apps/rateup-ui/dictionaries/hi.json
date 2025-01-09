@@ -1953,5 +1953,9 @@
   "Redeems": "रिडीम्स",
   "Update Reward": "इनाम अपडेट करें",
   "Inactivive": "निष्क्रिय",
-  "Session Inactive": "सत्र निष्क्रिय"
+  "Session Inactive": "सत्र निष्क्रिय",
+  "dob": "जन्मतिथि",
+  "email": "ईमेल",
+  "Enter the email": "ईमेल दर्ज करें",
+  "Enter the dob": "जन्मतिथि दर्ज करें"
 }

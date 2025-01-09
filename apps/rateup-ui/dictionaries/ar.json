@@ -1953,5 +1953,9 @@
   "Redeems": "استردادات",
   "Update Reward": "تحديث المكافأة",
   "Inactivive": "غير نشط",
-  "Session Inactive": "الجلسة غير نشطة"
+  "Session Inactive": "الجلسة غير نشطة",
+  "dob": "تاريخ الميلاد",
+  "email": "البريد الإلكتروني",
+  "Enter the email": "أدخل البريد الإلكتروني",
+  "Enter the dob": "أدخل تاريخ الميلاد"
 }
