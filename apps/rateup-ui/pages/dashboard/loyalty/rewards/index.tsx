@@ -21,7 +21,7 @@ enum rewardSortData {
   lowToHighPoints = "Low to High Points",
 }
 
-export default function () {
+export default function Reward() {
   const router = useRouter();
 
   const { data: rewards, isLoading, isError, error } = useGetLoyaltyRewards();
