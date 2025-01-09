@@ -176,7 +176,7 @@ export function getNavTopData(
               {
                 Icon: IconAward,
                 label: translations["Rewards"],
-                href: "/dashboard/loyalty/reward",
+                href: "/dashboard/loyalty/rewards",
               },
               // {
               //   Icon: IconStar,
