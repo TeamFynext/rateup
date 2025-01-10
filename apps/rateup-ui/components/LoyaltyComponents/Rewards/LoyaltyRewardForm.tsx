@@ -192,14 +192,14 @@ const LoyaltyRewardForm = ({
           />
           <RewardValueInput form={form} readOnly={disabled} />
           <ContainedNumberInput
-            label={"Points"}
+            label={"Required Points"}
             {...form.getInputProps("points")}
             allowDecimal={false}
             allowNegative={false}
             readOnly={disabled}
           />
           <ContainedNumberInput
-            label={"Max Per User"}
+            label={"Maximum Per User"}
             {...form.getInputProps("maxPerUser")}
             allowDecimal={false}
             allowNegative={false}

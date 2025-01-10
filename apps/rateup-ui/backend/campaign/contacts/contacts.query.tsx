@@ -47,6 +47,7 @@ export const useCreateContactMutation = () => {
     mutationFn: createContact,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({
         queryKey: ["contacts", "last-message"],
       });

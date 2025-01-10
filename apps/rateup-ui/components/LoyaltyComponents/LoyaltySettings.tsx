@@ -103,6 +103,8 @@ export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
   PointInformation = "PointInformation",
   Referral = "Referral",
+  CustomerRemoval = "CustomerRemoval",
+  RewardsIssued = "RewardsIssued",
 }
 
 export const LoyaltyWaTemplateConfig = ({
@@ -296,6 +298,17 @@ function getLoyaltyTemplateLabel(type) {
     case LoyaltyTemplateTypes.Referral:
       return {
         label: "Referral",
+      };
+    case LoyaltyTemplateTypes.CustomerRemoval:
+      return {
+        label: "Customer Removal from Loyalty",
+      };
+    case LoyaltyTemplateTypes.RewardsIssued:
+      return {
+        label: "Issued Rewards Information",
+        templateLabel: "WhatsApp Template for Issued Rewards Information",
+        templateDescription:
+          "Dynamic variables representation - {{1}} - customer name , {{2}} Numbered list of All the issued rewards to the customer with redeem code ",
       };
     default:
       return {
