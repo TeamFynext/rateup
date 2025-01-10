@@ -1,8 +1,17 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma";
-import { getLCustomerById } from "../customer/customer.service";
-import { getShortUrlId } from "../../../utils/commnUtils";
+import {
+  getLCustomerByPhone,
+  handleSendTemplate,
+} from "../customer/customer.service";
+
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
+import { LoyaltyWaCommand } from "@prisma/client";
+import {
+  replacedContentByDynamicVariable,
+  sendTextMessageAndUpdateStats,
+} from "../settings/settings.service";
+import { WaAutomatedReplyResponseType } from "../../../types/enums";
 
 export enum RedeemStatus {
   PROCESSING = "PROCESSING",
@@ -106,4 +115,48 @@ export async function getLoyaltyRedeemsByCustomerReward(
       status: RedeemStatus.COMPLETED,
     },
   });
+}
+
+export async function getAllIssuedRedeemsByCustomer(customerId) {
+  return await prisma.loyaltyRedeem.findMany({
+    where: {
+      customerId,
+      status: RedeemStatus.ISSUED,
+    },
+    include: {
+      reward: {
+        select: {
+          name: true,
+          description: true,
+        },
+      },
+    },
+  });
+}
+
+export async function handleIssuedRewardsCommand(
+  phone: string,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
+  const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
+  const customer = await getLCustomerByPhone(phone, orgId);
+  if (!customer) {
+    const message = `You are not a member of loyalty program yet`;
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    return;
+  }
+  const issuedRedeems = await getAllIssuedRedeemsByCustomer(customer.id);
+  if (!issuedRedeems?.length) {
+    const message = `No rewards have been issued to you at this time.`;
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    return;
+  }
+  const redeemList = `${issuedRedeems.map((r, index) => `${index + 1}. *${r.reward.name}*\n ${r.reward.description ?? ""}\n Redeem Code: *${r.code}*`).join("\n")}`;
+  const dynamicVariables = [customer.Contact.name, redeemList];
+  if (responseType === WaAutomatedReplyResponseType.Template) {
+    await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
+  } else if (responseType === WaAutomatedReplyResponseType.Text) {
+    const message = replacedContentByDynamicVariable(content, dynamicVariables);
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+  }
 }

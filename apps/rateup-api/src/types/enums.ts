@@ -394,4 +394,6 @@ export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
   PointInformation = "PointInformation",
   Referral = "Referral",
+  CustomerRemoval = "CustomerRemoval",
+  RewardsIssued = "RewardsIssued",
 }

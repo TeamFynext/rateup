@@ -8,6 +8,7 @@ import { LoyaltyTemplateInput } from "./settings.schema";
 import {
   createLoyaltyReferralCode,
   getLCustomerByPhone,
+  handleCustomerRemovalFromLoyalty,
   handleLoyaltyRegister,
   handleSendTemplate,
 } from "../customer/customer.service";
@@ -16,6 +17,7 @@ import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service"
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { log } from "../../../utils/logger";
 import { LoyaltyWaCommand } from "@prisma/client";
+import { handleIssuedRewardsCommand } from "../redeems/redeem.service";
 
 export async function createLoyaltyWaCommand(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -93,6 +95,11 @@ export async function handleLoyaltyWaCommand(
     case LoyaltyTemplateTypes.Referral:
       await handleReferralCommand(phone, loyaltyWaCommand);
       break;
+    case LoyaltyTemplateTypes.CustomerRemoval:
+      await handleCustomerRemovalFromLoyalty(phone, loyaltyWaCommand);
+      break;
+    case LoyaltyTemplateTypes.RewardsIssued:
+      await handleIssuedRewardsCommand(phone, loyaltyWaCommand);
   }
 }
 

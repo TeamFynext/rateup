@@ -68,7 +68,7 @@ export const getLoyaltyDashboardStats = async (
     { title: "Point Issued", id: 5, value: Number(data2) || 0 },
     { title: "Point Redeemed", id: 7, value: Number(data5) || 0 },
     { title: "Reward Redeems", id: 4, value: Number(data3) || 0 },
-    { title: "Redeem Claimed", id: 6, value: Number(data4) || 0 },
+    { title: "Reward Claimed", id: 6, value: Number(data4) || 0 },
   ];
 
   const overallActionsResult = await prisma.$queryRaw<
