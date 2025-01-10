@@ -56,8 +56,10 @@ export default function Redeems() {
 
 type Redeem = {
   customer: {
-    name: string;
-    phone: string;
+    Contact: {
+      name: string;
+      phone: string;
+    };
   };
   reward: LoyaltyReward;
   status: string;
@@ -70,11 +72,11 @@ function generateColumns(open, setRedeem) {
   const router = useRouter();
 
   const defaultColumns = [
-    columnHelper.accessor((row) => row.customer.name, {
+    columnHelper.accessor((row) => row.customer.Contact.name, {
       id: "name",
       header: () => <span>Name</span>,
     }),
-    columnHelper.accessor((row) => row.customer.phone, {
+    columnHelper.accessor((row) => row.customer.Contact.phone, {
       id: "phone",
       header: "Phone",
     }),
