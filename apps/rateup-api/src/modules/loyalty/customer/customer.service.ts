@@ -25,7 +25,11 @@ import {
 } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
 import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
-import { ContactGroupType, LoyaltyAction } from "@prisma/client";
+import {
+  ContactGroupType,
+  LoyaltyAction,
+  LoyaltyWaCommand,
+} from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import {
   createContact,
@@ -91,7 +95,6 @@ export async function createLCustomer(input: LCustomerInput) {
       loyaltyCustomer: true,
     },
   });
-  console.log(contact);
 
   const customer = contact.loyaltyCustomer;
   const action = await getReferralLoyaltyAction(input.orgId);
@@ -330,7 +333,7 @@ export async function getLoyaltyCustomers(
       totalCount,
       ...actionObj,
       referralCodes: c.referralCodes.map((r) => r.referralCode),
-      redeems: c.redeems.filter((r) => r.status === RedeemStatus.COMPLETED),
+      redeems: c.redeems.filter((r) => r.status !== RedeemStatus.FAILED),
       totalPoints: c.totalEarnedPoints,
       balancePoints: c.totalEarnedPoints - c.redeemedPoints,
     };
@@ -991,4 +994,23 @@ export async function addNewCustomersToGroup(
       loyaltyCustomerId: contact?.loyaltyCustomer?.id,
     })),
   });
+}
+
+export async function handleCustomerRemovalFromLoyalty(
+  phone: string,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
+  const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
+  const customer = await getLCustomerByPhone(phone, orgId);
+  if (!customer) {
+    const message = `You are not a member of loyalty program yet`;
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    return;
+  }
+  await deleteLoyaltyCustomer(customer.id);
+  if (responseType === WaAutomatedReplyResponseType.Template) {
+    await handleSendTemplate(waTemplateId, orgId, phone, []);
+  } else if (responseType === WaAutomatedReplyResponseType.Text) {
+    await sendTextMessageAndUpdateStats(phone, orgId, null, content);
+  }
 }
