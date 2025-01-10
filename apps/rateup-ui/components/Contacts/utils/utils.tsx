@@ -209,7 +209,7 @@ export const loyaltyGroupColumn = [
   {
     header: () => "Detail View",
     id: DETAIL_BTN,
-    accessorFn: (row) => `test/${row.id}`,
+    accessorFn: (row) => `customer/${row.id}`,
     enableSorting: false,
     enableColumnFilter: false,
   },
