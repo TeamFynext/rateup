@@ -404,12 +404,6 @@ export async function createContactsFromCsv(
   if (updateExisting) {
     await updateMulitplceContacts(data, orgId);
   } else {
-    const filterNewContacts = await getExistingContactCountByPhno(
-      data.map((item) => item.phone),
-      orgId,
-    );
-    if (filterNewContacts === (data?.length ?? 0))
-      throw new Error("All contacts already exist");
     await createMultipleContacts(data, orgId);
   }
   if (contactGroupId) {
