@@ -30,7 +30,7 @@ import {
 import { verifyRole } from "../../../utils/auth";
 import { Prisma, Role } from "@prisma/client";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
-import { importCSVContacts } from "../contact.service";
+import { createMultipleContacts, importCSVContacts } from "../contact.service";
 import { PaginationQuery } from "../contact.schema";
 import {
   addNewCustomersToGroup,
@@ -145,6 +145,7 @@ export async function addNewContactsToGroupHandler(
         orgId,
       );
     } else {
+      await createMultipleContacts(request.body, orgId);
       contactGroup = await addNewContactsToGroup(
         request.params.contactGroupId,
         request.body,

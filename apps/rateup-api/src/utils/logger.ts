@@ -1,6 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import pino from "pino";
-import PinoPretty from "pino-pretty";
 const { NO_LOG } = process.env;
 const devLog = {
   transport: {
@@ -27,13 +26,13 @@ const isDevelopment = process.env.NODE_ENV === "development";
 // else use default logging
 export const logOptions: any =
   NO_LOG === "true" ? false : isDevelopment ? devLog : true;
-export const log = pino(
-  {
-    enabled: NO_LOG !== "true",
-    // available levels: fatal, error, warn, info, debug, trace
-    level: process.env.LOG_LEVEL || "info",
+export const log = pino({
+  enabled: NO_LOG !== "true",
+  // available levels: fatal, error, warn, info, debug, trace
+  level: process.env.LOG_LEVEL || "info",
+  transport: {
+    target: "pino-pretty",
   },
-  PinoPretty(),
-);
+});
 
 console.log(`LOG_LEVEL => ${process.env.LOG_LEVEL || "info"}`);
