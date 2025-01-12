@@ -12,6 +12,12 @@ import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import { getSubscription, getUsageStats } from "./campaign.auth";
 import xlsx from "node-xlsx";
 
+interface WaMessageStats {
+  read?: boolean;
+  sent?: boolean;
+  delivered?: boolean;
+  [key: string]: any;
+}
 type campaginExtentend = {
   team: {
     id: string;
@@ -23,7 +29,6 @@ type campaginExtentend = {
     orgId: string;
     org: {
       WaAccountSettings: {
-        orgId: string;
         contactTags: string[];
       };
     };
@@ -32,8 +37,8 @@ type campaginExtentend = {
     data: {};
   };
   campaignParticipants: {
+    id: string;
     status: string;
-    WaMessageCampaginParticipantMap: any[];
     waStatus?: string;
     createdAt: Date;
     sentAt?: Date;
@@ -54,11 +59,12 @@ type campaginExtentend = {
   contactTags?: string[];
   name?: string;
 };
+
 export function getLatestStatus(participant) {
   let latestStatus = null;
   let latestTimestamp = null;
 
-  participant.WaMessageCampaginParticipantMap.forEach((mapping) => {
+  participant.forEach((mapping) => {
     Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
       if (
         timestamp &&
@@ -84,7 +90,11 @@ export async function getCampaignById(campaignId: string) {
         include: {
           org: {
             select: {
-              WaAccountSettings: true,
+              WaAccountSettings: {
+                select: {
+                  contactTags: true,
+                },
+              },
             },
           },
         },
@@ -102,72 +112,103 @@ export async function getCampaignById(campaignId: string) {
               flowId: true,
             },
           },
-          WaMessageCampaginParticipantMap: {
-            include: {
-              waMessage: {
-                select: {
-                  stats: true,
-                  waCreatedAt: true,
-                },
-              },
-            },
-            orderBy: {
-              waMessage: {
-                waCreatedAt: "desc",
-              },
-            },
-          },
         },
       },
     },
   });
-  let countRead = 0;
-  let countSent = 0;
-  let countFailed = 0;
-  let countDelivered = 0;
-  let countPending = 0;
-  let countCompleted = 0;
 
-  function updateCounters(stats) {
-    if (stats.read) countRead++;
-    if (stats.sent) countSent++;
-    if (stats.delivered) countDelivered++;
+  if (!campaign) {
+    throw new Error(`Campaign with ID ${campaignId} not found.`);
   }
 
-  campaign.campaignParticipants.forEach((participant) => {
+  // Fetch all participant IDs
+  const participantIds = campaign.campaignParticipants.map((p) => p.id);
+
+  // Batch query for waMessageMaps
+  const waMessageMaps = await prisma.waMessageCampaginParticipantMap.findMany({
+    where: {
+      campaignParticipantId: {
+        in: participantIds,
+      },
+    },
+    include: {
+      waMessage: {
+        select: {
+          stats: true,
+          waCreatedAt: true,
+        },
+      },
+    },
+    orderBy: {
+      waMessage: {
+        waCreatedAt: "desc",
+      },
+    },
+  });
+
+  // Process participants
+  let countRead = 0,
+    countSent = 0,
+    countFailed = 0,
+    countDelivered = 0,
+    countPending = 0,
+    countCompleted = 0;
+
+  for (const participant of campaign.campaignParticipants) {
     const participantStatus = participant.status;
-    const latestStatus = getLatestStatus(participant);
+    const participantMessages = waMessageMaps.filter(
+      (map) => map.campaignParticipantId === participant.id,
+    );
+
+    const latestStatus = getLatestStatus(participantMessages);
 
     if (participantStatus === CampaignParticipantStatus.PENDING) {
       countPending++;
     } else if (participantStatus === CampaignParticipantStatus.FAILED) {
       countFailed++;
     } else {
-      participant.WaMessageCampaginParticipantMap.forEach((item) => {
-        updateCounters(item.waMessage.stats);
-      });
+      participantMessages.forEach(
+        (item: {
+          waMessage: {
+            stats: WaMessageStats;
+          };
+        }) => {
+          if (item.waMessage.stats?.read) countRead++;
+          if (item.waMessage.stats?.sent) countSent++;
+          if (item.waMessage.stats?.delivered) countDelivered++;
+        },
+      );
     }
+
     if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
       countFailed++;
     }
-    const FlowId = campaign?.flowId;
-    if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED)
+
+    if (
+      campaign.flowId &&
+      participantStatus === CampaignParticipantStatus.COMPLETED
+    ) {
       countCompleted++;
+    }
+
     participant.waStatus = latestStatus;
-    delete participant.WaMessageCampaginParticipantMap;
-  });
-  campaign.contactTags = campaign.team.org?.WaAccountSettings?.contactTags;
+  }
+
+  const contactTags = campaign.team.org?.WaAccountSettings?.contactTags;
   delete campaign.team.org;
 
-  campaign.stats = {
-    countRead,
-    countSent,
-    countFailed,
-    countDelivered,
-    countPending,
-    countCompleted,
+  return {
+    ...campaign,
+    contactTags,
+    stats: {
+      countRead,
+      countSent,
+      countFailed,
+      countDelivered,
+      countPending,
+      countCompleted,
+    },
   };
-  return campaign;
 }
 
 export async function getCampaignsByTeamId(teamId: string) {
