@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import { getSubscription, getUsageStats } from "./campaign.auth";
 import xlsx from "node-xlsx";
+import { BATCH_SIZE } from "../../utils/constants/constants";
 
 interface WaMessageStats {
   read?: boolean;
@@ -124,27 +125,32 @@ export async function getCampaignById(campaignId: string) {
   // Fetch all participant IDs
   const participantIds = campaign.campaignParticipants.map((p) => p.id);
 
-  // Batch query for waMessageMaps
-  const waMessageMaps = await prisma.waMessageCampaginParticipantMap.findMany({
-    where: {
-      campaignParticipantId: {
-        in: participantIds,
-      },
-    },
-    include: {
-      waMessage: {
-        select: {
-          stats: true,
-          waCreatedAt: true,
+  // Batch query for waMessageMaps with pagination to improve performance
+  let waMessageMaps = [];
+  for (let i = 0; i < participantIds.length; i += BATCH_SIZE) {
+    const batchIds = participantIds.slice(i, i + BATCH_SIZE);
+    const batchResults = await prisma.waMessageCampaginParticipantMap.findMany({
+      where: {
+        campaignParticipantId: {
+          in: batchIds,
         },
       },
-    },
-    orderBy: {
-      waMessage: {
-        waCreatedAt: "desc",
+      include: {
+        waMessage: {
+          select: {
+            stats: true,
+            waCreatedAt: true,
+          },
+        },
       },
-    },
-  });
+      orderBy: {
+        waMessage: {
+          waCreatedAt: "desc",
+        },
+      },
+    });
+    waMessageMaps = waMessageMaps.concat(batchResults);
+  }
 
   // Process participants
   let countRead = 0,
