@@ -310,6 +310,11 @@ export async function getLoyaltyCustomers(
   const customers = await prisma.loyaltyCustomer.findMany({
     where: searchCondition,
     include: includeCondition,
+    skip: Number(page) * Number(limit),
+    take: Number(limit),
+    orderBy: {
+      [sort]: desc,
+    },
   });
   return customers?.map((c) => {
     const actionObj = {};
@@ -323,13 +328,9 @@ export async function getLoyaltyCustomers(
     });
     return {
       id: c.id,
-      customerInfo: {
-        name: c.Contact.name,
-        phone: c.Contact.phone,
-        // email: c.Contact?.email,
-        // dob: c.Contact?.dob,
-        createdAt: c.createdAt,
-      },
+      name: c.Contact.name,
+      phone: c.Contact.phone,
+      createdAt: c.createdAt,
       totalCount,
       ...actionObj,
       referralCodes: c.referralCodes.map((r) => r.referralCode),
@@ -525,7 +526,11 @@ export async function handleLCustomerAction({
     dayjs().isBefore(dayjs(action.startDate)) ||
     dayjs().isAfter(dayjs(action.endDate))
   ) {
-    return { success: false, message: "Action Not available on this date" };
+    return {
+      success: false,
+      message: "Action Not available on this date",
+      customerId,
+    };
   }
   //handling referee action
   let referee;
@@ -536,6 +541,7 @@ export async function handleLCustomerAction({
       return {
         success: false,
         message: "Existing Customers are not allowed to use referral",
+        customerId: referee.id,
       };
     if (
       (action.refereeRewardId && action.isAmountBasedForReferee && !amount) ||
@@ -544,6 +550,7 @@ export async function handleLCustomerAction({
       return {
         success: false,
         message: "Minimum " + action.amount + " required",
+        customerId,
       };
     }
     if (!referee) {
@@ -559,7 +566,11 @@ export async function handleLCustomerAction({
       refereePhone,
     );
     if (res) {
-      return { success: false, message: "Already referred by this number" };
+      return {
+        success: false,
+        message: "Already referred by this number",
+        customerId: referee.id,
+      };
     }
     if (action.refereeRewardId) {
       const { redeem, message } = await createRedeem(
@@ -571,6 +582,7 @@ export async function handleLCustomerAction({
         return {
           success: false,
           message,
+          customerId: referee.id,
         };
       }
     }
@@ -597,6 +609,7 @@ export async function handleLCustomerAction({
       return {
         success: false,
         message: "Minimum " + action.amount + " required",
+        customerId,
       };
     }
     const { redeem, message } = await createRedeem(
@@ -608,6 +621,7 @@ export async function handleLCustomerAction({
       return {
         success: false,
         message,
+        customerId,
       };
     }
     const customerAction = await createCustomerAction({

@@ -25,6 +25,7 @@ export async function getContactGroupById(contactGroupId: string) {
       _count: {
         select: {
           contacts: true,
+          LoyaltyCustomerMap: true,
         },
       },
     },
@@ -96,6 +97,7 @@ export async function getContactGroupsByOrgId(
       _count: {
         select: {
           contacts: true,
+          LoyaltyCustomerMap: true,
         },
       },
     },
@@ -411,6 +413,14 @@ export async function getContactGroupByNameAndTeam(
         name,
         teamId,
       },
+    },
+  });
+}
+
+export async function getLoyaltyCustomersFromGroup(contactGroupId) {
+  return await prisma.loyaltyCustomerMap.findMany({
+    where: {
+      contactGroupId,
     },
   });
 }

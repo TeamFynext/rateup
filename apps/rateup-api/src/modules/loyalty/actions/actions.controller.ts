@@ -9,10 +9,12 @@ import {
 } from "./actions.service";
 import { log } from "../../../utils/logger";
 import {
+  BulkActionInput,
   ByReferralCodeParamInput,
   lActionIdParamInput,
   lActionUpdateInput,
   loyaltyActionInput,
+  LoyaltyActionType,
   ReferralInput,
 } from "./actions.schema";
 import prisma from "../../../utils/prisma";
@@ -20,6 +22,7 @@ import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import {
+  getLCustomerById,
   getLoyaltyCustomerOrActionByReferralCode,
   getLoyaltyCustomers,
   handleLCustomerAction,
@@ -28,6 +31,12 @@ import {
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { isLReferralAction } from "../util";
 import { getReferralCodeByActionAndCustomer } from "../settings/settings.service";
+import {
+  getContactGroupById,
+  getContactGroupsByOrgId,
+  getLoyaltyCustomersFromGroup,
+} from "../../contact/contactGroup/contactGroup.service";
+import { ContactGroupType } from "../../contact/contactGroup/contactGroup.schema";
 
 export async function createLoyaltyActionHandler(
   request: FastifyRequest<{ Body: loyaltyActionInput }>,
@@ -242,6 +251,94 @@ export async function referActionHandler(
         }
       }
     }
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function bulkCustomerActionHandler(
+  request: FastifyRequest<{ Body: BulkActionInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const {
+      actionIds,
+      customerIds,
+      groupIds,
+      amount,
+      isAllActions,
+      isAllGroups,
+      isAllCustomer,
+    } = request.body;
+
+    const allCustomerIds = new Set(customerIds);
+    const allGroupIds = new Set(groupIds);
+    const allActionIds = new Set(actionIds);
+    if (isAllCustomer) {
+      const customers = await getLoyaltyCustomers(orgId);
+      customers.forEach((c) => allCustomerIds.add(c.id));
+    }
+    if (isAllGroups) {
+      const groups = await getContactGroupsByOrgId(
+        orgId,
+        ContactGroupType.LOYALTY,
+      );
+      groups.forEach((g) => allGroupIds.add(g.id));
+    }
+    if (isAllActions) {
+      const actions = await getLoyaltyActions(orgId);
+      actions
+        .filter((a) => a.type !== LoyaltyActionType.ReferralPurchase)
+        .forEach((a) => allActionIds.add(a.id));
+    }
+    for (const groupId of allGroupIds) {
+      const customers = await getLoyaltyCustomersFromGroup(groupId);
+      customers.forEach((c) => allCustomerIds.add(c.loyaltyCustomerId));
+    }
+
+    const promises = Array.from(allCustomerIds).flatMap((customerId) =>
+      Array.from(allActionIds).map((actionId) =>
+        handleLCustomerAction({
+          customerId,
+          actionId,
+          amount,
+        }),
+      ),
+    );
+
+    const results = await Promise.all(promises);
+
+    const sendData = [];
+    const failed = [];
+    await Promise.all(
+      results.map(async (res) => {
+        const { success, message, data, customerId } = res;
+        if (!success) {
+          const customer = await getLCustomerById(customerId);
+          failed.push({ phone: customer.Contact.phone, message });
+        } else {
+          sendData.push({
+            waTemplateId: data.customerAction.action.waTemplateId,
+            phone: data.customer.Contact.phone,
+            dynamicVariables: [
+              data.customer.Contact.name,
+              data.customerAction.action.rewardId
+                ? data.customerAction.action.reward.name
+                : data.customerPoints?.toString(),
+            ],
+          });
+        }
+      }),
+    );
+
+    reply.code(200).send({ failed });
+    await Promise.all(
+      sendData.map((c) =>
+        handleSendTemplate(c.waTemplateId, orgId, c.phone, c.dynamicVariables),
+      ),
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

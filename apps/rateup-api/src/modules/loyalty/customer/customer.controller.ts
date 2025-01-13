@@ -8,6 +8,7 @@ import {
 import {
   createLCustomer,
   deleteLoyaltyCustomer,
+  getLCustomerByPhone,
   getLoyaltyCustomers,
   handleLCustomerAction,
   handlePostRegisterAction,
@@ -75,20 +76,28 @@ export async function customerActionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { actionId, customerId } = request.params;
+    const { orgId } = request.user;
+    const { actionId, phone } = request.params;
     const { amount } = request.body;
+    const customer = await getLCustomerByPhone(phone, orgId);
+    if (!customer) {
+      log.trace("Customer not found with phone Number: %s", phone);
+      return reply
+        .code(404)
+        .send("Customer not found with phone Number: " + phone);
+    }
     const { success, data, message } = await handleLCustomerAction({
-      customerId,
+      customerId: customer.id,
       actionId,
       amount,
     });
     if (!success) {
       return reply.code(403).send(message);
     }
-    const { customer, customerAction, customerPoints } = data;
+    const { customer: newCustomer, customerAction, customerPoints } = data;
     reply.code(200).send({
       message: "Success",
-      totlaEarnedPoints: customer.totalEarnedPoints,
+      totlaEarnedPoints: newCustomer.totalEarnedPoints,
     });
     await handleSendTemplate(
       customerAction.action.waTemplateId,

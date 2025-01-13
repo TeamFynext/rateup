@@ -104,7 +104,9 @@ export async function createCampaignParticipantsFromAnotherCampaign(
   });
   campaignParticipantsOld?.forEach((participant) => {
     const participantStatus = participant.status;
-    let latestStatus = getLatestStatus(participant);
+    let latestStatus = getLatestStatus(
+      participant?.WaMessageCampaginParticipantMap,
+    );
     const FlowId = participant?.campaign?.flowId;
     if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED)
       latestStatus = CampaignParticipantStatus.COMPLETED;

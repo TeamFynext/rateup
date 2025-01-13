@@ -9,7 +9,7 @@ import { $lRedeemRef } from "./redeem.schema";
 export async function loyaltyRedeemRoutes(server: FastifyInstance) {
   server.get("/", getLoyaltyRedeemsHandler);
   server.post(
-    "/:customerId/:rewardId",
+    "/:phone/:rewardId",
     {
       schema: {
         params: $lRedeemRef("rewardCustomerParamSchema"),

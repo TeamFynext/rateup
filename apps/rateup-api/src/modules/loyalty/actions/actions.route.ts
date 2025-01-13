@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  bulkCustomerActionHandler,
   createLoyaltyActionHandler,
   deleteLoyaltyActionByIdHandler,
   getLoyaltyActionByIdHandler,
@@ -71,5 +72,15 @@ export async function loyaltyActionsRoutes(server: FastifyInstance) {
       },
     },
     referActionHandler,
+  );
+
+  server.post(
+    "/bulk",
+    {
+      schema: {
+        body: $lActionRef("bulkActionSchema"),
+      },
+    },
+    bulkCustomerActionHandler,
   );
 }

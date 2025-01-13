@@ -13,7 +13,7 @@ export const LCustomerSchema = z.object({
 });
 
 const actionCustomerIdParamSchema = z.object({
-  customerId: z.string(),
+  phone: z.string(),
   actionId: z.string(),
 });
 const amountSchema = z.object({

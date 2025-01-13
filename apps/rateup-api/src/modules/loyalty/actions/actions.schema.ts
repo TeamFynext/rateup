@@ -53,6 +53,17 @@ const referSchema = z.object({
   issuePurchasePoints: z.boolean().optional(),
   actionIds: z.array(z.string()),
 });
+
+const bulkActionSchema = z.object({
+  customerIds: z.array(z.string()),
+  groupIds: z.array(z.string()),
+  actionIds: z.array(z.string()),
+  amount: z.number().optional(),
+  isAllCustomer: z.boolean(),
+  isAllGroups: z.boolean(),
+  isAllActions: z.boolean(),
+});
+
 export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
   buildJsonSchemas(
     {
@@ -61,6 +72,7 @@ export const { schemas: loyaltyActionSchemas, $ref: $lActionRef } =
       lActionUpdateSchema,
       byReferralCodeParamsSchema,
       referSchema,
+      bulkActionSchema,
     },
     {
       $id: "loyaltyActionSchema",
@@ -74,3 +86,4 @@ export type ByReferralCodeParamInput = z.infer<
   typeof byReferralCodeParamsSchema
 >;
 export type ReferralInput = z.infer<typeof referSchema>;
+export type BulkActionInput = z.infer<typeof bulkActionSchema>;

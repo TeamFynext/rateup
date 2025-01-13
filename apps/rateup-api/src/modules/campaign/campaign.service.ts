@@ -61,11 +61,11 @@ type campaginExtentend = {
   name?: string;
 };
 
-export function getLatestStatus(participant) {
+export function getLatestStatus(participant = []) {
   let latestStatus = null;
   let latestTimestamp = null;
 
-  participant.forEach((mapping) => {
+  participant?.forEach((mapping) => {
     Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
       if (
         timestamp &&
