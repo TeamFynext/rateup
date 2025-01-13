@@ -1957,5 +1957,8 @@
   "dob": "Date of Birth",
   "email": "Email",
   "Enter the email": "Enter the email",
-  "Enter the dob": "Enter the dob"
+  "Enter the dob": "Enter the dob",
+  "No customer found": "No customer found",
+  "No action found": "No action found",
+  "Added": "Added"
 }

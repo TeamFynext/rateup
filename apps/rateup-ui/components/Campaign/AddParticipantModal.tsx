@@ -29,6 +29,7 @@ import { useContacts } from "../../backend/campaign/contacts/contacts.query";
 import {
   CampaignParticipantAddStatus,
   CampaignParticipantSource,
+  ContactGroupType,
 } from "../../types/enums";
 import { PAGE_SIZE } from "../../utils/constants";
 import { showWarnToast } from "../../utils/notifications";
@@ -189,15 +190,21 @@ const AddParticipantModal = ({ close, campaign }) => {
                     (groupIsLoading && <Loader type="bars" />)}
                   <Tabs.Panel value={CampaignParticipantSource.INDIVIDUAL}>
                     {filteredContacts?.length > 0 ? (
-                      filteredContacts.map((contact) => (
-                        <Individual
-                          customer={contact}
-                          selectedContacts={selectedContacts}
-                          selectedContactsHandlers={selectedContactsHandlers}
-                          key={contact?.id}
-                          participants={campaign?.campaignParticipants}
-                        />
-                      ))
+                      filteredContacts.map((contact) => {
+                        const isAlreadySeleted =
+                          campaign?.campaignParticipants.some(
+                            (c) => c?.contactId === contact?.id,
+                          );
+                        return (
+                          <Individual
+                            customer={contact}
+                            selectedContacts={selectedContacts}
+                            selectedContactsHandlers={selectedContactsHandlers}
+                            key={contact?.id}
+                            isAlreadySelected={isAlreadySeleted}
+                          />
+                        );
+                      })
                     ) : (
                       <Text>{translations["No contacts found"]}</Text>
                     )}
@@ -256,15 +263,20 @@ const AddParticipantModal = ({ close, campaign }) => {
           selectedCampaigns?.length > 0 ? (
             <PaperLayout>
               <ScrollArea h={325} pr={"sm"}>
-                {selectedContacts?.map((customer) => (
-                  <Individual
-                    customer={customer}
-                    selectedContacts={selectedContacts}
-                    selectedContactsHandlers={selectedContactsHandlers}
-                    key={customer?.id}
-                    participants={campaign?.campaignParticipants}
-                  />
-                ))}
+                {selectedContacts?.map((customer) => {
+                  const isAlreadySeleted = campaign?.campaignParticipants.some(
+                    (c) => c?.contactId === customer?.id,
+                  );
+                  return (
+                    <Individual
+                      customer={customer}
+                      selectedContacts={selectedContacts}
+                      selectedContactsHandlers={selectedContactsHandlers}
+                      key={customer?.id}
+                      isAlreadySelected={isAlreadySeleted}
+                    />
+                  );
+                })}
                 {selectedGroups?.map((group) => (
                   <CustomerGroup
                     group={group}
@@ -305,17 +317,14 @@ const AddParticipantModal = ({ close, campaign }) => {
   );
 };
 
-const Individual = ({
+export const Individual = ({
   customer,
   selectedContacts,
   selectedContactsHandlers,
-  participants,
+  isAlreadySelected = false,
 }) => {
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
   const { translations } = useTranslations();
-  const isAlreadySeleted = participants.some(
-    (c) => c?.contactId === customer?.id,
-  );
 
   return (
     <Group justify="space-between" my={"xs"}>
@@ -346,16 +355,21 @@ const Individual = ({
           radius={"xl"}
           size="sm"
           w={90}
-          disabled={isAlreadySeleted}
+          disabled={isAlreadySelected}
         >
-          {isAlreadySeleted ? "Added" : "Add"}
+          {isAlreadySelected ? translations["Added"] : translations["Add"]}
         </Button>
       )}
     </Group>
   );
 };
 
-const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
+export const CustomerGroup = ({
+  group,
+  selectedGroups,
+  selectedGroupsHandlers,
+  isAlreadySelected = false,
+}) => {
   const isSelected = selectedGroups.some((c) => c?.id === group?.id);
   const { translations } = useTranslations();
   return (
@@ -365,7 +379,10 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
           {group?.name}
         </Title>
         <Text c={"dimmed"} size="sm">
-          {group?._count.contacts} members
+          {group.type === ContactGroupType.NORMAL
+            ? group?._count.contacts
+            : group._count.LoyaltyCustomerMap}{" "}
+          members
         </Text>
       </Stack>
       {isSelected ? (
@@ -387,9 +404,14 @@ const CustomerGroup = ({ group, selectedGroups, selectedGroupsHandlers }) => {
           radius={"xl"}
           size="sm"
           w={90}
-          disabled={!group?._count.contacts}
+          disabled={
+            isAlreadySelected ||
+            (group.type === ContactGroupType.NORMAL
+              ? !group?._count.contacts
+              : !group._count.LoyaltyCustomerMap)
+          }
         >
-          {translations["Add"]}
+          {isAlreadySelected ? translations["Added"] : translations["Add"]}
         </Button>
       )}
     </Group>

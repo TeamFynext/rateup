@@ -8,8 +8,8 @@ export async function getLoyaltyRedeems() {
   return (await axiosClient.get(`${base}`)).data;
 }
 
-export async function redeemReward({ rewardId, customerId }) {
-  await axiosClient.post(`${base}/${customerId}/${rewardId}`);
+export async function redeemReward({ rewardId, phone }) {
+  await axiosClient.post(`${base}/${phone}/${rewardId}`);
 }
 
 export async function updateRedeem({ redeemId, data }) {

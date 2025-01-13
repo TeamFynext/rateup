@@ -35,7 +35,7 @@ export const LCSelector = (props: SelectProps) => {
   });
   const customerList = customers
     ? customers?.map((c) => ({
-        label: c.customerInfo.phone,
+        label: c.phone,
         value: c.id,
       }))
     : [];
