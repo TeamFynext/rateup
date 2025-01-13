@@ -816,7 +816,8 @@ export async function sendCampaignToParticipants(
               },
             },
             WaMessageCampaginParticipantMap: {
-              include: {
+              take: 1,
+              select: {
                 waMessage: {
                   select: {
                     stats: true,
@@ -840,7 +841,6 @@ export async function sendCampaignToParticipants(
         },
       },
     });
-
     const orgId = campaign.team.orgId;
     const dbTemplate = await getDbTemplate(campaign.waTemplateId);
     if (!dbTemplate) {
@@ -1161,7 +1161,9 @@ export function wait(ms: number) {
 }
 
 const getStatusData = (info) => {
-  let statusData: string = (getLatestStatus(info) || "").toUpperCase();
+  let statusData: string = (
+    getLatestStatus(info?.WaMessageCampaginParticipantMap) || ""
+  ).toUpperCase();
   const FlowId = info?.campaign?.flowId;
   const participantStatus = info.status?.toUpperCase();
   const errorMessage = info.errorMessage;
