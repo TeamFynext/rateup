@@ -14,6 +14,7 @@ import {
 import { useUser } from "@/context/UserContext";
 import { FRONTEND_URL } from "@/utils/constants";
 
+import LoyaltyBulkActions from "../Action/LoyaltyBulkActions";
 import LoyaltyManualCustomerActionModal from "../Action/PointsIssuance";
 import ReferralAction from "../ReferralAction";
 import ManualRedeemModal from "../Rewards/ManualRedeemModal";
@@ -29,6 +30,8 @@ const LoyaltyUtilityMenu = () => {
   const [redeemOpened, { open: openRedeem, close: closeRedeem }] =
     useDisclosure(false);
   const [openedSendModal, { open: openSendModal, close: closeSendModal }] =
+    useDisclosure(false);
+  const [openedBulk, { open: openBulk, close: closeBulk }] =
     useDisclosure(false);
 
   return (
@@ -49,6 +52,12 @@ const LoyaltyUtilityMenu = () => {
       >
         <Menu.Item onClick={open} leftSection={<IconHandClick size={"1rem"} />}>
           Points Issuance
+        </Menu.Item>
+        <Menu.Item
+          onClick={openBulk}
+          leftSection={<IconHandClick size={"1rem"} />}
+        >
+          Apply Bulk Actions
         </Menu.Item>
         <Menu.Item
           onClick={openReferral}
@@ -81,6 +90,7 @@ const LoyaltyUtilityMenu = () => {
       <ReferralAction opened={referOpened} close={closeReferral} />
       <ManualRedeemModal opened={redeemOpened} close={closeRedeem} />
       <SendLoyaltyTemplate opened={openedSendModal} close={closeSendModal} />
+      <LoyaltyBulkActions opened={openedBulk} close={closeBulk} />
     </Menu>
   );
 };

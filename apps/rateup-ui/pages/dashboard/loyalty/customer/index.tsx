@@ -360,7 +360,7 @@ export function generateColumns(
       //     </div>
       //   ),
       // },
-      columnHelper.accessor((row) => row.customerInfo, {
+      columnHelper.accessor((row) => row, {
         id: "customerInfo",
         header: () => <span>Customer Info</span>,
         cell: ({ getValue }) => {

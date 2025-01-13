@@ -41,3 +41,17 @@ export async function referralLoyaltyAction({
 }: referalProps) {
   await axiosClient.post(`${actionBaseUrl}/${referralCode}`, data);
 }
+
+type BulkActionProps = {
+  customerIds: string[];
+  actionIds: string[];
+  groupIds: string[];
+  isAllCustomer: boolean;
+  isAllGroups: boolean;
+  isAllActions: boolean;
+  amount?: number;
+};
+
+export async function bulkLoyaltyAction(data: BulkActionProps) {
+  return await axiosClient.post(`${actionBaseUrl}/bulk`, data);
+}

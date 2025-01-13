@@ -6,6 +6,7 @@ import {
   ContainedNumberInput,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 
 import { LASelector, LCSelector } from "../utils";
@@ -15,7 +16,7 @@ const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
 
   const form = useForm({
     initialValues: {
-      customerId: "",
+      phone: "",
       actionId: "",
       amount: 0,
     },
@@ -51,6 +52,10 @@ const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
           {...form.getInputProps("customerId")}
           placeholder="Select"
           searchable
+        />
+        <PhoneInputWithCountry
+          label={"Phone number"}
+          {...form.getInputProps("phone")}
         />
         <LASelector
           label={"Action"}

@@ -25,16 +25,16 @@ function Home() {
     <Box style={{ fontFamily: `var(--font-rubik)` }}>
       <Head>
         <title>
-          RateUp - Free Surveys, QR Codes & WhatsApp API | Customer Feedback &
-          Lead Generation
+          RateUp - WhatsApp API | Loyalty Platform | Campaigns | Customer
+          Feedback & Lead Generation
         </title>
         <meta
           name="keywords"
-          content="Customer Engagement Platform, Online reputation management, Survey, Review, Whatsapp Survey, Feedback "
+          content="Customer Engagement Platform, WhatsApp Loyalty, Review, Whatsapp Feedback, WhatsApp Surveys, WhatsApp API , WhatsApp Business API "
         />
         <meta
           name="description"
-          content="Create free web and WhatsApp surveys, build QR codes, and use WhatsApp API for powerful customer feedback and lead generation with RateUp's comprehensive tools."
+          content="Seamless customer engagement through WhatsApp!"
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rateup" />
@@ -42,7 +42,7 @@ function Home() {
         <meta property="og:title" content="Rateup" />
         <meta
           property="og:description"
-          content="Rateup: Create free web and WhatsApp surveys, build QR codes, and use WhatsApp API for powerful customer feedback and lead generation with RateUp's comprehensive tools."
+          content="Seamless customer engagement through WhatsApp!"
         />
         <meta
           property="og:image"

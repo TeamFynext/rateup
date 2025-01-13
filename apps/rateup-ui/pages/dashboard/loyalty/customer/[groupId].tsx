@@ -241,7 +241,7 @@ export default function ContactGroup() {
               <Stack gap={0}>
                 <Center>
                   <Title c="var(--tertiary-color)" order={3}>
-                    {groupDetails?._count?.contacts ?? 0}
+                    {groupDetails?._count.LoyaltyCustomerMap ?? 0}
                   </Title>
                 </Center>
                 <Text>{translations["members"]}</Text>

@@ -4,6 +4,7 @@ import { LoyaltyActionType } from "@/types/enums";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
+  bulkLoyaltyAction,
   createLoyaltyAction,
   deleteLoyaltyActionById,
   getLoyaltyActionById,
@@ -106,6 +107,22 @@ export const useReferralLoyaltyAction = () => {
     onError: (e: any) => {
       showErrorToast(
         `Refer failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
+      );
+    },
+  });
+};
+
+export const useBulkLoyaltyAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: bulkLoyaltyAction,
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        `failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
       );
     },
   });

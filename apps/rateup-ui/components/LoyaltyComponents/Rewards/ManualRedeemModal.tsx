@@ -1,40 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-import { Group, Stack, Text } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
-import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useRedeemReward } from "@/backend/loyalty/redeems/redeems.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput";
+import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 
-import { LoyaltyPointIcon } from "../Action/LoyaltyActionCard";
-
 const ManualRedeemModal = ({ opened, close }) => {
-  const [phone, setPhone] = useState("");
-  const [customer, setCustomer] = useState(null);
-  const [error, setError] = useState("");
   const form = useForm({
     initialValues: {
-      customerId: "",
       rewardId: "",
+      phone: "",
     },
     validate: {
+      phone: (value) => (!isValidPhoneNumber(value) ? "Invalid number" : null),
       rewardId: isNotEmpty("Choose a reward"),
     },
   });
 
-  const { data: customers } = useLoyaltyCustomers({ pagination: false });
   const { data: rewards } = useGetLoyaltyRewards();
 
   const redeemReward = useRedeemReward();
-
-  const phones = customers ? customers.map((c) => c.customerInfo.phone) : [];
 
   const rewardData = rewards
     ? rewards?.map((r) => ({
@@ -43,81 +33,41 @@ const ManualRedeemModal = ({ opened, close }) => {
       }))
     : [];
 
-  useEffect(() => {
-    if (customers && phone) {
-      setError("");
-      const cust = customers.find((c) => c.customerInfo.phone === phone);
-      setCustomer(cust);
-      form.setFieldValue("customerId", cust?.id);
-    }
-  }, [phone, customers]);
-
   function handleRedeem() {
-    if (!phone.trim().length || !customer) {
-      setError("Customer not found");
-      return;
-    }
     if (form.validate().hasErrors) return;
     redeemReward.mutate(form.values, {
-      onSuccess: () => {
-        setCustomer(null);
-        setPhone("");
-        form.reset();
-        close();
-      },
-      onError: () => {
-        setCustomer(null);
-        setPhone("");
-        form.reset();
-        close();
-      },
+      onSettled: onClose,
     });
+  }
+
+  function onClose() {
+    form.reset();
+    close();
   }
 
   return (
     <FormModalLayout
       opened={opened}
-      onClose={() => {
-        setCustomer(null);
-        setPhone("");
-        close();
-      }}
+      onClose={onClose}
       title="Manual Redeeem"
       centered
+      includeCancelButton
+      cancelOnClick={onClose}
+      buttonTitle="Redeem"
+      onSubmit={handleRedeem}
+      isLoading={redeemReward.isPending}
     >
       <Stack>
-        <ContainedSelection
-          data={phones}
-          searchable={!!phones?.length}
-          value={phone}
-          onChange={setPhone}
-          label={"Phone"}
-          error={error}
-          withAsterisk
-          nothingFoundMessage={"No customers found"}
+        <PhoneInputWithCountry
+          {...form.getInputProps("phone")}
+          label="Phone Number"
         />
-        <ContainedTextField
-          value={customer?.customerInfo.name}
-          readOnly
-          label={"Name"}
-        />
-        {customer && (
-          <Group gap={"xs"} mt={0}>
-            <LoyaltyPointIcon />
-            <Text size="sm">
-              {" "}
-              {customer?.customerInfo.name} has {customer.balancePoints} Points
-            </Text>
-          </Group>
-        )}
         <ContainedSelection
           data={rewardData}
-          disabled={!customer}
           label={"Rewards"}
           {...form.getInputProps("rewardId")}
           placeholder="Select a reward"
         />
-        <RateupButtonBlue title="Redeem" onClick={handleRedeem} />
       </Stack>
     </FormModalLayout>
   );

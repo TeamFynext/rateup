@@ -599,8 +599,10 @@ declare global {
     teamId: string;
     icon: string;
     createdAt: string;
+    type: string;
     _count: {
       contacts: number;
+      LoyaltyCustomerMap: number;
     };
   };
   type ContactGroupResponse = {
@@ -817,11 +819,11 @@ declare global {
 
   type LoyaltyCustomerTable = {
     id: string;
-    customerInfo: {
-      name: string;
-      phone: string;
-      createdAt: Date;
-    };
+    // customerInfo: {
+    name: string;
+    phone: string;
+    createdAt: Date;
+    // };
     referralCodes: string[];
     [LoyaltyActionType.ReferFriend]: LoyaltyAction[];
     [LoyaltyActionType.DirectPurchase]: LoyaltyAction[];
