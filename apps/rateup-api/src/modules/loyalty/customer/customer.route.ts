@@ -28,7 +28,7 @@ export async function loyaltyCustomerRoutes(server: FastifyInstance) {
   );
   server.delete("/:id", deleteLoyaltyCustomersHandler);
   server.post(
-    "/:customerId/:actionId",
+    "/:phone/:actionId",
     {
       schema: {
         params: $lCustomerRef("actionCustomerIdParamSchema"),

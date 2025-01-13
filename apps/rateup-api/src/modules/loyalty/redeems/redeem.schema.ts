@@ -3,7 +3,7 @@ import z from "zod";
 
 const rewardCustomerParamSchema = z.object({
   rewardId: z.string(),
-  customerId: z.string(),
+  phone: z.string(),
 });
 
 const redeemIdParamSchema = z.object({

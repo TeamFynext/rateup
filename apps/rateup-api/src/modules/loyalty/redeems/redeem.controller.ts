@@ -11,6 +11,7 @@ import {
   updateLoyaltyRedeem,
 } from "./redeem.service";
 import {
+  getLCustomerByPhone,
   handleSendTemplate,
   updateLCustomerRedeemPoint,
 } from "../customer/customer.service";
@@ -22,16 +23,24 @@ export async function redeemPointsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { customerId, rewardId } = request.params;
-    const { redeem, message } = await createRedeem(customerId, rewardId);
+    const { orgId } = request.user;
+    const { phone, rewardId } = request.params;
+    const customer = await getLCustomerByPhone(phone, orgId);
+    if (!customer) {
+      log.trace("Customer not found with phone Number: %s", phone);
+      return reply
+        .code(404)
+        .send("Customer not found with phone Number: " + phone);
+    }
+    const { redeem, message } = await createRedeem(customer.id, rewardId);
     if (redeem.status === RedeemStatus.ISSUED) {
-      const customer = await updateLCustomerRedeemPoint(
-        customerId,
+      const newCustomer = await updateLCustomerRedeemPoint(
+        customer.id,
         redeem.reward.points,
       );
       reply.code(200).send({
         message: "Success",
-        totalRedeemedPoints: customer.redeemedPoints,
+        totalRedeemedPoints: newCustomer.redeemedPoints,
         code: redeem.code,
       });
       await handleSendTemplate(
