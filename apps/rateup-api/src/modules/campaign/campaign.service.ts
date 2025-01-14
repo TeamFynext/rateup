@@ -91,7 +91,7 @@ export function getLatestStatus(participant = []) {
 }
 
 export async function getCampaignById(campaignId: string) {
-  const campaignTemp: campaginExtentend = await prisma.$queryRaw`
+  const campaignTemp: Array<campaginExtentend> = await prisma.$queryRaw`
   SELECT 
   c."id",
   c."createdAt",
@@ -197,6 +197,7 @@ WHERE c."id" = ${campaignId}::uuid;
     countPending = 0,
     countCompleted = 0;
 
+  campaign.campaignParticipants = campaign?.campaignParticipants || [];
   for (const participant of campaign.campaignParticipants) {
     const participantStatus = participant.status;
     const participantMessages =
