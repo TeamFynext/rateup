@@ -200,7 +200,7 @@ WHERE c."id" = ${campaignId}::uuid;
   for (const participant of campaign.campaignParticipants) {
     const participantStatus = participant.status;
     const participantMessages =
-      participant.WaMessageCampaginParticipantMap.filter(
+      participant?.WaMessageCampaginParticipantMap?.filter(
         (map) => map.campaignParticipantId === participant.id,
       );
 
