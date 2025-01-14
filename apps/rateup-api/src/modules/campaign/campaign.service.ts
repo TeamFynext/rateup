@@ -75,16 +75,18 @@ export function getLatestStatus(participant = []) {
   let latestTimestamp = null;
 
   participant?.forEach((mapping) => {
-    Object.entries(mapping.waMessage.stats).forEach(([status, timestamp]) => {
-      if (
-        timestamp &&
-        (!latestTimestamp ||
-          dayjs(timestamp as string).isAfter(latestTimestamp))
-      ) {
-        latestTimestamp = dayjs(timestamp as string);
-        latestStatus = status;
-      }
-    });
+    Object.entries(mapping?.waMessage?.stats ?? {}).forEach(
+      ([status, timestamp]) => {
+        if (
+          timestamp &&
+          (!latestTimestamp ||
+            dayjs(timestamp as string).isAfter(latestTimestamp))
+        ) {
+          latestTimestamp = dayjs(timestamp as string);
+          latestStatus = status;
+        }
+      },
+    );
   });
 
   return latestStatus;
