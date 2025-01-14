@@ -92,103 +92,91 @@ export function getLatestStatus(participant = []) {
 
 export async function getCampaignById(campaignId: string) {
   const campaignTemp: Array<campaginExtentend> = await prisma.$queryRaw`
-  SELECT 
-  c."id",
-  c."createdAt",
-  c."name",
-  c."startedAt",
-  c."endedAt",
-  c."status",
-  c."type",
-  c."teamId",
-  c."waTemplateId",
-  c."flowId",
-  c."campaignSentAt",
-  c."scheduledStatuses",
-  c."errorMessage",
-  c."dynamicTags",
-  c."useUserConsent",
+  WITH campaign_data AS (
+  SELECT
+    c.*,
+    t.id as team_id,
+    t."orgId",
+    t.name as "teamName",
+    was."contactTags",
+    wt.data as template_data
+  FROM "Campaign" c
+  LEFT JOIN "Team" t ON c."teamId" = t.id
+  LEFT JOIN "Org" o ON t."orgId" = o.id
+  LEFT JOIN "WaAccountSettings" was ON o.id = was."orgId"
+  LEFT JOIN "WaTemplate" wt ON c."waTemplateId" = wt.id
+  WHERE c.id = ${campaignId}::uuid
+),
+participant_data AS (
+  SELECT
+    cp.*,
+    c.name as name,
+    c.phone as contact_phone,
+    wm.stats as message_stats,
+    wm."waCreatedAt" as message_created_at,
+    camp."flowId"
+  FROM "CampaignParticipant" cp
+  LEFT JOIN "Contact" c ON cp."contactId" = c.id
+  LEFT JOIN "WaMessageCampaginParticipantMap" wmap ON cp.id = wmap."campaignParticipantId"
+  LEFT JOIN "WaMessage" wm ON wmap."waMessageId" = wm.id
+  LEFT JOIN "Campaign" camp ON cp."campaignId" = camp.id
+  WHERE cp."campaignId" = ${campaignId}::uuid
+)
+SELECT
+  cd.*,
   json_build_object(
-    'id', t."id",
-    'createdAt', t."createdAt",
-    'name', t."name",
-    'code', t."code",
-    'googleLink', t."googleLink",
-    'reviewPageLinks', t."reviewPageLinks",
-    'tags', t."tags",
-    'orgId', t."orgId",
-    'org', json_build_object(
-      'WaAccountSettings', json_build_object(
-        'contactTags', oas."contactTags"
-      )
-    )
-  ) AS "team",
-  json_build_object(
-    'data', wt."data"
-  ) AS "waTemplate",
-  (
-    SELECT json_agg(
+    'id', cd.team_id,
+    'name', cd."teamName"
+  ) as team,
+  COALESCE(json_agg(
+    CASE WHEN pd.id IS NOT NULL THEN
       json_build_object(
-        'id', cp."id",
-        'createdAt', cp."createdAt",
-        'status', cp."status",
-        'sentAt', cp."sentAt",
-        'respondedAt', cp."respondedAt",
-        'source', cp."source",
-        'campaignId', cp."campaignId",
-        'contactId', cp."contactId",
-        'contactGroupId', cp."contactGroupId",
-        'responseId', cp."responseId",
-        'errorMessage', cp."errorMessage",
+        'id', pd.id,
+        'status', pd.status,
         'contact', json_build_object(
-          'id', con."id",
-          'createdAt', con."createdAt",
-          'name', con."name",
-          'phone', con."phone",
-          'source', con."source",
-          'orgId', con."orgId",
-          'tags', con."tags",
-          'consent', con."consent",
-          'email', con."email",
-          'dob', con."dob"
+          'name', pd.name,
+          'phone', pd.contact_phone
         ),
-        'WaMessageCampaginParticipantMap', (
-          SELECT json_agg(
-            json_build_object(
-              'campaignParticipantId', wcpm."campaignParticipantId",
-              'waMessageId', wcpm."waMessageId",
-              'waMessage', json_build_object(
-                'stats', wm."stats",
-                'waCreatedAt', wm."waCreatedAt"
-              )
-            )
+        'WaMessageCampaginParticipantMap', json_build_object(
+          'waMessage', json_build_object(
+            'stats', pd.message_stats,
+            'waCreatedAt', pd.message_created_at
           )
-          FROM "WaMessageCampaginParticipantMap" wcpm
-          JOIN "WaMessage" wm ON wcpm."waMessageId" = wm."id"
-          WHERE wcpm."campaignParticipantId" = cp."id"
         ),
         'campaign', json_build_object(
-          'flowId', c."flowId"
+          'flowId', pd."flowId"
         )
       )
-    )
-    FROM "CampaignParticipant" cp
-    JOIN "Contact" con ON cp."contactId" = con."id"
-    WHERE cp."campaignId" = c."id"
-  ) AS "campaignParticipants"
-FROM "Campaign" c
-JOIN "Team" t ON c."teamId" = t."id"
-JOIN "Org" o ON t."orgId" = o."id"
-JOIN "WaAccountSettings" oas ON o."id" = oas."orgId"
-LEFT JOIN "WaTemplate" wt ON c."waTemplateId" = wt."id"
-WHERE c."id" = ${campaignId}::uuid;
-`;
+    END
+  ) FILTER (WHERE pd.id IS NOT NULL), '[]') as "campaignParticipants"
+FROM campaign_data cd
+LEFT JOIN participant_data pd ON cd.id = pd."campaignId"
+GROUP BY
+  cd.id,
+  cd.team_id,
+  cd."teamName",
+  cd."orgId",
+  cd."contactTags",
+  cd.template_data,
+  cd."createdAt",
+  cd."teamId",
+  cd."waTemplateId",
+  cd."flowId",
+  cd."name",
+  cd."status",
+  cd."startedAt",
+  cd."endedAt",
+  cd.type,
+  cd."campaignSentAt",
+  cd."errorMessage",
+  cd."scheduledStatuses",
+  cd."dynamicTags",
+  cd."useUserConsent"`;
   let campaign = campaignTemp?.[0];
 
   if (!campaign) {
     throw new Error(`Campaign with ID ${campaignId} not found.`);
   }
-
   // Process participants
   let countRead = 0,
     countSent = 0,
@@ -198,12 +186,32 @@ WHERE c."id" = ${campaignId}::uuid;
     countCompleted = 0;
 
   campaign.campaignParticipants = campaign?.campaignParticipants || [];
+  const groupedParticipants = campaign?.campaignParticipants?.reduce(
+    (acc, participant) => {
+      // Check if the participant ID is already in the map
+      if (!acc[participant.id]) {
+        acc[participant.id] = {
+          ...participant,
+          WaMessageCampaginParticipantMap: [
+            participant.WaMessageCampaginParticipantMap,
+          ],
+        };
+      } else {
+        // Merge the WaMessageCampaginParticipantMap for the same participant
+        acc[participant.id].WaMessageCampaginParticipantMap.push(
+          participant.WaMessageCampaginParticipantMap,
+        );
+      }
+      return acc;
+    },
+    {},
+  );
+
+  // Convert the map back into an array
+  campaign.campaignParticipants = Object.values(groupedParticipants);
   for (const participant of campaign.campaignParticipants) {
     const participantStatus = participant.status;
-    const participantMessages =
-      participant?.WaMessageCampaginParticipantMap?.filter(
-        (map) => map.campaignParticipantId === participant.id,
-      );
+    const participantMessages = participant?.WaMessageCampaginParticipantMap;
 
     const latestStatus = getLatestStatus(participantMessages);
 
@@ -239,12 +247,8 @@ WHERE c."id" = ${campaignId}::uuid;
     participant.waStatus = latestStatus;
   }
 
-  const contactTags = campaign.team.org?.WaAccountSettings?.contactTags;
-  delete campaign.team.org;
-
   return {
     ...campaign,
-    contactTags,
     stats: {
       countRead,
       countSent,
