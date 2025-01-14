@@ -12,6 +12,7 @@ import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import { getSubscription, getUsageStats } from "./campaign.auth";
 import xlsx from "node-xlsx";
 import { BATCH_SIZE } from "../../utils/constants/constants";
+import { Prisma } from "@prisma/client";
 
 interface WaMessageStats {
   read?: boolean;
@@ -123,35 +124,23 @@ export async function getCampaignById(campaignId: string) {
   }
 
   // Fetch all participant IDs
-  const participantIds = campaign.campaignParticipants.map((p) => p.id);
+  const participantIds = campaign.campaignParticipants.map(
+    (p) => Prisma.sql`${p.id}::uuid`,
+  );
 
-  // Batch query for waMessageMaps with pagination to improve performance
-  let waMessageMaps = [];
-  for (let i = 0; i < participantIds.length; i += BATCH_SIZE) {
-    const batchIds = participantIds.slice(i, i + BATCH_SIZE);
-    const batchResults = await prisma.waMessageCampaginParticipantMap.findMany({
-      where: {
-        campaignParticipantId: {
-          in: batchIds,
-        },
-      },
-      include: {
-        waMessage: {
-          select: {
-            stats: true,
-            waCreatedAt: true,
-          },
-        },
-      },
-      orderBy: {
-        waMessage: {
-          waCreatedAt: "desc",
-        },
-      },
-    });
-    waMessageMaps = waMessageMaps.concat(batchResults);
-  }
-
+  const waMessageMaps: Array<{
+    campaignParticipantId: string;
+    waMessage: {
+      stats: WaMessageStats;
+    };
+  }> = await prisma.$queryRaw`
+  SELECT wmcp."campaignParticipantId", wmcp."waMessageId", 
+         json_build_object('stats', wm."stats", 'waCreatedAt', wm."waCreatedAt") as "waMessage"
+  FROM "WaMessageCampaginParticipantMap" wmcp
+  INNER JOIN "WaMessage" wm ON wmcp."waMessageId" = wm.id
+  WHERE wmcp."campaignParticipantId" IN (${Prisma.join(participantIds)})
+  ORDER BY wm."waCreatedAt" DESC
+`;
   // Process participants
   let countRead = 0,
     countSent = 0,
