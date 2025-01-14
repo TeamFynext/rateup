@@ -48,6 +48,14 @@ type campaginExtentend = {
       name: string;
       phone: string;
     };
+    WaMessageCampaginParticipantMap: {
+      campaignParticipantId: string;
+      waMessageId: string;
+      waMessage: {
+        stats: WaMessageStats;
+        waCreatedAt: Date;
+      };
+    }[];
   }[];
   flowId?: string;
   stats?: {
@@ -83,64 +91,104 @@ export function getLatestStatus(participant = []) {
 }
 
 export async function getCampaignById(campaignId: string) {
-  const campaign: campaginExtentend = await prisma.campaign.findUnique({
-    where: {
-      id: campaignId,
-    },
-    include: {
-      team: {
-        include: {
-          org: {
-            select: {
-              WaAccountSettings: {
-                select: {
-                  contactTags: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      waTemplate: {
-        select: {
-          data: true,
-        },
-      },
-      campaignParticipants: {
-        include: {
-          contact: true,
-          campaign: {
-            select: {
-              flowId: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const campaignTemp: campaginExtentend = await prisma.$queryRaw`
+  SELECT 
+  c."id",
+  c."createdAt",
+  c."name",
+  c."startedAt",
+  c."endedAt",
+  c."status",
+  c."type",
+  c."teamId",
+  c."waTemplateId",
+  c."flowId",
+  c."campaignSentAt",
+  c."scheduledStatuses",
+  c."errorMessage",
+  c."dynamicTags",
+  c."useUserConsent",
+  json_build_object(
+    'id', t."id",
+    'createdAt', t."createdAt",
+    'name', t."name",
+    'code', t."code",
+    'googleLink', t."googleLink",
+    'reviewPageLinks', t."reviewPageLinks",
+    'tags', t."tags",
+    'orgId', t."orgId",
+    'org', json_build_object(
+      'WaAccountSettings', json_build_object(
+        'contactTags', oas."contactTags"
+      )
+    )
+  ) AS "team",
+  json_build_object(
+    'data', wt."data"
+  ) AS "waTemplate",
+  (
+    SELECT json_agg(
+      json_build_object(
+        'id', cp."id",
+        'createdAt', cp."createdAt",
+        'status', cp."status",
+        'sentAt', cp."sentAt",
+        'respondedAt', cp."respondedAt",
+        'source', cp."source",
+        'campaignId', cp."campaignId",
+        'contactId', cp."contactId",
+        'contactGroupId', cp."contactGroupId",
+        'responseId', cp."responseId",
+        'errorMessage', cp."errorMessage",
+        'contact', json_build_object(
+          'id', con."id",
+          'createdAt', con."createdAt",
+          'name', con."name",
+          'phone', con."phone",
+          'source', con."source",
+          'orgId', con."orgId",
+          'tags', con."tags",
+          'consent', con."consent",
+          'email', con."email",
+          'dob', con."dob"
+        ),
+        'WaMessageCampaginParticipantMap', (
+          SELECT json_agg(
+            json_build_object(
+              'campaignParticipantId', wcpm."campaignParticipantId",
+              'waMessageId', wcpm."waMessageId",
+              'waMessage', json_build_object(
+                'stats', wm."stats",
+                'waCreatedAt', wm."waCreatedAt"
+              )
+            )
+          )
+          FROM "WaMessageCampaginParticipantMap" wcpm
+          JOIN "WaMessage" wm ON wcpm."waMessageId" = wm."id"
+          WHERE wcpm."campaignParticipantId" = cp."id"
+        ),
+        'campaign', json_build_object(
+          'flowId', c."flowId"
+        )
+      )
+    )
+    FROM "CampaignParticipant" cp
+    JOIN "Contact" con ON cp."contactId" = con."id"
+    WHERE cp."campaignId" = c."id"
+  ) AS "campaignParticipants"
+FROM "Campaign" c
+JOIN "Team" t ON c."teamId" = t."id"
+JOIN "Org" o ON t."orgId" = o."id"
+JOIN "WaAccountSettings" oas ON o."id" = oas."orgId"
+LEFT JOIN "WaTemplate" wt ON c."waTemplateId" = wt."id"
+WHERE c."id" = ${campaignId}::uuid;
+`;
+  let campaign = campaignTemp?.[0];
 
   if (!campaign) {
     throw new Error(`Campaign with ID ${campaignId} not found.`);
   }
 
-  // Fetch all participant IDs
-  const participantIds = campaign.campaignParticipants.map(
-    (p) => Prisma.sql`${p.id}::uuid`,
-  );
-
-  const waMessageMaps: Array<{
-    campaignParticipantId: string;
-    waMessage: {
-      stats: WaMessageStats;
-    };
-  }> = await prisma.$queryRaw`
-  SELECT wmcp."campaignParticipantId", wmcp."waMessageId", 
-         json_build_object('stats', wm."stats", 'waCreatedAt', wm."waCreatedAt") as "waMessage"
-  FROM "WaMessageCampaginParticipantMap" wmcp
-  INNER JOIN "WaMessage" wm ON wmcp."waMessageId" = wm.id
-  WHERE wmcp."campaignParticipantId" IN (${Prisma.join(participantIds)})
-  ORDER BY wm."waCreatedAt" DESC
-`;
   // Process participants
   let countRead = 0,
     countSent = 0,
@@ -151,9 +199,10 @@ export async function getCampaignById(campaignId: string) {
 
   for (const participant of campaign.campaignParticipants) {
     const participantStatus = participant.status;
-    const participantMessages = waMessageMaps.filter(
-      (map) => map.campaignParticipantId === participant.id,
-    );
+    const participantMessages =
+      participant?.WaMessageCampaginParticipantMap?.filter(
+        (map) => map.campaignParticipantId === participant.id,
+      );
 
     const latestStatus = getLatestStatus(participantMessages);
 
