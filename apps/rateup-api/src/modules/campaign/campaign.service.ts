@@ -114,6 +114,7 @@ participant_data AS (
     cp.*,
     c.name as name,
     c.phone as contact_phone,
+    c.consent,
     wm.stats as message_stats,
     wm."waCreatedAt" as message_created_at,
     camp."flowId"
@@ -137,7 +138,8 @@ SELECT
         'status', pd.status,
         'contact', json_build_object(
           'name', pd.name,
-          'phone', pd.contact_phone
+          'phone', pd.contact_phone,
+          'consent', pd.consent
         ),
         'WaMessageCampaginParticipantMap', json_build_object(
           'waMessage', json_build_object(
