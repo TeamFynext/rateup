@@ -33,10 +33,14 @@ export const deleteWaSettings = async () => {
   return res.data;
 };
 
-export const registerBusinessClient = async (code) => {
+export const registerBusinessClient = async ({
+  code,
+  phone_number_id,
+  waba_id,
+}) => {
   const res = axiosClient.post(
     `${authUrl}/register`,
-    { code },
+    { code, phone_number_id, waba_id },
     {
       timeout: 1000 * 25,
     },

@@ -14,7 +14,6 @@ import {
   Stack,
   Tabs,
   Text,
-  Title,
   Tooltip,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
@@ -28,6 +27,7 @@ import {
 } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { showErrorToast, showWarnToast } from "@/utils/notifications";
 
 import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import {
@@ -37,15 +37,11 @@ import {
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "../../../backend/whatsapp/settings/waSettings.query";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../../components/Button/RateupButtons";
+import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import {
   ContainedTextArea,
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
-import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
@@ -201,15 +197,12 @@ function WhatsAppManualConfiguration({ waSettings }) {
 
 const initFacebookSdk = () => {
   return new Promise((resolve, reject) => {
-    //@ts-ignore
     window.fbAsyncInit = function () {
-      //@ts-ignore
       window.FB.init({
         appId: "3634460296824137",
-        cookie: true,
         autoLogAppEvents: true,
         xfbml: true,
-        version: "v19.0",
+        version: "v21.0",
       });
     };
   });
@@ -217,16 +210,14 @@ const initFacebookSdk = () => {
 
 const getFacebookLoginStatus = () => {
   return new Promise((resolve, reject) => {
-    //@ts-ignore
     window.FB.getLoginStatus((response) => {
       resolve(response);
     });
   });
 };
 
-const fbLogin = () => {
+const fbLogin = (): Promise<FBLoginResponse> => {
   return new Promise((resolve, reject) => {
-    //@ts-ignore
     window.FB.login(
       (response) => {
         resolve(response);
@@ -235,43 +226,95 @@ const fbLogin = () => {
         config_id: "1570807597035749", // configuration ID obtained in the previous step goes here
         response_type: "code", // must be set to 'code' for System User access token
         override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType: "",
+          sessionInfoVersion: "2",
+        },
       },
     );
   });
 };
 
 function MetaLoginButton() {
+  const [waData, setWData] = useState({
+    phone_number_id: "",
+    waba_id: "",
+  });
+  const registerMutation = useRegisterBusinessClientMutation();
+  const { translations } = useTranslations();
+
   useEffect(() => {
-    initFacebookSdk().then(() => {
-      getFacebookLoginStatus().then((response) => {
-        if (response == null) {
-          console.log("No login status for the person");
-        } else {
-          console.log("loginstatus_res => ", response);
+    initFacebookSdk();
+
+    const handleMessage = (event) => {
+      if (
+        event.origin !== "https://www.facebook.com" &&
+        event.origin !== "https://web.facebook.com"
+      ) {
+        return;
+      }
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "WA_EMBEDDED_SIGNUP") {
+          if (data.event === "FINISH") {
+            const { phone_number_id, waba_id } = data.data;
+            setWData({ phone_number_id, waba_id });
+          } else if (data.event === "CANCEL") {
+            const { current_step } = data.data;
+            setWData({ phone_number_id: "", waba_id: "" });
+            showWarnToast("Meta login cancelled at " + current_step);
+          } else if (data.event === "ERROR") {
+            const { error_message } = data.data;
+            setWData({ phone_number_id: "", waba_id: "" });
+            showErrorToast(JSON.stringify(error_message));
+          }
         }
-      });
-    });
+      } catch {
+        showErrorToast("Error in parsing response");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, []);
 
-  const registerMutation = useRegisterBusinessClientMutation();
-
-  function login() {
-    fbLogin().then((response: { authResponse: { code: string } }) => {
-      if (response.authResponse) {
-        const code = response.authResponse.code;
-        registerMutation.mutate(code);
+  async function login() {
+    const response = await fbLogin();
+    if (response.authResponse) {
+      const code = response.authResponse.code;
+      if (waData.phone_number_id && waData.waba_id && code) {
+        registerMutation.mutate({
+          code,
+          phone_number_id: waData.phone_number_id,
+          waba_id: waData.waba_id,
+        });
       } else {
-        console.log("Error in meta login");
-        console.log(response);
+        showErrorToast("Error in meta login");
       }
-    });
+    } else if (response.status === "not_authorized") {
+      showErrorToast("Not authorized");
+    }
   }
-  const { translations } = useTranslations();
   return (
+    // dont change the style of this button this is the requirement from facebook
     <Button
       onClick={login}
-      color={"#1877f2"}
-      size={"lg"}
+      style={{
+        backgroundColor: "#1877f2",
+        border: 0,
+        borderRadius: "4px",
+        color: "#fff",
+        cursor: "pointer",
+        fontFamily: "Helvetica, Arial, sans-serif",
+        fontSize: "16px",
+        fontWeight: "bold",
+        height: "40px",
+        padding: "0 24px",
+      }}
       loading={registerMutation.isPending}
     >
       {translations["Login with Facebook"]}
@@ -299,6 +342,8 @@ export default function WhatsAppSettingsPage() {
   return (
     <Stack h={"100%"}>
       <Script
+        async
+        defer
         src="https://connect.facebook.net/en_US/sdk.js"
         crossOrigin="anonymous"
       ></Script>
