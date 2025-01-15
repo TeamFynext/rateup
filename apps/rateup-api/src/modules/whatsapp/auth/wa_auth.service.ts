@@ -16,36 +16,6 @@ export async function getAccessTokenFromCode(code: string) {
   return res.data.access_token;
 }
 
-export const getAccessTokenFromCodeServer = async (code: string) => {
-  // const url = "https://graph.facebook.com/v21.0/oauth/access_token";
-  // let body = JSON.stringify({
-  //   client_id: process.env.waclient_id,
-  //   client_secret: process.env.waclient_secret,
-  //   grant_type: code,
-  //   redirect_uri: `https://developers.facebook.com/es/oauth/callback/?business_id=${process.env.wa_business_id}&nonce=rE1PrTNbpP6yxeaW9pHXPgDCAXd06o0Y`,
-  // });
-  // const res = await callWhatsappApi(url, "POST", "", body);
-  const url = "https://graph.facebook.com/v21.0/oauth/access_token";
-  const response = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify({
-      client_id: process.env.waclient_id,
-      client_secret: process.env.waclient_secret,
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: "https://qlfttch7-3000.inc1.devtunnels.ms/",
-      // `https://developers.facebook.com/es/oauth/callback/?business_id=${process.env.wa_business_id}&nonce=T9M0OUTzt33iZAJPWWumeDqlfrB4GT8B`,
-    }),
-    headers: { "Content-Type": "application/json" },
-  });
-  const data = await response.json();
-  console.log("🚀 ~ getAccessTokenFromCodeServer ~ data:", data);
-
-  log.trace("Access token response: %o", data?.data);
-  console.log("🚀 ~ getAccessTokenFromCodeServer ~ res.data:", data?.data);
-  return data?.data?.access_token;
-};
-
 /**
  * Returns metadata about a given access token.
  * This includes data such as the user for which the token was issued, whether the token is still valid, when it expires, and what permissions the app has for the given user.

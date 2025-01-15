@@ -13,6 +13,7 @@ import { log } from "../../../utils/logger";
 import {
   createWaSettings,
   deleteWaSettings,
+  updateWaSettings,
 } from "../settings/wa_settings.service";
 import { WaConfigType } from "../../../types/enums";
 import { GraphApiError } from "../wa_axios";
@@ -22,6 +23,7 @@ import {
   setNewEncryptionKeys,
 } from "../encryption/wa_encryption.utils";
 import { setBusinessPublicKey } from "../encryption/wa_encryption.service";
+import prisma from "../../../utils/prisma";
 
 export async function registerBusinessClientHandler(
   req: FastifyRequest<{
@@ -34,32 +36,16 @@ export async function registerBusinessClientHandler(
     const { orgId } = req.user;
 
     const accessToken = await getAccessTokenFromCode(code);
-    console.log("🚀 ~ accessToken:", accessToken);
-    // const ourAccessToken = process.env.wa_access_token;
-
-    // Getting business details
-    // const { data: businessDetails } = await debug_token(
-    //   accessToken,
-    //   ourAccessToken
-    // );
-    // log.trace("Business details: %o", businessDetails);
-    // console.log("businessDetails", JSON.stringify(businessDetails));
-
-    // const wabaId = businessDetails.granular_scopes.find(
-    //   (scope) => scope.scope === "whatsapp_business_messaging"
-    // ).target_ids[0];
 
     // Getting phone numbers & their ids
     const { data: phoneNumbers } = await getPhoneNumbersFromWABA(
       waba_id,
       accessToken,
     );
-    console.log("🚀 ~ phoneNumbers:", phoneNumbers);
 
-    // log.trace("Phone numbers: %o", phoneNumbers);
+    log.trace("Phone numbers: %o", phoneNumbers);
 
-    const phone = phoneNumbers[0];
-    // const wabaId = waba_id;
+    const phone = phoneNumbers?.[0];
 
     // Subscribing to webhook
     const subRes = await subscribeWABAToWebhook(waba_id, accessToken);
@@ -75,15 +61,26 @@ export async function registerBusinessClientHandler(
     );
     await setBusinessPublicKey(keys.publicKey, phone_number_id, accessToken);
     // Saving settings
-    await createWaSettings(orgId, {
-      wabaId: waba_id,
-      phone: phone.display_phone_number.replace(/ /g, ""),
-      phoneId: phone_number_id,
-      accessToken,
-      type: WaConfigType.Automated,
-      appId: process.env.wa_app_id,
-      encryption: keys,
+    const waSetting = await prisma.whatsappSettings.findUnique({
+      where: {
+        orgId,
+      },
     });
+    if (waSetting) {
+      await updateWaSettings(orgId, {
+        accessToken,
+      });
+    } else {
+      await createWaSettings(orgId, {
+        wabaId: waba_id,
+        phone: phone?.display_phone_number?.replace(/ /g, ""),
+        phoneId: phone_number_id,
+        accessToken,
+        type: WaConfigType.Automated,
+        appId: process.env.wa_app_id,
+        encryption: keys,
+      });
+    }
 
     log.info("Business client registered successfully");
     rep
