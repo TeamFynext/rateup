@@ -241,8 +241,22 @@ function MetaLoginButton() {
     phone_number_id: "",
     waba_id: "",
   });
-  const registerMutation = useRegisterBusinessClientMutation();
+  const [code, setCode] = useState("");
+  const registerMutation = useRegisterBusinessClientMutation(() => {
+    setWData({ phone_number_id: "", waba_id: "" });
+    setCode("");
+  });
   const { translations } = useTranslations();
+
+  useEffect(() => {
+    if (waData?.phone_number_id && waData?.waba_id && code) {
+      registerMutation.mutate({
+        code,
+        phone_number_id: waData.phone_number_id,
+        waba_id: waData.waba_id,
+      });
+    }
+  }, [waData, code]);
 
   useEffect(() => {
     initFacebookSdk();
@@ -263,15 +277,17 @@ function MetaLoginButton() {
           } else if (data.event === "CANCEL") {
             const { current_step } = data.data;
             setWData({ phone_number_id: "", waba_id: "" });
+            setCode("");
             showWarnToast("Meta login cancelled at " + current_step);
           } else if (data.event === "ERROR") {
             const { error_message } = data.data;
             setWData({ phone_number_id: "", waba_id: "" });
+            setCode("");
             showErrorToast(JSON.stringify(error_message));
           }
         }
       } catch {
-        showErrorToast("Error in parsing response");
+        console.log("Error in parsing response");
       }
     };
 
@@ -286,14 +302,11 @@ function MetaLoginButton() {
     const response = await fbLogin();
     if (response.authResponse) {
       const code = response.authResponse.code;
-      if (waData.phone_number_id && waData.waba_id && code) {
-        registerMutation.mutate({
-          code,
-          phone_number_id: waData.phone_number_id,
-          waba_id: waData.waba_id,
-        });
+      if (code) {
+        setCode(code);
       } else {
-        showErrorToast("Error in meta login");
+        setCode("");
+        showErrorToast("Error in meta login, Try again later");
       }
     } else if (response.status === "not_authorized") {
       showErrorToast("Not authorized");
