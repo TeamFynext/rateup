@@ -9,9 +9,7 @@ export async function getAccessTokenFromCode(code: string) {
   url = url + `?client_id=${process.env.waclient_id}`;
   url = url + `&client_secret=${process.env.waclient_secret}`;
   url = url + `&code=${code}`;
-  url =
-    url +
-    `&redirect_uri=${process.env.FRONTEND_URL}/dashboard/whatsapp/settings`;
+  url = url + `&redirect_uri=`;
   const res = await callWhatsappApi(url, "GET");
 
   log.trace("Access token response: %o", res.data);
