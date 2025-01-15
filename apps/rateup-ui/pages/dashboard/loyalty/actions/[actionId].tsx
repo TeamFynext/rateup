@@ -9,11 +9,13 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyActionForm from "@/components/LoyaltyComponents/Action/LoyaltyActionForm";
 import { useRouteParams } from "@/context/RouteParamsContext";
+import useTranslations from "@/dictionaries/useTranslation";
 
 const ActionID = () => {
   const router = useRouter();
   const { actionId } = router.query;
   const { update } = useRouteParams();
+  const { translations } = useTranslations();
 
   const { data: action, isLoading: isActionLoading } = useGetLoyaltyActionById(
     actionId !== "create" ? actionId : null,
@@ -37,7 +39,7 @@ const ActionID = () => {
 
   return (
     <LoyaltyActionForm
-      title={action ? action.name : "Create Action"}
+      title={action ? action.name : translations["Create Action"]}
       action={action}
       existingActionIds={existingActionIds}
       isReferralAvailable={!referralAction}

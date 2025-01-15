@@ -148,7 +148,7 @@ export default function Contacts() {
               leftSection={<IconSearch size="17.6px" stroke={1.5} />}
               radius="xl"
               size="md"
-              placeholder={`Search ${activeTab}`}
+              placeholder={`${translations["Search"]} ${activeTab}`}
               rightSectionWidth={60}
               defaultValue={searchTerm}
               onChange={(event) => setSearchTerm(event.currentTarget.value)}
@@ -330,6 +330,7 @@ export function generateColumns(
   setCustomerRedeems,
 ) {
   const columnHelper = createColumnHelper<LoyaltyCustomerTable>();
+  const { translations } = useTranslations();
 
   const defaultColumns = useMemo(
     () => [
@@ -362,7 +363,7 @@ export function generateColumns(
       // },
       columnHelper.accessor((row) => row, {
         id: "customerInfo",
-        header: () => <span>Customer Info</span>,
+        header: () => <span>{translations["Customer Info"]}</span>,
         cell: ({ getValue }) => {
           return (
             <Stack w={200} gap={0}>
@@ -379,7 +380,7 @@ export function generateColumns(
       }),
       columnHelper.accessor((row) => row.referralCodes?.join(","), {
         id: "referralCode",
-        header: "Referral Code",
+        header: translations["Referral Code"],
       }),
       ...Object.entries(LoyaltyActionType).map(([key, value]) =>
         columnHelper.accessor((row) => row[value], {
@@ -402,7 +403,7 @@ export function generateColumns(
       ),
       columnHelper.accessor((row) => row.totalPoints, {
         id: "totalPoints",
-        header: "Total Points",
+        header: translations["Total Points"],
       }),
       columnHelper.accessor((row) => row.balancePoints, {
         id: "balancePoints",
@@ -410,7 +411,7 @@ export function generateColumns(
       }),
       columnHelper.accessor((row) => row.redeems, {
         id: "redeems",
-        header: "Redeems",
+        header: translations["Redeems"],
         cell: ({ getValue }) => {
           return (
             <>
@@ -428,7 +429,7 @@ export function generateColumns(
       }),
 
       columnHelper.accessor((row) => row, {
-        header: () => "Action",
+        header: () => translations["Action"],
         enableSorting: false,
         enableColumnFilter: false,
         id: "action",

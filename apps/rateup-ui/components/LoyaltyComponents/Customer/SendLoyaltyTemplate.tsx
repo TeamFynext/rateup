@@ -10,8 +10,10 @@ import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 
 const SendLoyaltyTemplate = ({ opened, close }) => {
+  const { translations } = useTranslations();
   const form = useForm({
     initialValues: {
       phone: "",
@@ -19,10 +21,15 @@ const SendLoyaltyTemplate = ({ opened, close }) => {
     },
     validate: {
       phone: (value) =>
-        !value || !isValidPhoneNumber(value) ? "Invalid Phone number" : null,
-      waTemplateId: isNotEmpty("Select WhatsApp Template"),
+        !value || !isValidPhoneNumber(value)
+          ? translations["Invalid phone number"]
+          : null,
+      waTemplateId: isNotEmpty(
+        translations["Select"] + translations["whatsApp Template"],
+      ),
     },
   });
+
   const sendTemplate = useSendWaTemplateToUser(form.values.phone, "");
 
   function handleSendRegisterTemplate() {
@@ -42,17 +49,17 @@ const SendLoyaltyTemplate = ({ opened, close }) => {
         form.reset();
         close();
       }}
-      buttonTitle="Send"
+      buttonTitle={translations["Send"]}
       onSubmit={handleSendRegisterTemplate}
       submitButtonLeftIcon={<IconSend />}
       isLoading={sendTemplate.isPending}
     >
       <Title ta={"center"} mb={"xl"} order={4}>
-        Send Loyalty Register Template
+        {translations["Send Customer Register Template"]}
       </Title>
       <Stack>
         <PhoneInputWithCountry
-          label="Phone Number"
+          label={translations["Phone Number"]}
           {...form.getInputProps("phone")}
         />
         <WaTemplateSelector

@@ -59,22 +59,24 @@ const LoyaltyRewardForm = ({
       reward_id: "",
     },
     validate: {
-      name: isNotEmpty("Name cannot be empty"),
-      points: (value) => (!value ? "Points required" : null),
-      maxPerUser: (value) => (!value ? "Max Per User required" : null),
-      description: isNotEmpty("description cannot be empty"),
-      rewardType: isNotEmpty("Select Reward Type"),
+      name: isNotEmpty(translations["Name cannot be blank"]),
+      points: (value) =>
+        !value ? translations["Points"] + translations["required"] : null,
+      maxPerUser: (value) =>
+        !value ? translations["Max Per User"] + translations["required"] : null,
+      description: isNotEmpty(translations["description cannot be empty"]),
+      rewardType: isNotEmpty(translations["Select Reward Type"]),
       rewardValue: (value, values) =>
         !value.value
-          ? "Provide reward value"
+          ? translations["Provide reward value"]
           : values.rewardType === RewardTypes.VariableDiscount && !value.amount
-            ? "Provide amount"
+            ? translations["Provide amount"]
             : null,
       reward_id: (value) =>
         !/^[A-Za-z0-9_]+$/.test(value)
-          ? "Reward Id can only have alphanumerics and underscore"
+          ? translations["Reward Id can only have alphanumerics and underscore"]
           : !reward && existingRewardIds.includes(value)
-            ? "Reward Id already taken"
+            ? translations["Reward Id already taken"]
             : null,
     },
   });
@@ -85,7 +87,6 @@ const LoyaltyRewardForm = ({
       updateReward.mutate(form.values, {
         onSuccess: () => {
           form.reset();
-          // close();
           router.push("/dashboard/loyalty/rewards");
         },
       });
@@ -94,7 +95,6 @@ const LoyaltyRewardForm = ({
     createReward.mutate(form.values, {
       onSuccess: () => {
         form.reset();
-        // close();
         router.push("/dashboard/loyalty/rewards");
       },
     });
@@ -131,7 +131,7 @@ const LoyaltyRewardForm = ({
       form.values.reward_id &&
       existingRewardIds.includes(form.values.reward_id)
     ) {
-      form.setFieldError("reward_id", "Reward Id already taken");
+      form.setFieldError("reward_id", translations["Reward Id already taken"]);
     }
   }, [form.values.reward_id]);
 
@@ -148,7 +148,7 @@ const LoyaltyRewardForm = ({
             }}
           />
           <RateupButtonPrimary
-            title="Save"
+            title={translations["Save"]}
             onClick={handleSubmit}
             loading={createReward.isPending || updateReward.isPending}
           />
@@ -157,7 +157,7 @@ const LoyaltyRewardForm = ({
       <PaperLayout>
         <SimpleGrid cols={2}>
           <ContainedTextField
-            label={"Name"}
+            label={translations["Name"]}
             {...form.getInputProps("name")}
             placeholder={translations["Enter Reward Name"]}
             readOnly={disabled}
@@ -165,19 +165,19 @@ const LoyaltyRewardForm = ({
           <ContainedTextField
             label={"Reward Id"}
             {...form.getInputProps("reward_id")}
-            placeholder={"Enter reward id"}
+            placeholder={translations["Enter reward id"]}
             readOnly={disabled}
             disabled={reward && reward.reward_id?.length}
           />
           <ContainedTextArea
-            label={"Description"}
+            label={translations["Description"]}
             {...form.getInputProps("description")}
             autosize
             minRows={3}
             readOnly={disabled}
           />
           <ContainedTextArea
-            label={"Terms and Condition"}
+            label={translations["Terms and Condition"]}
             {...form.getInputProps("tnc")}
             autosize
             minRows={3}
@@ -186,35 +186,38 @@ const LoyaltyRewardForm = ({
           <ContainedSelection
             data={Object.values(RewardTypes)}
             {...form.getInputProps("rewardType")}
-            label="Reward Type"
-            placeholder="Choose Reward Type"
+            label={translations["Reward Type"]}
+            placeholder={translations["Choose Reward Type"]}
             readOnly={disabled}
           />
           <RewardValueInput form={form} readOnly={disabled} />
           <ContainedNumberInput
-            label={"Required Points"}
+            label={translations["Required Points"]}
             {...form.getInputProps("points")}
             allowDecimal={false}
             allowNegative={false}
             readOnly={disabled}
           />
           <ContainedNumberInput
-            label={"Maximum Per User"}
+            label={translations["Maximum Per User"]}
             {...form.getInputProps("maxPerUser")}
             allowDecimal={false}
             allowNegative={false}
             readOnly={disabled}
           />
           <ContainedDateInput
-            label={"Expiry Date"}
+            label={translations["Expiry Date"]}
             {...form.getInputProps("expireAt")}
             readOnly={disabled}
           />
           <WaTemplateSelector
             templateType={TemplateType.LOYALTY}
-            label="WhatsApp Template(to send after reward redemption)"
+            label={
+              translations["whatsApp Template"] +
+              translations["(to send after reward redemption)"]
+            }
             {...form.getInputProps("waTemplateId")}
-            description="Dynamic variable {{1}} - customer name, {{2}} - current redeemed points"
+            description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - ${translations["current redeemed points"]}`}
             readOnly={disabled}
           />
         </SimpleGrid>
@@ -226,11 +229,12 @@ const LoyaltyRewardForm = ({
 export default LoyaltyRewardForm;
 
 const RewardValueInput = ({ form, readOnly }) => {
+  const { translations } = useTranslations();
   switch (form.values.rewardType) {
     case RewardTypes.FixedAmountDiscount:
       return (
         <ContainedNumberInput
-          label="Discount Amount"
+          label={translations["Discount Amount"]}
           allowNegative={false}
           readOnly={readOnly}
           {...form.getInputProps("rewardValue.value")}
@@ -240,13 +244,13 @@ const RewardValueInput = ({ form, readOnly }) => {
       return (
         <>
           <ContainedNumberInput
-            label="Amount"
+            label={translations["Amount"]}
             {...form.getInputProps("rewardValue.amount")}
             readOnly={readOnly}
             allowNegative={false}
           />
           <ContainedNumberInput
-            label="Discout Amount"
+            label={translations["Discout Amount"]}
             readOnly={readOnly}
             allowNegative={false}
             {...form.getInputProps("rewardValue.value")}
@@ -256,7 +260,7 @@ const RewardValueInput = ({ form, readOnly }) => {
     case RewardTypes.FreeProduct:
       return (
         <ContainedTextField
-          label="Product Name"
+          label={translations["Product Name"]}
           readOnly={readOnly}
           {...form.getInputProps("rewardValue.value")}
         />
@@ -264,7 +268,7 @@ const RewardValueInput = ({ form, readOnly }) => {
     case RewardTypes.PercentageOff:
       return (
         <ContainedNumberInput
-          label="Percentage (%)"
+          label={translations["Percentage"] + "(%)"}
           readOnly={readOnly}
           max={100}
           allowNegative={false}
@@ -274,7 +278,7 @@ const RewardValueInput = ({ form, readOnly }) => {
     case RewardTypes.GiftCard:
       return (
         <ContainedNumberInput
-          label="Discount Amount"
+          label={translations["Discount Amount"]}
           readOnly={readOnly}
           {...form.getInputProps("rewardValue.value")}
         />
