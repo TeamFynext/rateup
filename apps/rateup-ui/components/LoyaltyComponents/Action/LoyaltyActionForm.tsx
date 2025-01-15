@@ -63,19 +63,28 @@ const LoyaltyActionForm = ({
 
   const schema = z
     .object({
-      type: z.string().trim().min(1, { message: "Select the action type" }),
-      name: z.string().trim().min(1, { message: "Name cannot be blank" }),
+      type: z
+        .string()
+        .trim()
+        .min(1, { message: translations["Select the action type"] }),
+      name: z
+        .string()
+        .trim()
+        .min(1, { message: translations["Name cannot be blank"] }),
       action_id: z
         .string()
         .trim()
-        .min(1, { message: "Action Id cannot be blank" })
+        .min(1, { message: translations["Action Id cannot be blank"] })
         .regex(/^[a-zA-Z0-9_]+$/, {
-          message: "Action Id can only have alphanumerics and underscores",
+          message:
+            translations[
+              "Action Id can only have alphanumerics and underscores"
+            ],
         }),
       description: z
         .string()
         .trim()
-        .min(1, { message: "Description required" }),
+        .min(1, { message: translations["Description required"] }),
       message: z.object({
         message: z.any(),
         forwardMessage: z.any(),
@@ -92,10 +101,10 @@ const LoyaltyActionForm = ({
       waTemplateId: z.string().optional().nullable(),
       refereeWaTemplateId: z.string().optional().nullable(),
       startDate: z.date().refine((date) => date !== null, {
-        message: "Start date cannot be empty",
+        message: translations["Start date cannot be empty"],
       }),
       endDate: z.date().refine((date) => date !== null, {
-        message: "End date cannot be empty",
+        message: translations["End date cannot be empty"],
       }),
       isExistingUserReferralAllowed: z.boolean().optional().nullable(),
       actionRewardType: z.nativeEnum(ActionRewadTypes),
@@ -110,7 +119,7 @@ const LoyaltyActionForm = ({
         ctx.addIssue({
           path: ["action_id"],
           code: z.ZodIssueCode.custom,
-          message: "Action Id already taken",
+          message: translations["Action Id already taken"],
         });
       }
       if (
@@ -120,7 +129,7 @@ const LoyaltyActionForm = ({
         ctx.addIssue({
           path: ["points"],
           code: z.ZodIssueCode.custom,
-          message: "Points should be minimum of one",
+          message: translations["Points should be minimum of one"],
         });
       }
       if (
@@ -131,14 +140,14 @@ const LoyaltyActionForm = ({
         ctx.addIssue({
           path: ["refereePoints"],
           code: z.ZodIssueCode.custom,
-          message: "Points should be minimum of one",
+          message: translations["Points should be minimum of one"],
         });
       }
       if (values.endDate <= values.startDate) {
         ctx.addIssue({
           path: ["endDate"],
           code: z.ZodIssueCode.custom,
-          message: "End date must be after start date",
+          message: translations["End date must be after start date"],
         });
       }
       if (isLReferralAction(values.type)) {
@@ -146,13 +155,13 @@ const LoyaltyActionForm = ({
           ctx.addIssue({
             path: ["message.message"],
             code: z.ZodIssueCode.custom,
-            message: "Message cannot be blank",
+            message: translations["Message cannot be blank"],
           });
         if (!values.message?.forwardMessage) {
           ctx.addIssue({
             path: ["message.forwardMessage"],
             code: z.ZodIssueCode.custom,
-            message: "Forward Message cannot be blank",
+            message: translations["Forward Message cannot be blank"],
           });
         }
       }
@@ -163,7 +172,7 @@ const LoyaltyActionForm = ({
         ctx.addIssue({
           path: ["rewardId"],
           code: z.ZodIssueCode.custom,
-          message: "Select the reward",
+          message: translations["Select the reward"],
         });
       }
       if (
@@ -173,7 +182,7 @@ const LoyaltyActionForm = ({
         ctx.addIssue({
           path: ["refereeRewardId"],
           code: z.ZodIssueCode.custom,
-          message: "Select the reward",
+          message: translations["Select the reward"],
         });
       }
     });
@@ -209,7 +218,6 @@ const LoyaltyActionForm = ({
   });
 
   function handleSubmit() {
-    console.log("form.validate()", form.validate());
     if (form.validate().hasErrors) return;
     if (action) {
       const { type, actionRewardType, refereeActionRewardType, ...rest } =
@@ -217,7 +225,6 @@ const LoyaltyActionForm = ({
       updateLoyaltyActionMut.mutate(rest, {
         onSuccess: () => {
           form.reset(), router.push("/dashboard/loyalty/actions");
-          // close();
         },
       });
       return;
@@ -226,7 +233,6 @@ const LoyaltyActionForm = ({
     createLoyaltyActionMutation.mutate(rest, {
       onSuccess: () => {
         form.reset(), router.push("/dashboard/loyalty/actions");
-        // close();
       },
     });
   }
@@ -285,7 +291,7 @@ const LoyaltyActionForm = ({
       form.values.action_id &&
       existingActionIds.includes(form.values.action_id)
     ) {
-      form.setFieldError("action_id", "Action Id already taken");
+      form.setFieldError("action_id", translations["Action Id already taken"]);
     }
   }, [form.values.action_id]);
 
@@ -295,7 +301,7 @@ const LoyaltyActionForm = ({
         <Title>{title}</Title>
         <Group>
           <RateupButtonSecondary
-            title={"Cancel"}
+            title={translations["Cancel"]}
             onClick={() => {
               form.reset();
               router.push("/dashboard/loyalty/actions");
@@ -318,22 +324,22 @@ const LoyaltyActionForm = ({
               isReferralAvailable={isReferralAvailable}
             />
             <ContainedTextField
-              label={"Action Id"}
+              label={translations["Action Id"]}
               {...form.getInputProps("action_id")}
               disabled={action && action.action_id?.length}
             />
             <ContainedTextField
-              label={"Name"}
+              label={translations["Name"]}
               {...form.getInputProps("name")}
             />
             <Group>
               <ContainedDateInput
-                label={"Start Date"}
+                label={translations["Start Date"]}
                 {...form.getInputProps("startDate")}
               />{" "}
               -
               <ContainedDateInput
-                label={"End Date"}
+                label={translations["End Date"]}
                 {...form.getInputProps("endDate")}
               />
             </Group>
@@ -348,8 +354,9 @@ const LoyaltyActionForm = ({
                 <Checkbox
                   label={
                     isLReferralAction(form.values.type)
-                      ? "Amount Based for Referrer"
-                      : "Amount Based"
+                      ? translations["Amount Based"] +
+                        translations["for referrer"]
+                      : translations["Amount Based"]
                   }
                   {...form.getInputProps("isAmountBased")}
                   checked={form.values.isAmountBased}
@@ -358,7 +365,9 @@ const LoyaltyActionForm = ({
                   }
                 />
                 <Checkbox
-                  label={"Amount Based for Friends"}
+                  label={
+                    translations["Amount Based"] + translations["for friends"]
+                  }
                   {...form.getInputProps("isAmountBasedForReferee")}
                   checked={form.values.isAmountBasedForReferee}
                   display={
@@ -370,7 +379,7 @@ const LoyaltyActionForm = ({
                 />
               </Stack>
               <ContainedNumberInput
-                label={"Amount"}
+                label={translations["Amount"]}
                 {...form.getInputProps("amount")}
                 allowNegative={false}
                 display={
@@ -401,22 +410,22 @@ const LoyaltyActionForm = ({
                 {form.values.actionRewardType === ActionRewadTypes.Reward ? (
                   <LRSelector
                     {...form.getInputProps("rewardId")}
-                    label="Reward"
+                    label={translations["Reward"]}
                   />
                 ) : (
                   <>
                     <ContainedNumberInput
                       label={
                         form.values.isAmountBased
-                          ? "Points per amount"
-                          : "Points"
+                          ? translations["Points per amount"]
+                          : translations["Points"]
                       }
                       {...form.getInputProps("points")}
                       allowDecimal={false}
                       allowNegative={false}
                     />
                     <ContainedNumberInput
-                      label={"Max Points Per Transaction"}
+                      label={translations["Max Points Per Transaction"]}
                       {...form.getInputProps("maxPoints")}
                       allowDecimal={false}
                       allowNegative={false}
@@ -428,11 +437,14 @@ const LoyaltyActionForm = ({
                   templateType={TemplateType.LOYALTY}
                   label={
                     isLReferralAction(form.values.type)
-                      ? "WhatsApp Template for referrer(to send after action)"
-                      : "WhatsApp Template(to send after action)"
+                      ? translations["whatsApp Template"] +
+                        translations["for referrer"] +
+                        translations["(to send after action)"]
+                      : translations["whatsApp Template"] +
+                        translations["(to send after action)"]
                   }
-                  description={`Dynamic variable {{1}} - customer name, {{2}} - 
-                      current earned points ${isLReferralAction(form.values.type) ? " ,{{3}} - Friend name, {{4}} - Friend phone number" : ""} `}
+                  description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - 
+                      ${translations["current earned points"]} ${isLReferralAction(form.values.type) ? `,{{3}} - ${translations["Friend name"]}, {{4}} - ${translations["Friend phone number"]}` : ""} `}
                   {...form.getInputProps("waTemplateId")}
                 />
               </Stack>
@@ -458,18 +470,18 @@ const LoyaltyActionForm = ({
                     ActionRewadTypes.Reward ? (
                       <LRSelector
                         {...form.getInputProps("refereeRewardId")}
-                        label={"Reward"}
+                        label={translations["Reward"]}
                       />
                     ) : (
                       <>
                         <ContainedNumberInput
-                          label={"Points"}
+                          label={translations["Points"]}
                           {...form.getInputProps("refereePoints")}
                           allowDecimal={false}
                           allowNegative={false}
                         />
                         <ContainedNumberInput
-                          label={"Max Points Per Transaction"}
+                          label={translations["Max Points Per Transaction"]}
                           {...form.getInputProps("maxPointsForReferee")}
                           allowDecimal={false}
                           allowNegative={false}
@@ -483,14 +495,20 @@ const LoyaltyActionForm = ({
                       </>
                     )}
                     <Checkbox
-                      label={"Referral allowed for existing customer"}
+                      label={
+                        translations["Referral allowed for existing customer"]
+                      }
                       {...form.getInputProps("isExistingUserReferralAllowed")}
                       checked={form.values.isExistingUserReferralAllowed}
                     />
                     <WaTemplateSelector
                       templateType={TemplateType.LOYALTY}
-                      label="WhatsApp Template for friends(to send after action)"
-                      description="Dynamic variable {{1}} - customer name, {{2}} - current earned points"
+                      label={
+                        translations["whatsApp Template"] +
+                        translations["for friends"] +
+                        translations["(to send after action)"]
+                      }
+                      description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - ${translations["current earned points"]}`}
                       {...form.getInputProps("refereeWaTemplateId")}
                     />
                   </Stack>
@@ -502,9 +520,13 @@ const LoyaltyActionForm = ({
           {isLReferralAction(form.values.type) && (
             <SimpleGrid cols={2}>
               <Stack gap={0}>
-                <Text size="sm">Referral Message</Text>
+                <Text size="sm">{translations["Referral Message"]}</Text>
                 <Text size="xs" c={"dimmed"}>
-                  Used in whatsapp message to send for referral
+                  {
+                    translations[
+                      "Used in whatsapp message to send for referral"
+                    ]
+                  }
                 </Text>
                 <WaTextEditor
                   handleInputChange={(value) => {
@@ -516,12 +538,18 @@ const LoyaltyActionForm = ({
               </Stack>
               <Stack gap={0}>
                 <Text size="sm">
-                  Referral forwarding Message with referral code
+                  {
+                    translations[
+                      "Referral forwarding Message with referral code"
+                    ]
+                  }
                 </Text>
-                <Text
-                  size="xs"
-                  c={"dimmed"}
-                >{`Used in whatsapp message for forwarding to friends. Use {{code}} to replace with referral code`}</Text>
+                <Text size="xs" c={"dimmed"}>
+                  {translations[
+                    "Used in whatsapp message for forwarding to friends"
+                  ] +
+                    translations["Use {{code}} to replace with referral code"]}
+                </Text>
                 <WaTextEditor
                   handleInputChange={(value) => {
                     console.log("cc f", value);

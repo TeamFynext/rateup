@@ -5,10 +5,12 @@ import { useForm } from "@mantine/form";
 import { useUpdateRedeem } from "@/backend/loyalty/redeems/redeems.query";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import { RedeemStatus } from "@/pages/dashboard/loyalty/redeem";
 
 const UpdateRedeemStatusModal = ({ opened, close, redeem }) => {
   const updateRedeemMut = useUpdateRedeem();
+  const { translations } = useTranslations();
 
   const form = useForm({
     initialValues: {
@@ -45,10 +47,10 @@ const UpdateRedeemStatusModal = ({ opened, close, redeem }) => {
       onSubmit={handleUpdateStatus}
       isLoading={updateRedeemMut.isPending}
       centered
-      buttonTitle="Update"
+      buttonTitle={translations["Update"]}
     >
       <ContainedSelection
-        label="Status"
+        label={translations["Status"]}
         data={Object.values(RedeemStatus)}
         {...form.getInputProps("status")}
       />

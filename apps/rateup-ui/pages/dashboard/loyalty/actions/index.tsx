@@ -13,8 +13,10 @@ import { ContainedSelection } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyActionCard from "@/components/LoyaltyComponents/Action/LoyaltyActionCard";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import useTranslations from "@/dictionaries/useTranslation";
 
 const index = () => {
+  const { translations } = useTranslations();
   const {
     data: subscription,
     isLoading: isSubscriptionLoading,
@@ -25,10 +27,13 @@ const index = () => {
   const { data: loyaltyActions, isLoading } = useGetLoyaltyActions();
   const [selectedAction, setSelectedAction] = useState("All Actions");
 
-  const actionFilterData = ["All Actions", ...Object.values(LoyaltyActionType)];
+  const actionFilterData = [
+    translations["All Actions"],
+    ...Object.values(LoyaltyActionType),
+  ];
 
   const filteredLoyaltyActions =
-    selectedAction === "All Actions"
+    selectedAction === translations["All Actions"]
       ? loyaltyActions
       : loyaltyActions?.filter((action) => action?.type === selectedAction);
 
@@ -45,7 +50,7 @@ const index = () => {
       <Group justify="space-between">
         <Group>
           <RateupButtonBlue
-            title="New Action"
+            title={translations["New Action"]}
             rightIcon={<IconPlus />}
             onClick={() => {
               router.push("/dashboard/loyalty/actions/create");
@@ -67,7 +72,7 @@ const index = () => {
           ))}
         </SimpleGrid>
       ) : (
-        <NothingFound text={"No actions found"} />
+        <NothingFound text={translations["No action found"]} />
       )}
     </Stack>
   );

@@ -9,16 +9,22 @@ import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 
 const ManualRedeemModal = ({ opened, close }) => {
+  const { translations } = useTranslations();
+
   const form = useForm({
     initialValues: {
       rewardId: "",
       phone: "",
     },
     validate: {
-      phone: (value) => (!isValidPhoneNumber(value) ? "Invalid number" : null),
-      rewardId: isNotEmpty("Choose a reward"),
+      phone: (value) =>
+        !isValidPhoneNumber(value)
+          ? translations["Invalid phone number"]
+          : null,
+      rewardId: isNotEmpty(translations["Choose a reward"]),
     },
   });
 
@@ -49,7 +55,7 @@ const ManualRedeemModal = ({ opened, close }) => {
     <FormModalLayout
       opened={opened}
       onClose={onClose}
-      title="Manual Redeeem"
+      title={translations["Manual Redeeem"]}
       centered
       includeCancelButton
       cancelOnClick={onClose}
@@ -60,13 +66,13 @@ const ManualRedeemModal = ({ opened, close }) => {
       <Stack>
         <PhoneInputWithCountry
           {...form.getInputProps("phone")}
-          label="Phone Number"
+          label={translations["Phone Number"]}
         />
         <ContainedSelection
           data={rewardData}
-          label={"Rewards"}
+          label={translations["Rewards"]}
           {...form.getInputProps("rewardId")}
-          placeholder="Select a reward"
+          placeholder={translations["Select a reward"]}
         />
       </Stack>
     </FormModalLayout>

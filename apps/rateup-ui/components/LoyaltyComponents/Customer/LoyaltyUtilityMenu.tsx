@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 
 import { useUser } from "@/context/UserContext";
+import useTranslations from "@/dictionaries/useTranslation";
 import { FRONTEND_URL } from "@/utils/constants";
 
 import LoyaltyBulkActions from "../Action/LoyaltyBulkActions";
@@ -33,6 +34,7 @@ const LoyaltyUtilityMenu = () => {
     useDisclosure(false);
   const [openedBulk, { open: openBulk, close: closeBulk }] =
     useDisclosure(false);
+  const { translations } = useTranslations();
 
   return (
     <Menu position="bottom-start" shadow="xl" width={200}>
@@ -42,7 +44,7 @@ const LoyaltyUtilityMenu = () => {
           leftSection={<IconLayoutSidebarLeftExpandFilled size={"1rem"} />}
           w={"fit-content"}
         >
-          Menu
+          {translations["Menu"]}
         </Button>
       </Menu.Target>
       <Menu.Dropdown
@@ -51,19 +53,19 @@ const LoyaltyUtilityMenu = () => {
         }
       >
         <Menu.Item onClick={open} leftSection={<IconHandClick size={"1rem"} />}>
-          Points Issuance
+          {translations["Points Issuance"]}
         </Menu.Item>
         <Menu.Item
           onClick={openBulk}
           leftSection={<IconHandClick size={"1rem"} />}
         >
-          Apply Bulk Actions
+          {translations["Apply Bulk Actions"]}
         </Menu.Item>
         <Menu.Item
           onClick={openReferral}
           leftSection={<IconUsers size="1rem" />}
         >
-          Referral
+          {translations["Referral"]}
         </Menu.Item>
         <Menu.Item leftSection={<IconAward size="1rem" />} onClick={openRedeem}>
           Redeem Reward
@@ -77,13 +79,13 @@ const LoyaltyUtilityMenu = () => {
           }
           leftSection={<IconUserPlus size="1rem" />}
         >
-          Customer Register
+          {translations["Customer Register"]}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconBrandWhatsapp size="1rem" />}
           onClick={openSendModal}
         >
-          Send Customer Register Template
+          {translations["Send Customer Register Template"]}
         </Menu.Item>
       </Menu.Dropdown>
       <LoyaltyManualCustomerActionModal opened={opened} close={close} />

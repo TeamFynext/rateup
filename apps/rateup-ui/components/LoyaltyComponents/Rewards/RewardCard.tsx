@@ -14,8 +14,6 @@ import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { LoyaltyPoint } from "../Action/LoyaltyActionCard";
 
 export function RewardCard({ reward }) {
-  const { translations } = useTranslations();
-  const [opened, { open, close }] = useDisclosure(false);
   const router = useRouter();
   return (
     <PaperLayout

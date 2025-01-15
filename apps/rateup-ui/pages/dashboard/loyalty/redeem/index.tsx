@@ -12,6 +12,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import UpdateRedeemStatusModal from "@/components/LoyaltyComponents/Redeem/UpdateRedeemStatusModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
+import useTranslations from "@/dictionaries/useTranslation";
 import { formatDateWithTime } from "@/utils/dateTime";
 
 export default function Redeems() {
@@ -70,23 +71,24 @@ type Redeem = {
 function generateColumns(open, setRedeem) {
   const columnHelper = createColumnHelper<Redeem>();
   const router = useRouter();
+  const { translations } = useTranslations();
 
   const defaultColumns = [
     columnHelper.accessor((row) => row.customer.Contact.name, {
       id: "name",
-      header: () => <span>Name</span>,
+      header: () => <span>{translations["Name"]}</span>,
     }),
     columnHelper.accessor((row) => row.customer.Contact.phone, {
       id: "phone",
-      header: "Phone",
+      header: translations["Phone"],
     }),
     columnHelper.accessor((row) => row.code, {
       id: "code",
-      header: "Redeem Code",
+      header: translations["Redeem Code"],
     }),
     columnHelper.accessor((row) => row.reward, {
       id: "rewardName",
-      header: "Reward",
+      header: translations["Reward"],
       cell: ({ getValue }) => {
         return (
           <Text
@@ -102,11 +104,11 @@ function generateColumns(open, setRedeem) {
     }),
     columnHelper.accessor((row) => row.reward.points, {
       id: "points",
-      header: "Required Points",
+      header: translations["Required Points"],
     }),
     columnHelper.accessor((row) => row, {
       id: "status",
-      header: "Status",
+      header: translations["Status"],
       cell: ({ getValue }) => {
         return (
           <Badge
@@ -124,7 +126,7 @@ function generateColumns(open, setRedeem) {
     }),
     columnHelper.accessor((row) => formatDateWithTime(row.createdAt), {
       id: "createdAt",
-      header: "Redeemed On",
+      header: translations["Redeemed On"],
     }),
   ];
 

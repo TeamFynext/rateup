@@ -8,11 +8,13 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyRewardForm from "@/components/LoyaltyComponents/Rewards/LoyaltyRewardForm";
 import { useRouteParams } from "@/context/RouteParamsContext";
+import useTranslations from "@/dictionaries/useTranslation";
 
 const RewardID = () => {
   const router = useRouter();
   const { rewardId } = router.query as { rewardId: string };
   const { update } = useRouteParams();
+  const { translations } = useTranslations();
 
   const { data: reward, isLoading: isRewardLoading } = useGetLoyaltyRewardById(
     rewardId !== "create" ? rewardId : null,
@@ -35,7 +37,7 @@ const RewardID = () => {
     <LoyaltyRewardForm
       reward={reward}
       existingRewardIds={existingRewardIds}
-      title={reward ? reward.name : "Create Reward"}
+      title={reward ? reward.name : translations["Create Reward"]}
     />
   );
 };
