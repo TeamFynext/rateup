@@ -67,14 +67,16 @@ export const useDeleteWaSettingsMutation = () => {
   });
 };
 
-export const useRegisterBusinessClientMutation = () => {
+export const useRegisterBusinessClientMutation = (completionFunction) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: registerBusinessClient,
     onSuccess: () => {
+      completionFunction?.();
       qc.invalidateQueries({ queryKey: ["waSettings"] });
     },
     onError: (e) => {
+      completionFunction?.();
       showErrorToastFromError(e, "Error registering business client!");
     },
   });
