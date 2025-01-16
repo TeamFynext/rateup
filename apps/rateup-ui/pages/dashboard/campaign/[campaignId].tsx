@@ -37,13 +37,16 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import { z } from "zod";
 
+import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import useTranslations from "@/dictionaries/useTranslation";
+import { PAGE_SIZE } from "@/utils/constants";
 
 import { SearchInput } from ".";
 import {
   useCampaignById,
   useCampaignResponseDownloadById,
+  useCampaignStatsById,
   useSendCampaign,
 } from "../../../backend/campaign/campaign.query";
 import ErrorComponent from "../../../components/404/ErrorComponent";
@@ -86,6 +89,10 @@ const CampaignById = () => {
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE[0],
+  });
   const router = useRouter();
   const { campaignId } = router.query;
   const { update } = useRouteParams();
@@ -103,19 +110,32 @@ const CampaignById = () => {
     refetch: refetchCampaign,
   } = useCampaignById(campaignId);
 
+  const {
+    data: filteredParticipants,
+    isPending: isPendingParticipant,
+    isError: isParticipantsError,
+    isRefetching: isRefetchingParticipants,
+    refetch: refetchParticipants,
+  } = useCampaignParticipants(
+    campaignId,
+    pagination,
+    searchText,
+    sorting,
+    columnFilters,
+  );
+
+  const {
+    data: campaignStats,
+    isPending: isPendingStats,
+    isError: isStatsError,
+    isRefetching: isRefetchingStats,
+    refetch: refetchStats,
+  } = useCampaignStatsById(campaignId);
+
   const campaignInfo = {
     template: campaignData?.waTemplate?.data.name,
     team: campaignData?.team.name,
   };
-
-  const participants = campaignData?.campaignParticipants;
-  const filteredParticipants = searchText
-    ? participants?.filter(
-        (p) =>
-          p?.contact?.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          p?.contact?.phone.includes(searchText),
-      )
-    : participants;
 
   const column: ColumnDef<any>[] = contactParticipentDetailColumn;
   const sendMutation = useSendCampaign(campaignData?.id, campaignData?.teamId);
@@ -132,7 +152,8 @@ const CampaignById = () => {
     [campaignData?.waTemplate?.data?.components],
   );
 
-  if (isError) return <ErrorComponent refetch={refetchCampaign} />;
+  if (isError || isParticipantsError || isStatsError)
+    return <ErrorComponent refetch={refetchCampaign} />;
   return (
     <MantineProvider theme={whatsappTheme}>
       <Stack className={styles["campaign-id-page-root-div"]}>
@@ -160,7 +181,7 @@ const CampaignById = () => {
           />
           <StartCampaignCard
             campaign={campaignData}
-            participantCount={campaignData?.campaignParticipants.length}
+            participantCount={filteredParticipants?.totalCount}
             sendMutation={sendMutation}
           />
           {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
@@ -208,27 +229,35 @@ const CampaignById = () => {
               dynamicVariables={dynamicVariables}
             />
             <CampaignInfoCard
-              participantCount={campaignData?.campaignParticipants.length}
-              stats={campaignData?.stats}
+              participantCount={filteredParticipants?.totalCount}
+              stats={campaignStats}
               flowId={campaignData?.flowId}
-              isPending={isPending || isRefetching}
+              isPending={
+                isPendingParticipant ||
+                isRefetchingParticipants ||
+                isPendingStats ||
+                isRefetchingStats
+              }
             />
           </Tabs.Panel>
           <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS} h={"100%"}>
             <PaperLayout p={0} h={"100%"} mah={800}>
               <ContactTable
                 columns={column}
-                data={filteredParticipants}
+                data={filteredParticipants?.participants}
                 btnTitle="Add"
                 toggle={open}
                 tab={WhatsappTableType.PARTICIPANTS}
                 groupId={campaignData?.id}
-                refetch={refetchCampaign}
+                refetch={refetchParticipants}
                 setSorting={setSorting}
                 sorting={sorting}
                 columnFilters={columnFilters}
                 setColumnFilters={setColumnFilters}
-                isPending={isPending}
+                isPending={isPendingParticipant}
+                setPagination={setPagination}
+                pagination={pagination}
+                totalCount={filteredParticipants?.searchCount}
               />
             </PaperLayout>
             <Modal

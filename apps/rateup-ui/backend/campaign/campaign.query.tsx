@@ -12,6 +12,7 @@ import {
   getCampaignFilterForFlows,
   getCampaigns,
   getCampaignsByTeam,
+  getCampaignStatsById,
   sendCampaign,
   updateCampaign,
 } from "./campaign.api";
@@ -58,6 +59,14 @@ export const useCampaignById = (campaignId) => {
   return useQuery({
     queryKey: ["campaignById", campaignId],
     queryFn: () => getCampaignById(campaignId),
+    enabled: !!campaignId,
+  });
+};
+
+export const useCampaignStatsById = (campaignId) => {
+  return useQuery({
+    queryKey: ["campaignStats", campaignId],
+    queryFn: () => getCampaignStatsById(campaignId),
     enabled: !!campaignId,
   });
 };

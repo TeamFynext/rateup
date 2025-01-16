@@ -59,10 +59,31 @@ export const useAddGroupParticipantMutation = (campaignId) => {
   });
 };
 
-export const useCampaignParticipants = (campaignId) => {
+export const useCampaignParticipants = (
+  campaignId,
+  pagination,
+  search,
+  sort,
+  columnFilters,
+) => {
   return useQuery({
-    queryKey: ["campaignParticipants", campaignId],
-    queryFn: () => getCampaignParticipants(campaignId),
+    queryKey: [
+      "campaignParticipants",
+      campaignId,
+      pagination,
+      search,
+      sort,
+      columnFilters,
+    ],
+    queryFn: () =>
+      getCampaignParticipants(
+        campaignId,
+        pagination,
+        search,
+        sort,
+        columnFilters,
+      ),
+    enabled: !!campaignId,
   });
 };
 
