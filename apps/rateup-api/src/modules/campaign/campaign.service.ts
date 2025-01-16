@@ -12,7 +12,7 @@ import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import { getSubscription, getUsageStats } from "./campaign.auth";
 import xlsx from "node-xlsx";
 import { BATCH_SIZE } from "../../utils/constants/constants";
-import { Prisma } from "@prisma/client";
+import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
 
 interface WaMessageStats {
   read?: boolean;
@@ -93,175 +93,193 @@ export function getLatestStatus(participant = []) {
 }
 
 export async function getCampaignById(campaignId: string) {
-  const campaignTemp: Array<campaginExtentend> = await prisma.$queryRaw`
-  WITH campaign_data AS (
-  SELECT
-    c.*,
-    t.id as team_id,
-    t."orgId",
-    t.name as "teamName",
-    was."contactTags",
-    wt.data as template_data
-  FROM "Campaign" c
-  LEFT JOIN "Team" t ON c."teamId" = t.id
-  LEFT JOIN "Org" o ON t."orgId" = o.id
-  LEFT JOIN "WaAccountSettings" was ON o.id = was."orgId"
-  LEFT JOIN "WaTemplate" wt ON c."waTemplateId" = wt.id
-  WHERE c.id = ${campaignId}::uuid
-),
-participant_data AS (
-  SELECT
-    cp.*,
-    c.name as name,
-    c.phone as contact_phone,
-    c.consent,
-    wm.stats as message_stats,
-    wm."waCreatedAt" as message_created_at,
-    camp."flowId"
-  FROM "CampaignParticipant" cp
-  LEFT JOIN "Contact" c ON cp."contactId" = c.id
-  LEFT JOIN "WaMessageCampaginParticipantMap" wmap ON cp.id = wmap."campaignParticipantId"
-  LEFT JOIN "WaMessage" wm ON wmap."waMessageId" = wm.id
-  LEFT JOIN "Campaign" camp ON cp."campaignId" = camp.id
-  WHERE cp."campaignId" = ${campaignId}::uuid
-)
-SELECT
-  cd.*,
-  json_build_object(
-    'id', cd.team_id,
-    'name', cd."teamName"
-  ) as team,
-  COALESCE(json_agg(
-    CASE WHEN pd.id IS NOT NULL THEN
-      json_build_object(
-        'id', pd.id,
-        'status', pd.status,
-        'contact', json_build_object(
-          'name', pd.name,
-          'phone', pd.contact_phone,
-          'consent', pd.consent
-        ),
-        'WaMessageCampaginParticipantMap', json_build_object(
-          'waMessage', json_build_object(
-            'stats', pd.message_stats,
-            'waCreatedAt', pd.message_created_at
-          )
-        ),
-        'campaign', json_build_object(
-          'flowId', pd."flowId"
-        )
-      )
-    END
-  ) FILTER (WHERE pd.id IS NOT NULL), '[]') as "campaignParticipants"
-FROM campaign_data cd
-LEFT JOIN participant_data pd ON cd.id = pd."campaignId"
-GROUP BY
-  cd.id,
-  cd.team_id,
-  cd."teamName",
-  cd."orgId",
-  cd."contactTags",
-  cd.template_data,
-  cd."createdAt",
-  cd."teamId",
-  cd."waTemplateId",
-  cd."flowId",
-  cd."name",
-  cd."status",
-  cd."startedAt",
-  cd."endedAt",
-  cd.type,
-  cd."campaignSentAt",
-  cd."errorMessage",
-  cd."scheduledStatuses",
-  cd."dynamicTags",
-  cd."useUserConsent"`;
-  let campaign = campaignTemp?.[0];
+  //   const campaignTemp: Array<campaginExtentend> = await prisma.$queryRaw`
+  //   WITH campaign_data AS (
+  //   SELECT
+  //     c.*,
+  //     t.id as team_id,
+  //     t."orgId",
+  //     t.name as "teamName",
+  //     was."contactTags",
+  //     wt.data as template_data
+  //   FROM "Campaign" c
+  //   LEFT JOIN "Team" t ON c."teamId" = t.id
+  //   LEFT JOIN "Org" o ON t."orgId" = o.id
+  //   LEFT JOIN "WaAccountSettings" was ON o.id = was."orgId"
+  //   LEFT JOIN "WaTemplate" wt ON c."waTemplateId" = wt.id
+  //   WHERE c.id = ${campaignId}::uuid
+  // ),
+  // participant_data AS (
+  //   SELECT
+  //     cp.*,
+  //     c.name as name,
+  //     c.phone as contact_phone,
+  //     c.consent,
+  //     wm.stats as message_stats,
+  //     wm."waCreatedAt" as message_created_at,
+  //     camp."flowId"
+  //   FROM "CampaignParticipant" cp
+  //   LEFT JOIN "Contact" c ON cp."contactId" = c.id
+  //   LEFT JOIN "WaMessageCampaginParticipantMap" wmap ON cp.id = wmap."campaignParticipantId"
+  //   LEFT JOIN "WaMessage" wm ON wmap."waMessageId" = wm.id
+  //   LEFT JOIN "Campaign" camp ON cp."campaignId" = camp.id
+  //   WHERE cp."campaignId" = ${campaignId}::uuid
+  // )
+  // SELECT
+  //   cd.*,
+  //   json_build_object(
+  //     'id', cd.team_id,
+  //     'name', cd."teamName"
+  //   ) as team,
+  //   COALESCE(json_agg(
+  //     CASE WHEN pd.id IS NOT NULL THEN
+  //       json_build_object(
+  //         'id', pd.id,
+  //         'status', pd.status,
+  //         'contact', json_build_object(
+  //           'name', pd.name,
+  //           'phone', pd.contact_phone,
+  //           'consent', pd.consent
+  //         ),
+  //         'WaMessageCampaginParticipantMap', json_build_object(
+  //           'waMessage', json_build_object(
+  //             'stats', pd.message_stats,
+  //             'waCreatedAt', pd.message_created_at
+  //           )
+  //         ),
+  //         'campaign', json_build_object(
+  //           'flowId', pd."flowId"
+  //         )
+  //       )
+  //     END
+  //   ) FILTER (WHERE pd.id IS NOT NULL), '[]') as "campaignParticipants"
+  // FROM campaign_data cd
+  // LEFT JOIN participant_data pd ON cd.id = pd."campaignId"
+  // GROUP BY
+  //   cd.id,
+  //   cd.team_id,
+  //   cd."teamName",
+  //   cd."orgId",
+  //   cd."contactTags",
+  //   cd.template_data,
+  //   cd."createdAt",
+  //   cd."teamId",
+  //   cd."waTemplateId",
+  //   cd."flowId",
+  //   cd."name",
+  //   cd."status",
+  //   cd."startedAt",
+  //   cd."endedAt",
+  //   cd.type,
+  //   cd."campaignSentAt",
+  //   cd."errorMessage",
+  //   cd."scheduledStatuses",
+  //   cd."dynamicTags",
+  //   cd."useUserConsent"`;
+  //   let campaign = campaignTemp?.[0];
 
-  if (!campaign) {
-    throw new Error(`Campaign with ID ${campaignId} not found.`);
-  }
-  // Process participants
-  let countRead = 0,
-    countSent = 0,
-    countFailed = 0,
-    countDelivered = 0,
-    countPending = 0,
-    countCompleted = 0;
+  //   if (!campaign) {
+  //     throw new Error(`Campaign with ID ${campaignId} not found.`);
+  //   }
+  // // Process participants
+  // let countRead = 0,
+  //   countSent = 0,
+  //   countFailed = 0,
+  //   countDelivered = 0,
+  //   countPending = 0,
+  //   countCompleted = 0;
 
-  campaign.campaignParticipants = campaign?.campaignParticipants || [];
-  const groupedParticipants = campaign?.campaignParticipants?.reduce(
-    (acc, participant) => {
-      // Check if the participant ID is already in the map
-      if (!acc[participant.id]) {
-        acc[participant.id] = {
-          ...participant,
-          WaMessageCampaginParticipantMap: [
-            participant.WaMessageCampaginParticipantMap,
-          ],
-        };
-      } else {
-        // Merge the WaMessageCampaginParticipantMap for the same participant
-        acc[participant.id].WaMessageCampaginParticipantMap.push(
-          participant.WaMessageCampaginParticipantMap,
-        );
-      }
-      return acc;
+  // campaign.campaignParticipants = campaign?.campaignParticipants || [];
+  // const groupedParticipants = campaign?.campaignParticipants?.reduce(
+  //   (acc, participant) => {
+  //     // Check if the participant ID is already in the map
+  //     if (!acc[participant.id]) {
+  //       acc[participant.id] = {
+  //         ...participant,
+  //         WaMessageCampaginParticipantMap: [
+  //           participant.WaMessageCampaginParticipantMap,
+  //         ],
+  //       };
+  //     } else {
+  //       // Merge the WaMessageCampaginParticipantMap for the same participant
+  //       acc[participant.id].WaMessageCampaginParticipantMap.push(
+  //         participant.WaMessageCampaginParticipantMap,
+  //       );
+  //     }
+  //     return acc;
+  //   },
+  //   {},
+  // );
+
+  // // Convert the map back into an array
+  // campaign.campaignParticipants = Object.values(groupedParticipants);
+  // for (const participant of campaign.campaignParticipants) {
+  //   const participantStatus = participant.status;
+  //   const participantMessages = participant?.WaMessageCampaginParticipantMap;
+
+  //   const latestStatus = getLatestStatus(participantMessages);
+
+  //   if (participantStatus === CampaignParticipantStatus.PENDING) {
+  //     countPending++;
+  //   } else if (participantStatus === CampaignParticipantStatus.FAILED) {
+  //     countFailed++;
+  //   } else {
+  //     participantMessages.forEach(
+  //       (item: {
+  //         waMessage: {
+  //           stats: WaMessageStats;
+  //         };
+  //       }) => {
+  //         if (item.waMessage.stats?.read) countRead++;
+  //         if (item.waMessage.stats?.sent) countSent++;
+  //         if (item.waMessage.stats?.delivered) countDelivered++;
+  //       },
+  //     );
+  //   }
+
+  //   if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
+  //     countFailed++;
+  //   }
+
+  //   if (
+  //     campaign.flowId &&
+  //     participantStatus === CampaignParticipantStatus.COMPLETED
+  //   ) {
+  //     countCompleted++;
+  //   }
+
+  //   participant.waStatus = latestStatus;
+  // }
+
+  // return {
+  //   ...campaign,
+  //   stats: {
+  //     countRead,
+  //     countSent,
+  //     countFailed,
+  //     countDelivered,
+  //     countPending,
+  //     countCompleted,
+  //   },
+  // };
+
+  return await prisma.campaign.findUnique({
+    where: {
+      id: campaignId,
     },
-    {},
-  );
-
-  // Convert the map back into an array
-  campaign.campaignParticipants = Object.values(groupedParticipants);
-  for (const participant of campaign.campaignParticipants) {
-    const participantStatus = participant.status;
-    const participantMessages = participant?.WaMessageCampaginParticipantMap;
-
-    const latestStatus = getLatestStatus(participantMessages);
-
-    if (participantStatus === CampaignParticipantStatus.PENDING) {
-      countPending++;
-    } else if (participantStatus === CampaignParticipantStatus.FAILED) {
-      countFailed++;
-    } else {
-      participantMessages.forEach(
-        (item: {
-          waMessage: {
-            stats: WaMessageStats;
-          };
-        }) => {
-          if (item.waMessage.stats?.read) countRead++;
-          if (item.waMessage.stats?.sent) countSent++;
-          if (item.waMessage.stats?.delivered) countDelivered++;
+    include: {
+      waTemplate: {
+        select: {
+          data: true,
         },
-      );
-    }
-
-    if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
-      countFailed++;
-    }
-
-    if (
-      campaign.flowId &&
-      participantStatus === CampaignParticipantStatus.COMPLETED
-    ) {
-      countCompleted++;
-    }
-
-    participant.waStatus = latestStatus;
-  }
-
-  return {
-    ...campaign,
-    stats: {
-      countRead,
-      countSent,
-      countFailed,
-      countDelivered,
-      countPending,
-      countCompleted,
+      },
+      team: {
+        select: {
+          name: true,
+        },
+      },
     },
-  };
+  });
 }
 
 export async function getCampaignsByTeamId(teamId: string) {
@@ -532,7 +550,11 @@ export const getResponseByCampaignById = async (id: string) => {
 };
 
 export const getResponseExcelByCampaignById = async (id: string) => {
-  const campaign = await getCampaignById(id);
+  const [campaign, participants, stats] = await Promise.all([
+    getCampaignById(id),
+    getCampaignParticipantsByCampaignId(id),
+    getCampaginStatsById(id),
+  ]);
   const headerArray = [
     "Created At",
     "Participant Name",
@@ -540,7 +562,7 @@ export const getResponseExcelByCampaignById = async (id: string) => {
     "Status",
     "Sent At",
   ];
-  const bodyArray = campaign.campaignParticipants.map((participant) => [
+  const bodyArray = participants?.participants?.map((participant) => [
     participant?.createdAt,
     participant?.contact?.name,
     participant?.contact?.phone,
@@ -557,12 +579,12 @@ export const getResponseExcelByCampaignById = async (id: string) => {
     "Count Completed",
   ];
   const statsBodyArray = [
-    campaign?.stats?.countPending,
-    campaign?.stats?.countRead,
-    campaign?.stats?.countSent,
-    campaign?.stats?.countFailed,
-    campaign?.stats?.countDelivered,
-    campaign?.stats?.countCompleted,
+    stats?.countPending,
+    stats?.countRead,
+    stats?.countSent,
+    stats?.countFailed,
+    stats?.countDelivered,
+    stats?.countCompleted,
   ];
 
   const buffer = xlsx.build([
@@ -580,3 +602,76 @@ export const getResponseExcelByCampaignById = async (id: string) => {
 
   return [campaign?.name, buffer];
 };
+
+export async function getCampaginStatsById(campaignId: string) {
+  const participants = await prisma.campaignParticipant.findMany({
+    where: {
+      campaignId,
+    },
+    include: {
+      WaMessageCampaginParticipantMap: {
+        include: {
+          waMessage: true,
+        },
+      },
+      campaign: {
+        select: {
+          flowId: true,
+        },
+      },
+    },
+  });
+
+  const campaign = participants?.[0]?.campaign;
+  let countRead = 0,
+    countSent = 0,
+    countFailed = 0,
+    countDelivered = 0,
+    countPending = 0,
+    countCompleted = 0;
+
+  for (const participant of participants) {
+    const participantStatus = participant.status;
+    const participantMessages = participant?.WaMessageCampaginParticipantMap;
+
+    const latestStatus = getLatestStatus(participantMessages);
+
+    if (participantStatus === CampaignParticipantStatus.PENDING) {
+      countPending++;
+    } else if (participantStatus === CampaignParticipantStatus.FAILED) {
+      countFailed++;
+    } else {
+      participantMessages.forEach(
+        (item: {
+          waMessage: {
+            stats: WaMessageStats;
+          };
+        }) => {
+          if (item.waMessage.stats?.read) countRead++;
+          if (item.waMessage.stats?.sent) countSent++;
+          if (item.waMessage.stats?.delivered) countDelivered++;
+        },
+      );
+    }
+
+    if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
+      countFailed++;
+    }
+
+    if (
+      campaign.flowId &&
+      participantStatus === CampaignParticipantStatus.COMPLETED
+    ) {
+      countCompleted++;
+    }
+  }
+
+  return {
+    countRead,
+    countSent,
+    countFailed,
+    countDelivered,
+    countPending,
+    countCompleted,
+  };
+}

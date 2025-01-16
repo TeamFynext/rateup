@@ -19,7 +19,7 @@ const updateContactSchema = z.object({
   tags: z.any(),
 });
 
-const paginationQuery = z.object({
+export const paginationQuery = z.object({
   page: z.number().optional(),
   limit: z.number().optional(),
   search: z.string().optional(),

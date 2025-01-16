@@ -10,6 +10,7 @@ import {
 import {
   createCampaign,
   deleteCampaign,
+  getCampaginStatsById,
   getCampaignById,
   getCampaignFilterForFlows,
   getCampaignsByOrgId,
@@ -173,5 +174,20 @@ export async function getResponseExcelByCampaignByIdHandler(
   } catch (error) {
     log.error("Error while handling getResponseExcelByCampaignById", error);
     return reply.code(500).send(error);
+  }
+}
+
+export async function getCampaignStatsHandler(
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const stats = await getCampaginStatsById(request.params.campaignId);
+    reply.code(200).send(stats);
+  } catch (e) {
+    log.error("Error in getting campain stats", e);
+    return reply.code(500).send(e);
   }
 }

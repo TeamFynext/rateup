@@ -5,6 +5,7 @@ import {
   ByCampaignParticipantIdParams,
   CreateCampaignParticipantsInput,
   DeleteCampaignParticipantsInput,
+  PaginateQueryInput,
 } from "./campaignParticipants.schema";
 import {
   createCampaignParticipants,
@@ -16,6 +17,7 @@ import {
   multipleDeleteCampaignParticipant,
 } from "./campaignParticipants.service";
 import { ByCampaignIdParams } from "../campaign.schema";
+import { PaginationQuery } from "../../contact/contact.schema";
 
 export async function createCampaignParticipantsFromContactsHandler(
   request: FastifyRequest<{
@@ -64,11 +66,15 @@ export async function createCampaignParticipantsHandler(
 }
 
 export async function getCampaignParticipantsByCampaignIdHandler(
-  request: FastifyRequest<{ Params: ByCampaignIdParams }>,
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+    Querystring: PaginateQueryInput;
+  }>,
   reply: FastifyReply,
 ) {
   const campaignParticipants = await getCampaignParticipantsByCampaignId(
     request.params.campaignId,
+    request.query,
   );
   reply.send(campaignParticipants);
 }
