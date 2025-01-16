@@ -59,6 +59,7 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $campaignRef("byCampaignIdParamsSchema"),
+        querystring: $campaignParticipantsRef("paginateQuerySchema"),
       },
     },
     getCampaignParticipantsByCampaignIdHandler,

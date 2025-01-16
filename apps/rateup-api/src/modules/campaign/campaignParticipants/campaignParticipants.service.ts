@@ -11,6 +11,7 @@ import {
 } from "./campaignParticipants.schema";
 import { getLatestStatus } from "../campaign.service";
 import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
+import { PaginationQuery } from "../../contact/contact.schema";
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,
@@ -147,13 +148,126 @@ export async function createCampaignParticipants(
   promise.then((results) => results).catch((error) => error);
 }
 
-export async function getCampaignParticipantsByCampaignId(campaignId: string) {
-  const campaignParticipants = await prisma.campaignParticipant.findMany({
+export async function getCampaignParticipantsByCampaignId(
+  campaignId: string,
+  query?: PaginationQuery,
+) {
+  const {
+    page,
+    limit,
+    desc = "asc",
+    search = "",
+    sort = "createdAt",
+    ...filter
+  } = query;
+
+  let filterData = [];
+  if (filter) {
+    const params = new URLSearchParams(filter);
+    for await (const [key, value] of params.entries()) {
+      if (["name", "phone"].includes(key)) {
+        filterData.push({
+          contact: {
+            [key]: {
+              contains: value,
+              mode: "insensitive",
+            },
+          },
+        });
+      } else if ("consent" === key) {
+        filterData.push({
+          contact: {
+            [key]: {
+              equals: value?.toLocaleLowerCase() === "true",
+            },
+          },
+        });
+      } else if (["createdAt", "status", "sentAt"].includes(key)) {
+        filterData.push({
+          [key]: {
+            equal: value,
+            mode: "insensitive",
+          },
+        });
+      }
+    }
+  }
+  if (search?.length > 0) {
+    filterData.push({
+      contact: {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+    });
+    filterData.push({
+      contact: {
+        phone: {
+          contains: search,
+        },
+      },
+    });
+  }
+
+  const totalCount = await prisma.campaignParticipant.count({
     where: {
       campaignId,
     },
   });
-  return campaignParticipants;
+
+  let searchCount = 0;
+  if (filterData.length > 0)
+    searchCount = await prisma.campaignParticipant.count({
+      where: {
+        campaignId,
+        OR: filterData,
+      },
+    });
+  else searchCount = totalCount;
+
+  const campaignParticipants = await prisma.campaignParticipant.findMany({
+    where:
+      filterData?.length > 0
+        ? {
+            campaignId,
+            OR: filterData,
+          }
+        : {
+            campaignId,
+          },
+    include: {
+      WaMessageCampaginParticipantMap: {
+        include: {
+          waMessage: true,
+        },
+      },
+      contact: {
+        select: {
+          name: true,
+          phone: true,
+          consent: true,
+        },
+      },
+    },
+    skip: page && limit ? Number(page) * Number(limit) : undefined,
+    take: limit ? Number(limit) : undefined,
+    orderBy: {
+      [sort]: desc,
+    },
+  });
+
+  const filteredParticipants = campaignParticipants.map((participant) => {
+    const latestStatus = getLatestStatus(
+      participant.WaMessageCampaginParticipantMap,
+    );
+    return {
+      ...participant,
+      waStatus: latestStatus,
+    };
+  });
+
+  return { participants: filteredParticipants, totalCount, searchCount };
 }
 
 export async function getCampaignParticipantById(

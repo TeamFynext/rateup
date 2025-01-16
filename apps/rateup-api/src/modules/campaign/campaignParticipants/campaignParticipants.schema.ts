@@ -4,6 +4,7 @@ import {
   CampaignParticipantAddStatus,
   CampaignParticipantStatus,
 } from "../../../types/enums";
+import { paginationQuery } from "../../contact/contact.schema";
 
 const byCampaignParticipantIdParamsSchema = z.object({
   campaignParticipantId: z.string().uuid(),
@@ -36,6 +37,19 @@ const campaignParticipantResponseSchema = z.object({
   sentAt: z.date().optional(),
 });
 
+const campaginParticipantPaginateSchema = z.object({
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  status: z.string().optional(),
+  consent: z.string().optional(),
+  sentAt: z.string().optional(),
+  createdAt: z.string().optional(),
+});
+
+const paginateQuerySchema = paginationQuery.merge(
+  campaginParticipantPaginateSchema,
+);
+
 export const {
   schemas: campaignParticipantsSchemas,
   $ref: $campaignParticipantsRef,
@@ -47,6 +61,7 @@ export const {
     createCampaignParticipantsSchema,
     campaignParticipantResponseSchema,
     deleteCampaignParticipantsSchema,
+    paginateQuerySchema,
   },
   {
     $id: "campaignParticipantsSchema",
@@ -68,3 +83,4 @@ export type CreateCampaignParticipantsInput = z.infer<
 export type DeleteCampaignParticipantsInput = z.infer<
   typeof deleteCampaignParticipantsSchema
 >;
+export type PaginateQueryInput = z.infer<typeof paginateQuerySchema>;

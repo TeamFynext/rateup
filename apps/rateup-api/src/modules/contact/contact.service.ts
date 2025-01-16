@@ -183,6 +183,11 @@ export async function getContactsByOrgId(
         },
       },
     },
+    campaignParticipants: {
+      select: {
+        campaignId: true,
+      },
+    },
   };
   // Fetch paginated contacts
   const users = await prisma.contact.findMany({

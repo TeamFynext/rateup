@@ -35,6 +35,23 @@ export async function registerBusinessClientHandler(
     const { code, phone_number_id, waba_id } = req.body;
     const { orgId } = req.user;
 
+    const existing = await prisma.whatsappSettings.findFirst({
+      where: {
+        phoneId: phone_number_id,
+        NOT: {
+          orgId: orgId,
+        },
+      },
+    });
+    if (existing) {
+      log.error(
+        `Phone number ${phone_number_id} is already registered with another organization`,
+      );
+      return rep
+        .status(400)
+        .send({ message: "Phone number already registered" });
+    }
+
     const accessToken = await getAccessTokenFromCode(code);
 
     // Getting phone numbers & their ids

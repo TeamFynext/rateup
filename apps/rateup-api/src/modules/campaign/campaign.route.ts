@@ -4,6 +4,7 @@ import {
   deleteCampaignByIdHandler,
   getCampaignFilterForFlowsHandler,
   getCampaignsHandler,
+  getCampaignStatsHandler,
   getResponseByCampaignByIdHandler,
   getResponseExcelByCampaignByIdHandler,
   sendCampaignHandler,
@@ -98,5 +99,16 @@ export async function campaignRoutes(server: FastifyInstance) {
       },
     },
     getResponseExcelByCampaignByIdHandler,
+  );
+
+  //route for campaign stats by campaignId
+  server.get(
+    "/:campaignId/stats",
+    {
+      schema: {
+        params: $campaignRef("byCampaignIdParamsSchema"),
+      },
+    },
+    getCampaignStatsHandler,
   );
 }
