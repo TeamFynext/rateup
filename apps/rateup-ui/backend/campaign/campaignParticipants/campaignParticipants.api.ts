@@ -1,3 +1,5 @@
+import { ContactGroupType } from "@/types/enums";
+
 import { axiosClient } from "../../apiClient";
 
 export const addContactParticipants = async ({ data, campaignId }) => {
@@ -16,9 +18,30 @@ export const addGroupParticipants = async ({ data, campaignId }) => {
   return res;
 };
 
-export const getCampaignParticipants = async (campaignId) => {
-  let res = await axiosClient.get(`/campaign/${campaignId}/participants`);
-  return res;
+export const getCampaignParticipants = async (
+  campaignId: string,
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  },
+  search: string,
+  sort: {
+    id: string;
+    desc: string;
+  },
+  columnFilters: { id: string; value: string }[],
+) => {
+  let filter = columnFilters
+    .map((data) => `&${data.id}=${data.value}`)
+    .join("&");
+  let desc = sort.desc ? "desc" : "asc";
+  const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}`;
+  let res = await axiosClient.get(url);
+  return res?.data as {
+    participants: any[];
+    searchCount: number;
+    totalCount: number;
+  };
 };
 
 export const addCampaignParticipants = async ({ data, campaignId }) => {

@@ -192,8 +192,8 @@ const AddParticipantModal = ({ close, campaign }) => {
                     {filteredContacts?.length > 0 ? (
                       filteredContacts.map((contact) => {
                         const isAlreadySeleted =
-                          campaign?.campaignParticipants.some(
-                            (c) => c?.contactId === contact?.id,
+                          contact?.campaignParticipants?.some(
+                            (c) => c?.campaignId === campaign?.id,
                           );
                         return (
                           <Individual
@@ -264,8 +264,8 @@ const AddParticipantModal = ({ close, campaign }) => {
             <PaperLayout>
               <ScrollArea h={325} pr={"sm"}>
                 {selectedContacts?.map((customer) => {
-                  const isAlreadySeleted = campaign?.campaignParticipants.some(
-                    (c) => c?.contactId === customer?.id,
+                  const isAlreadySeleted = customer.campainParticipants?.some(
+                    (c) => c?.campaignId === campaign?.id,
                   );
                   return (
                     <Individual

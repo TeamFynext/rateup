@@ -74,3 +74,7 @@ export const campaignResponseDownloadById = async (campaignId) => {
 
   return saveAs(blob, response?.headers?.filename ?? "file.xlsx");
 };
+
+export async function getCampaignStatsById(campaignId) {
+  return (await axiosClient.get(`/campaign/${campaignId}/stats`)).data;
+}

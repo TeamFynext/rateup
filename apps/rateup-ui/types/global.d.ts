@@ -586,6 +586,7 @@ declare global {
         };
       },
     ];
+    campaignParticipants: any[];
   };
 
   type ContactsResponse = {
