@@ -430,7 +430,19 @@ export async function downloadExcelResponse(
         } else if (question === "Respondent's Mobile Number") {
           responseValue = response?.Contact?.phone;
         } else if (question === responseTag) {
-          responseValue = response.tag;
+          const tags = response.tag ? response.tag.split(",") : [];
+          tags.forEach((tag, index) => {
+            const tagColumnName = `tag ${index + 1}`;
+            if (!headerArray.includes(tagColumnName)) {
+              if (index === 0) {
+                headerArray.pop();
+                filteredSecondArray.pop();
+              }
+              headerArray.push(tagColumnName);
+              filteredSecondArray.push(tagColumnName);
+            }
+            bodyArray[answerIndex].push(tag.trim());
+          });
         } else {
           if (question.type === QuestionType.MCQGrid) {
             question?.features?.[defaultLanguage]?.questions?.map((q) =>
