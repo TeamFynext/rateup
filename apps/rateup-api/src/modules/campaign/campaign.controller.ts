@@ -10,6 +10,9 @@ import {
 import {
   createCampaign,
   deleteCampaign,
+  deleteCampaignParticipantsByCampaignId,
+  doesCampaignIdExistInMessageQueue,
+  enqueueCampaignMessage,
   getCampaginStatsById,
   getCampaignById,
   getCampaignFilterForFlows,
@@ -24,8 +27,13 @@ import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
-import { CampaignStatus, SentCampaignEnum } from "../../types/enums";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+  SentCampaignEnum,
+} from "../../types/enums";
 import { log } from "../../utils/logger";
+import prisma from "../../utils/prisma";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -92,44 +100,85 @@ export async function sendCampaignHandler(
   }>,
   reply: FastifyReply,
 ) {
-  if (
-    !request.body.sendToStatuses ||
-    request.body.sendToStatuses.length === 0
-  ) {
-    return reply.status(400).send({ message: "sendToStatuses is required" });
-  }
-  if (request.body.status === CampaignStatus.INACTIVE) {
-    await updateCampaign(request.params.campaignId, {
+  const {
+    status,
+    campaignSentAt,
+    sentCampaignChoice,
+    sendToStatuses,
+    participantId,
+  } = request.body;
+  const { campaignId } = request.params;
+
+  try {
+    if (status === CampaignStatus.INACTIVE) {
+      await updateCampaign(campaignId, {
+        status: CampaignStatus.ACTIVE,
+        campaignSentAt: null,
+        scheduledStatuses: [],
+      });
+      await deleteCampaignParticipantsByCampaignId(campaignId);
+      return reply.status(200).send({
+        message: "Campaign schedule cancelled",
+        code: "MSG_SCHEDULED",
+      });
+    }
+
+    if (await doesCampaignIdExistInMessageQueue(campaignId)) {
+      return reply.status(400).send({
+        message:
+          "The campaign participants already exist in the queue. Add participants after it is sent.",
+        code: "MSG_ALREADY_IN_QUEUE",
+      });
+    }
+
+    if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
+      await updateCampaign(campaignId, {
+        status: CampaignStatus.SCHEDULED,
+        campaignSentAt,
+        scheduledStatuses: [],
+      });
+      const isScheduled = await enqueueCampaignMessage(
+        campaignId,
+        sendToStatuses,
+        undefined,
+        campaignSentAt,
+      );
+      if (!isScheduled) {
+        return reply.status(400).send({
+          message: "Campaign not scheduled, please try again",
+          code: "MSG_NOT_SCHEDULED",
+        });
+      }
+      return reply.status(200).send({
+        message: "Campaign scheduled successfully",
+        code: "MSG_SCHEDULED",
+      });
+    }
+    await updateCampaign(campaignId, {
       status: CampaignStatus.ACTIVE,
       campaignSentAt: null,
       scheduledStatuses: [],
     });
-    return reply.status(200).send({
-      message: "Campaign schedule cancelled",
-      code: "MSG_SCHEDULED",
+
+    const isScheduled = await enqueueCampaignMessage(
+      campaignId,
+      sendToStatuses,
+      participantId,
+    );
+    if (!isScheduled) {
+      return reply.status(400).send({
+        message: "Campaign not scheduled, please try again",
+        code: "MSG_NOT_SCHEDULED",
+      });
+    }
+    return reply.status(204).send();
+  } catch (error) {
+    log.error("Error while handling sendCampaignHandler", error);
+    return reply.code(500).send({
+      message: "Internal server error",
+      code: "INTERNAL_SERVER_ERROR",
     });
   }
-  if (
-    request.body.campaignSentAt &&
-    request.body.sentCampaignChoice === SentCampaignEnum.LATER
-  ) {
-    await updateCampaign(request.params.campaignId, {
-      status: CampaignStatus.SCHEDULED,
-      campaignSentAt: request.body.campaignSentAt,
-      scheduledStatuses: request.body.sendToStatuses,
-    });
-    return reply.status(200).send({
-      message: "Campaign scheduled successfully",
-      code: "MSG_SCHEDULED",
-    });
-  }
-  await sendCampaign(
-    request.params.campaignId,
-    request.body.sendToStatuses,
-    request.body.participantId,
-    request.user.userId,
-  );
-  return reply.status(204).send();
 }
 
 export async function getCampaignFilterForFlowsHandler(

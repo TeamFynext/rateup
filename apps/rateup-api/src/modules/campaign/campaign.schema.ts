@@ -73,7 +73,7 @@ const campaignResponseSchema = z.object({
 });
 
 const sendCampaignInputSchema = z.object({
-  sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)),
+  sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)).min(1),
   participantId: z.string().optional(),
   campaignSentAt: z.date().optional().nullable(),
   sentCampaignChoice: z.nativeEnum(SentCampaignEnum),

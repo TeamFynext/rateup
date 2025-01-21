@@ -13,8 +13,9 @@ import { getSubscription, getUsageStats } from "./campaign.auth";
 import xlsx from "node-xlsx";
 import { BATCH_SIZE } from "../../utils/constants/constants";
 import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
+import axios from "axios";
 
-interface WaMessageStats {
+export interface WaMessageStats {
   read?: boolean;
   sent?: boolean;
   delivered?: boolean;
@@ -41,7 +42,6 @@ type campaginExtentend = {
   campaignParticipants: {
     id: string;
     status: string;
-    waStatus?: string;
     createdAt: Date;
     sentAt?: Date;
     contact?: {
@@ -348,6 +348,11 @@ export async function createCampaign(data: CreateCampaignInput) {
       flowId: flowId,
     },
   });
+  await prisma.campaignStats.create({
+    data: {
+      campaignId: campaign.id,
+    },
+  });
   return campaign;
 }
 
@@ -562,11 +567,11 @@ export const getResponseExcelByCampaignById = async (id: string) => {
     "Status",
     "Sent At",
   ];
-  const bodyArray = participants?.participants?.map((participant) => [
+  const bodyArray = participants?.map((participant) => [
     participant?.createdAt,
     participant?.contact?.name,
     participant?.contact?.phone,
-    participant?.waStatus || participant?.status,
+    participant?.status,
     participant?.sentAt,
   ]);
 
@@ -604,74 +609,137 @@ export const getResponseExcelByCampaignById = async (id: string) => {
 };
 
 export async function getCampaginStatsById(campaignId: string) {
-  const participants = await prisma.campaignParticipant.findMany({
+  const stats = await prisma.campaignStats.findUnique({
     where: {
       campaignId,
     },
     include: {
-      WaMessageCampaginParticipantMap: {
-        include: {
-          waMessage: true,
-        },
-      },
       campaign: {
         select: {
-          flowId: true,
+          _count: {
+            select: {
+              campaignParticipants: {
+                where: {
+                  status: CampaignParticipantStatus.PENDING,
+                },
+              },
+            },
+          },
         },
       },
     },
   });
-
-  const campaign = participants?.[0]?.campaign;
-  let countRead = 0,
-    countSent = 0,
-    countFailed = 0,
-    countDelivered = 0,
-    countPending = 0,
-    countCompleted = 0;
-
-  for (const participant of participants) {
-    const participantStatus = participant.status;
-    const participantMessages = participant?.WaMessageCampaginParticipantMap;
-
-    const latestStatus = getLatestStatus(participantMessages);
-
-    if (participantStatus === CampaignParticipantStatus.PENDING) {
-      countPending++;
-    } else if (participantStatus === CampaignParticipantStatus.FAILED) {
-      countFailed++;
-    } else {
-      participantMessages.forEach(
-        (item: {
-          waMessage: {
-            stats: WaMessageStats;
-          };
-        }) => {
-          if (item.waMessage.stats?.read) countRead++;
-          if (item.waMessage.stats?.sent) countSent++;
-          if (item.waMessage.stats?.delivered) countDelivered++;
-        },
-      );
-    }
-
-    if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
-      countFailed++;
-    }
-
-    if (
-      campaign.flowId &&
-      participantStatus === CampaignParticipantStatus.COMPLETED
-    ) {
-      countCompleted++;
-    }
+  if (!stats) {
+    return {
+      countRead: 0,
+      countSent: 0,
+      countFailed: 0,
+      countDelivered: 0,
+      countPending: 0,
+      countCompleted: 0,
+    };
   }
 
   return {
-    countRead,
-    countSent,
-    countFailed,
-    countDelivered,
-    countPending,
-    countCompleted,
+    countRead: stats.totalRead,
+    countSent: stats.totalSend,
+    countFailed: stats.totalFailed,
+    countDelivered: stats.totalDelivered,
+    countPending: stats.campaign?._count?.campaignParticipants ?? 0,
+    countCompleted: stats.totalCompleted,
   };
+}
+
+export async function enqueueCampaignMessage(
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[],
+  participantId?: string,
+  scheduledAt?: Date,
+): Promise<boolean> {
+  try {
+    const campaign = await prisma.campaign.findUnique({
+      where: {
+        id: campaignId,
+      },
+      select: {
+        useUserConsent: true,
+      },
+    });
+
+    const contactConsentObj = campaign?.useUserConsent
+      ? { contact: { consent: true } }
+      : {};
+
+    if (participantId) {
+      const campaignParticipant = await prisma.campaignParticipant.findUnique({
+        where: {
+          id: participantId,
+          ...contactConsentObj,
+        },
+        select: { id: true },
+      });
+
+      if (campaignParticipant) {
+        await prisma.campaignMessageQueue.create({
+          data: { campaignParticipantId: campaignParticipant.id },
+        });
+      }
+    } else {
+      // send message to all participants
+      const campaignParticipants = await prisma.campaignParticipant.findMany({
+        where: {
+          campaignId,
+          status: { in: sendToStatuses },
+          ...contactConsentObj,
+        },
+        select: { id: true },
+      });
+      await prisma.$transaction(async (prisma) => {
+        await prisma.campaignMessageQueue.createMany({
+          skipDuplicates: true,
+          data: campaignParticipants.map((participant) => ({
+            campaignParticipantId: participant.id,
+            scheduledAt,
+          })),
+        });
+      });
+    }
+    if (!scheduledAt) {
+      try {
+        await axios.post(
+          `${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`,
+          {},
+        );
+      } catch (error) {
+        console.error("Error dispatching message:", error);
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error("Error enqueuing campaign message:", error);
+    return false;
+  }
+}
+
+export const deleteCampaignParticipantsByCampaignId = async (
+  campaignId: string,
+) => {
+  await prisma.campaignMessageQueue.deleteMany({
+    where: {
+      campaignParticipant: {
+        campaignId,
+      },
+    },
+  });
+};
+
+export async function doesCampaignIdExistInMessageQueue(campaignId: string) {
+  const exists = await prisma.campaignMessageQueue.findFirst({
+    where: {
+      campaignParticipant: {
+        campaignId,
+      },
+    },
+  });
+  return !!exists;
 }
