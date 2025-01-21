@@ -35,6 +35,7 @@ export async function campaignStatsUpdate() {
 
     skip += BATCH_SIZE;
   }
+  console.log("IMP:-> Campaign stats updated successfully");
 }
 
 async function processCampaign(campaign: { id: string; flowId?: string }) {
