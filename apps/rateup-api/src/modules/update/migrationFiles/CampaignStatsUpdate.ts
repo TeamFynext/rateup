@@ -6,45 +6,50 @@ import {
 } from "../../campaign/campaign.service";
 
 export async function campaignStatsUpdate() {
-  const campaigns = await prisma.campaign.findMany({
-    select: {
-      id: true,
-      flowId: true,
-      campaignParticipants: {
-        select: {
-          campaign: {
-            select: {
-              flowId: true,
+  const batchSize = 10000;
+  let skip = 0;
+  let hasMoreParticipants = true;
+
+  while (hasMoreParticipants) {
+    const campaignParticipants = await prisma.campaignParticipant.findMany({
+      skip,
+      take: batchSize,
+      select: {
+        id: true,
+        status: true,
+        campaign: {
+          select: {
+            id: true,
+            flowId: true,
+          },
+        },
+        WaMessageCampaginParticipantMap: {
+          select: {
+            waMessage: {
+              select: {
+                stats: true,
+                waCreatedAt: true,
+              },
             },
           },
-          id: true,
-          status: true,
-          WaMessageCampaginParticipantMap: {
-            select: {
-              waMessage: {
-                select: {
-                  stats: true,
-                  waCreatedAt: true,
-                },
-              },
-            },
-            orderBy: {
-              waMessage: {
-                waCreatedAt: "desc",
-              },
+          orderBy: {
+            waMessage: {
+              waCreatedAt: "desc",
             },
           },
         },
       },
-    },
-  });
+    });
 
-  for (const campaign of campaigns) {
-    const stats = getData(campaign);
+    if (campaignParticipants.length < batchSize) {
+      hasMoreParticipants = false;
+    }
+
     const participantUpdates = [];
-    const campaignStatsUpserts = [];
+    const campaignStatsUpserts = new Map();
 
-    for (const participant of campaign.campaignParticipants) {
+    for (const participant of campaignParticipants) {
+      const campaign = participant.campaign;
       const participantMessages = participant?.WaMessageCampaginParticipantMap;
       let latestStatus = getLatestStatus(participantMessages);
 
@@ -66,71 +71,106 @@ export async function campaignStatsUpdate() {
           },
         }),
       );
+
+      const stats = getData(participant);
+      if (!campaignStatsUpserts.has(campaign.id)) {
+        campaignStatsUpserts.set(campaign.id, {
+          campaignId: campaign.id,
+          ...stats,
+        });
+      } else {
+        const existingStats = campaignStatsUpserts.get(campaign.id);
+        campaignStatsUpserts.set(campaign.id, {
+          ...existingStats,
+          totalRead: existingStats.totalRead + stats.totalRead,
+          totalSend: existingStats.totalSend + stats.totalSend,
+          totalCompleted: existingStats.totalCompleted + stats.totalCompleted,
+          totalDelivered: existingStats.totalDelivered + stats.totalDelivered,
+          totalFailed: existingStats.totalFailed + stats.totalFailed,
+        });
+      }
     }
 
-    campaignStatsUpserts.push(
+    const campaignStatsUpsertsArray = Array.from(
+      campaignStatsUpserts.values(),
+    ).map((stats) =>
       prisma.campaignStats.upsert({
         where: {
-          campaignId: campaign.id,
+          campaignId: stats.campaignId,
         },
-        create: {
-          campaignId: campaign.id,
-          ...stats,
-        },
-        update: {
-          ...stats,
-        },
+        create: stats,
+        update: stats,
       }),
     );
 
-    await prisma.$transaction([...participantUpdates, ...campaignStatsUpserts]);
+    await prisma.$transaction([
+      ...participantUpdates,
+      ...campaignStatsUpsertsArray,
+    ]);
+
+    skip += batchSize;
+  }
+
+  const emptyCampaign = await prisma.campaign.findMany({
+    select: {
+      id: true,
+    },
+    where: {
+      campaignParticipants: {
+        none: {},
+      },
+    },
+  });
+  if (emptyCampaign.length > 0) {
+    await prisma.campaignStats.createMany({
+      data: emptyCampaign.map((campaign) => ({
+        campaignId: campaign.id,
+      })),
+      skipDuplicates: true,
+    });
   }
 }
 
-const getData = (campaign) => {
-  // Process participants
+const getData = (participant) => {
   let totalRead = 0,
     totalSend = 0,
     totalCompleted = 0,
     totalDelivered = 0,
     totalFailed = 0;
 
-  campaign.campaignParticipants = campaign?.campaignParticipants || [];
-  for (const participant of campaign.campaignParticipants) {
-    const participantStatus = participant.status;
-    const participantMessages = participant?.WaMessageCampaginParticipantMap;
+  const participantStatus = participant.status;
+  const participantMessages = participant?.WaMessageCampaginParticipantMap;
 
-    const latestStatus = getLatestStatus(participantMessages);
+  const latestStatus = getLatestStatus(participantMessages);
 
-    if (participantStatus === CampaignParticipantStatus.FAILED) {
-      totalFailed++;
-    }
-    participantMessages?.forEach(
-      (item: {
-        waMessage: {
-          stats: WaMessageStats;
-        };
-      }) => {
-        if (item.waMessage.stats?.read) totalRead++;
-        if (item.waMessage.stats?.sent) totalSend++;
-        if (item.waMessage.stats?.delivered) totalDelivered++;
-        if (item.waMessage.stats?.failed) totalFailed++;
-      },
-    );
-
-    if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
-      totalFailed++;
-    }
-
-    if (
-      campaign.flowId &&
-      participantStatus === CampaignParticipantStatus.COMPLETED
-    ) {
-      totalCompleted++;
-    }
-
-    participant.waStatus = latestStatus;
+  if (participantStatus === CampaignParticipantStatus.FAILED) {
+    totalFailed++;
   }
+  participantMessages?.forEach(
+    (item: {
+      waMessage: {
+        stats: WaMessageStats;
+      };
+    }) => {
+      if (item.waMessage.stats?.read) totalRead++;
+      if (item.waMessage.stats?.sent) totalSend++;
+      if (item.waMessage.stats?.delivered) totalDelivered++;
+      if (item.waMessage.stats?.failed) totalFailed++;
+    },
+  );
+
+  if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
+    totalFailed++;
+  }
+
+  if (
+    participant.campaign.flowId &&
+    participantStatus === CampaignParticipantStatus.COMPLETED
+  ) {
+    totalCompleted++;
+  }
+
+  participant.waStatus = latestStatus;
 
   return {
     totalRead,
