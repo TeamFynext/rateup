@@ -673,34 +673,90 @@ export const handleMessageStatusUpdate = async (
 ) => {
   if (!messageId) return;
 
-  const msg = await prisma.waMessage.findFirst({
-    where: {
-      messageId,
-    },
-    include: {
-      contact: {
-        select: {
-          orgId: true,
-          phone: true,
+  const messageCampaignParticipant =
+    await prisma.waMessageCampaginParticipantMap.findFirst({
+      where: {
+        waMessage: {
+          messageId: messageId,
         },
       },
-    },
-  });
+      include: {
+        campaignParticipant: {
+          select: {
+            campaignId: true,
+          },
+        },
+        waMessage: {
+          include: {
+            contact: {
+              select: {
+                phone: true,
+                orgId: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-  if (!msg) return;
-  // Ensure msg.stats is initialized
-  msg.stats = msg.stats || {};
-  if (status === WaEvent.DELIVERED) {
-    msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
-  } else if (status === WaEvent.READ) {
-    msg.stats[WaEvent.DELIVERED] = msg.stats[WaEvent.DELIVERED] || new Date();
-    msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
-  } else if (status === WaEvent.FAILED) {
-    await prisma.waLogs.create({
+  if (!messageCampaignParticipant) return;
+
+  const msg = messageCampaignParticipant.waMessage;
+  msg.stats = msg?.stats || {};
+
+  let incrementData = {};
+  switch (status) {
+    case WaEvent.DELIVERED:
+      if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.SENT]) {
+        incrementData = { ...incrementData, totalSent: { increment: 1 } };
+      }
+      msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
+      incrementData = { totalDelivered: { increment: 1 } };
+      break;
+    case WaEvent.READ:
+      if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.DELIVERED]) {
+        incrementData = { ...incrementData, totalDelivered: { increment: 1 } };
+      }
+      if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.SENT]) {
+        incrementData = { ...incrementData, totalSent: { increment: 1 } };
+      }
+      msg.stats[WaEvent.DELIVERED] = msg.stats[WaEvent.DELIVERED] || new Date();
+      msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
+
+      incrementData = { ...incrementData, totalRead: { increment: 1 } };
+      break;
+    case WaEvent.FAILED:
+      await prisma.waLogs.create({
+        data: {
+          orgId: msg.contact.orgId,
+          logs: errors,
+          phone: msg.contact.phone,
+        },
+      });
+      incrementData = { totalFailed: { increment: 1 } };
+      break;
+    case WaEvent.SENT:
+      incrementData = { totalSend: { increment: 1 } };
+      break;
+  }
+
+  if (messageCampaignParticipant?.campaignParticipantId) {
+    await prisma.campaignParticipant.update({
+      where: {
+        id: messageCampaignParticipant.campaignParticipantId,
+      },
       data: {
-        orgId: msg?.contact?.orgId,
-        logs: errors,
-        phone: msg?.contact?.phone,
+        status: status.toUpperCase(),
+        errorMessage: errors?.[0]?.title,
+      },
+    });
+
+    await prisma.campaignStats.update({
+      where: {
+        campaignId: messageCampaignParticipant?.campaignParticipant?.campaignId,
+      },
+      data: {
+        ...incrementData,
       },
     });
   }

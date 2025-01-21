@@ -478,6 +478,19 @@ model Campaign {
   errorMessage         String?
   dynamicTags          String[]              @default([])
   useUserConsent       Boolean               @default(true)
+  CampaignStats        CampaignStats?
+}
+
+model CampaignStats {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  totalRead      Int      @default(0)
+  totalSend      Int      @default(0)
+  totalCompleted Int      @default(0)
+  totalDelivered Int      @default(0)
+  totalFailed    Int      @default(0)
+  createdAt      DateTime @default(now())
+  campaignId     String   @unique @db.Uuid
+  campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model CampaignParticipant {
@@ -500,8 +513,25 @@ model CampaignParticipant {
   WaSession                       WaSession?
   errorMessage                    String?
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
+  CampaignMessageQueue            CampaignMessageQueue[]
 
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
+}
+
+enum CampaignMessageQueueStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model CampaignMessageQueue {
+  id                    String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignParticipant   CampaignParticipant        @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
+  campaignParticipantId String                     @db.Uuid
+  status                CampaignMessageQueueStatus @default(PENDING)
+  retryCount            Int                        @default(0)
+  scheduledAt            DateTime                   @default(now())
+  createdAt             DateTime                   @default(now())
 }
 
 model SurveyTheme {
@@ -995,9 +1025,7 @@ model WaMessageCampaginParticipantMap {
   campaignParticipant   CampaignParticipant @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
   campaignParticipantId String              @db.Uuid
   waMessage             WaMessage           @relation(fields: [waMessageId], references: [id], onDelete: Cascade)
-  waMessageId           String              @db.Uuid
-
-  @@id([campaignParticipantId, waMessageId]) // Composite primary key
+  waMessageId           String              @unique @db.Uuid
 }
 
 model WaAutomatedReply {
@@ -1133,37 +1161,37 @@ model WaMessageSchedule {
 }
 
 model LoyaltyAction {
-  id            String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type          String // enum LoyaltyActionType
-  name          String
-  points        Int
-  refereePoints  Int?
-  isAmountBased  Boolean                  @default(false)
-  isAmountBasedForReferee  Boolean        @default(false)
-  amount        Float                     @default(0)
-  maxPoints     Int?  //Max points per transaction   
-  maxPointsForReferee  Int?                        
-  startDate     DateTime
-  endDate       DateTime
-  createdAt     DateTime                   @default(now())
-  orgId         String                     @db.Uuid
-  org           Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  customers     LoyaltyActionCustomerMap[]
-  waTemplateId  String?                    @db.Uuid
-  waTemplate    WaTemplate?                @relation("customer_relation",fields: [waTemplateId], references: [id])
-  referralCodes LoyaltyReferralCode[]
-  refereeWaTemplateId String?   @db.Uuid
-  refereeWaTemplate  WaTemplate? @relation("referee_relation", fields: [refereeWaTemplateId], references: [id])
-  isExistingUserReferralAllowed  Boolean?  @default(false)
-  active        Boolean    @default(true)
-  description   String?
-  message       Json?
-  action_id     String?
-  rewardId      String?        @db.Uuid
-  reward        LoyaltyReward?  @relation("referrer_reward",fields: [rewardId], references: [id], onDelete: Cascade)
-  refereeRewardId  String?        @db.Uuid
-  refereeReward    LoyaltyReward?   @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
-  loyaltyWaCommand  LoyaltyWaCommand?
+  id                            String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type                          String // enum LoyaltyActionType
+  name                          String
+  points                        Int
+  refereePoints                 Int?
+  isAmountBased                 Boolean                    @default(false)
+  isAmountBasedForReferee       Boolean                    @default(false)
+  amount                        Float                      @default(0)
+  maxPoints                     Int? //Max points per transaction   
+  maxPointsForReferee           Int?
+  startDate                     DateTime
+  endDate                       DateTime
+  createdAt                     DateTime                   @default(now())
+  orgId                         String                     @db.Uuid
+  org                           Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customers                     LoyaltyActionCustomerMap[]
+  waTemplateId                  String?                    @db.Uuid
+  waTemplate                    WaTemplate?                @relation("customer_relation", fields: [waTemplateId], references: [id])
+  referralCodes                 LoyaltyReferralCode[]
+  refereeWaTemplateId           String?                    @db.Uuid
+  refereeWaTemplate             WaTemplate?                @relation("referee_relation", fields: [refereeWaTemplateId], references: [id])
+  isExistingUserReferralAllowed Boolean?                   @default(false)
+  active                        Boolean                    @default(true)
+  description                   String?
+  message                       Json?
+  action_id                     String?
+  rewardId                      String?                    @db.Uuid
+  reward                        LoyaltyReward?             @relation("referrer_reward", fields: [rewardId], references: [id], onDelete: Cascade)
+  refereeRewardId               String?                    @db.Uuid
+  refereeReward                 LoyaltyReward?             @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
+  loyaltyWaCommand              LoyaltyWaCommand?
 
   @@unique([action_id, orgId], name: "action_id_org_id_unique")
 }
@@ -1238,17 +1266,17 @@ model LoyaltyActionCustomerMap {
 }
 
 model LoyaltyWaCommand {
-  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId          String     @db.Uuid
-  org            Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String         @db.Uuid
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
   type           String //enum LoyaltyTemplateTypes 
-  waTemplateId   String?     @db.Uuid
-  waTemplate     WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  waTemplateId   String?        @db.Uuid
+  waTemplate     WaTemplate?    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
   requestMessage String?
-  createdAt      DateTime   @default(now())
+  createdAt      DateTime       @default(now())
   content        Json?
-  responseType   String      @default("Template")// enum WaAutomatedReplyResponseType
-  actionId       String?      @unique @db.Uuid
+  responseType   String         @default("Template") // enum WaAutomatedReplyResponseType
+  actionId       String?        @unique @db.Uuid
   action         LoyaltyAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@unique([requestMessage, orgId], name: "request_message_org_unique")

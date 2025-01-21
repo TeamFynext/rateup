@@ -3,6 +3,7 @@
 
 import { FastifyInstance } from "fastify";
 import {
+  campaignStatsChangeHandler,
   updateGoogleReviewQuestions,
   updateLoyaltySubscriptionHandler,
   updateWebSurveyThemePageTitleHandler,
@@ -15,4 +16,6 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/update-theme-title", updateWebSurveyThemePageTitleHandler);
 
   server.post("/loyalty-subscription", updateLoyaltySubscriptionHandler);
+
+  server.get("/campaign-stats-change", campaignStatsChangeHandler);
 }

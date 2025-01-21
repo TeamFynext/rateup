@@ -9,7 +9,6 @@ import {
   CreateCampaignParticipantsFromGroupsInput,
   CreateCampaignParticipantsInput,
 } from "./campaignParticipants.schema";
-import { getLatestStatus } from "../campaign.service";
 import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
 import { PaginationQuery } from "../../contact/contact.schema";
 
@@ -103,18 +102,6 @@ export async function createCampaignParticipantsFromAnotherCampaign(
       },
     },
   });
-  campaignParticipantsOld?.forEach((participant) => {
-    const participantStatus = participant.status;
-    let latestStatus = getLatestStatus(
-      participant?.WaMessageCampaginParticipantMap,
-    );
-    const FlowId = participant?.campaign?.flowId;
-    if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED)
-      latestStatus = CampaignParticipantStatus.COMPLETED;
-    else if (participantStatus === CampaignParticipantStatus.FAILED)
-      latestStatus = CampaignParticipantStatus.FAILED;
-    participant.status = latestStatus ?? CampaignParticipantStatus.PENDING;
-  });
   const status = mapStatuses(data.status);
   const campaignParticipants = await prisma.campaignParticipant.createMany({
     data: campaignParticipantsOld
@@ -149,6 +136,28 @@ export async function createCampaignParticipants(
 }
 
 export async function getCampaignParticipantsByCampaignId(
+  campaignId: string,
+  extra = {},
+) {
+  const campaignParticipants = await prisma.campaignParticipant.findMany({
+    where: {
+      campaignId,
+    },
+    include: {
+      contact: {
+        select: {
+          name: true,
+          phone: true,
+          consent: true,
+        },
+      },
+    },
+  });
+
+  return campaignParticipants;
+}
+
+export async function getCampaignParticipantsByCampaignIdPaginated(
   campaignId: string,
   query?: PaginationQuery,
 ) {
@@ -237,11 +246,6 @@ export async function getCampaignParticipantsByCampaignId(
             campaignId,
           },
     include: {
-      WaMessageCampaginParticipantMap: {
-        include: {
-          waMessage: true,
-        },
-      },
       contact: {
         select: {
           name: true,
@@ -257,17 +261,7 @@ export async function getCampaignParticipantsByCampaignId(
     },
   });
 
-  const filteredParticipants = campaignParticipants.map((participant) => {
-    const latestStatus = getLatestStatus(
-      participant.WaMessageCampaginParticipantMap,
-    );
-    return {
-      ...participant,
-      waStatus: latestStatus,
-    };
-  });
-
-  return { participants: filteredParticipants, totalCount, searchCount };
+  return { participants: campaignParticipants, totalCount, searchCount };
 }
 
 export async function getCampaignParticipantById(

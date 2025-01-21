@@ -13,11 +13,10 @@ import {
   createCampaignParticipantsFromGroup,
   deleteCampaignParticipantById,
   getCampaignParticipantById,
-  getCampaignParticipantsByCampaignId,
+  getCampaignParticipantsByCampaignIdPaginated,
   multipleDeleteCampaignParticipant,
 } from "./campaignParticipants.service";
 import { ByCampaignIdParams } from "../campaign.schema";
-import { PaginationQuery } from "../../contact/contact.schema";
 
 export async function createCampaignParticipantsFromContactsHandler(
   request: FastifyRequest<{
@@ -72,10 +71,11 @@ export async function getCampaignParticipantsByCampaignIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const campaignParticipants = await getCampaignParticipantsByCampaignId(
-    request.params.campaignId,
-    request.query,
-  );
+  const campaignParticipants =
+    await getCampaignParticipantsByCampaignIdPaginated(
+      request.params.campaignId,
+      request.query,
+    );
   reply.send(campaignParticipants);
 }
 
