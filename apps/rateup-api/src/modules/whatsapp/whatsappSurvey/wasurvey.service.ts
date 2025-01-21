@@ -711,11 +711,14 @@ export const handleMessageStatusUpdate = async (
         incrementData = { ...incrementData, totalSent: { increment: 1 } };
       }
       msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
-      incrementData = { totalDelivered: { increment: 1 } };
+      incrementData = { ...incrementData, totalDelivered: { increment: 1 } };
       break;
     case WaEvent.READ:
       if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.DELIVERED]) {
-        incrementData = { ...incrementData, totalDelivered: { increment: 1 } };
+        incrementData = {
+          ...incrementData,
+          totalDelivered: { increment: 1 },
+        };
       }
       if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.SENT]) {
         incrementData = { ...incrementData, totalSent: { increment: 1 } };
@@ -760,6 +763,8 @@ export const handleMessageStatusUpdate = async (
       },
     });
   }
+  incrementData = {};
+
   msg.stats[status] = new Date();
   await prisma.waMessage.update({
     where: {
