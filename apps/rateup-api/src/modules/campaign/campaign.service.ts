@@ -705,10 +705,14 @@ export async function enqueueCampaignMessage(
       });
     }
     if (!scheduledAt) {
-      await axios.post(
-        `${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`,
-        {},
-      );
+      try {
+        await axios.post(
+          `${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`,
+          {},
+        );
+      } catch (error) {
+        console.error("Error dispatching message:", error);
+      }
     }
     return true;
   } catch (error) {
