@@ -5,24 +5,59 @@ import {
   WaMessageStats,
 } from "../../campaign/campaign.service";
 
-export async function campaignStatsUpdate() {
-  const batchSize = 10000;
-  let skip = 0;
-  let hasMoreParticipants = true;
+const BATCH_SIZE = 50; // Adjust based on your system's capabilities
 
-  while (hasMoreParticipants) {
-    const campaignParticipants = await prisma.campaignParticipant.findMany({
+export async function campaignStatsUpdate() {
+  // Process campaigns in chunks
+  let skip = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const campaigns = await prisma.campaign.findMany({
+      take: BATCH_SIZE,
       skip,
-      take: batchSize,
+      select: {
+        id: true,
+        flowId: true,
+      },
+    });
+
+    if (campaigns.length === 0) {
+      hasMore = false;
+      continue;
+    }
+
+    // Process each campaign in the current batch
+    for (const campaign of campaigns) {
+      await processCampaign(campaign);
+    }
+
+    skip += BATCH_SIZE;
+  }
+}
+
+async function processCampaign(campaign: { id: string; flowId?: string }) {
+  let participantSkip = 0;
+  let hasMoreParticipants = true;
+  let campaignStats = {
+    totalRead: 0,
+    totalSend: 0,
+    totalCompleted: 0,
+    totalDelivered: 0,
+    totalFailed: 0,
+  };
+
+  // Process participants in chunks
+  while (hasMoreParticipants) {
+    const participants = await prisma.campaignParticipant.findMany({
+      where: {
+        campaignId: campaign.id,
+      },
+      take: BATCH_SIZE,
+      skip: participantSkip,
       select: {
         id: true,
         status: true,
-        campaign: {
-          select: {
-            id: true,
-            flowId: true,
-          },
-        },
         WaMessageCampaginParticipantMap: {
           select: {
             waMessage: {
@@ -37,19 +72,19 @@ export async function campaignStatsUpdate() {
               waCreatedAt: "desc",
             },
           },
+          take: 10, // Limit the number of messages per participant
         },
       },
     });
 
-    if (campaignParticipants.length < batchSize) {
+    if (participants.length === 0) {
       hasMoreParticipants = false;
+      continue;
     }
 
-    const participantUpdates = [];
-    const campaignStatsUpserts = new Map();
-
-    for (const participant of campaignParticipants) {
-      const campaign = participant.campaign;
+    // Process current batch of participants
+    const updates = [];
+    for (const participant of participants) {
       const participantMessages = participant?.WaMessageCampaginParticipantMap;
       let latestStatus = getLatestStatus(participantMessages);
 
@@ -58,10 +93,13 @@ export async function campaignStatsUpdate() {
         participant.status === CampaignParticipantStatus.COMPLETED
       ) {
         latestStatus = CampaignParticipantStatus.COMPLETED;
+        campaignStats.totalCompleted++;
       }
+
       if (!latestStatus) continue;
 
-      participantUpdates.push(
+      // Update participant status
+      updates.push(
         prisma.campaignParticipant.update({
           where: {
             id: participant.id,
@@ -72,111 +110,52 @@ export async function campaignStatsUpdate() {
         }),
       );
 
-      const stats = getData(participant);
-      if (!campaignStatsUpserts.has(campaign.id)) {
-        campaignStatsUpserts.set(campaign.id, {
-          campaignId: campaign.id,
-          ...stats,
-        });
-      } else {
-        const existingStats = campaignStatsUpserts.get(campaign.id);
-        campaignStatsUpserts.set(campaign.id, {
-          ...existingStats,
-          totalRead: existingStats.totalRead + stats.totalRead,
-          totalSend: existingStats.totalSend + stats.totalSend,
-          totalCompleted: existingStats.totalCompleted + stats.totalCompleted,
-          totalDelivered: existingStats.totalDelivered + stats.totalDelivered,
-          totalFailed: existingStats.totalFailed + stats.totalFailed,
-        });
+      // Update stats
+      if (participant.status === CampaignParticipantStatus.FAILED) {
+        campaignStats.totalFailed++;
+      }
+
+      participantMessages?.forEach(
+        (item: {
+          waMessage: {
+            waCreatedAt?: Date;
+            stats?: any;
+          };
+        }) => {
+          if (item.waMessage?.stats?.read) campaignStats.totalRead++;
+          if (item.waMessage?.stats?.sent) campaignStats.totalSend++;
+          if (item.waMessage?.stats?.delivered) campaignStats.totalDelivered++;
+          if (item.waMessage?.stats?.failed) campaignStats.totalFailed++;
+        },
+      );
+
+      if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
+        campaignStats.totalFailed++;
       }
     }
 
-    const campaignStatsUpsertsArray = Array.from(
-      campaignStatsUpserts.values(),
-    ).map((stats) =>
-      prisma.campaignStats.upsert({
-        where: {
-          campaignId: stats.campaignId,
-        },
-        create: stats,
-        update: stats,
-      }),
-    );
+    // Execute updates in smaller chunks
+    if (updates.length > 0) {
+      for (let i = 0; i < updates.length; i += 100) {
+        const chunk = updates.slice(i, i + 100);
+        await prisma.$transaction(chunk);
+      }
+    }
 
-    await prisma.$transaction([
-      ...participantUpdates,
-      ...campaignStatsUpsertsArray,
-    ]);
-
-    skip += batchSize;
+    participantSkip += BATCH_SIZE;
   }
 
-  const emptyCampaign = await prisma.campaign.findMany({
-    select: {
-      id: true,
-    },
+  // Update campaign stats
+  await prisma.campaignStats.upsert({
     where: {
-      campaignParticipants: {
-        none: {},
-      },
+      campaignId: campaign.id,
+    },
+    create: {
+      campaignId: campaign.id,
+      ...campaignStats,
+    },
+    update: {
+      ...campaignStats,
     },
   });
-  if (emptyCampaign.length > 0) {
-    await prisma.campaignStats.createMany({
-      data: emptyCampaign.map((campaign) => ({
-        campaignId: campaign.id,
-      })),
-      skipDuplicates: true,
-    });
-  }
 }
-
-const getData = (participant) => {
-  let totalRead = 0,
-    totalSend = 0,
-    totalCompleted = 0,
-    totalDelivered = 0,
-    totalFailed = 0;
-
-  const participantStatus = participant.status;
-  const participantMessages = participant?.WaMessageCampaginParticipantMap;
-
-  const latestStatus = getLatestStatus(participantMessages);
-
-  if (participantStatus === CampaignParticipantStatus.FAILED) {
-    totalFailed++;
-  }
-  participantMessages?.forEach(
-    (item: {
-      waMessage: {
-        stats: WaMessageStats;
-      };
-    }) => {
-      if (item.waMessage.stats?.read) totalRead++;
-      if (item.waMessage.stats?.sent) totalSend++;
-      if (item.waMessage.stats?.delivered) totalDelivered++;
-      if (item.waMessage.stats?.failed) totalFailed++;
-    },
-  );
-
-  if (latestStatus?.toUpperCase() === CampaignParticipantStatus.FAILED) {
-    totalFailed++;
-  }
-
-  if (
-    participant.campaign.flowId &&
-    participantStatus === CampaignParticipantStatus.COMPLETED
-  ) {
-    totalCompleted++;
-  }
-
-  participant.waStatus = latestStatus;
-
-  return {
-    totalRead,
-    totalSend,
-    totalCompleted,
-    totalDelivered,
-    totalFailed,
-  };
-};
