@@ -1,11 +1,12 @@
 import { CampaignParticipantStatus } from "../../../types/enums";
+import { BATCH_SIZE } from "../../../utils/constants/constants";
 import prisma from "../../../utils/prisma";
 import {
   getLatestStatus,
   WaMessageStats,
 } from "../../campaign/campaign.service";
 
-const BATCH_SIZE = 10000; // Adjust based on your system's capabilities
+// const BATCH_SIZE = 10000; // Adjust based on your system's capabilities
 
 export async function campaignStatsUpdate() {
   // Process campaigns in chunks
