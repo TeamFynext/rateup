@@ -367,15 +367,8 @@ export const contactParticipentDetailColumn = [
     filterFn: fuzzyFilter,
     sortingFn: customStatusSort,
     cell: (info) => {
-      let statusData: string = (info?.getValue()?.waStatus || "").toUpperCase();
-      const FlowId = info?.getValue()?.campaign?.flowId;
-      const participantStatus = info.getValue().status?.toUpperCase();
-      const errorMessage = info.getValue().errorMessage;
-      if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED) {
-        statusData = CampaignParticipantStatus.COMPLETED;
-      } else if (!statusData || errorMessage) {
-        statusData = participantStatus;
-      }
+      let statusData = info?.getValue()?.status;
+      let errorMessage = info?.getValue()?.errorMessage;
       return statusData === CampaignParticipantStatus.FAILED ? (
         <HoverCard width={280} shadow="md" withArrow>
           <HoverCard.Target>

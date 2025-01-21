@@ -171,7 +171,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
         showErrorToast(
-          `Error starting campaign: ${error?.response?.data.error}`,
+          `${error?.response?.data?.message ?? "Error sending campaign"}`,
           "campaign-start",
           <IconX />,
         );

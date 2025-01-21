@@ -157,13 +157,6 @@ const CampaignById = () => {
   return (
     <MantineProvider theme={whatsappTheme}>
       <Stack className={styles["campaign-id-page-root-div"]}>
-        <Title order={2} tt={"uppercase"}>
-          {isPending || isRefetching ? (
-            <Skeleton h={35} w={300} />
-          ) : (
-            campaignData?.name
-          )}
-        </Title>
         <Group mih={42}>
           <SegmentedControl
             data={Object.values(CampaignParticipantsTabs)}
@@ -377,15 +370,18 @@ const StartCampaignCard = ({
 
   return (
     <>
-      <Button
-        variant="outline"
-        radius={"xl"}
-        disabled={!participantCount}
-        onClick={toggle}
-        rightSection={<IconSend size={16} />}
-      >
-        {startCampaign ? translations["Resend"] : translations["Send"]}
-      </Button>
+      {campaign?.status !== CampaignStatus.SCHEDULED && (
+        <Button
+          variant="outline"
+          radius={"xl"}
+          disabled={!participantCount}
+          onClick={toggle}
+          rightSection={<IconSend size={16} />}
+        >
+          {startCampaign ? translations["Resend"] : translations["Send"]}
+        </Button>
+      )}
+
       <Badge
         variant="light"
         p={"md"}
