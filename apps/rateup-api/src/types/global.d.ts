@@ -378,6 +378,7 @@ declare global {
     renewedAt?: Date;
     createdAt: Date;
     basePlan: SPlan;
+    isAnnualMessageLimit: boolean;
   }
   type WaFlowWa = {
     // wa flow type from whatsapp

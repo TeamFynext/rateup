@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import prisma from "../../utils/prisma";
 
@@ -41,6 +42,10 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.LoyaltyCustomer
             ? { increment: 1 }
             : undefined,
+        annualMessageCount:
+          stat === SubscriptionFeaturePathName.Whatsapp
+            ? { increment: 1 }
+            : undefined,
       },
       create: {
         orgId: orgId,
@@ -62,6 +67,8 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.LoyaltyReward ? 1 : 0,
         loyaltyCustomerCount:
           stat === SubscriptionFeaturePathName.LoyaltyCustomer ? 1 : 0,
+        annualMessageCount:
+          stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },
@@ -77,10 +84,31 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
 export async function resetMonthlyCounts() {
   try {
     const resetMonthlyStats = await prisma.usageStats.updateMany({
+      where: {
+        lastMonthlyResettedDate: dayjs()
+          .startOf("D")
+          .subtract(30, "D")
+          .toDate(),
+        org: {
+          Subscription: {
+            basePlan: {
+              paymentPlan: {
+                period: "yearly",
+              },
+              OR: [
+                {
+                  paymentPlan: null,
+                },
+              ],
+            },
+          },
+        },
+      },
       data: {
         monthlyMenuViews: 0,
         monthlySurveyResponses: 0,
         monthlyMessagesCount: 0,
+        lastMonthlyResettedDate: new Date(),
       },
     });
     return resetMonthlyStats;
@@ -253,4 +281,18 @@ export async function updateUsageStats(
   });
 
   return usageStats;
+}
+
+export async function updateUsageStatsLastReset(orgId, renewedAt) {
+  const difference = dayjs().diff(dayjs(renewedAt), "D") % 30;
+  const lastMonthlyResettedDate = dayjs().subtract(difference, "D").toDate();
+
+  return await prisma.usageStats.update({
+    where: {
+      orgId,
+    },
+    data: {
+      lastMonthlyResettedDate,
+    },
+  });
 }

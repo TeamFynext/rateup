@@ -16,6 +16,7 @@ import {
   UnlimitedAccess,
 } from "./subscription.data";
 import dayjs from "dayjs";
+import { updateUsageStatsLastReset } from "../stats/stats.service";
 
 export async function getUserSubscriptionHandler(req, res) {
   const { orgId } = req.user;
@@ -59,9 +60,16 @@ export async function updateSubscriptionHandler(
       updatedData.features = UnlimitedAccess;
     else updatedData.features = rateupPlan.features;
     updatedData.expiresAt = dayjs().add(30, "days").toDate();
+    updatedData.isAnnualMessageLimit = false;
   }
   const subscription = await updateSubscription(orgId, updatedData);
-  return res.send(subscription);
+  res.send(subscription);
+  if (
+    "isAnnualMessageLimit" in updatedData &&
+    !updatedData.isAnnualMessageLimit
+  ) {
+    await updateUsageStatsLastReset(orgId, subscription.renewedAt);
+  }
 }
 
 export async function deleteSubscriptionsHandler(

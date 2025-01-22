@@ -5,7 +5,7 @@ import { FastifyInstance } from "fastify";
 import {
   campaignStatsChangeHandler,
   updateGoogleReviewQuestions,
-  updateLoyaltySubscriptionHandler,
+  updateUsageStatsResetHandler,
   updateWebSurveyThemePageTitleHandler,
 } from "./update.controller";
 
@@ -15,7 +15,7 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   //update title and subtitle structure of welcome, language and thank you page
   server.post("/update-theme-title", updateWebSurveyThemePageTitleHandler);
 
-  server.post("/loyalty-subscription", updateLoyaltySubscriptionHandler);
+  server.post("/usage-stats-reset", updateUsageStatsResetHandler);
 
   server.get("/campaign-stats-change", campaignStatsChangeHandler);
 }

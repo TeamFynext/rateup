@@ -27,9 +27,13 @@ export async function checkMessageLimitExceeded(orgId: string) {
       orgId: orgId,
     },
   });
-  return !(
-    usage?.monthlyMessagesCount >=
-    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-      ?.monthlyMessageLimit
-  );
+
+  return !(subscription?.isAnnualMessageLimit
+    ? usage.annualMessageCount >=
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+        ?.monthlyMessageLimit *
+        12
+    : usage?.monthlyMessagesCount >=
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+        ?.monthlyMessageLimit);
 }
