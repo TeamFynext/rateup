@@ -194,15 +194,15 @@ export const useCampaignResponseDownloadById = () => {
       // queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       showSuccessToast(
-        "Campaign deleted successfully.",
-        "campaign-delete",
+        "Delivery report generated successfully.",
+        "delivery-report",
         <IconCheck />,
       );
     },
     onError: (error: any) => {
       showErrorToast(
-        `Error deleting campaign: ${error?.response?.data.error}`,
-        "campaign-delete",
+        `Error generating delivery report: ${error?.response?.data.error}`,
+        "delivery-report",
         <IconX />,
       );
     },
