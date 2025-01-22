@@ -60,19 +60,19 @@ export const StatsCard = ({
     </PaperLayout>
   );
 };
-export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
+export const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
   const { translations } = useTranslations();
   const statsArray = [
     {
       Icon: IconSocial as unknown as string,
       count: stats?.teamsCount,
-      totalCount: totalStats?.team?.count?.max,
+      totalCount: subscription?.features?.team?.count?.max,
       stats: "Teams",
     },
     {
       Icon: IconUsers as unknown as string,
       count: stats?.teamMembersCount,
-      totalCount: totalStats?.team?.teamMember?.count?.max,
+      totalCount: subscription?.features?.team?.teamMember?.count?.max,
       stats: "Team Members",
     },
   ];
@@ -116,21 +116,21 @@ export const TeamStats = ({ stats, refetch, isRefetching, totalStats }) => {
   );
 };
 
-export const MenuStats = ({ stats, totalStats }) => {
+export const MenuStats = ({ stats, subscription }) => {
   const { translations } = useTranslations();
-  const isActive = totalStats?.menu?.active;
+  const isActive = subscription?.features?.menu?.active;
   if (!isActive) return;
   const statsArray = [
     {
       Icon: IconCategoryFilled as unknown as string,
       count: stats?.menusCount,
-      totalCount: totalStats?.menu?.count?.max,
+      totalCount: subscription?.features?.menu?.count?.max,
       stats: "Menus",
     },
     {
       Icon: IconEyeFilled as unknown as string,
       count: stats?.monthlyMenuViews,
-      totalCount: totalStats?.menu?.count?.monthlyViewLimit,
+      totalCount: subscription?.features?.menu?.count?.monthlyViewLimit,
       stats: "Monthly Menu view",
     },
     {
@@ -150,16 +150,17 @@ export const MenuStats = ({ stats, totalStats }) => {
     </Stack>
   );
 };
-export const SurveyStats = ({ stats, totalStats }) => {
+export const SurveyStats = ({ stats, subscription }) => {
   const { translations } = useTranslations();
-  const isActive = totalStats?.webSurvey?.active;
+  const isActive = subscription?.features?.webSurvey?.active;
   if (!isActive) return;
-  const totalSurveyCount = totalStats?.webSurvey?.count?.max;
+  const totalSurveyCount = subscription?.features?.webSurvey?.count?.max;
   const statsArray = [
     {
       Icon: IconClockFilled as unknown as string,
       count: stats?.monthlySurveyResponses,
-      totalCount: totalStats?.webSurvey?.count?.monthlyResponseLimit,
+      totalCount:
+        subscription?.features?.webSurvey?.count?.monthlyResponseLimit,
       stats: "Monthly Responses",
     },
     {
@@ -186,16 +187,22 @@ export const SurveyStats = ({ stats, totalStats }) => {
     </Stack>
   );
 };
-export const WhatsappStats = ({ stats, totalStats }) => {
+export const WhatsappStats = ({ stats, subscription }) => {
   const { translations } = useTranslations();
-  const isActive = totalStats?.whatsapp?.active;
+  const isActive = subscription?.features?.whatsapp?.active;
   if (!isActive) return;
   const statsArray = [
     {
       Icon: IconClockFilled as unknown as string,
-      count: stats?.monthlyMessagesCount,
-      totalCount: totalStats?.whatsapp?.count?.monthlyMessageLimit,
-      stats: "Monthly Message",
+      count: subscription?.isAnnualMessageLimit
+        ? stats?.annualMessageCount
+        : stats?.monthlyMessagesCount,
+      totalCount: subscription?.isAnnualMessageLimit
+        ? subscription?.features?.whatsapp?.count?.monthlyMessageLimit * 12
+        : subscription?.features?.whatsapp?.count?.monthlyMessageLimit,
+      stats: subscription?.isAnnualMessageLimit
+        ? "Annual Message"
+        : "Monthly Message",
     },
     {
       Icon: IconMessage as unknown as string,
@@ -205,7 +212,7 @@ export const WhatsappStats = ({ stats, totalStats }) => {
     {
       Icon: IconClipboardList as unknown as string,
       count: stats?.waSurveysCount,
-      totalCount: totalStats?.whatsapp?.flow?.count?.max,
+      totalCount: subscription?.features?.whatsapp?.flow?.count?.max,
       stats: "Flow Surveys",
     },
     // {
@@ -233,21 +240,21 @@ export const WhatsappStats = ({ stats, totalStats }) => {
   );
 };
 
-const AIStats = ({ stats, totalStats }) => {
+const AIStats = ({ stats, subscription }) => {
   const { translations } = useTranslations();
-  const aiFeature = totalStats?.ai;
+  const aiFeature = subscription?.features?.ai;
   if (!aiFeature || !aiFeature?.active) return;
   const statsArray = [
     {
       Icon: IconBrandOpenai as unknown as string,
       count: stats?.aiPromptTokensCount,
-      totalCount: totalStats?.ai.count.promptTokens,
+      totalCount: aiFeature?.count.promptTokens,
       stats: "Input Tokens",
     },
     {
       Icon: IconBrandOpenai as unknown as string,
       count: stats?.aiCompletionTokensCount,
-      totalCount: totalStats?.ai.count.completionTokens,
+      totalCount: aiFeature?.count.completionTokens,
       stats: "Output Tokens",
     },
   ];
@@ -263,27 +270,27 @@ const AIStats = ({ stats, totalStats }) => {
   );
 };
 
-const LoyaltyStats = ({ stats, totalStats }) => {
+const LoyaltyStats = ({ stats, subscription }) => {
   const { translations } = useTranslations();
-  const loyalty = totalStats?.loyalty;
+  const loyalty = subscription?.features?.loyalty;
   if (!loyalty || !loyalty?.active) return;
   const statsArray = [
     {
       Icon: IconHandClick as unknown as string,
       count: stats?.loyaltyActionCount,
-      totalCount: totalStats?.loyalty?.action?.count?.max,
+      totalCount: loyalty?.action?.count?.max,
       stats: "Actions",
     },
     {
       Icon: IconAward as unknown as string,
       count: stats?.loyaltyRewardCount,
-      totalCount: totalStats?.loyalty?.reward?.count?.max,
+      totalCount: loyalty?.reward?.count?.max,
       stats: "Rewards",
     },
     {
       Icon: IconUsers as unknown as string,
       count: stats?.loyaltyCustomerCount,
-      totalCount: totalStats?.loyalty?.customer?.count?.max,
+      totalCount: loyalty?.customer?.count?.max,
       stats: "Customers",
     },
   ];
@@ -308,15 +315,15 @@ const UsageStats = ({ subscription }) => {
         <Stack gap={"xl"} w={"fit-content"} pl={"xl"}>
           <TeamStats
             stats={stats}
-            totalStats={subscription?.features}
+            subscription={subscription}
             isRefetching={isRefetching}
             refetch={refetch}
           />
-          <SurveyStats stats={stats} totalStats={subscription?.features} />
-          <MenuStats stats={stats} totalStats={subscription?.features} />
-          <WhatsappStats stats={stats} totalStats={subscription?.features} />
-          <AIStats stats={stats} totalStats={subscription?.features} />
-          <LoyaltyStats stats={stats} totalStats={subscription?.features} />
+          <SurveyStats stats={stats} subscription={subscription} />
+          <MenuStats stats={stats} subscription={subscription} />
+          <WhatsappStats stats={stats} subscription={subscription} />
+          <AIStats stats={stats} subscription={subscription} />
+          <LoyaltyStats stats={stats} subscription={subscription} />
         </Stack>
       )}
     </>
