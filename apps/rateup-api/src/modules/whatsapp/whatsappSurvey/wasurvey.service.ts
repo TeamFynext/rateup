@@ -738,12 +738,12 @@ export const handleMessageStatusUpdate = async (
       });
       incrementData = { totalFailed: { increment: 1 } };
       break;
-    case WaEvent.SENT:
-      incrementData = { totalSend: { increment: 1 } };
-      break;
   }
 
-  if (messageCampaignParticipant?.campaignParticipantId) {
+  if (
+    messageCampaignParticipant?.campaignParticipantId &&
+    status !== WaEvent.SENT
+  ) {
     await prisma.campaignParticipant.update({
       where: {
         id: messageCampaignParticipant.campaignParticipantId,
