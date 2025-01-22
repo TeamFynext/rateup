@@ -2,6 +2,8 @@
 
 import { axiosClient } from "../apiClient";
 
+const baseUrl = "/public/update";
+
 export const updateGoogleReviewQuestions = async () => {
   const response = await axiosClient.post(
     "/public/update/updateGoogleReviewQuestions",
@@ -13,6 +15,6 @@ export async function updateThemeTitleSt() {
   return await axiosClient.post(`/public/update/update-theme-title`);
 }
 
-export async function updateLoyaltySubscription() {
-  return await axiosClient.post(`/public/update/loyalty-subscription`);
+export async function updateUsageStatsResetDate() {
+  return await axiosClient.post(`${baseUrl}/usage-stats-reset`);
 }

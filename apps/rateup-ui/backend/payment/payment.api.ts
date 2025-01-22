@@ -28,6 +28,7 @@ export interface ICreateCheckoutType {
   planName: string;
   period: string;
   orgId: string;
+  isAnnualMessageLimit: boolean;
 }
 
 export async function createCheckoutSession(data: ICreateCheckoutType) {

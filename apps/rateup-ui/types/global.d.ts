@@ -738,6 +738,7 @@ declare global {
     id?: string;
     paymentPlanId?: string;
     subscriptionRef?: string;
+    isAnnualMessageLimit: boolean;
   }
   type Org = {
     id: string;

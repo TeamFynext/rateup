@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { Button, Group, Stack, Switch, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+  IconInfoCircle,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
@@ -16,7 +17,10 @@ import {
   useOrgStats,
   useUpdateOrgPause,
 } from "../../../backend/org/org.query";
-import { useSubscriptionByOrgId } from "../../../backend/subscription/subscription.query";
+import {
+  useSubscriptionByOrgId,
+  useUpdateSubscriptionMutation,
+} from "../../../backend/subscription/subscription.query";
 import {
   CountCard,
   CountSectionContainer,
@@ -28,6 +32,7 @@ import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 
 export default function OrgById() {
   const [opened, { close, open }] = useDisclosure(false); // subscription editor
+  const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
   const [
     openedConfirmModal,
     { open: openConfirmModal, close: closeConfirmModal },
@@ -44,6 +49,7 @@ export default function OrgById() {
   const [orgDetails, setOrgDetails] = useState<Org>(null);
   const updatePauseStatus = useUpdateOrgPause();
   const { translations } = useTranslations();
+  const updateSubscription = useUpdateSubscriptionMutation();
   useEffect(() => {
     if (orgs) {
       setOrgDetails(orgs.find((org) => org.id === orgId));
@@ -56,6 +62,22 @@ export default function OrgById() {
       data: { isPaused: !orgDetails.isPaused },
     });
   };
+
+  const handleAnnualMessageLimit = (checked) => {
+    updateSubscription.mutate(
+      { orgId, updatedData: { isAnnualMessageLimit: checked } },
+      {
+        onSuccess: () => {
+          setIsAnnualMessageLimit(checked);
+        },
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (subscription)
+      setIsAnnualMessageLimit(subscription.isAnnualMessageLimit);
+  }, [subscription]);
 
   if (isError || isSubErr) return <div>error occured</div>;
   if (isLoading || !stats || isSubLoading) return <RateupLoader h={"100dvh"} />;
@@ -90,19 +112,35 @@ export default function OrgById() {
               : translations["Pause Organization"]}
           </Button>
         )}
-        <Button
-          style={{ fontSize: "1.2rem", height: "unset" }}
-          rightSection={<IconPencil />}
-          variant="outline"
-          onClick={open}
-          styles={{
-            inner: {
-              height: "40px",
-            },
-          }}
-        >
-          {translations["Manage Subscription"]}
-        </Button>
+        <Group>
+          {subscription?.basePlan?.paymentPlan?.period === "yearly" && (
+            <Group gap={1}>
+              <Switch
+                label={"Annual Message limit"}
+                checked={isAnnualMessageLimit}
+                onChange={(e) =>
+                  handleAnnualMessageLimit(e.currentTarget.checked)
+                }
+              />
+              <Tooltip label="Updation will affect only in current subscription year">
+                <IconInfoCircle size={"1rem"} color="grey" />
+              </Tooltip>
+            </Group>
+          )}
+          <Button
+            style={{ fontSize: "1.2rem", height: "unset" }}
+            rightSection={<IconPencil />}
+            variant="outline"
+            onClick={open}
+            styles={{
+              inner: {
+                height: "40px",
+              },
+            }}
+          >
+            {translations["Manage Subscription"]}
+          </Button>
+        </Group>
       </Group>
       <Group>
         <CountSectionContainer label="Org">

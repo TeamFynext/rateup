@@ -6,6 +6,7 @@ import {
   Group,
   ScrollAreaAutosize,
   Stack,
+  Switch,
   Tabs,
   Text,
   Title,
@@ -80,6 +81,7 @@ const AccountSettings = () => {
   const [activeTab, setActiveTab] = useState<AccountSettingsTabs>(
     AccountSettingsTabs.UsageStats,
   );
+  const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
 
   useEffect(() => {
     let order = orders?.data?.filter(
@@ -121,6 +123,7 @@ const AccountSettings = () => {
     planName: cart?.name,
     period: cart?.period,
     orgId: user?.orgId,
+    isAnnualMessageLimit,
   };
 
   async function displayRazorpay() {
@@ -281,7 +284,11 @@ const AccountSettings = () => {
             router.push(`/dashboard/payment/checkout?pid=${cart.priceId}`);
           } else {
             setProcessingPayment(true);
-            createCheckout.mutate(checkoutDetails);
+            createCheckout.mutate(checkoutDetails, {
+              onSettled: () => {
+                setIsAnnualMessageLimit(false);
+              },
+            });
             close();
             reset();
           }
@@ -290,6 +297,15 @@ const AccountSettings = () => {
         {enablePurchase ? (
           <Group mt="xl" mb="40px" justify="space-between">
             <Stack mr="xl">
+              {cart?.period === "yearly" && (
+                <Switch
+                  label={"Annual Message limit"}
+                  checked={isAnnualMessageLimit}
+                  onChange={(e) =>
+                    setIsAnnualMessageLimit(e.currentTarget.checked)
+                  }
+                />
+              )}
               <Title order={3}> {cart?.name} </Title>
               <Title order={5}>
                 {cart?.currencySymbol}
