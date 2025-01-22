@@ -41,6 +41,7 @@ export async function createCheckoutSession(
     notes: {
       rateupPlanId: data.rateupPlanId,
       orgId: data?.orgId,
+      isAnnualMessageLimit: data.isAnnualMessageLimit,
     },
   };
 
@@ -339,6 +340,7 @@ export async function updateSubscription(payload) {
         expiresAt: new Date(current_end * 1000),
         subscriptionRef: id,
         lastLimitAlertSentAt: null,
+        isAnnualMessageLimit: notes?.isAnnualMessageLimit === "1",
       },
     });
 
@@ -350,6 +352,21 @@ export async function updateSubscription(payload) {
         ...(!charge_at
           ? {}
           : { subscriptionChargeAt: new Date(charge_at * 1000) }),
+      },
+    });
+
+    const updatedUsageStats = await prisma.usageStats.update({
+      where: {
+        orgId: notes?.orgId,
+      },
+      data: {
+        subscriptionStartDate: new Date(),
+        subscriptionEndDate: new Date(current_end * 1000),
+        monthlyMessagesCount: 0,
+        monthlySurveyResponses: 0,
+        monthlyWaSurveyResponses: 0,
+        annualMessageCount: notes?.isAnnualMessageLimit ? 0 : undefined,
+        lastMonthlyResettedDate: new Date(),
       },
     });
 

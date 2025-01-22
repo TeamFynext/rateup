@@ -27,6 +27,7 @@ import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpi
 import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
 import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
+import dayjs from "dayjs";
 
 const server = Fastify({
   logger: logOptions,
@@ -102,24 +103,24 @@ server.register(fastifyCron, {
       },
       start: true,
     },
-    {
-      cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
-      onTick: async () => {
-        const currentTime = new Date();
-        console.log("......Monthly Stats Reset JOB --> .....", currentTime);
-        try {
-          await resetMonthlyCounts();
-        } catch (error) {
-          console.error("Failed to reset monthly counts:", error);
-        }
-      },
-      start: true, // Start the job immediately
-      timeZone: "Etc/UTC", // Set to UTC+0
-      //timeZone: "Asia/Kolkata", // UTC India
+    // {
+    //   cronTime: "0 0 1 * *", // This cron expression means "at 00:00 on day-of-month 1"
+    //   onTick: async () => {
+    //     const currentTime = new Date();
+    // console.log("......Monthly Stats Reset JOB --> .....", currentTime);
+    // try {
+    // await resetMonthlyCounts();
+    // } catch (error) {
+    //   console.error("Failed to reset monthly counts:", error);
+    // }
+    //   },
+    //   start: true, // Start the job immediately
+    //   timeZone: "Etc/UTC", // Set to UTC+0
+    //   //timeZone: "Asia/Kolkata", // UTC India
 
-      // timeZone: 'UTC', // Specify the timezone if necessary
-      //  cronTime: '* * * * *', // Every minute - for testing purpose
-    },
+    //   // timeZone: 'UTC', // Specify the timezone if necessary
+    //   //  cronTime: '* * * * *', // Every minute - for testing purpose
+    // },
     {
       cronTime: "0 * * * *", // Every one hour
       onTick: async () => {
@@ -128,6 +129,14 @@ server.register(fastifyCron, {
         await sendTemplateForShopifyAbandonedCheckouts();
       },
       start: true,
+    },
+    {
+      cronTime: "30 0 * * *",
+      onTick: async () => {
+        const currentTime = new Date();
+        log.info(`......Running Every Day 12.30 AM --> .....${currentTime}`);
+        await resetMonthlyCounts();
+      },
     },
   ],
 });

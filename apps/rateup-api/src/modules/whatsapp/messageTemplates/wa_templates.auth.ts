@@ -20,6 +20,18 @@ export async function verifyMessageMonthlyLimitRestriction(
   });
 
   if (
+    subscription?.isAnnualMessageLimit &&
+    usage.annualMessageCount >=
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+        ?.monthlyMessageLimit *
+        12
+  ) {
+    return reply.code(403).send({
+      message: "You have reached the maximum annual limit of messages.",
+      displayMessageInClient: true,
+    });
+  }
+  if (
     usage?.monthlyMessagesCount >=
     subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
       ?.monthlyMessageLimit

@@ -81,6 +81,7 @@ export async function getSubscription(orgId: string) {
         },
       },
       subscriptionRef: true,
+      isAnnualMessageLimit: true,
     },
   })) as unknown as Subscription;
 

@@ -160,6 +160,7 @@ model UsageStats {
   loyaltyRewardCount      Int @default(0)
   loyaltyCustomerCount    Int @default(0)
 
+  annualMessageCount      Int  @default(0)
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)
   monthlyMenuViews         Int @default(0)
@@ -175,6 +176,8 @@ model UsageStats {
   allowedMenus           Int @default(0)
   allowedMenuViews       Int @default(0)
   allowedMessagesCount   Int @default(0)
+
+  lastMonthlyResettedDate  DateTime? @db.Date()
 }
 
 model WhatsappSettings {
@@ -726,6 +729,7 @@ model Subscription {
   basePlanId           String?     @db.Uuid
   subscriptionRef      String?     @unique //gateway Subscription id
   lastLimitAlertSentAt DateTime? //Limit reached Email 
+  isAnnualMessageLimit  Boolean    @default(false)
 }
 
 // used to tokenize some data

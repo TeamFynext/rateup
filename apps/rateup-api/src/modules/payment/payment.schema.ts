@@ -19,6 +19,7 @@ const createCheckoutRequestSchema = z.object({
   rateupPlanId: z.string({
     required_error: "Rateup Plan Id is required",
   }),
+  isAnnualMessageLimit: z.boolean(),
 });
 const createRateUpPlanSchema = z.object({
   name: z.string().trim().min(1),

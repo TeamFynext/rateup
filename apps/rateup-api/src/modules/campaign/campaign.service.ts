@@ -476,7 +476,25 @@ export async function sendCampaignCronAction() {
     subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
       ?.monthlyMessageLimit ?? 0;
 
+  const annualLimit = monthlyMessageLimit * 12;
+
   if (
+    subscription?.isAnnualMessageLimit &&
+    (usage.annualMessageCount ?? 0 + newMessagesCount > annualLimit)
+  ) {
+    let errorMessage =
+      usage.annualMessageCount >= annualLimit
+        ? "You have reached the maximum annual limit of messages."
+        : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
+            annualLimit - newMessagesCount
+          } to proceed.`;
+    await updateCampaign(campaignsToBeSent?.[0].id, {
+      status: CampaignStatus.ACTIVE,
+      errorMessage: errorMessage,
+    });
+    log.error(errorMessage, "in schedule", orgId);
+    return;
+  } else if (
     (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
     monthlyMessageLimit
   ) {
