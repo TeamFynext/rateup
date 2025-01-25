@@ -34,7 +34,6 @@ import { useRouter } from "next/router";
 
 import { ModalsProvider } from "@mantine/modals";
 import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
 
 import CookieConsentBanner from "../components/Analytics/CookieConsentBanner";
 import FacebookPixel from "../components/Analytics/FacebookPixel";
@@ -56,7 +55,7 @@ if (typeof window !== "undefined") {
 // TODO: docs warns to not create this at file root level
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
-  getLayout?: (page: ReactElement) => ReactNode;
+  getLayout?: (page: ReactElement<any>) => ReactNode;
 };
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;

@@ -35,7 +35,6 @@ import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.a
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { lexend400, lexend500, lexend600 } from "@/utils/fonts";
 
 const ICONS = [
   IconHandClick,
@@ -99,7 +98,7 @@ const SummaryCards = ({ data, icons }) => (
         c={[3, 4, 5].includes(i) ? "var(--grey-color-7)" : ""}
       >
         <Group justify="space-between" gap={0}>
-          <Text ff={lexend500.style.fontFamily}>{item.title}</Text>
+          <Text fw={500}>{item.title}</Text>
           <Group gap={0} pos={"relative"}>
             {React.createElement(icons[i], {
               color: "var(--shade-of-blue-14)",
@@ -112,12 +111,7 @@ const SummaryCards = ({ data, icons }) => (
             )}
           </Group>
         </Group>
-        <Text
-          align="center"
-          fz={"h1"}
-          ff={lexend600.style.fontFamily}
-          c={"var(--shade-of-blue-14)"}
-        >
+        <Text ta={"center"} fz={"h1"} fw={600} c={"var(--shade-of-blue-14)"}>
           {item.value}
         </Text>
       </PaperLayout>
@@ -129,7 +123,9 @@ const TableHeader = ({ headers }) => (
   <Table.Thead style={{ borderBottom: "1px solid var(--grey-color-4-5)" }}>
     <Table.Tr c={"var(--grey-color-6)"}>
       {headers.map((header, index) => (
-        <Table.Th key={index}>{header}</Table.Th>
+        <Table.Th key={index} fw={400}>
+          {header}
+        </Table.Th>
       ))}
     </Table.Tr>
   </Table.Thead>
@@ -146,7 +142,7 @@ const TableRow = ({ rowData, renderRow }) => (
 const SectionHeader = ({ icon: Icon, title }) => (
   <Group gap={4} p={"sm"}>
     <Icon color="var(--shade-of-blue-14)" />
-    <Text fz="lg" ff={lexend500.style.fontFamily} c={"var(--shade-of-blue-14)"}>
+    <Text fz="lg" fw={500} c={"var(--shade-of-blue-14)"}>
       {title}
     </Text>
   </Group>
@@ -173,7 +169,7 @@ const TopPerformedActions = ({ data }) => (
           renderRow={(action) => (
             <>
               <Table.Td maw={200}>
-                <Text ff={lexend400.style.fontFamily} truncate={"end"}>
+                <Text fw={400} truncate={"end"}>
                   {action.name.title}
                 </Text>
                 <Text
@@ -231,18 +227,14 @@ const TopPerformers = ({ data }) => (
           renderRow={(action) => (
             <>
               <Table.Td w={200}>
-                <Text
-                  ff={lexend400.style.fontFamily}
-                  truncate={"end"}
-                  c={"var(--shade-of-blue-14)"}
-                >
+                <Text fw={400} truncate={"end"} c={"var(--shade-of-blue-14)"}>
                   {action.name}
                 </Text>
               </Table.Td>
               <Table.Td>{action.total_actions}</Table.Td>
               <Table.Td
                 c={action.recent_actions > 0 ? "var(--wa-green)" : "red"}
-                ff={lexend500.style.fontFamily}
+                fw={500}
               >
                 {action.recent_actions > 0
                   ? `+${action.recent_actions}`
@@ -279,7 +271,7 @@ const TopRedeemedRewards = ({ data }: TopRedeemedRewardsProps) => (
           renderRow={(action) => (
             <>
               <Table.Td w={200}>
-                <Text ff={lexend400.style.fontFamily} truncate={"end"}>
+                <Text fw={400} truncate={"end"}>
                   {action.name}
                 </Text>
               </Table.Td>
@@ -320,18 +312,10 @@ const PaginatedBarChart = ({ chartData, title, total }) => {
     <>
       <Group justify="space-between">
         <Stack gap={0} p={"sm"}>
-          <Text
-            fz="16px"
-            c={"var(--grey-color-6)"}
-            ff={lexend500.style.fontFamily}
-          >
+          <Text fz="16px" c={"var(--grey-color-6)"} fw={500}>
             {title}
           </Text>
-          <Text
-            fz={"h2"}
-            c={"var(--shade-of-blue-14)"}
-            ff={lexend600.style.fontFamily}
-          >
+          <Text fz={"h2"} c={"var(--shade-of-blue-14)"} fw={600}>
             {total}
           </Text>
         </Stack>

@@ -1,9 +1,11 @@
 import React from "react";
+
 import { Box, Image, Text, Title } from "@mantine/core";
-import styles from "./DescriptionsCarouselSlides.module.css";
-import { motion } from "framer-motion";
-import { Solution } from "../../../pages/Reputation/constants";
+import { motion } from "motion/react";
+
 import { lexend400 } from "../../../../../utils/fonts";
+import { Solution } from "../../../pages/Reputation/constants";
+import styles from "./DescriptionsCarouselSlides.module.css";
 
 type DescriptionsCarouselProps = {
   solutions: Solution[];

@@ -43,7 +43,7 @@ export function ImageCheckbox({
   const theme = useMantineTheme();
   const { hovered, ref } = useHover() as {
     hovered: boolean;
-    ref: React.RefObject<HTMLDivElement>;
+    ref: React.RefObject<HTMLDivElement | null>;
   };
 
   const mantineTheme = useMantineTheme();

@@ -32,7 +32,7 @@ function Preview({
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
     useState(false);
 
-  const previewContainerRef = useRef();
+  const previewContainerRef = useRef(undefined);
   const { translations } = useTranslations();
   const logoSrc = getLogoSrc(qrBgImgLogo);
 

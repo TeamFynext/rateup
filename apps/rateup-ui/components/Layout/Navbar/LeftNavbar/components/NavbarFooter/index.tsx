@@ -64,7 +64,6 @@ const NavbarFooter = (props: UserCardInterface) => {
             {props.opened && (
               <Text
                 size="sm"
-                fw={500}
                 onClick={() => router.push(href)}
                 c="var(--mantine-color-gray-7"
               >

@@ -270,7 +270,8 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   {
     header: () => "Responses",
     id: "flow",
-    accessorFn: (row) => row?.flowId && `v1/${row.flowId}`,
+    accessorFn: (row) =>
+      row?.flowId && `v${row.flowVersion ?? 1}/${row.flowId}`,
     enableColumnFilter: false,
     cell: (info) =>
       info.getValue() && (

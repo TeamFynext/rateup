@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useBeforeUnload } from "react-use";
 
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";

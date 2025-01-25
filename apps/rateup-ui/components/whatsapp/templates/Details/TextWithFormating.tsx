@@ -54,7 +54,7 @@ function replacePlaceholdersWithValues(
       return node.map(processNode);
     } else if (React.isValidElement(node)) {
       // If the node is a React element, recursively process its children
-      const { children, ...props } = node.props;
+      const { children, ...props } = node.props as React.PropsWithChildren;
       return React.cloneElement(
         node,
         props,

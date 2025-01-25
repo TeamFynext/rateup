@@ -1,7 +1,7 @@
 import { Lexend, Noto_Color_Emoji, Rubik } from "next/font/google";
+
 //use this export for theme page
 export const lexend = Lexend({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   style: ["normal"],
   variable: "--font-lexend",
   preload: false,
@@ -29,7 +29,7 @@ export const lexend200 = Lexend({
   preload: false,
 });
 export const lexend300 = Lexend({
-  weight: ["300"],
+  weight: "300",
   style: ["normal"],
   preload: false,
 });

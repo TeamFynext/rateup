@@ -20,7 +20,9 @@ export function CategoryDisplay({
   const { translations } = useTranslations();
   return (
     <Stack
-      ref={(el) => (categoryRefs.current[category.id] = el)}
+      ref={(el) => {
+        categoryRefs.current[category.id] = el;
+      }}
       fw={300}
       pb={"lg"}
     >

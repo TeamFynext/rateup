@@ -15,7 +15,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
   const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } =
     innerProps;
 
-  const cropperRef = useRef<ReactCropperElement>();
+  const cropperRef = useRef<ReactCropperElement>(undefined);
   const [scale, setScale] = useState(0.4);
   const [isCropperReady, setIsCropperReady] = useState(false);
   const { translations } = useTranslations();

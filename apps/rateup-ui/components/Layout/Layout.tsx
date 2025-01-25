@@ -6,7 +6,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconMenu2 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import classNames from "classnames/bind";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
 import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
@@ -193,10 +193,9 @@ export default function Layout({ children, appProps }) {
             </Transition>
             <Flex className={`${styles["content-wrapper"]}`}>
               <NavControlContext.Provider value={{ navOpened, setNavOpened }}>
-                <AnimatePresence>
+                <AnimatePresence key={appProps.router.pathname}>
                   <motion.div
                     className={styles["content-div"]}
-                    key={appProps.router.pathname}
                     initial={
                       !(
                         appProps.router.pathname.includes("login") ||

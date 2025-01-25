@@ -18,8 +18,8 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLanguage } from "@tabler/icons-react";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import _ from "lodash";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { v4 as uuidv4 } from "uuid";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
@@ -488,7 +488,6 @@ export function EditSurvey({
                 initial={{ x: 500 }}
                 animate={{ x: 0 }}
                 exit={{ x: 500 }}
-                transition={{ duration: 0.4, type: "tween" }}
               >
                 <PaperLayout
                   className={styles["edit-survey-theme-style-component-div"]}

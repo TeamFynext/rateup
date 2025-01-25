@@ -88,7 +88,7 @@ export function ChoicesCreator({
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
   const resetRef = useRef<() => void>(null);
-  const buttonRef = useRef<HTMLButtonElement>();
+  const buttonRef = useRef<HTMLButtonElement>(undefined);
   const choiceResetRef = useRef<() => void>(null);
   const choiceSchema = z.object({
     title: z

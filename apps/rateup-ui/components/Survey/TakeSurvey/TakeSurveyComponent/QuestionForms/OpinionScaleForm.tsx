@@ -8,7 +8,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import classNames from "classnames/bind";
-import { useAnimate } from "framer-motion";
+import { useAnimate } from "motion/react";
 
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
