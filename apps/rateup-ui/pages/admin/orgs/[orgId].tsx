@@ -113,7 +113,8 @@ export default function OrgById() {
           </Button>
         )}
         <Group>
-          {subscription?.basePlan?.paymentPlan?.period === "yearly" && (
+          {(!subscription?.basePlan?.paymentPlan ||
+            subscription?.basePlan?.paymentPlan?.period === "yearly") && (
             <Group gap={1}>
               <Switch
                 label={"Annual Message limit"}
@@ -122,9 +123,11 @@ export default function OrgById() {
                   handleAnnualMessageLimit(e.currentTarget.checked)
                 }
               />
-              <Tooltip label="Updation will affect only in current subscription year">
-                <IconInfoCircle size={"1rem"} color="grey" />
-              </Tooltip>
+              {subscription?.basePlan?.paymentPlan && (
+                <Tooltip label="Updation will affect only in current subscription year">
+                  <IconInfoCircle size={"1rem"} color="grey" />
+                </Tooltip>
+              )}
             </Group>
           )}
           <Button
