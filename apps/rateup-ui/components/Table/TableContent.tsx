@@ -26,7 +26,6 @@ import { flexRender, Header, Table as TableType } from "@tanstack/react-table";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { PAGE_SIZE } from "../../utils/constants";
-import { lexend600 } from "../../utils/fonts";
 import {
   TableBodySkeleton,
   TableHeadSkeleton,
@@ -316,11 +315,7 @@ const TableLayout = ({
             />
           </Group>
         </Group>
-        <Text
-          className="pagination-total-rows-text"
-          pr={"xs"}
-          ff={lexend600.style.fontFamily}
-        >
+        <Text className="pagination-total-rows-text" pr={"xs"} fw={600}>
           {translations["Total Rows: "]}
           {(isPending ? 0 : table.getRowCount()) ?? 0}
         </Text>

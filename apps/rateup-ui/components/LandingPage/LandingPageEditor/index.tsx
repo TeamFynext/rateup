@@ -4,10 +4,10 @@ import { useRouter } from "next/router";
 import { Box, Button, Center, Flex, Loader } from "@mantine/core";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { geist } from "@/utils/fonts";
 
 import { useGetLandingPageWithShortId } from "../../../backend/landingPage/landingPage.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { lexend } from "../../../utils/fonts";
 import { LandingPageContextProvider } from "./LandingPageContext/LandingPageContext";
 import styles from "./LandingPageEditor.module.css";
 import TabPanelsComp from "./TabPanels";
@@ -66,9 +66,7 @@ function LandingPageEdtior() {
   }
 
   return (
-    <Box
-      className={`${styles["landingPage-editor-page-root-div"]} ${lexend.variable}`}
-    >
+    <Box className={`${styles["landingPage-editor-page-root-div"]}`}>
       {componentToBeRendered}
     </Box>
   );

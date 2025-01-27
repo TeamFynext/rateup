@@ -151,7 +151,7 @@ export default function SurveyLandingList() {
           wrap="wrap"
           mb="md"
         >
-          <Title order={1}>{translations["Landing survey list "]}</Title>
+          <Title order={2}>{translations["Landing survey list "]}</Title>
 
           <Select
             mt="xs"
@@ -265,7 +265,7 @@ export function SurveyCard({
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
-        <Text mr={"sm"} truncate size="xl" fw={700}>
+        <Text mr={"sm"} truncate size="xl" fw={500}>
           {survey.title}
         </Text>
         <Badge color={survey?.type == "web" ? "blue" : "green"}>

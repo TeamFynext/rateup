@@ -238,7 +238,7 @@ const WhatsappPaymentList = ({
         <PaperLayout layoutAnimation key={credential?.configuration_name}>
           <Stack justify="space-between" h={"100%"} gap={4}>
             <Flex justify={"space-between"} align={"center"}>
-              <Text mr={"sm"} truncate fz="lg" fw={700}>
+              <Text mr={"sm"} truncate fz="lg" fw={500}>
                 {credential?.configuration_name}
               </Text>
               {/* <WhatsappPaymentCardMenu

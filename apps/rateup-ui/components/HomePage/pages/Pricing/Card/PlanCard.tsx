@@ -17,7 +17,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconCircleCheck, IconX } from "@tabler/icons-react";
 
-import { lexend300 } from "../../../../../utils/fonts";
 import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { NumberAnimate } from "../Animate/NumberAnimate";
@@ -144,7 +143,7 @@ const PlanCard = ({
         </Stack>
       ) : (
         <Stack justify="space-between" h="100%">
-          <Stack ff={lexend300.style.fontFamily} gap={5} p="0" mt={"sm"}>
+          <Stack gap={5} p="0" mt={"sm"}>
             {generateListItems(data?.description)}
           </Stack>
 

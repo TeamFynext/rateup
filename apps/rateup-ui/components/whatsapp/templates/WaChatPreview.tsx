@@ -16,7 +16,6 @@ import dayjs from "dayjs";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { lexend500 } from "../../../utils/fonts";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SendMessageMock } from "../MessageComponents";
 
@@ -61,7 +60,7 @@ const WaChatPreview = ({ children }) => {
               m={"xs"}
               bg={"var(--wa-alert-info)"}
               px={"xs"}
-              ff={lexend500.style.fontFamily}
+              fw={500}
               style={{
                 borderRadius: 4,
               }}

@@ -1,16 +1,17 @@
 import { Stack, Title } from "@mantine/core";
+
 import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
+import commonStyles from "../../../index.module.css";
 import { features } from "../constants";
 import styles from "./our-features.module.css";
-import commonStyles from "../../../index.module.css";
-import { lexend600 } from "../../../../../utils/fonts";
 
 function OurFeatures() {
   return (
     <Stack id="our-features" className={styles["our-features-container"]}>
       <Title
         order={1}
-        className={`${commonStyles["section-heading"]} ${lexend600.className}`}
+        className={`${commonStyles["section-heading"]} `}
+        fw={600}
       >
         OUR FEATURES
       </Title>

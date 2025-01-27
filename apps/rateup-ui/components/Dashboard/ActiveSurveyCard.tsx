@@ -67,7 +67,7 @@ export default function ActiveSurveyCard({
             flex={1}
             lineClamp={2}
             style={{ wordBreak: "break-all" }}
-            fw={700}
+            fw={500}
           >
             {survey?.title}
           </Text>

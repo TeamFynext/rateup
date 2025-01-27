@@ -7,7 +7,6 @@ import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions
 import AutosaveInput from "@/components/input/AutosaveInput";
 
 import { cordinateStyle } from "../../../../../../utils";
-import { lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 import classes from "../../../SurveyTheme.module.css";
@@ -112,12 +111,7 @@ export default function WelcomePageThemeView({ survey }) {
     : title;
 
   return (
-    <Flex
-      align={"center"}
-      h="100%"
-      style={{ backgroundColor }}
-      ff={lexend300.style.fontFamily}
-    >
+    <Flex align={"center"} h="100%" style={{ backgroundColor }}>
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith(
           "https://images.unsplash.com",

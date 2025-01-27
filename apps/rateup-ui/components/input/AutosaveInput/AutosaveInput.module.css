@@ -6,7 +6,7 @@
 
 .text-input :global(.mantine-Input-input),
 .auto-save-input-edit-btn {
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   font-size: 1.125rem;
   font-weight: normal;
   line-height: normal;

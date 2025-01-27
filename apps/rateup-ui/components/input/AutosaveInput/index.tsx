@@ -12,7 +12,6 @@ import {
 import { IconChevronRight, IconPencil } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
-import { lexend } from "@/utils/fonts";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import styles from "./AutosaveInput.module.css";
@@ -136,7 +135,7 @@ function AutosaveInput({
 
   return (
     <Box
-      className={`${styles["auto-save-input-div"]} auto-save-input-div ${lexend.className} ${className}`}
+      className={`${styles["auto-save-input-div"]} auto-save-input-div  ${className}`}
     >
       {componentToBeRendered}
     </Box>

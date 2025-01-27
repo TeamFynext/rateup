@@ -45,6 +45,7 @@
 
 .text2-container p .gradient-span {
   color: transparent;
+  font-weight: 500;
   background-clip: text;
   background-image: linear-gradient(
     127deg,

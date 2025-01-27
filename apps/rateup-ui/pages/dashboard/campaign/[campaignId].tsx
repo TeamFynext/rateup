@@ -71,7 +71,6 @@ import {
 import { Campaign } from "../../../types/global";
 import { getErrorMessage } from "../../../utils";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
-import { lexend600 } from "../../../utils/fonts";
 import { showErrorToast } from "../../../utils/notifications";
 import styles from "./campaign.module.css";
 
@@ -486,7 +485,7 @@ const CampaignInfoCard = ({ participantCount, stats, flowId, isPending }) => {
           {isPending ? (
             <Skeleton w={20} h={25} my={"xs"} />
           ) : (
-            <Text ff={lexend600.style.fontFamily} fz={30}>
+            <Text fw={600} fz={30}>
               {item.count}
             </Text>
           )}

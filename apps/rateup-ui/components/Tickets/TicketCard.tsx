@@ -89,7 +89,7 @@ export function TicketCard({
     >
       <Stack justify="space-between" h={"100%"}>
         <Group justify={"space-between"} align={"center"}>
-          <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={700}>
+          <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={500}>
             {ticket?.title}
           </Text>
           <Tooltip label={translations["Delete ticket"]}>

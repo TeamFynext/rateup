@@ -75,7 +75,6 @@ import {
   WHATSAPP_TEMPLATE_LANGUAGE,
 } from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
-import { lexend500 } from "@/utils/fonts";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
 import { parseTemplate } from "@/utils/whatsapp/templates";
 
@@ -379,6 +378,13 @@ export default function WhatsappTemplateById() {
       <IconAsterisk color="red" size={5} />
     </sup>
   );
+  const ReadonlyOverlay = () => {
+    if (editingItem?.data?.id && value) {
+      return <Overlay color="#fff" backgroundOpacity={0} zIndex={10} />;
+    }
+    return null;
+  };
+
   return (
     <MantineProvider theme={whatsappTheme}>
       <form>
@@ -399,7 +405,7 @@ export default function WhatsappTemplateById() {
             wrap="wrap"
             mb={"1rem"}
           >
-            <Title order={1} c={"var(--grey-color)"}>
+            <Title order={2} c={"var(--grey-color)"}>
               {editingItem
                 ? editingItem?.data?.name
                 : translations["Create Template"]}
@@ -439,15 +445,12 @@ export default function WhatsappTemplateById() {
           </Flex>
           <Grid>
             <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }} pos={"relative"}>
-              {editingItem?.data?.id && value && (
-                <Overlay color="#fff" backgroundOpacity={0} zIndex={10} />
-              )}
               <PaperLayout
                 className={styles["template-content-container"]}
                 h={"80dvh"}
-                style={{
-                  overflow: editingItem?.data?.id && value ? "hidden" : "auto",
-                }}
+                // style={{
+                //   overflow: editingItem?.data?.id && value ? "hidden" : "auto",
+                // }}
               >
                 <Stack gap={"xs"}>
                   <Alert
@@ -469,7 +472,7 @@ export default function WhatsappTemplateById() {
                       "Error Saving Changes",
                     )}
                   </Alert>
-                  <Group justify="space-between">
+                  <Group justify="space-between" pos={"relative"}>
                     <WaTemplateStatusBadge status={form.values.status} />
                     {editingItem?.data?.id && (
                       <LinkCopyElement
@@ -481,11 +484,13 @@ export default function WhatsappTemplateById() {
                         }}
                       />
                     )}
+                    <ReadonlyOverlay />
                   </Group>
-                  <SimpleGrid cols={2}>
+                  <SimpleGrid cols={2} pos={"relative"}>
+                    <ReadonlyOverlay />
                     <ContainedTextField
                       label={
-                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                        <Text fz={14} fw={500}>
                           {translations["Template Name"]} {requiredIcon}
                         </Text>
                       }
@@ -502,7 +507,7 @@ export default function WhatsappTemplateById() {
                     />
                     <ContainedSelection
                       label={
-                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                        <Text fz={14} fw={500}>
                           TemplateType {requiredIcon}
                         </Text>
                       }
@@ -515,7 +520,7 @@ export default function WhatsappTemplateById() {
                       TemplateType.PAYMENT_CONFIRMATION && (
                       <ContainedSelection
                         label={
-                          <Text fz={14} ff={lexend500.style.fontFamily}>
+                          <Text fz={14} fw={500}>
                             Category {requiredIcon}
                           </Text>
                         }
@@ -529,7 +534,7 @@ export default function WhatsappTemplateById() {
 
                     <ContainedSelection
                       label={
-                        <Text fz={14} ff={lexend500.style.fontFamily}>
+                        <Text fz={14} fw={500}>
                           {translations["Language"]} {requiredIcon}
                         </Text>
                       }
@@ -542,12 +547,14 @@ export default function WhatsappTemplateById() {
                   </SimpleGrid>
                   {form.getValues().templateType !==
                     TemplateType.PAYMENT_CONFIRMATION && (
-                    <Grid>
+                    <Grid pos={"relative"}>
+                      <ReadonlyOverlay />
+
                       <Grid.Col span={6}>
                         <ContainedSelection
                           label={
                             <>
-                              <Text fz={14} ff={lexend500.style.fontFamily}>
+                              <Text fz={14} fw={500}>
                                 {translations["Broadcast header"]}{" "}
                                 {requiredIcon}
                               </Text>
@@ -597,8 +604,10 @@ export default function WhatsappTemplateById() {
                     </Grid>
                   )}
 
-                  <Stack gap={0}>
-                    <Text fz={14} ff={lexend500.style.fontFamily}>
+                  <Stack gap={0} pos={"relative"}>
+                    <ReadonlyOverlay />
+
+                    <Text fz={14} fw={500}>
                       {translations["Body"]} {requiredIcon}
                     </Text>
                     <Text fz={13}>
@@ -639,126 +648,129 @@ export default function WhatsappTemplateById() {
                       }
                     />
                   </Stack>
-                  {dynamicVariables?.map((data, index) => (
-                    <ContainedTextField
-                      key={data}
-                      placeholder={`${translations["Enter the content for"]} {{${data}}}`}
-                      {...form.getInputProps(`example.${index}`)}
-                    />
-                  ))}
-                  {form.getValues().templateType !==
-                    TemplateType.PAYMENT_CONFIRMATION && (
-                    <>
+                  <Stack gap={0} pos={"relative"}>
+                    <ReadonlyOverlay />
+                    {dynamicVariables?.map((data, index) => (
                       <ContainedTextField
-                        label={
+                        key={data}
+                        placeholder={`${translations["Enter the content for"]} {{${data}}}`}
+                        {...form.getInputProps(`example.${index}`)}
+                      />
+                    ))}
+                    {form.getValues().templateType !==
+                      TemplateType.PAYMENT_CONFIRMATION && (
+                      <>
+                        <ContainedTextField
+                          label={
+                            <>
+                              <Text fz={14} fw={500}>
+                                {translations["Footer (Optional)"]}
+                              </Text>
+                              <Text fz={13}>
+                                {
+                                  translations[
+                                    "Footers are great to add any disclaimers or to add a thoughtful PS"
+                                  ]
+                                }
+                              </Text>
+                            </>
+                          }
+                          placeholder={translations["Footer"]}
+                          {...form.getInputProps("footer")}
+                          rightSection={
+                            <LengthTracker
+                              length={form?.values?.footer?.length}
+                              maxValue={60}
+                              atStart
+                            />
+                          }
+                        />
+                        <ButtonSelection
+                          handleMenuSelection={handleMenuSelection}
+                          flowBtn={
+                            !!form?.values?.buttons?.find(
+                              (data) => data.type === "FLOW",
+                            )
+                          }
+                          btnLen={form?.values?.buttons?.length}
+                          disabled={isOrderCreate}
+                        />
+                        {form.values?.buttons?.length > 0 && (
                           <>
-                            <Text fz={14} ff={lexend500.style.fontFamily}>
-                              {translations["Footer (Optional)"]}
-                            </Text>
-                            <Text fz={13}>
-                              {
-                                translations[
-                                  "Footers are great to add any disclaimers or to add a thoughtful PS"
-                                ]
-                              }
-                            </Text>
+                            {form.values?.buttons?.map((data, index) => (
+                              <Group
+                                className={buttonInputStyles.buttonBox}
+                                key={index}
+                              >
+                                <ButtonInput
+                                  form={form}
+                                  deleteButton={deleteButton}
+                                  index={index}
+                                  data={data}
+                                />
+                              </Group>
+                            ))}
                           </>
-                        }
-                        placeholder={translations["Footer"]}
-                        {...form.getInputProps("footer")}
-                        rightSection={
-                          <LengthTracker
-                            length={form?.values?.footer?.length}
-                            maxValue={60}
-                            atStart
-                          />
-                        }
-                      />
-                      <ButtonSelection
-                        handleMenuSelection={handleMenuSelection}
-                        flowBtn={
-                          !!form?.values?.buttons?.find(
-                            (data) => data.type === "FLOW",
-                          )
-                        }
-                        btnLen={form?.values?.buttons?.length}
-                        disabled={isOrderCreate}
-                      />
-                      {form.values?.buttons?.length > 0 && (
-                        <>
-                          {form.values?.buttons?.map((data, index) => (
-                            <Group
-                              className={buttonInputStyles.buttonBox}
-                              key={index}
-                            >
-                              <ButtonInput
-                                form={form}
-                                deleteButton={deleteButton}
-                                index={index}
-                                data={data}
-                              />
-                            </Group>
-                          ))}
-                        </>
-                      )}
-                      {isOrderCreate && (
-                        <>
-                          <Text fz={14} ff={lexend500.style.fontFamily}>
-                            {translations["Config"]} {requiredIcon}
-                          </Text>
-                          <ContainedTextField
-                            label={
-                              <Text fz={14} ff={lexend500.style.fontFamily}>
-                                {translations["Name"]} {requiredIcon}
-                              </Text>
-                            }
-                            placeholder={"name"}
-                            {...configForm.getInputProps("name")}
-                          />
-                          <ContainedNumberInput
-                            label={
-                              <Text fz={14} ff={lexend500.style.fontFamily}>
-                                {translations["Price"]} {requiredIcon}
-                              </Text>
-                            }
-                            placeholder={translations["price"]}
-                            min={0}
-                            {...configForm.getInputProps("price")}
-                          />
-                          <ContainedNumberInput
-                            label={
-                              <Text fz={14} ff={lexend500.style.fontFamily}>
-                                {translations["Tax"]} {requiredIcon}
-                              </Text>
-                            }
-                            placeholder={translations["tax"]}
-                            min={0}
-                            {...configForm.getInputProps("tax")}
-                          />
-                          <ContainedSelection
-                            label={
-                              <Text fz={14} ff={lexend500.style.fontFamily}>
-                                {translations["OrderType"]}
-                              </Text>
-                            }
-                            placeholder={translations["order type"]}
-                            data={Object.values(OrderType)}
-                            description={
-                              'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
-                            }
-                            {...configForm.getInputProps("orderType")}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
+                        )}
+                        {isOrderCreate && (
+                          <>
+                            <Text fz={14} fw={500}>
+                              {translations["Config"]} {requiredIcon}
+                            </Text>
+                            <ContainedTextField
+                              label={
+                                <Text fz={14} fw={500}>
+                                  {translations["Name"]} {requiredIcon}
+                                </Text>
+                              }
+                              placeholder={"name"}
+                              {...configForm.getInputProps("name")}
+                            />
+                            <ContainedNumberInput
+                              label={
+                                <Text fz={14} fw={500}>
+                                  {translations["Price"]} {requiredIcon}
+                                </Text>
+                              }
+                              placeholder={translations["price"]}
+                              min={0}
+                              {...configForm.getInputProps("price")}
+                            />
+                            <ContainedNumberInput
+                              label={
+                                <Text fz={14} fw={500}>
+                                  {translations["Tax"]} {requiredIcon}
+                                </Text>
+                              }
+                              placeholder={translations["tax"]}
+                              min={0}
+                              {...configForm.getInputProps("tax")}
+                            />
+                            <ContainedSelection
+                              label={
+                                <Text fz={14} fw={500}>
+                                  {translations["OrderType"]}
+                                </Text>
+                              }
+                              placeholder={translations["order type"]}
+                              data={Object.values(OrderType)}
+                              description={
+                                'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
+                              }
+                              {...configForm.getInputProps("orderType")}
+                            />
+                          </>
+                        )}
+                      </>
+                    )}
+                  </Stack>
                 </Stack>
               </PaperLayout>
             </Grid.Col>
             <Grid.Col span={{ xs: 12, sm: 5, xl: 3 }}>
               <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
                 <Stack h={"100%"} align="center" gap={0}>
-                  <Text fz="24px" ff={lexend500.style.fontFamily}>
+                  <Text fz="24px" fw={500}>
                     {translations["Preview"]}
                   </Text>
                   <WaChatPreview>

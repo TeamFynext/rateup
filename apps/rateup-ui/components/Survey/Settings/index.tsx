@@ -4,7 +4,6 @@ import { Box } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
-import { lexend } from "../../../utils/fonts";
 import FlowSettingsUpdate from "./FlowSettingsUpdate";
 import GeneralSettings from "./GeneralSettings";
 import GoogleSheetSettings from "./GoogleSheetSettings";
@@ -80,7 +79,7 @@ const SurveySettings = ({
   }
 
   return (
-    <Box className={`${styles["survey-settings-root-div"]} ${lexend.variable}`}>
+    <Box className={`${styles["survey-settings-root-div"]}`}>
       <Box className={styles["panels-container"]}>
         <Box className={`${styles["left-panel"]} ${styles["panel"]}`}>
           <GeneralSettings

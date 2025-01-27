@@ -3,7 +3,6 @@ import { IconX } from "@tabler/icons-react";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
-import { lexend500 } from "../../../../utils/fonts";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
 
@@ -36,7 +35,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
         <>
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Button text"]}
               </Text>
             }
@@ -64,7 +63,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
         <>
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Type of action"]}
               </Text>
             }
@@ -77,7 +76,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           />
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Button text"]}
               </Text>
             }
@@ -95,7 +94,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
               onlyPublished
               searchable
               label={
-                <Text fz={14} ff={lexend500.style.fontFamily}>
+                <Text fz={14} fw={500}>
                   {translations["Web Survey"]}
                 </Text>
               }
@@ -106,7 +105,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           ) : (
             <ContainedTextField
               label={
-                <Text fz={14} ff={lexend500.style.fontFamily}>
+                <Text fz={14} fw={500}>
                   {translations["Website Url"]}
                 </Text>
               }
@@ -137,7 +136,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <>
             <ContainedTextField
               label={
-                <Text fz={14} ff={lexend500.style.fontFamily}>
+                <Text fz={14} fw={500}>
                   {translations["Type of action"]}
                 </Text>
               }
@@ -146,7 +145,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             />
             <ContainedTextField
               label={
-                <Text fz={14} ff={lexend500.style.fontFamily}>
+                <Text fz={14} fw={500}>
                   {translations["Button text"]}
                 </Text>
               }
@@ -193,7 +192,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
         <>
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Type of action"]}
               </Text>
             }
@@ -202,7 +201,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           />
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Button text"]}
               </Text>
             }
@@ -212,7 +211,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           />
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Offer code"]}
               </Text>
             }
@@ -241,7 +240,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
         <>
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Type of action"]}
               </Text>
             }
@@ -250,7 +249,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           />
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Button text"]}
               </Text>
             }
@@ -269,7 +268,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             {...form.getInputProps(`buttons.${index}.flow_id`)}
             searchable
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Flow"]}
               </Text>
             }
@@ -289,7 +288,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
         <>
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Type of action"]}
               </Text>
             }
@@ -298,7 +297,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           />
           <ContainedTextField
             label={
-              <Text fz={14} ff={lexend500.style.fontFamily}>
+              <Text fz={14} fw={500}>
                 {translations["Button text"]}
               </Text>
             }

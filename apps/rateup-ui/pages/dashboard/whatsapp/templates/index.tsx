@@ -87,7 +87,7 @@ export default function Template() {
           wrap="wrap"
         >
           <Title
-            order={1}
+            order={2}
             c={"var(--grey-color)"}
             className={styles["heading-container"]}
           >
@@ -216,7 +216,7 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
     <PaperLayout hoveractive={true} onClick={onClick} layoutAnimation>
       <Stack>
         <Flex justify={"space-between"} align={"center"}>
-          <Text mr={"sm"} truncate size="lg" fw={600}>
+          <Text mr={"sm"} truncate size="lg" fw={500}>
             {template.data.name}
           </Text>
           <Group>

@@ -24,7 +24,6 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { completeInvite } from "../../backend/team/team.api";
 import { RateupButtonPrimary } from "../../components/Button/RateupButtons";
 import { rateupLogoUrl } from "../../components/HomePage/constants";
-import { lexend600 } from "../../utils/fonts";
 import styles from "./styles.module.css";
 
 const Invite = () => {
@@ -129,7 +128,7 @@ const Invite = () => {
             mb="lg"
             fz={24}
             style={{ color: "var(--tertiary-color)" }}
-            ff={lexend600.style.fontFamily}
+            fw={600}
           >
             {title} {translations["Invitation"]}
           </Text>

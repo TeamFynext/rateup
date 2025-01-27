@@ -51,7 +51,6 @@ import WelcomeTour from "../../components/WelcomeTour/WelcomeTour";
 import { useUser } from "../../context/UserContext";
 import { getDictionary } from "../../dictionaries/dictionaries";
 import { SurveyTypeFilters } from "../../types/enums";
-import { lexend400 } from "../../utils/fonts";
 import { getFormattedResponseForAreaGraph } from "../../utils/response";
 import classes from "./dashboard.module.css";
 
@@ -231,7 +230,7 @@ export default function DashboardHome() {
                   leftIcon={<IconPlus size="2.2rem" />}
                   size="xl"
                   py="xl"
-                  className={`${styles["create-button"]} ${lexend400.className} `}
+                  className={`${styles["create-button"]} `}
                   styles={{
                     root: {
                       height: "130px",
@@ -268,7 +267,6 @@ export default function DashboardHome() {
                           {summaryvalue ? summaryvalue : 0}
                         </Title>
                         <Text
-                          className={lexend400.className}
                           style={{ textAlign: "center" }}
                           fz="xl"
                           c="#595959"
@@ -309,7 +307,6 @@ export default function DashboardHome() {
                       <Text
                         style={{ textAlign: "center" }}
                         size="20px"
-                        className={lexend400.className}
                         c="#595959"
                       >
                         {title}

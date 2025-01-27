@@ -16,7 +16,7 @@ export function CommentCard({ comment, isSender }) {
       }}
     >
       <Stack gap="2px">
-        <Text fw={700}>{!isSender && comment.createdBy.name}</Text>
+        <Text fw={500}>{!isSender && comment.createdBy.name}</Text>
         <Text
           size={isNote ? "xs" : "md"}
           c={isNote ? "var(--tertiary-color)" : "000"}

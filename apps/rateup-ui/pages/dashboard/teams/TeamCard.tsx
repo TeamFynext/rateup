@@ -31,7 +31,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
     >
       <Flex justify={"space-between"} align={"center"} h={"100%"}>
         <Stack>
-          <Text mr={"sm"} truncate size="xl" fw={700}>
+          <Text mr={"sm"} truncate size="xl" fw={500}>
             {team.name}
           </Text>
           <Badge color="var(--tertiary-color)" variant="outline">
@@ -39,7 +39,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
           </Badge>
         </Stack>
         <Stack align={"center"} gap={0}>
-          <Text fw={700} fz="xl" color="var(--tertiary-color)">
+          <Text fw={500} fz="xl" color="var(--tertiary-color)">
             {team._count.members}
           </Text>
           <Text fz="sm" color="var(--tertiary-color)" fw={"400"}>

@@ -25,7 +25,6 @@ import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewMo
 import NothingFound from "@/components/NothingFound/NothingFound";
 import { isCategoryActive } from "@/utils/dateTime";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { lexend } from "@/utils/fonts";
 
 import FloatingMenuMain from "./FloatingMenu";
 import styles from "./gradientAnimation.module.css";
@@ -109,7 +108,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
 
   return (
     <ScrollAreaAutosize scrollbarSize={0} className={styles.scrollArea}>
-      <Paper ff={lexend.style.fontFamily} className={styles.paper}>
+      <Paper className={styles.paper}>
         {menuBanner?.length > 0 ? (
           <Carousel
             withIndicators

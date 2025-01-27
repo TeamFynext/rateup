@@ -7,7 +7,6 @@ import { CreditsCard } from "../../../../components/Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 import classes from "../../../../components/Survey/SurveyTheme/SurveyTheme.module.css";
 import { useSelectedPreview } from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
-import { lexend300 } from "../../../../utils/fonts";
 
 export default function TemplateCard({ survey }) {
   const webSurveyPagesTheme = survey?.webSurveyPagesTheme;
@@ -50,13 +49,7 @@ export default function TemplateCard({ survey }) {
   );
 
   return (
-    <Flex
-      align={"center"}
-      h={200}
-      w={300}
-      style={{ backgroundColor }}
-      ff={lexend300.style.fontFamily}
-    >
+    <Flex align={"center"} h={200} w={300} style={{ backgroundColor }}>
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith(
           "https://images.unsplash.com",

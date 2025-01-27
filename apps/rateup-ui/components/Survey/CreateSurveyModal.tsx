@@ -147,7 +147,7 @@ export function CreateSurveyModal({
       )?.id;
       form.setFieldValue("selectedTheme", defaultThemeId || "");
     }
-  }, [allThemesArr, open, form]);
+  }, [allThemesArr, open, form.values?.selectedTheme]);
 
   function arraysEqual(a, b) {
     if (a === b) return true;

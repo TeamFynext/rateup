@@ -17,7 +17,6 @@ import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeConte
 import { LogicAction, PageType, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
 import { encryptResponse } from "../../../../utils/encryption";
-import { lexend } from "../../../../utils/fonts";
 import { showErrorToast } from "../../../../utils/notifications";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import CustomHTML from "../../Page/Previews/CustomHTML";
@@ -444,7 +443,7 @@ function TakeSurvey({
                             ) : (
                               <>
                                 <Box
-                                  className={`${styles["title-desc-container"]} ${lexend.className}`}
+                                  className={`${styles["title-desc-container"]}`}
                                 >
                                   <QuestionTitle
                                     largeScreen={largeScreen}
