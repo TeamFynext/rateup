@@ -9,7 +9,6 @@ import { usePageVisitsOrLinkClicksUpdateMutation } from "../../../backend/linktr
 import UnsplashCreditText from "../../../components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText";
 import { initialState as defaultTheme } from "../../../components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/constants";
 import { imagesPath } from "../../../utils/constants";
-import { lexend } from "../../../utils/fonts";
 import styles from "./lt.module.css";
 
 export const getServerSideProps = async (context) => {
@@ -188,10 +187,7 @@ function Lt({ linktreeObj }) {
   }, []);
 
   return (
-    <Box
-      style={backgroundStylesObj}
-      className={`${styles["root-div"]} ${lexend.variable}`}
-    >
+    <Box style={backgroundStylesObj} className={`${styles["root-div"]}`}>
       <Box className={styles["logo-img-container"]}>
         {logoUrl ? (
           <Image

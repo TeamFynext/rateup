@@ -13,7 +13,7 @@ import GoogleAnalytics from "@/components/Analytics/GoogleAnalytics";
 import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { isProduction } from "@/utils/constants";
-import { lexend300, notoColorEmogi } from "@/utils/fonts";
+import { geist, notoColorEmogi } from "@/utils/fonts";
 
 import Providers from "./providers";
 
@@ -43,7 +43,7 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className={`${lexend300.className},${notoColorEmogi.className}`}>
+      <body className={`${geist.className},${notoColorEmogi.className}`}>
         <MantineProvider theme={theme}>
           <ModalsProvider>
             <Notifications />

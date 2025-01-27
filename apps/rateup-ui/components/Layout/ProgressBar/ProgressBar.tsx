@@ -1,24 +1,25 @@
-import React from 'react'
+import React from "react";
 
 import {
-  Box,
-  Grid,
-  Title,
-  Paper,
-  TextInput,
-  Space,
-  Text,
-  Center,
-  Stack,
-  Container,
-  Image,
-  RingProgress,
-  Modal,
-  Group,
-  Button,
-  Flex,
   BackgroundImage,
+  Box,
+  Button,
+  Center,
+  Container,
+  Flex,
+  Grid,
+  Group,
+  Image,
+  Modal,
+  Paper,
+  RingProgress,
+  Space,
+  Stack,
+  Text,
+  TextInput,
+  Title,
 } from "@mantine/core";
+
 function ProgressBar({ currentQuestionNo, questionCount }) {
   const progressPercentage = (currentQuestionNo / questionCount) * 100;
 
@@ -28,9 +29,14 @@ function ProgressBar({ currentQuestionNo, questionCount }) {
       thickness={5}
       sections={[{ value: progressPercentage, color: "black" }]}
       label={
-        <Text c="black" fw={700} style={{
-          textAlign:'center'
-        }} size="xs">
+        <Text
+          c="black"
+          fw={500}
+          style={{
+            textAlign: "center",
+          }}
+          size="xs"
+        >
           {currentQuestionNo}/{questionCount}
         </Text>
       }
@@ -38,4 +44,4 @@ function ProgressBar({ currentQuestionNo, questionCount }) {
   );
 }
 
-export default ProgressBar
+export default ProgressBar;

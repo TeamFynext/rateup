@@ -36,7 +36,7 @@ const CheckoutReturn = () => {
           direction="column"
           wrap="wrap"
         >
-          <Title order={1}>{translations["Thank You 🎉"]}</Title>
+          <Title order={2}>{translations["Thank You 🎉"]}</Title>
 
           <Title order={2}>
             {translations["Your Order is getting Processed..."]}

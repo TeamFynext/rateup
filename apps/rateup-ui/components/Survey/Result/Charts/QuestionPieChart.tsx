@@ -184,7 +184,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
               label={
                 <Text
                   c={getNPSScoreColor(data?.score)?.color}
-                  fw={700}
+                  fw={500}
                   ta="center"
                   size="xl"
                 >
@@ -207,7 +207,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
               label={
                 <Text
                   c={getCSATColor(csatScore)?.color}
-                  fw={700}
+                  fw={500}
                   ta="center"
                   size="xl"
                 >

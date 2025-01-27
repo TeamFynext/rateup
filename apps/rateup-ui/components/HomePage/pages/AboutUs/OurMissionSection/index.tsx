@@ -1,4 +1,3 @@
-import { lexend500 } from "../../../../../utils/fonts";
 import styles from "./OurMissionSection.module.css";
 
 function OurMissionSection() {
@@ -14,12 +13,12 @@ function OurMissionSection() {
       </div>
       <div className={styles["text2-container"]}>
         <p>
-          <span className={`${styles["gradient-span"]} ${lexend500.className}`}>
+          <span className={`${styles["gradient-span"]} `}>
             Empowering Businesses
           </span>
           <span>with insights to</span>
           <span>create exceptional</span>
-          <span className={`${styles["gradient-span"]} ${lexend500.className}`}>
+          <span className={`${styles["gradient-span"]} `}>
             customer experiences
           </span>
         </p>

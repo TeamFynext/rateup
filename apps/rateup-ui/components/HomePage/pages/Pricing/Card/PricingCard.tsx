@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { IconCircleCheck, IconX } from "@tabler/icons-react";
+
 import {
   Box,
   Card,
@@ -12,12 +12,13 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { lexend300 } from "../../../../../utils/fonts";
-import { NumberAnimate } from "../Animate/NumberAnimate";
+import { useDisclosure } from "@mantine/hooks";
+import { IconCircleCheck, IconX } from "@tabler/icons-react";
+
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
+import { NumberAnimate } from "../Animate/NumberAnimate";
 import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants";
 import ButtonStyles from "./Button.module.css";
-import { useDisclosure } from "@mantine/hooks";
 import styles from "./Modal.module.css";
 
 const PricingCard = ({
@@ -113,13 +114,7 @@ const PricingCard = ({
             <Text>/{data?.paymentPlan?.period}</Text>
           </Center>
 
-          <Stack
-            align="center"
-            ff={lexend300.style.fontFamily}
-            gap={5}
-            mt={"sm"}
-            mb={"xl"}
-          >
+          <Stack align="center" gap={5} mt={"sm"} mb={"xl"}>
             {generateListItems(data?.description)}
           </Stack>
 

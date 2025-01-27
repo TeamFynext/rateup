@@ -40,7 +40,7 @@ export function MenuCard({
       <Stack>
         <Box>
           <Flex justify={"space-between"} align={"center"}>
-            <Text mr={"sm"} truncate fz="lg" fw={700} tt={"capitalize"}>
+            <Text mr={"sm"} truncate fz="lg" fw={500} tt={"capitalize"}>
               {menu.name}
             </Text>
             <MenuCardMenu

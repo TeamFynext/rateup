@@ -1,10 +1,15 @@
-import { lexend500 } from "../../../../utils/fonts";
 import styles from "./TermsOfService.module.css";
 
 function TermsOfService() {
   return (
     <div className={styles["terms-of-service-container"]}>
-      <h1 className={lexend500.className}>Terms of Service</h1>
+      <h1
+        style={{
+          fontWeight: 500,
+        }}
+      >
+        Terms of Service
+      </h1>
       <p className={styles["last-revised-p"]}>Last revised on 01.01.2024</p>
       <section>
         <h2>The Gist</h2>

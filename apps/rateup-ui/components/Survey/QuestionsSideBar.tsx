@@ -293,7 +293,7 @@ export function QuestionsSideBar({
           <Center h="100%">
             <Stack align="center">
               <IconPlus size={36} />
-              <Text size="xl" fw={700}>
+              <Text size="xl" fw={500}>
                 {translations["Add Content"]}
               </Text>
             </Stack>

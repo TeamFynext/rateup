@@ -1,17 +1,19 @@
+import React, { useState } from "react";
+import Link from "next/link";
+
 import {
-  Title,
-  Paper,
   Button,
   Center,
-  Text,
-  Stack,
   Container,
   Image,
+  Paper,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
-import React, { useState } from "react";
-import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
-import Link from "next/link";
 import { useMediaQuery } from "@mantine/hooks";
+
+import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 
 const index = () => {
@@ -64,7 +66,7 @@ function Welcome({ setStartClicked, largeScreen }) {
         gap="xl"
         style={{ height: "70vh" }}
       >
-        <Title order={1} style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
+        <Title order={2} style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
           Welcome
         </Title>
         <Text>Please fill the survey..</Text>

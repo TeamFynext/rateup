@@ -16,7 +16,6 @@ import Confetti from "react-confetti";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput";
 
-import { lexend, lexend300 } from "../../../../../../utils/fonts";
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
 import { SelectedItemEnum } from "../../../SurveyTheme.enums";
@@ -106,12 +105,7 @@ export default function ThankyouPageThemeView({ survey }) {
     : title;
 
   return (
-    <Flex
-      align={"center"}
-      h="100%"
-      style={{ backgroundColor }}
-      ff={lexend300.style.fontFamily}
-    >
+    <Flex align={"center"} h="100%" style={{ backgroundColor }}>
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith(
           "https://images.unsplash.com",

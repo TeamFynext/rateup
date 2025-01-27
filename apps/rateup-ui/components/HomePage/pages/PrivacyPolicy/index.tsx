@@ -1,10 +1,15 @@
-import { lexend500 } from "../../../../utils/fonts";
 import styles from "./PrivacyPolicy.module.css";
 
 function PrivacyPolicy() {
   return (
     <div className={styles["privacy-policy-container"]}>
-      <h1 className={lexend500.className}>Privacy Policy</h1>
+      <h1
+        style={{
+          fontWeight: 500,
+        }}
+      >
+        Privacy Policy
+      </h1>
       <section>
         <h2>Privacy Policy</h2>
         <p>

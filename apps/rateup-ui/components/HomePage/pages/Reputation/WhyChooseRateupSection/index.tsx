@@ -1,9 +1,9 @@
 import { Stack, Title } from "@mantine/core";
+
 import InteractiveSolutionDescriptions from "../../../components/InteractiveSolutionDescriptions";
+import commonStyles from "../../../index.module.css";
 import { solutionsList } from "../constants";
 import styles from "./WhyChooseRateupSection.module.css";
-import commonStyles from "../../../index.module.css";
-import { lexend600 } from "../../../../../utils/fonts";
 
 const sectionClassName = `${styles["why-choose-rateup-container"]}`;
 
@@ -12,7 +12,8 @@ function WhyChooseRateupSection() {
     <Stack className={sectionClassName} id="our-solutions">
       <Title
         order={1}
-        className={`${commonStyles["section-heading"]} ${lexend600.className}`}
+        className={`${commonStyles["section-heading"]}`}
+        fw={600}
       >
         Why Choose Rateup
       </Title>

@@ -1,15 +1,16 @@
+import Image from "next/image";
+
 import { Stack, Title } from "@mantine/core";
-import { solutionsList } from "./constants";
-import styles from "./OurSolutionsSection.module.css";
-import InteractiveSolutionDescriptions from "../../../components/InteractiveSolutionDescriptions";
-import Banner from "./Banner";
-import { lexend600 } from "../../../../../utils/fonts";
 import { useMediaQuery } from "@mantine/hooks";
+
+import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
+import InteractiveSolutionDescriptions from "../../../components/InteractiveSolutionDescriptions";
 import MobileInteractiveSolutionDescriptions from "../../../components/MobileInteractiveSolutionDescriptions";
 import SparklesIconWithText from "../../../components/SparklesIconWithText";
-import Image from "next/image";
 import { imagesPath } from "../../../constants";
-import IllustrationTextLayout from "../../../components/IllustrationTextLayout";
+import Banner from "./Banner";
+import { solutionsList } from "./constants";
+import styles from "./OurSolutionsSection.module.css";
 
 function OurSolutionsSection() {
   return (

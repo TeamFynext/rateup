@@ -3,7 +3,6 @@ import React from "react";
 import { Box, Image, Text, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
-import { lexend400 } from "../../../../../utils/fonts";
 import { Solution } from "../../../pages/Reputation/constants";
 import styles from "./DescriptionsCarouselSlides.module.css";
 
@@ -54,9 +53,7 @@ function DescriptionsCarouselSlides({
                   </div>
                   <span>{heading}</span>
                 </Title>
-                <Text className={isSlideActive ? lexend400.className : ""}>
-                  {description}
-                </Text>
+                <Text fw={isSlideActive ? 500 : 400}>{description}</Text>
               </div>
             </motion.div>
           </Box>

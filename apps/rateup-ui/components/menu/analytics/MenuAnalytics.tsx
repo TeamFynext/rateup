@@ -67,7 +67,7 @@ const MenuAnalytics = ({
               label={
                 <Text
                   c="var(--mantine-primary-color-filled)"
-                  fw={700}
+                  fw={500}
                   ta="center"
                   size="sm"
                 >

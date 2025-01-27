@@ -4,7 +4,6 @@ import useTranslations from "@/dictionaries/useTranslation";
 
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
 import { getLabel } from "../../../../utils/file-upload/upload";
-import { lexend500 } from "../../../../utils/fonts";
 import {
   ContainedFileButton,
   ContainedTextField,
@@ -21,7 +20,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
       return (
         <ContainedTextField
           label={
-            <Text fz={14} ff={lexend500.style.fontFamily}>
+            <Text fz={14} fw={500}>
               Text
             </Text>
           }

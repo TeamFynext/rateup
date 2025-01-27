@@ -45,7 +45,7 @@ import { theme } from "../config/mantineTheme";
 import { checkEmailVerification } from "../utils/auth/checkEmailVerification";
 import { isProduction } from "../utils/constants";
 import { fbPageview } from "../utils/fbpixel";
-import { lexend300, notoColorEmogi } from "../utils/fonts";
+import { geist, notoColorEmogi } from "../utils/fonts";
 import { pageView } from "../utils/gtag";
 
 if (typeof window !== "undefined") {
@@ -197,7 +197,7 @@ export default function App({
         </>
       )}
       {/* notoColorEmogi is added as fallback for displaying emogies */}
-      <main className={`${lexend300.className},${notoColorEmogi.className}`}>
+      <main className={`${geist.className},${notoColorEmogi.className}`}>
         <QueryClientProvider client={queryClient}>
           <ModalsProvider modals={allModalManagerModalsObj}>
             <Notifications />

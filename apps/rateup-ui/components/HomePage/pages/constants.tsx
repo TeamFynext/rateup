@@ -1,4 +1,5 @@
 import { Text, Title } from "@mantine/core";
+
 import styles from "../index.module.css";
 
 export const imagePath = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images`;
@@ -9,7 +10,7 @@ const descriptionPSpanClassName = styles["bold-span"];
 const headingClassName = styles["heading-with-small-blue-span-and-normal-span"];
 
 export const Heading = ({ children }) => (
-  <Title order={1} className={`${featuresH1ClassName} ${headingClassName}`}>
+  <Title order={2} className={`${featuresH1ClassName} ${headingClassName}`}>
     {children}
   </Title>
 );

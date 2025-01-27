@@ -15,7 +15,6 @@ import { useMediaQuery } from "@mantine/hooks";
 
 import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
 import { useCheckSession } from "../../../../hooks/checkSession";
-import { lexend300, lexend500 } from "../../../../utils/fonts";
 import { MotionTransition } from "../../../animation/MotionTransition";
 import RateupLoader from "../../../Loaders/RateupLoader";
 import classes from "./Pricing.module.css";
@@ -118,12 +117,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
   });
 
   return (
-    <Stack
-      mt={isAccount ? 0 : 30}
-      align="center"
-      ff={lexend500.style.fontFamily}
-      mb={60}
-    >
+    <Stack mt={isAccount ? 0 : 30} align="center" fw={500} mb={60}>
       <Box ta={"center"} display={isAccount ? "none" : "block"}>
         <Text
           c={"var(--grey-color-4)"}
@@ -173,12 +167,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
             alt="image of arrow"
           />
           <Stack gap={0} fz={"clamp(14px, 12.576px + 0.238vw, 16px)"}>
-            <Text
-              c={"var(--light-grey-color-5)"}
-              ff={lexend300.style.fontFamily}
-            >
-              Subscribe Annually
-            </Text>
+            <Text c={"var(--light-grey-color-5)"}>Subscribe Annually</Text>
             <Text c={"var(--shade-of-blue-5"}>
               Save Upto {DISCOUNT_PERCENTAGE} Months
             </Text>

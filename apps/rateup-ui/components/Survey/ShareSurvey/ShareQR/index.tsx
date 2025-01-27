@@ -98,7 +98,7 @@ const ShareQR = ({
   return (
     <PaperLayout style={{ ...sx }}>
       <>
-        <Title order={1} mb="sm" pb="md" className={styles["heading"]}>
+        <Title order={2} mb="sm" pb="md" className={styles["heading"]}>
           {translations["Generate & Share QR Code"]}
         </Title>
 

@@ -24,7 +24,6 @@ import {
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
-import { lexend500 } from "../../../../utils/fonts";
 
 interface ButtonSelectionProps extends MenuProps {
   handleMenuSelection: (value: string) => void;
@@ -42,7 +41,7 @@ export const ButtonSelection = ({
   const { translations } = useTranslations();
   return (
     <Stack gap={4}>
-      <Text fz={14} ff={lexend500.style.fontFamily}>
+      <Text fz={14} fw={500}>
         {translations["Buttons (Optional)"]}
       </Text>
       <Text fz={13}>
