@@ -13,7 +13,10 @@ import { log, logOptions } from "./utils/logger";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import fastifyCron from "fastify-cron";
-import { resetMonthlyCounts } from "./modules/stats/stats.service";
+import {
+  resetAnnualCounts,
+  resetMonthlyCounts,
+} from "./modules/stats/stats.service";
 import {
   endSurveyCronAction,
   publishSurveyCronAction,
@@ -136,6 +139,7 @@ server.register(fastifyCron, {
         const currentTime = new Date();
         log.info(`......Running Every Day 12.30 AM --> .....${currentTime}`);
         await resetMonthlyCounts();
+        await resetAnnualCounts();
       },
     },
   ],
