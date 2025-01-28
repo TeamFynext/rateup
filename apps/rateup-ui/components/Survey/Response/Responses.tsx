@@ -9,7 +9,7 @@ import {
 import { useRouter } from "next/router";
 
 import { Box, Button, Flex, Group, Popover, Stack, Text } from "@mantine/core";
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import { range, useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
@@ -169,15 +169,17 @@ const Responses = ({
       filterTeams,
       campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
       columnFilters,
+      ranges: ranges?.[0],
     });
   }, [
     campaignFlowFilter,
+    columnFilters,
     defaultLanguage,
     downloadExcelResponse,
     filterTeams,
+    ranges,
     survey?.title,
     surveyId,
-    columnFilters,
   ]);
 
   useEffect(() => {
