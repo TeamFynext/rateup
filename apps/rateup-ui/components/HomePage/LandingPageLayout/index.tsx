@@ -4,7 +4,7 @@ import { IconArrowUp } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import { isProduction } from "../../../utils/constants";
-import { lexend, rubik } from "../../../utils/fonts";
+import { rubik } from "../../../utils/fonts";
 import CookieConsentBanner from "../../Analytics/CookieConsentBanner";
 import BookADemoSection from "../components/BookADemoSection";
 import Footer from "../components/Footer";
@@ -17,7 +17,6 @@ function LandingPageLayout({ children, className = "" }) {
   const requiredClassName = cx(
     className,
     "home-page-container",
-    lexend.variable,
     rubik.variable,
   );
 

@@ -437,7 +437,13 @@ function FormElementCard({
       <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
         {index}
       </Badge>
-      <Text px="xs" fw={500} style={{ flex: 1 }} lineClamp={2}>
+      <Text
+        px="xs"
+        fw={500}
+        flex={1}
+        lineClamp={2}
+        style={{ wordBreak: "break-word" }}
+      >
         {markdownToPlainText(text)}
       </Text>
       {/* {Object.keys(dbFlow.logicJumps).includes(screen) && (

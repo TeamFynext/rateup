@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import classNames from "classnames/bind";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 

@@ -9,9 +9,11 @@ import {
   Divider,
   Group,
   Menu,
+  NavLink,
   rem,
   Text,
   ThemeIcon,
+  useMantineColorScheme,
 } from "@mantine/core";
 
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
@@ -21,12 +23,15 @@ import { surveyUploadsPath } from "@/utils/constants";
 import { UserCardInterface } from "../..";
 import { UserRole } from "../../../../../../utils/enums";
 import { useNavBottomData } from "../../../navbar.constants";
+import NavbarLink from "../NavbarLink/NavbarLink";
 import styles from "./NavbarFooter.module.css";
 
 const NavbarFooter = (props: UserCardInterface) => {
   const router = useRouter();
   const bottomNavData = useNavBottomData();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { colorScheme } = useMantineColorScheme();
+  const colorBasedOnLightMode = colorScheme === "light" ? "gray" : "white";
   const { translations } = useTranslations();
   const handleItemClick = (label: string) => {
     if (label === "Admin") {
@@ -48,30 +53,50 @@ const NavbarFooter = (props: UserCardInterface) => {
           </Text>
         </Box>
       )}
+      {/* <NavbarLink /> */}
       <Box style={{ margin: "auto", width: "15rem" }}>
         {bottomNavData.map(({ Icon, label, href }, index) => (
-          <Group
-            key={index}
-            onClick={() => handleItemClick(label)}
-            ml="1rem"
-            mb="10px"
-            mt="15px"
-            style={{ cursor: "pointer" }}
-          >
-            <ThemeIcon variant="transparent" size={20}>
-              <Icon color="gray" />
-            </ThemeIcon>
-            {props.opened && (
-              <Text
-                size="sm"
-                fw={500}
-                onClick={() => router.push(href)}
-                c="var(--mantine-color-gray-7"
-              >
-                {label}
-              </Text>
-            )}
-          </Group>
+          // <Group
+          //   key={index}
+          //   onClick={() => handleItemClick(label)}
+          // ml="1rem"
+          // mb="10px"
+          // mt="15px"
+          //   style={{ cursor: "pointer" }}
+          // >
+          //   <ThemeIcon variant="transparent" size={20}>
+          //     <Icon color="gray" />
+          //   </ThemeIcon>
+          //   {props.opened && (
+          //     <Text
+          //       size="sm"
+          //       onClick={() => router.push(href)}
+          //       c="var(--mantine-color-gray-7"
+          //     >
+          //       {label}
+          //     </Text>
+          //   )}
+          // </Group>
+          <NavLink
+            styles={{
+              children: { display: !props.opened && "none", marginTop: 5 },
+              root: {
+                borderRadius: 5,
+              },
+              label: {
+                color:
+                  !(props.active || router.pathname === href) &&
+                  colorBasedOnLightMode,
+              },
+              chevron: {
+                color: !(router.pathname === href) && colorBasedOnLightMode,
+              },
+            }}
+            ml="lg"
+            p={5}
+            label={props.opened && label}
+            leftSection={<Icon color="gray" size={21} />}
+          />
         ))}
       </Box>
       <Box ml="15px" mt="15px" mb="10px">

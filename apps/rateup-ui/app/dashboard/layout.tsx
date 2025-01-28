@@ -1,5 +1,5 @@
 import React from "react";
-import { cookies } from "next/headers";
+import { cookies, type UnsafeUnwrappedCookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import JsonWebToken from "jsonwebtoken";
@@ -15,7 +15,8 @@ const client = jwksClient({
 });
 
 function getAccessToken(): string | undefined {
-  return cookies().get("sAccessToken")?.value;
+  return (cookies() as unknown as UnsafeUnwrappedCookies).get("sAccessToken")
+    ?.value;
 }
 
 function getPublicKey(header: JwtHeader, callback: SigningKeyCallback) {

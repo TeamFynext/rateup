@@ -19,7 +19,7 @@ import {
 } from "@mantine/core";
 import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
 import classNames from "classnames/bind";
-import { motion, useAnimate } from "framer-motion";
+import { motion, useAnimate } from "motion/react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 

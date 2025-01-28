@@ -5,7 +5,7 @@ import { PasswordInput, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconPhone } from "@tabler/icons-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
 import useTranslations from "@/dictionaries/useTranslation";
@@ -149,9 +149,11 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           ],
         ])}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence
+          mode="wait"
+          key={signUpTypeValue ? signUpTypeValue?.toString() : null}
+        >
           <motion.div
-            key={signUpTypeValue ? signUpTypeValue?.toString() : null}
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -10, opacity: 0 }}

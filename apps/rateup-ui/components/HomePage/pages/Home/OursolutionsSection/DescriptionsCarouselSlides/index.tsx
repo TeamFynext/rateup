@@ -1,9 +1,11 @@
 import React, { MutableRefObject } from "react";
-import { Text, Title } from "@mantine/core";
+
 import { Carousel } from "@mantine/carousel";
-import styles from "./DescriptionsCarouselSlides.module.css";
-import { motion } from "framer-motion";
+import { Text, Title } from "@mantine/core";
+import { motion } from "motion/react";
+
 import { Solution } from "../../../Reputation/constants";
+import styles from "./DescriptionsCarouselSlides.module.css";
 
 type DescriptionsCarouselProps = {
   solutions: Solution[];

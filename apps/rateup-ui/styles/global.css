@@ -99,13 +99,16 @@ html {
   padding: 0;
   width: 100%;
 }
-
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
+h6 {
+  font-weight: 500;
+  margin: 0;
+}
+
 p {
   margin: 0;
 }
@@ -147,6 +150,7 @@ p {
 body {
   background: light-dark(white, var(--mantine-color-body)) !important;
   color: light-dark(black, white) !important;
+  font-weight: 300;
 }
 .react-flow {
   --xy-edge-stroke-default: rgb(129, 126, 126) !important;

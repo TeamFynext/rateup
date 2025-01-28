@@ -2,7 +2,7 @@ import { useContext } from "react";
 
 import { Rating, useMantineTheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { useAnimate } from "framer-motion";
+import { useAnimate } from "motion/react";
 
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";

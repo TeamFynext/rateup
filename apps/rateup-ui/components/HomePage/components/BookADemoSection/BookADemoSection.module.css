@@ -30,12 +30,12 @@
   margin-bottom: 1.5rem;
   font-size: 2rem;
   color: white;
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   font-weight: 300;
 }
 
 .book-a-demo-container :global(.book-a-demo-btn) {
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   background-color: transparent;
   border: 1px solid white;
   font-weight: 600;

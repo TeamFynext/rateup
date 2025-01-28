@@ -34,7 +34,6 @@ import { useRouter } from "next/router";
 
 import { ModalsProvider } from "@mantine/modals";
 import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
 
 import CookieConsentBanner from "../components/Analytics/CookieConsentBanner";
 import FacebookPixel from "../components/Analytics/FacebookPixel";
@@ -46,7 +45,7 @@ import { theme } from "../config/mantineTheme";
 import { checkEmailVerification } from "../utils/auth/checkEmailVerification";
 import { isProduction } from "../utils/constants";
 import { fbPageview } from "../utils/fbpixel";
-import { lexend300, notoColorEmogi } from "../utils/fonts";
+import { geist, notoColorEmogi } from "../utils/fonts";
 import { pageView } from "../utils/gtag";
 
 if (typeof window !== "undefined") {
@@ -56,7 +55,7 @@ if (typeof window !== "undefined") {
 // TODO: docs warns to not create this at file root level
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
-  getLayout?: (page: ReactElement) => ReactNode;
+  getLayout?: (page: ReactElement<any>) => ReactNode;
 };
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
@@ -198,7 +197,7 @@ export default function App({
         </>
       )}
       {/* notoColorEmogi is added as fallback for displaying emogies */}
-      <main className={`${lexend300.className},${notoColorEmogi.className}`}>
+      <main className={`${geist.className},${notoColorEmogi.className}`}>
         <QueryClientProvider client={queryClient}>
           <ModalsProvider modals={allModalManagerModalsObj}>
             <Notifications />

@@ -1,13 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { Radio, ScrollArea } from "@mantine/core";
-import { SelectedQContext } from "../../../../../context/SelectedQ";
+import { useAnimate } from "motion/react";
+
+import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
+import { SelectedQContext } from "../../../../../context/SelectedQ";
+import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 import { sampleChoices } from "../../../../../utils/constants/forms";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard";
-import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
-import { useAnimate } from "framer-motion";
-import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;

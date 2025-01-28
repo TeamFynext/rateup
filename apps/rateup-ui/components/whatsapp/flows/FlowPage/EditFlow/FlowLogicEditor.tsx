@@ -46,7 +46,6 @@ import {
   FlowLogicJumpComponentLevel,
 } from "../../../../../types/global";
 import { logicSupportedTypes } from "../../../../../utils/data";
-import { lexend500 } from "../../../../../utils/fonts";
 import {
   getConditions,
   getResponses,
@@ -166,7 +165,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
     <Flex style={{ flexDirection: "column", height: "100%" }}>
       <Group gap={"xs"}>
         <Title order={3}>{translations["Logic Jumps for Screen:"]}</Title>
-        <Title c="whatsapp-green" className={lexend500.className} order={3}>
+        <Title c="whatsapp-green" fw={500} order={3}>
           {screen.title}
         </Title>{" "}
         {/* TODO: fix native font weight not working */}

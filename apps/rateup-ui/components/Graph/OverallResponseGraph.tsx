@@ -19,7 +19,6 @@ import {
 } from "recharts";
 
 import { useAllSurveysSummary } from "../../backend/surveys/surveys.query";
-import { lexend400 } from "../../utils/fonts";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import RefreshButton from "../Button/RefreshButton";
 import NothingFound from "../NothingFound/NothingFound";
@@ -49,7 +48,7 @@ const OverallResponseGraph = ({
                   {total}
                 </Text>
                 <Text
-                  className={`${lexend400.className} ${classes["overall-responses-text-p"]}`}
+                  className={`${classes["overall-responses-text-p"]}`}
                   c="dimmed"
                 >
                   {translations["Overall Responses"]}

@@ -7,7 +7,6 @@ import { PageType } from "@/types/enums";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
 import { cordinateStyle } from "../../../utils";
-import { lexend } from "../../../utils/fonts";
 import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 
 const _buttonStyles = {
@@ -83,7 +82,6 @@ function WelcomePage({
         justify="center"
         h={"100%"}
         p={"lg"}
-        className={lexend.className}
         gap={"xl"}
         maw={1920}
         w={isMobile ? "100%" : "80%"}

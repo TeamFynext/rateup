@@ -1,9 +1,27 @@
-import { createTheme } from "@mantine/core";
-import { lexend300, notoColorEmogi } from "../utils/fonts";
+import { createTheme, MantineThemeComponents } from "@mantine/core";
+
+import { geist, notoColorEmogi } from "../utils/fonts";
+
+let componentsStyles: MantineThemeComponents = {
+  Text: {
+    defaultProps: {
+      fw: 300,
+    },
+  },
+  Button: {
+    defaultProps: {
+      fw: 400,
+    },
+  },
+  Title: {
+    defaultProps: {
+      fw: 500,
+    },
+  },
+};
 // Add global theme overrides here. (used by app & storybook)
 export const theme = createTheme({
-  fontFamily:
-    lexend300.style.fontFamily + "," + notoColorEmogi.style.fontFamily,
+  fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryColor: "rateup-blue",
   colors: {
     "rateup-blue": [
@@ -23,8 +41,8 @@ export const theme = createTheme({
 
 export const whatsappTheme = createTheme({
   primaryColor: "whatsapp-green",
-  fontFamily:
-    lexend300.style.fontFamily + "," + notoColorEmogi.style.fontFamily,
+  fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
+  components: componentsStyles,
   colors: {
     "whatsapp-green": [
       "#96d2cb",
@@ -37,27 +55,6 @@ export const whatsappTheme = createTheme({
       "#0f776b",
       "#0d665c",
       "#0b554c",
-    ],
-  },
-});
-
-export const menuTheme = createTheme({
-  autoContrast: true,
-  fontFamily:
-    lexend300.style.fontFamily + "," + notoColorEmogi.style.fontFamily,
-  primaryColor: "pale-purple",
-  colors: {
-    "pale-purple": [
-      "#f2f0ff",
-      "#e0dff2",
-      "#bfbdde",
-      "#9b98ca",
-      "#7d79ba",
-      "#6a65b0",
-      "#605bac",
-      "#504c97",
-      "#464388",
-      "#3b3979",
     ],
   },
 });

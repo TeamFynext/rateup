@@ -5,7 +5,6 @@ import { Box, Center, Loader } from "@mantine/core";
 
 import { useGetLinktreeWithShortId } from "../../../backend/linktree/linktree.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
-import { lexend } from "../../../utils/fonts";
 import { LinktreeContextProvider } from "./LinktreeContext/LinktreeContext";
 import styles from "./LinktreeEditor.module.css";
 import TabPanelsComp from "./TabPanels";
@@ -65,9 +64,7 @@ function LinktreeEdtior() {
       activeTab={activeTab}
       setActiveTab={setActiveTab}
     >
-      <Box
-        className={`${styles["linktree-editor-page-root-div"]} ${lexend.variable}`}
-      >
+      <Box className={`${styles["linktree-editor-page-root-div"]}`}>
         {componentToBeRendered}
       </Box>
     </LinktreeContextProvider>

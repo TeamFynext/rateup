@@ -11,7 +11,7 @@ import {
   IconMoodSmile,
   IconMoodSmileBeam,
 } from "@tabler/icons-react";
-import { useAnimate } from "framer-motion";
+import { useAnimate } from "motion/react";
 
 import {
   generateGradient,

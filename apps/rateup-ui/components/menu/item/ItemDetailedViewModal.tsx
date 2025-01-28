@@ -21,7 +21,6 @@ import YoutubeEmbed from "@/components/youtube/YoutubeEmbed";
 import useTranslations from "@/dictionaries/useTranslation";
 import { fallbackImage } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { lexend } from "@/utils/fonts";
 import { extractVideoId } from "@/utils/youtube/url";
 
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
@@ -90,7 +89,6 @@ export function ItemDetailedViewModal({
       onClose={onClose}
       size={"sm"}
       classNames={styles}
-      ff={lexend.style.fontFamily}
       scrollAreaComponent={ScrollArea.Autosize}
       radius={"lg"}
     >
@@ -142,12 +140,7 @@ export function ItemDetailedViewModal({
             <Card.Section className={classes.section} mt="sm">
               <Text className={styles.title}>{item.name}</Text>
               <ScrollAreaAutosize mah={150} my="xs" type="always">
-                <Text
-                  fz="sm"
-                  component="pre"
-                  className={styles.preWrap}
-                  ff={lexend.style.fontFamily}
-                >
+                <Text fz="sm" component="pre" className={styles.preWrap}>
                   {item.description}
                 </Text>
               </ScrollAreaAutosize>

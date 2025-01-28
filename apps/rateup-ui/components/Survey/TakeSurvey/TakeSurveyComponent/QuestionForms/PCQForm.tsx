@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Radio } from "@mantine/core";
-import { useAnimate } from "framer-motion";
+import { useAnimate } from "motion/react";
 
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";

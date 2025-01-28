@@ -1,7 +1,8 @@
 import { Badge } from "@mantine/core";
+
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getSubscriptionFeatureLabel } from "../../../utils/enums";
 import { subscriptionColorMap } from "./features.colors";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export function FeatureBadge({
   featurePathName,

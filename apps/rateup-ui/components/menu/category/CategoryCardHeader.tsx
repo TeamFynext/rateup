@@ -40,7 +40,7 @@ export function CategoryCardHeader({
       bg={"var(--mantine-primary-color-filled)"}
     >
       <div></div>
-      <Text fz="1.5rem" c="white" fw={700} tt={"capitalize"}>
+      <Text fz="1.5rem" c="white" fw={500} tt={"capitalize"}>
         {category.name}
       </Text>
       <Group>

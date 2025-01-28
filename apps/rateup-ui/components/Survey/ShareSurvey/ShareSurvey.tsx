@@ -289,7 +289,7 @@ const ShareSurvey = ({
                 });
               }}
               label={
-                <Text fw={700} fz={"lg"}>
+                <Text fw={500} fz={"lg"}>
                   {translations["Scheduled"]}
                 </Text>
               }

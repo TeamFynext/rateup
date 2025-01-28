@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useBeforeUnload } from "react-use";
 
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
@@ -17,7 +17,6 @@ import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeConte
 import { LogicAction, PageType, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
 import { encryptResponse } from "../../../../utils/encryption";
-import { lexend } from "../../../../utils/fonts";
 import { showErrorToast } from "../../../../utils/notifications";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import CustomHTML from "../../Page/Previews/CustomHTML";
@@ -444,7 +443,7 @@ function TakeSurvey({
                             ) : (
                               <>
                                 <Box
-                                  className={`${styles["title-desc-container"]} ${lexend.className}`}
+                                  className={`${styles["title-desc-container"]}`}
                                 >
                                   <QuestionTitle
                                     largeScreen={largeScreen}

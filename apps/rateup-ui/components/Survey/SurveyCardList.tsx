@@ -145,7 +145,7 @@ function SurveyCard({
         style={{ cursor: "pointer" }}
       >
         <Flex justify={"space-between"} align={"center"}>
-          <Text mr={"sm"} truncate size="xl" fw={700}>
+          <Text mr={"sm"} truncate size="xl" fw={500}>
             {survey?.title}
           </Text>
           <Badge color={survey?.type == "web" ? "blue" : "green"}>

@@ -17,7 +17,6 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { ReviewSuggestion } from "../../../../types/global";
 import { shuffleArray } from "../../../../utils";
-import { lexend500 } from "../../../../utils/fonts";
 import { GoogleIcon } from "../../../Button/GoogleIcon";
 import RateupRedirectCard from "../../../Card/RateupRedirectCard";
 import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor";
@@ -114,7 +113,13 @@ function GoogleReview({
           </Box>
         )}
         <Box className={styles["happy-text-div"]}>
-          <h2 className={lexend500.className}>Make us more happy!</h2>
+          <h2
+            style={{
+              fontWeight: 500,
+            }}
+          >
+            Make us more happy!
+          </h2>
           <Box className={styles["leave-review-paras-container"]}>
             <p>{`Leave us a review on ${reviewPagePlatform}`}</p>
           </Box>

@@ -1,12 +1,14 @@
 import { useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
-import { RateupButtonBlue } from "../../../../Button/RateupButtons";
-import { YNResponse } from "../../../../../types/enums";
-import styles from "./YNForm.module.css";
-import { animate } from "framer-motion";
+import { animate } from "motion/react";
+
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
+import { YNResponse } from "../../../../../types/enums";
+import { RateupButtonBlue } from "../../../../Button/RateupButtons";
+import styles from "./YNForm.module.css";
 
 export function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);

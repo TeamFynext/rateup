@@ -16,7 +16,6 @@ import classNames from "classnames/bind";
 import { PageType } from "@/types/enums";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
-import { lexend } from "../../../utils/fonts";
 import { CreditsCard } from "../../Card/CreditsCard";
 import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
 import surveyThemeStyles from "../../Survey/SurveyTheme/SurveyTheme.module.css";
@@ -96,11 +95,9 @@ function LanguageSelectionPage({
   return (
     <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
       <Flex
-        className={cx(
-          "preview-language-page-container",
-          { "org-logo-not-present": !isOrgLogoPresent },
-          lexend.variable,
-        )}
+        className={cx("preview-language-page-container", {
+          "org-logo-not-present": !isOrgLogoPresent,
+        })}
         style={{
           backgroundColor,
           backgroundImage: `url(${backgroundImageSrc})`,

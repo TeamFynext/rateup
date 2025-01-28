@@ -1,15 +1,17 @@
 import { useContext } from "react";
-import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+
 import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
-import { RateupButtonBlue } from "../../../../Button/RateupButtons";
-import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
-import { LDResponse } from "../../../../../types/enums";
 import { useMediaQuery } from "@mantine/hooks";
+import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
+import { useAnimate } from "motion/react";
+
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
-import { useAnimate } from "framer-motion";
-import styles from "./LDForm.module.css";
-import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
+import { LDResponse } from "../../../../../types/enums";
+import { RateupButtonBlue } from "../../../../Button/RateupButtons";
+import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
+import styles from "./LDForm.module.css";
 
 export function LDForm() {
   const selectedPreview = useSelectedPreview();

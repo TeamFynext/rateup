@@ -11,7 +11,7 @@
 }
 
 .editor-selector-dropdown-input {
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   font-weight: 400;
   background-color: var(--tertiary-color);
   color: white;
@@ -50,12 +50,12 @@
 }
 
 .theme-styles-div :global(button) {
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   font-weight: 400;
 }
 
 .theme-styles-div :global(label) {
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   font-weight: 400;
 }
 

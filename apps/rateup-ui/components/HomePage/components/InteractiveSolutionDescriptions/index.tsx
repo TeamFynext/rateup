@@ -1,9 +1,11 @@
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+
 import { Button, Flex } from "@mantine/core";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
-import { AnimatePresence, motion } from "framer-motion";
 import { useKeenSlider } from "keen-slider/react";
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+
 import { Solution } from "../../pages/Reputation/constants";
 import MobileInteractiveSolutionDescriptions from "../MobileInteractiveSolutionDescriptions";
 import DescriptionsCarouselSlides from "./DescriptionsCarouselSlides";
@@ -184,11 +186,10 @@ function InteractiveSolutionDescriptions({
             priority={false}
           />
         ) : (
-          <AnimatePresence>
+          <AnimatePresence key={activeSlideIndex}>
             {
               <motion.div
                 className={styles["motion-div"]}
-                key={activeSlideIndex}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

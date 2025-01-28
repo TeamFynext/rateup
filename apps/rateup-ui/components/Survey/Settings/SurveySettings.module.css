@@ -58,7 +58,7 @@
 }
 
 .survey-settings-root-div :global(.switch-heading-and-desc-container h3) {
-  font-family: var(--font-lexend);
+  font-family: var(--font-geist);
   font-weight: 400;
   font-size: 1rem;
   color: var(--grey-color-3);

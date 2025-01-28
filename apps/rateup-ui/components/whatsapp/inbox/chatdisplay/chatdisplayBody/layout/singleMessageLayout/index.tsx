@@ -100,7 +100,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
             <Text
               fz={"xs"}
               c={getColorForUser(props?.messageObject?.sender?.name)}
-              fw={700}
+              fw={500}
               tt={"capitalize"}
             >
               {props?.messageObject?.sender?.name}

@@ -56,7 +56,7 @@ export function ImageCheckbox({
   const titleTypeString = typeof title === "string";
   const { hovered, ref } = useHover() as {
     hovered: boolean;
-    ref: React.RefObject<HTMLButtonElement>;
+    ref: React.RefObject<HTMLButtonElement | null>;
   };
 
   const mantineTheme = useMantineTheme();

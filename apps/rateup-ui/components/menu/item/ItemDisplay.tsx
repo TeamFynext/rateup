@@ -16,7 +16,6 @@ import classes2 from "@/pages/public/menu/gradientAnimation.module.css";
 
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { lexend } from "../../../utils/fonts";
 import { CreditsCard } from "../../Card/CreditsCard";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
@@ -49,7 +48,7 @@ export function ItemDisplay({
         !(item?.disabled || categoryDisabled) && setSelectedItem(item)
       }
     >
-      <Card radius="md" p={0} ff={lexend.style.fontFamily}>
+      <Card radius="md" p={0}>
         <Grid>
           <Grid.Col span={5} pr={0} display={"grid"}>
             <CreditsCard

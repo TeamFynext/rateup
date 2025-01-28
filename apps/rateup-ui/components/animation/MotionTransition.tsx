@@ -1,5 +1,6 @@
 import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+
+import { AnimatePresence, motion } from "motion/react";
 
 type MotionTransitionProps = {
   keyValue: any;
@@ -26,9 +27,8 @@ export const MotionTransition = ({
   children,
 }: MotionTransitionProps) => {
   return apEnable ? (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" key={keyValue ? keyValue.id : null}>
       <motion.div
-        key={keyValue ? keyValue.id : null}
         layout={layout}
         {...getAnimationProps(type)}
         transition={{ duration }}
