@@ -53,6 +53,7 @@
 .icon-text {
   display: inline-block;
   position: relative;
+  font-size: 14;
 }
 
 @media (max-width: 1568px) {

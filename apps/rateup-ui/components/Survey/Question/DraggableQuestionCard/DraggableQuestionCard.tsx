@@ -142,7 +142,7 @@ export function DraggableQuestionCard({
                   {index + 1}
                 </Flex>
               </Badge>
-              <Text px="xs" fw={500} truncate style={{ flex: 1 }}>
+              <Text px="xs" fz={14} truncate style={{ flex: 1 }}>
                 {extractText(questionTitle)}
               </Text>
 

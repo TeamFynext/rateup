@@ -1,18 +1,15 @@
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import {
-  ActionIcon,
   Avatar,
   Badge,
   Box,
   Divider,
   Group,
-  Menu,
   NavLink,
-  rem,
   Text,
-  ThemeIcon,
   useMantineColorScheme,
 } from "@mantine/core";
 
@@ -23,7 +20,6 @@ import { surveyUploadsPath } from "@/utils/constants";
 import { UserCardInterface } from "../..";
 import { UserRole } from "../../../../../../utils/enums";
 import { useNavBottomData } from "../../../navbar.constants";
-import NavbarLink from "../NavbarLink/NavbarLink";
 import styles from "./NavbarFooter.module.css";
 
 const NavbarFooter = (props: UserCardInterface) => {
@@ -33,15 +29,6 @@ const NavbarFooter = (props: UserCardInterface) => {
   const { colorScheme } = useMantineColorScheme();
   const colorBasedOnLightMode = colorScheme === "light" ? "gray" : "white";
   const { translations } = useTranslations();
-  const handleItemClick = (label: string) => {
-    if (label === "Admin") {
-      router.push(`/admin`);
-    } else if (label === "Settings") {
-      router.push(`/dashboard/settings`);
-    } else if (label === "Logout") {
-      router.push(`/logout`);
-    }
-  };
   let isProfilePhotoAvailable =
     props?.profilePhoto && props?.profilePhoto !== "REMOVED_PHOTO";
   return (
@@ -53,31 +40,16 @@ const NavbarFooter = (props: UserCardInterface) => {
           </Text>
         </Box>
       )}
-      {/* <NavbarLink /> */}
       <Box style={{ margin: "auto", width: "15rem" }}>
         {bottomNavData.map(({ Icon, label, href }, index) => (
-          // <Group
-          //   key={index}
-          //   onClick={() => handleItemClick(label)}
-          // ml="1rem"
-          // mb="10px"
-          // mt="15px"
-          //   style={{ cursor: "pointer" }}
-          // >
-          //   <ThemeIcon variant="transparent" size={20}>
-          //     <Icon color="gray" />
-          //   </ThemeIcon>
-          //   {props.opened && (
-          //     <Text
-          //       size="sm"
-          //       onClick={() => router.push(href)}
-          //       c="var(--mantine-color-gray-7"
-          //     >
-          //       {label}
-          //     </Text>
-          //   )}
-          // </Group>
           <NavLink
+            ml="lg"
+            p={5}
+            key={index}
+            href={href ?? "/"}
+            component={Link}
+            label={props.opened && label}
+            leftSection={<Icon color="gray" size={21} />}
             styles={{
               children: { display: !props.opened && "none", marginTop: 5 },
               root: {
@@ -92,10 +64,6 @@ const NavbarFooter = (props: UserCardInterface) => {
                 color: !(router.pathname === href) && colorBasedOnLightMode,
               },
             }}
-            ml="lg"
-            p={5}
-            label={props.opened && label}
-            leftSection={<Icon color="gray" size={21} />}
           />
         ))}
       </Box>
