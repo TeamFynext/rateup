@@ -14,6 +14,7 @@ import xlsx from "node-xlsx";
 import { BATCH_SIZE } from "../../utils/constants/constants";
 import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
 import axios from "axios";
+import { Prisma } from "@prisma/client";
 
 export interface WaMessageStats {
   read?: boolean;
@@ -306,8 +307,24 @@ export async function getCampaignsByTeamId(teamId: string) {
   });
   return campaigns;
 }
+
+type CampaignWithExtras = Prisma.CampaignGetPayload<{
+  include: {
+    team: {
+      select: {
+        name: true;
+      };
+    };
+    _count: {
+      select: {
+        campaignParticipants: true;
+      };
+    };
+  };
+}> & { flowVersion?: string };
+
 export async function getCampaignsByOrgId(orgId: string) {
-  const campaigns = await prisma.campaign.findMany({
+  const campaigns = (await prisma.campaign.findMany({
     where: {
       team: {
         orgId,
@@ -325,7 +342,35 @@ export async function getCampaignsByOrgId(orgId: string) {
         },
       },
     },
-  });
+  })) as CampaignWithExtras[];
+
+  const flowIds = campaigns
+    .filter((campaign) => campaign.flowId)
+    .map((campaign) => campaign.flowId);
+
+  if (flowIds.length > 0) {
+    const flows = await prisma.waFlow.findMany({
+      where: {
+        dbFlowId: { in: flowIds },
+      },
+      select: {
+        dbFlowId: true,
+        version: true,
+      },
+    });
+
+    const flowMap = flows.reduce((acc, flow) => {
+      acc[flow.dbFlowId] = flow.version;
+      return acc;
+    }, {});
+
+    campaigns.forEach((campaign) => {
+      if (campaign.flowId) {
+        campaign.flowVersion = flowMap[campaign.flowId];
+      }
+    });
+  }
+
   return campaigns;
 }
 

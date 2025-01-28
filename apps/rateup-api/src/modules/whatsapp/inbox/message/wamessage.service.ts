@@ -139,7 +139,7 @@ export async function getContactsWithLastMessage(
       c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL
   ORDER BY 
       lm."waCreatedAt" DESC NULLS LAST
-  LIMIT 5000 OFFSET ${(page - 1) * 5000}`;
+  LIMIT 1000 OFFSET ${(page - 1) * 1000}`;
   return contacts.map(
     ({
       latestmessage,
