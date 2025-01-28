@@ -485,8 +485,29 @@ export async function saveResponses(session: WaSessionWithRelations) {
       status: CampaignParticipantStatus.COMPLETED,
       responseId: res.id,
     });
+    await updateCampaignStats(session.campaignParticipantId);
   }
   return res;
+}
+async function updateCampaignStats(id: string) {
+  const participant = await prisma.campaignParticipant.findFirst({
+    where: {
+      id,
+    },
+    select: {
+      campaignId: true,
+    },
+  });
+  if (participant?.campaignId) {
+    await prisma.campaignStats.update({
+      where: {
+        campaignId: participant?.campaignId,
+      },
+      data: {
+        totalCompleted: { increment: 1 },
+      },
+    });
+  }
 }
 
 export async function sendTextMessage(
