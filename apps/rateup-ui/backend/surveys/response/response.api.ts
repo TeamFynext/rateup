@@ -76,6 +76,11 @@ export type downloadExcelResponseType = {
   campaignIds: string[];
   dbFlowId?: string;
   columnFilters?: { id: string; value: unknown }[];
+  ranges?: {
+    startDate?: Date;
+    endDate?: Date;
+    key?: string;
+  };
 };
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {
