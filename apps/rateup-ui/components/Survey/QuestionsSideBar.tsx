@@ -218,6 +218,8 @@ export function QuestionsSideBar({
             className={styles["add-content-btn"]}
             rightSection={<IconPlus size="1.125rem" />}
             onClick={handleAddQn}
+            fz={14}
+            fw={400}
           >
             {translations["Add Content"]}
           </Button>
