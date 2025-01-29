@@ -323,7 +323,7 @@ export async function updateAnnualMessageCount(orgId, renewedAt, features) {
       features?.[SubscriptionFeaturePathName.Whatsapp]?.count
         ?.monthlyMessageLimit
     } * (
-      EXTRACT(MONTH FROM AGE(CURRENT_DATE, ${new Date(renewedAt)}::DATE)) - 1)
+      EXTRACT(MONTH FROM AGE(CURRENT_DATE, ${new Date(renewedAt)}::DATE)))
     ) + "monthlyMessagesCount"
   )
   WHERE "orgId" = CAST(${orgId} as UUID);`;
