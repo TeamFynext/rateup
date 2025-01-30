@@ -160,3 +160,9 @@ body {
     rgb(129, 126, 126)
   ) !important;
 }
+
+.button-edge__label {
+  position: absolute;
+  pointer-events: all;
+  transform-origin: center;
+}

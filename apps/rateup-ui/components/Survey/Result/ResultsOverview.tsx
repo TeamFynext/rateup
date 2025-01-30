@@ -348,7 +348,7 @@ const ResultsOverview = ({ surveyId }) => {
                         <QuestionPieChart
                           no={index + 1}
                           type={item.type}
-                          responseCount={noofResponses}
+                          responseCount={item?.responses?.length}
                           question={item.question}
                           data={item.nps}
                           csatScore={item?.csat}

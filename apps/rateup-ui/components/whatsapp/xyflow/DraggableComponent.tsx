@@ -9,6 +9,7 @@ import {
   Select,
   Stack,
   Text,
+  TextInput,
 } from "@mantine/core";
 import {
   IconEdit,
@@ -181,6 +182,30 @@ const DraggableComponent = ({
       );
     }
   };
+  const handleInputChange = (fieldId, value) => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                components: node.data.components.map((comp, compIndex) =>
+                  compIndex === index
+                    ? {
+                        ...comp,
+                        name: comp.name.map((field) =>
+                          field.id === fieldId ? { ...field, value } : field,
+                        ),
+                      }
+                    : comp,
+                ),
+              },
+            }
+          : node,
+      ),
+    );
+  };
   const renderDynamicTextFields = (len = 4) => (
     <Stack gap={"xs"} onClick={(e) => e.stopPropagation()}>
       {component.name.map((field, i) => {
@@ -197,34 +222,54 @@ const DraggableComponent = ({
                 <IconMinus />
               </ActionIcon>
             )}
-            <Card
-              shadow="sm"
-              radius="md"
-              p={"xs"}
-              flex={1}
-              withBorder
-              onClick={() => {
-                setId(field.id);
-                setType(i === 0 ? ReplyType.Editor : ReplyType.Text);
-                open();
-              }}
-            >
-              {parsedValue ? (
-                parsedValue
-              ) : (
-                <Text c={"dimmed"} fz={"sm"}>
-                  {i === 0 ? "Enter Text" : "Enter button name"}
-                </Text>
-              )}
-              {i > 0 && (
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={field.id}
-                  className={styles.handle_style}
-                />
-              )}
-            </Card>
+            {i === 0 ? (
+              <Card
+                shadow="sm"
+                radius="md"
+                p={"xs"}
+                flex={1}
+                withBorder
+                onClick={() => {
+                  setId(field.id);
+                  setType(i === 0 ? ReplyType.Editor : ReplyType.Text);
+                  open();
+                }}
+              >
+                {parsedValue ? (
+                  parsedValue
+                ) : (
+                  <Text c={"dimmed"} fz={"sm"}>
+                    {i === 0 ? "Enter Text" : "Enter button name"}
+                  </Text>
+                )}
+                {i > 0 && (
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={field.id}
+                    className={styles.handle_style}
+                  />
+                )}
+              </Card>
+            ) : (
+              <TextInput
+                placeholder={"Enter the button text"}
+                value={field.value}
+                onClick={() => open && close()}
+                onChange={(e) => handleInputChange(field.id, e.target.value)}
+                flex={1}
+                rightSection={
+                  i > 0 && (
+                    <Handle
+                      type="source"
+                      position={Position.Right}
+                      id={field.id}
+                      className={styles.handle_style}
+                    />
+                  )
+                }
+              />
+            )}
           </Group>
         );
       })}

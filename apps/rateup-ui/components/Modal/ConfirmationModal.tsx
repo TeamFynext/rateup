@@ -62,20 +62,20 @@ export default function ConfirmationModal({
       title={headerTitle}
       opened={opened}
       onClose={onClose}
-      radius={"lg"}
+      radius={"md"}
       onClick={(e) => e.stopPropagation()}
       styles={{
         title: {
           fontSize: 20,
-          fontWeight: "bolder",
+          fontWeight: "500",
         },
       }}
       withCloseButton={!excludeCancelButton}
       closeOnClickOutside={!excludeCancelButton}
     >
       <Modal.Body>
-        <Stack>
-          <Text fw={500} dangerouslySetInnerHTML={{ __html: headerLabel }} />
+        <Stack gap={0}>
+          <Text dangerouslySetInnerHTML={{ __html: headerLabel }} />
           {forDeleteFunctionality && deleteQuotion && (
             <Blockquote
               color="red"

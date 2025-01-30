@@ -262,4 +262,4 @@ export function RenderMenuDropdown({
     </Menu>
   );
 }
-export default memo(ScreenNode);
+export default ScreenNode;
