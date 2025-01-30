@@ -317,14 +317,26 @@ export async function updateUsageStatsLastReset(orgId, renewedAt) {
 }
 
 export async function updateAnnualMessageCount(orgId, renewedAt, features) {
-  const res = await prisma.$executeRaw`UPDATE "UsageStats" 
-  SET "annualMessageCount" = (
-    (${
-      features?.[SubscriptionFeaturePathName.Whatsapp]?.count
-        ?.monthlyMessageLimit
-    } * (
-      EXTRACT(MONTH FROM AGE(CURRENT_DATE, ${new Date(renewedAt)}::DATE)))
-    ) + "monthlyMessagesCount"
-  )
-  WHERE "orgId" = CAST(${orgId} as UUID);`;
+  const waMessages = await prisma.waMessage.findMany({
+    where: {
+      contact: {
+        orgId,
+      },
+      createdAt: {
+        gte: new Date(renewedAt),
+      },
+      messageBody: {
+        path: ["send"],
+        not: null,
+      },
+    },
+  });
+  await prisma.usageStats.update({
+    where: {
+      orgId,
+    },
+    data: {
+      annualMessageCount: waMessages.length,
+    },
+  });
 }
