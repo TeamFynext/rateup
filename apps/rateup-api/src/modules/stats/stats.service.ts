@@ -317,26 +317,18 @@ export async function updateUsageStatsLastReset(orgId, renewedAt) {
 }
 
 export async function updateAnnualMessageCount(orgId, renewedAt, features) {
-  const waMessages = await prisma.waMessage.findMany({
-    where: {
-      contact: {
-        orgId,
-      },
-      createdAt: {
-        gte: new Date(renewedAt),
-      },
-      messageBody: {
-        path: ["send"],
-        not: null,
-      },
-    },
-  });
+  const waMessages = await prisma.$queryRaw`SELECT COUNT(*)
+  FROM "WaMessage" wm
+  JOIN "Contact" c ON wm."contactId" = c."id"
+  WHERE wm."messageBody"->>'send' IS NOT NULL
+    AND wm."createdAt"::DATE >= ${new Date(renewedAt)}
+    AND c."orgId" = CAST(${orgId} as UUID);`;
   await prisma.usageStats.update({
     where: {
       orgId,
     },
     data: {
-      annualMessageCount: waMessages.length,
+      annualMessageCount: Number(waMessages[0]?.count),
     },
   });
 }
