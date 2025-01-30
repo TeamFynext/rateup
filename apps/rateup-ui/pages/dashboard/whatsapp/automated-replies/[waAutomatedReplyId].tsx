@@ -59,6 +59,7 @@ import TanstackTable from "@/components/Table/TanstackTable";
 import WaTemplateFormElements, {
   NoParams,
 } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/templatePreview/formElements";
+import CustomEdge from "@/components/whatsapp/xyflow/CustomEdge";
 import ScreenNode from "@/components/whatsapp/xyflow/ScreenNode";
 import { useRouteParams } from "@/context/RouteParamsContext";
 
@@ -137,7 +138,10 @@ const App = () => {
     setNodes((nds) => nds.concat(newNode));
   };
 
-  const onConnect = (params) => setEdges((eds) => addEdge(params, eds));
+  // const onConnect = (params) => setEdges((eds) => addEdge(params, eds));
+  const onConnect = (params) =>
+    setEdges((eds) => addEdge({ ...params, type: "custom" }, eds));
+
   const saveFlow = () => {
     updateWaReplyMutation.mutate({
       id: router.query.waAutomatedReplyId as string,
@@ -232,6 +236,7 @@ const App = () => {
               proOptions={{
                 hideAttribution: true,
               }}
+              edgeTypes={{ custom: CustomEdge }}
             >
               <Background
                 gap={12}
@@ -317,11 +322,7 @@ export const RightSection = ({ setNodes, nodes }) => {
         >
           <Group gap="xs" justify="space-between">
             <Title order={2}>
-              {type === ReplyType.Editor
-                ? "Editor"
-                : type === ReplyType.Template
-                  ? "Template Parameters"
-                  : "Text"}
+              {type === ReplyType.Editor ? "Editor" : "Template Parameters"}
             </Title>
             <ActionIcon onClick={close} variant="light">
               <IconX />
@@ -330,12 +331,7 @@ export const RightSection = ({ setNodes, nodes }) => {
           {type === ReplyType.Template ? (
             <TemplateEditor id={id} setNodes={setNodes} nodes={nodes} />
           ) : (
-            <RichTextEditor
-              id={id}
-              setNodes={setNodes}
-              nodes={nodes}
-              type={type}
-            />
+            <RichTextEditor id={id} setNodes={setNodes} nodes={nodes} />
           )}
         </Card>
       )}
@@ -405,7 +401,7 @@ const TemplateEditor = ({ id, setNodes, nodes }) => {
   );
 };
 
-const RichTextEditor = ({ setNodes, nodes, id, type }) => {
+const RichTextEditor = ({ setNodes, nodes, id }) => {
   // Find content using useMemo to cache the result
   const content = useMemo(() => {
     return nodes?.reduce((found, node) => {
@@ -464,18 +460,10 @@ const RichTextEditor = ({ setNodes, nodes, id, type }) => {
   // Don't render if no content found
   if (!content) return null;
 
-  return type === ReplyType.Editor ? (
+  return (
     <WaTextEditor
       handleInputChange={handleInputChange}
       content={content.value}
-    />
-  ) : (
-    <TextInput
-      placeholder="Enter the button text"
-      maxLength={20}
-      onChange={(e) => handleInputChange(e.target.value)}
-      description="Max 20 characters"
-      value={content?.value}
     />
   );
 };
