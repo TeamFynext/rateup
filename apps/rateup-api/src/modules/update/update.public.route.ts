@@ -4,6 +4,7 @@
 import { FastifyInstance } from "fastify";
 import {
   campaignStatsChangeHandler,
+  getMessageHandler,
   updateGoogleReviewQuestions,
   updateUsageStatsResetHandler,
   updateWebSurveyThemePageTitleHandler,
@@ -18,4 +19,6 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/usage-stats-reset", updateUsageStatsResetHandler);
 
   server.get("/campaign-stats-change", campaignStatsChangeHandler);
+
+  server.get("/message/:id", getMessageHandler);
 }
