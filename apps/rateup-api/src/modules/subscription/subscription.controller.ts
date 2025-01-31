@@ -73,12 +73,7 @@ export async function updateSubscriptionHandler(
         orgId,
         subscription.renewedAt ?? subscription.createdAt,
       );
-    else
-      await updateAnnualMessageCount(
-        orgId,
-        subscription.renewedAt ?? subscription.createdAt,
-        subscription.features,
-      );
+    else await updateAnnualMessageCount(orgId);
   }
 }
 
