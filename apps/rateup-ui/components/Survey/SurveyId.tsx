@@ -35,10 +35,10 @@ import TabsListComp from "./Tabs/TabsList";
 
 export enum TabEnum {
   Edit = "Edit",
-  Share = "Share",
-  Result = "Result",
   Settings = "Settings",
-  Theme = "Theme",
+  Share = "Share",
+  // Theme = "Theme",
+  Result = "Result",
 }
 
 export default function SurveyID() {
@@ -226,7 +226,11 @@ export default function SurveyID() {
           >
             {user?.role !== UserRole.MEMBER && (
               <Portal target={"#tabs-container-entity-editor-tabs"}>
-                <TabsListComp value={activeTab} onChange={handleTabChange} />
+                <TabsListComp
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  tabs={Object.values(TabEnum)}
+                />
               </Portal>
             )}
             {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}

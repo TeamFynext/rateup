@@ -48,3 +48,7 @@ export const importCustomers = async (data) => {
   });
   return res;
 };
+
+export async function getLoyaltyCustomerById(customerId) {
+  return (await axiosClient.get(`${base}/${customerId}`)).data;
+}

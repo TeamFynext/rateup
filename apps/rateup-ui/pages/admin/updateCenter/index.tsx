@@ -68,6 +68,21 @@ function UpdateAllThemes() {
           {translations["Update"]}
         </Button>
       </Stack>
+
+      <Stack mt="xl">
+        <Title order={2}>Check Messages</Title>
+
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateUsageStats.mutate();
+          }}
+          loading={updateUsageStats.isPending}
+        >
+          {translations["Update"]}
+        </Button>
+      </Stack>
     </Stack>
   );
 }

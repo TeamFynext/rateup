@@ -11,21 +11,11 @@ import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateString } from "@/utils/dateTime";
 
 import classes from "../Loyalty.module.css";
-import { LoyaltyReward } from "../utils";
+import { getActionColor, LoyaltyReward } from "../utils";
 import LoyaltyActionMenu from "./LoyaltyActionMenu";
 
 const LoyaltyActionCard = ({ action }) => {
   const router = useRouter();
-
-  function getActionColor(type) {
-    switch (type) {
-      case LoyaltyActionType.ReferralPurchase:
-        return "#2942CC";
-      case LoyaltyActionType.DirectPurchase:
-        return "#CC2960";
-    }
-  }
-
   return (
     <PaperLayout
       onClick={() => {

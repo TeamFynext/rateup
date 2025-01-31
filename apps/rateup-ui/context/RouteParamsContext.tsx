@@ -20,6 +20,7 @@ interface RouteParamsState {
   waAutomatedReplyId: string;
   actionId: string;
   rewardId: string;
+  customerId: string; //loyalty customer
 }
 
 interface RouteParamsContextData {
@@ -40,6 +41,7 @@ const initialState: RouteParamsState = {
   waAutomatedReplyId: "",
   actionId: "",
   rewardId: "",
+  customerId: "",
 };
 
 const RouteParamsContext = createContext<RouteParamsContextData>({
