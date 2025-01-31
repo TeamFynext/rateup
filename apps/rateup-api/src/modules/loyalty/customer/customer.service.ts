@@ -192,6 +192,21 @@ export async function updateLCustomerRedeemPoint(id, points) {
   });
 }
 
+export async function getLCustomerPhoneById(id) {
+  return await prisma.loyaltyCustomer.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      Contact: {
+        select: {
+          phone: true,
+        },
+      },
+    },
+  });
+}
+
 export async function getLCustomerById(id) {
   const customer = await prisma.loyaltyCustomer.findUnique({
     where: {
@@ -212,6 +227,7 @@ export async function getLCustomerById(id) {
               points: true,
             },
           },
+          status: true,
           createdAt: true,
         },
         orderBy: {
@@ -225,6 +241,9 @@ export async function getLCustomerById(id) {
               name: true,
               points: true,
               type: true,
+              refereePoints: true,
+              isAmountBased: true,
+              isAmountBasedForReferee: true,
             },
           },
           amount: true,
@@ -238,11 +257,15 @@ export async function getLCustomerById(id) {
     },
   });
 
+  for (const action of customer.actions) {
+    action["refereeName"] = action.refereePhone
+      ? (await getLCustomerByPhone(action.refereePhone, customer.orgId)).Contact
+          .name
+      : undefined;
+  }
+
   const lastActionDate = customer?.actions[0]?.createdAt;
   const lastRedeemDate = customer?.redeems[0]?.createdAt;
-
-  console.log("lastActionDate", lastActionDate);
-  console.log("lastRedeemDate", lastRedeemDate);
   return {
     ...customer,
     balancePoints: customer?.totalEarnedPoints - customer?.redeemedPoints,
@@ -252,16 +275,18 @@ export async function getLCustomerById(id) {
           new Date(lastRedeemDate).getTime()
           ? lastActionDate
           : lastRedeemDate
-        : lastActionDate || lastRedeemDate,
+        : lastActionDate || lastRedeemDate || customer.createdAt,
     stats: {
       "Total Actions": customer?.actions?.length,
       "Points Earned": customer?.totalEarnedPoints,
-      Rewards: customer?.redeems?.length,
+      Rewards: customer?.redeems?.filter(
+        (r) => r.status !== RedeemStatus.FAILED,
+      ).length,
       Referrals: customer?.actions?.filter(
         (a) => a.action.type === LoyaltyActionType.ReferralPurchase,
       ).length,
       "Total Spent": customer?.actions?.reduce((acc, a) => {
-        if (a.amount) acc += a.amount;
+        if (a.amount && !a.refereePhone) acc += a.amount;
         return acc;
       }, 0),
     },
@@ -356,6 +381,16 @@ export async function getLoyaltyCustomers(
         }
       : { orgId };
 
+  let sortBy;
+
+  if (sort === "name") {
+    sortBy = {
+      Contact: {
+        name: desc,
+      },
+    };
+  }
+
   // Count total matching contacts
   const totalCount = await prisma.loyaltyCustomer.count({
     where: searchCondition,
@@ -387,7 +422,7 @@ export async function getLoyaltyCustomers(
     include: includeCondition,
     skip: Number(page) * Number(limit),
     take: Number(limit),
-    orderBy: {
+    orderBy: sortBy ?? {
       [sort]: desc,
     },
   });

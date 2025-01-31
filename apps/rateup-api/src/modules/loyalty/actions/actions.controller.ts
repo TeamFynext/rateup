@@ -22,7 +22,7 @@ import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import {
-  getLCustomerById,
+  getLCustomerPhoneById,
   getLoyaltyCustomerOrActionByReferralCode,
   getLoyaltyCustomers,
   handleLCustomerAction,
@@ -316,7 +316,7 @@ export async function bulkCustomerActionHandler(
       results.map(async (res) => {
         const { success, message, data, customerId } = res;
         if (!success) {
-          const customer = await getLCustomerById(customerId);
+          const customer = await getLCustomerPhoneById(customerId);
           failed.push({ phone: customer.Contact.phone, message });
         } else {
           sendData.push({
