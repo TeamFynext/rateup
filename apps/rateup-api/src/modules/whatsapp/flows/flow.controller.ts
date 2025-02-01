@@ -191,7 +191,7 @@ export async function createFlowHandler(
       orgId,
       flowId,
       json: {
-        version: "5.1",
+        version: "6.3",
         screens: [],
       } as WaFlowJson,
       flowMap: {},

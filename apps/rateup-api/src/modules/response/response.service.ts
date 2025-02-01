@@ -1666,6 +1666,7 @@ const getCellData = (response, question) => {
         ""
       );
     case WaQuestions.CheckboxGroup:
+    case WaQuestions.ChipsSelector:
       return (
         (Array.isArray(response) &&
           response
