@@ -56,30 +56,47 @@ export function DataSourceInput(props) {
   let choices = props.value ?? [];
   let maxCharCount = props.maxCharCount ?? 30;
   let maxChoiceCount = props.maxChoice ?? 20;
-  const choiceSchema = z.object({
-    title: z
-      .string()
-      .trim()
-      .min(1)
-      .max(30)
-      .refine((title) => {
-        const isDuplicate = choices.some((c) => {
-          const choiceValue = c?.title?.replace(/\s+/g, "");
-          return choiceValue === title.replace(/\s+/g, "");
-        });
-        return !isDuplicate;
-      }, "Option already exists"),
-    description: z.string().trim().max(MAX_DESCRIPTION_COUNT).optional(),
-    metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
-    image: z.string().optional().nullable(),
-  });
-  const choiceForm = useForm<z.infer<typeof choiceSchema>>({
-    initialValues: {
-      title: "",
-      description: "",
-      metadata: "",
-      image: "",
-    },
+  const choiceSchema = props?.onlyTitle
+    ? z.object({
+        title: z
+          .string()
+          .trim()
+          .min(1)
+          .max(30)
+          .refine((title) => {
+            const isDuplicate = choices.some((c) => {
+              const choiceValue = c?.title?.replace(/\s+/g, "");
+              return choiceValue === title.replace(/\s+/g, "");
+            });
+            return !isDuplicate;
+          }, "Option already exists"),
+      })
+    : z.object({
+        title: z
+          .string()
+          .trim()
+          .min(1)
+          .max(30)
+          .refine((title) => {
+            const isDuplicate = choices.some((c) => {
+              const choiceValue = c?.title?.replace(/\s+/g, "");
+              return choiceValue === title.replace(/\s+/g, "");
+            });
+            return !isDuplicate;
+          }, "Option already exists"),
+        description: z.string().trim().max(MAX_DESCRIPTION_COUNT).optional(),
+        metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
+        image: z.string().optional().nullable(),
+      });
+  const choiceForm = useForm({
+    initialValues: props?.onlyTitle
+      ? { title: "" }
+      : {
+          title: "",
+          description: "",
+          metadata: "",
+          image: "",
+        },
     validate: zodResolver(choiceSchema),
   });
   const { translations } = useTranslations();
@@ -91,7 +108,7 @@ export function DataSourceInput(props) {
         id: generateId(),
         ...Object.fromEntries(
           Object.entries(choiceForm.getValues()).filter(
-            ([key, value]) => value?.trim() !== "",
+            ([key, value]) => typeof value === "string" && value.trim() !== "",
           ),
         ),
       };
@@ -147,6 +164,7 @@ export function DataSourceInput(props) {
             index={i}
             maxCharCount={maxCharCount}
             disabled={disabled}
+            onlyTitle={props?.onlyTitle ?? false}
           />
         ))}
       </Stack>
@@ -169,7 +187,7 @@ export function DataSourceInput(props) {
                 rightSection={
                   maxCharCount && (
                     <LengthTracker
-                      length={choiceForm.getValues().title?.length}
+                      length={(choiceForm.getValues().title as string)?.length}
                       maxValue={maxCharCount}
                     />
                   )
@@ -188,42 +206,50 @@ export function DataSourceInput(props) {
                 />
               </Box>
             </Group>
-            <ContainedTextField
-              placeholder={translations["Enter description here"]}
-              label={translations["Description"]}
-              rightSection={
-                MAX_DESCRIPTION_COUNT && (
-                  <LengthTracker
-                    length={choiceForm.getValues().description?.length}
-                    maxValue={MAX_DESCRIPTION_COUNT}
+            {!props?.onlyTitle && (
+              <>
+                <ContainedTextField
+                  placeholder={translations["Enter description here"]}
+                  label={translations["Description"]}
+                  rightSection={
+                    MAX_DESCRIPTION_COUNT && (
+                      <LengthTracker
+                        length={
+                          (choiceForm.getValues().description as string)?.length
+                        }
+                        maxValue={MAX_DESCRIPTION_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("description")}
+                />
+                <SimpleGrid cols={2}>
+                  <ContainedTextField
+                    placeholder="Enter metadata here"
+                    label={"Metadata"}
+                    rightSection={
+                      MAX_METADATA_COUNT && (
+                        <LengthTracker
+                          length={
+                            (choiceForm.getValues().metadata as string)?.length
+                          }
+                          maxValue={MAX_METADATA_COUNT}
+                        />
+                      )
+                    }
+                    {...choiceForm.getInputProps("metadata")}
                   />
-                )
-              }
-              {...choiceForm.getInputProps("description")}
-            />
-            <SimpleGrid cols={2}>
-              <ContainedTextField
-                placeholder="Enter metadata here"
-                label={"Metadata"}
-                rightSection={
-                  MAX_METADATA_COUNT && (
-                    <LengthTracker
-                      length={choiceForm.getValues().metadata?.length}
-                      maxValue={MAX_METADATA_COUNT}
-                    />
-                  )
-                }
-                {...choiceForm.getInputProps("metadata")}
-              />
-              <RateupFileUploadButton
-                clearFile={clearFile}
-                handleFileChange={handleFileChange}
-                resetRef={resetRef}
-                fileSrc={choiceForm.getValues().image}
-                error={choiceForm.errors.image as string}
-                style={{ marginTop: "20px" }}
-              />
-            </SimpleGrid>
+                  <RateupFileUploadButton
+                    clearFile={clearFile}
+                    handleFileChange={handleFileChange}
+                    resetRef={resetRef}
+                    fileSrc={choiceForm.getValues().image as string}
+                    error={choiceForm.errors.image as string}
+                    style={{ marginTop: "20px" }}
+                  />
+                </SimpleGrid>
+              </>
+            )}
           </Stack>
           <RateupButtonSecondary
             title={translations["Add choice"]}
@@ -267,6 +293,7 @@ interface ChoiceProps {
   index: number;
   maxCharCount?: number;
   disabled: boolean;
+  onlyTitle: boolean;
 }
 
 function Choice({
@@ -277,37 +304,44 @@ function Choice({
   index,
   maxCharCount,
   disabled,
+  onlyTitle,
 }: ChoiceProps) {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   const choiceResetRef = useRef<() => void>(null);
   const { translations } = useTranslations();
-  const choiceSchema = z.object({
-    title: z
-      .string()
-      .trim()
-      .min(1)
-      .max(30)
-      .refine((title) => {
-        const isDuplicate = choices.some((c, i) => {
-          const choiceValue = c?.title?.replace(/\s+/g, "");
-          return i !== index && choiceValue === title.replace(/\s+/g, "");
-        });
-        return !isDuplicate;
-      }, "Option already exists"),
-    description: z.string().trim().max(MAX_DESCRIPTION_COUNT).optional(),
-    metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
-    image: z.string().optional().nullable(),
-  });
+  const choiceSchema = z.object(
+    onlyTitle
+      ? { title: z.string() }
+      : {
+          title: z
+            .string()
+            .trim()
+            .min(1)
+            .max(30)
+            .refine((title) => {
+              const isDuplicate = choices.some((c, i) => {
+                const choiceValue = c?.title?.replace(/\s+/g, "");
+                return i !== index && choiceValue === title.replace(/\s+/g, "");
+              });
+              return !isDuplicate;
+            }, "Option already exists"),
+          description: z.string().trim().max(MAX_DESCRIPTION_COUNT).optional(),
+          metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
+          image: z.string().optional().nullable(),
+        },
+  );
 
   const choiceForm = useForm<z.infer<typeof choiceSchema>>({
-    initialValues: {
-      title: "",
-      description: "",
-      metadata: "",
-      image: "",
-    },
+    initialValues: onlyTitle
+      ? { title: "" }
+      : {
+          title: "",
+          description: "",
+          metadata: "",
+          image: "",
+        },
     validate: zodResolver(choiceSchema),
   });
 
@@ -323,7 +357,7 @@ function Choice({
 
     let choiceObj = Object.fromEntries(
       Object.entries(choiceForm.getValues()).filter(
-        ([key, value]) => value?.trim() !== "",
+        ([key, value]) => typeof value === "string" && value.trim() !== "",
       ),
     );
     const updatedChoices = choices.map((c, i) =>
@@ -364,6 +398,7 @@ function Choice({
             src={`${DEFAULT_IMAGE_BASE64_START}${choice?.image}`}
             h={30}
             w={30}
+            alt={choice?.title}
           />
         ) : (
           <Box h={30} w={30} />
@@ -429,39 +464,48 @@ function Choice({
               }
               {...choiceForm.getInputProps("title")}
             />
-            <ContainedTextField
-              placeholder={translations["Enter description here"]}
-              label={translations["Description"]}
-              rightSection={
-                MAX_DESCRIPTION_COUNT && (
-                  <LengthTracker
-                    length={choiceForm.getValues().description?.length}
-                    maxValue={MAX_DESCRIPTION_COUNT}
-                  />
-                )
-              }
-              {...choiceForm.getInputProps("description")}
-            />
-            <ContainedTextField
-              placeholder={translations["Enter metadata here"]}
-              label={translations["Metadata"]}
-              rightSection={
-                MAX_METADATA_COUNT && (
-                  <LengthTracker
-                    length={choiceForm.getValues().metadata?.length}
-                    maxValue={MAX_METADATA_COUNT}
-                  />
-                )
-              }
-              {...choiceForm.getInputProps("metadata")}
-            />
-            <RateupFileUploadButton
-              clearFile={clearFile}
-              handleFileChange={handleFileChange}
-              resetRef={resetRef}
-              fileSrc={choiceForm.getValues().image}
-              error={choiceForm.errors.image as string}
-            />
+            {!onlyTitle && (
+              <>
+                {" "}
+                <ContainedTextField
+                  placeholder={translations["Enter description here"]}
+                  label={translations["Description"]}
+                  rightSection={
+                    MAX_DESCRIPTION_COUNT && (
+                      <LengthTracker
+                        length={
+                          (choiceForm.getValues().description as string)?.length
+                        }
+                        maxValue={MAX_DESCRIPTION_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("description")}
+                />
+                <ContainedTextField
+                  placeholder={translations["Enter metadata here"]}
+                  label={translations["Metadata"]}
+                  rightSection={
+                    MAX_METADATA_COUNT && (
+                      <LengthTracker
+                        length={
+                          (choiceForm.getValues().metadata as string)?.length
+                        }
+                        maxValue={MAX_METADATA_COUNT}
+                      />
+                    )
+                  }
+                  {...choiceForm.getInputProps("metadata")}
+                />
+                <RateupFileUploadButton
+                  clearFile={clearFile}
+                  handleFileChange={handleFileChange}
+                  resetRef={resetRef}
+                  fileSrc={choiceForm.getValues().image as string}
+                  error={choiceForm.errors.image as string}
+                />
+              </>
+            )}
           </Stack>
           <RateupButtonBlue
             title={translations["Update Choice"]}

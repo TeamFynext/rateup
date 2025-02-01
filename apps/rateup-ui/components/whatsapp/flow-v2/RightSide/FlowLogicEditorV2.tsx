@@ -56,12 +56,8 @@ export const FlowLogicEditorV2 = () => {
     [],
   );
 
-  const {
-    getCurrentScreen,
-    currentScreenId,
-    setDetailActiveEditor,
-    flowEditable,
-  } = useFlowStore();
+  const { getCurrentScreen, currentScreenId, setDetailActiveEditor } =
+    useFlowStore();
 
   const screen = getCurrentScreen();
 
@@ -153,9 +149,6 @@ export const FlowLogicEditorV2 = () => {
       ) || {}) as any),
       [currentScreenId]: [...logicJumps, ...logicJumpsComponentLevel],
     };
-    if (!flowEditable) {
-      return showErrorToast("Flow is not editable", "error-flow-not-editable");
-    }
     updateFlowMutation.mutate({
       dbFlowId,
       data: {

@@ -24,6 +24,7 @@ import {
   IconMoodSmileFilled,
   IconPhoneFilled,
   IconPhoto,
+  IconPokerChip,
   IconScaleOutline,
   IconStarsFilled,
   IconTextSize,
@@ -151,6 +152,7 @@ const questionIcons = {
   [QuestionType2.EmbeddedLink]: IconLink,
   [QuestionType2.OptIn]: IconLink,
   [QuestionType2.RichText]: IconLink,
+  [QuestionType2.ChipsSelector]: IconPokerChip,
 };
 
 export { questionIcons };

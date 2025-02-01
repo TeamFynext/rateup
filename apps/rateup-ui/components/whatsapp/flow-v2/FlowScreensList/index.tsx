@@ -25,7 +25,6 @@ function FlowScreensList() {
   const theme = useMantineTheme();
   const dbFlowId = router.query.dbFlowId as string;
   const { data: dbFlow, isPending } = useWaFlowFromDb(dbFlowId);
-  const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
@@ -38,13 +37,11 @@ function FlowScreensList() {
     getScreens,
     updateComponentsInScreen,
     currentScreenId,
-    setFlowEditable,
   } = useFlowStore();
 
   useEffect(() => {
     if (dbFlow) {
       addScreens((dbFlow.json.screens || []) as any);
-      setFlowEditable(dbFlow.status === WaFlowStatus.DRAFT);
       if (currentScreenId) {
         const screenExists = getScreens().some(
           (screen) => screen.id === currentScreenId,
@@ -92,25 +89,6 @@ function FlowScreensList() {
 
   return (
     <Box className={styles["flow-screens-list-container"]}>
-      {flowEditable || (
-        <Group
-          justify="center"
-          style={{
-            borderRadius: "4px",
-            backgroundColor: theme.colors.red[1],
-          }}
-          p="4"
-        >
-          <IconAlertTriangle color={theme.colors.red[9]} />
-          <Text
-            style={{
-              color: theme.colors.red[9],
-            }}
-          >
-            {translations["Cannot Edit a Published Flow"]}
-          </Text>
-        </Group>
-      )}
       <DragDropContext onDragEnd={onDragEnd}>
         <Box className={styles["screens-list-div"]}>
           <ScreenListItem

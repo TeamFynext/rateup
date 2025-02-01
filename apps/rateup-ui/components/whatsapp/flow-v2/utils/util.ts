@@ -60,7 +60,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "max-selected-items": z.number().optional(),
         label: z.string().trim().min(1).max(30),
         required: z.boolean(),
-        description: z.string().optional(),
+        description: z.string().max(300).optional(),
         "init-value": z.array(z.string()).optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
         visible: z.boolean(),
@@ -88,7 +88,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         name: z.string(),
         label: z.string().trim().min(1).max(30),
         required: z.boolean(),
-        description: z.string().optional(),
+        description: z.string().max(300).optional(),
         "init-value": z.string().optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
         visible: z.boolean(),
@@ -257,12 +257,36 @@ export const getValidationSchema = (type: QuestionType2) => {
         type: z.literal("RichText"),
         text: z.union([z.string().trim().min(1), z.array(z.string()).min(1)]),
       };
+      break;
     case QuestionType2.EmbeddedLink:
       schema = {
         type: z.literal("EmbeddedLink"),
         url: z.string().url(),
         visible: z.boolean(),
       };
+      break;
+    case QuestionType2.ChipsSelector:
+      schema = {
+        type: z.string(),
+        "data-source": z
+          .array(
+            z.object({
+              id: z.string(),
+              title: z.string().max(30),
+            }),
+          )
+          .min(2, { message: "At least two option is required" })
+          .max(20, { message: "Maximum 20 options allowed" }),
+        name: z.string(),
+        "min-selected-items": z.number().optional(),
+        "max-selected-items": z.number().optional(),
+        label: z.string().trim().min(1).max(80),
+        required: z.boolean(),
+        description: z.string().max(300).optional(),
+        "init-value": z.array(z.string()).optional(),
+        visible: z.boolean(),
+      };
+      break;
   }
   return z.object(schema).superRefine((data, ctx) => {
     if (data["visible"] === false) {
@@ -292,6 +316,22 @@ export const getValidationSchema = (type: QuestionType2) => {
         }
       });
     }
+    if (data["min-selected-items"] && data["max-selected-items"]) {
+      if (data["min-selected-items"] > data["max-selected-items"]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Min selected items should be less than max selected items",
+          path: ["min-selected-items"],
+        });
+      }
+    }
+    if (data["url"] && !data["url"].startsWith("https")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "URL must start with https",
+        path: ["url"],
+      });
+    }
   });
 };
 
@@ -314,6 +354,9 @@ export const getInitialValues = (type: QuestionType2) => {
   let validation = getValidationSchema(type);
   let shape: any = validation?._def?.schema?._def?.shape();
   let LABEL_MAX = shape?.label?._def?.checks?.find(
+    (data) => data.kind === "max",
+  ).value;
+  let DESC_MAX = shape?.description?._def?.checks?.find(
     (data) => data.kind === "max",
   ).value;
   let TEXT_MAX = shape?.text?._def?.checks?.find(
@@ -445,7 +488,13 @@ export const getInitialValues = (type: QuestionType2) => {
           },
         },
         required: { type: "hidden", value: true },
-        description: { type: "text", value: "" },
+        description: {
+          type: "text",
+          value: "",
+          extra: {
+            max: DESC_MAX,
+          },
+        },
         "min-selected-items": { type: "number", value: 1 },
         "init-value": { type: "text", value: [] },
         "media-size": {
@@ -499,7 +548,13 @@ export const getInitialValues = (type: QuestionType2) => {
           },
         },
         required: { type: "hidden", value: true },
-        description: { type: "text", value: "" },
+        description: {
+          type: "text",
+          value: "",
+          extra: {
+            max: DESC_MAX,
+          },
+        },
         "init-value": { type: "init", value: "" },
         "media-size": {
           type: "select",
@@ -739,7 +794,13 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        description: { type: "text", value: "" },
+        description: {
+          type: "text",
+          value: "",
+          extra: {
+            max: DESC_MAX,
+          },
+        },
         "photo-source": {
           type: "select",
           value: "camera_gallery",
@@ -786,7 +847,13 @@ export const getInitialValues = (type: QuestionType2) => {
             max: LABEL_MAX,
           },
         },
-        description: { type: "text", value: "" },
+        description: {
+          type: "text",
+          value: "",
+          extra: {
+            max: DESC_MAX,
+          },
+        },
         "max-file-size-kb": { type: "number", value: 25600 },
         "min-uploaded-documents": { type: "number", value: 1 },
         "max-uploaded-documents": { type: "number", value: 1 },
@@ -989,6 +1056,58 @@ export const getInitialValues = (type: QuestionType2) => {
             offMessage: "press to display the component",
           },
         },
+      };
+      break;
+    case QuestionType2.ChipsSelector:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "ChipsSelector" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        name: { type: "hidden", value: generateId },
+        header: {
+          type: "richText",
+          value: "",
+          extra: { max: TITLE_MAX },
+        },
+        label: {
+          type: "text",
+          value: "",
+          extra: {
+            required: true,
+            max: LABEL_MAX,
+          },
+        },
+        required: { type: "hidden", value: true },
+        description: {
+          type: "text",
+          value: "",
+          extra: {
+            max: DESC_MAX,
+          },
+        },
+        "min-selected-items": { type: "number", value: 2 },
+        "max-selected-items": { type: "number", value: 2 },
+        "init-value": { type: "text", value: [] },
+        visible: {
+          type: "checkbox",
+          value: true,
+          extra: {
+            size: "lg",
+            onMessage: "press to hide the component",
+            offMessage: "press to display the component",
+          },
+        },
+        "data-source": {
+          type: "dataSource",
+          value: getDataSource(type),
+          extra: { onlyTitle: true },
+        },
+        enableNpsAnalytics: { type: "hidden", value: false },
       };
       break;
     default:
