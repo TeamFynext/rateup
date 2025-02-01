@@ -73,6 +73,7 @@ export enum QuestionType2 {
   PhotoPicker = "Photo Picker",
   RichText = "RichText",
   EmbeddedLink = "Embedded Link",
+  ChipsSelector = "Chips Selector",
 }
 
 export enum WaQuestions {
@@ -98,6 +99,7 @@ export enum WaQuestions {
   PhotoPicker = "PhotoPicker",
   RichText = "RichText",
   EmbeddedLink = "EmbeddedLink",
+  ChipsSelector = "ChipsSelector",
 }
 
 export enum LDResponse {
