@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   Divider,
   Group,
   Image,
@@ -182,6 +183,27 @@ export function FlowCheckBoxPreview({
         ))}
       </Stack>
     </Checkbox.Group>
+  );
+}
+
+export function FlowChipsSelectorPreview({
+  label = "Label",
+  options,
+}: {
+  label?: string;
+  options: string[];
+}) {
+  return (
+    <Chip.Group multiple>
+      <Text fz={"sm"}>{label}</Text>
+      <Group>
+        {options?.map((option, index) => (
+          <Chip key={option} value={option}>
+            {option}
+          </Chip>
+        ))}
+      </Group>
+    </Chip.Group>
   );
 }
 
@@ -382,6 +404,16 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return <FlowFileInputPreview label={label} type={"photo"} />;
     case WaFlowFormElementType.documentPicker:
       return <FlowFileInputPreview label={label} type={"document"} />;
+    case WaFlowFormElementType.chipsSelector:
+      return (
+        <FlowChipsSelectorPreview
+          label={label}
+          options={
+            typeof fe["data-source"] !== "string" &&
+            fe["data-source"]?.map((ds) => ds.title)
+          }
+        />
+      );
     default:
       throw new Error("Invalid form element type");
   }

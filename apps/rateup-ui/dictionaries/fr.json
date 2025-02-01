@@ -2054,5 +2054,7 @@
   "Refer": "Parrainer",
   "Issue Direct Purchase Points": "Attribuer des points d'achat directs",
   "Select Actions": "Sélectionner des actions",
-  "Customer Registration page link": "Lien de la page d'inscription client"
+  "Customer Registration page link": "Lien de la page d'inscription client",
+  "Are you sure you want to delete this question? Deleting it will also remove the associated responses.": "Êtes-vous sûr de vouloir supprimer cette question ? La supprimer supprimera également les réponses associées.",
+  "Delete Question?": "Supprimer la question ?"
 }

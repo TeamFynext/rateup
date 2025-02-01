@@ -65,7 +65,6 @@ function ScreenListItem({
     setCurrentScreenId,
     setCurrentElement,
     setActiveEditor,
-    flowEditable,
   } = useFlowStore();
   const screen = getCurrentScreen();
   const footerElement = screen?.layout.children.find(
@@ -87,12 +86,10 @@ function ScreenListItem({
   }, [screen]);
 
   const handleDeleteScreen = () => {
-    if (!flowEditable) return;
     deleteScreen();
   };
 
   function handleDeleteFormElement(feId: string) {
-    if (!flowEditable) return;
     deleteComponentFromScreen(feId);
   }
 
@@ -104,7 +101,6 @@ function ScreenListItem({
   };
 
   function handleScreenTitleInputChange(e) {
-    if (!flowEditable) return;
     setScreenTitleInputState(e.target.value);
   }
 
@@ -113,7 +109,6 @@ function ScreenListItem({
   }
 
   function handleFooterLabelInputBlur() {
-    if (!flowEditable) return;
     updateComponentInScreen("slfkdj", {
       label: footerLabel,
     });
@@ -141,7 +136,6 @@ function ScreenListItem({
                 mt={"xl"}
                 size="lg"
                 title={translations["Add Screen"]}
-                disabled={!flowEditable}
               />
             </Stack>
           </Tooltip>
@@ -185,7 +179,6 @@ function ScreenListItem({
                 label={`Screen ${pageNo + 1}`}
                 value={screenTitleInputState}
                 onChange={handleScreenTitleInputChange}
-                readOnly={!flowEditable}
                 placeholder={
                   translations[
                     "Section title (Required if more than one section is added)"
@@ -193,14 +186,12 @@ function ScreenListItem({
                 }
                 onBlur={handleScreenTitleInputBlur}
                 rightSection={
-                  flowEditable && (
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => screenTitleInputRef.current?.focus()}
-                    >
-                      <IconPencil size={20} />
-                    </ActionIcon>
-                  )
+                  <ActionIcon
+                    variant="subtle"
+                    onClick={() => screenTitleInputRef.current?.focus()}
+                  >
+                    <IconPencil size={20} />
+                  </ActionIcon>
                 }
                 onKeyUp={(e) => {
                   if (e.code === "Enter") {
@@ -228,28 +219,23 @@ function ScreenListItem({
                   <ActionIcon
                     onClick={handleCreateScreenClick}
                     variant="subtle"
-                    disabled={!flowEditable}
                   >
                     <IconPlus />
                   </ActionIcon>
                 </Tooltip>
-                {flowEditable && (
-                  <>
-                    <Tooltip label={translations["Delete Screen"]}>
-                      <ActionIcon onClick={toggle} variant="subtle">
-                        <IconTrash size={20} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip
-                      label={translations["Swap order of screens"]}
-                      openDelay={500}
-                    >
-                      <ActionIcon onClick={open} variant={"subtle"} size={20}>
-                        <IconReplace size={20} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </>
-                )}
+                <Tooltip label={translations["Delete Screen"]}>
+                  <ActionIcon onClick={toggle} variant="subtle">
+                    <IconTrash size={20} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip
+                  label={translations["Swap order of screens"]}
+                  openDelay={500}
+                >
+                  <ActionIcon onClick={open} variant={"subtle"} size={20}>
+                    <IconReplace size={20} />
+                  </ActionIcon>
+                </Tooltip>
               </Group>
               <Group>
                 <Tooltip
@@ -328,18 +314,15 @@ function ScreenListItem({
                 className={cx("text-input", "footer-label-input")}
                 defaultValue={footerLabel}
                 onChange={(event) => setFooterLabel(event.currentTarget.value)}
-                readOnly={!flowEditable}
                 placeholder={translations["Next button text"]}
                 onBlur={handleFooterLabelInputBlur}
                 rightSection={
-                  flowEditable && (
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => footerLabelInputRef.current?.focus()}
-                    >
-                      <IconPencil size={20} />
-                    </ActionIcon>
-                  )
+                  <ActionIcon
+                    variant="subtle"
+                    onClick={() => footerLabelInputRef.current?.focus()}
+                  >
+                    <IconPencil size={20} />
+                  </ActionIcon>
                 }
                 onKeyUp={(e) => {
                   if (e.code === "Enter") {
@@ -412,8 +395,8 @@ function FormElementCard({
   feType,
   dragHandleProps,
 }: Readonly<FormElementCardProps>) {
-  const flowEditable = true;
-
+  const [dialogOpened, { toggle, close }] = useDisclosure(false);
+  const { translations } = useTranslations();
   return (
     <Box
       onClick={() => handleOpen(feId, feType)}
@@ -455,20 +438,34 @@ function FormElementCard({
           alt="image of logic jump"
         />
       )} */}
-      {flowEditable && (
-        <ActionIcon
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleDelete(feId);
-          }}
-          variant="subtle"
-          color="gray"
-          me={"xs"}
-        >
-          <IconTrash />
-        </ActionIcon>
-      )}
+      <ActionIcon
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggle();
+        }}
+        variant="subtle"
+        color="gray"
+        me={"xs"}
+      >
+        <IconTrash />
+      </ActionIcon>
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={dialogOpened}
+        onClose={close}
+        headerLabel={
+          translations[
+            "Are you sure you want to delete this question? Deleting it will also remove the associated responses."
+          ]
+        }
+        headerTitle={translations["Delete Question?"]}
+        confirmLabel={translations["Delete"]}
+        onConfirm={(e) => {
+          handleDelete(feId);
+          close();
+        }}
+      />
     </Box>
   );
 }

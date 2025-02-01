@@ -2055,5 +2055,7 @@
   "Refer": "संदर्भित करें",
   "Issue Direct Purchase Points": "प्रत्यक्ष खरीद अंक जारी करें",
   "Select Actions": "क्रियाएँ चुनें",
-  "Customer Registration page link": "ग्राहक पंजीकरण पृष्ठ लिंक"
+  "Customer Registration page link": "ग्राहक पंजीकरण पृष्ठ लिंक",
+  "Are you sure you want to delete this question? Deleting it will also remove the associated responses.": "क्या आप वाकई इस सवाल को हटाना चाहते हैं? इसे हटाने से संबंधित प्रतिक्रियाएँ भी हट जाएंगी।",
+  "Delete Question?": "सवाल हटाएं?"
 }

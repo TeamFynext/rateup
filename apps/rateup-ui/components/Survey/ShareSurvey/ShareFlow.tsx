@@ -125,7 +125,6 @@ export const ShareFlow = ({
   }));
 
   const isPublished = dbFlow.status === WaFlowStatus.PUBLISHED;
-  const canPublish = !isPublished;
   const disableShare = !(isPublished || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
@@ -146,7 +145,6 @@ export const ShareFlow = ({
       children: (
         <Text size="sm">
           {translations["Are you sure you want to Publish this Flow?"]}
-          <b> {translations["You can't edit flows after publishing."]} </b>
           <br />
           {
             translations[
@@ -187,6 +185,8 @@ export const ShareFlow = ({
   const handleSaveToWa = () => {
     pushToWaMutation.mutate(dbFlowId);
   };
+  let v2Flow = router.pathname?.includes("/v2/");
+  const canPublish = v2Flow ? true : !isPublished;
 
   return (
     <Stack p={10} pr={16} h={"fit-content"}>
@@ -209,41 +209,48 @@ export const ShareFlow = ({
               }
             >
               <Button
-                disabled={!dbFlow.pendingSave}
-                onClick={handleSaveToWa}
+                disabled={!canPublish || !dbFlow.pendingSave}
+                onClick={() => {
+                  handleSaveToWa();
+                  {
+                    v2Flow && handlePublish();
+                  }
+                }}
                 loading={pushToWaMutation.isPending}
               >
                 {translations["Save to WhatsApp"]}
               </Button>
             </Tooltip>
-            <Tooltip
-              label={
-                !isPublished
-                  ? translations[
-                      "Publish your flow to WhatsApp, so that you can share it."
-                    ]
-                  : translations["You can`t edit flows after publishing."]
-              }
-            >
-              <div>
-                {" "}
-                {/* adding div since tooltip won't work when its children is an input element. TODO: fixthis */}
-                <Switch
-                  fw={500}
-                  size="lg"
-                  checked={isPublished}
-                  disabled={!canPublish}
-                  onChange={confirmModal}
-                  label={
-                    <Text fw={700} fz={"lg"}>
-                      {isPublished
-                        ? translations["Published"]
-                        : translations["Publish Survey"]}
-                    </Text>
-                  }
-                />
-              </div>
-            </Tooltip>
+            {!v2Flow && (
+              <Tooltip
+                label={
+                  !isPublished
+                    ? translations[
+                        "Publish your flow to WhatsApp, so that you can share it."
+                      ]
+                    : translations["You can`t edit flows after publishing."]
+                }
+              >
+                <div>
+                  {" "}
+                  {/* adding div since tooltip won't work when its children is an input element. TODO: fixthis */}
+                  <Switch
+                    fw={500}
+                    size="lg"
+                    checked={isPublished}
+                    disabled={!canPublish}
+                    onChange={confirmModal}
+                    label={
+                      <Text fw={700} fz={"lg"}>
+                        {isPublished
+                          ? translations["Published"]
+                          : translations["Publish Survey"]}
+                      </Text>
+                    }
+                  />
+                </div>
+              </Tooltip>
+            )}
           </Group>
           <Group>
             <Text>{translations["Current Status: "]}</Text>

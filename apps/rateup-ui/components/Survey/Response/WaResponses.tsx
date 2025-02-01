@@ -25,7 +25,7 @@ import {
   IconTicket,
   IconX,
 } from "@tabler/icons-react";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { Range } from "react-date-range";
@@ -189,14 +189,17 @@ const WaResponses = ({
       campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
       dbFlowId,
       columnFilters: [],
+      ranges: ranges?.[0],
     });
   }, [
-    campaignFlowFilter,
-    defaultLanguage,
     downloadExcelResponse,
-    filterTeams,
-    survey?.title,
+    defaultLanguage,
     surveyId,
+    survey?.title,
+    filterTeams,
+    campaignFlowFilter,
+    dbFlowId,
+    ranges,
   ]);
 
   useEffect(() => {
@@ -657,6 +660,7 @@ const getCellData = (info, question) => {
           ?.title || ""
       );
     case WaQuestions.CheckboxGroup:
+    case WaQuestions.ChipsSelector:
       return (
         (Array.isArray(info.getValue()) &&
           info
