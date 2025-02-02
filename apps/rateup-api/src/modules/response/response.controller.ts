@@ -133,6 +133,7 @@ export async function downloadExcelResponseHandler(
       campaignParticipantIds.map((data) => data.contactId),
       request.body.columnFilters,
       request.body.ranges,
+      request.body.tz,
     );
     let question;
     if (request.body.dbFlowId) {

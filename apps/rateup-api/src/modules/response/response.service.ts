@@ -79,13 +79,14 @@ export async function getAllResponses(
   contactIds?: Array<string>,
   columnFilters?: Array<{ id?: string; value?: string }>,
   ranges?: { startDate?: string; endDate?: string },
+  tz = "Asia/Calcutta",
 ) {
   let responseWhereCondition = ranges
     ? {
         where: {
           createdAt: {
-            gte: dayjs(ranges?.startDate).startOf("day").toISOString(),
-            lte: dayjs(ranges?.endDate).endOf("day").toISOString(),
+            gte: dayjs(ranges?.startDate).tz(tz).startOf("day").toISOString(),
+            lte: dayjs(ranges?.endDate).tz(tz).endOf("day").toISOString(),
           },
         },
       }
