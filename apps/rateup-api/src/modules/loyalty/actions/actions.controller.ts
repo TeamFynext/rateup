@@ -22,7 +22,7 @@ import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import {
-  getLCustomerById,
+  getLCustomerPhoneById,
   getLoyaltyCustomerOrActionByReferralCode,
   getLoyaltyCustomers,
   handleLCustomerAction,
@@ -50,7 +50,7 @@ export async function createLoyaltyActionHandler(
       request.user.orgId,
     );
     if (!isLReferralAction(res.type)) return;
-    const customers = await getLoyaltyCustomers(request.user.orgId);
+    const { customers } = await getLoyaltyCustomers(request.user.orgId);
     for (const customer of customers)
       await getReferralCodeByActionAndCustomer(res.id, customer.id);
   } catch (e) {
@@ -277,7 +277,7 @@ export async function bulkCustomerActionHandler(
     const allGroupIds = new Set(groupIds);
     const allActionIds = new Set(actionIds);
     if (isAllCustomer) {
-      const customers = await getLoyaltyCustomers(orgId);
+      const { customers } = await getLoyaltyCustomers(orgId);
       customers.forEach((c) => allCustomerIds.add(c.id));
     }
     if (isAllGroups) {
@@ -316,7 +316,7 @@ export async function bulkCustomerActionHandler(
       results.map(async (res) => {
         const { success, message, data, customerId } = res;
         if (!success) {
-          const customer = await getLCustomerById(customerId);
+          const customer = await getLCustomerPhoneById(customerId);
           failed.push({ phone: customer.Contact.phone, message });
         } else {
           sendData.push({

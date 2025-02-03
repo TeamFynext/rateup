@@ -3,6 +3,7 @@ import {
   createLCustomerHandler,
   customerActionHandler,
   deleteLoyaltyCustomersHandler,
+  getLCustomerByIdHanlder,
   getLoyaltyCustomersHandler,
   importCSVContactsHandler,
 } from "./customer.controller";
@@ -45,5 +46,15 @@ export async function loyaltyCustomerRoutes(server: FastifyInstance) {
       },
     },
     importCSVContactsHandler,
+  );
+
+  server.get(
+    "/:customerId",
+    {
+      schema: {
+        params: $lCustomerRef("byCustomerIdSchema"),
+      },
+    },
+    getLCustomerByIdHanlder,
   );
 }

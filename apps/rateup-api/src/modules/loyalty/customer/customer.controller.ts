@@ -3,11 +3,13 @@ import { log } from "../../../utils/logger";
 import {
   AmountInput,
   CustomerActionParamInput,
+  CustomerIdInput,
   LCustomerInput,
 } from "./customer.schema";
 import {
   createLCustomer,
   deleteLoyaltyCustomer,
+  getLCustomerById,
   getLCustomerByPhone,
   getLoyaltyCustomers,
   handleLCustomerAction,
@@ -195,5 +197,18 @@ export async function importCSVContactsHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e?.message || "Something went wrong" });
+  }
+}
+
+export async function getLCustomerByIdHanlder(
+  request: FastifyRequest<{ Params: CustomerIdInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const customer = await getLCustomerById(request.params.customerId);
+    reply.code(200).send(customer);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
