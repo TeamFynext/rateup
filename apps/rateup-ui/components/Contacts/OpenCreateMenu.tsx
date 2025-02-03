@@ -41,9 +41,11 @@ const OpenCreateMenu = ({
         rightIcon={<IconPlus size={20} />}
         disabled={isPending}
         onClick={() => {
+          console.log("here1", tab);
           if (tab === ContactTabs.CONTACTS) {
             contactOpen();
           } else if (tab === ContactTabs.GROUPS) {
+            console.log("here 2", tab);
             groupOpen();
           } else {
             toggle();

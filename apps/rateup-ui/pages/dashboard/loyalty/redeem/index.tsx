@@ -39,7 +39,7 @@ export default function Redeems() {
   return (
     <Stack>
       <Group></Group>
-      <PaperLayout h={"65vh"}>
+      <PaperLayout h={"80vh"}>
         <TanstackTable
           columns={columns}
           data={redeems ?? []}
@@ -140,7 +140,7 @@ export enum RedeemStatus {
   CLAIMED = "CLAIMED",
 }
 
-function getRedeemsStatusColor(status) {
+export function getRedeemsStatusColor(status) {
   switch (status) {
     case RedeemStatus.COMPLETED:
       return "green";

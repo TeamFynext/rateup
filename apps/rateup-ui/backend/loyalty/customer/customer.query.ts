@@ -9,6 +9,7 @@ import {
   createLoyaltyCustomer,
   deleteLoyaltyCustomer,
   getAllCustomers,
+  getLoyaltyCustomerById,
   importCustomers,
 } from "./customer.api";
 
@@ -20,6 +21,14 @@ export const useCreateLoyaltyCustomerMutation = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
     },
+  });
+};
+
+export const useGetLoyaltyCustomerById = (customerId) => {
+  return useQuery({
+    queryFn: () => getLoyaltyCustomerById(customerId),
+    queryKey: ["loyaltyCustomer", customerId],
+    enabled: !!customerId,
   });
 };
 

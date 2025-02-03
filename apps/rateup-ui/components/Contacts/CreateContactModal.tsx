@@ -73,6 +73,7 @@ const CreateContactModal = ({
       countryCode: "91",
       tags: {},
       updateExisting: false,
+      external_id: "",
     },
     validate: {
       phone: (value, values) => {
@@ -125,6 +126,9 @@ const CreateContactModal = ({
       form.getValues().tags = result;
       let contactData: ICreateContact = {
         ...form.getValues(),
+        external_id: form.values.external_id.length
+          ? form.values.external_id
+          : undefined,
         phone: form.getValues().phone.slice(1),
         source:
           type === ContactGroupType.LOYALTY
@@ -238,6 +242,13 @@ const CreateContactModal = ({
                     size="md"
                     maxDate={new Date()}
                     {...form.getInputProps("dob")}
+                  />
+                  <TextInput
+                    label={translations["External ID"]}
+                    placeholder={translations["Enter External ID"]}
+                    radius={"md"}
+                    size="md"
+                    {...form.getInputProps("external_id")}
                   />
                 </>
               )}

@@ -63,29 +63,41 @@ export function DateRangePickerButton({
           </ActionIcon>
         </Tooltip>
       </Group>
-      <Modal
+      <DateRangePickerModal
         opened={opened}
-        onClose={close}
-        title={translations["Date range picker"]}
-        size={"auto"}
-      >
-        <DateRangePicker
-          onChange={onChange}
-          moveRangeOnFirstSelection={false}
-          months={2}
-          ranges={ranges}
-          direction="horizontal"
-        />
-        <Group justify="end">
-          <RateupButtonPrimary
-            onClick={() => onChange(undefined)}
-            variant="outline"
-            color="red"
-            title={translations["Clear"]}
-          />
-          <RateupButtonPrimary onClick={close} title={translations["Done"]} />
-        </Group>
-      </Modal>
+        onChange={onChange}
+        ranges={ranges}
+        close={close}
+      />
     </>
   );
 }
+
+export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
+  const { translations } = useTranslations();
+  return (
+    <Modal
+      opened={opened}
+      onClose={close}
+      title={translations["Date range picker"]}
+      size={"auto"}
+    >
+      <DateRangePicker
+        onChange={onChange}
+        moveRangeOnFirstSelection={false}
+        months={2}
+        ranges={ranges}
+        direction="horizontal"
+      />
+      <Group justify="end">
+        <RateupButtonPrimary
+          onClick={() => onChange(undefined)}
+          variant="outline"
+          color="red"
+          title={translations["Clear"]}
+        />
+        <RateupButtonPrimary onClick={close} title={translations["Done"]} />
+      </Group>
+    </Modal>
+  );
+};

@@ -2058,5 +2058,8 @@
   "Select Actions": "Aktionen auswählen",
   "Customer Registration page link": "Link zur Kundenregistrierungsseite",
   "Are you sure you want to delete this question? Deleting it will also remove the associated responses.": "Sind Sie sicher, dass Sie diese Frage löschen möchten? Durch das Löschen wird auch die zugehörige Antwort entfernt.",
-  "Delete Question?": "Frage löschen?"
+  "Delete Question?": "Frage löschen?",
+  "Add Customer": "Kunden hinzufügen",
+  "External ID": "Externe ID",
+  "Enter External ID": "Externe ID eingeben"
 }

@@ -8,12 +8,14 @@ import {
   MultiSelectProps,
   SelectProps,
   Skeleton,
+  Stack,
   Text,
   useCombobox,
 } from "@mantine/core";
 import {
   IconAward,
   IconShoppingCart,
+  IconUserCircle,
   IconUserFilled,
   IconUserPlus,
 } from "@tabler/icons-react";
@@ -23,11 +25,13 @@ import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 import useTranslations from "@/dictionaries/useTranslation";
+import { LCustomerStats } from "@/pages/dashboard/loyalty/customer/[customerId]";
 
 import {
   ContainedMultiSelect,
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 import classes from "./Loyalty.module.css";
 
 export const LRSelector = (props: SelectProps) => {
@@ -266,3 +270,44 @@ export const LoyaltyActionSelect = ({
     </Combobox>
   );
 };
+
+export const CustomerStatsCard = ({
+  stats,
+  onClick,
+  isSelected,
+  hoveractive = false,
+}) => {
+  return (
+    <PaperLayout
+      onClick={onClick}
+      style={{
+        cursor: hoveractive ? "pointer" : undefined,
+        border: isSelected ? "5px solid var(--light-blue-5)" : undefined,
+      }}
+      hoveractive={hoveractive}
+      p="xs"
+    >
+      <Stack gap={2}>
+        <Group justify="space-between">
+          <Text fw={500}>{stats?.name}</Text>
+          {stats?.icon}
+        </Group>
+        <Text fw={800} size="xl" c={"var(--tertiary-color)"}>
+          {stats?.name === LCustomerStats.TotalSpent ? "$" : ""}
+          {stats?.count}
+        </Text>
+      </Stack>
+    </PaperLayout>
+  );
+};
+
+export function getActionColor(type) {
+  switch (type) {
+    case LoyaltyActionType.ReferralPurchase:
+      return "var(--shade-of-blue-18)";
+    case LoyaltyActionType.DirectPurchase:
+      return "var(--pink)";
+    case LoyaltyActionType.CustomerRegistration:
+      return "var(--shade-of-blue-17)";
+  }
+}

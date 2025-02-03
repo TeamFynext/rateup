@@ -2057,5 +2057,8 @@
   "Select Actions": "क्रियाएँ चुनें",
   "Customer Registration page link": "ग्राहक पंजीकरण पृष्ठ लिंक",
   "Are you sure you want to delete this question? Deleting it will also remove the associated responses.": "क्या आप वाकई इस सवाल को हटाना चाहते हैं? इसे हटाने से संबंधित प्रतिक्रियाएँ भी हट जाएंगी।",
-  "Delete Question?": "सवाल हटाएं?"
+  "Delete Question?": "सवाल हटाएं?",
+  "Add Customer": "ग्राहक जोड़ें",
+  "External ID": "बाहरी पहचान",
+  "Enter External ID": "बाहरी पहचान दर्ज करें"
 }
