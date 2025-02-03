@@ -22,8 +22,6 @@ export const useGetLoyaltyActions = (enabled = true) => {
 };
 
 export const useGetLoyaltyActionById = (actionId) => {
-  console.log("actionId", actionId);
-  console.log("!!actionId", !!actionId);
   return useQuery({
     queryKey: ["loyaltyActions", actionId],
     queryFn: () => getLoyaltyActionById(actionId),

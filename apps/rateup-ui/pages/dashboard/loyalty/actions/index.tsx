@@ -25,17 +25,12 @@ const index = () => {
 
   const router = useRouter();
   const { data: loyaltyActions, isLoading } = useGetLoyaltyActions();
-  const [selectedAction, setSelectedAction] = useState(
-    translations["All Actions"],
-  );
+  const [selectedAction, setSelectedAction] = useState("All Actions");
 
-  const actionFilterData = [
-    translations["All Actions"],
-    ...Object.values(LoyaltyActionType),
-  ];
+  const actionFilterData = ["All Actions", ...Object.values(LoyaltyActionType)];
 
   const filteredLoyaltyActions =
-    selectedAction == "All Actions"
+    selectedAction === "All Actions"
       ? loyaltyActions
       : loyaltyActions?.filter((action) => action?.type === selectedAction);
 

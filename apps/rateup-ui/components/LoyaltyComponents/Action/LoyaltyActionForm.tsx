@@ -552,7 +552,6 @@ const LoyaltyActionForm = ({
                 </Text>
                 <WaTextEditor
                   handleInputChange={(value) => {
-                    console.log("cc f", value);
                     form.setFieldValue("message.forwardMessage", value.content);
                   }}
                   content={form.values.message.forwardMessage}
