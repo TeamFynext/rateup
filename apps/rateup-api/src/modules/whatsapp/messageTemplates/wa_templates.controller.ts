@@ -510,14 +510,12 @@ export async function sendTemplateToUserCore(
               surveyTeamMapWithTeam?.id ||
               shortUrlId ||
               "error";
+            let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
             log.info("Short URL ID: %s", url);
             log.info(
               "length : %s",
-              `${url}?tag=${phone}${tag ? `,${tag}` : ""}`.length,
-            );
-            log.info(
-              "fullurl : %s",
-              `${url}?tag=${phone}${tag ? `,${tag}` : ""}`,
+              `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
+                .length,
             );
             components.push({
               type: "button",
@@ -526,7 +524,7 @@ export async function sendTemplateToUserCore(
               parameters: [
                 {
                   type: "text",
-                  text: `${url}?tag=${phone}${tag ? `,${tag}` : ""}`,
+                  text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
                 },
               ],
             });
