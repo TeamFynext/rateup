@@ -2055,5 +2055,8 @@
   "Refer": "إحالة",
   "Issue Direct Purchase Points": "إصدار نقاط الشراء المباشر",
   "Select Actions": "اختر الإجراءات",
-  "Customer Registration page link": "رابط صفحة تسجيل العميل"
+  "Customer Registration page link": "رابط صفحة تسجيل العميل",
+  "Are you sure you want to delete this question? Deleting it will also remove the associated responses.": "هل أنت متأكد من حذف هذا السؤال؟ سيؤدي الحذف إلى إزالة الردود المرتبطة أيضًا.",
+  "Delete Question?": "حذف السؤال؟",
+  "Add Customer": "إضافة عميل"
 }

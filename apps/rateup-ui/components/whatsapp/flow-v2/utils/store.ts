@@ -60,7 +60,6 @@ interface StoreState {
   currentElementId: string | null;
   currentElementType: QuestionType2 | null;
   activeEditor: EditFlowRightPanel | null;
-  flowEditable: boolean;
   detailActiveEditor: EditorType;
   getScreens: () => Screen[];
   addScreens: (screens: Screen[]) => void;
@@ -74,7 +73,6 @@ interface StoreState {
   getComponent: (componentName: string) => FormElement | undefined;
   setCurrentScreenId: (screenId: string) => void;
   setCurrentElement: (elementId?: string, type?: QuestionType2) => void;
-  setFlowEditable: (editable: boolean) => void;
   setActiveEditor: (editor: EditFlowRightPanel) => void;
   setDetailActiveEditor: (editor: EditorType) => void;
   getCurrentScreen: () => Screen | undefined;
@@ -92,7 +90,6 @@ const useFlowStore = create<StoreState>()(
     currentElementId: null,
     currentElementType: null,
     activeEditor: null,
-    flowEditable: true,
     detailActiveEditor: EditorType.ElementEditor,
     googleReview: null,
     getScreens: () => {
@@ -154,10 +151,6 @@ const useFlowStore = create<StoreState>()(
         state.currentElementType = type;
         state.detailActiveEditor = EditorType.ElementEditor;
         state.activeEditor = EditFlowRightPanel.ElementEditor;
-      }),
-    setFlowEditable: (editable) =>
-      set((state) => {
-        state.flowEditable = editable;
       }),
     setActiveEditor: (editor) =>
       set((state) => {

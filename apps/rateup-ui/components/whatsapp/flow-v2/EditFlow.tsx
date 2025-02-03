@@ -33,24 +33,17 @@ function EditFlow() {
     activeEditor,
     setActiveEditor,
     setCurrentElement,
-    flowEditable,
   } = useFlowStore();
   const updateFlow = useUpdateFlowMutation();
 
   useEffect(() => {
     if (!isPending && !_.isEqual(dbFlow.json.screens, getScreens())) {
-      if (!flowEditable) {
-        return showErrorToast(
-          "Flow is not editable",
-          "error-flow-not-editable",
-        );
-      }
       updateFlow.mutate({
         dbFlowId,
         data: {
           json: {
             screens: getScreens() as any,
-            version: "5.1",
+            version: "6.3",
           },
         },
       });

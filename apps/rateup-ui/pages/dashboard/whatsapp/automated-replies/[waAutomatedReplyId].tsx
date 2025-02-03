@@ -163,7 +163,7 @@ const App = () => {
   );
   useEffect(() => {
     if (!isPending) {
-      const { nodes = [], edges = [] } = data.matchData?.json || {};
+      const { nodes = [], edges = [] } = data?.matchData?.json || {};
       setNodes(nodes);
       setEdges(edges);
       update({ waAutomatedReplyId: data?.name });

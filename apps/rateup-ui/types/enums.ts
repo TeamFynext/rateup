@@ -91,6 +91,7 @@ export enum QuestionType2 {
   PhotoPicker = "Photo Picker",
   RichText = "RichText",
   EmbeddedLink = "Embedded Link",
+  ChipsSelector = "Chips Selector",
   // If = "If",
   // Switch = "Switch",
 }
@@ -117,6 +118,7 @@ export enum WaQuestions {
   PhotoPicker = "PhotoPicker",
   RichText = "RichText",
   EmbeddedLink = "EmbeddedLink",
+  ChipsSelector = "ChipsSelector",
   // If = "If",
   // Switch = "Switch",
 }
@@ -314,6 +316,7 @@ export enum WaFlowFormElementType {
   photoPicker = "PhotoPicker",
   documentPicker = "DocumentPicker",
   if = "If",
+  chipsSelector = "ChipsSelector",
 }
 export enum WaFlowFormInputElementType {
   textInput = "TextInput",

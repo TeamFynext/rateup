@@ -16,6 +16,7 @@ import { ContainedSelection } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import useTranslations from "@/dictionaries/useTranslation";
 import { SearchInput } from "@/pages/dashboard/campaign";
 import { PAGE_SIZE } from "@/utils/constants";
 
@@ -107,6 +108,7 @@ function getSortValue(id) {
 
 const LCustomerPage = () => {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
+  const { translations } = useTranslations();
   const [date, setDate] = useState<Date | null>(null);
   const [sorting, setSorting] = useState({
     value: SortMenu.LatestFirst,
@@ -135,7 +137,7 @@ const LCustomerPage = () => {
   const totalStats = Object.values(CustomerStats).map((c) => ({
     name: c,
     icon: CustomerStatsIcon(c),
-    count: customerData?.stats?.[c],
+    count: customerData?.stats?.[c] ?? "NA",
   }));
 
   useEffect(() => {
@@ -179,7 +181,7 @@ const LCustomerPage = () => {
               <SearchInput
                 searchText={searchTerm}
                 setSearchText={setSearchTerm}
-                placeholder={"Search Customer"}
+                placeholder={translations["Search"]}
               />
             </Group>
             <Group>
@@ -209,7 +211,7 @@ const LCustomerPage = () => {
             </Group>
           </Group>
           {customers?.length === 0 ? (
-            <NothingFound text="No customers found" />
+            <NothingFound text={translations["No customer found"]} />
           ) : (
             <ScrollAreaAutosize h={"45vh"}>
               <SimpleGrid cols={4} p={"sm"}>

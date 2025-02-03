@@ -66,7 +66,6 @@ function ElementEditor() {
     updateComponentInScreen,
     getCurrentElement,
     currentElementType,
-    flowEditable,
     setDetailActiveEditor,
   } = useFlowStore();
   const { translations } = useTranslations();
@@ -122,31 +121,19 @@ function ElementEditor() {
         }
       }
 
-      if (!flowEditable) {
-        showErrorToast(translations["Published Flows cannot be edited"]);
-        return;
-      }
-
       if (element?.id) {
         updateComponentInScreen(element.id, updatedValues);
       } else {
         addComponentToScreen(updatedValues);
       }
     },
-    [
-      flowEditable,
-      translations,
-      element,
-      updateComponentInScreen,
-      addComponentToScreen,
-    ],
+    [element, updateComponentInScreen, addComponentToScreen],
   );
 
   const renderField = (field) => {
     const fieldType = initialValues[field].type;
     const FieldComponent = FieldComponentMap[fieldType] || ContainedTextField;
     const extra = initialValues[field]?.extra || {};
-
     if (["hidden"].includes(fieldType)) return null;
 
     return (
@@ -169,7 +156,6 @@ function ElementEditor() {
             removeListItem: form2.removeListItem,
             metaType: currentElementType,
           })}
-          disabled={!flowEditable}
           {...(field === "init-value" && {
             dataSource: form2?.values?.["data-source"],
           })}

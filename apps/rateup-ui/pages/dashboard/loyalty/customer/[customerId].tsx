@@ -306,15 +306,17 @@ const LoyaltyCustomerID = () => {
             </Stack>
           </Group>
 
-          <ContainedTextField
-            value={`Referral code - ${customer?.referralCodes?.[0]?.referralCode}`}
-            readOnly
-            rightSection={
-              <ApiCopyButton
-                value={customer?.referralCodes?.[0]?.referralCode}
-              />
-            }
-          />
+          {customer?.referralCodes?.[0]?.referralCode && (
+            <ContainedTextField
+              value={`Referral code - ${customer?.referralCodes?.[0]?.referralCode}`}
+              readOnly
+              rightSection={
+                <ApiCopyButton
+                  value={customer?.referralCodes?.[0]?.referralCode}
+                />
+              }
+            />
+          )}
 
           <Group gap={50}>
             {[
