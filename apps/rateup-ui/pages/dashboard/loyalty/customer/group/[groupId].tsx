@@ -52,8 +52,8 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { PAGE_SIZE } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
-import { generateColumns } from ".";
-import { RedeemStatus } from "../redeem";
+import { generateColumns } from "..";
+import { RedeemStatus } from "../../redeem";
 
 export default function ContactGroup() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -141,12 +141,10 @@ export default function ContactGroup() {
       Object.values(LoyaltyActionType).map((a) => (actionObj[a] = []));
       return {
         id: c.id,
-        customerInfo: {
-          name: c.Contact.name,
-          phone: c.Contact.phone,
-          email: c.email,
-          createdAt: c.createdAt,
-        },
+        name: c.Contact.name,
+        phone: c.Contact.phone,
+        email: c.email,
+        createdAt: c.createdAt,
         ...actionObj,
         referralCodes: c.referralCodes?.map((r) => r.referralCode),
         redeems: c.redeems?.filter((r) => r.status === RedeemStatus.COMPLETED),

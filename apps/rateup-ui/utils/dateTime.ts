@@ -117,3 +117,8 @@ export function roundOffMinutesAndSeconds(dateString) {
 export function formatDateWithTime(date: string | Date) {
   return dayjs(date).format("DD-MM-YYYY hh:mm A");
 }
+
+// Jan 2024
+export function formateDate2(date) {
+  return dayjs(date).format("MMM, YYYY");
+}

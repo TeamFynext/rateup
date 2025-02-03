@@ -6,23 +6,31 @@ const TableLayoutSecondary = ({
   columns,
   rows,
   maxHeight,
+  minHeight,
+  headerStyle,
 }: {
   columns: Array<{
     key: string;
     value: string;
     renderCell?: (value) => JSX.Element;
+    width?: string | number;
   }>;
   rows: Array<any>;
   maxHeight?: string | number;
+  minHeight?: string | number;
+  headerStyle?: any;
 }) => {
   const { translations } = useTranslations();
+  console.log("columns", columns);
   return (
-    <ScrollAreaAutosize mah={maxHeight}>
+    <ScrollAreaAutosize mah={maxHeight} mih={minHeight}>
       <Table highlightOnHover stickyHeader striped verticalSpacing={"md"}>
         <Table.Thead>
           <Table.Tr>
             {columns.map((column) => (
-              <Table.Th key={column.key}>{column.value}</Table.Th>
+              <Table.Th w={column.width} key={column.key} style={headerStyle}>
+                {column.value}
+              </Table.Th>
             ))}
           </Table.Tr>
         </Table.Thead>
