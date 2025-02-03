@@ -511,6 +511,10 @@ export async function sendTemplateToUserCore(
               shortUrlId ||
               "error";
             log.info("Short URL ID: %s", url);
+            log.info(
+              "url length",
+              `${url}?tag=${phone}${tag ? `,${tag}` : ""}`.length,
+            );
             components.push({
               type: "button",
               sub_type: "url",
