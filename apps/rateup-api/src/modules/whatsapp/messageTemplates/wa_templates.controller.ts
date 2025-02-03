@@ -512,8 +512,12 @@ export async function sendTemplateToUserCore(
               "error";
             log.info("Short URL ID: %s", url);
             log.info(
-              "url length",
+              "length : %s",
               `${url}?tag=${phone}${tag ? `,${tag}` : ""}`.length,
+            );
+            log.info(
+              "fullurl : %s",
+              `${url}?tag=${phone}${tag ? `,${tag}` : ""}`,
             );
             components.push({
               type: "button",
