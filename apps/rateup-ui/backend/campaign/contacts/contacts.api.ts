@@ -9,6 +9,7 @@ export interface ICreateContact {
   teamId?: string;
   source?: string;
   tags?: any;
+  external_id?: string;
 }
 
 const CONTACT_BASE_URL = "/contact";

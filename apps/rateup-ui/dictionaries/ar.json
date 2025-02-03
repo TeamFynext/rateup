@@ -2058,5 +2058,7 @@
   "Customer Registration page link": "رابط صفحة تسجيل العميل",
   "Are you sure you want to delete this question? Deleting it will also remove the associated responses.": "هل أنت متأكد من حذف هذا السؤال؟ سيؤدي الحذف إلى إزالة الردود المرتبطة أيضًا.",
   "Delete Question?": "حذف السؤال؟",
-  "Add Customer": "إضافة عميل"
+  "Add Customer": "إضافة عميل",
+  "External ID": "الهوية الخارجية",
+  "Enter External ID": "أدخل الهوية الخارجية"
 }
