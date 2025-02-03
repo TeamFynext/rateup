@@ -10,6 +10,7 @@ export const LCustomerSchema = z.object({
   totalEarnedPoints: z.number().optional(),
   tags: z.any(),
   source: z.string().optional(),
+  external_id: z.string().optional(),
 });
 
 const actionCustomerIdParamSchema = z.object({

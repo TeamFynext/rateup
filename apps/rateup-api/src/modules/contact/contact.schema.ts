@@ -9,6 +9,7 @@ export const contactCoreSchema = z.object({
   source: z.string(),
   email: z.string().optional(),
   dob: z.date().optional().nullable(),
+  external_id: z.string().optional(),
 });
 
 export const createMultipleContactSchema = z.array(contactCoreSchema);

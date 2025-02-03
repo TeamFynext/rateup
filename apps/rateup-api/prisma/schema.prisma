@@ -429,7 +429,9 @@ model Contact {
   email                String?
   dob                  DateTime?
   loyaltyCustomer      LoyaltyCustomer?
+  external_id          String?   
 
+  @@unique([external_id,orgId],name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
 }
 

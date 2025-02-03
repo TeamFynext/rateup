@@ -71,6 +71,7 @@ export async function createLCustomer(input: LCustomerInput) {
       dob: input.dob ?? null,
       email: input.email,
       tags: input.tags,
+      external_id: input.external_id,
       loyaltyCustomer: {
         create: {
           orgId: input.orgId,
@@ -85,6 +86,7 @@ export async function createLCustomer(input: LCustomerInput) {
       dob: input.dob ?? null,
       email: input.email,
       tags: input.tags,
+      external_id: input.external_id,
       loyaltyCustomer: {
         create: {
           orgId: input.orgId,
