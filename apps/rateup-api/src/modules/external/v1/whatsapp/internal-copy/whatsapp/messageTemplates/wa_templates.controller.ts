@@ -370,15 +370,7 @@ export async function sendTemplateByNameToPhoneHandler(
       parameterData,
       tag,
     } = req.body;
-    log.info(
-      "🚀 ~ req.body - external: templateName,timeDelay,teamId,body_variables,parameterData,tag,:",
-      templateName,
-      timeDelay,
-      teamId,
-      body_variables,
-      parameterData,
-      tag,
-    );
+    log.trace("🚀 ~ req.body - external:", req.body);
     const orgId = req.user.orgId;
     const userId = req.user.userId;
     let reqNumber = "+" + req.body.phone;
