@@ -78,7 +78,19 @@ export async function getAllResponses(
   teamIds?: Array<string>,
   contactIds?: Array<string>,
   columnFilters?: Array<{ id?: string; value?: string }>,
+  ranges?: { startDate?: string; endDate?: string },
 ) {
+  let responseWhereCondition = ranges
+    ? {
+        where: {
+          createdAt: {
+            gte: dayjs(ranges?.startDate).startOf("day").toISOString(),
+            lte: dayjs(ranges?.endDate).endOf("day").toISOString(),
+          },
+        },
+      }
+    : {};
+
   let whereCondtion =
     teamIds?.length > 0
       ? {
@@ -113,6 +125,7 @@ export async function getAllResponses(
         },
       },
       responses: {
+        ...responseWhereCondition,
         select: {
           id: true,
           contactId: true,
@@ -1653,6 +1666,7 @@ const getCellData = (response, question) => {
         ""
       );
     case WaQuestions.CheckboxGroup:
+    case WaQuestions.ChipsSelector:
       return (
         (Array.isArray(response) &&
           response

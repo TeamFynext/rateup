@@ -105,6 +105,11 @@ const generateXlsxSchema = z.object({
       value: z.string().optional(),
     }),
   ),
+  ranges: z.object({
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    key: z.string().optional(),
+  }),
 });
 
 export const summarizeSchema = z.object({
