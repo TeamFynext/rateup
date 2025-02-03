@@ -21,7 +21,6 @@ const TableLayoutSecondary = ({
   headerStyle?: any;
 }) => {
   const { translations } = useTranslations();
-  console.log("columns", columns);
   return (
     <ScrollAreaAutosize mah={maxHeight} mih={minHeight}>
       <Table highlightOnHover stickyHeader striped verticalSpacing={"md"}>
