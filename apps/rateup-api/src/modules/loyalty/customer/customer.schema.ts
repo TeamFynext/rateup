@@ -10,11 +10,16 @@ export const LCustomerSchema = z.object({
   totalEarnedPoints: z.number().optional(),
   tags: z.any(),
   source: z.string().optional(),
+  external_id: z.string().optional(),
 });
 
 const actionCustomerIdParamSchema = z.object({
   phone: z.string(),
   actionId: z.string(),
+});
+
+const byCustomerIdSchema = z.object({
+  customerId: z.string(),
 });
 const amountSchema = z.object({
   amount: z.number().optional(),
@@ -26,6 +31,7 @@ export const { schemas: loyaltyCustomerSchemas, $ref: $lCustomerRef } =
       LCustomerSchema,
       actionCustomerIdParamSchema,
       amountSchema,
+      byCustomerIdSchema,
     },
     {
       $id: "loyaltyCustomerSchema",
@@ -37,3 +43,4 @@ export type CustomerActionParamInput = z.infer<
   typeof actionCustomerIdParamSchema
 >;
 export type AmountInput = z.infer<typeof amountSchema>;
+export type CustomerIdInput = z.infer<typeof byCustomerIdSchema>;

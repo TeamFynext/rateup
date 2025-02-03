@@ -71,6 +71,7 @@ export async function createLCustomer(input: LCustomerInput) {
       dob: input.dob ?? null,
       email: input.email,
       tags: input.tags,
+      external_id: input.external_id,
       loyaltyCustomer: {
         create: {
           orgId: input.orgId,
@@ -85,6 +86,7 @@ export async function createLCustomer(input: LCustomerInput) {
       dob: input.dob ?? null,
       email: input.email,
       tags: input.tags,
+      external_id: input.external_id,
       loyaltyCustomer: {
         create: {
           orgId: input.orgId,
@@ -192,13 +194,105 @@ export async function updateLCustomerRedeemPoint(id, points) {
   });
 }
 
-export async function getLCustomerById(id) {
+export async function getLCustomerPhoneById(id) {
   return await prisma.loyaltyCustomer.findUnique({
     where: {
       id,
     },
-    include: includeContact,
+    select: {
+      Contact: {
+        select: {
+          phone: true,
+        },
+      },
+    },
   });
+}
+
+export async function getLCustomerById(id) {
+  const customer = await prisma.loyaltyCustomer.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      ...includeContact,
+      referralCodes: {
+        select: {
+          referralCode: true,
+        },
+      },
+      redeems: {
+        select: {
+          reward: {
+            select: {
+              name: true,
+              points: true,
+            },
+          },
+          status: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+      actions: {
+        select: {
+          action: {
+            select: {
+              name: true,
+              points: true,
+              type: true,
+              refereePoints: true,
+              isAmountBased: true,
+              isAmountBasedForReferee: true,
+            },
+          },
+          amount: true,
+          refereePhone: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
+
+  for (const action of customer.actions) {
+    action["refereeName"] = action.refereePhone
+      ? (await getLCustomerByPhone(action.refereePhone, customer.orgId)).Contact
+          .name
+      : undefined;
+  }
+
+  const lastActionDate = customer?.actions[0]?.createdAt;
+  const lastRedeemDate = customer?.redeems[0]?.createdAt;
+  return {
+    ...customer,
+    balancePoints: customer?.totalEarnedPoints - customer?.redeemedPoints,
+    lastActivityAt:
+      lastActionDate && lastRedeemDate
+        ? new Date(lastActionDate).getTime() >
+          new Date(lastRedeemDate).getTime()
+          ? lastActionDate
+          : lastRedeemDate
+        : lastActionDate || lastRedeemDate || customer.createdAt,
+    stats: {
+      "Total Actions": customer?.actions?.length,
+      "Points Earned": customer?.totalEarnedPoints,
+      Rewards: customer?.redeems?.filter(
+        (r) => r.status !== RedeemStatus.FAILED,
+      ).length,
+      Referrals: customer?.actions?.filter(
+        (a) => a.action.type === LoyaltyActionType.ReferralPurchase,
+      ).length,
+      "Total Spent": customer?.actions?.reduce((acc, a) => {
+        if (a.amount && !a.refereePhone) acc += a.amount;
+        return acc;
+      }, 0),
+    },
+  };
 }
 
 export async function getLoyaltyCustomers(
@@ -244,8 +338,8 @@ export async function getLoyaltyCustomers(
       } else if ("createdAt" === key) {
         filterData.push({
           [key]: {
-            equal: value,
-            mode: "insensitive",
+            gte: new Date(value),
+            lte: dayjs(value).endOf("D").toDate(),
           },
         });
       } else if ("filterGroupName" === key) {
@@ -289,10 +383,27 @@ export async function getLoyaltyCustomers(
         }
       : { orgId };
 
+  let sortBy;
+
+  if (sort === "name") {
+    sortBy = {
+      Contact: {
+        name: desc,
+      },
+    };
+  }
+
   // Count total matching contacts
   const totalCount = await prisma.loyaltyCustomer.count({
     where: searchCondition,
   });
+
+  const [totalCustomer, newCustomers] = await Promise.all([
+    prisma.loyaltyCustomer.count({ where: { orgId } }),
+    prisma.loyaltyCustomer.count({
+      where: { orgId, createdAt: { gte: dayjs().startOf("D").toDate() } },
+    }),
+  ]);
   const includeCondition = {
     redeems: {
       include: {
@@ -307,38 +418,49 @@ export async function getLoyaltyCustomers(
     referralCodes: true,
     ...includeContact,
   };
+
   const customers = await prisma.loyaltyCustomer.findMany({
     where: searchCondition,
     include: includeCondition,
     skip: Number(page) * Number(limit),
     take: Number(limit),
-    orderBy: {
+    orderBy: sortBy ?? {
       [sort]: desc,
     },
   });
-  return customers?.map((c) => {
-    const actionObj = {};
-    Object.values(LoyaltyActionType).map((a) => (actionObj[a] = []));
-    c.actions.map((action) => {
-      actionObj[action.action.type].push({
-        ...action.action,
-        createdAt: action.createdAt,
-        amountSpent: action.amount,
+
+  return {
+    customers: customers?.map((c) => {
+      const actionObj = {};
+      Object.values(LoyaltyActionType).map((a) => (actionObj[a] = []));
+      c.actions.map((action) => {
+        actionObj[action.action.type].push({
+          ...action.action,
+          createdAt: action.createdAt,
+          amountSpent: action.amount,
+        });
       });
-    });
-    return {
-      id: c.id,
-      name: c.Contact.name,
-      phone: c.Contact.phone,
-      createdAt: c.createdAt,
-      totalCount,
-      ...actionObj,
-      referralCodes: c.referralCodes.map((r) => r.referralCode),
-      redeems: c.redeems.filter((r) => r.status !== RedeemStatus.FAILED),
-      totalPoints: c.totalEarnedPoints,
-      balancePoints: c.totalEarnedPoints - c.redeemedPoints,
-    };
-  });
+      return {
+        id: c.id,
+        name: c.Contact.name,
+        phone: c.Contact.phone,
+        createdAt: c.createdAt,
+        totalCount,
+        ...actionObj,
+        referralCodes: c.referralCodes.map((r) => r.referralCode),
+        redeems: c.redeems.filter((r) => r.status !== RedeemStatus.FAILED),
+        totalPoints: c.totalEarnedPoints,
+        balancePoints: c.totalEarnedPoints - c.redeemedPoints,
+      };
+    }),
+    stats: {
+      "Total Customers": totalCustomer,
+      "New Customers": newCustomers,
+      "Active Customers": totalCustomer,
+      "Inactive Customers": 0,
+      "Customer Growth": newCustomers,
+    },
+  };
 }
 
 export async function deleteLoyaltyCustomer(id: string) {
