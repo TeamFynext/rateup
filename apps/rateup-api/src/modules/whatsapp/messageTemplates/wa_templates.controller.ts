@@ -506,7 +506,11 @@ export async function sendTemplateToUserCore(
               },
             });
             let url =
-              surveyTeamMapWithTeam?.shortUrlId || surveyTeamMapWithTeam?.id;
+              surveyTeamMapWithTeam?.shortUrlId ||
+              surveyTeamMapWithTeam?.id ||
+              shortUrlId ||
+              "error";
+            log.info("Short URL ID: %s", url);
             components.push({
               type: "button",
               sub_type: "url",
