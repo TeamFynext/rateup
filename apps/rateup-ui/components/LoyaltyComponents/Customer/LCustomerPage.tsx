@@ -156,6 +156,10 @@ const LCustomerPage = () => {
     } else setFilters.setState(filters?.filter((f) => f.id !== "createdAt"));
   }, [date]);
 
+  const totalPageCount = customers?.[0]?.totalCount
+    ? customers?.[0]?.totalCount / pagination.pageSize
+    : 0;
+
   if (isPendingCustomer || isLoading || isRefetching) return <RateupLoader />;
   if (isError) return <ErrorComponent refetch={refetch} />;
 
@@ -225,7 +229,7 @@ const LCustomerPage = () => {
             <ContactPagination
               pagination={pagination}
               setPagination={setPagination}
-              totalPageCount={customers?.[0]?.totalCount / pagination.pageSize}
+              totalPageCount={totalPageCount}
             />
           </Stack>
         </Stack>

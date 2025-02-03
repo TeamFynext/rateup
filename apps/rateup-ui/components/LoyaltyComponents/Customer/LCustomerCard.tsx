@@ -27,7 +27,11 @@ const LCustomerCard = ({ customer }) => {
       hoveractive
     >
       <Group>
-        <Avatar name={customer?.name} color="initials" size={"lg"} />
+        <Avatar
+          name={customer?.name}
+          color="var(--shade-of-blue-14)"
+          size={"lg"}
+        />
         <Stack gap={0} flex={1}>
           <Group justify="space-between">
             <Text size="sm" fw={500}>
