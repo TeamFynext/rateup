@@ -694,7 +694,7 @@ export const handleMessageStatusUpdate = async (
 ) => {
   if (!messageId) return;
 
-  const messageCampaignParticipant =
+  let messageCampaignParticipant =
     await prisma.waMessageCampaginParticipantMap.findFirst({
       where: {
         waMessage: {
@@ -720,7 +720,29 @@ export const handleMessageStatusUpdate = async (
       },
     });
 
-  if (!messageCampaignParticipant) return;
+  if (!messageCampaignParticipant) {
+    let waMessage = await prisma.waMessage.findFirst({
+      where: {
+        messageId: messageId,
+      },
+      include: {
+        contact: {
+          select: {
+            phone: true,
+            orgId: true,
+          },
+        },
+      },
+    });
+    messageCampaignParticipant = {
+      waMessage,
+      waMessageId: "",
+      campaignParticipantId: "",
+      campaignParticipant: {
+        campaignId: "",
+      },
+    };
+  }
 
   const msg = messageCampaignParticipant.waMessage;
   msg.stats = msg?.stats || {};

@@ -7,6 +7,7 @@ import prisma from "../../../utils/prisma";
 import { getPhoneDetails } from "../auth/wa_auth.service";
 import { WaConfigType } from "../../../types/enums";
 import { log } from "../../../utils/logger";
+import { PaginationQuery } from "./wa_settings.schema";
 
 export async function createWaSettings(
   orgId: string,
@@ -174,10 +175,25 @@ export async function updateContactTag(orgId: string, tags: string[]) {
   return res;
 }
 
-export function getWaLogs(orgId: string) {
-  return prisma.waLogs.findMany({
+export async function getWaLogs(orgId: string, query: PaginationQuery) {
+  const {
+    page,
+    limit,
+    desc = "asc",
+    search = "",
+    sort = "createdAt",
+    ...filter
+  } = query;
+  const totalCount = await prisma.waLogs.count({});
+  const logs = await prisma.waLogs.findMany({
     where: {
       orgId,
     },
+    skip: page && limit ? Number(page) * Number(limit) : undefined,
+    take: limit ? Number(limit) : undefined,
+    orderBy: {
+      [sort]: desc,
+    },
   });
+  return { totalCount, logs };
 }
