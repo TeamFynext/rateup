@@ -750,22 +750,10 @@ export const handleMessageStatusUpdate = async (
   let incrementData = {};
   switch (status) {
     case WaEvent.DELIVERED:
-      if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.SENT]) {
-        incrementData = { ...incrementData, totalSent: { increment: 1 } };
-      }
       msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
       incrementData = { ...incrementData, totalDelivered: { increment: 1 } };
       break;
     case WaEvent.READ:
-      if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.DELIVERED]) {
-        incrementData = {
-          ...incrementData,
-          totalDelivered: { increment: 1 },
-        };
-      }
-      if (!messageCampaignParticipant.waMessage?.stats?.[WaEvent.SENT]) {
-        incrementData = { ...incrementData, totalSent: { increment: 1 } };
-      }
       msg.stats[WaEvent.DELIVERED] = msg.stats[WaEvent.DELIVERED] || new Date();
       msg.stats[WaEvent.SENT] = msg.stats[WaEvent.SENT] || new Date();
 
