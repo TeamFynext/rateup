@@ -64,18 +64,38 @@ export async function getContactTags() {
     ?.data as getContactTagsRes;
 }
 type WaLogsRes = {
-  id: string;
-  createdAt: string;
-  logs?: {
-    code?: number;
-    title?: string;
-    message?: string;
-    error_data?: {
-      details?: string;
-    };
-  }[];
+  logs: {
+    id: string;
+    createdAt: string;
+    logs?: {
+      code?: number;
+      title?: string;
+      message?: string;
+      error_data?: {
+        details?: string;
+      };
+    }[];
+  };
+  totalCount: number;
 };
-export const getWaLogs = async () => {
-  const res = await axiosClient.get(`${SettingsUrl}/logs`);
+export const getWaLogs = async (
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  },
+  search: string,
+  sort: {
+    id: string;
+    desc: string;
+  },
+  columnFilters: { id: string; value: string }[],
+) => {
+  let filter = columnFilters
+    .map((data) => `&${data.id}=${data.value}`)
+    .join("&");
+  let desc = sort.desc ? "desc" : "asc";
+  const url = `${SettingsUrl}/logs?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}`;
+
+  const res = await axiosClient.get(url);
   return res.data as WaLogsRes;
 };
