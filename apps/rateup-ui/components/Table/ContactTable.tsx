@@ -232,66 +232,77 @@ function ContactTable({
           }}
         />
         <Group mr={"auto"}>
-          {Object.keys(rowSelection)?.length > 0 ? (
-            <Tooltip
-              label={` ${translations["Click to"]} ${tooltipMsg}`}
-              onClick={toggleConfirmationModal}
-            >
-              <ActionIcon variant="light">
-                <IconTrash />
-              </ActionIcon>
-            </Tooltip>
+          {leftSection ? (
+            leftSection
           ) : (
-            <Tooltip label={translations["Select an item to delete"]}>
-              <ActionIcon variant="light" disabled>
-                <IconTrash />
-              </ActionIcon>
-            </Tooltip>
-          )}
-          {toggle ? (
-            <Group>
-              <RateupButtonBlue
-                title={btnTitle}
-                rightIcon={<IconPlus />}
-                onClick={toggle}
-              />
-              <ActionIcon onClick={refetch} variant="light" loading={isPending}>
-                <IconRefresh />
-              </ActionIcon>
-            </Group>
-          ) : (
-            <Group gap={"sm"}>
-              <OpenCreateMenu
-                tags={cTags ?? []}
-                tab={tab}
-                toggle={open}
-                isPending={isPending}
-                type={contactGroupType}
-              />
-              <Tooltip label={translations["Refresh"]}>
-                <ActionIcon
-                  variant="light"
-                  onClick={async () => {
-                    showLoadingToast(
-                      translations["Data getting loaded..."],
-                      "contacts",
-                      true,
-                      translations["Loading"],
-                    );
-                    await refetch();
-                    showSuccessToast(
-                      translations["Data updated"],
-                      "contacts",
-                      <IconCheck />,
-                      true,
-                    );
-                  }}
+            <>
+              {" "}
+              {Object.keys(rowSelection)?.length > 0 ? (
+                <Tooltip
+                  label={` ${translations["Click to"]} ${tooltipMsg}`}
+                  onClick={toggleConfirmationModal}
                 >
-                  <IconRefresh stroke={1.5} />
-                </ActionIcon>
-              </Tooltip>
-              <InfoButton docUrl={`${docsPath}/whatsappSurvey/contacts`} />
-            </Group>
+                  <ActionIcon variant="light">
+                    <IconTrash />
+                  </ActionIcon>
+                </Tooltip>
+              ) : (
+                <Tooltip label={translations["Select an item to delete"]}>
+                  <ActionIcon variant="light" disabled>
+                    <IconTrash />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+              {toggle ? (
+                <Group>
+                  <RateupButtonBlue
+                    title={btnTitle}
+                    rightIcon={<IconPlus />}
+                    onClick={toggle}
+                  />
+                  <ActionIcon
+                    onClick={refetch}
+                    variant="light"
+                    loading={isPending}
+                  >
+                    <IconRefresh />
+                  </ActionIcon>
+                </Group>
+              ) : (
+                <Group gap={"sm"}>
+                  <OpenCreateMenu
+                    tags={cTags ?? []}
+                    tab={tab}
+                    toggle={open}
+                    isPending={isPending}
+                    type={contactGroupType}
+                  />
+                  <Tooltip label={translations["Refresh"]}>
+                    <ActionIcon
+                      variant="light"
+                      onClick={async () => {
+                        showLoadingToast(
+                          translations["Data getting loaded..."],
+                          "contacts",
+                          true,
+                          translations["Loading"],
+                        );
+                        await refetch();
+                        showSuccessToast(
+                          translations["Data updated"],
+                          "contacts",
+                          <IconCheck />,
+                          true,
+                        );
+                      }}
+                    >
+                      <IconRefresh stroke={1.5} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <InfoButton docUrl={`${docsPath}/whatsappSurvey/contacts`} />
+                </Group>
+              )}
+            </>
           )}
         </Group>
         <FilterToggles

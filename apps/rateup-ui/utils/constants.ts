@@ -207,7 +207,7 @@ export const MAX_FILE_SIZE_IN_MB = 10;
 export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;
 export const THUMBNAIL_URL = "thumb300x200-";
 
-export const PAGE_SIZE = ["50", "100", "200", "500"];
+export const PAGE_SIZE = ["10", "100", "200", "500"];
 
 export const SAVE_HOTKEY = "mod+s";
 

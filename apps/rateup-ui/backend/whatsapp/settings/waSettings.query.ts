@@ -120,9 +120,8 @@ export const useGetContactTags = () =>
     queryFn: getContactTags,
   });
 
-export const useWaLogs = (enabled = true) =>
+export const useWaLogs = (pagination, search, sort, columnFilters) =>
   useQuery({
-    queryKey: ["waLogs"],
-    queryFn: getWaLogs,
-    enabled,
+    queryKey: ["waLogs", pagination, search, sort, columnFilters],
+    queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
   });

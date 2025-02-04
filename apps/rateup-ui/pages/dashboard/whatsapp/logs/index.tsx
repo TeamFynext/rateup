@@ -1,18 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { ActionIcon, List, Tooltip } from "@mantine/core";
+import { useDebouncedState } from "@mantine/hooks";
 import { IconCheck, IconRefresh } from "@tabler/icons-react";
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+} from "@tanstack/react-table";
 import dayjs from "dayjs";
 
 import { useWaLogs } from "@/backend/whatsapp/settings/waSettings.query";
+import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import TanstackTable from "@/components/Table/TanstackTable";
+import ContactTable from "@/components/Table/ContactTable";
 import useTranslations from "@/dictionaries/useTranslation";
+import { PAGE_SIZE } from "@/utils/constants";
 import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
 
 const Logs = () => {
-  const { data, isPending, refetch } = useWaLogs();
+  const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE[0],
+  });
+  const [searchText, setSearchText] = useDebouncedState("", 200);
+  const { data, isPending, refetch } = useWaLogs(
+    pagination,
+    searchText,
+    sorting,
+    columnFilters,
+  );
   const { translations } = useTranslations();
 
   const columns: ColumnDef<any>[] = [
@@ -69,11 +89,19 @@ const Logs = () => {
   );
   return (
     <PaperLayout p={0} h={"100%"} mah={"800px"}>
-      <TanstackTable
-        data={data}
+      <ContactTable
+        data={data?.logs ?? []}
         columns={columns}
         isPending={isPending}
-        toggleOffContent={refreshButton}
+        refetch={refetch}
+        setSorting={setSorting}
+        sorting={sorting}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        setPagination={setPagination}
+        pagination={pagination}
+        leftSection={refreshButton}
+        totalCount={data?.totalCount ?? 0}
       />
     </PaperLayout>
   );
