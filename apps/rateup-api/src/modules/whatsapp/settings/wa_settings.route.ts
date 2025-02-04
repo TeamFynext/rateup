@@ -53,5 +53,13 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     updateContactTagHandler,
   );
-  server.get("/logs", getWaLogsHandler);
+  server.get(
+    "/logs",
+    {
+      schema: {
+        querystring: $WASettingsref("paginationQuery"),
+      },
+    },
+    getWaLogsHandler,
+  );
 }

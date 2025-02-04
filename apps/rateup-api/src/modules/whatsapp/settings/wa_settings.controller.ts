@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   ContactTagSchema,
   createWaSettingsInput,
+  PaginationQuery,
   updateWaSettingsInput,
 } from "./wa_settings.schema";
 import { getOrgIdAndRole } from "../../user/user.service";
@@ -132,12 +133,14 @@ export async function updateContactTagHandler(
 }
 
 export async function getWaLogsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Querystring: PaginationQuery;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    const data = await getWaLogs(orgId);
+    const data = await getWaLogs(orgId, request.query);
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting wa logs", error);

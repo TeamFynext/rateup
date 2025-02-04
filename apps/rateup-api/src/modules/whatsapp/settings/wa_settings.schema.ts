@@ -10,6 +10,13 @@ const createWaSettingsInput = {
   webhookPassword: z.string(),
 };
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
+export const paginationQuery = z.object({
+  page: z.number().optional(),
+  limit: z.number().optional(),
+  search: z.string().optional(),
+  sort: z.string().optional(),
+  desc: z.string().optional(),
+});
 
 const updateWaSettingsInputSchema = z.object({
   accessToken: z.string().optional(),
@@ -47,9 +54,11 @@ export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
       updateWaSettingsInputSchema,
       getWaSettingsResponseSchema,
       contactTagSchema,
+      paginationQuery,
     },
     { $id: "waSettingsSchema" },
   );
 export type createWaSettingsInput = z.infer<typeof createWaSettingsInputSchema>;
 export type updateWaSettingsInput = z.infer<typeof updateWaSettingsInputSchema>;
 export type ContactTagSchema = z.infer<typeof contactTagSchema>;
+export type PaginationQuery = z.infer<typeof paginationQuery>;
