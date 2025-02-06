@@ -1,6 +1,6 @@
 import prisma from "../../../utils/prisma";
 import shopify from "./shopify.config";
-import { Session } from "@shopify/shopify-api";
+import { GraphqlClient, Session } from "@shopify/shopify-api";
 import { isEmpty } from "lodash";
 import { log } from "../../../utils/logger";
 import {
@@ -55,6 +55,10 @@ import { pauseOrg } from "../../org/org.services";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 import { getScheduleTime } from "../../../utils/date";
+import {
+  getLCustomerByPhone,
+  handleLCustomerAction,
+} from "../../loyalty/customer/customer.service";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -138,6 +142,7 @@ export async function createScheduleOnShopifyEvent({
   productIds,
   webhookId,
   scheduleFromDate,
+  amount,
 }: {
   customerPhone: string;
   event: ShopifyEvents;
@@ -145,6 +150,7 @@ export async function createScheduleOnShopifyEvent({
   productIds: string[];
   webhookId?: string;
   scheduleFromDate: Date;
+  amount?: number;
 }) {
   log.info(`checking survey for shopify event ${event}`);
   const phone = parsePhoneNumber(customerPhone, "IN");
@@ -174,16 +180,33 @@ export async function createScheduleOnShopifyEvent({
     return;
   }
 
+  let actionStatus = null;
+  if (shopifySurvey.actionId) {
+    const customer = await getLCustomerByPhone(
+      phoneWithoutPlus,
+      shopifyInfo.orgId,
+    );
+    if (customer) {
+      const { success } = await handleLCustomerAction({
+        actionId: shopifySurvey.actionId,
+        customerId: customer.id,
+        amount,
+      });
+      actionStatus = success ? "success" : "failed";
+    }
+  }
+
   const schedules = [...shopifySurvey.schedules];
   const scheduleObj = {
     scheduledAt: getScheduleTime(shopifySurvey.timeDelay, scheduleFromDate),
     createdAt: new Date(),
-    status: "SCHEDULED",
+    status: shopifySurvey.waTemplateId ? "SCHEDULED" : null,
   };
   const data = {
     ...scheduleObj,
     phone: phoneWithoutPlus,
     webhookId,
+    actionStatus,
     history: [scheduleObj],
   };
   schedules.push(data);
@@ -224,7 +247,6 @@ export async function sendShopifySurveyCronAction() {
       log.trace("No config found");
       return false;
     }
-    let allCheckouts = [];
     const newShopifySurveys = [...shopifySurveys];
     const callShopifyApi = newShopifySurveys.some(
       (s) =>
@@ -238,12 +260,12 @@ export async function sendShopifySurveyCronAction() {
                 s.repeatInterval.value),
         ),
     );
+
+    let allCheckouts;
+
     if (callShopifyApi) {
-      allCheckouts = (
-        (await shopify.rest.AbandonedCheckout.checkouts({
-          session,
-        })) as any
-      ).checkouts?.filter((c) => !c.completed_at);
+      const client = new shopify.clients.Graphql({ session });
+      allCheckouts = await getAbandonedCheckouts(client);
     }
 
     for (const config of newShopifySurveys) {
@@ -266,7 +288,7 @@ export async function sendShopifySurveyCronAction() {
         let tobeSent = false;
         const isCheckoutNotExist =
           isAbandonedEvent &&
-          !allCheckouts.find((c) => c.id.toString() === sch.checkoutId);
+          !allCheckouts.find((c) => c.id === sch.checkoutId);
         if (
           sch.status === "SCHEDULED" &&
           new Date(sch.scheduledAt) <= fiveMinutesLater
@@ -334,6 +356,21 @@ export async function sendShopifySurveyCronAction() {
       },
     });
   }
+}
+
+export async function deleteWebhookById(webhookId, client) {
+  await client.request(
+    `mutation webhookSubscriptionDelete($id: ID!) {
+    webhookSubscriptionDelete(id: $id) {
+      userErrors {
+        field
+        message
+      }
+      deletedWebhookSubscriptionId
+    }
+  }`,
+    { variables: { id: webhookId } },
+  );
 }
 
 export async function sendWhatsAppTemplateToCustomer(
@@ -432,32 +469,84 @@ export async function sendWhatsAppTemplateToCustomer(
 }
 
 export async function deleteAllWebhooks(session) {
-  const webhookslist = await shopify.rest.Webhook.all({ session });
+  const client = new shopify.clients.Graphql({ session });
+  const webhookslist = await getManagableWebhooks(client);
   await Promise.all(
-    webhookslist.data.map(async (webhook) => {
-      const webhookTopic = ShopifyOrderWebhookTopicEventMap.find(
-        (t) => t.value === webhook.topic,
-      );
-      if (!webhookTopic) return false;
-      const response = await shopify.rest.Webhook.delete({
-        session,
-        id: webhook.id,
-      });
+    webhookslist.map(async (webhook) => {
+      await deleteWebhookById(webhook.id, client);
     }),
   );
 }
 
-export async function registerWebhookByTopic(topic, orgId) {
-  const shopifyInfo = await getShopifyInfo(orgId);
-  const webhook = new shopify.rest.Webhook({
-    session: shopifyInfo.credential?.session,
-  });
-  webhook.address = `${API_URL}${WEBHOOK_API_ROUTE}`;
-  (webhook.topic = ShopifyOrderWebhookTopicEventMap.find(
-    (webhookTopic) => webhookTopic.key === topic,
-  ).value),
-    (webhook.format = "json");
-  await webhook.save({ update: true });
+export async function registerWebhookByTopic(topic, session) {
+  const client = new shopify.clients.Graphql({ session });
+  await client.request(
+    `mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
+  webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
+    webhookSubscription {
+      id
+      topic
+      format
+      endpoint {
+        __typename
+        ... on WebhookHttpEndpoint {
+          callbackUrl
+        }
+      }
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}`,
+    {
+      variables: {
+        topic,
+        webhookSubscription: {
+          callbackUrl: `${API_URL}${WEBHOOK_API_ROUTE}`,
+          format: "JSON",
+        },
+      },
+    },
+  );
+}
+
+export async function getManagableWebhooks(client) {
+  const webhookslist = [];
+  let hasNextPage = true;
+  let cursor = null;
+  while (hasNextPage) {
+    const data = await client.request(
+      `query getWebhooks($topics: [WebhookSubscriptionTopic!], $cursor: String){
+      webhookSubscriptions(first: 50,after: $cursor, topics:$topics,) {
+      edges {
+        node {
+          id
+          topic
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    } 
+    }`,
+      {
+        variables: {
+          topics: ShopifyOrderWebhookTopicEventMap.map((t) => t.key),
+          cursor,
+        },
+      },
+    );
+    hasNextPage = data.data.webhookSubscriptions.pageInfo.hasNextPage;
+    cursor = data.data.webhookSubscriptions.pageInfo.endCursor;
+    webhookslist.push(
+      ...data.data.webhookSubscriptions.edges.map((e) => e.node),
+    );
+  }
+  return webhookslist;
 }
 
 export async function handleSubscriptionUpdateFromShopify(shop, payload) {
@@ -467,7 +556,7 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
   if (payload?.app_subscription?.name === "FREE PLAN") {
     rateupPlan = await prisma.rateupPlan.findFirst({
       where: {
-        displayName: "FREE PLAN",
+        name: "FREE PLAN",
       },
     });
   } else {
@@ -482,19 +571,17 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
   }
 
   const currentPlanInRateup = subscription.basePlan.displayName;
+  const chargeId = payload.app_subscription?.admin_graphql_api_id;
 
-  const chargeIdSplitArray =
-    payload.app_subscription?.admin_graphql_api_id?.split("/");
-  const chargeId = chargeIdSplitArray[chargeIdSplitArray.length - 1];
-  const recurringCharge = await shopify.rest.RecurringApplicationCharge.find({
+  const client = new shopify.clients.Graphql({
     session: integration.credential.session,
-    id: parseInt(chargeId),
   });
+  const recurringCharge = await getRecurringCharge(chargeId, integration);
+
   let haltSubscription = false;
 
-  const shopDetails = await shopify.rest.Shop.current({
-    session: integration.credential.session,
-  });
+  const data = await client.request(`query { shop { name, email, phone } }`);
+  const shopDetails = data.data.shop;
 
   switch (payload.app_subscription?.status) {
     case shopifyRecurringChargeStatus.pending:
@@ -604,8 +691,8 @@ async function activateSubscriptionThroughShopify(
     rateupPlanId: rateupPlan.id,
     subscriptionStatus:
       shopifyRecurringChargeSubscriptionStatusMap[recurringCharge.status],
-    subscriptionChargeAt: recurringCharge.billing_on
-      ? new Date(recurringCharge.billing_on)
+    subscriptionChargeAt: recurringCharge.currentPeriodEnd
+      ? new Date(recurringCharge.currentPeriodEnd)
       : null,
     shopifyPlanId: Object.values(ShopifyPlanMap)
       .find((plan) => plan.name === recurringCharge.name)
@@ -625,22 +712,23 @@ async function activateSubscriptionThroughShopify(
     const payment = await prisma.payments.create({
       data: {
         payId: chargeId,
-        amount: Number(recurringCharge?.price),
-        currency: recurringCharge?.currency,
+        amount: Number(
+          recurringCharge?.lineItems[0].plan.pricingDetails.price.amount,
+        ),
+        currency:
+          recurringCharge?.lineItems[0].plan.pricingDetails.price.currencyCode,
         method: PaymentSource.Shopify,
         description: "Subscription activated through shopify",
         customer_email: shopDetails.email || "",
         customer_phone: shopDetails.phone || "",
         rateupOrderId: order.id,
         createdAt: Math.floor(
-          new Date(recurringCharge.activated_on).getTime() / 1000,
+          new Date(recurringCharge.createdAt).getTime() / 1000,
         ),
       },
     });
   }
-  const expiresAt = dayjs(recurringCharge.activated_on)
-    .add(29, "days")
-    .toDate();
+  const expiresAt = dayjs(recurringCharge.createdAt).add(29, "days").toDate();
   const updatedSubscription = await prisma.subscription.update({
     where: { orgId: integration?.orgId },
     data: {
@@ -712,14 +800,39 @@ export async function handleWebhook(webhook) {
   }
 }
 
-export async function getRecurringCharge(chargId, orgId) {
-  const integration = await getShopifyInfo(orgId);
-  if (integration)
-    return await shopify.rest.RecurringApplicationCharge.find({
-      session: integration.credential.session,
-      id: parseInt(chargId),
-    });
-  return null;
+export async function getRecurringCharge(chargeId, integration) {
+  if (!integration) return null;
+  const client = new shopify.clients.Graphql({
+    session: integration.credential.session,
+  });
+  const appSubscriptions = await client.request(
+    `query GetRecurringApplicationCharges($id: ID!) {
+      node(id: $id) {
+        ...on AppSubscription {
+          createdAt
+          currentPeriodEnd
+          id
+          name
+          status
+          lineItems {
+            plan {
+              pricingDetails {
+                ...on AppRecurringPricing {
+                  interval
+                  price {
+                    amount
+                    currencyCode
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }`,
+    { variables: { id: chargeId } },
+  );
+  return appSubscriptions.data.node;
 }
 
 export async function handleShopifyOrderEvents(webhook) {
@@ -729,38 +842,62 @@ export async function handleShopifyOrderEvents(webhook) {
     log.trace(`No shopify session found`);
     return;
   }
-  let customerPhone, productIds;
+  let customerPhone;
+  const productIds = [];
   if (topic === ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED) {
     const fulfillmentOrderGId = body.fulfillment_order.id;
-    const gidArray = fulfillmentOrderGId.split("/");
-    const fulfillmentOrderId = parseInt(gidArray[gidArray.length - 1]);
-    const fulfillmentOrder = await shopify.rest.FulfillmentOrder.find({
+    const client = new shopify.clients.Graphql({
       session: shopifyInfo.credential.session,
-      id: fulfillmentOrderId,
-      include_order_reference_fields: true,
     });
-    if (!fulfillmentOrder) return;
-    const orderDetails = await shopify.rest.Order.find({
-      session: shopifyInfo.credential.session,
-      id: fulfillmentOrder.order_id,
-    });
-    if (!orderDetails) return;
-    customerPhone =
-      orderDetails.customer.phone ||
-      orderDetails.customer.default_address.phone ||
-      orderDetails.billing_address.phone ||
-      orderDetails.shipping_address.phone;
-    productIds = fulfillmentOrder.line_items.map((product) =>
-      product.product_id.toString(),
-    );
+    let hasNextPage = false;
+    let cursor = null;
+    while (hasNextPage) {
+      const data = await client.request(
+        `query FulfillmentOrderShow($id: ID!, $cursor: String) {
+        fulfillmentOrder(id: $id) {
+          order {
+            customer {
+              phone
+            }
+          }
+          lineItems(first: 10, after: $cursor) {
+            edges {
+              node {
+                lineItem {
+                  product {
+                    id
+                  }
+                }  
+              }
+            }
+            pageInfo {
+            hasNextPage
+            endCursor
+            }
+          }
+        }
+      }`,
+        { variables: { id: fulfillmentOrderGId, cursor } },
+      );
+      hasNextPage = data.data.fulfillmentOrder.pageInfo.hasNextPage;
+      cursor = data.data.fulfillmentOrder.pageInfo.endCursor;
+      productIds.push(
+        ...data.data.fulfillmentOrder.lineItems.map(
+          (item) => item.lineItem.product.id,
+        ),
+      );
+      customerPhone = data.data.fulfillmentOrder.order.cutsomer.phone;
+    }
   } else {
     customerPhone =
       body?.customer?.phone ||
       body?.customer?.default_address?.phone ||
       body?.billing_address?.phone ||
       webhook.body?.shipping_address?.phone;
-    productIds = body.line_items?.map((products) =>
-      products?.product_id?.toString(),
+    productIds.push(
+      ...body.line_items?.map(
+        (product) => `gid://shopify/Product/${product.product_id}`,
+      ),
     );
   }
   if (!customerPhone) {
@@ -774,6 +911,7 @@ export async function handleShopifyOrderEvents(webhook) {
     productIds,
     webhookId,
     scheduleFromDate: new Date(),
+    amount: Number(body?.total_price),
   });
 }
 
@@ -799,6 +937,39 @@ export async function deleteShopifyIntegrationByShop(shop: string) {
   });
 }
 
+export async function getAbandonedCheckouts(client: GraphqlClient) {
+  const allCheckouts = [];
+  let hasNextPage = true;
+  let cursor = null;
+  while (hasNextPage) {
+    const data = await client.request(
+      `query getAbandonedCheckouts($cursor: String) {
+      abandonedCheckouts(first: 50, after: $cursor){
+      edges {
+       nodes {
+         id
+         createdAt
+         completedAt
+       }
+       cursor
+      }
+      pageInfo {
+       endCursor
+       hasNextPage
+      }
+      }
+  }`,
+      { variables: { cursor } },
+    );
+    hasNextPage = data.data.abandonedCheckouts.pageInfo.hasNextPage;
+    cursor = data.data.abandonedCheckouts.pageInfo.endCursor;
+    allCheckouts.push(
+      ...data.data.abandonedCheckouts.nodes.filter((a) => !a.completedAt),
+    );
+  }
+  return allCheckouts;
+}
+
 export async function sendTemplateForShopifyAbandonedCheckouts() {
   try {
     const integrations = (await prisma.integration.findMany({
@@ -818,13 +989,10 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
           return false;
         }
         const { waTemplateId, teamId } = abandonedCheckoutConfig;
-        const abandonedCheckouts =
-          (await shopify.rest.AbandonedCheckout.checkouts({
-            session: credential.session,
-          })) as { checkouts: any[] };
-        const allCheckouts = (abandonedCheckouts as any).checkouts.filter(
-          (checkout) => !checkout.completed_at,
-        );
+        const client = new shopify.clients.Graphql({
+          session: credential.session,
+        });
+        const allCheckouts = await getAbandonedCheckouts(client);
 
         if (!allCheckouts || !allCheckouts.length) {
           log.trace("No abandoned checkouts found");
@@ -832,7 +1000,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         }
         //checkouts created within one hour
         const lastCheckouts = allCheckouts.filter(
-          (checkout) => dayjs().diff(checkout.created_at, "hours") < 1,
+          (checkout) => dayjs().diff(checkout.createdAt, "hours") < 1,
         );
 
         if (!lastCheckouts.length) {
@@ -885,7 +1053,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
             .filter((checkout) =>
               schedules.find(
                 (c) =>
-                  checkout.id.toString() === c.checkoutId &&
+                  checkout.id === c.checkoutId &&
                   dayjs().diff(dayjs(c.sentAt), unit) >= value,
               ),
             )

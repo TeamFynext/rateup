@@ -39,4 +39,15 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     },
     updateSubscriptionHandler,
   );
+
+  server.put(
+    "/menu/:orgId",
+    {
+      schema: {
+        params: $Sref("byOrgIdParams"),
+        body: $subscriptionRef("updateSubscriptionInputSchema"),
+      },
+    },
+    updateSubscriptionHandler,
+  );
 }

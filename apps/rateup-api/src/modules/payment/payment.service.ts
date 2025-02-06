@@ -16,7 +16,10 @@ import {
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../utils/email/payments/subscriptionActivated";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { getRecurringCharge } from "../integrations/shopify/shopify.service";
+import {
+  getRecurringCharge,
+  getShopifyInfo,
+} from "../integrations/shopify/shopify.service";
 
 const prisma = new PrismaClient();
 const credentials = Buffer.from(
@@ -641,23 +644,26 @@ export async function getAllOrgOrders(orgId: string) {
           },
         });
       } else if (order.shopifyPlanId) {
-        const recurringCharge = await getRecurringCharge(
-          order.subscriptionId,
-          orgId,
-        );
-        if (recurringCharge) {
-          const rateupPlan = await prisma.rateupPlan.findFirst({
-            where: {
-              displayName: recurringCharge?.name,
-            },
-          });
-          planDetail = {
-            amount: recurringCharge.price,
-            currency: recurringCharge.currency,
-            description: rateupPlan.description,
-            interval: "monthly",
-            RateupPlan: rateupPlan,
-          };
+        const integration = await getShopifyInfo(orgId);
+        if (integration) {
+          const recurringCharge = await getRecurringCharge(
+            order.subscriptionId,
+            integration,
+          );
+          if (recurringCharge) {
+            const rateupPlan = await prisma.rateupPlan.findFirst({
+              where: {
+                displayName: recurringCharge?.name,
+              },
+            });
+            planDetail = {
+              amount: recurringCharge.price,
+              currency: recurringCharge.currency,
+              description: rateupPlan.description,
+              interval: "monthly",
+              RateupPlan: rateupPlan,
+            };
+          }
         }
       }
 

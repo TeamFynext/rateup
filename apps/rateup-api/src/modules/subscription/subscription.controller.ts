@@ -57,13 +57,10 @@ export async function updateSubscriptionHandler(
       return res
         .code(403)
         .send({ message: "You cannot change to Razorpay plans manually" });
-    if (rateupPlan.name === "FREE PLAN")
-      updatedData.features = FreePlanSubscriptionFeatures;
     else if (rateupPlan.name === "RATEUP TRIAL")
       updatedData.features = UnlimitedAccess;
-    else updatedData.features = rateupPlan.features;
+    else updatedData.features = rateupPlan?.features;
     updatedData.expiresAt = dayjs().add(30, "days").toDate();
-    updatedData.isAnnualMessageLimit = false;
   }
   const subscription = await updateSubscription(orgId, updatedData);
   res.send(subscription);

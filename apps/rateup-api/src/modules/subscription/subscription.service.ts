@@ -119,7 +119,13 @@ export async function updateSubscription(
     where: {
       orgId,
     },
-    data: { ...updatedData, lastLimitAlertSentAt: null },
+    data: {
+      ...updatedData,
+      lastLimitAlertSentAt: null,
+      isAnnualMessageLimit: updatedData?.basePlanId?.length
+        ? false
+        : updatedData.isAnnualMessageLimit,
+    },
   });
 }
 
