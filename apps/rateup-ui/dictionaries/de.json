@@ -2061,5 +2061,10 @@
   "Delete Question?": "Frage löschen?",
   "Add Customer": "Kunden hinzufügen",
   "External ID": "Externe ID",
-  "Enter External ID": "Externe ID eingeben"
+  "Enter External ID": "Externe ID eingeben",
+  "Allow rateup to subscribe to your store events": "Erlauben Sie Rateup, sich für Ihre Store-Events anzumelden",
+  "Schedule": "Zeitplan",
+  "Loyalty Action": "Treueaktion",
+  "Choose Loyalty Action or Whatsapp Template": "Wählen Sie Treueaktion oder WhatsApp-Vorlage",
+  "Loyalty Action Status": "Treueaktionsstatus"
 }

@@ -2060,5 +2060,10 @@
   "Delete Question?": "सवाल हटाएं?",
   "Add Customer": "ग्राहक जोड़ें",
   "External ID": "बाहरी पहचान",
-  "Enter External ID": "बाहरी पहचान दर्ज करें"
+  "Enter External ID": "बाहरी पहचान दर्ज करें",
+  "Allow rateup to subscribe to your store events": "अपने स्टोर इवेंट्स को सब्सक्राइब करने के लिए रेटअप को अनुमति दें",
+  "Schedule": "संचय",
+  "Loyalty Action": "वफादारी क्रिया",
+  "Choose Loyalty Action or Whatsapp Template": "वफादारी क्रिया या व्हाट्सएप टेम्पलेट चुनें",
+  "Loyalty Action Status": "वफादारी क्रिया स्थिति"
 }

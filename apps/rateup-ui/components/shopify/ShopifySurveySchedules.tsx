@@ -8,6 +8,7 @@ import { ActiveStatusBadge } from "pages/dashboard/apps&services/shopify";
 import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
+import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -39,6 +40,7 @@ const ShopifySurveySchedules = ({
   const columns = [
     { key: "event", value: "Event" },
     { key: "whatsapp_template", value: translations["WhatsApp Template"] },
+    { key: "loyaltyAction", value: translations["Loyalty Action"] },
     { key: "isProductSpecific", value: translations["Product Specific"] },
     { key: "product", value: translations["Product"] },
     { key: "timeDelay", value: translations["Time Delay (in minutes)"] },
@@ -64,6 +66,7 @@ const ShopifySurveySchedules = ({
   ];
   const [opened, { open, close }] = useDisclosure(false);
   const shopifySurveys = shopifyInfo?.credential?.shopifySurveys;
+  const { data: loyaltyActions } = useGetLoyaltyActions();
 
   const rows = shopifySurveys
     ? shopifySurveys?.map((row) => {
@@ -72,18 +75,22 @@ const ShopifySurveySchedules = ({
         return {
           event: shopifyEventData.find((event) => row.event == event.value)
             ?.label,
-          whatsapp_template: waTemplate?.data.name,
+          whatsapp_template: waTemplate?.data.name ?? "----",
           isProductSpecific: row.isProductSpecific ? "Yes" : "No",
           product: row.isProductSpecific
             ? shopifyProducts?.find(
                 (product) => product.id.toString() === row.productId,
               )?.title
             : "----",
-          timeDelay: row.timeDelay,
-          repeatInterval: `${row.repeatInterval.value} ${row.repeatInterval.unit}`,
+          timeDelay: row.timeDelay || "----",
+          repeatInterval: row.repeatInterval.value
+            ? `${row.repeatInterval.value} ${row.repeatInterval.unit}`
+            : "----",
           status: row.active,
           team: team?.name,
           createdAt: formatIsoDateStringWithTime(row.createdAt),
+          loyaltyAction:
+            loyaltyActions?.find((a) => a.id === row.actionId)?.name ?? "----",
           action: row,
         };
       })
@@ -95,7 +102,7 @@ const ShopifySurveySchedules = ({
         <Title order={3}>{translations["WhatsApp Message scheduling"]}</Title>
         <RefreshButton queryKeys={["shopifySurveySchedules"]} />
         <RateupButtonBlue
-          title={translations["schedule survey"]}
+          title={translations["Schedule"]}
           onClick={open}
           rightIcon={<IconPlus />}
         />
