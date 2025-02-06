@@ -2,6 +2,8 @@ import { registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema";
 import {
   deleteAllWebhooks,
   deleteShopifyIntegrationByShop,
+  deleteWebhookById,
+  getManagableWebhooks,
   getShopifyAuthUrl,
   getShopifyInfo,
   getShopifyIntegrationByShop,
@@ -44,9 +46,6 @@ export async function getShopifyAuthHandler(
     ) {
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
     } else {
-      const shop = await shopify.rest.Shop.current({
-        session: shopifyInfo.credential.session,
-      });
       reply.redirect(`${FRONTEND_URL}`);
     }
   } catch (e) {
@@ -90,15 +89,9 @@ export async function getShopifyAuthCallbackHandler(
         active: true,
       });
     else await createIntegration(data);
-    const webhook = new shopify.rest.Webhook({
-      session,
-    });
-    webhook.address = `${API_URL}${WEBHOOK_API_ROUTE}`;
-    webhook.format = "json";
     const res = await Promise.all(
-      ["app/uninstalled", "app_subscriptions/update"].map(async (topic) => {
-        webhook.topic = topic;
-        await webhook.save({ update: true });
+      ["APP_UNINSTALLED", "APP_SUBSCRIPTIONS_UPDATE"].map(async (topic) => {
+        await registerWebhookByTopic(topic, session);
       }),
     );
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
@@ -159,7 +152,8 @@ export async function registerWebhookByTopicHandler(
 ) {
   try {
     const { topic } = request.body;
-    await registerWebhookByTopic(topic, request.user.orgId);
+    const integration = await getShopifyInfo(request.user.orgId);
+    await registerWebhookByTopic(topic, integration.credential.session);
     reply.code(200).send();
   } catch (e) {
     console.error(e);
@@ -175,17 +169,11 @@ export async function deleteWebhookByTopicHandler(
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const { topic } = request.body;
     const session = shopifyInfo.credential?.session;
-    const webhooks = await shopify.rest.Webhook.all({ session });
-    const webhookId = webhooks.data.find(
-      (webhook) =>
-        webhook.topic ===
-        ShopifyOrderWebhookTopicEventMap.find((t) => t.key === topic).value,
-    ).id;
-    await shopify.rest.Webhook.delete({
-      session: session,
-      id: webhookId,
-    });
-    reply.code(200).send();
+    const client = new shopify.clients.Graphql({ session });
+    const data = await getManagableWebhooks(client);
+    const webhookId = data.find((webhook) => webhook.topic === topic).id;
+    const webhook = await deleteWebhookById(webhookId, client);
+    reply.code(200).send(webhook);
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
@@ -245,14 +233,10 @@ export async function getRegisteredWebhooksHandler(
   try {
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const session = shopifyInfo.credential.session;
-    const webhooks = await shopify.rest.Webhook.all({ session });
-    const formattedWebhooks = webhooks.data.map(
-      (webhook) =>
-        ShopifyOrderWebhookTopicEventMap.find(
-          (topic) => topic.value === webhook.topic,
-        )?.key,
-    );
-    reply.code(200).send(formattedWebhooks);
+    const client = new shopify.clients.Graphql({ session });
+    const data = await getManagableWebhooks(client);
+    const webhookslist = data.map((e) => e.topic);
+    reply.code(200).send(webhookslist);
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
@@ -266,8 +250,37 @@ export async function getProductsHandler(
   try {
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const session = shopifyInfo.credential.session;
-    const products = await shopify.rest.Product.all({ session });
-    reply.code(200).send(products.data);
+    const client = new shopify.clients.Graphql({ session });
+    let hasNextPage = true;
+    let cursor = null;
+    const products = [];
+    while (hasNextPage) {
+      const data = await client.request(
+        `query getProducts($cursor: String) {
+          products(first: 50, after: $cursor) {
+            edges {
+              node {
+                id
+                title
+              },
+              cursor
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }`,
+        { variables: { cursor } },
+      );
+      hasNextPage = data.data.products.pageInfo.hasNextPage;
+      cursor = data.data.products.pageInfo.endCursor;
+      products.push(
+        ...data.data.products.edges?.map((product) => product?.node),
+      );
+    }
+
+    reply.code(200).send(products);
   } catch (e) {
     console.error(e);
     reply.code(500).send(e);
@@ -281,10 +294,11 @@ export async function deleteIntegrationByShopHandler(
   try {
     const integration = await getShopifyIntegrationByShop(request.params.shop);
     try {
-      const shop = await shopify.rest.Shop.current({
+      const client = new shopify.clients.Graphql({
         session: integration.credential.session,
       });
-      if (shop) {
+      const data = await client.request(`query { shop { name }}`);
+      if (data.data.shop) {
         return reply.code(403).send("App is still installed on Shop");
       }
     } catch (e) {

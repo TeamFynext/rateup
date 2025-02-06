@@ -196,6 +196,7 @@ declare global {
     surveyId?: string;
     active: boolean;
     schedules: ShopifySchedules[];
+    actionId?: string;
   };
 
   type ScheduleObj = {
@@ -209,6 +210,7 @@ declare global {
     phone: string;
     webhookId?: string;
     checkoutId?: string;
+    actionStatus?: "success" | "failed";
     history: ScheduleObj[];
   };
 
