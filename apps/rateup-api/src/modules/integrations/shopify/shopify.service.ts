@@ -556,7 +556,7 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
   if (payload?.app_subscription?.name === "FREE PLAN") {
     rateupPlan = await prisma.rateupPlan.findFirst({
       where: {
-        displayName: "FREE PLAN",
+        name: "FREE PLAN",
       },
     });
   } else {
