@@ -31,10 +31,12 @@ export const useUpdateSubscriptionMutation = () => {
     mutationFn: ({
       orgId,
       updatedData,
+      isMenuPlanChange,
     }: {
       orgId: string;
       updatedData: object;
-    }) => updateSubscription(orgId, updatedData),
+      isMenuPlanChange?: boolean;
+    }) => updateSubscription(orgId, updatedData, isMenuPlanChange),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });

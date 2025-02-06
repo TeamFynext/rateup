@@ -161,6 +161,9 @@ const PlanCard = ({
                   "Clicked on subscribe now button in the pricing page",
                 );
                 if (data?.displayName.includes("FREE")) {
+                  if (data?.name?.includes("MENU")) {
+                    localStorage.setItem("selected_plan", JSON.stringify(data));
+                  }
                   router.push("/signup");
                 } else {
                   handlePlanSelection({

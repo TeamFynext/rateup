@@ -240,7 +240,7 @@ const Billing = ({
                   )}
 
                 {subscription?.basePlan?.name === "RATEUP TRIAL" ||
-                (subscription?.basePlan?.name === "FREE PLAN" &&
+                (subscription?.basePlan?.name.includes("FREE") &&
                   !isCustomPlan &&
                   !isProcessingPlan) ? (
                   <RateupButtonPrimary
