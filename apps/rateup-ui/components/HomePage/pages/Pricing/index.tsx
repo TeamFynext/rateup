@@ -25,8 +25,12 @@ import { WhatsAppSection } from "./Section/WhatsAppSection";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
 import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
 
-const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
-  const [value, setValue] = useState("WebSurveys");
+const Pricing = ({
+  isAccount = false,
+  handleSelection = () => {},
+  source = "WebSurveys",
+}) => {
+  const [value, setValue] = useState(source);
   const [checked, setChecked] = useState(false);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
@@ -70,7 +74,11 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
 
   const freePlan = session
     ? []
-    : data?.filter((plan) => plan?.displayName?.includes("FREE"));
+    : data?.filter(
+        (plan) =>
+          plan?.displayName?.includes("FREE") &&
+          (source === "Digital Menu") === plan?.name?.includes("MENU"),
+      );
 
   const plans = data?.filter((item) => {
     if (item?.paymentPlan) {
@@ -132,48 +140,50 @@ const Pricing = ({ isAccount = false, handleSelection = () => {} }) => {
           Choose what you need
         </Text>
       </Box>
-      <SimpleGrid
-        cols={{ base: 1, xl: 3 }}
-        spacing={extraLargeScren ? "80px" : "40px"}
-      >
-        <Box display={extraLargeScren ? "block" : "none"} />
-        <SegmentedControl
-          value={value}
-          color="var(--shade-of-blue-7)"
-          onChange={setValue}
-          classNames={classes}
-          fw={500}
-          data={[
-            { label: "Web Survey", value: "WebSurveys" },
-            { label: "WhatsApp", value: "WhatsApp" },
-            { label: "Custom", value: "Custom" },
-          ]}
-        />
-        <Flex align="center" pos={"relative"} gap={"xs"}>
-          <Switch
-            color={"var(--shade-of-blue-5)"}
+      {source === "WebSurveys" && (
+        <SimpleGrid
+          cols={{ base: 1, xl: 3 }}
+          spacing={extraLargeScren ? "80px" : "40px"}
+        >
+          <Box display={extraLargeScren ? "block" : "none"} />
+          <SegmentedControl
+            value={value}
+            color="var(--shade-of-blue-7)"
+            onChange={setValue}
             classNames={classes}
-            checked={checked}
-            onChange={(event) => setChecked(event.currentTarget.checked)}
-            size="lg"
+            fw={500}
+            data={[
+              { label: "Web Survey", value: "WebSurveys" },
+              { label: "WhatsApp", value: "WhatsApp" },
+              { label: "Custom", value: "Custom" },
+            ]}
           />
-          <Image
-            src={"/images/subscriptionArrow.png"}
-            h={32}
-            w={67}
-            pos={"absolute"}
-            bottom={"40px"}
-            left={"40px"}
-            alt="image of arrow"
-          />
-          <Stack gap={0} fz={"clamp(14px, 12.576px + 0.238vw, 16px)"}>
-            <Text c={"var(--light-grey-color-5)"}>Subscribe Annually</Text>
-            <Text c={"var(--shade-of-blue-5"}>
-              Save Upto {DISCOUNT_PERCENTAGE} Months
-            </Text>
-          </Stack>
-        </Flex>
-      </SimpleGrid>
+          <Flex align="center" pos={"relative"} gap={"xs"}>
+            <Switch
+              color={"var(--shade-of-blue-5)"}
+              classNames={classes}
+              checked={checked}
+              onChange={(event) => setChecked(event.currentTarget.checked)}
+              size="lg"
+            />
+            <Image
+              src={"/images/subscriptionArrow.png"}
+              h={32}
+              w={67}
+              pos={"absolute"}
+              bottom={"40px"}
+              left={"40px"}
+              alt="image of arrow"
+            />
+            <Stack gap={0} fz={"clamp(14px, 12.576px + 0.238vw, 16px)"}>
+              <Text c={"var(--light-grey-color-5)"}>Subscribe Annually</Text>
+              <Text c={"var(--shade-of-blue-5"}>
+                Save Upto {DISCOUNT_PERCENTAGE} Months
+              </Text>
+            </Stack>
+          </Flex>
+        </SimpleGrid>
+      )}
 
       <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">
         {value === "WebSurveys" && (

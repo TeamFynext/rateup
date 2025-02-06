@@ -8,6 +8,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import classNames from "classnames/bind";
 import { AnimatePresence, motion } from "motion/react";
 
+import { useUpdateSubscriptionMutation } from "@/backend/subscription/subscription.query";
+
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
 import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
 import { IUserInfoApiResponse } from "../../backend/user/user.api";
@@ -51,6 +53,7 @@ export default function Layout({ children, appProps }) {
   } = useUserInfo();
 
   const { data, error } = useOrgWsAuthCheck();
+  const updateSubscription = useUpdateSubscriptionMutation();
 
   useEffect(() => {
     if (data && !error) {
@@ -131,6 +134,22 @@ export default function Layout({ children, appProps }) {
 
     if (userInfo === null)
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+
+    const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
+    if (userInfo?.data && selectedPlan && selectedPlan.name.includes("MENU")) {
+      updateSubscription.mutate(
+        {
+          orgId: userInfo.data.orgId,
+          updatedData: { basePlanId: selectedPlan.id },
+          isMenuPlanChange: true,
+        },
+        {
+          onSuccess: () => {
+            localStorage.removeItem("selected_plan");
+          },
+        },
+      );
+    }
   }, [userInfo]);
 
   useEffect(() => {

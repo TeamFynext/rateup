@@ -27,6 +27,8 @@ import {
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
+import WaTemplateSelector from "../input/WaTemplateSelector";
+import { LASelector } from "../LoyaltyComponents/utils";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ScheduleSurveyModal = ({
@@ -54,9 +56,10 @@ const ScheduleSurveyModal = ({
         value: 0,
         unit: "hour",
       },
+      actionId: "",
     },
     validate: {
-      waTemplateId: isNotEmpty("Template is required"),
+      // waTemplateId: isNotEmpty("Template is required"),
       event: isNotEmpty("Template is required"),
       teamId: isNotEmpty("Team is required"),
       productId: (value, values) =>
@@ -72,24 +75,15 @@ const ScheduleSurveyModal = ({
     IntegratedApps.shopify,
   );
 
-  //get wa templates from db
-  const templates = useTemplatesAvailableForTeam(form.values.teamId);
-  if (
-    form.values.waTemplateId &&
-    templates?.length &&
-    !templates.map((t) => t.id).includes(form.values.waTemplateId)
-  ) {
-    form.setFieldValue("waTemplateId", "");
-  }
-  const templatesData = templates?.map((t) => {
-    return {
-      value: t?.id,
-      label: t?.data?.name,
-    };
-  });
-
   const handleScheduleSurvey = () => {
     if (form.validate().hasErrors) return;
+    if (!form.values.waTemplateId && !form.values.actionId) {
+      form.setErrors({
+        actionId: translations["Choose Loyalty Action or Whatapp Template"],
+        waTemplateId: translations["Choose Loyalty Action or Whatapp Template"],
+      });
+      return;
+    }
     const newShopifySurveys = [...shopifyInfo.credential.shopifySurveys];
     const isEventExist = newShopifySurveys.find(
       (s) => s.event === form.values.event,
@@ -196,10 +190,9 @@ const ScheduleSurveyModal = ({
           data={shopifyEventData}
           {...form.getInputProps("event")}
         />
-        <ContainedSelection
+        <WaTemplateSelector
           label={translations["whatsApp Template"]}
           placeholder={translations["Select a template"]}
-          data={templatesData}
           {...form.getInputProps("waTemplateId")}
         />
         <ContainedNumberInput
@@ -207,6 +200,17 @@ const ScheduleSurveyModal = ({
           {...form.getInputProps("timeDelay")}
           allowDecimal={false}
           allowNegative={false}
+          display={form.values.waTemplateId ? "block" : "none"}
+        />
+        <LASelector
+          label={translations["Loyalty Action"]}
+          placeholder={translations["Select action"]}
+          {...form.getInputProps("actionId")}
+          display={
+            form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS
+              ? "none"
+              : "block"
+          }
         />
 
         {form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS ? (

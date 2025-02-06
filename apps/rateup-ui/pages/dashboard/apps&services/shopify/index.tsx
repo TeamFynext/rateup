@@ -24,6 +24,7 @@ import { useIntegrationByType } from "@/backend/appsIntegration/integration.quer
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -57,9 +58,9 @@ enum ShopifyActivePanel {
 const Shopify = () => {
   const [connectOpened, { open: openConnect, close: closeConnect }] =
     useDisclosure(false);
-  const { data: shopifyInfo } = useIntegrationByType(
+  const { data: shopifyInfo, isLoading } = useIntegrationByType(
     IntegratedApps.shopify,
-  ) as { data: ShopifyIntegration };
+  ) as { data: ShopifyIntegration; isLoading: boolean };
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
   const { translations } = useTranslations();
@@ -94,6 +95,8 @@ const Shopify = () => {
       );
     }
   };
+
+  if (isLoading) return <RateupLoader />;
 
   if (!shopifyInfo || !shopifyInfo?.active || !shopifyInfo.credential.session)
     return (

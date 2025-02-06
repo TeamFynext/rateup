@@ -1434,6 +1434,7 @@ export type ShopifySurvey = {
     value: number;
     unit: string; // "hour" | "day"
   };
+  actionId?: string;
 };
 
 type ScheduleObj = {
@@ -1447,5 +1448,6 @@ export type ShopifySchedule = ScheduleObj & {
   phone: string;
   webhookId?: string;
   checkoutId?: string;
+  actionStatus?: "success" | "failed";
   history: ScheduleObj[];
 };

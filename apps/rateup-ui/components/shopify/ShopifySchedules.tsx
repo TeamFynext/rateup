@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { Anchor, Group, Stack, Text, Title } from "@mantine/core";
+import { Anchor, Badge, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -65,6 +65,22 @@ const ShopifySchedules = ({
     { key: "sentAt", value: translations["Sent At"] },
     { key: "status", value: translations["Status"] },
     {
+      key: "actionStatus",
+      value: translations["Loyalty Action Status"],
+      renderCell: (value) =>
+        !value ? (
+          <Text>----</Text>
+        ) : (
+          <Badge
+            color={value === "success" ? "var(--sucess-green)" : "red"}
+            variant="light"
+            radius={"xs"}
+          >
+            {value}
+          </Badge>
+        ),
+    },
+    {
       key: "event_details",
       value: "Event Details",
       renderCell: (value) => (
@@ -100,17 +116,22 @@ const ShopifySchedules = ({
   ];
 
   const rows = schedules
-    ? schedules.map((schedule) => ({
-        phone: schedule.phone,
-        scheduleTime: formatIsoDateStringWithTime(schedule.scheduledAt),
-        sentAt: formatIsoDateStringWithTime(schedule.sentAt),
-        status: schedule.status,
-        createdAt: formatIsoDateStringWithTime(schedule.createdAt),
-        history: schedule,
-        event_details: shopifyInfo.credential.shopifySurveys?.find((s) =>
-          s.schedules.find((sc) => sc.webhookId === schedule.webhookId),
-        ),
-      }))
+    ? schedules
+        .sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
+        .map((schedule) => ({
+          phone: schedule.phone,
+          scheduleTime: formatIsoDateStringWithTime(schedule.scheduledAt),
+          sentAt: schedule.sentAt
+            ? formatIsoDateStringWithTime(schedule.sentAt)
+            : "----",
+          status: schedule.status ?? "----",
+          actionStatus: schedule.actionStatus,
+          createdAt: formatIsoDateStringWithTime(schedule.createdAt),
+          history: schedule,
+          event_details: shopifyInfo.credential.shopifySurveys?.find((s) =>
+            s.schedules.find((sc) => sc.webhookId === schedule.webhookId),
+          ),
+        }))
     : [];
 
   return (

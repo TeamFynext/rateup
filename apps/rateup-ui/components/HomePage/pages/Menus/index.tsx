@@ -1,8 +1,10 @@
+import Head from "next/head";
+
+import Pricing from "../Pricing";
 import HeroSection from "./HeroSection";
+import HowItWorks from "./HowItWorks";
 import RateupInAction from "./RateupInAction";
 import SimplicityRefined from "./SimplicityRefined";
-import HowItWorks from "./HowItWorks";
-import Head from "next/head";
 
 function Menus() {
   return (
@@ -39,6 +41,7 @@ function Menus() {
       <SimplicityRefined />
       <RateupInAction />
       <HowItWorks />
+      <Pricing source="Digital Menu" />
     </>
   );
 }

@@ -11,7 +11,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
 
-import { IntegratedApps } from "@/types/enums";
+import { IntegratedApps, ShopifyEvents } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
 import {
   useDeleteIntegrationMutation,
@@ -256,22 +256,27 @@ const ShopifySettings = ({
             </Group>
             {showEvents && (
               <Stack>
-                {shopifyEventData.map((event) => (
-                  <Switch
-                    key={event.value}
-                    label={event.label}
-                    checked={webhooks?.includes(event.value)}
-                    size="md"
-                    styles={{
-                      label: {
-                        color: "dimgray",
-                      },
-                    }}
-                    onChange={(e) =>
-                      handleChangeWebhookByTopic(event, e.currentTarget.checked)
-                    }
-                  />
-                ))}
+                {shopifyEventData.map((event) =>
+                  event.value === ShopifyEvents.ABANDONED_CHECKOUTS ? null : (
+                    <Switch
+                      key={event.value}
+                      label={event.label}
+                      checked={webhooks?.includes(event.value)}
+                      size="md"
+                      styles={{
+                        label: {
+                          color: "dimgray",
+                        },
+                      }}
+                      onChange={(e) =>
+                        handleChangeWebhookByTopic(
+                          event,
+                          e.currentTarget.checked,
+                        )
+                      }
+                    />
+                  ),
+                )}
               </Stack>
             )}
           </Stack>

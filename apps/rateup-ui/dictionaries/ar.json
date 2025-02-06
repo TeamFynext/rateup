@@ -2060,5 +2060,10 @@
   "Delete Question?": "حذف السؤال؟",
   "Add Customer": "إضافة عميل",
   "External ID": "الهوية الخارجية",
-  "Enter External ID": "أدخل الهوية الخارجية"
+  "Enter External ID": "أدخل الهوية الخارجية",
+  "Allow rateup to subscribe to your store events": "السماح لـ Rateup بالاشتراك في أحداث متجرك",
+  "Schedule": "الجدول الزمني",
+  "Loyalty Action": "إجراء الولاء",
+  "Choose Loyalty Action or Whatsapp Template": "اختر إجراء الولاء أو قالب WhatsApp",
+  "Loyalty Action Status": "حالة إجراء الولاء"
 }
