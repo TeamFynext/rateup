@@ -739,6 +739,7 @@ declare global {
     paymentPlanId?: string;
     subscriptionRef?: string;
     isAnnualMessageLimit: boolean;
+    shopifyPlanId?: string;
   }
   type Org = {
     id: string;
