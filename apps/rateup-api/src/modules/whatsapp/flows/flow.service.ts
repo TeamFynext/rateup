@@ -614,7 +614,7 @@ export async function updateFlowJsonInWa(
 
   try {
     const res = await axios.post(
-      `https://graph.facebook.com/v18.0/${waFlowId}/assets`,
+      `https://graph.facebook.com/v21.0/${waFlowId}/assets`,
       formData, // Upload the FormData
       {
         headers: {

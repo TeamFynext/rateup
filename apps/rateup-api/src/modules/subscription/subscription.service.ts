@@ -87,8 +87,18 @@ export async function getSubscription(orgId: string) {
 
   //check if usageStats record exists & update
   if (orgId) await createStats(orgId);
-
-  return sub;
+  if (sub) {
+    const order = await prisma.order.findFirst({
+      where: {
+        subscriptionId: sub.subscriptionRef,
+      },
+      select: {
+        shopifyPlanId: true,
+      },
+    });
+    return { ...sub, shopifyPlanId: order?.shopifyPlanId };
+  }
+  return null;
 }
 
 export async function getAllSubscriptions() {

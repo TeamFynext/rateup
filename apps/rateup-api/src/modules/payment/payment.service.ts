@@ -514,6 +514,18 @@ export async function cancelRazorpaySubscription(orgId) {
   if (!subscription || !subscription?.subscriptionRef) {
     throw new Error("Subscription missing");
   }
+  if (!subscription.subscriptionRef.startsWith("sub")) {
+    const subscriptionStatus = await prisma.order.update({
+      data: {
+        subscriptionStatus: SubscriptionStatus.cancelled,
+        subscriptionEndedAt: new Date(),
+      },
+      where: {
+        subscriptionId: subscription.subscriptionRef,
+      },
+    });
+    return;
+  }
 
   const cancelSubscriptionData = {
     cancel_at_cycle_end: 0,

@@ -381,6 +381,8 @@ declare global {
     createdAt: Date;
     basePlan: SPlan;
     isAnnualMessageLimit: boolean;
+    subscriptionRef?: string;
+    shopifyPlanId?: string;
   }
   type WaFlowWa = {
     // wa flow type from whatsapp

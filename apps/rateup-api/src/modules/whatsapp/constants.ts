@@ -1,3 +1,3 @@
-const whatsappApiBaseUrl = "https://graph.facebook.com/v18.0";
+const whatsappApiBaseUrl = "https://graph.facebook.com/v21.0";
 
 export { whatsappApiBaseUrl };
