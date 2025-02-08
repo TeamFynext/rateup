@@ -35,6 +35,7 @@ import {
 import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme";
 import { hasFeature } from "../subscription/subscription.service";
 import { updateQuestionsOnSurvey } from "../question/question.service";
+import { createStats } from "../stats/stats.service";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -182,14 +183,7 @@ export async function cloneSurvey(
 
     if (newClonedSurvey && teamIds.length > 0) {
       let team = await getTeamById(teamIds[0]);
-      let incrementCount =
-        survey?.type === SurveyType.Web
-          ? { surveysCount: { increment: 1 } }
-          : { waSurveysCount: { increment: 1 } };
-      await prisma.usageStats.update({
-        where: { orgId: team.orgId },
-        data: incrementCount,
-      });
+      await createStats(team.orgId);
     }
 
     return newClonedSurvey;
