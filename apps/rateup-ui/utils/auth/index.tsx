@@ -1,13 +1,20 @@
+import { useCallback } from "react";
 import { useRouter } from "next/router";
-import { IconInfoCircleFilled, IconX, IconCheck } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import { signIn, signUp } from "supertokens-web-js/recipe/emailpassword";
 
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconInfoCircleFilled, IconX } from "@tabler/icons-react";
+import { signIn, signUp } from "supertokens-web-js/recipe/emailpassword";
 import {
+  sendVerificationEmail,
+  verifyEmail,
+} from "supertokens-web-js/recipe/emailverification";
+import {
+  clearLoginAttemptInfo,
   createCode,
   resendCode,
-  clearLoginAttemptInfo,
 } from "supertokens-web-js/recipe/passwordless";
+
+import { useRouteAndCartStore } from "../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 
 const handleCreateCode = async (phoneNumber: string, router) => {
   try {
@@ -230,6 +237,7 @@ export function useSignUp() {
     name: string,
     orgName: string,
     phoneNumber: string,
+    planId?: string,
   ) {
     try {
       // if (phoneNumber) {
@@ -256,6 +264,10 @@ export function useSignUp() {
           {
             id: "phoneNumber",
             value: phoneNumber || null,
+          },
+          {
+            id: "planId",
+            value: planId || null,
           },
         ],
       });
@@ -313,8 +325,6 @@ export function useSignUp() {
     }
   };
 }
-
-import { verifyEmail } from "supertokens-web-js/recipe/emailverification";
 
 export const useConsumeVerificationCode = () => {
   const router = useRouter();
@@ -379,10 +389,6 @@ export const useConsumeVerificationCode = () => {
 
   return consumeVerificationCode;
 };
-
-import { sendVerificationEmail } from "supertokens-web-js/recipe/emailverification";
-import { useCallback } from "react";
-import { useRouteAndCartStore } from "../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 
 export function useEmailSend() {
   const router = useRouter();
