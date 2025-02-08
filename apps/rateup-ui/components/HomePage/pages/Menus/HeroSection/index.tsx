@@ -1,11 +1,15 @@
-import { Flex, Text, Title, Button, Stack } from "@mantine/core";
-import MotionButtonGesture from "../../../components/MotionButtonGesture";
-import CustomMantineButton from "../../../components/Button";
-import { IconArrowRight } from "@tabler/icons-react";
-import styles from "./HeroSection.module.css";
 import Image from "next/image";
+
+import { Button, Flex, Stack, Text, Title } from "@mantine/core";
+import { IconArrowRight } from "@tabler/icons-react";
+
 import { gAnalyticsAndFbEvent } from "../../../../../utils/gtag";
-import BookDemoContactForm from "../../../components/BookDemoContactForm";
+import BookDemoContactForm, {
+  JoinNowButton,
+} from "../../../components/BookDemoContactForm";
+import CustomMantineButton from "../../../components/Button";
+import MotionButtonGesture from "../../../components/MotionButtonGesture";
+import styles from "./HeroSection.module.css";
 
 function HeroSection() {
   return (
@@ -20,11 +24,7 @@ function HeroSection() {
           <span className={styles["para-span"]}>digital menus.</span>
         </Text>
         <Flex className={styles["join-see-sample-btns-container"]}>
-          <BookDemoContactForm
-            buttonProps={{ whiteBackgroundGradientText: true }}
-            buttonText="Join Now"
-            clickedFromPage="digital-menu-page"
-          />
+          <JoinNowButton buttonProps={{ whiteBackgroundGradientText: true }} />
 
           <MotionButtonGesture>
             <Button

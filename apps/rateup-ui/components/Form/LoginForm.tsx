@@ -64,6 +64,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
 
   const handleSubmit = (values) => {
+    localStorage.removeItem("selected_plan");
     setIsLoading(true);
     signIn(
       values.email,

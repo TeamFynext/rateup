@@ -235,9 +235,8 @@ export const generateListItems = (listData: string[] = []) => (
       const isNegative = item.startsWith("-");
       const displayName = isNegative ? item.substring(1) : item;
       return (
-        <>
+        <Stack key={item} gap={2}>
           <List.Item
-            key={item}
             icon={
               isNegative && (
                 <IconX
@@ -250,7 +249,7 @@ export const generateListItems = (listData: string[] = []) => (
           </List.Item>
 
           <Divider my="md" />
-        </>
+        </Stack>
       );
     })}
   </List>

@@ -5,7 +5,7 @@ import { Flex, Group } from "@mantine/core";
 import classNames from "classnames/bind";
 
 import { useCheckSession } from "../../../../hooks/checkSession";
-import BookDemoContactForm from "../BookDemoContactForm";
+import BookDemoContactForm, { JoinNowButton } from "../BookDemoContactForm";
 import styles from "./Header.module.css";
 
 const cx = classNames.bind(styles);
@@ -27,9 +27,7 @@ function LoginSignupLinks() {
       ) : currentRoutePath === "/digital-menu" ? (
         <>
           <Flex className={cx("join-now-btn-container")}>
-            <BookDemoContactForm
-              buttonText="Join Now"
-              clickedFromPage="digital-menu-page"
+            <JoinNowButton
               buttonProps={{
                 style: { fontSize: "1rem", padding: "0.625rem 1rem" },
               }}
