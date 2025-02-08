@@ -246,6 +246,17 @@ export async function getLCustomerById(id) {
               refereePoints: true,
               isAmountBased: true,
               isAmountBasedForReferee: true,
+              amount: true,
+              reward: {
+                select: {
+                  name: true,
+                },
+              },
+              refereeReward: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           amount: true,
