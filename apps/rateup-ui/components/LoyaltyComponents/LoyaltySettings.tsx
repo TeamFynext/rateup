@@ -44,15 +44,16 @@ const LoyaltySettings = () => {
     useDisclosure(false);
 
   const [selectedConfig, setSelectedConfig] = useState(null);
+  const { translations } = useTranslations();
 
   const columns = generateColumnsForLoyaltyTemplate(
     setSelectedConfig,
     open,
     openDialog,
+    translations,
   );
 
   const deleteMutation = useDeleteLoyaltyTemplate();
-  const { translations } = useTranslations();
 
   return (
     <Stack>
@@ -64,7 +65,7 @@ const LoyaltySettings = () => {
           onClick={open}
         />
       </Group>
-      <PaperLayout>
+      <PaperLayout h={"60vh"}>
         <TanstackTable
           columns={columns}
           data={templateConfigs}
@@ -192,7 +193,7 @@ export const LoyaltyWaTemplateConfig = ({
 
   const typeData = Object.values(LoyaltyTemplateTypes).map((t) => ({
     value: t,
-    label: getLoyaltyTemplateLabel(t).label,
+    label: getLoyaltyTemplateLabel(t, translations).label,
   }));
 
   return (
@@ -246,9 +247,13 @@ export const LoyaltyWaTemplateConfig = ({
             WaAutomatedReplyResponseType.Template ? (
               <WaTemplateSelector
                 templateType={TemplateType.LOYALTY}
-                label={getLoyaltyTemplateLabel(form.values.type)?.templateLabel}
+                label={
+                  getLoyaltyTemplateLabel(form.values.type, translations)
+                    ?.templateLabel
+                }
                 description={
-                  getLoyaltyTemplateLabel(form.values.type)?.templateDescription
+                  getLoyaltyTemplateLabel(form.values.type, translations)
+                    ?.templateDescription
                 }
                 {...form.getInputProps("waTemplateId")}
               />
@@ -257,7 +262,7 @@ export const LoyaltyWaTemplateConfig = ({
                 <Text size="sm">{translations["Reply Message"]}</Text>
                 <Text size="xs" c="dimmed">
                   {
-                    getLoyaltyTemplateLabel(form.values.type)
+                    getLoyaltyTemplateLabel(form.values.type, translations)
                       .templateDescription
                   }
                 </Text>
@@ -271,20 +276,17 @@ export const LoyaltyWaTemplateConfig = ({
             )}
           </>
         ) : (
-          <>
-            <LReferralSelector
-              {...form.getInputProps("actionId")}
-              label={translations["Referral Action"]}
-            />
-          </>
+          <LReferralSelector
+            {...form.getInputProps("actionId")}
+            label={translations["Referral Action"]}
+          />
         )}
       </Stack>
     </FormModalLayout>
   );
 };
 
-function getLoyaltyTemplateLabel(type) {
-  const { translations } = useTranslations();
+function getLoyaltyTemplateLabel(type, translations) {
   switch (type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
       return {
@@ -334,15 +336,18 @@ function generateColumnsForLoyaltyTemplate(
   setSelectedConfig,
   open,
   openDialog,
+  translations,
 ) {
   const columnHelper = createColumnHelper<LoyaltyTemplate>();
-  const { translations } = useTranslations();
 
   return [
-    columnHelper.accessor((row) => getLoyaltyTemplateLabel(row.type).label, {
-      id: "type",
-      header: () => <span>Type</span>,
-    }),
+    columnHelper.accessor(
+      (row) => getLoyaltyTemplateLabel(row.type, translations).label,
+      {
+        id: "type",
+        header: () => <span>Type</span>,
+      },
+    ),
     columnHelper.accessor((row) => row.requestMessage, {
       id: "requestMessage",
       header: translations["Request Message"],

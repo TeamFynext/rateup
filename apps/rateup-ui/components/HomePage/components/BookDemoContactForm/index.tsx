@@ -1,7 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 import { Flex } from "@mantine/core";
 import { modals } from "@mantine/modals";
+
+import { useCheckSession } from "@/hooks/checkSession";
+import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 
 import { gAnalyticsAndFbEvent } from "../../../../utils/gtag";
 import modalStyles from "../../../Modal/ModalManagerModals/BookDemoModal/ModalStyles.module.css";
@@ -70,3 +74,38 @@ function BookDemoContactForm({
 }
 
 export default BookDemoContactForm;
+
+export const JoinNowButton = ({ buttonProps }) => {
+  const { data: plans, isPending, isError } = useRateupPaymentsPlans();
+  const menuFreePlan = plans
+    ? plans.find(
+        (plan) => plan.name.includes("FREE") && plan.name.includes("MENU"),
+      )
+    : null;
+
+  const session = useCheckSession();
+
+  const router = useRouter();
+
+  const handleFreeMenuPlan = () => {
+    if (session) {
+      router.push("/login");
+      return;
+    }
+    if (menuFreePlan) {
+      localStorage.setItem("selected_plan", JSON.stringify(menuFreePlan));
+      router.push("/signup");
+    } else {
+      router.push("/pricing");
+    }
+  };
+  return (
+    <Button
+      className="book-a-demo-btn"
+      onClick={handleFreeMenuPlan}
+      {...buttonProps}
+    >
+      Join Now
+    </Button>
+  );
+};
