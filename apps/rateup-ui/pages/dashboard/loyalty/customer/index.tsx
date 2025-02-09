@@ -253,11 +253,11 @@ export function generateColumns(
           return (
             <Stack w={200} gap={0}>
               <Text fw={"bold"} size="sm">
-                {getValue().name}
+                {getValue()?.name}
               </Text>
-              <Text size="sm">{getValue().phone}</Text>
+              <Text size="sm">{getValue()?.phone}</Text>
               <Text size="sm">
-                Joined On - {formatDate(getValue().createdAt)}
+                Joined On - {formatDate(getValue()?.createdAt)}
               </Text>
             </Stack>
           );

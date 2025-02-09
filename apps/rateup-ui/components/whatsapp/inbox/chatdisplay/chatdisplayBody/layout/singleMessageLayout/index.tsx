@@ -58,40 +58,15 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     const colorIndex = Math.abs(hash) % colors.length;
     return colors[colorIndex];
   };
-  const getLatestStatus = (statuses: { [key: string]: string }) => {
-    const statusKeys = Object.keys(statuses ?? []).filter(
-      (key) => statuses[key] !== "",
-    );
-    if (statusKeys.length === 0) return getStatusIcon("pending");
-    const latestStatus = statusKeys.reduce((latest, key) => {
-      const latestDate = dayjs(statuses[latest]).startOf("minute");
-      const currentDate = dayjs(statuses[key]).startOf("minute");
-      if (currentDate.isAfter(latestDate)) {
-        return key;
-      } else if (currentDate.isSame(latestDate)) {
-        const order = ["sent", "delivered", "read", "failed"];
-        return order.indexOf(key) > order.indexOf(latest) ? key : latest;
-      }
-      return latest;
-    }, statusKeys?.[0]);
-
-    return getStatusIcon(latestStatus);
+  const getLatestStatus = (statusObj: { [key: string]: string }) => {
+    if (statusObj?.read) return <IconChecks size={14} color="#34B7F1" />;
+    if (statusObj?.delivered) return <IconChecks size={14} color="gray" />;
+    if (statusObj?.failed)
+      return <IconExclamationCircleFilled size={14} color="red" />;
+    if (statusObj?.sent) return <IconCheck size={14} color="gray" />;
+    return <IconClock size={13} color="gray" />;
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "read":
-        return <IconChecks size={14} color="#34B7F1" />;
-      case "delivered":
-        return <IconChecks size={14} color="gray" />;
-      case "sent":
-        return <IconCheck size={14} color="gray" />;
-      case "failed":
-        return <IconExclamationCircleFilled size={14} color="red" />;
-      default:
-        return <IconClock size={13} color="gray" />;
-    }
-  };
   return (
     <Stack className={classes.wrapper} {...getWrapperProps()}>
       <Group gap={4}>
