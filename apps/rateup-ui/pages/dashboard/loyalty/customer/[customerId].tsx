@@ -402,11 +402,31 @@ function getDetailedView(
   function getActionHistory(stats) {
     return actions
       .filter((a) => a.action.type === stats)
-      .map((a) => ({
-        name: a.action.name,
-        createdAt: formatIsoDateStringWithTime(a.createdAt),
-        points: a.action.points,
-      }));
+      .map((a) => {
+        let points = a.action.points;
+        if (a.action.reward) {
+          points = `${a.action.reward.name} reward`;
+        } else {
+          if (a.action.isAmountBased)
+            points = Math.round((points / a.action.amount) * a.amount);
+        }
+        if (a.action.type === LoyaltyActionType.ReferralPurchase) {
+          if (!a.refereePhone) {
+            if (a.action.refereeReward)
+              points = `${a.action.refereeReward.name} reward`;
+            else {
+              points = a.action.refereePoints;
+              if (a.action.isAmountBasedForReferee)
+                points = Math.round((points / a.action.amount) * a.amount);
+            }
+          }
+        }
+        return {
+          name: a.action.name,
+          createdAt: formatIsoDateStringWithTime(a.createdAt),
+          points,
+        };
+      });
   }
 
   const pointStats = {
