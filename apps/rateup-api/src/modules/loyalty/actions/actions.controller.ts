@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createLoyaltyAction,
+  createLoyaltyActionFlowMap,
   deleteLoyaltyActionById,
   getCustomerActions,
   getLoyaltyActionById,
@@ -43,7 +44,9 @@ export async function createLoyaltyActionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await createLoyaltyAction(request.body, request.user.orgId);
+    const { flowId, ...restBody } = request.body;
+    const res = await createLoyaltyAction(restBody, request.user.orgId);
+    flowId && (await createLoyaltyActionFlowMap({ flowId, actionId: res.id }));
     reply.code(200).send(res);
     await updateMonthlyStat(
       SubscriptionFeaturePathName.LoyaltyAction,

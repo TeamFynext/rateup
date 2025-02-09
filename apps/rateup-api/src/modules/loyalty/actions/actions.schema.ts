@@ -5,6 +5,7 @@ export enum LoyaltyActionType {
   ReferralPurchase = "Referral Purchase",
   DirectPurchase = "Direct Purchase",
   CustomerRegistration = "Customer Registration",
+  FeedBack = "FeedBack",
 }
 
 export const lActionSchema = z.object({
@@ -34,6 +35,7 @@ export const lActionSchema = z.object({
   action_id: z.string(),
   rewardId: z.string().optional(),
   refereeRewardId: z.string().optional(),
+  flowId: z.string().optional(),
 });
 
 const lActionUpdateSchema = lActionSchema.omit({ type: true }).partial();

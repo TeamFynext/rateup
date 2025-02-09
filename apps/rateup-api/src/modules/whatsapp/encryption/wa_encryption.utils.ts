@@ -11,6 +11,8 @@ import {
   handleDecryptedFlowRequest,
 } from "../flows/flow.service";
 import { WhatsappSettings } from "@prisma/client";
+import prisma from "../../../utils/prisma";
+import { handleLoyaltyPointsCommand } from "../../loyalty/settings/settings.service";
 
 export function generateKeyPairsForWaEncryption(
   passphrase: string,

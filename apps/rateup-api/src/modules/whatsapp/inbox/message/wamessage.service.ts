@@ -317,7 +317,7 @@ export async function filterChats(
       // Search term filter
       if (bodyFilterProps?.searchTerm) {
         const search = bodyFilterProps.searchTerm;
-        extendedWhereClause += ` AND (c."name" ILIKE '%${search}%' OR c."phone" LIKE '%${search}%')`;
+        extendedWhereClause += ` AND (c."name" ILIKE '%${search}%' OR REPLACE(c."phone", ' ', '') LIKE '%${search}%')`;
       }
 
       return extendedWhereClause;

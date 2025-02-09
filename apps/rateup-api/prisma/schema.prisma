@@ -160,7 +160,7 @@ model UsageStats {
   loyaltyRewardCount      Int @default(0)
   loyaltyCustomerCount    Int @default(0)
 
-  annualMessageCount      Int  @default(0)
+  annualMessageCount       Int @default(0)
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)
   monthlyMenuViews         Int @default(0)
@@ -177,7 +177,7 @@ model UsageStats {
   allowedMenuViews       Int @default(0)
   allowedMessagesCount   Int @default(0)
 
-  lastMonthlyResettedDate  DateTime? @db.Date()
+  lastMonthlyResettedDate DateTime? @db.Date()
 }
 
 model WhatsappSettings {
@@ -322,6 +322,7 @@ model Survey {
   surveyEndAt                       DateTime?
   uiTextTranslations                Json?             @default("{\"nextBtn\": { \"english\": \"Next\"}, \"submitBtn\": { \"english\": \"Submit\" }}")
   responseWebhookEndpoint           String?
+  sendWeeklyReport                  Boolean           @default(true)
 }
 
 model SurveyTeamMap {
@@ -429,9 +430,9 @@ model Contact {
   email                String?
   dob                  DateTime?
   loyaltyCustomer      LoyaltyCustomer?
-  external_id          String?   
+  external_id          String?
 
-  @@unique([external_id,orgId],name: "external_id_org_id_unique")
+  @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
 }
 
@@ -535,7 +536,7 @@ model CampaignMessageQueue {
   campaignParticipantId String                     @db.Uuid
   status                CampaignMessageQueueStatus @default(PENDING)
   retryCount            Int                        @default(0)
-  scheduledAt            DateTime                   @default(now())
+  scheduledAt           DateTime                   @default(now())
   createdAt             DateTime                   @default(now())
 }
 
@@ -731,7 +732,7 @@ model Subscription {
   basePlanId           String?     @db.Uuid
   subscriptionRef      String?     @unique //gateway Subscription id
   lastLimitAlertSentAt DateTime? //Limit reached Email 
-  isAnnualMessageLimit  Boolean    @default(false)
+  isAnnualMessageLimit Boolean     @default(false)
 }
 
 // used to tokenize some data
@@ -895,12 +896,13 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId     String  @db.Uuid
-  survey    Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId  String  @unique @db.Uuid
-  anonymous Boolean @default(false)
-  version   Int     @default(1)
+  org                  Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                String                 @db.Uuid
+  survey               Survey                 @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId             String                 @unique @db.Uuid
+  anonymous            Boolean                @default(false)
+  version              Int                    @default(1)
+  LoyaltyActionFlowMap LoyaltyActionFlowMap[]
 
   @@unique([flowId, orgId])
 }
@@ -1198,6 +1200,7 @@ model LoyaltyAction {
   refereeRewardId               String?                    @db.Uuid
   refereeReward                 LoyaltyReward?             @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
   loyaltyWaCommand              LoyaltyWaCommand?
+  LoyaltyActionFlowMap          LoyaltyActionFlowMap[]
 
   @@unique([action_id, orgId], name: "action_id_org_id_unique")
 }
@@ -1269,6 +1272,15 @@ model LoyaltyActionCustomerMap {
   refereePhone String?
   amount       Float? //amount spent on action
   createdAt    DateTime        @default(now())
+}
+
+model LoyaltyActionFlowMap {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actionId  String        @db.Uuid
+  action    LoyaltyAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  flowId    String        @db.Uuid
+  flow      WaFlow        @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)
+  createdAt DateTime      @default(now())
 }
 
 model LoyaltyWaCommand {
