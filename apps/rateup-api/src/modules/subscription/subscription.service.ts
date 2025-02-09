@@ -10,39 +10,52 @@ import { getNestedProperty } from "../../utils/misc/obj.utils";
 export async function createFreePlanSubscription(
   orgId: string,
   pClient = prisma,
+  planId?: string,
 ) {
-  // Check if the FREE PLAN plan exists  -- was earlier RATEUP TRIAL
-  let rateupFreePlan = await pClient.rateupPlan.findFirst({
-    where: {
-      name: "FREE PLAN",
-    },
-  });
-
-  let freePlanDescription = [
-    "2 Surveys",
-    "100 Response/Month",
-    "100 Messages/Month",
-    "1 Team",
-    "1 User",
-  ];
-
-  if (!rateupFreePlan) {
-    rateupFreePlan = await pClient.rateupPlan.create({
-      data: {
-        name: "FREE PLAN",
-        displayName: "FREE PLAN",
-        planType: PaymentPlanType.BASE,
-        description: freePlanDescription,
-        features: FreePlanSubscriptionFeatures as any,
+  let rateupPlan;
+  if (planId) {
+    rateupPlan = await pClient.rateupPlan.findUnique({
+      where: {
+        id: planId,
       },
     });
+  }
+  if (!planId || !rateupPlan) {
+    // Check if the FREE PLAN plan exists  -- was earlier RATEUP TRIAL
+    let rateupFreePlan = await pClient.rateupPlan.findFirst({
+      where: {
+        name: "FREE PLAN",
+      },
+    });
+
+    let freePlanDescription = [
+      "2 Surveys",
+      "100 Response/Month",
+      "100 Messages/Month",
+      "1 Team",
+      "1 User",
+    ];
+
+    if (!rateupFreePlan) {
+      rateupFreePlan = await pClient.rateupPlan.create({
+        data: {
+          name: "FREE PLAN",
+          displayName: "FREE PLAN",
+          planType: PaymentPlanType.BASE,
+          description: freePlanDescription,
+          features: FreePlanSubscriptionFeatures as any,
+        },
+      });
+    }
+
+    rateupPlan = rateupFreePlan;
   }
 
   await pClient.subscription.create({
     data: {
       orgId,
-      basePlanId: rateupFreePlan.id,
-      features: rateupFreePlan.features,
+      basePlanId: rateupPlan.id,
+      features: rateupPlan.features,
       expiresAt: dayjs().add(100, "day").toDate(),
     },
   });
