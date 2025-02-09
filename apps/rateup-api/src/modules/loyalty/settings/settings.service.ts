@@ -6,18 +6,25 @@ import {
 import prisma from "../../../utils/prisma";
 import { LoyaltyTemplateInput } from "./settings.schema";
 import {
+  createCustomerAction,
   createLoyaltyReferralCode,
   getLCustomerByPhone,
   handleCustomerRemovalFromLoyalty,
   handleLoyaltyRegister,
   handleSendTemplate,
+  updateLCustomerPoint,
 } from "../customer/customer.service";
 import { getLoyaltyActionById } from "../actions/actions.service";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { log } from "../../../utils/logger";
 import { LoyaltyWaCommand } from "@prisma/client";
-import { handleIssuedRewardsCommand } from "../redeems/redeem.service";
+import {
+  createRedeem,
+  handleIssuedRewardsCommand,
+  RedeemStatus,
+} from "../redeems/redeem.service";
+import dayjs from "dayjs";
 
 export async function createLoyaltyWaCommand(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -184,6 +191,67 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
   }
+}
+export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
+  const { action } = loyaltyWaCommand;
+  const { waTemplateId, orgId } = action;
+  if (
+    dayjs().isBefore(dayjs(action.startDate)) ||
+    dayjs().isAfter(dayjs(action.endDate))
+  ) {
+    return { success: false, message: "Action Not available on this date" };
+  }
+  const customer = await getLCustomerByPhone(phone, orgId);
+
+  if (!customer) {
+    const message = `You are not a member of loyalty program yet`;
+    await sendTextMessage({ phone, orgId }, null, message);
+    return;
+  }
+  const existing = await prisma.loyaltyActionCustomerMap.findFirst({
+    where: {
+      customerId: customer.id,
+      actionId: action.id,
+    },
+  });
+  if (existing) {
+    const message = `You have already given feedback for this action`;
+    await sendTextMessage({ phone, orgId }, null, message);
+    return;
+  }
+
+  //handling referrer/customer action having reward
+  if (action.rewardId) {
+    const { redeem, message } = await createRedeem(
+      customer.id,
+      action.rewardId,
+      true,
+    );
+    if (redeem.status === RedeemStatus.FAILED) {
+      return {
+        success: false,
+        message,
+      };
+    }
+    await createCustomerAction({
+      customerId: customer.id,
+      actionId: action.id,
+      refereePhone: "",
+      amount: action.points,
+    });
+  } else {
+    //handling referrer/customer action having points
+    let customerPoints = action.points;
+    await createCustomerAction({
+      customerId: customer.id,
+      actionId: action.id,
+      refereePhone: "",
+      amount: action.points,
+    });
+    await updateLCustomerPoint(customer.id, customerPoints);
+  }
+
+  await handleSendTemplate(waTemplateId, orgId, phone, []);
 }
 
 export function replacedContentByDynamicVariable(content, dynamicVariables) {

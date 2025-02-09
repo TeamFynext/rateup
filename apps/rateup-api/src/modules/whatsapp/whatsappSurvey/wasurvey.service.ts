@@ -46,6 +46,10 @@ import {
 import { getGraphApiErrorMessage } from "../wa_error_handler";
 import { uploadFile } from "../../../utils/upload/s3Upload";
 import axios from "axios";
+import {
+  handleLoyaltyFeedback,
+  handleLoyaltyPointsCommand,
+} from "../../loyalty/settings/settings.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -467,6 +471,17 @@ export async function saveResponses(session: WaSessionWithRelations) {
   };
   const res = await createResponse(surveyResponse);
   await updateResponse(res.id, { ip: session.ip, location: undefined });
+  const loyalty = await prisma.loyaltyActionFlowMap.findFirst({
+    where: {
+      flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
+    },
+    include: {
+      action: true,
+    },
+  });
+  if (loyalty) {
+    await handleLoyaltyFeedback(session.phone, loyalty);
+  }
   log.info("Responses saved \n%o\n", surveyResponse);
   const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
   await saveResponseToGoogleSheet({

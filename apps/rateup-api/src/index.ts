@@ -28,7 +28,10 @@ import {
 } from "./modules/integrations/shopify/shopify.service";
 import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
 import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
-import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler";
+import {
+  sendSchedulesWaMessages,
+  sendWeeklyReportToEmail,
+} from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
 import dayjs from "dayjs";
 
@@ -141,6 +144,17 @@ server.register(fastifyCron, {
         await resetMonthlyCounts();
         await resetAnnualCounts();
       },
+    },
+    {
+      name: "sendWeeklyReportToEmail",
+      cronTime: "0 0 * * 0", // Every week on Sunday at 00:00
+      onTick: async () => {
+        const currentTime = new Date();
+        log.info(`......Running Weekly Job --> .....${currentTime}`);
+        await sendWeeklyReportToEmail();
+      },
+      start: true,
+      timeZone: "Etc/UTC", // Set to UTC+0
     },
   ],
 });

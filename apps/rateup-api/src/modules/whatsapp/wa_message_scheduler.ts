@@ -16,6 +16,8 @@ import {
 import { getFlowWithSurveyTeamMapIds } from "../external/v1/whatsapp/internal-copy/whatsapp/flows/flow.service";
 import { getScheduleTime } from "../../utils/date";
 import { updateMonthlyStat } from "../stats/stats.service";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -139,5 +141,67 @@ export async function sendSchedulesWaMessages() {
     );
   } catch (e) {
     log.error("error in wamessageschedule %o", e);
+  }
+}
+
+type weeklyStats = {
+  email: string;
+  surveys: {
+    surveyId: string;
+    title: string;
+    type: string;
+    totalCount: number;
+    weeklyCount: number;
+  }[];
+}[];
+
+export async function sendWeeklyReportToEmail() {
+  const reports: weeklyStats = await prisma.$queryRaw`
+  SELECT 
+    s."notificationEmail" AS email,
+    JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'surveyId', s.id,
+        'title', COALESCE(wf.name, s.title),
+        'type', s.type,
+        'totalCount', 
+          (SELECT COUNT(*) FROM "SurveyResponse" sr 
+            JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id 
+            WHERE stm."surveyId" = s.id),
+        'weeklyCount', 
+          (SELECT COUNT(*) FROM "SurveyResponse" sr 
+            JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id 
+            WHERE stm."surveyId" = s.id 
+              AND sr."createdAt" >= NOW() - INTERVAL '7 days')
+      )
+      ORDER BY s.type ASC, COALESCE(wf.name, s.title) ASC
+    ) AS surveys
+  FROM "Survey" s
+  LEFT JOIN "WaFlow" wf ON s.id = wf."surveyId"
+  WHERE s."sendWeeklyReport" = TRUE 
+    AND s."notificationEmail" IS NOT NULL 
+    AND s."notificationEmail" <> ''
+  GROUP BY s."notificationEmail";
+`;
+  for (const report of reports) {
+    const msg = {
+      to: report.email,
+      subject: "Weekly Report of Stats of Web Survey and WhatsApp Survey",
+      text: "weekly report",
+      html: createMessageTemplate({
+        body: report.surveys
+          .map(
+            (survey) =>
+              `<tr>
+              <td>${survey?.title}</td>
+              <td>${survey?.type}</td>
+              <td>${survey?.totalCount}</td>
+              <td>${survey?.weeklyCount}</td>
+            </tr>`,
+          )
+          .join(""),
+      }),
+    };
+    sendAWSEmail(msg);
   }
 }
