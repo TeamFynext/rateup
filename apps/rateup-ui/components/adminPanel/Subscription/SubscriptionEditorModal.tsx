@@ -98,10 +98,10 @@ export function SubscriptionEditorModal({
               onChange={(value) =>
                 subscriptionForm.setFieldValue("expiresAt", value)
               }
-              disabled={!!subscription.basePlan.paymentPlan}
+              disabled={!!isRazorPayPlan}
             />
-            {new Date(subscription.expiresAt) < new Date() &&
-              subscription.basePlan.paymentPlan && (
+            {new Date(subscription?.expiresAt) < new Date() &&
+              isRazorPayPlan && (
                 <Text
                   size="sm"
                   c={"var(--tertiary-color)"}
