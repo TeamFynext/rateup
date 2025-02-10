@@ -18,3 +18,9 @@ export async function updateThemeTitleSt() {
 export async function updateUsageStatsResetDate() {
   return await axiosClient.post(`${baseUrl}/usage-stats-reset`);
 }
+
+export async function updateSubscriptionFeature() {
+  return await axiosClient.post(`${baseUrl}/subscription/free`, null, {
+    timeout: 0,
+  });
+}
