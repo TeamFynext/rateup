@@ -25,6 +25,7 @@ const createUserSignupSchema = z.object({
   phone: z.string(),
   phoneNumber: z.string().optional(),
   recipeName: z.nativeEnum(UserRecipes),
+  planId: z.string().optional(),
 });
 
 const pauseUserSchema = z.object({

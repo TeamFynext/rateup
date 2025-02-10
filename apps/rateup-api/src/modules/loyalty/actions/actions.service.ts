@@ -39,7 +39,14 @@ export async function createLoyaltyAction(
     },
   });
 }
-
+export async function createLoyaltyActionFlowMap({ flowId, actionId }) {
+  return await prisma.loyaltyActionFlowMap.create({
+    data: {
+      flowId,
+      actionId,
+    },
+  });
+}
 export async function getLoyaltyActions(orgId: string) {
   return await prisma.loyaltyAction.findMany({
     where: {
@@ -56,7 +63,7 @@ export async function getLoyaltyActions(orgId: string) {
 }
 
 export async function getLoyaltyActionById(id: string) {
-  return await prisma.loyaltyAction.findUnique({
+  return await prisma.loyaltyAction.findFirst({
     where: {
       id,
     },

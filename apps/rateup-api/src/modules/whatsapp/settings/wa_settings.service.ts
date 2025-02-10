@@ -176,23 +176,21 @@ export async function updateContactTag(orgId: string, tags: string[]) {
 }
 
 export async function getWaLogs(orgId: string, query: PaginationQuery) {
-  const {
-    page,
-    limit,
-    desc = "asc",
-    search = "",
-    sort = "createdAt",
-    ...filter
-  } = query;
-  const totalCount = await prisma.waLogs.count({});
+  const { page, limit, desc = "desc", phone } = query;
+  const totalCount = await prisma.waLogs.count({
+    where: {
+      orgId,
+    },
+  });
   const logs = await prisma.waLogs.findMany({
     where: {
       orgId,
+      phone: phone ? { contains: phone } : undefined,
     },
     skip: page && limit ? Number(page) * Number(limit) : undefined,
     take: limit ? Number(limit) : undefined,
     orderBy: {
-      [sort]: desc,
+      createdAt: desc,
     },
   });
   return { totalCount, logs };

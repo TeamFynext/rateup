@@ -9,13 +9,18 @@ const createWaSettingsInput = {
   appId: z.string(),
   webhookPassword: z.string(),
 };
+enum sortOrder {
+  asc = "asc",
+  desc = "desc",
+}
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
 export const paginationQuery = z.object({
   page: z.number().optional(),
   limit: z.number().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
-  desc: z.string().optional(),
+  desc: z.nativeEnum(sortOrder).optional(),
+  phone: z.string().optional().nullable(),
 });
 
 const updateWaSettingsInputSchema = z.object({

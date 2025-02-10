@@ -59,6 +59,10 @@ export const SuperTokensConfig: TypeInput = {
             id: "phoneNumber",
             optional: true,
           },
+          {
+            id: "planId",
+            optional: true,
+          },
         ],
       },
       override: {
@@ -129,6 +133,7 @@ export const SuperTokensConfig: TypeInput = {
                 const name = getValueByKey(formFields, "name");
                 const orgName = getValueByKey(formFields, "orgName");
                 const phoneNumber = getValueByKey(formFields, "phoneNumber");
+                const planId = getValueByKey(formFields, "planId");
 
                 let { id, emails, loginMethods } = response.user;
 
@@ -142,6 +147,7 @@ export const SuperTokensConfig: TypeInput = {
                     orgName,
                     phoneNumber,
                     recipeName: getUserRecipeName(loginMethods[0].recipeId),
+                    planId,
                   });
                 }
 

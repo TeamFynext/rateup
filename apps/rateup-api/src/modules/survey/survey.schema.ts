@@ -139,6 +139,7 @@ const updateSurveyRequestSchema = z.object({
   uiTextTranslations: z.any().optional(),
   webSurveyPagesTheme: z.any().optional(),
   responseWebhookEndpoint: z.string().optional(),
+  sendWeeklyReport: z.boolean().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

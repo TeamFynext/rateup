@@ -57,6 +57,7 @@ export async function createUserSignup({
   phoneNumber,
   recipeName,
   prefLanguage,
+  planId,
 }: CreateUserSignupSchema) {
   log.info("Creating user....");
   try {
@@ -111,7 +112,7 @@ export async function createUserSignup({
         },
       });
       // creating free plan subscription
-      await createFreePlanSubscription(org.id, prisma as any);
+      await createFreePlanSubscription(org.id, prisma as any, planId);
     });
 
     if (team.id && teamMember.userId) {
