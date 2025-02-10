@@ -63,31 +63,57 @@ export async function campaignStatsChangeHandler(
   }
 }
 
-export async function getMessageHandler(
-  request: FastifyRequest<{
-    Params: { id: string };
-    Querystring: { limit: number; offset: number };
-  }>,
+export async function updateRateupPlanHandler(
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const orgId = request.params.id;
-    const messages =
-      await prisma.$queryRaw`SELECT wm."id", wm."messageBody", wm."createdAt" FROM "WaMessage" wm 
-      JOIN "Contact" c ON wm."contactId" = c.id 
-      JOIN "Subscription" s ON c."orgId" = s."orgId"
-      WHERE wm."messageBody"->>'send' IS NOT NULL
-      AND wm."createdAt" >= COALESCE(s."renewedAt", s."createdAt")
-      AND c."orgId" = ${orgId}::uuid ORDER BY wm."createdAt" LIMIT ${BigInt(request.query.limit)} OFFSET ${BigInt(request.query.offset)};`;
-
-    const count = await prisma.$queryRaw`SELECT COUNT(*) FROM "WaMessage" wm 
-      JOIN "Contact" c ON wm."contactId" = c.id 
-      JOIN "Subscription" s ON c."orgId" = s."orgId"
-      WHERE wm."messageBody"->>'send' IS NOT NULL
-      AND wm."createdAt" >= COALESCE(s."renewedAt", s."createdAt")
-      AND c."orgId" = ${orgId}::uuid;`;
-
-    reply.code(200).send({ messages, count: Number(count[0].count) });
+    const rateupplans = await prisma.rateupPlan.findMany();
+    for (const plan of rateupplans) {
+      const features = plan.features as unknown as SubscriptionFeatures;
+      const newfeatures = {
+        ...features,
+        ai: { count: { completionTokens: 0, promptTokens: 0 }, active: false },
+      };
+      await prisma.rateupPlan.update({
+        where: {
+          id: plan.id,
+        },
+        data: {
+          features: newfeatures,
+        },
+      });
+      if (plan.name === "FREE PLAN") {
+        const subscriptions = await prisma.subscription.findMany({
+          where: {
+            basePlan: {
+              id: plan.id,
+            },
+          },
+        });
+        for (const sub of subscriptions) {
+          const subFeatures = sub.features as unknown as SubscriptionFeatures;
+          if (!subFeatures.ai) {
+            const updateFeature = {
+              ...subFeatures,
+              ai: {
+                count: { completionTokens: 0, promptTokens: 0 },
+                active: false,
+              },
+            };
+            await prisma.subscription.update({
+              where: {
+                orgId: sub.orgId,
+              },
+              data: {
+                features: updateFeature,
+              },
+            });
+          }
+        }
+      }
+    }
+    reply.code(200).send("success");
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
