@@ -15,7 +15,7 @@ import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
 
-import { TemplateType } from "@/types/enums";
+import { LoyaltyActionType, TemplateType } from "@/types/enums";
 import {
   useCreateLoyaltyAction,
   useUpdateLoyaltyAction,
@@ -33,6 +33,7 @@ import {
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { FlowSelector } from "@/components/whatsapp/flows/FlowSelector/FlowSelector";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import {
@@ -109,6 +110,7 @@ const LoyaltyActionForm = ({
       isExistingUserReferralAllowed: z.boolean().optional().nullable(),
       actionRewardType: z.nativeEnum(ActionRewadTypes),
       refereeActionRewardType: z.nativeEnum(ActionRewadTypes),
+      flowId: z.string().optional().nullable(),
     })
     .superRefine((values, ctx) => {
       if (
@@ -213,6 +215,7 @@ const LoyaltyActionForm = ({
       action_id: "",
       actionRewardType: ActionRewadTypes.Point,
       refereeActionRewardType: ActionRewadTypes.Point,
+      flowId: "",
     },
     validate: zodResolver(schema),
   });
@@ -264,6 +267,7 @@ const LoyaltyActionForm = ({
         refereeActionRewardType: action?.refereeRewardId
           ? ActionRewadTypes.Reward
           : ActionRewadTypes.Point,
+        flowId: action?.flowId || "",
       });
       form.setValues({
         ...action,
@@ -281,9 +285,11 @@ const LoyaltyActionForm = ({
         refereeActionRewardType: action?.refereeRewardId
           ? ActionRewadTypes.Reward
           : ActionRewadTypes.Point,
+        flowId: action?.flowId || "",
       });
     }
   }, [action, form.values.type]);
+  console.log(action);
 
   useEffect(() => {
     if (
@@ -349,6 +355,16 @@ const LoyaltyActionForm = ({
               autosize
               minRows={3}
             />
+            {LoyaltyActionType.FeedBack && (
+              // <WaTemplateSelector {...form.getInputProps("flowId")} />
+              <FlowSelector
+                onlyPublished
+                id={"dbFlowId"}
+                {...form.getInputProps("flowId")}
+                searchable
+                comboboxProps={{ position: "top" }}
+              />
+            )}
             <Group>
               <Stack>
                 <Checkbox

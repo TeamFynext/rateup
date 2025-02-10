@@ -3,9 +3,7 @@ import React from "react";
 import { Group, Stack, Text } from "@mantine/core";
 import { IconCircleArrowRightFilled } from "@tabler/icons-react";
 
-import { LoyaltyActionType } from "@/types/enums";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { LCustomerStats } from "@/pages/dashboard/loyalty/customer/[customerId]";
 
 export enum LPointStats {
   TotalPoints = "Total Points Earned",

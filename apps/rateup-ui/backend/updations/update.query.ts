@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   updateGoogleReviewQuestions,
+  updateSubscriptionFeature,
   updateThemeTitleSt,
   updateUsageStatsResetDate,
 } from "./update.api";
@@ -34,6 +35,18 @@ export const useUpdateThemeTitleSt = () => {
 export const useUpdateUsageStatsResetDate = () => {
   return useMutation({
     mutationFn: updateUsageStatsResetDate,
+    onSuccess: () => {
+      showSuccessToast("Update Success");
+    },
+    onError: () => {
+      showErrorToast("Update Error");
+    },
+  });
+};
+
+export const useUpdateSubscription = () => {
+  return useMutation({
+    mutationFn: updateSubscriptionFeature,
     onSuccess: () => {
       showSuccessToast("Update Success");
     },

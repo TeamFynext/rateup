@@ -30,7 +30,7 @@ const Logs = () => {
   const { data, isPending, refetch } = useWaLogs(
     pagination,
     searchText,
-    sorting,
+    sorting?.[0],
     columnFilters,
   );
   const { translations } = useTranslations();

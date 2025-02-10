@@ -103,6 +103,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
   const hasPhoneInputErr = signUpForm.errors?.phoneNumber;
 
   const handleSubmit = (values) => {
+    const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
     if (termsPrivacyAgreed) {
       setIsLoading(true);
       signUp(
@@ -111,8 +112,10 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         values.name,
         values.orgName,
         values.phoneNumber,
+        selectedPlan?.id,
       ).finally(() => {
         setIsLoading(false);
+        localStorage.removeItem("selected_plan");
       });
     }
   };

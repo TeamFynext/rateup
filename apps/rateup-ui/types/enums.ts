@@ -515,6 +515,7 @@ export enum LoyaltyActionType {
   ReferralPurchase = "Referral Purchase",
   DirectPurchase = "Direct Purchase",
   CustomerRegistration = "Customer Registration",
+  FeedBack = "FeedBack",
 }
 
 export enum ContactGroupType {

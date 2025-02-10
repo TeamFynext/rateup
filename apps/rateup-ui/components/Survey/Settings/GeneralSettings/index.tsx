@@ -10,6 +10,7 @@ import {
   Pill,
   PillsInput,
   Stack,
+  Switch,
   Text,
   useCombobox,
 } from "@mantine/core";
@@ -35,6 +36,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
       title: survey?.title || "",
       languages: survey?.langauges || [],
       teams: survey?.teams?.map((team) => team?.id) || [],
+      sendWeeklyReport: survey?.sendWeeklyReport || true,
     },
     validate: {
       title: isNotEmpty(translations["Cannot be Empty"]),
@@ -68,6 +70,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   }));
   useEffect(() => {
     setLanguages(survey?.languages);
+    settingsForm.setFieldValue("sendWeeklyReport", survey?.sendWeeklyReport);
   }, [survey]);
 
   useEffect(() => {
@@ -139,6 +142,14 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
             />
           </Stack>
         )}
+        <Group className={styles["form-input-container"]}>
+          <Switch
+            {...settingsForm.getInputProps("sendWeeklyReport", {
+              type: "checkbox",
+            })}
+          />
+          <h3>{translations["Send weekly report to email"]}</h3>
+        </Group>
 
         <RateupButtonBlue
           className={styles["save-changes-btn"]}

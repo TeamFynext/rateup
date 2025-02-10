@@ -91,21 +91,28 @@ export function SubscriptionEditorModal({
     >
       <Stack>
         {!rateupPlanEnable && (
-          <DateInput
-            label={translations["Expires At"]}
-            value={dayjs(subscriptionForm.values.expiresAt).toDate()}
-            onChange={(value) =>
-              subscriptionForm.setFieldValue("expiresAt", value)
-            }
-            disabled={
-              subscription?.basePlan &&
-              !(
-                subscription.basePlan.name.toUpperCase().includes("CUSTOM") ||
-                subscription.basePlan.name.toUpperCase().includes("TRIAL") ||
-                subscription.basePlan.name.toUpperCase().includes("FREE")
-              )
-            }
-          />
+          <>
+            <DateInput
+              label={translations["Expires At"]}
+              value={dayjs(subscriptionForm.values.expiresAt).toDate()}
+              onChange={(value) =>
+                subscriptionForm.setFieldValue("expiresAt", value)
+              }
+              disabled={!!subscription.basePlan.paymentPlan}
+            />
+            {new Date(subscription.expiresAt) < new Date() &&
+              subscription.basePlan.paymentPlan && (
+                <Text
+                  size="sm"
+                  c={"var(--tertiary-color)"}
+                  fw={"bold"}
+                  m={"xs"}
+                >
+                  Cannot change expiry date of payment plan subscription. Try
+                  changing the plan
+                </Text>
+              )}
+          </>
         )}
         <Box
           style={{

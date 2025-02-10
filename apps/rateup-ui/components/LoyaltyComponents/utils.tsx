@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import {
   IconAward,
+  IconMessage,
   IconShoppingCart,
   IconUserCircle,
   IconUserFilled,
@@ -217,6 +218,13 @@ export const LoyaltyActionSelect = ({
       case LoyaltyActionType.CustomerRegistration:
         return (
           <IconUserPlus
+            size={"1.2rem"}
+            color={color ?? "var(--mantine-color-gray-7)"}
+          />
+        );
+      case LoyaltyActionType.FeedBack:
+        return (
+          <IconMessage
             size={"1.2rem"}
             color={color ?? "var(--mantine-color-gray-7)"}
           />
