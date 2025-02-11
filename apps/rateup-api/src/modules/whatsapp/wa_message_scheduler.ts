@@ -197,7 +197,7 @@ export async function sendWeeklyReportToEmail() {
             (survey) =>
               `<tr>
               <td>${survey?.title}</td>
-              <td>${survey?.type}</td>
+              <td>${survey?.type === "web" ? "WebSurvey" : "Flow"}</td>
               <td>${survey?.totalCount}</td>
               <td>${survey?.weeklyCount}</td>
             </tr>`,
