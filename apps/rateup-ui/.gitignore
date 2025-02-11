@@ -34,3 +34,6 @@ yarn-error.log*
 # storybook
 storybook-static
 .idea
+
+# Sentry Config File
+.env.sentry-build-plugin

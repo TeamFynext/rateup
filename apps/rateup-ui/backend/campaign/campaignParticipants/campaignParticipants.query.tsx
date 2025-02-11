@@ -96,7 +96,9 @@ export const useAddCampaignParticipants = (
   return useMutation({
     mutationFn: addCampaignParticipants,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignParticipants", campaignId],
+      });
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
@@ -126,7 +128,9 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
         "campaign-participants-remove",
         <IconCheck />,
       );
-      queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignParticipants", campaignId],
+      });
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
@@ -156,7 +160,9 @@ export const useRemoveMulitpleGroupParticipants = (
         <IconCheck />,
         true,
       );
-      queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignParticipants", campaignId],
+      });
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
