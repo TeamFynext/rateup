@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   ActionIcon,
   Badge,
+  BadgeProps,
   Center,
   Group,
   Image,
@@ -40,13 +41,14 @@ import {
 } from "../../../../components/Button/RateupButtons";
 import ShopifySurveySchedules from "../../../../components/shopify/ShopifySurveySchedules";
 
-export const ActiveStatusBadge = ({ active }) => {
+interface ActiveBadgeProps extends BadgeProps {
+  active: boolean;
+}
+export const ActiveStatusBadge = ({ active, ...props }: ActiveBadgeProps) => {
   const { translations } = useTranslations();
   return (
-    <Badge color={active ? "green" : "red"}>
-      {active
-        ? (translations["ACTIVE"] ?? "ACTIVE")
-        : (translations["INACTIVE"] ?? "INACTIVE")}
+    <Badge color={active ? "var(--active-green-2)" : "red"} {...props}>
+      {active ? translations["ACTIVE"] : translations["INACTIVE"]}
     </Badge>
   );
 };

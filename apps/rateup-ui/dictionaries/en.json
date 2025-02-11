@@ -307,6 +307,7 @@
   "Are you sure you want to sign out from the synced account?": "Are you sure you want to sign out from the synced account?",
   "Yes": "Yes",
   "INACTIVE": "INACTIVE",
+  "ACTIVE": "ACTIVE",
   "Syncing Shopify products": "Syncing Shopify products",
   "Products loaded successfully": "Products loaded successfully",
   "Product syncing failed": "Product syncing failed",

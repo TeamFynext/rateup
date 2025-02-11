@@ -1,5 +1,7 @@
 import React from "react";
+
 import { Box, Flex, Stack, Text } from "@mantine/core";
+
 import PlanCard from "../Card/PlanCard";
 import { PlanCardWidth } from "../Utils/constants";
 
@@ -10,20 +12,19 @@ export const MenuSection = ({
   freePlan,
   currencySymbol,
 }) => {
-  const menuPlan = plans
+  const menuPlan = [] // plans, removing for now
     ?.filter((item) => item?.name?.includes("Menu"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
 
-  if (menuPlan?.length > 0) {
-    menuPlan?.push({
-      displayName: "Business",
-      paymentPlan: {
-        amount: "Lets Talk!",
-        currency: "",
-        period: "",
-      },
-    });
-  }
+  menuPlan?.push({
+    displayName: "Business",
+    paymentPlan: {
+      amount: "Lets Talk!",
+      currency: "",
+      period: "",
+    },
+  });
+
   const inversePeriod =
     menuPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 
