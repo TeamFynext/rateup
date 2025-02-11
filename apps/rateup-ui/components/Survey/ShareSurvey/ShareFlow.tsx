@@ -203,7 +203,9 @@ export const ShareFlow = ({
               label={
                 dbFlow.pendingSave
                   ? translations[
-                      "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
+                      v2Flow
+                        ? "Save your flow to WhatsApp"
+                        : "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
                     ]
                   : translations["No changes to save"]
               }
@@ -260,14 +262,18 @@ export const ShareFlow = ({
               <Text c="dark.1"> {translations["Not published! "]}</Text>
             )}
           </Group>
-          <RateupButtonSecondary
-            disabled={disableShare}
-            title={survey?.active ? "Pause" : "Resume"}
-            leftIcon={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
-            onClick={() =>
-              surveyStatusUpdateMutation.mutate({ active: !survey?.active })
-            }
-          />
+          {!v2Flow && (
+            <RateupButtonSecondary
+              disabled={disableShare}
+              title={survey?.active ? "Pause" : "Resume"}
+              leftIcon={
+                survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />
+              }
+              onClick={() =>
+                surveyStatusUpdateMutation.mutate({ active: !survey?.active })
+              }
+            />
+          )}
         </Group>
       </PaperLayout>
       <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>

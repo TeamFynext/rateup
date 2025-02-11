@@ -241,9 +241,7 @@ function ScreenListItem({
                 <Tooltip
                   label={
                     pendingSave
-                      ? translations[
-                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
-                        ]
+                      ? translations["Save your flow to WhatsApp"]
                       : translations["No changes to save"]
                   }
                 >
