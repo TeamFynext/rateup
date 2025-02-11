@@ -22,6 +22,7 @@ import {
   getResponseExcelByCampaignById,
   sendCampaign,
   updateCampaign,
+  updateCampaignMessageQueueRetryCount,
 } from "./campaign.service";
 import { Role } from "@prisma/client";
 import { verifyRole } from "../../utils/auth";
@@ -124,6 +125,14 @@ export async function sendCampaignHandler(
     }
 
     if (await doesCampaignIdExistInMessageQueue(campaignId)) {
+      const updated = await updateCampaignMessageQueueRetryCount(campaignId);
+      if (updated?.count > 0) {
+        return reply.status(200).send({
+          message:
+            "Retry count has been reset and the campaign is now scheduled",
+          code: "MSG_SCHEDULED",
+        });
+      }
       return reply.status(400).send({
         message:
           "The campaign participants already exist in the queue. Add participants after it is sent.",
