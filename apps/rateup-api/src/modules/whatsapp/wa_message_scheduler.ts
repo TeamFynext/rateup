@@ -157,31 +157,34 @@ type weeklyStats = {
 
 export async function sendWeeklyReportToEmail() {
   const reports: weeklyStats = await prisma.$queryRaw`
-  SELECT 
-    s."notificationEmail" AS email,
+  SELECT
+    u.email,
     JSON_AGG(
       JSON_BUILD_OBJECT(
         'surveyId', s.id,
         'title', COALESCE(wf.name, s.title),
         'type', s.type,
-        'totalCount', 
-          (SELECT COUNT(*) FROM "SurveyResponse" sr 
-            JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id 
-            WHERE stm."surveyId" = s.id),
-        'weeklyCount', 
-          (SELECT COUNT(*) FROM "SurveyResponse" sr 
-            JOIN "SurveyTeamMap" stm ON sr."surveyTeamMapId" = stm.id 
-            WHERE stm."surveyId" = s.id 
-              AND sr."createdAt" >= NOW() - INTERVAL '7 days')
+        'totalCount', total_count,
+        'weeklyCount', weekly_count
       )
       ORDER BY s.type ASC, COALESCE(wf.name, s.title) ASC
     ) AS surveys
   FROM "Survey" s
   LEFT JOIN "WaFlow" wf ON s.id = wf."surveyId"
+  LEFT JOIN "SurveyTeamMap" stm ON s.id = stm."surveyId"
+  LEFT JOIN "TeamMember" tm ON tm."teamId" = stm."teamId"
+  LEFT JOIN "User" u ON u.id = tm."userId"
+  LEFT JOIN LATERAL (
+    SELECT 
+      COUNT(*) AS total_count,
+      COUNT(*) FILTER (WHERE sr."createdAt" >= NOW() - INTERVAL '7 days') AS weekly_count
+    FROM "SurveyResponse" sr
+    WHERE sr."surveyTeamMapId" = stm.id
+  ) response_counts ON TRUE
   WHERE s."sendWeeklyReport" = TRUE 
-    AND s."notificationEmail" IS NOT NULL 
-    AND s."notificationEmail" <> ''
-  GROUP BY s."notificationEmail";
+    AND s.active = TRUE
+  GROUP BY u.email;
+;
 `;
   for (const report of reports) {
     const msg = {
@@ -194,7 +197,7 @@ export async function sendWeeklyReportToEmail() {
             (survey) =>
               `<tr>
               <td>${survey?.title}</td>
-              <td>${survey?.type}</td>
+              <td>${survey?.type === "web" ? "WebSurvey" : "Flow"}</td>
               <td>${survey?.totalCount}</td>
               <td>${survey?.weeklyCount}</td>
             </tr>`,

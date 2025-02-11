@@ -82,8 +82,8 @@ export const createMessageTemplate = ({ body }) => {
                               <tr>
                                       <th>Title</th>
                                       <th>Type</th>
-                                      <th>Total Count</th>
-                                      <th>Weekly Count</th>
+                                      <th>Total Response</th>
+                                      <th>Weekly Response</th>
                               </tr>
                       </thead>
                       <tbody>
