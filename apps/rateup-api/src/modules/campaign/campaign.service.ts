@@ -806,3 +806,16 @@ export async function doesCampaignIdExistInMessageQueue(campaignId: string) {
   });
   return !!exists;
 }
+export const updateCampaignMessageQueueRetryCount = (campaignId) => {
+  return prisma.campaignMessageQueue.updateMany({
+    where: {
+      campaignParticipant: {
+        campaignId,
+      },
+      retryCount: 2,
+    },
+    data: {
+      retryCount: 0,
+    },
+  });
+};

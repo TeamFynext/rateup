@@ -378,8 +378,12 @@ export async function deleteFlowHandler(
     throw new Error("Cannot delete a published flow. Deprecate it instead.");
   }
 
-  log.trace("deleting flow in wa %s", flow.flowId);
-  await deleteFlowInWa(orgId, flow.flowId);
+  try {
+    log.trace("deleting flow in wa %s", flow.flowId);
+    if (flow.flowId) await deleteFlowInWa(orgId, flow.flowId);
+  } catch (error) {
+    log.error("Error deleting flow in wa", error);
+  }
 
   if (flow.surveyId) {
     log.trace("deleting survey %s", flow.surveyId);
