@@ -302,6 +302,19 @@ export async function updateUsageStats(
   return usageStats;
 }
 
+export async function decrementStatsCount(orgId, stat) {
+  await prisma.usageStats.update({
+    where: {
+      orgId,
+    },
+    data: {
+      [stat]: {
+        decrement: 1,
+      },
+    },
+  });
+}
+
 export async function updateUsageStatsLastReset(orgId, renewedAt) {
   const difference = dayjs().diff(dayjs(renewedAt), "D") % 30;
   const lastMonthlyResettedDate = dayjs().subtract(difference, "D").toDate();

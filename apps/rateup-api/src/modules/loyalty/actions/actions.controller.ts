@@ -21,7 +21,10 @@ import {
 import prisma from "../../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { updateMonthlyStat } from "../../stats/stats.service";
+import {
+  decrementStatsCount,
+  updateMonthlyStat,
+} from "../../stats/stats.service";
 import {
   getLCustomerPhoneById,
   getLoyaltyCustomerOrActionByReferralCode,
@@ -48,10 +51,6 @@ export async function createLoyaltyActionHandler(
     const res = await createLoyaltyAction(restBody, request.user.orgId);
     flowId && (await createLoyaltyActionFlowMap({ flowId, actionId: res.id }));
     reply.code(200).send(res);
-    await updateMonthlyStat(
-      SubscriptionFeaturePathName.LoyaltyAction,
-      request.user.orgId,
-    );
     if (!isLReferralAction(res.type)) return;
     const { customers } = await getLoyaltyCustomers(request.user.orgId);
     for (const customer of customers)
@@ -59,7 +58,7 @@ export async function createLoyaltyActionHandler(
   } catch (e) {
     log.error(e);
     if (e instanceof PrismaClientKnownRequestError && e.code === "P2002")
-      return reply.code(500).send("Customer already exist");
+      return reply.code(500).send("Action already exist");
     reply.code(500).send(e);
   }
 }
@@ -127,7 +126,7 @@ export async function deleteLoyaltyActionByIdHandler(
         .send(
           "Cannot delete the action used by active customer. Deactivate action instead",
         );
-    const res = await deleteLoyaltyActionById(actionId);
+    const res = await deleteLoyaltyActionById(actionId, request.user.orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -147,6 +146,25 @@ export async function verifyLActionMaxCountRestriction(
         orgId,
       },
     });
+
+    const { loyaltyActionCount } = await prisma.usageStats.findUnique({
+      where: {
+        orgId,
+      },
+      select: {
+        loyaltyActionCount: true,
+      },
+    });
+
+    if (loyaltyActionCount !== count)
+      await prisma.usageStats.update({
+        where: {
+          orgId,
+        },
+        data: {
+          loyaltyActionCount: count,
+        },
+      });
 
     if (
       count >=

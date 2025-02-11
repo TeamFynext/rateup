@@ -58,6 +58,7 @@ import { getScheduleTime } from "../../../utils/date";
 import {
   getLCustomerByPhone,
   handleLCustomerAction,
+  updateLCustomer,
 } from "../../loyalty/customer/customer.service";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
@@ -193,6 +194,10 @@ export async function createScheduleOnShopifyEvent({
         amount,
       });
       actionStatus = success ? "success" : "failed";
+      if (!customer.active)
+        await updateLCustomer(phoneWithoutPlus, shopifyInfo.orgId, {
+          active: true,
+        });
     }
   }
 

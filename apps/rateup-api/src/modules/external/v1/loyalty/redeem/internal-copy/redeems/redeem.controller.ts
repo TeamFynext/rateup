@@ -4,6 +4,7 @@ import { customerRedeemQueryInput } from "../../../loyalty.external.schema";
 import {
   getLCustomerByPhone,
   handleSendTemplate,
+  updateLCustomer,
   updateLCustomerRedeemPoint,
 } from "../../../../../../loyalty/customer/customer.service";
 import { getLoyaltyRewardByRewardId } from "../../../reward/internal-copy/rewards/reward.service";
@@ -11,7 +12,9 @@ import {
   createRedeem,
   RedeemStatus,
 } from "../../../../../../loyalty/redeems/redeem.service";
+import { custom } from "zod";
 
+//active check
 export async function redeemPointsHandler(
   request: FastifyRequest<{ Querystring: customerRedeemQueryInput }>,
   reply: FastifyReply,
@@ -27,6 +30,7 @@ export async function redeemPointsHandler(
       log.trace("customer  with phone %s not found", phone);
       return reply.code(404).send("Customer not found");
     }
+    if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
     if (!reward) {
       log.trace("reward with  with reward id %s not found", reward_id);
       return reply.code(404).send("Reward not found");

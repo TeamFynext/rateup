@@ -14,6 +14,9 @@ import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
 import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
 import { checkSession } from "../../utils/checkSession";
 import fastifyMultipart from "@fastify/multipart";
+import { getVerifySubscriptionHandler } from "../../utils/auth";
+import { verifyLCustomerMaxCountRestrictionHandler } from "../loyalty/customer/customer.controller";
+import { SubscriptionFeaturePathName } from "../../types/enums";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -30,6 +33,12 @@ export async function contactRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
+      preHandler: [
+        getVerifySubscriptionHandler([
+          SubscriptionFeaturePathName.LoyaltyCustomer,
+        ]),
+        verifyLCustomerMaxCountRestrictionHandler,
+      ],
       schema: {
         body: $contactRef("contactCoreSchema"),
       },

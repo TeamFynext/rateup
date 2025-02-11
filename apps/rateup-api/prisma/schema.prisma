@@ -1241,6 +1241,7 @@ model LoyaltyCustomer {
   contactId          String                     @unique @db.Uuid
   Contact            Contact                    @relation(fields: [contactId], references: [id])
   LoyaltyCustomerMap LoyaltyCustomerMap[]
+  active             Boolean?                   @default(true)
 }
 
 model LoyaltyCustomerMap {

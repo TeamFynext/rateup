@@ -13,6 +13,7 @@ import {
 import {
   getLCustomerByPhone,
   handleSendTemplate,
+  updateLCustomer,
   updateLCustomerRedeemPoint,
 } from "../customer/customer.service";
 import { log } from "../../../utils/logger";
@@ -32,6 +33,7 @@ export async function redeemPointsHandler(
         .code(404)
         .send("Customer not found with phone Number: " + phone);
     }
+    if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
     const { redeem, message } = await createRedeem(customer.id, rewardId);
     if (redeem.status === RedeemStatus.ISSUED) {
       const newCustomer = await updateLCustomerRedeemPoint(

@@ -22,7 +22,20 @@ import {
 import { ContactGroupType, Prisma } from "@prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import { createLCustomer } from "../loyalty/customer/customer.service";
+import {
+  createLCustomer,
+  handlePostRegisterAction,
+  handleSendTemplate,
+} from "../loyalty/customer/customer.service";
+import {
+  LoyaltyTemplateTypes,
+  WaAutomatedReplyResponseType,
+} from "../../types/enums";
+import {
+  getLoyaltyWaCommandByType,
+  replacedContentByDynamicVariable,
+  sendTextMessageAndUpdateStats,
+} from "../loyalty/settings/settings.service";
 
 export async function createContactHandler(
   request: FastifyRequest<{ Body: ContactCore }>,
@@ -38,6 +51,34 @@ export async function createContactHandler(
         orgId,
       });
       reply.code(201).send(contact);
+      const loyaltyWaCommand = await getLoyaltyWaCommandByType(
+        LoyaltyTemplateTypes.CustomerRegistration,
+        orgId,
+      );
+      if (loyaltyWaCommand) {
+        const { responseType, waTemplateId, content } = loyaltyWaCommand;
+        const dynamicVariables = [contact.name];
+        if (responseType === WaAutomatedReplyResponseType.Template)
+          await handleSendTemplate(
+            waTemplateId,
+            orgId,
+            contact.phone,
+            dynamicVariables,
+          );
+        else if (responseType === WaAutomatedReplyResponseType.Text) {
+          const message = replacedContentByDynamicVariable(
+            content,
+            dynamicVariables,
+          );
+          await sendTextMessageAndUpdateStats(
+            contact.phone,
+            orgId,
+            null,
+            message,
+          );
+        }
+      }
+      await handlePostRegisterAction(orgId, contact.id);
     } else {
       const contact = await createContact({ ...request.body, orgId });
       reply.code(201).send(contact);

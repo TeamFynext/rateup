@@ -16,21 +16,21 @@ import {
   handlePostRegisterAction,
   handleSendTemplate,
   importCSVContacts,
+  updateLCustomer,
   verifyLCustomerMaxCountRestriction,
 } from "./customer.service";
 import {
   LoyaltyTemplateTypes,
-  SubscriptionFeaturePathName,
   WaAutomatedReplyResponseType,
 } from "../../../types/enums";
-import { updateMonthlyStat } from "../../stats/stats.service";
 import {
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
   sendTextMessageAndUpdateStats,
 } from "../settings/settings.service";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
-import { PaginationQuery } from "../../contact/contact.schema";
+import { ContactCore, PaginationQuery } from "../../contact/contact.schema";
+import { ContactGroupType } from "@prisma/client";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
@@ -62,7 +62,6 @@ export async function createLCustomerHandler(
         await sendTextMessageAndUpdateStats(res.phone, orgId, null, message);
       }
     }
-    await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
     await handlePostRegisterAction(orgId, res.id);
   } catch (e) {
     log.error(e);
@@ -88,6 +87,7 @@ export async function customerActionHandler(
         .code(404)
         .send("Customer not found with phone Number: " + phone);
     }
+    if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
     const { success, data, message } = await handleLCustomerAction({
       customerId: customer.id,
       actionId,
@@ -137,11 +137,12 @@ export async function getLoyaltyCustomersHandler(
 }
 
 export async function verifyLCustomerMaxCountRestrictionHandler(
-  request: FastifyRequest<{ Body: LCustomerInput }>,
+  request: FastifyRequest<{ Body: { orgId?: string } & ContactCore }>,
   reply: FastifyReply,
 ) {
   try {
-    const orgId = request.body.orgId;
+    if (request.body.source !== ContactGroupType.LOYALTY) return;
+    const orgId = request.body.orgId ?? request.user.orgId;
     if (
       !(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))
     ) {
@@ -161,7 +162,10 @@ export async function deleteLoyaltyCustomersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const customer = await deleteLoyaltyCustomer(request.params.id);
+    const customer = await deleteLoyaltyCustomer(
+      request.params.id,
+      request.user.orgId,
+    );
     reply.code(200).send(customer);
   } catch (e) {
     log.error(e);
