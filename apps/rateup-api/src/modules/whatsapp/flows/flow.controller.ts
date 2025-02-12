@@ -411,7 +411,12 @@ export async function deprecateFlowHandler(
     throw new Error("Cannot deprecate a draft flow. Delete it instead.");
   }
 
-  await deprecateFlowInWa(orgId, flow.flowId);
+  try {
+    await deprecateFlowInWa(orgId, flow.flowId);
+  } catch (error) {
+    log.error("Error deprecating flow in wa %s", error);
+  }
+
   if (flow.surveyId) {
     log.trace("deleting survey %s", flow.surveyId);
     await deleteSurveyById(flow.surveyId);
