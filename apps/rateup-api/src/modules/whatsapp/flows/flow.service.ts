@@ -519,7 +519,7 @@ export async function createFlowInWa(
     `/${wabaId}/flows`,
     "POST",
     accessToken,
-    { ...createFlowInput, publish: true },
+    createFlowInput,
   );
   return data as { id: string };
 }
