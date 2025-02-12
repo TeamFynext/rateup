@@ -158,7 +158,7 @@ const Pricing = ({
               { label: "Custom", value: "Custom" },
             ]}
           />
-          <Flex align="center" pos={"relative"} gap={"xs"}>
+          {/* <Flex align="center" pos={"relative"} gap={"xs"}>
             <Switch
               color={"var(--shade-of-blue-5)"}
               classNames={classes}
@@ -181,7 +181,7 @@ const Pricing = ({
                 Save Upto {DISCOUNT_PERCENTAGE} Months
               </Text>
             </Stack>
-          </Flex>
+          </Flex> */}
         </SimpleGrid>
       )}
 

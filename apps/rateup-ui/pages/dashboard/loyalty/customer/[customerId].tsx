@@ -44,6 +44,7 @@ import {
   formatIsoDateStringWithTime,
 } from "@/utils/dateTime";
 
+import { ActiveStatusBadge } from "../../apps&services/shopify";
 import { getRedeemsStatusColor, RedeemStatus } from "../redeem";
 
 export enum LCustomerStats {
@@ -290,7 +291,7 @@ const LoyaltyCustomerID = () => {
         style={{ border: "2px solid var(--light-blue-5)", borderRadius: 10 }}
         p={"xs"}
       >
-        <Group justify="space-between">
+        <Group justify="space-between" pl={"lg"} pr={"xl"}>
           <Group>
             <Avatar
               size={"lg"}
@@ -317,7 +318,6 @@ const LoyaltyCustomerID = () => {
               }
             />
           )}
-
           <Group gap={50}>
             {[
               { key: "Mobile Number", value: customer?.Contact?.phone },
@@ -335,7 +335,7 @@ const LoyaltyCustomerID = () => {
               </Stack>
             ))}
           </Group>
-          <Badge color="#69F0AE">Active Customer</Badge>
+          <ActiveStatusBadge active={customer?.active} mr={"xl"} />
         </Group>
       </Stack>
       <PaperLayout p={"xs"} bg={"var(--grey-color-5)"}>

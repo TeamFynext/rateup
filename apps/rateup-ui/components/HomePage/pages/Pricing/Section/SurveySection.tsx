@@ -1,5 +1,7 @@
 import React from "react";
+
 import { Box, Flex, Stack, Text } from "@mantine/core";
+
 import PlanCard from "../Card/PlanCard";
 import { PlanCardWidth } from "../Utils/constants";
 
@@ -10,7 +12,7 @@ export const SurveySection = ({
   freePlan,
   currencySymbol,
 }) => {
-  const surveyPlan = plans
+  const surveyPlan = [] // plans, removing for now
     ?.filter((item) => {
       const name = item?.name;
       return (
@@ -22,16 +24,15 @@ export const SurveySection = ({
     })
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
 
-  if (surveyPlan?.length > 0) {
-    surveyPlan?.push({
-      displayName: "Enterprise",
-      paymentPlan: {
-        amount: "Lets Talk!",
-        currency: "",
-        period: "",
-      },
-    });
-  }
+  surveyPlan?.push({
+    displayName: "Enterprise",
+    paymentPlan: {
+      amount: "Lets Talk!",
+      currency: "",
+      period: "",
+    },
+  });
+
   const inversePeriod =
     surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
   if (freePlan?.length > 0) {

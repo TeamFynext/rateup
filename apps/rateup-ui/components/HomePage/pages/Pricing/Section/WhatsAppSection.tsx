@@ -1,5 +1,7 @@
 import React from "react";
+
 import { Box, Flex, Stack, Text } from "@mantine/core";
+
 import PlanCard from "../Card/PlanCard";
 import { PlanCardWidth } from "../Utils/constants";
 
@@ -10,20 +12,19 @@ export const WhatsAppSection = ({
   freePlan,
   currencySymbol,
 }) => {
-  const whatsAppPlan = plans
+  const whatsAppPlan = [] // plans, removing for now
     ?.filter((item) => item?.name?.includes("WhatsApp"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
 
-  if (whatsAppPlan?.length > 0) {
-    whatsAppPlan?.push({
-      displayName: "Business",
-      paymentPlan: {
-        amount: "Lets Talk!",
-        currency: "",
-        period: "",
-      },
-    });
-  }
+  whatsAppPlan?.push({
+    displayName: "Business",
+    paymentPlan: {
+      amount: "Lets Talk!",
+      currency: "",
+      period: "",
+    },
+  });
+
   const inversePeriod =
     whatsAppPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 
