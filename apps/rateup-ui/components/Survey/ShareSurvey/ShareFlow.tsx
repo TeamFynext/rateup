@@ -1,34 +1,16 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import {
-  Button,
-  Group,
-  Stack,
-  Switch,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
-import { modals } from "@mantine/modals";
-import { notifications } from "@mantine/notifications";
-import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 
 import useTranslations from "@/dictionaries/useTranslation";
-import { FlowChoiceQuestions } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
-import { getQuestionsFromScreen } from "@/utils/whatsapp/flow.utils";
 
-import { updateSurvey } from "../../../backend/surveys/survey.api";
-import { useUpdateSurveyMutation } from "../../../backend/surveys/surveys.query";
 import {
   usePushToWaMutation,
   useWaFlowFromDb,
 } from "../../../backend/whatsapp/flow/flow.query";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
-import { QuestionType, SurveyType, WaFlowStatus } from "../../../types/enums";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import { SurveyType, WaFlowStatus } from "../../../types/enums";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import NothingFound from "../../NothingFound/NothingFound";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -59,7 +41,6 @@ export const ShareFlow = ({
   const [tag, setTag] = useState("");
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
 
-  const queryClient = useQueryClient();
   const { data: waSettings } = useWaSettings();
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
@@ -68,7 +49,6 @@ export const ShareFlow = ({
       survey.type === SurveyType.WaFlow
     ) {
       if (!waSettings) return;
-      const phone = waSettings.phone?.replace("+", "").replaceAll(" ", "");
 
       if (shortUrlId) {
         setShareUrl(
@@ -103,21 +83,8 @@ export const ShareFlow = ({
     }
   }, [survey?.teams, surveyTeamMapId]);
 
-  const surveyUpdateMutation = useUpdateSurveyMutation();
   const pushToWaMutation = usePushToWaMutation();
   const { translations } = useTranslations();
-  const surveyStatusUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
-    onSuccess: () => {
-      notifications.show({
-        id: "survey",
-        message: translations["Survey status Updated!"],
-        autoClose: true,
-      });
-      queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
-    },
-  });
 
   const teamSelectData = survey?.teams?.map((team) => ({
     value: team?.mapId,
@@ -138,55 +105,15 @@ export const ShareFlow = ({
     },
     [survey],
   );
-  const confirmModal = () => {
-    modals.openConfirmModal({
-      title: "Confirm Publish",
-      centered: true,
-      children: (
-        <Text size="sm">
-          {translations["Are you sure you want to Publish this Flow?"]}
-          <br />
-          {
-            translations[
-              "It is advised to test the flow by opening the link in before publishing and make sure everything is working fine."
-            ]
-          }
-        </Text>
-      ),
-      labels: { confirm: translations["Yes"], cancel: translations["Cancel"] },
-      confirmProps: { color: "red" },
-      onConfirm: handlePublish,
-      onCancel: () => modals.closeAll(),
-    });
-  };
   const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map(
     (tag) => {
       return tag;
     },
   );
-  // TODO: allow user to deprecate the flow.
-  // TODO: implement pause & resume
-
-  async function handlePublish() {
-    await pushToWaMutation.mutateAsync(dbFlowId);
-    surveyUpdateMutation.mutate(
-      {
-        surveyId: survey.id,
-        data: { isPublished: true },
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["flow", "db"] });
-        },
-      },
-    );
-  }
 
   const handleSaveToWa = () => {
     pushToWaMutation.mutate(dbFlowId);
   };
-  let v2Flow = router.pathname?.includes("/v2/");
-  const canPublish = v2Flow ? true : !isPublished;
 
   return (
     <Stack p={10} pr={16} h={"fit-content"}>
@@ -202,57 +129,18 @@ export const ShareFlow = ({
             <Tooltip
               label={
                 dbFlow.pendingSave
-                  ? translations[
-                      v2Flow
-                        ? "Save your flow to WhatsApp"
-                        : "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
-                    ]
+                  ? translations["Save your flow to WhatsApp"]
                   : translations["No changes to save"]
               }
             >
               <Button
-                disabled={!canPublish || !dbFlow.pendingSave}
-                onClick={() => {
-                  handleSaveToWa();
-                  {
-                    v2Flow && handlePublish();
-                  }
-                }}
+                disabled={!dbFlow.pendingSave}
+                onClick={handleSaveToWa}
                 loading={pushToWaMutation.isPending}
               >
                 {translations["Save to WhatsApp"]}
               </Button>
             </Tooltip>
-            {!v2Flow && (
-              <Tooltip
-                label={
-                  !isPublished
-                    ? translations[
-                        "Publish your flow to WhatsApp, so that you can share it."
-                      ]
-                    : translations["You can`t edit flows after publishing."]
-                }
-              >
-                <div>
-                  {" "}
-                  {/* adding div since tooltip won't work when its children is an input element. TODO: fixthis */}
-                  <Switch
-                    fw={500}
-                    size="lg"
-                    checked={isPublished}
-                    disabled={!canPublish}
-                    onChange={confirmModal}
-                    label={
-                      <Text fw={700} fz={"lg"}>
-                        {isPublished
-                          ? translations["Published"]
-                          : translations["Publish Survey"]}
-                      </Text>
-                    }
-                  />
-                </div>
-              </Tooltip>
-            )}
           </Group>
           <Group>
             <Text>{translations["Current Status: "]}</Text>
@@ -262,18 +150,6 @@ export const ShareFlow = ({
               <Text c="dark.1"> {translations["Not published! "]}</Text>
             )}
           </Group>
-          {!v2Flow && (
-            <RateupButtonSecondary
-              disabled={disableShare}
-              title={survey?.active ? "Pause" : "Resume"}
-              leftIcon={
-                survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />
-              }
-              onClick={() =>
-                surveyStatusUpdateMutation.mutate({ active: !survey?.active })
-              }
-            />
-          )}
         </Group>
       </PaperLayout>
       <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>

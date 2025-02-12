@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 
 import { QuestionType2, WaQuestions } from "@/types/enums";
 
-interface Screen {
+export interface Screen {
   id: string;
   title: string;
   terminal: boolean;

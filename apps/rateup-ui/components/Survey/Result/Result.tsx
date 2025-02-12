@@ -1,25 +1,12 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
-import {
-  Box,
-  Flex,
-  Loader,
-  ScrollArea,
-  Stack,
-  Tabs,
-  Text,
-} from "@mantine/core";
+import { Box, Flex, ScrollArea, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
 import { QuestionType2 } from "@/types/enums";
+import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -88,6 +75,7 @@ const Result = ({
     error: responseFetchError,
     isPending: isLoading,
   } = useAllResponses(survey?.id);
+  const { data: waFlow, isPending } = useWaFlowFromDb(flow?.dbFlowId);
 
   const filteredResponsesByTeam = useMemo(() => {
     return getFilteredResponsesUsingTeam(filterTeams, teamWiseResponses)
@@ -133,7 +121,7 @@ const Result = ({
     );
   }, [flow]);
 
-  if (isLoading) return <RateupLoader />;
+  if (isLoading || (flow?.dbFlowId && isPending)) return <RateupLoader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
   return (
     <StyledTabs
@@ -210,7 +198,10 @@ const Result = ({
           {version === 1 ? (
             <ResultsOverview surveyId={survey?.id} />
           ) : (
-            <WaResultsOverviewV2 surveyId={survey?.id} />
+            <WaResultsOverviewV2
+              surveyId={survey?.id}
+              screens={waFlow?.json?.screens ?? []}
+            />
           )}
         </Tabs.Panel>
         <Tabs.Panel value="comparison">

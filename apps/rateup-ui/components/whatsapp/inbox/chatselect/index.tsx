@@ -121,7 +121,7 @@ export default function WaInboxChatSelect(props: {
       }));
 
   function validateSearchStringAsMobileNumber(searchString: string): Boolean {
-    return searchString.match(/^\d{10}$/) ? true : false;
+    return searchString?.match(/^\d{10}$/) ? true : false;
   }
 
   function clearSearchTermFilter() {
