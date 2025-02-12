@@ -1,6 +1,6 @@
 import prisma from "./prisma";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Role } from "@prisma/client";
+import { ContactGroupType, Role } from "@prisma/client";
 import { log } from "./logger";
 import { getSubscription } from "../modules/subscription/subscription.service";
 import { SubscriptionFeaturePathName, UserRecipes } from "../types/enums";
@@ -144,6 +144,13 @@ export function getVerifySubscriptionHandler(
         });
         return;
       }
+      if (
+        featurePathNames.includes(
+          SubscriptionFeaturePathName.LoyaltyCustomer,
+        ) &&
+        (request.body as any).source !== ContactGroupType.LOYALTY
+      )
+        return;
       const missingFeatures = featurePathNames.filter(
         (feature) => !getNestedProperty(subscription.features, feature).active,
       );

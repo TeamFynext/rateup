@@ -16,7 +16,6 @@ import { loyaltyActionInput } from "../actions/actions.schema";
 import prisma from "../../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { updateMonthlyStat } from "../../stats/stats.service";
 
 export async function createLoyaltyRewardHandler(
   request: FastifyRequest<{ Body: loyaltyRewardInput }>,
@@ -26,7 +25,6 @@ export async function createLoyaltyRewardHandler(
     const { orgId } = request.user;
     const res = await createLoyaltyReward(request.body, orgId);
     reply.code(200).send(res);
-    await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyReward, orgId);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
@@ -88,7 +86,10 @@ export async function deleteLoyaltyRewardByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await deleteLoyaltyRewardById(request.params.rewardId);
+    const res = await deleteLoyaltyRewardById(
+      request.params.rewardId,
+      request.user.orgId,
+    );
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -107,6 +108,25 @@ export async function verifyLRewardctionMaxCountRestriction(
         orgId,
       },
     });
+
+    const { loyaltyRewardCount } = await prisma.usageStats.findUnique({
+      where: {
+        orgId,
+      },
+      select: {
+        loyaltyRewardCount: true,
+      },
+    });
+
+    if (loyaltyRewardCount !== count)
+      await prisma.usageStats.update({
+        where: {
+          orgId,
+        },
+        data: {
+          loyaltyRewardCount: count,
+        },
+      });
 
     if (
       count >=

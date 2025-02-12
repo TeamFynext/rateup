@@ -140,8 +140,8 @@ export async function handleIssuedRewardsCommand(
 ) {
   const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer) {
-    const message = `You are not a member of loyalty program yet`;
+  if (!customer || !customer.active) {
+    const message = `You are not an active member of our loyalty programme`;
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }

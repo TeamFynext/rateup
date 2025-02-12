@@ -4,6 +4,7 @@ import {
   getLCustomerByPhone,
   handleLCustomerAction,
   handleSendTemplate,
+  updateLCustomer,
 } from "../../../../../../loyalty/customer/customer.service";
 import { getLoyaltyActionByActionId } from "../../../action/internal-copy/actions/actions.service";
 import { CustomerActionQueryInput } from "../../../loyalty.external.schema";
@@ -24,6 +25,14 @@ export async function customerActionHandler(
       getLCustomerByPhone(phone, orgId),
       getLoyaltyActionByActionId(action_id, orgId),
     ]);
+    if (!customer) {
+      log.trace("Customer not found with phone Number: %s", phone);
+      return reply
+        .code(404)
+        .send("Customer not found with phone Number: " + phone);
+    }
+    if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
+
     const { success, data, message } = await handleLCustomerAction({
       customerId: customer.id,
       actionId: action.id,

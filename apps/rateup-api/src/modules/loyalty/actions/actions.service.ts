@@ -6,12 +6,17 @@ import {
   LoyaltyActionType,
 } from "./actions.schema";
 import { string } from "zod";
+import {
+  decrementStatsCount,
+  updateMonthlyStat,
+} from "../../stats/stats.service";
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 
 export async function createLoyaltyAction(
   data: loyaltyActionInput,
   orgId: string,
 ) {
-  return await prisma.loyaltyAction.create({
+  const action = await prisma.loyaltyAction.create({
     data: {
       name: data.name,
       points: data.points,
@@ -38,6 +43,8 @@ export async function createLoyaltyAction(
         : undefined,
     },
   });
+  await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyAction, orgId);
+  return action;
 }
 export async function createLoyaltyActionFlowMap({ flowId, actionId }) {
   return await prisma.loyaltyActionFlowMap.create({
@@ -92,12 +99,13 @@ export async function updateLoyaltyActionById(
   });
 }
 
-export async function deleteLoyaltyActionById(id: string) {
-  return await prisma.loyaltyAction.delete({
+export async function deleteLoyaltyActionById(id: string, orgId: string) {
+  await prisma.loyaltyAction.delete({
     where: {
       id,
     },
   });
+  await decrementStatsCount(orgId, "loyaltyActionCount");
 }
 
 export async function getReferralLoyaltyAction(orgId) {

@@ -12,6 +12,7 @@ import {
   handleCustomerRemovalFromLoyalty,
   handleLoyaltyRegister,
   handleSendTemplate,
+  updateLCustomer,
   updateLCustomerPoint,
 } from "../customer/customer.service";
 import { getLoyaltyActionById } from "../actions/actions.service";
@@ -122,8 +123,8 @@ export async function handleReferralCommand(phone, loyaltyWaCommand) {
   try {
     const { orgId, actionId } = loyaltyWaCommand;
     const customer = await getLCustomerByPhone(phone, orgId);
-    if (!customer) {
-      const message = `You are not a member of loyalty program yet`;
+    if (!customer || !customer.active) {
+      const message = `You are not an active member of our loyalty programme`;
       await sendTextMessageAndUpdateStats(phone, orgId, null, message);
       return;
     }
@@ -169,8 +170,8 @@ export async function handleReferralCommand(phone, loyaltyWaCommand) {
 export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
   const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer) {
-    const message = `You are not a member of loyalty program yet`;
+  if (!customer || !customer.active) {
+    const message = `You are not an active member of our loyalty programme`;
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
@@ -205,9 +206,10 @@ export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
 
   if (!customer) {
     const message = `You are not a member of loyalty program yet`;
-    await sendTextMessage({ phone, orgId }, null, message);
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
+  if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
   const existing = await prisma.loyaltyActionCustomerMap.findFirst({
     where: {
       customerId: customer.id,
@@ -216,7 +218,7 @@ export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
   });
   if (existing) {
     const message = `You have already given feedback for this action`;
-    await sendTextMessage({ phone, orgId }, null, message);
+    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
 

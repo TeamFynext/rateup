@@ -9,7 +9,10 @@ import { log } from "../../../utils/logger";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
 import prisma from "../../../utils/prisma";
-import { updateMonthlyStat } from "../../stats/stats.service";
+import {
+  decrementStatsCount,
+  updateMonthlyStat,
+} from "../../stats/stats.service";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
 import { LoyaltyActionType } from "../actions/actions.schema";
 import {
@@ -28,6 +31,7 @@ import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
 import {
   ContactGroupType,
   LoyaltyAction,
+  LoyaltyCustomer,
   LoyaltyWaCommand,
 } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
@@ -97,6 +101,10 @@ export async function createLCustomer(input: LCustomerInput) {
       loyaltyCustomer: true,
     },
   });
+  await updateMonthlyStat(
+    SubscriptionFeaturePathName.LoyaltyCustomer,
+    input.orgId,
+  );
 
   const customer = contact.loyaltyCustomer;
   const action = await getReferralLoyaltyAction(input.orgId);
@@ -474,12 +482,13 @@ export async function getLoyaltyCustomers(
   };
 }
 
-export async function deleteLoyaltyCustomer(id: string) {
+export async function deleteLoyaltyCustomer(id: string, orgId: string) {
   await prisma.loyaltyCustomer.delete({
     where: {
       id,
     },
   });
+  await decrementStatsCount(orgId, "loyaltyCustomerCount");
 }
 
 export async function handleLoyaltyRegister(phone, name, loyaltyWaCommand) {
@@ -488,11 +497,20 @@ export async function handleLoyaltyRegister(phone, name, loyaltyWaCommand) {
     //subscription and usage check
     const customer = await getLCustomerByPhone(phone, orgId);
     if (customer) {
+      if (!customer.active) {
+        await updateLCustomer(phone, orgId, { active: true });
+        return await sendTextMessageAndUpdateStats(
+          phone,
+          orgId,
+          null,
+          "You are loyalty account has activated successfully",
+        );
+      }
       return await sendTextMessageAndUpdateStats(
         phone,
         orgId,
         null,
-        "You are already a member of our loyalty program\n\nReply *Points* to know the current points details",
+        "You are already a member of our loyalty programme",
       );
     }
     const subscription = await verifySubscription(orgId, [
@@ -526,7 +544,6 @@ export async function handleLoyaltyRegister(phone, name, loyaltyWaCommand) {
       );
       await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     }
-    await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, orgId);
     await handlePostRegisterAction(orgId, res.id);
   } catch (e) {
     log.error(e);
@@ -551,6 +568,25 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
       orgId,
     },
   });
+
+  const { loyaltyCustomerCount } = await prisma.usageStats.findUnique({
+    where: {
+      orgId,
+    },
+    select: {
+      loyaltyCustomerCount: true,
+    },
+  });
+
+  if (loyaltyCustomerCount !== count)
+    await prisma.usageStats.update({
+      where: {
+        orgId,
+      },
+      data: {
+        loyaltyCustomerCount: count,
+      },
+    });
 
   if (
     count >=
@@ -692,7 +728,8 @@ export async function handleLCustomerAction({
         orgId: action.orgId,
         name: refereeName,
       });
-    }
+    } else if (!referee.active)
+      updateLCustomer(refereePhone, action.orgId, { active: true });
     const res = await getLCustomerActionByRefereePhone(
       customerId,
       actionId,
@@ -1149,12 +1186,12 @@ export async function handleCustomerRemovalFromLoyalty(
 ) {
   const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer) {
-    const message = `You are not a member of loyalty program yet`;
+  if (!customer || !customer.active) {
+    const message = `You are not an active member of our loyalty programme`;
     await sendTextMessageAndUpdateStats(phone, orgId, null, message);
     return;
   }
-  await deleteLoyaltyCustomer(customer.id);
+  await updateLCustomer(phone, orgId, { active: false });
   if (responseType === WaAutomatedReplyResponseType.Template) {
     await handleSendTemplate(waTemplateId, orgId, phone, []);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {

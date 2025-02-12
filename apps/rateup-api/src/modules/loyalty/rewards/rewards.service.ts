@@ -1,4 +1,9 @@
+import { SubscriptionFeaturePathName } from "../../../types/enums";
 import prisma from "../../../utils/prisma";
+import {
+  decrementStatsCount,
+  updateMonthlyStat,
+} from "../../stats/stats.service";
 import { loyaltyRewardInput, lRewardUpdateInput } from "./rewards.schema";
 
 export async function createLoyaltyReward(
@@ -22,6 +27,7 @@ export async function createLoyaltyReward(
       reward_id: reward.reward_id,
     },
   });
+  await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyReward, orgId);
 }
 
 export async function getLoyaltyRewards(orgId: string) {
@@ -55,10 +61,11 @@ export async function updateLoyaltyRewardById(
   });
 }
 
-export async function deleteLoyaltyRewardById(id: string) {
-  return await prisma.loyaltyReward.delete({
+export async function deleteLoyaltyRewardById(id: string, orgId: string) {
+  await prisma.loyaltyReward.delete({
     where: {
       id,
     },
   });
+  await decrementStatsCount(orgId, "loyaltyRewardCount");
 }
