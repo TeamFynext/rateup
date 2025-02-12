@@ -13,7 +13,6 @@ import { Range } from "react-date-range";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
-import useFlowStore from "@/components/whatsapp/flow-v2/utils/store";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
@@ -44,7 +43,13 @@ import QuestionPieChart from "./Charts/QuestionPieChart";
 import LargeTextResponseSummary from "./LargeTextResponseSummary";
 import styles from "./ResultsOverview.module.css";
 
-const WaResultsOverviewV2 = ({ surveyId }) => {
+const WaResultsOverviewV2 = ({
+  surveyId,
+  screens = [],
+}: {
+  surveyId: string;
+  screens;
+}) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const [ranges, setRange] = useState<Range[]>([]);
@@ -54,9 +59,7 @@ const WaResultsOverviewV2 = ({ surveyId }) => {
     error,
     data: teamWiseResponses,
   } = useAllResponses(surveyId);
-  const { screens } = useFlowStore();
-
-  let questions = screens.flatMap((screen) =>
+  let questions = screens?.flatMap((screen) =>
     screen.layout.children.filter(
       (child) => child.type !== QuestionType2.Footer && child.name,
     ),
@@ -298,7 +301,7 @@ const WaResultsOverviewV2 = ({ surveyId }) => {
                       <React.Fragment key={index}>
                         <QuestionPieChart
                           no={index + 1}
-                          type={item.type}
+                          type={item.metaType}
                           responseCount={item?.responses?.length}
                           question={item.question}
                           data={item.nps}
