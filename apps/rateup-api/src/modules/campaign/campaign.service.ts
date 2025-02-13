@@ -498,64 +498,6 @@ export async function sendCampaignCronAction() {
   });
   if (campaignsToBeSent?.length === 0) return;
 
-  const orgId = campaignsToBeSent?.[0].team.orgId;
-
-  const [usage, subscription] = await Promise.all([
-    getUsageStats(orgId),
-    getSubscription(orgId),
-  ]);
-
-  if (!usage || !subscription) {
-    let errorMessage = "Usage stats or subscription not found";
-    await updateCampaign(campaignsToBeSent?.[0].id, {
-      status: CampaignStatus.INACTIVE,
-      errorMessage: errorMessage,
-    });
-    log.error(errorMessage, "in schedule", orgId);
-    return;
-  }
-
-  const newMessagesCount = campaignsToBeSent.length;
-
-  const monthlyMessageLimit =
-    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-      ?.monthlyMessageLimit ?? 0;
-
-  const annualLimit = monthlyMessageLimit * 12;
-
-  if (
-    subscription?.isAnnualMessageLimit &&
-    (usage.annualMessageCount ?? 0 + newMessagesCount > annualLimit)
-  ) {
-    let errorMessage =
-      usage.annualMessageCount >= annualLimit
-        ? "You have reached the maximum annual limit of messages."
-        : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
-            annualLimit - newMessagesCount
-          } to proceed.`;
-    await updateCampaign(campaignsToBeSent?.[0].id, {
-      status: CampaignStatus.ACTIVE,
-      errorMessage: errorMessage,
-    });
-    log.error(errorMessage, "in schedule", orgId);
-    return;
-  } else if (
-    (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
-    monthlyMessageLimit
-  ) {
-    let errorMessage =
-      usage.monthlyMessagesCount >= monthlyMessageLimit
-        ? "You have reached the maximum monthly limit of messages."
-        : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
-            monthlyMessageLimit - usage.monthlyMessagesCount
-          } to proceed.`;
-    await updateCampaign(campaignsToBeSent?.[0].id, {
-      status: CampaignStatus.ACTIVE,
-      errorMessage: errorMessage,
-    });
-    log.error(errorMessage, "in schedule", orgId);
-    return;
-  }
   for await (const campaign of campaignsToBeSent) {
     await sendCampaign(
       campaign.id,

@@ -1465,6 +1465,32 @@ export function getFormattedResponse(response, qstn, language) {
   return formattedResponse;
 }
 
+export async function getAIResponseSummaryBySurveyId(
+  surveyId: string,
+  questionId: string,
+) {
+  const { aiResponseSummary } = await prisma.survey.findUnique({
+    where: {
+      id: surveyId,
+    },
+    select: {
+      aiResponseSummary: true,
+    },
+  });
+  return aiResponseSummary as unknown as ResponseSummary[];
+}
+
+export async function updateSummaryOnSurvey(surveyId, updatedSummary) {
+  await prisma.survey.update({
+    where: {
+      id: surveyId,
+    },
+    data: {
+      aiResponseSummary: updatedSummary,
+    },
+  });
+}
+
 export async function getResponseSummary(
   surveyId: string,
   request: FastifyRequest,
@@ -1474,8 +1500,20 @@ export async function getResponseSummary(
   teamId?: string,
 ) {
   const allResponses = await getAllResponses(surveyId);
-  const questions = await getQuestionsBySurveyId(surveyId);
-  const question = questions.find((q) => q.id === questionId);
+
+  const aiResponseSummary = await getAIResponseSummaryBySurveyId(
+    surveyId,
+    questionId,
+  );
+
+  let questionIndex = null;
+  const responseSummary = aiResponseSummary.find((q, index) => {
+    if (q.questionId === questionId) {
+      questionIndex = index;
+      return true;
+    }
+    return false;
+  });
   const questionResponses = allResponses
     .flatMap((res) =>
       res.responses.map((r) => ({
@@ -1490,14 +1528,12 @@ export async function getResponseSummary(
 
   let existingSummary = null;
   let filteredResponses = questionResponses;
-  if (type === ResponseSummaryType.All) {
-    existingSummary = question.responseSummary?.all;
-  } else if (type === ResponseSummaryType.Team) {
+  if (type === ResponseSummaryType.All && responseSummary) {
+    existingSummary = responseSummary.all;
+  } else if (type === ResponseSummaryType.Team && responseSummary) {
     if (!teamId) throw new Error("TeamId not found");
     filteredResponses = questionResponses.filter((r) => r.teamId === teamId);
-    existingSummary = question.responseSummary?.team?.find(
-      (t) => t.teamId === teamId,
-    );
+    existingSummary = responseSummary?.team?.find((t) => t.teamId === teamId);
   }
   const responseIds = filteredResponses.map((r) => r.responseId);
   const responsesNotSummarised = existingSummary
@@ -1506,8 +1542,10 @@ export async function getResponseSummary(
       )
     : filteredResponses;
   if (!responsesNotSummarised.length) return;
-  const responseTexts = responsesNotSummarised.map(
-    (r) => r.response.response[r.response.type],
+  const responseTexts = responsesNotSummarised.map((r) =>
+    r.response.type
+      ? r.response.response[r.response.type]
+      : r.response.response,
   );
   if (existingSummary) responseTexts.push(existingSummary.summary);
   const res = await getTextSummaryByAI(responseTexts, request, allowedTokens);
@@ -1515,16 +1553,14 @@ export async function getResponseSummary(
   let updateData = null;
   if (type === ResponseSummaryType.All) {
     updateData = {
-      responseSummary: {
-        ...question.responseSummary,
-        all: {
-          summary: res.summary,
-          responseIds,
-        },
+      ...responseSummary,
+      all: {
+        summary: res.summary,
+        responseIds,
       },
     };
   } else if (type === ResponseSummaryType.Team) {
-    let updatedTeamSummary = question.responseSummary?.team ?? [];
+    let updatedTeamSummary = responseSummary?.team ?? [];
     if (existingSummary) {
       const teamSummaryIndex = updatedTeamSummary.findIndex(
         (t) => t.teamId === teamId,
@@ -1535,19 +1571,24 @@ export async function getResponseSummary(
       updatedTeamSummary.push({ teamId, responseIds, summary: res?.summary });
     }
     updateData = {
-      responseSummary: {
-        ...question.responseSummary,
-        team: updatedTeamSummary,
-      },
+      ...responseSummary,
+      team: updatedTeamSummary,
     };
   }
-  if (updateData && res.tokenUsage)
-    await Promise.all([
-      updateQuestion(
-        surveyId,
+  if (updateData && res.tokenUsage) {
+    const updatedSummary = [...aiResponseSummary];
+    if (questionIndex === null) {
+      updatedSummary.push({
+        ...updateData,
         questionId,
-        updateData as unknown as UpdateQuestionInput,
-      ),
+      });
+    } else {
+      updatedSummary[questionIndex] = {
+        ...updateData,
+      };
+    }
+    await Promise.all([
+      updateSummaryOnSurvey(surveyId, updatedSummary),
       prisma.usageStats.update({
         where: {
           orgId: request.user.orgId,
@@ -1562,6 +1603,7 @@ export async function getResponseSummary(
         },
       }),
     ]);
+  }
   return true;
 }
 
