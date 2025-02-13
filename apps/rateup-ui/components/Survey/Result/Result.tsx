@@ -7,6 +7,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 
 import { QuestionType2 } from "@/types/enums";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -74,6 +75,7 @@ const Result = ({
     data: teamWiseResponses,
     error: responseFetchError,
     isPending: isLoading,
+    refetch,
   } = useAllResponses(survey?.id);
   const { data: waFlow, isPending } = useWaFlowFromDb(flow?.dbFlowId);
 
@@ -121,7 +123,7 @@ const Result = ({
     );
   }, [flow]);
 
-  if (isLoading || (flow?.dbFlowId && isPending)) return <RateupLoader />;
+  if (isLoading) return <RateupLoader />;
   if (responseFetchError) return <Text>An error has occurred</Text>;
   return (
     <StyledTabs
@@ -196,11 +198,15 @@ const Result = ({
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
           {version === 1 ? (
-            <ResultsOverview surveyId={survey?.id} />
+            <ResultsOverview
+              surveyId={survey?.id}
+              aiResponseSummary={survey?.aiResponseSummary}
+            />
           ) : (
             <WaResultsOverviewV2
               surveyId={survey?.id}
               screens={waFlow?.json?.screens ?? []}
+              aiResponseSummary={survey?.aiResponseSummary}
             />
           )}
         </Tabs.Panel>

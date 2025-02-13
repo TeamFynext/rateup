@@ -95,7 +95,6 @@ declare global {
     wop?: Wop;
     onSelectAction?: boolean;
     waAppName?: IntegratedApps;
-    responseSummary?: ResponseSummary;
     subtitleText?: string;
     titleText?: string;
     startButtonText?: string;
@@ -112,6 +111,7 @@ declare global {
     reviewPagePlatform?: string;
   }
   type ResponseSummary = {
+    questionId: string;
     all: {
       summary: string;
       responseIds: string[];

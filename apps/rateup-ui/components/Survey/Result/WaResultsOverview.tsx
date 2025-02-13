@@ -46,9 +46,11 @@ import styles from "./ResultsOverview.module.css";
 const WaResultsOverviewV2 = ({
   surveyId,
   screens = [],
+  aiResponseSummary,
 }: {
   surveyId: string;
   screens;
+  aiResponseSummary: ResponseSummary[];
 }) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
   const { filterTeams, filterTags } = useContext(SurveyContext);
@@ -349,9 +351,12 @@ const WaResultsOverviewV2 = ({
             </PaperLayout>
             <LargeTextResponseSummary
               surveyId={surveyId}
-              questions={questions}
+              questions={questions?.filter(
+                (question) => question?.metaType === WaQuestions.TextArea,
+              )}
               subscription={subscription}
               version={2}
+              currentSummary={aiResponseSummary}
             />
           </Stack>
         </Stack>
