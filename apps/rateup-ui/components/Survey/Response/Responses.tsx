@@ -26,6 +26,7 @@ import utc from "dayjs/plugin/utc";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -131,6 +132,7 @@ const Responses = ({
     isPending: isQLoading,
     error: QError,
     data: questions,
+    refetch,
   } = useQuestions(surveyId);
 
   const exportContactMutation = useExportContactResponses(surveyId);
@@ -308,7 +310,7 @@ const Responses = ({
     return result;
   }, [responses, ranges, campaignFlowFilter]);
   if (isQLoading || isLoading || CFLoading) return <RateupLoader />;
-  if (QError) return <Text>An error has occurred</Text>;
+  if (QError) return <ErrorComponent refetch={refetch} />;
 
   const responseCount = responses?.length;
   return (

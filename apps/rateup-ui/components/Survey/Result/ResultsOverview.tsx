@@ -55,7 +55,7 @@ import QuestionPieChart from "./Charts/QuestionPieChart";
 import LargeTextResponseSummary from "./LargeTextResponseSummary";
 import styles from "./ResultsOverview.module.css";
 
-const ResultsOverview = ({ surveyId }) => {
+const ResultsOverview = ({ surveyId, aiResponseSummary }) => {
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
@@ -467,8 +467,11 @@ const ResultsOverview = ({ surveyId }) => {
             </PaperLayout>
             <LargeTextResponseSummary
               surveyId={surveyId}
-              questions={questions}
+              questions={questions?.filter(
+                (question) => question?.type === QuestionType.TextArea,
+              )}
               subscription={subscription}
+              currentSummary={aiResponseSummary}
             />
           </Stack>
         </Stack>

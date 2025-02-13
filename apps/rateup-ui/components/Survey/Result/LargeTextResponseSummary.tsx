@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Badge,
+  Button,
   Divider,
   Flex,
   Group,
@@ -20,7 +21,7 @@ import {
 import styles from "components/Graph/graph.module.css";
 
 import { QuestionType } from "@/types/enums";
-import { useGetLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
+import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
@@ -40,6 +41,7 @@ interface LargeTextResponseSummaryProp {
   surveyId: string;
   questions: Question[] | FormElement[];
   subscription: Subscription;
+  currentSummary: ResponseSummary[];
   version?: number;
 }
 
@@ -52,16 +54,16 @@ const LargeTextResponseSummary = ({
   surveyId,
   questions,
   subscription,
+  currentSummary,
   version = 1,
 }: LargeTextResponseSummaryProp) => {
-  const getSummary = useGetLargeTextResponseSummaryByAI(surveyId);
+  const getSummary = useGenerateLargeTextResponseSummaryByAI(surveyId);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
   const [summaryTab, setSummaryTab] = useState(ResponseSummaryType.All);
   const [selectedQuestion, setSelectedQuestion] = useState<Question>(null);
   const { teams } = useContext(SurveyContext);
-  const [largeTextQuestions, setLargeTextQuestions] = useState([]);
   const ref = useRef(null);
   const [height, setHeight] = useState(null);
   const { translations } = useTranslations();
@@ -96,22 +98,20 @@ const LargeTextResponseSummary = ({
   };
 
   useEffect(() => {
-    setLargeTextQuestions(
-      questions.filter((question) => question.type === QuestionType.TextArea),
-    );
-  }, [questions]);
-
-  useEffect(() => {
     if (ref.current) {
       setHeight(ref.current.clientHeight);
     }
   }, [ref]);
 
-  if (!largeTextQuestions.length || !subscription.features?.ai?.active)
-    return null;
+  if (!questions?.length || !subscription.features?.ai?.active) return null;
 
   const LargeTextTeamwiseSummary = () => {
     if (!selectedQuestion) setSummaryTab(ResponseSummaryType.Team);
+    const questionSummary = currentSummary.find(
+      (q) => q.questionId === selectedQuestion.id,
+    );
+    const teamWiseSummary = questionSummary?.team;
+
     return (
       <Stack h={height}>
         <Group gap={"sm"}>
@@ -127,37 +127,42 @@ const LargeTextResponseSummary = ({
           </Text>
         </Group>
         <Stack p={"xl"}>
-          <Text fw={800}>
-            {getReplacedTitleFromVariable({
-              title: selectedQuestion?.title[defaultLanguage],
-              surveyId,
-            })}
+          <Text fw={600}>
+            {version === 1
+              ? getReplacedTitleFromVariable({
+                  title: selectedQuestion?.title[defaultLanguage],
+                  surveyId,
+                })
+              : selectedQuestion?.label}
           </Text>
           {teams?.map((team, index) => {
-            const summary = selectedQuestion?.responseSummary?.team?.find(
+            const currentTeamSummary = teamWiseSummary?.find(
               (t) => t.teamId === team.value,
-            )?.summary;
+            );
             return (
               <Stack key={team.value} pl={"xl"} mt={"md"}>
                 <Flex justify={"flex-end"} gap={"sm"}>
                   <Badge variant="light">{team.label}</Badge>
                   <Tooltip
-                    label={` ${translations["Generate"]} ${team.label} ${translations["Summary by AI"]}`}
+                    label={`${translations["Generate"]} ${team.label} ${translations["Summary by AI"]}`}
                   >
-                    <ActionIcon
+                    <Button
+                      rightSection={
+                        <IconBrandOpenai
+                          className={
+                            getSummary.isPending
+                              ? styles.rotateInfinitely
+                              : null
+                          }
+                        />
+                      }
+                      size="sm"
                       onClick={() =>
                         getResponseSummary(selectedQuestion.id, team.value)
                       }
-                      variant="subtle"
-                      size={"sm"}
-                      color="black"
                     >
-                      <IconBrandOpenai
-                        className={
-                          getSummary.isPending ? styles.rotateInfinitely : null
-                        }
-                      />
-                    </ActionIcon>
+                      {translations["Generate"]}
+                    </Button>
                   </Tooltip>
                   <Tooltip
                     label={
@@ -170,9 +175,9 @@ const LargeTextResponseSummary = ({
                   </Tooltip>
                 </Flex>
                 <Flex gap={"xs"}>
-                  <Text fw={800}>Summary:</Text>
-                  <Text fw={800} c={"dark.3"}>
-                    {summary ?? "---------"}
+                  <Text fw={600}>Summary:</Text>
+                  <Text fw={600} c={"dark.3"}>
+                    {currentTeamSummary?.summary ?? "---------"}
                   </Text>
                 </Flex>
                 {index + 1 !== teams.length && <Divider my={"sm"} />}
@@ -191,62 +196,70 @@ const LargeTextResponseSummary = ({
         {summaryTab === ResponseSummaryType.Team ? (
           <LargeTextTeamwiseSummary />
         ) : (
-          largeTextQuestions?.map((question, index) => (
-            <Stack key={index} mt={"sm"} ref={ref}>
-              <Flex gap={"xs"}>
-                <Text fw={800}>{index + 1}.</Text>
-                <Text fw={800}>
-                  {version === 1
-                    ? getReplacedTitleFromVariable({
-                        title: question?.title?.[defaultLanguage],
-                        surveyId,
-                      })
-                    : question?.label}
-                </Text>
-                <Tooltip label={translations["Generate Summary by AI"]}>
-                  <ActionIcon
-                    onClick={() => getResponseSummary(question.id)}
-                    variant="subtle"
-                    size={"sm"}
-                    color="black"
-                  >
-                    <IconBrandOpenai
-                      className={
-                        getSummary.isPending ? styles.rotateInfinitely : null
+          questions?.map((question, index) => {
+            const summary = currentSummary.find(
+              (summary) => summary.questionId === question.id,
+            );
+            return (
+              <Stack key={question?.id} mt={"sm"} ref={ref}>
+                <Flex gap={"xs"}>
+                  <Text fw={600}>{index + 1}.</Text>
+                  <Text fw={600}>
+                    {version === 1
+                      ? getReplacedTitleFromVariable({
+                          title: question?.title?.[defaultLanguage],
+                          surveyId,
+                        })
+                      : question?.label}
+                  </Text>
+                  <Tooltip label={translations["Generate Summary by AI"]}>
+                    <Button
+                      rightSection={
+                        <IconBrandOpenai
+                          className={
+                            getSummary.isPending
+                              ? styles.rotateInfinitely
+                              : null
+                          }
+                        />
                       }
+                      size="sm"
+                      onClick={() => getResponseSummary(question.id)}
+                    >
+                      {translations["Generate"]}
+                    </Button>
+                  </Tooltip>
+                  <Tooltip
+                    label={
+                      translations[
+                        "Summary will updated only if there are responses after summary generation"
+                      ]
+                    }
+                  >
+                    <IconInfoCircle size={"1rem"} color="gray" />
+                  </Tooltip>
+                </Flex>
+                {summary && (
+                  <Stack px={"xl"}>
+                    <Flex gap={"xs"}>
+                      <Text fw={600}>Summary:</Text>
+                      <Text fw={600} c={"dark.3"}>
+                        {summary.all.summary}
+                      </Text>
+                    </Flex>
+                    <RateupButtonSecondary
+                      title={translations["Generate Team wise summary"]}
+                      onClick={() => {
+                        setSelectedQuestion(question);
+                        setSummaryTab(ResponseSummaryType.Team);
+                      }}
+                      w={"fit-content"}
                     />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip
-                  label={
-                    translations[
-                      "Summary will updated only if there are responses after summary generation"
-                    ]
-                  }
-                >
-                  <IconInfoCircle size={"1rem"} color="gray" />
-                </Tooltip>
-              </Flex>
-              {question?.responseSummary?.all?.summary && (
-                <Stack px={"xl"}>
-                  <Flex gap={"xs"}>
-                    <Text fw={800}>Summary:</Text>
-                    <Text fw={800} c={"dark.3"}>
-                      {question?.responseSummary?.all?.summary}
-                    </Text>
-                  </Flex>
-                  <RateupButtonSecondary
-                    title={translations["Generate Team wise summary"]}
-                    onClick={() => {
-                      setSelectedQuestion(question);
-                      setSummaryTab(ResponseSummaryType.Team);
-                    }}
-                    w={"fit-content"}
-                  />
-                </Stack>
-              )}
-            </Stack>
-          ))
+                  </Stack>
+                )}
+              </Stack>
+            );
+          })
         )}
       </PaperLayout>
     </Stack>
