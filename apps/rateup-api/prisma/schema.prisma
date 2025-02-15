@@ -903,6 +903,8 @@ model WaFlow {
   anonymous            Boolean                @default(false)
   version              Int                    @default(1)
   LoyaltyActionFlowMap LoyaltyActionFlowMap[]
+  ///[FlowTicket[]]
+  ticketIssued          Json[]
 
   @@unique([flowId, orgId])
 }

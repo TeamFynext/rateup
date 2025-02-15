@@ -10,6 +10,10 @@ import { Role } from "../../utils/enums";
 import { formatDateT1 } from "../../utils/date";
 import { createEmailBodyTicketAssigned } from "../../utils/email/tickets/ticketAssigned";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import { SurveyType } from "../../types/enums";
+import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
+import { parsePhoneforWa } from "../loyalty/util";
+import { log } from "../../utils/logger";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -131,12 +135,38 @@ export async function createTicket(
                 select: {
                   id: true,
                   enableTicketEmailAlerts: true,
+                  type: true,
+                  orgId: true,
+                  org: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+              team: {
+                select: {
+                  name: true,
                 },
               },
             },
           });
 
-          if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
+          if (surveyTeamMap?.survey?.type === SurveyType.WaFlow) {
+            //sendTicket to whatSapp
+            const {
+              survey: {
+                org: { name: org_name },
+                orgId,
+              },
+              team: { name: team_name },
+            } = surveyTeamMap;
+            await sendTicketAssignWaMessage(newTicket, {
+              orgId,
+              team_name,
+              org_name,
+            });
+          } else if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
             sendTicketAssignEmail(newTicket);
           }
         } else {
@@ -149,6 +179,24 @@ export async function createTicket(
   } catch (error) {
     throw new Error(error);
   }
+}
+
+async function sendTicketAssignWaMessage(newTicket, data) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: newTicket.assignedToId,
+    },
+    select: {
+      phone: true,
+    },
+  });
+  const phone = parsePhoneforWa(user.phone);
+  const { orgId, team_name, org_name } = data;
+  const { number: ticket_no, priority } = newTicket;
+  const message = `A ticket has been assigned to you on RateUp.app under *${team_name}* team of *${org_name}*.\nKindly 
+  check the ticket and take necessary actions.\nTicket No: *#${ticket_no}*
+  Priority: *${priority}*  `;
+  await sendTextMessage({ phone, orgId }, null, message);
 }
 
 async function sendTicketAssignEmail(newTicket) {
@@ -228,7 +276,8 @@ export async function getAllTicketsByUser(userId: string) {
 }
 
 export function getQuestionTitleById(questions, questionId) {
-  return questions.find((question) => question.id === questionId).title.English;
+  const question = questions.find((question) => question.id === questionId);
+  return question?.title?.English ?? question?.label;
 }
 
 //get single ticket with associated comments
@@ -245,7 +294,17 @@ export async function getSingleTicket(ticketId: string) {
           include: {
             surveyTeamMap: {
               include: {
-                survey: true,
+                survey: {
+                  select: {
+                    questions: true,
+                    type: true,
+                    WaFlow: {
+                      select: {
+                        json: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -274,16 +333,21 @@ export async function getSingleTicket(ticketId: string) {
 
     let updatedResponse = null;
     if (surveyResponse) {
-      const questions = surveyResponse?.surveyTeamMap?.survey?.questions;
+      const isFlow =
+        surveyResponse?.surveyTeamMap?.survey?.type === SurveyType.WaFlow;
+      const questions = isFlow
+        ? surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
+            (screen) =>
+              screen?.layout?.children?.filter(
+                (child) => child?.type !== "Footer" && child.name,
+              ),
+          )
+        : surveyResponse?.surveyTeamMap?.survey?.questions;
       updatedResponse = surveyResponse?.responses?.map((response) => {
         const questionTitle = getQuestionTitleById(
           questions,
           response?.questionId,
         );
-        console.log(
-          `Question Title: ${questionTitle}, Response: ${response?.response?.Smiley}`,
-        );
-
         return { ...response, questionTitle: questionTitle };
       });
     }
@@ -295,6 +359,7 @@ export async function getSingleTicket(ticketId: string) {
       comments: commentsData,
     };
   } catch (error) {
+    log.error(error);
     throw new Error("Failed to fetch ticket");
   }
 }
