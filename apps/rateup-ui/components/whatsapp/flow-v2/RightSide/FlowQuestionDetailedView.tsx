@@ -2,14 +2,22 @@ import { useContext } from "react";
 
 import { QuestionType2 } from "@/types/enums";
 import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor";
+import TicketIssueEditor from "@/components/Survey/Question/TicketIssueEditor";
 import SurveyContext from "@/context/SurveyContext";
 
 import useFlowStore, { EditorType } from "../utils/store";
 import ElementEditor from "./ElementEditor";
 import { FlowLogicEditorV2 } from "./FlowLogicEditorV2";
+import TicketIssueEditorV2 from "./TicketIssueEditorV2";
 
 export function FlowQuestionDetailedView() {
-  const { currentElementType, detailActiveEditor } = useFlowStore();
+  const {
+    currentElementType,
+    detailActiveEditor,
+    getCurrentElement,
+    setDetailActiveEditor,
+    ticketIssued,
+  } = useFlowStore();
 
   switch (detailActiveEditor) {
     case EditorType.ElementEditor:
@@ -18,6 +26,14 @@ export function FlowQuestionDetailedView() {
       return <FlowLogicEditorV2 />;
     case EditorType.GoogleReviewEditor:
       return <GoogleReviewEditor2 />;
+    case EditorType.TicketIssueEditor:
+      return (
+        <TicketIssueEditorV2
+          element={getCurrentElement()}
+          setDetailActiveEditor={setDetailActiveEditor}
+          ticketIssued={ticketIssued}
+        />
+      );
   }
 }
 

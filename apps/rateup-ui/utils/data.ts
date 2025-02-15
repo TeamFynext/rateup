@@ -16,6 +16,7 @@ export const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
 export const googleReviewSupportedTypes2 = [Q2.Rating, Q2.Smiley, Q2.Opinion];
 
 export const ticketIssueSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
+export const ticketIssueSupportedTypes2 = [Q2.Rating, Q2.Smiley, Q2.Opinion];
 export const logicSupportedTypes = Object.values(Q);
 export const logicSupportedTypes2 = [
   W.Rating,
