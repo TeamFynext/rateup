@@ -225,7 +225,7 @@ export function useDownloadExcelResponse() {
   });
 }
 
-export function useGetLargeTextResponseSummaryByAI(surveyId: string) {
+export function useGenerateLargeTextResponseSummaryByAI(surveyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: getLargeTextResponseSummaryByAI,
