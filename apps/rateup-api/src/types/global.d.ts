@@ -81,7 +81,6 @@ declare global {
     validationRules?: ValidationRules | any;
     tnc?: TNC;
     waAppName?: string;
-    responseSummary?: ResponseSummary;
     reviewPageOptions?: any;
     reviewPagePlatform?: string;
   }
@@ -110,6 +109,7 @@ declare global {
   }
 
   type ResponseSummary = {
+    questionId: string;
     all: {
       summary: string;
       responseIds: string[];

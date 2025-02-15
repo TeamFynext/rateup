@@ -425,7 +425,13 @@ export async function sendTemplateByNameToPhoneHandler(
       );
   } catch (error) {
     log.error("Error sending template to contacts \n%o", error);
-    rep.code(500).send(error);
+    if (error instanceof Error) {
+      rep.code(400).send(error?.message);
+    } else {
+      rep
+        .code(500)
+        .send(error?.message ?? "Error sending template to contacts");
+    }
   }
 }
 

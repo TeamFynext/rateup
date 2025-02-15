@@ -36,6 +36,7 @@ import {
   WaTemplateComponentType,
   SubscriptionFeaturePathName,
   WaTemplateSupportedFormats,
+  CampaignStatus,
 } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import {
@@ -68,12 +69,16 @@ import { handleContactConsent } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
 import { checkMessageLimitExceeded } from "./wasurvey.auth";
 import { updateMonthlyStat } from "../../stats/stats.service";
-import { getLatestStatus } from "../../campaign/campaign.service";
+import {
+  getLatestStatus,
+  updateCampaign,
+} from "../../campaign/campaign.service";
 import {
   getLoyaltyWaCommandByRequestMessage,
   handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service";
 import dayjs from "dayjs";
+import { getSubscription, getUsageStats } from "../../campaign/campaign.auth";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -984,6 +989,7 @@ export function updateButtonText(array, newText) {
   );
 }
 type _campaign = {
+  id: string;
   team: {
     id: string;
     orgId: string;
@@ -1034,6 +1040,71 @@ async function _sendCampaignToParticipants(
     }
   } else {
     log.trace("No flow button identified in template");
+  }
+
+  const [usage, subscription] = await Promise.all([
+    getUsageStats(orgId),
+    getSubscription(orgId),
+  ]);
+
+  if (!usage || !subscription) {
+    let errorMessage = "Usage stats or subscription not found";
+    await updateCampaign(campaign.id, {
+      status: CampaignStatus.INACTIVE,
+      errorMessage: errorMessage,
+    });
+    log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
+    return;
+  }
+
+  const newMessagesCount = campaign.campaignParticipants.filter(
+    (participant) =>
+      (individualParticipantId ||
+        sendToStatuses.includes(
+          getStatusData(participant) as CampaignParticipantStatus,
+        )) &&
+      (participant.contact.consent || !campaign.useUserConsent) &&
+      participant.contact.phone,
+  ).length;
+
+  const monthlyMessageLimit =
+    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
+      ?.monthlyMessageLimit ?? 0;
+
+  const annualLimit = monthlyMessageLimit * 12;
+
+  if (
+    subscription?.isAnnualMessageLimit &&
+    (usage.annualMessageCount ?? 0 + newMessagesCount > annualLimit)
+  ) {
+    let errorMessage =
+      usage.annualMessageCount >= annualLimit
+        ? "You have reached the maximum annual limit of messages."
+        : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
+            annualLimit - usage.annualMessageCount
+          } to proceed.`;
+    await updateCampaign(campaign?.id, {
+      status: CampaignStatus.INACTIVE,
+      errorMessage: errorMessage,
+    });
+    log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
+    return;
+  } else if (
+    (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
+    monthlyMessageLimit
+  ) {
+    let errorMessage =
+      usage.monthlyMessagesCount >= monthlyMessageLimit
+        ? "You have reached the maximum monthly limit of messages."
+        : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
+            monthlyMessageLimit - usage.monthlyMessagesCount
+          } to proceed.`;
+    await updateCampaign(campaign.id, {
+      status: CampaignStatus.INACTIVE,
+      errorMessage: errorMessage,
+    });
+    log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
+    return;
   }
 
   for (const participant of campaign.campaignParticipants) {

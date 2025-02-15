@@ -4,6 +4,7 @@ import { getShortUrlId } from "../../utils/commnUtils";
 import prisma from "../../utils/prisma";
 import { FastifyRequest } from "fastify";
 import { getAxiosAIClient } from "./chatbot.controller";
+import { log } from "../../utils/logger";
 
 const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
 const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;
@@ -148,6 +149,7 @@ export async function getTextSummaryByAI(
       tokenUsage: { completionTokens: number; promptTokens: number };
     };
   } catch (err) {
+    log.error(err);
     throw `Error in getting text summary, ${err?.response?.data ?? err}`;
   }
 }

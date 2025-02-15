@@ -658,7 +658,13 @@ export async function sendTemplateToUserHandler(
     reply.code(200).send("Template sent to user successfully");
   } catch (error) {
     log.error("Error sending template to user \n%o", error);
-    reply.code(500).send(error.message || "Internal Server Error");
+    if (error instanceof Error) {
+      reply.code(400).send(error?.message);
+    } else {
+      reply
+        .code(500)
+        .send(error?.message ?? "Error sending template to contacts");
+    }
   }
 }
 

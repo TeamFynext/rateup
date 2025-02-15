@@ -103,8 +103,23 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
     const monthlyMessageLimit =
       subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
         ?.monthlyMessageLimit ?? 0;
+    const annualLimit = monthlyMessageLimit * 12;
 
     if (
+      subscription?.isAnnualMessageLimit &&
+      (usage.annualMessageCount ?? 0 + newMessagesCount > annualLimit)
+    ) {
+      let errorMessage =
+        usage.annualMessageCount >= annualLimit
+          ? "You have reached the maximum annual limit of messages."
+          : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
+              annualLimit - usage.annualMessageCount
+            } to proceed.`;
+      return reply.code(403).send({
+        message: errorMessage,
+        displayMessageInClient: true,
+      });
+    } else if (
       (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
       monthlyMessageLimit
     ) {
