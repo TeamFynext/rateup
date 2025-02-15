@@ -77,7 +77,6 @@ const TicketIssueEditorV2 = ({
 
   const handleSave = () => {
     const currentElementType = QuestionType2[element.metaType];
-    console.log("currentElementType", currentElementType);
     if (ticketIssue && !enableTicketIssue) {
       const updatedTickets = ticketIssued.filter(
         (t) => t.questionId !== element.id,
