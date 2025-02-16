@@ -33,6 +33,7 @@ function EditFlow() {
     activeEditor,
     setActiveEditor,
     setCurrentElement,
+    setTicketIssued,
   } = useFlowStore();
   const updateFlow = useUpdateFlowMutation();
 
@@ -84,6 +85,10 @@ function EditFlow() {
     setCurrentElement(null, type);
     setActiveEditor(EditFlowRightPanel.ElementEditor);
   };
+  useEffect(() => {
+    setTicketIssued(dbFlow?.ticketIssued);
+  }, [dbFlow]);
+
   if (isPending) return <RateupLoader />;
 
   return (

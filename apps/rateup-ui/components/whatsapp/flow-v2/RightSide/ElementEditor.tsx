@@ -1,23 +1,37 @@
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   Badge,
+  Button,
   Checkbox,
   Divider,
   Grid,
   Group,
   Image,
+  Menu,
   ScrollArea,
   Stack,
+  Text,
+  Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
+import {
+  IconAppWindow,
+  IconBrandGoogle,
+  IconChevronDown,
+  IconDeviceSdCard,
+  IconTicket,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { zodResolver } from "mantine-form-zod-resolver";
 
-import { QuestionType2 } from "@/types/enums";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { QuestionType2, SubscriptionFeaturePathName } from "@/types/enums";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
 import {
   ContainedDatePickerInput,
   ContainedMultiSelect,
@@ -35,15 +49,19 @@ import {
 } from "@/utils/constants";
 import {
   googleReviewSupportedTypes2,
+  logicSupportedTypes2,
   logicSupportedTypes3,
+  ticketIssueSupportedTypes,
+  ticketIssueSupportedTypes2,
 } from "@/utils/data";
 import { showErrorToast } from "@/utils/notifications";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import { DataSourceInput } from "../input/DataSource";
 import ImageInput from "../input/ImageInput";
 import InitInput from "../input/InitInput";
 import TiptapMarkdown from "../input/TiptapMarkdown";
-import useFlowStore, { EditorType } from "../utils/store";
+import useFlowStore, { EditorType, FormElement } from "../utils/store";
 import { getInitialValues, getValidationSchema } from "../utils/util";
 
 // Memoize field components to prevent re-renders
@@ -216,36 +234,10 @@ function ElementEditor() {
             )}
           </Group>
 
-          {logicSupportedTypes3.includes(currentElementType) && (
-            <RateupButtonPrimary
-              title={translations["Logic Jump"]}
-              leftIcon={
-                <Image
-                  src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
-                  w={30}
-                  h={30}
-                  fit={"contain"}
-                  alt="logic jump"
-                />
-              }
-              size="sm"
-              variant="outline"
-              onClick={() => setDetailActiveEditor(EditorType.LogicEditor)}
-            />
-          )}
-          <Group>
-            {googleReviewSupportedTypes2.includes(currentElementType) && (
-              <RateupButtonPrimary
-                title={translations["Google Review"]}
-                leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  setDetailActiveEditor(EditorType.GoogleReviewEditor)
-                }
-              />
-            )}
-          </Group>
+          <FlowElementActions
+            currentElementType={currentElementType}
+            setDetailActiveEditor={setDetailActiveEditor}
+          />
           <RateupButtonPrimary
             title={"Save"}
             size="md"
@@ -257,5 +249,141 @@ function ElementEditor() {
     </form>
   );
 }
+
+const FlowElementActions = ({
+  setDetailActiveEditor,
+  currentElementType,
+}: {
+  setDetailActiveEditor: (editor: EditorType) => void;
+  currentElementType: QuestionType2;
+}) => {
+  const { translations } = useTranslations();
+  const { data: subscription } = useSubscription();
+  const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
+    useState(false);
+  const [isTicketFeatureActive, setIsTicketFeatureActive] = useState(false);
+
+  useEffect(() => {
+    setIsGoogleReviewFeatureActive(
+      hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
+    );
+
+    setIsTicketFeatureActive(
+      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    );
+  }, [subscription]);
+  return (
+    <Menu
+      position="top"
+      offset={4}
+      withArrow
+      arrowPosition="side"
+      transitionProps={{
+        transition: "rotate-right",
+        duration: 150,
+      }}
+    >
+      <Menu.Target>
+        <Button
+          variant="outline"
+          color="dark.2"
+          radius="lg"
+          size="sm"
+          rightSection={<IconChevronDown size="1rem" />}
+        >
+          <Text size="sm" c={"var(--text-color-sp)"} fw="700">
+            {translations["Actions"]}
+          </Text>
+        </Button>
+      </Menu.Target>
+
+      <Menu.Dropdown>
+        {logicSupportedTypes3.includes(currentElementType) && (
+          <Menu.Item>
+            <RateupButtonSecondary
+              title={translations["Logic Jump"]}
+              fullWidth
+              leftIcon={
+                <Image
+                  src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
+                  h={30}
+                  w={30}
+                  fit="contain"
+                  alt="icon of login jump"
+                />
+              }
+              size="sm"
+              onClick={async () => {
+                setDetailActiveEditor(EditorType.LogicEditor);
+              }}
+            />
+          </Menu.Item>
+        )}
+
+        {googleReviewSupportedTypes2.includes(currentElementType) && (
+          <Menu.Item>
+            {isGoogleReviewFeatureActive ? (
+              <RateupButtonPrimary
+                title={translations["Google Review"]}
+                leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setDetailActiveEditor(EditorType.GoogleReviewEditor)
+                }
+              />
+            ) : (
+              <Tooltip
+                label={translations["Upgrade your Plan for this feature."]}
+                disabled={isGoogleReviewFeatureActive}
+                color="yellow"
+              >
+                <Button
+                  data-disabled
+                  radius="lg"
+                  onClick={(event) => event.preventDefault()}
+                  leftSection={<IconAppWindow />}
+                >
+                  Review Page
+                </Button>
+              </Tooltip>
+            )}
+          </Menu.Item>
+        )}
+
+        {ticketIssueSupportedTypes2.includes(currentElementType) && (
+          <Menu.Item>
+            {isTicketFeatureActive ? (
+              <RateupButtonSecondary
+                title={translations["Create Tickets"]}
+                leftIcon={<IconTicket stroke={4} size={"1rem"} />}
+                size="sm"
+                fullWidth
+                onClick={() => {
+                  setDetailActiveEditor(EditorType.TicketIssueEditor);
+                }}
+              />
+            ) : (
+              <Tooltip
+                label={translations["Upgrade your Plan for this feature."]}
+                disabled={isTicketFeatureActive}
+                color="yellow"
+              >
+                <Button
+                  data-disabled
+                  radius="lg"
+                  onClick={(event) => event.preventDefault()}
+                  leftSection={<IconTicket stroke={4} size={"1rem"} />}
+                >
+                  {translations["Create Tickets"]}
+                </Button>
+              </Tooltip>
+            )}
+          </Menu.Item>
+        )}
+      </Menu.Dropdown>
+    </Menu>
+  );
+};
 
 export default memo(ElementEditor);

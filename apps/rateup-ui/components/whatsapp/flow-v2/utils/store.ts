@@ -52,6 +52,7 @@ export enum EditorType {
   LogicEditor = "logic-editor",
   GoogleReviewEditor = "google-review-editor",
   ElementEditor = "element-editor",
+  TicketIssueEditor = "ticket-issue-editor",
 }
 
 interface StoreState {
@@ -81,6 +82,8 @@ interface StoreState {
   updateComponentsInScreen: (updatedComponents: FormElement[]) => void;
   addComponentToScreen: (omponent: FormElement) => void;
   deleteComponentFromScreen: (feId: string) => void;
+  ticketIssued: FlowTicket[];
+  setTicketIssued: (ticketIssued: FlowTicket[]) => void;
 }
 
 const useFlowStore = create<StoreState>()(
@@ -301,6 +304,8 @@ const useFlowStore = create<StoreState>()(
       }
       return undefined;
     },
+    ticketIssued: [],
+    setTicketIssued: (ticketIssued) => set({ ticketIssued }),
   })),
 );
 

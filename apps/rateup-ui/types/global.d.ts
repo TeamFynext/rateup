@@ -759,6 +759,16 @@ declare global {
     cta: string;
   };
 
+  type FlowTicket = {
+    questionId: string;
+    type: QuestionType2;
+    condition: {
+      minRating?: number;
+      minOpinion?: number;
+      reqOptions?: string[];
+    };
+  };
+
   type DbFlow = {
     dbFlowId: string;
     createdAt: Date;
@@ -778,6 +788,7 @@ declare global {
     pendingSave: boolean;
     anonymous: boolean;
     version: number;
+    ticketIssued: FlowTicket[];
   };
 
   type LoyaltyCustomer = {
