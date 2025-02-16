@@ -107,7 +107,7 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
 
     if (
       subscription?.isAnnualMessageLimit &&
-      (usage.annualMessageCount ?? 0 + newMessagesCount > annualLimit)
+      (usage.annualMessageCount ?? 0) + newMessagesCount > annualLimit
     ) {
       let errorMessage =
         usage.annualMessageCount >= annualLimit
