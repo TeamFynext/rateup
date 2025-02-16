@@ -7,6 +7,7 @@ import {
   getMediaFileByMediaId,
   getMessageCountHandler,
   getWaMessagesByContactIdHandler,
+  getWaTicketsHandler,
   sendNewWaMessageHandler,
 } from "./wamessage.controller";
 import { checkSession } from "../../../../utils/checkSession";
@@ -39,6 +40,15 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.get("/contacts", getContactsWithLastMessageHandler);
   server.get("/messagecount", getMessageCountHandler);
   server.get("/filterdata", generateChatFilterDataHandler);
+  server.get(
+    "/tickets",
+    {
+      schema: {
+        querystring: $waMessage("PaginateQuerySchema"),
+      },
+    },
+    getWaTicketsHandler,
+  );
 
   server.get(
     "/contactsfiltered",

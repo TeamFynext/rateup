@@ -16,6 +16,7 @@ import {
   getMediaFile,
   getMessageCount,
   getWaMessagesByContactId,
+  getWaTickets,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -159,8 +160,13 @@ export async function getContactsWithLastMessageHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const { page } = request.query;
-    const contacts = await getContactsWithLastMessage(orgId, parseInt(page));
+    const { page, active } = request.query;
+    let activeConditon = active === "true" ? true : false;
+    const contacts = await getContactsWithLastMessage(
+      orgId,
+      parseInt(page),
+      activeConditon,
+    );
     reply.status(200).send(contacts);
   } catch (error) {
     console.log(error);
@@ -177,6 +183,21 @@ export async function getMessageCountHandler(
     reply.status(200).send(contacts);
   } catch (error) {
     reply.status(500).send("Error while getting message count");
+  }
+}
+export async function getWaTicketsHandler(
+  request: FastifyRequest<{
+    Querystring: PaginateQuerySchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { page } = request.query;
+    const orgId = request.user.orgId;
+    const tickets = await getWaTickets(parseInt(page ?? "0"), orgId);
+    reply.send(tickets);
+  } catch (error) {
+    reply.status(500).send("Internal Server Error");
   }
 }
 export async function generateChatFilterDataHandler(
