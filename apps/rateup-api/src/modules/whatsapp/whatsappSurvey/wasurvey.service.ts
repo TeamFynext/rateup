@@ -4,6 +4,7 @@ import {
   LogicAction,
   QuestionType as Q,
   QuestionType,
+  QuestionType2,
   WaEvent,
   WaQuestions,
 } from "../../../types/enums";
@@ -50,6 +51,7 @@ import {
   handleLoyaltyFeedback,
   handleLoyaltyPointsCommand,
 } from "../../loyalty/settings/settings.service";
+import { fa } from "@faker-js/faker";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -391,6 +393,31 @@ export async function sendQuestion(
     await sendMessage(session.orgId, message);
   }
 }
+
+function checkShouldRaiseTicket(ticketIssued, responses) {
+  let shouldRaiseTicket = false;
+  for (const ticket of ticketIssued) {
+    const response = responses.find((r) => r.questionId === ticket.questionId);
+    if (!response) continue;
+    switch (ticket.type) {
+      case QuestionType2.Rating:
+        shouldRaiseTicket =
+          Number(response.response) <= ticket.condition.minRating;
+        break;
+      case QuestionType2.Smiley:
+        shouldRaiseTicket = ticket.condition.reqOptions.includes(
+          response.response,
+        );
+        break;
+      case QuestionType2.Opinion:
+        shouldRaiseTicket =
+          Number(response.response) <= ticket.condition.minOpinion;
+        break;
+    }
+    if (shouldRaiseTicket) return true;
+  }
+  return shouldRaiseTicket;
+}
 /**
  * Saves responses to the database in SurveyResponse table.
  * To be called after getting response to the last question.
@@ -469,7 +496,12 @@ export async function saveResponses(session: WaSessionWithRelations) {
     contactId: contact?.id,
     tag: session.tag,
   };
-  const res = await createResponse(surveyResponse);
+  const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow?.ticketIssued;
+  let shouldRaiseTicket = false;
+  if (ticketIssued.length) {
+    shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
+  }
+  const res = await createResponse(surveyResponse, shouldRaiseTicket);
   await updateResponse(res.id, { ip: session.ip, location: undefined });
   const loyalty = await prisma.loyaltyActionFlowMap.findFirst({
     where: {
