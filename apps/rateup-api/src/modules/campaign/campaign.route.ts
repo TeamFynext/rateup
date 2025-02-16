@@ -70,6 +70,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/:campaignId/send",
     {
+      preHandler: verifyMessageMonthlyLimitRestrictionForCampaign,
       schema: {
         params: $campaignRef("byCampaignIdParamsSchema"),
       },
