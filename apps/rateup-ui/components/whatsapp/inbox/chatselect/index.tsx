@@ -67,6 +67,8 @@ const WaInboxChatSelect = () => {
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
   const { ref, width, height } = useElementSize();
   const { ref: ref2, width: width2, height: height2 } = useElementSize();
+  const { ref: ref3, width: width3, height: height3 } = useElementSize();
+
   const queryClient = useQueryClient();
   const [shouldFetchAgainData, setShouldFetchAgainData] = useState(true);
   const [
@@ -598,10 +600,10 @@ const WaInboxChatSelect = () => {
               </Card>
             )
           ) : (
-            <div className={classes.chat_cards_wrapper} ref={ref2}>
+            <div className={classes.chat_cards_wrapper} ref={ref3}>
               <List
-                height={height2}
-                width={width2}
+                height={height3}
+                width={width3}
                 itemCount={contactsToDisplay?.length || 0}
                 itemSize={69}
                 onItemsRendered={(e) => {
@@ -638,37 +640,6 @@ const WaInboxChatSelect = () => {
           )}
         </Tabs.Panel>
       </Tabs>
-
-      {/* <SegmentedControl
-        value={tab}
-        onChange={(value) => {
-          setTab(value as TabsEnum);
-          refetch();
-          // setFilter({
-          //   ...filter,
-          //   messageType: "all",
-          // });
-        }}
-        data={Object.values(TabsEnum).map((atab) => ({
-          value: atab,
-          label: (
-            <Indicator
-              inline
-              label={messageCount[atab] || 0}
-              size={16}
-              color="red"
-              mt={4}
-            >
-              {atab === TabsEnum.active && <IconMessageCog size={18} />}
-              {atab === TabsEnum.all && <IconMessageDots size={18} />}
-            </Indicator>
-          ),
-        }))}
-        color={"var(--mantine-primary-color-6)"}
-        radius={"md"}
-        mx={"md"}
-        pb={"sm"}
-      /> */}
     </Stack>
   );
 };
