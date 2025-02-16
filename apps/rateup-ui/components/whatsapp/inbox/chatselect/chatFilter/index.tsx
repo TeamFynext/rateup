@@ -126,19 +126,7 @@ export default function WaInboxChatFilter(props: Props) {
   return (
     <HoverCard position={isMobile ? "bottom-end" : "right-start"}>
       <HoverCardTarget>
-        <Indicator
-          label={getFilterActiveCount()}
-          size={"xl"}
-          styles={{
-            indicator: {
-              borderRadius: "50%",
-              width: 15,
-              height: 15,
-              fontSize: 10,
-              zIndex: 0,
-            },
-          }}
-        >
+        <Indicator label={getFilterActiveCount()} size={16}>
           <ThemeIcon className={classes.theme_icon} variant="light">
             <IconFilter />
           </ThemeIcon>

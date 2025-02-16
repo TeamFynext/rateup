@@ -1,6 +1,10 @@
+import { useSearchParams } from "next/navigation";
+
 import { motion } from "motion/react";
 
+import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useTranslations from "@/dictionaries/useTranslation";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import {
   ContactsWithLastMessage,
@@ -13,13 +17,23 @@ import WaInboxChatDisplayFooter from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
 import classes from "./styles.module.css";
 
-export default function WaInboxChatDisplay({
-  messages,
-  contact,
-}: {
-  messages: WaGetMessagesBody[];
-  contact: ContactsWithLastMessage;
-}) {
+export default function WaInboxChatDisplay() {
+  const searchParams = useSearchParams();
+  const { data, error } = useGetMessagesByContactId(
+    searchParams.get("contactId") as string,
+  );
+  const { selectedContact: contact } = useContactStore();
+  const messages =
+    data?.pages
+      .map((page) =>
+        page.messages.sort(
+          (a, b) =>
+            new Date(a.waCreatedAt).getTime() -
+            new Date(b.waCreatedAt).getTime(),
+        ),
+      )
+      .flat() || [];
+
   // Animation variants
   const variants = {
     hidden: { opacity: 0 },
@@ -35,6 +49,8 @@ export default function WaInboxChatDisplay({
 
   const isChatDisplayOpen = useIsChatDisplayOpen();
   const { translations } = useTranslations();
+  if (error) return <div>Error: {error.message}</div>;
+
   return (
     <div
       className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""}`}
