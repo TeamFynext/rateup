@@ -50,7 +50,7 @@ import styles from "../../components/WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../components/WelcomeTour/WelcomeTour";
 import { useUser } from "../../context/UserContext";
 import { getDictionary } from "../../dictionaries/dictionaries";
-import { SurveyTypeFilters } from "../../types/enums";
+import { SurveyType, SurveyTypeFilters } from "../../types/enums";
 import { getFormattedResponseForAreaGraph } from "../../utils/response";
 import classes from "./dashboard.module.css";
 
@@ -176,7 +176,11 @@ export default function DashboardHome() {
   // Filtering surveys based on the filterParam state
   const filteredSurveys =
     surveysSummary?.surveys
-      ?.filter((s) => s.active === true && s.isPublished === true)
+      ?.filter(
+        (s) =>
+          s.active === true &&
+          (s.type === SurveyType.WaFlow || s.isPublished === true),
+      )
       ?.filter((s) => {
         if (filterParam === SurveyTypeFilters.Web) {
           return s.type === "web";
