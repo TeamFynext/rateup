@@ -23,6 +23,7 @@ const NewWaMessageBody = z.object({
 const PaginateQuerySchema = z.object({
   cursor: z.string().optional(),
   page: z.string().optional(),
+  active: z.string().optional().nullable(),
 });
 
 const waMediaFileByMediaIdBody = z.object({

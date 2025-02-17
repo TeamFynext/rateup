@@ -397,6 +397,17 @@ declare global {
     data_api_version: string;
     routing_model: Json;
   };
+
+  type FlowTicket = {
+    questionId: string;
+    type: QuestionType2;
+    condition: {
+      minRating?: number;
+      minOpinion?: number;
+      reqOptions?: string[];
+    };
+  };
+
   type WaFlowScreen = {
     id: string;
     title: string;
