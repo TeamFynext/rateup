@@ -16,6 +16,7 @@ import {
   getMessageCount,
   getMessagesByContactId,
   getWaChatMediaFile,
+  getWaTickets,
   sendNewWaMessage,
 } from "./wamessage.api";
 
@@ -46,11 +47,11 @@ export const useSendNewWaMessage = (contactId: string) => {
   });
 };
 
-export const useContactsWithLastMessage = () =>
+export const useContactsWithLastMessage = (active = false) =>
   useInfiniteQuery({
-    queryKey: ["contacts", "last-message"],
+    queryKey: ["contacts", "last-message", active],
     initialPageParam: 1,
-    queryFn: ({ pageParam }) => getContactsWithLastMessage(pageParam),
+    queryFn: ({ pageParam }) => getContactsWithLastMessage(pageParam, active),
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     placeholderData: { pages: [], pageParams: [] },
   });
@@ -61,13 +62,24 @@ export const useChatFilterData = () => {
     queryFn: getChatFilterData,
   });
 };
-
-export const useMessageCount = () => {
-  return useQuery({
-    queryKey: ["contacts", "message-count"],
+type messageCountType = {
+  active: number;
+  all: number;
+};
+export const useMessageCount = (active = false) => {
+  return useQuery<messageCountType, Error>({
+    queryKey: ["contacts", "message-count", active],
     queryFn: getMessageCount,
   });
 };
+export const useWaTicktes = () =>
+  useInfiniteQuery({
+    queryKey: ["waTickets"],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => getWaTickets(pageParam),
+    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    placeholderData: { pages: [], pageParams: [] },
+  });
 
 export const useFilteredContacts = (
   filterData: string,

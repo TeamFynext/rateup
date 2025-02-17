@@ -1,5 +1,5 @@
 .wrapper {
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xl);
+  /* padding: var(--mantine-spacing-xs) var(--mantine-spacing-xl); */
   border-bottom: 1px dashed var(--mantine-color-gray-3);
   border-radius: 0px;
   overflow: unset;

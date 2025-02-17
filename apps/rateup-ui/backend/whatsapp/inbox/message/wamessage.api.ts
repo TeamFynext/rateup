@@ -52,9 +52,14 @@ export type ContactsWithLastMessage = ContactsData & {
   userInitiatedFinalTimeStamp: string;
   total_contact_count?: string;
 };
-export async function getContactsWithLastMessage(page: number) {
+export async function getContactsWithLastMessage(
+  page: number,
+  active: boolean,
+) {
   return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/contacts?page=${page}`)
+    await axiosClient.get(
+      `${WA_CONTACT_BASE_PATH}/contacts?page=${page}&active=${active}`,
+    )
   ).data as ContactsWithLastMessage[];
 }
 
@@ -70,6 +75,11 @@ export async function getFilteredContacts(filterData: string, page: number) {
       `${WA_CONTACT_BASE_PATH}/contactsfiltered?filterData=${filterData}&page=${page}`,
     )
   ).data as ContactsWithLastMessage[];
+}
+
+export async function getWaTickets(page: number) {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/tickets?page=${page}`))
+    .data;
 }
 
 export async function exportWaChats({
