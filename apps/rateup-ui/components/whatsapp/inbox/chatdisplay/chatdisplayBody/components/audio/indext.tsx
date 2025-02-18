@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import { ActionIcon, Group } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
@@ -12,7 +12,6 @@ interface Props {
 
 export default function WaInboxAudio({ messageContent }: Props) {
   const { mutate, isPending } = useGetMediaFile();
-  const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleAudioError = () => {
@@ -29,10 +28,10 @@ export default function WaInboxAudio({ messageContent }: Props) {
         // Create a Blob URL from the fetched audio data
         const blob = new Blob([fileData], { type: "audio/ogg" });
         const url = URL.createObjectURL(blob);
-        setAudioSrc(url);
 
         // Play the audio automatically
         if (audioRef.current) {
+          audioRef.current.src = url;
           audioRef.current.load();
           audioRef.current.play().catch((err) => {
             console.error("Failed to play audio:", err);
@@ -55,9 +54,9 @@ export default function WaInboxAudio({ messageContent }: Props) {
         ref={audioRef}
         controls
         style={{ flex: 1 }}
-        onError={audioSrc ? handleAudioError : undefined}
+        onError={audioRef?.current?.src ? handleAudioError : undefined}
       >
-        <source src={audioSrc || ""} type="audio/mpeg" />
+        <source type="audio/ogg" />
         Your browser does not support the audio element.
       </audio>
       <ActionIcon
@@ -68,7 +67,7 @@ export default function WaInboxAudio({ messageContent }: Props) {
         onClick={handleDownload}
         aria-label="Download Audio"
         loading={isPending}
-        display={audioSrc ? "none" : "flex"}
+        display={audioRef?.current?.src ? "none" : "flex"}
       >
         <IconDownload />
       </ActionIcon>

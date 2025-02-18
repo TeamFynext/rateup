@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import { ActionIcon, Group } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
@@ -12,7 +12,6 @@ interface Props {
 
 export default function WaInboxVideo({ messageContent }: Props) {
   const { mutate, isPending } = useGetMediaFile();
-  const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleVideoError = () => {
@@ -29,11 +28,11 @@ export default function WaInboxVideo({ messageContent }: Props) {
         // Create a Blob URL from the fetched video data
         const blob = new Blob([fileData], { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
-        setVideoSrc(url);
 
         // Play the video automatically
         if (videoRef.current) {
           videoRef.current.load();
+          videoRef.current.src = url;
           videoRef.current.play().catch((err) => {
             console.error("Failed to play video:", err);
           });
@@ -55,9 +54,9 @@ export default function WaInboxVideo({ messageContent }: Props) {
         ref={videoRef}
         controls
         style={{ width: "100%" }}
-        onError={videoSrc ? handleVideoError : undefined}
+        onError={videoRef?.current?.src ? handleVideoError : undefined}
       >
-        <source src={videoSrc || ""} type="video/mp4" />
+        <source type="video/mp4" />
         Your browser does not support the video element.
       </video>
       <ActionIcon
@@ -69,7 +68,7 @@ export default function WaInboxVideo({ messageContent }: Props) {
         onClick={handleDownload}
         aria-label="Download Video"
         loading={isPending}
-        display={videoSrc ? "none" : "flex"}
+        display={videoRef?.current?.src ? "none" : "flex"}
       >
         <IconDownload />
       </ActionIcon>
