@@ -303,8 +303,8 @@ export async function importCSVContacts(
 
     const processContact = (contact) => {
       const formattedPhone = contact.phone?.startsWith("+")
-        ? contact.phone.replace(/\s+/g, "")
-        : `+${contact.phone.replace(/\s+/g, "")}`;
+        ? contact?.phone?.replace(/\s+/g, "")
+        : `+${contact?.phone?.replace(/\s+/g, "")}`;
 
       if (
         !contact?.phone ||
@@ -352,9 +352,9 @@ export async function importCSVContacts(
         skipEmptyLines: true,
         chunkSize: 1024 * 1024,
         transformHeader: (header) => header?.trim()?.toLowerCase(),
-        chunk: (results) => {
+        chunk: async (results) => {
           if (results?.data) {
-            results.data.forEach(processContact);
+            await Promise.all(results.data.map(processContact));
           }
         },
         complete: finalizeProcessing,

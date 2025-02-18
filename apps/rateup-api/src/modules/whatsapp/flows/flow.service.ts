@@ -194,7 +194,7 @@ export async function getFlowFromDb(dbFlowId: string) {
 
 // updates flow json of a flow from db to whatsapp
 export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
-  const flow: any = await prisma.waFlow.findFirst({
+  const flow = await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
     },
@@ -548,7 +548,7 @@ export async function updateFlowInDb(
   dbFlowId: string,
   data: UpdateFlowInput,
 ) {
-  const updatedFlow = prisma.waFlow.update({
+  const updatedFlow = await prisma.waFlow.update({
     where: {
       dbFlowId: dbFlowId,
     },
@@ -559,17 +559,18 @@ export async function updateFlowInDb(
   });
 
   // updating survey title if name is updated
-  if (data.name) {
-    await prisma.survey.updateMany({
+  if (data.name || data.status === WaFlowStatus.PUBLISHED) {
+    const updateData = {
+      title: data.name,
+      isPublished: data.status
+        ? data.status === WaFlowStatus.PUBLISHED
+        : undefined,
+    };
+    await prisma.survey.update({
       where: {
-        WaFlow: {
-          dbFlowId,
-          orgId,
-        },
+        id: updatedFlow.surveyId,
       },
-      data: {
-        title: data.name,
-      },
+      data: updateData,
     });
   }
 
