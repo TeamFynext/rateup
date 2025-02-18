@@ -250,7 +250,7 @@ export async function getMessageCount(orgId: string) {
 
   return { active, all, tickets };
 }
-export async function getWaTickets(page = 0, orgId: string) {
+export async function getWaTickets(page = 1, orgId: string) {
   const data = await prisma.ticket.findMany({
     where: {
       team: {
@@ -360,8 +360,7 @@ export async function filterChats(
       ) {
         if (bodyFilterProps?.messageType === "usermessages") {
           extendedWhereClause += `AND EXISTS (
-            SELECT 1
-            FROM "WaMessage" wm
+            SELECT 1 FROM "WaMessage" wm
             WHERE wm."contactId" = c.id
             AND wm."messageBody"->>'exchangeProcess' = 'receive'
           )`;
@@ -403,55 +402,51 @@ export async function filterChats(
         const search = bodyFilterProps.searchTerm;
         extendedWhereClause += ` AND (c."name" ILIKE '%${search}%' OR REPLACE(c."phone", ' ', '') LIKE '%${search}%')`;
       }
+
       return extendedWhereClause;
     }
 
-    const query = `WITH LatestMessages AS (
+    const query = `
+    WITH LatestMessages AS (
       SELECT DISTINCT ON (w."contactId")
           w."contactId",
           w."messageBody",
           w."waCreatedAt"
-      FROM
-          "WaMessage" w
-      ORDER BY
-          w."contactId", w."waCreatedAt" DESC
+      FROM "WaMessage" w
+      ORDER BY w."contactId", w."waCreatedAt" DESC
     ),
     LatestReceiveMessages AS (
-        SELECT DISTINCT ON (w."contactId")
-            w."contactId",
-            w."messageBody" AS receiveMessageBody,
-            w."waCreatedAt" AS receiveCreatedAt
-        FROM
-            "WaMessage" w
-        WHERE
-            w."messageBody"->'exchangeProcess' = '"receive"'
-        ORDER BY
-            w."contactId", w."waCreatedAt" DESC
+      SELECT DISTINCT ON (w."contactId")
+          w."contactId",
+          w."messageBody" AS receiveMessageBody,
+          w."waCreatedAt" AS receiveCreatedAt
+      FROM "WaMessage" w
+      WHERE w."messageBody"->'exchangeProcess' = '"receive"'
+      ORDER BY w."contactId", w."waCreatedAt" DESC
+    ),
+    UniqueContacts AS (
+      SELECT DISTINCT ON (c.id) 
+          c.*,
+          lm."messageBody" AS LatestMessage,
+          lm."waCreatedAt" AS LatestMessageTime,
+          lrm.receiveMessageBody AS LatestReceiveMessage,
+          lrm.receiveCreatedAt AS LatestReceiveTime
+      FROM "Contact" c
+      LEFT JOIN "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
+      LEFT JOIN "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
+      LEFT JOIN "CampaignParticipant" cpt ON cpt."contactId" = c."id"
+      LEFT JOIN LatestMessages lm ON c.id = lm."contactId"
+      LEFT JOIN LatestReceiveMessages lrm ON c.id = lrm."contactId"
+      WHERE c."orgId" = $1::uuid ${extendQueryForFilters("main")}
+    ),
+    CountedContacts AS (
+      SELECT COUNT(*)::Text AS total_contact_count FROM UniqueContacts
     )
-    SELECT
-        c.*,
-        lm."messageBody" AS LatestMessage,
-        lm."waCreatedAt" AS LatestMessageTime,
-        lrm.receiveMessageBody AS LatestReceiveMessage,
-        lrm.receiveCreatedAt AS LatestReceiveTime,
-        COUNT(*) OVER ()::Text AS total_contact_count
-    FROM
-        "Contact" c
-    LEFT JOIN 
-        "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
-    LEFT JOIN 
-        "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
-    LEFT JOIN 
-        "CampaignParticipant" cpt ON cpt."contactId" = c."id"
-    LEFT JOIN
-        LatestMessages lm ON c.id = lm."contactId"
-    LEFT JOIN
-        LatestReceiveMessages lrm ON c.id = lrm."contactId"
-    WHERE
-        c."orgId" = $1::uuid ${extendQueryForFilters("main")}
-    ORDER BY 
-        lm."waCreatedAt" DESC NULLS LAST
-    LIMIT 5000 OFFSET $2`;
+    SELECT uc.*, cc.total_contact_count
+    FROM UniqueContacts uc, CountedContacts cc
+    ORDER BY uc.LatestMessageTime DESC NULLS LAST
+    LIMIT 5000 OFFSET $2
+    `;
 
     const contacts: Array<
       Contact & {
@@ -459,17 +454,11 @@ export async function filterChats(
         latestreceivemessage: WaMessage;
         latestmessagetime: string;
         latestreceivetime: string;
-        total_contact_count: number; // Added total_contact_count
+        total_contact_count: number;
       }
     > = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 5000);
-    const uniqueContacts = Array.from(
-      contacts.reduce(
-        (map, contact) => map.set(contact.id, contact),
-        new Map(),
-      ),
-    ).map(([id, contact]) => contact);
 
-    return uniqueContacts.map(
+    const formattedContacts = contacts.map(
       ({
         latestmessage,
         latestmessagetime,
@@ -487,8 +476,9 @@ export async function filterChats(
         userInitiatedFinalTimeStamp: latestreceivetime ?? null,
       }),
     );
+    return formattedContacts;
   } catch (error) {
-    log.error("Error in inbox chat filter api", error);
+    log.error("Error in inbox chat filter API", error);
     return [];
   }
 }
