@@ -10,14 +10,16 @@ import { Role } from "../../utils/enums";
 import { formatDateT1 } from "../../utils/date";
 import { createEmailBodyTicketAssigned } from "../../utils/email/tickets/ticketAssigned";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { SurveyType } from "../../types/enums";
-import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
+import { QuestionType2, SurveyType } from "../../types/enums";
 import { parsePhoneforWa } from "../loyalty/util";
 import { log } from "../../utils/logger";
+import { sendTextMessageAndUpdateStats } from "../loyalty/settings/settings.service";
+import { getContent } from "../../utils/survey/response.data";
 
 export async function createTicket(
   input: CreateTicketInput,
   createdBy: string,
+  responsePlatform?: string,
 ) {
   const {
     title,
@@ -45,14 +47,17 @@ export async function createTicket(
         ? TicketType.REVIEW
         : isCustomTicket
           ? TicketType.CUSTOM
-          : TicketType.SURVEY_RESPONSE;
+          : responsePlatform === "WHATSAPP"
+            ? TicketType.FLOW_RESPONSE
+            : TicketType.SURVEY_RESPONSE;
 
       let ticket;
 
       if (reviewId || surveyResponseId) {
         ticket = await prisma.ticket.findFirst({
           where: {
-            ...(ticketType === TicketType.SURVEY_RESPONSE
+            ...(ticketType === TicketType.SURVEY_RESPONSE ||
+            ticketType === TicketType.FLOW_RESPONSE
               ? { surveyResponseId }
               : { reviewId }),
           },
@@ -135,6 +140,7 @@ export async function createTicket(
                 select: {
                   id: true,
                   enableTicketEmailAlerts: true,
+                  enableTicketWaMessageAlerts: true,
                   type: true,
                   orgId: true,
                   org: {
@@ -152,8 +158,10 @@ export async function createTicket(
             },
           });
 
-          if (surveyTeamMap?.survey?.type === SurveyType.WaFlow) {
-            //sendTicket to whatSapp
+          if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
+            sendTicketAssignEmail(newTicket);
+          }
+          if (surveyTeamMap?.survey?.enableTicketWaMessageAlerts) {
             const {
               survey: {
                 org: { name: org_name },
@@ -166,13 +174,10 @@ export async function createTicket(
               team_name,
               org_name,
             });
-          } else if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
-            sendTicketAssignEmail(newTicket);
           }
         } else {
           sendTicketAssignEmail(newTicket);
         }
-
         return newTicket;
       }
     }
@@ -191,12 +196,14 @@ async function sendTicketAssignWaMessage(newTicket, data) {
     },
   });
   const phone = parsePhoneforWa(user.phone);
+  if (!phone) {
+    log.error("Phone number not found for the ticket assigned user");
+    return;
+  }
   const { orgId, team_name, org_name } = data;
   const { number: ticket_no, priority } = newTicket;
-  const message = `A ticket has been assigned to you on RateUp.app under *${team_name}* team of *${org_name}*.\nKindly 
-  check the ticket and take necessary actions.\nTicket No: *#${ticket_no}*
-  Priority: *${priority}*  `;
-  await sendTextMessage({ phone, orgId }, null, message);
+  const message = `A ticket has been assigned to you on RateUp.app under *${team_name}* team of *${org_name}*.\nKindly check the ticket and take necessary actions.\n\nTicket No: *#${ticket_no}*\nPriority: *${priority}*`;
+  await sendTextMessageAndUpdateStats(phone, orgId, null, message);
 }
 
 async function sendTicketAssignEmail(newTicket) {
@@ -301,8 +308,10 @@ export async function getSingleTicket(ticketId: string) {
                     WaFlow: {
                       select: {
                         json: true,
+                        ticketIssued: true,
                       },
                     },
+                    enableAutoGenerateTicket: true,
                   },
                 },
               },
@@ -335,21 +344,69 @@ export async function getSingleTicket(ticketId: string) {
     if (surveyResponse) {
       const isFlow =
         surveyResponse?.surveyTeamMap?.survey?.type === SurveyType.WaFlow;
-      const questions = isFlow
-        ? surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
-            (screen) =>
-              screen?.layout?.children?.filter(
-                (child) => child?.type !== "Footer" && child.name,
-              ),
-          )
-        : surveyResponse?.surveyTeamMap?.survey?.questions;
-      updatedResponse = surveyResponse?.responses?.map((response) => {
-        const questionTitle = getQuestionTitleById(
-          questions,
-          response?.questionId,
-        );
-        return { ...response, questionTitle: questionTitle };
-      });
+      if (isFlow) {
+        const questions = (
+          surveyResponse?.surveyTeamMap?.survey?.WaFlow
+            ?.json as unknown as WaFlowJson
+        )?.screens?.flatMap((screen) =>
+          screen?.layout?.children?.filter(
+            (child) => child?.type !== "Footer" && child.name,
+          ),
+        ) as unknown as Question2[];
+        const filteredResponses = surveyResponse?.surveyTeamMap?.survey
+          ?.enableAutoGenerateTicket
+          ? surveyResponse?.responses
+          : (
+              surveyResponse?.responses as unknown as {
+                questionId: string;
+                response: any;
+              }[]
+            )?.filter((response) =>
+              (
+                surveyResponse?.surveyTeamMap?.survey?.WaFlow
+                  ?.ticketIssued as unknown as FlowTicket[]
+              ).some((t) => t.questionId === response.questionId),
+            );
+        updatedResponse = filteredResponses.map((response) => {
+          const question = questions.find(
+            (question) => question.id === response?.questionId,
+          );
+          return {
+            ...response,
+            question: {
+              title: question.label,
+              choices: question["data-source"],
+            },
+            type: QuestionType2[question.metaType],
+          };
+        });
+      } else {
+        const questions = surveyResponse?.surveyTeamMap?.survey
+          ?.questions as unknown as Question[];
+        const filteredResponses = surveyResponse?.surveyTeamMap?.survey
+          ?.enableAutoGenerateTicket
+          ? surveyResponse?.responses
+          : (
+              surveyResponse?.responses as unknown as QuestionResponse[]
+            )?.filter((response) => {
+              const question = questions.find(
+                (question) => question.id === response?.questionId,
+              );
+              return question.ticketIssue;
+            });
+        updatedResponse = filteredResponses.map((response) => {
+          const question = questions.find(
+            (question) => question.id === response?.questionId,
+          );
+          return {
+            ...response,
+            question: {
+              title: getContent(question?.title?.English),
+              choices: question.choices,
+            },
+          };
+        });
+      }
     }
 
     return {
@@ -357,6 +414,7 @@ export async function getSingleTicket(ticketId: string) {
       surveyResponse: updatedResponse,
       teamName: team?.name,
       comments: commentsData,
+      responseLanguage: surveyResponse.language,
     };
   } catch (error) {
     log.error(error);
@@ -492,6 +550,7 @@ export async function updateTicket(
 export async function autoGenerateTicket(
   teamId: string,
   surveyResponseId: string,
+  responsePlatform?: string,
 ) {
   const team = await prisma.team.findUnique({
     where: {
@@ -558,7 +617,11 @@ export async function autoGenerateTicket(
       "This ticket is raised automatically based on the survey response",
   };
 
-  let createdNewTicket = await createTicket(ticketData, createdBy);
+  let createdNewTicket = await createTicket(
+    ticketData,
+    createdBy,
+    responsePlatform,
+  );
 
   return createdNewTicket;
 }

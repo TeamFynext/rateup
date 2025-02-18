@@ -394,7 +394,7 @@ export async function sendQuestion(
   }
 }
 
-function checkShouldRaiseTicket(ticketIssued, responses) {
+function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses) {
   let shouldRaiseTicket = false;
   for (const ticket of ticketIssued) {
     const response = responses.find((r) => r.questionId === ticket.questionId);
@@ -412,6 +412,16 @@ function checkShouldRaiseTicket(ticketIssued, responses) {
       case QuestionType2.Opinion:
         shouldRaiseTicket =
           Number(response.response) <= ticket.condition.minOpinion;
+        break;
+      case QuestionType2.CheckboxGroup:
+      case QuestionType2.ChipsSelector:
+      case QuestionType2.Dropdown:
+      case QuestionType2.RadioButtonsGroup:
+        shouldRaiseTicket = Array.isArray(response.response)
+          ? ticket.condition.reqOptions.some((op) =>
+              response.response.includes(op),
+            )
+          : ticket.condition.reqOptions.includes(response.response);
         break;
     }
     if (shouldRaiseTicket) return true;
@@ -496,9 +506,11 @@ export async function saveResponses(session: WaSessionWithRelations) {
     contactId: contact?.id,
     tag: session.tag,
   };
-  const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow?.ticketIssued;
-  let shouldRaiseTicket = false;
-  if (ticketIssued.length) {
+  const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
+    ?.ticketIssued as unknown as FlowTicket[];
+  let shouldRaiseTicket =
+    session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
+  if (ticketIssued.length && !shouldRaiseTicket) {
     shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
   }
   const res = await createResponse(surveyResponse, shouldRaiseTicket);
