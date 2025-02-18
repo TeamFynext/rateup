@@ -277,8 +277,8 @@ function TakeSurvey({
     let shouldRaiseTicket = checkRaiseTicketIssueQuestion(
       survey?.questions,
       responsesRef.current,
+      selectedLanguage,
     );
-
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       shouldShowGoogleReview && !(pageType === PageType.ThankYou)

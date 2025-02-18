@@ -382,7 +382,8 @@ const SingleTicket = ({ id }: { id: string }) => {
                   </Group>
                   <Text lineClamp={2}>{ticket?.review?.review}</Text>
                 </Stack>
-              ) : ticket?.type === TicketType.SURVEY_RESPONSE ? (
+              ) : ticket?.type === TicketType.SURVEY_RESPONSE ||
+                ticket?.type === TicketType.FLOW_RESPONSE ? (
                 <Stack>
                   <Title order={2} c="gray.5">
                     {translations["User Response Details"]}
@@ -392,12 +393,10 @@ const SingleTicket = ({ id }: { id: string }) => {
                       return (
                         <SurveyResponsesView
                           response={response}
-                          question={{
-                            title: response.questionTitle,
-                            id: response.questionId,
-                          }}
+                          question={response.question}
                           type={response.type}
                           no={index + 1}
+                          language={ticket.responseLanguage}
                         />
                       );
                     })}

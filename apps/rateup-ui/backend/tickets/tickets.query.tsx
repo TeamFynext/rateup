@@ -1,4 +1,8 @@
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 import {
   createComment,
   createTicket,
@@ -8,9 +12,6 @@ import {
   updateTicket,
   updateTicketStatus,
 } from "./tickets.api";
-import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 
 //get all tickets
 export const useTickets = () =>
@@ -57,7 +58,7 @@ export const useCreateTicketMutation = () => {
 //get single ticket
 export const useTicket = (id: string) =>
   useQuery({
-    enabled: true,
+    enabled: !!id,
     queryKey: ["ticket", id],
     queryFn: () => getTicket(id),
   });

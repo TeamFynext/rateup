@@ -2064,5 +2064,7 @@
   "Loyalty Action Status": "वफादारी क्रिया स्थिति",
   "Send weekly report to email": "साप्ताहिक रिपोर्ट को ईमेल पर भेजें",
   "Save your flow to WhatsApp": "अपने फ्लो को व्हाट्सएप में सहेजें",
-  "ACTIVE": "सक्रिय"
+  "ACTIVE": "सक्रिय",
+  "Select choices for which Ticket should be created": "उन विकल्पों का चयन करें जिनके लिए टिकट बनाया जाना चाहिए",
+  "Save the element to create ticket": "टिकट बनाने के लिए तत्व सहेजें"
 }
