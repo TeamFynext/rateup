@@ -65,6 +65,8 @@ function ScreenListItem({
     setCurrentScreenId,
     setCurrentElement,
     setActiveEditor,
+    ticketIssued,
+    setTicketIssued,
   } = useFlowStore();
   const screen = getCurrentScreen();
   const footerElement = screen?.layout.children.find(
@@ -91,6 +93,10 @@ function ScreenListItem({
 
   function handleDeleteFormElement(feId: string) {
     deleteComponentFromScreen(feId);
+    const elementTicket = ticketIssued.find((t) => t.questionId === feId);
+    if (elementTicket) {
+      setTicketIssued(ticketIssued.filter((t) => t.questionId !== feId));
+    }
   }
 
   function handleElementClick(feId: string, feType: QuestionType2) {

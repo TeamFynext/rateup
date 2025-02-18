@@ -237,6 +237,7 @@ function ElementEditor() {
           <FlowElementActions
             currentElementType={currentElementType}
             setDetailActiveEditor={setDetailActiveEditor}
+            element={element}
           />
           <RateupButtonPrimary
             title={"Save"}
@@ -253,9 +254,11 @@ function ElementEditor() {
 const FlowElementActions = ({
   setDetailActiveEditor,
   currentElementType,
+  element,
 }: {
   setDetailActiveEditor: (editor: EditorType) => void;
   currentElementType: QuestionType2;
+  element: FormElement;
 }) => {
   const { translations } = useTranslations();
   const { data: subscription } = useSubscription();
@@ -353,7 +356,7 @@ const FlowElementActions = ({
 
         {ticketIssueSupportedTypes2.includes(currentElementType) && (
           <Menu.Item>
-            {isTicketFeatureActive ? (
+            {isTicketFeatureActive && element?.id ? (
               <RateupButtonSecondary
                 title={translations["Create Tickets"]}
                 leftIcon={<IconTicket stroke={4} size={"1rem"} />}
@@ -365,9 +368,12 @@ const FlowElementActions = ({
               />
             ) : (
               <Tooltip
-                label={translations["Upgrade your Plan for this feature."]}
-                disabled={isTicketFeatureActive}
-                color="yellow"
+                label={
+                  !isTicketFeatureActive
+                    ? translations["Upgrade your Plan for this feature."]
+                    : translations["Save the element to create ticket"]
+                }
+                color={!isTicketFeatureActive ? "yellow" : "black"}
               >
                 <Button
                   data-disabled

@@ -34,6 +34,7 @@ function EditFlow() {
     setActiveEditor,
     setCurrentElement,
     setTicketIssued,
+    ticketIssued,
   } = useFlowStore();
   const updateFlow = useUpdateFlowMutation();
 
@@ -46,10 +47,14 @@ function EditFlow() {
             screens: getScreens() as any,
             version: "6.3",
           },
+          ticketIssued:
+            ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued)
+              ? ticketIssued
+              : undefined,
         },
       });
     }
-  }, [dbFlowId, screens, isPending]);
+  }, [dbFlowId, screens, isPending, ticketIssued]);
 
   const handleTypeSelection = (type: QuestionType2) => {
     const screenToBeEdited = getCurrentScreen();

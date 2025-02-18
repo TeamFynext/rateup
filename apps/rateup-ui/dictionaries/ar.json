@@ -2064,5 +2064,7 @@
   "Loyalty Action Status": "حالة إجراء الولاء",
   "Send weekly report to email": "إرسال تقرير أسبوعي إلى البريد الإلكتروني",
   "Save your flow to WhatsApp": "احفظ تدفقك على واتساب",
-  "ACTIVE": "نشط"
+  "ACTIVE": "نشط",
+  "Select choices for which Ticket should be created": "حدد الخيارات التي يجب إنشاء تذكرة لها",
+  "Save the element to create ticket": "احفظ العنصر لإنشاء تذكرة"
 }

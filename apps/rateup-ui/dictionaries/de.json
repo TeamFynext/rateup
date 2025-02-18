@@ -2065,5 +2065,7 @@
   "Loyalty Action Status": "Treueaktionsstatus",
   "Send weekly report to email": "Wöchentlichen Bericht an E-Mail senden",
   "Save your flow to WhatsApp": "Speichern Sie Ihren Flow in WhatsApp",
-  "ACTIVE": "AKTIV"
+  "ACTIVE": "AKTIV",
+  "Select choices for which Ticket should be created": "Wählen Sie die Optionen aus, für die ein Ticket erstellt werden soll",
+  "Save the element to create ticket": "Speichern Sie das Element, um ein Ticket zu erstellen"
 }
