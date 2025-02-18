@@ -1,4 +1,11 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   Badge,
@@ -57,6 +64,7 @@ import {
 import { showErrorToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
 
+import { EditFlowContext } from "../../flows/FlowPage/EditFlow/EditFlowContext";
 import { DataSourceInput } from "../input/DataSource";
 import ImageInput from "../input/ImageInput";
 import InitInput from "../input/InitInput";
@@ -275,6 +283,7 @@ const FlowElementActions = ({
       hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     );
   }, [subscription]);
+  const { survey } = useContext(EditFlowContext);
   return (
     <Menu
       position="top"
@@ -353,10 +362,11 @@ const FlowElementActions = ({
             )}
           </Menu.Item>
         )}
-
         {ticketIssueSupportedTypes2.includes(currentElementType) && (
           <Menu.Item>
-            {isTicketFeatureActive && element?.id ? (
+            {isTicketFeatureActive &&
+            element?.id &&
+            !survey?.enableAutoGenerateTicket ? (
               <RateupButtonSecondary
                 title={translations["Create Tickets"]}
                 leftIcon={<IconTicket stroke={4} size={"1rem"} />}
@@ -371,7 +381,11 @@ const FlowElementActions = ({
                 label={
                   !isTicketFeatureActive
                     ? translations["Upgrade your Plan for this feature."]
-                    : translations["Save the element to create ticket"]
+                    : survey?.enableAutoGenerateTicket
+                      ? translations[
+                          "Aut-Generate Ticket is enabled on this flow"
+                        ]
+                      : translations["Save the element to create ticket"]
                 }
                 color={!isTicketFeatureActive ? "yellow" : "black"}
               >
