@@ -470,7 +470,7 @@ const WaInboxChatSelect = () => {
                 ref={parentRef}
                 className="List"
                 style={{
-                  height: `500px`,
+                  height: `68dvh`,
                   width: `100%`,
                   overflow: "auto",
                 }}
@@ -555,7 +555,7 @@ const WaInboxChatSelect = () => {
                 ref={ticketsParentRef}
                 className="List"
                 style={{
-                  height: `500px`,
+                  height: `68dvh`,
                   width: `100%`,
                   overflow: "auto",
                 }}

@@ -55,7 +55,7 @@ export function WaInboxSessionAvatar({
       >
         <Avatar
           name={title}
-          color="initials"
+          color="var(--mantine-primary-color-6)"
           // bd={`2px solid ${sessionExiped ? "#CC292C33" : "#69F0AE"}`}
         />
       </Indicator>
