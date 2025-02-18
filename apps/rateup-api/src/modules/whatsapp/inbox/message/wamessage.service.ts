@@ -409,28 +409,28 @@ export async function filterChats(
     const query = `
     WITH LatestMessages AS (
       SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody",
-          w."waCreatedAt"
+        w."contactId",
+        w."messageBody",
+        w."waCreatedAt"
       FROM "WaMessage" w
       ORDER BY w."contactId", w."waCreatedAt" DESC
     ),
     LatestReceiveMessages AS (
       SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody" AS receiveMessageBody,
-          w."waCreatedAt" AS receiveCreatedAt
+        w."contactId",
+        w."messageBody" AS receiveMessageBody,
+        w."waCreatedAt" AS receiveCreatedAt
       FROM "WaMessage" w
       WHERE w."messageBody"->'exchangeProcess' = '"receive"'
       ORDER BY w."contactId", w."waCreatedAt" DESC
     ),
     UniqueContacts AS (
       SELECT DISTINCT ON (c.id) 
-          c.*,
-          lm."messageBody" AS LatestMessage,
-          lm."waCreatedAt" AS LatestMessageTime,
-          lrm.receiveMessageBody AS LatestReceiveMessage,
-          lrm.receiveCreatedAt AS LatestReceiveTime
+        c.*,
+        lm."messageBody" AS LatestMessage,
+        lm."waCreatedAt" AS LatestMessageTime,
+        lrm.receiveMessageBody AS LatestReceiveMessage,
+        lrm.receiveCreatedAt AS LatestReceiveTime
       FROM "Contact" c
       LEFT JOIN "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
       LEFT JOIN "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
@@ -444,8 +444,8 @@ export async function filterChats(
     )
     SELECT uc.*, cc.total_contact_count
     FROM UniqueContacts uc, CountedContacts cc
-    ORDER BY uc.LatestMessageTime DESC NULLS LAST
-    LIMIT 5000 OFFSET $2
+    ORDER BY uc.LatestReceiveTime DESC NULLS LAST
+    LIMIT 1000 OFFSET $2
     `;
 
     const contacts: Array<
@@ -456,7 +456,7 @@ export async function filterChats(
         latestreceivetime: string;
         total_contact_count: number;
       }
-    > = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 5000);
+    > = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 1000);
 
     const formattedContacts = contacts.map(
       ({
@@ -499,7 +499,10 @@ export async function getMediaFile(mediaId: string, orgId: string) {
       },
     });
     // const imageBuffer = Buffer.from(fileResponse.data, "binary");
-    return fileResponse.data;
+    return {
+      type: fileResponse?.headers?.["content-type"],
+      data: fileResponse.data,
+    };
   } else {
     log.error("Failed to download media file from WhatsApp API.");
   }

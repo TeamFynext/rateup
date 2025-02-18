@@ -252,8 +252,8 @@ export async function getMediaFileByMediaId(
     const { mediaId } = request.params;
     const orgId = request.user.orgId;
     const media = await getMediaFile(mediaId, orgId);
-    if (media) {
-      reply.status(200).send(media);
+    if (media?.data) {
+      reply.status(200).type(media.type).send(media?.data);
     } else {
       reply.status(404).send("Media not found");
     }
