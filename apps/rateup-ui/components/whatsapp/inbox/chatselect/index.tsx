@@ -1,13 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
 import {
   ActionIcon,
   Card,
+  Divider,
   Group,
   Indicator,
-  SegmentedControl,
   Stack,
   Tabs,
   Text,
@@ -15,13 +21,13 @@ import {
 import { useElementSize } from "@mantine/hooks";
 import {
   IconMessageCog,
-  IconMessageDots,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
+  IconTicket,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { FixedSizeList as List } from "react-window";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { WaInboxMessage } from "@/types/global";
 import { useWsData } from "@/context/UserContext";
@@ -46,18 +52,17 @@ import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import classes from "./styles.module.css";
+import TicketSelectCard from "./ticketSelectCard";
 
 enum TabsEnum {
-  active = "active",
   all = "all",
+  tickets = "tickets",
 }
 
 const WaInboxChatSelect = () => {
   const router = useRouter();
-  const [tab, setTab] = useState(TabsEnum.active);
-  const [contactList, setContactList] = useState<ContactsWithLastMessage[]>([]);
   const [filter, setFilter] = useState<ChatFilter>({
-    messageType: "all",
+    messageType: "usermessages",
     strictFilter: false,
     searchTerm: "",
     contactGroups: [],
@@ -65,17 +70,9 @@ const WaInboxChatSelect = () => {
     tags: [],
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
-  const { ref, width, height } = useElementSize();
-  const { ref: ref2, width: width2, height: height2 } = useElementSize();
-  const { ref: ref3, width: width3, height: height3 } = useElementSize();
 
   const queryClient = useQueryClient();
-  const [shouldFetchAgainData, setShouldFetchAgainData] = useState(true);
-  const [
-    shouldFetchAgainFilteredContacts,
-    setShouldFetchAgainFilteredContacts,
-  ] = useState(true);
-  const [shouldFetchAgainTickets, setShouldFetchAgainTickets] = useState(true);
+
   const { translations } = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
     return (
@@ -89,40 +86,134 @@ const WaInboxChatSelect = () => {
   }, []);
 
   const {
+    status: filteredContactsStatus,
     data: filteredContacts,
-    isFetched: isFilteredContactsFetched,
     isFetchingNextPage: isFilteredContactsFetchingNextPage,
     error: filteredContactsError,
     fetchNextPage: fetchNextPageFilteredContacts,
     refetch: refetchFilteredContacts,
     isRefetching: isRefetchingFilteredContacts,
+    hasNextPage: hasNextPageFilteredContacts,
   } = useFilteredContacts(
     encodeURIComponent(JSON.stringify(processedFilter)),
     checkIfAnyFilterisActive(filter) ? true : false,
   );
-  // const {
-  //   data: tickets,
-  //   isPending: isTicketsLoading,
-  //   error: ticketsError,
-  //   fetchNextPage: fetchNextPageTickets,
-  //   isError: isTicketsError,
-  //   isFetchingNextPage: isTicketsFetchingNextPage,
-  //   refetch: refetchTickets,
-  //   isRefetching: isTicketsRefetching,
-  // } = useWaTicktes();
 
   const {
-    data: contactsWithLastMessage,
+    status: ticketsStatus,
+    data: tickets,
+    isPending: isTicketsLoading,
+    error: ticketsError,
+    fetchNextPage: fetchNextPageTickets,
+    isFetchingNextPage: isTicketsFetchingNextPage,
+    hasNextPage: hasNextPageTickets,
+  } = useWaTicktes();
+
+  const {
+    status,
+    data,
     isLoading: isContactsFetching,
     error,
     fetchNextPage,
-    isError,
     isFetchingNextPage,
     refetch,
+    isFetching,
     isRefetching,
-  } = useContactsWithLastMessage(TabsEnum.active === tab);
-
+    hasNextPage,
+  } = useContactsWithLastMessage(filter.messageType === "all");
   const { data: messageCount, isPending } = useMessageCount();
+
+  const allFilteredContacts = useMemo(
+    () =>
+      filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
+    [filteredContacts],
+  );
+  const allContactsRow = useMemo(
+    () => (data ? data.pages.flatMap((d) => d.rows) : []),
+    [data],
+  );
+  const allTicketsRow = useMemo(
+    () => (tickets ? tickets.pages.flatMap((d) => d.rows) : []),
+    [tickets],
+  );
+
+  const listRows = checkIfAnyFilterisActive(filter)
+    ? allFilteredContacts
+    : allContactsRow;
+
+  const parentRef = useRef(null);
+  const ticketsParentRef = useRef(null);
+
+  // The virtualizer
+  const contactRowVirtualizer = useVirtualizer({
+    count: hasNextPage ? listRows.length + 1 : listRows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 70,
+    overscan: 5,
+  });
+  const ticketsRowVirtualizer = useVirtualizer({
+    count: hasNextPageTickets ? allTicketsRow.length + 1 : allTicketsRow.length,
+    getScrollElement: () => ticketsParentRef.current,
+    estimateSize: () => 83,
+    overscan: 5,
+  });
+  useEffect(() => {
+    const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      checkIfAnyFilterisActive(filter) &&
+      lastItem.index >= allFilteredContacts.length - 1 &&
+      hasNextPageFilteredContacts &&
+      !isFilteredContactsFetchingNextPage
+    ) {
+      fetchNextPageFilteredContacts();
+    } else if (
+      lastItem.index >= allContactsRow.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      fetchNextPage();
+    }
+  }, [
+    allContactsRow.length,
+    allFilteredContacts.length,
+    checkIfAnyFilterisActive,
+    contactRowVirtualizer,
+    fetchNextPage,
+    fetchNextPageFilteredContacts,
+    filter,
+    hasNextPage,
+    hasNextPageFilteredContacts,
+    isFetchingNextPage,
+    isFilteredContactsFetchingNextPage,
+  ]);
+
+  useEffect(() => {
+    const [lastItem] = [...ticketsRowVirtualizer.getVirtualItems()].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= allTicketsRow.length - 1 &&
+      hasNextPageTickets &&
+      !isTicketsFetchingNextPage
+    ) {
+      fetchNextPageTickets();
+    }
+  }, [
+    allTicketsRow.length,
+    ticketsRowVirtualizer,
+    fetchNextPageTickets,
+    hasNextPageTickets,
+    isTicketsFetchingNextPage,
+  ]);
+
   const { wsData } = useWsData();
 
   const findAndReturnTheIndexOfTheContact = useCallback(
@@ -145,42 +236,35 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
+  const { setSelectedContact, selectedContact } = useContactStore();
 
   const updateWaContactsList = useCallback(
     (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
-      setContactList((prevList) => {
-        let updatedContacts = [...prevList];
-        const contactIndex = findAndReturnTheIndexOfTheContact(
-          updatedContacts,
-          newMessage.contact.id,
-        );
-        if (contactIndex !== -1) {
-          updatedContacts[contactIndex] = updateTheContactObject(
-            updatedContacts[contactIndex],
-            newMessage.message,
-          );
-        } else {
-          queryClient.invalidateQueries({
-            queryKey: ["contacts", "last-message"],
-          });
-        }
-        return updatedContacts.sort((a, b) => {
-          const aDate = new Date(a.lastMessage.waCreatedAt);
-          const bDate = new Date(b.lastMessage.waCreatedAt);
-          return bDate.getTime() - aDate.getTime();
-        });
-      });
-    },
-    [findAndReturnTheIndexOfTheContact, updateTheContactObject, queryClient],
-  );
-
-  useEffect(() => {
-    if (contactsWithLastMessage) {
-      setContactList(
-        contactsWithLastMessage?.pages?.map((page) => page).flat(),
+      let updatedContacts = [...listRows];
+      const contactIndex = findAndReturnTheIndexOfTheContact(
+        updatedContacts,
+        newMessage.contact.id,
       );
-    }
-  }, [contactsWithLastMessage]);
+      if (contactIndex !== -1) {
+        let data = updateTheContactObject(
+          updatedContacts[contactIndex],
+          newMessage.message,
+        );
+        if (data) setSelectedContact(data);
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: ["contacts", "last-message"],
+        });
+      }
+    },
+    [
+      findAndReturnTheIndexOfTheContact,
+      listRows,
+      queryClient,
+      setSelectedContact,
+      updateTheContactObject,
+    ],
+  );
 
   useEffect(() => {
     if (wsData && wsData.type === "inbox") {
@@ -203,19 +287,19 @@ const WaInboxChatSelect = () => {
   }, [wsData, updateWaContactsList, queryClient]);
 
   const searchParams = useSearchParams();
-  const { setSelectedContact, selectedContact } = useContactStore();
 
   useEffect(() => {
     let contactId = searchParams.get("contactId");
-    if (contactId) {
-      let contact = contactList.find(
+    if (contactId && !selectedContact) {
+      let contact = allContactsRow.find(
         (contact) => contact.id === searchParams.get("contactId"),
       );
       if (contact && selectedContact !== contact) {
         setSelectedContact(contact);
       }
     }
-  }, [contactList, searchParams, selectedContact, setSelectedContact]);
+  }, [allContactsRow, searchParams, selectedContact, setSelectedContact]);
+
   const prepareFilters = useCallback(
     (filters: any) => {
       setFilter(filters);
@@ -233,17 +317,6 @@ const WaInboxChatSelect = () => {
     },
     [checkIfAnyFilterisActive],
   );
-
-  const contactsToDisplay = useMemo(() => {
-    return checkIfAnyFilterisActive(filter)
-      ? filteredContacts?.pages?.length > 0
-        ? filteredContacts?.pages
-            ?.flat()
-            ?.map((page) => page)
-            .flat()
-        : []
-      : contactList;
-  }, [filter, filteredContacts, contactList, checkIfAnyFilterisActive]);
 
   const validateSearchStringAsMobileNumber = useCallback(
     (searchString: string): Boolean => {
@@ -281,55 +354,12 @@ const WaInboxChatSelect = () => {
     [openChatDisplayForContact, setSelectedContact],
   );
 
-  useEffect(() => {
-    if (
-      contactsWithLastMessage?.pages.length > 0 &&
-      contactsWithLastMessage?.pages[contactsWithLastMessage?.pages.length - 1]
-        .length === 0
-    ) {
-      setShouldFetchAgainData(false);
-    } else {
-      setShouldFetchAgainData(true);
-    }
-  }, [contactsWithLastMessage]);
-
-  useEffect(() => {
-    if (filteredContacts.pages.length > 0) {
-      setContactList(filteredContacts?.pages?.map((page) => page).flat());
-      if (
-        filteredContacts.pages[filteredContacts.pages.length - 1].length === 0
-      ) {
-        setShouldFetchAgainFilteredContacts(false);
-      } else {
-        setShouldFetchAgainFilteredContacts(true);
-      }
-    }
-  }, [filteredContacts]);
-  // useEffect(() => {
-  //   if (tickets?.pages.length > 0) {
-  //     setContactList(tickets?.pages?.map((page) => page).flat());
-  //     if (tickets.pages[tickets.pages.length - 1].length === 0) {
-  //       setShouldFetchAgainTickets(false);
-  //     } else {
-  //       setShouldFetchAgainTickets(true);
-  //     }
-  //   }
-  // }, [tickets]);
-
-  if (
-    isContactsFetching ||
-    isPending
-    // || isTicketsLoading
-  )
+  if (isContactsFetching || isPending || isTicketsLoading)
     return (
       <WhatsAppInboxLoader
-        isLoading={
-          isContactsFetching || isPending
-          //  || isTicketsLoading
-        }
+        isLoading={isContactsFetching || isPending || isTicketsLoading}
       />
     );
-  if (error) return <div>Error:{error?.message}</div>;
 
   return (
     <Stack className={classes.wrapper} gap={"xs"}>
@@ -386,258 +416,204 @@ const WaInboxChatSelect = () => {
         <WaInboxChatExport filter={filter} />
       </Group>
       <Tabs
-        variant="pills"
-        px="md"
         radius="md"
         styles={{
           panel: {
             paddingTop: 5,
           },
         }}
-        value={tab}
-        onChange={(value) => {
-          setTab(value as TabsEnum);
-          refetch();
-          setFilter({
-            ...filter,
-            messageType: "all",
-          });
-        }}
+        defaultValue="all"
       >
         <Tabs.List
+          mx="md"
           grow
           style={{
             borderRadius: "var(--tabs-radius)",
-            border: ".5px dashed var(--tabs-color)",
+            // border: ".5px dashed var(--tabs-color)",
           }}
         >
           {Object.values(TabsEnum).map((aTab) => (
             <Tabs.Tab
               key={aTab}
               value={aTab}
+              h={25}
               leftSection={
                 <Indicator
                   inline
-                  label={messageCount[aTab] || 0}
+                  label={
+                    filter?.messageType === "usermessages" &&
+                    aTab === TabsEnum.all
+                      ? allFilteredContacts?.[0]?.total_contact_count || 0
+                      : messageCount[aTab] || 0
+                  }
                   size={16}
                   color="red"
                 >
-                  {aTab === TabsEnum.active && <IconMessageCog size={18} />}
-                  {aTab === TabsEnum.all && <IconMessageDots size={18} />}
+                  {aTab === TabsEnum.all && <IconMessageCog size={18} />}
+                  {aTab === TabsEnum.tickets && <IconTicket size={18} />}
                 </Indicator>
               }
             />
           ))}
         </Tabs.List>
 
-        <Tabs.Panel value="active" h="80dvh">
-          {isFilteredContactsFetched && contactsToDisplay.length === 0 ? (
-            validateSearchStringAsMobileNumber(filter.searchTerm) ? (
-              <AddUnknownContactModal
-                phone={filter.searchTerm}
-                successCallback={(contact) => {
-                  prepareFilters({
-                    ...filter,
-                    searchTerm: "",
-                  });
-                  onUnknownContactAddSuccess(contact);
-                }}
-              />
+        <Tabs.Panel value="all">
+          <div>
+            {status === "pending" || filteredContactsStatus === "pending" ? (
+              <Text px={"md"}>Loading...</Text>
+            ) : status === "error" || filteredContactsStatus === "error" ? (
+              <Text px={"md"}>
+                Error: {error?.message ?? filteredContactsError?.message}
+              </Text>
             ) : (
-              <Card component={Group}>
-                <Text c="dimmed" size="sm" ta="center">
-                  {translations["No chats found"]} <br />
-                  {
-                    translations[
-                      "search for a valid phone number or contact name"
-                    ]
-                  }
-                </Text>
-              </Card>
-            )
-          ) : (
-            <div className={classes.chat_cards_wrapper} ref={ref}>
-              <List
-                height={height}
-                width={width}
-                itemCount={contactsToDisplay?.length || 0}
-                itemSize={69}
-                onItemsRendered={(e) => {
-                  if (filteredContacts?.pages?.length > 0) {
-                    if (
-                      !isFilteredContactsFetchingNextPage &&
-                      shouldFetchAgainFilteredContacts &&
-                      e.visibleStopIndex === contactsToDisplay.length - 1
-                    ) {
-                      fetchNextPageFilteredContacts();
-                    }
-                  } else if (
-                    !isFetchingNextPage &&
-                    shouldFetchAgainData &&
-                    e.visibleStopIndex === contactsToDisplay.length - 1
-                  ) {
-                    fetchNextPage();
-                  }
+              <div
+                ref={parentRef}
+                className="List"
+                style={{
+                  height: `500px`,
+                  width: `100%`,
+                  overflow: "auto",
                 }}
-                overscanCount={2}
               >
-                {({ index, style }) => {
-                  const contact = contactsToDisplay[index];
-                  return (
-                    <div style={style}>
-                      <WaInboxChatSelectCard
-                        key={contact.id}
-                        contact={contact}
+                <Divider />
+                <div
+                  style={{
+                    height: `${contactRowVirtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const isLoaderRow = virtualRow.index > listRows.length - 1;
+                    const post = listRows[virtualRow.index];
+
+                    return (
+                      <div
+                        key={virtualRow.index}
+                        className={
+                          virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
+                        }
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        {isLoaderRow ? (
+                          hasNextPage && "Loading more..."
+                        ) : (
+                          <WaInboxChatSelectCard contact={post} />
+                        )}
+                        <Divider />
+                      </div>
+                    );
+                  })}
+                  {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
+                    (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+                      <AddUnknownContactModal
+                        phone={filter.searchTerm}
+                        successCallback={(contact) => {
+                          prepareFilters({
+                            ...filter,
+                            searchTerm: "",
+                          });
+                          onUnknownContactAddSuccess(contact);
+                        }}
                       />
-                    </div>
-                  );
-                }}
-              </List>
-              {(isError || filteredContactsError) && (
-                <Text size="xs" c="red">
-                  {error?.message}
-                  {filteredContactsError?.message}
-                </Text>
-              )}
-            </div>
-          )}
-        </Tabs.Panel>
-        <Tabs.Panel value="all" h="80dvh">
-          {isFilteredContactsFetched && contactsToDisplay.length === 0 ? (
-            validateSearchStringAsMobileNumber(filter.searchTerm) ? (
-              <AddUnknownContactModal
-                phone={filter.searchTerm}
-                successCallback={(contact) => {
-                  prepareFilters({
-                    ...filter,
-                    searchTerm: "",
-                  });
-                  onUnknownContactAddSuccess(contact);
-                }}
-              />
-            ) : (
-              <Card component={Group}>
-                <Text c="dimmed" size="sm" ta="center">
-                  {translations["No chats found"]} <br />
-                  {
-                    translations[
-                      "search for a valid phone number or contact name"
-                    ]
-                  }
-                </Text>
-              </Card>
-            )
-          ) : (
-            <div className={classes.chat_cards_wrapper} ref={ref2}>
-              <List
-                height={height2}
-                width={width2}
-                itemCount={contactsToDisplay?.length || 0}
-                itemSize={69}
-                onItemsRendered={(e) => {
-                  if (filteredContacts?.pages?.length > 0) {
-                    if (
-                      !isFilteredContactsFetchingNextPage &&
-                      shouldFetchAgainFilteredContacts &&
-                      e.visibleStopIndex === contactsToDisplay.length - 1
-                    ) {
-                      fetchNextPageFilteredContacts();
-                    }
-                  } else if (
-                    !isFetchingNextPage &&
-                    shouldFetchAgainData &&
-                    e.visibleStopIndex === contactsToDisplay.length - 1
-                  ) {
-                    fetchNextPage();
-                  }
-                }}
-                overscanCount={2}
-              >
-                {({ index, style }) => {
-                  const contact = contactsToDisplay[index];
-                  return (
-                    <div style={style}>
-                      <WaInboxChatSelectCard
-                        key={contact.id}
-                        contact={contact}
-                      />
-                    </div>
-                  );
-                }}
-              </List>
-              {(isError || filteredContactsError) && (
-                <Text size="xs" c="red">
-                  {error?.message}
-                  {filteredContactsError?.message}
-                </Text>
-              )}
-            </div>
-          )}
+                    ) : (
+                      <Card component={Group}>
+                        <Text c="dimmed" size="sm" ta="center">
+                          {translations["No chats found"]} <br />
+                          {
+                            translations[
+                              "search for a valid phone number or contact name"
+                            ]
+                          }
+                        </Text>
+                      </Card>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {isFetching && !isFetchingNextPage
+              ? "Background Updating..."
+              : null}
+          </div>
         </Tabs.Panel>
         <Tabs.Panel value="tickets" h="80dvh">
-          {isFilteredContactsFetched && contactsToDisplay.length === 0 ? (
-            validateSearchStringAsMobileNumber(filter.searchTerm) ? (
-              <AddUnknownContactModal
-                phone={filter.searchTerm}
-                successCallback={(contact) => {
-                  prepareFilters({
-                    ...filter,
-                    searchTerm: "",
-                  });
-                  onUnknownContactAddSuccess(contact);
-                }}
-              />
+          <div>
+            {ticketsStatus === "pending" ? (
+              <Text px={"md"}>Loading...</Text>
+            ) : ticketsStatus === "error" ? (
+              <Text px={"md"}>Error: {ticketsError.message}</Text>
             ) : (
-              <Card component={Group}>
-                <Text c="dimmed" size="sm" ta="center">
-                  {translations["No chats found"]} <br />
-                  {
-                    translations[
-                      "search for a valid phone number or contact name"
-                    ]
-                  }
-                </Text>
-              </Card>
-            )
-          ) : (
-            <div className={classes.chat_cards_wrapper} ref={ref3}>
-              <List
-                height={height3}
-                width={width3}
-                itemCount={contactsToDisplay?.length || 0}
-                itemSize={69}
-                onItemsRendered={(e) => {
-                  //   if (tickets?.pages?.length > 0) {
-                  // if (
-                  //   !isTicketsFetchingNextPage &&
-                  //   shouldFetchAgainTickets &&
-                  //   e.visibleStopIndex === contactsToDisplay.length - 1
-                  // ) {
-                  //   fetchNextPageTickets();
-                  // }
+              <div
+                ref={ticketsParentRef}
+                className="List"
+                style={{
+                  height: `500px`,
+                  width: `100%`,
+                  overflow: "auto",
                 }}
-                overscanCount={2}
               >
-                {({ index, style }) => {
-                  const contact = contactsToDisplay[index];
-                  return (
-                    <div style={style}>
-                      <WaInboxChatSelectCard
-                        key={contact.id}
-                        contact={contact}
-                      />
-                    </div>
-                  );
-                }}
-              </List>
-              {(isError || filteredContactsError) && (
-                <Text size="xs" c="red">
-                  {error?.message}
-                  {filteredContactsError?.message}
-                </Text>
-              )}
-            </div>
-          )}
+                <Divider />
+                <div
+                  style={{
+                    height: `${ticketsRowVirtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  {ticketsRowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const isLoaderRow =
+                      virtualRow.index > allTicketsRow.length - 1;
+
+                    const post = allTicketsRow[virtualRow.index];
+
+                    return (
+                      <div
+                        key={virtualRow.index}
+                        className={
+                          virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
+                        }
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        {isLoaderRow ? (
+                          hasNextPageTickets ? (
+                            "Loading more..."
+                          ) : (
+                            "Nothing more to load"
+                          )
+                        ) : (
+                          <TicketSelectCard ticket={post} />
+                        )}
+                        <Divider />
+                      </div>
+                    );
+                  })}
+                  {ticketsRowVirtualizer.getVirtualItems()?.length === 0 && (
+                    <Card component={Group}>
+                      <Text c="dimmed" size="sm" ta="center">
+                        {translations["No chats found"]} <br />
+                      </Text>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            )}
+            {!isTicketsFetchingNextPage ? "Background Updating..." : null}
+          </div>
         </Tabs.Panel>
       </Tabs>
     </Stack>

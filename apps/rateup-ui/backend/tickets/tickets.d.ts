@@ -1,4 +1,5 @@
 import { UserRole } from "./../../utils/enums/index";
+
 export interface ICreateTicketResponse {
   id: string;
   createdAt: string;
@@ -28,6 +29,11 @@ export interface ITicket {
   assignedToId: string;
   reviewId: string | null;
   surveyResponseId: string | null;
+  assignedTo?: {
+    recipeName?: string;
+    name?: string;
+    phone?: string;
+  };
 }
 
 export interface IUpdateTicketStatusRequest {
