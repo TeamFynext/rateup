@@ -47,13 +47,14 @@ export const useSendNewWaMessage = (contactId: string) => {
   });
 };
 
-export const useContactsWithLastMessage = () =>
+export const useContactsWithLastMessage = (enabled) =>
   useInfiniteQuery({
     queryKey: ["contacts", "last-message"],
     queryFn: ({ pageParam }) => getContactsWithLastMessage(pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
+    enabled,
   });
 
 export const useChatFilterData = () => {

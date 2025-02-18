@@ -105,10 +105,7 @@ const WaInboxChatSelect = () => {
     isPending: isTicketsLoading,
     error: ticketsError,
     fetchNextPage: fetchNextPageTickets,
-    isError: isTicketsError,
     isFetchingNextPage: isTicketsFetchingNextPage,
-    refetch: refetchTickets,
-    isRefetching: isTicketsRefetching,
     hasNextPage: hasNextPageTickets,
   } = useWaTicktes();
 
@@ -123,7 +120,7 @@ const WaInboxChatSelect = () => {
     isFetching,
     isRefetching,
     hasNextPage,
-  } = useContactsWithLastMessage();
+  } = useContactsWithLastMessage(filter.messageType === "all");
   const { data: messageCount, isPending } = useMessageCount();
 
   const allFilteredContacts = useMemo(
@@ -419,7 +416,6 @@ const WaInboxChatSelect = () => {
         <WaInboxChatExport filter={filter} />
       </Group>
       <Tabs
-        // variant="pills"
         radius="md"
         styles={{
           panel: {
@@ -427,10 +423,6 @@ const WaInboxChatSelect = () => {
           },
         }}
         defaultValue="all"
-        // value={tab}
-        // onChange={(value) => {
-        //   setTab(value as TabsEnum);
-        // }}
       >
         <Tabs.List
           mx="md"
@@ -448,7 +440,12 @@ const WaInboxChatSelect = () => {
               leftSection={
                 <Indicator
                   inline
-                  label={messageCount[aTab] || 0}
+                  label={
+                    filter?.messageType === "usermessages" &&
+                    aTab === TabsEnum.all
+                      ? allFilteredContacts?.[0]?.total_contact_count || 0
+                      : messageCount[aTab] || 0
+                  }
                   size={16}
                   color="red"
                 >
@@ -615,9 +612,7 @@ const WaInboxChatSelect = () => {
                 </div>
               </div>
             )}
-            {isFetching && !isTicketsFetchingNextPage
-              ? "Background Updating..."
-              : null}
+            {!isTicketsFetchingNextPage ? "Background Updating..." : null}
           </div>
         </Tabs.Panel>
       </Tabs>
