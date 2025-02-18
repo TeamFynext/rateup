@@ -140,6 +140,8 @@ const updateSurveyRequestSchema = z.object({
   webSurveyPagesTheme: z.any().optional(),
   responseWebhookEndpoint: z.string().optional(),
   sendWeeklyReport: z.boolean().optional(),
+  enableAutoGenerateTicket: z.boolean().optional(),
+  enableTicketWaMessageAlerts: z.boolean().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

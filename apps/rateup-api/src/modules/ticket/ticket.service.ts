@@ -140,6 +140,7 @@ export async function createTicket(
                 select: {
                   id: true,
                   enableTicketEmailAlerts: true,
+                  enableTicketWaMessageAlerts: true,
                   type: true,
                   orgId: true,
                   org: {
@@ -157,8 +158,10 @@ export async function createTicket(
             },
           });
 
-          if (surveyTeamMap?.survey?.type === SurveyType.WaFlow) {
-            //sendTicket to whatSapp
+          if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
+            sendTicketAssignEmail(newTicket);
+          }
+          if (surveyTeamMap?.survey?.enableTicketWaMessageAlerts) {
             const {
               survey: {
                 org: { name: org_name },
@@ -171,13 +174,10 @@ export async function createTicket(
               team_name,
               org_name,
             });
-          } else if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
-            sendTicketAssignEmail(newTicket);
           }
         } else {
           sendTicketAssignEmail(newTicket);
         }
-
         return newTicket;
       }
     }
@@ -311,6 +311,7 @@ export async function getSingleTicket(ticketId: string) {
                         ticketIssued: true,
                       },
                     },
+                    enableAutoGenerateTicket: true,
                   },
                 },
               },
@@ -344,56 +345,67 @@ export async function getSingleTicket(ticketId: string) {
       const isFlow =
         surveyResponse?.surveyTeamMap?.survey?.type === SurveyType.WaFlow;
       if (isFlow) {
-        const questions =
-          surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
-            (screen) =>
-              screen?.layout?.children?.filter(
-                (child) => child?.type !== "Footer" && child.name,
-              ),
-          ) as unknown as Question2[];
-
-        updatedResponse = surveyResponse?.responses
-          ?.filter((response) =>
-            (
-              surveyResponse?.surveyTeamMap?.survey?.WaFlow
-                ?.ticketIssued as unknown as FlowTicket[]
-            ).some((t) => t.questionId === response.questionId),
-          )
-          .map((response) => {
-            const question = questions.find(
-              (question) => question.id === response?.questionId,
+        const questions = (
+          surveyResponse?.surveyTeamMap?.survey?.WaFlow
+            ?.json as unknown as WaFlowJson
+        )?.screens?.flatMap((screen) =>
+          screen?.layout?.children?.filter(
+            (child) => child?.type !== "Footer" && child.name,
+          ),
+        ) as unknown as Question2[];
+        const filteredResponses = surveyResponse?.surveyTeamMap?.survey
+          ?.enableAutoGenerateTicket
+          ? surveyResponse?.responses
+          : (
+              surveyResponse?.responses as unknown as {
+                questionId: string;
+                response: any;
+              }[]
+            )?.filter((response) =>
+              (
+                surveyResponse?.surveyTeamMap?.survey?.WaFlow
+                  ?.ticketIssued as unknown as FlowTicket[]
+              ).some((t) => t.questionId === response.questionId),
             );
-            return {
-              ...response,
-              question: {
-                title: question.label,
-                choices: question["data-source"],
-              },
-              type: QuestionType2[question.metaType],
-            };
-          });
+        updatedResponse = filteredResponses.map((response) => {
+          const question = questions.find(
+            (question) => question.id === response?.questionId,
+          );
+          return {
+            ...response,
+            question: {
+              title: question.label,
+              choices: question["data-source"],
+            },
+            type: QuestionType2[question.metaType],
+          };
+        });
       } else {
         const questions = surveyResponse?.surveyTeamMap?.survey
-          ?.questions as Question[];
-        updatedResponse = surveyResponse?.responses
-          ?.filter((response) => {
-            const question = questions.find(
-              (question) => question.id === response?.questionId,
-            );
-            return question.ticketIssue;
-          })
-          .map((response) => {
-            const question = questions.find(
-              (question) => question.id === response?.questionId,
-            );
-            return {
-              ...response,
-              question: {
-                title: getContent(question?.title?.English),
-                choices: question.choices,
-              },
-            };
-          });
+          ?.questions as unknown as Question[];
+        const filteredResponses = surveyResponse?.surveyTeamMap?.survey
+          ?.enableAutoGenerateTicket
+          ? surveyResponse?.responses
+          : (
+              surveyResponse?.responses as unknown as QuestionResponse[]
+            )?.filter((response) => {
+              const question = questions.find(
+                (question) => question.id === response?.questionId,
+              );
+              return question.ticketIssue;
+            });
+        updatedResponse = filteredResponses.map((response) => {
+          const question = questions.find(
+            (question) => question.id === response?.questionId,
+          );
+          return {
+            ...response,
+            question: {
+              title: getContent(question?.title?.English),
+              choices: question.choices,
+            },
+          };
+        });
       }
     }
 

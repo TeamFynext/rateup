@@ -304,6 +304,8 @@ model Survey {
   notificationEmail                 String            @default("")
   enableTickets                     Boolean           @default(false)
   enableTicketEmailAlerts           Boolean           @default(false)
+  enableAutoGenerateTicket          Boolean           @default(false)
+  enableTicketWaMessageAlerts       Boolean           @default(false)
   webSurveyAutoTransitionToNextQues Boolean           @default(true)
   shareSettings                     Json?
   publicKey                         String?

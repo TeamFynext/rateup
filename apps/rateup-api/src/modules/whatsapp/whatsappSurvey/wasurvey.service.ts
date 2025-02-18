@@ -508,8 +508,9 @@ export async function saveResponses(session: WaSessionWithRelations) {
   };
   const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
     ?.ticketIssued as unknown as FlowTicket[];
-  let shouldRaiseTicket = false;
-  if (ticketIssued.length) {
+  let shouldRaiseTicket =
+    session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
+  if (ticketIssued.length && !shouldRaiseTicket) {
     shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
   }
   const res = await createResponse(surveyResponse, shouldRaiseTicket);
