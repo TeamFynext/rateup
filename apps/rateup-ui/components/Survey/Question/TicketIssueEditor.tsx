@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -15,11 +15,17 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconInfoCircle, IconX } from "@tabler/icons-react";
 
+import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
+import SelectedLanguageContext from "@/context/SelectedLanguage";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
-import { QuestionType as Q, SmileyResponse } from "../../../types/enums";
+import {
+  QuestionType as Q,
+  QuestionType,
+  SmileyResponse,
+} from "../../../types/enums";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -45,6 +51,10 @@ const TicketIssueEditor = ({
     surveyId,
   });
 
+  const { selectedLanguage, defaultLanguage } = useContext(
+    SelectedLanguageContext,
+  );
+
   const [enableTicketIssue, setEnableTicketIssue] = useState(
     !!selectedQ?.ticketIssue,
   );
@@ -55,8 +65,8 @@ const TicketIssueEditor = ({
   const [minOpinion, setMinOpinion] = useState(
     selectedQ?.ticketIssue?.minOpinion || 6,
   );
-  const [selectedSmileys, setSelectedSmileys] = useState(
-    selectedQ?.ticketIssue?.reqOptions || ["Sad", "Very Sad"],
+  const [selectedOptions, setSelectedOptions] = useState(
+    selectedQ?.ticketIssue?.reqOptions || [],
   );
 
   const updateTicketIssue = (ticketIssue: any) => {
@@ -79,8 +89,8 @@ const TicketIssueEditor = ({
             setMinOpinion(selectedQ["ticketIssue"]["minOpinion"]);
           break;
         case Q.Smiley:
-          selectedSmileys !== selectedQ["ticketIssue"]["reqOptions"] &&
-            setSelectedSmileys(selectedQ["ticketIssue"]["reqOptions"]);
+          selectedOptions !== selectedQ["ticketIssue"]["reqOptions"] &&
+            setSelectedOptions(selectedQ["ticketIssue"]["reqOptions"]);
           break;
       }
     } else {
@@ -99,12 +109,17 @@ const TicketIssueEditor = ({
           ticketIssue = { minOpinion: minOpinion };
           break;
         case Q.Smiley:
-          ticketIssue = { reqOptions: selectedSmileys };
+        case Q.CustomNPS:
+        case Q.DDMS:
+        case Q.MCQ:
+        case Q.MSQ:
+        case Q.DDSS:
+          ticketIssue = { reqOptions: selectedOptions };
           break;
       }
     }
     updateTicketIssue(ticketIssue);
-  }, [enableTicketIssue, minRating, minOpinion, selectedSmileys]);
+  }, [enableTicketIssue, minRating, minOpinion, selectedOptions]);
 
   const handleSwitch = (event: any) => {
     const isChecked = event.currentTarget.checked;
@@ -122,7 +137,7 @@ const TicketIssueEditor = ({
   };
 
   const updateSmileyResponse = (value) => {
-    setSelectedSmileys((prevSmileys) => {
+    setSelectedOptions((prevSmileys) => {
       return prevSmileys.includes(value)
         ? prevSmileys.filter((smiley) => smiley !== value)
         : [...prevSmileys, value];
@@ -240,7 +255,7 @@ const TicketIssueEditor = ({
                                   key={value}
                                   title={value}
                                   variant={
-                                    selectedSmileys.includes(value)
+                                    selectedOptions.includes(value)
                                       ? "light"
                                       : "default"
                                   }
@@ -326,6 +341,37 @@ const TicketIssueEditor = ({
                                 {translations["For"]} {minOpinion}{" "}
                                 {translations["and below."]}
                               </Text>
+                            </Stack>
+                          </SimpleGrid>
+                        );
+                      case QuestionType.CustomNPS:
+                      case QuestionType.DDMS:
+                      case QuestionType.DDSS:
+                      case QuestionType.MCQ:
+                      case QuestionType.MSQ:
+                        return (
+                          <SimpleGrid cols={3} spacing={30}>
+                            <Text fw={500}>
+                              {
+                                translations[
+                                  "Select choices for which Ticket should be created"
+                                ]
+                              }
+                              :
+                            </Text>
+                            <Text fw={500}> : </Text>
+                            <Stack>
+                              <ContainedMultiSelect
+                                data={selectedQ.choices?.[selectedLanguage].map(
+                                  (c, index) => ({
+                                    value: index.toString(),
+                                    label: c.value as string,
+                                  }),
+                                )}
+                                value={selectedOptions}
+                                onChange={setSelectedOptions}
+                                placeholder="select"
+                              />
                             </Stack>
                           </SimpleGrid>
                         );

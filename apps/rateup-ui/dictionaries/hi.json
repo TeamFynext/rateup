@@ -2064,5 +2064,15 @@
   "Loyalty Action Status": "वफादारी क्रिया स्थिति",
   "Send weekly report to email": "साप्ताहिक रिपोर्ट को ईमेल पर भेजें",
   "Save your flow to WhatsApp": "अपने फ्लो को व्हाट्सएप में सहेजें",
-  "ACTIVE": "सक्रिय"
+  "ACTIVE": "सक्रिय",
+  "Select choices for which Ticket should be created": "उन विकल्पों का चयन करें जिनके लिए टिकट बनाया जाना चाहिए",
+  "Save the element to create ticket": "टिकट बनाने के लिए तत्व सहेजें",
+  "Enable Auto-Generate Ticket": "स्वचालित टिकट निर्माण सक्षम करें",
+  "Enable Ticket WhatsApp Message Alerts": "टिकट व्हाट्सएप संदेश अलर्ट सक्षम करें",
+  "Click here to disable Ticket WhatsApp Message Alerts": "टिकट व्हाट्सएप संदेश अलर्ट अक्षम करने के लिए यहां क्लिक करें",
+  "Click here to enable auto-generate Tickets on response": "प्रतिक्रिया पर स्वचालित टिकट निर्माण सक्षम करने के लिए यहां क्लिक करें",
+  "Aut-Generate Ticket is enabled on this flow": "इस प्रवाह पर स्वचालित टिकट निर्माण सक्षम है",
+  "Auto-Generate Ticket is enabled on this survey": "इस सर्वेक्षण में स्वचालित टिकट निर्माण सक्षम है",
+  "Click here to disable auto-generate Tickets on response": "प्रतिक्रिया पर स्वचालित टिकट निर्माण अक्षम करने के लिए यहां क्लिक करें",
+  "Click here to enable Ticket WhatsApp Message Alerts": "टिकट व्हाट्सएप संदेश अलर्ट सक्षम करने के लिए यहां क्लिक करें"
 }

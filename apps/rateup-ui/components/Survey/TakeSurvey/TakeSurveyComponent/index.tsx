@@ -274,11 +274,13 @@ function TakeSurvey({
     const shouldShowGoogleReview =
       pageType === PageType.GoogleReview ||
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
-    let shouldRaiseTicket = checkRaiseTicketIssueQuestion(
-      survey?.questions,
-      responsesRef.current,
-    );
-
+    let shouldRaiseTicket =
+      survey?.enableAutoGenerateTicket ||
+      checkRaiseTicketIssueQuestion(
+        survey?.questions,
+        responsesRef.current,
+        selectedLanguage,
+      );
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       shouldShowGoogleReview && !(pageType === PageType.ThankYou)

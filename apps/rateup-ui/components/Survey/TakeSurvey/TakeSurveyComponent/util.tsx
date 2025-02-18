@@ -72,7 +72,7 @@ export const checkGoogleReviewForQuestion = (questions, responses) => {
   return false;
 };
 
-const shouldRaiseTicket = (question, userResponse) => {
+const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
   switch (question.type) {
     case QuestionType.Rating:
       return userResponse.response.Rating <= question.ticketIssue.minRating;
@@ -85,16 +85,45 @@ const shouldRaiseTicket = (question, userResponse) => {
       return question.ticketIssue.reqOptions.includes(
         userResponse.response.Smiley,
       );
+    case QuestionType.CustomNPS:
+    case QuestionType.DDMS:
+    case QuestionType.DDSS:
+    case QuestionType.MCQ:
+    case QuestionType.MSQ:
+      const response = userResponse.response[userResponse.type];
+      let flag = false;
+      if (Array.isArray(response)) {
+        response.forEach((res) => {
+          const index = question.choices[selectedLanguage].findIndex(
+            (c) => c.value === res.value,
+          );
+          flag = question.ticketIssue.reqOptions.includes(index.toString());
+          if (flag) return;
+        });
+      } else {
+        const index = question.choices[selectedLanguage].findIndex(
+          (c) => c.value === response.value,
+        );
+        flag = question.ticketIssue.reqOptions.includes(index.toString());
+      }
+      return flag;
     default:
       return false;
   }
 };
 
-export const checkRaiseTicketIssueQuestion = (questions, responses) => {
+export const checkRaiseTicketIssueQuestion = (
+  questions,
+  responses,
+  selectedLanguage,
+) => {
   for (let question of questions) {
     if (question?.ticketIssue) {
       let userResponse = responses.find((r) => r?.questionId === question?.id);
-      if (userResponse && shouldRaiseTicket(question, userResponse)) {
+      if (
+        userResponse &&
+        shouldRaiseTicket(question, userResponse, selectedLanguage)
+      ) {
         return true;
       }
     }

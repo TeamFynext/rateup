@@ -4,9 +4,10 @@ import { Group, Image, Paper, Rating, Stack, Text, Title } from "@mantine/core";
 import dayjs from "dayjs";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { SmileyResponseMap } from "@/utils/whatsapp/enumMap";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import { QuestionType as Q } from "../../../types/enums";
+import { QuestionType as Q, QuestionType2 } from "../../../types/enums";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { OpinionScaleForm } from "../../Survey/TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
@@ -17,15 +18,14 @@ const SurveyResponsesView = ({
   response,
   type,
   no,
+  language,
 }: {
   question: any;
   response: QuestionResponse;
   type: string;
   no: number;
+  language: string;
 }) => {
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
   const { translations } = useTranslations();
   return (
     <PaperLayout
@@ -64,13 +64,19 @@ const SurveyResponsesView = ({
                   case Q.Rating:
                     return (
                       <Rating
-                        value={Object.values(response?.response)[0]}
+                        value={
+                          typeof response?.response !== "string"
+                            ? Object.values(response?.response)[0]
+                            : Number(response?.response)
+                        }
                         readOnly
                       />
                     );
                   case Q.Smiley:
                     return mapSmileyIcon(
-                      Object.values(response?.response)[0],
+                      typeof response?.response !== "string"
+                        ? Object.values(response?.response)[0]
+                        : SmileyResponseMap[Number(response?.response)],
                       "blue",
                       // surveyThemeData?.surveyTheme?.input
                       //   ?.primaryColor,
@@ -87,13 +93,18 @@ const SurveyResponsesView = ({
                     );
                   case Q.MSQ:
                   case Q.DDMS:
-                    const responseData = Object.values(response?.response)[0];
+                  case QuestionType2.ChipsSelector:
+                    const responseData = Array.isArray(response?.response)
+                      ? response?.response
+                      : Object.values(response?.response)[0];
                     if (Array.isArray(responseData)) {
                       return responseData.map((item, index) => {
+                        const choices =
+                          question?.choices?.[language] ?? question?.choices;
+                        const choice = choices?.find((c) => c.id === item);
                         return (
-                          <li key={index}>
-                            {item?.value ||
-                              `${question?.features?.[selectedLanguage || defaultLanguage].other?.title}: ${item?.other}`}
+                          <li key={choice?.title}>
+                            {choice?.title || item?.value}
                           </li>
                         );
                       });
@@ -153,13 +164,16 @@ const SurveyResponsesView = ({
                       </Stack>
                     );
                   case Q.MCQ:
-                    let selectedValue = Object.values(response?.response)[0];
-                    return (
-                      <Text>
-                        {selectedValue?.value ||
-                          `${question?.features?.[selectedLanguage || defaultLanguage].other?.title}: ${selectedValue?.other}`}
-                      </Text>
-                    );
+                  case QuestionType2.RadioButtonsGroup:
+                  case QuestionType2.Dropdown:
+                    let selectedValue =
+                      typeof response?.response !== "string"
+                        ? Object.values(response?.response)[0]
+                        : response?.response;
+                    const choices =
+                      question?.choices?.[language] ?? question?.choices;
+                    const choice = choices?.find((c) => c.id === selectedValue);
+                    return <Text>{choice?.title || selectedValue?.value}</Text>;
                   case Q.CustomNPS:
                   case Q.DDSS:
                     let selectedChoice = Object.values(response?.response)[0];
@@ -208,13 +222,19 @@ const SurveyResponsesView = ({
                   case Q.Opinion:
                     return (
                       <OpinionScaleForm
-                        initValue={Object.values(response?.response)[0]}
+                        initValue={
+                          typeof response?.response !== "string"
+                            ? Object.values(response?.response)[0]
+                            : Number(response?.response)
+                        }
                       />
                     );
                   default:
-                    return JSON.stringify(Object.values(response?.response)[0])
-                      .replace(/"/g, "")
-                      .replace(/,/g, ", ");
+                    return typeof response?.response !== "string"
+                      ? JSON.stringify(Object.values(response?.response)[0])
+                          .replace(/"/g, "")
+                          .replace(/,/g, ", ")
+                      : response?.response;
                 }
               })()}
             </Text>

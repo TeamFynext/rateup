@@ -22,32 +22,40 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons";
-import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+} from "@/components/input/ContainedInput/ContainedInput";
 import { QuestionTabsEnum } from "@/components/Survey/EditSurvey";
 import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { EditorType } from "../utils/store";
+import { EditorType, FormElement } from "../utils/store";
 
 const TicketIssueEditorV2 = ({
   element,
   ticketIssued,
   setDetailActiveEditor,
+}: {
+  element: FormElement;
+  ticketIssued: FlowTicket[];
+  setDetailActiveEditor: (value: EditorType) => void;
 }) => {
   const router = useRouter();
   const { dbFlowId } = router.query as { dbFlowId: string };
   const { translations } = useTranslations();
-  const ticketIssue = ticketIssued.find((s) => s.questionId === element.id);
+  const ticketIssue = ticketIssued.find((s) => s.questionId === element?.id);
   const [enableTicketIssue, setEnableTicketIssue] = useState(!!ticketIssue);
   const updateFlow = useUpdateFlowMutation();
 
-  const [selectedSmileys, setSelectedSmileys] = useListState(
+  const [selectedOptions, setSelectedOptions] = useListState<string>(
     ticketIssue?.condition?.reqOptions ?? [],
   );
   const [minRating, setMinRating] = useState(ticketIssue?.condition?.minRating);
   const [minOpinion, setMinOpinion] = useState(
     ticketIssue?.condition?.minOpinion ?? "3",
   );
+  const [choices, setChoices] = useState(null);
 
   const handleSwitch = (event: any) => {
     const isChecked = event.currentTarget.checked;
@@ -69,7 +77,11 @@ const TicketIssueEditorV2 = ({
       case QuestionType2.Rating:
         return { minRating };
       case QuestionType2.Smiley:
-        return { reqOptions: selectedSmileys };
+      case QuestionType2.CheckboxGroup:
+      case QuestionType2.Dropdown:
+      case QuestionType2.RadioButtonsGroup:
+      case QuestionType2.ChipsSelector:
+        return { reqOptions: selectedOptions };
       case QuestionType2.Opinion:
         return { minOpinion: Number(minOpinion) };
     }
@@ -103,6 +115,15 @@ const TicketIssueEditorV2 = ({
   useEffect(() => {
     setEnableTicketIssue(!!ticketIssue);
   }, [ticketIssue]);
+
+  useEffect(() => {
+    setChoices(
+      element?.["data-source"]?.map((choice) => ({
+        value: choice.id,
+        label: choice.title,
+      })),
+    );
+  }, [element]);
 
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
@@ -150,7 +171,7 @@ const TicketIssueEditorV2 = ({
                                 (value, index) => (
                                   <ActionIcon
                                     variant={
-                                      selectedSmileys.includes(
+                                      selectedOptions.includes(
                                         (index + 1).toString(),
                                       )
                                         ? "gradient"
@@ -159,40 +180,22 @@ const TicketIssueEditorV2 = ({
                                     size={"xl"}
                                     key={value}
                                     onClick={() =>
-                                      selectedSmileys.includes(
+                                      selectedOptions.includes(
                                         (index + 1).toString(),
                                       )
-                                        ? setSelectedSmileys.setState(
-                                            selectedSmileys.filter(
+                                        ? setSelectedOptions.setState(
+                                            selectedOptions.filter(
                                               (s) =>
                                                 s !== (index + 1).toString(),
                                             ),
                                           )
-                                        : setSelectedSmileys.append(
+                                        : setSelectedOptions.append(
                                             (index + 1).toString(),
                                           )
                                     }
                                   >
                                     <Text fz={30}>{value}</Text>
                                   </ActionIcon>
-                                  // <Button
-                                  //   key={value}
-                                  //   size={
-                                  //     selectedSmileys.includes(value)
-                                  //       ? "sm"
-                                  //       : "xs"
-                                  //   }
-                                  //   onClick={() => {
-                                  //      selectedSmileys.includes(value)?
-                                  //    setSelectedSmileys(prev => {
-                                  //     const [value,...rest] = prev
-                                  //     return rest
-                                  //    }):
-                                  //    setSelectedSmileys(prev =>[...prev, value])
-                                  //   }}
-                                  // >
-                                  //  {value}
-                                  // </Button>
                                 ),
                               )}
                             </Group>
@@ -239,42 +242,38 @@ const TicketIssueEditorV2 = ({
                                 value={minOpinion?.toString()}
                                 onChange={setMinOpinion}
                               />
-                              {/* <Group style={{ minWidth: "300px" }}>
-                                {(() => {
-                                  const buttons = [];
-
-                                  for (let i = 1; i <= 10; i++) {
-                                    buttons.push(
-                                      <Button
-                                        key={i}
-                                        radius="xl"
-                                        size="xs"
-                                        onClick={() => setMinOpinion(i)}
-                                        color={
-                                          minOpinion === i ? "blue" : "blue.9"
-                                        }
-                                        variant={
-                                          minOpinion === i
-                                            ? "gradient"
-                                            : "default"
-                                        }
-                                        gradient={{
-                                          from: "#62CBE6",
-                                          to: "#3F5BA9",
-                                        }}
-                                      >
-                                        {i}
-                                      </Button>,
-                                    );
-                                  }
-                                  return buttons;
-                                })()}
-                              </Group> */}
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
                                 {translations["For"]} {minOpinion}{" "}
                                 {translations["and below."]}
                               </Text>
+                            </Stack>
+                          </SimpleGrid>
+                        );
+                      case QuestionType2.CheckboxGroup:
+                      case QuestionType2.RadioButtonsGroup:
+                      case QuestionType2.Dropdown:
+                      case QuestionType2.ChipsSelector:
+                        return (
+                          <SimpleGrid cols={3} spacing={30}>
+                            <Text fw={500}>
+                              {
+                                translations[
+                                  "Select choices for which Ticket should be created"
+                                ]
+                              }
+                              :
+                            </Text>
+                            <Text fw={500}> : </Text>
+                            <Stack>
+                              <ContainedMultiSelect
+                                data={choices}
+                                value={selectedOptions as string[]}
+                                onChange={(values) =>
+                                  setSelectedOptions.setState(values)
+                                }
+                                placeholder="select"
+                              />
                             </Stack>
                           </SimpleGrid>
                         );
