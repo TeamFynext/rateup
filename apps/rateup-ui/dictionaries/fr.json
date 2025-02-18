@@ -2065,5 +2065,6 @@
   "Save your flow to WhatsApp": "Enregistrez votre flux sur WhatsApp",
   "ACTIVE": "ACTIF",
   "Select choices for which Ticket should be created": "Sélectionnez les choix pour lesquels un ticket doit être créé",
-  "Save the element to create ticket": "Enregistrez l'élément pour créer un ticket"
+  "Save the element to create ticket": "Enregistrez l'élément pour créer un ticket",
+  "View Ticket Details": "Voir les détails du ticket"
 }

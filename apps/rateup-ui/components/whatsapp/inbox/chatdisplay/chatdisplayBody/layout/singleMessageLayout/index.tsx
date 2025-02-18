@@ -32,9 +32,9 @@ export default function WaInboxSingleMessageLayout(props: Props) {
 
   function getInnerProps() {
     if (exchangeProcess === "send") {
-      return { bg: "#dcf0e4" };
+      return { bg: "light-dark(#dcf0e4,rgb(82, 190, 127)" };
     }
-    return { bg: "#ffffff" };
+    return { bg: "light-dark(#ffffff, var(--mantine-color-dark-6))" };
   }
   const getColorForUser = (userName = "") => {
     const colors = [

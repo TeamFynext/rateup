@@ -2,10 +2,12 @@ import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import isBetween from "dayjs/plugin/isBetween";
+import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(advancedFormat);
 dayjs.extend(isBetween);
+dayjs.extend(relativeTime);
 
 export function findPreviousMonday(date: Date): Date {
   const day = date.getDay();
@@ -64,7 +66,9 @@ export function formatIsoDateStringWithTime(isoDateString) {
   if (!isoDateString) return null;
   return dayjs(isoDateString).format("Do MMM, YYYY, h:mm A");
 }
-
+export function formatToRelativeTime(date) {
+  return dayjs(date).fromNow();
+}
 const currentTime = dayjs().format("HH:mm");
 export const isCategoryActive = (item) => {
   if (!item.startTime || !item.endTime || !item.scheduleEnabled) {

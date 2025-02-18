@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Group, MantineProvider, Stack, Title } from "@mantine/core";
+import {
+  Button,
+  Flex,
+  Group,
+  MantineProvider,
+  Stack,
+  Title,
+  Transition,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
+
+import WaInboxChatDisplayPopoverMsg from "@/components/whatsapp/inbox/chatdisplay/chatdisplayPoveroverMsg/page";
 
 import {
   ContactsWithLastMessage,
@@ -29,7 +40,12 @@ export default function WhatsAppInbox() {
         <Stack className={styles["whatsapp-inbox-root-div"]}>
           <Group className={styles["chat-selector-and-chat-container"]}>
             <WaInboxChatSelect />
-            <WaInboxChatDisplay />
+            <Flex flex={1} pos={"relative"} h={"100%"}>
+              <WaInboxChatDisplayPopoverMsg />
+              <Flex flex={3} style={{ overflow: "hidden" }}>
+                <WaInboxChatDisplay />
+              </Flex>
+            </Flex>
           </Group>
         </Stack>
       </ChatDisplayContext>

@@ -47,12 +47,12 @@ export const useSendNewWaMessage = (contactId: string) => {
   });
 };
 
-export const useContactsWithLastMessage = (active = false) =>
+export const useContactsWithLastMessage = () =>
   useInfiniteQuery({
-    queryKey: ["contacts", "last-message", active],
+    queryKey: ["contacts", "last-message"],
+    queryFn: ({ pageParam }) => getContactsWithLastMessage(pageParam),
     initialPageParam: 1,
-    queryFn: ({ pageParam }) => getContactsWithLastMessage(pageParam, active),
-    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
   });
 
@@ -66,9 +66,9 @@ type messageCountType = {
   active: number;
   all: number;
 };
-export const useMessageCount = (active = false) => {
+export const useMessageCount = () => {
   return useQuery<messageCountType, Error>({
-    queryKey: ["contacts", "message-count", active],
+    queryKey: ["contacts", "message-count"],
     queryFn: getMessageCount,
   });
 };
@@ -77,7 +77,7 @@ export const useWaTicktes = () =>
     queryKey: ["waTickets"],
     initialPageParam: 1,
     queryFn: ({ pageParam }) => getWaTickets(pageParam),
-    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
   });
 
@@ -89,7 +89,7 @@ export const useFilteredContacts = (
     queryKey: ["contacts", "filtered", filterData],
     initialPageParam: 1,
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
-    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
     enabled: queryEnabled,
   });

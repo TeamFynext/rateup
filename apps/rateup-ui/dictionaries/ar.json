@@ -2066,5 +2066,6 @@
   "Save your flow to WhatsApp": "احفظ تدفقك على واتساب",
   "ACTIVE": "نشط",
   "Select choices for which Ticket should be created": "حدد الخيارات التي يجب إنشاء تذكرة لها",
-  "Save the element to create ticket": "احفظ العنصر لإنشاء تذكرة"
+  "Save the element to create ticket": "احفظ العنصر لإنشاء تذكرة",
+  "View Ticket Details": "عرض تفاصيل التذكرة"
 }
