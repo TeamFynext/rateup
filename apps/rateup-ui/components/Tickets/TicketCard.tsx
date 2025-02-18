@@ -142,43 +142,53 @@ export function TicketCard({
   );
 }
 
-function PriorityBadge({ priority }) {
+export function PriorityBadge({ priority }) {
+  // swtich case for 4 priority levels
+  let color;
+  switch (priority) {
+    case "LOW":
+      color = "blue";
+      break;
+    case "MEDIUM":
+      color = "yellow";
+      break;
+    case "HIGH":
+      color = "orange";
+      break;
+    default:
+      color = "red";
+      break;
+  }
+
   return (
-    // swtich case for 4 priority levels
-    <Badge
-      color={
-        priority === "LOW"
-          ? "blue"
-          : priority === "MEDIUM"
-            ? "yellow"
-            : priority === "HIGH"
-              ? "orange"
-              : "red"
-      }
-      variant="light"
-    >
+    <Badge color={color} variant="light">
       {priority}
     </Badge>
   );
 }
 
-function StatusBadge({ status }) {
+export function StatusBadge({ status }) {
+  let color;
+  switch (status) {
+    case TicketStatus.OPEN:
+      color = "blue";
+      break;
+    case TicketStatus.IN_PROGRESS:
+      color = "yellow";
+      break;
+    case TicketStatus.RESOLVED:
+      color = "orange";
+      break;
+    case TicketStatus.CLOSED:
+      color = "green";
+      break;
+    default:
+      color = "black";
+      break;
+  }
+
   return (
-    // swtich case for 4 priority levels
-    <Badge
-      color={
-        status === TicketStatus.OPEN
-          ? "blue"
-          : status === TicketStatus.IN_PROGRESS
-            ? "yellow"
-            : status === TicketStatus.RESOLVED
-              ? "orange"
-              : status === TicketStatus.CLOSED
-                ? "green"
-                : "black"
-      }
-      variant="filled"
-    >
+    <Badge color={color} variant="filled">
       {status}
     </Badge>
   );

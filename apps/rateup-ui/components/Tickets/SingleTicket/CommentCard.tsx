@@ -19,7 +19,7 @@ export function CommentCard({ comment, isSender }) {
         <Text fw={500}>{!isSender && comment.createdBy.name}</Text>
         <Text
           size={isNote ? "xs" : "md"}
-          c={isNote ? "var(--tertiary-color)" : "000"}
+          c={isNote ? "var(--tertiary-color)" : "black"}
         >
           {comment.text}
         </Text>

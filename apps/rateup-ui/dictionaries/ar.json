@@ -2074,5 +2074,6 @@
   "Aut-Generate Ticket is enabled on this flow": "تم تمكين إنشاء التذاكر تلقائيًا في هذا التدفق",
   "Auto-Generate Ticket is enabled on this survey": "تم تمكين إنشاء التذاكر تلقائيًا في هذا الاستبيان",
   "Click here to disable auto-generate Tickets on response": "انقر هنا لتعطيل إنشاء التذاكر تلقائيًا عند الرد",
-  "Click here to enable Ticket WhatsApp Message Alerts": "انقر هنا لتمكين تنبيهات رسائل واتساب للتذاكر"
+  "Click here to enable Ticket WhatsApp Message Alerts": "انقر هنا لتمكين تنبيهات رسائل واتساب للتذاكر",
+  "View Ticket Details": "عرض تفاصيل التذكرة"
 }

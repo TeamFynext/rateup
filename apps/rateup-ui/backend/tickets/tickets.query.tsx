@@ -172,7 +172,7 @@ export const useCreateCommentMutation = (id) => {
   return useMutation({
     mutationFn: createComment,
     onSuccess: () => {
-      notifications.update({
+      notifications.show({
         id: "load-data",
         color: "teal",
         loading: false,
@@ -181,6 +181,7 @@ export const useCreateCommentMutation = (id) => {
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });
+      queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket", id] });
     },
     onError: (error: any) => {

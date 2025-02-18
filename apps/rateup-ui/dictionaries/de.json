@@ -2068,6 +2068,7 @@
   "ACTIVE": "AKTIV",
   "Select choices for which Ticket should be created": "Wählen Sie die Optionen aus, für die ein Ticket erstellt werden soll",
   "Save the element to create ticket": "Speichern Sie das Element, um ein Ticket zu erstellen",
+  "View Ticket Details": "Ticketdetails anzeigen",
   "Enable Auto-Generate Ticket": "Automatische Ticketerstellung aktivieren",
   "Enable Ticket WhatsApp Message Alerts": "WhatsApp-Benachrichtigungen für Tickets aktivieren",
   "Click here to disable Ticket WhatsApp Message Alerts": "Klicken Sie hier, um WhatsApp-Benachrichtigungen für Tickets zu deaktivieren",

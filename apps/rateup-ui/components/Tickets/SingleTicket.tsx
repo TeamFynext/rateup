@@ -1,18 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import {
   ActionIcon,
+  Box,
+  CloseIcon,
   Group,
   rem,
   ScrollArea,
+  ScrollAreaAutosize,
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconSend } from "@tabler/icons-react";
+import { IconEdit, IconEye, IconSend } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -27,7 +32,7 @@ import {
   useUpdateTicketMutation,
   useUpdateTicketStatusMutation,
 } from "../../backend/tickets/tickets.query";
-import { useUser } from "../../context/UserContext";
+import { User, useUser } from "../../context/UserContext";
 import { formatIsoDateString } from "../../utils/dateTime";
 import { UserRole } from "../../utils/enums";
 import { TicketType } from "../../utils/enums/ticket";
@@ -222,12 +227,6 @@ const SingleTicket = ({ id }: { id: string }) => {
     });
   };
 
-  function handleKeyPress(event) {
-    if (event.key === "Enter") {
-      onSubmit();
-    }
-  }
-
   function calculateDaysLeft(deadlineDate) {
     const today = new Date().getTime();
     const deadline = new Date(deadlineDate).getTime();
@@ -416,71 +415,131 @@ const SingleTicket = ({ id }: { id: string }) => {
           )}
         </PaperLayout>
 
-        <Stack>
-          <PaperLayout
-            hoveractive
-            mah={500}
-            mih={500}
-            maw={400}
-            miw={400}
-            p="md"
-            shadow="lg"
-            radius="lg"
-          >
-            <Title order={4} c="gray.5" pb="sm">
-              Conversation - ( {ticket?.comments?.length} Messages)
-            </Title>
-            {ticketLoading ? (
-              <RateupLoader />
-            ) : (
-              <>
-                <ScrollArea h={360} viewportRef={viewport}>
-                  {ticket?.comments?.map((comment: any) => {
-                    return (
-                      <Group
-                        justify={
-                          comment.createdBy.id === user.userId
-                            ? "flex-end"
-                            : "flex-start"
-                        }
-                        mb="xs"
-                      >
-                        <CommentCard
-                          comment={comment}
-                          isSender={comment.createdBy.id === user.userId}
-                        />
-                      </Group>
-                    );
-                  })}
-                </ScrollArea>
-                <Group mt="md" align="flex-start">
-                  <ContainedTextField
-                    placeholder={translations["Enter message here..."]}
-                    withAsterisk
-                    style={{ width: "83%" }}
-                    {...form.getInputProps("msg")}
-                    onKeyDown={handleKeyPress}
-                  />
-                  <ActionIcon
-                    onClick={onSubmit}
-                    title={translations["Send message"]}
-                    style={{ width: "12%" }}
-                    size={45}
-                    variant="default"
-                    aria-label={
-                      translations["ActionIcon with size as a number"]
-                    }
-                  >
-                    <IconSend style={{ width: rem(25), height: rem(25) }} />
-                  </ActionIcon>
-                </Group>
-              </>
-            )}
-          </PaperLayout>
-        </Stack>
+        <TicketInternalChat
+          ticket={ticket}
+          ticketLoading={ticketLoading}
+          viewport={viewport}
+          user={user}
+          form={form}
+          onSubmit={onSubmit}
+        />
       </Group>
     </Stack>
   );
 };
 
 export default SingleTicket;
+
+type ticketInternalChatProps = {
+  ticket: any;
+  ticketLoading: boolean;
+  user: User;
+  form;
+  onSubmit: () => void;
+  viewport: React.MutableRefObject<HTMLDivElement>;
+  waInboxFlag?: boolean;
+  close?: () => void;
+};
+export function TicketInternalChat({
+  ticket,
+  ticketLoading,
+  user,
+  form,
+  onSubmit,
+  viewport,
+  waInboxFlag = false,
+  close,
+}: ticketInternalChatProps) {
+  const translations = useTranslations();
+  function handleKeyPress(event) {
+    if (event.key === "Enter") {
+      onSubmit();
+    }
+  }
+  return (
+    <PaperLayout
+      hoveractive
+      mih={500}
+      flex={1}
+      maw={400}
+      miw={400}
+      p="md"
+      shadow="lg"
+      radius="lg"
+      {...(!waInboxFlag && { mah: 500 })}
+    >
+      <Stack justify="space-between" gap={0} h={"100%"}>
+        <Box>
+          <Group gap={0} justify="space-between">
+            <Title order={4} c="gray.5" pb="sm">
+              Conversation - ( {ticket?.comments?.length} Messages)
+            </Title>
+            {close && (
+              <Group mt={-10}>
+                <Tooltip label={"View Ticket Details"}>
+                  <ActionIcon
+                    component={Link}
+                    href={`/dashboard/tickets/${ticket.id}`}
+                    variant="light"
+                  >
+                    <IconEye />
+                  </ActionIcon>
+                </Tooltip>
+                <ActionIcon variant="light">
+                  <CloseIcon onClick={close} />
+                </ActionIcon>
+              </Group>
+            )}
+          </Group>
+          {ticketLoading ? (
+            <RateupLoader />
+          ) : (
+            <>
+              <ScrollArea
+                h={waInboxFlag ? "66dvh" : 360}
+                viewportRef={viewport}
+                pr={"xs"}
+              >
+                {ticket?.comments?.map((comment: any) => {
+                  return (
+                    <Group
+                      justify={
+                        comment.createdById === user.userId
+                          ? "flex-end"
+                          : "flex-start"
+                      }
+                      mb="xs"
+                    >
+                      <CommentCard
+                        comment={comment}
+                        isSender={comment.createdById === user.userId}
+                      />
+                    </Group>
+                  );
+                })}
+              </ScrollArea>
+            </>
+          )}
+        </Box>
+        <Group mt="md" align="flex-start">
+          <ContainedTextField
+            placeholder={translations["Enter message here..."]}
+            withAsterisk
+            style={{ width: "83%" }}
+            {...form.getInputProps("msg")}
+            onKeyDown={handleKeyPress}
+          />
+          <ActionIcon
+            onClick={onSubmit}
+            title={translations["Send message"]}
+            size={"lg"}
+            variant="default"
+            aria-label={translations["ActionIcon with size as a number"]}
+          >
+            <IconSend style={{ width: rem(25), height: rem(25) }} />
+          </ActionIcon>
+        </Group>
+      </Stack>
+    </PaperLayout>
+  );
+}

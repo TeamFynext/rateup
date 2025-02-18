@@ -1,11 +1,12 @@
 import { ActionIcon, Avatar, Group, Stack, Text } from "@mantine/core";
-import classes from "./styles.module.css";
-import WaInboxCountdownTimer from "./countDown";
-import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { IconArrowLeft } from "@tabler/icons-react";
-import { useSetIsChatDisplayOpen } from "../../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import { useMediaQuery } from "@mantine/hooks";
-import { useEffect } from "react";
+import { IconArrowLeft } from "@tabler/icons-react";
+
+import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
+
+import WaInboxCountdownTimer from "./countDown";
+import classes from "./styles.module.css";
 
 interface WaInboxChatDisplayHeaderProps {
   contact: ContactsWithLastMessage;
@@ -13,10 +14,9 @@ interface WaInboxChatDisplayHeaderProps {
 export default function WaInboxChatDisplayHeader({
   contact,
 }: WaInboxChatDisplayHeaderProps) {
-  if (!contact) return null;
-
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const isMobile = useMediaQuery("(max-width: 1200px)");
+  if (!contact) return null;
 
   return (
     <div className={classes.wrapper}>
@@ -33,21 +33,18 @@ export default function WaInboxChatDisplayHeader({
         )}
 
         <Avatar
-          color="var(--mantine-primary-color-6)"
+          color="initials"
           size={!isMobile ? 65 : 35}
-        >
-          {getFirstLetterFromNameByExcludingSpecialCharacters(contact?.name)}
-        </Avatar>
+          name={contact.name}
+        />
         <Stack className={classes.name_phone_wrapper}>
-          <Text className={classes.name}>{contact.name}</Text>
+          <Text className={classes.name} fw={600}>
+            {contact.name}
+          </Text>
           <Text className={classes.phone}>{contact.phone}</Text>
         </Stack>
       </Group>
       <WaInboxCountdownTimer timeStamp={contact?.userInitiatedFinalTimeStamp} />
     </div>
   );
-}
-
-function getFirstLetterFromNameByExcludingSpecialCharacters(name: string) {
-  return name?.replace(/[^a-zA-Z]/g, "")[0]?.toUpperCase();
 }
