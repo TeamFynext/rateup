@@ -239,8 +239,16 @@ export async function getMessageCount(orgId: string) {
         c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL`;
 
   const { all, active } = result?.[0] ?? { all: 0, active: 0 };
+  const tickets = await prisma.ticket.count({
+    where: {
+      team: {
+        orgId,
+      },
+      type: "FLOW_RESPONSE",
+    },
+  });
 
-  return { active, all };
+  return { active, all, tickets };
 }
 export async function getWaTickets(page = 0, orgId: string) {
   const data = await prisma.ticket.findMany({
@@ -248,8 +256,19 @@ export async function getWaTickets(page = 0, orgId: string) {
       team: {
         orgId,
       },
+      type: "FLOW_RESPONSE",
     },
-    skip: page * 100,
+    include: {
+      comments: true,
+      assignedTo: {
+        select: {
+          name: true,
+          recipeName: true,
+          phone: true,
+        },
+      },
+    },
+    skip: (page - 1) * 100,
     take: 100,
   });
   return data;
@@ -340,7 +359,12 @@ export async function filterChats(
         context !== "TotalContactCount"
       ) {
         if (bodyFilterProps?.messageType === "usermessages") {
-          extendedWhereClause += `AND lm."messageBody"->>'exchangeProcess' = 'receive'`;
+          extendedWhereClause += `AND EXISTS (
+            SELECT 1
+            FROM "WaMessage" wm
+            WHERE wm."contactId" = c.id
+            AND wm."messageBody"->>'exchangeProcess' = 'receive'
+          )`;
         }
       }
 

@@ -167,7 +167,9 @@ export async function getContactsWithLastMessageHandler(
       parseInt(page),
       activeConditon,
     );
-    reply.status(200).send(contacts);
+    reply
+      .status(200)
+      .send({ rows: contacts ?? [], nextOffSet: parseInt(page) + 1 });
   } catch (error) {
     console.log(error);
     reply.status(500).send("Internal Server Error");
@@ -194,8 +196,8 @@ export async function getWaTicketsHandler(
   try {
     const { page } = request.query;
     const orgId = request.user.orgId;
-    const tickets = await getWaTickets(parseInt(page ?? "0"), orgId);
-    reply.send(tickets);
+    const tickets = await getWaTickets(parseInt(page), orgId);
+    reply.send({ rows: tickets, nextOffSet: parseInt(page) + 1 });
   } catch (error) {
     reply.status(500).send("Internal Server Error");
   }
@@ -227,7 +229,9 @@ export async function getFilteredContactsHandler(
       parseInt(page),
       JSON.parse(decodeURIComponent(filterData)),
     );
-    reply.status(200).send(contacts);
+    reply
+      .status(200)
+      .send({ rows: contacts ?? [], nextOffSet: parseInt(page) + 1 });
   } catch (error) {
     console.log(error);
     reply.status(500).send("Internal Server Error");
