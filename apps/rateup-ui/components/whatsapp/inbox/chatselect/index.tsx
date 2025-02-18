@@ -245,7 +245,11 @@ const WaInboxChatSelect = () => {
         updatedContacts,
         newMessage.contact.id,
       );
-      if (contactIndex !== -1) {
+      const contactId = useContactStore.getState().selectedContact?.id;
+      if (
+        contactIndex !== -1 &&
+        contactId === updatedContacts?.[contactIndex]?.id
+      ) {
         let data = updateTheContactObject(
           updatedContacts[contactIndex],
           newMessage.message,
