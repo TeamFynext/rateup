@@ -66,7 +66,7 @@ export default function WaInboxChatSelectCard({
                 "No messages yet"
               }
             >
-              <Text className={classes.latest_chat} truncate>
+              <Text className={classes.latest_chat} truncate maw={200}>
                 {returnMessageContentBasedOnParsedMessage(
                   parseWaMessage(lastMessage?.messageBody),
                 )}

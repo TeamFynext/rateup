@@ -33,7 +33,7 @@ export default function WaInboxChatDisplayHeader({
         )}
 
         <Avatar
-          color="initials"
+          color="var(--mantine-primary-color-6)"
           size={!isMobile ? 65 : 35}
           name={contact.name}
         />

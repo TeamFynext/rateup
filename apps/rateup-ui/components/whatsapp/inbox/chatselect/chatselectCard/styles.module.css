@@ -33,7 +33,6 @@
 .latest_chat {
   font-size: var(--mantine-font-size-xs);
   font-weight: 100;
-  /* width: 100%; */
 }
 .chat_time_wrapper {
   justify-content: space-between;
