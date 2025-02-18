@@ -2065,5 +2065,13 @@
   "Save your flow to WhatsApp": "Enregistrez votre flux sur WhatsApp",
   "ACTIVE": "ACTIF",
   "Select choices for which Ticket should be created": "Sélectionnez les choix pour lesquels un ticket doit être créé",
-  "Save the element to create ticket": "Enregistrez l'élément pour créer un ticket"
+  "Save the element to create ticket": "Enregistrez l'élément pour créer un ticket",
+  "Enable Auto-Generate Ticket": "Activer la génération automatique de tickets",
+  "Enable Ticket WhatsApp Message Alerts": "Activer les alertes de messages WhatsApp pour les tickets",
+  "Click here to disable Ticket WhatsApp Message Alerts": "Cliquez ici pour désactiver les alertes de messages WhatsApp pour les tickets",
+  "Click here to enable auto-generate Tickets on response": "Cliquez ici pour activer la génération automatique des tickets en réponse",
+  "Aut-Generate Ticket is enabled on this flow": "La génération automatique de tickets est activée sur ce flux",
+  "Auto-Generate Ticket is enabled on this survey": "La génération automatique de tickets est activée sur cette enquête",
+  "Click here to disable auto-generate Tickets on response": "Cliquez ici pour désactiver la génération automatique des tickets en réponse",
+  "Click here to enable Ticket WhatsApp Message Alerts": "Cliquez ici pour activer les alertes de messages WhatsApp pour les tickets"
 }

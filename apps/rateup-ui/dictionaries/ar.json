@@ -2066,5 +2066,13 @@
   "Save your flow to WhatsApp": "احفظ تدفقك على واتساب",
   "ACTIVE": "نشط",
   "Select choices for which Ticket should be created": "حدد الخيارات التي يجب إنشاء تذكرة لها",
-  "Save the element to create ticket": "احفظ العنصر لإنشاء تذكرة"
+  "Save the element to create ticket": "احفظ العنصر لإنشاء تذكرة",
+  "Enable Auto-Generate Ticket": "تمكين إنشاء التذاكر تلقائيًا",
+  "Enable Ticket WhatsApp Message Alerts": "تمكين تنبيهات رسائل واتساب للتذاكر",
+  "Click here to disable Ticket WhatsApp Message Alerts": "انقر هنا لتعطيل تنبيهات رسائل واتساب للتذاكر",
+  "Click here to enable auto-generate Tickets on response": "انقر هنا لتمكين إنشاء التذاكر تلقائيًا عند الرد",
+  "Aut-Generate Ticket is enabled on this flow": "تم تمكين إنشاء التذاكر تلقائيًا في هذا التدفق",
+  "Auto-Generate Ticket is enabled on this survey": "تم تمكين إنشاء التذاكر تلقائيًا في هذا الاستبيان",
+  "Click here to disable auto-generate Tickets on response": "انقر هنا لتعطيل إنشاء التذاكر تلقائيًا عند الرد",
+  "Click here to enable Ticket WhatsApp Message Alerts": "انقر هنا لتمكين تنبيهات رسائل واتساب للتذاكر"
 }

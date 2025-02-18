@@ -331,6 +331,7 @@ export function QuestionDetailedView({
           getIncompleteLanguages={getIncompleteLanguages}
           selectedLanguage={selectedLanguage}
           isSaving={isSaving}
+          enableAutoGenerateTicket={survey?.enableAutoGenerateTicket}
         />
       </Stack>
     </form>

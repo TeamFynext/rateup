@@ -45,6 +45,7 @@ function QuestionDetailedViewFooter({
   getIncompleteLanguages,
   selectedLanguage,
   isSaving,
+  enableAutoGenerateTicket,
 }) {
   const { translations } = useTranslations();
   return (
@@ -197,7 +198,7 @@ function QuestionDetailedViewFooter({
                 question?.type as QuestionType,
               ) && (
                 <Menu.Item>
-                  {isTicketFeatureActive ? (
+                  {isTicketFeatureActive && !enableAutoGenerateTicket ? (
                     <RateupButtonSecondary
                       title={translations["Create Tickets"]}
                       leftIcon={<IconTicket stroke={4} size={"1rem"} />}
@@ -212,10 +213,16 @@ function QuestionDetailedViewFooter({
                   ) : (
                     <Tooltip
                       label={
-                        translations["Upgrade your Plan for this feature."]
+                        isTicketFeatureActive
+                          ? translations["Upgrade your Plan for this feature."]
+                          : translations[
+                              "Auto-Generate Ticket is enabled on this survey"
+                            ]
                       }
-                      disabled={isTicketFeatureActive}
-                      color="yellow"
+                      disabled={
+                        isTicketFeatureActive || enableAutoGenerateTicket
+                      }
+                      color={enableAutoGenerateTicket ? "yellow" : "black"}
                     >
                       <Button
                         data-disabled

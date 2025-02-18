@@ -230,9 +230,11 @@ const SurveyResponsesView = ({
                       />
                     );
                   default:
-                    return JSON.stringify(Object.values(response?.response)[0])
-                      .replace(/"/g, "")
-                      .replace(/,/g, ", ");
+                    return typeof response?.response !== "string"
+                      ? JSON.stringify(Object.values(response?.response)[0])
+                          .replace(/"/g, "")
+                          .replace(/,/g, ", ")
+                      : response?.response;
                 }
               })()}
             </Text>

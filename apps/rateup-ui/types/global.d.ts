@@ -152,6 +152,8 @@ declare global {
     getLocation: boolean;
     enableTickets: boolean;
     enableTicketEmailAlerts: boolean;
+    enableAutoGenerateTicket: boolean;
+    enableTicketWaMessageAlerts: boolean;
     uniqueDeviceResponse: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
