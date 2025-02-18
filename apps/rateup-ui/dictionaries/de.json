@@ -2068,5 +2068,13 @@
   "ACTIVE": "AKTIV",
   "Select choices for which Ticket should be created": "Wählen Sie die Optionen aus, für die ein Ticket erstellt werden soll",
   "Save the element to create ticket": "Speichern Sie das Element, um ein Ticket zu erstellen",
-  "View Ticket Details": "Ticketdetails anzeigen"
+  "View Ticket Details": "Ticketdetails anzeigen",
+  "Enable Auto-Generate Ticket": "Automatische Ticketerstellung aktivieren",
+  "Enable Ticket WhatsApp Message Alerts": "WhatsApp-Benachrichtigungen für Tickets aktivieren",
+  "Click here to disable Ticket WhatsApp Message Alerts": "Klicken Sie hier, um WhatsApp-Benachrichtigungen für Tickets zu deaktivieren",
+  "Click here to enable auto-generate Tickets on response": "Klicken Sie hier, um die automatische Ticketerstellung bei Antworten zu aktivieren",
+  "Aut-Generate Ticket is enabled on this flow": "Die automatische Ticketerstellung ist in diesem Ablauf aktiviert",
+  "Auto-Generate Ticket is enabled on this survey": "Die automatische Ticketerstellung ist in dieser Umfrage aktiviert",
+  "Click here to disable auto-generate Tickets on response": "Klicken Sie hier, um die automatische Ticketerstellung bei Antworten zu deaktivieren",
+  "Click here to enable Ticket WhatsApp Message Alerts": "Klicken Sie hier, um WhatsApp-Benachrichtigungen für Tickets zu aktivieren"
 }

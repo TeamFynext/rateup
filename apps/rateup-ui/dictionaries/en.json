@@ -2069,5 +2069,13 @@
   "Save your flow to WhatsApp": "Save your flow to WhatsApp",
   "Select choices for which Ticket should be created": "Select choices for which Ticket should be created",
   "Save the element to create ticket": "Save the element to create ticket",
-  "View Ticket Details": "View Ticket Details"
+  "View Ticket Details": "View Ticket Details",
+  "Enable Auto-Generate Ticket": "Enable Auto-Generate Ticket",
+  "Enable Ticket WhatsApp Message Alerts": "Enable Ticket WhatsApp Message Alerts",
+  "Click here to disable Ticket WhatsApp Message Alerts": "Click here to disable Ticket WhatsApp Message Alerts",
+  "Click here to enable auto-generate Tickets on response": "Click here to enable auto-generate Tickets on response",
+  "Aut-Generate Ticket is enabled on this flow": "Aut-Generate Ticket is enabled on this flow",
+  "Auto-Generate Ticket is enabled on this survey": "Auto-Generate Ticket is enabled on this survey",
+  "Click here to disable auto-generate Tickets on response": "Click here to disable auto-generate Tickets on response",
+  "Click here to enable Ticket WhatsApp Message Alerts": "Click here to enable Ticket WhatsApp Message Alerts"
 }

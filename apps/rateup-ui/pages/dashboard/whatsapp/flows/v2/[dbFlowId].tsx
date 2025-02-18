@@ -3,7 +3,9 @@ import { useRouter } from "next/router";
 
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
 
+import { SubscriptionFeaturePathName } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
@@ -19,6 +21,7 @@ import FlowPageHeader, {
 import { useRouteParams } from "@/context/RouteParamsContext";
 import SurveyContext from "@/context/SurveyContext";
 import useTranslations from "@/dictionaries/useTranslation";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import styles from "./FlowPage.module.css";
 
@@ -37,6 +40,7 @@ const Flow = () => {
   const { data: survey, isPending: isSurveyPending } = useSurvey(
     flow?.surveyId,
   );
+  const { data: subscription } = useSubscription();
   const { tab: tabView } = router.query;
 
   const { update } = useRouteParams();
@@ -126,7 +130,14 @@ const Flow = () => {
                   <SurveySettings
                     surveyId={survey.id}
                     survey={survey}
-                    enabledModules={["teams", "flow"]}
+                    enabledModules={[
+                      "teams",
+                      "flow",
+                      hasFeature(
+                        subscription,
+                        SubscriptionFeaturePathName.Ticket,
+                      ) && "tickets",
+                    ]}
                     flowName={flow.name}
                     flowDbId={flow.dbFlowId}
                     anonymous={flow?.anonymous}
