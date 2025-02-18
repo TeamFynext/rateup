@@ -743,6 +743,7 @@ export async function createResponse(
     let generatedTicket = await autoGenerateTicket(
       surveyResponse?.surveyTeamMap?.teamId,
       surveyResponse.id,
+      surveyResponse.platform,
     );
   }
 

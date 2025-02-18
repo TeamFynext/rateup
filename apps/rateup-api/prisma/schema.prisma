@@ -987,6 +987,7 @@ enum TicketType {
   REVIEW
   SURVEY_RESPONSE
   CUSTOM
+  FLOW_RESPONSE
 }
 
 model TicketComment {
