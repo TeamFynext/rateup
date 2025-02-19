@@ -320,8 +320,6 @@ export async function addExistingContactsToGroup(
   if (!contactGroup) {
     throw new Error("Contact group not found");
   }
-  console.log("🚀 ~ contactGroupId:", contactGroupId);
-  console.log("🚀 ~ contactIds:", contactIds);
   // TODO: check if contactIds belong to the same team?
   // FIXME:
   return await prisma.loyaltyCustomerMap.createMany({
