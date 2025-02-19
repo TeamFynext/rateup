@@ -58,17 +58,13 @@ export const useWaTicktes = () =>
     placeholderData: { pages: [], pageParams: [] },
   });
 
-export const useFilteredContacts = (
-  filterData: string,
-  // queryEnabled: boolean,
-) => {
+export const useFilteredContacts = (filterData: string) => {
   return useInfiniteQuery({
     queryKey: ["contacts", "filtered", filterData],
     initialPageParam: 1,
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
-    // enabled: queryEnabled,
   });
 };
 

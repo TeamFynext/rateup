@@ -334,7 +334,7 @@ const WaInboxChatSelect = () => {
     [openChatDisplayForContact, setSelectedContact],
   );
 
-  if (isContactsFetching || isTicketsLoading)
+  if (isContactsFetching)
     return (
       <WhatsAppInboxLoader isLoading={isContactsFetching || isTicketsLoading} />
     );

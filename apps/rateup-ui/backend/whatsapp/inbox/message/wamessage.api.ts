@@ -65,6 +65,9 @@ export async function getFilteredContacts(filterData: string, page: number) {
   return (
     await axiosClient.get(
       `${WA_CONTACT_BASE_PATH}/contactsfiltered?filterData=${filterData}&page=${page}`,
+      {
+        timeout: 16000,
+      },
     )
   ).data as ContactsWithLastMessageResponse;
 }
@@ -99,8 +102,11 @@ type tickets = {
   assignedTo: assignedTo;
 };
 export async function getWaTickets(page: number) {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/tickets?page=${page}`))
-    .data as {
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/tickets?page=${page}`, {
+      timeout: 16000,
+    })
+  ).data as {
     rows: {
       data: tickets[];
       totalTickets: number;
