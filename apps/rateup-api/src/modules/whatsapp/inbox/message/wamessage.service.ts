@@ -205,7 +205,10 @@ export async function filterChats(
             WHERE wm."contactId" = c.id
             AND wm."messageBody"->>'exchangeProcess' = 'receive'
           )`;
-        } else if (bodyFilterProps?.messageType === "all") {
+        } else if (
+          bodyFilterProps?.messageType === "all" &&
+          !bodyFilterProps?.searchTerm?.trim()
+        ) {
           extendedWhereClause += `AND EXISTS (
             SELECT 1 FROM "WaMessage" wm
             WHERE wm."contactId" = c.id
