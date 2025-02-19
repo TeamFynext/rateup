@@ -105,7 +105,7 @@ export default function WaInboxChatFilter(props: Props) {
     if (props.filter.tags.length > 0) {
       count += props.filter.tags.length;
     }
-    if (props.filter.messageType !== "all") {
+    if (props.filter.messageType !== "usermessages") {
       count += 1;
     }
     if (props.filter.strictFilter !== false) {
@@ -118,7 +118,7 @@ export default function WaInboxChatFilter(props: Props) {
       contactGroups: [],
       campaigns: [],
       tags: [],
-      messageType: "all",
+      messageType: "usermessages",
       strictFilter: false,
     });
   }

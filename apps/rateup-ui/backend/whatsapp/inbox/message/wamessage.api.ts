@@ -56,18 +56,11 @@ type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];
   nextOffset: number | null;
 };
-export async function getContactsWithLastMessage(page: number) {
-  return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/contacts?page=${page}`)
-  ).data as ContactsWithLastMessageResponse;
-}
 
 export async function getChatFilterData() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/filterdata`)).data;
 }
-export async function getMessageCount() {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/messagecount`)).data;
-}
+
 export async function getFilteredContacts(filterData: string, page: number) {
   return (
     await axiosClient.get(
@@ -75,10 +68,45 @@ export async function getFilteredContacts(filterData: string, page: number) {
     )
   ).data as ContactsWithLastMessageResponse;
 }
-
+type assignedTo = {
+  name: string;
+  recipeName: string | null;
+  phone: string | null;
+};
+type comments = {
+  id: string;
+  text: string;
+  createdById: string;
+  createdAt: string;
+  ticketId: string;
+};
+type tickets = {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  type: string;
+  createdById: string;
+  createdAt: string;
+  status: string;
+  priority: string;
+  teamId: string;
+  deadline: string | null;
+  assignedToId: string;
+  reviewId: string | null;
+  surveyResponseId: string;
+  comments: comments[];
+  assignedTo: assignedTo;
+};
 export async function getWaTickets(page: number) {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/tickets?page=${page}`))
-    .data;
+    .data as {
+    rows: {
+      data: tickets[];
+      totalTickets: number;
+    };
+    nextOffset: number | null;
+  };
 }
 
 export async function exportWaChats({
