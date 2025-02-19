@@ -89,174 +89,34 @@ export async function getWaMessagesByContactId(
   return { messages, nextCursor };
 }
 
-export async function getContactsWithLastMessage(
-  orgId: string,
-  page: number = 1,
-  activeOnly: boolean = true,
-) {
-  const contacts: Array<
-    Contact & {
-      latestmessage: WaMessage;
-      latestreceivemessage: WaMessage;
-      latestmessagetime: string;
-      latestreceivetime: string;
-    }
-  > = activeOnly
-    ? await prisma.$queryRaw`
-  WITH LatestMessages AS (
-      SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody",
-          w."waCreatedAt"
-      FROM
-          "WaMessage" w
-      ORDER BY
-          w."contactId", w."waCreatedAt" DESC
-  ),
-  LatestReceiveMessages AS (
-      SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody" AS receiveMessageBody,
-          w."waCreatedAt" AS receiveCreatedAt
-      FROM
-          "WaMessage" w
-      WHERE
-          w."messageBody"->'exchangeProcess' = '"receive"'
-      ORDER BY
-          w."contactId", w."waCreatedAt" DESC
-  )
-  SELECT
-      c.*,
-      lm."messageBody" AS LatestMessage,
-      lm."waCreatedAt" AS LatestMessageTime,
-      lrm.receiveMessageBody AS LatestReceiveMessage,
-      lrm.receiveCreatedAt AS LatestReceiveTime
-  FROM
-      "Contact" c
-  LEFT JOIN
-      LatestMessages lm ON c.id = lm."contactId"
-  LEFT JOIN
-      LatestReceiveMessages lrm ON c.id = lrm."contactId"
-  WHERE
-      c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL
-      AND lrm.receiveCreatedAt >= NOW() - INTERVAL '24 HOURS'
-  ORDER BY 
-      lm."waCreatedAt" DESC NULLS LAST
-  LIMIT 1000 OFFSET ${(page - 1) * 1000}`
-    : await prisma.$queryRaw`
-  WITH LatestMessages AS (
-      SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody",
-          w."waCreatedAt"
-      FROM
-          "WaMessage" w
-      ORDER BY
-          w."contactId", w."waCreatedAt" DESC
-  ),
-  LatestReceiveMessages AS (
-      SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody" AS receiveMessageBody,
-          w."waCreatedAt" AS receiveCreatedAt
-      FROM
-          "WaMessage" w
-      WHERE
-          w."messageBody"->'exchangeProcess' = '"receive"'
-      ORDER BY
-          w."contactId", w."waCreatedAt" DESC
-  )
-  SELECT
-      c.*,
-      lm."messageBody" AS LatestMessage,
-      lm."waCreatedAt" AS LatestMessageTime,
-      lrm.receiveMessageBody AS LatestReceiveMessage,
-      lrm.receiveCreatedAt AS LatestReceiveTime
-  FROM
-      "Contact" c
-  LEFT JOIN
-      LatestMessages lm ON c.id = lm."contactId"
-  LEFT JOIN
-      LatestReceiveMessages lrm ON c.id = lrm."contactId"
-  WHERE
-      c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL
-  ORDER BY 
-      lm."waCreatedAt" DESC NULLS LAST
-  LIMIT 1000 OFFSET ${(page - 1) * 1000}`;
-  return contacts.map(
-    ({
-      latestmessage,
-      latestmessagetime,
-      latestreceivetime,
-      tags,
-      ...rest
-    }) => ({
-      ...rest,
-      tags: tags ?? {},
-      groups: [],
-      lastMessage: {
-        messageBody: latestmessage ?? null,
-        waCreatedAt: latestmessagetime ?? null,
-      },
-      userInitiatedFinalTimeStamp: latestreceivetime ?? null,
-    }),
-  );
-}
-export async function getMessageCount(orgId: string) {
-  const result = await prisma.$queryRaw`
-    WITH LatestMessages AS (
-      SELECT DISTINCT ON (w."contactId")
-          w."contactId",
-          w."messageBody",
-          w."waCreatedAt"
-      FROM
-          "WaMessage" w
-      ORDER BY
-          w."contactId", w."waCreatedAt" DESC
-    )
-    SELECT 
-      COUNT(*)::int AS all
-    FROM
-        "Contact" c
-    LEFT JOIN
-        LatestMessages lm ON c.id = lm."contactId"
-    WHERE
-        c."orgId" = ${orgId}::uuid AND lm."messageBody" IS NOT NULL`;
-
-  const { all } = result?.[0] ?? { all: 0 };
-  const tickets = await prisma.ticket.count({
-    where: {
-      team: {
-        orgId,
-      },
-      type: "FLOW_RESPONSE",
-    },
-  });
-
-  return { all, tickets };
-}
 export async function getWaTickets(page = 1, orgId: string) {
-  const data = await prisma.ticket.findMany({
-    where: {
-      team: {
-        orgId,
-      },
-      type: "FLOW_RESPONSE",
+  let condition: any = {
+    team: {
+      orgId,
     },
-    include: {
-      comments: true,
-      assignedTo: {
-        select: {
-          name: true,
-          recipeName: true,
-          phone: true,
+    type: "FLOW_RESPONSE",
+  };
+  const [data, totalTickets] = await Promise.all([
+    prisma.ticket.findMany({
+      where: condition,
+      include: {
+        comments: true,
+        assignedTo: {
+          select: {
+            name: true,
+            recipeName: true,
+            phone: true,
+          },
         },
       },
-    },
-    skip: (page - 1) * 100,
-    take: 100,
-  });
-  return data;
+      skip: (page - 1) * 100,
+      take: 100,
+    }),
+    prisma.ticket.count({
+      where: condition,
+    }),
+  ]);
+  return { data, totalTickets };
 }
 export async function generateChatFilterData(orgId: string) {
   try {

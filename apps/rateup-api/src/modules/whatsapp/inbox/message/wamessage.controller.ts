@@ -12,9 +12,7 @@ import {
   exportWhatsapChats,
   filterChats,
   generateChatFilterData,
-  getContactsWithLastMessage,
   getMediaFile,
-  getMessageCount,
   getWaMessagesByContactId,
   getWaTickets,
 } from "./wamessage.service";
@@ -154,40 +152,6 @@ export async function getWaMessagesByContactIdHandler(
   }
 }
 
-export async function getContactsWithLastMessageHandler(
-  request: FastifyRequest<{ Querystring: PaginateQuerySchema }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const { page, active } = request.query;
-    let activeConditon = active === "true" ? true : false;
-    const contacts = await getContactsWithLastMessage(
-      orgId,
-      parseInt(page),
-      activeConditon,
-    );
-    reply.status(200).send({
-      rows: contacts ?? [],
-      nextOffset: contacts?.length > 0 ? parseInt(page) + 1 : null,
-    });
-  } catch (error) {
-    console.log(error);
-    reply.status(500).send("Internal Server Error");
-  }
-}
-export async function getMessageCountHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.user;
-    const contacts = await getMessageCount(orgId);
-    reply.status(200).send(contacts);
-  } catch (error) {
-    reply.status(500).send("Error while getting message count");
-  }
-}
 export async function getWaTicketsHandler(
   request: FastifyRequest<{
     Querystring: PaginateQuerySchema;
@@ -200,7 +164,7 @@ export async function getWaTicketsHandler(
     const tickets = await getWaTickets(parseInt(page), orgId);
     reply.send({
       rows: tickets,
-      nextOffset: tickets?.length > 0 ? parseInt(page) + 1 : null,
+      nextOffset: tickets?.data?.length > 0 ? parseInt(page) + 1 : null,
     });
   } catch (error) {
     reply.status(500).send("Internal Server Error");
