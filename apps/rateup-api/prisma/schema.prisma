@@ -438,6 +438,7 @@ model Contact {
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
+  @@index([orgId])
 }
 
 model ContactGroup {
@@ -464,6 +465,7 @@ model ContactGroupMap {
   contactGroupId String       @db.Uuid
 
   @@id([contactId, contactGroupId])
+  @@index([contactId])
 }
 
 model Campaign {
@@ -526,6 +528,7 @@ model CampaignParticipant {
   CampaignMessageQueue            CampaignMessageQueue[]
 
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
+  @@index([contactId])
 }
 
 enum CampaignMessageQueueStatus {
@@ -908,7 +911,7 @@ model WaFlow {
   version              Int                    @default(1)
   LoyaltyActionFlowMap LoyaltyActionFlowMap[]
   ///[FlowTicket[]]
-  ticketIssued          Json[]
+  ticketIssued         Json[]
 
   @@unique([flowId, orgId])
 }
@@ -1034,6 +1037,8 @@ model WaMessage {
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
   sendBy                          String?                           @db.Uuid
   sender                          User?                             @relation(fields: [sendBy], references: [id], onDelete: Cascade)
+
+  @@index([contactId, waCreatedAt(sort: Desc)])
 }
 
 model WaMessageCampaginParticipantMap {

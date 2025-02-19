@@ -2,10 +2,8 @@ import { FastifyInstance } from "fastify";
 import {
   exportWhatsappChatsHandler,
   generateChatFilterDataHandler,
-  getContactsWithLastMessageHandler,
   getFilteredContactsHandler,
   getMediaFileByMediaId,
-  getMessageCountHandler,
   getWaMessagesByContactIdHandler,
   getWaTicketsHandler,
   sendNewWaMessageHandler,
@@ -37,8 +35,6 @@ export async function waMessageRoutes(server: FastifyInstance) {
     sendNewWaMessageHandler,
   );
 
-  server.get("/contacts", getContactsWithLastMessageHandler);
-  server.get("/messagecount", getMessageCountHandler);
   server.get("/filterdata", generateChatFilterDataHandler);
   server.get(
     "/tickets",
