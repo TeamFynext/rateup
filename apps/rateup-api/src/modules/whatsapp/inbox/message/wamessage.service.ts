@@ -198,17 +198,21 @@ export async function filterChats(
       let extendedWhereClause = "";
 
       // Filter for messageType when not in TotalContactCount context
-      if (bodyFilterProps?.messageType && context !== "TotalContactCount") {
+      console.log(bodyFilterProps?.searchTerm);
+
+      if (
+        bodyFilterProps?.messageType &&
+        context !== "TotalContactCount" &&
+        (bodyFilterProps?.searchTerm === null ||
+          bodyFilterProps?.searchTerm?.length === 0)
+      ) {
         if (bodyFilterProps?.messageType === "usermessages") {
           extendedWhereClause += `AND EXISTS (
             SELECT 1 FROM "WaMessage" wm
             WHERE wm."contactId" = c.id
             AND wm."messageBody"->>'exchangeProcess' = 'receive'
           )`;
-        } else if (
-          bodyFilterProps?.messageType === "all" &&
-          !bodyFilterProps?.searchTerm?.trim()
-        ) {
+        } else if (bodyFilterProps?.messageType === "all") {
           extendedWhereClause += `AND EXISTS (
             SELECT 1 FROM "WaMessage" wm
             WHERE wm."contactId" = c.id
@@ -304,6 +308,7 @@ export async function filterChats(
       uc.id,
       uc."name",
       uc."phone",
+      uc."tags",
       uc."userInitiatedFinalTimeStamp",
       uc."lastMessage",
       cc.total_contact_count
