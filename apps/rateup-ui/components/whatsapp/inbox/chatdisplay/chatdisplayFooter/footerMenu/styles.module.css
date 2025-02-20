@@ -1,6 +1,6 @@
 .action_icon {
-  width: 45px;
-  height: 45px;
+  width: 35px;
+  height: 35px;
   border-radius: var(--mantine-radius-xl);
   transition: rotate 0.5s;
 }

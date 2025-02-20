@@ -116,20 +116,22 @@ const EditContactModal = ({
             radius={"md"}
             required
           />
-          <Paper shadow="xl" p="md" px="xl">
-            <Checkbox.Group value={contactType} onChange={setContactType}>
-              <Group>
-                {tags?.map((data) => (
-                  <Checkbox
-                    value={data}
-                    label={data}
-                    key={data}
-                    tt={"capitalize"}
-                  />
-                ))}
-              </Group>
-            </Checkbox.Group>
-          </Paper>
+          {tags?.length > 0 && (
+            <Paper shadow="xl" p="md" px="xl">
+              <Checkbox.Group value={contactType} onChange={setContactType}>
+                <Group>
+                  {tags?.map((data) => (
+                    <Checkbox
+                      value={data}
+                      label={data}
+                      key={data}
+                      tt={"capitalize"}
+                    />
+                  ))}
+                </Group>
+              </Checkbox.Group>
+            </Paper>
+          )}
 
           {contactType.includes("phone") && (
             <Stack gap={0}>
@@ -137,17 +139,21 @@ const EditContactModal = ({
                 <Text>{translations["Phone Number"]}</Text>
                 <Text c="red">*</Text>
               </Group>
-              <PhoneInputWithCountrySelect
-                defaultCountry="IN"
-                international
-                countryCallingCodeEditable={false}
-                placeholder={translations["Enter phone number"]}
-                {...form.getInputProps("phone")}
-                className={styles.inputPhone}
-              />
-              <Text size="sm" c={"red"}>
-                {form?.errors?.phone}
-              </Text>
+              <Box
+                className={`${styles["phone-input-container"]} ${form?.errors?.phone ? styles["phone-input-error"] : ""}`}
+              >
+                <PhoneInputWithCountrySelect
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
+                  placeholder={translations["Enter phone number"]}
+                  {...form.getInputProps("phone")}
+                  className={styles.inputPhone}
+                />
+                <Text size="sm" c={"red"}>
+                  {form?.errors?.phone}
+                </Text>
+              </Box>
             </Stack>
           )}
           {contactType?.map(
