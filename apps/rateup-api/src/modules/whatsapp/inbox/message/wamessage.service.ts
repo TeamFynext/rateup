@@ -94,7 +94,9 @@ export async function getWaTickets(page = 1, orgId: string) {
     team: {
       orgId,
     },
-    type: "FLOW_RESPONSE",
+    type: {
+      in: ["FLOW_RESPONSE", "AUTOMATION"],
+    },
   };
   const [data, totalTickets] = await Promise.all([
     prisma.ticket.findMany({

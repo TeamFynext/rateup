@@ -11,6 +11,7 @@ const ticketCore = {
   reviewId: z.string().optional(),
   surveyResponseId: z.string().optional(),
   type: z.string().optional(),
+  waAutomatedReplyMessageId: z.string().optional(),
 };
 
 const createTicketRequestSchema = z.object({

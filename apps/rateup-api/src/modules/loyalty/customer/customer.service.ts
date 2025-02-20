@@ -24,7 +24,6 @@ import { createRedeem, RedeemStatus } from "../redeems/redeem.service";
 import {
   getReferralCodeByActionAndCustomer,
   replacedContentByDynamicVariable,
-  sendTextMessageAndUpdateStats,
 } from "../settings/settings.service";
 import { LCustomerInput } from "./customer.schema";
 import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
@@ -51,6 +50,7 @@ import {
 import { getContactGroupById } from "../../contact/contactGroup/contactGroup.service";
 import { AddNewContactsToGroupInput } from "../../contact/contactGroup/contactGroup.schema";
 import { getContactTag } from "../../whatsapp/settings/wa_settings.service";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 
 let includeContact = {
   Contact: {
@@ -499,16 +499,20 @@ export async function handleLoyaltyRegister(phone, name, loyaltyWaCommand) {
     if (customer) {
       if (!customer.active) {
         await updateLCustomer(phone, orgId, { active: true });
-        return await sendTextMessageAndUpdateStats(
-          phone,
-          orgId,
+        return await sendTextMessage(
+          {
+            phone,
+            orgId,
+          },
           null,
           "You are loyalty account has activated successfully",
         );
       }
-      return await sendTextMessageAndUpdateStats(
-        phone,
-        orgId,
+      return await sendTextMessage(
+        {
+          phone,
+          orgId,
+        },
         null,
         "You are already a member of our loyalty programme",
       );
@@ -542,15 +546,17 @@ export async function handleLoyaltyRegister(phone, name, loyaltyWaCommand) {
         content,
         dynamicVariables,
       );
-      await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+      await sendTextMessage({ phone, orgId }, null, message);
     }
     await handlePostRegisterAction(orgId, res.id);
   } catch (e) {
     log.error(e);
     if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
-      await sendTextMessageAndUpdateStats(
-        phone,
-        orgId,
+      await sendTextMessage(
+        {
+          phone,
+          orgId,
+        },
         null,
         "You are already a member of our loyalty program\n\n Reply *Points* to know the current points details",
       );
@@ -1188,13 +1194,13 @@ export async function handleCustomerRemovalFromLoyalty(
   const customer = await getLCustomerByPhone(phone, orgId);
   if (!customer || !customer.active) {
     const message = `You are not an active member of our loyalty programme`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
   await updateLCustomer(phone, orgId, { active: false });
   if (responseType === WaAutomatedReplyResponseType.Template) {
     await handleSendTemplate(waTemplateId, orgId, phone, []);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    await sendTextMessageAndUpdateStats(phone, orgId, null, content);
+    await sendTextMessage({ phone, orgId }, null, content);
   }
 }

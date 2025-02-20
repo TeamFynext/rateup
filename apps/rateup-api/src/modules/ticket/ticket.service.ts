@@ -13,8 +13,12 @@ import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { QuestionType2, SurveyType } from "../../types/enums";
 import { parsePhoneforWa } from "../loyalty/util";
 import { log } from "../../utils/logger";
-import { sendTextMessageAndUpdateStats } from "../loyalty/settings/settings.service";
 import { getContent } from "../../utils/survey/response.data";
+import {
+  getSession,
+  sendTextMessage,
+} from "../whatsapp/whatsappSurvey/wasurvey.service";
+import { validateSession } from "../whatsapp/whatsappSurvey/wasurvey.utils";
 
 export async function createTicket(
   input: CreateTicketInput,
@@ -31,6 +35,7 @@ export async function createTicket(
     surveyResponseId,
     firstComment,
     type,
+    waAutomatedReplyMessageId,
   } = input;
 
   let isCustomTicket = type === TicketType.CUSTOM;
@@ -40,33 +45,44 @@ export async function createTicket(
   }
 
   try {
-    if (!isCustomTicket && !reviewId && !surveyResponseId) {
-      throw new Error("ReviewId or SurveyResponseId is required");
+    if (
+      !isCustomTicket &&
+      !reviewId &&
+      !surveyResponseId &&
+      !waAutomatedReplyMessageId
+    ) {
+      throw new Error(
+        "ReviewId or SurveyResponseId or waAutomatedReplyMessageId is required",
+      );
     } else {
       let ticketType = reviewId
         ? TicketType.REVIEW
         : isCustomTicket
           ? TicketType.CUSTOM
-          : responsePlatform === "WHATSAPP"
-            ? TicketType.FLOW_RESPONSE
-            : TicketType.SURVEY_RESPONSE;
+          : waAutomatedReplyMessageId
+            ? TicketType.AUTOMATION
+            : responsePlatform === "WHATSAPP"
+              ? TicketType.FLOW_RESPONSE
+              : TicketType.SURVEY_RESPONSE;
 
       let ticket;
 
-      if (reviewId || surveyResponseId) {
+      if (reviewId || surveyResponseId || waAutomatedReplyMessageId) {
         ticket = await prisma.ticket.findFirst({
           where: {
             ...(ticketType === TicketType.SURVEY_RESPONSE ||
             ticketType === TicketType.FLOW_RESPONSE
               ? { surveyResponseId }
-              : { reviewId }),
+              : ticketType === TicketType.REVIEW
+                ? { reviewId }
+                : { waAutomatedReplyMessageId }),
           },
         });
       }
 
       if (ticket) {
         throw new Error(
-          "Ticket already exists for this review or survey response",
+          "Ticket already exists for this review or survey response or message",
         );
       } else {
         const newTicket = await prisma.ticket.create({
@@ -103,6 +119,13 @@ export async function createTicket(
               surveyResponse: {
                 connect: {
                   id: surveyResponseId,
+                },
+              },
+            }),
+            ...(waAutomatedReplyMessageId && {
+              waAutomatedReplyMessage: {
+                connect: {
+                  id: waAutomatedReplyMessageId,
                 },
               },
             }),
@@ -176,7 +199,8 @@ export async function createTicket(
             });
           }
         } else {
-          sendTicketAssignEmail(newTicket);
+          console.log("ticket created");
+          // sendTicketAssignEmail(newTicket);
         }
         return newTicket;
       }
@@ -197,13 +221,18 @@ async function sendTicketAssignWaMessage(newTicket, data) {
   });
   const phone = parsePhoneforWa(user.phone);
   if (!phone) {
-    log.error("Phone number not found for the ticket assigned user");
+    log.trace("Phone number not found for the ticket assigned user");
     return;
   }
   const { orgId, team_name, org_name } = data;
+  const session = await getSession(orgId, phone);
+  if (!validateSession(session)) {
+    log.trace("Aborting...session not found for phone: %s", phone);
+    return;
+  }
   const { number: ticket_no, priority } = newTicket;
   const message = `A ticket has been assigned to you on RateUp.app under *${team_name}* team of *${org_name}*.\nKindly check the ticket and take necessary actions.\n\nTicket No: *#${ticket_no}*\nPriority: *${priority}*`;
-  await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+  await sendTextMessage({ phone, orgId }, null, message);
 }
 
 async function sendTicketAssignEmail(newTicket) {
@@ -274,9 +303,24 @@ export async function getAllTicketsByUser(userId: string) {
           in: teamIds,
         },
       },
+      include: {
+        surveyResponse: {
+          select: {
+            surveyTeamMap: {
+              select: {
+                surveyId: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    return tickets;
+    return tickets.map((t) => ({
+      ...t,
+      surveyId: t?.surveyResponse?.surveyTeamMap?.surveyId,
+      surveyResponse: undefined,
+    }));
   } catch (error) {
     throw new Error("Failed to fetch tickets");
   }
@@ -321,6 +365,17 @@ export async function getSingleTicket(ticketId: string) {
         comments: {
           include: {
             createdBy: true,
+          },
+        },
+        waAutomatedReplyMessage: {
+          select: {
+            message: true,
+            phone: true,
+            waAutomatedReply: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
@@ -414,7 +469,7 @@ export async function getSingleTicket(ticketId: string) {
       surveyResponse: updatedResponse,
       teamName: team?.name,
       comments: commentsData,
-      responseLanguage: surveyResponse.language,
+      responseLanguage: surveyResponse?.language,
     };
   } catch (error) {
     log.error(error);
@@ -547,11 +602,17 @@ export async function updateTicket(
 }
 
 //Autogenerate ticket
-export async function autoGenerateTicket(
-  teamId: string,
-  surveyResponseId: string,
-  responsePlatform?: string,
-) {
+export async function autoGenerateTicket({
+  teamId,
+  surveyResponseId,
+  responsePlatform,
+  waAutomatedReplyMessageId,
+}: {
+  teamId: string;
+  surveyResponseId?: string;
+  responsePlatform?: string;
+  waAutomatedReplyMessageId?: string;
+}) {
   const team = await prisma.team.findUnique({
     where: {
       id: teamId,
@@ -606,15 +667,19 @@ export async function autoGenerateTicket(
     createdBy;
 
   const ticketData = {
-    title: "Response Ticket (Auto Generated)",
+    title: surveyResponseId
+      ? "Response Ticket (Auto Generated)"
+      : "WhatsApp Automation Ticket",
     priority: TicketPriority.LOW,
     teamId: teamId,
     // deadline: null,
     assignedToId: assignedTo,
     reviewId: null,
     surveyResponseId: surveyResponseId,
-    firstComment:
-      "This ticket is raised automatically based on the survey response",
+    firstComment: surveyResponseId
+      ? "This ticket is raised automatically based on the survey response"
+      : "This ticket is raised automatically for the whatsapp message based on the automated reply rule",
+    waAutomatedReplyMessageId,
   };
 
   let createdNewTicket = await createTicket(
