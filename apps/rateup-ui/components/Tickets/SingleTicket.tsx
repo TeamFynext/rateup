@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import {
   ActionIcon,
+  Badge,
   Box,
   CloseIcon,
   Group,
@@ -19,6 +20,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconEdit, IconEye, IconSend } from "@tabler/icons-react";
 
+import { useRouteParams } from "@/context/RouteParamsContext";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
@@ -57,6 +59,7 @@ import SurveyResponsesView from "./SingleTicket/SurveyResponsesView";
 import { TicketDetailBlock } from "./SingleTicket/TicketDetailBlock";
 
 const SingleTicket = ({ id }: { id: string }) => {
+  const { update } = useRouteParams();
   const { user } = useUser();
   const {
     isLoading: ticketLoading,
@@ -88,6 +91,7 @@ const SingleTicket = ({ id }: { id: string }) => {
   useEffect(() => {
     setPriority(ticket?.priority);
     setStatus(ticket?.status);
+    update({ ticketId: ticket?.title });
   }, [ticket]);
 
   const form = useForm({
@@ -243,51 +247,35 @@ const SingleTicket = ({ id }: { id: string }) => {
   }
 
   return (
-    <Stack>
-      <Group>
-        <Title
-          order={2}
-          style={{ ...titleStyle, width: "600px", maxWidth: "600px" }}
-        >
-          Ticket #{ticket?.number} &nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;{" "}
-          {ticket?.title}
+    <Stack gap={"xs"}>
+      <Group p={0}>
+        <Title order={4} fz={20}>
+          Ticket #{ticket?.number} - {ticket?.title}
         </Title>
       </Group>
-      <Group justify="flex-start" gap="10" mt="-1px">
-        <TicketDetailBlock mawInp="550" mihInput="85" pt="lg">
-          <Text>{translations["Team :"]}</Text>
-          <Text size="xl" fw="700">
-            {ticket?.teamName}
-          </Text>
-        </TicketDetailBlock>
-        <TicketDetailBlock mawInp="550" mihInput="85">
-          <Text>{translations["Assigned To :"]}</Text>
+      <PaperLayout p={"xs"}>
+        <Group justify="space-between" p={0}>
           <ContainedSelection
+            label={translations["Assigned To :"]}
             allowDeselect={false}
             data={memberOptions}
             withAsterisk
-            my="0"
             placeholder={
               translations["Select a team member to assign ticket to"]
             }
             value={ticket?.assignedToId}
             onChange={setValue}
-            defaultChecked={ticket?.assignedTo}
             disabled={user.role !== UserRole.SUPADM}
           />
-        </TicketDetailBlock>
-      </Group>
-      <Group justify="flex-start" gap="10" mt="-1px">
-        <TicketDetailBlock>
-          <Text>{translations["Status : "]}</Text>
-          <StatusMenu status={status} setStatus={setStatus} />
-        </TicketDetailBlock>
-        <TicketDetailBlock>
-          <Text>{translations["Priority : "]}</Text>
-          <PriorityMenu priority={priority} setPriority={setPriority} />
-        </TicketDetailBlock>
-        <TicketDetailBlock mawInp="320">
-          <Stack>
+          <Group gap={"xs"}>
+            <Text>{translations["Status : "]}</Text>
+            <StatusMenu status={status} setStatus={setStatus} />
+          </Group>
+          <Group gap={"xs"}>
+            <Text>{translations["Priority : "]}</Text>
+            <PriorityMenu priority={priority} setPriority={setPriority} />
+          </Group>
+          <Stack gap={1}>
             <Group>
               <Text>{translations["Deadline: "]}</Text>
               <Text
@@ -309,15 +297,17 @@ const SingleTicket = ({ id }: { id: string }) => {
                   stroke={1.5}
                 />
               </ActionIcon>
-              {ticket?.deadline && (
-                <Text pl="lg" c="orange">
-                  * {calculateDaysLeft(ticket?.deadline)}
-                </Text>
-              )}
             </Group>
+            {ticket?.deadline && (
+              <Text c="orange">* {calculateDaysLeft(ticket?.deadline)}</Text>
+            )}
           </Stack>
-        </TicketDetailBlock>
-      </Group>
+
+          <Tooltip label={"Team"}>
+            <Badge variant="outline">{ticket?.teamName}</Badge>
+          </Tooltip>
+        </Group>
+      </PaperLayout>
 
       <FormModalLayout
         opened={opened}
@@ -339,15 +329,14 @@ const SingleTicket = ({ id }: { id: string }) => {
         />
       </FormModalLayout>
 
-      <Group gap={30} mb="lg">
+      <Group w={"100%"}>
         <PaperLayout
           hoveractive
-          mah={500}
-          mih={500}
-          maw={680}
+          h={460}
           p="md"
           shadow="lg"
           radius="lg"
+          flex={1}
         >
           {ticketLoading ? (
             <RateupLoader mt="50px" />
@@ -401,6 +390,44 @@ const SingleTicket = ({ id }: { id: string }) => {
                     })}
                   </ScrollArea>
                 </Stack>
+              ) : ticket?.type === TicketType.AUTOMATION ? (
+                <Stack justify="flex-start">
+                  <Title order={4} c="gray.5" mb="md">
+                    Automation Details
+                  </Title>
+                  <Group pl="md">
+                    <Text>Name : </Text>
+                    <Text c="dark.3">
+                      {ticket?.waAutomatedReplyMessage?.waAutomatedReply?.name}
+                    </Text>
+                  </Group>
+
+                  <Title order={4} c="gray.5" mb="md">
+                    User Details
+                  </Title>
+                  <Stack>
+                    <Text>Phone : </Text>
+                    <Text
+                      c="dark.3"
+                      bg="var(--shade-of-blue)"
+                      p={"lg"}
+                      style={{ borderRadius: "10px" }}
+                    >
+                      {ticket?.waAutomatedReplyMessage?.phone}
+                    </Text>
+                  </Stack>
+                  <Stack>
+                    <Text>Message: </Text>
+                    <Text
+                      c="dark.3"
+                      bg="var(--shade-of-blue)"
+                      p={"lg"}
+                      style={{ borderRadius: "10px" }}
+                    >
+                      {ticket?.waAutomatedReplyMessage?.message}
+                    </Text>
+                  </Stack>
+                </Stack>
               ) : (
                 <Stack justify="flex-start">
                   <Title order={2} c="gray.5" mb="md">
@@ -422,6 +449,7 @@ const SingleTicket = ({ id }: { id: string }) => {
           user={user}
           form={form}
           onSubmit={onSubmit}
+          height={460}
         />
       </Group>
     </Stack>
@@ -438,6 +466,7 @@ type ticketInternalChatProps = {
   onSubmit: () => void;
   viewport: React.MutableRefObject<HTMLDivElement>;
   waInboxFlag?: boolean;
+  height?: string | number;
   close?: () => void;
 };
 export function TicketInternalChat({
@@ -448,6 +477,7 @@ export function TicketInternalChat({
   onSubmit,
   viewport,
   waInboxFlag = false,
+  height = 500,
   close,
 }: ticketInternalChatProps) {
   const translations = useTranslations();
@@ -459,14 +489,14 @@ export function TicketInternalChat({
   return (
     <PaperLayout
       hoveractive
-      mih={500}
+      mih={height}
       flex={1}
       maw={400}
       miw={400}
       p="md"
       shadow="lg"
       radius="lg"
-      {...(!waInboxFlag && { mah: 500 })}
+      {...(!waInboxFlag && { mah: height })}
     >
       <Stack justify="space-between" gap={0} h={"100%"}>
         <Box>
@@ -496,7 +526,7 @@ export function TicketInternalChat({
           ) : (
             <>
               <ScrollArea
-                h={waInboxFlag ? "66dvh" : 360}
+                h={waInboxFlag ? "66dvh" : 335}
                 viewportRef={viewport}
                 pr={"xs"}
               >

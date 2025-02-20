@@ -21,6 +21,7 @@ interface RouteParamsState {
   actionId: string;
   rewardId: string;
   customerId: string; //loyalty customer
+  ticketId: string;
 }
 
 interface RouteParamsContextData {
@@ -42,6 +43,7 @@ const initialState: RouteParamsState = {
   actionId: "",
   rewardId: "",
   customerId: "",
+  ticketId: "",
 };
 
 const RouteParamsContext = createContext<RouteParamsContextData>({

@@ -35,28 +35,33 @@ export const Navbar = () => {
       ? `/${pathParts?.slice(0, index + 1)?.join("/")}/${query?.[paramName]}`
       : `/${pathParts?.slice(0, index + 2)?.join("/")}`;
   };
-  const items = pathParts
+
+  const paths = pathParts
     ?.slice(1)
     ?.map((data, index) => ({
       title: replaceRouteParameter(data, query, routeParams),
       href: getUrl(index, data),
     }))
-    .filter((item) => !["v1", "v2"].includes(item.title))
-    ?.map((item, index) => (
-      <Link href={item.href} key={index} className={styles.breadcrumbsLink}>
-        <Text
-          size={"14px"}
-          c={
-            index === pathParts.length - 2
-              ? "var(--mantine-primary-color-filled)"
-              : "dark.2"
-          }
-          tt={"capitalize"}
-        >
-          {item.title}
-        </Text>
-      </Link>
-    ));
+    .filter((item) => !["v1", "v2"].includes(item.title));
+
+  const items = paths?.map((item, index) => (
+    <Link href={item.href} key={index} className={styles.breadcrumbsLink}>
+      <Text
+        size={"14px"}
+        c={
+          index === pathParts.length - 2
+            ? "var(--mantine-primary-color-filled)"
+            : "dark.2"
+        }
+        tt={"capitalize"}
+      >
+        {item.title}
+      </Text>
+    </Link>
+  ));
+  const excludePath =
+    paths?.length === 1 && ["tickets"].includes(paths[0].title);
+  if (excludePath) return;
   return (
     <Group className={styles["navbar-root-div"]}>
       <Breadcrumbs

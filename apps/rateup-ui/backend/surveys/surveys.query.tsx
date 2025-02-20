@@ -128,10 +128,11 @@ export const useSurveyTemplates = (surveyType) => {
   });
 };
 
-export const useSurveys = () => {
+export const useSurveys = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ["surveys"],
     queryFn: getSurveys,
+    enabled,
   });
 };
 

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 
 import {
   Box,
+  Button,
   Group,
   Loader,
+  Popover,
   ScrollArea,
   Stack,
   Tabs,
@@ -11,8 +13,10 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconFilter, IconPlus } from "@tabler/icons-react";
 
+import { SurveyType } from "@/types/enums";
+import { useSurveys } from "@/backend/surveys/surveys.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import {
@@ -40,7 +44,7 @@ import styles from "./TicketsHome.module.css";
 const TicketsHome = () => {
   const [sortOption, setSortOption] = useState("deadline");
   const { user } = useUser();
-  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState("all");
   const {
     isLoading: ticketLoading,
     data: tickets,
@@ -52,6 +56,14 @@ const TicketsHome = () => {
   const [opened, { open: toggleDelete, close }] = useDisclosure(false);
   const [filterParam, setFilterParam] = useState("all");
   const [filteredTickets, setFilteredTickets] = useState([]);
+  const [ticketType, setTicketType] = useState("All Tickets");
+  const { data: surveys } = useSurveys(
+    [TicketType.SURVEY_RESPONSE, TicketType.FLOW_RESPONSE].includes(
+      ticketType as TicketType,
+    ),
+  ) as { data: Survey[] };
+  const [survey, setSurvey] = useState("All");
+  const [filterMenuOpened, { toggle }] = useDisclosure(false);
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -66,11 +78,14 @@ const TicketsHome = () => {
   }, [opened]);
 
   useEffect(() => {
+    if (ticketType === "All Tickets") setSurvey("All");
     const filtered = tickets?.filter((t) => {
       const statusMatches = filterParam === "all" || t?.status === filterParam;
       const teamMatches =
         selectedTeamId === "all" || t?.teamId === selectedTeamId;
-      return statusMatches && teamMatches;
+      const typeMatch = ticketType === "All Tickets" || t?.type === ticketType;
+      const surveyMatch = survey === "All" || t?.surveyId === survey;
+      return statusMatches && teamMatches && typeMatch && surveyMatch;
     });
 
     const uniqueFilteredTickets = Array.from(
@@ -78,7 +93,7 @@ const TicketsHome = () => {
     ).map((id) => filtered.find((ticket) => ticket?.id === id));
 
     setFilteredTickets(uniqueFilteredTickets);
-  }, [tickets, filterParam, selectedTeamId]);
+  }, [tickets, filterParam, selectedTeamId, ticketType, survey]);
 
   if (ticketLoading) return <Loader type="bars" />;
   if (error || !Array.isArray(tickets)) {
@@ -92,6 +107,80 @@ const TicketsHome = () => {
     { value: "old", label: translations["Sort by Old First"] },
   ];
   const handleSortChange = (value) => setSortOption(value);
+
+  const ticketTypeData = ["All Tickets", ...Object.values(TicketType)];
+  const surveyData = surveys
+    ? [
+        "All",
+        ...surveys
+          ?.filter(
+            (s) =>
+              s?.type ===
+              (ticketType === TicketType.SURVEY_RESPONSE
+                ? SurveyType.Web
+                : SurveyType.WaFlow),
+          )
+          .map((s) => ({ value: s?.id, label: s?.title })),
+      ]
+    : [];
+
+  const FilterMenu = () => {
+    return (
+      <Popover
+        width={300}
+        trapFocus
+        position="bottom"
+        withArrow
+        shadow="md"
+        opened={filterMenuOpened}
+      >
+        <Popover.Target>
+          <Button leftSection={<IconFilter />} onClick={() => toggle()}>
+            Filter
+          </Button>
+        </Popover.Target>
+        <Popover.Dropdown>
+          <Stack>
+            <ContainedSelection
+              allowDeselect={false}
+              data={sortOptions}
+              defaultValue={sortOptions[0].value}
+              value={sortOption}
+              onChange={handleSortChange}
+              placeholder={translations["Select Sort Option"]}
+            />
+            <ContainedSelection
+              allowDeselect={false}
+              data={ticketTypeData}
+              defaultValue={ticketTypeData[0]}
+              value={ticketType}
+              onChange={setTicketType}
+              placeholder={"Select Ticket Type"}
+            />
+            <ContainedSelection
+              allowDeselect={false}
+              data={surveyData}
+              value={survey}
+              onChange={setSurvey}
+              placeholder={"Filter by Survey"}
+              display={
+                [TicketType.SURVEY_RESPONSE, TicketType.FLOW_RESPONSE].includes(
+                  ticketType as TicketType,
+                )
+                  ? "block"
+                  : "none"
+              }
+            />
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(teamId) => setSelectedTeamId(teamId)}
+              enableAll={true}
+            />
+          </Stack>
+        </Popover.Dropdown>
+      </Popover>
+    );
+  };
 
   return (
     <Stack>
@@ -125,7 +214,6 @@ const TicketsHome = () => {
 
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
-        openTicketModal={openTicketModal}
         closeTicketModal={closeTicketModal}
         selectedTeamId={""}
         type={TicketType.CUSTOM}
@@ -147,24 +235,9 @@ const TicketsHome = () => {
             />
           )}
         </Group>
-        <Group>
-          <ContainedSelection
-            allowDeselect={false}
-            data={sortOptions}
-            defaultValue={sortOptions[0].value}
-            value={sortOption}
-            onChange={handleSortChange}
-            placeholder={translations["Select Sort Option"]}
-          />
-          <TeamSelector
-            value={selectedTeamId}
-            onChange={(teamId) => setSelectedTeamId(teamId)}
-            enableAll={true}
-          />
-        </Group>
+        <FilterMenu />
       </Group>
-
-      <Tabs defaultValue="all" mt="sm">
+      <Tabs defaultValue="all">
         <Tabs.List>
           <Tabs.Tab value="all" onClick={() => setFilterParam("all")}>
             {translations["All"]}
@@ -179,7 +252,6 @@ const TicketsHome = () => {
             </Tabs.Tab>
           ))}
         </Tabs.List>
-
         <Tabs.Panel value="all">
           <TicketPanel
             filteredTickets={filteredTickets}
@@ -189,7 +261,7 @@ const TicketsHome = () => {
           />
         </Tabs.Panel>
         {TicketStatusValues.map((status) => (
-          <Tabs.Panel value={status}>
+          <Tabs.Panel value={status} key={status}>
             <TicketPanel
               filteredTickets={filteredTickets}
               setDeleteTicketId={setDeleteTicketId}
@@ -245,11 +317,11 @@ function TicketPanel({
   });
 
   return (
-    <Stack>
-      <Title order={3} mt="xl" ml="lg">
+    <Stack p={"md"}>
+      {/* <Title order={3} mt="xl" ml="lg">
         {" "}
         {filterParam === "all" ? "All Tickets" : `Tickets - ${filterParam}`}
-      </Title>
+      </Title> */}
       <ScrollArea className={styles["ticket-cards-scroll-area-div"]} h={"64vh"}>
         {sortedTickets?.length > 0 ? (
           <Box className="cards-grid-global-class">
