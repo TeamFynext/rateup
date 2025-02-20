@@ -2,9 +2,9 @@
   height: 100%;
   flex: 0.45;
   border-radius: var(--mantine-radius-lg);
-  padding-top: var(--mantine-spacing-xl);
+  padding-top: var(--mantine-spacing-md);
   box-shadow: var(--mantine-shadow-xl);
-  padding-bottom: var(--mantine-spacing-xs);
+  padding-bottom: var(--mantine-spacing-md);
   display: flex;
   max-width: 450px;
   background-color: light-dark(white, var(--mantine-color-dark-6));

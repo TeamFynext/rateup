@@ -48,6 +48,7 @@ import AddUnknownContactModal from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
+import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import classes from "./styles.module.css";
 import TicketSelectCard from "./ticketSelectCard";
 
@@ -92,7 +93,7 @@ const WaInboxChatSelect = () => {
     refetch: refetchFilteredContacts,
     isRefetching: isRefetchingFilteredContacts,
     hasNextPage: hasNextPageFilteredContacts,
-    isLoading: isContactsFetching,
+    isLoading: isContactLoading,
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
@@ -305,12 +306,6 @@ const WaInboxChatSelect = () => {
     [],
   );
 
-  const clearSearchTermFilter = useCallback(() => {
-    const currentFilters = { ...filter };
-    currentFilters.searchTerm = "";
-    setFilter(currentFilters);
-  }, [filter]);
-
   const openChatDisplayForContact = useCallback(
     (data: Partial<ContactsData>) => {
       router.push(`/dashboard/whatsapp/inbox?contactId=${data.id}`);
@@ -334,9 +329,9 @@ const WaInboxChatSelect = () => {
     [openChatDisplayForContact, setSelectedContact],
   );
 
-  if (isContactsFetching)
+  if (isContactLoading)
     return (
-      <WhatsAppInboxLoader isLoading={isContactsFetching || isTicketsLoading} />
+      <WhatsAppInboxLoader isLoading={isContactLoading || isTicketsLoading} />
     );
 
   return (
@@ -351,7 +346,7 @@ const WaInboxChatSelect = () => {
               <IconSquareRoundedX
                 size={18}
                 style={{ marginRight: "var(--mantine-spacing-xs)" }}
-                onClick={clearSearchTermFilter}
+                onClick={() => prepareFilters({ ...filter, searchTerm: null })}
               />
             )
           }
@@ -429,7 +424,7 @@ const WaInboxChatSelect = () => {
                 ref={parentRef}
                 className="List"
                 style={{
-                  height: `68dvh`,
+                  height: `calc(100dvh - 160px)`,
                   width: `100%`,
                   overflow: "auto",
                 }}
@@ -483,6 +478,8 @@ const WaInboxChatSelect = () => {
                           onUnknownContactAddSuccess(contact);
                         }}
                       />
+                    ) : isContactLoading || isFetching ? (
+                      <ChatSelectSkeletonCardList />
                     ) : (
                       <Card component={Group}>
                         <Text c="dimmed" size="sm" ta="center">
@@ -498,10 +495,6 @@ const WaInboxChatSelect = () => {
                 </div>
               </div>
             )}
-
-            {isFetching && !isTicketsFetchingNextPage
-              ? "Background Updating..."
-              : null}
           </div>
         </Tabs.Panel>
         <Tabs.Panel value="tickets" h="80dvh">
@@ -568,9 +561,6 @@ const WaInboxChatSelect = () => {
                 </div>
               </div>
             )}
-            {isTicketFetching && !isTicketsFetchingNextPage
-              ? "Background Updating..."
-              : null}
           </div>
         </Tabs.Panel>
       </Tabs>

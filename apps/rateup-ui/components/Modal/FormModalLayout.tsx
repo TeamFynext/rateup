@@ -57,11 +57,16 @@ export default function FormModalLayout({
       opened={opened}
       onClose={onClose}
       radius="lg"
-      bg={"red"}
       style={{ zIndex: 9999999 }}
       size={size}
       onClick={(e) => {
         e.stopPropagation();
+      }}
+      styles={{
+        title: {
+          fontSize: "1.2rem",
+          fontWeight: 500,
+        },
       }}
     >
       {!noCustomHeader && (
@@ -69,9 +74,9 @@ export default function FormModalLayout({
           {customHeader ? (
             customHeader
           ) : (
-            <Stack align={"center"}>
-              <Title size={30}>{title}</Title>
-            </Stack>
+            <Title size={30} ta={"center"} mb={"md"}>
+              {title}
+            </Title>
           )}
         </>
       )}
@@ -81,7 +86,7 @@ export default function FormModalLayout({
           e.stopPropagation();
           onSubmit();
         }}
-        style={{ padding: 20 }}
+        style={!noCustomHeader ? { padding: 20 } : {}}
         onKeyDown={getHotkeyHandler([
           [SAVE_HOTKEY, onSubmit ? onSubmit : () => {}],
         ])}

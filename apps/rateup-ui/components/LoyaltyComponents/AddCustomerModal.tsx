@@ -138,7 +138,7 @@ const AddCustomerModal = ({
     const validation = form.validate();
     if (validation.hasErrors) {
       if (validation.errors.contactType) {
-        showErrorToast(validation.errors.contactType);
+        showErrorToast(validation.errors.contactType as string);
       }
       return;
     }

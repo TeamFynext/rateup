@@ -3,16 +3,16 @@ import { useSearchParams } from "next/navigation";
 
 import { Card, Group, Stack, Text, Tooltip } from "@mantine/core";
 
+import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
-
-import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useSetIsChatDisplayOpen } from "../../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
-import { formatToRelativeTime } from "../../../../../utils/dateTime";
+import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
-} from "../../../../../utils/whatsapp/inbox";
-import WaInboxSessionBadge, { WaInboxSessionAvatar } from "./sessionBadge";
+} from "@/utils/whatsapp/inbox";
+
+import { WaInboxSessionAvatar } from "./sessionBadge";
 import classes from "./styles.module.css";
 
 interface WaInboxChatSelectCardProps {
@@ -54,9 +54,6 @@ export default function WaInboxChatSelectCard({
             >
               {contact?.name ?? contact?.phone}
             </Text>
-            <WaInboxSessionBadge
-              timeStamp={contact?.userInitiatedFinalTimeStamp}
-            />
           </Group>
           <Group justify="space-between">
             <Tooltip

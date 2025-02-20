@@ -27,6 +27,7 @@ import {
 } from "../../../../../types/global";
 import { formatDate } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
+import WhatsAppInboxLoader from "../../loader";
 import WaInboxAudio from "./components/audio/indext";
 import WaInboxDocument from "./components/document";
 import WaInboxImage from "./components/image";
@@ -48,6 +49,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
     hasNextPage, // boolean
     isError,
     isFetchingNextPage,
+    isPending,
   } = useGetMessagesByContactId(searchParams.get("contactId") as string);
 
   const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
@@ -124,10 +126,13 @@ export default function WaInboxChatDisplayBody(props: Props) {
   }, [paginateEntry]);
 
   useEffect(() => {
-    const newScrollHeight = scrollableRef.current.scrollHeight;
+    const newScrollHeight = scrollableRef.current?.scrollHeight;
+    if (!newScrollHeight) return;
     const heightDifference = newScrollHeight - currentScrollHeight;
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
   }, [props?.data]);
+
+  if (isPending) return <WhatsAppInboxLoader isLoading={isPending} />;
 
   return (
     <div className={classes.wrapper}>
