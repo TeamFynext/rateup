@@ -34,8 +34,8 @@ import {
 import {
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
-  sendTextMessageAndUpdateStats,
 } from "../loyalty/settings/settings.service";
+import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
 
 export async function createContactHandler(
   request: FastifyRequest<{ Body: ContactCore }>,
@@ -70,9 +70,11 @@ export async function createContactHandler(
             content,
             dynamicVariables,
           );
-          await sendTextMessageAndUpdateStats(
-            contact.phone,
-            orgId,
+          await sendTextMessage(
+            {
+              phone: contact.phone,
+              orgId,
+            },
             null,
             message,
           );

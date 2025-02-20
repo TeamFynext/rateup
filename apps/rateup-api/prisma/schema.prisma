@@ -970,6 +970,8 @@ model Ticket {
   surveyResponseId String?         @db.Uuid
   review           Review?         @relation(fields: [reviewId], references: [id])
   surveyResponse   SurveyResponse? @relation(fields: [surveyResponseId], references: [id])
+  waAutomatedReplyMessageId String?  @db.Uuid
+  waAutomatedReplyMessage   WaAutomatedReplyMessage? @relation(fields: [waAutomatedReplyMessageId], references: [id])
 
   @@unique([number, teamId], name: "ticket_number_team_id_unique")
 }
@@ -993,6 +995,7 @@ enum TicketType {
   SURVEY_RESPONSE
   CUSTOM
   FLOW_RESPONSE
+  AUTOMATION
 }
 
 model TicketComment {
@@ -1063,6 +1066,7 @@ model WaAutomatedReply {
   responseType             String // enums.ts: WaAutomatedReplyResponseType
   responseText             String?
   responseTemplateId       String?
+  enableTicket             Boolean   @default(false)
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
 }
 
@@ -1076,6 +1080,7 @@ model WaAutomatedReplyMessage {
   waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   orgId              String            @db.Uuid
   org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ticket             Ticket[] 
 }
 
 model ApiAccessToken {

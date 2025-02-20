@@ -3,7 +3,7 @@ import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth";
 import { CreateSurveyInput } from "./survey.schema";
 import { GetSurveyByIdParams } from "./survey.schema";
 import prisma from "../../utils/prisma";
-import { SubscriptionFeaturePathName } from "../../types/enums";
+import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert";
 import dayjs from "dayjs";
 import { sendSubscriptionExpiryAlertEmail } from "../../utils/email/payments/subscriptionExpiryAlert";
@@ -48,6 +48,7 @@ export async function verifySurveyMaxCountRestriction(
 
   const count = await prisma.survey.count({
     where: {
+      type: SurveyType.Web,
       teams: {
         some: {
           team: {

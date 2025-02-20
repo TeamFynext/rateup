@@ -7,11 +7,9 @@ import {
 
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
 import { LoyaltyWaCommand } from "@prisma/client";
-import {
-  replacedContentByDynamicVariable,
-  sendTextMessageAndUpdateStats,
-} from "../settings/settings.service";
+import { replacedContentByDynamicVariable } from "../settings/settings.service";
 import { WaAutomatedReplyResponseType } from "../../../types/enums";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 
 export enum RedeemStatus {
   PROCESSING = "PROCESSING",
@@ -142,13 +140,13 @@ export async function handleIssuedRewardsCommand(
   const customer = await getLCustomerByPhone(phone, orgId);
   if (!customer || !customer.active) {
     const message = `You are not an active member of our loyalty programme`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
   const issuedRedeems = await getAllIssuedRedeemsByCustomer(customer.id);
   if (!issuedRedeems?.length) {
     const message = `No rewards have been issued to you at this time.`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
   const redeemList = `${issuedRedeems.map((r, index) => `${index + 1}. *${r.reward.name}*\n ${r.reward.description ?? ""}\n Redeem Code: *${r.code}*`).join("\n")}`;
@@ -157,6 +155,6 @@ export async function handleIssuedRewardsCommand(
     await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
   }
 }

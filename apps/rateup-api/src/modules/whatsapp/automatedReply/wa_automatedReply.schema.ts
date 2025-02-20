@@ -21,6 +21,7 @@ const createAutomatedReplySchema = z.object({
   responseType: z.nativeEnum(WaAutomatedReplyResponseType),
   responseText: z.string().optional(),
   responseTemplateId: z.string().optional(),
+  enableTicket: z.boolean(),
 });
 
 const byWaAutomatedReplyIdParams = z.object({

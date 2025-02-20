@@ -740,11 +740,11 @@ export async function createResponse(
 
   if (shouldRaiseTicket && input?.responses?.length > 0) {
     //generate ticket
-    let generatedTicket = await autoGenerateTicket(
-      surveyResponse?.surveyTeamMap?.teamId,
-      surveyResponse.id,
-      surveyResponse.platform,
-    );
+    let generatedTicket = await autoGenerateTicket({
+      teamId: surveyResponse?.surveyTeamMap?.teamId,
+      responsePlatform: surveyResponse.platform,
+      surveyResponseId: surveyResponse.id,
+    });
   }
 
   return surveyResponse;

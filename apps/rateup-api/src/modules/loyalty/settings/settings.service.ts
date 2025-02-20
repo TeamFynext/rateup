@@ -125,14 +125,14 @@ export async function handleReferralCommand(phone, loyaltyWaCommand) {
     const customer = await getLCustomerByPhone(phone, orgId);
     if (!customer || !customer.active) {
       const message = `You are not an active member of our loyalty programme`;
-      await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+      await sendTextMessage({ phone, orgId }, null, message);
       return;
     }
     // const res = await getReferralLoyaltyAction(orgId);
     const action = await getLoyaltyActionById(actionId);
     if (!action) {
       const message = `Thank you for reaching out. Unfortunately, there is no referral program yet`;
-      await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+      await sendTextMessage({ phone, orgId }, null, message);
       return;
     }
     const { message } = action as unknown as {
@@ -154,10 +154,12 @@ export async function handleReferralCommand(phone, loyaltyWaCommand) {
       }
     }
 
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message.message);
-    await sendTextMessageAndUpdateStats(
-      phone,
-      orgId,
+    await sendTextMessage({ phone, orgId }, null, message.message);
+    await sendTextMessage(
+      {
+        phone,
+        orgId,
+      },
       null,
       message.forwardMessage,
     );
@@ -172,7 +174,7 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
   const customer = await getLCustomerByPhone(phone, orgId);
   if (!customer || !customer.active) {
     const message = `You are not an active member of our loyalty programme`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
   const dynamicVariables = [
@@ -190,7 +192,7 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
     );
   else if (responseType === WaAutomatedReplyResponseType.Text) {
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
   }
 }
 export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
@@ -206,7 +208,7 @@ export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
 
   if (!customer) {
     const message = `You are not a member of loyalty program yet`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
   if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
@@ -218,7 +220,7 @@ export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
   });
   if (existing) {
     const message = `You have already given feedback for this action`;
-    await sendTextMessageAndUpdateStats(phone, orgId, null, message);
+    await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
 
@@ -286,16 +288,6 @@ export async function getReferralCodeByActionAndCustomer(actionId, customerId) {
       allReferralCodes.map((r) => r.referralCode),
     );
   return referralByCustomerAction;
-}
-
-export async function sendTextMessageAndUpdateStats(
-  phone,
-  orgId,
-  title,
-  description,
-) {
-  await sendTextMessage({ phone, orgId }, title, description);
-  await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
 }
 
 export async function deleteLoyaltyWaCommandById(id) {

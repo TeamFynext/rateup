@@ -25,6 +25,7 @@ import { templateData } from "../messageTemplates/wa_templates.service";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { sendFlow } from "../flows/flow.service";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
+import { autoGenerateTicket } from "../../ticket/ticket.service";
 
 export function validateAutomationMatchCondition(
   automation: WaAutomatedReply,
@@ -117,8 +118,14 @@ export async function sendAutomatedReplyMessage(
   prevIntraction: prevIntractionProps,
   isAutomationValid: boolean = true, // in the case of chained automations, automation will be invalid and automation prop will contain previous automation
 ) {
-  const { responseType, responseTemplateId, teamId, name, matchData } =
-    automation;
+  const {
+    responseType,
+    responseTemplateId,
+    teamId,
+    name,
+    matchData,
+    enableTicket,
+  } = automation;
 
   let nodes = (matchData as unknown as matchDataProps)?.json?.nodes;
   if (responseType === WaAutomatedReplyResponseType.Template) {
@@ -134,15 +141,23 @@ export async function sendAutomatedReplyMessage(
     if (!nextScreenId) return false;
     const node = nodes?.find((node) => node.id === nextScreenId);
 
-    await prisma.waAutomatedReplyMessage.create({
-      data: {
-        orgId,
-        waAutomatedReplyId: automation?.id,
-        phone: from,
-        currentScreen: nextScreenId ?? "",
-        message: message ?? "",
+    const waAutomatedReplyMessage = await prisma.waAutomatedReplyMessage.create(
+      {
+        data: {
+          orgId,
+          waAutomatedReplyId: automation?.id,
+          phone: from,
+          currentScreen: nextScreenId ?? "",
+          message: message ?? "",
+        },
       },
-    });
+    );
+    if (enableTicket && validateAutomationMatchCondition(automation, message)) {
+      await autoGenerateTicket({
+        teamId,
+        waAutomatedReplyMessageId: waAutomatedReplyMessage.id,
+      });
+    }
     if (!node) return false;
 
     let components = node?.data?.components;

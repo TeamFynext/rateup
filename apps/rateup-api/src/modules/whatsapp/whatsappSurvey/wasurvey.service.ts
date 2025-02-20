@@ -572,7 +572,7 @@ async function updateCampaignStats(id: string) {
 export async function sendTextMessage(
   to: { phone: string; orgId: string },
   title: string,
-  description: string = "",
+  description: any = "",
 ) {
   const messageData = createTextMessage(to.phone, title, description);
   await sendMessage(to.orgId, messageData);

@@ -26,11 +26,11 @@ import {
 import {
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
-  sendTextMessageAndUpdateStats,
 } from "../settings/settings.service";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
 import { ContactCore, PaginationQuery } from "../../contact/contact.schema";
 import { ContactGroupType } from "@prisma/client";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,
@@ -59,7 +59,7 @@ export async function createLCustomerHandler(
           content,
           dynamicVariables,
         );
-        await sendTextMessageAndUpdateStats(res.phone, orgId, null, message);
+        await sendTextMessage({ phone: res.phone, orgId }, null, message);
       }
     }
     await handlePostRegisterAction(orgId, res.id);
