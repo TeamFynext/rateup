@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 import { Group, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -24,7 +25,6 @@ import FormModalLayout from "../Modal/FormModalLayout";
 
 interface iProps {
   createTicketOpened: boolean;
-  openTicketModal: any;
   closeTicketModal: any;
   selectedTeamId: string;
   type: string;
@@ -33,7 +33,6 @@ interface iProps {
 }
 const CreateTicketModal = ({
   createTicketOpened,
-  openTicketModal,
   closeTicketModal,
   selectedTeamId,
   type,
@@ -42,6 +41,7 @@ const CreateTicketModal = ({
 }: iProps) => {
   let isCustomTicket = type === TicketType.CUSTOM;
   const { translations } = useTranslations();
+  const router = useRouter();
   const form = useForm({
     initialValues: {
       title:
@@ -105,9 +105,6 @@ const CreateTicketModal = ({
   }, [surveyResponseId]);
 
   const createTicket = useCreateTicketMutation();
-  const [dialogOpened, { toggle: openSuccessDialog, close: closeDialog }] =
-    useDisclosure(false);
-  const [createdTicketId, setCreatedTicketId] = useState("");
 
   const onSubmit = () => {
     const validationRes = form.validate();
@@ -126,20 +123,17 @@ const CreateTicketModal = ({
 
     createTicket.mutate(form.values, {
       onSuccess: (res) => {
-        setCreatedTicketId(res.id);
+        if (res.id) {
+          closeAll();
+          router.push(`/dashboard/tickets/${res.id}`);
+        }
       },
     });
   };
 
-  useEffect(() => {
-    createdTicketId && openSuccessDialog();
-  }, [createdTicketId]);
-
   function closeAll() {
-    closeDialog();
-    closeTicketModal();
     form.reset();
-    setCreatedTicketId("");
+    closeTicketModal();
   }
 
   return (
@@ -150,23 +144,6 @@ const CreateTicketModal = ({
       centered
       size="xl"
     >
-      <ConfirmationModal
-        opened={dialogOpened}
-        onClose={() => {
-          closeAll();
-        }}
-        headerLabel={` ${translations["Successfully created ticket for the"]} ${type === TicketType.SURVEY_RESPONSE ? translations["Survey Response"] : translations["Review"]}`}
-        headerTitle={translations["Ticket Created"]}
-        confirmLabel={translations["View Ticket"]}
-        onConfirm={(e) => {
-          if (createdTicketId) {
-            let url = `/dashboard/tickets/${createdTicketId}`;
-            window.open(url, "_blank");
-          }
-          closeAll();
-        }}
-      />
-
       <Stack mt="lg">
         <Group>
           <ContainedTextField

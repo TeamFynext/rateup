@@ -466,7 +466,6 @@ const WaResponses = ({
     <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
-        openTicketModal={openTicketModal}
         closeTicketModal={closeTicketModal}
         selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}

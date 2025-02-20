@@ -54,8 +54,14 @@ export function TicketCard({
     case TicketType.CUSTOM:
       color = "green";
       break;
+    case TicketType.FLOW_RESPONSE:
+      color = "var(--wa-green)";
+      break;
+    case TicketType.AUTOMATION:
+      color = "var(--wa-blue)";
+      break;
     default:
-      color = "blue";
+      color = "var(--tertiary-color)";
       break;
   }
 
@@ -77,7 +83,6 @@ export function TicketCard({
   return (
     <PaperLayout
       hoveractive
-      mih={200}
       p="md"
       shadow="lg"
       radius="lg"
@@ -87,9 +92,9 @@ export function TicketCard({
         router.push(`${router.pathname}/${ticket?.id}`);
       }}
     >
-      <Stack justify="space-between" h={"100%"}>
+      <Stack justify="space-between" h={"100%"} gap={"xs"}>
         <Group justify={"space-between"} align={"center"}>
-          <Text style={{ maxWidth: "70%" }} truncate="end" size="xl" fw={500}>
+          <Text style={{ maxWidth: "70%" }} truncate="end" fw={500}>
             {ticket?.title}
           </Text>
           <Tooltip label={translations["Delete ticket"]}>
@@ -107,7 +112,7 @@ export function TicketCard({
           </Tooltip>
         </Group>
         <Group justify="space-between">
-          <Title order={5} c="gray.5">
+          <Title order={5} c="gray.5" size={"sm"}>
             {translations["TICKET: #"]} {ticket.number}
           </Title>
           <Badge variant="outline" color={color}>
@@ -116,7 +121,7 @@ export function TicketCard({
         </Group>
         <Group gap="xs" justify="space-between">
           <Group>
-            <Avatar radius={"xl"} />
+            <Avatar radius={"xl"} size={"sm"} />
             <Text size="sm" c="dimmed">
               {translations["Created"]} {timeSince}
             </Text>
@@ -130,7 +135,10 @@ export function TicketCard({
         </Group>
         <Group justify="space-between">
           <Group>
-            <Text c="gray.3"> {translations["Priority Level : "]}</Text>
+            <Text c="gray.3" size="sm">
+              {" "}
+              {translations["Priority Level : "]}
+            </Text>
             <PriorityBadge priority={ticket?.priority} />
           </Group>
           <Group justify={"space-between"} align={"center"}>

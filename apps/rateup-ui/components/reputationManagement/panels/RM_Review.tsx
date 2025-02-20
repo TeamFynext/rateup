@@ -178,7 +178,6 @@ const RenderReviewTable = function RenderReviewTable({
 
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
-        openTicketModal={openTicketModal}
         closeTicketModal={closeTicketModal}
         selectedTeamId={selectedTeamId}
         type={TicketType.REVIEW}

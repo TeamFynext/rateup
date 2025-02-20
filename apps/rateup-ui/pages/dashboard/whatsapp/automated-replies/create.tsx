@@ -57,6 +57,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
       json: {},
       caseSensitive: false,
     },
+    enableTicket: false,
   };
 }
 
@@ -153,6 +154,11 @@ export function AutomatedReplyForm({
         <MatchDataForm
           matchDataForm={matchDataForm}
           type={rootForm.values.matchType}
+        />
+        <Checkbox
+          label={"Create Ticket"}
+          {...rootForm.getInputProps("enableTicket")}
+          checked={rootForm.values.enableTicket}
         />
         {/* <ContainedSelection
           label="Response Type"

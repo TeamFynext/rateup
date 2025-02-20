@@ -34,6 +34,7 @@ export interface ITicket {
     name?: string;
     phone?: string;
   };
+  surveyId?: string;
 }
 
 export interface IUpdateTicketStatusRequest {
