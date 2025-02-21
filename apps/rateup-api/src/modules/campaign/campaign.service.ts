@@ -644,6 +644,13 @@ export async function getCampaginStatsById(campaignId: string) {
       countCompleted: 0,
     };
   }
+  const queueCount = await prisma.campaignMessageQueue.count({
+    where: {
+      campaignParticipant: {
+        campaignId,
+      },
+    },
+  });
 
   return {
     countRead: stats.totalRead,
@@ -652,6 +659,7 @@ export async function getCampaginStatsById(campaignId: string) {
     countDelivered: stats.totalDelivered,
     countPending: stats.campaign?._count?.campaignParticipants ?? 0,
     countCompleted: stats.totalCompleted,
+    queueCount,
   };
 }
 
@@ -711,10 +719,7 @@ export async function enqueueCampaignMessage(
     }
     if (!scheduledAt) {
       try {
-        await axios.post(
-          `${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`,
-          {},
-        );
+        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
       } catch (error) {
         console.error("Error dispatching message:", error);
       }
