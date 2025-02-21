@@ -151,8 +151,10 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       ),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignStats", campaignId],
+      });
       notifications.show({
         color: "teal",
         title:

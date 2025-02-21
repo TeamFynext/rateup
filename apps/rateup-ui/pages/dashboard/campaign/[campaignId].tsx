@@ -10,6 +10,7 @@ import {
   MantineProvider,
   Modal,
   MultiSelect,
+  Progress,
   Radio,
   SegmentedControl,
   SimpleGrid,
@@ -150,6 +151,10 @@ const CampaignById = () => {
       )?.example?.body_text?.[0],
     [campaignData?.waTemplate?.data?.components],
   );
+  const refetch = () => {
+    refetchCampaign();
+    refetchStats();
+  };
 
   if (isError || isParticipantsError || isStatsError)
     return <ErrorComponent refetch={refetchCampaign} />;
@@ -175,6 +180,8 @@ const CampaignById = () => {
             campaign={campaignData}
             participantCount={filteredParticipants?.totalCount}
             sendMutation={sendMutation}
+            queueCount={campaignStats?.queueCount}
+            totalCount={filteredParticipants?.totalCount}
           />
           {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
             <SearchInput
@@ -215,7 +222,7 @@ const CampaignById = () => {
           <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
             <StartCampaignCardRightSection
               campaign={campaignData}
-              refetchCampaign={refetchCampaign}
+              refetchCampaign={refetch}
               campaignInfo={campaignInfo}
               isPending={isPending}
               dynamicVariables={dynamicVariables}
@@ -278,6 +285,8 @@ interface StartCampaignCardProps {
   campaign: Campaign;
   participantCount: number;
   sendMutation;
+  queueCount: number;
+  totalCount: number;
 }
 enum SentCampaignEnum {
   NOW = "NOW",
@@ -287,6 +296,8 @@ const StartCampaignCard = ({
   campaign,
   participantCount,
   sendMutation,
+  queueCount = 0,
+  totalCount = 0,
 }: StartCampaignCardProps) => {
   const [errorMsg, setErrorMsg] = useState("");
   const { translations } = useTranslations();
@@ -394,8 +405,14 @@ const StartCampaignCard = ({
           </>
         )}{" "}
       </Badge>
-
-      {campaign?.status === CampaignStatus.SCHEDULED && (
+      {queueCount > 0 && (
+        <Stack gap={0} align="center">
+          <Tooltip label={queueCount + " participants in queue"}>
+            <Progress value={100 - (queueCount / totalCount) * 100} w={100} />
+          </Tooltip>
+        </Stack>
+      )}
+      {queueCount > 0 && (
         <Tooltip label={translations["cancel schedule"]}>
           <ActionIcon
             size={"sm"}
