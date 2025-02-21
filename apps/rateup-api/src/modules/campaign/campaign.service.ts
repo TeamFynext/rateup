@@ -720,6 +720,10 @@ export async function enqueueCampaignMessage(
     if (!scheduledAt) {
       try {
         axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
+        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
+        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
+        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
+        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
       } catch (error) {
         console.error("Error dispatching message:", error);
       }
