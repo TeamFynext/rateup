@@ -199,8 +199,7 @@ export async function createTicket(
             });
           }
         } else {
-          console.log("ticket created");
-          // sendTicketAssignEmail(newTicket);
+          sendTicketAssignEmail(newTicket);
         }
         return newTicket;
       }
