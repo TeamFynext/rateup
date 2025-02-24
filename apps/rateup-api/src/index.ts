@@ -39,7 +39,7 @@ export const redisConnection = new IORedis({
   host: process.env.REDISHOST,
   port: parseInt(process.env.REDISPORT),
   username: process.env.REDISUSER,
-  password: process.env.REDISPASSWORD,
+  password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
 });
 
