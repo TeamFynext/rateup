@@ -13,7 +13,6 @@ import { Queue } from "bullmq";
 import IORedis from "ioredis";
 
 const redisURL = new URL(process.env.REDIS_URL);
-log.info(`Connecting to Redis at %s`, redisURL.toString());
 const redisConnection = new IORedis({
   family: 0,
   host: redisURL.hostname,
