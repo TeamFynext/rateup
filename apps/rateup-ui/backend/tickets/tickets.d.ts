@@ -40,6 +40,7 @@ export interface ITicket {
 export interface IUpdateTicketStatusRequest {
   status: string;
   role: string;
+  id?: string;
 }
 
 export interface IUpdateTicketRequest {

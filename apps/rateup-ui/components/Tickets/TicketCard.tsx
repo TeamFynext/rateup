@@ -175,7 +175,7 @@ export function PriorityBadge({ priority }) {
   );
 }
 
-export function StatusBadge({ status }) {
+export function getTicketStatusColor(status) {
   let color;
   switch (status) {
     case TicketStatus.OPEN:
@@ -194,9 +194,12 @@ export function StatusBadge({ status }) {
       color = "black";
       break;
   }
+  return color;
+}
 
+export function StatusBadge({ status }) {
   return (
-    <Badge color={color} variant="filled">
+    <Badge color={getTicketStatusColor(status)} variant="filled">
       {status}
     </Badge>
   );
