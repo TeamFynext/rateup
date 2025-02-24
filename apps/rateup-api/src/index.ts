@@ -35,14 +35,11 @@ import {
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
 import IORedis from "ioredis";
 
-const redisURL = new URL(process.env.REDIS_URL);
-
 export const redisConnection = new IORedis({
-  family: 0,
-  host: redisURL.hostname,
-  port: parseInt(redisURL.port),
-  username: redisURL.username,
-  password: redisURL.password,
+  host: process.env.REDISHOST,
+  port: parseInt(process.env.REDISPORT),
+  username: process.env.REDISUSER,
+  password: process.env.REDISPASSWORD,
   maxRetriesPerRequest: null,
 });
 
