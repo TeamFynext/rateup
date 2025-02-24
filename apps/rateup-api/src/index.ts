@@ -42,6 +42,8 @@ export const redisConnection = new IORedis({
   password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
 });
+console.log("🚀 ~ process.env.REDISPORT:", process.env.REDISPORT);
+log.info("🚀 ~ process.env.REDISPORT: %s", process.env.REDISPORT);
 
 const server = Fastify({
   logger: logOptions,
