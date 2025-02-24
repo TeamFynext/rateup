@@ -33,17 +33,6 @@ import {
   sendWeeklyReportToEmail,
 } from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
-import IORedis from "ioredis";
-
-export const redisConnection = new IORedis({
-  host: process.env.REDISHOST,
-  port: parseInt(process.env.REDISPORT),
-  username: process.env.REDISUSER,
-  password: process.env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null,
-});
-console.log("🚀 ~ process.env.REDISPORT:", process.env.REDISPORT);
-log.info("🚀 ~ process.env.REDISPORT: %s", process.env.REDISPORT);
 
 const server = Fastify({
   logger: logOptions,

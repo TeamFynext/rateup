@@ -9,7 +9,19 @@ import xlsx from "node-xlsx";
 import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
 import { Prisma } from "@prisma/client";
 import { Queue } from "bullmq";
-import { redisConnection } from "../..";
+
+import IORedis from "ioredis";
+
+const redisURL = new URL(process.env.REDIS_URL);
+log.info(`Connecting to Redis at %s`, redisURL.toString());
+const redisConnection = new IORedis({
+  family: 0,
+  host: redisURL.hostname,
+  port: parseInt(redisURL.port),
+  username: redisURL.username,
+  password: redisURL.password,
+  maxRetriesPerRequest: null,
+});
 
 export interface WaMessageStats {
   read?: boolean;
