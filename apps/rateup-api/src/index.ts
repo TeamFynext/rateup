@@ -33,7 +33,18 @@ import {
   sendWeeklyReportToEmail,
 } from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
-import dayjs from "dayjs";
+import IORedis from "ioredis";
+
+const redisURL = new URL(process.env.REDIS_URL);
+
+export const redisConnection = new IORedis({
+  family: 0,
+  host: redisURL.hostname,
+  port: parseInt(redisURL.port),
+  username: redisURL.username,
+  password: redisURL.password,
+  maxRetriesPerRequest: null,
+});
 
 const server = Fastify({
   logger: logOptions,
