@@ -1,20 +1,15 @@
 import prisma from "../../utils/prisma";
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
-import {
-  CampaignParticipantStatus,
-  CampaignStatus,
-  SubscriptionFeaturePathName,
-} from "../../types/enums";
+import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { log } from "../../utils/logger";
 import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
-import { getSubscription, getUsageStats } from "./campaign.auth";
 import xlsx from "node-xlsx";
-import { BATCH_SIZE } from "../../utils/constants/constants";
 import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
-import axios from "axios";
 import { Prisma } from "@prisma/client";
+import { Queue } from "bullmq";
+import { redisConnection } from "../..";
 
 export interface WaMessageStats {
   read?: boolean;
@@ -644,13 +639,7 @@ export async function getCampaginStatsById(campaignId: string) {
       countCompleted: 0,
     };
   }
-  const queueCount = await prisma.campaignMessageQueue.count({
-    where: {
-      campaignParticipant: {
-        campaignId,
-      },
-    },
-  });
+  const queueCount = await queue.getJobCounts();
 
   return {
     countRead: stats.totalRead,
@@ -659,8 +648,26 @@ export async function getCampaginStatsById(campaignId: string) {
     countDelivered: stats.totalDelivered,
     countPending: stats.campaign?._count?.campaignParticipants ?? 0,
     countCompleted: stats.totalCompleted,
-    queueCount,
+    queueCount: queueCount.waiting + queueCount.delayed,
   };
+}
+
+const queue = new Queue("waMessageQueue", { connection: redisConnection });
+
+interface Campaign {
+  useUserConsent: boolean;
+}
+
+interface CampaignParticipant {
+  id: string;
+  phone: string;
+  name: string;
+  tags: string[];
+  orgId: string;
+  teamId: string;
+  dynamicTags: string[];
+  data: any;
+  defaultValues: any;
 }
 
 export async function enqueueCampaignMessage(
@@ -670,63 +677,59 @@ export async function enqueueCampaignMessage(
   scheduledAt?: Date,
 ): Promise<boolean> {
   try {
-    const campaign = await prisma.campaign.findUnique({
-      where: {
-        id: campaignId,
-      },
-      select: {
-        useUserConsent: true,
-      },
+    // Fetch campaign settings
+    const campaign: Campaign | null = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+      select: { useUserConsent: true },
     });
 
-    const contactConsentObj = campaign?.useUserConsent
-      ? { contact: { consent: true } }
-      : {};
+    // Define the contact consent condition
+    const contactConsentCondition = campaign?.useUserConsent
+      ? Prisma.sql`AND c.consent = true`
+      : Prisma.sql``;
 
     if (participantId) {
-      const campaignParticipant = await prisma.campaignParticipant.findUnique({
-        where: {
-          id: participantId,
-          ...contactConsentObj,
-        },
-        select: { id: true },
-      });
+      // Check if participant exists with consent
+      const campaignParticipant = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "CampaignParticipant"
+        WHERE id = ${participantId} ${contactConsentCondition}
+      `;
 
-      if (campaignParticipant) {
-        await prisma.campaignMessageQueue.create({
-          data: { campaignParticipantId: campaignParticipant.id },
-        });
+      if (campaignParticipant.length > 0) {
+        await prisma.$executeRaw`
+          INSERT INTO "CampaignMessageQueue" ("campaignParticipantId")
+          VALUES (${campaignParticipant[0].id})
+        `;
       }
     } else {
-      // send message to all participants
-      const campaignParticipants = await prisma.campaignParticipant.findMany({
-        where: {
-          campaignId,
-          status: { in: sendToStatuses },
-          ...contactConsentObj,
-        },
-        select: { id: true },
-      });
-      await prisma.$transaction(async (prisma) => {
-        await prisma.campaignMessageQueue.createMany({
-          skipDuplicates: true,
-          data: campaignParticipants.map((participant) => ({
-            campaignParticipantId: participant.id,
-            scheduledAt,
-          })),
-        });
-      });
-    }
-    if (!scheduledAt) {
-      try {
-        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
-        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
-        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
-        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
-        axios.post(`${process.env.MESSAGE_DISPATCHER_URL}/api/dispatch`, {});
-      } catch (error) {
-        console.error("Error dispatching message:", error);
-      }
+      // Fetch all participants for the campaign
+      const campaignParticipants = await prisma.$queryRaw<
+        CampaignParticipant[]
+      >`
+        SELECT cp.id, c.phone, c.name, c.tags, c."orgId", 
+               camp."dynamicTags", camp."teamId", wt.data, wt."defaultValues"
+        FROM "CampaignParticipant" cp
+        JOIN "Contact" c ON cp."contactId" = c.id
+        JOIN "Campaign" camp ON cp."campaignId" = camp.id
+        JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
+        WHERE cp."campaignId" = ${campaignId} :: uuid
+          AND cp.status IN (${Prisma.join(sendToStatuses)}) 
+          ${contactConsentCondition}
+      `;
+
+      // Enqueue messages
+      await queue.addBulk(
+        campaignParticipants.map((participant) => {
+          const delayOptions = scheduledAt
+            ? { delay: dayjs(scheduledAt).diff(dayjs(), "second") * 1000 }
+            : {};
+          return {
+            name: campaignId,
+            data: { ...participant, scheduledAt, campaignId },
+            opts: { ...delayOptions, removeOnComplete: true },
+          };
+        }),
+      );
     }
     return true;
   } catch (error) {
@@ -738,13 +741,8 @@ export async function enqueueCampaignMessage(
 export const deleteCampaignParticipantsByCampaignId = async (
   campaignId: string,
 ) => {
-  await prisma.campaignMessageQueue.deleteMany({
-    where: {
-      campaignParticipant: {
-        campaignId,
-      },
-    },
-  });
+  const d = await queue.getJobs("delayed");
+  d.filter((job) => job.name === campaignId).forEach((job) => job.remove());
 };
 
 export async function doesCampaignIdExistInMessageQueue(campaignId: string) {
