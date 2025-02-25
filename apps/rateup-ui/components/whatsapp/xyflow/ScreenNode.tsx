@@ -14,10 +14,13 @@ import { IconDeviceLaptop, IconPlus, IconTrash } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Handle, NodeToolbar, Position } from "@xyflow/react";
 
+import { SubscriptionFeaturePathName } from "@/types/enums";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import DraggableComponent from "./DraggableComponent";
 import styles from "./ScreenNode.module.css";
@@ -28,6 +31,7 @@ export enum ComponentType {
   Flow = "Flow",
   Template = "Template",
   List = "List",
+  Ticket = "Ticket",
 }
 
 const getItemStyle = (isDragging, draggableStyle) => ({
@@ -45,6 +49,7 @@ const ScreenNode = ({ id, data, setNodes }) => {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
   const { translations } = useTranslations();
+  const { data: subscription } = useSubscription();
 
   const addComponentNode = (type: ComponentType, index?: number) => {
     const newComponent = {
@@ -166,6 +171,10 @@ const ScreenNode = ({ id, data, setNodes }) => {
                                 }))
                               : []
                         }
+                        isTicketFeatureActive={hasFeature(
+                          subscription,
+                          SubscriptionFeaturePathName.Ticket,
+                        )}
                       />
                     </div>
                   )}
@@ -190,6 +199,10 @@ const ScreenNode = ({ id, data, setNodes }) => {
             {translations["Add Content"]}
           </Button>
         }
+        isTicketFeatureActive={hasFeature(
+          subscription,
+          SubscriptionFeaturePathName.Ticket,
+        )}
       />
     </Box>
   );
@@ -198,10 +211,12 @@ export function RenderMenuDropdown({
   addComponentNode,
   button,
   index,
+  isTicketFeatureActive,
 }: {
   addComponentNode: any;
   button?: any;
   index?: number;
+  isTicketFeatureActive: boolean;
 }) {
   const [opened, setOpened] = useState(false);
   return (
@@ -257,6 +272,13 @@ export function RenderMenuDropdown({
           >
             List
           </Menu.Item>
+          {isTicketFeatureActive && (
+            <Menu.Item
+              onClick={() => addComponentNode(ComponentType.Ticket, index)}
+            >
+              Ticket
+            </Menu.Item>
+          )}
         </ScrollAreaAutosize>
       </Menu.Dropdown>
     </Menu>

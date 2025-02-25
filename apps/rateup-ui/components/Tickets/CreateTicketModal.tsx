@@ -125,7 +125,6 @@ const CreateTicketModal = ({
       onSuccess: (res) => {
         if (res.id) {
           closeAll();
-          router.push(`/dashboard/tickets/${res.id}`);
         }
       },
     });

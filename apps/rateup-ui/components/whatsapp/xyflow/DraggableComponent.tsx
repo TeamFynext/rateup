@@ -45,6 +45,7 @@ const DraggableComponent = ({
   addComponentNode,
   index,
   options,
+  isTicketFeatureActive,
 }) => {
   const { setId, close, setType, open } = useReplyStore();
   const { translations } = useTranslations();
@@ -354,6 +355,8 @@ const DraggableComponent = ({
             </ActionIcon>
           </Group>
         );
+      case ComponentType.Ticket:
+        return <TextInput disabled value="Ticket Auto-generation" />;
       default:
         return null;
     }
@@ -407,6 +410,7 @@ const DraggableComponent = ({
             <RenderMenuDropdown
               addComponentNode={addComponentNode}
               index={index}
+              isTicketFeatureActive={isTicketFeatureActive}
             />
           </Stack>
         </HoverCard.Dropdown>

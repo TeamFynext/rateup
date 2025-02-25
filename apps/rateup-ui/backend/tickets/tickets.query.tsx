@@ -64,11 +64,13 @@ export const useTicket = (id: string) =>
   });
 
 //update ticket status
-export const useUpdateTicketStatusMutation = (id) => {
+export const useUpdateTicketStatusMutation = (ticketId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketStatusRequest) => {
-      return updateTicketStatus(id, data);
+      const { id, ...rest } = data;
+      const selectedTicketId = ticketId ?? id;
+      return updateTicketStatus(selectedTicketId, rest);
     },
     onSuccess: () => {
       notifications.update({
@@ -81,7 +83,7 @@ export const useUpdateTicketStatusMutation = (id) => {
         autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["ticket", id] });
+      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
     },
     onError: (error: any) => {
       notifications.update({

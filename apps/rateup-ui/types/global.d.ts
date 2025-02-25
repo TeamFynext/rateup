@@ -1086,7 +1086,6 @@ export type WaAutomatedReply = {
   responseType: WaAutomatedReplyResponseType;
   responseText: string | null;
   responseTemplateId: string | null;
-  enableTicket: boolean;
 };
 
 //types related to wa inbox
