@@ -1,5 +1,6 @@
 import { useSearchParams } from "next/navigation";
 
+import { Flex, Stack } from "@mantine/core";
 import { motion } from "motion/react";
 
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -15,6 +16,7 @@ import NothingFound from "../../../NothingFound/NothingFound";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
 import WaInboxChatDisplayFooter from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
+import WaInboxChatDisplayPopoverMsg from "./chatdisplayPoveroverMsg/page";
 import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplay() {
@@ -22,7 +24,11 @@ export default function WaInboxChatDisplay() {
   const { data, error } = useGetMessagesByContactId(
     searchParams.get("contactId") as string,
   );
-  const { selectedContact: contact } = useContactStore();
+  const {
+    selectedContact: contact,
+    opened,
+    selectedTicket,
+  } = useContactStore();
   const messages =
     data?.pages
       .map((page) =>
@@ -65,8 +71,41 @@ export default function WaInboxChatDisplay() {
           layout
         >
           <WaInboxChatDisplayHeader contact={contact} />
-          <WaInboxChatDisplayBody data={messages} />
-          <WaInboxChatDisplayFooter contact={contact} />
+          <Flex gap={opened && "xs"} p={0}>
+            <motion.div
+              key={contact?.phone}
+              initial={{ flex: 1, opacity: 1 }}
+              animate={
+                opened ? { flex: 0.5, opacity: 1 } : { flex: 1, opacity: 1 }
+              }
+              transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              style={{
+                overflow: "hidden",
+              }}
+            >
+              <Stack h="78vh" gap={0} p={0}>
+                <WaInboxChatDisplayBody data={messages} />
+                <WaInboxChatDisplayFooter contact={contact} />
+              </Stack>
+            </motion.div>
+
+            <motion.div
+              key={selectedTicket}
+              initial={{ flex: 0, x: 300, opacity: 0 }}
+              animate={
+                opened
+                  ? { flex: 0.5, x: 0, opacity: 1 }
+                  : { flex: 0, x: 300, opacity: 0 }
+              }
+              transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              style={{
+                overflow: "hidden",
+                pointerEvents: opened ? "auto" : "none",
+              }}
+            >
+              <WaInboxChatDisplayPopoverMsg />
+            </motion.div>
+          </Flex>
         </motion.div>
       ) : (
         <NothingFound text={translations["Select a chat to see messages"]} />

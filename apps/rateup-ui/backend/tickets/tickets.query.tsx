@@ -83,6 +83,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
         autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
     },
     onError: (error: any) => {
@@ -117,6 +118,7 @@ export const useUpdateTicketMutation = (id) => {
         autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket", id] });
     },
     onError: (error: any) => {
@@ -141,6 +143,7 @@ export function useDeleteTicket() {
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["allresponses"] });
+      queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       notifications.update({
@@ -179,7 +182,7 @@ export const useCreateCommentMutation = (id) => {
         color: "teal",
         loading: false,
         title: "Success",
-        message: "Ticket Created...!",
+        message: "Message Sent...!",
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });

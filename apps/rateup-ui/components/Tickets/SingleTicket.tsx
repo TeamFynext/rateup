@@ -39,6 +39,7 @@ import { formatIsoDateString } from "../../utils/dateTime";
 import { UserRole } from "../../utils/enums";
 import { TicketType } from "../../utils/enums/ticket";
 import { showLoadingToast } from "../../utils/notifications";
+import { RateupButtonPrimary } from "../Button/RateupButtons";
 import {
   ContainedDateInput,
   ContainedSelection,
@@ -332,7 +333,7 @@ const SingleTicket = ({ id }: { id: string }) => {
       <Group w={"100%"}>
         <PaperLayout
           hoveractive
-          h={460}
+          h={480}
           p="md"
           shadow="lg"
           radius="lg"
@@ -449,7 +450,7 @@ const SingleTicket = ({ id }: { id: string }) => {
           user={user}
           form={form}
           onSubmit={onSubmit}
-          height={460}
+          height={480}
         />
       </Group>
     </Stack>
@@ -481,11 +482,7 @@ export function TicketInternalChat({
   close,
 }: ticketInternalChatProps) {
   const translations = useTranslations();
-  function handleKeyPress(event) {
-    if (event.key === "Enter") {
-      onSubmit();
-    }
-  }
+
   return (
     <PaperLayout
       hoveractive
@@ -524,52 +521,77 @@ export function TicketInternalChat({
           {ticketLoading ? (
             <RateupLoader />
           ) : (
-            <>
-              <ScrollArea
-                h={waInboxFlag ? "66dvh" : 335}
-                viewportRef={viewport}
-                pr={"xs"}
-              >
-                {ticket?.comments?.map((comment: any) => {
-                  return (
-                    <Group
-                      justify={
-                        comment.createdById === user.userId
-                          ? "flex-end"
-                          : "flex-start"
-                      }
-                      mb="xs"
-                    >
-                      <CommentCard
-                        comment={comment}
-                        isSender={comment.createdById === user.userId}
-                      />
-                    </Group>
-                  );
-                })}
-              </ScrollArea>
-            </>
+            <TicketInternalChatBody
+              waInboxFlag={waInboxFlag}
+              ticket={ticket}
+              user={user}
+              viewport={viewport}
+            />
           )}
         </Box>
-        <Group mt="md" align="flex-start">
-          <ContainedTextField
-            placeholder={translations["Enter message here..."]}
-            withAsterisk
-            style={{ width: "83%" }}
-            {...form.getInputProps("msg")}
-            onKeyDown={handleKeyPress}
-          />
-          <ActionIcon
-            onClick={onSubmit}
-            title={translations["Send message"]}
-            size={"lg"}
-            variant="default"
-            aria-label={translations["ActionIcon with size as a number"]}
-          >
-            <IconSend style={{ width: rem(25), height: rem(25) }} />
-          </ActionIcon>
-        </Group>
+        <TicketInternalChatFooter form={form} onSubmit={onSubmit} />
       </Stack>
     </PaperLayout>
   );
 }
+
+export const TicketInternalChatBody = ({
+  waInboxFlag,
+  viewport,
+  ticket,
+  user,
+}) => {
+  return (
+    <ScrollArea
+      h={waInboxFlag ? "59dvh" : 335}
+      viewportRef={viewport}
+      p={"xs"}
+      bg={"var(--light-blue-5)"}
+    >
+      {ticket?.comments?.map((comment: any) => {
+        return (
+          <Group
+            justify={
+              comment.createdById === user.userId ? "flex-end" : "flex-start"
+            }
+            mb="xs"
+          >
+            <CommentCard
+              comment={comment}
+              isSender={comment.createdById === user.userId}
+            />
+          </Group>
+        );
+      })}
+    </ScrollArea>
+  );
+};
+
+export const TicketInternalChatFooter = ({ form, onSubmit }) => {
+  const { translations } = useTranslations();
+  function handleKeyPress(event) {
+    if (event.key === "Enter") {
+      onSubmit();
+    }
+  }
+  return (
+    <Group
+      align="flex-start"
+      style={{ borderLeft: "1px solid var(--gift-grey-2)" }}
+      p={"sm"}
+    >
+      <ContainedTextField
+        placeholder={translations["Enter message here..."]}
+        withAsterisk
+        flex={1}
+        {...form.getInputProps("msg")}
+        onKeyDown={handleKeyPress}
+      />
+      <RateupButtonPrimary
+        title={translations["Send"]}
+        onClick={onSubmit}
+        rightIcon={<IconSend />}
+      />
+    </Group>
+  );
+};

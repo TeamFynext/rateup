@@ -83,7 +83,7 @@ export function TicketCard({
   return (
     <PaperLayout
       hoveractive
-      p="md"
+      p={"xs"}
       shadow="lg"
       radius="lg"
       style={{ cursor: "pointer" }}
@@ -119,8 +119,8 @@ export function TicketCard({
             {ticket?.type}
           </Badge>
         </Group>
-        <Group gap="xs" justify="space-between">
-          <Group>
+        <Group justify="space-between">
+          <Group gap={1}>
             <Avatar radius={"xl"} size={"sm"} />
             <Text size="sm" c="dimmed">
               {translations["Created"]} {timeSince}
@@ -135,10 +135,6 @@ export function TicketCard({
         </Group>
         <Group justify="space-between">
           <Group>
-            <Text c="gray.3" size="sm">
-              {" "}
-              {translations["Priority Level : "]}
-            </Text>
             <PriorityBadge priority={ticket?.priority} />
           </Group>
           <Group justify={"space-between"} align={"center"}>

@@ -1,12 +1,19 @@
+import { useMemo } from "react";
+
 import { ActionIcon, Avatar, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { IconArrowLeft, IconEdit } from "@tabler/icons-react";
+import { IconArrowLeft, IconEdit, IconPlus } from "@tabler/icons-react";
 
+import { useTickets } from "@/backend/tickets/tickets.query";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import EditContactModal from "@/components/Contacts/EditContactModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import CreateTicketModal from "@/components/Tickets/CreateTicketModal";
 import useTranslations from "@/dictionaries/useTranslation";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { TicketType } from "@/utils/enums/ticket";
 
 import WaInboxCountdownTimer from "./countDown";
 import classes from "./styles.module.css";
@@ -18,7 +25,22 @@ export default function WaInboxChatDisplayHeader({
   contact,
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
+  const [
+    openedCreateTicket,
+    { open: openCreateTicket, close: closeCreateTicket },
+  ] = useDisclosure(false);
   const isMobile = useMediaQuery("(max-width: 1200px)");
+
+  const { data: tickets } = useTickets();
+  const { selectedTicket } = useContactStore();
+
+  const ticketCount = useMemo(() => {
+    return tickets?.reduce((count, ticket) => {
+      if (ticket.assignedToId === selectedTicket?.assignedToId) count += 1;
+      return count;
+    }, 0);
+  }, [tickets, selectedTicket]);
+
   if (!contact) return null;
 
   return (
@@ -49,6 +71,29 @@ export default function WaInboxChatDisplayHeader({
         <ContactEdit isMobile={isMobile} contact={contact} />
       </Group>
       <WaInboxCountdownTimer timeStamp={contact?.userInitiatedFinalTimeStamp} />
+      <Stack gap={1}>
+        <RateupButtonPrimary
+          title="create ticket"
+          rightIcon={<IconPlus />}
+          onClick={openCreateTicket}
+          size="xs"
+          radius={"md"}
+        />
+        <Text
+          size="xs"
+          display={selectedTicket ? "block" : "none"}
+          ta={"center"}
+          c={"red"}
+        >
+          {ticketCount} ticket created
+        </Text>
+      </Stack>
+      <CreateTicketModal
+        closeTicketModal={closeCreateTicket}
+        createTicketOpened={openedCreateTicket}
+        type={TicketType.CUSTOM}
+        selectedTeamId=""
+      />
     </div>
   );
 }

@@ -58,6 +58,9 @@ const TicketIssueEditor = ({
   const [enableTicketIssue, setEnableTicketIssue] = useState(
     !!selectedQ?.ticketIssue,
   );
+  const [submissionTicket, setSubmissionTicket] = useState(
+    !!selectedQ?.ticketIssue?.submissionTicket,
+  );
   const { translations } = useTranslations();
   const [minRating, setMinRating] = useState(
     selectedQ?.ticketIssue?.minRating || 3,
@@ -93,6 +96,8 @@ const TicketIssueEditor = ({
             setSelectedOptions(selectedQ["ticketIssue"]["reqOptions"]);
           break;
       }
+      if (selectedQ["ticketIssue"]["submissionTicket"])
+        setSubmissionTicket(selectedQ["ticketIssue"]["submissionTicket"]);
     } else {
       setEnableTicketIssue(false);
     }
@@ -103,10 +108,10 @@ const TicketIssueEditor = ({
     if (enableTicketIssue) {
       switch (selectedQ?.type) {
         case Q.Rating:
-          ticketIssue = { minRating: minRating };
+          ticketIssue = { minRating: minRating, submissionTicket };
           break;
         case Q.Opinion:
-          ticketIssue = { minOpinion: minOpinion };
+          ticketIssue = { minOpinion: minOpinion, submissionTicket };
           break;
         case Q.Smiley:
         case Q.CustomNPS:
@@ -114,12 +119,21 @@ const TicketIssueEditor = ({
         case Q.MCQ:
         case Q.MSQ:
         case Q.DDSS:
-          ticketIssue = { reqOptions: selectedOptions };
+          ticketIssue = { reqOptions: selectedOptions, submissionTicket };
+          break;
+        default:
+          ticketIssue = { submissionTicket };
           break;
       }
     }
     updateTicketIssue(ticketIssue);
-  }, [enableTicketIssue, minRating, minOpinion, selectedOptions]);
+  }, [
+    enableTicketIssue,
+    minRating,
+    minOpinion,
+    selectedOptions,
+    submissionTicket,
+  ]);
 
   const handleSwitch = (event: any) => {
     const isChecked = event.currentTarget.checked;
@@ -235,20 +249,40 @@ const TicketIssueEditor = ({
           {enableTicketIssue && (
             <>
               <Stack>
+                <Switch
+                  label={translations["Raise Ticket if Response submitted"]}
+                  checked={submissionTicket}
+                  onChange={(e) => setSubmissionTicket(e.currentTarget.checked)}
+                  styles={{
+                    label: {
+                      fontWeight: 500,
+                      fontSize: 16,
+                    },
+                  }}
+                />
                 <Group>
                   {(() => {
                     switch (selectedQ?.type) {
                       case Q.Smiley:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
                               {
                                 translations[
                                   "Select the emojis for which Ticket creation to be enabled:"
                                 ]
                               }
                             </Text>
-                            <Text fw={500}> : </Text>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
+                              {" "}
+                              :{" "}
+                            </Text>
                             <Group style={{ minWidth: "300px" }}>
                               {Object.values(SmileyResponse).map((value) => (
                                 <Button
@@ -265,8 +299,14 @@ const TicketIssueEditor = ({
                                     minHeight: "20px",
                                     maxWidth: "70px",
                                   }}
+                                  disabled={submissionTicket}
                                 >
-                                  {mapSmileyIcon(value, primaryColor)}
+                                  {mapSmileyIcon(
+                                    value,
+                                    submissionTicket
+                                      ? "var(--gift-grey-2)"
+                                      : primaryColor,
+                                  )}
                                 </Button>
                               ))}
                             </Group>
@@ -275,28 +315,49 @@ const TicketIssueEditor = ({
                       case Q.Rating:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
                               {
                                 translations[
                                   "Select rating until which Ticket should be created:"
                                 ]
                               }
                             </Text>
-                            <Text fw={500}> : </Text>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
+                              {" "}
+                              :{" "}
+                            </Text>
                             <Stack align="center">
                               <Rating
                                 value={minRating}
                                 onChange={setMinRating}
                                 size="xl"
+                                color={
+                                  submissionTicket
+                                    ? "var(--gift-grey-2)"
+                                    : "yellow"
+                                }
+                                readOnly={submissionTicket}
                               />
-                              <Text> {minRating} star and below.</Text>
+                              <Text c={submissionTicket ? "dimmed" : "black"}>
+                                {" "}
+                                {minRating} star and below.
+                              </Text>
                             </Stack>
                           </SimpleGrid>
                         );
                       case Q.Opinion:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
                               {" "}
                               {
                                 translations[
@@ -304,7 +365,13 @@ const TicketIssueEditor = ({
                                 ]
                               }{" "}
                             </Text>
-                            <Text fw={500}> : </Text>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
+                              {" "}
+                              :{" "}
+                            </Text>
                             <Stack>
                               <Group style={{ minWidth: "300px" }}>
                                 {(() => {
@@ -328,6 +395,7 @@ const TicketIssueEditor = ({
                                           from: "#62CBE6",
                                           to: "#3F5BA9",
                                         }}
+                                        disabled={submissionTicket}
                                       >
                                         {i}
                                       </Button>,
@@ -351,7 +419,10 @@ const TicketIssueEditor = ({
                       case QuestionType.MSQ:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text fw={500}>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
                               {
                                 translations[
                                   "Select choices for which Ticket should be created"
@@ -359,7 +430,13 @@ const TicketIssueEditor = ({
                               }
                               :
                             </Text>
-                            <Text fw={500}> : </Text>
+                            <Text
+                              fw={500}
+                              c={submissionTicket ? "dimmed" : "black"}
+                            >
+                              {" "}
+                              :{" "}
+                            </Text>
                             <Stack>
                               <ContainedMultiSelect
                                 data={selectedQ.choices?.[selectedLanguage].map(
@@ -371,6 +448,7 @@ const TicketIssueEditor = ({
                                 value={selectedOptions}
                                 onChange={setSelectedOptions}
                                 placeholder="select"
+                                disabled={submissionTicket}
                               />
                             </Stack>
                           </SimpleGrid>

@@ -9,7 +9,7 @@ import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import styles from "./styles.module.css";
 
 const MessageList = ({ ticket }: { ticket: ITicket }) => {
-  const { setTicketAndOpen } = useContactStore();
+  const { setTicketAndOpen, selectedTicket } = useContactStore();
 
   return (
     <Card
@@ -20,6 +20,11 @@ const MessageList = ({ ticket }: { ticket: ITicket }) => {
         setTicketAndOpen(ticket);
       }}
       className={styles["hovered-and-hover-active"]}
+      bg={
+        ticket?.id === selectedTicket?.id
+          ? "var(--mantine-color-gray-1)"
+          : undefined
+      }
     >
       <Group justify="space-between">
         <Text size="sm" fw={500}>
