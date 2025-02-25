@@ -33,7 +33,6 @@ import {
   sendWeeklyReportToEmail,
 } from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
-import dayjs from "dayjs";
 
 const server = Fastify({
   logger: logOptions,

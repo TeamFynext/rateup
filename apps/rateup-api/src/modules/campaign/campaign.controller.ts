@@ -34,7 +34,6 @@ import {
   SentCampaignEnum,
 } from "../../types/enums";
 import { log } from "../../utils/logger";
-import prisma from "../../utils/prisma";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -124,22 +123,6 @@ export async function sendCampaignHandler(
       });
     }
 
-    if (await doesCampaignIdExistInMessageQueue(campaignId)) {
-      const updated = await updateCampaignMessageQueueRetryCount(campaignId);
-      if (updated?.count > 0) {
-        return reply.status(200).send({
-          message:
-            "Retry count has been reset and the campaign is now scheduled",
-          code: "MSG_SCHEDULED",
-        });
-      }
-      return reply.status(400).send({
-        message:
-          "The campaign participants already exist in the queue. Add participants after it is sent.",
-        code: "MSG_ALREADY_IN_QUEUE",
-      });
-    }
-
     if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
       await updateCampaign(campaignId, {
         status: CampaignStatus.SCHEDULED,
@@ -152,9 +135,9 @@ export async function sendCampaignHandler(
         undefined,
         campaignSentAt,
       );
-      if (!isScheduled) {
+      if (!isScheduled.status) {
         return reply.status(400).send({
-          message: "Campaign not scheduled, please try again",
+          message: isScheduled.message,
           code: "MSG_NOT_SCHEDULED",
         });
       }
@@ -174,9 +157,9 @@ export async function sendCampaignHandler(
       sendToStatuses,
       participantId,
     );
-    if (!isScheduled) {
+    if (!isScheduled.status) {
       return reply.status(400).send({
-        message: "Campaign not scheduled, please try again",
+        message: isScheduled.message,
         code: "MSG_NOT_SCHEDULED",
       });
     }

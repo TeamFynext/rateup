@@ -118,14 +118,8 @@ export async function sendAutomatedReplyMessage(
   prevIntraction: prevIntractionProps,
   isAutomationValid: boolean = true, // in the case of chained automations, automation will be invalid and automation prop will contain previous automation
 ) {
-  const {
-    responseType,
-    responseTemplateId,
-    teamId,
-    name,
-    matchData,
-    enableTicket,
-  } = automation;
+  const { responseType, responseTemplateId, teamId, name, matchData } =
+    automation;
 
   let nodes = (matchData as unknown as matchDataProps)?.json?.nodes;
   if (responseType === WaAutomatedReplyResponseType.Template) {
@@ -152,12 +146,6 @@ export async function sendAutomatedReplyMessage(
         },
       },
     );
-    if (enableTicket && validateAutomationMatchCondition(automation, message)) {
-      await autoGenerateTicket({
-        teamId,
-        waAutomatedReplyMessageId: waAutomatedReplyMessage.id,
-      });
-    }
     if (!node) return false;
 
     let components = node?.data?.components;
@@ -246,6 +234,11 @@ export async function sendAutomatedReplyMessage(
             teamId,
           );
         }
+      } else if (component?.type === ReplyComponentType.Ticket) {
+        await autoGenerateTicket({
+          teamId,
+          waAutomatedReplyMessageId: waAutomatedReplyMessage.id,
+        });
       }
     }
     return true;
@@ -409,4 +402,5 @@ export enum ReplyComponentType {
   Template = "Template",
   Image = "Image",
   List = "List",
+  Ticket = "Ticket",
 }

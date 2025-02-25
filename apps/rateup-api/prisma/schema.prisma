@@ -1066,7 +1066,6 @@ model WaAutomatedReply {
   responseType             String // enums.ts: WaAutomatedReplyResponseType
   responseText             String?
   responseTemplateId       String?
-  enableTicket             Boolean   @default(false)
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
 }
 
