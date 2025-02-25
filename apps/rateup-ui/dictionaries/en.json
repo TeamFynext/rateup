@@ -2077,5 +2077,6 @@
   "Aut-Generate Ticket is enabled on this flow": "Aut-Generate Ticket is enabled on this flow",
   "Auto-Generate Ticket is enabled on this survey": "Auto-Generate Ticket is enabled on this survey",
   "Click here to disable auto-generate Tickets on response": "Click here to disable auto-generate Tickets on response",
-  "Click here to enable Ticket WhatsApp Message Alerts": "Click here to enable Ticket WhatsApp Message Alerts"
+  "Click here to enable Ticket WhatsApp Message Alerts": "Click here to enable Ticket WhatsApp Message Alerts",
+  "Raise Ticket if Response submitted": "Raise Ticket if Response submitted"
 }

@@ -15,12 +15,7 @@ export default function WhatsAppInbox() {
         <Stack className={styles["whatsapp-inbox-root-div"]}>
           <Group className={styles["chat-selector-and-chat-container"]}>
             <WaInboxChatSelect />
-            <Flex flex={1} pos={"relative"} h={"100%"}>
-              <WaInboxChatDisplayPopoverMsg />
-              <Flex flex={3} style={{ overflow: "hidden" }}>
-                <WaInboxChatDisplay />
-              </Flex>
-            </Flex>
+            <WaInboxChatDisplay />
           </Group>
         </Stack>
       </ChatDisplayContext>

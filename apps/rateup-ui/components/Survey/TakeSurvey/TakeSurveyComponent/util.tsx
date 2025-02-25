@@ -73,6 +73,7 @@ export const checkGoogleReviewForQuestion = (questions, responses) => {
 };
 
 const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
+  if (question.ticketIssue.submissionTicket) return true;
   switch (question.type) {
     case QuestionType.Rating:
       return userResponse.response.Rating <= question.ticketIssue.minRating;

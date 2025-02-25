@@ -38,6 +38,7 @@ type IssueTicket = {
   minRating?: number;
   minOpinion?: number;
   reqOptions?: Array<string>;
+  submissionTicket?: boolean;
 } | null;
 
 type TNC = {
@@ -768,6 +769,7 @@ declare global {
       minRating?: number;
       minOpinion?: number;
       reqOptions?: string[];
+      submissionTicket?: boolean;
     };
   };
 

@@ -408,7 +408,7 @@ const TicketPanel = ({
   }, [tickets, selectedTeamId, ticketType, survey, sortOption]);
 
   return (
-    <PaperLayout bg={"var(--shade-of-blue-1)"} h="100%" p={0} w={370}>
+    <PaperLayout bg={"var(--shade-of-blue-1)"} h="100%" p={0} w={330}>
       <Stack bg={"var(--shade-of-blue-10)"} p="xs" mb={"xs"}>
         <Group justify="space-between">
           <Text fw={500} c="var(--shade-of-blue)">

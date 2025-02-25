@@ -48,6 +48,7 @@ export function WaInboxSessionAvatar({
           ? translations["Session Inactive"]
           : translations["Session Active"]
       }
+      color={sessionExiped ? "#CC292C33" : "var(--wa-green)"}
     >
       <Indicator
         color={sessionExiped ? "#CC292C33" : "#69F0AE"}

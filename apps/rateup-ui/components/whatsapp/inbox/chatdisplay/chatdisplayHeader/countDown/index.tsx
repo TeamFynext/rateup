@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
+import {
+  Badge,
+  Loader,
+  Progress,
+  RingProgress,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { IconPointFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Badge, Loader, RingProgress, Text } from "@mantine/core";
-import classes from "./styles.module.css";
+
 import { isInboxSessionExpired } from "../../../../../../utils/whatsapp/inbox";
+import classes from "./styles.module.css";
+
 dayjs.extend(utc);
 
 export default function WaInboxCountdownTimer({
@@ -39,21 +50,31 @@ export default function WaInboxCountdownTimer({
     return <Loader size={"xs"} />;
   }
   return (
-    <RingProgress
-      sections={[
-        {
-          color: "var(--mantine-primary-color-5)",
-          value: percentageDifference,
-        },
-      ]}
-      size={65}
-      thickness={5}
-      roundCaps
-      label={
-        <Text
-          className={classes.timer_text}
-        >{`${hours ?? 0} : ${minutes ?? 0}`}</Text>
-      }
-    />
+    <Stack gap={2}>
+      <Text
+        className={classes.timer_text}
+        fw={500}
+      >{`${hours ?? 0} : ${minutes ?? 0}`}</Text>
+      <Progress size={"md"} value={Math.floor((hours * 100) / 24)} w={120} />
+      <Badge
+        variant="outline"
+        styles={{
+          root: {
+            borderColor: "var(--active-green-2)",
+          },
+          label: {
+            fontWeight: 400,
+          },
+        }}
+        leftSection={
+          <IconPointFilled color="var(--active-green-2)" size={"1rem"} />
+        }
+        tt={"capitalize"}
+        w={120}
+        mt={4}
+      >
+        Session Active
+      </Badge>
+    </Stack>
   );
 }

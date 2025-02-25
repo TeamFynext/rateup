@@ -1,19 +1,40 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   ActionIcon,
+  Avatar,
+  Box,
   CloseIcon,
+  Collapse,
   Group,
+  Popover,
+  Radio,
   Stack,
   Text,
+  TextInput,
   Transition,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconCircleXFilled,
+  IconTicket,
+} from "@tabler/icons-react";
 
-import { useCreateCommentMutation } from "@/backend/tickets/tickets.query";
-import { TicketInternalChat } from "@/components/Tickets/SingleTicket";
+import {
+  useCreateCommentMutation,
+  useUpdateTicketMutation,
+  useUpdateTicketStatusMutation,
+} from "@/backend/tickets/tickets.query";
+import {
+  TicketInternalChatBody,
+  TicketInternalChatFooter,
+} from "@/components/Tickets/SingleTicket";
 import { useUser } from "@/context/UserContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { TicketPriority, TicketStatus } from "@/utils/enums/ticket";
 import { showErrorToast } from "@/utils/notifications";
 
 const WaInboxChatDisplayPopoverMsg = () => {
@@ -77,29 +98,16 @@ const WaInboxChatDisplayPopoverMsg = () => {
       timingFunction="ease"
     >
       {(styles) => (
-        <div style={{ flex: 1, ...styles }}>
+        <div style={{ ...styles }}>
           <Stack justify="space-between" h={"100%"} gap={0}>
-            {selectedTicket ? (
-              <TicketInternalChat
-                user={user}
-                form={form}
-                waInboxFlag
-                close={close}
-                ticket={selectedTicket}
-                ticketLoading={false}
-                onSubmit={onSubmit}
-                viewport={viewport}
-              />
-            ) : (
-              <Stack p={"md"}>
-                <Group justify="space-between">
-                  <Text>No data</Text>
-                  <ActionIcon mt={-10} variant="light">
-                    <CloseIcon onClick={close} />
-                  </ActionIcon>
-                </Group>
-              </Stack>
-            )}
+            <TicketInternalChatWaHeader close={close} />
+            <TicketInternalChatBody
+              user={user}
+              waInboxFlag
+              ticket={selectedTicket}
+              viewport={viewport}
+            />
+            <TicketInternalChatFooter form={form} onSubmit={onSubmit} />
           </Stack>
         </div>
       )}
@@ -108,3 +116,147 @@ const WaInboxChatDisplayPopoverMsg = () => {
 };
 
 export default WaInboxChatDisplayPopoverMsg;
+
+const TicketInternalChatWaHeader = ({ close }) => {
+  const {
+    user: { orgName, orgLogo, role },
+  } = useUser();
+  const { setSelectedTicket, selectedTicket } = useContactStore();
+  const updateTicket = useUpdateTicketMutation(selectedTicket?.id);
+  const updateTicketStatus = useUpdateTicketStatusMutation(selectedTicket?.id);
+
+  const TicketPropUpdate = () => {
+    const [openedPriority, { toggle: togglePriority }] = useDisclosure(false);
+    const [openedStatus, { toggle: toggleStatus }] = useDisclosure(false);
+
+    const handlePriority = (value) => {
+      if (value && value !== selectedTicket?.priority) {
+        updateTicket.mutate(
+          { priority: value },
+          {
+            onSuccess: () => {
+              setSelectedTicket({ ...selectedTicket, priority: value });
+            },
+          },
+        );
+      }
+    };
+
+    const handleStatus = (value) => {
+      if (value && value !== selectedTicket?.status) {
+        updateTicketStatus.mutate(
+          { status: value, role },
+          {
+            onSuccess: () => {
+              setSelectedTicket({ ...selectedTicket, status: value });
+            },
+          },
+        );
+      }
+    };
+
+    return (
+      <Popover>
+        <Popover.Target>
+          <TextInput
+            placeholder={"select"}
+            w={100}
+            size="xs"
+            readOnly
+            rightSection={<IconTicket color="var(--tertiary-color)" />}
+          />
+        </Popover.Target>
+        <Popover.Dropdown w={150}>
+          <Stack gap={2}>
+            <Box>
+              <Group justify="space-between" mb={5}>
+                <Text size="sm" fw={400}>
+                  Priority
+                </Text>
+                <ActionIcon
+                  variant="subtle"
+                  onClick={togglePriority}
+                  size={"sm"}
+                >
+                  {openedPriority ? <IconChevronUp /> : <IconChevronDown />}
+                </ActionIcon>
+              </Group>
+              <Collapse in={openedPriority}>
+                <Radio.Group
+                  value={selectedTicket?.priority}
+                  onChange={handlePriority}
+                  size="xs"
+                >
+                  <Stack>
+                    {Object.values(TicketPriority).map((pr) => (
+                      <Radio size="xs" value={pr} label={pr} key={pr} />
+                    ))}
+                  </Stack>
+                </Radio.Group>
+              </Collapse>
+            </Box>
+            <Box>
+              <Group justify="space-between" mb={5}>
+                <Text fw={400} size="sm">
+                  Status
+                </Text>
+                <ActionIcon variant="subtle" onClick={toggleStatus} size={"sm"}>
+                  {openedStatus ? <IconChevronUp /> : <IconChevronDown />}
+                </ActionIcon>
+              </Group>
+              <Collapse in={openedStatus}>
+                <Radio.Group
+                  value={selectedTicket?.status}
+                  onChange={handleStatus}
+                  size="xs"
+                >
+                  <Stack>
+                    {Object.values(TicketStatus).map((status) => (
+                      <Radio
+                        size="xs"
+                        value={status}
+                        label={status}
+                        key={status}
+                      />
+                    ))}
+                  </Stack>
+                </Radio.Group>
+              </Collapse>
+            </Box>
+          </Stack>
+        </Popover.Dropdown>
+      </Popover>
+    );
+  };
+  return (
+    <Group
+      justify="space-between"
+      p={"sm"}
+      style={{ borderLeft: "1px solid var(--gift-grey-2)" }}
+    >
+      <Group gap="xs">
+        <Avatar src={orgLogo} size={"sm"} />
+        <Stack gap={0}>
+          <Text fw={500} truncate={"end"} w={110} order={4}>
+            {orgName}
+          </Text>
+          <Text size="sm">Internal Chat</Text>
+        </Stack>
+      </Group>
+      <Group gap={"xs"}>
+        <TicketPropUpdate />
+        <ActionIcon
+          variant="subtle"
+          onClick={() => {
+            setSelectedTicket(null);
+            close();
+          }}
+          pos={"relative"}
+          bottom={20}
+        >
+          <IconCircleXFilled />
+        </ActionIcon>
+      </Group>
+    </Group>
+  );
+};
