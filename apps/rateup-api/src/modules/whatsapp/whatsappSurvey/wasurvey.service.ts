@@ -399,6 +399,7 @@ function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses) {
   for (const ticket of ticketIssued) {
     const response = responses.find((r) => r.questionId === ticket.questionId);
     if (!response) continue;
+    if (ticket.condition.submissionTicket) shouldRaiseTicket = true;
     switch (ticket.type) {
       case QuestionType2.Rating:
         shouldRaiseTicket =
