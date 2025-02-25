@@ -405,6 +405,7 @@ declare global {
       minRating?: number;
       minOpinion?: number;
       reqOptions?: string[];
+      submissionTicket?: boolean;
     };
   };
 

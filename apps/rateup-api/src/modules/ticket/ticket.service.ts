@@ -390,6 +390,7 @@ export async function getSingleTicket(ticketId: string) {
           id: createdBy.id,
           name: createdBy.name,
           email: createdBy.email,
+          profilePhoto: createdBy.profilePhoto,
         },
       };
     });

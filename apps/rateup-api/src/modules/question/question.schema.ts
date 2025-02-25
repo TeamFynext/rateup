@@ -204,6 +204,7 @@ const updateQuestionRequestSchema = z.object({
         minRating: z.number().optional(),
         minOpinion: z.number().optional(),
         reqOptions: z.array(z.string()).optional(),
+        submissionTicket: z.boolean().optional(),
       }),
     ])
     .optional(),
