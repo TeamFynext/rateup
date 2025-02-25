@@ -135,9 +135,9 @@ export async function sendCampaignHandler(
         undefined,
         campaignSentAt,
       );
-      if (!isScheduled) {
+      if (!isScheduled.status) {
         return reply.status(400).send({
-          message: "Campaign not scheduled, please try again",
+          message: isScheduled.message,
           code: "MSG_NOT_SCHEDULED",
         });
       }
@@ -157,9 +157,9 @@ export async function sendCampaignHandler(
       sendToStatuses,
       participantId,
     );
-    if (!isScheduled) {
+    if (!isScheduled.status) {
       return reply.status(400).send({
-        message: "Campaign not scheduled, please try again",
+        message: isScheduled.message,
         code: "MSG_NOT_SCHEDULED",
       });
     }

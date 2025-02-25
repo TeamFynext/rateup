@@ -1,7 +1,11 @@
 import prisma from "../../utils/prisma";
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
 import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
-import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+  WaTemplateComponentType,
+} from "../../types/enums";
 import { log } from "../../utils/logger";
 import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
@@ -11,6 +15,10 @@ import { Prisma } from "@prisma/client";
 import { Queue } from "bullmq";
 
 import IORedis from "ioredis";
+import {
+  WaTemplateComponent,
+  WHATSAPP_BUTTON_TYPE,
+} from "../../types/whatsapp.types";
 
 const redisURL = new URL(process.env.REDIS_URL);
 const redisConnection = new IORedis({
@@ -686,10 +694,10 @@ export async function enqueueCampaignMessage(
   sendToStatuses: CampaignParticipantStatus[],
   participantId?: string,
   scheduledAt?: Date,
-): Promise<boolean> {
+): Promise<{ status: boolean; message: string }> {
   try {
     // Fetch campaign settings
-    const campaign: Campaign | null = await prisma.campaign.findUnique({
+    const campaign = await prisma.campaign.findUnique({
       where: { id: campaignId },
       select: { useUserConsent: true },
     });
@@ -699,54 +707,82 @@ export async function enqueueCampaignMessage(
       ? Prisma.sql`AND c.consent = true`
       : Prisma.sql``;
 
-    if (participantId) {
-      // Check if participant exists with consent
-      const campaignParticipant = await prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM "CampaignParticipant"
-        WHERE id = ${participantId} ${contactConsentCondition}
-      `;
+    // Fetch participants based on the provided conditions
+    const campaignParticipants = await prisma.$queryRaw<CampaignParticipant[]>`
+      SELECT cp.id, c.phone, c.name, c.tags, c."orgId", 
+             camp."dynamicTags", camp."teamId", wt.data, wt."defaultValues"
+      FROM "CampaignParticipant" cp
+      JOIN "Contact" c ON cp."contactId" = c.id
+      JOIN "Campaign" camp ON cp."campaignId" = camp.id
+      JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
+      WHERE cp."campaignId" = ${campaignId}::uuid
+        ${participantId ? Prisma.sql`AND cp.id = ${participantId}::uuid` : Prisma.sql`AND cp.status IN (${Prisma.join(sendToStatuses)})`}
+        ${contactConsentCondition}
+    `;
 
-      if (campaignParticipant.length > 0) {
-        await prisma.$executeRaw`
-          INSERT INTO "CampaignMessageQueue" ("campaignParticipantId")
-          VALUES (${campaignParticipant[0].id})
-        `;
-      }
-    } else {
-      // Fetch all participants for the campaign
-      const campaignParticipants = await prisma.$queryRaw<
-        CampaignParticipant[]
-      >`
-        SELECT cp.id, c.phone, c.name, c.tags, c."orgId", 
-               camp."dynamicTags", camp."teamId", wt.data, wt."defaultValues"
-        FROM "CampaignParticipant" cp
-        JOIN "Contact" c ON cp."contactId" = c.id
-        JOIN "Campaign" camp ON cp."campaignId" = camp.id
-        JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
-        WHERE cp."campaignId" = ${campaignId} :: uuid
-          AND cp.status IN (${Prisma.join(sendToStatuses)}) 
-          ${contactConsentCondition}
-      `;
-
-      // Enqueue messages
-      await queue.addBulk(
-        campaignParticipants.map((participant) => {
-          const delayOptions = scheduledAt
-            ? { delay: dayjs(scheduledAt).diff(dayjs(), "second") * 1000 }
-            : {};
-          return {
-            name: campaignId,
-            data: { ...participant, scheduledAt, campaignId },
-            opts: { ...delayOptions, removeOnComplete: true },
-          };
-        }),
-      );
+    if (campaignParticipants.length === 0) {
+      return {
+        message: "No participants found matching the conditions",
+        status: false,
+      };
     }
-    return true;
+
+    const flowId = getFlowIdFromTemplateComponents(
+      campaignParticipants[0]?.data?.components,
+    );
+
+    const surveyTeamMap = flowId
+      ? await prisma.surveyTeamMap.findFirst({
+          where: {
+            teamId: campaignParticipants[0].teamId,
+            survey: {
+              WaFlow: {
+                flowId,
+              },
+            },
+          },
+          select: { id: true },
+        })
+      : null;
+
+    // Enqueue messages
+    await queue.addBulk(
+      campaignParticipants.map((participant) => ({
+        name: campaignId,
+        data: {
+          ...participant,
+          scheduledAt,
+          campaignId,
+          surveyTeamMapId: surveyTeamMap?.id,
+        },
+        opts: {
+          delay: scheduledAt
+            ? dayjs(scheduledAt).diff(dayjs(), "millisecond")
+            : undefined,
+          removeOnComplete: true,
+        },
+      })),
+    );
+
+    return { status: true, message: "Campaign messages enqueued successfully" };
   } catch (error) {
     console.error("Error enqueuing campaign message:", error);
-    return false;
+    return {
+      status: false,
+      message: "Campaign not scheduled, please try again",
+    };
   }
+}
+
+export function getFlowIdFromTemplateComponents(
+  components: WaTemplateComponent[],
+): string | undefined {
+  const flowId = components
+    .find((c) => c.type.toLocaleLowerCase() === WaTemplateComponentType.BUTTONS)
+    ?.buttons.find((b) => b.type === WHATSAPP_BUTTON_TYPE.FLOW)
+    ?.flow_id?.toString();
+
+  return flowId;
 }
 
 export const deleteCampaignParticipantsByCampaignId = async (
