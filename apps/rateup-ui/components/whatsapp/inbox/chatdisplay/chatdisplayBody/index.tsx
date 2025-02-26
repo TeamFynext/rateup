@@ -132,8 +132,6 @@ export default function WaInboxChatDisplayBody(props: Props) {
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
   }, [props?.data]);
 
-  if (isPending) return <WhatsAppInboxLoader isLoading={isPending} />;
-
   return (
     <div className={classes.wrapper}>
       <div className={classes.inner} ref={scrollableRef}>

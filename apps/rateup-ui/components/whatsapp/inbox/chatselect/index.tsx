@@ -54,7 +54,7 @@ import TicketSelectCard from "./ticketSelectCard";
 
 enum TabsEnum {
   all = "all",
-  tickets = "tickets",
+  // tickets = "tickets",
 }
 
 const WaInboxChatSelect = () => {
@@ -406,7 +406,7 @@ const WaInboxChatSelect = () => {
                   color="red"
                 >
                   {aTab === TabsEnum.all && <IconMessageCog size={18} />}
-                  {aTab === TabsEnum.tickets && <IconTicket size={18} />}
+                  {/* {aTab === TabsEnum.tickets && <IconTicket size={18} />} */}
                 </Indicator>
               }
             />
