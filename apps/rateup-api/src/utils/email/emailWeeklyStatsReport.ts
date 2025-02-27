@@ -58,6 +58,14 @@ export const createMessageTemplate = ({ body }) => {
                       font-size: 12px;
                       color: #666;
               }
+              .view-response {
+                      border-radius: 10px;
+                      background:var(--RateUp-Blue, #1c518e);
+                      color: #f5f5f5;
+                      text-decoration: none;
+                      padding: 8px;
+                      font-size: 12px;
+              }
       </style>
   </head>
   <body>
@@ -81,9 +89,9 @@ export const createMessageTemplate = ({ body }) => {
                       <thead>
                               <tr>
                                       <th>Title</th>
-                                      <th>Type</th>
                                       <th>Total Response</th>
                                       <th>Weekly Response</th>
+                                      <th></th>
                               </tr>
                       </thead>
                       <tbody>
