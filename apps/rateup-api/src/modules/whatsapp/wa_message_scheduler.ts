@@ -18,6 +18,7 @@ import { getScheduleTime } from "../../utils/date";
 import { updateMonthlyStat } from "../stats/stats.service";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport";
+import { FRONTEND_URL } from "../../utils/constants/constants";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -152,6 +153,8 @@ type weeklyStats = {
     type: string;
     totalCount: number;
     weeklyCount: number;
+    dbFlowId?: string;
+    flowVersion?: number;
   }[];
 }[];
 
@@ -165,7 +168,9 @@ export async function sendWeeklyReportToEmail() {
         'title', COALESCE(wf.name, s.title),
         'type', s.type,
         'totalCount', total_count,
-        'weeklyCount', weekly_count
+        'weeklyCount', weekly_count,
+        'dbFlowId', wf."dbFlowId",
+        'flowVersion', wf."version"
       )
       ORDER BY s.type ASC, COALESCE(wf.name, s.title) ASC
     ) AS surveys
@@ -183,25 +188,32 @@ export async function sendWeeklyReportToEmail() {
   ) response_counts ON TRUE
   WHERE s."sendWeeklyReport" = TRUE 
     AND s.active = TRUE
+    AND u.active = TRUE
   GROUP BY u.email;
 ;
 `;
   for (const report of reports) {
+    const surveys = report.surveys.filter((survey) => survey.weeklyCount > 0);
+    if (!surveys.length) continue;
     const msg = {
       to: report.email,
       subject: "Weekly Report of Stats of Web Survey and WhatsApp Survey",
       text: "weekly report",
       html: createMessageTemplate({
-        body: report.surveys
-          .map(
-            (survey) =>
-              `<tr>
+        body: surveys
+          .map((survey) => {
+            const responseUrl =
+              survey.type === "web"
+                ? `${FRONTEND_URL}/dashboard/surveys/${survey.surveyId}?tab=Result"`
+                : `${FRONTEND_URL}/dashboard/whatsapp/flows/v${survey.flowVersion}/${survey.dbFlowId}?tab=Result`;
+            return `<tr>
               <td>${survey?.title}</td>
-              <td>${survey?.type === "web" ? "WebSurvey" : "Flow"}</td>
               <td>${survey?.totalCount}</td>
               <td>${survey?.weeklyCount}</td>
-            </tr>`,
-          )
+              <td><a href="${responseUrl}"
+              target="blank" style="color:#f5f5f5" class="view-response">View Responses</a></td>
+            </tr>`;
+          })
           .join(""),
       }),
     };
