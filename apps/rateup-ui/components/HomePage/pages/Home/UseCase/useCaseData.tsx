@@ -2,16 +2,6 @@ import { imagesPath } from "@/utils/constants";
 
 const useCasesData = [
   {
-    id: "58585854959",
-    heading: "Improve Online Reputation",
-    useCaseText:
-      "Automatically solicit reviews from satisfied customers to boost your online ratings and credibility.",
-    imageUrl: `${imagesPath}/homepage/use-case/improve-online-reputation.png`,
-    imageAlt: "Improve Online Reputation",
-    imageWidth: 794,
-    imageHeight: 563,
-  },
-  {
     id: "58585854960",
     heading: "Feedback Collection",
     useCaseText:

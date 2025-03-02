@@ -10,7 +10,6 @@ import AIAnalyticsAndInsights from "./AIAnalyticsAndInsights";
 import styles from "./Features.module.css";
 import LoyaltyFeaturesSection from "./LoyaltyFeaturesSection";
 import PerfectSurveyForYourNeeds from "./PerfectSurveyForYourNeeds";
-import ReputationFeaturesSection from "./ReputationFeaturesSection";
 
 const cx = classNames.bind(styles);
 
@@ -18,7 +17,6 @@ function Features() {
   return (
     <Stack className={cx("features-root-div")} id="our-features">
       <PerfectSurveyForYourNeeds />
-      <ReputationFeaturesSection />
       <Banner
         title={"Ready to Boost Loyalty?"}
         subtitle={"Unlock the full potential of your loyalty initiatives"}

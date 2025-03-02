@@ -6,7 +6,7 @@ import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { useKeenSlider } from "keen-slider/react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { Solution } from "../../pages/Reputation/constants";
+import { Solution } from "../../pages/Home/OursolutionsSection/DescriptionsCarouselSlides";
 import MobileInteractiveSolutionDescriptions from "../MobileInteractiveSolutionDescriptions";
 import DescriptionsCarouselSlides from "./DescriptionsCarouselSlides";
 import styles from "./InteractiveSolutionDescriptions.module.css";

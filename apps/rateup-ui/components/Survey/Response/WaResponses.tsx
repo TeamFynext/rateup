@@ -31,7 +31,7 @@ import utc from "dayjs/plugin/utc";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
-import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
+import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import useTranslations from "@/dictionaries/useTranslation";
 import { hasFeature } from "@/utils/subscription/subscription";
