@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 import { Range } from "react-date-range";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
+import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";

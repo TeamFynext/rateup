@@ -623,12 +623,6 @@ declare global {
     totalCount?: number;
     loyaltyCustomers?: any;
   }
-  interface RM_Topic {
-    id: string;
-    name: string;
-    keywords: string[];
-    teamId: string;
-  }
   interface ReviewsFilter {
     sentiment: {
       [key in SentimentClass]: boolean;

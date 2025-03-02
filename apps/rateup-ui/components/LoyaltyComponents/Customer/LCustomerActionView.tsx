@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
-import { DateRangePickerModal } from "@/components/reputationManagement/misc/DateRangePicker";
+import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import {
   getLCustomerStatsIcon,

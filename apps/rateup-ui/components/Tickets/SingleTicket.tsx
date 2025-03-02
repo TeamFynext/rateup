@@ -47,10 +47,6 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import RateupLoader from "../Loaders/RateupLoader";
 import FormModalLayout from "../Modal/FormModalLayout";
-import {
-  PlatformIcon,
-  RatingBadge,
-} from "../reputationManagement/panels/RM_Review";
 import { titleStyle } from "../styled/Heading/Heading";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { CommentCard } from "./SingleTicket/CommentCard";
@@ -343,36 +339,8 @@ const SingleTicket = ({ id }: { id: string }) => {
             <RateupLoader mt="50px" />
           ) : (
             <>
-              {ticket?.type === TicketType.REVIEW ? (
-                <Stack justify="flex-start">
-                  <Title order={2} c="gray.5" mb="md">
-                    {translations["Review Details"]}
-                  </Title>
-                  <Group>
-                    <PlatformIcon platform={ticket?.review?.platform} />
-                    <Text>
-                      {ticket?.review?.meta?.reviewedBy ||
-                        translations["Anonymous"]}
-                    </Text>
-                  </Group>
-                  <Group>
-                    <Text>{translations["Rating : "]}</Text>
-                    <RatingBadge rating={ticket?.review?.rating} />
-                  </Group>
-                  <Group>
-                    <Text>{translations["Posted on : "]}</Text>
-                    <Text>
-                      {formatIsoDateString(ticket?.review?.reviewedAt)}
-                    </Text>
-                  </Group>
-                  <Group>
-                    <Text>{translations["Comment : "]}</Text>
-                    <Text> {ticket?.review?.review || "n/a"} </Text>
-                  </Group>
-                  <Text lineClamp={2}>{ticket?.review?.review}</Text>
-                </Stack>
-              ) : ticket?.type === TicketType.SURVEY_RESPONSE ||
-                ticket?.type === TicketType.FLOW_RESPONSE ? (
+              {ticket?.type === TicketType.SURVEY_RESPONSE ||
+              ticket?.type === TicketType.FLOW_RESPONSE ? (
                 <Stack>
                   <Title order={2} c="gray.5">
                     {translations["User Response Details"]}

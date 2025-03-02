@@ -3,7 +3,8 @@ import React from "react";
 import { Box, Image, Text, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
-import { Solution } from "../../../pages/Reputation/constants";
+import { Solution } from "@/components/HomePage/pages/Home/OursolutionsSection/DescriptionsCarouselSlides";
+
 import styles from "./DescriptionsCarouselSlides.module.css";
 
 type DescriptionsCarouselProps = {

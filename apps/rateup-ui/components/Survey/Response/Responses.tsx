@@ -27,7 +27,7 @@ import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { DateRangePickerButton } from "@/components/reputationManagement/misc/DateRangePicker";
+import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";

@@ -4,8 +4,19 @@ import { Carousel } from "@mantine/carousel";
 import { Text, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
-import { Solution } from "../../../Reputation/constants";
 import styles from "./DescriptionsCarouselSlides.module.css";
+
+export type Solution = {
+  heading: string;
+  description: string;
+  imageUrl: string;
+  listIcons?: {
+    enabledIcon: string;
+    disabledIcon: string;
+  };
+  listIcon?: any;
+  id: string;
+};
 
 type DescriptionsCarouselProps = {
   solutions: Solution[];

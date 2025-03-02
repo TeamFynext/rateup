@@ -1,8 +1,10 @@
+import { useCallback, useEffect } from "react";
+
 import { Flex, Tabs } from "@mantine/core";
-import { Solution } from "../../pages/Reputation/constants";
+
+import { Solution } from "../../pages/Home/OursolutionsSection/DescriptionsCarouselSlides";
 import styles from "./MobileInteractiveSolutionDescriptions.module.css";
 import tabStyles from "./Tabs.module.css";
-import { useCallback, useEffect } from "react";
 
 type MobileInteractiveSolutionDescriptionsProps = {
   solutions: Solution[];

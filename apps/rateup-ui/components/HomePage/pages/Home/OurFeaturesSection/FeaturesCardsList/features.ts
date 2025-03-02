@@ -12,15 +12,6 @@ const features = [
       "Measuring customer satisfaction through real-timefeedback is crucial for a positive customer experience.",
   },
   {
-    id: 93532,
-    imgSrc: `${path}/online-reputation.png`,
-    imgAlt: "online reputation",
-    imgBgColor: "#D8B4F8",
-    heading: "Online Reputation",
-    description:
-      "ORM is essential formanaging online presence, including social media and Google.",
-  },
-  {
     id: 93533,
     imgSrc: `${path}/testimonials.png`,
     imgAlt: "testimonials",

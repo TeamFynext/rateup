@@ -256,16 +256,6 @@ export function getNavTopData(
         ]),
     // { Icon: IconDeviceDesktopAnalytics, label: 'Testimonials', href: '/dashboard/' },
 
-    ...(hiddenModules.includes("reputation_management") ||
-    !hasFeature(sfpn.ReputationManagement)
-      ? []
-      : [
-          {
-            Icon: IconComet,
-            label: translations["Reputation"],
-            href: "/dashboard/rm",
-          },
-        ]),
     ...(hasFeature(sfpn.Menu)
       ? [
           {

@@ -58,16 +58,6 @@ const headerNavLinks = [
         iconLink: `${imagesPath}/homepage/header/package.svg`,
       },
       {
-        id: 1001,
-        link: "/reputation-management",
-        content: {
-          heading: "Reputation Management",
-          description:
-            "Offering businesses a platform to boost Google reviews and foster brand advocates.",
-        },
-        iconLink: `${imagesPath}/homepage/header/target.svg`,
-      },
-      {
         id: 1003,
         link: "/qr-studio",
         content: {
