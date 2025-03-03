@@ -131,7 +131,8 @@ export interface WaSendMessageBody {
       type: "text" | "image" | "video" | "document";
       text?: string; // max 60 chars
       image?: {
-        link: string;
+        link?: string;
+        id?: string;
       };
       // add image, video, document if needed in future
     };

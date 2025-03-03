@@ -8,21 +8,12 @@ import {
   createAutomatedReply,
   deleteAutomatedReply,
   getAutomatedRepliesByOrgId,
-  getAutomatedRepliesByTeamId,
   getAutomatedRepliesMessagId,
   getAutomatedReplyById,
   updateAutomatedReply,
 } from "./wa_automatedReply.service";
 import { ByTeamIdParams } from "../../team/team.schema";
 import { log } from "../../../utils/logger";
-
-export async function getAutomatedRepliesByTeamIdHandler(
-  req: FastifyRequest<{ Params: ByTeamIdParams }>,
-  reply: FastifyReply,
-) {
-  const automatedReplies = await getAutomatedRepliesByTeamId(req.params.teamId);
-  reply.send(automatedReplies);
-}
 
 export async function getAutomatedRepliesMessagIdHandler(
   req: FastifyRequest<{ Params: { id: string } }>,
@@ -56,8 +47,19 @@ export async function createAutomatedReplyHandler(
   req: FastifyRequest<{ Body: CreateAutomatedReplySchema }>,
   reply: FastifyReply,
 ) {
-  const automatedReply = await createAutomatedReply(req.body);
-  reply.send(automatedReply);
+  try {
+    const automatedReply = await createAutomatedReply(req.body, req.user.orgId);
+    reply.code(201).send(automatedReply);
+  } catch (error) {
+    if (error.code === "P2002") {
+      reply
+        .code(409)
+        .send("Some specified keywords already exist for this organization.");
+    } else {
+      log.error(error);
+      reply.code(500).send("error in creating automatedReply");
+    }
+  }
 }
 
 export async function updateAutomatedReplyHandler(
@@ -68,11 +70,21 @@ export async function updateAutomatedReplyHandler(
   reply: FastifyReply,
 ) {
   try {
-    await updateAutomatedReply(req.params.waAutomatedReplyId, req.body);
+    await updateAutomatedReply(
+      req.params.waAutomatedReplyId,
+      req.body,
+      req.user.orgId,
+    );
     reply.code(204).send();
   } catch (error) {
-    log.error(error);
-    reply.code(500).send("error in updating automatedReply");
+    if (error.code === "P2002") {
+      reply
+        .code(409)
+        .send("Some specified keywords already exist for this organization.");
+    } else {
+      log.error(error);
+      reply.code(500).send("error in updating automatedReply");
+    }
   }
 }
 

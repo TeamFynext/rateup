@@ -1,14 +1,5 @@
 import prisma from "../../../utils/prisma";
 
-export async function getAutomatedRepliesByTeamId(teamId: string) {
-  const automatedReplies = await prisma.waAutomatedReply.findMany({
-    where: {
-      teamId,
-    },
-  });
-  return automatedReplies;
-}
-
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
     where: {
@@ -22,12 +13,23 @@ export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
 export async function getAutomatedRepliesByOrgId(orgId: string) {
   const automatedReplies = await prisma.waAutomatedReply.findMany({
     where: {
-      team: {
-        orgId,
+      orgId,
+    },
+    include: {
+      WaAutomatedReplyCommands: {
+        select: {
+          command: true,
+        },
       },
     },
   });
-  return automatedReplies;
+  return automatedReplies.map((ar) => {
+    const { WaAutomatedReplyCommands, ...rest } = ar;
+    return {
+      ...rest,
+      commands: WaAutomatedReplyCommands.map((c) => c.command),
+    };
+  });
 }
 
 export async function getAutomatedReplyById(id: string) {
@@ -35,25 +37,61 @@ export async function getAutomatedReplyById(id: string) {
     where: {
       id,
     },
+    include: {
+      WaAutomatedReplyCommands: {
+        select: {
+          command: true,
+        },
+      },
+    },
+  });
+  const { WaAutomatedReplyCommands, ...rest } = automatedReply;
+  return {
+    ...rest,
+    commands: WaAutomatedReplyCommands.map((c) => c.command),
+  };
+}
+
+export async function createAutomatedReply(data: any, orgId: string) {
+  const { commands = [], ...restData } = data;
+  const automatedReply = await prisma.$transaction(async (prisma) => {
+    const createdAutomatedReply = await prisma.waAutomatedReply.create({
+      data: { ...restData, orgId },
+    });
+    await prisma.waAutomatedReplyCommands.createMany({
+      data: commands.map((c) => ({
+        orgId,
+        command: c,
+        waAutomatedReplyId: createdAutomatedReply.id,
+      })),
+    });
+    return createdAutomatedReply;
   });
   return automatedReply;
 }
 
-export async function createAutomatedReply(data: any) {
-  const automatedReply = await prisma.waAutomatedReply.create({
-    data: {
-      ...data,
-    },
-  });
-  return automatedReply;
-}
-
-export function updateAutomatedReply(id: string, data: any) {
-  return prisma.waAutomatedReply.update({
-    where: {
-      id,
-    },
-    data,
+export function updateAutomatedReply(id: string, data: any, orgId: string) {
+  const { commands = [], ...restData } = data;
+  return prisma.$transaction(async (prisma) => {
+    const updatedAutomatedReply = await prisma.waAutomatedReply.update({
+      where: {
+        id,
+      },
+      data: restData,
+    });
+    await prisma.waAutomatedReplyCommands.deleteMany({
+      where: {
+        waAutomatedReplyId: id,
+      },
+    });
+    await prisma.waAutomatedReplyCommands.createMany({
+      data: commands.map((c) => ({
+        orgId,
+        command: c,
+        waAutomatedReplyId: updatedAutomatedReply.id,
+      })),
+    });
+    return updatedAutomatedReply;
   });
 }
 
@@ -69,9 +107,7 @@ export async function deleteAutomatedReply(id: string) {
 export async function getAutomatedRepliesByKeyWeords(orgId, keyword) {
   return await prisma.waAutomatedReply.findFirst({
     where: {
-      team: {
-        orgId,
-      },
+      orgId,
       matchData: {
         path: ["keywords"],
         array_contains: [keyword],

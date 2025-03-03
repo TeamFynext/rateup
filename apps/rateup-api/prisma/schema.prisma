@@ -100,42 +100,44 @@ model User {
 }
 
 model Org {
-  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt               DateTime                  @default(now())
-  name                    String
-  owner                   User                      @relation(fields: [ownerId], references: [id])
-  ownerId                 String                    @db.Uuid
-  logo                    String?
-  phone                   String?
-  address                 String?
-  encryptionKeys          Json? //{privateKey:string,publicKey:string}
-  isPaused                Boolean?                  @default(false)
-  members                 OrgMember[]
-  teams                   Team[]
-  invitations             Invitation[]
-  whatsappSettings        WhatsappSettings?
-  templates               WaTemplate[]
-  Subscription            Subscription?
-  Order                   Order[]
-  WaFlow                  WaFlow[]
-  contacts                Contact[]
-  linktree                Linktree[]
-  ApiAccessToken          ApiAccessToken?
-  surveyThemes            WebSurveyTheme[]
-  UsageStats              UsageStats?
-  chatbot                 Chatbot?
-  Survey                  Survey[]
-  WaAccountSettings       WaAccountSettings?
-  generateQr              GenerateQr[]
-  landingPage             LandingPage[]
-  Integration             Integration[]
-  waMessageSchedule       WaMessageSchedule[]
-  WaLogs                  WaLogs[]
-  loyaltyActions          LoyaltyAction[]
-  loyaltyRewards          LoyaltyReward[]
-  loyaltyCustomers        LoyaltyCustomer[]
-  loyaltyTemplates        LoyaltyWaCommand[]
-  WaAutomatedReplyMessage WaAutomatedReplyMessage[]
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                DateTime                   @default(now())
+  name                     String
+  owner                    User                       @relation(fields: [ownerId], references: [id])
+  ownerId                  String                     @db.Uuid
+  logo                     String?
+  phone                    String?
+  address                  String?
+  encryptionKeys           Json? //{privateKey:string,publicKey:string}
+  isPaused                 Boolean?                   @default(false)
+  members                  OrgMember[]
+  teams                    Team[]
+  invitations              Invitation[]
+  whatsappSettings         WhatsappSettings?
+  templates                WaTemplate[]
+  Subscription             Subscription?
+  Order                    Order[]
+  WaFlow                   WaFlow[]
+  contacts                 Contact[]
+  linktree                 Linktree[]
+  ApiAccessToken           ApiAccessToken?
+  surveyThemes             WebSurveyTheme[]
+  UsageStats               UsageStats?
+  chatbot                  Chatbot?
+  Survey                   Survey[]
+  WaAccountSettings        WaAccountSettings?
+  generateQr               GenerateQr[]
+  landingPage              LandingPage[]
+  Integration              Integration[]
+  waMessageSchedule        WaMessageSchedule[]
+  WaLogs                   WaLogs[]
+  loyaltyActions           LoyaltyAction[]
+  loyaltyRewards           LoyaltyReward[]
+  loyaltyCustomers         LoyaltyCustomer[]
+  loyaltyTemplates         LoyaltyWaCommand[]
+  WaAutomatedReplyMessage  WaAutomatedReplyMessage[]
+  WaAutomatedReplyCommands WaAutomatedReplyCommands[]
+  WaAutomatedReply         WaAutomatedReply[]
 }
 
 model UsageStats {
@@ -950,27 +952,27 @@ model TestimonialCollectionMap {
 }
 
 model Ticket {
-  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  number           Int             @unique @default(autoincrement())
-  title            String
-  description      String?
-  type             TicketType
-  createdBy        User            @relation("CreatedTicket", fields: [createdById], references: [id])
-  createdById      String          @db.Uuid
-  createdAt        DateTime        @default(now())
-  status           TicketStatus
-  priority         TicketPriority
-  team             Team            @relation(fields: [teamId], references: [id])
-  teamId           String          @db.Uuid
-  deadline         DateTime?
-  assignedTo       User            @relation("AssignedTicket", fields: [assignedToId], references: [id])
-  assignedToId     String          @db.Uuid
-  comments         TicketComment[]
-  reviewId         String?         @db.Uuid
-  surveyResponseId String?         @db.Uuid
-  review           Review?         @relation(fields: [reviewId], references: [id])
-  surveyResponse   SurveyResponse? @relation(fields: [surveyResponseId], references: [id])
-  waAutomatedReplyMessageId String?  @db.Uuid
+  id                        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number                    Int                      @unique @default(autoincrement())
+  title                     String
+  description               String?
+  type                      TicketType
+  createdBy                 User                     @relation("CreatedTicket", fields: [createdById], references: [id])
+  createdById               String                   @db.Uuid
+  createdAt                 DateTime                 @default(now())
+  status                    TicketStatus
+  priority                  TicketPriority
+  team                      Team                     @relation(fields: [teamId], references: [id])
+  teamId                    String                   @db.Uuid
+  deadline                  DateTime?
+  assignedTo                User                     @relation("AssignedTicket", fields: [assignedToId], references: [id])
+  assignedToId              String                   @db.Uuid
+  comments                  TicketComment[]
+  reviewId                  String?                  @db.Uuid
+  surveyResponseId          String?                  @db.Uuid
+  review                    Review?                  @relation(fields: [reviewId], references: [id])
+  surveyResponse            SurveyResponse?          @relation(fields: [surveyResponseId], references: [id])
+  waAutomatedReplyMessageId String?                  @db.Uuid
   waAutomatedReplyMessage   WaAutomatedReplyMessage? @relation(fields: [waAutomatedReplyMessageId], references: [id])
 
   @@unique([number, teamId], name: "ticket_number_team_id_unique")
@@ -1055,18 +1057,27 @@ model WaAutomatedReply {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   createdAt DateTime @default(now())
-
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId String @db.Uuid
-
-  /// [PWaAutomatedReplyMatchData]
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.Uuid
   matchData Json
   matchType String // enums.ts: WaAutomatedReplyMatchType
+  orgId     String?  @db.Uuid
+  org       Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  responseType             String // enums.ts: WaAutomatedReplyResponseType
-  responseText             String?
-  responseTemplateId       String?
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
+  WaAutomatedReplyCommands WaAutomatedReplyCommands[]
+}
+
+model WaAutomatedReplyCommands {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime          @default(now())
+  command            String
+  orgId              String            @db.Uuid
+  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  waAutomatedReplyId String?           @db.Uuid
+
+  @@unique([command, orgId], name: "command_org_id_unique")
 }
 
 model WaAutomatedReplyMessage {
@@ -1079,7 +1090,7 @@ model WaAutomatedReplyMessage {
   waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   orgId              String            @db.Uuid
   org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  ticket             Ticket[] 
+  ticket             Ticket[]
 }
 
 model ApiAccessToken {

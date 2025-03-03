@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify/types/instance";
 import {
-  getAutomatedRepliesByTeamIdHandler,
   createAutomatedReplyHandler,
   updateAutomatedReplyHandler,
   deleteAutomatedReplyHandler,
@@ -12,7 +11,6 @@ import { checkSession } from "../../../utils/checkSession";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.addHook("preHandler", checkSession);
-  fastify.get("/team/:teamId", getAutomatedRepliesByTeamIdHandler);
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
   fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
   fastify.post("/", createAutomatedReplyHandler);
