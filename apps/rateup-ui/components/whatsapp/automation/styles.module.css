@@ -1,5 +1,5 @@
 .card_wrapper {
-  gap: var(--mantine-spacing-md);
+  gap: var(--mantine-spacing-xs);
   justify-content: space-between;
   height: 100%;
 }

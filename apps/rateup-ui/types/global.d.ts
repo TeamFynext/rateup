@@ -1067,9 +1067,7 @@ export type Testimonial = {
 };
 
 export type WaAutomatedReplyMatchData = {
-  keywords?: Array<string>;
   caseSensitive: boolean;
-  exactText?: string;
   json?: any;
 };
 export type WaAutomatedReply = {
@@ -1079,9 +1077,7 @@ export type WaAutomatedReply = {
   teamId: string;
   matchData: WaAutomatedReplyMatchData;
   matchType: WaAutomatedReplyMatchType;
-  responseType: WaAutomatedReplyResponseType;
-  responseText: string | null;
-  responseTemplateId: string | null;
+  commands: Array<string>;
 };
 
 //types related to wa inbox

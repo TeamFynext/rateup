@@ -177,7 +177,7 @@ const App = () => {
   }, [nodes]);
 
   if (isPending || isLoading || waPending) return <RateupLoader />;
-  let link = `https://api.whatsapp.com/send/?phone=${encodeURIComponent(waSettings?.phone?.replace("+", ""))}&text=${encodeURIComponent(data?.matchData?.keywords?.[0] ?? "")}`;
+  let link = `https://api.whatsapp.com/send/?phone=${encodeURIComponent(waSettings?.phone?.replace("+", ""))}&text=${encodeURIComponent(data?.commands?.[0] ?? "")}`;
   return (
     <StyledTabs
       keepMounted={false}
@@ -185,40 +185,39 @@ const App = () => {
       h={"100%"}
       onChange={close}
     >
-      <Tabs.List>
-        <Tabs.Tab value="flow" leftSection={<IconSitemap size={18} />}>
-          Flow
-        </Tabs.Tab>
-        <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
-          settings
-        </Tabs.Tab>
-        <Tabs.Tab value="share" leftSection={<IconShare size={18} />}>
-          share
-        </Tabs.Tab>
-        <Tabs.Tab value="result" leftSection={<IconDatabase size={18} />}>
-          Result
-        </Tabs.Tab>
-      </Tabs.List>
+      <Group justify="space-between">
+        <>
+          <Tooltip label={"click to create new screen"}>
+            <ActionIcon radius={"xl"} size={"lg"} onClick={addScreenNode}>
+              <IconBrowserPlus />
+            </ActionIcon>
+          </Tooltip>
+        </>
+        <Tabs.List>
+          <Tabs.Tab value="flow" leftSection={<IconSitemap size={18} />}>
+            Flow
+          </Tabs.Tab>
+          <Tabs.Tab value="settings" leftSection={<IconSettings size={18} />}>
+            settings
+          </Tabs.Tab>
+          <Tabs.Tab value="share" leftSection={<IconShare size={18} />}>
+            share
+          </Tabs.Tab>
+          <Tabs.Tab value="result" leftSection={<IconDatabase size={18} />}>
+            Result
+          </Tabs.Tab>
+        </Tabs.List>
+        <Button
+          onClick={saveFlow}
+          variant="light"
+          loading={updateWaReplyMutation.isPending}
+        >
+          Save
+        </Button>
+      </Group>
 
       <Tabs.Panel value="flow">
         <Stack style={{ width: "100%", height: "100%" }}>
-          <Group justify="space-between">
-            <Group>
-              <Tooltip label={"click to create new screen"}>
-                <ActionIcon radius={"xl"} size={"lg"} onClick={addScreenNode}>
-                  <IconBrowserPlus />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-            <Button
-              onClick={saveFlow}
-              variant="light"
-              loading={updateWaReplyMutation.isPending}
-            >
-              Save
-            </Button>
-          </Group>
-
           <ReactFlowProvider>
             <ReactFlow
               nodes={nodes}

@@ -99,7 +99,7 @@ export default function WhatsappTemplateById() {
       header: null,
       language: "en",
       body: "Would you like to start survey?",
-      footer: 'Reply "STOP" to unsubscribe',
+      footer: "Powered by rateup.app",
       category: "MARKETING",
       format: "NONE",
       buttons: [],

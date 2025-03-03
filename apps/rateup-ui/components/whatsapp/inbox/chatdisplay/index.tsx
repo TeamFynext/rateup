@@ -71,7 +71,7 @@ export default function WaInboxChatDisplay() {
           layout
         >
           <WaInboxChatDisplayHeader contact={contact} />
-          <Flex gap={opened && "xs"} p={0}>
+          {/* <Flex gap={opened && "xs"} p={0}>
             <motion.div
               key={contact?.phone}
               initial={{ flex: 1, opacity: 1 }}
@@ -83,10 +83,10 @@ export default function WaInboxChatDisplay() {
                 overflow: "hidden",
               }}
             >
-              <Stack h="78vh" gap={0} p={0}>
-                <WaInboxChatDisplayBody data={messages} />
-                <WaInboxChatDisplayFooter contact={contact} />
-              </Stack>
+              <Stack h="78vh" gap={0} p={0}> */}
+          <WaInboxChatDisplayBody data={messages} />
+          <WaInboxChatDisplayFooter contact={contact} />
+          {/* </Stack>
             </motion.div>
 
             <motion.div
@@ -105,7 +105,7 @@ export default function WaInboxChatDisplay() {
             >
               <WaInboxChatDisplayPopoverMsg />
             </motion.div>
-          </Flex>
+          </Flex> */}
         </motion.div>
       ) : (
         <NothingFound text={translations["Select a chat to see messages"]} />

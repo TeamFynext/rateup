@@ -9,8 +9,10 @@ import {
   Radio,
   SelectProps,
   Stack,
+  Tabs,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
+import { IconMessageCircle, IconPhoto } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -49,14 +51,13 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
   if (initialValues) return initialValues;
   return {
     name: "",
-    responseType: WaAutomatedReplyResponseType.Text,
     teamId: "",
     matchType: WaAutomatedReplyMatchType.ContainsAnyOf,
     matchData: {
-      keywords: [],
       json: {},
       caseSensitive: false,
     },
+    commands: [],
   };
 }
 
@@ -97,7 +98,10 @@ export function AutomatedReplyForm({
   }
 
   function handleSubmitClick() {
-    const data = { ...rootForm.values, matchData: matchDataForm.values };
+    const data = {
+      ...rootForm.values,
+      matchData: matchDataForm.values,
+    };
 
     if (editMode) {
       updateMutation.mutate(data);
@@ -128,38 +132,94 @@ export function AutomatedReplyForm({
             {...rootForm.getInputProps("teamId")}
           />
         </Group>
-
-        <Radio.Group
-          label="Match Type"
-          required
-          {...rootForm.getInputProps("matchType")}
+        <Tabs
+          defaultValue="keywords"
+          variant="pills"
+          onChange={(e) => {
+            if (e === "allOthers") {
+              rootForm.setFieldValue("commands", ["*"]);
+            } else {
+              rootForm.setFieldValue("commands", []);
+            }
+          }}
         >
-          <Group pl={"xs"} pt={"xs"}>
-            <Radio
-              value={WaAutomatedReplyMatchType.ContainsAnyOf}
-              label={"Contains Any Of"}
-            />
-            <Radio
-              value={WaAutomatedReplyMatchType.ContainsAllOf}
-              label={"Contains All Of"}
-            />
-            <Radio
-              value={WaAutomatedReplyMatchType.Exact}
-              label={"Exactly Equals"}
-            />
-          </Group>
-        </Radio.Group>
+          <Tabs.List>
+            <Tabs.Tab
+              value="keywords"
+              leftSection={<IconMessageCircle size={12} />}
+            >
+              Keywords
+            </Tabs.Tab>
+            <Tabs.Tab value="allOthers" leftSection={<IconPhoto size={12} />}>
+              All Others
+            </Tabs.Tab>
+          </Tabs.List>
 
-        <MatchDataForm
-          matchDataForm={matchDataForm}
-          type={rootForm.values.matchType}
-        />
-        {/* <ContainedSelection
-          label="Response Type"
-          data={Object.values(WaAutomatedReplyResponseType)}
-          {...rootForm.getInputProps("responseType")}
-        /> */}
-        {/* <ResponseSelector type={rootForm.values.responseType} form={rootForm} /> */}
+          <Tabs.Panel value="keywords">
+            <Radio.Group
+              label="Match Type"
+              required
+              {...rootForm.getInputProps("matchType")}
+              onChange={(e) => {
+                rootForm.setFieldValue("matchType", e as any);
+                if (e === WaAutomatedReplyMatchType.Exact) {
+                  rootForm.values?.commands?.length &&
+                    rootForm.setFieldValue("commands", [
+                      rootForm.values?.commands?.[0],
+                    ]);
+                }
+              }}
+            >
+              <Group pl={"xs"} pt={"xs"}>
+                <Radio
+                  value={WaAutomatedReplyMatchType.ContainsAnyOf}
+                  label={"Contains Any Of"}
+                />
+                <Radio
+                  value={WaAutomatedReplyMatchType.ContainsAllOf}
+                  label={"Contains All Of"}
+                />
+                <Radio
+                  value={WaAutomatedReplyMatchType.Exact}
+                  label={"Exactly Equals"}
+                />
+              </Group>
+            </Radio.Group>
+            <Group>
+              <ContainedTagInput
+                required
+                label="Keywords"
+                placeholder="Enter keywords"
+                {...rootForm.getInputProps("commands")}
+                flex={1}
+                maxTags={
+                  rootForm?.values?.matchType ===
+                  WaAutomatedReplyMatchType.Exact
+                    ? 1
+                    : Infinity
+                }
+              />
+              <Checkbox
+                mt={"lg"}
+                label="Case Sensitive"
+                {...matchDataForm.getInputProps("caseSensitive", {
+                  type: "checkbox",
+                })}
+              />
+            </Group>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="allOthers">
+            <ContainedTagInput
+              required
+              readOnly
+              disabled
+              label="Keywords"
+              placeholder="Enter keywords"
+              {...rootForm.getInputProps("commands")}
+            />
+          </Tabs.Panel>
+        </Tabs>
 
         <Group justify={"space-between"}>
           <Button onClick={handleCancelClick} variant="light">
@@ -174,79 +234,5 @@ export function AutomatedReplyForm({
         </Group>
       </Stack>
     </form>
-  );
-}
-
-interface MatchDataFormProps {
-  matchDataForm: UseFormReturnType<WaAutomatedReplyMatchData, any>;
-  type: WaAutomatedReplyMatchType;
-}
-
-function MatchDataForm({ matchDataForm, type }: MatchDataFormProps) {
-  return (
-    <Group>
-      <Box style={{ flex: 4 }}>
-        {[
-          WaAutomatedReplyMatchType.ContainsAllOf,
-          WaAutomatedReplyMatchType.ContainsAnyOf,
-        ].includes(type) && (
-          <ContainedTagInput
-            required
-            label="Keywords"
-            placeholder="Enter keywords"
-            {...matchDataForm.getInputProps("keywords")}
-          />
-        )}
-        {type === WaAutomatedReplyMatchType.Exact && (
-          <ContainedTextField
-            required
-            label="Exact Text"
-            placeholder="Enter exact text"
-            {...matchDataForm.getInputProps("exactText")}
-          />
-        )}
-      </Box>
-      <Checkbox
-        mt={"lg"}
-        label="Case Sensitive"
-        {...matchDataForm.getInputProps("caseSensitive", { type: "checkbox" })}
-      />
-    </Group>
-  );
-}
-
-interface ResponseSelectorProps {
-  type: WaAutomatedReplyResponseType;
-  form: UseFormReturnType<any, any>;
-}
-function ResponseSelector({ type, form }: ResponseSelectorProps) {
-  return (
-    <>
-      {type === WaAutomatedReplyResponseType.Text && (
-        <ContainedTextArea
-          required
-          label="Response"
-          placeholder="Enter response"
-          {...form.getInputProps("responseText")}
-        />
-      )}
-      {type === WaAutomatedReplyResponseType.Template && (
-        <TemplateSelector {...form.getInputProps("responseTemplateId")} />
-      )}
-    </>
-  );
-}
-
-function TemplateSelector(props: SelectProps) {
-  const { data: templates } = useWaTemplates();
-  const { translations } = useTranslations();
-  if (!templates || !Array.isArray(templates)) return <RateupLoader />;
-  return (
-    <ContainedSelection
-      {...props}
-      label={translations["Template"]}
-      required
-      data={templates.map((t) => ({ label: t.data.name, value: t.id }))}
-    />
   );
 }
