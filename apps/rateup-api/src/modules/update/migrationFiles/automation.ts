@@ -14,12 +14,12 @@ export const automationReplyUpdate = async () => {
   for (const reply of waReplies) {
     if (!reply.matchData || !reply.matchData?.json) continue;
 
-    const updatedMatchData = { ...reply.matchData };
+    const updatedMatchData = { ...(reply?.matchData ?? {}) };
 
     // Iterate through nodes
-    updatedMatchData.json.nodes = updatedMatchData.json.nodes.map((node) => {
+    updatedMatchData.json.nodes = updatedMatchData?.json.nodes?.map((node) => {
       if (node.data?.components) {
-        node.data.components = node.data.components.map((component) => {
+        node.data.components = node.data.components?.map((component) => {
           if (component.type === "Image" && component.name?.image) {
             return {
               ...component,
