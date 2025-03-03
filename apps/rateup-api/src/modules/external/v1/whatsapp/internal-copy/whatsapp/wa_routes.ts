@@ -8,18 +8,12 @@ import { waRedirectRoutes } from "./redirect/wa_redirect.route";
 import { flowRoutes } from "./flows/flow.route";
 import { waFlowSchemas } from "./flows/flow.schema";
 import { flowEnpointRoutes } from "./flows/flow.endpoint-routes";
-import { waAutomatedReplySchemas } from "./automatedReply/wa_automatedReply.schema";
 import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route";
 import { waInboxRoutes } from "./inbox/wainbox.routes";
 import { waAuthRoutes } from "./auth/wa_auth.route";
 
 export async function whatsappRoutes(server: FastifyInstance) {
-  const modules = [
-    waSettingsSchema,
-    waTemplateSchemas,
-    waFlowSchemas,
-    waAutomatedReplySchemas,
-  ];
+  const modules = [waSettingsSchema, waTemplateSchemas, waFlowSchemas];
   for (const module of modules) {
     for (const schema of module) {
       server.addSchema(schema);

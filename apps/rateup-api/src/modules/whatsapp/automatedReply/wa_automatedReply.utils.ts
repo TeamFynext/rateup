@@ -28,15 +28,23 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { autoGenerateTicket } from "../../ticket/ticket.service";
 
 export function validateAutomationMatchCondition(
-  automation: WaAutomatedReply,
+  automation: {
+    commands: string[];
+    matchType: string;
+    matchData: any;
+    id: string;
+    name: string;
+    createdAt: Date;
+    teamId?: string;
+  },
   message: string,
 ): boolean {
-  const { matchType, matchData } = automation;
+  const { matchType, matchData, commands } = automation;
   if (matchType === WaAutomatedReplyMatchType.Exact) {
     if (matchData.caseSensitive) {
-      return message === matchData.exactText;
+      return commands?.[0] === message;
     } else {
-      return message.toLowerCase() === matchData.exactText.toLowerCase();
+      return commands?.[0]?.toLowerCase() === message?.toLowerCase();
     }
   } else if (
     [
@@ -52,12 +60,10 @@ export function validateAutomationMatchCondition(
       comparator = "some";
 
     if (matchData.caseSensitive) {
-      return matchData.keywords[comparator]((keyword) =>
-        message.includes(keyword),
-      );
+      return commands[comparator]((keyword) => message.includes(keyword));
     } else {
       message = message.toLowerCase();
-      return matchData.keywords[comparator]((keyword) =>
+      return commands[comparator]((keyword) =>
         message.includes(keyword.toLowerCase()),
       );
     }
@@ -105,6 +111,7 @@ type matchDataProps = {
             | string
             | { image: string };
           parameter?: any;
+          teamId?: string;
         }>;
       };
     }>;
@@ -118,133 +125,134 @@ export async function sendAutomatedReplyMessage(
   prevIntraction: prevIntractionProps,
   isAutomationValid: boolean = true, // in the case of chained automations, automation will be invalid and automation prop will contain previous automation
 ) {
-  const { responseType, responseTemplateId, teamId, name, matchData } =
-    automation;
+  const { matchData } = automation;
 
   let nodes = (matchData as unknown as matchDataProps)?.json?.nodes;
-  if (responseType === WaAutomatedReplyResponseType.Template) {
-    // TODO: improve template sending
-    await sendTemplateToUserCore(orgId, responseTemplateId, from, [], teamId);
-  } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    let nextScreenId = prevIntraction
-      ? getNextScreen((matchData as unknown as matchDataProps)?.json, buttonId)
-      : nodes?.[0]?.id;
-    if (isAutomationValid && !nextScreenId) {
-      nextScreenId = nodes?.[0]?.id;
-    }
-    if (!nextScreenId) return false;
-    const node = nodes?.find((node) => node.id === nextScreenId);
+  let nextScreenId = prevIntraction
+    ? getNextScreen((matchData as unknown as matchDataProps)?.json, buttonId)
+    : nodes?.[0]?.id;
+  if (isAutomationValid && !nextScreenId) {
+    nextScreenId = nodes?.[0]?.id;
+  }
+  if (!nextScreenId) return false;
+  const node = nodes?.find((node) => node.id === nextScreenId);
 
-    const waAutomatedReplyMessage = await prisma.waAutomatedReplyMessage.create(
-      {
-        data: {
-          orgId,
-          waAutomatedReplyId: automation?.id,
-          phone: from,
-          currentScreen: nextScreenId ?? "",
-          message: message ?? "",
-        },
-      },
-    );
-    if (!node) return false;
+  const waAutomatedReplyMessage = await prisma.waAutomatedReplyMessage.create({
+    data: {
+      orgId,
+      waAutomatedReplyId: automation?.id,
+      phone: from,
+      currentScreen: nextScreenId ?? "",
+      message: message ?? "",
+    },
+  });
+  if (!node) return false;
 
-    let components = node?.data?.components;
-    if (!components?.length) return false;
+  let components = node?.data?.components;
+  if (!components?.length) return false;
 
-    for (const component of components) {
-      orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
-      if (
-        component?.type === ReplyComponentType.BasicText &&
-        Array.isArray(component?.name)
-      ) {
-        let buttons = component?.name?.splice(1);
-        if (buttons?.length === 0) {
-          await sendTextMessage(
-            { phone: from, orgId },
-            "",
-            component?.name[0]?.value,
-          );
-        } else {
-          await sendMessage(
-            orgId,
-            createReplyButtonsMessage(
-              from,
-              "",
-              component?.name?.[0]?.value,
-              buttons,
-            ),
-            teamId,
-          );
-        }
-      } else if (
-        component?.type === ReplyComponentType?.Template &&
-        typeof component?.name === "string"
-      ) {
-        await sendTemplateToUserCore(
-          orgId,
-          component?.name,
-          from,
-          component?.parameter ?? [],
-          teamId,
+  for (const component of components) {
+    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    if (
+      component?.type === ReplyComponentType.BasicText &&
+      Array.isArray(component?.name)
+    ) {
+      let buttons = component?.name?.splice(1);
+      if (buttons?.length === 0) {
+        await sendTextMessage(
+          { phone: from, orgId },
+          "",
+          component?.name[0]?.value,
         );
-      } else if (
-        component?.type === ReplyComponentType?.Flow &&
-        typeof component?.name === "string"
-      ) {
-        const serviceParam = {
+      } else {
+        await sendMessage(
           orgId,
-          dbFlowId: component?.name,
-          phone: from,
-        };
-        await sendFlow(serviceParam);
-      } else if (
-        component?.type === ReplyComponentType?.Image &&
-        typeof component?.name === "object" &&
-        !Array.isArray(component?.name)
-      ) {
+          createReplyButtonsMessage(
+            from,
+            "",
+            component?.name?.[0]?.value,
+            buttons,
+          ),
+        );
+      }
+    } else if (
+      component?.type === ReplyComponentType?.Template &&
+      typeof component?.name === "string"
+    ) {
+      await sendTemplateToUserCore(
+        orgId,
+        component?.name,
+        from,
+        component?.parameter ?? [],
+        component?.teamId,
+      );
+    } else if (
+      component?.type === ReplyComponentType?.Flow &&
+      typeof component?.name === "string"
+    ) {
+      const serviceParam = {
+        orgId,
+        dbFlowId: component?.name,
+        phone: from,
+      };
+      await sendFlow(serviceParam);
+    } else if (
+      component?.type === ReplyComponentType?.Image &&
+      Array.isArray(component?.name)
+    ) {
+      let buttons = component?.name?.slice(2);
+      if (buttons?.length === 0) {
         await sendMessage(
           orgId,
           createReplyImageMessage(
             from,
-            getFileUrlFromKey(component?.name?.image),
+            getFileUrlFromKey(component?.name?.[0]?.value),
+            component?.name?.[1]?.value,
           ),
-          teamId,
         );
-      } else if (
-        component?.type === ReplyComponentType.List &&
-        Array.isArray(component?.name)
-      ) {
-        let buttons = component?.name?.splice(1);
-        if (buttons?.length === 0) {
-          await sendTextMessage(
-            { phone: from, orgId },
-            "",
-            component?.name[0]?.value,
-          );
-        } else {
-          await sendMessage(
-            orgId,
-            createListMessage(
-              from,
-              null,
-              component?.name?.[0]?.value,
-              "options",
-              buttons,
-            ),
-            teamId,
-          );
-        }
-      } else if (component?.type === ReplyComponentType.Ticket) {
-        await autoGenerateTicket({
-          teamId,
-          waAutomatedReplyMessageId: waAutomatedReplyMessage.id,
-        });
+      } else {
+        await sendMessage(
+          orgId,
+          createReplyButtonsMessage(
+            from,
+            getFileUrlFromKey(component?.name?.[0]?.value),
+            component?.name?.[1]?.value,
+            buttons,
+            true,
+          ),
+        );
       }
+    } else if (
+      component?.type === ReplyComponentType.List &&
+      Array.isArray(component?.name)
+    ) {
+      let buttons = component?.name?.splice(1);
+      if (buttons?.length === 0) {
+        await sendTextMessage(
+          { phone: from, orgId },
+          "",
+          component?.name[0]?.value,
+        );
+      } else {
+        await sendMessage(
+          orgId,
+          createListMessage(
+            from,
+            null,
+            component?.name?.[0]?.value,
+            "options",
+            buttons,
+          ),
+        );
+      }
+    } else if (component?.type === ReplyComponentType.Ticket) {
+      await autoGenerateTicket({
+        teamId: component?.teamId,
+        waAutomatedReplyMessageId: waAutomatedReplyMessage.id,
+      });
     }
-    return true;
-  } else {
-    throw new Error("Not implemented");
   }
+  return true;
 }
 
 function getNextScreen(data, buttonId) {

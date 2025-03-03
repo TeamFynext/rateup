@@ -468,6 +468,7 @@ async function handleAutomatedReply(
       await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
     }
   } catch (error) {
+    console.log("🚀 ~ error:", error);
     log.error("Error handling automated reply: %o", error);
   }
 }
@@ -482,15 +483,23 @@ async function handleInitialInteraction(
     dayjs(prevInteraction.createdAt).isBefore(dayjs().subtract(1, "day"));
 
   if (isInitialInteraction) {
-    const initialAutomation = await prisma.waAutomatedReply.findFirst({
-      where: { team: { orgId }, name: "initial" },
+    let initialAutomation = await prisma.waAutomatedReplyCommands.findUnique({
+      where: {
+        command_org_id_unique: {
+          command: "*",
+          orgId: orgId,
+        },
+      },
+      include: {
+        waAutomatedReply: true,
+      },
     });
 
     if (initialAutomation) {
       await sendAutomatedReplyMessage(
         orgId,
         parsedMessage,
-        initialAutomation,
+        initialAutomation?.waAutomatedReply,
         prevInteraction,
       );
     }

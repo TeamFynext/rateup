@@ -166,6 +166,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
 export function createReplyImageMessage(
   to: string,
   imageId: string,
+  caption?: string,
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -174,15 +175,17 @@ export function createReplyImageMessage(
     type: "image",
     image: {
       link: imageId,
+      caption,
     },
   };
 }
 
 export function createReplyButtonsMessage(
   to: string,
-  questionTitle: string,
+  questionHeader: string,
   questionDescription: string | Object,
   choices: any[],
+  withImage = false,
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -191,10 +194,17 @@ export function createReplyButtonsMessage(
     type: "interactive",
     interactive: {
       type: "button",
-      header: {
-        type: "text",
-        text: questionTitle,
-      },
+      header: withImage
+        ? {
+            type: "image",
+            image: {
+              link: questionHeader,
+            },
+          }
+        : {
+            type: "text",
+            text: questionHeader,
+          },
       body: {
         text:
           typeof questionDescription === "string"

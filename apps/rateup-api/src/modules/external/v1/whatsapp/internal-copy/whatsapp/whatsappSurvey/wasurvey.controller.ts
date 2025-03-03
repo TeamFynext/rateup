@@ -33,10 +33,6 @@ import {
 import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
 import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
 
-import {
-  checkIfMessageMatchesAnyAutomation,
-  sendAutomatedReplyMessage,
-} from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { CampaignParticipant, Contact, WhatsappSettings } from "@prisma/client";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
@@ -61,6 +57,10 @@ import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
 } from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service";
+import {
+  checkIfMessageMatchesAnyAutomation,
+  sendAutomatedReplyMessage,
+} from "../../../../../../whatsapp/automatedReply/wa_automatedReply.utils";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -89,52 +89,6 @@ export async function webhookSubscribeHandler(
   }
 }
 
-// TODO: handle multiple changes (changes.length > 1)
-// TODO: Check for usable types in whatsapp sdk (discontinued project)
-export async function whatsappEventHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const body = request.body as WaMessageBody;
-    log.trace("WaEvent => %o", body); // Log all events
-
-    const eventType = getEventType(body);
-    if (!eventType) {
-      // Probably a message delivery status. Ignoring...
-      return;
-    } else if (
-      [WaEvent.DELIVERED, WaEvent.READ, WaEvent.FAILED, WaEvent.SENT].includes(
-        eventType,
-      )
-    ) {
-      await handleMessageStatusUpdate(
-        eventType,
-        body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
-      );
-      return;
-    } else if (eventType === WaEvent.Message) {
-      log.trace("messageObject => %o", getMessageObject(body));
-
-      const phone_id = body.entry[0].changes[0].value.metadata.phone_number_id;
-      const waSettings = await getWaSettingsByPhoneId(phone_id);
-      if (!waSettings) {
-        log.error("WaSettings not found for phone_id %s", phone_id);
-        return;
-      }
-
-      await whatsappMessageHandler(waSettings, body);
-    } else if (eventType === WaEvent.TemplateStatusChange) {
-      log.trace("template status change => %o", body);
-      await templateStatusChangeHandler(body.entry[0].changes[0].value as any);
-    }
-  } catch (e) {
-    log.error(e);
-    log.trace("Error caught successfully");
-  } finally {
-    reply.code(200).send();
-  }
-}
 interface changeValue {
   event: WaTemplateStatus;
   message_template_id: number;
@@ -159,63 +113,6 @@ async function templateStatusChangeHandler(changeValue: changeValue) {
     waTemplate.status = changeValue.event;
     await updateTemplateInDb(dbTemplate.id, waTemplate);
     return true;
-  }
-}
-
-async function whatsappMessageHandler(
-  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
-  waMessage: WaMessageBody,
-) {
-  // check for '/start' command
-  const parsedMessage = parseMessage(waMessage);
-  const { orgId } = waSettings;
-  const {
-    message: tempMessage,
-    from,
-    type,
-    completeMessageObject,
-    userName,
-  } = parsedMessage;
-
-  await handleWaMessages(
-    "receive",
-    completeMessageObject,
-    from,
-    orgId,
-    userName,
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
-  );
-  const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
-  log.trace("message => %s", message);
-
-  if (parseStartMessage(message)) {
-    await handleStartMessage(orgId, waMessage);
-  }
-  // else if (message.startsWith("/register")) {
-  //   await handleRegisterMessage(orgId, waMessage);
-  // }
-  else if (parsedMessage.type === "nfm_reply") {
-    await handleStaticFlowReply(orgId, waMessage);
-  } else {
-    let session = await getSession(orgId, from);
-    // deleting session after 24hrs
-    if (!validateSession(session)) {
-      if (session) {
-        await deleteSession(orgId, from);
-        session = undefined;
-      }
-    }
-    if (session) {
-      await handleWaSurveySession(orgId, waMessage, session);
-    } else {
-      const automation = await checkIfMessageMatchesAnyAutomation(
-        orgId,
-        waMessage,
-      );
-      if (automation) {
-        await sendAutomatedReplyMessage(orgId, parsedMessage, automation);
-      }
-    }
   }
 }
 
