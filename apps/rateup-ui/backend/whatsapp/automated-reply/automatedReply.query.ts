@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { showSuccessToast } from "../../../utils/notifications";
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createWaAutomatedReply,
   deleteWaAutomatedReply,
@@ -46,6 +46,9 @@ export const useCreateWaAutomatedReplyMutation = () => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       showSuccessToast("Automated Reply Created Successfully");
     },
+    onError: (error: any) => {
+      showErrorToast(error?.response?.data ?? "Error Creating Automated Reply");
+    },
   });
 };
 
@@ -71,6 +74,9 @@ export const useUpdateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
         queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
       });
       showSuccessToast("Automated Reply Updated Successfully");
+    },
+    onError: (error: any) => {
+      showErrorToast(error?.response?.data ?? "Error Updating Automated Reply");
     },
   });
 };

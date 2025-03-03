@@ -9,6 +9,7 @@ import {
   Menu,
   SimpleGrid,
   Stack,
+  Switch,
   Text,
   Title,
 } from "@mantine/core";
@@ -69,26 +70,43 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
             <LCampaignCardMenuItems campaignId={automation.id} />
           </CardMenu>
         </Group>
-        <Text fz="sm" c="dimmed">
-          {` ${translations["Created"]} ${timeSince}`}
-        </Text>
+        <Group justify="space-between">
+          <Text fz="sm" c="dimmed">
+            {` ${translations["Created"]} ${timeSince}`}
+          </Text>
+          {automation?.commands?.includes("*") && (
+            <Badge size="xs" color="green">
+              Fallback
+            </Badge>
+          )}
+        </Group>
         <Group className={classes.card_footer}>
           <Text fz={"xs"} fw={600}>
             {translations["For"]}
           </Text>
 
-          {automation?.matchData?.exactText ? (
-            <Badge size="xs" variant="outline">
-              {automation?.matchData?.exactText}
-            </Badge>
-          ) : (
-            ""
-          )}
-          {automation?.matchData?.keywords?.map((kw) => (
+          {automation?.commands?.map((kw) => (
             <Badge size="xs" variant="outline" key={kw}>
               {kw}
             </Badge>
           )) ?? ""}
+        </Group>
+        <Group justify="space-between">
+          <Badge
+            variant="light"
+            size="xs"
+          >{`Type: ${automation.matchType}`}</Badge>
+          <Switch
+            checked={automation.matchData?.caseSensitive}
+            readOnly
+            label={"caseSensitive"}
+            size="xs"
+            styles={{
+              label: {
+                paddingLeft: 2,
+              },
+            }}
+          />
         </Group>
       </Stack>
     </PaperLayout>

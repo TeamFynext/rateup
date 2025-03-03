@@ -168,6 +168,9 @@ const ScreenNode = ({ id, data, setNodes }) => {
                               ? templates.map((t) => ({
                                   label: t.data.name,
                                   value: t.id,
+                                  flowId: t.data?.components?.find(
+                                    (c) => c.type === "BUTTONS",
+                                  )?.buttons?.[0]?.["flow_id"],
                                 }))
                               : []
                         }
@@ -250,12 +253,12 @@ export function RenderMenuDropdown({
           <Menu.Item
             onClick={() => addComponentNode(ComponentType.BasicText, index)}
           >
-            Text
+            Text + Button
           </Menu.Item>
           <Menu.Item
             onClick={() => addComponentNode(ComponentType.Image, index)}
           >
-            Image
+            Image + Button
           </Menu.Item>
           <Menu.Item
             onClick={() => addComponentNode(ComponentType.Flow, index)}

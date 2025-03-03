@@ -1,6 +1,8 @@
 import { MutableRefObject } from "react";
 
 import {
+  ActionIcon,
+  ActionIconProps,
   Button,
   ButtonProps,
   FileButton,
@@ -9,7 +11,7 @@ import {
   Image,
   MantineStyleProp,
 } from "@mantine/core";
-import { IconUpload } from "@tabler/icons-react";
+import { IconRestore, IconTrash, IconUpload } from "@tabler/icons-react";
 
 import { DEFAULT_IMAGE_BASE64_START } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -252,13 +254,14 @@ type RateupFileUploadButtonProps = {
   handleFileChange: (file: File) => Promise<void>;
   clearFile: () => void;
   fileButton?: ButtonProps;
-  resetButton?: ButtonProps;
+  resetButton?: ActionIconProps;
   type?: "file" | "image";
   fileSrc?: string | { id: string; image: string };
   accept?: string;
   error?: string;
   style?: MantineStyleProp;
   size?: "xs" | "sm" | "md" | "lg";
+  rightSection?: React.ReactNode;
 };
 export const RateupFileUploadButton = ({
   resetRef,
@@ -271,33 +274,25 @@ export const RateupFileUploadButton = ({
   clearFile,
   error,
   style,
-  size = "sm",
+  size = "lg",
+  rightSection,
 }: RateupFileUploadButtonProps) => {
+  let url = rightSection
+    ? typeof fileSrc === "string"
+      ? getFileUrlFromKey(fileSrc)
+      : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`
+    : typeof fileSrc === "object"
+      ? getFileUrlFromKey(fileSrc.image)
+      : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`;
   return (
     <Group gap={4} style={style}>
       {fileSrc && (
         <HoverCard width={280} shadow="md" position="top" withArrow>
           <HoverCard.Target>
-            <Image
-              src={
-                typeof fileSrc === "object"
-                  ? getFileUrlFromKey(fileSrc?.image)
-                  : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`
-              }
-              h={35}
-              alt="choice-preview"
-            />
+            <Image src={url} h={35} alt="img" />
           </HoverCard.Target>
           <HoverCard.Dropdown>
-            <Image
-              src={
-                typeof fileSrc === "object"
-                  ? getFileUrlFromKey(fileSrc?.image)
-                  : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`
-              }
-              alt="choice-preview"
-              mah={400}
-            />
+            <Image src={url} alt="choice-preview" mah={400} />
           </HoverCard.Dropdown>
         </HoverCard>
       )}
@@ -310,10 +305,11 @@ export const RateupFileUploadButton = ({
         {(props) => (
           <Button
             variant="outline"
-            rightSection={<IconUpload size={18} />}
+            rightSection={<IconUpload size={16} />}
             radius={"md"}
             color={error && "red"}
-            size={size}
+            size={"sm"}
+            p={0}
             style={{
               flexGrow: 1,
             }}
@@ -324,7 +320,7 @@ export const RateupFileUploadButton = ({
           </Button>
         )}
       </FileButton>
-      <Button
+      <ActionIcon
         disabled={!fileSrc}
         color="red"
         radius={"md"}
@@ -332,8 +328,9 @@ export const RateupFileUploadButton = ({
         size={size}
         {...resetButton}
       >
-        reset
-      </Button>
+        {fileSrc ? <IconTrash /> : <IconRestore />}
+      </ActionIcon>
+      {rightSection}
     </Group>
   );
 };

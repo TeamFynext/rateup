@@ -11,7 +11,9 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
+  IconDeviceFloppy,
   IconEdit,
   IconGripVertical,
   IconMinus,
@@ -24,6 +26,9 @@ import {
   RateupButtonPrimary,
   RateupFileUploadButton,
 } from "@/components/Button/RateupButtons";
+import { LengthTracker } from "@/components/input/LengthTracker";
+import { TeamSelector } from "@/components/input/TeamSelector";
+import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import useTranslations from "@/dictionaries/useTranslation";
 import useReplyStore, {
@@ -49,11 +54,16 @@ const DraggableComponent = ({
 }) => {
   const { setId, close, setType, open } = useReplyStore();
   const { translations } = useTranslations();
-  const [image, setImage] = useState(data.components[index].name ?? null);
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fileContent, setFileContent] = useState(null);
   const [imageError, setImageError] = useState("");
   const resetRef = useRef(null);
+  const [opened, { toggle, close: closeModal }] = useDisclosure();
+  const [templateIdWithTeamId, setTemplateIdWithTeamId] = useState({
+    teamId: null,
+    templateId: null,
+  });
 
   const handleAddField = (len) => {
     if (component.name.length < len) {
@@ -109,7 +119,10 @@ const DraggableComponent = ({
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000) return setImageError("max image size is 300KB");
+      if (file.size > 300000) {
+        showErrorToast("Max image size is 300KB", "file-size");
+        return setImageError("Max 300KB");
+      }
       setImageError("");
       const base64String = await FileConverter.fileToBase64(file);
       setImage(base64String);
@@ -124,6 +137,13 @@ const DraggableComponent = ({
   };
   const clearFile = async () => {
     setLoading(true);
+    if (!image?.image) {
+      setImage(null);
+      setFileContent(null);
+      setLoading(false);
+      resetRef.current?.();
+      return;
+    }
     await deleteUploadedFiles({ fileKeyArray: [{ Key: image?.image }] });
     setImage(null);
     setFileContent(null);
@@ -134,9 +154,17 @@ const DraggableComponent = ({
               ...node,
               data: {
                 ...node.data,
-                components: node.data.components.map((comp, compIndex) => {
-                  let { name = {}, ...rest } = comp;
-                  return compIndex === index ? rest : comp;
+                components: node?.data?.components?.map((comp, compIndex) => {
+                  return compIndex === index
+                    ? {
+                        ...comp,
+                        name: comp.name.map((field, fieldIndex) =>
+                          fieldIndex === 0
+                            ? { ...field, value: { image: "" } }
+                            : field,
+                        ),
+                      }
+                    : comp;
                 }),
               },
             }
@@ -150,8 +178,9 @@ const DraggableComponent = ({
     try {
       if (!fileContent) return;
       setLoading(true);
+      clearFile();
       const publicImageLink = await uploadFile(fileContent);
-      setImage({ image: publicImageLink });
+      setImage(publicImageLink);
       setNodes((nodes) =>
         nodes.map((node) =>
           node.id === id
@@ -163,9 +192,11 @@ const DraggableComponent = ({
                     compIndex === index
                       ? {
                           ...comp,
-                          name: {
-                            image: publicImageLink,
-                          },
+                          name: comp.name.map((field, fieldIndex) =>
+                            fieldIndex === 0
+                              ? { ...field, value: publicImageLink }
+                              : field,
+                          ),
                         }
                       : comp,
                   ),
@@ -207,23 +238,36 @@ const DraggableComponent = ({
       ),
     );
   };
-  const renderDynamicTextFields = (len = 4) => (
+  const renderDynamicTextFields = (len = 4, withImage = false) => (
     <Stack gap={"xs"} onClick={(e) => e.stopPropagation()}>
       {component.name.map((field, i) => {
         let parsedValue = parseJsonToReact(field.value);
-        return (
-          <Group key={field.id} gap={4}>
-            {i > 0 && (
-              <ActionIcon
-                title="Delete"
-                radius={"sm"}
-                variant="light"
-                onClick={() => handleRemoveField(field.id)}
-              >
-                <IconMinus />
-              </ActionIcon>
-            )}
-            {i === 0 ? (
+        let index = withImage ? i : i + 1;
+        switch (index) {
+          case 0:
+            return (
+              <RateupFileUploadButton
+                clearFile={clearFile}
+                handleFileChange={handleFileChange}
+                resetRef={resetRef}
+                fileSrc={image ?? field.value}
+                error={imageError}
+                rightSection={
+                  <ActionIcon
+                    title="Save"
+                    radius={"md"}
+                    size={"lg"}
+                    onClick={uploadFileData}
+                    loading={loading}
+                    disabled={image?.image || !image}
+                  >
+                    <IconDeviceFloppy />
+                  </ActionIcon>
+                }
+              />
+            );
+          case 1:
+            return (
               <Card
                 shadow="sm"
                 radius="md"
@@ -240,43 +284,70 @@ const DraggableComponent = ({
                   parsedValue
                 ) : (
                   <Text c={"dimmed"} fz={"sm"}>
-                    {i === 0 ? "Enter Text" : "Enter button name"}
+                    Enter Text
                   </Text>
                 )}
-                {i > 0 && (
-                  <Handle
-                    type="source"
-                    position={Position.Right}
-                    id={field.id}
-                    className={styles.handle_style}
-                  />
-                )}
               </Card>
-            ) : (
-              <TextInput
-                placeholder={"Enter the button text"}
-                value={field.value}
-                onClick={() => open && close()}
-                onChange={(e) => handleInputChange(field.id, e.target.value)}
-                flex={1}
-                rightSection={
-                  i > 0 && (
-                    <Handle
-                      type="source"
-                      position={Position.Right}
-                      id={field.id}
-                      className={styles.handle_style}
-                    />
-                  )
-                }
-              />
-            )}
-          </Group>
-        );
+            );
+
+          default:
+            return (
+              <Group key={field.id} gap={4}>
+                <ActionIcon
+                  title="Delete"
+                  radius={"sm"}
+                  variant="light"
+                  onClick={() => handleRemoveField(field.id)}
+                >
+                  <IconMinus />
+                </ActionIcon>
+                <TextInput
+                  placeholder={"Enter the button text"}
+                  value={field.value}
+                  onClick={() => open && close()}
+                  onChange={(e) => handleInputChange(field.id, e.target.value)}
+                  flex={1}
+                  maxLength={len > 4 ? 24 : 20}
+                  rightSection={
+                    i > 0 && (
+                      <>
+                        <LengthTracker
+                          maxValue={len > 4 ? 24 : 20}
+                          length={field.value?.length}
+                        />
+                        <Handle
+                          type="source"
+                          position={Position.Right}
+                          id={field.id}
+                          className={styles.handle_style}
+                        />
+                      </>
+                    )
+                  }
+                  styles={{
+                    section: {
+                      width: 60,
+                    },
+
+                    input: {
+                      width: "calc(100% - 30px)",
+                      border: "none",
+                    },
+                    root: {
+                      border: "1px solid #e3e3e3",
+                      borderRadius: 4,
+                    },
+                  }}
+                />
+              </Group>
+            );
+        }
       })}
       {component.name.length < len && (
         <RateupButtonPrimary
-          title="Add Button"
+          title={
+            withImage && component.name.length === 1 ? "Add Text" : "Add Button"
+          }
           radius={"sm"}
           leftIcon={<IconPlus />}
           onClick={() => handleAddField(len)}
@@ -292,23 +363,7 @@ const DraggableComponent = ({
       case ComponentType.List:
         return renderDynamicTextFields(11);
       case ComponentType.Image:
-        return (
-          <Stack>
-            <RateupFileUploadButton
-              clearFile={clearFile}
-              handleFileChange={handleFileChange}
-              resetRef={resetRef}
-              fileSrc={image}
-            />
-            <RateupButtonPrimary
-              title="Save"
-              radius={"sm"}
-              onClick={uploadFileData}
-              loading={loading}
-              disabled={image?.image || !image}
-            />
-          </Stack>
-        );
+        return renderDynamicTextFields(3, true);
       case ComponentType.Flow:
       case ComponentType.Template:
         return (
@@ -319,8 +374,15 @@ const DraggableComponent = ({
               allowDeselect={false}
               placeholder={`Select ${label.toLowerCase()}`}
               value={component.name}
-              onChange={(value) => {
+              onChange={(value, values: any) => {
                 if (type !== ComponentType.Flow) close();
+                if (values?.flowId) {
+                  setTemplateIdWithTeamId((prev) => ({
+                    ...prev,
+                    templateId: values?.value,
+                  }));
+                  return toggle();
+                }
                 setNodes((nodes) =>
                   nodes.map((node) =>
                     node.id === id
@@ -331,7 +393,11 @@ const DraggableComponent = ({
                             components: node.data.components.map(
                               (comp, compIndex) =>
                                 compIndex === index
-                                  ? { ...comp, name: value }
+                                  ? {
+                                      ...comp,
+                                      name: value,
+                                      teamId: templateIdWithTeamId?.teamId,
+                                    }
                                   : comp,
                             ),
                           },
@@ -342,6 +408,54 @@ const DraggableComponent = ({
               }}
               flex={1}
             />
+            <SimpleModalLayout
+              opened={opened}
+              onClose={() => {
+                closeModal();
+                setTemplateIdWithTeamId({ teamId: null, templateId: null });
+              }}
+              title="Authentication"
+            >
+              <Stack>
+                <TeamSelector
+                  value={templateIdWithTeamId.teamId}
+                  onChange={(id) => {
+                    setTemplateIdWithTeamId((prev) => ({
+                      ...prev,
+                      teamId: id,
+                    }));
+                  }}
+                />
+                <RateupButtonPrimary
+                  title="Select"
+                  onClick={() => {
+                    setNodes((nodes) =>
+                      nodes.map((node) =>
+                        node.id === id
+                          ? {
+                              ...node,
+                              data: {
+                                ...node.data,
+                                components: node.data.components.map(
+                                  (comp, compIndex) =>
+                                    compIndex === index
+                                      ? {
+                                          ...comp,
+                                          name: templateIdWithTeamId.templateId,
+                                          teamId: templateIdWithTeamId?.teamId,
+                                        }
+                                      : comp,
+                                ),
+                              },
+                            }
+                          : node,
+                      ),
+                    );
+                    closeModal();
+                  }}
+                />
+              </Stack>
+            </SimpleModalLayout>
             <ActionIcon
               display={type === ComponentType.Flow ? "none" : "block"}
               mt={"lg"}
