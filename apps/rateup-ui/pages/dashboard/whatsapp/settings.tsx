@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Script from "next/script";
 
 import {
@@ -12,6 +12,7 @@ import {
   Group,
   Skeleton,
   Stack,
+  Switch,
   Tabs,
   Text,
   Tooltip,
@@ -19,15 +20,24 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import {
+  IconCheck,
   IconChecks,
   IconCopy,
   IconHelp,
   IconLogout,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react";
 
+import {
+  useGetChatbotDetails,
+  useUpdateChatbot,
+} from "@/backend/chatbot/chatbot.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import ChatbotResources from "@/components/ChatBot/ChatbotResources";
 import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import {
@@ -37,7 +47,10 @@ import {
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "../../../backend/whatsapp/settings/waSettings.query";
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "../../../components/Button/RateupButtons";
 import {
   ContainedTextArea,
   ContainedTextField,
@@ -45,7 +58,10 @@ import {
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
-import { WaConfigType } from "../../../types/enums";
+import {
+  SubscriptionFeaturePathName,
+  WaConfigType,
+} from "../../../types/enums";
 import { SAVE_HOTKEY } from "../../../utils/constants";
 import styles from "./settings.style.module.css";
 
@@ -339,11 +355,17 @@ export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
   const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
   const { translations } = useTranslations();
+  const { data: subscription } = useSubscription();
   useEffect(() => {
     if (waSettings) {
       setTab(waSettings.type);
     }
   }, [waSettings]);
+
+  const hasAIFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
+    [subscription],
+  );
 
   if (isLoading) {
     return <MetaLoginStatusLoaderSkeleton />;
@@ -395,6 +417,25 @@ export default function WhatsAppSettingsPage() {
                   {translations["Manual"]}
                 </Tabs.Tab>
               </Tooltip>
+              <Tooltip
+                label={
+                  !waSettings
+                    ? translations[
+                        "You need to configure WhatsApp Account to use AI chat in whatsapp"
+                      ]
+                    : !hasAIFeature
+                      ? translations["Upgrade subscription"]
+                      : translations["Configure WhatsApp with AI Chat"]
+                }
+                openDelay={300}
+              >
+                <Tabs.Tab
+                  value={WaConfigType.Chatbot}
+                  disabled={!waSettings || !hasAIFeature}
+                >
+                  {translations["Chat Bot"]}
+                </Tabs.Tab>
+              </Tooltip>
             </Tabs.List>
           </Center>
           <div />
@@ -404,6 +445,9 @@ export default function WhatsAppSettingsPage() {
         </Tabs.Panel>
         <Tabs.Panel value={WaConfigType.Manual}>
           <WhatsAppManualConfiguration waSettings={waSettings} />
+        </Tabs.Panel>
+        <Tabs.Panel value={WaConfigType.Chatbot}>
+          <WhatsAppAIChatConfiguration />
         </Tabs.Panel>
       </StyledTabs>
     </Stack>
@@ -497,3 +541,99 @@ function MetaLoginStatusLoaderSkeleton() {
     </PaperLayout>
   );
 }
+
+function WhatsAppAIChatConfiguration() {
+  const { data: chatbot } = useGetChatbotDetails();
+  const { translations } = useTranslations();
+  const updateChatbotdetMut = useUpdateChatbot();
+
+  const form = useForm({
+    initialValues: {
+      waCommand: "",
+      waPrompt: "",
+    },
+  });
+
+  function handleEnableWaAIChat(e) {
+    updateChatbotdetMut.mutate({ enableWaChat: e.currentTarget.checked });
+  }
+
+  useEffect(() => {
+    const initialValues = {
+      waCommand: chatbot?.waCommand,
+      waPrompt: chatbot?.waPrompt,
+    };
+    form.setInitialValues(initialValues);
+    form.setValues(initialValues);
+  }, [chatbot]);
+
+  function handleSubmit() {
+    updateChatbotdetMut.mutate(form.values);
+  }
+
+  return (
+    <Stack p={"sm"}>
+      <PaperLayout w={"100%"}>
+        <Stack>
+          <Switch
+            label={translations["Enable AI Chat in WhatsApp"]}
+            checked={chatbot?.enableWaChat}
+            onChange={handleEnableWaAIChat}
+          />
+          {chatbot?.enableWaChat && (
+            <Stack w={"50%"}>
+              <ContainedTextField
+                label={translations["Bot Command"]}
+                placeholder={"eg: @bot"}
+                {...form.getInputProps("waCommand")}
+              />
+              <ContainedTextArea
+                label={translations["Bot Prompt"]}
+                {...form.getInputProps("waPrompt")}
+                rows={5}
+              />
+              <Group>
+                <RateupButtonPrimary
+                  onClick={handleSubmit}
+                  title="Save"
+                  loading={updateChatbotdetMut.isPending}
+                />
+                <RateupButtonSecondary
+                  onClick={() => form.reset()}
+                  title="Cancel"
+                />
+              </Group>
+            </Stack>
+          )}
+        </Stack>
+      </PaperLayout>
+      <ChatbotResources />
+    </Stack>
+  );
+}
+
+export const SaveAndCancelIcons = ({
+  onSubmit,
+  onCancel,
+  isPending,
+  isChanging = false,
+}) => {
+  if (!isChanging) return null;
+  return (
+    <Group justify="center" align="center" mt={"lg"}>
+      <ActionIcon
+        radius={"xl"}
+        loading={isPending}
+        loaderProps={{ type: "oval" }}
+        color={"var(--gift-green)"}
+        onClick={onSubmit}
+        style={{ border: "1px solid white" }}
+      >
+        <IconCheck size={"1rem"} stroke={3} />
+      </ActionIcon>
+      <ActionIcon radius={"xl"} color={"red"} onClick={onCancel}>
+        <IconX size={"1rem"} stroke={3} />
+      </ActionIcon>
+    </Group>
+  );
+};

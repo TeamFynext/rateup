@@ -90,6 +90,13 @@ export async function createChatbot() {
   return await axiosClient.post(`${CHATBOT_BASEURL}/chatbot`);
 }
 
-export async function updateChatbot(data) {
+type IChatbotUpdate = {
+  publicPageStatus?: ChatbotPublicPageStatus;
+  enableWaChat?: boolean;
+  waCommand?: string;
+  waPrompt?: string;
+};
+
+export async function updateChatbot(data: IChatbotUpdate) {
   return await axiosClient.put(`${CHATBOT_BASEURL}/chatbot`, data);
 }
