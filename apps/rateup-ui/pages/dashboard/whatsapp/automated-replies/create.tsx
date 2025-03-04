@@ -51,7 +51,6 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
   if (initialValues) return initialValues;
   return {
     name: "",
-    teamId: "",
     matchType: WaAutomatedReplyMatchType.ContainsAnyOf,
     matchData: {
       json: {},
@@ -117,21 +116,13 @@ export function AutomatedReplyForm({
   return (
     <form onSubmit={rootForm.onSubmit((values) => handleSubmitClick())}>
       <Stack>
-        <Group>
-          <ContainedTextField
-            label="Name"
-            placeholder="Enter name"
-            required
-            style={{ flex: 4 }}
-            {...rootForm.getInputProps("name")}
-          />
-          <TeamSelector
-            label="Team"
-            required
-            style={{ flex: 3 }}
-            {...rootForm.getInputProps("teamId")}
-          />
-        </Group>
+        <ContainedTextField
+          label="Name"
+          placeholder="Enter name"
+          required
+          style={{ flex: 4 }}
+          {...rootForm.getInputProps("name")}
+        />
         <Tabs
           defaultValue="keywords"
           variant="pills"
