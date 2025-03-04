@@ -9,7 +9,6 @@ import {
   updateUsageStatsResetHandler,
   updateWebSurveyThemePageTitleHandler,
 } from "./update.controller";
-import { automationReplyUpdate } from "./migrationFiles/automation";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/updateGoogleReviewQuestions", updateGoogleReviewQuestions);
@@ -20,8 +19,6 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/usage-stats-reset", updateUsageStatsResetHandler);
 
   server.get("/campaign-stats-change", campaignStatsChangeHandler);
-
-  server.get("/update-automation-reply", automationReplyUpdate);
 
   server.post("/subscription/free", updateRateupPlanHandler);
 }
