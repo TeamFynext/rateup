@@ -175,7 +175,7 @@ export function createReplyImageMessage(
     type: "image",
     image: {
       link: imageId,
-      caption,
+      caption: caption ?? "",
     },
   };
 }
@@ -287,7 +287,7 @@ export function parseToWhatsAppFormat(editorContent) {
     }
   };
 
-  return editorContent.content
+  return editorContent?.content
     ? editorContent.content.map(parseNode).join("\n")
     : editorContent.map(parseNode).join("\n");
 }

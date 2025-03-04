@@ -207,12 +207,13 @@ async function handleMessageEvent(body: WaMessageBody) {
 
       await safeAsyncOperation(
         () => whatsappMessageHandler(waSettings, body),
-        (error) =>
+        (error) => {
           log.error(
             "Error processing WhatsApp message for phone_id %s: %o",
             phoneId,
             error,
-          ),
+          );
+        },
       );
     }
   }

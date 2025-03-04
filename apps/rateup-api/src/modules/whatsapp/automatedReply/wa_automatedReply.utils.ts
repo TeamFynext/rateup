@@ -12,6 +12,7 @@ import {
   createReplyButtonsMessage,
   createReplyImageMessage,
   parseMessage,
+  parseToWhatsAppFormat,
 } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
 import {
@@ -207,7 +208,7 @@ export async function sendAutomatedReplyMessage(
           createReplyImageMessage(
             from,
             getFileUrlFromKey(component?.name?.[0]?.value),
-            component?.name?.[1]?.value,
+            parseToWhatsAppFormat(component?.name?.[1]?.value ?? []),
           ),
         );
       } else {
