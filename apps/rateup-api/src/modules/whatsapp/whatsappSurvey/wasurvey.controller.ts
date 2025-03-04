@@ -65,7 +65,10 @@ import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { CampaignParticipant, Contact, WhatsappSettings } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
-import { handleContactConsent } from "../../contact/contact.service";
+import {
+  getContactByPhoneNumberAndOrgId,
+  handleContactConsent,
+} from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
 import { checkMessageLimitExceeded } from "./wasurvey.auth";
 import { updateMonthlyStat } from "../../stats/stats.service";
@@ -79,6 +82,11 @@ import {
 } from "../../loyalty/settings/settings.service";
 import dayjs from "dayjs";
 import { getSubscription, getUsageStats } from "../../campaign/campaign.auth";
+import { createJWT } from "../../../utils/jwt";
+import {
+  getAIResponseForQuery,
+  getChatbotDetails,
+} from "../../chatbot/chatbot.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -365,6 +373,7 @@ async function whatsappMessageHandler(
     orgId,
     message,
   );
+  const chatbot = await getChatbotDetails(orgId);
   if (loyaltyWaCommand) {
     await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand);
   } else if (!!parseStartMessage(message)) {
@@ -376,6 +385,8 @@ async function whatsappMessageHandler(
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
+  } else if (chatbot?.enableWaChat && message.startsWith(chatbot?.waCommand)) {
+    await handleAiWaChat(chatbot, message, orgId, from);
   } else {
     let session = await getSession(orgId, from);
     // deleting session after 24hrs
@@ -391,6 +402,42 @@ async function whatsappMessageHandler(
     if (session) {
       await handleWaSurveySession(orgId, waMessage, session);
     }
+  }
+}
+
+async function handleAiWaChat(
+  chatbot,
+  message: string,
+  orgId: string,
+  phone: string,
+) {
+  try {
+    const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+    const jwtToken = await createJWT({
+      userId: contact.id,
+      orgId,
+      role: "Contact",
+    });
+
+    const query = message.slice(chatbot?.waCommand?.length);
+    const response = await getAIResponseForQuery(
+      { query, userId: contact.id, orgId, customPrompt: chatbot?.waPrompt },
+      jwtToken,
+    );
+    if (response) await sendTextMessage({ phone, orgId }, null, response);
+    else
+      await sendTextMessage(
+        { phone, orgId },
+        null,
+        "Unable to reply. Something went wrong!",
+      );
+  } catch (e) {
+    log.error(e);
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "Unable to reply. Something went wrong!",
+    );
   }
 }
 

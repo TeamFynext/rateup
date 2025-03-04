@@ -5,6 +5,7 @@ import prisma from "../../utils/prisma";
 import { FastifyRequest } from "fastify";
 import { getAxiosAIClient } from "./chatbot.controller";
 import { log } from "../../utils/logger";
+import { getSubscription } from "../subscription/subscription.service";
 
 const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
 const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;
@@ -25,22 +26,84 @@ interface messageInput {
   query: string;
   userId: string;
   orgId: string;
+  customPrompt?: string;
 }
 export async function getAIResponseForQuery(data: messageInput, jwtToken) {
-  return await axios.post(CHATBOT_BASEURL, data, {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${jwtToken}`,
+  const subscription = await getSubscription(data.orgId);
+  const allowedTokens = subscription.features.ai.count;
+  const usedTokens = await prisma.usageStats.findUnique({
+    where: {
+      orgId: data.orgId,
+    },
+    select: {
+      aiCompletionTokensCount: true,
+      aiPromptTokensCount: true,
     },
   });
+  const res = await axios.post(
+    CHATBOT_BASEURL,
+    { ...data, allowedTokens, usedTokens },
+    {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    },
+  );
+  const { message, tokenUsage } = res.data;
+  if (tokenUsage)
+    await prisma.usageStats.update({
+      where: {
+        orgId: data.orgId,
+      },
+      data: {
+        aiPromptTokensCount: {
+          increment: tokenUsage.promptTokens,
+        },
+        aiCompletionTokensCount: {
+          increment: tokenUsage.completionTokens,
+        },
+      },
+    });
+  return message;
 }
 
 export async function getPublicAIResponseForQuery(data) {
-  return await axios.post(CHATBOT_PUBLIC_BASEURL, data, {
-    headers: {
-      Accept: "application/json",
+  const subscription = await getSubscription(data.orgId);
+  const allowedTokens = await subscription.features.ai.count;
+  const usedTokens = await prisma.usageStats.findUnique({
+    where: {
+      orgId: data.orgId,
+    },
+    select: {
+      aiCompletionTokensCount: true,
+      aiPromptTokensCount: true,
     },
   });
+  const res = await axios.post(
+    CHATBOT_PUBLIC_BASEURL,
+    { ...data, allowedTokens, usedTokens },
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+  const { message, tokenUsage } = res.data;
+  prisma.usageStats.update({
+    where: {
+      orgId: data.orgId,
+    },
+    data: {
+      aiPromptTokensCount: {
+        increment: tokenUsage.promptTokens,
+      },
+      aiCompletionTokensCount: {
+        increment: tokenUsage.completionTokens,
+      },
+    },
+  });
+  return message;
 }
 
 export async function uploadFileForAIEmbed(data, jwtToken) {
@@ -117,11 +180,17 @@ export async function getChatbotDetails(orgId: string) {
 }
 
 export async function updateChatbotDetails(data, orgId: string) {
-  return await prisma.chatbot.update({
+  return await prisma.chatbot.upsert({
     where: {
       orgId,
     },
-    data,
+    create: {
+      shortUrlId: getShortUrlId(),
+      orgId,
+    },
+    update: {
+      ...data,
+    },
   });
 }
 
@@ -137,12 +206,14 @@ export async function getTextSummaryByAI(
   texts,
   request: FastifyRequest,
   allowedTokens,
+  usedTokens,
 ) {
   try {
     const axiosAIClient = await getAxiosAIClient(request);
     const res = await axiosAIClient.post(`/chatbot/summarize`, {
       texts,
       allowedTokens,
+      usedTokens,
     });
     return res.data as {
       summary: string;

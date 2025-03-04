@@ -1496,6 +1496,7 @@ export async function getResponseSummary(
   surveyId: string,
   request: FastifyRequest,
   allowedTokens,
+  usedTokens,
   type: ResponseSummaryType,
   questionId: string,
   teamId?: string,
@@ -1549,7 +1550,12 @@ export async function getResponseSummary(
       : r.response.response,
   );
   if (existingSummary) responseTexts.push(existingSummary.summary);
-  const res = await getTextSummaryByAI(responseTexts, request, allowedTokens);
+  const res = await getTextSummaryByAI(
+    responseTexts,
+    request,
+    allowedTokens,
+    usedTokens,
+  );
   if (!res) throw new Error("Unable to get Summary");
   let updateData = null;
   if (type === ResponseSummaryType.All) {
