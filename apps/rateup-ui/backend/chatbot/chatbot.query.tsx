@@ -1,4 +1,7 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createChatbot,
   deleteChatbotResource,
@@ -13,8 +16,6 @@ import {
   updateChatbot,
   uploadSourceForEmbed,
 } from "./chatbot.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 export const useChatMutation = () => {
   return useMutation({
@@ -133,6 +134,10 @@ export const useUpdateChatbot = () => {
     mutationFn: updateChatbot,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatbotDetails"] });
+      showSuccessToast("Chatbot updated");
+    },
+    onError: () => {
+      showErrorToast("Updation Failed");
     },
   });
 };

@@ -397,6 +397,7 @@ export enum WaTemplateComponentTypeUpperCase {
 export enum WaConfigType {
   Manual = "Manual",
   Automated = "Automated", // through meta login
+  Chatbot = "Chatbot",
 }
 
 export enum ChatBotDataSourceType {
