@@ -240,7 +240,7 @@ const DraggableComponent = ({
   };
   const renderDynamicTextFields = (len = 4, withImage = false) => (
     <Stack gap={"xs"} onClick={(e) => e.stopPropagation()}>
-      {component.name.map((field, i) => {
+      {component?.name?.map((field, i) => {
         let parsedValue = parseJsonToReact(field.value);
         let index = withImage ? i : i + 1;
         switch (index) {
@@ -343,7 +343,7 @@ const DraggableComponent = ({
             );
         }
       })}
-      {component.name.length < len && (
+      {component?.name?.length < len && (
         <RateupButtonPrimary
           title={
             withImage && component.name.length === 1 ? "Add Text" : "Add Button"
