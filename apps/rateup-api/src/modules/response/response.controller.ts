@@ -310,10 +310,20 @@ export async function summarizeResponseHandler(
     const aiFeature = subscription.features.ai;
     if (!aiFeature || !aiFeature.active)
       return reply.code(403).send("You are not subscribed to AI Features");
+    const usedTokens = await prisma.usageStats.findUnique({
+      where: {
+        orgId: request.user.orgId,
+      },
+      select: {
+        aiCompletionTokensCount: true,
+        aiPromptTokensCount: true,
+      },
+    });
     const res = await getResponseSummary(
       surveyId,
       request,
       aiFeature.count,
+      usedTokens,
       type,
       questionId,
       teamId,

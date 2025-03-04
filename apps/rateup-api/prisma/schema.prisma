@@ -1104,6 +1104,9 @@ model Chatbot {
   org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   shortUrlId       String  @unique
   publicPageStatus String? @default("INACTIVE")
+  enableWaChat     Boolean @default(false)
+  waCommand        String? 
+  waPrompt         String?
 }
 
 model SurveyVariables {

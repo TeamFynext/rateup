@@ -81,7 +81,7 @@ export async function chatbotMessageHandler(
     const { query } = request.body;
     const jwtToken = await createJWT(request.user);
     const res = await getAIResponseForQuery({ query, userId, orgId }, jwtToken);
-    reply.code(200).send(res.data);
+    reply.code(200).send({ message: res });
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "Something went wrong!" });
@@ -98,7 +98,7 @@ export async function publicChatbotMessageHandler(
     const { query, chatbotId, userId } = request.body;
     const { orgId } = await getChatbotDetailsByShortUrlId(chatbotId);
     const res = await getPublicAIResponseForQuery({ query, orgId, userId });
-    reply.code(200).send(res.data);
+    reply.code(200).send({ message: res });
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "Something went wrong!" });

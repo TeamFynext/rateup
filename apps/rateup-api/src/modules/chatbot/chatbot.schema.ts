@@ -36,6 +36,9 @@ export const byChatbotIdSchema = z.object({
 
 export const updateChatbotSchema = z.object({
   publicPageStatus: z.nativeEnum(ChatbotPublicPageStatus).optional(),
+  enableWaChat: z.boolean().optional(),
+  waCommand: z.string().optional(),
+  waPrompt: z.string().optional(),
 });
 
 export const { schemas: chatbotSchemas, $ref: $chatbotRef } = buildJsonSchemas(
