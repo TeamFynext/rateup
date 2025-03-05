@@ -313,7 +313,9 @@ export async function importCSVContacts(
       ) {
         errorContact.push({
           name: contact?.name || "name is missing/invalid",
-          phone: contact?.phone || "phone is missing/invalid",
+          phone: contact?.phone
+            ? `${contact?.phone}: Invalid phone number`
+            : "phone is missing",
         });
       } else {
         contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
@@ -368,15 +370,34 @@ export async function importCSVContacts(
         workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
           header?.toString().toLowerCase(),
         ) ?? [];
-      const headerIndices = headers.map((header, index) => ({ header, index }));
+      const headerIndices = headers.map((header, index) => ({
+        header: header?.trim()?.toLowerCase(),
+        index,
+      }));
+      const sheetData = workSheetsFromFile?.[0]?.data;
+      if (!sheetData || sheetData.length < 2) {
+        log.info("No data rows available");
+        return;
+      }
 
-      workSheetsFromFile?.[0]?.data?.slice(1).forEach((row) => {
-        let contact = {};
-        headerIndices.forEach(({ header, index }) => {
-          contact[header] = row[index]?.toString()?.trim();
-        });
+      const headerCount = headerIndices.length;
+      const totalRows = sheetData.length;
+
+      // Iterate directly over the rows starting from index 1 (skipping header)
+      for (let i = 1; i < totalRows; i++) {
+        const row = sheetData[i];
+        if (!row || row.length === 0) continue;
+
+        const contact = {};
+
+        // Use a simple for loop for header indices to reduce overhead
+        for (let j = 0; j < headerCount; j++) {
+          const { header, index } = headerIndices[j];
+          const value = row[index];
+          contact[header] = value != null ? value.toString().trim() : "";
+        }
         processContact(contact);
-      });
+      }
       await finalizeProcessing();
     }
   });
