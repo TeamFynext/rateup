@@ -31,6 +31,7 @@ import SurveyContext from "../../../context/SurveyContext";
 import {
   LDResponse,
   NPSWeightage,
+  PageType,
   QuestionType,
   SmileyResponse,
   YNResponse,
@@ -115,6 +116,7 @@ const ResultsOverview = ({ surveyId, aiResponseSummary }) => {
         QuestionType.MCQ,
         QuestionType.MSQ,
         QuestionType.MCQGrid,
+        QuestionType.TextArea,
       ];
       // Check if any of the allowed question types are present in the survey
       const hasAllowedQuestions = questions.some((question) =>
@@ -200,114 +202,125 @@ const ResultsOverview = ({ surveyId, aiResponseSummary }) => {
           ),
         )
       : filteredResponsesByTags;
-    return questions?.map((question) => {
-      const responsesForQuestion = filteredResponses?.flatMap((response) =>
-        response?.responses?.filter(
-          (item: any) => item?.questionId === question?.id,
-        ),
-      );
-      let promoters = 0;
-      let passives = 0;
-      let detractors = 0;
-      let csat = 0;
-      responsesForQuestion?.forEach((response: any) => {
-        const rating = response?.response[response?.type];
-        switch (response?.type) {
-          case QuestionType.Rating:
-            if (rating >= 4) {
-              promoters++;
-              csat++;
-            } else if (rating == 3) passives++;
-            else detractors++;
-            break;
-          case QuestionType.Opinion:
-            if (rating >= 9) {
-              promoters++;
-              csat++;
-            } else if (rating >= 7) passives++;
-            else detractors++;
-            break;
-          case QuestionType.Smiley:
-            if (
-              [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(rating)
-            ) {
-              promoters++;
-              csat++;
-            } else if (rating === SmileyResponse.Neutral) passives++;
-            else detractors++;
-            break;
-          case QuestionType.LD:
-            if (rating === LDResponse.Like) {
-              promoters++;
-              csat++;
-            } else detractors++;
-            break;
-          case QuestionType.YN:
-            if (rating === YNResponse.Yes) {
-              promoters++;
-              csat++;
-            } else detractors++;
-            break;
-          case QuestionType.CustomNPS:
-            if (rating?.weightage == NPSWeightage.PROMOTER) {
-              csat++;
-              promoters++;
-            }
-            if (rating?.weightage == NPSWeightage.PASSIVE) passives++;
-            if (rating?.weightage == NPSWeightage.DETRACTOR) detractors++;
-            break;
-        }
-      });
-      const total = promoters + passives + detractors;
-      const nps = total ? ((promoters - detractors) / total) * 100 : null;
-      const csatScore = Math.round((csat / noofResponses) * 100);
-      let lang = selectedLanguage || defaultLanguage;
-      let localizedTitle =
-        question?.title?.[lang] ||
-        question?.description?.[lang] ||
-        question?.label?.[lang];
+    return questions
+      ?.filter(
+        (question) =>
+          !(question.type in PageType) &&
+          question.type !== QuestionType.TextArea,
+      )
+      .map((question) => {
+        const responsesForQuestion = filteredResponses?.flatMap((response) =>
+          response?.responses?.filter(
+            (item: any) => item?.questionId === question?.id,
+          ),
+        );
+        let promoters = 0;
+        let passives = 0;
+        let detractors = 0;
+        let csat = 0;
+        responsesForQuestion?.forEach((response: any) => {
+          const rating = response?.response[response?.type];
+          switch (response?.type) {
+            case QuestionType.Rating:
+              if (rating >= 4) {
+                promoters++;
+                csat++;
+              } else if (rating == 3) passives++;
+              else detractors++;
+              break;
+            case QuestionType.Opinion:
+              if (rating >= 9) {
+                promoters++;
+                csat++;
+              } else if (rating >= 7) passives++;
+              else detractors++;
+              break;
+            case QuestionType.Smiley:
+              if (
+                [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(
+                  rating,
+                )
+              ) {
+                promoters++;
+                csat++;
+              } else if (rating === SmileyResponse.Neutral) passives++;
+              else detractors++;
+              break;
+            case QuestionType.LD:
+              if (rating === LDResponse.Like) {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+            case QuestionType.YN:
+              if (rating === YNResponse.Yes) {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+            case QuestionType.CustomNPS:
+              if (rating?.weightage == NPSWeightage.PROMOTER) {
+                csat++;
+                promoters++;
+              }
+              if (rating?.weightage == NPSWeightage.PASSIVE) passives++;
+              if (rating?.weightage == NPSWeightage.DETRACTOR) detractors++;
+              break;
+          }
+        });
+        const total = promoters + passives + detractors;
+        const nps = total ? ((promoters - detractors) / total) * 100 : null;
+        const csatScore = Math.round((csat / noofResponses) * 100);
+        let lang = selectedLanguage || defaultLanguage;
+        let localizedTitle =
+          question?.title?.[lang] ||
+          question?.description?.[lang] ||
+          question?.label?.[lang];
 
-      let choices = null;
-      let choicesInAllLang = question?.choices;
-      if (question?.choices?.[lang]) {
-        choices = question?.choices[lang];
-      }
-      return {
-        question:
-          getReplacedTitleFromVariable({
-            title: localizedTitle,
-            surveyId,
-          }) || localizedTitle,
-        choices: choices,
-        type: question?.type,
-        responses: responsesForQuestion,
-        nps: {
-          score: nps,
-          promoters,
-          detractors,
-          passives,
-          total,
-        },
-        csat: csatScore,
-        choicesInAllLang: choicesInAllLang,
-        enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
-        mcqOtherFeature: [QuestionType.MCQ, QuestionType.MSQ].includes(
-          question?.type,
-        )
-          ? question?.features?.[lang]?.other
-          : false,
-        features: question?.features?.[lang],
-      };
-    });
+        let choices = null;
+        let choicesInAllLang = question?.choices;
+        if (question?.choices?.[lang]) {
+          choices = question?.choices[lang];
+        }
+        return {
+          question:
+            getReplacedTitleFromVariable({
+              title: localizedTitle,
+              surveyId,
+            }) || localizedTitle,
+          choices: choices,
+          type: question?.type,
+          responses: responsesForQuestion,
+          nps: {
+            score: nps,
+            promoters,
+            detractors,
+            passives,
+            total,
+          },
+          csat: csatScore,
+          choicesInAllLang: choicesInAllLang,
+          enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
+          mcqOtherFeature: [QuestionType.MCQ, QuestionType.MSQ].includes(
+            question?.type,
+          )
+            ? question?.features?.[lang]?.other
+            : false,
+          features: question?.features?.[lang],
+        };
+      });
   };
 
   chartData = prepareData(questions, filteredResponsesByTeam);
   let enablewholeNpsAnalytics =
     chartData?.filter((item) => item.enableNpsAnalytics === true)?.length > 0;
 
+  if (!filteredResponsesByTags.length)
+    return <NothingFound text={translations["No responses yet"]} />;
+
   return (
     <Stack className={styles["results-overview-root-div"]} h={"100%"} p={3}>
-      {chartData?.length > 0 ? (
+      {chartData?.length > 0 && (
         <Stack>
           <Stack p={5} ref={contentDivRef}>
             <PaperLayout p={"md"}>
@@ -465,19 +478,17 @@ const ResultsOverview = ({ surveyId, aiResponseSummary }) => {
                   ),
                 )}
             </PaperLayout>
-            <LargeTextResponseSummary
-              surveyId={surveyId}
-              questions={questions?.filter(
-                (question) => question?.type === QuestionType.TextArea,
-              )}
-              subscription={subscription}
-              currentSummary={aiResponseSummary}
-            />
           </Stack>
         </Stack>
-      ) : (
-        <NothingFound text={translations["No responses yet"]} />
       )}
+      <LargeTextResponseSummary
+        surveyId={surveyId}
+        questions={questions?.filter(
+          (question) => question?.type === QuestionType.TextArea,
+        )}
+        subscription={subscription}
+        currentSummary={aiResponseSummary}
+      />
     </Stack>
   );
 };

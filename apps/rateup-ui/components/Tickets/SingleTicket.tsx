@@ -258,7 +258,7 @@ const SingleTicket = ({ id }: { id: string }) => {
             data={memberOptions}
             withAsterisk
             placeholder={
-              translations["Select a team member to assign ticket to"]
+              translations["Select a team staff to assign ticket to"]
             }
             value={ticket?.assignedToId}
             onChange={setValue}

@@ -239,7 +239,7 @@ export function getNavTopData(
         { Icon: IconSocial, label: "Teams", href: "/dashboard/teams" },
         {
           Icon: IconUsers,
-          label: translations["Members"],
+          label: translations["Staff"],
           href: "/dashboard/members",
           role: UserRole.SUPADM,
         },

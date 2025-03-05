@@ -2075,5 +2075,20 @@
   "Aut-Generate Ticket is enabled on this flow": "इस प्रवाह पर स्वचालित टिकट निर्माण सक्षम है",
   "Auto-Generate Ticket is enabled on this survey": "इस सर्वेक्षण में स्वचालित टिकट निर्माण सक्षम है",
   "Click here to disable auto-generate Tickets on response": "प्रतिक्रिया पर स्वचालित टिकट निर्माण अक्षम करने के लिए यहां क्लिक करें",
-  "Click here to enable Ticket WhatsApp Message Alerts": "टिकट व्हाट्सएप संदेश अलर्ट सक्षम करने के लिए यहां क्लिक करें"
+  "Click here to enable Ticket WhatsApp Message Alerts": "टिकट व्हाट्सएप संदेश अलर्ट सक्षम करने के लिए यहां क्लिक करें",
+  "Staff": "स्टाफ",
+  "Add Staff": "स्टाफ जोड़ें",
+  "Are you sure to delete this team staff": "क्या आप वाकई इस टीम स्टाफ को हटाना चाहते हैं?",
+  "Delete Staff": "स्टाफ हटाएं",
+  "Resume Staff": "स्टाफ फिर से शुरू करें",
+  "Pause staff": "स्टाफ रोकें",
+  "Edit staff role": "स्टाफ की भूमिका संपादित करें",
+  "Edit Staff": "स्टाफ संपादित करें",
+  "Select a team staff to assign ticket to": "टिकट सौंपने के लिए टीम स्टाफ चुनें",
+  "Team staff selection is required": "टीम स्टाफ चयन आवश्यक है",
+  "Chat Bot": "चैट बॉट",
+  "Enable AI Chat in WhatsApp": "WhatsApp में एआई चैट सक्षम करें",
+  "Bot Command": "बॉट कमांड",
+  "Upgrade subscription": "सदस्यता अपग्रेड करें",
+  "Bot Prompt": "बॉट संकेत"
 }

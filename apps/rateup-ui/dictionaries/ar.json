@@ -2075,5 +2075,20 @@
   "Auto-Generate Ticket is enabled on this survey": "تم تمكين إنشاء التذاكر تلقائيًا في هذا الاستبيان",
   "Click here to disable auto-generate Tickets on response": "انقر هنا لتعطيل إنشاء التذاكر تلقائيًا عند الرد",
   "Click here to enable Ticket WhatsApp Message Alerts": "انقر هنا لتمكين تنبيهات رسائل واتساب للتذاكر",
-  "View Ticket Details": "عرض تفاصيل التذكرة"
+  "View Ticket Details": "عرض تفاصيل التذكرة",
+  "Staff": "الموظفون",
+  "Add Staff": "إضافة موظف",
+  "Are you sure to delete this team staff": "هل أنت متأكد من حذف موظف الفريق هذا؟",
+  "Delete Staff": "حذف الموظف",
+  "Resume Staff": "استئناف الموظف",
+  "Pause staff": "إيقاف الموظف مؤقتًا",
+  "Edit staff role": "تحرير دور الموظف",
+  "Edit Staff": "تحرير الموظف",
+  "Select a team staff to assign ticket to": "اختر موظف فريق لتعيين التذكرة إليه",
+  "Team staff selection is required": "اختيار موظف الفريق مطلوب",
+  "Chat Bot": "روبوت الدردشة",
+  "Enable AI Chat in WhatsApp": "تمكين الدردشة بالذكاء الاصطناعي في واتساب",
+  "Bot Command": "أمر البوت",
+  "Upgrade subscription": "ترقية الاشتراك",
+  "Bot Prompt": "موجه البوت"
 }

@@ -39,11 +39,11 @@ const TeamCard = ({ team }: TeamCardProps) => {
           </Badge>
         </Stack>
         <Stack align={"center"} gap={0}>
-          <Text fw={500} fz="xl" color="var(--tertiary-color)">
+          <Text fw={500} fz="xl" c="var(--tertiary-color)">
             {team._count.members}
           </Text>
-          <Text fz="sm" color="var(--tertiary-color)" fw={"400"}>
-            {translations["Members"]}
+          <Text fz="sm" c="var(--tertiary-color)" fw={"400"}>
+            {translations["Staff"]}
           </Text>
         </Stack>
       </Flex>

@@ -73,7 +73,7 @@ export const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
       Icon: IconUsers as unknown as string,
       count: stats?.teamMembersCount,
       totalCount: subscription?.features?.team?.teamMember?.count?.max,
-      stats: "Team Members",
+      stats: "Team Staff",
     },
   ];
 

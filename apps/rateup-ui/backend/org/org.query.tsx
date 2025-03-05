@@ -47,7 +47,7 @@ export function useUpdateRoleMutation() {
         loading: false,
         color: "teal",
         title: "Success",
-        message: "Member Role Updated Successfully!",
+        message: "Staff Role Updated Successfully!",
         icon: <IconCheck size="1rem" />,
         autoClose: 2000,
       });

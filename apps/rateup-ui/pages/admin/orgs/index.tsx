@@ -1,19 +1,20 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { ActionIcon, Box, Group, Stack, Title } from "@mantine/core";
+import { IconArrowRight } from "@tabler/icons-react";
 import {
   DataGrid,
   GridColDef,
   GridRenderCellParams,
   GridToolbar,
 } from "@mui/x-data-grid";
+
 import { useAllOrgs } from "../../../backend/org/org.query";
-import { ActionIcon, Box, Group, Stack, Title } from "@mantine/core";
 import styles from "../../../components/adminPanel/admin.module.css";
-import { IconArrowRight } from "@tabler/icons-react";
-import { useRouter } from "next/router";
+import RefreshButton from "../../../components/Button/RefreshButton";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { CountStatsCard } from "../userstats";
-import { useEffect, useState } from "react";
-import RefreshButton from "../../../components/Button/RefreshButton";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -21,6 +22,7 @@ import {
   isToday,
   isYesterday,
 } from "../../../utils/dateTime";
+import { CountStatsCard } from "../userstats";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 220, cellClassName: styles.idCell },
@@ -29,7 +31,7 @@ const columns: GridColDef[] = [
   { field: "owner", headerName: "Owner", width: 150 },
   { field: "ownerEmail", headerName: "Owner Email", width: 200 },
   { field: "teams", headerName: "Teams", width: 100 },
-  { field: "members", headerName: "Members", width: 100 },
+  { field: "members", headerName: "Staff", width: 100 },
   { field: "invitations", headerName: "Invitations", width: 100 },
   {
     field: "actions",

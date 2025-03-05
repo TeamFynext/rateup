@@ -2085,5 +2085,15 @@
   "Enable AI Chat in WhatsApp": "Enable AI Chat in WhatsApp",
   "Bot Command": "Bot Command",
   "Upgrade subscription": "Upgrade subscription",
-  "Bot Prompt": "Bot Prompt"
+  "Bot Prompt": "Bot Prompt",
+  "Staff": "Staff",
+  "Add Staff": "Add Staff",
+  "Are you sure to delete this team staff": "Are you sure to delete this team staff",
+  "Delete Staff": "Delete Staff",
+  "Resume Staff": "Resume Staff",
+  "Pause staff": "Pause staff",
+  "Edit staff role": "Edit staff role",
+  "Edit Staff": "Edit Staff",
+  "Select a team staff to assign ticket to": "Select a team staff to assign ticket to",
+  "Team staff selection is required": "Team staff selection is required"
 }

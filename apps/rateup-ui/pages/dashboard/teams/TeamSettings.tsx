@@ -191,7 +191,7 @@ const TeamSettings = ({
           includeEmailConfirmation
           deleteQuotion={
             translations[
-              "All the associated enities including Team Members, Survey Responses and Menus will be deleted"
+              "All the associated enities including Team Staff, Survey Responses and Menus will be deleted"
             ]
           }
           opened={opened}

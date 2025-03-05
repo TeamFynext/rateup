@@ -2074,5 +2074,20 @@
   "Aut-Generate Ticket is enabled on this flow": "La génération automatique de tickets est activée sur ce flux",
   "Auto-Generate Ticket is enabled on this survey": "La génération automatique de tickets est activée sur cette enquête",
   "Click here to disable auto-generate Tickets on response": "Cliquez ici pour désactiver la génération automatique des tickets en réponse",
-  "Click here to enable Ticket WhatsApp Message Alerts": "Cliquez ici pour activer les alertes de messages WhatsApp pour les tickets"
+  "Click here to enable Ticket WhatsApp Message Alerts": "Cliquez ici pour activer les alertes de messages WhatsApp pour les tickets",
+  "Staff": "Personnel",
+  "Add Staff": "Ajouter du personnel",
+  "Are you sure to delete this team staff": "Êtes-vous sûr de vouloir supprimer ce membre de l'équipe ?",
+  "Delete Staff": "Supprimer le personnel",
+  "Resume Staff": "Reprendre le personnel",
+  "Pause staff": "Mettre en pause le personnel",
+  "Edit staff role": "Modifier le rôle du personnel",
+  "Edit Staff": "Modifier le personnel",
+  "Select a team staff to assign ticket to": "Sélectionnez un membre de l'équipe pour attribuer le ticket",
+  "Team staff selection is required": "La sélection d'un membre de l'équipe est requise",
+  "Chat Bot": "Chatbot",
+  "Enable AI Chat in WhatsApp": "Activer le chat IA sur WhatsApp",
+  "Bot Command": "Commande du bot",
+  "Upgrade subscription": "Mettre à niveau l'abonnement",
+  "Bot Prompt": "Invite du bot"
 }

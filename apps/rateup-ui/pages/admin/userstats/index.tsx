@@ -25,7 +25,7 @@ import RefreshButton from "../../../components/Button/RefreshButton";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import { getUserRoleColor } from "../../../utils";
+import { getUserRoleColor, getUserRoleLabel } from "../../../utils";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -83,7 +83,11 @@ const index = () => {
       headerName: translations["Role"],
       renderCell: (params: GridRenderCellParams<any, any>) => {
         const role = params.value;
-        return <Badge color={getUserRoleColor(role)}>{role}</Badge>;
+        return (
+          <Badge color={getUserRoleColor(role)}>
+            {getUserRoleLabel(role, translations)}
+          </Badge>
+        );
       },
       width: 200,
     },

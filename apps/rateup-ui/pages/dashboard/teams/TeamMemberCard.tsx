@@ -18,6 +18,8 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
+import { getUserRoleLabel } from "@/utils";
+
 import {
   useDeleteInviteMutation,
   userResendInviteTeamMutation,
@@ -90,7 +92,7 @@ const TeamMemberCard = ({
                 variant="dot"
                 size="sm"
               >
-                {member?.role}
+                {getUserRoleLabel(member?.role, translations)}
               </Badge>
             )}
             <Badge
@@ -139,7 +141,7 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
       message:
         translations[
           deleteInviteMutation?.isPending
-            ? "Hold on, Member invite is getting deleted."
+            ? "Hold on, Staff invite is getting deleted."
             : "Hold on, Team Invitation Resending."
         ],
       autoClose: false,

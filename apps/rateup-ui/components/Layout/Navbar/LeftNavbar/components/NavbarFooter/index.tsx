@@ -100,7 +100,7 @@ const NavbarFooter = (props: UserCardInterface) => {
                     ? "Super Admin"
                     : props?.role === UserRole.ADM
                       ? "Admin"
-                      : "Member"}
+                      : "Staff"}
                 </Badge>
               </div>
             ) : null}

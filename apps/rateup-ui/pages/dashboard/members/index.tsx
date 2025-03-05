@@ -21,6 +21,8 @@ import {
   IconUserEdit,
 } from "@tabler/icons-react";
 
+import { getUserRoleLabel } from "@/utils";
+
 import {
   useTeamsMembersOfOrg,
   useUpdateRoleMutation,
@@ -62,7 +64,7 @@ const Members = () => {
   return (
     <Stack>
       <Group justify="space-between">
-        <Heading title={translations["Members"]} />
+        <Heading title={translations["Staff"]} />
         {/* <ContainedTextField
           placeholder={translations["Search in all members"]}
           disabled
@@ -179,7 +181,7 @@ export const MemberEditFormModal = ({
       includeCancelButton
       opened={id !== ""}
       onClose={onClose}
-      title={translations["Edit Member"]}
+      title={translations["Edit Staff"]}
       buttonTitle={translations["Save"]}
       onSubmit={() => onChangeRole(member?.id, newRole)}
     >
@@ -194,7 +196,7 @@ export const MemberEditFormModal = ({
             data={[
               { value: UserRole.SUPADM, label: translations["Super Admin"] },
               { value: UserRole.ADM, label: translations["Admin"] },
-              { value: UserRole.MEMBER, label: translations["Member"] },
+              { value: UserRole.MEMBER, label: translations["Staff"] },
             ]}
             onChange={(value) => setNewRole(value)}
           />
@@ -267,7 +269,7 @@ const LongMemberCard = ({
               variant="dot"
               size="sm"
             >
-              {translations[member?.role] || member?.role}
+              {getUserRoleLabel(member?.role, translations)}
             </Badge>
           </Group>
           <Text size="xs" c={"dimmed"}>
@@ -298,7 +300,7 @@ const LongMemberCard = ({
         </Stack>
         <Group>
           <Tooltip
-            label={translations["Edit member role"]}
+            label={translations["Edit staff role"]}
             position="top"
             withArrow
           >
@@ -311,7 +313,7 @@ const LongMemberCard = ({
             </Button>
           </Tooltip>
           <Tooltip
-            label={translations["Delete member"]}
+            label={translations["Delete Staff"]}
             position="top"
             withArrow
           >
@@ -327,8 +329,8 @@ const LongMemberCard = ({
           <Tooltip
             label={
               member.isPaused
-                ? translations["Resume member"]
-                : translations["Pause member"]
+                ? translations["Resume Staff"]
+                : translations["Pause staff"]
             }
             position="top"
             withArrow
@@ -351,8 +353,8 @@ const LongMemberCard = ({
         forDeleteFunctionality
         opened={modalOpened}
         confirmLabel={translations["Delete"]}
-        headerTitle={translations["Delete Member"]}
-        headerLabel={translations["Are you sure to delete this team Member?"]}
+        headerTitle={translations["Delete Staff"]}
+        headerLabel={translations["Are you sure to delete this team staff?"]}
         onConfirm={onUpdateStatus}
         onClose={close}
       />
