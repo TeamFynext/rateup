@@ -158,8 +158,8 @@ const TeamDetails = () => {
         centered
         opened={opened}
         onClose={close}
-        title={translations["Add Member"]}
-        buttonTitle={translations["Add member"]}
+        title={translations["Add Staff"]}
+        buttonTitle={translations["Add Staff"]}
         onSubmit={handleSubmit}
       >
         <Box>
@@ -188,9 +188,7 @@ const TeamDetails = () => {
       >
         <Stack gap={10}>
           <Tabs.List>
-            <Tabs.Tab value={TabEnum.Members}>
-              {translations["Members"]}
-            </Tabs.Tab>
+            <Tabs.Tab value={TabEnum.Members}>{translations["Staff"]}</Tabs.Tab>
             <Tabs.Tab value={TabEnum.Settings}>
               {" "}
               {translations["Settings"]}
@@ -207,7 +205,7 @@ const TeamDetails = () => {
                 />
               </Group>
               <RateupButtonBlue
-                title={translations["Add Member"]}
+                title={translations["Add Staff"]}
                 rightIcon={<IconPlus />}
                 onClick={open}
               />

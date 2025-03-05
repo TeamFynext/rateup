@@ -72,7 +72,7 @@ const CreateTicketModal = ({
           ? null
           : translations["Minimum 2 words required"],
       assignedToId: (value) =>
-        value.length ? null : translations["Team member selection is required"],
+        value.length ? null : translations["Team staff selection is required"],
       priority: (value) =>
         value.length ? null : translations["Priority selection is required"],
     },
@@ -192,7 +192,7 @@ const CreateTicketModal = ({
             label={translations["Assign to"]}
             style={{ minWidth: "32%" }}
             placeholder={
-              translations["Select a team member to assign ticket to"]
+              translations["Select a team staff to assign ticket to"]
             }
             {...form.getInputProps("assignedToId")}
           />

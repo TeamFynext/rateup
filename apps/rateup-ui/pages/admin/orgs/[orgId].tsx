@@ -147,7 +147,7 @@ export default function OrgById() {
       </Group>
       <Group>
         <CountSectionContainer label="Org">
-          <CountCard count={stats.members} label={["Member", "Members"]} />
+          <CountCard count={stats.members} label={["Staff", "Staff"]} />
           <CountCard
             count={stats.invitations}
             label={["Invitation", "Invitations"]}
@@ -155,10 +155,7 @@ export default function OrgById() {
         </CountSectionContainer>
         <CountSectionContainer label={translations["Teams"]}>
           <CountCard count={stats.teams.total} label={["Team", "Teams"]} />
-          <CountCard
-            count={stats.teams.members}
-            label={["Member", "Members"]}
-          />
+          <CountCard count={stats.teams.members} label={["Staff", "Staff"]} />
           <CountCard
             count={stats.teams.invitations}
             label={["Invitation", "Invitations"]}

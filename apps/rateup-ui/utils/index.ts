@@ -127,6 +127,17 @@ export function getUserRoleColor(role) {
   }
 }
 
+export function getUserRoleLabel(role, translations) {
+  switch (role) {
+    case UserRole.SUPADM:
+      return translations["Super Admin"];
+    case UserRole.ADM:
+      return translations["Admin"];
+    case UserRole.MEMBER:
+      return translations["Staff"];
+  }
+}
+
 export function isValidUrl(url: string, checkHttps: boolean = true) {
   try {
     const validatedUrl = new URL(url);

@@ -1,8 +1,13 @@
-import { Stack, Text, Group, Avatar } from "@mantine/core";
+import { Avatar, Group, Stack, Text } from "@mantine/core";
+
+import useTranslations from "@/dictionaries/useTranslation";
+import { getUserRoleLabel } from "@/utils";
+
 import { useUser } from "../../../context/UserContext";
 
 const LoggedInUserCard = () => {
   const { user } = useUser();
+  const { translations } = useTranslations();
 
   if (!user) return null;
   return (
@@ -22,7 +27,7 @@ const LoggedInUserCard = () => {
           {user?.userName ? user?.userName : user?.email}
         </Text>
         <Text c="dimmed" size="xs">
-          {user?.role}
+          {getUserRoleLabel(user?.role, translations)}
         </Text>
       </Stack>
     </Group>
