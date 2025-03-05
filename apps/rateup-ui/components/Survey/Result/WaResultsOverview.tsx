@@ -95,6 +95,7 @@ const WaResultsOverviewV2 = ({
         WaQuestions.Opinion,
         WaQuestions.RadioButtonsGroup,
         WaQuestions.CheckboxGroup,
+        WaQuestions.TextArea,
       ];
       //   Check if any of the allowed question types are present in the survey
       const hasAllowedQuestions = questions.some((question) =>
@@ -177,95 +178,102 @@ const WaResultsOverviewV2 = ({
           ),
         )
       : filteredResponsesByTags;
-    return questions?.map((question) => {
-      const responsesForQuestion = filteredResponses?.flatMap((response) =>
-        response?.responses?.filter(
-          (item: any) => item?.questionId === question?.id,
-        ),
-      );
-      let promoters = 0;
-      let passives = 0;
-      let detractors = 0;
-      let csat = 0;
-      responsesForQuestion?.forEach((response: any) => {
-        const rating = response?.response;
-        switch (question?.metaType) {
-          case WaQuestions.Rating:
-            if (rating >= 4) {
-              promoters++;
-              csat++;
-            } else if (rating == 3) passives++;
-            else detractors++;
-            break;
-          case WaQuestions.Opinion:
-            if (rating >= 9) {
-              promoters++;
-              csat++;
-            } else if (rating >= 7) passives++;
-            else detractors++;
-            break;
-          case WaQuestions.Smiley:
-            if (
-              [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(rating)
-            ) {
-              promoters++;
-              csat++;
-            } else if (rating === SmileyResponse.Neutral) passives++;
-            else detractors++;
-            break;
-          case WaQuestions.LD:
-            if (rating === LDResponse.Like) {
-              promoters++;
-              csat++;
-            } else detractors++;
-            break;
-          case WaQuestions.YN:
-            if (rating === YNResponse.Yes) {
-              promoters++;
-              csat++;
-            } else detractors++;
-            break;
-        }
-      });
-      const total = promoters + passives + detractors;
-      const nps = total ? ((promoters - detractors) / total) * 100 : null;
-      const csatScore = Math.round((csat / noofResponses) * 100);
-      let localizedTitle = question.label;
+    return questions
+      ?.filter((question) => question?.metaType !== WaQuestions.TextArea)
+      .map((question) => {
+        const responsesForQuestion = filteredResponses?.flatMap((response) =>
+          response?.responses?.filter(
+            (item: any) => item?.questionId === question?.id,
+          ),
+        );
+        let promoters = 0;
+        let passives = 0;
+        let detractors = 0;
+        let csat = 0;
+        responsesForQuestion?.forEach((response: any) => {
+          const rating = response?.response;
+          switch (question?.metaType) {
+            case WaQuestions.Rating:
+              if (rating >= 4) {
+                promoters++;
+                csat++;
+              } else if (rating == 3) passives++;
+              else detractors++;
+              break;
+            case WaQuestions.Opinion:
+              if (rating >= 9) {
+                promoters++;
+                csat++;
+              } else if (rating >= 7) passives++;
+              else detractors++;
+              break;
+            case WaQuestions.Smiley:
+              if (
+                [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(
+                  rating,
+                )
+              ) {
+                promoters++;
+                csat++;
+              } else if (rating === SmileyResponse.Neutral) passives++;
+              else detractors++;
+              break;
+            case WaQuestions.LD:
+              if (rating === LDResponse.Like) {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+            case WaQuestions.YN:
+              if (rating === YNResponse.Yes) {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+          }
+        });
+        const total = promoters + passives + detractors;
+        const nps = total ? ((promoters - detractors) / total) * 100 : null;
+        const csatScore = Math.round((csat / noofResponses) * 100);
+        let localizedTitle = question.label;
 
-      let choices = null;
-      if (question["data-source"]) {
-        choices = question["data-source"];
-      }
-      return {
-        question:
-          getReplacedTitleFromVariable({
-            title: localizedTitle,
-            surveyId,
-          }) || localizedTitle,
-        choices: choices,
-        type: question?.type,
-        responses: responsesForQuestion,
-        nps: {
-          score: nps,
-          promoters,
-          detractors,
-          passives,
-          total,
-        },
-        csat: csatScore,
-        enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
-        metaType: question?.metaType,
-      };
-    });
+        let choices = null;
+        if (question["data-source"]) {
+          choices = question["data-source"];
+        }
+        return {
+          question:
+            getReplacedTitleFromVariable({
+              title: localizedTitle,
+              surveyId,
+            }) || localizedTitle,
+          choices: choices,
+          type: question?.type,
+          responses: responsesForQuestion,
+          nps: {
+            score: nps,
+            promoters,
+            detractors,
+            passives,
+            total,
+          },
+          csat: csatScore,
+          enableNpsAnalytics: question?.enableNpsAnalytics ?? false,
+          metaType: question?.metaType,
+        };
+      });
   };
 
   chartData = prepareData(questions);
   let enablewholeNpsAnalytics =
     chartData?.filter((item) => item.enableNpsAnalytics === true)?.length > 0;
 
+  if (!filteredResponsesByTags.length)
+    return <NothingFound text={translations["No responses yet"]} />;
+
   return (
     <Stack className={styles["results-overview-root-div"]} h={"100%"} p={3}>
-      {chartData?.length > 0 ? (
+      {chartData?.length > 0 && (
         <Stack>
           <Stack p={5} ref={contentDivRef}>
             <PaperLayout p={"md"}>
@@ -349,20 +357,18 @@ const WaResultsOverviewV2 = ({
                   </React.Fragment>
                 ))}
             </PaperLayout>
-            <LargeTextResponseSummary
-              surveyId={surveyId}
-              questions={questions?.filter(
-                (question) => question?.metaType === WaQuestions.TextArea,
-              )}
-              subscription={subscription}
-              version={2}
-              currentSummary={aiResponseSummary}
-            />
           </Stack>
         </Stack>
-      ) : (
-        <NothingFound text={translations["No responses yet"]} />
       )}
+      <LargeTextResponseSummary
+        surveyId={surveyId}
+        questions={questions?.filter(
+          (question) => question?.metaType === WaQuestions.TextArea,
+        )}
+        subscription={subscription}
+        version={2}
+        currentSummary={aiResponseSummary}
+      />
     </Stack>
   );
 };
