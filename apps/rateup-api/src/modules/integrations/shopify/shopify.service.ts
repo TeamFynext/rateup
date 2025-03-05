@@ -274,14 +274,8 @@ export async function sendShopifySurveyCronAction() {
     }
 
     for (const config of newShopifySurveys) {
-      const {
-        event,
-        schedules,
-        repeatInterval: { unit, value },
-        waTemplateId,
-        teamId,
-        active,
-      } = config;
+      const { event, schedules, repeatInterval, waTemplateId, teamId, active } =
+        config;
       if (!schedules || !schedules.length || !active) {
         log.trace("No schedules found");
         return false;
@@ -309,7 +303,11 @@ export async function sendShopifySurveyCronAction() {
           }
         } else {
           if (isAbandonedEvent && !isCheckoutNotExist) {
-            if (value && dayjs().diff(dayjs(sch.sentAt), unit) >= value) {
+            if (
+              repeatInterval?.value &&
+              dayjs().diff(dayjs(sch.sentAt), repeatInterval?.unit) >=
+                repeatInterval?.value
+            ) {
               tobeSent = true;
               //add new schedule history and update
               const newSchedule = {
@@ -1019,7 +1017,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         const {
           timeDelay,
           schedules = [],
-          repeatInterval: { unit, value },
+          repeatInterval,
         } = abandonedCheckoutConfig;
         const shopifySurveys = [...credential.shopifySurveys];
 
@@ -1053,13 +1051,14 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
             });
           }
         });
-        if (value) {
+        if (repeatInterval?.value) {
           allCheckouts
             .filter((checkout) =>
               schedules.find(
                 (c) =>
                   checkout.id === c.checkoutId &&
-                  dayjs().diff(dayjs(c.sentAt), unit) >= value,
+                  dayjs().diff(dayjs(c.sentAt), repeatInterval?.unit) >=
+                    repeatInterval?.value,
               ),
             )
             .map((checkout) => {

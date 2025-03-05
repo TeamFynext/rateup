@@ -62,7 +62,7 @@ export async function uploadFileForAIEmbedHandler(
     formData.append("file", blob, data.filename);
     const jwtToken = await createJWT(request.user);
     const res = await uploadFileForAIEmbed(formData, jwtToken);
-    reply.code(200).send(res);
+    reply.code(200).send();
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "Something went wrong" });
@@ -126,7 +126,7 @@ export async function deleteEmbeddedSourceHandler(
   try {
     const jwtToken = await createJWT(request.user);
     const res = await deleteEmbeddedSource(request.body, jwtToken);
-    reply.code(200).send(res);
+    reply.code(200).send();
   } catch (e) {
     console.log(e);
     reply.code(500).send({ message: "something went wrong" });
