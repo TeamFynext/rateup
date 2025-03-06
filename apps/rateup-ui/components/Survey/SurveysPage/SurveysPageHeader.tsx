@@ -40,23 +40,6 @@ export function SurveyHeader({
   return (
     <Group gap="sm" justify="space-between">
       <Group gap="sm" justify="flex-start">
-        <Group mr="sm">
-          <div className={styles["heading-container"]}>
-            <Heading
-              title={
-                surveyType == "web"
-                  ? translations["Web Surveys"]
-                  : translations["WhatsApp Surveys"]
-              }
-              titleprops={{ w: "fit-content" }}
-            />
-          </div>
-          {surveyType == "web" && (
-            <InfoButton docUrl={`${docsPath}/webSurvey`} />
-          )}
-        </Group>
-        <WelcomeTour steps={tourSteps} />
-        <RefreshButton queryKeys={["surveys"]} />
         {user?.role !== UserRole.MEMBER && (
           <RateupButtonBlue
             className={styles["create-survey-button"]}
@@ -65,6 +48,9 @@ export function SurveyHeader({
             onClick={openCreateSurvey}
           />
         )}
+        <InfoButton docUrl={`${docsPath}/webSurvey`} />
+        <WelcomeTour steps={tourSteps} />
+        <RefreshButton queryKeys={["surveys"]} />
       </Group>
 
       <Group gap="md" justify="flex-start">

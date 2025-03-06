@@ -168,15 +168,6 @@ export default function Teams() {
       </FormModalLayout>
       <Group gap="md" justify="space-between">
         <Group gap={"md"}>
-          <div className={styles["heading-container"]}>
-            <Heading
-              title={translations["Teams"]}
-              titleprops={{ w: "fit-content" }}
-            />
-          </div>
-          <InfoButton docUrl={`${docsPath}/teams/team`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["teamsDataUserQuery"]} />
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
               className={styles["create-team-button"]}
@@ -185,6 +176,9 @@ export default function Teams() {
               onClick={open}
             />
           )}
+          <InfoButton docUrl={`${docsPath}/teams/team`} />
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["teamsDataUserQuery"]} />
         </Group>
         <Group className={styles["sort-dropdown"]}>
           <SortDropdown onSortChange={onSortChange} />

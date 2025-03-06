@@ -68,10 +68,6 @@ function Flows() {
     <Box className={styles["flows-list-page-container"]}>
       <Group justify="space-between">
         <Group>
-          <Title className={styles["heading-container"]}>Flows</Title>
-          <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["flow", "db"]} />
           <Tooltip
             label={
               translations[
@@ -92,6 +88,9 @@ function Flows() {
               />
             </Box>
           </Tooltip>
+          <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["flow", "db"]} />
         </Group>
         <Group>
           <TeamSelector

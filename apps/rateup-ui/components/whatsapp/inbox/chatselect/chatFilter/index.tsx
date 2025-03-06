@@ -137,16 +137,6 @@ export default function WaInboxChatFilter(props: Props) {
           <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
             {translations["clear filters"]}
           </Button>
-          <SegmentedControl
-            value={props.filter.messageType}
-            onChange={(value) => setFilters("messageType", value)}
-            data={[
-              { value: "all", label: translations["All"] },
-              { value: "usermessages", label: translations["User Messages"] },
-            ]}
-            color={"var(--mantine-primary-color-6)"}
-            radius={"md"}
-          />
           <ContainedMultiSelect
             maw={250}
             //TODO reimplement strict filter

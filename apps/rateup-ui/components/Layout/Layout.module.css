@@ -16,8 +16,8 @@
   flex: 1 1 auto;
   overflow: auto;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  height: calc(100vh - 35px);
+  height: calc(100dvh - 35px);
   overflow-x: hidden;
   /* background: light-dark(var(--light-grey-color-6), var(--mantine-color-body)); */
 }
@@ -25,10 +25,6 @@
 .content-container > div {
   max-width: 1920px;
   width: 100%;
-}
-
-.content-container > div:nth-child(1) {
-  padding: 0.625rem 1.25rem;
 }
 
 .content-wrapper {
@@ -41,8 +37,6 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  padding: 0.625rem 1.25rem;
-  padding-bottom: 1.25rem;
 }
 
 @media screen and (max-width: 768px) {
@@ -51,9 +45,5 @@
   }
   .mobile-hamburger-icon-div {
     display: block;
-  }
-  .content-div {
-    padding: 0.625rem 1rem;
-    padding-bottom: 1rem;
   }
 }

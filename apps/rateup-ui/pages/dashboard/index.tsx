@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import {
   ActionIcon,
   Blockquote,
+  Box,
   Group,
   Portal,
   Stack,
@@ -217,7 +218,7 @@ export default function DashboardHome() {
   }
 
   return (
-    <>
+    <Box m={"xs"}>
       {user && !isError && !surveysSummary?.error ? (
         <Stack>
           <Portal target={"#navbar"}>
@@ -385,9 +386,7 @@ export default function DashboardHome() {
                 leftIcon={<IconShoppingCart />}
                 title={translations["Go to Billing Section"]}
                 onClick={() => {
-                  router.push(
-                    "/dashboard/settings?activeTab=account&view=billing",
-                  );
+                  router.push("/dashboard/settings?tab=account&view=billing");
                 }}
               />
             </>
@@ -404,6 +403,6 @@ export default function DashboardHome() {
           )}
         </Stack>
       )}
-    </>
+    </Box>
   );
 }

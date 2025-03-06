@@ -87,7 +87,7 @@ export const Navbar = () => {
       <Group
         className={styles["language-selector-and-other-options-container"]}
       >
-        {!router.asPath.includes("/dashboard/settings?activeTab=account") && (
+        {!router.asPath.includes("/dashboard/settings?tab=account") && (
           <ExpiryComponent expiryDate={subscription?.expiresAt}>
             <RateupButtonPrimary
               title={translations["Upgrade Now"]}
@@ -96,9 +96,7 @@ export const Navbar = () => {
               gradient={{ from: "#FDBD3A", to: "#F99A21" }}
               radius={"md"}
               onClick={() =>
-                router.push(
-                  "/dashboard/settings?activeTab=account&view=billing",
-                )
+                router.push("/dashboard/settings?tab=account&view=billing")
               }
             />
           </ExpiryComponent>

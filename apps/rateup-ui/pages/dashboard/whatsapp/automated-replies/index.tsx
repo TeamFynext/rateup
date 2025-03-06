@@ -20,8 +20,7 @@ export default function AutomatedRepliesPage() {
   return (
     <Stack mih={"80dvh"}>
       <Group justify={"space-between"}>
-        <Group>
-          <Title>{translations["Automated Replies"]}</Title>
+        <Group ml={"md"}>
           <RateupButtonBlue
             title={translations["Create automated reply"]}
             rightIcon={<IconPlus size={"1rem"} />}

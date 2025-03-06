@@ -83,12 +83,6 @@ function LinktreeDashboard() {
     <Stack className={`${styles["linktree-dashboard-page-div"]}`}>
       <Group justify="space-between">
         <Group className={styles["heading-and-create-linktree-btn-container"]}>
-          <Title className={styles["heading-container"]}>
-            {translations["Quick Access Links"]}
-          </Title>
-          <InfoButton docUrl={`${docsPath}/landingpage`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["linktrees"]} />
           <Button
             className={styles["create-linktree-btn"]}
             rightSection={<IconPlus />}
@@ -96,6 +90,8 @@ function LinktreeDashboard() {
           >
             {translations["Create Quick Access Link"]}
           </Button>
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["linktrees"]} />
         </Group>
         <div className={styles["sort-dropdown"]}>
           <SortDropdown

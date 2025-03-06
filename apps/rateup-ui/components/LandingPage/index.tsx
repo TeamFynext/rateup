@@ -87,12 +87,6 @@ function LandingPageDashboard() {
         <Group
           className={styles["heading-and-create-landingPage-btn-container"]}
         >
-          <Title className={styles["heading-container"]}>
-            {translations["Landing Pages"]}
-          </Title>
-          <InfoButton docUrl={`${docsPath}/landingpage`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["landingPages"]} />
           <Button
             className={styles["create-landingPage-btn"]}
             rightSection={<IconPlus />}
@@ -100,6 +94,9 @@ function LandingPageDashboard() {
           >
             {translations["Create Landing Page"]}
           </Button>
+          <InfoButton docUrl={`${docsPath}/landingpage`} />
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["landingPages"]} />
         </Group>
         <div className={styles["sort-dropdown"]}>
           <SortDropdown

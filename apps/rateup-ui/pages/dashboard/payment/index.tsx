@@ -1,9 +1,9 @@
-import { useRouter } from "next/router";
 import React from "react";
+import { useRouter } from "next/router";
 
 const Payment = () => {
   const router = useRouter();
-  router.push(`/dashboard/settings?activeTab=account&view=billing`);
+  router.push(`/dashboard/settings?tab=account&view=billing`);
   return <div></div>;
 };
 

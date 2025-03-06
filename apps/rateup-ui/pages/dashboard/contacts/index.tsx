@@ -127,28 +127,6 @@ export default function Contacts() {
     );
   return (
     <Stack className={styles["contacts-page-root-div"]}>
-      <Flex
-        mih={50}
-        gap="md"
-        justify="space-between"
-        align="center"
-        direction="row"
-        wrap="wrap"
-      >
-        <Group gap={"md"}>
-          <Heading
-            title={translations["Contacts"]}
-            titleprops={{ w: "fit-content" }}
-          />
-        </Group>
-        {activeTab === ContactTabs.GROUPS && (
-          <TeamSelector
-            value={selectedTeamID}
-            onChange={setSelectedTeamID}
-            enableAll={true}
-          />
-        )}
-      </Flex>
       <Tabs value={activeTab} color="var(--tertiary-color)" keepMounted={false}>
         <Flex justify="space-between" align={"center"} wrap={"wrap"} gap={10}>
           <SegmentedControl
@@ -189,6 +167,13 @@ export default function Contacts() {
                 value: data?.id,
                 label: data?.name,
               }))}
+            />
+          )}
+          {activeTab === ContactTabs.GROUPS && (
+            <TeamSelector
+              value={selectedTeamID}
+              onChange={setSelectedTeamID}
+              enableAll={true}
             />
           )}
           <ContactActionMenu groups={contactGroupData} />

@@ -246,12 +246,6 @@ const TicketsHome = () => {
 
       <Group justify="space-between">
         <Group gap={"md"}>
-          <Heading
-            title={translations["Tickets"]}
-            titleprops={{ w: "fit-content" }}
-          />
-          <InfoButton docUrl={`${docsPath}/ticket`} />
-          <RefreshButton queryKeys={["tickets"]} />
           {user?.role === UserRole.SUPADM && (
             <RateupButtonPrimary
               rightIcon={<IconPlus />}
@@ -259,6 +253,8 @@ const TicketsHome = () => {
               onClick={openTicketModal}
             />
           )}
+          <InfoButton docUrl={`${docsPath}/ticket`} />
+          <RefreshButton queryKeys={["tickets"]} />
         </Group>
         <FilterMenu />
       </Group>

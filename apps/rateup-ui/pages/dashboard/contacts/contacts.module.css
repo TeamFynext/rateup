@@ -2,7 +2,7 @@
   height: 100%;
 }
 
-.contacts-page-root-div > div:nth-child(2) {
+.contacts-page-root-div > div:nth-child(1) {
   flex: 1 1 0;
   overflow: hidden;
   display: flex;

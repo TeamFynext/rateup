@@ -68,8 +68,6 @@ function GenerateQr() {
     <Stack className={`${styles["generate-qr-dashboard-page-div"]}`}>
       <Group justify="space-between">
         <Group className={styles["heading-and-create-qr-btn-container"]}>
-          <h1>{translations["QR Creator"]}</h1>
-          <RefreshButton queryKeys={["generatedQrs"]} />
           <Button
             className={styles["create-qr-btn"]}
             rightSection={<IconPlus />}
@@ -77,6 +75,7 @@ function GenerateQr() {
           >
             {translations["Create QR"]}
           </Button>
+          <RefreshButton queryKeys={["generatedQrs"]} />
         </Group>
         <SortDropdown
           onSortChange={handleSortChange}
