@@ -49,6 +49,7 @@ export const logicSupportedTypes2 = [
   W.OptIn,
   W.DocumentPicker,
   W.PhotoPicker,
+  W.ChipsSelector,
 ];
 export const logicSupportedTypes3 = [
   QuestionType2.Rating,
@@ -65,4 +66,5 @@ export const logicSupportedTypes3 = [
   QuestionType2.OptIn,
   QuestionType2.DocumentPicker,
   QuestionType2.PhotoPicker,
+  QuestionType2.ChipsSelector,
 ];
