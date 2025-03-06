@@ -383,63 +383,56 @@ export default function WhatsAppSettingsPage() {
         crossOrigin="anonymous"
       ></Script>
       <StyledTabs value={tab} onChange={setTab as any}>
-        <Flex className={styles.headerContainer} mb={"sm"}>
-          <h2>{translations["WhatsApp Settings"]}</h2>
-          <Center pr={"xl"}>
-            <Tabs.List>
-              <Tooltip
-                label={
-                  isManual
-                    ? translations[
-                        "You need to delete the manually configured details to switch to Automated Configuration"
-                      ]
-                    : translations["Automated Configuration"]
-                }
-                openDelay={300}
-              >
-                <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
-                  {translations["Automated"]}
-                </Tabs.Tab>
-              </Tooltip>
-              <Tooltip
-                label={
-                  isAutomated
-                    ? translations[
-                        "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
-                      ]
-                    : translations[
-                        "Manually Configure WhatsApp Business Account"
-                      ]
-                }
-                openDelay={300}
-              >
-                <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
-                  {translations["Manual"]}
-                </Tabs.Tab>
-              </Tooltip>
-              <Tooltip
-                label={
-                  !waSettings
-                    ? translations[
-                        "You need to configure WhatsApp Account to use AI chat in whatsapp"
-                      ]
-                    : !hasAIFeature
-                      ? translations["Upgrade subscription"]
-                      : translations["Configure WhatsApp with AI Chat"]
-                }
-                openDelay={300}
-              >
-                <Tabs.Tab
-                  value={WaConfigType.Chatbot}
-                  disabled={!waSettings || !hasAIFeature}
-                >
-                  {translations["Chat Bot"]}
-                </Tabs.Tab>
-              </Tooltip>
-            </Tabs.List>
-          </Center>
-          <div />
-        </Flex>
+        <Tabs.List mb={"xs"}>
+          <Tooltip
+            label={
+              isManual
+                ? translations[
+                    "You need to delete the manually configured details to switch to Automated Configuration"
+                  ]
+                : translations["Automated Configuration"]
+            }
+            openDelay={300}
+          >
+            <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
+              {translations["Automated"]}
+            </Tabs.Tab>
+          </Tooltip>
+          <Tooltip
+            label={
+              isAutomated
+                ? translations[
+                    "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
+                  ]
+                : translations["Manually Configure WhatsApp Business Account"]
+            }
+            openDelay={300}
+          >
+            <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
+              {translations["Manual"]}
+            </Tabs.Tab>
+          </Tooltip>
+          <Tooltip
+            label={
+              !waSettings
+                ? translations[
+                    "You need to configure WhatsApp Account to use AI chat in whatsapp"
+                  ]
+                : !hasAIFeature
+                  ? translations["Upgrade subscription"]
+                  : translations["Configure WhatsApp with AI Chat"]
+            }
+            openDelay={300}
+          >
+            <Tabs.Tab
+              value={WaConfigType.Chatbot}
+              disabled={!waSettings || !hasAIFeature}
+            >
+              {translations["Chat Bot"]}
+            </Tabs.Tab>
+          </Tooltip>
+        </Tabs.List>
+
         <Tabs.Panel value={WaConfigType.Automated}>
           <MetaLoginStatus waSettings={waSettings} />
         </Tabs.Panel>

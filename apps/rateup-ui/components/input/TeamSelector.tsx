@@ -61,10 +61,10 @@ export function TeamSelector({
   }
   if (teamsLoading) {
     return (
-      <Card h={46} w={240} radius={"md"} withBorder p={0}>
+      <Card h={40} w={240} radius={"md"} withBorder p={0}>
         <Group justify="space-between" w={"100%"} my={"auto"}>
-          <Skeleton w={100} h={20} ml={"xs"} />
-          <Skeleton w={20} h={20} mr={"xs"} />
+          <Skeleton w={100} h={17} ml={"xs"} />
+          <Skeleton w={20} h={17} mr={"xs"} />
         </Group>
       </Card>
     );

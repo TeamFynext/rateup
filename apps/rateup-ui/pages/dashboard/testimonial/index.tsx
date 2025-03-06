@@ -1,33 +1,35 @@
+import { useState } from "react";
+
 import {
   Center,
   Container,
   Flex,
   Group,
   Loader,
+  ScrollAreaAutosize,
   SimpleGrid,
-  Tabs,
-  Title,
   Space,
   Stack,
-  ScrollAreaAutosize,
+  Tabs,
+  Title,
 } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
-import { TeamSelector } from "../../../components/input/TeamSelector";
-import Heading from "../../../components/styled/Heading/Heading";
 import { useDisclosure } from "@mantine/hooks";
-import NothingFound from "../../../components/NothingFound/NothingFound";
-import { useState } from "react";
-import styles from "../contacts/contacts.module.css";
+import { IconPlus } from "@tabler/icons-react";
+
 import {
   useGetAllCollectionsByOrg,
   useGetAllTestimonialsByOrg,
 } from "../../../backend/testimonials/testimonial.query";
-import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
+import InfoButton from "../../../components/Button/InfoButton";
+import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
+import { TeamSelector } from "../../../components/input/TeamSelector";
+import NothingFound from "../../../components/NothingFound/NothingFound";
+import Heading from "../../../components/styled/Heading/Heading";
 import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
 import TestimonialCard from "../../../components/testimonial/TestimonialCard";
-import InfoButton from "../../../components/Button/InfoButton";
+import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
 import { docsPath } from "../../../utils/constants";
+import styles from "../contacts/contacts.module.css";
 
 enum TestimonailInnerTabEnum {
   TESTIMONIALS = "testimonials",
@@ -64,13 +66,12 @@ const indexPage = () => {
         wrap="wrap"
       >
         <Group gap={"md"}>
-          <Heading title="Testimonials" titleprops={{ w: "fit-content" }} />
-          <InfoButton docUrl={`${docsPath}/testimonial`} />
           <RateupButtonBlue
             title="Create Collection"
             rightIcon={<IconPlus />}
             onClick={openSave}
           />
+          <InfoButton docUrl={`${docsPath}/testimonial`} />
           <SaveTestimonialCollection close={closeSave} opened={openedSave} />
         </Group>
         <TeamSelector

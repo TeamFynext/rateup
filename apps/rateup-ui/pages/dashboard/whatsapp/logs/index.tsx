@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { ActionIcon, List, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, List, Tooltip } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
 import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import {
@@ -88,22 +88,24 @@ const Logs = () => {
     </Tooltip>
   );
   return (
-    <PaperLayout p={0} h={"100%"} mah={"800px"}>
-      <ContactTable
-        data={data?.logs ?? []}
-        columns={columns}
-        isPending={isPending}
-        refetch={refetch}
-        setSorting={setSorting}
-        sorting={sorting}
-        columnFilters={columnFilters}
-        setColumnFilters={setColumnFilters}
-        setPagination={setPagination}
-        pagination={pagination}
-        leftSection={refreshButton}
-        totalCount={data?.totalCount ?? 0}
-      />
-    </PaperLayout>
+    <Box m={"xs"} h={"97%"}>
+      <PaperLayout p={0} h={"100%"} mah={"800px"}>
+        <ContactTable
+          data={data?.logs ?? []}
+          columns={columns}
+          isPending={isPending}
+          refetch={refetch}
+          setSorting={setSorting}
+          sorting={sorting}
+          columnFilters={columnFilters}
+          setColumnFilters={setColumnFilters}
+          setPagination={setPagination}
+          pagination={pagination}
+          leftSection={refreshButton}
+          totalCount={data?.totalCount ?? 0}
+        />
+      </PaperLayout>
+    </Box>
   );
 };
 

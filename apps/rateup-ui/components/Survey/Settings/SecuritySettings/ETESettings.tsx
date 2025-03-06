@@ -122,7 +122,7 @@ export default function ETESettings(props: ETESettingsInterface) {
                 color="red"
                 onClick={() =>
                   router.push(
-                    "/dashboard/settings?activeTab=organization&highlighted=true",
+                    "/dashboard/settings?tab=organization&highlighted=true",
                   )
                 }
               >

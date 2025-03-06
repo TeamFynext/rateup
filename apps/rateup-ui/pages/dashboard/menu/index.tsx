@@ -50,15 +50,6 @@ export default function MenuPage() {
     <Stack h={"100%"}>
       <Group justify="space-between">
         <Group>
-          <Group className={styles["heading-container"]}>
-            <Heading
-              title={translations["Menus"]}
-              titleprops={{ w: "fit-content" }}
-            />
-          </Group>
-          <InfoButton docUrl={`${docsPath}/menu`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["allMenus"]} />
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
               className={styles["create-menu-button"]}
@@ -67,6 +58,9 @@ export default function MenuPage() {
               onClick={handleCreateClick}
             />
           )}
+          <InfoButton docUrl={`${docsPath}/menu`} />
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["allMenus"]} />
         </Group>
         <Group>
           <TeamSelector

@@ -23,7 +23,7 @@ const ImageInput = (props) => {
   const clearFile = () => {
     choiceForm.setFieldValue("image", null);
     resetRef.current?.();
-    props.onChange(null);
+    props.onChange("");
   };
   const handleFileChange = async (file: File) => {
     try {
