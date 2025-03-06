@@ -394,15 +394,21 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
                       <MultiSelect
                         label="Add Then Component"
                         placeholder="Select component"
-                        data={componentsList.filter((component) => {
-                          const isInElse = block.else?.includes(
-                            component.value,
-                          );
-                          const isInConditions = block.conditions?.some(
-                            (condition) => condition?.field === component.value,
-                          );
-                          return !isInElse && !isInConditions;
-                        })}
+                        data={componentsList
+                          ?.map((d) => ({
+                            label: d.label ?? d.value,
+                            value: d.value,
+                          }))
+                          .filter((component) => {
+                            const isInElse = block.else?.includes(
+                              component.value,
+                            );
+                            const isInConditions = block.conditions?.some(
+                              (condition) =>
+                                condition?.field === component.value,
+                            );
+                            return !isInElse && !isInConditions;
+                          })}
                         value={block.then}
                         onChange={(value) => addComponent(index, "then", value)}
                       />
@@ -413,15 +419,21 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
                       <MultiSelect
                         label="Add Else Component"
                         placeholder="Select component"
-                        data={componentsList.filter((component) => {
-                          const isInElse = block.then?.includes(
-                            component.value,
-                          );
-                          const isInConditions = block.conditions?.some(
-                            (condition) => condition?.field === component.value,
-                          );
-                          return !isInElse && !isInConditions;
-                        })}
+                        data={componentsList
+                          ?.map((d) => ({
+                            label: d?.label ?? d.value,
+                            value: d.value,
+                          }))
+                          .filter((component) => {
+                            const isInElse = block.then?.includes(
+                              component.value,
+                            );
+                            const isInConditions = block.conditions?.some(
+                              (condition) =>
+                                condition?.field === component.value,
+                            );
+                            return !isInElse && !isInConditions;
+                          })}
                         value={block.else}
                         onChange={(value) => addComponent(index, "else", value)}
                       />

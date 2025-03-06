@@ -1090,7 +1090,7 @@ export const getInitialValues = (type: QuestionType2) => {
             max: DESC_MAX,
           },
         },
-        "min-selected-items": { type: "number", value: 2 },
+        "min-selected-items": { type: "number", value: 1 },
         "max-selected-items": { type: "number", value: 2 },
         "init-value": { type: "text", value: [] },
         visible: {
