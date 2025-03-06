@@ -22,7 +22,7 @@ export default function AutomatedRepliesPage() {
       <Group justify={"space-between"}>
         <Group ml={"md"}>
           <RateupButtonBlue
-            title={translations["Create automated reply"]}
+            title={translations["Create Automation"]}
             rightIcon={<IconPlus size={"1rem"} />}
             onClick={open}
           />
@@ -30,7 +30,7 @@ export default function AutomatedRepliesPage() {
         <SimpleModalLayout
           opened={opened}
           onClose={close}
-          title="create automated reply"
+          title={translations["Create Automation"]}
         >
           <AutomatedReplyForm close={close} />
         </SimpleModalLayout>

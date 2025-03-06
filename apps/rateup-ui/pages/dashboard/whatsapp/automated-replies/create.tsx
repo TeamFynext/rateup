@@ -1,38 +1,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
-import {
-  Box,
-  Button,
-  Checkbox,
-  Group,
-  Radio,
-  SelectProps,
-  Stack,
-  Tabs,
-} from "@mantine/core";
-import { useForm, UseFormReturnType } from "@mantine/form";
+import { Button, Checkbox, Group, Radio, Stack, Tabs } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { IconMessageCircle, IconPhoto } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
-import { useWaTemplates } from "../../../../backend/whatsapp/whatsapp.query";
 import {
-  ContainedSelection,
   ContainedTagInput,
-  ContainedTextArea,
   ContainedTextField,
 } from "../../../../components/input/ContainedInput/ContainedInput";
-import { TeamSelector } from "../../../../components/input/TeamSelector";
-import RateupLoader from "../../../../components/Loaders/RateupLoader";
-import {
-  WaAutomatedReplyMatchType,
-  WaAutomatedReplyResponseType,
-} from "../../../../types/enums";
+import { WaAutomatedReplyMatchType } from "../../../../types/enums";
 import {
   WaAutomatedReply,
   WaAutomatedReplyMatchData,
@@ -41,7 +22,7 @@ import {
 export default function CreateAutomatedReplyPage() {
   return (
     <Stack>
-      <h1>Create Automated Reply</h1>
+      <h1>Create Automation</h1>
       <AutomatedReplyForm />
     </Stack>
   );

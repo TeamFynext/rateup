@@ -64,8 +64,8 @@
   &[data-active] {
     &,
     &:hover {
-      background-color: var(--mantine-primary-color-light);
-      color: var(--mantine-primary-color-filled);
+      background-color: var(--mantine-color-rateup-blue-light);
+      color: var(--mantine-color-rateup-blue-filled);
     }
   }
 }
@@ -114,9 +114,9 @@
   &[data-active] {
     &,
     &:hover {
-      border-left-color: var(--mantine-primary-color-filled);
-      background-color: var(--mantine-primary-color-light);
-      color: var(--mantine-primary-color-filled);
+      border-left-color: var(--mantine-color-rateup-blue-filled);
+      background-color: var(--mantine-color-rateup-blue-light);
+      color: var(--mantine-color-rateup-blue-filled);
     }
   }
 }

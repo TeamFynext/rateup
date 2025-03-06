@@ -49,7 +49,7 @@ import styles from "./contacts.module.css";
 
 export enum ContactTabs {
   GROUPS = "groups",
-  CONTACTS = "contacts",
+  CONTACTS = "All Contacts",
   SETTINGS = "settings",
 }
 export default function Contacts() {

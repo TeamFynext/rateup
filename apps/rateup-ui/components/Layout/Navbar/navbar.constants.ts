@@ -12,11 +12,8 @@ import {
   IconCirclePlus,
   IconDashboard,
   IconFileDescription,
-  IconFileInfo,
-  IconForms,
   IconGift,
   IconHome2,
-  IconInbox,
   IconInvoice,
   IconLinkPlus,
   IconLogout,
@@ -131,15 +128,6 @@ export function getNavTopData(
             icon: IconBrandWhatsapp,
             label: translations["WhatsApp"],
             children: [
-              ...(hasFeature(sfpn.WhatsAppTemplate)
-                ? [
-                    {
-                      label: translations["Templates"],
-                      link: "/dashboard/whatsapp/templates",
-                      icon: IconTemplate,
-                    },
-                  ]
-                : []),
               ...(hasFeature(sfpn.WhatsAppFlow)
                 ? [
                     {
@@ -149,12 +137,20 @@ export function getNavTopData(
                     },
                   ]
                 : []),
-
               {
                 label: translations["Automation"],
                 link: "/dashboard/whatsapp/automated-replies",
                 icon: IconAutomation,
               },
+              ...(hasFeature(sfpn.WhatsAppTemplate)
+                ? [
+                    {
+                      label: translations["Templates"],
+                      link: "/dashboard/whatsapp/templates",
+                      icon: IconTemplate,
+                    },
+                  ]
+                : []),
               {
                 label: translations["Logs"],
                 link: "/dashboard/whatsapp/logs",
@@ -276,7 +272,27 @@ export function getNavTopData(
           : []),
       ],
     },
-
+    {
+      icon: IconQrcode,
+      label: translations["QR Studio"],
+      children: [
+        {
+          label: translations["QR Creator"],
+          link: "/dashboard/qrCreator",
+          icon: IconCirclePlus,
+        },
+        {
+          label: translations["Access Links"],
+          link: "/dashboard/quickAccessLinks",
+          icon: IconLinkPlus,
+        },
+        {
+          label: translations["Landing Pages"],
+          link: "/dashboard/landingPages",
+          icon: IconWallpaper,
+        },
+      ],
+    },
     {
       icon: IconApps,
       label: translations["Apps & Services"],
@@ -307,40 +323,6 @@ export function getNavTopData(
           },
         ]
       : []),
-    {
-      icon: IconQrcode,
-      label: translations["QR Studio"],
-      children: [
-        {
-          label: translations["QR Creator"],
-          link: "/dashboard/qrCreator",
-          icon: IconCirclePlus,
-        },
-        {
-          label: translations["Access Links"],
-          link: "/dashboard/quickAccessLinks",
-          icon: IconLinkPlus,
-        },
-        {
-          label: translations["Landing Pages"],
-          link: "/dashboard/landingPages",
-          icon: IconWallpaper,
-        },
-      ],
-    },
-    {
-      icon: IconFileInfo,
-      label: translations["Docs"],
-      link: "https://docs.rateup.app/",
-      children: [
-        {
-          label: "Guides",
-          link: "https://docs.rateup.app/",
-          icon: IconFileInfo,
-          disabled: true,
-        },
-      ],
-    },
   ];
   const lastLinksData = [
     ...(process.env.NEXT_PUBLIC_EXPERIMENT

@@ -63,6 +63,7 @@ const MainNavLinks = ({
   setActiveMainLink,
   router,
   open,
+  setActiveSubLink,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -75,9 +76,12 @@ const MainNavLinks = ({
       <UnstyledButton
         onClick={() => {
           setActiveMainLink(link.label);
+          setActiveSubLink(link?.children[0]?.link);
           open();
           if (link.link && !link?.disabled) {
             router.push(link.link);
+          } else {
+            router.push(link?.children[0]?.link);
           }
         }}
         className={classes.mainLink}
@@ -474,6 +478,7 @@ export default function Layout({ children, appProps }) {
       setActiveMainLink={setActiveMainLink}
       router={router}
       open={open}
+      setActiveSubLink={setActiveSubLink}
     />
   );
 
