@@ -194,6 +194,7 @@ export function getResponses2(
       case WaQuestions.Opinion:
       case WaQuestions.YN:
       case WaQuestions.Smiley:
+      case WaQuestions.ChipsSelector:
         return (
           question?.["data-source"]?.map((source, index) => ({
             label: source.title,
@@ -288,6 +289,7 @@ export function getConditionsv2(qType: WaQuestions): Array<any> {
         LogicCondition.Submitted,
       ];
     case WaQuestions.CheckboxGroup:
+    case WaQuestions.ChipsSelector:
       return [
         LogicCondition.IncludesNoneOf,
         LogicCondition.IncludesAnyOf,
