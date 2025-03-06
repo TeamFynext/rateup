@@ -25,6 +25,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import useTranslations from "@/dictionaries/useTranslation";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
 import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
@@ -36,7 +37,6 @@ import useLocalStorage from "../../hooks/localStorage";
 import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
-import ExpiryComponent from "../Premium/ExpiryComponent";
 import SessionAuth from "../SuperToken/SessionAuth";
 import ColorSchemaButton from "../theme/ColorSchemaButton";
 import classes from "./DoubleNavbar.module.css";
@@ -52,24 +52,31 @@ interface NavLinkItem {
 }
 
 // LogoutButton Component
-const LogoutButton = ({ onClick }) => {
+export const LogoutButton = ({ onClick }) => {
   return <IconLogout onClick={onClick} size={22} stroke={1.5} />;
 };
 
 // MainNavLinks Component
-const MainNavLinks = ({ links, activeMainLink, setActiveMainLink, router }) => {
-  return links.map((link) => (
+const MainNavLinks = ({
+  links,
+  activeMainLink,
+  setActiveMainLink,
+  router,
+  open,
+}) => {
+  return links.map((link, index) => (
     <Tooltip
       label={link.label}
       position="right"
       withArrow
       transitionProps={{ duration: 0 }}
-      key={link.label}
+      key={index}
     >
       <UnstyledButton
         onClick={() => {
           setActiveMainLink(link.label);
-          if (link.link) {
+          open();
+          if (link.link && !link?.disabled) {
             router.push(link.link);
           }
         }}
@@ -92,13 +99,13 @@ const SubNavLinks = ({
 }) => {
   const linksIcon = links
     .filter((d) => !d?.disabled)
-    .map((link) => (
+    .map((link, index) => (
       <Tooltip
         label={link.label}
         position="right"
         withArrow
         transitionProps={{ duration: 0 }}
-        key={link.label}
+        key={index}
       >
         <UnstyledButton
           onClick={() => {
@@ -119,7 +126,7 @@ const SubNavLinks = ({
 
   const linksText = links
     .filter((d) => !d?.disabled)
-    .map((link) => (
+    .map((link, index) => (
       <a
         className={classes.link}
         data-active={link.link === activeSubLink || undefined}
@@ -130,7 +137,7 @@ const SubNavLinks = ({
           setActiveSubLabel(link?.label);
           router.push(link.link);
         }}
-        key={link.label}
+        key={index}
         style={{ paddingLeft: 0 }}
       >
         {link.label}
@@ -141,16 +148,22 @@ const SubNavLinks = ({
 };
 
 // LastLinks Component
-const LastLinks = ({ links }) => {
-  return links.map((link) => (
+const LastLinks = ({ links, activeMainLink, setActiveMainLink, router }) => {
+  return links.map((link, index) => (
     <Tooltip
       label={link.label}
       position="right"
       withArrow
       transitionProps={{ duration: 0 }}
-      key={link.label}
+      key={index}
     >
-      <UnstyledButton className={classes.mainLink}>
+      <UnstyledButton
+        onClick={() => {
+          if (link?.label === "Account") setActiveMainLink(link.label);
+        }}
+        className={classes.mainLink}
+        data-active={link.label === activeMainLink || undefined}
+      >
         <link.icon />
       </UnstyledButton>
     </Tooltip>
@@ -207,7 +220,6 @@ const Navbar = ({
   user,
 }) => {
   if (isPending) return <NavbarSkeleton />;
-  let localImagesPath = "http://localhost:3000/images";
   return (
     <nav className={classes.navbar}>
       <div className={classes.wrapper}>
@@ -217,9 +229,9 @@ const Navbar = ({
               <HoverCard width={280} shadow="md">
                 <HoverCard.Target>
                   <Avatar
-                    name={user?.userName}
+                    name={user?.orgName}
                     color="initials"
-                    src={user?.profilePhoto}
+                    src={getFileUrlFromKey(user?.orgLogo)}
                   />
                 </HoverCard.Target>
                 <HoverCard.Dropdown>
@@ -338,24 +350,17 @@ export default function Layout({ children, appProps }) {
 
   const { data, error } = useOrgWsAuthCheck();
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
-  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(false);
+  const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
   const { translations } = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
-
-  const lastLinksData = [
-    ...(process.env.NEXT_PUBLIC_EXPERIMENT
-      ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
-      : []),
-    {
-      icon: () => <LogoutButton onClick={() => router.push("/logout")} />,
-      label: "Logout",
-    },
-  ];
+  const [lastLinksData, setLastLinksData] = useState([]);
 
   useEffect(() => {
     if (!isPending) {
-      setNavLinks(getNavTopData(sub, translations));
+      const [nLinks, lLinks] = getNavTopData(sub, translations);
+      setNavLinks(nLinks);
+      setLastLinksData(lLinks);
     }
   }, [isPending, sub, translations]);
 
@@ -444,13 +449,12 @@ export default function Layout({ children, appProps }) {
   const tab = router.asPath;
 
   // Create linksMapping object from navLinks
-  const linksMapping = navLinks.reduce<Record<string, NavLinkItem[]>>(
-    (acc, link) => {
-      acc[link.label] = link.children || [];
-      return acc;
-    },
-    {},
-  );
+  const linksMapping = [...navLinks, ...lastLinksData]?.reduce<
+    Record<string, NavLinkItem[]>
+  >((acc, link) => {
+    acc[link.label] = link.children || [];
+    return acc;
+  }, {});
 
   useEffect(() => {
     Object.entries(linksMapping).find(([key, value]) => {
@@ -469,6 +473,7 @@ export default function Layout({ children, appProps }) {
       activeMainLink={activeMainLink}
       setActiveMainLink={setActiveMainLink}
       router={router}
+      open={open}
     />
   );
 
@@ -480,7 +485,14 @@ export default function Layout({ children, appProps }) {
     router,
   });
 
-  const lastLinks = <LastLinks links={lastLinksData} />;
+  const lastLinks = (
+    <LastLinks
+      links={lastLinksData}
+      activeMainLink={activeMainLink}
+      setActiveMainLink={setActiveMainLink}
+      router={router}
+    />
+  );
 
   return (
     <SessionAuth>

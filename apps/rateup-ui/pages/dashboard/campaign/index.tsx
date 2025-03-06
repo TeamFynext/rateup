@@ -85,7 +85,7 @@ export default function CampaignList() {
         </Flex>
         <Center></Center>
 
-        <PaperLayout p={0} h={"100%"} mah={"800px"}>
+        <PaperLayout p={0} h={"100%"} mah={"850px"}>
           <TanstackTable
             columns={column}
             data={filteredCampaigns}

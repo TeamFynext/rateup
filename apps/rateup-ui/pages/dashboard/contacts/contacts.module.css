@@ -13,7 +13,7 @@
 .panels-container {
   padding: 0.3125rem;
   flex: 1 1 0;
-  max-height: 800px;
+  max-height: 1000px;
 }
 
 .tabLabel[data-active] {

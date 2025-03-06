@@ -5,8 +5,10 @@ import {
   IconApps,
   IconAutomation,
   IconAward,
+  IconBrandHipchat,
   IconBrandTeams,
   IconBrandWhatsapp,
+  IconBrowser,
   IconCirclePlus,
   IconDashboard,
   IconFileDescription,
@@ -37,11 +39,14 @@ import {
   IconWaveSine,
 } from "@tabler/icons-react";
 
+import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
+
 import {
   SubscriptionFeaturePathName as sfpn,
   SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import { LogoutButton } from "../Layout";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -83,7 +88,7 @@ export function getNavTopData(
     ...(hasFeature(sfpn.Whatsapp)
       ? [
           {
-            icon: IconInbox,
+            icon: IconBrandHipchat,
             label: translations["Inbox"],
             children: [
               {
@@ -103,23 +108,18 @@ export function getNavTopData(
     ...(hasFeature(sfpn.WhatsAppCampaign)
       ? [
           {
-            icon: IconAddressBook,
-            label: translations["Contacts"],
+            icon: IconSpeakerphone,
+            label: translations["Campaigns"],
             children: [
               {
-                label: translations["Groups"],
-                link: "/dashboard/contacts?tab=groups",
-                icon: IconUsersGroup,
+                label: translations["Campaigns"],
+                link: "/dashboard/campaign",
+                icon: IconSpeakerphone,
               },
               {
-                label: translations["All Contacts"],
-                link: "/dashboard/contacts?tab=contacts",
+                label: translations["Contacts"],
+                link: "/dashboard/contacts",
                 icon: IconAddressBook,
-              },
-              {
-                label: translations["Settings"],
-                link: "/dashboard/contacts?tab=settings",
-                icon: IconSettings,
               },
             ],
           },
@@ -137,15 +137,6 @@ export function getNavTopData(
                       label: translations["Templates"],
                       link: "/dashboard/whatsapp/templates",
                       icon: IconTemplate,
-                    },
-                  ]
-                : []),
-              ...(hasFeature(sfpn.WhatsAppCampaign)
-                ? [
-                    {
-                      label: translations["Campaigns"],
-                      link: "/dashboard/campaign",
-                      icon: IconSpeakerphone,
                     },
                   ]
                 : []),
@@ -216,16 +207,16 @@ export function getNavTopData(
     ...(hasFeature(sfpn.WebSurvey)
       ? [
           {
-            icon: IconForms,
+            icon: IconBrowser,
             label: translations["Web Forms"],
             children: [
               {
                 label: translations["Surveys"],
                 link: "/dashboard/surveys",
-                icon: IconFileDescription,
+                icon: IconBrowser,
               },
               {
-                label: translations["Testimonial"],
+                label: translations["Templates"],
                 link: "/dashboard/surveys/templates",
                 icon: IconTemplate,
               },
@@ -264,6 +255,7 @@ export function getNavTopData(
       icon: IconBrandTeams,
       label: translations["Teams"],
       link: "/dashboard/teams",
+      disabled: subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG,
       children: [
         {
           label: translations["Teams"],
@@ -274,7 +266,7 @@ export function getNavTopData(
         ...(subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
           ? [
               {
-                label: translations["Staff"],
+                label: translations["All Members"],
                 link: "/dashboard/members",
                 icon: IconUsers,
                 disabled:
@@ -284,41 +276,7 @@ export function getNavTopData(
           : []),
       ],
     },
-    {
-      icon: IconUser,
-      label: translations["Account"],
-      children: [
-        {
-          label: translations["Account"],
-          link: "/dashboard/settings?tab=user",
-          icon: IconUserShare,
-        },
-        {
-          label: translations["Organization"],
-          link: "/dashboard/settings?tab=organization",
-          icon: IconUsersGroup,
-        },
-        {
-          label: translations["Account"],
-          link: "/dashboard/settings?tab=account",
-          icon: IconInvoice,
-        },
-        ...(subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
-          ? [
-              {
-                label: translations["Admin"],
-                link: "/admin",
-                icon: IconTerminal2,
-              },
-            ]
-          : []),
-        {
-          label: translations["Logout"],
-          link: "/logout",
-          icon: IconLogout,
-        },
-      ],
-    },
+
     {
       icon: IconApps,
       label: translations["Apps & Services"],
@@ -384,7 +342,51 @@ export function getNavTopData(
       ],
     },
   ];
-  return navLinks;
+  const lastLinksData = [
+    ...(process.env.NEXT_PUBLIC_EXPERIMENT
+      ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
+      : []),
+    {
+      icon: LogoutButton,
+      label: "Logout",
+    },
+    {
+      icon: IconUser,
+      label: translations["Account"],
+      children: [
+        {
+          label: translations["Account"],
+          link: "/dashboard/settings?tab=user",
+          icon: IconUserShare,
+        },
+        {
+          label: translations["Organization"],
+          link: "/dashboard/settings?tab=organization",
+          icon: IconUsersGroup,
+        },
+        {
+          label: translations["Account"],
+          link: "/dashboard/settings?tab=account",
+          icon: IconInvoice,
+        },
+        ...(subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
+          ? [
+              {
+                label: translations["Admin"],
+                link: "/admin",
+                icon: IconTerminal2,
+              },
+            ]
+          : []),
+        {
+          label: translations["Logout"],
+          link: "/logout",
+          icon: IconLogout,
+        },
+      ],
+    },
+  ];
+  return [navLinks, lastLinksData];
 }
 
 //data Array consisting of NavbarBottomData
