@@ -34,7 +34,7 @@ import {
   useUpdateChatbot,
 } from "@/backend/chatbot/chatbot.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import ChatbotResources from "@/components/ChatBot/ChatbotResources";
+import PremiumFeature from "@/components/Premium/PremiumFeature";
 import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
@@ -355,17 +355,11 @@ export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
   const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
   const { translations } = useTranslations();
-  const { data: subscription } = useSubscription();
   useEffect(() => {
     if (waSettings) {
       setTab(waSettings.type);
     }
   }, [waSettings]);
-
-  const hasAIFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
-    [subscription],
-  );
 
   if (isLoading) {
     return <MetaLoginStatusLoaderSkeleton />;
@@ -383,71 +377,42 @@ export default function WhatsAppSettingsPage() {
         crossOrigin="anonymous"
       ></Script>
       <StyledTabs value={tab} onChange={setTab as any}>
-        <Flex className={styles.headerContainer} mb={"sm"}>
-          <h2>{translations["WhatsApp Settings"]}</h2>
-          <Center pr={"xl"}>
-            <Tabs.List>
-              <Tooltip
-                label={
-                  isManual
-                    ? translations[
-                        "You need to delete the manually configured details to switch to Automated Configuration"
-                      ]
-                    : translations["Automated Configuration"]
-                }
-                openDelay={300}
-              >
-                <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
-                  {translations["Automated"]}
-                </Tabs.Tab>
-              </Tooltip>
-              <Tooltip
-                label={
-                  isAutomated
-                    ? translations[
-                        "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
-                      ]
-                    : translations[
-                        "Manually Configure WhatsApp Business Account"
-                      ]
-                }
-                openDelay={300}
-              >
-                <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
-                  {translations["Manual"]}
-                </Tabs.Tab>
-              </Tooltip>
-              <Tooltip
-                label={
-                  !waSettings
-                    ? translations[
-                        "You need to configure WhatsApp Account to use AI chat in whatsapp"
-                      ]
-                    : !hasAIFeature
-                      ? translations["Upgrade subscription"]
-                      : translations["Configure WhatsApp with AI Chat"]
-                }
-                openDelay={300}
-              >
-                <Tabs.Tab
-                  value={WaConfigType.Chatbot}
-                  disabled={!waSettings || !hasAIFeature}
-                >
-                  {translations["Chat Bot"]}
-                </Tabs.Tab>
-              </Tooltip>
-            </Tabs.List>
-          </Center>
-          <div />
-        </Flex>
+        <Tabs.List mb={"xs"}>
+          <Tooltip
+            label={
+              isManual
+                ? translations[
+                    "You need to delete the manually configured details to switch to Automated Configuration"
+                  ]
+                : translations["Automated Configuration"]
+            }
+            openDelay={300}
+          >
+            <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
+              {translations["Automated"]}
+            </Tabs.Tab>
+          </Tooltip>
+          <Tooltip
+            label={
+              isAutomated
+                ? translations[
+                    "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
+                  ]
+                : translations["Manually Configure WhatsApp Business Account"]
+            }
+            openDelay={300}
+          >
+            <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
+              {translations["Manual"]}
+            </Tabs.Tab>
+          </Tooltip>
+        </Tabs.List>
+
         <Tabs.Panel value={WaConfigType.Automated}>
           <MetaLoginStatus waSettings={waSettings} />
         </Tabs.Panel>
         <Tabs.Panel value={WaConfigType.Manual}>
           <WhatsAppManualConfiguration waSettings={waSettings} />
-        </Tabs.Panel>
-        <Tabs.Panel value={WaConfigType.Chatbot}>
-          <WhatsAppAIChatConfiguration />
         </Tabs.Panel>
       </StyledTabs>
     </Stack>
@@ -542,10 +507,11 @@ function MetaLoginStatusLoaderSkeleton() {
   );
 }
 
-function WhatsAppAIChatConfiguration() {
+export function WhatsAppAIChatConfiguration() {
   const { data: chatbot } = useGetChatbotDetails();
   const { translations } = useTranslations();
   const updateChatbotdetMut = useUpdateChatbot();
+  const { data: subscription } = useSubscription();
 
   const form = useForm({
     initialValues: {
@@ -571,43 +537,52 @@ function WhatsAppAIChatConfiguration() {
     updateChatbotdetMut.mutate(form.values);
   }
 
+  const hasAIFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
+    [subscription],
+  );
+
   return (
-    <Stack p={"sm"}>
-      <PaperLayout w={"100%"}>
-        <Stack>
-          <Switch
-            label={translations["Enable AI Chat in WhatsApp"]}
-            checked={chatbot?.enableWaChat}
-            onChange={handleEnableWaAIChat}
-          />
-          {chatbot?.enableWaChat && (
-            <Stack w={"50%"}>
-              <ContainedTextField
-                label={translations["Bot Command"]}
-                placeholder={"eg: @bot"}
-                {...form.getInputProps("waCommand")}
-              />
-              <ContainedTextArea
-                label={translations["Bot Prompt"]}
-                {...form.getInputProps("waPrompt")}
-                rows={5}
-              />
-              <Group>
-                <RateupButtonPrimary
-                  onClick={handleSubmit}
-                  title="Save"
-                  loading={updateChatbotdetMut.isPending}
+    <Stack p={0}>
+      <PremiumFeature isSubscribed={hasAIFeature}>
+        <PaperLayout>
+          <Stack>
+            <Text fw={500} c="var(--grey-color-6)">
+              {translations["Configure WhatsApp with AI Chat"]}
+            </Text>
+            <Switch
+              label={translations["Enable AI Chat in WhatsApp"]}
+              checked={chatbot?.enableWaChat}
+              onChange={handleEnableWaAIChat}
+            />
+            {chatbot?.enableWaChat && (
+              <Stack w={"50%"}>
+                <ContainedTextField
+                  label={translations["Bot Command"]}
+                  placeholder={"eg: @bot"}
+                  {...form.getInputProps("waCommand")}
                 />
-                <RateupButtonSecondary
-                  onClick={() => form.reset()}
-                  title="Cancel"
+                <ContainedTextArea
+                  label={translations["Bot Prompt"]}
+                  {...form.getInputProps("waPrompt")}
+                  rows={5}
                 />
-              </Group>
-            </Stack>
-          )}
-        </Stack>
-      </PaperLayout>
-      <ChatbotResources />
+                <Group>
+                  <RateupButtonPrimary
+                    onClick={handleSubmit}
+                    title="Save"
+                    loading={updateChatbotdetMut.isPending}
+                  />
+                  <RateupButtonSecondary
+                    onClick={() => form.reset()}
+                    title="Cancel"
+                  />
+                </Group>
+              </Stack>
+            )}
+          </Stack>
+        </PaperLayout>
+      </PremiumFeature>
     </Stack>
   );
 }

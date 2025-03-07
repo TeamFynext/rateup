@@ -53,7 +53,7 @@ export default function CampaignList() {
   const filteredCampaignsdata =
     selectedTeam == "all" || !selectedTeam // filtering by team
       ? campaignData?.data
-      : campaignDataByTeam?.data ?? [];
+      : (campaignDataByTeam?.data ?? []);
   const filteredCampaigns = (
     searchText
       ? filteredCampaignsdata.filter(
@@ -70,12 +70,8 @@ export default function CampaignList() {
 
   return (
     <MantineProvider theme={whatsappTheme}>
-      <Stack gap={"sm"} h={"100%"}>
+      <Stack gap={"sm"} h={"100%"} mx={4}>
         <Flex justify={"space-between"}>
-          <Heading
-            title={translations["Campaigns"]}
-            titleprops={{ w: "fit-content" }}
-          />
           <SearchInput
             placeholder={translations["Search Campaign"]}
             searchText={searchText}
@@ -89,7 +85,7 @@ export default function CampaignList() {
         </Flex>
         <Center></Center>
 
-        <PaperLayout p={0} h={"100%"} mah={"800px"}>
+        <PaperLayout p={0} h={"100%"} mah={"850px"}>
           <TanstackTable
             columns={column}
             data={filteredCampaigns}

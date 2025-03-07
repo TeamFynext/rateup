@@ -86,16 +86,6 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          <Title
-            order={2}
-            c={"var(--grey-color)"}
-            className={styles["heading-container"]}
-          >
-            {translations["All Templates"]}
-          </Title>
-          <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["watemplates"]} />
           <Tooltip
             label={
               translations[
@@ -114,6 +104,9 @@ export default function Template() {
               />
             </Box>
           </Tooltip>
+          <InfoButton docUrl={`${docsPath}/whatsappSurvey/template`} />
+          <WelcomeTour steps={tourSteps} />
+          <RefreshButton queryKeys={["watemplates"]} />
         </Flex>
 
         <Flex

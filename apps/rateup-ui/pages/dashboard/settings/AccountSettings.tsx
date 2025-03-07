@@ -110,7 +110,7 @@ const AccountSettings = () => {
       setActiveTab(AccountSettingsTabs.OrderHistory);
     if (router?.query?.view === "stats")
       setActiveTab(AccountSettingsTabs.UsageStats);
-  }, [router.query?.activeTab, router?.query?.view]);
+  }, [router.query?.tab, router?.query?.view]);
 
   const { cart, reset } = useRouteAndCartStore();
   const [selectedRateupPlan, setselectedRateupPlan] = useState("");

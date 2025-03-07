@@ -1693,7 +1693,7 @@
   "Template Name": "اسم النموذج",
   "Sync Templates": "مزامنة النماذج",
   "This business uses a secure service from Meta to manage this chat. Tap to learn more": "يستخدم هذا النشاط التجاري خدمة آمنة من Meta لإدارة هذه الدردشة. انقر لمعرفة المزيد.",
-  "Create automated reply": "إنشاء رد آلي",
+  "Create Automation": "إنشاء أتمتة",
   "Automated Replies": "الردود الآلية",
   "Connect a WhatsApp number in settings to sync a Flow": "قم بتوصيل رقم WhatsApp في الإعدادات لمزامنة التدفق",
   "Create flow": "إنشاء تدفق",
@@ -2090,5 +2090,10 @@
   "Enable AI Chat in WhatsApp": "تمكين الدردشة بالذكاء الاصطناعي في واتساب",
   "Bot Command": "أمر البوت",
   "Upgrade subscription": "ترقية الاشتراك",
-  "Bot Prompt": "موجه البوت"
+  "Bot Prompt": "موجه البوت",
+  "Web Forms": "نماذج الويب",
+  "All Contacts": "جميع الجهات الاتصال",
+  "Groups": "المجموعات",
+  "Access Links": "روابط الوصول",
+  "All Members": "جميع الأعضاء"
 }

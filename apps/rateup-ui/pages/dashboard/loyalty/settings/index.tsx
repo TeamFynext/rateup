@@ -6,7 +6,7 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const index = () => {
   return (
-    <Stack gap={"md"}>
+    <Stack gap={"md"} m={"xs"}>
       <PaperLayout>
         <RegisterPageShare />
       </PaperLayout>

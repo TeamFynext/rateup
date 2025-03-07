@@ -64,7 +64,7 @@ const Pricing = ({
   const session = useCheckSession();
 
   const handlePlanSelection = (data) => {
-    let route = "/dashboard/settings?activeTab=account";
+    let route = "/dashboard/settings?tab=account";
     updateRouteAndCart(route, data);
     if (isAccount) return handleSelection();
     if (!session) route = "/login";

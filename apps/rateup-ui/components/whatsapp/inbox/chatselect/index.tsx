@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 
 import {
   ActionIcon,
+  Badge,
   Card,
   Divider,
   Group,
@@ -20,6 +21,7 @@ import {
 } from "@mantine/core";
 import {
   IconMessageCog,
+  IconPercentage100,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
@@ -97,29 +99,29 @@ const WaInboxChatSelect = () => {
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
-  const {
-    status: ticketsStatus,
-    data: tickets,
-    isPending: isTicketsLoading,
-    error: ticketsError,
-    fetchNextPage: fetchNextPageTickets,
-    isFetchingNextPage: isTicketsFetchingNextPage,
-    hasNextPage: hasNextPageTickets,
-    isFetching: isTicketFetching,
-  } = useWaTicktes();
+  // const {
+  //   status: ticketsStatus,
+  //   data: tickets,
+  //   isPending: isTicketsLoading,
+  //   error: ticketsError,
+  //   fetchNextPage: fetchNextPageTickets,
+  //   isFetchingNextPage: isTicketsFetchingNextPage,
+  //   hasNextPage: hasNextPageTickets,
+  //   isFetching: isTicketFetching,
+  // } = useWaTicktes();
 
   const allFilteredContactsRow = useMemo(
     () =>
       filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
     [filteredContacts],
   );
-  const { allTicketsRow, totalTickets } = useMemo(() => {
-    const data = tickets?.pages?.flatMap((d) => d?.rows) ?? [];
-    return {
-      allTicketsRow: data[0]?.data ?? [],
-      totalTickets: data[0]?.totalTickets ?? 0,
-    };
-  }, [tickets]);
+  // const { allTicketsRow, totalTickets } = useMemo(() => {
+  //   const data = tickets?.pages?.flatMap((d) => d?.rows) ?? [];
+  //   return {
+  //     allTicketsRow: data[0]?.data ?? [],
+  //     totalTickets: data[0]?.totalTickets ?? 0,
+  //   };
+  // }, [tickets]);
 
   const parentRef = useRef(null);
   const ticketsParentRef = useRef(null);
@@ -133,12 +135,12 @@ const WaInboxChatSelect = () => {
     estimateSize: () => 70,
     overscan: 5,
   });
-  const ticketsRowVirtualizer = useVirtualizer({
-    count: hasNextPageTickets ? allTicketsRow.length + 1 : allTicketsRow.length,
-    getScrollElement: () => ticketsParentRef.current,
-    estimateSize: () => 82,
-    overscan: 5,
-  });
+  // const ticketsRowVirtualizer = useVirtualizer({
+  //   count: hasNextPageTickets ? allTicketsRow.length + 1 : allTicketsRow.length,
+  //   getScrollElement: () => ticketsParentRef.current,
+  //   estimateSize: () => 82,
+  //   overscan: 5,
+  // });
   useEffect(() => {
     const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
 
@@ -164,27 +166,27 @@ const WaInboxChatSelect = () => {
     isFilteredContactsFetchingNextPage,
   ]);
 
-  useEffect(() => {
-    const [lastItem] = [...ticketsRowVirtualizer.getVirtualItems()].reverse();
+  // useEffect(() => {
+  //   const [lastItem] = [...ticketsRowVirtualizer.getVirtualItems()].reverse();
 
-    if (!lastItem) {
-      return;
-    }
+  //   if (!lastItem) {
+  //     return;
+  //   }
 
-    if (
-      lastItem.index >= allTicketsRow.length - 1 &&
-      hasNextPageTickets &&
-      !isTicketsFetchingNextPage
-    ) {
-      fetchNextPageTickets();
-    }
-  }, [
-    allTicketsRow.length,
-    ticketsRowVirtualizer,
-    fetchNextPageTickets,
-    hasNextPageTickets,
-    isTicketsFetchingNextPage,
-  ]);
+  //   if (
+  //     lastItem.index >= allTicketsRow.length - 1 &&
+  //     hasNextPageTickets &&
+  //     !isTicketsFetchingNextPage
+  //   ) {
+  //     fetchNextPageTickets();
+  //   }
+  // }, [
+  //   allTicketsRow.length,
+  //   ticketsRowVirtualizer,
+  //   fetchNextPageTickets,
+  //   hasNextPageTickets,
+  //   isTicketsFetchingNextPage,
+  // ]);
 
   const { wsData } = useWsData();
 
@@ -328,15 +330,32 @@ const WaInboxChatSelect = () => {
     },
     [openChatDisplayForContact, setSelectedContact],
   );
+  useEffect(() => {
+    let tab = router.query?.tab as string;
+    if (tab === "All") {
+      prepareFilters({ ...filter, messageType: "all" });
+    } else {
+      prepareFilters({ ...filter, messageType: "usermessages" });
+    }
+  }, [router.query?.tab]);
 
   if (isContactLoading)
-    return (
-      <WhatsAppInboxLoader isLoading={isContactLoading || isTicketsLoading} />
-    );
+    return <WhatsAppInboxLoader isLoading={isContactLoading} />;
 
   return (
     <Stack className={classes.wrapper} gap={"xs"}>
       <Group className={classes.chat_select_header} gap={"xs"}>
+        <Indicator
+          inline
+          label={allFilteredContactsRow?.[0]?.total_contact_count || 6}
+          size={16}
+          color="red"
+          pos={"fixed"}
+          top={filter.messageType === "usermessages" ? 80 : 124}
+          left={100}
+          style={{ zIndex: 1000 }}
+          visibleFrom="sm"
+        />
         <ContainedTextField
           leftSection={
             <IconSearch style={{ marginLeft: "var(--mantine-spacing-xs)" }} />
@@ -379,7 +398,7 @@ const WaInboxChatSelect = () => {
         <WaInboxChatFilter filter={filter} setFilter={prepareFilters} />
         <WaInboxChatExport filter={filter} />
       </Group>
-      <Tabs
+      {/* <Tabs
         radius="md"
         styles={{
           panel: {
@@ -387,8 +406,8 @@ const WaInboxChatSelect = () => {
           },
         }}
         defaultValue={TabsEnum.all}
-      >
-        <Tabs.List mx="md" grow>
+      > */}
+      {/* <Tabs.List mx="md" grow>
           {Object.values(TabsEnum).map((aTab) => (
             <Tabs.Tab
               key={aTab}
@@ -406,98 +425,97 @@ const WaInboxChatSelect = () => {
                   color="red"
                 >
                   {aTab === TabsEnum.all && <IconMessageCog size={18} />}
-                  {/* {aTab === TabsEnum.tickets && <IconTicket size={18} />} */}
                 </Indicator>
               }
             />
           ))}
-        </Tabs.List>
+        </Tabs.List> */}
 
-        <Tabs.Panel value="all">
-          <div>
-            {filteredContactsStatus === "pending" ? (
-              <Text px={"md"}>Loading...</Text>
-            ) : filteredContactsStatus === "error" ? (
-              <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
-            ) : (
-              <div
-                ref={parentRef}
-                className="List"
-                style={{
-                  height: `calc(100dvh - 160px)`,
-                  width: `100%`,
-                  overflow: "auto",
-                }}
-              >
-                <Divider />
-                <div
-                  style={{
-                    height: `${contactRowVirtualizer.getTotalSize()}px`,
-                    width: "100%",
-                    position: "relative",
-                  }}
-                >
-                  {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const isLoaderRow =
-                      virtualRow.index > allFilteredContactsRow.length - 1;
-                    const post = allFilteredContactsRow[virtualRow.index];
+      {/* <Tabs.Panel value="all"> */}
+      <div>
+        {filteredContactsStatus === "pending" ? (
+          <Text px={"md"}>Loading...</Text>
+        ) : filteredContactsStatus === "error" ? (
+          <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
+        ) : (
+          <div
+            ref={parentRef}
+            className="List"
+            style={{
+              height: `calc(100dvh - 160px)`,
+              width: `100%`,
+              overflow: "auto",
+            }}
+          >
+            <Divider />
+            <div
+              style={{
+                height: `${contactRowVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const isLoaderRow =
+                  virtualRow.index > allFilteredContactsRow.length - 1;
+                const post = allFilteredContactsRow[virtualRow.index];
 
-                    return (
-                      <div
-                        key={virtualRow.index}
-                        className={
-                          virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
-                        }
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: `${virtualRow.size}px`,
-                          transform: `translateY(${virtualRow.start}px)`,
-                        }}
-                      >
-                        {isLoaderRow ? (
-                          !hasNextPageFilteredContacts && "Nothing more to load"
-                        ) : (
-                          <WaInboxChatSelectCard contact={post} />
-                        )}
-                        <Divider />
-                      </div>
-                    );
-                  })}
-                  {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
-                    (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
-                      <AddUnknownContactModal
-                        phone={filter.searchTerm}
-                        successCallback={(contact) => {
-                          prepareFilters({
-                            ...filter,
-                            searchTerm: "",
-                          });
-                          onUnknownContactAddSuccess(contact);
-                        }}
-                      />
-                    ) : isContactLoading || isFetching ? (
-                      <ChatSelectSkeletonCardList />
+                return (
+                  <div
+                    key={virtualRow.index}
+                    className={
+                      virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
+                    }
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {isLoaderRow ? (
+                      !hasNextPageFilteredContacts && "Nothing more to load"
                     ) : (
-                      <Card component={Group}>
-                        <Text c="dimmed" size="sm" ta="center">
-                          {translations["No chats found"]} <br />
-                          {
-                            translations[
-                              "search for a valid phone number or contact name"
-                            ]
-                          }
-                        </Text>
-                      </Card>
-                    ))}
-                </div>
-              </div>
-            )}
+                      <WaInboxChatSelectCard contact={post} />
+                    )}
+                    <Divider />
+                  </div>
+                );
+              })}
+              {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
+                (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+                  <AddUnknownContactModal
+                    phone={filter.searchTerm}
+                    successCallback={(contact) => {
+                      prepareFilters({
+                        ...filter,
+                        searchTerm: "",
+                      });
+                      onUnknownContactAddSuccess(contact);
+                    }}
+                  />
+                ) : isContactLoading || isFetching ? (
+                  <ChatSelectSkeletonCardList />
+                ) : (
+                  <Card component={Group}>
+                    <Text c="dimmed" size="sm" ta="center">
+                      {translations["No chats found"]} <br />
+                      {
+                        translations[
+                          "search for a valid phone number or contact name"
+                        ]
+                      }
+                    </Text>
+                  </Card>
+                ))}
+            </div>
           </div>
-        </Tabs.Panel>
-        <Tabs.Panel value="tickets" h="80dvh">
+        )}
+      </div>
+      {/* </Tabs.Panel> */}
+      {/* <Tabs.Panel value="tickets" h="80dvh">
           <div>
             {ticketsStatus === "pending" ? (
               <Text px={"md"}>Loading...</Text>
@@ -562,8 +580,8 @@ const WaInboxChatSelect = () => {
               </div>
             )}
           </div>
-        </Tabs.Panel>
-      </Tabs>
+        </Tabs.Panel> */}
+      {/* </Tabs> */}
     </Stack>
   );
 };

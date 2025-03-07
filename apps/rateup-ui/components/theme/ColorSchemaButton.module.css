@@ -3,22 +3,12 @@
   height: 22px;
 }
 
+.light,
 .dark {
-  @mixin dark {
-    display: none;
-  }
-
-  @mixin light {
-    display: block;
-  }
+  display: block;
 }
 
-.light {
-  @mixin light {
-    display: none;
-  }
-
-  @mixin dark {
-    display: block;
-  }
+[data-mantine-color-scheme="light"] .light,
+[data-mantine-color-scheme="dark"] .dark {
+  display: none;
 }

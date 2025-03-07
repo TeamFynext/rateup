@@ -124,7 +124,7 @@ const ChatbotResources = ({}) => {
           onClick={open}
         />
       </Flex>
-      <PaperLayout>
+      <PaperLayout h={"100%"}>
         {chatbotResourses?.length > 0 ? (
           <ScrollAreaAutosize mah={395}>
             <Table stickyHeader>

@@ -25,8 +25,8 @@ const Settings = () => {
   if (retrieveRole(user?.role) === "Super Admin") {
     return (
       <StyledTabs
-        value={(router.query?.activeTab as string) || "user"}
-        onChange={(value) => router.push(`?activeTab=${value}`)}
+        value={(router.query?.tab as string) || "user"}
+        onChange={(value) => router.push(`?tab=${value}`)}
         w="100%"
       >
         <Tabs.List mb="md" pb="md">

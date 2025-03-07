@@ -1694,7 +1694,7 @@
   "Template Name": "Template Name",
   "Sync Templates": "Sync Templates",
   "This business uses a secure service from Meta to manage this chat. Tap to learn more": "This business uses a secure service from Meta to manage this chat. Tap to learn more",
-  "Create automated reply": "Create automated reply",
+  "Create Automation": "Create Automation",
   "Automated Replies": "Automated Replies",
   "Connect a WhatsApp number in settings to sync a Flow": "Connect a WhatsApp number in settings to sync a Flow",
   "Create flow": "Create flow",
@@ -2095,5 +2095,10 @@
   "Edit staff role": "Edit staff role",
   "Edit Staff": "Edit Staff",
   "Select a team staff to assign ticket to": "Select a team staff to assign ticket to",
-  "Team staff selection is required": "Team staff selection is required"
+  "Team staff selection is required": "Team staff selection is required",
+  "Web Forms": "Web Forms",
+  "All Contacts": "All Contacts",
+  "Groups": "Groups",
+  "Access Links": "Access Links",
+  "All Members": "All Members"
 }
