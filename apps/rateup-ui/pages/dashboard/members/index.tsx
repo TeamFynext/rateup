@@ -31,13 +31,9 @@ import {
   useUpdateActiveStatusMutation,
   useUpdateUserPause,
 } from "../../../backend/user/user.query";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "../../../components/input/ContainedInput/ContainedInput";
+import { ContainedSelection } from "../../../components/input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import Heading from "../../../components/styled/Heading/Heading";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useUser } from "../../../context/UserContext";
 import useTranslations from "../../../dictionaries/useTranslation";
@@ -47,7 +43,6 @@ const Members = () => {
   const router = useRouter();
   const { user } = useUser();
   const [memberModalOpenedId, setMemberModalOpenedId] = useState("");
-  const { translations } = useTranslations();
 
   if (user?.role === "ADMIN" || user?.role === "MEMBER") {
     router.push("/dashboard");
@@ -62,9 +57,8 @@ const Members = () => {
 
   // onChange={(value) => onChangeRole(member?.id, value)}
   return (
-    <Stack>
+    <Stack m={"xs"}>
       <Group justify="space-between">
-        <Heading title={translations["Staff"]} />
         {/* <ContainedTextField
           placeholder={translations["Search in all members"]}
           disabled

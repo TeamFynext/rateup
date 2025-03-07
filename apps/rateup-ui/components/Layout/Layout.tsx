@@ -64,6 +64,7 @@ const MainNavLinks = ({
   router,
   open,
   setActiveSubLink,
+  setActiveSubLabel,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -77,6 +78,7 @@ const MainNavLinks = ({
         onClick={() => {
           setActiveMainLink(link.label);
           setActiveSubLink(link?.children[0]?.link);
+          setActiveSubLabel(link?.children[0]?.label);
           open();
           if (link.link && !link?.disabled) {
             router.push(link.link);
@@ -152,7 +154,14 @@ const SubNavLinks = ({
 };
 
 // LastLinks Component
-const LastLinks = ({ links, activeMainLink, setActiveMainLink, router }) => {
+const LastLinks = ({
+  links,
+  activeMainLink,
+  setActiveMainLink,
+  setActiveSubLabel,
+  setActiveSubLink,
+  router,
+}) => {
   return links.map((link, index) => (
     <Tooltip
       label={link.label}
@@ -163,7 +172,12 @@ const LastLinks = ({ links, activeMainLink, setActiveMainLink, router }) => {
     >
       <UnstyledButton
         onClick={() => {
-          if (link?.label === "Account") setActiveMainLink(link.label);
+          if (link?.label === "Account") {
+            setActiveMainLink(link.label);
+            setActiveSubLink(link.link);
+            setActiveSubLabel(link?.label);
+            router.push(link?.children[0]?.link);
+          }
         }}
         className={classes.mainLink}
         data-active={link.label === activeMainLink || undefined}
@@ -267,7 +281,7 @@ const Navbar = ({
 
         {linksIcon?.length > 0 && (
           <div className={classes.main}>
-            <Title order={4} className={classes.title}>
+            <Title order={5} className={classes.title}>
               <Group justify="space-between">
                 {largeScreen
                   ? desktopOpened && activeSubLabel
@@ -479,6 +493,7 @@ export default function Layout({ children, appProps }) {
       router={router}
       open={open}
       setActiveSubLink={setActiveSubLink}
+      setActiveSubLabel={setActiveSubLabel}
     />
   );
 
@@ -495,6 +510,8 @@ export default function Layout({ children, appProps }) {
       links={lastLinksData}
       activeMainLink={activeMainLink}
       setActiveMainLink={setActiveMainLink}
+      setActiveSubLabel={setActiveSubLabel}
+      setActiveSubLink={setActiveSubLink}
       router={router}
     />
   );

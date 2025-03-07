@@ -350,9 +350,12 @@ const WaInboxChatSelect = () => {
           label={allFilteredContactsRow?.[0]?.total_contact_count || 6}
           size={16}
           color="red"
-        >
-          `
-        </Indicator>
+          pos={"fixed"}
+          top={filter.messageType === "usermessages" ? 80 : 124}
+          left={100}
+          style={{ zIndex: 1000 }}
+          visibleFrom="sm"
+        />
         <ContainedTextField
           leftSection={
             <IconSearch style={{ marginLeft: "var(--mantine-spacing-xs)" }} />

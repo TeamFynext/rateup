@@ -338,18 +338,8 @@ export function getNavTopData(
       children: [
         {
           label: translations["Account"],
-          link: "/dashboard/settings?tab=user",
+          link: "/dashboard/settings",
           icon: IconUserShare,
-        },
-        {
-          label: translations["Organization"],
-          link: "/dashboard/settings?tab=organization",
-          icon: IconUsersGroup,
-        },
-        {
-          label: translations["Account"],
-          link: "/dashboard/settings?tab=account",
-          icon: IconInvoice,
         },
         ...(subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
           ? [
