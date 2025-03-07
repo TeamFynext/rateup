@@ -103,9 +103,14 @@ export const updateContactGroup = (data) => {
   return res;
 };
 
-export const addExistingContactsToGroup = ({ customerList, groupId }) => {
+export const addExistingContactsToGroup = ({
+  customerList,
+  groupId,
+  isCustomer = false,
+}) => {
   let customerListObj = {
     contactIds: customerList,
+    isCustomer,
   };
   let res = axiosClient.post(
     `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/existing`,

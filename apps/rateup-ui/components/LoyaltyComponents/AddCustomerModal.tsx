@@ -168,6 +168,7 @@ const AddCustomerModal = ({
           {
             customerList: customerList,
             groupId: groupId,
+            isCustomer: true,
           },
           {
             onSuccess: () => {
