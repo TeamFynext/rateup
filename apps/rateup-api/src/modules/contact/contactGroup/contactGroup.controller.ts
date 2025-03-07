@@ -119,6 +119,7 @@ export async function addExistingContactsToGroupHandler(
     const contactGroup = await addExistingContactsToGroup(
       request.params.contactGroupId,
       request.body.contactIds,
+      request.body.isCustomer,
     );
     reply.code(200).send(contactGroup);
   } catch (error) {
