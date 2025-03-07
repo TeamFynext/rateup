@@ -64,7 +64,6 @@ const MainNavLinks = ({
   router,
   open,
   setActiveSubLink,
-  setActiveSubLabel,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -78,7 +77,6 @@ const MainNavLinks = ({
         onClick={() => {
           setActiveMainLink(link.label);
           setActiveSubLink(link?.children[0]?.link);
-          setActiveSubLabel(link?.children[0]?.label);
           open();
           if (link.link && !link?.disabled) {
             router.push(link.link);
@@ -96,13 +94,7 @@ const MainNavLinks = ({
 };
 
 // SubNavLinks Component
-const SubNavLinks = ({
-  links,
-  activeSubLink,
-  setActiveSubLink,
-  setActiveSubLabel,
-  router,
-}) => {
+const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
   const linksIcon = links
     .filter((d) => !d?.disabled)
     .map((link, index) => (
@@ -116,7 +108,6 @@ const SubNavLinks = ({
         <UnstyledButton
           onClick={() => {
             setActiveSubLink(link.link);
-            setActiveSubLabel(link?.label);
             router.push(link.link);
           }}
           className={classes.link}
@@ -140,7 +131,6 @@ const SubNavLinks = ({
         onClick={(event) => {
           event.preventDefault();
           setActiveSubLink(link.link);
-          setActiveSubLabel(link?.label);
           router.push(link.link);
         }}
         key={index}
@@ -158,7 +148,6 @@ const LastLinks = ({
   links,
   activeMainLink,
   setActiveMainLink,
-  setActiveSubLabel,
   setActiveSubLink,
   router,
 }) => {
@@ -175,7 +164,6 @@ const LastLinks = ({
           if (link?.label === "Account") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
-            setActiveSubLabel(link?.label);
             router.push(link?.children[0]?.link);
           }
         }}
@@ -228,7 +216,6 @@ const Navbar = ({
   linksIcon,
   linksText,
   lastLinks,
-  activeSubLabel,
   mobileOpened,
   toggleMobile,
   desktopOpened,
@@ -284,8 +271,8 @@ const Navbar = ({
             <Title order={5} className={classes.title}>
               <Group justify="space-between">
                 {largeScreen
-                  ? desktopOpened && activeSubLabel
-                  : mobileOpened && activeSubLabel}
+                  ? desktopOpened && activeMainLink
+                  : mobileOpened && activeMainLink}
                 <Burger
                   opened={mobileOpened}
                   onClick={toggleMobile}
@@ -461,7 +448,6 @@ export default function Layout({ children, appProps }) {
 
   const [activeMainLink, setActiveMainLink] = useState("Home");
   const [activeSubLink, setActiveSubLink] = useState("/dashboard");
-  const [activeSubLabel, setActiveSubLabel] = useState("dashboard");
 
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const tab = router.asPath;
@@ -480,7 +466,6 @@ export default function Layout({ children, appProps }) {
       if (a) {
         setActiveMainLink(key);
         setActiveSubLink(a?.link);
-        setActiveSubLabel(a?.label);
       }
     });
   }, [navLinks]);
@@ -493,7 +478,6 @@ export default function Layout({ children, appProps }) {
       router={router}
       open={open}
       setActiveSubLink={setActiveSubLink}
-      setActiveSubLabel={setActiveSubLabel}
     />
   );
 
@@ -501,7 +485,6 @@ export default function Layout({ children, appProps }) {
     links: linksMapping[activeMainLink] || [],
     activeSubLink,
     setActiveSubLink,
-    setActiveSubLabel,
     router,
   });
 
@@ -510,7 +493,6 @@ export default function Layout({ children, appProps }) {
       links={lastLinksData}
       activeMainLink={activeMainLink}
       setActiveMainLink={setActiveMainLink}
-      setActiveSubLabel={setActiveSubLabel}
       setActiveSubLink={setActiveSubLink}
       router={router}
     />
@@ -554,7 +536,6 @@ export default function Layout({ children, appProps }) {
             linksIcon={linksIcon}
             linksText={linksText}
             lastLinks={lastLinks}
-            activeSubLabel={activeSubLabel}
             mobileOpened={mobileOpened}
             toggleMobile={toggleMobile}
             desktopOpened={desktopOpened}
