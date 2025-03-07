@@ -19,6 +19,7 @@ import {
   getAIResponseForQuery,
   getChatbotDetails,
   getChatbotDetailsByShortUrlId,
+  getChatBotHistory,
   getPublicAIResponseForQuery,
   getUploadedSources,
   updateChatbotDetails,
@@ -27,6 +28,7 @@ import {
 } from "./chatbot.service";
 import { createJWT } from "../../utils/jwt";
 import axios from "axios";
+import { log } from "../../utils/logger";
 
 export async function uploadSourceForEmbedHandler(
   request: FastifyRequest<{
@@ -245,5 +247,19 @@ export async function getAxiosAIClient(request: FastifyRequest) {
     return axiosAIClient;
   } catch (e) {
     console.error("Error getting axios ai client", e);
+  }
+}
+
+export async function getChatHitoryByOrgHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const axiosAIClient = await getAxiosAIClient(request);
+    const res = await getChatBotHistory(axiosAIClient);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }

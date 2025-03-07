@@ -7,6 +7,7 @@ import {
   deleteEmbeddedSourceHandler,
   deleteManyEmbeddedSourcesHandler,
   getChatbotDetailsHandler,
+  getChatHitoryByOrgHandler,
   getUploadedSourceHandler,
   updateChatbotDetailsHanlder,
   uploadFileForAIEmbedHandler,
@@ -106,5 +107,12 @@ export async function chatbotRoutes(server: FastifyInstance) {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     getChatbotDetailsHandler,
+  );
+  server.get(
+    "/chathistory",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    getChatHitoryByOrgHandler,
   );
 }

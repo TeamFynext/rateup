@@ -315,6 +315,7 @@ export async function addNewContactsToGroup(
 export async function addExistingContactsToGroup(
   contactGroupId: string,
   contactIds: Array<string>,
+  isCustomer: boolean,
 ) {
   const contactGroup = await getContactGroupById(contactGroupId);
   if (!contactGroup) {
@@ -322,12 +323,23 @@ export async function addExistingContactsToGroup(
   }
   // TODO: check if contactIds belong to the same team?
   // FIXME:
-  return await prisma.loyaltyCustomerMap.createMany({
-    data: contactIds.map((contactId) => ({
-      loyaltyCustomerId: contactId,
-      contactGroupId,
-    })),
-  });
+  if (isCustomer) {
+    await prisma.loyaltyCustomerMap.createMany({
+      skipDuplicates: true,
+      data: contactIds.map((contactId) => ({
+        loyaltyCustomerId: contactId,
+        contactGroupId,
+      })),
+    });
+  } else {
+    await prisma.contactGroupMap.createMany({
+      skipDuplicates: true,
+      data: contactIds.map((contactId) => ({
+        contactId,
+        contactGroupId,
+      })),
+    });
+  }
 }
 
 export async function updateContactGroup(

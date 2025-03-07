@@ -224,3 +224,40 @@ export async function getTextSummaryByAI(
     throw `Error in getting text summary, ${err?.response?.data ?? err}`;
   }
 }
+
+export async function getChatBotHistory(client) {
+  const res = await client.get(`/chatbot/chathistory`);
+  const userIds = res.data.map((hist) => hist.userId);
+  const userDetails = await prisma.user.findMany({
+    where: {
+      id: {
+        in: userIds,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+  const contactUserDetails = await prisma.contact.findMany({
+    where: {
+      id: {
+        in: userIds,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+    },
+  });
+
+  return res.data.map((hist) => ({
+    ...hist,
+    user: userDetails?.find((u) => u.id === hist.userId) ||
+      contactUserDetails?.find((c) => c.id === hist.userId) || {
+        name: `Anonymous_${hist.userId.slice(-4)}`,
+      },
+  }));
+}

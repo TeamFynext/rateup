@@ -42,6 +42,7 @@ const byContactGroupIdWithOrgIdParamsSchema =
 
 const addExistingContactsToGroupInputSchema = z.object({
   contactIds: z.array(z.string()),
+  isCustomer: z.boolean().optional(),
 });
 const addExistingContactsToMultipleGroupsInputSchema =
   addExistingContactsToGroupInputSchema.extend({
