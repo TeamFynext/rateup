@@ -100,3 +100,7 @@ type IChatbotUpdate = {
 export async function updateChatbot(data: IChatbotUpdate) {
   return await axiosClient.put(`${CHATBOT_BASEURL}/chatbot`, data);
 }
+
+export async function getUserAiChats() {
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chathistory`)).data;
+}

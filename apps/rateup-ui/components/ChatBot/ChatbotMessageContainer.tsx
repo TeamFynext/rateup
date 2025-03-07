@@ -67,7 +67,7 @@ const ChatbotMessageContainer = ({
       </Flex>
       <PaperLayout bg={"#f5f6fa"}>
         <Stack p={0}>
-          <ScrollAreaAutosize h={isPublicPage ? 500 : 320} scrollbarSize={4}>
+          <ScrollAreaAutosize h={isPublicPage ? 500 : 315} scrollbarSize={4}>
             {isDeleteMessagePending ? (
               <LoadingOverlay loaderProps={{ children: "Please wait..." }} />
             ) : (

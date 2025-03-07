@@ -22,6 +22,7 @@ import {
   IconMessageBolt,
   IconMessageChatbot,
   IconQrcode,
+  IconRobotFace,
   IconSettings,
   IconSocial,
   IconSpeakerphone,
@@ -293,6 +294,23 @@ export function getNavTopData(
         },
       ],
     },
+    ...(hasFeature(sfpn.AI)
+      ? [
+          {
+            icon: IconRobotFace,
+            label: "ChatBot",
+            link: "/dashboard/chatbot",
+            children: [
+              {
+                label: "ChatBot",
+                link: "/dashboard/chatbot",
+                icon: IconRobotFace,
+                disabled: true,
+              },
+            ],
+          },
+        ]
+      : []),
     {
       icon: IconApps,
       label: translations["Apps & Services"],

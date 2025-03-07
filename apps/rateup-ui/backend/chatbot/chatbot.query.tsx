@@ -11,6 +11,7 @@ import {
   getChatbotDetails,
   getChatbotPublicPageStatus,
   getChatbotResources,
+  getUserAiChats,
   sendChatbotMessage,
   sendPublicChatbotMessage,
   updateChatbot,
@@ -18,9 +19,12 @@ import {
 } from "./chatbot.api";
 
 export const useChatMutation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: sendChatbotMessage,
-    onSuccess: (data) => {},
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["aiChat"] });
+    },
     onError: (error) => {},
   });
 };
@@ -84,21 +88,32 @@ export const useDeleteManyChatborResource = () => {
 };
 
 export const useDeleteChatHistory = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteChatHistory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["aiChat"] });
+    },
   });
 };
 
 export const useDeletePublicChatHistory = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deletePublicChatHistory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["aiChat"] });
+    },
   });
 };
 
 export const usePublicChatMutation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: sendPublicChatbotMessage,
-    onSuccess: (data) => {},
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["aiChat"] });
+    },
     onError: (error) => {},
   });
 };
@@ -139,5 +154,12 @@ export const useUpdateChatbot = () => {
     onError: () => {
       showErrorToast("Updation Failed");
     },
+  });
+};
+
+export const useGetUserAiChats = () => {
+  return useQuery({
+    queryFn: getUserAiChats,
+    queryKey: ["aiChat"],
   });
 };
