@@ -1,9 +1,21 @@
 import { useMemo } from "react";
 
-import { ActionIcon, Avatar, Group, Modal, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Avatar,
+  Group,
+  Modal,
+  Stack,
+  Switch,
+  Text,
+} from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconArrowLeft, IconEdit, IconPlus } from "@tabler/icons-react";
 
+import { SubscriptionFeaturePathName } from "@/types/enums";
+import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTickets } from "@/backend/tickets/tickets.query";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -14,6 +26,7 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { TicketType } from "@/utils/enums/ticket";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import WaInboxCountdownTimer from "./countDown";
 import classes from "./styles.module.css";
@@ -32,7 +45,10 @@ export default function WaInboxChatDisplayHeader({
   const isMobile = useMediaQuery("(max-width: 1200px)");
 
   const { data: tickets } = useTickets();
-  const { selectedTicket } = useContactStore();
+  const { selectedTicket, setSelectedContact } = useContactStore();
+  const editContactMutation = useEditContactMutation(null);
+  const { data: chatbot } = useGetChatbotDetails();
+  const { data: subscription } = useSubscription();
 
   const ticketCount = useMemo(() => {
     return tickets?.reduce((count, ticket) => {
@@ -40,6 +56,23 @@ export default function WaInboxChatDisplayHeader({
       return count;
     }, 0);
   }, [tickets, selectedTicket]);
+
+  const hasAIFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
+    [subscription],
+  );
+
+  function handleAiWaChat(e) {
+    const checked = e.currentTarget.checked;
+    editContactMutation.mutate(
+      { contactId: contact.id, data: { aiWaChat: e.currentTarget.checked } },
+      {
+        onSuccess: () => {
+          setSelectedContact({ ...contact, aiWaChat: checked });
+        },
+      },
+    );
+  }
 
   if (!contact) return null;
 
@@ -67,6 +100,17 @@ export default function WaInboxChatDisplayHeader({
             {contact.name}
           </Text>
           <Text className={classes.phone}>{contact.phone}</Text>
+          {hasAIFeature &&
+            chatbot?.enableWaChat &&
+            chatbot?.enableAllWaChat && (
+              <Switch
+                size="xs"
+                label={"AI Chat"}
+                mt={"xs"}
+                checked={contact.aiWaChat}
+                onChange={handleAiWaChat}
+              />
+            )}
         </Stack>
         <ContactEdit isMobile={isMobile} contact={contact} />
       </Group>

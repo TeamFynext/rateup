@@ -149,6 +149,7 @@ export const useUpdateChatbot = () => {
     mutationFn: updateChatbot,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatbotDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
       showSuccessToast("Chatbot updated");
     },
     onError: () => {

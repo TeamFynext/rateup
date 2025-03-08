@@ -590,6 +590,7 @@ declare global {
       },
     ];
     campaignParticipants: any[];
+    aiWaChat: boolean;
   };
 
   type ContactsResponse = {
