@@ -238,6 +238,7 @@ export async function updateContactById(
       name: contact.name,
       phone: contact.phone,
       tags: contact.tags,
+      aiWaChat: contact.aiWaChat,
     },
   });
   return user;

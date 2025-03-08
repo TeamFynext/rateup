@@ -435,6 +435,7 @@ model Contact {
   dob                  DateTime?
   loyaltyCustomer      LoyaltyCustomer?
   external_id          String?
+  aiWaChat             Boolean               @default(false)
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1107,6 +1108,7 @@ model Chatbot {
   enableWaChat     Boolean @default(false)
   waCommand        String? 
   waPrompt         String?
+  enableAllWaChat  Boolean @default(false)
 }
 
 model SurveyVariables {

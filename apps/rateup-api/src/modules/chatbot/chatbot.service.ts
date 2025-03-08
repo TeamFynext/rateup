@@ -180,7 +180,7 @@ export async function getChatbotDetails(orgId: string) {
 }
 
 export async function updateChatbotDetails(data, orgId: string) {
-  return await prisma.chatbot.upsert({
+  const res = await prisma.chatbot.upsert({
     where: {
       orgId,
     },
@@ -192,6 +192,16 @@ export async function updateChatbotDetails(data, orgId: string) {
       ...data,
     },
   });
+  if ("enableAllWaChat" in data) {
+    await prisma.contact.updateMany({
+      where: {
+        orgId: res.orgId,
+      },
+      data: {
+        aiWaChat: data.enableAllWaChat,
+      },
+    });
+  }
 }
 
 export async function getChatbotDetailsByShortUrlId(shortUrlId: string) {

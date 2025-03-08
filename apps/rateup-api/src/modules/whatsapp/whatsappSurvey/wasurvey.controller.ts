@@ -385,7 +385,10 @@ async function whatsappMessageHandler(
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
-  } else if (chatbot?.enableWaChat && message.startsWith(chatbot?.waCommand)) {
+  } else if (
+    chatbot?.enableWaChat &&
+    (chatbot?.enableAllWaChat || message.startsWith(chatbot?.waCommand))
+  ) {
     await handleAiWaChat(chatbot, message, orgId, from);
   } else {
     let session = await getSession(orgId, from);
@@ -413,6 +416,10 @@ async function handleAiWaChat(
 ) {
   try {
     const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+    if (!contact.aiWaChat) {
+      log.trace("Ai chat is disabled for phone: %s", phone);
+      return;
+    }
     const jwtToken = await createJWT({
       userId: contact.id,
       orgId,

@@ -18,6 +18,7 @@ const updateContactSchema = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
   tags: z.any(),
+  aiWaChat: z.boolean().optional(),
 });
 
 export const paginationQuery = z.object({

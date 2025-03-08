@@ -288,6 +288,7 @@ export async function filterChats(
       c.id,
       c."name",
       c."phone",
+      c."aiWaChat",
       COALESCE(c.tags, '{}'::jsonb) as tags,
       jsonb_build_object(
         'messageBody', lm."messageBody",
@@ -313,6 +314,7 @@ export async function filterChats(
       uc."tags",
       uc."userInitiatedFinalTimeStamp",
       uc."lastMessage",
+      uc."aiWaChat",
       cc.total_contact_count
     FROM UniqueContacts uc, CountedContacts cc
     ORDER BY uc."userInitiatedFinalTimeStamp" DESC NULLS LAST
@@ -333,6 +335,7 @@ export async function filterChats(
         waCreatedAt: string;
       };
       total_contact_count: string;
+      aiWaChat: boolean;
     }> = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 1000);
     return contacts;
   } catch (error) {
