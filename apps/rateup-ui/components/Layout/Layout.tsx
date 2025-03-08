@@ -363,11 +363,15 @@ export default function Layout({ children, appProps }) {
 
   useEffect(() => {
     if (!isPending) {
-      const [nLinks, lLinks] = getNavTopData(sub, translations);
+      const [nLinks, lLinks] = getNavTopData(
+        sub,
+        translations,
+        userInfo?.data?.role,
+      );
       setNavLinks(nLinks);
       setLastLinksData(lLinks);
     }
-  }, [isPending, sub, translations]);
+  }, [isPending, sub, translations, userInfo?.data?.role]);
 
   if (router.query.msg === "welcome") {
     refetch();
