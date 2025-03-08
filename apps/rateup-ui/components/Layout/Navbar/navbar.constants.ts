@@ -63,6 +63,7 @@ interface Translations {
 export function getNavTopData(
   subscription?: Subscription,
   translations?: Translations,
+  role?: string,
 ) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
     if (!subscription) return false;
@@ -252,22 +253,20 @@ export function getNavTopData(
       icon: IconBrandTeams,
       label: translations["Teams"],
       link: "/dashboard/teams",
-      disabled: subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG,
+      disabled: role !== "SUPER_ADMIN",
       children: [
         {
           label: translations["Teams"],
           link: "/dashboard/teams",
           icon: IconSocial,
-          disabled: subscription.orgId !== process.env.NEXT_PUBLIC_ROOT_ORG,
+          disabled: role !== "SUPER_ADMIN",
         },
-        ...(subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
+        ...(role === "SUPER_ADMIN"
           ? [
               {
                 label: translations["All Members"],
                 link: "/dashboard/members",
                 icon: IconUsers,
-                disabled:
-                  subscription.orgId !== process.env.NEXT_PUBLIC_ROOT_ORG,
               },
             ]
           : []),
