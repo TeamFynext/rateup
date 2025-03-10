@@ -494,12 +494,21 @@ export async function exportWhatsapChats(
 }
 
 export async function assignWaMessageToUser(data: WaMessageAssignBody) {
-  await prisma.waInboxAssign.createMany({
+  const res = await prisma.waInboxAssign.createMany({
     data: data.assignedUserIds.map((userId) => ({
       contactId: data.contactId,
       assignedUserId: userId,
       teamId: data.teamId,
     })),
+    skipDuplicates: true,
+  });
+  const contact = await prisma.waInboxAssign.deleteMany({
+    where: {
+      contactId: data.contactId,
+      assignedUserId: {
+        notIn: data.assignedUserIds,
+      },
+    },
   });
   await updateContactById(data.contactId, {
     waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
@@ -535,9 +544,12 @@ export async function getContactsCountByInbox(orgId, userId) {
   COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} THEN 1 END)::INTEGER AS closed_count,
   COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.NEW} THEN 1 END)::INTEGER AS new_count,
   COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED}
-   AND winb."assignedUserId" = ${userId}::uuid THEN 1 END)::INTEGER AS assigned_to_me_count
-   FROM "Contact" as c LEFT JOIN "WaInboxAssign" as winb ON c.id = winb."contactId"
-   WHERE c."orgId" = ${orgId}::uuid;`;
+    AND EXISTS (
+       SELECT 1 FROM "WaInboxAssign" winb 
+       WHERE winb."contactId" = c.id 
+       AND winb."assignedUserId" = ${userId}::uuid
+   ) THEN 1 END)::INTEGER AS assigned_to_me_count FROM "Contact" c
+WHERE c."orgId" = ${orgId}::uuid;`;
 
   return {
     new: count[0].new_count,
