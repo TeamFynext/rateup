@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
+  Center,
   Group,
   MantineProvider,
   MultiSelect,
@@ -225,13 +226,13 @@ export default function SurveyID() {
             }}
           >
             {user?.role !== UserRole.MEMBER && (
-              <Portal target={"#tabs-container-entity-editor-tabs"}>
+              <Center mb={"xs"}>
                 <TabsListComp
                   value={activeTab}
                   onChange={handleTabChange}
                   tabs={Object.values(TabEnum)}
                 />
-              </Portal>
+              </Center>
             )}
             {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
             <div id="SurveyIssueAlert"> </div>
