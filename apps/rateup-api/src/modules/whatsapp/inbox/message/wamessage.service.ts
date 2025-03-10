@@ -337,7 +337,7 @@ export async function filterChats(
       cc.total_contact_count
     FROM UniqueContacts uc, CountedContacts cc
     ORDER BY uc."userInitiatedFinalTimeStamp" DESC NULLS LAST
-    LIMIT 1000 OFFSET $2
+    LIMIT 100 OFFSET $2
     `;
 
     const contacts: Array<{
@@ -356,7 +356,7 @@ export async function filterChats(
       };
       total_contact_count: string;
       aiWaChat: boolean;
-    }> = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 1000);
+    }> = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 100);
     return contacts;
   } catch (error) {
     log.error("Error in inbox chat filter API: %o", error);
