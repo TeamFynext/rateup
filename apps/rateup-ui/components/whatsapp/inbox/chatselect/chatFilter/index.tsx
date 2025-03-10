@@ -35,6 +35,7 @@ export type ChatFilter = {
 interface Props {
   filter: ChatFilter;
   setFilter: (filter: ChatFilter) => void;
+  tag: string;
 }
 
 export default function WaInboxChatFilter(props: Props) {
@@ -119,7 +120,7 @@ export default function WaInboxChatFilter(props: Props) {
       contactGroups: [],
       campaigns: [],
       tags: [],
-      messageType: "usermessages",
+      messageType: props?.tag === "All" ? "all" : "usermessages",
       strictFilter: false,
       searchTerm: "",
     });

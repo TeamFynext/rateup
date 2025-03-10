@@ -362,7 +362,11 @@ const WaInboxChatSelect = () => {
             <IconRefresh />
           </ActionIcon>
         </Group>
-        <WaInboxChatFilter filter={filter} setFilter={prepareFilters} />
+        <WaInboxChatFilter
+          filter={filter}
+          setFilter={prepareFilters}
+          tag={router.query?.tab as string}
+        />
         <WaInboxChatExport filter={filter} />
       </Group>
       <div>
@@ -396,9 +400,6 @@ const WaInboxChatSelect = () => {
                 return (
                   <div
                     key={virtualRow.index}
-                    className={
-                      virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
-                    }
                     style={{
                       position: "absolute",
                       top: 0,
@@ -409,7 +410,11 @@ const WaInboxChatSelect = () => {
                     }}
                   >
                     {isLoaderRow ? (
-                      !hasNextPageFilteredContacts && "Nothing more to load"
+                      hasNextPageFilteredContacts ? (
+                        "Loading more..."
+                      ) : (
+                        "Nothing more to load"
+                      )
                     ) : (
                       <WaInboxChatSelectCard contact={post} />
                     )}
