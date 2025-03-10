@@ -6,12 +6,16 @@ import {
   WaChatExportQuerySchema,
   WaChatExportConstraints,
   WaMediaFileByMediaIdBody,
+  WaMessageAssignBody,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
+  assignWaMessageToUser,
   exportWhatsapChats,
   filterChats,
   generateChatFilterData,
+  getAssignedUserForContact,
+  getContactsCountByInbox,
   getMediaFile,
   getWaMessagesByContactId,
   getWaTickets,
@@ -20,8 +24,16 @@ import {
   ByContactIdParams,
   ContactCore,
 } from "../../../contact/contact.schema";
-import { createTextMessage } from "../../whatsappSurvey/wasurvey.utils";
-import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
+import {
+  createTextMessage,
+  validateSession,
+} from "../../whatsappSurvey/wasurvey.utils";
+import {
+  createSession,
+  deleteSession,
+  getSession,
+  sendMessage,
+} from "../../whatsappSurvey/wasurvey.service";
 import {
   handleWaReceivedImages,
   returnAppropriateTimeStamp,
@@ -31,10 +43,12 @@ import { log } from "../../../../utils/logger";
 import {
   getContactById,
   getOrCreateContactByPhone,
+  updateContactById,
 } from "../../../contact/contact.service";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 import xlsx from "node-xlsx";
 import fs from "fs";
+import { WaMessageAssignStatus } from "../../../../types/enums";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -58,6 +72,7 @@ export async function handleWaMessages(
       phone: phone,
       source: "whatsapp",
     };
+    let session = await getSession(orgId, phone);
     // create contact if it does not exist
     const contact = await getOrCreateContactByPhone(phone, orgId, contactCore);
 
@@ -80,6 +95,20 @@ export async function handleWaMessages(
     }
     const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
 
+    if (type === "receive" && !validateSession(session)) {
+      if (session) await deleteSession(orgId, phone);
+      if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED)
+        await updateContactById(contact.id, {
+          waMessageAssignStatus: WaMessageAssignStatus.NEW,
+        });
+      session = await createSession({
+        orgId,
+        phone,
+        surveyTeamMapId: null,
+        createdAt: waTimeStamp,
+      });
+    }
+
     const waMessage = await addNewWaMessage(
       waMessageBody,
       contact.id,
@@ -98,7 +127,8 @@ export async function handleWaMessages(
       },
     });
   } catch (error) {
-    log.error("Error in handleWaMessages: ", error);
+    log.error("Error in handleWaMessages: %o", error);
+    log.error(error);
   }
 }
 
@@ -190,12 +220,13 @@ export async function getFilteredContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
+    const { orgId, userId } = request.user;
     const { page, filterData } = request.query;
     const contacts = await filterChats(
       orgId,
       parseInt(page),
       JSON.parse(decodeURIComponent(filterData)),
+      userId,
     );
     reply.status(200).send({
       rows: contacts ?? [],
@@ -264,5 +295,47 @@ export async function exportWhatsappChatsHandler(
     );
     reply.header("Content-Disposition", "attachment; filename=export.xlsx");
     reply.send(buffer);
+  }
+}
+
+export async function assignWaMessageHandler(
+  request: FastifyRequest<{ Body: WaMessageAssignBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await assignWaMessageToUser(request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getAssignedUserForContactHandler(
+  request: FastifyRequest<{ Params: ByContactIdParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getAssignedUserForContact(request.params.contactId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getContactsCountByInboxTabHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getContactsCountByInbox(
+      request.user.orgId,
+      request.user.userId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }

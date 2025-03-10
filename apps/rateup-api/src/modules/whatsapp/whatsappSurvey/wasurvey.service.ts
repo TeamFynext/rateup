@@ -154,6 +154,7 @@ interface createSessionParams {
   ip?: string;
   tag?: string;
   type?: string;
+  createdAt?: string;
 }
 export async function createSession({
   phone,
@@ -166,6 +167,7 @@ export async function createSession({
   ip = "",
   tag,
   type = "survey",
+  createdAt,
 }: createSessionParams) {
   log.info("Creating session \n%o\n", { phone, surveyTeamMapId, language });
 
@@ -181,6 +183,7 @@ export async function createSession({
       ip: ip ? ip : undefined,
       tag,
       type,
+      createdAt,
     },
     include: toBeIncludedWaSessionRelations,
   });

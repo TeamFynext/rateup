@@ -18,6 +18,8 @@ import {
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants";
 import { AddNewContactsToGroupInput } from "./contactGroup/contactGroup.schema";
+import { WaMessageAssignStatus } from "../../types/enums";
+import { deleteAssignedUsersforContact } from "../whatsapp/inbox/message/wamessage.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -239,8 +241,12 @@ export async function updateContactById(
       phone: contact.phone,
       tags: contact.tags,
       aiWaChat: contact.aiWaChat,
+      waMessageAssignStatus: contact.waMessageAssignStatus,
     },
   });
+  if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+    await deleteAssignedUsersforContact(user.id);
+  }
   return user;
 }
 

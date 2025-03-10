@@ -1,7 +1,10 @@
 import { FastifyInstance } from "fastify";
 import {
+  assignWaMessageHandler,
   exportWhatsappChatsHandler,
   generateChatFilterDataHandler,
+  getAssignedUserForContactHandler,
+  getContactsCountByInboxTabHandler,
   getFilteredContactsHandler,
   getMediaFileByMediaId,
   getWaMessagesByContactIdHandler,
@@ -64,4 +67,26 @@ export async function waMessageRoutes(server: FastifyInstance) {
     exportWhatsappChatsHandler,
   );
   server.get("/mediafile/:mediaId", getMediaFileByMediaId);
+
+  server.post(
+    "/assign",
+    {
+      schema: {
+        body: $waMessage("waMessageAssignBody"),
+      },
+    },
+    assignWaMessageHandler,
+  );
+
+  server.get(
+    "/assign/:contactId",
+    {
+      schema: {
+        params: $contactRef("byContactIdSchema"),
+      },
+    },
+    getAssignedUserForContactHandler,
+  );
+
+  server.get("/count", getContactsCountByInboxTabHandler);
 }

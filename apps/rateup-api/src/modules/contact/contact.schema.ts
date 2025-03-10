@@ -1,6 +1,7 @@
 import { ContactGroupType } from "@prisma/client";
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
+import { WaMessageAssignStatus } from "../../types/enums";
 
 export const contactCoreSchema = z.object({
   name: z.string(),
@@ -19,6 +20,7 @@ const updateContactSchema = z.object({
   phone: z.string().optional(),
   tags: z.any(),
   aiWaChat: z.boolean().optional(),
+  waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus).optional(),
 });
 
 export const paginationQuery = z.object({

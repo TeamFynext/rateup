@@ -37,6 +37,7 @@ const WaChatFilterSchema = z.object({
   contactGroups: z.array(z.string()).optional(),
   campaigns: z.array(z.string()).optional(),
   tags: z.array(z.any()).optional(),
+  waMessageAssignStatus: z.string().optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
@@ -62,6 +63,12 @@ const waChatExportQuerySchema = z.object({
   filterData: z.string(),
 });
 
+const waMessageAssignBody = z.object({
+  contactId: z.string(),
+  assignedUserIds: z.array(z.string()),
+  teamId: z.string(),
+});
+
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
@@ -71,6 +78,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
     waChatExportConstraints,
     waChatExportQuerySchema,
     waMediaFileByMediaIdBody,
+    waMessageAssignBody,
   },
   { $id: "waMessage" },
 );
@@ -82,3 +90,4 @@ export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;
 export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
+export type WaMessageAssignBody = z.infer<typeof waMessageAssignBody>;
