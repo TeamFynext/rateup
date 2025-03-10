@@ -613,7 +613,7 @@ const WaInboxChatSelect = () => {
 
 export const NewInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount.new) return <IconMessageBolt />;
+  if (!totalCount?.new) return <IconMessageBolt />;
   return (
     <Indicator label={totalCount.new} inline size={16} color="red">
       <IconMessageBolt />
@@ -623,7 +623,7 @@ export const NewInboxIcon = () => {
 
 export const AssignedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount.assigned) return <IconPin />;
+  if (!totalCount?.assigned) return <IconPin />;
   return (
     <Indicator label={totalCount.assigned} inline size={16} color="red">
       <IconPin />
@@ -632,7 +632,7 @@ export const AssignedInboxIcon = () => {
 };
 export const AssignedToMeInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount.assignedToMe) return <IconUserCircle />;
+  if (!totalCount?.assignedToMe) return <IconUserCircle />;
   return (
     <Indicator label={totalCount.assignedToMe} inline size={16} color="red">
       <IconUserCircle />
@@ -641,7 +641,7 @@ export const AssignedToMeInboxIcon = () => {
 };
 export const ClosedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount.closed) return <IconMessageCheck />;
+  if (!totalCount?.closed) return <IconMessageCheck />;
   return (
     <Indicator label={totalCount.closed} inline size={16} color="red">
       <IconMessageCheck />
@@ -651,7 +651,7 @@ export const ClosedInboxIcon = () => {
 
 export const AllInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount.all) return <IconMessage />;
+  if (!totalCount?.all) return <IconMessage />;
   return (
     <Indicator label={totalCount.all} inline size={16} color="red">
       <IconMessage />

@@ -1,4 +1,5 @@
 import { Box, Stack } from "@mantine/core";
+
 import styles from "./contactus.module.css";
 
 function ContactUs() {
@@ -26,7 +27,7 @@ function ContactUs() {
           <h2 className={styles["country-name-h2"]}>Germany:</h2>
           <p className={styles["contact-details-p"]}>
             <span>Drishya Technlogies UG</span>
-            <span>Saphirweg 11, 41564 Kaarst</span>
+            <span>Duesseldorf, Germany</span>
           </p>
         </Box>
       </Stack>
