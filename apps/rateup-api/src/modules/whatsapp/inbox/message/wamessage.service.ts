@@ -8,6 +8,7 @@ import {
 import prisma from "../../../../utils/prisma";
 import {
   DateType,
+  InboxContactQuery,
   WaChatExportConstraints,
   WaChatFilterSchema,
   WaMessageAssignBody,
@@ -32,7 +33,7 @@ export async function addNewWaMessage(
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
-      messageBody,
+      messageBody: messageBody as any,
       contactId,
       waCreatedAt,
       templateComponentParams: componentParams,
@@ -558,4 +559,84 @@ WHERE c."orgId" = ${orgId}::uuid;`;
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
   };
+}
+
+export async function getInboxContacts(
+  orgId,
+  userId,
+  assignStatus,
+  filterQuery: InboxContactQuery,
+) {
+  const contactGroups = filterQuery.contactGroups?.filter(
+    (id) => id.trim().length,
+  );
+  const campaigns = filterQuery.campaigns?.filter((id) => id.trim().length);
+  const res = (await prisma.$queryRaw`WITH LatestReceivedMessage AS (
+    SELECT DISTINCT ON (wm."contactId") 
+        wm."contactId", 
+        wm."waCreatedAt"
+    FROM "WaMessage" wm
+    WHERE wm."messageBody"->>'exchangeProcess' = 'receive'
+    ORDER BY wm."contactId", wm."waCreatedAt" DESC
+),
+LatestMessage AS (
+    SELECT DISTINCT ON (wm."contactId") 
+        wm."contactId",
+        wm."waCreatedAt",
+        wm."messageBody"
+    FROM "WaMessage" wm
+    ORDER BY wm."contactId", wm."waCreatedAt" DESC
+)
+SELECT 
+    c."id" AS id,
+    COALESCE(lrm."waCreatedAt", lm."waCreatedAt") AS final_timestamp,
+    c."name",
+    c."phone",
+    lm."messageBody" AS last_message,
+    lm."waCreatedAt"
+FROM LatestMessage lm
+JOIN "Contact" c ON lm."contactId" = c."id"
+LEFT JOIN LatestReceivedMessage lrm ON lm."contactId" = lrm."contactId"
+WHERE c."orgId" = ${orgId}::uuid
+  AND (
+    ${assignStatus} = 'All' OR c."waMessageAssignStatus" = ${WaMessageAssignStatusTab[assignStatus]}
+  )
+  AND (
+    ${assignStatus} != 'AssignedToMe' OR EXISTS (
+      SELECT 1 FROM "WaInboxAssign" winb WHERE winb."assignedUserId" = ${userId}::uuid AND winb."contactId" = c."id"
+    )
+  )
+  AND (
+    ${contactGroups.length === 0} OR EXISTS (
+      SELECT 1 FROM "ContactGroupMap" cg WHERE cg."contactId" = c."id" AND cg."contactGroupId" = ANY(COALESCE(${contactGroups}::uuid[], '{}'::uuid[]))
+    )
+  )
+  AND (
+    ${campaigns.length === 0} OR EXISTS (
+      SELECT 1 FROM "CampaignParticipant" cp WHERE cp."contactId" = c."id" AND cp."campaignId" = ANY(COALESCE(${campaigns}::uuid[], '{}'::uuid[]))
+    )
+  ) 
+  AND (
+    ${!filterQuery.search || !filterQuery.search.trim().length} OR
+    c."name" ILIKE ${filterQuery.search} || '%' 
+    OR c."phone" ILIKE ${filterQuery.search} || '%'
+   )
+ORDER BY lm."waCreatedAt" DESC
+LIMIT ${filterQuery.pageSize} OFFSET ${filterQuery.page * filterQuery.pageSize};
+`) as unknown as {
+    id: string;
+    final_timestamp: string;
+    name: string;
+    phone: string;
+    last_message: WaInboxMessageBody;
+    waCreatedAt: string;
+  }[];
+
+  return res.map((contact) => ({
+    ...contact,
+    userInitiatedFinalTimeStamp: contact.final_timestamp,
+    final_timestamp: undefined,
+    lastMessage: contact.last_message,
+    last_message: undefined,
+  }));
 }

@@ -69,6 +69,18 @@ const waMessageAssignBody = z.object({
   teamId: z.string(),
 });
 
+const waAssignStatusParams = z.object({
+  waMessageAssignStatus: z.string(),
+});
+
+const inboxContactQuery = z.object({
+  page: z.number(),
+  pageSize: z.number(),
+  contactGroups: z.array(z.string().optional()),
+  campaigns: z.array(z.string().optional()),
+  search: z.string().optional(),
+});
+
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
@@ -79,6 +91,8 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
     waChatExportQuerySchema,
     waMediaFileByMediaIdBody,
     waMessageAssignBody,
+    waAssignStatusParams,
+    inboxContactQuery,
   },
   { $id: "waMessage" },
 );
@@ -91,3 +105,5 @@ export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.infer<typeof waMessageAssignBody>;
+export type WaAssignStatusParams = z.infer<typeof waAssignStatusParams>;
+export type InboxContactQuery = z.infer<typeof inboxContactQuery>;

@@ -6,6 +6,7 @@ import {
   getAssignedUserForContactHandler,
   getContactsCountByInboxTabHandler,
   getFilteredContactsHandler,
+  getInboxContactsHandler,
   getMediaFileByMediaId,
   getWaMessagesByContactIdHandler,
   getWaTicketsHandler,
@@ -57,6 +58,17 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     getFilteredContactsHandler,
+  );
+
+  server.get(
+    "/contacts/:waMessageAssignStatus",
+    {
+      schema: {
+        params: $waMessage("waAssignStatusParams"),
+        querystring: $waMessage("inboxContactQuery"),
+      },
+    },
+    getInboxContactsHandler,
   );
 
   server.post(

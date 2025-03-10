@@ -7,6 +7,8 @@ import {
   WaChatExportConstraints,
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
+  WaAssignStatusParams,
+  InboxContactQuery,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
@@ -16,6 +18,7 @@ import {
   generateChatFilterData,
   getAssignedUserForContact,
   getContactsCountByInbox,
+  getInboxContacts,
   getMediaFile,
   getWaMessagesByContactId,
   getWaTickets,
@@ -332,6 +335,29 @@ export async function getContactsCountByInboxTabHandler(
     const res = await getContactsCountByInbox(
       request.user.orgId,
       request.user.userId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getInboxContactsHandler(
+  request: FastifyRequest<{
+    Params: WaAssignStatusParams;
+    Querystring: InboxContactQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+    const { waMessageAssignStatus } = request.params;
+    const res = await getInboxContacts(
+      orgId,
+      userId,
+      waMessageAssignStatus,
+      request.query,
     );
     reply.code(200).send(res);
   } catch (e) {
