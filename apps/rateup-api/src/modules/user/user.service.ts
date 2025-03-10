@@ -197,13 +197,13 @@ export async function getLoggedUserInfo(
   //let userInfo = await ThirdPartyEmailPassword.getUserById(userId);
   let userInfo = await supertokens.getUser(userId);
 
-  if (!role) {
-    const user = await getOrgIdAndRole({ id: userId });
-    role = user?.role;
-    orgId = user?.orgId;
+  // if (!role) {
+  const user = await getOrgIdAndRole({ id: userId });
+  role = user?.role;
+  orgId = user?.orgId;
 
-    await session!.mergeIntoAccessTokenPayload({ orgId: orgId, role: role });
-  }
+  await session!.mergeIntoAccessTokenPayload({ orgId: orgId, role: role });
+  // }
 
   let profile = await prisma.user.findUnique({
     where: { id: userId },

@@ -216,6 +216,7 @@ async function handleMessageEvent(body: WaMessageBody) {
       await safeAsyncOperation(
         () => whatsappMessageHandler(waSettings, body),
         (error) => {
+          log.error(error);
           log.error(
             "Error processing WhatsApp message for phone_id %s: %o",
             phoneId,
@@ -385,7 +386,10 @@ async function whatsappMessageHandler(
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
-  } else if (chatbot?.enableWaChat && message.startsWith(chatbot?.waCommand)) {
+  } else if (
+    chatbot?.enableWaChat &&
+    (chatbot?.enableAllWaChat || message.startsWith(chatbot?.waCommand))
+  ) {
     await handleAiWaChat(chatbot, message, orgId, from);
   } else {
     let session = await getSession(orgId, from);
@@ -399,9 +403,9 @@ async function whatsappMessageHandler(
     // handle automated reply
     await handleAutomatedReply(orgId, waMessage, parsedMessage, from);
 
-    if (session) {
-      await handleWaSurveySession(orgId, waMessage, session);
-    }
+    // if (session) {
+    //   await handleWaSurveySession(orgId, waMessage, session);
+    // }
   }
 }
 
@@ -413,6 +417,10 @@ async function handleAiWaChat(
 ) {
   try {
     const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+    if (!contact.aiWaChat) {
+      log.trace("Ai chat is disabled for phone: %s", phone);
+      return;
+    }
     const jwtToken = await createJWT({
       userId: contact.id,
       orgId,

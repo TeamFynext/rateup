@@ -10,11 +10,17 @@ import {
   DateType,
   WaChatExportConstraints,
   WaChatFilterSchema,
+  WaMessageAssignBody,
 } from "./wamessage.schema";
 import { log } from "../../../../utils/logger";
 import { callWhatsappApi } from "../../wa_axios";
 import { getWaSettings } from "../../settings/wa_settings.service";
 import axios from "axios";
+import {
+  WaMessageAssignStatus,
+  WaMessageAssignStatusTab,
+} from "../../../../types/enums";
+import { updateContactById } from "../../../contact/contact.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -194,6 +200,7 @@ export async function filterChats(
   orgId: string,
   page: number,
   bodyFilterProps: WaChatFilterSchema,
+  userId: string,
 ) {
   try {
     function extendQueryForFilters(context = "") {
@@ -262,6 +269,15 @@ export async function filterChats(
         extendedWhereClause += ` AND (c."name" ILIKE '%${search}%' OR REPLACE(c."phone", ' ', '') LIKE '%${search}%')`;
       }
 
+      if (bodyFilterProps?.waMessageAssignStatus) {
+        const isAssignedToMe =
+          bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
+        const assignedStatus =
+          WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
+        extendedWhereClause += ` AND c."waMessageAssignStatus" = '${assignedStatus}'`;
+        if (isAssignedToMe)
+          extendedWhereClause += ` AND winb."assignedUserId" = '${userId}'`;
+      }
       return extendedWhereClause;
     }
 
@@ -288,6 +304,8 @@ export async function filterChats(
       c.id,
       c."name",
       c."phone",
+      c."aiWaChat",
+      c."waMessageAssignStatus",
       COALESCE(c.tags, '{}'::jsonb) as tags,
       jsonb_build_object(
         'messageBody', lm."messageBody",
@@ -300,6 +318,7 @@ export async function filterChats(
       LEFT JOIN "CampaignParticipant" cpt ON cpt."contactId" = c."id"
       LEFT JOIN LatestMessages lm ON c.id = lm."contactId"
       LEFT JOIN LatestReceiveMessages lrm ON c.id = lrm."contactId"
+      LEFT JOIN "WaInboxAssign" winb ON c.id = winb."contactId"
       WHERE c."orgId" = $1::uuid ${extendQueryForFilters("main")}
     ),
     CountedContacts AS (
@@ -313,6 +332,8 @@ export async function filterChats(
       uc."tags",
       uc."userInitiatedFinalTimeStamp",
       uc."lastMessage",
+      uc."aiWaChat",
+      uc."waMessageAssignStatus",
       cc.total_contact_count
     FROM UniqueContacts uc, CountedContacts cc
     ORDER BY uc."userInitiatedFinalTimeStamp" DESC NULLS LAST
@@ -324,6 +345,7 @@ export async function filterChats(
       name: string;
       phone: string;
       userInitiatedFinalTimeStamp: string;
+      waMessageAssignStatus: WaMessageAssignStatus;
       lastMessage: {
         messageBody: {
           send: any;
@@ -333,10 +355,11 @@ export async function filterChats(
         waCreatedAt: string;
       };
       total_contact_count: string;
+      aiWaChat: boolean;
     }> = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 1000);
     return contacts;
   } catch (error) {
-    log.error("Error in inbox chat filter API", error);
+    log.error("Error in inbox chat filter API: %o", error);
     return [];
   }
 }
@@ -468,4 +491,59 @@ export async function exportWhatsapChats(
     sendbody: string;
     templatename: string;
   }>;
+}
+
+export async function assignWaMessageToUser(data: WaMessageAssignBody) {
+  await prisma.waInboxAssign.createMany({
+    data: data.assignedUserIds.map((userId) => ({
+      contactId: data.contactId,
+      assignedUserId: userId,
+      teamId: data.teamId,
+    })),
+  });
+  await updateContactById(data.contactId, {
+    waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+  });
+}
+
+export async function getAssignedUserForContact(contactId) {
+  return await prisma.waInboxAssign.findMany({
+    where: {
+      contactId,
+    },
+  });
+}
+
+export async function deleteAssignedUsersforContact(contactId) {
+  return await prisma.waInboxAssign.deleteMany({
+    where: {
+      contactId,
+    },
+  });
+}
+
+export async function getContactsCountByInbox(orgId, userId) {
+  const count: {
+    new_count: number;
+    total_count: number;
+    assigned_count: number;
+    closed_count: number;
+    assigned_to_me_count: number;
+  }[] = await prisma.$queryRaw`SELECT 
+  COUNT(*)::INTEGER AS total_count,
+  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} THEN 1 END)::INTEGER AS assigned_count,
+  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} THEN 1 END)::INTEGER AS closed_count,
+  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.NEW} THEN 1 END)::INTEGER AS new_count,
+  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED}
+   AND winb."assignedUserId" = ${userId}::uuid THEN 1 END)::INTEGER AS assigned_to_me_count
+   FROM "Contact" as c LEFT JOIN "WaInboxAssign" as winb ON c.id = winb."contactId"
+   WHERE c."orgId" = ${orgId}::uuid;`;
+
+  return {
+    new: count[0].new_count,
+    all: count[0].total_count,
+    closed: count[0].closed_count,
+    assignedToMe: count[0].assigned_to_me_count,
+    assigned: count[0].assigned_count,
+  };
 }

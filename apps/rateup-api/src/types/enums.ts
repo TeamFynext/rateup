@@ -399,3 +399,16 @@ export enum LoyaltyTemplateTypes {
   CustomerRemoval = "CustomerRemoval",
   RewardsIssued = "RewardsIssued",
 }
+
+export enum WaMessageAssignStatus {
+  NEW = "NEW",
+  ASSIGNED = "ASSIGNED",
+  CLOSED = "CLOSED",
+}
+
+export enum WaMessageAssignStatusTab {
+  New = "NEW",
+  Assigned = "ASSIGNED",
+  AssignedToMe = "ASSIGNED",
+  Closed = "CLOSED",
+}

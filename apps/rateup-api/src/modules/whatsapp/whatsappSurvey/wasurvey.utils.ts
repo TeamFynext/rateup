@@ -763,7 +763,7 @@ export function getQuestionByIdFromSession(
 // Returns false if session is older than 1 day
 export function validateSession(session: WaSession) {
   if (!session) return false;
-  return !(dayjs(session.createdAt).diff(dayjs(), "day") >= 1);
+  return !(dayjs().diff(dayjs(session.createdAt), "day") >= 1);
 }
 
 // format for start-survey-message is "`#<surveyName> @<TeamCode>`"

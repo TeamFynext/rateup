@@ -39,6 +39,7 @@ export const updateChatbotSchema = z.object({
   enableWaChat: z.boolean().optional(),
   waCommand: z.string().optional(),
   waPrompt: z.string().optional(),
+  enableAllWaChat: z.boolean().optional(),
 });
 
 export const { schemas: chatbotSchemas, $ref: $chatbotRef } = buildJsonSchemas(
