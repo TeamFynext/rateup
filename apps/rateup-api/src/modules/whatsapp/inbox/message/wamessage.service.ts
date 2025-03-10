@@ -203,160 +203,150 @@ export async function filterChats(
   userId: string,
 ) {
   try {
-    function extendQueryForFilters(context = "") {
-      let extendedWhereClause = "";
+    // Create params array to use parameterized queries instead of string concatenation
+    const params: any[] = [orgId, (page - 1) * 100];
+    let paramIndex = 3;
 
-      // Filter for messageType when not in TotalContactCount context
-      console.log(bodyFilterProps?.searchTerm);
+    // Build where conditions using parameters to prevent SQL injection
+    let filters = [];
 
-      if (
-        bodyFilterProps?.messageType &&
-        context !== "TotalContactCount" &&
-        (bodyFilterProps?.searchTerm === null ||
-          bodyFilterProps?.searchTerm?.length === 0)
-      ) {
-        if (bodyFilterProps?.messageType === "usermessages") {
-          extendedWhereClause += `AND EXISTS (
-            SELECT 1 FROM "WaMessage" wm
-            WHERE wm."contactId" = c.id
-            AND wm."messageBody"->>'exchangeProcess' = 'receive'
-          )`;
-        } else if (bodyFilterProps?.messageType === "all") {
-          extendedWhereClause += `AND EXISTS (
-            SELECT 1 FROM "WaMessage" wm
-            WHERE wm."contactId" = c.id
-            AND (
-              wm."messageBody"->>'exchangeProcess' = 'send' OR
-              wm."messageBody"->>'exchangeProcess' = 'receive'
-            )
-            )`;
-        }
+    // Base condition
+    filters.push(`c."orgId" = $1::uuid`);
+
+    // Filter by message type
+    if (
+      bodyFilterProps?.messageType &&
+      (!bodyFilterProps?.searchTerm ||
+        bodyFilterProps?.searchTerm?.length === 0)
+    ) {
+      if (bodyFilterProps?.messageType === "usermessages") {
+        filters.push(`EXISTS (
+          SELECT 1 FROM "WaMessage" wm
+          WHERE wm."contactId" = c.id
+          AND wm."messageBody"->>'exchangeProcess' = 'receive'
+        )`);
+      } else if (bodyFilterProps?.messageType === "all") {
+        filters.push(`EXISTS (
+          SELECT 1 FROM "WaMessage" wm
+          WHERE wm."contactId" = c.id
+        )`);
       }
-
-      // Filter for contactGroups when ContactGroup (cg) is accessible
-      if (
-        bodyFilterProps?.contactGroups &&
-        bodyFilterProps?.contactGroups?.length > 0 &&
-        (context === "" || context === "main")
-      ) {
-        extendedWhereClause += `AND cg."id" IN (${bodyFilterProps?.contactGroups
-          ?.map((v) => `'${v}'::uuid`)
-          .join(",")})`;
-      }
-
-      // Filter for campaigns when CampaignParticipant (cpt) is accessible
-      if (
-        bodyFilterProps?.campaigns &&
-        bodyFilterProps?.campaigns?.length > 0 &&
-        (context === "" || context === "main")
-      ) {
-        extendedWhereClause += `AND cpt."campaignId" IN (${bodyFilterProps?.campaigns
-          ?.map((v) => `'${v}'::uuid`)
-          .join(",")})`;
-      }
-
-      // Filter for tags
-      if (bodyFilterProps?.tags && bodyFilterProps.tags.length > 0) {
-        const tagsFilter = bodyFilterProps.tags
-          .map((tag) => `c."tags" @> '${JSON.stringify(tag)}'`)
-          .join(" OR ");
-        extendedWhereClause += ` AND (${tagsFilter})`;
-      }
-
-      // Search term filter
-      if (bodyFilterProps?.searchTerm) {
-        const search = bodyFilterProps.searchTerm;
-        extendedWhereClause += ` AND (c."name" ILIKE '%${search}%' OR REPLACE(c."phone", ' ', '') LIKE '%${search}%')`;
-      }
-
-      if (bodyFilterProps?.waMessageAssignStatus) {
-        const isAssignedToMe =
-          bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
-        const assignedStatus =
-          WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
-        extendedWhereClause += ` AND c."waMessageAssignStatus" = '${assignedStatus?.toUpperCase()}'`;
-        if (isAssignedToMe)
-          extendedWhereClause += ` AND winb."assignedUserId" = '${userId}'`;
-      }
-      return extendedWhereClause;
     }
 
+    // Filter by contact groups
+    if (bodyFilterProps?.contactGroups?.length > 0) {
+      params.push(bodyFilterProps.contactGroups);
+      filters.push(`EXISTS (
+        SELECT 1 FROM "ContactGroupMap" cgm 
+        WHERE cgm."contactId" = c.id 
+        AND cgm."contactGroupId" = ANY($${paramIndex}::uuid[])
+      )`);
+      paramIndex++;
+    }
+
+    // Filter by campaigns
+    if (bodyFilterProps?.campaigns?.length > 0) {
+      params.push(bodyFilterProps.campaigns);
+      filters.push(`EXISTS (
+        SELECT 1 FROM "CampaignParticipant" cpt 
+        WHERE cpt."contactId" = c.id 
+        AND cpt."campaignId" = ANY($${paramIndex}::uuid[])
+      )`);
+      paramIndex++;
+    }
+
+    // Filter by tags
+    if (bodyFilterProps?.tags?.length > 0) {
+      const tagFilters = bodyFilterProps.tags.map((tag) => {
+        params.push(JSON.stringify(tag));
+        return `c."tags" @> $${paramIndex++}`;
+      });
+      filters.push(`(${tagFilters.join(" OR ")})`);
+    }
+
+    // Search by name or phone
+    if (bodyFilterProps?.searchTerm) {
+      params.push(`%${bodyFilterProps.searchTerm}%`);
+      params.push(`%${bodyFilterProps.searchTerm.replace(/\s+/g, "")}%`);
+      filters.push(
+        `(c."name" ILIKE $${paramIndex - 1} OR REPLACE(c."phone", ' ', '') LIKE $${paramIndex})`,
+      );
+      paramIndex++;
+    }
+
+    // Filter by assignment status
+    if (bodyFilterProps?.waMessageAssignStatus) {
+      const isAssignedToMe =
+        bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
+      const assignedStatus =
+        WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
+
+      params.push(assignedStatus?.toUpperCase());
+      filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
+
+      if (isAssignedToMe) {
+        params.push(userId);
+        filters.push(`EXISTS (
+          SELECT 1 FROM "WaInboxAssign" winb 
+          WHERE winb."contactId" = c.id 
+          AND winb."assignedUserId" = $${paramIndex++}
+        )`);
+      }
+    }
+
+    const whereClause = filters.join(" AND ");
+
+    // Simplified and optimized query
     const query = `
-    WITH LatestMessages AS (
-      SELECT DISTINCT ON (w."contactId") 
-      w."contactId",
-      w."messageBody",
-      w."waCreatedAt"
-      FROM "WaMessage" w
-      ORDER BY w."contactId", w."waCreatedAt" DESC
-    ),
-    LatestReceiveMessages AS (
-      SELECT DISTINCT ON (w."contactId")
-      w."contactId",
-      w."messageBody" AS receiveMessageBody,
-      w."waCreatedAt" AS receiveCreatedAt
-      FROM "WaMessage" w
-      WHERE w."messageBody"->>'exchangeProcess' = 'receive'
-      ORDER BY w."contactId", w."waCreatedAt" DESC
-    ),
-    UniqueContacts AS (
-      SELECT DISTINCT ON (c.id)
-      c.id,
-      c."name",
-      c."phone",
-      c."aiWaChat",
-      c."waMessageAssignStatus",
-      COALESCE(c.tags, '{}'::jsonb) as tags,
-      jsonb_build_object(
-        'messageBody', lm."messageBody",
-        'waCreatedAt', lm."waCreatedAt"
-      ) as "lastMessage",
-      lrm.receiveCreatedAt as "userInitiatedFinalTimeStamp"
+    WITH ContactsWithLastMessages AS (
+      SELECT 
+        c.id,
+        c."name",
+        c."phone",
+        c."aiWaChat",
+        c."waMessageAssignStatus",
+        COALESCE(c.tags, '{}'::jsonb) as tags,
+        (
+          SELECT jsonb_build_object(
+            'messageBody', w."messageBody",
+            'waCreatedAt', w."waCreatedAt"
+          )
+          FROM "WaMessage" w
+          WHERE w."contactId" = c.id
+          ORDER BY w."waCreatedAt" DESC
+          LIMIT 1
+        ) as "lastMessage",
+        (
+          SELECT w."waCreatedAt"
+          FROM "WaMessage" w
+          WHERE w."contactId" = c.id
+          AND w."messageBody"->>'exchangeProcess' = 'receive'
+          ORDER BY w."waCreatedAt" DESC
+          LIMIT 1
+        ) as "userInitiatedFinalTimeStamp"
       FROM "Contact" c
-      LEFT JOIN "ContactGroupMap" cgm ON cgm."contactId" = c."id"
-      LEFT JOIN "ContactGroup" cg ON cg.id = cgm."contactGroupId"
-      LEFT JOIN "CampaignParticipant" cpt ON cpt."contactId" = c."id"
-      LEFT JOIN LatestMessages lm ON c.id = lm."contactId"
-      LEFT JOIN LatestReceiveMessages lrm ON c.id = lrm."contactId"
-      LEFT JOIN "WaInboxAssign" winb ON c.id = winb."contactId"
-      WHERE c."orgId" = $1::uuid ${extendQueryForFilters("main")}
+      WHERE ${whereClause}
     ),
     CountedContacts AS (
       SELECT COUNT(*)::Text AS total_contact_count 
-      FROM UniqueContacts
+      FROM ContactsWithLastMessages
     )
     SELECT 
-      uc.id,
-      uc."name",
-      uc."phone",
-      uc."tags",
-      uc."userInitiatedFinalTimeStamp",
-      uc."lastMessage",
-      uc."aiWaChat",
-      uc."waMessageAssignStatus",
+      cwm.id,
+      cwm."name",
+      cwm."phone",
+      cwm."tags",
+      cwm."userInitiatedFinalTimeStamp",
+      cwm."lastMessage",
+      cwm."aiWaChat",
+      cwm."waMessageAssignStatus",
       cc.total_contact_count
-    FROM UniqueContacts uc, CountedContacts cc
-    ORDER BY uc."userInitiatedFinalTimeStamp" DESC NULLS LAST
+    FROM ContactsWithLastMessages cwm, CountedContacts cc
+    ORDER BY cwm."userInitiatedFinalTimeStamp" DESC NULLS LAST
     LIMIT 100 OFFSET $2
     `;
 
-    const contacts: Array<{
-      id: string;
-      name: string;
-      phone: string;
-      userInitiatedFinalTimeStamp: string;
-      waMessageAssignStatus: WaMessageAssignStatus;
-      lastMessage: {
-        messageBody: {
-          send: any;
-          receive: any;
-          exchangeProcess: string;
-        };
-        waCreatedAt: string;
-      };
-      total_contact_count: string;
-      aiWaChat: boolean;
-    }> = await prisma.$queryRawUnsafe(query, orgId, (page - 1) * 100);
+    const contacts = await prisma.$queryRawUnsafe(query, ...params);
     return contacts;
   } catch (error) {
     log.error("Error in inbox chat filter API: %o", error);

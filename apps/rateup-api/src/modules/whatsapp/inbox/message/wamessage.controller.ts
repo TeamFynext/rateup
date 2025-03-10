@@ -230,7 +230,10 @@ export async function getFilteredContactsHandler(
     );
     reply.status(200).send({
       rows: contacts ?? [],
-      nextOffset: contacts?.length > 0 ? parseInt(page) + 1 : null,
+      nextOffset:
+        Array.isArray(contacts) && contacts.length > 0
+          ? parseInt(page) + 1
+          : null,
     });
   } catch (error) {
     console.log(error);
