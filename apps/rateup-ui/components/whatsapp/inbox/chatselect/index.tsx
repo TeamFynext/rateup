@@ -10,26 +10,21 @@ import { useRouter } from "next/router";
 
 import {
   ActionIcon,
-  Badge,
   Card,
   Divider,
   Group,
   Indicator,
   Stack,
-  Tabs,
   Text,
 } from "@mantine/core";
 import {
   IconMessage,
   IconMessageBolt,
   IconMessageCheck,
-  IconMessageCog,
-  IconPercentage100,
   IconPin,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
-  IconTicket,
   IconUserCircle,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,11 +36,7 @@ import {
   WaGetMessagesBody,
   WaMessagePage,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import {
-  useFilteredContacts,
-  useGetInboxUserCount,
-  useWaTicktes,
-} from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -60,7 +51,6 @@ import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import classes from "./styles.module.css";
-import TicketSelectCard from "./ticketSelectCard";
 
 enum TabsEnum {
   all = "all",
@@ -110,38 +100,19 @@ const WaInboxChatSelect = () => {
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
-  // const {
-  //   status: ticketsStatus,
-  //   data: tickets,
-  //   isPending: isTicketsLoading,
-  //   error: ticketsError,
-  //   fetchNextPage: fetchNextPageTickets,
-  //   isFetchingNextPage: isTicketsFetchingNextPage,
-  //   hasNextPage: hasNextPageTickets,
-  //   isFetching: isTicketFetching,
-  // } = useWaTicktes();
-
   const allFilteredContactsRow = useMemo(
     () =>
       filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
     [filteredContacts],
   );
-  const { data: inboxCount } = useGetInboxUserCount();
+  // Todo: re-add this after count is fixed:
+  // const { data: inboxCount } = useGetInboxUserCount();
 
-  useEffect(() => {
-    setTotalCount(inboxCount);
-  }, [inboxCount]);
-
-  // const { allTicketsRow, totalTickets } = useMemo(() => {
-  //   const data = tickets?.pages?.flatMap((d) => d?.rows) ?? [];
-  //   return {
-  //     allTicketsRow: data[0]?.data ?? [],
-  //     totalTickets: data[0]?.totalTickets ?? 0,
-  //   };
-  // }, [tickets]);
+  // useEffect(() => {
+  //   setTotalCount(inboxCount);
+  // }, [inboxCount]);
 
   const parentRef = useRef(null);
-  const ticketsParentRef = useRef(null);
 
   // The virtualizer
   const contactRowVirtualizer = useVirtualizer({
@@ -152,12 +123,6 @@ const WaInboxChatSelect = () => {
     estimateSize: () => 70,
     overscan: 5,
   });
-  // const ticketsRowVirtualizer = useVirtualizer({
-  //   count: hasNextPageTickets ? allTicketsRow.length + 1 : allTicketsRow.length,
-  //   getScrollElement: () => ticketsParentRef.current,
-  //   estimateSize: () => 82,
-  //   overscan: 5,
-  // });
   useEffect(() => {
     const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
 
@@ -175,35 +140,11 @@ const WaInboxChatSelect = () => {
     }
   }, [
     allFilteredContactsRow.length,
-    checkIfAnyFilterisActive,
-    contactRowVirtualizer,
     fetchNextPageFilteredContacts,
-    filter,
     hasNextPageFilteredContacts,
     isFilteredContactsFetchingNextPage,
+    contactRowVirtualizer.getVirtualItems(), // This is the key change - use getVirtualItems()
   ]);
-
-  // useEffect(() => {
-  //   const [lastItem] = [...ticketsRowVirtualizer.getVirtualItems()].reverse();
-
-  //   if (!lastItem) {
-  //     return;
-  //   }
-
-  //   if (
-  //     lastItem.index >= allTicketsRow.length - 1 &&
-  //     hasNextPageTickets &&
-  //     !isTicketsFetchingNextPage
-  //   ) {
-  //     fetchNextPageTickets();
-  //   }
-  // }, [
-  //   allTicketsRow.length,
-  //   ticketsRowVirtualizer,
-  //   fetchNextPageTickets,
-  //   hasNextPageTickets,
-  //   isTicketsFetchingNextPage,
-  // ]);
 
   const { wsData } = useWsData();
 
@@ -349,6 +290,7 @@ const WaInboxChatSelect = () => {
   );
   useEffect(() => {
     let tab = router.query?.tab as string;
+    if (!tab) return;
     if (tab === "All") {
       prepareFilters({
         ...filter,
@@ -423,40 +365,6 @@ const WaInboxChatSelect = () => {
         <WaInboxChatFilter filter={filter} setFilter={prepareFilters} />
         <WaInboxChatExport filter={filter} />
       </Group>
-      {/* <Tabs
-        radius="md"
-        styles={{
-          panel: {
-            paddingTop: 5,
-          },
-        }}
-        defaultValue={TabsEnum.all}
-      > */}
-      {/* <Tabs.List mx="md" grow>
-          {Object.values(TabsEnum).map((aTab) => (
-            <Tabs.Tab
-              key={aTab}
-              value={aTab}
-              h={25}
-              leftSection={
-                <Indicator
-                  inline
-                  label={
-                    aTab === TabsEnum.all
-                      ? allFilteredContactsRow?.[0]?.total_contact_count || 0
-                      : totalTickets || 0
-                  }
-                  size={16}
-                  color="red"
-                >
-                  {aTab === TabsEnum.all && <IconMessageCog size={18} />}
-                </Indicator>
-              }
-            />
-          ))}
-        </Tabs.List> */}
-
-      {/* <Tabs.Panel value="all"> */}
       <div>
         {filteredContactsStatus === "pending" ? (
           <Text px={"md"}>Loading...</Text>
@@ -539,74 +447,6 @@ const WaInboxChatSelect = () => {
           </div>
         )}
       </div>
-      {/* </Tabs.Panel> */}
-      {/* <Tabs.Panel value="tickets" h="80dvh">
-          <div>
-            {ticketsStatus === "pending" ? (
-              <Text px={"md"}>Loading...</Text>
-            ) : ticketsStatus === "error" ? (
-              <Text px={"md"}>Error: {ticketsError.message}</Text>
-            ) : (
-              <div
-                ref={ticketsParentRef}
-                className="List"
-                style={{
-                  height: `68dvh`,
-                  width: `100%`,
-                  overflow: "auto",
-                }}
-              >
-                <Divider />
-                <div
-                  style={{
-                    height: `${ticketsRowVirtualizer.getTotalSize()}px`,
-                    width: "100%",
-                    position: "relative",
-                  }}
-                >
-                  {ticketsRowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const isLoaderRow =
-                      virtualRow.index > allTicketsRow.length - 1;
-
-                    const post = allTicketsRow[virtualRow.index];
-
-                    return (
-                      <div
-                        key={virtualRow.index}
-                        className={
-                          virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
-                        }
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: `${virtualRow.size}px`,
-                          transform: `translateY(${virtualRow.start}px)`,
-                        }}
-                      >
-                        {isLoaderRow ? (
-                          !hasNextPageTickets && "Nothing more to load"
-                        ) : (
-                          <TicketSelectCard ticket={post} />
-                        )}
-                        <Divider />
-                      </div>
-                    );
-                  })}
-                  {ticketsRowVirtualizer.getVirtualItems()?.length === 0 && (
-                    <Card component={Group}>
-                      <Text c="dimmed" size="sm" ta="center">
-                        {translations["No chats found"]} <br />
-                      </Text>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </Tabs.Panel> */}
-      {/* </Tabs> */}
     </Stack>
   );
 };

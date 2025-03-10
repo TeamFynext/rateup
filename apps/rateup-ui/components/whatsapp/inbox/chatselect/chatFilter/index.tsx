@@ -121,6 +121,7 @@ export default function WaInboxChatFilter(props: Props) {
       tags: [],
       messageType: "usermessages",
       strictFilter: false,
+      searchTerm: "",
     });
   }
 
