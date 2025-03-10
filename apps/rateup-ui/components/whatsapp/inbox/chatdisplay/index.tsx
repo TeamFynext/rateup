@@ -104,7 +104,7 @@ export default function WaInboxChatDisplay() {
             >
               <Stack h="78vh" gap={0} p={0}> */}
           <WaInboxChatDisplayBody data={messages} />
-          {!assignedUsers?.length && user?.role !== UserRole.MEMBER ? (
+          {!assignedUsers?.length && user?.role === UserRole.SUPADM ? (
             <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
           ) : (
             <WaInboxChatDisplayFooter

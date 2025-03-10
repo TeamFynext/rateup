@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import {
   ActionIcon,
@@ -30,7 +30,10 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTickets } from "@/backend/tickets/tickets.query";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useAssignInboxToUer } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useAssignInboxToUer,
+  useGetAssignedUserForContact,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import EditContactModal from "@/components/Contacts/EditContactModal";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
@@ -146,7 +149,7 @@ export default function WaInboxChatDisplayHeader({
       <WaInboxCountdownTimer timeStamp={contact?.userInitiatedFinalTimeStamp} />
 
       <Group gap={"lg"}>
-        {user.role !== UserRole.MEMBER && (
+        {user.role === UserRole.SUPADM && (
           <Group gap="xs">
             <Tooltip label={"Assign"}>
               <ActionIcon onClick={openAssign} variant="outline">
@@ -213,6 +216,8 @@ export const ContactEdit = ({ isMobile, contact }) => {
 
 export const AssignInbox = ({ contactId, opened, close }) => {
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
+  const { data: assignedUsers } = useGetAssignedUserForContact(contactId);
+
   const assignMut = useAssignInboxToUer();
   const form = useForm({
     initialValues: {
@@ -249,6 +254,18 @@ export const AssignInbox = ({ contactId, opened, close }) => {
     form.reset();
     close();
   }
+
+  useEffect(() => {
+    if (assignedUsers) {
+      const data = {
+        teamId: assignedUsers[0]?.teamId,
+        contactId,
+        assignedUserIds: assignedUsers?.map((user) => user.assignedUserId),
+      };
+      form.setInitialValues(data);
+      form.setValues(data);
+    }
+  }, [assignedUsers]);
 
   return (
     <FormModalLayout
