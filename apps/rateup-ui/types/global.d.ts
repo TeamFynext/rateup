@@ -22,6 +22,7 @@ import {
   WaFlowFormElementType,
   WaFlowLayoutType,
   WaFlowStatus,
+  WaMessageAssignStatus,
   WaMessageTypes,
   WaTemplateCategory,
   WaTemplateComponentTypeUpperCase,
@@ -564,6 +565,7 @@ declare global {
     createdAt: Date;
     tags?: any;
     consent: boolean;
+    waMessageAssignStatus: WaMessageAssignStatus;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -590,6 +592,7 @@ declare global {
       },
     ];
     campaignParticipants: any[];
+    aiWaChat: boolean;
   };
 
   type ContactsResponse = {

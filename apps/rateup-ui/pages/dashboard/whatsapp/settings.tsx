@@ -508,7 +508,7 @@ function MetaLoginStatusLoaderSkeleton() {
 }
 
 export function WhatsAppAIChatConfiguration() {
-  const { data: chatbot } = useGetChatbotDetails();
+  const { data: chatbot, isLoading } = useGetChatbotDetails();
   const { translations } = useTranslations();
   const updateChatbotdetMut = useUpdateChatbot();
   const { data: subscription } = useSubscription();
@@ -543,47 +543,66 @@ export function WhatsAppAIChatConfiguration() {
   );
 
   return (
-    <Stack p={0}>
-      <PremiumFeature isSubscribed={hasAIFeature}>
-        <PaperLayout>
-          <Stack>
-            <Text fw={500} c="var(--grey-color-6)">
-              {translations["Configure WhatsApp with AI Chat"]}
-            </Text>
-            <Switch
-              label={translations["Enable AI Chat in WhatsApp"]}
-              checked={chatbot?.enableWaChat}
-              onChange={handleEnableWaAIChat}
-            />
-            {chatbot?.enableWaChat && (
-              <Stack w={"50%"}>
-                <ContainedTextField
-                  label={translations["Bot Command"]}
-                  placeholder={"eg: @bot"}
-                  {...form.getInputProps("waCommand")}
-                />
-                <ContainedTextArea
-                  label={translations["Bot Prompt"]}
-                  {...form.getInputProps("waPrompt")}
-                  rows={5}
-                />
-                <Group>
-                  <RateupButtonPrimary
-                    onClick={handleSubmit}
-                    title="Save"
-                    loading={updateChatbotdetMut.isPending}
+    <Skeleton visible={isLoading}>
+      <Stack p={0}>
+        <PremiumFeature isSubscribed={hasAIFeature}>
+          <PaperLayout>
+            <Stack>
+              <Text fw={500} c="var(--grey-color-6)">
+                {translations["Configure WhatsApp with AI Chat"]}
+              </Text>
+              <Switch
+                label={translations["Enable AI Chat in WhatsApp"]}
+                checked={chatbot?.enableWaChat}
+                onChange={handleEnableWaAIChat}
+              />
+              {chatbot?.enableWaChat && (
+                <Stack w={"50%"}>
+                  <Switch
+                    label={"Enable AI Chat for All Messages"}
+                    checked={chatbot?.enableAllWaChat}
+                    onChange={(e) =>
+                      updateChatbotdetMut.mutate({
+                        enableAllWaChat: e.currentTarget.checked,
+                      })
+                    }
                   />
-                  <RateupButtonSecondary
-                    onClick={() => form.reset()}
-                    title="Cancel"
+                  <Tooltip
+                    disabled={!chatbot?.enableAllWaChat}
+                    label={
+                      "Disable AI Chat for All Messages for command based chat"
+                    }
+                  >
+                    <ContainedTextField
+                      label={translations["Bot Command"]}
+                      placeholder={"eg: @bot"}
+                      {...form.getInputProps("waCommand")}
+                      disabled={chatbot?.enableAllWaChat}
+                    />
+                  </Tooltip>
+                  <ContainedTextArea
+                    label={translations["Bot Prompt"]}
+                    {...form.getInputProps("waPrompt")}
+                    rows={5}
                   />
-                </Group>
-              </Stack>
-            )}
-          </Stack>
-        </PaperLayout>
-      </PremiumFeature>
-    </Stack>
+                  <Group>
+                    <RateupButtonPrimary
+                      onClick={handleSubmit}
+                      title="Save"
+                      loading={updateChatbotdetMut.isPending}
+                    />
+                    <RateupButtonSecondary
+                      onClick={() => form.reset()}
+                      title="Cancel"
+                    />
+                  </Group>
+                </Stack>
+              )}
+            </Stack>
+          </PaperLayout>
+        </PremiumFeature>
+      </Stack>
+    </Skeleton>
   );
 }
 

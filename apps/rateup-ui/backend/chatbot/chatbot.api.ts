@@ -95,6 +95,7 @@ type IChatbotUpdate = {
   enableWaChat?: boolean;
   waCommand?: string;
   waPrompt?: string;
+  enableAllWaChat?: boolean;
 };
 
 export async function updateChatbot(data: IChatbotUpdate) {

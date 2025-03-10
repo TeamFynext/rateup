@@ -147,6 +147,11 @@ export const useEditContactMutation = (groupId) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["assignedInboxUser"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
       showSuccessToast(
         "Contact updated successfully.",
         "contact-update",

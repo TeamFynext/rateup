@@ -523,3 +523,9 @@ export enum ContactGroupType {
   NORMAL = "NORMAL",
   LOYALTY = "LOYALTY",
 }
+
+export enum WaMessageAssignStatus {
+  NEW = "NEW",
+  ASSIGNED = "ASSIGNED",
+  CLOSED = "CLOSED",
+}

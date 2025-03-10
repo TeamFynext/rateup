@@ -96,7 +96,6 @@ export default function FormModalLayout({
         <Group justify={includeCancelButton ? "flex-end" : "center"}>
           {includeCancelButton && (
             <RateupButtonSecondary
-              color="var(--tertiary-color)"
               type="reset"
               variant="subtle"
               onClick={cancelOnClick ? cancelOnClick : onClose}

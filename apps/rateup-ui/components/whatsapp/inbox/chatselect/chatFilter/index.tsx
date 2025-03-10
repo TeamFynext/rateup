@@ -30,6 +30,7 @@ export type ChatFilter = {
   contactGroups: Array<MultiGV>;
   campaigns: Array<MultiGV>;
   tags: Array<MultiGV>;
+  waMessageAssignStatus?: string;
 };
 interface Props {
   filter: ChatFilter;
