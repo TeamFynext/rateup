@@ -20,12 +20,17 @@ import {
   Text,
 } from "@mantine/core";
 import {
+  IconMessage,
+  IconMessageBolt,
+  IconMessageCheck,
   IconMessageCog,
   IconPercentage100,
+  IconPin,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
   IconTicket,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -38,11 +43,14 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useFilteredContacts,
+  useGetInboxUserCount,
   useWaTicktes,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import useContactStore, {
+  useChatContactCountStore,
+} from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
@@ -68,10 +76,13 @@ const WaInboxChatSelect = () => {
     contactGroups: [],
     campaigns: [],
     tags: [],
+    waMessageAssignStatus: "New",
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
   const queryClient = useQueryClient();
+
+  const { setTotalCount } = useChatContactCountStore();
 
   const { translations } = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
@@ -115,6 +126,12 @@ const WaInboxChatSelect = () => {
       filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
     [filteredContacts],
   );
+  const { data: inboxCount } = useGetInboxUserCount();
+
+  useEffect(() => {
+    setTotalCount(inboxCount);
+  }, [inboxCount]);
+
   // const { allTicketsRow, totalTickets } = useMemo(() => {
   //   const data = tickets?.pages?.flatMap((d) => d?.rows) ?? [];
   //   return {
@@ -333,9 +350,17 @@ const WaInboxChatSelect = () => {
   useEffect(() => {
     let tab = router.query?.tab as string;
     if (tab === "All") {
-      prepareFilters({ ...filter, messageType: "all" });
+      prepareFilters({
+        ...filter,
+        messageType: "all",
+        waMessageAssignStatus: undefined,
+      });
     } else {
-      prepareFilters({ ...filter, messageType: "usermessages" });
+      prepareFilters({
+        ...filter,
+        messageType: "usermessages",
+        waMessageAssignStatus: tab,
+      });
     }
   }, [router.query?.tab]);
 
@@ -345,7 +370,7 @@ const WaInboxChatSelect = () => {
   return (
     <Stack className={classes.wrapper} gap={"xs"}>
       <Group className={classes.chat_select_header} gap={"xs"}>
-        <Indicator
+        {/* <Indicator
           inline
           label={allFilteredContactsRow?.[0]?.total_contact_count || 6}
           size={16}
@@ -355,7 +380,7 @@ const WaInboxChatSelect = () => {
           left={100}
           style={{ zIndex: 1000 }}
           visibleFrom="sm"
-        />
+        /> */}
         <ContainedTextField
           leftSection={
             <IconSearch style={{ marginLeft: "var(--mantine-spacing-xs)" }} />
@@ -583,6 +608,54 @@ const WaInboxChatSelect = () => {
         </Tabs.Panel> */}
       {/* </Tabs> */}
     </Stack>
+  );
+};
+
+export const NewInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount.new) return <IconMessageBolt />;
+  return (
+    <Indicator label={totalCount.new} inline size={16} color="red">
+      <IconMessageBolt />
+    </Indicator>
+  );
+};
+
+export const AssignedInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount.assigned) return <IconPin />;
+  return (
+    <Indicator label={totalCount.assigned} inline size={16} color="red">
+      <IconPin />
+    </Indicator>
+  );
+};
+export const AssignedToMeInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount.assignedToMe) return <IconUserCircle />;
+  return (
+    <Indicator label={totalCount.assignedToMe} inline size={16} color="red">
+      <IconUserCircle />
+    </Indicator>
+  );
+};
+export const ClosedInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount.closed) return <IconMessageCheck />;
+  return (
+    <Indicator label={totalCount.closed} inline size={16} color="red">
+      <IconMessageCheck />
+    </Indicator>
+  );
+};
+
+export const AllInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount.all) return <IconMessage />;
+  return (
+    <Indicator label={totalCount.all} inline size={16} color="red">
+      <IconMessage />
+    </Indicator>
   );
 };
 

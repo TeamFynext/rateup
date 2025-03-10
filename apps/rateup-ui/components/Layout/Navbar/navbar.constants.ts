@@ -20,7 +20,11 @@ import {
   IconLogs,
   IconMessage,
   IconMessageBolt,
+  IconMessageCancel,
   IconMessageChatbot,
+  IconMessageCheck,
+  IconPin,
+  IconPinned,
   IconQrcode,
   IconRobotFace,
   IconSettings,
@@ -30,6 +34,8 @@ import {
   IconTerminal2,
   IconTicket,
   IconUser,
+  IconUserCircle,
+  IconUserFilled,
   IconUsers,
   IconUsersGroup,
   IconUserShare,
@@ -38,6 +44,14 @@ import {
 } from "@tabler/icons-react";
 
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
+import {
+  AllInboxIcon,
+  AssignedInboxIcon,
+  AssignedToMeInboxIcon,
+  ClosedInboxIcon,
+  NewInboxIcon,
+} from "@/components/whatsapp/inbox/chatselect";
+import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 
 import {
   SubscriptionFeaturePathName as sfpn,
@@ -93,12 +107,27 @@ export function getNavTopData(
               {
                 label: translations["New"],
                 link: "/dashboard/whatsapp/inbox?tab=New",
-                icon: IconMessageBolt,
+                icon: NewInboxIcon,
+              },
+              {
+                label: translations["Assigned"],
+                link: "/dashboard/whatsapp/inbox?tab=Assigned",
+                icon: AssignedInboxIcon,
+              },
+              {
+                label: translations["Assigned to Me"],
+                link: "/dashboard/whatsapp/inbox?tab=AssignedToMe",
+                icon: AssignedToMeInboxIcon,
+              },
+              {
+                label: translations["Closed"],
+                link: "/dashboard/whatsapp/inbox?tab=Closed",
+                icon: ClosedInboxIcon,
               },
               {
                 label: translations["All"],
                 link: "/dashboard/whatsapp/inbox?tab=All",
-                icon: IconMessage,
+                icon: AllInboxIcon,
               },
             ],
           },

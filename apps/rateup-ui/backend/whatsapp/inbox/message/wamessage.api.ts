@@ -147,3 +147,20 @@ export async function getWaChatMediaFile(mediaId: string) {
     throw error;
   }
 }
+
+export async function assignInboxToUser(data: {
+  contactId: string;
+  assignedUserIds: string[];
+  teamId: string;
+}) {
+  await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data);
+}
+
+export async function getAssignedUserForContact(contactId) {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`))
+    .data;
+}
+
+export async function getInboxUserCount() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`)).data;
+}

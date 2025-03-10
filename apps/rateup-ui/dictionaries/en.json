@@ -2100,5 +2100,8 @@
   "All Contacts": "All Contacts",
   "Groups": "Groups",
   "Access Links": "Access Links",
-  "All Members": "All Members"
+  "All Members": "All Members",
+  "Assigned": "Assigned",
+  "Assigned to Me": "Assigned to Me",
+  "Closed": "Closed"
 }

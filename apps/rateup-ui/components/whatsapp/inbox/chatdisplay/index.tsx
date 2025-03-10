@@ -1,11 +1,17 @@
+import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Flex, Stack } from "@mantine/core";
 import { motion } from "motion/react";
 
-import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useGetAssignedUserForContact,
+  useGetMessagesByContactId,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { UserRole } from "@/utils/enums";
 
 import {
   ContactsWithLastMessage,
@@ -14,7 +20,9 @@ import {
 import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import NothingFound from "../../../NothingFound/NothingFound";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
-import WaInboxChatDisplayFooter from "./chatdisplayFooter";
+import WaInboxChatDisplayFooter, {
+  WaInboxAssignUserFooter,
+} from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
 import WaInboxChatDisplayPopoverMsg from "./chatdisplayPoveroverMsg/page";
 import classes from "./styles.module.css";
@@ -53,6 +61,17 @@ export default function WaInboxChatDisplay() {
     },
   };
 
+  const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
+  const { user } = useUser();
+  const isAssignedToMe = useMemo(
+    () =>
+      assignedUsers &&
+      !!assignedUsers?.find(
+        (contact) => contact.assignedUserId === user?.userId,
+      ),
+    [assignedUsers, user],
+  );
+
   const isChatDisplayOpen = useIsChatDisplayOpen();
   const { translations } = useTranslations();
   if (error) return <div>Error: {error.message}</div>;
@@ -85,7 +104,14 @@ export default function WaInboxChatDisplay() {
             >
               <Stack h="78vh" gap={0} p={0}> */}
           <WaInboxChatDisplayBody data={messages} />
-          <WaInboxChatDisplayFooter contact={contact} />
+          {!assignedUsers?.length && user?.role !== UserRole.MEMBER ? (
+            <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
+          ) : (
+            <WaInboxChatDisplayFooter
+              contact={contact}
+              isChatAssignedToMe={isAssignedToMe}
+            />
+          )}
           {/* </Stack>
             </motion.div>
 

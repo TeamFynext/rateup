@@ -5,10 +5,15 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { showSuccessToast, showWarnToast } from "@/utils/notifications";
+
 import {
+  assignInboxToUser,
   exportWaChats,
+  getAssignedUserForContact,
   getChatFilterData,
   getFilteredContacts,
+  getInboxUserCount,
   getMessagesByContactId,
   getWaChatMediaFile,
   getWaTickets,
@@ -80,5 +85,35 @@ export const useExportWaChats = () => {
 export const useGetMediaFile = () => {
   return useMutation({
     mutationFn: getWaChatMediaFile,
+  });
+};
+
+export const useAssignInboxToUer = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: assignInboxToUser,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      showSuccessToast("Assigned successfully");
+    },
+    onError: (e) => {
+      showWarnToast("Something went wrong" + JSON.stringify(e));
+    },
+  });
+};
+
+export const useGetAssignedUserForContact = (contactId) => {
+  return useQuery({
+    queryKey: ["assignedInboxUser"],
+    queryFn: () => getAssignedUserForContact(contactId),
+    enabled: !!contactId,
+  });
+};
+
+export const useGetInboxUserCount = () => {
+  return useQuery({
+    queryKey: ["contactInboxCount"],
+    queryFn: getInboxUserCount,
   });
 };

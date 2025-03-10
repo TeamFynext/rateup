@@ -13,6 +13,17 @@ interface ContactStore {
   setTicketAndOpen: (ticket: any) => void;
 }
 
+interface ChatContactCountStore {
+  totalCount: {
+    new: number;
+    all: number;
+    closed: number;
+    assigned: number;
+    assignedToMe: number;
+  };
+  setTotalCount: (value) => void;
+}
+
 const useContactStore = create<ContactStore>((set) => ({
   opened: false,
   open: () => set((state) => ({ opened: true })),
@@ -23,5 +34,18 @@ const useContactStore = create<ContactStore>((set) => ({
   setSelectedTicket: (ticket) => set({ selectedTicket: ticket }),
   setTicketAndOpen: (ticket) => set({ selectedTicket: ticket, opened: true }),
 }));
+
+export const useChatContactCountStore = create<ChatContactCountStore>(
+  (set) => ({
+    totalCount: {
+      new: 0,
+      closed: 0,
+      all: 0,
+      assigned: 0,
+      assignedToMe: 0,
+    },
+    setTotalCount: (value) => set({ totalCount: value }),
+  }),
+);
 
 export default useContactStore;
