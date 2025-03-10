@@ -15,6 +15,7 @@ import {
   Divider,
   Group,
   Indicator,
+  ScrollArea,
   Stack,
   Tabs,
   Text,
@@ -43,21 +44,24 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useFilteredContacts,
+  useGetInboxContacts,
   useGetInboxUserCount,
   useWaTicktes,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import ContactPagination from "@/components/Contacts/ContactPagination";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
   useChatContactCountStore,
 } from "@/pages/dashboard/whatsapp/inbox/store";
+import { PAGE_SIZE } from "@/utils/constants";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
 import AddUnknownContactModal from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
-import WaInboxChatSelectCard from "./chatselectCard";
+import WaInboxChatSelectCard, { InboxContact } from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import classes from "./styles.module.css";
 import TicketSelectCard from "./ticketSelectCard";
@@ -82,7 +86,7 @@ const WaInboxChatSelect = () => {
 
   const queryClient = useQueryClient();
 
-  const { setTotalCount } = useChatContactCountStore();
+  const { setTotalCount, totalCount } = useChatContactCountStore();
 
   const { translations } = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
@@ -97,19 +101,30 @@ const WaInboxChatSelect = () => {
     );
   }, []);
 
-  const {
-    status: filteredContactsStatus,
-    data: filteredContacts,
-    isFetchingNextPage: isFilteredContactsFetchingNextPage,
-    error: filteredContactsError,
-    fetchNextPage: fetchNextPageFilteredContacts,
-    refetch: refetchFilteredContacts,
-    isRefetching: isRefetchingFilteredContacts,
-    hasNextPage: hasNextPageFilteredContacts,
-    isLoading: isContactLoading,
-    isFetching,
-  } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
+  // const {
+  //   status: filteredContactsStatus,
+  //   data: filteredContacts,
+  //   isFetchingNextPage: isFilteredContactsFetchingNextPage,
+  //   error: filteredContactsError,
+  //   fetchNextPage: fetchNextPageFilteredContacts,
+  //   refetch: refetchFilteredContacts,
+  //   isRefetching: isRefetchingFilteredContacts,
+  //   hasNextPage: hasNextPageFilteredContacts,
+  //   isLoading: isContactLoading,
+  //   isFetching,
+  // } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
+  let tab = router.query?.tab as string;
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
+  const {
+    data: contacts,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useGetInboxContacts(tab, pagination, processedFilter);
   // const {
   //   status: ticketsStatus,
   //   data: tickets,
@@ -120,17 +135,40 @@ const WaInboxChatSelect = () => {
   //   hasNextPage: hasNextPageTickets,
   //   isFetching: isTicketFetching,
   // } = useWaTicktes();
-
-  const allFilteredContactsRow = useMemo(
-    () =>
-      filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
-    [filteredContacts],
-  );
+  //----------------------------------------
+  // const allFilteredContactsRow = useMemo(
+  //   () =>
+  //     filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
+  //   [filteredContacts],
+  // );
+  //----------------------------------------
   const { data: inboxCount } = useGetInboxUserCount();
 
   useEffect(() => {
     setTotalCount(inboxCount);
   }, [inboxCount]);
+
+  function getTotalCount(tab) {
+    let count = 1;
+    switch (tab) {
+      case "All":
+        count = totalCount?.all;
+        break;
+      case "Assigned":
+        count = totalCount?.assigned;
+        break;
+      case "AssignedToMe":
+        count = totalCount?.assignedToMe;
+        break;
+      case "Closed":
+        count = totalCount?.closed;
+        break;
+      case "New":
+        count = totalCount?.new;
+        break;
+    }
+    return count / pagination.pageSize;
+  }
 
   // const { allTicketsRow, totalTickets } = useMemo(() => {
   //   const data = tickets?.pages?.flatMap((d) => d?.rows) ?? [];
@@ -144,44 +182,49 @@ const WaInboxChatSelect = () => {
   const ticketsParentRef = useRef(null);
 
   // The virtualizer
-  const contactRowVirtualizer = useVirtualizer({
-    count: hasNextPageFilteredContacts
-      ? allFilteredContactsRow.length + 1
-      : allFilteredContactsRow.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 70,
-    overscan: 5,
-  });
+  //-------------------------------------start
+  // const contactRowVirtualizer = useVirtualizer({
+  //   count: hasNextPageFilteredContacts
+  //     ? allFilteredContactsRow.length + 1
+  //     : allFilteredContactsRow.length,
+  //   getScrollElement: () => parentRef.current,
+  //   estimateSize: () => 70,
+  //   overscan: 5,
+  // });
+  //-----------------------------------------end
   // const ticketsRowVirtualizer = useVirtualizer({
   //   count: hasNextPageTickets ? allTicketsRow.length + 1 : allTicketsRow.length,
   //   getScrollElement: () => ticketsParentRef.current,
   //   estimateSize: () => 82,
   //   overscan: 5,
   // });
-  useEffect(() => {
-    const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
 
-    if (!lastItem) {
-      return;
-    }
+  //---------------------------------start
+  // useEffect(() => {
+  //   const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
 
-    if (
-      checkIfAnyFilterisActive(filter) &&
-      lastItem.index >= allFilteredContactsRow.length - 1 &&
-      hasNextPageFilteredContacts &&
-      !isFilteredContactsFetchingNextPage
-    ) {
-      fetchNextPageFilteredContacts();
-    }
-  }, [
-    allFilteredContactsRow.length,
-    checkIfAnyFilterisActive,
-    contactRowVirtualizer,
-    fetchNextPageFilteredContacts,
-    filter,
-    hasNextPageFilteredContacts,
-    isFilteredContactsFetchingNextPage,
-  ]);
+  //   if (!lastItem) {
+  //     return;
+  //   }
+
+  //   if (
+  //     checkIfAnyFilterisActive(filter) &&
+  //     lastItem.index >= allFilteredContactsRow.length - 1 &&
+  //     hasNextPageFilteredContacts &&
+  //     !isFilteredContactsFetchingNextPage
+  //   ) {
+  //     fetchNextPageFilteredContacts();
+  //   }
+  // }, [
+  //   allFilteredContactsRow.length,
+  //   checkIfAnyFilterisActive,
+  //   contactRowVirtualizer,
+  //   fetchNextPageFilteredContacts,
+  //   filter,
+  //   hasNextPageFilteredContacts,
+  //   isFilteredContactsFetchingNextPage,
+  // ]);
+  //----------------------end
 
   // useEffect(() => {
   //   const [lastItem] = [...ticketsRowVirtualizer.getVirtualItems()].reverse();
@@ -215,7 +258,7 @@ const WaInboxChatSelect = () => {
   );
 
   const updateTheContactObject = useCallback(
-    (cObj: ContactsWithLastMessage, newMessage: WaGetMessagesBody) => {
+    (cObj: InboxContact, newMessage: WaGetMessagesBody) => {
       return {
         ...cObj,
         lastMessage: newMessage,
@@ -231,7 +274,7 @@ const WaInboxChatSelect = () => {
 
   const updateWaContactsList = useCallback(
     (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
-      let updatedContacts = [...allFilteredContactsRow];
+      let updatedContacts = [...contacts];
       const contactIndex = findAndReturnTheIndexOfTheContact(
         updatedContacts,
         newMessage.contact.id,
@@ -254,7 +297,7 @@ const WaInboxChatSelect = () => {
     },
     [
       findAndReturnTheIndexOfTheContact,
-      allFilteredContactsRow,
+      contacts,
       queryClient,
       setSelectedContact,
       updateTheContactObject,
@@ -286,19 +329,14 @@ const WaInboxChatSelect = () => {
   useEffect(() => {
     let contactId = searchParams.get("contactId");
     if (contactId && !selectedContact) {
-      let contact = allFilteredContactsRow.find(
+      let contact = contacts?.find(
         (contact) => contact.id === searchParams.get("contactId"),
       );
       if (contact && selectedContact !== contact) {
         setSelectedContact(contact);
       }
     }
-  }, [
-    allFilteredContactsRow,
-    searchParams,
-    selectedContact,
-    setSelectedContact,
-  ]);
+  }, [contacts, searchParams, selectedContact, setSelectedContact]);
 
   const prepareFilters = useCallback(
     (filters: any) => {
@@ -327,33 +365,29 @@ const WaInboxChatSelect = () => {
 
   const openChatDisplayForContact = useCallback(
     (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/whatsapp/inbox?contactId=${data.id}`);
+      router.push(`/dashboard/whatsapp/inbox?tab=${tab}&contactId=${data.id}`);
     },
-    [router],
+    [router, tab],
   );
 
   const onUnknownContactAddSuccess = useCallback(
     (contact: ContactsData) => {
       setSelectedContact({
         ...contact,
-        groups: [],
         userInitiatedFinalTimeStamp: "",
-        lastMessage: {
-          messageBody: {} as WaInboxMessage,
-          waCreatedAt: "",
-        },
+        lastMessage: {},
+        waCreatedAt: "",
       });
       openChatDisplayForContact(contact);
     },
     [openChatDisplayForContact, setSelectedContact],
   );
   useEffect(() => {
-    let tab = router.query?.tab as string;
     if (tab === "All") {
       prepareFilters({
         ...filter,
         messageType: "all",
-        waMessageAssignStatus: undefined,
+        waMessageAssignStatus: tab,
       });
     } else {
       prepareFilters({
@@ -364,8 +398,7 @@ const WaInboxChatSelect = () => {
     }
   }, [router.query?.tab]);
 
-  if (isContactLoading)
-    return <WhatsAppInboxLoader isLoading={isContactLoading} />;
+  if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
   return (
     <Stack className={classes.wrapper} gap={"xs"}>
@@ -412,10 +445,8 @@ const WaInboxChatSelect = () => {
             w={30}
             variant="light"
             radius="md"
-            loading={
-              isFilteredContactsFetchingNextPage || isRefetchingFilteredContacts
-            }
-            onClick={refetchFilteredContacts}
+            loading={isLoading || isRefetching}
+            onClick={refetch}
           >
             <IconRefresh />
           </ActionIcon>
@@ -423,6 +454,40 @@ const WaInboxChatSelect = () => {
         <WaInboxChatFilter filter={filter} setFilter={prepareFilters} />
         <WaInboxChatExport filter={filter} />
       </Group>
+      <Stack>
+        <ScrollArea h={"calc(100dvh - 170px)"}>
+          {isLoading ? (
+            <ChatSelectSkeletonCardList />
+          ) : contacts?.length > 0 ? (
+            contacts?.map((contact) => (
+              <div>
+                <Divider />
+                <WaInboxChatSelectCard contact={contact} tab={tab} />
+                <Divider />
+              </div>
+            ))
+          ) : (
+            <Card component={Group}>
+              <Text c="dimmed" size="sm" ta="center">
+                {translations["No chats found"]} <br />
+                {
+                  translations[
+                    "search for a valid phone number or contact name"
+                  ]
+                }
+              </Text>
+            </Card>
+          )}
+        </ScrollArea>
+        <div style={{ padding: "0px 5px" }}>
+          <ContactPagination
+            pagination={pagination}
+            setPagination={setPagination}
+            totalPageCount={getTotalCount(tab)}
+          />
+        </div>
+      </Stack>
+
       {/* <Tabs
         radius="md"
         styles={{
@@ -457,6 +522,8 @@ const WaInboxChatSelect = () => {
         </Tabs.List> */}
 
       {/* <Tabs.Panel value="all"> */}
+
+      {/*       
       <div>
         {filteredContactsStatus === "pending" ? (
           <Text px={"md"}>Loading...</Text>
@@ -538,7 +605,8 @@ const WaInboxChatSelect = () => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
+
       {/* </Tabs.Panel> */}
       {/* <Tabs.Panel value="tickets" h="80dvh">
           <div>

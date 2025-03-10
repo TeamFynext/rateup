@@ -1,10 +1,11 @@
 import { create } from "zustand";
 
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { InboxContact } from "@/components/whatsapp/inbox/chatselect/chatselectCard";
 
 interface ContactStore {
-  selectedContact: ContactsWithLastMessage | null;
-  setSelectedContact: (contact: ContactsWithLastMessage) => void;
+  selectedContact: InboxContact | null;
+  setSelectedContact: (contact: InboxContact) => void;
   opened: boolean;
   open: () => void;
   close: () => void;

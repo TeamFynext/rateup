@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 
+import { ChatFilter } from "@/components/whatsapp/inbox/chatselect/chatFilter";
+
 import { WA_INBOX_BASE_PATH } from "..";
 import { WaInboxMessage, WaTemplateComponent } from "../../../../types/global";
 import { axiosClient } from "../../../apiClient";
@@ -163,4 +165,11 @@ export async function getAssignedUserForContact(contactId) {
 
 export async function getInboxUserCount() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`)).data;
+}
+
+export async function getInboxContacts(tab, pagination, filter: ChatFilter) {
+  let url = `${WA_CONTACT_BASE_PATH}/contacts/${tab}?page=
+    ${pagination.pageIndex}&pageSize=${pagination.pageSize}&campaigns=${filter.campaigns}&contactGroups=${filter.contactGroups}`;
+  if (filter.searchTerm?.trim().length) url += `&search=${filter.searchTerm}`;
+  return (await axiosClient.get(url)).data;
 }
