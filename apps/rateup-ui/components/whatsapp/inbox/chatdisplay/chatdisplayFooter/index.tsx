@@ -24,7 +24,6 @@ import {
 } from "../../../../Button/RateupButtons";
 import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
 import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
-import { InboxContact } from "../../chatselect/chatselectCard";
 import { AssignInbox } from "../chatdisplayHeader";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
@@ -33,7 +32,7 @@ export default function WaInboxChatDisplayFooter({
   contact,
   isChatAssignedToMe,
 }: {
-  contact: InboxContact;
+  contact: ContactsWithLastMessage;
   isChatAssignedToMe: boolean;
 }) {
   const inputRef = useRef(null);

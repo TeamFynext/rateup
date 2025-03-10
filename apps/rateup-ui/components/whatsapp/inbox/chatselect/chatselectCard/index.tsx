@@ -15,21 +15,11 @@ import {
 import { WaInboxSessionAvatar } from "./sessionBadge";
 import classes from "./styles.module.css";
 
-export interface InboxContact extends ContactsData {
-  userInitiatedFinalTimeStamp: string;
-  id: string;
-  name: string;
-  lastMessage: any;
-  waCreatedAt: string;
-  phone: string;
-}
 interface WaInboxChatSelectCardProps {
-  contact: InboxContact;
-  tab: string;
+  contact: ContactsWithLastMessage;
 }
 export default function WaInboxChatSelectCard({
   contact,
-  tab,
 }: WaInboxChatSelectCardProps) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
@@ -40,7 +30,7 @@ export default function WaInboxChatSelectCard({
   return (
     <Card
       component={Link}
-      href={`?tab=${tab}&contactId=${contact?.id}`}
+      href={`?contactId=${contact?.id}`}
       className={`${classes.wrapper} ${params.get("contactId") === contact?.id && classes.highlighted_wrapper}`}
       onClick={() => {
         setIsChatDisplayOpen(true);
@@ -69,17 +59,18 @@ export default function WaInboxChatSelectCard({
             <Tooltip
               position="bottom-start"
               label={
-                parseWaMessage(lastMessage).messageContent ?? "No messages yet"
+                parseWaMessage(lastMessage?.messageBody).messageContent ??
+                "No messages yet"
               }
             >
               <Text className={classes.latest_chat} truncate maw={200}>
                 {returnMessageContentBasedOnParsedMessage(
-                  parseWaMessage(lastMessage),
+                  parseWaMessage(lastMessage?.messageBody),
                 )}
               </Text>
             </Tooltip>
             <Text className={classes.chat_time}>
-              {formatToRelativeTime(contact?.waCreatedAt)}
+              {formatToRelativeTime(contact?.lastMessage?.waCreatedAt)}
             </Text>
           </Group>
         </Stack>

@@ -13,7 +13,6 @@ import {
   getAssignedUserForContact,
   getChatFilterData,
   getFilteredContacts,
-  getInboxContacts,
   getInboxUserCount,
   getMessagesByContactId,
   getWaChatMediaFile,
@@ -116,12 +115,5 @@ export const useGetInboxUserCount = () => {
   return useQuery({
     queryKey: ["contactInboxCount"],
     queryFn: getInboxUserCount,
-  });
-};
-
-export const useGetInboxContacts = (tab, pagination, filter) => {
-  return useQuery({
-    queryKey: ["inboxContacts", tab, pagination, filter],
-    queryFn: () => getInboxContacts(tab, pagination, filter),
   });
 };

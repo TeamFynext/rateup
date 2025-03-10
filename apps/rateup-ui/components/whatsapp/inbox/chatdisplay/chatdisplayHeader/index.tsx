@@ -48,12 +48,11 @@ import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
 
-import { InboxContact } from "../../chatselect/chatselectCard";
 import WaInboxCountdownTimer from "./countDown";
 import classes from "./styles.module.css";
 
 interface WaInboxChatDisplayHeaderProps {
-  contact: InboxContact;
+  contact: ContactsWithLastMessage;
 }
 export default function WaInboxChatDisplayHeader({
   contact,
