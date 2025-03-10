@@ -274,7 +274,7 @@ export async function filterChats(
           bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
         const assignedStatus =
           WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
-        extendedWhereClause += ` AND c."waMessageAssignStatus" = '${assignedStatus}'`;
+        extendedWhereClause += ` AND c."waMessageAssignStatus" = '${assignedStatus?.toUpperCase()}'`;
         if (isAssignedToMe)
           extendedWhereClause += ` AND winb."assignedUserId" = '${userId}'`;
       }
