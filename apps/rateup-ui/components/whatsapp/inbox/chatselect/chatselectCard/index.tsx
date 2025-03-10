@@ -52,7 +52,7 @@ export default function WaInboxChatSelectCard({
               tt={"capitalize"}
               fw={500}
             >
-              {contact?.name ?? contact?.phone}
+              {contact?.name || contact?.phone}
             </Text>
           </Group>
           <Group justify="space-between">
