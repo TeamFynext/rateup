@@ -66,9 +66,7 @@ export default function WaInboxChatDisplay() {
   const isAssignedToMe = useMemo(
     () =>
       assignedUsers &&
-      !!assignedUsers?.find(
-        (contact) => contact.assignedUserId === user?.userId,
-      ),
+      !!assignedUsers?.find((c) => c.assignedUserId === user?.userId),
     [assignedUsers, user],
   );
 

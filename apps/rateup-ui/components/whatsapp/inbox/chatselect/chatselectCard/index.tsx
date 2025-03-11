@@ -1,9 +1,19 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { Card, Group, Stack, Text, Tooltip } from "@mantine/core";
+import {
+  Badge,
+  Card,
+  Group,
+  Skeleton,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 
+import { WaMessageAssignStatus } from "@/types/enums";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { formatToRelativeTime } from "@/utils/dateTime";
@@ -54,6 +64,7 @@ export default function WaInboxChatSelectCard({
             >
               {contact?.name || contact?.phone}
             </Text>
+            <AssignedStatusBadge contact={contact} />
           </Group>
           <Group justify="space-between">
             <Tooltip
@@ -78,3 +89,30 @@ export default function WaInboxChatSelectCard({
     </Card>
   );
 }
+
+const AssignedStatusBadge = ({ contact }) => {
+  const { data: assignedUsers, isLoading } = useGetAssignedUserForContact(
+    contact.id,
+  );
+  if (isLoading)
+    return (
+      <Skeleton>
+        <Badge size="xs" radius={"xs"}></Badge>
+      </Skeleton>
+    );
+  if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
+    return (
+      <Group>
+        {assignedUsers?.map((u) => (
+          <Badge variant="light" size="xs" radius={"xs"}>
+            {u?.assignedUser?.name}
+          </Badge>
+        ))}
+      </Group>
+    );
+  return (
+    <Badge variant="light" size="xs" radius={"xs"}>
+      {contact?.waMessageAssignStatus}
+    </Badge>
+  );
+};
