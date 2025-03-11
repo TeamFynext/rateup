@@ -174,7 +174,8 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
-  const { setSelectedContact, selectedContact } = useContactStore();
+  const { setSelectedContact, selectedContact, setFilterData } =
+    useContactStore();
 
   const updateWaContactsList = useCallback(
     (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
@@ -260,6 +261,7 @@ const WaInboxChatSelect = () => {
           })),
         };
         setProcessedFilter(processedFilters);
+        setFilterData(encodeURIComponent(JSON.stringify(processedFilter)));
       }
     },
     [checkIfAnyFilterisActive],

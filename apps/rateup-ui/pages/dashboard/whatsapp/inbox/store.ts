@@ -11,6 +11,8 @@ interface ContactStore {
   selectedTicket: any;
   setSelectedTicket: (ticket: any) => void;
   setTicketAndOpen: (ticket: any) => void;
+  filterData: string;
+  setFilterData: (value: string) => void;
 }
 
 interface ChatContactCountStore {
@@ -34,6 +36,8 @@ const useContactStore = create<ContactStore>((set) => ({
   selectedTicket: null,
   setSelectedTicket: (ticket) => set({ selectedTicket: ticket }),
   setTicketAndOpen: (ticket) => set({ selectedTicket: ticket, opened: true }),
+  filterData: null,
+  setFilterData: (value) => set({ filterData: value }),
 }));
 
 export const useChatContactCountStore = create<ChatContactCountStore>(
