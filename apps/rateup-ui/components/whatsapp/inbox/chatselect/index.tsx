@@ -111,11 +111,12 @@ const WaInboxChatSelect = () => {
     [filteredContacts],
   );
   // Todo: re-add this after count is fixed:
-  const { data: inboxCount } = useGetInboxUserCount();
+  const { data: inboxCount, refetch } = useGetInboxUserCount();
 
   useEffect(() => {
+    if (filteredContacts && !inboxCount) refetch();
     setTotalCount(inboxCount);
-  }, [inboxCount]);
+  }, [inboxCount, filteredContacts]);
 
   const parentRef = useRef(null);
 
