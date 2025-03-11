@@ -489,6 +489,13 @@ export async function getAssignedUserForContact(contactId) {
     where: {
       contactId,
     },
+    include: {
+      assignedUser: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
 }
 
