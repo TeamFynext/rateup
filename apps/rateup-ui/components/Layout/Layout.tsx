@@ -461,10 +461,14 @@ export default function Layout({ children, appProps }) {
 
   useEffect(() => {
     Object.entries(linksMapping).find(([key, value]) => {
-      let a = value?.find((v) => v.link === tab);
-      if (a) {
+      const [basePath, queryString] = tab.split("?");
+      const params = new URLSearchParams(queryString || "");
+      const tabParam = params.get("tab");
+      const cleanPath = tabParam ? `${basePath}?tab=${tabParam}` : basePath;
+      let navItem = value?.find((v) => v.link === cleanPath);
+      if (navItem) {
         setActiveMainLink(key);
-        setActiveSubLink(a?.link);
+        setActiveSubLink(navItem?.link);
       }
     });
   }, [navLinks]);
