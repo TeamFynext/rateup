@@ -528,4 +528,5 @@ export enum WaMessageAssignStatus {
   NEW = "NEW",
   ASSIGNED = "ASSIGNED",
   CLOSED = "CLOSED",
+  UNASSIGNED = "UNASSIGNED",
 }
