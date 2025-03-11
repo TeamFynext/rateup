@@ -26,11 +26,11 @@ export default function WaInboxChatSelectCard({
 
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const { setSelectedContact } = useContactStore();
-
+  let tab = params.get("tab") ?? "New";
   return (
     <Card
       component={Link}
-      href={`?contactId=${contact?.id}`}
+      href={`?tab=${tab}&contactId=${contact?.id}`}
       className={`${classes.wrapper} ${params.get("contactId") === contact?.id && classes.highlighted_wrapper}`}
       onClick={() => {
         setIsChatDisplayOpen(true);

@@ -63,6 +63,7 @@ enum TabsEnum {
 
 const WaInboxChatSelect = () => {
   const router = useRouter();
+  const tab = (router.query?.tab as string) ?? "New";
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "usermessages",
     strictFilter: false,
@@ -272,7 +273,7 @@ const WaInboxChatSelect = () => {
 
   const openChatDisplayForContact = useCallback(
     (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/whatsapp/inbox?contactId=${data.id}`);
+      router.push(`/dashboard/whatsapp/inbox?tab=&${tab}contactId=${data.id}`);
     },
     [router],
   );
