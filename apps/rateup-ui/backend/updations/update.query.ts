@@ -5,7 +5,9 @@ import { useMutation } from "@tanstack/react-query";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
+  updateContactMessageTime,
   updateGoogleReviewQuestions,
+  updateInboxStatus,
   updateSubscriptionFeature,
   updateThemeTitleSt,
   updateUsageStatsResetDate,
@@ -52,6 +54,24 @@ export const useUpdateSubscription = () => {
     },
     onError: () => {
       showErrorToast("Update Error");
+    },
+  });
+};
+
+export const useUpdateContactLastRecievedTime = () => {
+  return useMutation({
+    mutationFn: updateContactMessageTime,
+    onSuccess: () => {
+      showSuccessToast("Updated successfully");
+    },
+  });
+};
+
+export const useUpdateInboxStatus = () => {
+  return useMutation({
+    mutationFn: updateInboxStatus,
+    onSuccess: () => {
+      showSuccessToast("Updated successfully");
     },
   });
 };

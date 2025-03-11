@@ -2103,5 +2103,6 @@
   "All Members": "All Members",
   "Assigned": "Assigned",
   "Assigned to Me": "Assigned to Me",
-  "Closed": "Closed"
+  "Closed": "Closed",
+  "UnAssigned": "UnAssigned"
 }
