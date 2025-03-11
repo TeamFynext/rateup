@@ -51,11 +51,6 @@ interface NavLinkItem {
   disabled?: boolean;
 }
 
-// LogoutButton Component
-export const LogoutButton = ({ onClick }) => {
-  return <IconLogout onClick={onClick} size={22} stroke={1.5} />;
-};
-
 // MainNavLinks Component
 const MainNavLinks = ({
   links,
@@ -161,7 +156,7 @@ const LastLinks = ({
     >
       <UnstyledButton
         onClick={() => {
-          if (link?.label === "Account") {
+          if (link?.label !== "Dark Mode") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             router.push(link?.children[0]?.link);
@@ -466,10 +461,14 @@ export default function Layout({ children, appProps }) {
 
   useEffect(() => {
     Object.entries(linksMapping).find(([key, value]) => {
-      let a = value?.find((v) => v.link === tab);
-      if (a) {
+      const [basePath, queryString] = tab.split("?");
+      const params = new URLSearchParams(queryString || "");
+      const tabParam = params.get("tab");
+      const cleanPath = tabParam ? `${basePath}?tab=${tabParam}` : basePath;
+      let navItem = value?.find((v) => v.link === cleanPath);
+      if (navItem) {
         setActiveMainLink(key);
-        setActiveSubLink(a?.link);
+        setActiveSubLink(navItem?.link);
       }
     });
   }, [navLinks]);

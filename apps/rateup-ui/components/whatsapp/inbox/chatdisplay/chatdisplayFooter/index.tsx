@@ -8,6 +8,7 @@ import {
   IconInfoCircle,
   IconSend,
 } from "@tabler/icons-react";
+import { create } from "zustand";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -38,6 +39,7 @@ export default function WaInboxChatDisplayFooter({
   const inputRef = useRef(null);
   const { translations } = useTranslations();
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
+  const { addMessage, removeMessage } = useMessageStore();
   const form = useForm({
     initialValues: {
       type: "text",
@@ -52,9 +54,14 @@ export default function WaInboxChatDisplayFooter({
     },
   });
   function handleSendMessage(values: typeof form.values) {
+    form.reset();
+    addMessage(contact.id, {
+      body: values.text.body,
+      type: "text",
+    });
     sendnewWaMessage.mutate(values, {
       onSuccess: () => {
-        form.reset();
+        removeMessage(contact.id);
       },
     });
   }
@@ -174,3 +181,54 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
     </Stack>
   );
 };
+
+interface Message {
+  id?: string;
+  contactId: string;
+  body: string;
+  type: string;
+  timestamp: number;
+  isOutgoing: boolean;
+}
+
+interface MessageState {
+  messages: Record<string, Message[]>;
+  addMessage: (
+    contactId: string,
+    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">,
+  ) => void;
+  getMessages: (contactId: string) => Message[];
+  removeMessage: (contactId: string) => void;
+}
+
+export const useMessageStore = create<MessageState>((set, get) => ({
+  messages: {},
+  addMessage: (contactId, message) =>
+    set((state) => {
+      const newMessage: Message = {
+        ...message,
+        contactId,
+        timestamp: Date.now(),
+        isOutgoing: true,
+      };
+
+      const currentContactMessages = state.messages[contactId] || [];
+
+      return {
+        messages: {
+          ...state.messages,
+          [contactId]: [...currentContactMessages, newMessage],
+        },
+      };
+    }),
+  getMessages: (contactId) => get().messages[contactId] || [],
+  removeMessage: (contactId) =>
+    set((state) => {
+      return {
+        messages: {
+          ...state.messages,
+          [contactId]: [],
+        },
+      };
+    }),
+}));

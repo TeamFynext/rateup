@@ -3,16 +3,20 @@ import { useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
+  Avatar,
   Badge,
   Center,
   Divider,
   Group,
   Loader,
+  Paper,
+  Stack,
   Text,
 } from "@mantine/core";
 import { useIntersection, useScrollIntoView } from "@mantine/hooks";
 import {
   IconBrandWhatsapp,
+  IconClock,
   IconSquareRoundedChevronDown,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -25,9 +29,10 @@ import {
   WaInboxMessage,
   WaTemplateComponent,
 } from "../../../../../types/global";
-import { formatDate } from "../../../../../utils/dateTime";
+import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
 import WhatsAppInboxLoader from "../../loader";
+import { useMessageStore } from "../chatdisplayFooter";
 import WaInboxAudio from "./components/audio/indext";
 import WaInboxDocument from "./components/document";
 import WaInboxImage from "./components/image";
@@ -43,6 +48,7 @@ interface Props {
 }
 export default function WaInboxChatDisplayBody(props: Props) {
   const searchParams = useSearchParams();
+  let contactId = searchParams.get("contactId") as string;
   const {
     error, // Error
     fetchNextPage,
@@ -50,7 +56,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
     isError,
     isFetchingNextPage,
     isPending,
-  } = useGetMessagesByContactId(searchParams.get("contactId") as string);
+  } = useGetMessagesByContactId(contactId);
 
   const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
   const [currentScrollHeight, setCurrentScrollHeight] = useState(0);
@@ -70,6 +76,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
     threshold: 1,
   });
   const { translations } = useTranslations();
+  const { messages } = useMessageStore();
   const singleMessage = (
     messageBody: WaInboxMessage,
     templateComponentParams: WaTemplateComponent[],
@@ -173,6 +180,9 @@ export default function WaInboxChatDisplayBody(props: Props) {
             </React.Fragment>
           );
         })}
+        {messages?.[contactId]?.map((msg, i) => (
+          <TempMessageBody body={msg?.body} timestamp={msg.timestamp} key={i} />
+        ))}
         <div ref={targetInViewportRef}></div>
         <div ref={targetRef}></div>
       </div>
@@ -186,6 +196,31 @@ export default function WaInboxChatDisplayBody(props: Props) {
     </div>
   );
 }
+
+const TempMessageBody = ({ body, timestamp }) => {
+  return (
+    <Stack align="flex-end">
+      <Group gap={4}>
+        <Paper
+          w={"fit-content"}
+          px={"xs"}
+          radius={"md"}
+          shadow="xs"
+          bg={"light-dark(#dcf0e4,rgb(82, 190, 127)"}
+        >
+          <Text>{body}</Text>
+          <Group gap={4}>
+            <Text fz={10} c={"dimmed"}>
+              {formatToCustomTime(timestamp)}
+            </Text>
+            <IconClock size={13} color="gray" />
+          </Group>
+        </Paper>
+        <Avatar color="initials" size={"sm"} mb={"auto"} />
+      </Group>
+    </Stack>
+  );
+};
 
 const EndofConversationComponent = () => {
   const { translations } = useTranslations();
