@@ -32,7 +32,7 @@ export async function addNewWaMessage(
 ) {
   const newMessage = prisma.waMessage.create({
     data: {
-      messageBody,
+      messageBody: messageBody as any,
       contactId,
       waCreatedAt,
       templateComponentParams: componentParams,
@@ -276,35 +276,40 @@ export async function filterChats(
 
     // Filter by assignment status
     if (bodyFilterProps?.waMessageAssignStatus) {
-      const isAssignedToMe =
-        bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
-      const assignedStatus =
-        WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
+      if (bodyFilterProps?.waMessageAssignStatus === "New") {
+        filters.push(
+          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours')`,
+        );
+      } else {
+        const isAssignedToMe =
+          bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
+        const assignedStatus =
+          WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
 
-      params.push(assignedStatus?.toUpperCase());
-      filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
+        params.push(assignedStatus);
+        filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
 
-      if (isAssignedToMe) {
-        params.push(userId);
-        filters.push(`EXISTS (
+        if (isAssignedToMe) {
+          params.push(userId);
+          filters.push(`EXISTS (
           SELECT 1 FROM "WaInboxAssign" winb 
           WHERE winb."contactId" = c.id 
-          AND winb."assignedUserId" = $${paramIndex++}
+          AND winb."assignedUserId" = $${paramIndex++}::uuid
         )`);
+        }
       }
     }
 
     const whereClause = filters.join(" AND ");
 
     // Simplified and optimized query
-    const query = `
-    WITH ContactsWithLastMessages AS (
-      SELECT 
+    const query = `SELECT 
         c.id,
         c."name",
         c."phone",
         c."aiWaChat",
         c."waMessageAssignStatus",
+        c."lastReceivedMessageTimeStamp",
         COALESCE(c.tags, '{}'::jsonb) as tags,
         (
           SELECT jsonb_build_object(
@@ -315,35 +320,9 @@ export async function filterChats(
           WHERE w."contactId" = c.id
           ORDER BY w."waCreatedAt" DESC
           LIMIT 1
-        ) as "lastMessage",
-        (
-          SELECT w."waCreatedAt"
-          FROM "WaMessage" w
-          WHERE w."contactId" = c.id
-          AND w."messageBody"->>'exchangeProcess' = 'receive'
-          ORDER BY w."waCreatedAt" DESC
-          LIMIT 1
-        ) as "userInitiatedFinalTimeStamp"
-      FROM "Contact" c
-      WHERE ${whereClause}
-    ),
-    CountedContacts AS (
-      SELECT COUNT(*)::Text AS total_contact_count 
-      FROM ContactsWithLastMessages
-    )
-    SELECT 
-      cwm.id,
-      cwm."name",
-      cwm."phone",
-      cwm."tags",
-      cwm."userInitiatedFinalTimeStamp",
-      cwm."lastMessage",
-      cwm."aiWaChat",
-      cwm."waMessageAssignStatus",
-      cc.total_contact_count
-    FROM ContactsWithLastMessages cwm, CountedContacts cc
-    ORDER BY cwm."userInitiatedFinalTimeStamp" DESC NULLS LAST
-    LIMIT 100 OFFSET $2
+        ) as "lastMessage" FROM "Contact" c
+      WHERE ${whereClause} 
+      ORDER BY c."lastReceivedMessageTimeStamp" DESC NULLS LAST LIMIT 100 OFFSET $2
     `;
 
     const contacts = await prisma.$queryRawUnsafe(query, ...params);
@@ -527,22 +506,45 @@ export async function getContactsCountByInbox(orgId, userId) {
     total_count: number;
     assigned_count: number;
     closed_count: number;
+    unassigned_count: number;
     assigned_to_me_count: number;
-  }[] = await prisma.$queryRaw`SELECT 
-  COUNT(*)::INTEGER AS total_count,
-  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} THEN 1 END)::INTEGER AS assigned_count,
-  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} THEN 1 END)::INTEGER AS closed_count,
-  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.NEW} THEN 1 END)::INTEGER AS new_count,
-  COUNT(CASE WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED}
-    AND EXISTS (
-       SELECT 1 FROM "WaInboxAssign" winb 
-       WHERE winb."contactId" = c.id 
-       AND winb."assignedUserId" = ${userId}::uuid
-   ) THEN 1 END)::INTEGER AS assigned_to_me_count FROM "Contact" c
+  }[] = await prisma.$queryRaw`WITH assigned_contacts AS (
+    SELECT DISTINCT "contactId"
+    FROM "WaInboxAssign"
+    WHERE "assignedUserId" = ${userId}::uuid
+)
+SELECT 
+    COUNT(DISTINCT CASE 
+        WHEN c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' 
+        THEN wm."contactId" 
+    END)::INTEGER AS new_count,
+
+    COUNT(DISTINCT wm."contactId")::INTEGER AS total_count,
+
+    COUNT(DISTINCT CASE 
+        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} 
+        THEN wm."contactId" 
+    END)::INTEGER AS assigned_count,
+
+    COUNT(DISTINCT CASE 
+        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} 
+        THEN wm."contactId" 
+    END)::INTEGER AS closed_count,
+
+    COUNT(DISTINCT CASE 
+        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
+        THEN wm."contactId" 
+    END)::INTEGER AS unassigned_count,
+
+    COUNT(DISTINCT ac."contactId")::INTEGER AS assigned_to_me_count
+FROM "WaMessage" wm
+JOIN "Contact" c ON wm."contactId" = c.id
+LEFT JOIN assigned_contacts ac ON wm."contactId" = ac."contactId"
 WHERE c."orgId" = ${orgId}::uuid;`;
 
   return {
     new: count[0].new_count,
+    unassigned: count[0].unassigned_count,
     all: count[0].total_count,
     closed: count[0].closed_count,
     assignedToMe: count[0].assigned_to_me_count,

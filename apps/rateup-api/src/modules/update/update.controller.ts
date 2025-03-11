@@ -119,3 +119,45 @@ export async function updateRateupPlanHandler(
     reply.code(500).send(e);
   }
 }
+
+export async function updateContactMessageTimeHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await prisma.$executeRaw`WITH latest_messages AS (
+      SELECT DISTINCT ON (w."contactId") 
+        w."contactId",
+        w."waCreatedAt"
+      FROM "WaMessage" w
+      WHERE w."messageBody"->>'exchangeProcess' = 'receive'
+      ORDER BY w."contactId", w."waCreatedAt" DESC
+    )
+    UPDATE "Contact" c
+    SET "lastReceivedMessageTimeStamp" = lm."waCreatedAt"
+    FROM latest_messages lm
+    WHERE c.id = lm."contactId";
+    `;
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updateInboxStatusHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await prisma.$executeRaw`
+      UPDATE "Contact"
+      SET "waMessageAssignStatus" = 'UNASSIGNED'
+      WHERE "waMessageAssignStatus" = 'NEW';
+      `;
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}

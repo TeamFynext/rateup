@@ -36,6 +36,7 @@ import {
 } from "../../whatsappSurvey/wasurvey.service";
 import {
   handleWaReceivedImages,
+  isSessionExpired,
   returnAppropriateTimeStamp,
 } from "./wamessage.utils";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service";
@@ -72,7 +73,6 @@ export async function handleWaMessages(
       phone: phone,
       source: "whatsapp",
     };
-    let session = await getSession(orgId, phone);
     // create contact if it does not exist
     const contact = await getOrCreateContactByPhone(phone, orgId, contactCore);
 
@@ -95,17 +95,15 @@ export async function handleWaMessages(
     }
     const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
 
-    if (type === "receive" && !validateSession(session)) {
-      if (session) await deleteSession(orgId, phone);
-      if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED)
-        await updateContactById(contact.id, {
-          waMessageAssignStatus: WaMessageAssignStatus.NEW,
-        });
-      session = await createSession({
-        orgId,
-        phone,
-        surveyTeamMapId: null,
-        createdAt: waTimeStamp,
+    if (type === "receive") {
+      const isChangeStatus =
+        isSessionExpired(contact.lastReceivedMessageTimeStamp) &&
+        contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED;
+      await updateContactById(contact.id, {
+        waMessageAssignStatus: isChangeStatus
+          ? WaMessageAssignStatus.UNASSIGNED
+          : undefined,
+        lastReceivedMessageTimeStamp: waTimeStamp,
       });
     }
 
