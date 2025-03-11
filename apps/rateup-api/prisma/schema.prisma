@@ -438,8 +438,9 @@ model Contact {
   loyaltyCustomer      LoyaltyCustomer?
   external_id          String?
   aiWaChat             Boolean               @default(false)
-  waMessageAssignStatus  String              @default("NEW")
+  waMessageAssignStatus  String              @default("UNASSIGNED")
   waInboxAssign        WaInboxAssign[]
+  lastReceivedMessageTimeStamp   DateTime? 
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
