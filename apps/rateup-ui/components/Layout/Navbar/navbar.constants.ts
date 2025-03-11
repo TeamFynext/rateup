@@ -58,7 +58,6 @@ import {
   SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { LogoutButton } from "../Layout";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -375,8 +374,15 @@ export function getNavTopData(
       ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
       : []),
     {
-      icon: LogoutButton,
+      icon: IconLogout,
       label: "Logout",
+      children: [
+        {
+          label: "Logout",
+          link: "/logout",
+          icon: IconLogout,
+        },
+      ],
     },
     {
       icon: IconUser,

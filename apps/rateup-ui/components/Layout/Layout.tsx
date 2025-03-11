@@ -51,11 +51,6 @@ interface NavLinkItem {
   disabled?: boolean;
 }
 
-// LogoutButton Component
-export const LogoutButton = ({ onClick }) => {
-  return <IconLogout onClick={onClick} size={22} stroke={1.5} />;
-};
-
 // MainNavLinks Component
 const MainNavLinks = ({
   links,
@@ -161,7 +156,7 @@ const LastLinks = ({
     >
       <UnstyledButton
         onClick={() => {
-          if (link?.label === "Account") {
+          if (link?.label !== "Dark Mode") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             router.push(link?.children[0]?.link);
