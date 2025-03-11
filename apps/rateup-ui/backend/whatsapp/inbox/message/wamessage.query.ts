@@ -106,7 +106,7 @@ export const useAssignInboxToUer = (filterData) => {
 
 export const useGetAssignedUserForContact = (contactId) => {
   return useQuery({
-    queryKey: ["assignedInboxUser"],
+    queryKey: ["assignedInboxUser", contactId],
     queryFn: () => getAssignedUserForContact(contactId),
     enabled: !!contactId,
   });
