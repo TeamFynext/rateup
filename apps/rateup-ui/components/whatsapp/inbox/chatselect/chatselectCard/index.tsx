@@ -40,7 +40,7 @@ export default function WaInboxChatSelectCard({
     >
       <Group>
         <WaInboxSessionAvatar
-          timeStamp={contact?.userInitiatedFinalTimeStamp}
+          timeStamp={contact?.lastReceivedMessageTimeStamp}
           title={contact?.name}
         />
         <Stack className={classes.inner} flex={1}>

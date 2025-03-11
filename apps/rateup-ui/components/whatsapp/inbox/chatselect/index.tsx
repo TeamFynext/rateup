@@ -21,11 +21,12 @@ import {
   IconMessage,
   IconMessageBolt,
   IconMessageCheck,
-  IconPin,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
+  IconUserCheck,
   IconUserCircle,
+  IconUserX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -36,7 +37,10 @@ import {
   WaGetMessagesBody,
   WaMessagePage,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useFilteredContacts,
+  useGetInboxUserCount,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -106,11 +110,11 @@ const WaInboxChatSelect = () => {
     [filteredContacts],
   );
   // Todo: re-add this after count is fixed:
-  // const { data: inboxCount } = useGetInboxUserCount();
+  const { data: inboxCount } = useGetInboxUserCount();
 
-  // useEffect(() => {
-  //   setTotalCount(inboxCount);
-  // }, [inboxCount]);
+  useEffect(() => {
+    setTotalCount(inboxCount);
+  }, [inboxCount]);
 
   const parentRef = useRef(null);
 
@@ -160,10 +164,10 @@ const WaInboxChatSelect = () => {
       return {
         ...cObj,
         lastMessage: newMessage,
-        userInitiatedFinalTimeStamp:
+        lastReceivedMessageTimeStamp:
           newMessage.messageBody.exchangeProcess === "receive"
             ? newMessage.waCreatedAt
-            : cObj?.userInitiatedFinalTimeStamp,
+            : cObj?.lastReceivedMessageTimeStamp,
       };
     },
     [],
@@ -278,7 +282,7 @@ const WaInboxChatSelect = () => {
       setSelectedContact({
         ...contact,
         groups: [],
-        userInitiatedFinalTimeStamp: "",
+        lastReceivedMessageTimeStamp: "",
         lastMessage: {
           messageBody: {} as WaInboxMessage,
           waCreatedAt: "",
@@ -468,10 +472,20 @@ export const NewInboxIcon = () => {
 
 export const AssignedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assigned) return <IconPin />;
+  if (!totalCount?.assigned) return <IconUserCheck />;
   return (
     <Indicator label={totalCount.assigned} inline size={16} color="red">
-      <IconPin />
+      <IconUserCheck />
+    </Indicator>
+  );
+};
+
+export const UnAssignedInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount?.unassigned) return <IconUserX />;
+  return (
+    <Indicator label={totalCount.unassigned} inline size={16} color="red">
+      <IconUserX />
     </Indicator>
   );
 };

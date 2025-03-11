@@ -75,7 +75,7 @@ export default function WaInboxChatDisplayFooter({
   }
 
   const isSessionExpired = isInboxSessionExpired(
-    contact?.userInitiatedFinalTimeStamp,
+    contact?.lastReceivedMessageTimeStamp,
   );
   return (
     <Stack gap={0}>

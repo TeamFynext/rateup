@@ -146,7 +146,9 @@ export default function WaInboxChatDisplayHeader({
         </Stack>
         <ContactEdit isMobile={isMobile} contact={contact} />
       </Group>
-      <WaInboxCountdownTimer timeStamp={contact?.userInitiatedFinalTimeStamp} />
+      <WaInboxCountdownTimer
+        timeStamp={contact?.lastReceivedMessageTimeStamp}
+      />
 
       <Group gap={"lg"}>
         {user.role === UserRole.SUPADM && (

@@ -24,3 +24,15 @@ export async function updateSubscriptionFeature() {
     timeout: 0,
   });
 }
+
+export async function updateContactMessageTime() {
+  return await axiosClient.post(`${baseUrl}/inbox/time`, null, {
+    timeout: 0,
+  });
+}
+
+export async function updateInboxStatus() {
+  return await axiosClient.post(`${baseUrl}/inbox/status`, null, {
+    timeout: 0,
+  });
+}

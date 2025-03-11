@@ -50,8 +50,8 @@ import {
   AssignedToMeInboxIcon,
   ClosedInboxIcon,
   NewInboxIcon,
+  UnAssignedInboxIcon,
 } from "@/components/whatsapp/inbox/chatselect";
-import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 
 import {
   SubscriptionFeaturePathName as sfpn,
@@ -108,6 +108,11 @@ export function getNavTopData(
                 label: translations["New"],
                 link: "/dashboard/whatsapp/inbox?tab=New",
                 icon: NewInboxIcon,
+              },
+              {
+                label: translations["UnAssigned"],
+                link: "/dashboard/whatsapp/inbox?tab=UnAssigned",
+                icon: UnAssignedInboxIcon,
               },
               {
                 label: translations["Assigned"],
