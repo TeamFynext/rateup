@@ -88,12 +88,13 @@ export const useGetMediaFile = () => {
   });
 };
 
-export const useAssignInboxToUer = () => {
+export const useAssignInboxToUer = (filterData) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       showSuccessToast("Assigned successfully");
     },

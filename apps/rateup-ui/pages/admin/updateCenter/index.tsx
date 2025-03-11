@@ -1,7 +1,9 @@
 import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
+  useUpdateContactLastRecievedTime,
   useUpdateGoogleReviewQuestions,
+  useUpdateInboxStatus,
   useUpdateSubscription,
   useUpdateThemeTitleSt,
   useUpdateUsageStatsResetDate,
@@ -14,7 +16,8 @@ function UpdateAllThemes() {
 
   const updateUsageStats = useUpdateUsageStatsResetDate();
 
-  const updateSubscription = useUpdateSubscription();
+  const updateContactTime = useUpdateContactLastRecievedTime();
+  const updateContactStatus = useUpdateInboxStatus();
   const { translations } = useTranslations();
   const isDev =
     process.env.NEXT_PUBLIC_FRONTEND_URL === "https://dev.rateup.app";
@@ -58,30 +61,30 @@ function UpdateAllThemes() {
       </Stack>
 
       <Stack mt="xl">
-        <Title order={2}>Update Usage Stats last reset date</Title>
+        <Title order={2}>Update Contact last received message time</Title>
 
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}
           onClick={() => {
-            updateUsageStats.mutate();
+            updateContactTime.mutate();
           }}
-          loading={updateUsageStats.isPending}
+          loading={updateContactTime.isPending}
         >
           {translations["Update"]}
         </Button>
       </Stack>
 
       <Stack mt="xl">
-        <Title order={2}>Update Suscription</Title>
+        <Title order={2}>Update Contact unassined status</Title>
 
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}
           onClick={() => {
-            updateSubscription.mutate();
+            updateContactStatus.mutate();
           }}
-          loading={updateSubscription.isPending}
+          loading={updateContactStatus.isPending}
         >
           {translations["Update"]}
         </Button>

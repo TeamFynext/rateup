@@ -11,6 +11,7 @@ import {
 import { create } from "zustand";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -82,7 +83,7 @@ export default function WaInboxChatDisplayFooter({
   }
 
   const isSessionExpired = isInboxSessionExpired(
-    contact?.userInitiatedFinalTimeStamp,
+    contact?.lastReceivedMessageTimeStamp,
   );
   return (
     <Stack gap={0}>
@@ -134,7 +135,8 @@ export default function WaInboxChatDisplayFooter({
 }
 
 export const WaInboxAssignUserFooter = ({ contactId, user }) => {
-  const assignMut = useAssignInboxToUer();
+  const { filterData } = useContactStore();
+  const assignMut = useAssignInboxToUer(filterData);
   const [openedAssign, { open: openAssign, close: closeAssign }] =
     useDisclosure(false);
 

@@ -146,7 +146,9 @@ export default function WaInboxChatDisplayHeader({
         </Stack>
         <ContactEdit isMobile={isMobile} contact={contact} />
       </Group>
-      <WaInboxCountdownTimer timeStamp={contact?.userInitiatedFinalTimeStamp} />
+      <WaInboxCountdownTimer
+        timeStamp={contact?.lastReceivedMessageTimeStamp}
+      />
 
       <Group gap={"lg"}>
         {user.role === UserRole.SUPADM && (
@@ -217,8 +219,8 @@ export const ContactEdit = ({ isMobile, contact }) => {
 export const AssignInbox = ({ contactId, opened, close }) => {
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
   const { data: assignedUsers } = useGetAssignedUserForContact(contactId);
-
-  const assignMut = useAssignInboxToUer();
+  const { filterData } = useContactStore();
+  const assignMut = useAssignInboxToUer(filterData);
   const form = useForm({
     initialValues: {
       teamId: "",

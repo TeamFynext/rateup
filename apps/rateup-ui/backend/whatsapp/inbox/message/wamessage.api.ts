@@ -49,7 +49,7 @@ export type ContactsWithLastMessage = ContactsData & {
     waCreatedAt: string;
     messageBody: WaInboxMessage;
   };
-  userInitiatedFinalTimeStamp: string;
+  lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;
 };
 type ContactsWithLastMessageResponse = {
