@@ -508,20 +508,38 @@ export async function getContactsCountByInbox(orgId, userId) {
     closed_count: number;
     unassigned_count: number;
     assigned_to_me_count: number;
-  }[] = await prisma.$queryRaw`SELECT 
-  COUNT(*)::INTEGER AS total_count,
-  COUNT(*) FILTER (WHERE c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS assigned_count,
-  COUNT(*) FILTER(WHERE c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED})::INTEGER AS closed_count,
-  COUNT(*) FILTER (WHERE c."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS unassigned_count,
-  COUNT(winb."contactId")::INTEGER AS assigned_to_me_count,
-  COUNT(*) FILTER (WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours')::INTEGER AS new_count
-  FROM "Contact" c
-  LEFT JOIN LATERAL (
-      SELECT winb."contactId" FROM "WaInboxAssign" winb 
-      WHERE winb."contactId" = c.id 
-      AND winb."assignedUserId" = ${userId}::uuid
-      LIMIT 1
-  ) winb ON true
+  }[] = await prisma.$queryRaw`WITH assigned_contacts AS (
+    SELECT DISTINCT "contactId"
+    FROM "WaInboxAssign"
+    WHERE "assignedUserId" = ${userId}::uuid
+)
+SELECT 
+    COUNT(DISTINCT CASE 
+        WHEN c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' 
+        THEN wm."contactId" 
+    END)::INTEGER AS new_count,
+
+    COUNT(DISTINCT wm."contactId")::INTEGER AS total_count,
+
+    COUNT(DISTINCT CASE 
+        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} 
+        THEN wm."contactId" 
+    END)::INTEGER AS assigned_count,
+
+    COUNT(DISTINCT CASE 
+        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} 
+        THEN wm."contactId" 
+    END)::INTEGER AS closed_count,
+
+    COUNT(DISTINCT CASE 
+        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
+        THEN wm."contactId" 
+    END)::INTEGER AS unassigned_count,
+
+    COUNT(DISTINCT ac."contactId")::INTEGER AS assigned_to_me_count
+FROM "WaMessage" wm
+JOIN "Contact" c ON wm."contactId" = c.id
+LEFT JOIN assigned_contacts ac ON wm."contactId" = ac."contactId"
 WHERE c."orgId" = ${orgId}::uuid;`;
 
   return {
