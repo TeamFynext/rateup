@@ -242,6 +242,7 @@ export async function updateContactById(
       tags: contact.tags,
       aiWaChat: contact.aiWaChat,
       waMessageAssignStatus: contact.waMessageAssignStatus,
+      lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp,
     },
   });
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {

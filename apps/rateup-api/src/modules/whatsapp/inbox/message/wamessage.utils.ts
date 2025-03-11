@@ -42,3 +42,7 @@ export async function returnAppropriateTimeStamp(
   }
   return dayjs().utc().format();
 }
+
+export const isSessionExpired = (userInitiatedFinalTimeStamp: Date) =>
+  userInitiatedFinalTimeStamp &&
+  dayjs().diff(userInitiatedFinalTimeStamp, "D") >= 1;

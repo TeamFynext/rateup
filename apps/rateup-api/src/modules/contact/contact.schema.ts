@@ -21,6 +21,7 @@ const updateContactSchema = z.object({
   tags: z.any(),
   aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus).optional(),
+  lastReceivedMessageTimeStamp: z.string().optional(),
 });
 
 export const paginationQuery = z.object({

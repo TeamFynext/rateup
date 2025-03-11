@@ -401,13 +401,14 @@ export enum LoyaltyTemplateTypes {
 }
 
 export enum WaMessageAssignStatus {
-  NEW = "NEW",
+  UNASSIGNED = "UNASSIGNED",
   ASSIGNED = "ASSIGNED",
   CLOSED = "CLOSED",
 }
 
 export enum WaMessageAssignStatusTab {
   New = "NEW",
+  UnAssigned = "UNASSIGNED",
   Assigned = "ASSIGNED",
   AssignedToMe = "ASSIGNED",
   Closed = "CLOSED",
