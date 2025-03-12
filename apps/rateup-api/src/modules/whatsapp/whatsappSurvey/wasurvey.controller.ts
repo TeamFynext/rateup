@@ -62,7 +62,12 @@ import {
   sendAutomatedReplyMessage,
 } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { CampaignParticipant, Contact, WhatsappSettings } from "@prisma/client";
+import {
+  CampaignParticipant,
+  Chatbot,
+  Contact,
+  WhatsappSettings,
+} from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {
@@ -386,10 +391,7 @@ async function whatsappMessageHandler(
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
-  } else if (
-    chatbot?.enableWaChat &&
-    (chatbot?.enableAllWaChat || message.startsWith(chatbot?.waCommand))
-  ) {
+  } else if (chatbot?.enableWaChat && message.startsWith(chatbot?.waCommand)) {
     await handleAiWaChat(chatbot, message, orgId, from);
   } else {
     let session = await getSession(orgId, from);
@@ -401,7 +403,7 @@ async function whatsappMessageHandler(
       }
     }
     // handle automated reply
-    await handleAutomatedReply(orgId, waMessage, parsedMessage, from);
+    await handleAutomatedReply(orgId, waMessage, parsedMessage, from, chatbot);
 
     // if (session) {
     //   await handleWaSurveySession(orgId, waMessage, session);
@@ -417,7 +419,7 @@ async function handleAiWaChat(
 ) {
   try {
     const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
-    if (!contact.aiWaChat) {
+    if (chatbot.enableAllWaChat && !contact.aiWaChat) {
       log.trace("Ai chat is disabled for phone: %s", phone);
       return;
     }
@@ -482,6 +484,7 @@ async function handleAutomatedReply(
   waMessage: WaMessageBody,
   parsedMessage: WaParsedMessage,
   phone: string,
+  chatbot: Chatbot,
 ) {
   try {
     const automation = await checkIfMessageMatchesAnyAutomation(
@@ -517,11 +520,21 @@ async function handleAutomatedReply(
         );
 
         if (!result) {
-          await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
+          if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
+            await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
+          } else
+            await handleInitialInteraction(
+              orgId,
+              parsedMessage,
+              prevInteraction,
+            );
         }
       }
     } else {
-      await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
+      if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
+        await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
+      } else
+        await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
     }
   } catch (error) {
     console.log("🚀 ~ error:", error);
