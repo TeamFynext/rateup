@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
+
 import { getTimeSince } from "../../utils/index";
 
 function TimeSinceText({ isoDateString }) {
   const [timeSinceStr, setTimeSinceStr] = useState("");
   useEffect(() => {
     if (isoDateString) {
-      setTimeSinceStr(getTimeSince(new Date(isoDateString).toString()));
+      setTimeSinceStr(getTimeSince(isoDateString));
       const timeoutID = setInterval(
-        () => setTimeSinceStr(getTimeSince(new Date(isoDateString).toString())),
+        () => setTimeSinceStr(getTimeSince(isoDateString)),
         5000,
       );
       return () => clearInterval(timeoutID);

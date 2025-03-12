@@ -151,20 +151,18 @@ export default function WaInboxChatDisplayHeader({
       />
 
       <Group gap={"lg"}>
-        {user.role === UserRole.SUPADM && (
-          <Group gap="xs">
-            <Tooltip label={"Assign"}>
-              <ActionIcon onClick={openAssign} variant="outline">
-                <IconUserShare />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={"Create Ticket"}>
-              <ActionIcon onClick={openCreateTicket}>
-                <IconTicket />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-        )}
+        <Group gap="xs">
+          <Tooltip label={"Assign"}>
+            <ActionIcon onClick={openAssign} variant="outline">
+              <IconUserShare />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={"Create Ticket"}>
+            <ActionIcon onClick={openCreateTicket}>
+              <IconTicket />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <RateupButtonPrimary
             color="var(--grey-color-7)"

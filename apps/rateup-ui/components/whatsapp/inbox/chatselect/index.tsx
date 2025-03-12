@@ -468,7 +468,7 @@ export const NewInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.new) return <IconMessageBolt />;
   return (
-    <Indicator label={totalCount.new} inline size={16} color="red">
+    <Indicator label={totalCount.new} inline size={16} color="black">
       <IconMessageBolt />
     </Indicator>
   );
@@ -478,7 +478,7 @@ export const AssignedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.assigned) return <IconUserCheck />;
   return (
-    <Indicator label={totalCount.assigned} inline size={16} color="red">
+    <Indicator label={totalCount.assigned} inline size={16} color="black">
       <IconUserCheck />
     </Indicator>
   );
@@ -488,7 +488,7 @@ export const UnAssignedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.unassigned) return <IconUserX />;
   return (
-    <Indicator label={totalCount.unassigned} inline size={16} color="red">
+    <Indicator label={totalCount.unassigned} inline size={16} color="black">
       <IconUserX />
     </Indicator>
   );
@@ -497,7 +497,7 @@ export const AssignedToMeInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.assignedToMe) return <IconUserCircle />;
   return (
-    <Indicator label={totalCount.assignedToMe} inline size={16} color="red">
+    <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
       <IconUserCircle />
     </Indicator>
   );
@@ -506,7 +506,7 @@ export const ClosedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.closed) return <IconMessageCheck />;
   return (
-    <Indicator label={totalCount.closed} inline size={16} color="red">
+    <Indicator label={totalCount.closed} inline size={16} color="black">
       <IconMessageCheck />
     </Indicator>
   );
@@ -516,7 +516,7 @@ export const AllInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.all) return <IconMessage />;
   return (
-    <Indicator label={totalCount.all} inline size={16} color="red">
+    <Indicator label={totalCount.all} inline size={16} color="black">
       <IconMessage />
     </Indicator>
   );
