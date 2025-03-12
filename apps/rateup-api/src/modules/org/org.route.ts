@@ -70,13 +70,7 @@ export async function orgRoutes(server: FastifyInstance) {
     getAllTeamsAndMembers,
   );
 
-  server.get(
-    "/members-with-teams",
-    {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
-    },
-    getAllMembersWithTeamsHandler,
-  );
+  server.get("/members-with-teams", getAllMembersWithTeamsHandler);
 
   server.put(
     "/update-logo",
