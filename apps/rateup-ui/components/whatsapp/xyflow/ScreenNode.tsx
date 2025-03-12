@@ -240,7 +240,6 @@ export function RenderMenuDropdown({
       position="bottom"
       opened={opened}
       onChange={setOpened}
-      withinPortal={false}
     >
       <Menu.Target>
         <Box>
@@ -261,6 +260,15 @@ export function RenderMenuDropdown({
       >
         <ScrollAreaAutosize mah={300}>
           <Menu.Label>Components</Menu.Label>
+          <Button
+            onClick={(e) => {
+              e?.preventDefault();
+              console.log("triggered");
+              addComponentNode(ComponentType.BasicText, index);
+            }}
+          >
+            hii
+          </Button>
           <Menu.Item
             onClick={(e) => {
               e?.preventDefault();
