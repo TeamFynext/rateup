@@ -21,12 +21,6 @@ module.exports = withBundleAnalyzer({
       },
     ],
   },
-  compiler:
-    process.env.NODE_ENV === "production"
-      ? {
-          removeConsole: true,
-        }
-      : {},
   async redirects() {
     return [
       {

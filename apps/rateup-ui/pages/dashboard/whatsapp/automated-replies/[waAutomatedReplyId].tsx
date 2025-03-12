@@ -118,10 +118,12 @@ const App = () => {
       type: "screenNode",
     },
   ]);
+  console.log("🚀 ~ App ~ nodes:", nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const addScreenNode = () => {
     const lastNode = nodes.findLast((node) => node.id);
+    console.log("🚀 ~ addScreenNode ~ lastNode:", lastNode);
     let id = `screen-${nodes.length + 1}`;
     const newNode = {
       id: id,
@@ -135,6 +137,7 @@ const App = () => {
       },
       type: "screenNode",
     };
+    console.log("🚀 ~ addScreenNode ~ newNode:", newNode);
     setNodes((nds) => nds.concat(newNode));
   };
 
