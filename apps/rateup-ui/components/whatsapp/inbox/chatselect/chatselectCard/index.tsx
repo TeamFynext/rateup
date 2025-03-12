@@ -10,10 +10,12 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import dayjs from "dayjs";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { formatToRelativeTime } from "@/utils/dateTime";
@@ -37,6 +39,7 @@ export default function WaInboxChatSelectCard({
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const { setSelectedContact } = useContactStore();
   let tab = params.get("tab") ?? "New";
+
   return (
     <Card
       component={Link}
@@ -81,7 +84,11 @@ export default function WaInboxChatSelectCard({
               </Text>
             </Tooltip>
             <Text className={classes.chat_time}>
-              {formatToRelativeTime(contact?.lastMessage?.waCreatedAt)}
+              <TimeSinceText
+                isoDateString={dayjs
+                  .utc(contact?.lastMessage?.waCreatedAt)
+                  .local()}
+              />
             </Text>
           </Group>
         </Stack>
