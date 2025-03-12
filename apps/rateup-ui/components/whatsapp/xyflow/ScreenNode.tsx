@@ -240,6 +240,7 @@ export function RenderMenuDropdown({
       position="bottom"
       opened={opened}
       onChange={setOpened}
+      withinPortal={false}
     >
       <Menu.Target>
         <Box>
