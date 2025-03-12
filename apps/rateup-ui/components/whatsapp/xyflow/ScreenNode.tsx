@@ -254,9 +254,9 @@ export function RenderMenuDropdown({
       </Menu.Target>
 
       <Menu.Dropdown
-        onBlur={() => {
-          setOpened(false);
-        }}
+      // onBlur={() => {
+      //   setOpened(false);
+      // }}
       >
         <ScrollAreaAutosize mah={300}>
           <Menu.Label>Components</Menu.Label>
