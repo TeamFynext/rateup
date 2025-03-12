@@ -52,11 +52,6 @@ const ScreenNode = ({ id, data, setNodes }) => {
   const { data: subscription } = useSubscription();
 
   const addComponentNode = (type: ComponentType, index?: number) => {
-    console.log(
-      "🚀 ~ addComponentNode ~ type: ComponentType, index?: number:",
-      ComponentType,
-      index,
-    );
     const newComponent = {
       id: crypto.randomUUID(),
       name: [
@@ -68,7 +63,6 @@ const ScreenNode = ({ id, data, setNodes }) => {
       type: type,
       draggable: false,
     };
-    console.log("🚀 ~ addComponentNode ~ newComponent:", newComponent);
     const updatedComponents = data.components || [];
     if (index !== undefined) {
       updatedComponents.splice(index + 1, 0, newComponent);
@@ -76,10 +70,6 @@ const ScreenNode = ({ id, data, setNodes }) => {
       updatedComponents.push(newComponent);
     }
 
-    console.log(
-      "🚀 ~ addComponentNode ~ updatedComponents:",
-      updatedComponents,
-    );
     setNodes((nds) =>
       nds.map((node) =>
         node.id === id
@@ -253,26 +243,12 @@ export function RenderMenuDropdown({
         </Box>
       </Menu.Target>
 
-      <Menu.Dropdown
-      // onBlur={() => {
-      //   setOpened(false);
-      // }}
-      >
+      <Menu.Dropdown>
         <ScrollAreaAutosize mah={300}>
           <Menu.Label>Components</Menu.Label>
-          <Button
-            onClick={(e) => {
-              e?.preventDefault();
-              console.log("triggered");
-              addComponentNode(ComponentType.BasicText, index);
-            }}
-          >
-            hii
-          </Button>
           <Menu.Item
             onClick={(e) => {
               e?.preventDefault();
-              console.log("triggered");
               addComponentNode(ComponentType.BasicText, index);
             }}
           >
