@@ -233,7 +233,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   },
   {
     header: () => "Team",
-    accessorKey: "team.name",
+    accessorKey: "team_name",
     id: "Team",
     cell: (info) => (
       <Badge size="md" variant="light" color="green" mt={"auto"}>
@@ -252,7 +252,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   },
   {
     header: () => "Participants",
-    accessorKey: "_count.campaignParticipants",
+    accessorKey: "campaign_participants_count",
     id: "participants",
     cell: (info) => (
       <Badge variant="light" ml={"xl"}>
@@ -271,7 +271,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     header: () => "Responses",
     id: "flow",
     accessorFn: (row) =>
-      row?.flowId && `v${row.flowVersion ?? 1}/${row.flowId}`,
+      row?.flowId && `v${row.flow_version ?? 1}/${row.flowId}`,
     enableColumnFilter: false,
     cell: (info) =>
       info.getValue() && (
