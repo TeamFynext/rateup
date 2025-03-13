@@ -76,27 +76,11 @@ export default function DashboardHome() {
   const [timePeriod, setTimePeriod] = useState("daily");
   const [sortOption, setSortOption] = useState("latest");
   const {
-    isLoading: isLoadingSummary,
-    error: summaryError,
-    data: surveysSummary,
-    refetch,
-    fetchStatus,
+    data: allSurveysSummary,
     isError,
-    isRefetching,
-    isInitialLoading,
-    isRefetchError,
-  } = useSurveysSummary() as {
-    isLoading: boolean;
-    error: any;
-    data: SurveySummaryData | any;
-    refetch: any;
-    fetchStatus: any;
-    isError: boolean;
-    isRefetching: boolean;
-    isInitialLoading: boolean;
-    isRefetchError: boolean;
-  };
-  const { data: allSurveysSummary } = useAllSurveysSummary();
+    error: summaryError,
+    refetch,
+  } = useAllSurveysSummary();
 
   const allResponses = [];
   allSurveysSummary?.surveys?.forEach((survey) => {
@@ -149,22 +133,22 @@ export default function DashboardHome() {
 
   const summaryArray: Array<{
     summaryname: string;
-    summaryvalue: string;
+    summaryvalue: number;
     route: string;
   }> = [
     {
       summaryname: "Active Surveys",
-      summaryvalue: surveysSummary?.activeSurveysCount ?? 0,
+      summaryvalue: allSurveysSummary?.activeSurveysCount ?? 0,
       route: "/dashboard/surveys",
     },
     {
       summaryname: "Total Surveys",
-      summaryvalue: surveysSummary?.totalSurveysCount ?? 0,
+      summaryvalue: allSurveysSummary?.totalSurveysCount ?? 0,
       route: "/dashboard/surveys",
     },
     {
       summaryname: "Total Teams",
-      summaryvalue: surveysSummary?.totalTeamsCount ?? 0,
+      summaryvalue: allSurveysSummary?.totalTeamsCount ?? 0,
       route: "/dashboard/teams",
     },
   ];
@@ -176,7 +160,7 @@ export default function DashboardHome() {
 
   // Filtering surveys based on the filterParam state
   const filteredSurveys =
-    surveysSummary?.surveys
+    allSurveysSummary?.surveys
       ?.filter(
         (s) =>
           s.active === true &&
@@ -213,13 +197,13 @@ export default function DashboardHome() {
     }
     return "";
   };
-  if (loadingTranslations || isLoadingSummary) {
+  if (loadingTranslations) {
     return <Loading h={300} />;
   }
 
   return (
     <Box m={"xs"}>
-      {user && !isError && !surveysSummary?.error ? (
+      {user && !isError ? (
         <Stack>
           <Portal target={"#navbar"}>
             <WelcomeTour steps={tourSteps} />
@@ -371,11 +355,12 @@ export default function DashboardHome() {
             </Stack>
           </Stack>
         </Stack>
-      ) : !summaryError ? (
+      ) : !isError ? (
         <Loading h={300} />
       ) : (
         <Stack p="xl">
-          {summaryError?.response?.data?.message === "Subscription expired" ? (
+          {(summaryError as any)?.response?.data?.message ===
+          "Subscription expired" ? (
             <>
               <Blockquote color="red" icon={<IconCloudExclamation />}>
                 {translations["You don't have an active Subscription..!"]}

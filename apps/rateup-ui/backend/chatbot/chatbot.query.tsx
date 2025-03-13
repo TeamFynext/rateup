@@ -43,10 +43,11 @@ export const useUploadSourceForEmbed = () => {
   });
 };
 
-export const useGetChatbotResources = () => {
+export const useGetChatbotResources = (enabled) => {
   return useQuery({
     queryKey: ["chatbotResources"],
     queryFn: getChatbotResources,
+    enabled,
   });
 };
 
@@ -158,9 +159,10 @@ export const useUpdateChatbot = () => {
   });
 };
 
-export const useGetUserAiChats = () => {
+export const useGetUserAiChats = (enabled) => {
   return useQuery({
     queryFn: getUserAiChats,
     queryKey: ["aiChat"],
+    enabled,
   });
 };

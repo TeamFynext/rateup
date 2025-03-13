@@ -117,7 +117,7 @@ const AddParticipantModal = ({ close, campaign }) => {
         selectedCampaignsHandlers.setState(
           isChecked
             ? campaignData.data?.filter(
-                (data) => data?._count.campaignParticipants,
+                (data) => data?.campaignParticipantsCount,
               )
             : emptyState,
         );
@@ -448,7 +448,7 @@ const CustomerCampaign = ({
           radius={"xl"}
           size="sm"
           w={90}
-          disabled={!campaign?._count.campaignParticipants}
+          disabled={!campaign?.campaignParticipantsCount}
         >
           {translations["Add"]}
         </Button>

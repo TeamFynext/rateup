@@ -198,6 +198,7 @@ declare global {
     active: boolean;
     createdAt: string;
     type: string;
+    isPublished: true;
     teams: {
       id: string;
       mapId: string;

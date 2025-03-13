@@ -18,6 +18,7 @@ import {
   useCampaignDataByTeam,
 } from "@/backend/campaign/campaign.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
+import UnauthorizedPage from "@/components/404/UnAuthorizedError";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
 import { contactParticipentColumn } from "@/components/Contacts/utils/utils";
 import { TeamSelector } from "@/components/input/TeamSelector";
@@ -33,14 +34,6 @@ export default function CampaignList() {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
   const { translations } = useTranslations();
-  const enabled = !!selectedTeam && selectedTeam != "all";
-  const {
-    data: campaignDataByTeam,
-    isPending,
-    isError,
-    refetch,
-    isRefetching,
-  } = useCampaignDataByTeam(selectedTeam, enabled);
 
   const {
     data: campaignData,
@@ -48,12 +41,13 @@ export default function CampaignList() {
     isError: isAllCampaignError,
     isRefetching: isRefetchingAllCampaign,
     refetch: refetchAllkCampaign,
+    error,
   } = useCampaignData();
 
   const filteredCampaignsdata =
     selectedTeam == "all" || !selectedTeam // filtering by team
       ? campaignData?.data
-      : (campaignDataByTeam?.data ?? []);
+      : (campaignData?.data?.filter((c) => c?.teamId === selectedTeam) ?? []);
   const filteredCampaigns = (
     searchText
       ? filteredCampaignsdata.filter(
@@ -64,8 +58,10 @@ export default function CampaignList() {
       : filteredCampaignsdata
   )?.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // sorting by date
 
-  if (isError || isAllCampaignError)
-    return <ErrorComponent refetch={isError ? refetch : refetchAllkCampaign} />;
+  if (isAllCampaignError && (error as any)?.response?.status === 403)
+    return <UnauthorizedPage />;
+  if (isAllCampaignError)
+    return <ErrorComponent refetch={refetchAllkCampaign} />;
   const column: ColumnDef<any>[] = contactParticipentColumn;
 
   return (
@@ -93,11 +89,7 @@ export default function CampaignList() {
             toggle={open}
             disableFuzzyFnCustom={true}
             detailBtn
-            isPending={
-              (isPending && isAllCampaignLoading) ||
-              isRefetching ||
-              isRefetchingAllCampaign
-            }
+            isPending={isAllCampaignLoading || isRefetchingAllCampaign}
           />
         </PaperLayout>
         <Modal
