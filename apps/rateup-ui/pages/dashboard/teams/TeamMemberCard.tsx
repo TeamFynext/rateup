@@ -4,14 +4,19 @@ import {
   ActionIcon,
   Badge,
   Button,
+  CopyButton,
   Flex,
+  Group,
   Menu,
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
+  IconCheck,
+  IconCopy,
   IconDots,
   IconPencilMinus,
   IconSend,
@@ -19,6 +24,7 @@ import {
 } from "@tabler/icons-react";
 
 import { getUserRoleLabel } from "@/utils";
+import { FRONTEND_URL } from "@/utils/constants";
 
 import {
   useDeleteInviteMutation,
@@ -79,29 +85,62 @@ const TeamMemberCard = ({
               </Button>
             )}
           </Flex>
-          <Flex>
-            {member?.role && (
+          <Flex justify={"space-between"}>
+            <Flex gap={"xs"}>
+              {member?.role && (
+                <Badge
+                  color={
+                    member?.role === UserRole.SUPADM
+                      ? "red"
+                      : member?.role === UserRole.ADM
+                        ? "orange"
+                        : "green"
+                  }
+                  variant="dot"
+                  size="sm"
+                >
+                  {getUserRoleLabel(member?.role, translations)}
+                </Badge>
+              )}
               <Badge
-                color={
-                  member?.role === UserRole.SUPADM
-                    ? "red"
-                    : member?.role === UserRole.ADM
-                      ? "orange"
-                      : "green"
-                }
-                variant="dot"
-                size="sm"
+                color={member.status === "PENDING" ? "yellow" : "green"}
+                variant="light"
+                p={"sm"}
               >
-                {getUserRoleLabel(member?.role, translations)}
+                {member.active ? "ACTIVE" : member?.status}
               </Badge>
+            </Flex>
+            {member.status === "PENDING" && (
+              <CopyButton
+                value={`${FRONTEND_URL}/invite?type=team&token=${member.id}`}
+                timeout={2000}
+              >
+                {({ copied, copy }) => (
+                  <Badge variant="light" radius={"sm"} tt={"capitalize"} pr={0}>
+                    <Group p={0}>
+                      <Text size="xs">Invite Link</Text>
+                      <Tooltip
+                        label={copied ? "Copied" : "Copy"}
+                        withArrow
+                        position="right"
+                      >
+                        <ActionIcon
+                          color={copied ? "teal" : "gray"}
+                          variant="subtle"
+                          onClick={copy}
+                        >
+                          {copied ? (
+                            <IconCheck size={14} />
+                          ) : (
+                            <IconCopy size={14} />
+                          )}
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Badge>
+                )}
+              </CopyButton>
             )}
-            <Badge
-              color={member.status === "PENDING" ? "yellow" : "green"}
-              variant="light"
-              p={"sm"}
-            >
-              {member.active ? "ACTIVE" : member?.status}
-            </Badge>
           </Flex>
         </Stack>
       </PaperLayout>
