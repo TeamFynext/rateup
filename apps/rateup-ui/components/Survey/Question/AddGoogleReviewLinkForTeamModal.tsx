@@ -10,6 +10,7 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { useEditTeamMutation } from "../../../backend/team/team.query";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
+import { ReviewPagePlatform } from "./QuestionReviewPageEditor";
 
 const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
   const { translations } = useTranslations();
@@ -39,10 +40,20 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
         [platform]: form.getValues().url,
       };
     } else if (team.reviewPageLinks) {
-      newReviewPageLinks = {
-        ...team.reviewPageLinks,
-        [platform]: form.getValues().url,
-      };
+      if (
+        "" in team.reviewPageLinks &&
+        platform === ReviewPagePlatform.Google
+      ) {
+        newReviewPageLinks = {
+          ...team.reviewPageLinks,
+          [platform]: form.getValues().url,
+        };
+        delete newReviewPageLinks[""];
+      } else
+        newReviewPageLinks = {
+          ...team.reviewPageLinks,
+          [platform]: form.getValues().url,
+        };
     }
     await editTeamMutation.mutateAsync({ reviewPageLinks: newReviewPageLinks });
     form.reset();

@@ -34,6 +34,7 @@ import {
 import { QuestionTabsEnum } from "../EditSurvey";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating";
 import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal";
+import { ReviewPagePlatform } from "./QuestionReviewPageEditor";
 
 interface IProps {
   selectedQ: Question;
@@ -364,7 +365,7 @@ const GoogleReviewEditor = ({
                         team={team}
                         surveyId={surveyId}
                         key={team?.id}
-                        platform={""}
+                        platform={ReviewPagePlatform.Google}
                       />
                     ))}
                 </Stack>
