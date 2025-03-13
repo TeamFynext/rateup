@@ -1,18 +1,20 @@
+import { useRouter } from "next/router";
+
+import { notifications } from "@mantine/notifications";
+import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import {
-  IEditTeam,
   createTeam,
   deleteInviteById,
   editTeam,
   getSurveyLanguagesFromTeam,
   getTeamMembersFromInvitation,
   getTeamsByUser,
+  IEditTeam,
   resendInviteTeamMember,
 } from "./team.api";
-import { getOrgIdRole, getUserID } from "../../utils/userInfo";
-import { IconCheck } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/router";
 
 export function useTeamsByUser() {
   return useQuery({
@@ -24,6 +26,7 @@ export function useTeamMembersFromInvitation(teamId: string) {
   return useQuery({
     queryKey: ["invitedTeamMembers", teamId],
     queryFn: () => getTeamMembersFromInvitation(teamId),
+    enabled: !!teamId,
   });
 }
 
