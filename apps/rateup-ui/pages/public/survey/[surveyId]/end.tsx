@@ -13,6 +13,7 @@ import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import Confetti from "react-confetti";
 
 import { PageType } from "@/types/enums";
+import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -50,7 +51,17 @@ export async function getServerSideProps(context) {
     );
     propsToPass.googleLink = googleLink;
     propsToPass.reviews = reviews;
-    if (googleLink) propsToPass.enableGoogleReview = true;
+    const reviewPageLinks = { ...survey.reviewPageLinks };
+    if ("" in reviewPageLinks || googleLink?.length) {
+      reviewPageLinks[ReviewPagePlatform.Google] =
+        reviewPageLinks[""] ?? googleLink;
+      delete reviewPageLinks[""];
+    }
+    propsToPass.reviewPageLinks = reviewPageLinks;
+    const hasGoogleLink = Object.keys(propsToPass.reviewPageLinks).includes(
+      ReviewPagePlatform.Google,
+    );
+    if (hasGoogleLink) propsToPass.enableGoogleReview = true;
     if (survey) {
       propsToPass.redirect = survey.redirect;
       propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
@@ -96,6 +107,7 @@ export default function ThankYou({
   titleText,
   subtitleText,
   isSurveyPreview = false,
+  reviewPageLinks = null,
 }) {
   const [imageLoading, setImageLoading] = useState(true);
   const [pulsing, setPulsing] = useState(true);
@@ -269,6 +281,7 @@ export default function ThankYou({
               reviews={reviews}
               orgLogoSrc={orgLogoSrc}
               surveyId={surveyId}
+              reviewPageLinks={reviewPageLinks}
             />
           )}
         </Stack>
