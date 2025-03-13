@@ -160,7 +160,14 @@ export async function getFlowsFromDb(orgId: string, userId: string) {
         },
       },
     },
-    include: {
+    select: {
+      dbFlowId: true,
+      name: true,
+      createdAt: true,
+      status: true,
+      version: true,
+      flowId: true,
+      surveyId: true,
       survey: {
         select: {
           teams: {
@@ -1005,6 +1012,8 @@ export async function handleStaticFlowReply(
   session.responses = uniqueResponses;
   await saveResponses(session);
   let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
+
+  console.log("session", session);
 
   const sendGRLink = versionCheck
     ? shouldShowGoogleReview({

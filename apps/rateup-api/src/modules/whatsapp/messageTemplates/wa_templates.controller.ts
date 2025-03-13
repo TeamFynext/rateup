@@ -72,7 +72,7 @@ export async function getTemplatesHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { orgId } = await getOrgIdAndRole({ id: request.userId });
+  const { orgId } = request.user;
   const templates = await getTemplatesByOrgIdAndTemplateType(
     orgId,
     request.query.templateType,
