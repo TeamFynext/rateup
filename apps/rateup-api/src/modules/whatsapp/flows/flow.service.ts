@@ -160,7 +160,14 @@ export async function getFlowsFromDb(orgId: string, userId: string) {
         },
       },
     },
-    include: {
+    select: {
+      dbFlowId: true,
+      name: true,
+      createdAt: true,
+      status: true,
+      version: true,
+      flowId: true,
+      surveyId: true,
       survey: {
         select: {
           teams: {
