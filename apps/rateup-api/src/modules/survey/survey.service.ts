@@ -367,7 +367,7 @@ export async function getSurveyBylandingId(landingid: string) {
 
 export async function getSurveysByUserId(
   userId: string,
-  includeQuestions?: boolean,
+  includeQuestions: boolean = false,
 ) {
   const teamIds: string[] = await getTeamIdsByUserId(userId);
 
@@ -381,15 +381,23 @@ export async function getSurveysByUserId(
         },
       },
     },
-    include: {
+    select: {
+      id: true,
+      type: true,
+      title: true,
+      active: true,
+      createdAt: true,
+      questions: includeQuestions,
       teams: {
-        where: {
-          teamId: {
-            in: teamIds,
+        select: {
+          id: true,
+          teamId: true,
+          shortUrlId: true,
+          team: {
+            select: {
+              name: true,
+            },
           },
-        },
-        include: {
-          team: true,
         },
       },
     },
@@ -407,14 +415,7 @@ export async function getSurveysByUserId(
     return { ...survey, teams: optimizedTeams };
   });
 
-  const surveys = surveyTeamOptimized?.map((survey) => {
-    return excludeFields(survey, [
-      includeQuestions ? undefined : "questions",
-      "password",
-    ]);
-  });
-
-  return surveys;
+  return surveyTeamOptimized;
 }
 
 //------------get web survey list --------
@@ -542,7 +543,11 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
       },
       active: true,
     },
-    include: {
+    select: {
+      type: true,
+      isPublished: true,
+      active: true,
+      title: true,
       teams: {
         select: {
           id: true,
@@ -619,7 +624,12 @@ export async function getSurveysSummmaryByUserId(userId: string) {
         },
       },
     },
-    include: {
+    select: {
+      type: true,
+      isPublished: true,
+      title: true,
+      active: true,
+      createdAt: true,
       teams: {
         select: {
           id: true,
@@ -676,6 +686,7 @@ export async function getSurveysSummmaryByUserId(userId: string) {
     totalTeamsCount: teamIds?.length,
     totalSurveysCount: allSurveys?.length,
     surveys: data,
+    activeSurveysCount: allSurveys?.filter((s) => s.active)?.length,
   };
 
   return summaryData;

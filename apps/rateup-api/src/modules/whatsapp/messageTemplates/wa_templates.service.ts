@@ -85,6 +85,12 @@ export async function getTemplatesByOrgIdAndTemplateType(
       orgId: orgId,
       ...(templateType ? { templateType } : {}),
     },
+    select: {
+      id: true,
+      data: true,
+      createdAt: true,
+      templateType: true,
+    },
   });
   return templates as WaTemplateWithTypes[];
 }

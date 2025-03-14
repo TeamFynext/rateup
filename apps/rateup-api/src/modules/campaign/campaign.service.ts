@@ -278,23 +278,11 @@ export async function getCampaignById(campaignId: string) {
   //   },
   // };
 
-  return await prisma.campaign.findUnique({
-    where: {
-      id: campaignId,
-    },
-    include: {
-      waTemplate: {
-        select: {
-          data: true,
-        },
-      },
-      team: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+  const campaign =
+    await prisma.$queryRaw`SELECT c.*, wt."data" as "templateData", t."name" as "teamName", wf."version" as "flowVersion" FROM "Campaign" c 
+  LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" LEFT JOIN "Team" t ON t.id = c."teamId"
+  LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid WHERE c.id = ${campaignId}::uuid;`;
+  return campaign[0];
 }
 
 export async function getCampaignsByTeamId(teamId: string) {
@@ -338,53 +326,19 @@ type CampaignWithExtras = Prisma.CampaignGetPayload<{
 }> & { flowVersion?: string };
 
 export async function getCampaignsByOrgId(orgId: string) {
-  const campaigns = (await prisma.campaign.findMany({
-    where: {
-      team: {
-        orgId,
-      },
-    },
-    include: {
-      team: {
-        select: {
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          campaignParticipants: true,
-        },
-      },
-    },
-  })) as CampaignWithExtras[];
-
-  const flowIds = campaigns
-    .filter((campaign) => campaign.flowId)
-    .map((campaign) => campaign.flowId);
-
-  if (flowIds.length > 0) {
-    const flows = await prisma.waFlow.findMany({
-      where: {
-        dbFlowId: { in: flowIds },
-      },
-      select: {
-        dbFlowId: true,
-        version: true,
-      },
-    });
-
-    const flowMap = flows.reduce((acc, flow) => {
-      acc[flow.dbFlowId] = flow.version;
-      return acc;
-    }, {});
-
-    campaigns.forEach((campaign) => {
-      if (campaign.flowId) {
-        campaign.flowVersion = flowMap[campaign.flowId];
-      }
-    });
-  }
-
+  const campaigns = await prisma.$queryRaw`SELECT 
+  c.id,
+  c."name",
+  c."createdAt",
+  c."status",
+  c."teamId",
+  t."name" AS "teamName",
+  COUNT(cp.id)::INTEGER AS "campaignParticipantsCount"
+FROM "Campaign" c
+LEFT JOIN "Team" t ON c."teamId" = t.id
+LEFT JOIN "CampaignParticipant" cp ON c.id = cp."campaignId"
+WHERE t."orgId" = ${orgId}::uuid
+GROUP BY c.id, c."name", c."createdAt", c."status", c."teamId",t."name";`;
   return campaigns;
 }
 

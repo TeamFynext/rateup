@@ -41,7 +41,7 @@ export async function getAllTestimonialBySurveyId(surveyId) {
     },
     include: {
       surveyResponse: {
-        include: {
+        select: {
           surveyTeamMap: true,
         },
       },

@@ -297,9 +297,9 @@ declare global {
       language: string;
       category: WaTemplateCategory;
     };
-    acceptButton: string;
-    orgId: string;
-    defaultValues: WaTemplateDefaultValues;
+    acceptButton?: string;
+    orgId?: string;
+    defaultValues?: WaTemplateDefaultValues;
   };
   type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
 
