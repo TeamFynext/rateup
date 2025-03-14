@@ -64,9 +64,7 @@ export async function getCampaignsHandler(
     res = await getCampaignsByTeamId(request.query.teamId);
   } else {
     // get all contact groups for all teams
-    if (verifyRole(request, reply, Role.SUPER_ADMIN)) {
-      res = await getCampaignsByOrgId(request.user.orgId);
-    }
+    res = await getCampaignsByOrgId(request.user.orgId);
   }
   return reply.code(200).send(res);
 }
