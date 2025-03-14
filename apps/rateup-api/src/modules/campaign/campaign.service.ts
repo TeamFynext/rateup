@@ -650,6 +650,21 @@ export async function enqueueCampaignMessage(
   scheduledAt?: Date,
 ): Promise<{ status: boolean; message: string }> {
   try {
+    const jobs = await queue.getJobs([
+      "delayed",
+      "waiting",
+      "active",
+      "failed",
+      "paused",
+    ]);
+    const count = jobs.filter((job) => job.name === campaignId).length;
+    if (count > 0) {
+      return {
+        status: false,
+        message: "Campaign already scheduled",
+      };
+    }
+
     // Fetch campaign settings
     const campaign = await prisma.campaign.findUnique({
       where: { id: campaignId },
@@ -714,6 +729,7 @@ export async function enqueueCampaignMessage(
             ? dayjs(scheduledAt).diff(dayjs(), "millisecond")
             : undefined,
           removeOnComplete: true,
+          deduplication: { id: participant?.id },
         },
       })),
     );
