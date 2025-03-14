@@ -28,8 +28,8 @@ import NothingFound from "../NothingFound/NothingFound";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import UploadChatbotSource from "./UploadChatbotSource";
 
-const ChatbotResources = ({}) => {
-  const { data: chatbotResourses } = useGetChatbotResources();
+const ChatbotResources = ({ enableApi }) => {
+  const { data: chatbotResourses } = useGetChatbotResources(enableApi);
   const { translations } = useTranslations();
   const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>(
     [],
