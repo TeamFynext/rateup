@@ -24,6 +24,7 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import {
+  IconEye,
   IconInfoCircle,
   IconRefresh,
   IconSend,
@@ -133,8 +134,8 @@ const CampaignById = () => {
   } = useCampaignStatsById(campaignId);
 
   const campaignInfo = {
-    template: campaignData?.waTemplate?.data.name,
-    team: campaignData?.team.name,
+    template: campaignData?.templateData?.name,
+    team: campaignData?.teamName,
   };
 
   const column: ColumnDef<any>[] = contactParticipentDetailColumn;
@@ -146,10 +147,10 @@ const CampaignById = () => {
 
   const dynamicVariables = useMemo(
     () =>
-      campaignData?.waTemplate?.data?.components?.find(
+      campaignData?.templateData?.components?.find(
         (data) => data.example?.body_text,
       )?.example?.body_text?.[0],
-    [campaignData?.waTemplate?.data?.components],
+    [campaignData?.templateData?.components],
   );
   const refetch = () => {
     refetchCampaign();
@@ -446,6 +447,7 @@ const StartCampaignCardRightSection = ({
   dynamicVariables,
 }) => {
   const { translations } = useTranslations();
+  const router = useRouter();
   if (isPending) return <Skeleton w={"100%"} h={147} />;
   if (!campaign) return null;
   return (
@@ -457,23 +459,38 @@ const StartCampaignCardRightSection = ({
           close={() => {}}
           dynamicVariables={dynamicVariables}
         />
-        <Group>
-          <Tooltip label={translations["Refresh data"]}>
-            <ActionIcon
+        <Stack>
+          <Group>
+            <Tooltip label={translations["Refresh data"]}>
+              <ActionIcon
+                variant="light"
+                aria-label={translations["refresh"]}
+                onClick={() => refetchCampaign()}
+              >
+                <IconRefresh
+                  style={{ width: "90%", height: "90%" }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            </Tooltip>
+            <Badge variant="outline" size="xl">
+              {campaignInfo?.team}
+            </Badge>
+          </Group>
+          {campaignInfo?.flowId && (
+            <RateupButtonPrimary
+              title="View Responses"
+              rightIcon={<IconEye size={14} />}
+              size="xs"
               variant="light"
-              aria-label={translations["refresh"]}
-              onClick={() => refetchCampaign()}
-            >
-              <IconRefresh
-                style={{ width: "90%", height: "90%" }}
-                stroke={1.5}
-              />
-            </ActionIcon>
-          </Tooltip>
-          <Badge variant="outline" size="xl">
-            {campaignInfo?.team}
-          </Badge>
-        </Group>
+              onClick={() =>
+                router.push(
+                  `whatsapp/flows/v${campaignInfo.flowVersion ?? 1}/${campaignInfo.flowId}}?tab=Result`,
+                )
+              }
+            />
+          )}
+        </Stack>
       </Group>
     </PaperLayout>
   );

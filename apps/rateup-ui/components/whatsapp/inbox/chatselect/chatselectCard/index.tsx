@@ -111,7 +111,12 @@ const AssignedStatusBadge = ({ contact }) => {
     return (
       <Group>
         {assignedUsers?.map((u) => (
-          <Badge variant="light" size="xs" radius={"xs"}>
+          <Badge
+            variant="light"
+            size="xs"
+            radius={"xs"}
+            key={u?.assignedUserId}
+          >
             {u?.assignedUser?.name}
           </Badge>
         ))}

@@ -115,13 +115,13 @@ const ChatBot = () => {
           />
         </Tabs.Panel>
         <Tabs.Panel value={ChatbotTab.Resources} p={"sm"}>
-          <ChatbotResources />
+          <ChatbotResources enableApi={activetab === ChatbotTab.Resources} />
         </Tabs.Panel>
         <Tabs.Panel value={ChatbotTab.WaSettings}>
           <WhatsAppAIChatConfiguration />
         </Tabs.Panel>
         <Tabs.Panel value={ChatbotTab.UserChats} p={"sm"} h={"73dvh"}>
-          <ChatHistory />
+          <ChatHistory enableApi={activetab === ChatbotTab.UserChats} />
         </Tabs.Panel>
       </Tabs>
     </Stack>

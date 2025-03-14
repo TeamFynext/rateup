@@ -233,7 +233,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   },
   {
     header: () => "Team",
-    accessorKey: "team.name",
+    accessorKey: "teamName",
     id: "Team",
     cell: (info) => (
       <Badge size="md" variant="light" color="green" mt={"auto"}>
@@ -252,7 +252,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
   },
   {
     header: () => "Participants",
-    accessorKey: "_count.campaignParticipants",
+    accessorKey: "campaignParticipantsCount",
     id: "participants",
     cell: (info) => (
       <Badge variant="light" ml={"xl"}>
@@ -267,30 +267,30 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     cell: (info) =>
       dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
   },
-  {
-    header: () => "Responses",
-    id: "flow",
-    accessorFn: (row) =>
-      row?.flowId && `v${row.flowVersion ?? 1}/${row.flowId}`,
-    enableColumnFilter: false,
-    cell: (info) =>
-      info.getValue() && (
-        <Box
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Link href={`whatsapp/flows/${info.getValue() as string}?tab=Result`}>
-            <RateupButtonPrimary
-              title="View"
-              rightIcon={<IconEye size={14} />}
-              size="xs"
-              variant="light"
-            />
-          </Link>
-        </Box>
-      ),
-  },
+  // {
+  //   header: () => "Responses",
+  //   id: "flow",
+  //   accessorFn: (row) =>
+  //     row?.flowId && `v${row.flowVersion ?? 1}/${row.flowId}`,
+  //   enableColumnFilter: false,
+  //   cell: (info) =>
+  //     info.getValue() && (
+  //       <Box
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //         }}
+  //       >
+  //         <Link href={`whatsapp/flows/${info.getValue() as string}?tab=Result`}>
+  //           <RateupButtonPrimary
+  //             title="View"
+  //             rightIcon={<IconEye size={14} />}
+  //             size="xs"
+  //             variant="light"
+  //           />
+  //         </Link>
+  //       </Box>
+  //     ),
+  // },
   {
     header: () => "Detail View",
     id: DETAIL_BTN,
