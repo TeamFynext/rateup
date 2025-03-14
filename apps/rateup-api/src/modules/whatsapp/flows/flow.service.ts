@@ -1013,8 +1013,6 @@ export async function handleStaticFlowReply(
   await saveResponses(session);
   let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
 
-  console.log("session", session);
-
   const sendGRLink = versionCheck
     ? shouldShowGoogleReview({
         questions: session.surveyTeamMap.survey.questions,
