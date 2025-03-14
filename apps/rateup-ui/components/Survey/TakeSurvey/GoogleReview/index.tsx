@@ -30,6 +30,7 @@ function GoogleReview({
   surveyTeamMapId = "",
   isSurveyPreview = false,
   survey,
+  reviewPageLinks = null,
 }) {
   const [
     isSuggestionCopiedModalOpen,
@@ -95,8 +96,11 @@ function GoogleReview({
     return Boolean(question?.reviewPageOptions);
   });
 
-  const reviewPageLinks = survey?.reviewPageLinks;
-  let reviewPagePlatform = questionWithReviewPageOptions?.reviewPagePlatform;
+  if (!reviewPageLinks) reviewPageLinks = survey?.reviewPageLinks;
+
+  let reviewPagePlatform =
+    questionWithReviewPageOptions?.reviewPagePlatform ||
+    ReviewPagePlatform.Google;
   if (reviewPagePlatform === ReviewPagePlatform.Custom) {
     reviewPagePlatform =
       questionWithReviewPageOptions?.reviewPageOptions?.customPlatformName;

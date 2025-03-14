@@ -172,6 +172,7 @@ declare global {
     webSurveyTheme: any;
     webSurveyThemeId: string;
     webSurveyPagesTheme: any;
+    reviewPageLinks: object;
   };
 
   interface STeam {

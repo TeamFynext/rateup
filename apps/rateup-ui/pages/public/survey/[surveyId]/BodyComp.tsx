@@ -14,6 +14,7 @@ function BodyComp({
   orgLogoSrc,
   surveyId,
   k,
+  reviewPageLinks,
 }) {
   const { translations } = useTranslations();
   return (
@@ -33,6 +34,7 @@ function BodyComp({
           orgLogoUrl={orgLogoSrc}
           surveyTeamMapId={surveyId}
           survey={undefined}
+          reviewPageLinks={reviewPageLinks}
         />
       )}
 

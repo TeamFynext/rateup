@@ -243,15 +243,14 @@ export function RenderMenuDropdown({
         </Box>
       </Menu.Target>
 
-      <Menu.Dropdown
-        onBlur={() => {
-          setOpened(false);
-        }}
-      >
+      <Menu.Dropdown>
         <ScrollAreaAutosize mah={300}>
           <Menu.Label>Components</Menu.Label>
           <Menu.Item
-            onClick={() => addComponentNode(ComponentType.BasicText, index)}
+            onClick={(e) => {
+              e?.preventDefault();
+              addComponentNode(ComponentType.BasicText, index);
+            }}
           >
             Text + Button
           </Menu.Item>
@@ -271,7 +270,7 @@ export function RenderMenuDropdown({
             Template
           </Menu.Item>
           <Menu.Item
-            onClick={() => addComponentNode(ComponentType.List, index)}
+            onClick={() => addComponentNode(ComponentType.List, index ?? 0)}
           >
             List
           </Menu.Item>
