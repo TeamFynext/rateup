@@ -38,6 +38,7 @@ import {
   SendTemplateToContactGroups,
   SendTemplateToContact,
   SendTemplateByNameToPhone,
+  ErrorLogsQuery,
 } from "../../../template/wa_templates.external.schema";
 import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -549,5 +550,79 @@ export async function sendTemplatesToContactGroupsHandler(
   } catch (error) {
     log.error("Error sending template to contactGroups \n%o", error);
     res.code(500).send(error);
+  }
+}
+
+const getLatestStatus = (statusObj) => {
+  if (statusObj?.read) return "read";
+  if (statusObj?.delivered) return "delivered";
+  if (statusObj?.failed) return "failed";
+  if (statusObj?.sent) return "sent";
+  return "pending";
+};
+export async function getMessageStatusByIdHandler(
+  request: FastifyRequest<{
+    Params: { messageId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { messageId } = request.params;
+    const messageStatus = await prisma.waMessage.findFirst({
+      where: { messageId },
+      select: {
+        messageId: true,
+        stats: true,
+        errorMessage: true,
+      },
+    });
+    if (!messageStatus)
+      return reply.code(404).send({ message: "Message not found" });
+    let status = getLatestStatus(messageStatus.stats);
+    let response = {
+      messageId: messageStatus.messageId,
+      status,
+      ...(status === "failed"
+        ? { errorMessage: messageStatus.errorMessage }
+        : {}),
+    };
+
+    reply.code(200).send(response);
+  } catch (error) {
+    log.error("Error getting message status by id \n%o", error);
+    reply.code(500).send(error);
+  }
+}
+
+export async function getErrorLogsHandler(
+  request: FastifyRequest<{
+    Querystring: ErrorLogsQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const data = await prisma.waLogs.findMany({
+      where: {
+        orgId: request.user.orgId,
+        createdAt: {
+          ...(request.query.endDate
+            ? { lte: new Date(request.query.endDate) }
+            : {}),
+          ...(request.query.startDate
+            ? { gte: new Date(request.query.startDate) }
+            : {}),
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      omit: {
+        orgId: true,
+      },
+    });
+    return reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error getting error logs \n%o", error);
+    reply.code(500).send({ message: "Error getting error logs" });
   }
 }
