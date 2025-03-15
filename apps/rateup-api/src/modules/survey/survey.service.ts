@@ -544,6 +544,7 @@ export async function getActiveSurveysSummmaryByUserId(userId: string) {
       active: true,
     },
     select: {
+      id: true,
       type: true,
       isPublished: true,
       active: true,
@@ -625,6 +626,7 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       },
     },
     select: {
+      id: true,
       type: true,
       isPublished: true,
       title: true,
