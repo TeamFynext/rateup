@@ -87,7 +87,7 @@ export default function TemplateCard({ survey }) {
                 maxWidth: "200px",
               }}
             >
-              <Text dangerouslySetInnerHTML={{ __html: newTitle }} />
+              <Text truncate dangerouslySetInnerHTML={{ __html: newTitle }} />
             </Stack>
           </Flex>
         </BackgroundImage>
