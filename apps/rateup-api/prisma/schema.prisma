@@ -250,6 +250,7 @@ model Team {
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
   waInboxAssign          WaInboxAssign[]
+
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
 }
@@ -425,22 +426,22 @@ model Contact {
   phone  String?
   source String?
 
-  org                  Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                String                @db.Uuid
-  responses            SurveyResponse[]
-  contactGroups        ContactGroupMap[]
-  campaignParticipants CampaignParticipant[]
-  tags                 Json?
-  WaMessage            WaMessage[]
-  consent              Boolean               @default(true)
-  email                String?
-  dob                  DateTime?
-  loyaltyCustomer      LoyaltyCustomer?
-  external_id          String?
-  aiWaChat             Boolean               @default(false)
-  waMessageAssignStatus  String              @default("UNASSIGNED")
-  waInboxAssign        WaInboxAssign[]
-  lastReceivedMessageTimeStamp   DateTime? 
+  org                          Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                        String                @db.Uuid
+  responses                    SurveyResponse[]
+  contactGroups                ContactGroupMap[]
+  campaignParticipants         CampaignParticipant[]
+  tags                         Json?
+  WaMessage                    WaMessage[]
+  consent                      Boolean               @default(true)
+  email                        String?
+  dob                          DateTime?
+  loyaltyCustomer              LoyaltyCustomer?
+  external_id                  String?
+  aiWaChat                     Boolean               @default(false)
+  waMessageAssignStatus        String                @default("UNASSIGNED")
+  waInboxAssign                WaInboxAssign[]
+  lastReceivedMessageTimeStamp DateTime?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -448,13 +449,13 @@ model Contact {
 }
 
 model WaInboxAssign {
-  contactId   String @db.Uuid 
-  contact     Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  assignedUserId String @db.Uuid
-  assignedUser  User @relation(fields: [assignedUserId], references: [id], onDelete: Cascade) 
-  teamId       String @db.Uuid
-  Team     Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  contactId      String  @db.Uuid
+  contact        Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  assignedUserId String  @db.Uuid
+  assignedUser   User    @relation(fields: [assignedUserId], references: [id], onDelete: Cascade)
+  teamId         String  @db.Uuid
+  Team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@unique([contactId, assignedUserId], name: "contact_id_assigned_user_id_unique")
 }
 
@@ -1057,6 +1058,7 @@ model WaMessage {
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
   sendBy                          String?                           @db.Uuid
   sender                          User?                             @relation(fields: [sendBy], references: [id], onDelete: Cascade)
+  errorMessage                    String?
 
   @@index([contactId, waCreatedAt(sort: Desc)])
 }
@@ -1122,7 +1124,7 @@ model Chatbot {
   shortUrlId       String  @unique
   publicPageStatus String? @default("INACTIVE")
   enableWaChat     Boolean @default(false)
-  waCommand        String? 
+  waCommand        String?
   waPrompt         String?
   enableAllWaChat  Boolean @default(false)
 }

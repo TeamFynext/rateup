@@ -866,6 +866,7 @@ export const handleMessageStatusUpdate = async (
     },
     data: {
       stats: msg.stats,
+      errorMessage: errors?.[0]?.title,
     },
   });
 };

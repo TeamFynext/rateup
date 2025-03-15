@@ -6,6 +6,8 @@ import {
   sendTemplateToContactHandler,
   sendTemplatesToContactGroupsHandler,
   sendTemplatesToContactsHandler,
+  getErrorLogsHandler,
+  getMessageStatusByIdHandler,
 } from "../internal-copy/whatsapp/messageTemplates/wa_templates.controller";
 
 export async function extWaTemplateRoutes(server: FastifyInstance) {
@@ -83,5 +85,40 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
       },
     },
     sendTemplatesToContactGroupsHandler,
+  );
+
+  server.get(
+    "/errors",
+    {
+      schema: {
+        querystring: $waTemplateExternalRef("errorLogsQuery"),
+        tags: ["WhatsApp/Template"],
+        description: "Get all error logs with optional date filtering",
+        summary: "Get error logs",
+        // response: {
+        //   200: {
+        //     type: "array",
+        //     items: $waTemplateExternalRef("errorLogResponse"),
+        //   },
+        // },
+      },
+    },
+    getErrorLogsHandler,
+  );
+
+  server.get(
+    "/message/:messageId/status",
+    {
+      schema: {
+        params: $waTemplateExternalRef("messageStatusParams"),
+        tags: ["WhatsApp/Template"],
+        description: "Get status of a message by messageId",
+        summary: "Get message status",
+        // response: {
+        //   200: $waTemplateExternalRef("messageStatusResponse"),
+        // },
+      },
+    },
+    getMessageStatusByIdHandler,
   );
 }
