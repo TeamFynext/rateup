@@ -487,76 +487,83 @@ export async function sendTemplateToUserCore(
     }
   }
 
-  dbTemplate.data.components.forEach((item) => {
-    if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
-      item?.buttons.forEach(async (button, idx) => {
-        if (button.type === "URL" && button?.example?.length > 0) {
-          if (button?.example?.[0]?.startsWith(":")) {
-            let shortUrlId = button?.example?.[0]?.slice(1);
-            if (shortUrlId?.startsWith("error")) return;
-            let surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
-              where: {
-                shortUrlId,
-              },
-            });
-            let surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
-              where: {
-                surveyId: surveyTeamMapData.surveyId,
-                ...(teamId && { teamId }),
-              },
-            });
-            let url =
-              surveyTeamMapWithTeam?.shortUrlId ||
-              surveyTeamMapWithTeam?.id ||
-              shortUrlId ||
-              "error";
-            let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
-            log.info("Short URL ID: %s", url);
-            log.info(
-              "length : %s",
-              `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
-                .length,
-            );
+  async function processComponents() {
+    for await (const item of dbTemplate.data.components) {
+      if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+        for await (const [idx, button] of item.buttons.entries()) {
+          if (button?.type === "URL" && button?.example?.length > 0) {
+            if (button?.example?.[0]?.startsWith(":")) {
+              let shortUrlId = button?.example[0].slice(1);
+              if (shortUrlId?.startsWith("error")) continue;
+
+              const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
+                where: { shortUrlId },
+              });
+
+              const surveyTeamMapWithTeam =
+                await prisma.surveyTeamMap.findFirst({
+                  where: {
+                    surveyId: surveyTeamMapData.surveyId,
+                    ...(teamId && { teamId }),
+                  },
+                });
+
+              let url =
+                surveyTeamMapWithTeam?.shortUrlId ||
+                surveyTeamMapWithTeam?.id ||
+                shortUrlId ||
+                "error";
+              let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
+              log.info("Short URL ID: %s", url);
+              log.info(
+                "length : %s",
+                `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
+                  .length,
+              );
+              components.push({
+                type: "button",
+                sub_type: "url",
+                index: idx,
+                parameters: [
+                  {
+                    type: "text",
+                    text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
+                  },
+                ],
+              });
+            } else {
+              components.push({
+                type: "button",
+                sub_type: "url",
+                index: idx,
+                parameters: [
+                  {
+                    type: "text",
+                    text: phone,
+                  },
+                ],
+              });
+            }
+          } else if (button.type === "COPY_CODE") {
             components.push({
               type: "button",
-              sub_type: "url",
-              index: idx,
+              sub_type: button.type,
+              index: 0,
               parameters: [
                 {
-                  type: "text",
-                  text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
-                },
-              ],
-            });
-          } else {
-            components.push({
-              type: "button",
-              sub_type: "url",
-              index: idx,
-              parameters: [
-                {
-                  type: "text",
-                  text: phone,
+                  type: "coupon_code",
+                  coupon_code: button.example[0],
                 },
               ],
             });
           }
-        } else if (button.type === "COPY_CODE") {
-          components.push({
-            type: "button",
-            sub_type: button.type,
-            index: 0,
-            parameters: [
-              {
-                type: "coupon_code",
-                coupon_code: button?.example?.[0],
-              },
-            ],
-          });
         }
-      });
+      }
     }
-  });
+  }
+
+  // Call the function and wait for it to complete before proceeding.
+  await processComponents();
 
   const templateQuery = {
     name: data?.name,
