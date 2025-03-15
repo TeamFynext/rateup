@@ -103,6 +103,45 @@ const sendTemplateToContactGroupsParamsWithOrgId =
   byTemplateIdParamsSchema.extend({
     orgId: z.string(),
   });
+const errorLogsQuery = z.object({
+  startDate: z
+    .string()
+    .optional()
+    .describe("Filter logs from this date (FORMAT: mm/dd/yyyy)"),
+  endDate: z
+    .string()
+    .optional()
+    .describe("Filter logs before this date (FORMAT: mm/dd/yyyy)"),
+});
+
+const errorLogResponse = z.object({
+  id: z.string(),
+  messageId: z.string().nullable(),
+  templateId: z.string().nullable(),
+  errorMessage: z.string(),
+  errorCode: z.string().nullable(),
+  timestamp: z.string(),
+  details: z.record(z.any()),
+});
+
+const messageStatusParams = z.object({
+  messageId: z.string(),
+  orgId: z.string(),
+});
+
+const messageStatusResponse = z.object({
+  messageId: z.string(),
+  status: z.enum(["sent", "delivered", "read", "failed", "pending"]),
+  timestamp: z.string(),
+  deliveredAt: z.string().nullable(),
+  readAt: z.string().nullable(),
+  errorDetails: z
+    .object({
+      errorCode: z.string(),
+      errorMessage: z.string(),
+    })
+    .nullable(),
+});
 
 export const {
   schemas: waTemplateExternalSchemas,
@@ -118,6 +157,10 @@ export const {
     sendTemplateToContactsParamsWithOrgId,
     sendTemplateToContactGroupsParamsWithOrgId,
     sendTemplateByNameToPhone,
+    errorLogsQuery,
+    errorLogResponse,
+    messageStatusParams,
+    messageStatusResponse,
   },
   { $id: "waTemplateExternal" },
 );
@@ -136,3 +179,5 @@ export type SendTemplateHeaderComponent = z.infer<
 export type SendTemplateByNameToPhone = z.infer<
   typeof sendTemplateByNameToPhone
 >;
+
+export type ErrorLogsQuery = z.infer<typeof errorLogsQuery>;
