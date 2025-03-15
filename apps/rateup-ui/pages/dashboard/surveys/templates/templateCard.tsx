@@ -1,6 +1,7 @@
-import { BackgroundImage, Flex, Stack } from "@mantine/core";
+import { BackgroundImage, Flex, Stack, Text } from "@mantine/core";
 
 import { PageType } from "@/types/enums";
+import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
@@ -48,6 +49,13 @@ export default function TemplateCard({ survey }) {
     selectedPreview === "mobile",
   );
 
+  const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
+  const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
+
+  const newTitle = subtitleText
+    ? `<p style="text-align:center;"><span style="${titleStyleNew}">${titleText}</span></p><p style="text-align:center;"><span style="${subtitleStylesNew}">${subtitleText ?? ""}</span></p>`
+    : titleText;
+
   return (
     <Flex align={"center"} h={200} w={300} style={{ backgroundColor }}>
       <CreditsCard
@@ -79,20 +87,7 @@ export default function TemplateCard({ survey }) {
                 maxWidth: "200px",
               }}
             >
-              {titleText}
-            </Stack>
-            <Stack
-              mt="lg"
-              w={"80%"}
-              ta={"center"}
-              style={{
-                fontFamily: "inherit",
-                ...subtitleStyles,
-                marginBottom: "2rem",
-              }}
-            >
-              {subtitleText.split(" ").slice(0, 10).join(" ")}{" "}
-              {subtitleText.split(" ").length > 10 && "..."}
+              <Text dangerouslySetInnerHTML={{ __html: newTitle }} />
             </Stack>
           </Flex>
         </BackgroundImage>
