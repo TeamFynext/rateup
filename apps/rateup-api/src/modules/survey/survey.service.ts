@@ -1429,7 +1429,7 @@ export async function getSurveyResponseCount(
             CURRENT_DATE - INTERVAL '1 year' as year_back
         )
         SELECT 
-        (EXTRACT(EPOCH FROM (cw.this_week - DATE_TRUNC('week', sr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${userTimeZone}))) / 604800)::INTEGER + 1 as date,
+        (EXTRACT(EPOCH FROM (cw.this_week - DATE_TRUNC('week', sr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${userTimeZone}))) / 604800)::INTEGER as date,
         COUNT(*)::INTEGER AS responses
         FROM "SurveyResponse" sr
         LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
@@ -1441,7 +1441,7 @@ export async function getSurveyResponseCount(
 
     const resMap = new Map(res.map((r) => [r.date, r]));
     res = [];
-    for (var i = 52; i > 0; i--) {
+    for (var i = 52; i >= 0; i--) {
       res.push(resMap.get(i) ?? { date: i, responses: 0 });
     }
   }
