@@ -219,6 +219,7 @@ declare global {
       dbFlowId?: string;
       version?: number;
     };
+    responseCount?: number;
   }
 
   type dataError = {

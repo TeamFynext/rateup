@@ -1,7 +1,10 @@
+import { useMemo } from "react";
+
 import {
   ActionIcon,
   Group,
   Tooltip as MantineTooltip,
+  Skeleton,
   Stack,
   Text,
 } from "@mantine/core";
@@ -32,57 +35,77 @@ const OverallResponseGraph = ({
   refreshKeys,
   className,
   translations,
+  isLoading,
 }) => {
-  let total = 0;
+  const total = useMemo(() => {
+    return data?.reduce((total, item) => (total += item?.responses), 0);
+  }, [data]);
 
-  data?.map((item) => (total += item?.responses));
+  if (isLoading) {
+    return (
+      <PaperLayout className={`${classes["graph-root-div"]} ${className}`}>
+        <Stack w={"100%"}>
+          <Group justify="space-between">
+            <Skeleton h={20} w={"40%"} />
+            <Group justify="space-between">
+              <Skeleton h={20} w={100} />
+              <Skeleton h={20} w={100} />
+              <Skeleton h={20} w={100} />
+            </Group>
+          </Group>
+          <Group h={380} w={"100%"}>
+            <Skeleton h={"100%"} w={"1%"} />
+            <Skeleton h={"100%"} flex={1} />
+          </Group>
+        </Stack>
+      </PaperLayout>
+    );
+  }
 
   return (
     <PaperLayout className={`${classes["graph-root-div"]} ${className}`}>
       <Stack>
-        <Stack>
-          <Group justify="space-between">
-            <Group>
-              <Stack align="center" gap={0}>
-                <Text className={classes["responses-text-p"]} c="#595959">
-                  {total}
-                </Text>
-                <Text
-                  className={`${classes["overall-responses-text-p"]}`}
-                  c="dimmed"
-                >
-                  {translations["Overall Responses"]}
-                </Text>
-              </Stack>
-              <RefreshButton queryKeys={refreshKeys} />
-            </Group>
-
-            <Group className={classes["hour-daily-weekly-btn-container"]}>
-              <RateupButtonBlue
-                variant={timePeriod === "hourly" ? "filled" : "subtle"}
-                radius="lg"
-                color={timePeriod !== "hourly" ? "gray" : "black"}
-                onClick={() => setTimePeriod("hourly")}
-                title={translations["Hourly"]}
-              />
-
-              <RateupButtonBlue
-                variant={timePeriod === "daily" ? "filled" : "subtle"}
-                radius="lg"
-                color={timePeriod !== "daily" ? "gray" : "black"}
-                onClick={() => setTimePeriod("daily")}
-                title={translations["Daily"]}
-              />
-              <RateupButtonBlue
-                variant={timePeriod === "weekly" ? "filled" : "subtle"}
-                radius="lg"
-                color={timePeriod !== "weekly" ? "gray" : "black"}
-                onClick={() => setTimePeriod("weekly")}
-                title={translations["Weekly"]}
-              />
-            </Group>
+        <Group justify="space-between">
+          <Group>
+            <Stack align="center" gap={0}>
+              <Text className={classes["responses-text-p"]} c="#595959">
+                {total}
+              </Text>
+              <Text
+                className={`${classes["overall-responses-text-p"]}`}
+                c="dimmed"
+              >
+                {translations["Overall Responses"]}
+              </Text>
+            </Stack>
+            <RefreshButton queryKeys={refreshKeys} />
           </Group>
-        </Stack>
+
+          <Group className={classes["hour-daily-weekly-btn-container"]}>
+            <RateupButtonBlue
+              variant={timePeriod === "hourly" ? "filled" : "subtle"}
+              radius="lg"
+              color={timePeriod !== "hourly" ? "gray" : "black"}
+              onClick={() => setTimePeriod("hourly")}
+              title={translations["Hourly"]}
+            />
+
+            <RateupButtonBlue
+              variant={timePeriod === "daily" ? "filled" : "subtle"}
+              radius="lg"
+              color={timePeriod !== "daily" ? "gray" : "black"}
+              onClick={() => setTimePeriod("daily")}
+              title={translations["Daily"]}
+            />
+            <RateupButtonBlue
+              variant={timePeriod === "weekly" ? "filled" : "subtle"}
+              radius="lg"
+              color={timePeriod !== "weekly" ? "gray" : "black"}
+              onClick={() => setTimePeriod("weekly")}
+              title={translations["Weekly"]}
+            />
+          </Group>
+        </Group>
         <ResponsiveContainer width="100%" height={380}>
           {total > 0 ? (
             <AreaChart
@@ -104,16 +127,7 @@ const OverallResponseGraph = ({
                   />
                 </linearGradient>
               </defs>
-              <XAxis
-                dataKey="date"
-                tickFormatter={(str) =>
-                  timePeriod === "hourly"
-                    ? dayjs(str).format("h A")
-                    : timePeriod === "daily"
-                      ? dayjs(str).format("MMM DD")
-                      : str
-                }
-              />
+              <XAxis dataKey="date" />
               <YAxis allowDecimals={false} />
               <Tooltip
                 content={
@@ -174,10 +188,10 @@ const CustomTooltip = ({
   if (active && payload && payload?.length) {
     label =
       timePeriod === "hourly"
-        ? dayjs(label).format("MMM DD, YYYY h A")
+        ? `Today ${label}`
         : timePeriod === "daily"
-          ? dayjs(label).format("MMM DD, YYYY")
-          : label;
+          ? `${label} ${dayjs().year()}`
+          : `Week ${label}`;
     return (
       <div
         className="custom-tooltip"
