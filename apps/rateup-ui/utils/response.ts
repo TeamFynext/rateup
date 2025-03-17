@@ -485,7 +485,7 @@ export function getFormattedResponseForAreaGraph(responses, timePeriod) {
   const resData = [];
   switch (timePeriod) {
     case "hourly":
-      for (var i = 0; i <= 24; i++) {
+      for (var i = 0; i < 24; i++) {
         let date = dayjs().hour(i).format("h A");
         resData.push(
           dayResponseCount[date]

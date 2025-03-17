@@ -150,13 +150,6 @@ const OverallResponseGraph = ({
               <Brush
                 height={15}
                 dataKey="date"
-                tickFormatter={(str) =>
-                  timePeriod === "hourly"
-                    ? dayjs(str).format("h A")
-                    : timePeriod === "daily"
-                      ? dayjs(str).format("MMM DD")
-                      : str
-                }
                 fill="var(--light-grey-color-3)"
               />
             </AreaChart>
