@@ -202,17 +202,20 @@ export async function sendAutomatedReplyMessage(
         dbFlowId: component?.name,
         phone: from,
       };
-      if (orgId) updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
-      await deleteSession(orgId, from);
-      const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(
-        component.name,
-      );
+      try {
+        await deleteSession(orgId, from);
+        const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(
+          component.name,
+        );
 
-      await createSession({
-        phone: from,
-        surveyTeamMapId: dbFlow?.survey?.teams?.[0].id,
-        orgId,
-      });
+        await createSession({
+          phone: from,
+          surveyTeamMapId: dbFlow?.survey?.teams?.[0].id,
+          orgId,
+        });
+      } catch (error) {
+        console.log("🚀 ~ error-session:", error);
+      }
 
       await sendFlow(serviceParam);
     } else if (
