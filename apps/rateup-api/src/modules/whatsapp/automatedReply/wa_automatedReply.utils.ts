@@ -16,6 +16,8 @@ import {
 } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
 import {
+  createSession,
+  deleteSession,
   sendMessage,
   sendTextMessage,
 } from "../whatsappSurvey/wasurvey.service";
@@ -24,7 +26,11 @@ import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.control
 import prisma from "../../../utils/prisma";
 import { templateData } from "../messageTemplates/wa_templates.service";
 import { updateMonthlyStat } from "../../stats/stats.service";
-import { sendFlow } from "../flows/flow.service";
+import {
+  getFlowWithSurveyTeamMapIds,
+  getFlowWithSurveyTeamMapIdsWithDbFlowId,
+  sendFlow,
+} from "../flows/flow.service";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { autoGenerateTicket } from "../../ticket/ticket.service";
 
@@ -196,6 +202,18 @@ export async function sendAutomatedReplyMessage(
         dbFlowId: component?.name,
         phone: from,
       };
+      if (orgId) updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+      await deleteSession(orgId, from);
+      const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(
+        component.name,
+      );
+
+      await createSession({
+        phone: from,
+        surveyTeamMapId: dbFlow?.survey?.teams?.[0].id,
+        orgId,
+      });
+
       await sendFlow(serviceParam);
     } else if (
       component?.type === ReplyComponentType?.Image &&

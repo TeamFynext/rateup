@@ -291,7 +291,28 @@ export async function getFlowWithSurveyTeamMapIds(
     },
   });
 }
-
+export async function getFlowWithSurveyTeamMapIdsWithDbFlowId(
+  dbFlowId: string,
+) {
+  return await prisma.waFlow.findFirst({
+    where: {
+      dbFlowId,
+    },
+    select: {
+      survey: {
+        select: {
+          languages: true,
+          teams: {
+            select: {
+              id: true, // surveyTeamMapId
+              teamId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
 export async function getUnsyncedFlows(orgId: string, userId: string) {
   const waFlows = await getFlowsFromWa(orgId);
   const dbFlows = await getFlowsFromDb(orgId, userId);
@@ -451,7 +472,6 @@ export async function sendFlow({
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
     const dbFlow = await getFlowFromDb(dbFlowId);
-
     const messageData = generateFlowMessageData({
       to: phone,
       dbFlow,
