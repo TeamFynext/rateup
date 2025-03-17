@@ -20,6 +20,7 @@ import {
   getSurvey,
   getSurveyByLandingId,
   getSurveyLandings,
+  getSurveyResponseForGraph,
   getSurveys,
   getSurveysSummary,
   getSurveyStatsBySurveyTeamMapId,
@@ -621,5 +622,12 @@ export const useSurveyUpdateMutation = (surveyId) => {
     onError: () => {
       showErrorToast("Something went wrong, Please try again later.", surveyId);
     },
+  });
+};
+
+export const useAllResponseForGraph = (timePeriod, userTimeZone) => {
+  return useQuery({
+    queryKey: ["reponse", "graph", timePeriod, userTimeZone],
+    queryFn: () => getSurveyResponseForGraph(timePeriod, userTimeZone),
   });
 };

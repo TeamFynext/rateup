@@ -24,6 +24,7 @@ import {
   WaQuestions,
   YNResponse,
 } from "../types/enums";
+import { isToday } from "./dateTime";
 import { decryptPrivateKey, decryptResponse } from "./encryption";
 import { RatingScaleMap } from "./whatsapp/enumMap";
 
@@ -463,86 +464,57 @@ export function getFormattedResponseForAreaGraph(responses, timePeriod) {
   let dateResponseCount = {};
   let dayResponseCount = {};
   let weekResponseCount = {};
-  responses?.forEach((response) => {
-    let date = dayjs(new Date(response?.createdAt)).format().split("T")[0];
-    let week = dayjs().diff(dayjs(new Date(response?.createdAt)), "week");
-    if (dateResponseCount[date]) {
-      dateResponseCount[date]++;
-    } else {
-      dateResponseCount[date] = 1;
+  responses.forEach((response) => {
+    if (isToday(response.createdAt)) {
+      let hour = dayjs(response.createdAt).format("h A");
+      if (dayResponseCount[hour]) dayResponseCount[hour]++;
+      else dayResponseCount[hour] = 1;
     }
-    let dateWithHour = dayjs(new Date(response?.createdAt))
-      .format()
-      .slice(0, 13);
-    if (dayResponseCount[dateWithHour]) dayResponseCount[dateWithHour]++;
-    else dayResponseCount[dateWithHour] = 1;
-    if (weekResponseCount[week]) weekResponseCount[week]++;
-    else weekResponseCount[week] = 1;
+    if (dayjs().diff(dayjs(response.createdAt), "day") <= 30) {
+      let date = dayjs(response.createdAt).format("MMM DD");
+      if (dateResponseCount[date]) dateResponseCount[date]++;
+      else dateResponseCount[date] = 1;
+    }
+    if (dayjs().diff(dayjs(response.createdAt), "year") === 0) {
+      let week = dayjs().diff(dayjs(response.createdAt), "week");
+      if (weekResponseCount[week]) weekResponseCount[week]++;
+      else weekResponseCount[week] = 1;
+    }
   });
 
-  for (var i = 30; i >= 0; i--) {
-    const date = dayjs().subtract(i, "day").format().split("T")[0];
-    if (!Object.keys(dateResponseCount).some((dt) => dt == date))
-      dateResponseCount[date] = 0;
+  const resData = [];
+  switch (timePeriod) {
+    case "hourly":
+      for (var i = 0; i < 24; i++) {
+        let date = dayjs().hour(i).format("h A");
+        resData.push(
+          dayResponseCount[date]
+            ? { date, responses: dayResponseCount[date] }
+            : { date, responses: 0 },
+        );
+      }
+      break;
+    case "daily":
+      for (var i = 30; i > 0; i--) {
+        let date = dayjs()
+          .subtract(i - 1, "day")
+          .format("MMM DD");
+        resData.push(
+          dateResponseCount[date]
+            ? { date, responses: dateResponseCount[date] }
+            : { date, responses: 0 },
+        );
+      }
+      break;
+    case "weekly":
+      for (var i = 52; i >= 0; i--) {
+        resData.push(
+          weekResponseCount[i]
+            ? { date: i, responses: weekResponseCount[i] }
+            : { date: i, responses: 0 },
+        );
+      }
+      break;
   }
-
-  for (var i = 0; i <= 52; i++) {
-    if (!Object.keys(weekResponseCount).some((dt) => Number(dt) == i))
-      weekResponseCount[i] = 0;
-  }
-
-  for (var i = 0; i <= 24; i++) {
-    const dayWithHour = dayjs().subtract(i, "hour").format().slice(0, 13);
-    if (!Object.keys(dayResponseCount).some((dt) => dt == dayWithHour))
-      dayResponseCount[dayWithHour] = 0;
-  }
-
-  let data = Object.keys(
-    timePeriod === "hourly"
-      ? dayResponseCount
-      : timePeriod === "daily"
-        ? dateResponseCount
-        : weekResponseCount,
-  )?.map((date) => ({
-    date: date,
-    responses:
-      timePeriod === "hourly"
-        ? dayResponseCount[date]
-        : timePeriod === "daily"
-          ? dateResponseCount[date]
-          : weekResponseCount[date],
-  }));
-
-  const formattedData =
-    timePeriod === "hourly"
-      ? data.sort((a, b) => {
-          return a.date.localeCompare(b.date);
-        })
-      : timePeriod === "daily"
-        ? data.sort(
-            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-          )
-        : data.sort((a, b) => Number(b.date) - Number(a.date));
-  const filteredData = data?.filter((datum) => {
-    const date = dayjs(datum.date);
-    const now = dayjs();
-    let periodStart;
-    switch (timePeriod) {
-      case "hourly":
-        periodStart = now.subtract(1, "day");
-        break;
-      case "daily":
-        periodStart = now.subtract(1, "month");
-        break;
-      case "weekly":
-        return Number(datum.date) <= 52;
-      default:
-        periodStart = dayjs(0);
-    }
-    return (
-      (date.isAfter(periodStart) || date.isSame(periodStart)) &&
-      (date.isBefore(now) || date.isSame(now))
-    );
-  });
-  return filteredData;
+  return resData;
 }

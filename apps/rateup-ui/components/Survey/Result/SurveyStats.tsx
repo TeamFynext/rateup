@@ -311,6 +311,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
           setTimePeriod={setTimePeriod}
           refreshKeys={["allresponses"]}
           translations={translations}
+          isLoading={rLoading}
         />
       </Stack>
     </Stack>
