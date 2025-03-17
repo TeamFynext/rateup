@@ -187,6 +187,11 @@ const surveyVariableUpdateSchema = z.object({
   value: z.string().optional(),
 });
 
+const graphResponseParamsSchema = z.object({
+  timePeriod: z.string(),
+  userTimeZone: z.string(),
+});
+
 export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
   {
     createSurveyRequestSchema,
@@ -205,6 +210,7 @@ export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
     phoneParamsSchema,
     surveyVariableSchema,
     surveyVariableUpdateSchema,
+    graphResponseParamsSchema,
   },
   { $id: "surveySchema" },
 );
@@ -242,3 +248,4 @@ export type surveyVariableInput = z.infer<typeof surveyVariableSchema>;
 export type surveyVariableUpdateInput = z.infer<
   typeof surveyVariableUpdateSchema
 >;
+export type GraphResponseParams = z.infer<typeof graphResponseParamsSchema>;
