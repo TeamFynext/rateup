@@ -1401,7 +1401,7 @@ export async function getSurveyResponseCount(
 
     const resMap = new Map(res.map((r) => [r.date, r]));
     res = [];
-    for (var i = 0; i <= 24; i++) {
+    for (var i = 0; i < 24; i++) {
       let date = dayjs().hour(i).format("h A");
       res.push(resMap.get(date) ?? { date, responses: 0 });
     }
