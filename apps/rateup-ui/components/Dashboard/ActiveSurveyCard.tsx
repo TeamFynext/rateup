@@ -14,9 +14,7 @@ interface SurveyCardProps {
 export default function ActiveSurveyCard({
   survey,
 }: SurveyCardProps): JSX.Element {
-  const responsesCount = survey?.teams
-    ?.map((team) => team.responses?.length)
-    ?.reduce((a, b) => a + b, 0);
+  const responsesCount = survey?.responseCount;
   const visitedCount = survey?.teams
     ?.map((team) => team.surveyStats?.visited ?? 0)
     ?.reduce((a, b) => a + b, 0);

@@ -26,7 +26,10 @@ import {
   IconSquareRoundedPlusFilled,
 } from "@tabler/icons-react";
 
+import useTranslations from "@/dictionaries/useTranslation";
+
 import {
+  useAllResponseForGraph,
   useAllSurveysSummary,
   useSurveysSummary,
 } from "../../backend/surveys/surveys.query";
@@ -57,18 +60,7 @@ import classes from "./dashboard.module.css";
 
 export default function DashboardHome() {
   const router = useRouter();
-  const [translations, setTranslations] = useState({});
-  const [loadingTranslations, setLoadingTranslations] = useState(true);
-
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const lang = await getDictionary(router.locale);
-      setTranslations(lang);
-      setLoadingTranslations(false);
-    };
-
-    loadTranslations();
-  }, [router.locale]);
+  const { translations } = useTranslations();
 
   const { user } = useUser();
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
@@ -80,19 +72,12 @@ export default function DashboardHome() {
     isError,
     error: summaryError,
     refetch,
+    isLoading,
   } = useAllSurveysSummary();
 
-  const allResponses = [];
-  allSurveysSummary?.surveys?.forEach((survey) => {
-    survey?.teams?.forEach((team) => {
-      allResponses.push(...team?.responses);
-    });
-  });
-
-  const filteredData = getFormattedResponseForAreaGraph(
-    allResponses,
-    timePeriod,
-  );
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { data: graphData, isLoading: isResponseLoading } =
+    useAllResponseForGraph(timePeriod, userTimeZone);
 
   const createModalContent: Array<{
     Icon: any;
@@ -197,7 +182,7 @@ export default function DashboardHome() {
     }
     return "";
   };
-  if (loadingTranslations) {
+  if (isLoading) {
     return <Loading h={300} />;
   }
 
@@ -271,9 +256,10 @@ export default function DashboardHome() {
                 className={styles["overall-responses-graph"]}
                 timePeriod={timePeriod}
                 setTimePeriod={setTimePeriod}
-                data={filteredData}
-                refreshKeys={["surveysSummary", "allSurveysSummary"]}
+                data={graphData}
+                refreshKeys={["reponse", "graph", timePeriod, userTimeZone]}
                 translations={translations}
+                isLoading={isResponseLoading}
               />
             </Group>
             <FormModalLayout

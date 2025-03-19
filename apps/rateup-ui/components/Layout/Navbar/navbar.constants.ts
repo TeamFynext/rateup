@@ -398,7 +398,7 @@ export function getNavTopData(
           link: "/dashboard/settings",
           icon: IconUserShare,
         },
-        ...(subscription.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
+        ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
           ? [
               {
                 label: translations["Admin"],

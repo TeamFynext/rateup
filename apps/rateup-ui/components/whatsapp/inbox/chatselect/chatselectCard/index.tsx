@@ -84,11 +84,7 @@ export default function WaInboxChatSelectCard({
               </Text>
             </Tooltip>
             <Text className={classes.chat_time}>
-              <TimeSinceText
-                isoDateString={dayjs
-                  .utc(contact?.lastMessage?.waCreatedAt)
-                  .local()}
-              />
+              {dayjs.utc(contact?.lastMessage?.waCreatedAt).fromNow()}
             </Text>
           </Group>
         </Stack>

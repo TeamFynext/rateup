@@ -28,6 +28,16 @@ export async function getAllResponses(surveyId: string) {
   return res.data as Array<TeamWiseResponses>;
 }
 
+export async function getResponsesBySurveyId(
+  surveyId: string,
+  filter: string = "",
+) {
+  const res = await axiosClient.get(
+    `${RESPONSE_URL}/survey/${surveyId}${filter}`,
+  );
+  return res.data;
+}
+
 type CreateResponseType = Omit<SurveyResponse, "id" | "createdAt"> & {
   shouldRaiseTicket?: boolean;
   checkUniqueDevice?: boolean;
@@ -108,4 +118,8 @@ export async function getLargeTextResponseSummaryByAI({ surveyId, data }) {
 
 export async function exportContactResponseToContacts(surveyId) {
   return await axiosClient.post(`${RESPONSE_URL}/export-contacts/${surveyId}`);
+}
+
+export async function getSurveyResponseCount(surveyId) {
+  return (await axiosClient.get(`${RESPONSE_URL}/count/${surveyId}`)).data;
 }

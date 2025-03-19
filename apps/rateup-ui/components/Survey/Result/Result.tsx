@@ -7,25 +7,14 @@ import { IconArrowLeft } from "@tabler/icons-react";
 
 import { QuestionType2 } from "@/types/enums";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import ErrorComponent from "@/components/404/ErrorComponent";
-import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import { decryptPrivateKey } from "../../../utils/encryption";
 import { pushToSessionStorage } from "../../../utils/essential";
 import { showErrorToast } from "../../../utils/notifications";
-import {
-  getfilteredResponseUsingLanguage,
-  getFilteredResponseUsingTags,
-} from "../../../utils/response";
-import {
-  getFilteredResponsesUsingTeam,
-  mergeResponsesFromTeams,
-} from "../../../utils/team/surveyTeam";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -58,9 +47,12 @@ const Result = ({
   flow = null,
   version = 1,
 }) => {
-  const { filterTeams, filterTags, selectedTeamId } = useContext(SurveyContext);
+  const { selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
+  );
+  const [activeTab, setActiveTab] = useState(
+    !flow ? ResultTab.OverView : ResultTab.Responses,
   );
   //end to end encryption logic for result page begins here
   const passwordModalOpenedCondition =
@@ -71,32 +63,7 @@ const Result = ({
   //end to end encryption logic for result page ends here
   //.
   //.
-  const {
-    data: teamWiseResponses,
-    error: responseFetchError,
-    isPending: isLoading,
-    refetch,
-  } = useAllResponses(survey?.id);
   const { data: waFlow, isPending } = useWaFlowFromDb(flow?.dbFlowId);
-
-  const filteredResponsesByTeam = useMemo(() => {
-    return getFilteredResponsesUsingTeam(filterTeams, teamWiseResponses)
-      .filteredResponsesByTeam;
-  }, [filterTeams, teamWiseResponses]);
-
-  const mergedResponses = useMemo(() => {
-    return mergeResponsesFromTeams(filteredResponsesByTeam).mergedResponses;
-  }, [filteredResponsesByTeam]);
-
-  const filteredResponsesByLanguage = useMemo(() => {
-    return getfilteredResponseUsingLanguage(mergedResponses, selectedLanguage)
-      .filteredResponsesByLanguage;
-  }, [mergedResponses, selectedLanguage]);
-
-  const filteredResponsesByTags = useMemo(() => {
-    return getFilteredResponseUsingTags(filteredResponsesByLanguage, filterTags)
-      .filteredResponsesByTags;
-  }, [filteredResponsesByLanguage, filterTags]);
 
   const questions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen) =>
@@ -123,8 +90,6 @@ const Result = ({
     );
   }, [flow]);
 
-  if (isLoading) return <RateupLoader />;
-  if (responseFetchError) return <Text>An error has occurred</Text>;
   return (
     <StyledTabs
       defaultValue={flowId ? ResultTab.Responses : ResultTab.OverView}
@@ -154,6 +119,8 @@ const Result = ({
           overflow: "auto",
         },
       }}
+      value={activeTab}
+      onChange={(value) => setActiveTab(value as ResultTab)}
     >
       <Box className={styles["result-page-tabs-container"]}>
         <ScrollArea offsetScrollbars={true}>
@@ -179,17 +146,13 @@ const Result = ({
           {version === 1 ? (
             <Responses
               survey={survey}
-              responses={filteredResponsesByTags}
               defaultLanguage={defaultLanguage}
-              isLoading={isLoading}
               subscription={subscription}
             />
           ) : (
             <WaResponses
               survey={survey}
-              responses={filteredResponsesByTags}
               defaultLanguage={defaultLanguage}
-              isLoading={isLoading}
               selectedTeamId={selectedTeamId}
               subscription={subscription}
               questions={questions}

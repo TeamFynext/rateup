@@ -272,3 +272,11 @@ export async function sendOTPEmail(data) {
 export async function validateOTP(data) {
   return (await axiosClient.post(`email/otp/validate`, data)).data;
 }
+
+export async function getSurveyResponseForGraph(timePeriod, userTimeZone) {
+  return (
+    await axiosClient.get(
+      `${SURVEYURL}/summary/response?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}`,
+    )
+  ).data;
+}
