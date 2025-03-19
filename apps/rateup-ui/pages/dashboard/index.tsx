@@ -25,6 +25,7 @@ import {
   IconSocial,
   IconSquareRoundedPlusFilled,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -74,7 +75,7 @@ export default function DashboardHome() {
     refetch,
     isLoading,
   } = useAllSurveysSummary();
-
+  const queryClient = useQueryClient();
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { data: graphData, isLoading: isResponseLoading } =
     useAllResponseForGraph(timePeriod, userTimeZone);
@@ -257,7 +258,13 @@ export default function DashboardHome() {
                 timePeriod={timePeriod}
                 setTimePeriod={setTimePeriod}
                 data={graphData}
-                refreshKeys={["reponse", "graph", timePeriod, userTimeZone]}
+                onRefresh={async () => {
+                  await queryClient.invalidateQueries({
+                    queryKey: [
+                      ["reponse", "graph", timePeriod, userTimeZone, "", []],
+                    ],
+                  });
+                }}
                 translations={translations}
                 isLoading={isResponseLoading}
               />

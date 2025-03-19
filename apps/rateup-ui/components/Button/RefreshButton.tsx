@@ -11,9 +11,11 @@ import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 const RefreshButton = ({
   queryKeys,
   onClick,
+  isLoading,
 }: {
   queryKeys?: Array<string>;
   onClick?: () => void;
+  isLoading?: boolean;
 }) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
@@ -47,7 +49,7 @@ const RefreshButton = ({
         variant="light"
         aria-label="Refresh"
         onClick={handleRefresh}
-        loading={loading}
+        loading={loading || isLoading}
       >
         <IconRefresh style={{ width: "90%", height: "90%" }} stroke={1.5} />
       </ActionIcon>
