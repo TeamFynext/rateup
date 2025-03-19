@@ -8,7 +8,13 @@ import useTranslations from "@/dictionaries/useTranslation";
 
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 
-const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
+const RefreshButton = ({
+  queryKeys,
+  onClick,
+}: {
+  queryKeys?: Array<string>;
+  onClick?: () => void;
+}) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const { translations } = useTranslations();
@@ -21,8 +27,11 @@ const RefreshButton = ({ queryKeys }: { queryKeys: Array<string> }) => {
       true,
       translations["Refreshing"],
     );
-    for (const queryKey of queryKeys)
-      await queryClient.invalidateQueries({ queryKey: [queryKey] });
+    if (onClick) onClick();
+    else {
+      for (const queryKey of queryKeys)
+        await queryClient.invalidateQueries({ queryKey: [queryKey] });
+    }
     setLoading(false);
     showSuccessToast(
       translations["Data Updated Successfully"],
