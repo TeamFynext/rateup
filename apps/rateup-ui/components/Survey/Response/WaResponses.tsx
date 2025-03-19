@@ -31,6 +31,7 @@ import utc from "dayjs/plugin/utc";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -47,6 +48,7 @@ import {
   useDeleteResponse,
   useDownloadExcelResponse,
   useExportContactResponses,
+  useResponsesBySurvey,
   useSyncResponseToGoogleSheet,
 } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
@@ -58,7 +60,7 @@ import {
   SubscriptionFeaturePathName,
   WaQuestions,
 } from "../../../types/enums";
-import { docsPath } from "../../../utils/constants";
+import { docsPath, PAGE_SIZE } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
 import {
   showErrorToast,
@@ -90,15 +92,18 @@ dayjs.extend(timezone);
 
 const WaResponses = ({
   survey,
-  responses,
   defaultLanguage,
-  isLoading,
   selectedTeamId,
   subscription,
   questions,
 }) => {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
   const surveyId = survey?.id;
-  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
+  const { surveyTeamMapId, filterTeams, filterTags } =
+    useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -126,12 +131,43 @@ const WaResponses = ({
   const [ranges, setRange] = useState<Range[]>([]);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
+  const [campaignFlowFilter, setCampaignFlowFilter] = useState([]);
+  const contactIds = useMemo(
+    () =>
+      campaignFlowFilter.length
+        ? new Set(
+            campaignFlowFilter.flatMap(
+              (campaign) => campaign.participantsContactIds,
+            ),
+          )
+        : [],
+    [campaignFlowFilter],
+  );
+  const {
+    data: responseData,
+    isLoading,
+    isRefetching,
+    error,
+    refetch: refetchResponse,
+  } = useResponsesBySurvey(survey?.id, {
+    ...pagination,
+    filterTeams,
+    tags: filterTags,
+    selectedLanguage: defaultLanguage,
+    contactIds,
+    ranges: ranges.length
+      ? [
+          dayjs(ranges[0]?.startDate).toISOString(),
+          dayjs(ranges[0]?.endDate).toISOString(),
+        ]
+      : "",
+  });
   const hasContactQuestion = useMemo(
     () =>
-      responses?.some((response) =>
+      responseData?.responses?.some((response) =>
         response?.responses?.some((res) => QuestionType.Contact === res.type),
       ),
-    [responses],
+    [responseData?.responses],
   );
   const enableTicket =
     survey?.enableTickets &&
@@ -151,20 +187,7 @@ const WaResponses = ({
 
   const exportContactMutation = useExportContactResponses(surveyId);
 
-  const [campaignFlowFilter, setCampaignFlowFilter] = useState([]);
   const { data: CFData } = useCampaignFilterForFlows(surveyId);
-
-  const handleCampaignFlowFilter = useCallback(
-    (responses) => {
-      if (campaignFlowFilter.length === 0) return responses;
-      return responses.filter((response) =>
-        campaignFlowFilter.some((campaign) =>
-          campaign.participantsContactIds.includes(response.contactId),
-        ),
-      );
-    },
-    [campaignFlowFilter],
-  );
 
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExportContacts = useCallback(() => {
@@ -406,39 +429,8 @@ const WaResponses = ({
     }
   }, [refreshing]);
 
-  useEffect(() => {
-    if (!responses || !responses?.length) return;
-    if (ranges.length === 0) {
-      const endDate = dayjs();
-      let startDate = dayjs();
-      responses
-        ?.map((res) => dayjs(res.createdAt))
-        .forEach((responseDate) => {
-          if (responseDate.isBefore(startDate)) startDate = responseDate;
-        });
-      setRange([
-        {
-          startDate: startDate?.toDate(),
-          endDate: endDate.toDate(),
-          key: "selection",
-        },
-      ]);
-    }
-  }, [ranges, responses]);
-
   const data = useMemo(() => {
-    const filteredResponses = ranges?.[0]
-      ? responses.filter((response) =>
-          dayjs(response.createdAt).isBetween(
-            ranges[0].startDate,
-            ranges[0].endDate,
-            "day",
-            "[]",
-          ),
-        )
-      : responses;
-
-    let t = filteredResponses?.map((item) => {
+    let t = responseData?.responses?.map((item) => {
       const row = {
         id: item.id,
         contactId: item.contactId,
@@ -457,11 +449,11 @@ const WaResponses = ({
 
       return row;
     });
-    return handleCampaignFlowFilter(t);
-  }, [ranges, responses, questions]);
-  if (isLoading) return <RateupLoader />;
+  }, [responseData?.responses, questions]);
+  if (isLoading || isRefetching) return <RateupLoader />;
+  if (error) return <ErrorComponent refetch={refetchResponse} />;
 
-  const responseCount = responses?.length;
+  const responseCount = responseData?.totalCount;
   return (
     <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
@@ -592,7 +584,13 @@ const WaResponses = ({
 
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
-          <TanstackTable data={data} columns={columns} />
+          <TanstackTable
+            data={data}
+            columns={columns}
+            pagination={pagination}
+            setPagination={setPagination}
+            totalCount={responseCount}
+          />
           <DeleteModal
             confirmDelete={confirmDelete}
             translations={translations}

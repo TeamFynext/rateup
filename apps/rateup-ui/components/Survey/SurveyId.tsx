@@ -30,6 +30,7 @@ import { useUser } from "../../context/UserContext";
 import { SurveyType } from "../../types/enums";
 import { UserRole } from "../../utils/enums";
 import { getFromSessionStorage } from "../../utils/essential";
+import ErrorComponent from "../404/ErrorComponent";
 import RateupLoader from "../Loaders/RateupLoader";
 import TabPanelsComp from "./Tabs/TabPanels";
 import TabsListComp from "./Tabs/TabsList";
@@ -56,8 +57,14 @@ export default function SurveyID() {
     isLoading: isSurveyLoading,
     error: surveyError,
     data: survey,
+    refetch,
   } = useSurvey(surveyId);
-  const { isLoading, error, data: questions } = useQuestions(surveyId);
+  const {
+    isLoading,
+    error,
+    data: questions,
+    refetch: refetchQuestions,
+  } = useQuestions(surveyId);
 
   const { data: surveyVariables } = useGetSurveyVariables(surveyId, false);
   const { update } = useRouteParams();
@@ -200,7 +207,9 @@ export default function SurveyID() {
     return <RateupLoader h={"80dvh"} />;
 
   if (error || surveyError) {
-    return <p>{translations["An error has occurred"]}</p>;
+    return (
+      <ErrorComponent refetch={surveyError ? refetch : refetchQuestions} />
+    );
   }
 
   return (

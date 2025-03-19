@@ -40,6 +40,9 @@ function TanstackTable({
   isPending = false,
   columnFiltersE,
   setColumnFiltersE,
+  pagination,
+  setPagination,
+  totalCount,
 }: Readonly<{
   className?: string;
   data: any;
@@ -56,6 +59,9 @@ function TanstackTable({
   isPending?: boolean;
   columnFiltersE?: ColumnFiltersState;
   setColumnFiltersE?: (newFilters: ColumnFiltersState) => void;
+  pagination?: any;
+  setPagination?: (pagination) => void;
+  totalCount?: number;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -107,9 +113,10 @@ function TanstackTable({
       sorting,
       columnFilters: columnFiltersE || columnFilters,
       rowSelection,
+      pagination,
     },
     initialState: {
-      pagination: {
+      pagination: pagination ?? {
         pageSize: Number(PAGE_SIZE[0]),
       },
     },
@@ -121,6 +128,12 @@ function TanstackTable({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: handleColumnVisibilityChange,
     onRowSelectionChange: handleRowSelectionChange,
+    onPaginationChange: setPagination ?? undefined,
+    manualPagination: !!pagination,
+    manualSorting: !!pagination,
+    manualFiltering: !!pagination,
+    rowCount: totalCount,
+    autoResetPageIndex: !pagination,
   });
 
   return (
