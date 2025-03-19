@@ -37,6 +37,7 @@ import { hasFeature } from "../subscription/subscription.service";
 import { updateQuestionsOnSurvey } from "../question/question.service";
 import { createStats } from "../stats/stats.service";
 import dayjs from "dayjs";
+import { Prisma } from "@prisma/client";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -1384,6 +1385,8 @@ export async function getSurveyResponseCountForGraph(
   orgId: string,
   userTimeZone,
   timePeriod,
+  surveyId = "",
+  teamMapIds = [],
 ) {
   let res = null;
   if (timePeriod === "hourly") {
@@ -1394,7 +1397,8 @@ export async function getSurveyResponseCountForGraph(
           LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
           LEFT JOIN "Survey" s ON st."surveyId" = s.id
           WHERE s."orgId" = ${orgId}::uuid
-          AND sr."createdAt"::DATE = CURRENT_DATE
+          AND sr."createdAt"::DATE = CURRENT_DATE ${surveyId.length ? Prisma.sql`AND st."surveyId" = ${surveyId}::uuid` : Prisma.empty}
+          ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.empty}
           GROUP BY date 
           ORDER BY date;
           ;`;
@@ -1402,7 +1406,7 @@ export async function getSurveyResponseCountForGraph(
     const resMap = new Map(res.map((r) => [r.date, r]));
     res = [];
     for (var i = 0; i < 24; i++) {
-      let date = dayjs().hour(i).format("h A");
+      let date = dayjs().hour(i).format("hh A");
       res.push(resMap.get(date) ?? { date, responses: 0 });
     }
   } else if (timePeriod === "daily") {
@@ -1411,7 +1415,8 @@ export async function getSurveyResponseCountForGraph(
         FROM "SurveyResponse" sr
         LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
         LEFT JOIN "Survey" s ON st."surveyId" = s.id
-        WHERE s."orgId"=${orgId}::uuid
+        WHERE s."orgId"=${orgId}::uuid ${surveyId.length ? Prisma.sql`AND st."surveyId" = ${surveyId}::uuid` : Prisma.empty}
+        ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.empty}
         AND sr."createdAt" >= CURRENT_DATE - INTERVAL '30 days'
         GROUP BY date ORDER BY date;
     `;
@@ -1435,7 +1440,8 @@ export async function getSurveyResponseCountForGraph(
         LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
         LEFT JOIN "Survey" s ON st."surveyId" = s.id
         JOIN current_week cw ON TRUE  
-        WHERE s."orgId"=${orgId}::uuid
+        WHERE s."orgId"=${orgId}::uuid ${surveyId.length ? Prisma.sql`AND st."surveyId" = ${surveyId}::uuid` : Prisma.empty}
+        ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.empty}
         AND sr."createdAt"::DATE >= cw.year_back
       GROUP BY date ORDER BY date;`;
 
