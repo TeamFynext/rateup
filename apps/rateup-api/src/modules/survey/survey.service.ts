@@ -1380,7 +1380,7 @@ export async function endSurveyCronAction() {
   );
 }
 
-export async function getSurveyResponseCount(
+export async function getSurveyResponseCountForGraph(
   orgId: string,
   userTimeZone,
   timePeriod,

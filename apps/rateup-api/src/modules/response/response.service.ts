@@ -7,7 +7,11 @@ import {
   getContent,
   getReplacedTitleFromVariable,
 } from "../../utils/survey/response.data";
-import { CreateResponseInput, GenerateBodyInput } from "./response.schema";
+import {
+  CreateResponseInput,
+  GenerateBodyInput,
+  ResponseFilterQuery,
+} from "./response.schema";
 import {
   ChoiceTypeQuestions,
   IntegratedApps,
@@ -53,6 +57,7 @@ import {
   YNResponseMap,
 } from "../../utils/enumMap";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
+import { PaginationQuery } from "../contact/contact.schema";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -1738,3 +1743,94 @@ const getCellData = (response, question) => {
       return response.toString() || "";
   }
 };
+
+export async function getSurveyResponseCount(surveyId) {
+  const teamWiseCount = (await prisma.$queryRaw`SELECT st.id, 
+  COUNT(sr.id)::INTEGER
+  FROM "SurveyTeamMap" st
+  LEFT JOIN "SurveyResponse" sr ON st.id = sr."surveyTeamMapId" WHERE st."surveyId"=${surveyId}::uuid 
+  GROUP BY st.id
+  ;`) as { id: string; count: number }[];
+  return {
+    all: teamWiseCount.reduce((total, teamMap) => (total += teamMap.count), 0),
+    teamWiseCount,
+  };
+}
+
+export async function getSurveyResponseBySurveyId(
+  surveyId: string,
+  teamIds: string[],
+  filter: ResponseFilterQuery,
+) {
+  const {
+    page,
+    limit,
+    surveyTeamMapIds,
+    language,
+    tags,
+    contactIds,
+    dateRange,
+  } = filter;
+  let where = {
+    surveyTeamMap: {
+      surveyId,
+      teamId: {
+        in: teamIds,
+      },
+    },
+    language,
+  };
+  if (surveyTeamMapIds?.length)
+    where.surveyTeamMap["id"] = {
+      in: surveyTeamMapIds?.split(","),
+    };
+  if (tags?.length) {
+    where["tag"] = {
+      in: tags?.split(","),
+    };
+  }
+  if (contactIds?.length) {
+    where["contactId"] = {
+      in: contactIds?.split(","),
+    };
+  }
+  if (dateRange?.length) {
+    const [startDate, endDate] = dateRange?.split(",");
+    where["createdAt"] = {
+      gte: dayjs(startDate).startOf("day").toISOString(),
+      lte: dayjs(endDate).endOf("day").toISOString(),
+    };
+  }
+
+  let pagination = {};
+  if ((page === 0 || page) && limit) {
+    pagination = {
+      skip: page * Number(limit),
+      take: Number(limit),
+    };
+  }
+  const totalCount = await prisma.surveyResponse.count({ where });
+  const responses = await prisma.surveyResponse.findMany({
+    where,
+    select: {
+      id: true,
+      contactId: true,
+      language: true,
+      tag: true,
+      responses: true,
+      createdAt: true,
+      encryptedResponses: true,
+      Contact: {
+        select: {
+          phone: true,
+        },
+      },
+      platform: true,
+    },
+    ...pagination,
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+  return { totalCount, responses };
+}

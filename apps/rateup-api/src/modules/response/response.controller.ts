@@ -6,6 +6,7 @@ import {
   GenerateBodyInput,
   generateXlsxBody,
   SummarizeInput,
+  ResponseFilterQuery,
 } from "./response.schema";
 import {
   createResponse,
@@ -19,6 +20,8 @@ import {
   getResponses,
   getResponseSummary,
   getSurveyList,
+  getSurveyResponseBySurveyId,
+  getSurveyResponseCount,
   resetResponsesStats,
   saveResponseToGoogleSheet,
   sendEmailOnResponseCreation,
@@ -40,6 +43,7 @@ import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import { getSubscription } from "../subscription/subscription.service";
 import { getFlowFromDb } from "../whatsapp/flows/flow.service";
+import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -65,7 +69,6 @@ export async function getAllResponsesHandler(
 ) {
   try {
     const surveyId = request.params.surveyId;
-
     const teamIds = await getTeamIdsByUserId(request.userId);
     const responses = await getAllResponses(surveyId, teamIds);
     if (responses.length === 0)
@@ -348,5 +351,39 @@ export async function exportContactResponseToContactsHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send({ message: "Error exporting contacts" });
+  }
+}
+
+export async function getSurveyResponseCountHandler(
+  request: FastifyRequest<{ Params: BySurveyIdParamsInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getSurveyResponseCount(request.params.surveyId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getSurveyResponseBySurveyIdHandler(
+  request: FastifyRequest<{
+    Params: BySurveyIdParamsInput;
+    Querystring: ResponseFilterQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const teamIds = await getTeamIdsByUserId(request.userId);
+    const res = await getSurveyResponseBySurveyId(
+      request.params.surveyId,
+      teamIds,
+      request.query,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
