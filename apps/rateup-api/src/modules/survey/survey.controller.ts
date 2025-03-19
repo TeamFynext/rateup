@@ -30,7 +30,7 @@ import {
   getSurveyVariables,
   updateSurveyVariable,
   deleteSurveyVariable,
-  getSurveyResponseCount,
+  getSurveyResponseCountForGraph,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -620,13 +620,13 @@ export async function deleteSurveyVariableHandler(
   }
 }
 
-export async function getSurveyResponseCountHandler(
+export async function getSurveyResponseCountForGraphHandler(
   request: FastifyRequest<{ Querystring: GraphResponseParams }>,
   reply: FastifyReply,
 ) {
   try {
     const { userTimeZone, timePeriod } = request.query;
-    const res = await getSurveyResponseCount(
+    const res = await getSurveyResponseCountForGraph(
       request.user.orgId,
       userTimeZone,
       timePeriod,
