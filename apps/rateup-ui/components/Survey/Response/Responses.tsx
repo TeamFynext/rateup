@@ -8,7 +8,16 @@ import {
 } from "react";
 import { useRouter } from "next/router";
 
-import { Box, Button, Flex, Group, Popover, Stack, Text } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Flex,
+  Group,
+  Popover,
+  Skeleton,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { range, useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
@@ -142,7 +151,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     ...pagination,
     filterTeams,
     tags: filterTags,
-    selectedLanguage: defaultLanguage,
+    selectedLanguage: "",
     contactIds,
     ranges: ranges?.length
       ? [
@@ -307,6 +316,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       );
     }
   };
+  const isPending = isQLoading || isLoading || CFLoading || isRefetching;
 
   if (QError || error) return <ErrorComponent refetch={refetch} />;
 
@@ -319,124 +329,129 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-
-      <Group className={styles["total-responses-export-btn-container"]}>
-        <Flex align={"center"}>
-          <Heading
-            subtitle={`${translations["Total Responses :"]} ${responseData?.totalCount}`}
-          />
-          <RefreshButton queryKeys={["allresponses"]} />
-        </Flex>
-
-        <DateRangePickerButton
-          onChange={(r) => setRange(r ? [r["selection"]] : [])}
-          ranges={ranges}
-        />
-
-        <Group>
-          {CFData && CFData.length > 0 && (
-            <ContainedMultiSelect
-              placeholder={translations["Filter By Campaign"]}
-              onChange={(value) =>
-                setCampaignFlowFilter(
-                  CFData.filter((c) => value.includes(c.campaignId)),
-                )
-              }
-              data={CFData.map(({ campaignName, campaignId }) => ({
-                value: campaignId,
-                label: campaignName,
-              }))}
+      <Skeleton
+        visible={isPending}
+        h={isPending && 70}
+        className={isPending && styles["total-responses-export-btn-container"]}
+      >
+        <Group className={styles["total-responses-export-btn-container"]}>
+          <Flex align={"center"}>
+            <Heading
+              subtitle={`${translations["Total Responses :"]} ${responseData?.totalCount ?? 0}`}
             />
-          )}
-          {!survey?.isEncrypted && (
-            <Popover
-              position="bottom-end"
-              withArrow
-              shadow="md"
-              classNames={{
-                dropdown: styles["filters-popover-dropdown-div"],
-              }}
-              opened={openedExport}
-            >
-              <Popover.Target>
-                <Button
-                  className={styles["export-btn"]}
-                  leftSection={<IconTableExport />}
-                  radius={"lg"}
-                  fw={400}
-                  onClick={toggle}
-                >
-                  {translations["Export"]}
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Stack>
-                  <RateupButtonSecondary
-                    title={
-                      survey.spreadSheetId
-                        ? translations["Resync with Google Sheet"]
-                        : translations["Sync with Google Sheet"]
-                    }
-                    onClick={() => {
-                      if (survey.spreadSheetId) alertModalOpen();
-                      else handleSyncGoogleSheet();
-                    }}
-                    leftIcon={
-                      <IconRefresh
-                        className={
-                          isSyncing ? styles.rotateInfinitely : undefined
-                        }
-                        style={{ width: "90%", height: "90%" }}
-                        stroke={1.5}
-                      />
-                    }
-                  />
-                  <RateupButtonSecondary
-                    onClick={() => {
-                      handleExcelDownload();
-                      toggle();
-                    }}
-                    title={translations["Download Excel"]}
+            <RefreshButton onClick={() => refetchResponse()} />
+          </Flex>
+
+          <DateRangePickerButton
+            onChange={(r) => setRange(r ? [r["selection"]] : [])}
+            ranges={ranges}
+          />
+
+          <Group>
+            {CFData && CFData.length > 0 && (
+              <ContainedMultiSelect
+                placeholder={translations["Filter By Campaign"]}
+                onChange={(value) =>
+                  setCampaignFlowFilter(
+                    CFData.filter((c) => value.includes(c.campaignId)),
+                  )
+                }
+                data={CFData.map(({ campaignName, campaignId }) => ({
+                  value: campaignId,
+                  label: campaignName,
+                }))}
+              />
+            )}
+            {!survey?.isEncrypted && (
+              <Popover
+                position="bottom-end"
+                withArrow
+                shadow="md"
+                classNames={{
+                  dropdown: styles["filters-popover-dropdown-div"],
+                }}
+                opened={openedExport}
+              >
+                <Popover.Target>
+                  <Button
+                    className={styles["export-btn"]}
+                    leftSection={<IconTableExport />}
                     radius={"lg"}
-                    leftIcon={<IconFileDownload stroke={1.5} />}
-                  />
-                  {hasContactQuestion && (
+                    fw={400}
+                    onClick={toggle}
+                  >
+                    {translations["Export"]}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Stack>
                     <RateupButtonSecondary
-                      onClick={handleExportContacts}
-                      title={translations["Export Contacts"]}
-                      radius={"lg"}
-                      leftIcon={<IconDatabaseImport stroke={1.5} />}
+                      title={
+                        survey.spreadSheetId
+                          ? translations["Resync with Google Sheet"]
+                          : translations["Sync with Google Sheet"]
+                      }
+                      onClick={() => {
+                        if (survey.spreadSheetId) alertModalOpen();
+                        else handleSyncGoogleSheet();
+                      }}
+                      leftIcon={
+                        <IconRefresh
+                          className={
+                            isSyncing ? styles.rotateInfinitely : undefined
+                          }
+                          style={{ width: "90%", height: "90%" }}
+                          stroke={1.5}
+                        />
+                      }
                     />
-                  )}
-                  <ConfirmationModal
-                    opened={alertModalOpened}
-                    onClose={alertModalClose}
-                    headerTitle={translations["Resync Google Sheet"]}
-                    headerLabel={
-                      translations[
-                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
-                      ]
-                    }
-                    confirmLabel={translations["Yes"]}
-                    onConfirm={handleSyncGoogleSheet}
-                  />
-                  <ConfirmationModal
-                    opened={redirectModalOpened}
-                    onClose={redirectModalClose}
-                    headerTitle={translations["Sync Google Sheet"]}
-                    headerLabel={alertMsg}
-                    confirmLabel={translations["Continue"]}
-                    onConfirm={() => {
-                      router.push("/dashboard/apps&services/googlesheet");
-                    }}
-                  />
-                </Stack>
-              </Popover.Dropdown>
-            </Popover>
-          )}
-          <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
+                    <RateupButtonSecondary
+                      onClick={() => {
+                        handleExcelDownload();
+                        toggle();
+                      }}
+                      title={translations["Download Excel"]}
+                      radius={"lg"}
+                      leftIcon={<IconFileDownload stroke={1.5} />}
+                    />
+                    {hasContactQuestion && (
+                      <RateupButtonSecondary
+                        onClick={handleExportContacts}
+                        title={translations["Export Contacts"]}
+                        radius={"lg"}
+                        leftIcon={<IconDatabaseImport stroke={1.5} />}
+                      />
+                    )}
+                    <ConfirmationModal
+                      opened={alertModalOpened}
+                      onClose={alertModalClose}
+                      headerTitle={translations["Resync Google Sheet"]}
+                      headerLabel={
+                        translations[
+                          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
+                        ]
+                      }
+                      confirmLabel={translations["Yes"]}
+                      onConfirm={handleSyncGoogleSheet}
+                    />
+                    <ConfirmationModal
+                      opened={redirectModalOpened}
+                      onClose={redirectModalClose}
+                      headerTitle={translations["Sync Google Sheet"]}
+                      headerLabel={alertMsg}
+                      confirmLabel={translations["Continue"]}
+                      onConfirm={() => {
+                        router.push("/dashboard/apps&services/googlesheet");
+                      }}
+                    />
+                  </Stack>
+                </Popover.Dropdown>
+              </Popover>
+            )}
+            <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
+          </Group>
         </Group>
-      </Group>
+      </Skeleton>
 
       {responseData?.totalCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
@@ -448,7 +463,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
             pagination={pagination}
             setPagination={setPagination}
             totalCount={responseData?.totalCount}
-            isPending={isQLoading || isLoading || CFLoading || isRefetching}
+            isPending={isPending}
           />
           <DeleteModal
             confirmDelete={confirmDelete}
