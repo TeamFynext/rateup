@@ -1778,7 +1778,6 @@ export async function getSurveyResponseBySurveyId(
         in: teamIds,
       },
     },
-    language,
   };
   if (surveyTeamMapIds?.length)
     where.surveyTeamMap["id"] = {
@@ -1788,6 +1787,9 @@ export async function getSurveyResponseBySurveyId(
     where["tag"] = {
       in: tags?.split(","),
     };
+  }
+  if (language?.length) {
+    where["language"] = language;
   }
   if (contactIds?.length) {
     where["contactId"] = {
