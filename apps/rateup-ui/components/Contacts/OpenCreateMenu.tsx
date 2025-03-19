@@ -41,7 +41,7 @@ const OpenCreateMenu = ({
         rightIcon={<IconPlus size={20} />}
         disabled={isPending}
         onClick={() => {
-          if (tab === ContactTabs.CONTACTS) {
+          if (tab === WhatsappTableType.CONTACTS) {
             contactOpen();
           } else if (tab === ContactTabs.GROUPS) {
             groupOpen();

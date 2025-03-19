@@ -308,8 +308,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     }
   };
 
-  if (isQLoading || isLoading || CFLoading || isRefetching)
-    return <RateupLoader />;
   if (QError || error) return <ErrorComponent refetch={refetch} />;
 
   return (
@@ -442,17 +440,16 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
 
       {responseData?.totalCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
-          <Suspense fallback={<RateupLoader />}>
-            <TanstackTable
-              data={responseData?.responses}
-              columns={columns}
-              columnFiltersE={columnFilters}
-              setColumnFiltersE={setColumnFilters}
-              pagination={pagination}
-              setPagination={setPagination}
-              totalCount={responseData?.totalCount}
-            />
-          </Suspense>
+          <TanstackTable
+            data={responseData?.responses}
+            columns={columns}
+            columnFiltersE={columnFilters}
+            setColumnFiltersE={setColumnFilters}
+            pagination={pagination}
+            setPagination={setPagination}
+            totalCount={responseData?.totalCount}
+            isPending={isQLoading || isLoading || CFLoading || isRefetching}
+          />
           <DeleteModal
             confirmDelete={confirmDelete}
             translations={translations}

@@ -450,7 +450,6 @@ const WaResponses = ({
       return row;
     });
   }, [responseData?.responses, questions]);
-  if (isLoading || isRefetching) return <RateupLoader />;
   if (error) return <ErrorComponent refetch={refetchResponse} />;
 
   const responseCount = responseData?.totalCount;
@@ -590,6 +589,7 @@ const WaResponses = ({
             pagination={pagination}
             setPagination={setPagination}
             totalCount={responseCount}
+            isPending={isLoading || isRefetching}
           />
           <DeleteModal
             confirmDelete={confirmDelete}
