@@ -452,7 +452,10 @@ const WaResponses = ({
     });
   }, [responseData?.responses, questions]);
   const isPending = isLoading || isRefetching;
-  if (error) return <ErrorComponent refetch={refetchResponse} />;
+  if (error)
+    return (
+      <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
+    );
 
   const responseCount = responseData?.totalCount ?? 0;
   return (

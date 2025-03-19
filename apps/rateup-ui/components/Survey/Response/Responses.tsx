@@ -318,7 +318,8 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   };
   const isPending = isQLoading || isLoading || CFLoading || isRefetching;
 
-  if (QError || error) return <ErrorComponent refetch={refetch} />;
+  if (QError || error)
+    return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
     <Stack className={styles["responses-root-div"]}>

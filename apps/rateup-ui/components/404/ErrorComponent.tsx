@@ -11,8 +11,9 @@ type ErrorComponentProps = {
   refetch: (
     options?: RefetchOptions,
   ) => Promise<QueryObserverResult<any, Error>>;
+  isRefetching?: boolean;
 };
-const ErrorComponent = ({ refetch }: ErrorComponentProps) => {
+const ErrorComponent = ({ refetch, isRefetching }: ErrorComponentProps) => {
   return (
     <Container
       flex={1}
@@ -51,6 +52,7 @@ const ErrorComponent = ({ refetch }: ErrorComponentProps) => {
             title="Try Again"
             onClick={refetch}
             variant="outline"
+            loading={isRefetching}
           />
         </Box>
       </Stack>
