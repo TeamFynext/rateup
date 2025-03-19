@@ -152,8 +152,8 @@ const WaResponses = ({
   } = useResponsesBySurvey(survey?.id, {
     ...pagination,
     filterTeams,
-    tags: filterTags,
-    selectedLanguage: defaultLanguage,
+    tags: filterTags ? filterTags : "",
+    selectedLanguage: "en",
     contactIds,
     ranges: ranges.length
       ? [
@@ -430,7 +430,7 @@ const WaResponses = ({
   }, [refreshing]);
 
   const data = useMemo(() => {
-    let t = responseData?.responses?.map((item) => {
+    return responseData?.responses?.map((item) => {
       const row = {
         id: item.id,
         contactId: item.contactId,
@@ -452,7 +452,7 @@ const WaResponses = ({
   }, [responseData?.responses, questions]);
   if (error) return <ErrorComponent refetch={refetchResponse} />;
 
-  const responseCount = responseData?.totalCount;
+  const responseCount = responseData?.totalCount ?? 0;
   return (
     <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
@@ -584,7 +584,7 @@ const WaResponses = ({
       {responseCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
           <TanstackTable
-            data={data}
+            data={data ?? []}
             columns={columns}
             pagination={pagination}
             setPagination={setPagination}

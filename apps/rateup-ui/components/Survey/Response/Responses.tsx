@@ -441,7 +441,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       {responseData?.totalCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
           <TanstackTable
-            data={responseData?.responses}
+            data={responseData ? responseData?.responses : []}
             columns={columns}
             columnFiltersE={columnFilters}
             setColumnFiltersE={setColumnFilters}
