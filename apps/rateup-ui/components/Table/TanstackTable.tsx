@@ -113,12 +113,16 @@ function TanstackTable({
       sorting,
       columnFilters: columnFiltersE || columnFilters,
       rowSelection,
-      pagination,
+      ...(pagination ? { pagination } : {}),
     },
     initialState: {
-      pagination: pagination ?? {
-        pageSize: Number(PAGE_SIZE[0]),
-      },
+      ...(pagination
+        ? { pagination }
+        : {
+            pagination: {
+              pageSize: Number(PAGE_SIZE[0]),
+            },
+          }),
     },
     onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
@@ -128,7 +132,7 @@ function TanstackTable({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: handleColumnVisibilityChange,
     onRowSelectionChange: handleRowSelectionChange,
-    onPaginationChange: setPagination ?? undefined,
+    ...(pagination ? { onPaginationChange: setPagination } : {}),
     manualPagination: !!pagination,
     manualSorting: !!pagination,
     manualFiltering: !!pagination,
