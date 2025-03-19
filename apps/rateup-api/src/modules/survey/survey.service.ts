@@ -36,6 +36,7 @@ import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme";
 import { hasFeature } from "../subscription/subscription.service";
 import { updateQuestionsOnSurvey } from "../question/question.service";
 import { createStats } from "../stats/stats.service";
+import dayjs from "dayjs";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -635,10 +636,9 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       teams: {
         select: {
           id: true,
-          responses: {
+          _count: {
             select: {
-              id: true,
-              createdAt: true,
+              responses: true,
             },
           },
           surveyStats: {
@@ -664,26 +664,32 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       },
     },
   });
-
   const data = allSurveys?.map((survey) => {
-    const surveys = {
-      ...survey,
-      teamMapIds: survey.teams.map((team) => ({
+    let responseCount = 0;
+    let teamMapIds = [];
+    let teams = [];
+    survey.teams.forEach((team) => {
+      responseCount += team._count.responses;
+      teamMapIds.push({
         teamMapId: team.id,
         teamName: team.team.name,
         teamId: team.team.id,
-      })),
-      teams: survey.teams.map((team) => ({
+      });
+      teams.push({
         id: team.team.id,
         mapId: team.id,
         teamName: team.team.name,
-        responses: team.responses,
         surveyStats: team.surveyStats,
-      })),
+      });
+    });
+    const surveys = {
+      ...survey,
+      responseCount,
+      teamMapIds,
+      teams,
     };
     return surveys;
   });
-
   let summaryData = {
     totalTeamsCount: teamIds?.length,
     totalSurveysCount: allSurveys?.length,
@@ -1372,4 +1378,73 @@ export async function endSurveyCronAction() {
   console.log(
     `Unpublished ${surveysToUnpublish.length} surveys. At ${currentTime}`,
   );
+}
+
+export async function getSurveyResponseCountForGraph(
+  orgId: string,
+  userTimeZone,
+  timePeriod,
+) {
+  let res = null;
+  if (timePeriod === "hourly") {
+    res = await prisma.$queryRaw`SELECT 
+            TO_CHAR(sr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${userTimeZone}, 'HH12 AM') AS date, 
+            COUNT(*)::INTEGER AS responses
+          FROM "SurveyResponse" sr
+          LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
+          LEFT JOIN "Survey" s ON st."surveyId" = s.id
+          WHERE s."orgId" = ${orgId}::uuid
+          AND sr."createdAt"::DATE = CURRENT_DATE
+          GROUP BY date 
+          ORDER BY date;
+          ;`;
+
+    const resMap = new Map(res.map((r) => [r.date, r]));
+    res = [];
+    for (var i = 0; i < 24; i++) {
+      let date = dayjs().hour(i).format("h A");
+      res.push(resMap.get(date) ?? { date, responses: 0 });
+    }
+  } else if (timePeriod === "daily") {
+    res = await prisma.$queryRaw`
+        SELECT TO_CHAR(sr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${userTimeZone}, 'Mon DD') AS date, COUNT(*)::INTEGER AS responses
+        FROM "SurveyResponse" sr
+        LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
+        LEFT JOIN "Survey" s ON st."surveyId" = s.id
+        WHERE s."orgId"=${orgId}::uuid
+        AND sr."createdAt" >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY date ORDER BY date;
+    `;
+    const resMap = new Map(res.map((r) => [r.date, r]));
+    res = [];
+    for (var i = 30; i > 0; i--) {
+      let date = dayjs()
+        .subtract(i - 1, "day")
+        .format("MMM DD");
+      res.push(resMap.get(date) ?? { date, responses: 0 });
+    }
+  } else if (timePeriod === "weekly") {
+    res = await prisma.$queryRaw`WITH current_week AS (
+            SELECT DATE_TRUNC('week', NOW() AT TIME ZONE 'UTC' AT TIME ZONE ${userTimeZone}) AS this_week,
+            CURRENT_DATE - INTERVAL '1 year' as year_back
+        )
+        SELECT 
+        (EXTRACT(EPOCH FROM (cw.this_week - DATE_TRUNC('week', sr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${userTimeZone}))) / 604800)::INTEGER as date,
+        COUNT(*)::INTEGER AS responses
+        FROM "SurveyResponse" sr
+        LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
+        LEFT JOIN "Survey" s ON st."surveyId" = s.id
+        JOIN current_week cw ON TRUE  
+        WHERE s."orgId"=${orgId}::uuid
+        AND sr."createdAt"::DATE >= cw.year_back
+      GROUP BY date ORDER BY date;`;
+
+    const resMap = new Map(res.map((r) => [r.date, r]));
+    res = [];
+    for (var i = 52; i >= 0; i--) {
+      res.push(resMap.get(i) ?? { date: i, responses: 0 });
+    }
+  }
+
+  return res;
 }

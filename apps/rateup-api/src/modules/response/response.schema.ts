@@ -118,6 +118,16 @@ export const summarizeSchema = z.object({
   teamId: z.string().optional(),
 });
 
+const responseFilterQuery = z.object({
+  page: z.number().optional(),
+  limit: z.number().optional(),
+  tags: z.string().optional(),
+  language: z.string().optional(),
+  surveyTeamMapIds: z.string().optional(),
+  contactIds: z.string().optional(),
+  dateRange: z.string().optional(),
+});
+
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   createResponseInputSchema,
   getResponsesParamsSchema,
@@ -129,6 +139,7 @@ export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   summarizeSchema,
   getResponsesBySurveyParamsSchema,
   getSurveyListResponseSchema,
+  responseFilterQuery,
 });
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
@@ -141,3 +152,4 @@ export type GenerateBodyInput = z.infer<typeof generateBodySchema>;
 export type getResponsesBody = z.infer<typeof getResponsesBodySchema>;
 export type generateXlsxBody = z.infer<typeof generateXlsxSchema>;
 export type SummarizeInput = z.infer<typeof summarizeSchema>;
+export type ResponseFilterQuery = z.infer<typeof responseFilterQuery>;

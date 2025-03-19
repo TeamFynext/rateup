@@ -7,6 +7,8 @@ import {
   generateResponseHandler,
   getAllResponsesHandler,
   getResponsesHandler,
+  getSurveyResponseBySurveyIdHandler,
+  getSurveyResponseCountHandler,
   resetResponsesHandler,
   summarizeResponseHandler,
   syncResponseToGoogleSheetHandler,
@@ -32,6 +34,17 @@ export async function responseRoutes(server: FastifyInstance) {
   //route dedcicated for getting all responses for a survey including all teams
   server.get("/all/:surveyId", getAllResponsesHandler);
 
+  server.get(
+    "/survey/:surveyId",
+    {
+      schema: {
+        querystring: $Rref("responseFilterQuery"),
+      },
+    },
+    getSurveyResponseBySurveyIdHandler,
+  );
+
+  server.get("/count/:surveyId", getSurveyResponseCountHandler);
   server.post(
     "/download-response",
     {

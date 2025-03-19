@@ -30,6 +30,7 @@ import {
   getSurveyVariables,
   updateSurveyVariable,
   deleteSurveyVariable,
+  getSurveyResponseCountForGraph,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -37,6 +38,7 @@ import {
   DeleteTeamSurveyInput,
   GetSurveyByIdParams,
   GetSurveyTemplatesParams,
+  GraphResponseParams,
   IdParamInput,
   PhoneParamInput,
   surveyVariableInput,
@@ -615,5 +617,23 @@ export async function deleteSurveyVariableHandler(
     reply
       .code(500)
       .send({ error: e?.message || "Something Went Wrong! Try again." });
+  }
+}
+
+export async function getSurveyResponseCountForGraphHandler(
+  request: FastifyRequest<{ Querystring: GraphResponseParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { userTimeZone, timePeriod } = request.query;
+    const res = await getSurveyResponseCountForGraph(
+      request.user.orgId,
+      userTimeZone,
+      timePeriod,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
