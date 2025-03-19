@@ -19,6 +19,8 @@ import {
   getAllResponses,
   getLargeTextResponseSummaryByAI,
   getResponses,
+  getResponsesBySurveyId,
+  getSurveyResponseCount,
   resetResponsesStats,
   syncResponseToGoogleSheet,
 } from "./response.api";
@@ -54,6 +56,14 @@ export const useAllResponses = (surveyId: string) => {
   });
 };
 
+export const useResponsesBySurvey = (surveyId, filter) => {
+  const filterQuery = `?page=${filter.pageIndex}
+  &limit=${filter.pageSize}&tags=${filter.tags}&language=${filter.selectedLanguage}&dateRange=${filter.ranges}&surveyTeamMapIds=${filter.filterTeams}`;
+  return useQuery({
+    queryFn: () => getResponsesBySurveyId(surveyId, filterQuery),
+    queryKey: ["response", "survey", surveyId, filter],
+  });
+};
 export function useResetResponsesStats(
   surveyId: string,
   surveyTeamMapId: string,
@@ -260,5 +270,13 @@ export const useExportContactResponses = (surveyId) => {
         true,
       );
     },
+  });
+};
+
+export const useResponseCount = (surveyId) => {
+  return useQuery({
+    queryFn: () => getSurveyResponseCount(surveyId),
+    queryKey: ["responseCount", surveyId],
+    enabled: !!surveyId,
   });
 };

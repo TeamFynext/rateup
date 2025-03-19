@@ -36,6 +36,7 @@ import {
   useDeleteResponse,
   useDownloadExcelResponse,
   useExportContactResponses,
+  useResponsesBySurvey,
   useSyncResponseToGoogleSheet,
 } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
@@ -47,7 +48,7 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
 } from "../../../types/enums";
-import { docsPath } from "../../../utils/constants";
+import { docsPath, PAGE_SIZE } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
 import {
   showErrorToast,
@@ -76,15 +77,14 @@ import styles from "./Responses.module.css";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const Responses = ({
-  survey,
-  responses,
-  defaultLanguage,
-  isLoading,
-  subscription,
-}) => {
+const Responses = ({ survey, defaultLanguage, subscription }) => {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Number(PAGE_SIZE[0]),
+  });
   const surveyId = survey?.id;
-  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
+  const { surveyTeamMapId, filterTeams, filterTags } =
+    useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const { user } = useUser();
@@ -112,6 +112,47 @@ const Responses = ({
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
+  //The below filtering should be done in the backend
+  const [campaignFlowFilter, setCampaignFlowFilter] = useState<
+    {
+      campaignId: string;
+      campaignName: string;
+      participantsContactIds: string[];
+    }[]
+  >([]);
+
+  const contactIds = useMemo(
+    () =>
+      campaignFlowFilter.length
+        ? new Set(
+            campaignFlowFilter.flatMap(
+              (campaign) => campaign.participantsContactIds,
+            ),
+          )
+        : [],
+    [campaignFlowFilter],
+  );
+  const {
+    data: responseData,
+    isLoading,
+    isRefetching,
+    error,
+    refetch: refetchResponse,
+  } = useResponsesBySurvey(survey?.id, {
+    ...pagination,
+    filterTeams,
+    tags: filterTags,
+    selectedLanguage: defaultLanguage,
+    contactIds,
+    ranges: ranges?.length
+      ? [
+          dayjs(ranges[0]?.startDate).toISOString(),
+          dayjs(ranges[0]?.endDate).toISOString(),
+        ]
+      : "",
+  });
+  const responses = responseData?.responses;
+
   const hasContactQuestion =
     responses &&
     responses?.some((response) =>
@@ -136,15 +177,6 @@ const Responses = ({
   } = useQuestions(surveyId);
 
   const exportContactMutation = useExportContactResponses(surveyId);
-
-  //The below filtering should be done in the backend
-  const [campaignFlowFilter, setCampaignFlowFilter] = useState<
-    {
-      campaignId: string;
-      campaignName: string;
-      participantsContactIds: string[];
-    }[]
-  >([]);
   const {
     data: CFData,
     error: CFError,
@@ -276,43 +308,10 @@ const Responses = ({
     }
   };
 
-  const [isTableLoading, setIsTableLoading] = useState(true);
+  if (isQLoading || isLoading || CFLoading || isRefetching)
+    return <RateupLoader />;
+  if (QError || error) return <ErrorComponent refetch={refetch} />;
 
-  useEffect(() => {
-    if (!responses || responses?.length === 0) return;
-    if (ranges.length === 0) {
-      const dates = responses.map((res) => dayjs(res.createdAt));
-      const startDate = dates
-        .reduce((min, date) => (date.isBefore(min) ? date : min))
-        .toDate();
-      const endDate = dayjs().toDate();
-      setRange([{ startDate, endDate, key: "selection" }]);
-    }
-    setIsTableLoading(false);
-  }, [responses, ranges]);
-
-  const filteredResponses = useMemo(() => {
-    if (!responses) return [];
-    const result = responses.filter((response) => {
-      const responseDate = dayjs(response.createdAt);
-      const matchesDateRange = ranges.some((range) =>
-        responseDate.isBetween(range.startDate, range.endDate, "day", "[]"),
-      );
-
-      const matchesCampaignFlow =
-        campaignFlowFilter.length === 0 ||
-        campaignFlowFilter.some((campaign) =>
-          campaign.participantsContactIds.includes(response.contactId),
-        );
-
-      return matchesDateRange && matchesCampaignFlow;
-    });
-    return result;
-  }, [responses, ranges, campaignFlowFilter]);
-  if (isQLoading || isLoading || CFLoading) return <RateupLoader />;
-  if (QError) return <ErrorComponent refetch={refetch} />;
-
-  const responseCount = responses?.length;
   return (
     <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
@@ -326,7 +325,7 @@ const Responses = ({
       <Group className={styles["total-responses-export-btn-container"]}>
         <Flex align={"center"}>
           <Heading
-            subtitle={`${translations["Total Responses :"]} ${responseCount}`}
+            subtitle={`${translations["Total Responses :"]} ${responseData?.totalCount}`}
           />
           <RefreshButton queryKeys={["allresponses"]} />
         </Flex>
@@ -441,20 +440,19 @@ const Responses = ({
         </Group>
       </Group>
 
-      {responseCount > 0 ? (
+      {responseData?.totalCount > 0 ? (
         <Box className={styles["responses-table-container"]}>
-          {isTableLoading ? (
-            <RateupLoader />
-          ) : (
-            <Suspense fallback={<RateupLoader />}>
-              <TanstackTable
-                data={filteredResponses}
-                columns={columns}
-                columnFiltersE={columnFilters}
-                setColumnFiltersE={setColumnFilters}
-              />
-            </Suspense>
-          )}
+          <Suspense fallback={<RateupLoader />}>
+            <TanstackTable
+              data={responseData?.responses}
+              columns={columns}
+              columnFiltersE={columnFilters}
+              setColumnFiltersE={setColumnFilters}
+              pagination={pagination}
+              setPagination={setPagination}
+              totalCount={responseData?.totalCount}
+            />
+          </Suspense>
           <DeleteModal
             confirmDelete={confirmDelete}
             translations={translations}

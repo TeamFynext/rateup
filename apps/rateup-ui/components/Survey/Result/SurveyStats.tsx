@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 
 import {
   ActionIcon,
@@ -15,6 +15,7 @@ import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
 
 import {
   useAllResponses,
+  useResponseCount,
   useResponses,
 } from "../../../backend/surveys/response/response.query";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
@@ -49,6 +50,22 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
     isLoading: isResponsesLoading,
     error: responsesError,
   } = useResponses(surveyTeamMapId);
+
+  const {
+    data: responseCountData,
+    isLoading,
+    refetch: refetchCount,
+  } = useResponseCount(survey?.id);
+
+  const responseCount = useMemo(
+    () =>
+      filterTeams?.length
+        ? responseCountData?.teamWiseCount?.reduce((total, teamMap) => {
+            if (filterTeams.includes(teamMap.id)) total += teamMap.count;
+          }, 0)
+        : responseCountData?.all,
+    [responseCountData, filterTeams],
+  );
   const {
     data: teamWiseResponses,
     isLoading: rLoading,
@@ -87,13 +104,13 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
   );
   const { data: flowMetrics, isPending } = useWaFlowMetrics(
     flowId,
-    !!flowId && responseLength > 250,
+    !!flowId && responseCount > 250,
   );
 
   if (
     isResponsesLoading ||
     !responses ||
-    (flowId && responseLength > 250 && isPending)
+    (flowId && responseCount > 250 && isPending)
   ) {
     // TODO: loading ui
     return null;
@@ -166,7 +183,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
               <Tooltip label={translations["Refresh stats"]}>
                 <ActionIcon
                   onClick={async () => {
-                    await Promise.all([surveyRefetch(), refetch()]);
+                    await Promise.all([surveyRefetch(), refetchCount()]);
                     showSuccessToast(
                       translations["User stats updated"],
                       "load-data",
@@ -177,7 +194,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
                 >
                   <IconRefresh
                     className={
-                      isSurveyFetching || isFetching
+                      isSurveyFetching || isLoading
                         ? classes.rotateInfinitely
                         : null
                     }
@@ -192,8 +209,8 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
                 className={styles["responses-text-p"]}
                 c="light-dark(var(--mantine-primary-color-filled),white)"
               >
-                {responseLength ?? 0} &nbsp;
-                {responseLength > 1
+                {responseCount ?? 0} &nbsp;
+                {responseCount > 1
                   ? translations["Responses"]
                   : translations["Response"]}
               </Text>
