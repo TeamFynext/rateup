@@ -28,6 +28,7 @@ import {
   IconListDetails,
   IconMessage,
   IconMessageCircle,
+  IconTrash,
   IconUser,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -38,6 +39,7 @@ import { QuestionType2 } from "@/types/enums";
 import {
   useCardById,
   useCreateCommentMutation,
+  useDeleteCommentMutation,
   useUpdateCardMutation,
 } from "@/backend/tickets/tickets.query";
 import {
@@ -54,6 +56,7 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { getCellData } from "@/components/Survey/Response/WaResponses";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
+import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import { formatToRelativeTime } from "@/utils/dateTime";
 import { TicketPriority, TicketType } from "@/utils/enums/ticket";
@@ -247,15 +250,20 @@ const TicketComments = ({
       />
       <Stack mt={"xs"}>
         {data.map((comment) => (
-          <Comment {...comment} key={comment?.id} />
+          <Comment {...comment} key={comment?.id} cardId={ticketCardId} />
         ))}
       </Stack>
     </>
   );
 };
 
-const Comment = (data: TicketComment) => {
-  z;
+const Comment = (
+  data: TicketComment & {
+    cardId: string;
+  },
+) => {
+  const { user } = useUser();
+  const { mutate, isPending } = useDeleteCommentMutation(data.cardId);
   if (!data) return null;
   return (
     <Group align="start">
@@ -263,15 +271,35 @@ const Comment = (data: TicketComment) => {
         src={data?.createdBy?.profilePhoto}
         size="md"
         name={data?.createdBy?.name}
-        color="ini"
+        color="initials"
       />
-      <Stack w={"80%"} gap={4}>
-        <Group justify="space-between">
-          <Text size="xs">{data.createdBy?.name}</Text>
-          <Text size="xs">{dayjs(data.createdAt).format("DD/MM/YYYY")}</Text>
+      <Stack w={"85%"} gap={0}>
+        <Group gap={"xs"}>
+          <Text fz={14} tt={"capitalize"}>
+            {data.createdBy?.name}
+          </Text>
+          <Text fz={12} c={"var(--grey-color-6)"}>
+            {formatToRelativeTime(data.createdAt)}
+          </Text>
         </Group>
-        <div>{parse(data.text)}</div>
+        <div
+          style={{
+            fontSize: 14,
+          }}
+        >
+          {parse(data.text)}
+        </div>
       </Stack>
+      {data?.createdById === user?.userId && (
+        <ActionIcon
+          variant="light"
+          size={"xs"}
+          disabled={isPending}
+          onClick={() => mutate(data.id)}
+        >
+          <IconTrash />
+        </ActionIcon>
+      )}
     </Group>
   );
 };

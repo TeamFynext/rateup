@@ -222,3 +222,7 @@ export const fetchCardById = async (cardId: string): Promise<Card> => {
   const { data } = await axiosClient.get(`/tickets/cards/${cardId}`);
   return data;
 };
+
+export const deleteComment = async (commentId: string): Promise<void> => {
+  await axiosClient.delete(`/tickets/${commentId}/comment`);
+};

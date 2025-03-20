@@ -15,6 +15,7 @@ import {
   deleteBoard,
   deleteCard,
   deleteColumn,
+  deleteComment,
   deleteTicket,
   fetchBoard,
   fetchBoards,
@@ -596,5 +597,22 @@ export function useCardById(cardId: string | undefined) {
     queryKey: ["card", cardId],
     queryFn: () => fetchCardById(cardId as string),
     enabled: !!cardId, // Only run the query if cardId is provided
+  });
+}
+
+export function useDeleteCommentMutation(cardId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteComment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["card", cardId] });
+      showSuccessToast(
+        "Comment deleted successfully!",
+        "delete-comment-success",
+      );
+    },
+    onError: () => {
+      showErrorToast("Failed to delete comment.", "delete-comment-error");
+    },
   });
 }
