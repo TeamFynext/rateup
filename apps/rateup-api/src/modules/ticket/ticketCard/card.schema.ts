@@ -27,17 +27,14 @@ const createCardResponseSchema = z.object({
 const updateCardRequestSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
-  assignedToId: z.string().min(1, "Assignee is required"),
-  priority: z.nativeEnum(TicketPriority),
+  assignedToId: z.string().optional(),
+  priority: z.nativeEnum(TicketPriority).optional().nullable(),
   deadline: z
     .date({
       required_error: "Deadline is required",
       invalid_type_error: "Invalid date format",
     })
-    .nullable()
-    .refine((val) => val !== null, {
-      message: "Deadline is required",
-    }),
+    .nullable(),
   description: z.string().optional(),
 });
 
