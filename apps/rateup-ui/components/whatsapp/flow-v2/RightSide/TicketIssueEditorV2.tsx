@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
   ActionIcon,
-  Button,
   Group,
   Rating,
+  Select,
   SimpleGrid,
   Stack,
   Switch,
@@ -16,7 +16,8 @@ import { useListState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconInfoCircle } from "@tabler/icons-react";
 
-import { QuestionType2, SmileyResponse, SmileyResponse2 } from "@/types/enums";
+import { QuestionType2, SmileyResponse2 } from "@/types/enums";
+import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useUpdateFlowMutation } from "@/backend/whatsapp/flow/flow.query";
 import {
   RateupButtonBlue,
@@ -26,8 +27,7 @@ import {
   ContainedMultiSelect,
   ContainedSelection,
 } from "@/components/input/ContainedInput/ContainedInput";
-import { QuestionTabsEnum } from "@/components/Survey/EditSurvey";
-import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { EditorType, FormElement } from "../utils/store";
@@ -50,6 +50,32 @@ const TicketIssueEditorV2 = ({
     ticketIssue?.condition?.submissionTicket,
   );
   const updateFlow = useUpdateFlowMutation();
+  const { data: options, isPending } = useBoardsQueries();
+  const [selectedBoardId, setSelectedBoardId] = useState(
+    ticketIssue?.selectedBoardId,
+  );
+  const [selectedColumnId, setSelectedColumnId] = useState(
+    ticketIssue?.selectedColumnId,
+  );
+
+  // Transform boards for Select component
+  const boards = useMemo(
+    () => options?.map((board) => ({ value: board.id, label: board.title })),
+    [options],
+  );
+
+  // Get columns for selected board
+  const columns = useMemo(() => {
+    const selectedBoard = options?.find(
+      (board) => board.id === selectedBoardId,
+    );
+    return selectedBoard
+      ? selectedBoard.ticketColumns.map((col) => ({
+          value: col.id,
+          label: col.title,
+        }))
+      : [];
+  }, [options, selectedBoardId]);
 
   const [selectedOptions, setSelectedOptions] = useListState<string>(
     ticketIssue?.condition?.reqOptions ?? [],
@@ -118,13 +144,22 @@ const TicketIssueEditorV2 = ({
 
       if (ticketIssue)
         updatedTickets = ticketIssued.map((t) =>
-          t.questionId === element.id ? { ...t, condition: newCondition } : t,
+          t.questionId === element.id
+            ? {
+                ...t,
+                condition: newCondition,
+                selectedBoardId,
+                selectedColumnId,
+              }
+            : t,
         );
       else
         updatedTickets.push({
           questionId: element.id,
           type: currentElementType,
           condition: newCondition,
+          selectedBoardId,
+          selectedColumnId,
         });
       const tickets = updatedTickets.filter(
         (t) =>
@@ -150,6 +185,8 @@ const TicketIssueEditorV2 = ({
       })),
     );
   }, [element]);
+
+  if (isPending) return <RateupLoader />;
 
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
@@ -361,6 +398,28 @@ const TicketIssueEditorV2 = ({
                     }
                   })()}
                 </Group>
+              </Stack>
+              <Stack gap="xs">
+                <Select
+                  label="Select Board"
+                  placeholder="Choose a board"
+                  value={ticketIssue.selectedBoardId}
+                  data={boards}
+                  onChange={(boardId) => {
+                    setSelectedBoardId(boardId);
+                  }}
+                />
+                {selectedBoardId && (
+                  <Select
+                    label="Select Column"
+                    placeholder="Choose a column"
+                    value={ticketIssue.selectedColumnId}
+                    data={columns}
+                    onChange={(columnId) => {
+                      setSelectedColumnId(columnId);
+                    }}
+                  />
+                )}
               </Stack>
             </>
           )}

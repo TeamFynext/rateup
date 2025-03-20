@@ -142,6 +142,7 @@ export function submitSurvey({
   encryptedResponses,
   shouldRaiseTicket,
   checkUniqueDevice,
+  selectedColumnId,
 }) {
   return createResponsePublic({
     surveyTeamMapId,
@@ -152,6 +153,7 @@ export function submitSurvey({
     tag: tag || null,
     shouldRaiseTicket,
     checkUniqueDevice,
+    selectedColumnId,
   })
     .then(() => {
       // notifications.show({

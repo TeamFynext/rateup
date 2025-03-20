@@ -126,3 +126,26 @@ export function formatDateWithTime(date: string | Date) {
 export function formateDate2(date) {
   return dayjs(date).format("MMM, YYYY");
 }
+export function getTimeRemaining(targetDate) {
+  const now = dayjs().startOf("day");
+  const target = dayjs(targetDate).endOf("day");
+
+  if (now.isAfter(target)) {
+    return "overdue by " + now.diff(target, "day") + " days";
+  }
+
+  const diffInDays = target.diff(now, "day");
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  const diffInMonths = target.diff(now, "month");
+  const diffInYears = target.diff(now, "year");
+
+  if (diffInYears >= 1) {
+    return `${diffInYears} ${diffInYears === 1 ? "year" : "years"} left`;
+  } else if (diffInMonths >= 1) {
+    return `${diffInMonths} ${diffInMonths === 1 ? "month" : "months"} left`;
+  } else if (diffInWeeks >= 1) {
+    return `${diffInWeeks} ${diffInWeeks === 1 ? "week" : "weeks"} left`;
+  } else {
+    return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} left`;
+  }
+}

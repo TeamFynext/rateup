@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 
 import { Group, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
 
@@ -20,7 +19,6 @@ import {
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
-import ConfirmationModal from "../Modal/ConfirmationModal";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 interface iProps {

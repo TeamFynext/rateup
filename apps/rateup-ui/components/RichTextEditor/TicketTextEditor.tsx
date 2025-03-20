@@ -1,0 +1,124 @@
+import { Button } from "@mantine/core";
+import { Link, RichTextEditor } from "@mantine/tiptap";
+import { Color } from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import Youtube from "@tiptap/extension-youtube";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+
+import InsertEmoji from "./InsertEmoji";
+import InsertImage from "./InsertImage";
+import { Video } from "./InsertVideo/CustomVideo";
+
+export default function TicketTextEditor({
+  content,
+  onUpdate,
+  placeholder = "",
+  saveBtn = false,
+}) {
+  // const [focus, setFocus] = useState(false);
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Link,
+      Color,
+      TextStyle,
+      Youtube,
+      Video,
+      Highlight,
+      TextAlign.configure({ types: ["paragraph"] }),
+      Placeholder.configure({ placeholder }),
+    ],
+    content,
+    onUpdate: ({ editor }) => {
+      if (saveBtn) return;
+      onUpdate(editor.getHTML());
+    },
+  });
+
+  return (
+    <RichTextEditor
+      editor={editor}
+      style={{
+        transition: "all 0.3s",
+        border: "none",
+      }}
+    >
+      <RichTextEditor.Toolbar sticky bg={"var(--grey-color-5)"}>
+        <RichTextEditor.ControlsGroup>
+          <RichTextEditor.ColorPicker
+            colors={[
+              "#25262b",
+              "#868e96",
+              "#fa5252",
+              "#e64980",
+              "#be4bdb",
+              "#7950f2",
+              "#4c6ef5",
+              "#228be6",
+              "#15aabf",
+              "#12b886",
+              "#40c057",
+              "#82c91e",
+              "#fab005",
+              "#fd7e14",
+            ]}
+            popoverProps={{
+              withinPortal: false,
+            }}
+          />
+          <RichTextEditor.UnsetColor />
+        </RichTextEditor.ControlsGroup>
+        <RichTextEditor.ControlsGroup>
+          <RichTextEditor.Bold />
+          <RichTextEditor.Italic />
+          <RichTextEditor.Underline />
+          <RichTextEditor.Strikethrough />
+          <RichTextEditor.ClearFormatting />
+          <RichTextEditor.Highlight />
+          <RichTextEditor.Code />
+        </RichTextEditor.ControlsGroup>
+
+        <RichTextEditor.ControlsGroup>
+          <RichTextEditor.Blockquote />
+          <RichTextEditor.Hr />
+          <RichTextEditor.BulletList />
+          <RichTextEditor.OrderedList />
+        </RichTextEditor.ControlsGroup>
+
+        <RichTextEditor.ControlsGroup>
+          <RichTextEditor.Link />
+          <RichTextEditor.Unlink />
+        </RichTextEditor.ControlsGroup>
+
+        <RichTextEditor.ControlsGroup>
+          <RichTextEditor.Undo />
+          <RichTextEditor.Redo />
+        </RichTextEditor.ControlsGroup>
+        <RichTextEditor.ControlsGroup>
+          <InsertEmoji />
+          <InsertImage />
+        </RichTextEditor.ControlsGroup>
+        {saveBtn && (
+          <Button
+            size="compact-sm"
+            onClick={() => {
+              onUpdate(editor.getHTML());
+              editor.commands.clearContent();
+            }}
+            ml={"auto"}
+            variant="filled"
+          >
+            Submit
+          </Button>
+        )}
+      </RichTextEditor.Toolbar>
+      <RichTextEditor.Content bg={"var(--grey-color-5)"} />
+    </RichTextEditor>
+  );
+}

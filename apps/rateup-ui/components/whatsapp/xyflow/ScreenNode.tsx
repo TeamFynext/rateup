@@ -16,6 +16,7 @@ import { Handle, NodeToolbar, Position } from "@xyflow/react";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
@@ -50,6 +51,7 @@ const ScreenNode = ({ id, data, setNodes }) => {
   const { data: flows, isPending } = useWaFlowsFromDb();
   const { translations } = useTranslations();
   const { data: subscription } = useSubscription();
+  const { data: boardData } = useBoardsQueries();
 
   const addComponentNode = (type: ComponentType, index?: number) => {
     const newComponent = {
@@ -172,7 +174,9 @@ const ScreenNode = ({ id, data, setNodes }) => {
                                     (c) => c.type === "BUTTONS",
                                   )?.buttons?.[0]?.["flow_id"],
                                 }))
-                              : []
+                              : component?.type === ComponentType.Ticket
+                                ? boardData
+                                : []
                         }
                         isTicketFeatureActive={hasFeature(
                           subscription,

@@ -312,7 +312,7 @@ const WaResponses = ({
           WaQuestions.DocumentPicker,
           WaQuestions.PhotoPicker,
         ].includes(question.metaType),
-        cell: (info) => getCellData(info, question),
+        cell: (info) => getCellData(info?.getValue(), question),
       })),
       {
         accessorKey: "mobile",
@@ -659,30 +659,26 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
     </FormModalLayout>
   );
 };
-const getCellData = (info, question) => {
+export const getCellData = (info, question) => {
   switch (question.metaType) {
     case WaQuestions.LD:
-      return LDResponseMap[info.getValue()] || "";
+      return LDResponseMap[info] || "";
     case WaQuestions.YN:
-      return YNResponseMap[info.getValue()] || "";
+      return YNResponseMap[info] || "";
     case WaQuestions.Smiley:
-      return SmileyResponseMap[info.getValue()] || "";
+      return SmileyResponseMap[info] || "";
     case WaQuestions.Rating:
-      return RatingScaleMap[info.getValue()] || "";
+      return RatingScaleMap[info] || "";
     case WaQuestions.Opinion:
-      return info.getValue() || "";
+      return info || "";
     case WaQuestions.RadioButtonsGroup:
     case WaQuestions.Dropdown:
-      return (
-        question.dataSource?.find((data) => data.id === info.getValue())
-          ?.title || ""
-      );
+      return question.dataSource?.find((data) => data.id === info)?.title || "";
     case WaQuestions.CheckboxGroup:
     case WaQuestions.ChipsSelector:
       return (
-        (Array.isArray(info.getValue()) &&
+        (Array.isArray(info) &&
           info
-            ?.getValue()
             ?.map(
               (i) => question.dataSource?.find((data) => data.id === i)?.title,
             )
@@ -691,9 +687,9 @@ const getCellData = (info, question) => {
       );
     case WaQuestions.DocumentPicker:
       return (
-        info.getValue() && (
+        info && (
           <Anchor
-            href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${info.getValue()}`}
+            href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${info}`}
             download
           >
             Download
@@ -701,16 +697,11 @@ const getCellData = (info, question) => {
         )
       );
     case WaQuestions.DatePicker:
-      return info.getValue() ? dayjs(info.getValue()).format("DD-MM-YYYY") : "";
+      return info ? dayjs(info).format("DD-MM-YYYY") : "";
     case WaQuestions.TextArea:
     case WaQuestions.PhotoPicker:
-      return (
-        <WaHoverCardComponent
-          content={info.getValue()}
-          type={question.metaType}
-        />
-      );
+      return <WaHoverCardComponent content={info} type={question.metaType} />;
     default:
-      return info.getValue().toString() || "";
+      return info.toString() || "";
   }
 };

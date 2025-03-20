@@ -28,10 +28,6 @@ import {
   useUpdateTicketMutation,
   useUpdateTicketStatusMutation,
 } from "@/backend/tickets/tickets.query";
-import {
-  TicketInternalChatBody,
-  TicketInternalChatFooter,
-} from "@/components/Tickets/SingleTicket";
 import { useUser } from "@/context/UserContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { TicketPriority, TicketStatus } from "@/utils/enums/ticket";
@@ -101,13 +97,13 @@ const WaInboxChatDisplayPopoverMsg = () => {
         <div style={{ ...styles }}>
           <Stack justify="space-between" h={"100%"} gap={0}>
             <TicketInternalChatWaHeader close={close} />
-            <TicketInternalChatBody
+            {/* <TicketInternalChatBody
               user={user}
               waInboxFlag
               ticket={selectedTicket}
               viewport={viewport}
             />
-            <TicketInternalChatFooter form={form} onSubmit={onSubmit} />
+            <TicketInternalChatFooter form={form} onSubmit={onSubmit} /> */}
           </Stack>
         </div>
       )}
