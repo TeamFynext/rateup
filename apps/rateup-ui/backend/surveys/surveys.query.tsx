@@ -625,9 +625,22 @@ export const useSurveyUpdateMutation = (surveyId) => {
   });
 };
 
-export const useAllResponseForGraph = (timePeriod, userTimeZone) => {
+export const useAllResponseForGraph = (
+  timePeriod,
+  userTimeZone,
+  surveyId = "",
+  teamMapIds = [],
+) => {
   return useQuery({
-    queryKey: ["reponse", "graph", timePeriod, userTimeZone],
-    queryFn: () => getSurveyResponseForGraph(timePeriod, userTimeZone),
+    queryKey: [
+      "reponse",
+      "graph",
+      timePeriod,
+      userTimeZone,
+      surveyId,
+      teamMapIds,
+    ],
+    queryFn: () =>
+      getSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
   });
 };

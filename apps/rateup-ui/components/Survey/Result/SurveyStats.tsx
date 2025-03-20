@@ -1,34 +1,20 @@
 import React, { useContext, useMemo, useState } from "react";
 
-import {
-  ActionIcon,
-  Badge,
-  Box,
-  Grid,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
+import { Badge, Box, Grid, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
 
+import RefreshButton from "@/components/Button/RefreshButton";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+
 import {
-  useAllResponses,
   useResponseCount,
   useResponses,
 } from "../../../backend/surveys/response/response.query";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
+import { useAllResponseForGraph } from "../../../backend/surveys/surveys.query";
 import { useWaFlowMetrics } from "../../../backend/whatsapp/flow/flow.query";
 import SurveyContext from "../../../context/SurveyContext";
 import { findCentroid } from "../../../utils/location";
-import { showSuccessToast } from "../../../utils/notifications";
-import { getFormattedResponseForAreaGraph } from "../../../utils/response";
-import {
-  getFilteredResponsesUsingTeam,
-  mergeResponsesFromTeams,
-} from "../../../utils/team/surveyTeam";
-import classes from "../../Graph/graph.module.css";
 import OverallResponseGraph from "../../Graph/OverallResponseGraph";
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput";
 import Heading from "../../styled/Heading/Heading";
@@ -55,6 +41,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
     data: responseCountData,
     isLoading,
     refetch: refetchCount,
+    isPending: isPendingCount,
   } = useResponseCount(survey?.id);
 
   const responseCount = useMemo(
@@ -62,46 +49,22 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
       filterTeams?.length
         ? responseCountData?.teamWiseCount?.reduce((total, teamMap) => {
             if (filterTeams.includes(teamMap.id)) total += teamMap.count;
+            return total;
           }, 0)
         : responseCountData?.all,
     [responseCountData, filterTeams],
   );
-  const {
-    data: teamWiseResponses,
-    isLoading: rLoading,
-    error: rError,
-    isFetching,
-    refetch,
-  } = useAllResponses(survey?.id);
-
-  const {
-    isLoading: isSurveyLoading,
-    error: surveyError,
-    data,
-    refetch: surveyRefetch,
-    isRefetching: isSurveyFetching,
-  } = useSurvey(survey?.id);
-
+  const queryClient = useQueryClient();
   const [zoom, setZoom] = useState(7);
   const [isFindingZoomLevel, setIsFindingZoomLevel] = useState(false);
   const [locationType, setLocationType] = useState(LocationType.City);
   const [timePeriod, setTimePeriod] = useState("daily");
-  const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
-    filterTeams,
-    teamWiseResponses,
-  );
-  const { mergedResponses, noofResponses } = mergeResponsesFromTeams(
-    filteredResponsesByTeam,
-  );
-
-  const graphResponse = getFormattedResponseForAreaGraph(
-    mergedResponses,
-    timePeriod,
-  );
-  const responseLength = filteredResponsesByTeam?.reduce(
-    (acc: number, curr: any) => acc + curr?._count["responses"],
-    0,
-  );
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const {
+    data: graphResponse,
+    isLoading: isrLoading,
+    isRefetching,
+  } = useAllResponseForGraph(timePeriod, userTimeZone, survey?.id, filterTeams);
   const { data: flowMetrics, isPending } = useWaFlowMetrics(
     flowId,
     !!flowId && responseCount > 250,
@@ -112,8 +75,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
     !responses ||
     (flowId && responseCount > 250 && isPending)
   ) {
-    // TODO: loading ui
-    return null;
+    return <RateupLoader />;
   }
   function returnSurveyStats() {
     let filteredStats: Array<any>;
@@ -181,26 +143,15 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
             <Group>
               <Heading subtitle={translations["User Stats"]} />
               <Tooltip label={translations["Refresh stats"]}>
-                <ActionIcon
+                <RefreshButton
                   onClick={async () => {
-                    await Promise.all([surveyRefetch(), refetchCount()]);
-                    showSuccessToast(
-                      translations["User stats updated"],
-                      "load-data",
-                      <IconCheck />,
-                    );
+                    await queryClient.invalidateQueries({
+                      queryKey: ["survey", survey?.id],
+                    });
+                    refetchCount();
                   }}
-                  variant="light"
-                >
-                  <IconRefresh
-                    className={
-                      isSurveyFetching || isLoading
-                        ? classes.rotateInfinitely
-                        : null
-                    }
-                    stroke={1.5}
-                  />
-                </ActionIcon>
+                  isLoading={isPendingCount || isLoading}
+                />
               </Tooltip>
             </Group>
 
@@ -326,9 +277,22 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
           data={graphResponse}
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
-          refreshKeys={["allresponses"]}
           translations={translations}
-          isLoading={rLoading}
+          isLoading={isrLoading || isRefetching}
+          onRefresh={async () => {
+            await queryClient.invalidateQueries({
+              queryKey: [
+                [
+                  "reponse",
+                  "graph",
+                  timePeriod,
+                  userTimeZone,
+                  survey?.id,
+                  filterTeams,
+                ],
+              ],
+            });
+          }}
         />
       </Stack>
     </Stack>
