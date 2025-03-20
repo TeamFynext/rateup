@@ -32,7 +32,7 @@ import {
   sendFlow,
 } from "../flows/flow.service";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import { autoGenerateTicket } from "../../ticket/ticket.service";
+import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
 
 export function validateAutomationMatchCondition(
   automation: {
@@ -119,6 +119,7 @@ type matchDataProps = {
             | { image: string };
           parameter?: any;
           teamId?: string;
+          columnId?: string;
         }>;
       };
     }>;
@@ -267,10 +268,14 @@ export async function sendAutomatedReplyMessage(
           ),
         );
       }
-    } else if (component?.type === ReplyComponentType.Ticket) {
+    } else if (
+      component?.type === ReplyComponentType.Ticket &&
+      component?.columnId
+    ) {
       await autoGenerateTicket({
-        teamId: component?.teamId,
+        ticketColumnId: component?.columnId,
         waAutomatedReplyMessageId: waAutomatedReplyMessage.id,
+        type: "AUTOMATION",
       });
     }
   }
