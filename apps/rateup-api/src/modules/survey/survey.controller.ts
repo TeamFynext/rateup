@@ -625,11 +625,13 @@ export async function getSurveyResponseCountForGraphHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { userTimeZone, timePeriod } = request.query;
+    const { userTimeZone, timePeriod, surveyId, teamMapIds } = request.query;
     const res = await getSurveyResponseCountForGraph(
       request.user.orgId,
       userTimeZone,
       timePeriod,
+      surveyId,
+      teamMapIds?.length ? teamMapIds?.split(",") : [],
     );
     reply.code(200).send(res);
   } catch (e) {

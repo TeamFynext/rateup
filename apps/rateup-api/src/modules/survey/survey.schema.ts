@@ -190,6 +190,8 @@ const surveyVariableUpdateSchema = z.object({
 const graphResponseParamsSchema = z.object({
   timePeriod: z.string(),
   userTimeZone: z.string(),
+  surveyId: z.string().optional(),
+  teamMapIds: z.string().optional(),
 });
 
 export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
