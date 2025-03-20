@@ -357,12 +357,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
             />
             <RefreshButton onClick={() => refetchResponse()} />
           </Flex>
-
-          {/* <DateRangePickerButton
-            onChange={(r) => setRange(r ? [r["selection"]] : [])}
-            ranges={ranges}
-          /> */}
-
           <Group>
             <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
             {CFData && CFData.length > 0 && (

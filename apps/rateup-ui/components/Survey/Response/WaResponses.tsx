@@ -494,11 +494,6 @@ const WaResponses = ({
             />
             <RefreshButton onClick={() => refetchResponse()} />
           </Flex>
-          {/* 
-          <DateRangePickerButton
-            onChange={(r) => setRange(r ? [r["selection"]] : [])}
-            ranges={ranges}
-          /> */}
 
           <Group>
             <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
