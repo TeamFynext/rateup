@@ -34,6 +34,7 @@ import { Range } from "react-date-range";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import useTranslations from "@/dictionaries/useTranslation";
 import { hasFeature } from "@/utils/subscription/subscription";
@@ -129,10 +130,16 @@ const WaResponses = ({
   const [opened, { open, close }] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const [ranges, setRange] = useState<Range[]>([]);
+  const initialDateRange = {
+    startDate: dayjs().subtract(10, "year").toDate(),
+    endDate: new Date(),
+    key: "selection",
+  };
+  const [ranges, setRange] = useState<Range[]>([initialDateRange]);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const [campaignFlowFilter, setCampaignFlowFilter] = useState([]);
+  const [dateRange, setDateRange] = useState([]);
   const contactIds = useMemo(
     () =>
       campaignFlowFilter.length
@@ -156,12 +163,7 @@ const WaResponses = ({
     tags: filterTags ? filterTags : "",
     selectedLanguage: "",
     contactIds,
-    ranges: ranges.length
-      ? [
-          dayjs(ranges[0]?.startDate).toISOString(),
-          dayjs(ranges[0]?.endDate).toISOString(),
-        ]
-      : "",
+    ranges: dateRange,
   });
   const hasContactQuestion = useMemo(
     () =>
@@ -181,6 +183,19 @@ const WaResponses = ({
     setIsDeleting,
   );
   const { translations } = useTranslations();
+
+  useEffect(() => {
+    if (ranges.length === 0) {
+      setRange([initialDateRange]);
+      setDateRange([]);
+      return;
+    }
+    if (ranges[0].startDate !== initialDateRange.startDate)
+      setDateRange([
+        dayjs(ranges[0]?.startDate).toISOString(),
+        dayjs(ranges[0]?.endDate).toISOString(),
+      ]);
+  }, [ranges]);
 
   if (Array.isArray(surveyId)) {
     throw new Error(translations["surveyId is an array"]);
@@ -480,12 +495,8 @@ const WaResponses = ({
             <RefreshButton onClick={() => refetchResponse()} />
           </Flex>
 
-          <DateRangePickerButton
-            onChange={(r) => setRange(r ? [r["selection"]] : [])}
-            ranges={ranges}
-          />
-
           <Group>
+            <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
             {CFData && CFData.length > 0 && (
               <ContainedMultiSelect
                 placeholder={translations["Filter By Campaign"]}

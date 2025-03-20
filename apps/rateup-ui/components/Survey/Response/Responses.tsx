@@ -37,6 +37,7 @@ import { Range } from "react-date-range";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
@@ -117,7 +118,12 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const [ranges, setRange] = useState<Range[]>([]);
+  const initialDateRange = {
+    startDate: dayjs().subtract(10, "year").toDate(),
+    endDate: new Date(),
+    key: "selection",
+  };
+  const [ranges, setRange] = useState<Range[]>([initialDateRange]);
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
@@ -129,6 +135,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       participantsContactIds: string[];
     }[]
   >([]);
+  const [dateRange, setDateRange] = useState([]);
 
   const contactIds = useMemo(
     () =>
@@ -153,14 +160,22 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     tags: filterTags,
     selectedLanguage: "",
     contactIds,
-    ranges: ranges?.length
-      ? [
-          dayjs(ranges[0]?.startDate).toISOString(),
-          dayjs(ranges[0]?.endDate).toISOString(),
-        ]
-      : "",
+    ranges: dateRange,
   });
   const responses = responseData?.responses;
+
+  useEffect(() => {
+    if (ranges.length === 0) {
+      setRange([initialDateRange]);
+      setDateRange([]);
+      return;
+    }
+    if (ranges[0].startDate !== initialDateRange.startDate)
+      setDateRange([
+        dayjs(ranges[0]?.startDate).toISOString(),
+        dayjs(ranges[0]?.endDate).toISOString(),
+      ]);
+  }, [ranges]);
 
   const hasContactQuestion =
     responses &&
@@ -342,13 +357,8 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
             />
             <RefreshButton onClick={() => refetchResponse()} />
           </Flex>
-
-          <DateRangePickerButton
-            onChange={(r) => setRange(r ? [r["selection"]] : [])}
-            ranges={ranges}
-          />
-
           <Group>
+            <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
             {CFData && CFData.length > 0 && (
               <ContainedMultiSelect
                 placeholder={translations["Filter By Campaign"]}
