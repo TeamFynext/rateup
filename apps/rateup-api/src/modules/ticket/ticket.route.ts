@@ -1,6 +1,9 @@
 import { FastifyInstance } from "fastify";
 import { $TicketRef } from "./ticket.schema";
-import { createCommentHandler } from "./ticket.controller";
+import {
+  createCommentHandler,
+  deleteCommentHandler,
+} from "./ticket.controller";
 import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
@@ -34,4 +37,5 @@ export async function ticketRoutes(server: FastifyInstance) {
     },
     createCommentHandler,
   );
+  server.delete("/:id/comment", deleteCommentHandler);
 }

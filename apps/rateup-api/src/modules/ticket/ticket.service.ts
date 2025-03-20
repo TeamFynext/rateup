@@ -96,3 +96,12 @@ export async function createComment(input: CreateCommentInput, userId: string) {
 
   return newComment;
 }
+
+export async function deleteComment(id: string, userId: string) {
+  await prisma.ticketComment.delete({
+    where: {
+      id,
+      createdById: userId,
+    },
+  });
+}
