@@ -42,14 +42,8 @@ export default function TicketTextEditor({
   });
 
   return (
-    <RichTextEditor
-      editor={editor}
-      style={{
-        transition: "all 0.3s",
-        border: "none",
-      }}
-    >
-      <RichTextEditor.Toolbar sticky bg={"var(--grey-color-5)"}>
+    <RichTextEditor editor={editor}>
+      <RichTextEditor.Toolbar>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.ColorPicker
             colors={[
@@ -118,7 +112,7 @@ export default function TicketTextEditor({
           </Button>
         )}
       </RichTextEditor.Toolbar>
-      <RichTextEditor.Content bg={"var(--grey-color-5)"} />
+      <RichTextEditor.Content />
     </RichTextEditor>
   );
 }

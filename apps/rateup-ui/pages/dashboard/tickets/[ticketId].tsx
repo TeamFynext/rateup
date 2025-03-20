@@ -1,7 +1,8 @@
-import React, { useMemo } from "react";
-import { useRouter } from "next/router";
+import React, { useEffect, useMemo, useState } from "react";
+import { NextRouter, useRouter } from "next/router";
 
 import {
+  ActionIcon,
   Avatar,
   Badge,
   Box,
@@ -18,8 +19,10 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
+import { useDebouncedValue } from "@mantine/hooks";
 import {
   IconCalendar,
+  IconChevronLeft,
   IconFileDescription,
   IconHistory,
   IconListDetails,
@@ -37,13 +40,17 @@ import {
   useCreateCommentMutation,
   useUpdateCardMutation,
 } from "@/backend/tickets/tickets.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+} from "@/components/Button/RateupButtons";
 import {
   ContainedDatePickerInput,
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { getCellData } from "@/components/Survey/Response/WaResponses";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
@@ -114,38 +121,44 @@ export default function CardDetailPage() {
     <Container size={"xl"} h={"100%"}>
       <Grid h={"100%"} p={"xs"} display={"grid"}>
         <Grid.Col span={8}>
-          <EditTicket ticket={card} memberOptions={memberOptions} />
-          <Tabs defaultValue="comments" classNames={styles} mt={"xs"}>
-            <Tabs.List>
-              <Tabs.Tab
-                value="comments"
-                leftSection={<IconMessage size={12} />}
-              >
-                Comments
-              </Tabs.Tab>
-              <Tabs.Tab
-                value="activity"
-                leftSection={<IconHistory size={12} />}
-              >
-                Activity
-              </Tabs.Tab>
-            </Tabs.List>
+          <PaperLayout h={"100%"} p={"xs"} radius={"md"}>
+            <EditTicket
+              ticket={card}
+              memberOptions={memberOptions}
+              router={router}
+            />
+            <Tabs defaultValue="comments" classNames={styles} mt={"xs"}>
+              <Tabs.List>
+                <Tabs.Tab
+                  value="comments"
+                  leftSection={<IconMessage size={12} />}
+                >
+                  Comments
+                </Tabs.Tab>
+                <Tabs.Tab
+                  value="activity"
+                  leftSection={<IconHistory size={12} />}
+                >
+                  Activity
+                </Tabs.Tab>
+              </Tabs.List>
 
-            <ScrollAreaAutosize mah={"calc(100vh - 330px)"}>
-              <Tabs.Panel value="comments">
-                <TicketComments
-                  data={card?.ticketComments}
-                  ticketCardId={ticketId}
-                />
-              </Tabs.Panel>
-              <Tabs.Panel value="activity">
-                <TicketActivity activities={card?.ticketActivities} />
-              </Tabs.Panel>
-            </ScrollAreaAutosize>
-          </Tabs>
+              <ScrollAreaAutosize mah={"calc(100vh - 360px)"}>
+                <Tabs.Panel value="comments">
+                  <TicketComments
+                    data={card?.ticketComments}
+                    ticketCardId={ticketId}
+                  />
+                </Tabs.Panel>
+                <Tabs.Panel value="activity">
+                  <TicketActivity activities={card?.ticketActivities} />
+                </Tabs.Panel>
+              </ScrollAreaAutosize>
+            </Tabs>
+          </PaperLayout>
         </Grid.Col>
         <Grid.Col span={4}>
-          <Paper withBorder p={"xs"} h={"100%"}>
+          <PaperLayout h={"100%"} p={"xs"} radius={"md"}>
             <Tabs
               defaultValue={
                 card.waAutomatedReplyMessageId
@@ -157,7 +170,7 @@ export default function CardDetailPage() {
               classNames={styles}
               h={"100%"}
             >
-              <Tabs.List px={"xs"}>
+              <Tabs.List>
                 <Tabs.Tab
                   value="response"
                   leftSection={<IconFileDescription size={16} />}
@@ -202,7 +215,7 @@ export default function CardDetailPage() {
                 />
               </Tabs.Panel>
             </Tabs>
-          </Paper>
+          </PaperLayout>
         </Grid.Col>
       </Grid>
     </Container>
@@ -317,17 +330,14 @@ const TicketActivity = ({ activities }: { activities: Array<Activity> }) => {
 const ticketSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
-  assignedToId: z.string().min(1, "Assignee is required"),
-  priority: z.string().min(1, "Priority is required"),
+  assignedToId: z.string().optional(),
+  priority: z.string().optional(),
   deadline: z
     .date({
       required_error: "Deadline is required",
       invalid_type_error: "Invalid date format",
     })
-    .nullable()
-    .refine((val) => val !== null, {
-      message: "Deadline is required",
-    }),
+    .nullable(),
   description: z.string().optional(),
 });
 
@@ -336,37 +346,62 @@ export type TicketFormValues = z.infer<typeof ticketSchema>;
 const EditTicket = ({
   ticket,
   memberOptions,
+  router,
 }: {
   ticket: Card;
   memberOptions: any[];
+  router: NextRouter;
 }) => {
   const { translations } = useTranslations();
   const { mutate } = useUpdateCardMutation();
-
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">(
+    "idle",
+  );
+  const initialValues = {
+    id: ticket.id,
+    title: ticket.title || "",
+    assignedToId: ticket.assignedToId || "",
+    priority: ticket.priority || "",
+    deadline: ticket.deadline ? new Date(ticket.deadline) : null,
+    description: ticket.description || "",
+  };
   const form = useForm<TicketFormValues>({
     validate: zodResolver(ticketSchema),
-    initialValues: {
-      id: ticket.id,
-      title: ticket.title || "",
-      assignedToId: ticket.assignedToId || "",
-      priority: ticket.priority || "",
-      deadline: ticket.deadline ? new Date(ticket.deadline) : null,
-      description: ticket.description || "",
-    },
+    initialValues,
   });
 
-  const handleSubmit = async (values: TicketFormValues) => {
-    mutate(values);
-  };
+  const [debouncedFormValues] = useDebouncedValue(form.values, 800);
+
+  useEffect(() => {
+    // Skip the initial render
+    if (debouncedFormValues === initialValues) return;
+
+    setSaveStatus("saving");
+    mutate(debouncedFormValues, {
+      onSuccess: () => {
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      },
+      onError: () => setSaveStatus("idle"),
+    });
+  }, [debouncedFormValues, mutate]);
 
   const handleDescriptionUpdate = (content: string) => {
     form.setFieldValue("description", content);
   };
 
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
+    <form>
       <Group justify="space-between">
         <Group gap={"xs"}>
+          <ActionIcon
+            radius={"lg"}
+            variant="filled"
+            title="Go Back"
+            onClick={() => router.back()}
+          >
+            <IconChevronLeft />
+          </ActionIcon>
           {[
             { title: "Ticket Id", btnTitle: `#${ticket.ticketId}` },
             {
@@ -382,7 +417,15 @@ const EditTicket = ({
             </Group>
           ))}
         </Group>
-        <RateupButtonBlue title="Save Changes" type="submit" size="xs" />
+        {saveStatus !== "idle" && (
+          <Badge
+            color={saveStatus === "saved" ? "teal" : "blue"}
+            variant="light"
+            size="sm"
+          >
+            {saveStatus === "saved" ? "Changes saved" : "Saving..."}
+          </Badge>
+        )}
       </Group>
       <SimpleGrid cols={4}>
         <ContainedTextField
@@ -395,7 +438,6 @@ const EditTicket = ({
         <ContainedSelection
           allowDeselect={false}
           data={memberOptions}
-          withAsterisk
           label={translations["Assign to"]}
           style={{ minWidth: "32%" }}
           placeholder={translations["Select a team staff to assign ticket to"]}
@@ -405,7 +447,6 @@ const EditTicket = ({
         <ContainedSelection
           allowDeselect={false}
           data={Object.values(TicketPriority)}
-          withAsterisk
           label={translations["Priority"]}
           style={{ minWidth: "30%" }}
           placeholder={translations["Select priority for the ticket"]}
@@ -415,7 +456,6 @@ const EditTicket = ({
         <ContainedDatePickerInput
           label={translations["Deadline:"]}
           placeholder={translations["Select a deadline for the ticket"]}
-          required
           rightSection={<IconCalendar />}
           classNames={styles}
           minDate={new Date()}
@@ -427,6 +467,7 @@ const EditTicket = ({
         <TicketTextEditor
           content={form.values.description}
           onUpdate={handleDescriptionUpdate}
+          placeholder="Add a description..."
         />
       </Box>
     </form>

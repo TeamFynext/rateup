@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import {
   ActionIcon,
@@ -22,7 +23,6 @@ import { BoardInfo } from "./types";
 
 type BoardSidebarProps = {
   selectedBoardId: string | null;
-  onSelectBoard: (boardId: string) => void;
   onCreateBoard: () => void;
   onEditBoard?: (boardId: string) => void;
   onDeleteBoard?: (boardId: string) => void;
@@ -33,7 +33,6 @@ type BoardSidebarProps = {
 
 export function BoardSidebar({
   selectedBoardId,
-  onSelectBoard,
   onCreateBoard,
   onEditBoard,
   onDeleteBoard,
@@ -43,7 +42,7 @@ export function BoardSidebar({
 }: BoardSidebarProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
   const { data: boardsData, isPending } = useBoardsQueries(selectedTeamId);
-
+  const router = useRouter();
   // Use provided boards prop if available, otherwise use data from query
   const boardsToDisplay = boards.length > 0 ? boards : boardsData || [];
 
@@ -149,7 +148,11 @@ export function BoardSidebar({
                       padding: "4px 8px",
                       flex: 1,
                     }}
-                    onClick={() => onSelectBoard(board.id)}
+                    onClick={() =>
+                      router.push({
+                        query: { b: board.id },
+                      })
+                    }
                   >
                     {board.title}
                   </Text>

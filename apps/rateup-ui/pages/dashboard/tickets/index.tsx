@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
-import { Button, Flex, Group, Modal, Stack } from "@mantine/core";
+import { Flex, Group, Modal, Stack, Title } from "@mantine/core";
 
 import { useBoard, useBoardQueries } from "@/backend/tickets/tickets.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -12,7 +13,6 @@ import { BoardSidebar } from "@/components/Tickets/BoardSidebar";
 import { Board } from "../../../components/Tickets/board";
 
 export default function Page() {
-  const [selectedBoardId, setSelectedBoardId] = useState<string | null>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newBoardData, setNewBoardData] = useState({ title: "", teamId: "" });
@@ -22,7 +22,8 @@ export default function Page() {
     teamId: "",
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const router = useRouter();
+  const selectedBoardId = router.query?.b as string;
   // Use Tanstack Query for boards data
   const { boards, isLoading, createBoard, updateBoard, deleteBoard } =
     useBoardQueries();
@@ -33,11 +34,6 @@ export default function Page() {
     title: board.title,
     teamId: board.teamId,
   }));
-
-  // Get selected board data
-  const { board: selectedBoard, isLoading: IsBoardDataLoading } = useBoard(
-    selectedBoardId || "",
-  );
 
   const handleCreateBoard = () => {
     if (!newBoardData.title.trim() || !newBoardData.teamId) return;
@@ -89,9 +85,10 @@ export default function Page() {
   const handleDeleteBoard = (boardId: string) => {
     deleteBoard(boardId);
 
-    // If the deleted board was selected, select another board or set to null
-    if (selectedBoardId === boardId) {
-      setSelectedBoardId(boards.length > 1 ? boards[0].id : null);
+    if (boardId === selectedBoardId) {
+      router.push({
+        query: {},
+      });
     }
   };
 
@@ -101,7 +98,6 @@ export default function Page() {
     <Flex h="100%">
       <BoardSidebar
         selectedBoardId={selectedBoardId}
-        onSelectBoard={setSelectedBoardId}
         onCreateBoard={() => setIsCreateModalOpen(true)}
         onEditBoard={handleOpenEditBoard}
         onDeleteBoard={handleDeleteBoard}
@@ -109,20 +105,10 @@ export default function Page() {
         toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         boards={boardInfos}
       />
-
-      <Stack style={{ flexGrow: 1, height: "100%", overflow: "hidden" }} p="md">
-        {IsBoardDataLoading ? (
-          <RateupLoader h={"100dvh"} />
-        ) : selectedBoard ? (
-          <div style={{ overflowX: "auto", width: "100%", height: "100%" }}>
-            <Board initial={selectedBoard} availableBoards={boardInfos} />
-          </div>
-        ) : (
-          <Flex align="center" justify="center" h="100%">
-            <Button>Select a board to start</Button>
-          </Flex>
-        )}
-      </Stack>
+      <ColumnListByBoardId
+        selectedBoardId={selectedBoardId}
+        boardInfos={boardInfos}
+      />
 
       {/* Create Board Modal */}
       <Modal
@@ -196,3 +182,30 @@ export default function Page() {
     </Flex>
   );
 }
+
+const ColumnListByBoardId = ({
+  selectedBoardId,
+  boardInfos,
+}: {
+  selectedBoardId: string;
+  boardInfos: { id: string; title: string; teamId: string }[];
+}) => {
+  // Get selected board data
+  const { board: selectedBoard, isLoading: IsBoardDataLoading } = useBoard(
+    selectedBoardId || "",
+  );
+  if (IsBoardDataLoading) return <RateupLoader h={"100dvh"} />;
+  if (!selectedBoard || !selectedBoardId)
+    return (
+      <Flex align="center" justify="center" h="100%" w={"100%"}>
+        <Title order={4}>Select a board to start</Title>
+      </Flex>
+    );
+  return (
+    <Stack style={{ flexGrow: 1, height: "100%", overflow: "hidden" }} p="md">
+      <div style={{ overflowX: "auto", width: "100%", height: "100%" }}>
+        <Board initial={selectedBoard} availableBoards={boardInfos} />
+      </div>
+    </Stack>
+  );
+};
