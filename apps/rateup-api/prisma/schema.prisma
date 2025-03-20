@@ -72,32 +72,34 @@ enum ContactGroupType {
 }
 
 model User {
-  id             String          @id @default(uuid()) @db.Uuid
-  createdAt      DateTime        @default(now())
-  email          String          @unique
+  id             String           @id @default(uuid()) @db.Uuid
+  createdAt      DateTime         @default(now())
+  email          String           @unique
   name           String?
   profilePhoto   String?
   phone          String?
-  active         Boolean         @default(true)
+  active         Boolean          @default(true)
   gender         Gender?
   recipeName     UserRecipes?
-  isPaused       Boolean?        @default(false)
+  isPaused       Boolean?         @default(false)
   pausedBy       String?
-  prefLanguage   String?         @default("English")
+  prefLanguage   String?          @default("English")
   deletedAt      DateTime?
   org            Org[]
   orgMember      OrgMember[]
   teamMember     TeamMember[]
   surveys        Survey[]
   Order          Order[]
-  assignedTicket Ticket[]        @relation("AssignedTicket")
-  createdTicket  Ticket[]        @relation("CreatedTicket")
+  assignedTicket Ticket[]         @relation("AssignedTicket")
+  createdTicket  Ticket[]         @relation("CreatedTicket")
   TicketComment  TicketComment[]
   linktree       Linktree[]
   generateQr     GenerateQr[]
   landingPage    LandingPage[]
   WaMessage      WaMessage[]
   waInboxAssign  WaInboxAssign[]
+  ticketActivity TicketActivity[]
+  ticketCards    TicketCard[]
 }
 
 model Org {
@@ -251,6 +253,8 @@ model Team {
   Ticket                 Ticket[]
   waInboxAssign          WaInboxAssign[]
 
+  ticketBoards TicketBoard[]
+
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
 }
@@ -384,6 +388,7 @@ model SurveyResponse {
   CampaignParticipants CampaignParticipant[]
   Testimonial          Testimonial[]
   Ticket               Ticket[]
+  ticketCards          TicketCard[]
 }
 
 model SurveyStats {
@@ -707,6 +712,7 @@ model Review {
   meta           Json?
   ReviewAnalysis ReviewAnalysis?
   Ticket         Ticket[]
+  ticketCards    TicketCard[]
 }
 
 // result of sentiment analysis
@@ -983,7 +989,6 @@ model Ticket {
   deadline                  DateTime?
   assignedTo                User                     @relation("AssignedTicket", fields: [assignedToId], references: [id])
   assignedToId              String                   @db.Uuid
-  comments                  TicketComment[]
   reviewId                  String?                  @db.Uuid
   surveyResponseId          String?                  @db.Uuid
   review                    Review?                  @relation(fields: [reviewId], references: [id])
@@ -1017,13 +1022,65 @@ enum TicketType {
 }
 
 model TicketComment {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  text        String
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  createdById String   @db.Uuid
-  createdAt   DateTime @default(now())
-  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  ticketId    String   @db.Uuid
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  text         String
+  createdBy    User        @relation(fields: [createdById], references: [id])
+  createdById  String      @db.Uuid
+  createdAt    DateTime    @default(now())
+  ticketCard   TicketCard? @relation(fields: [ticketCardId], references: [id])
+  ticketCardId String?     @db.Uuid
+}
+
+model TicketBoard {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  teamId        String         @db.Uuid
+  team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  ticketColumns TicketColumn[]
+}
+
+model TicketColumn {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  order         Int          @default(0) // Used to maintain column order within a board
+  ticketBoardId String       @db.Uuid
+  ticketBoard   TicketBoard  @relation(fields: [ticketBoardId], references: [id], onDelete: Cascade)
+  ticketCards   TicketCard[]
+}
+
+model TicketCard {
+  id                        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                     String
+  description               String?
+  ticketId                  String                   @unique
+  deadline                  DateTime?
+  priority                  TicketPriority?
+  type                      TicketType
+  order                     Int                      @default(0) // Used to maintain card order within a column
+  createdAt                 DateTime                 @default(now())
+  assignedToId              String?                  @db.Uuid
+  assignedTo                User?                    @relation(fields: [assignedToId], references: [id])
+  ticketColumnId            String                   @db.Uuid
+  ticketColumn              TicketColumn             @relation(fields: [ticketColumnId], references: [id], onDelete: Cascade)
+  reviewId                  String?                  @db.Uuid
+  surveyResponseId          String?                  @db.Uuid
+  review                    Review?                  @relation(fields: [reviewId], references: [id])
+  surveyResponse            SurveyResponse?          @relation(fields: [surveyResponseId], references: [id])
+  waAutomatedReplyMessageId String?                  @db.Uuid
+  waAutomatedReplyMessage   WaAutomatedReplyMessage? @relation(fields: [waAutomatedReplyMessageId], references: [id])
+  ticketActivities          TicketActivity[]
+  ticketComments            TicketComment[]
+}
+
+model TicketActivity {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type         String // ADDED_CARD, MOVED_CARD, EDITED_CARD, etc.
+  timestamp    DateTime   @default(now())
+  userId       String?    @db.Uuid
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketCardId String     @db.Uuid
+  ticketCard   TicketCard @relation(fields: [ticketCardId], references: [id], onDelete: Cascade)
+  details      Json // JSON object for additional metadata
 }
 
 model Linktree {
@@ -1106,6 +1163,7 @@ model WaAutomatedReplyMessage {
   orgId              String            @db.Uuid
   org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   ticket             Ticket[]
+  ticketCards        TicketCard[]
 }
 
 model ApiAccessToken {

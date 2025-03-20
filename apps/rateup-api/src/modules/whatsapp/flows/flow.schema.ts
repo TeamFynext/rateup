@@ -39,6 +39,8 @@ const updateFlowInput = z.object({
       z.object({
         questionId: z.string(),
         type: z.nativeEnum(QuestionType2),
+        selectedColumnId: z.string().optional(),
+        selectedBoardId: z.string().optional(),
         condition: z.object({
           minRating: z.number().optional(),
           minOpinion: z.number().optional(),

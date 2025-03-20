@@ -105,6 +105,8 @@ const questionCore = {
         minRating: z.number().optional(),
         minOpinion: z.number().optional(),
         reqOptions: z.array(z.string()).optional(),
+        selectedColumnId: z.string().optional(),
+        selectedBoardId: z.string().optional(),
       }),
     ])
     .optional(),
@@ -205,6 +207,8 @@ const updateQuestionRequestSchema = z.object({
         minOpinion: z.number().optional(),
         reqOptions: z.array(z.string()).optional(),
         submissionTicket: z.boolean().optional(),
+        selectedColumnId: z.string().optional(),
+        selectedBoardId: z.string().optional(),
       }),
     ])
     .optional(),

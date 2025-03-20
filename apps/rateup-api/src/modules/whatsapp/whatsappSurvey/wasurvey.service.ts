@@ -432,6 +432,14 @@ function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses) {
   }
   return shouldRaiseTicket;
 }
+function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses) {
+  for (const ticket of ticketIssued) {
+    const response = responses.find((r) => r.questionId === ticket.questionId);
+    if (!response) continue;
+    return ticket.selectedColumnId;
+  }
+  return null;
+}
 /**
  * Saves responses to the database in SurveyResponse table.
  * To be called after getting response to the last question.
@@ -514,10 +522,18 @@ export async function saveResponses(session: WaSessionWithRelations) {
     ?.ticketIssued as unknown as FlowTicket[];
   let shouldRaiseTicket =
     session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
+  let columnId = null;
   if (ticketIssued.length && !shouldRaiseTicket) {
+    columnId = getColumnIdFromTickets(ticketIssued, questionResponses);
     shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
   }
-  const res = await createResponse(surveyResponse, shouldRaiseTicket);
+  const res = await createResponse(
+    surveyResponse,
+    shouldRaiseTicket,
+    false,
+    null,
+    columnId,
+  );
   await updateResponse(res.id, { ip: session.ip, location: undefined });
   const loyalty = await prisma.loyaltyActionFlowMap.findFirst({
     where: {

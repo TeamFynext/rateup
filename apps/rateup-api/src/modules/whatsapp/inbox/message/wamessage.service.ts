@@ -108,7 +108,6 @@ export async function getWaTickets(page = 1, orgId: string) {
     prisma.ticket.findMany({
       where: condition,
       include: {
-        comments: true,
         assignedTo: {
           select: {
             name: true,
