@@ -453,29 +453,24 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
           </Group>
         </Group>
       </Skeleton>
-
-      {responseData?.totalCount > 0 ? (
-        <Box className={styles["responses-table-container"]}>
-          <TanstackTable
-            data={responseData ? responseData?.responses : []}
-            columns={columns}
-            columnFiltersE={columnFilters}
-            setColumnFiltersE={setColumnFilters}
-            pagination={pagination}
-            setPagination={setPagination}
-            totalCount={responseData?.totalCount}
-            isPending={isPending}
-          />
-          <DeleteModal
-            confirmDelete={confirmDelete}
-            translations={translations}
-            opened={opened}
-            close={close}
-          />
-        </Box>
-      ) : (
-        <NothingFound text={translations["No responses yet"]} />
-      )}
+      <Box className={styles["responses-table-container"]}>
+        <TanstackTable
+          data={responseData ? responseData?.responses : []}
+          columns={columns}
+          columnFiltersE={columnFilters}
+          setColumnFiltersE={setColumnFilters}
+          pagination={pagination}
+          setPagination={setPagination}
+          totalCount={responseData?.totalCount}
+          isPending={isPending}
+        />
+        <DeleteModal
+          confirmDelete={confirmDelete}
+          translations={translations}
+          opened={opened}
+          close={close}
+        />
+      </Box>
     </Stack>
   );
 };

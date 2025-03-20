@@ -273,10 +273,15 @@ export async function validateOTP(data) {
   return (await axiosClient.post(`email/otp/validate`, data)).data;
 }
 
-export async function getSurveyResponseForGraph(timePeriod, userTimeZone) {
+export async function getSurveyResponseForGraph(
+  timePeriod,
+  userTimeZone,
+  surveyId,
+  teamMapIds,
+) {
   return (
     await axiosClient.get(
-      `${SURVEYURL}/summary/response?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}`,
+      `${SURVEYURL}/summary/response?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds}`,
     )
   ).data;
 }

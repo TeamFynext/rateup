@@ -32,10 +32,10 @@ const OverallResponseGraph = ({
   data,
   timePeriod,
   setTimePeriod,
-  refreshKeys,
   className,
   translations,
   isLoading,
+  onRefresh,
 }) => {
   const total = useMemo(() => {
     return data?.reduce((total, item) => (total += item?.responses), 0);
@@ -78,7 +78,7 @@ const OverallResponseGraph = ({
                 {translations["Overall Responses"]}
               </Text>
             </Stack>
-            <RefreshButton queryKeys={refreshKeys} />
+            <RefreshButton onClick={onRefresh} />
           </Group>
 
           <Group className={classes["hour-daily-weekly-btn-container"]}>
