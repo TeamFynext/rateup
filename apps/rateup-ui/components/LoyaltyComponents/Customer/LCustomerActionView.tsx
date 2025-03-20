@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 
-import { ActionIcon, Divider, Group, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Divider,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconArrowLeft,
@@ -94,5 +101,33 @@ export const DetailedViewHeader = ({
         onChange={(r) => setRange(r ? [r["selection"]] : [])}
       />
     </Stack>
+  );
+};
+
+export const CalenderIconDateRangePicker = ({
+  ranges,
+  setRange,
+  label = "Filter by Date",
+  variant = "light",
+}) => {
+  const [opened, { open, close }] = useDisclosure(false);
+  return (
+    <>
+      <Tooltip label={label}>
+        <ActionIcon
+          color="var(--tertiary-color)"
+          onClick={open}
+          variant={variant}
+        >
+          <IconCalendar />
+        </ActionIcon>
+      </Tooltip>
+      <DateRangePickerModal
+        opened={opened}
+        ranges={ranges}
+        close={close}
+        onChange={(r) => setRange(r ? [r["selection"]] : [])}
+      />
+    </>
   );
 };
