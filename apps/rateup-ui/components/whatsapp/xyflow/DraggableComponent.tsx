@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 
 import {
   ActionIcon,
@@ -470,7 +470,15 @@ const DraggableComponent = ({
           </Group>
         );
       case ComponentType.Ticket:
-        return <TextInput disabled value="Ticket Auto-generation" />;
+        return (
+          <TicketColumnSelector
+            component={component}
+            id={id}
+            options={options}
+            setNodes={setNodes}
+            index={index}
+          />
+        );
       default:
         return null;
     }
@@ -534,3 +542,94 @@ const DraggableComponent = ({
 };
 
 export default DraggableComponent;
+
+const TicketColumnSelector = ({ component, setNodes, id, options, index }) => {
+  const [selectedBoardId, setSelectedBoardId] = useState(
+    component.boardId || null,
+  );
+
+  // Transform boards for Select component
+  const boards = useMemo(
+    () => options?.map((board) => ({ value: board.id, label: board.title })),
+    [],
+  );
+
+  // Get columns for selected board
+  const columns = useMemo(() => {
+    const selectedBoard = options?.find(
+      (board) => board.id === selectedBoardId,
+    );
+    return selectedBoard
+      ? selectedBoard.ticketColumns.map((col) => ({
+          value: col.id,
+          label: col.title,
+        }))
+      : [];
+  }, [selectedBoardId]);
+
+  return (
+    <Stack gap="xs">
+      <Select
+        label="Select Board"
+        placeholder="Choose a board"
+        value={component.boardId}
+        data={boards}
+        onChange={(boardId) => {
+          setSelectedBoardId(boardId);
+          setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === id
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      components: node.data.components.map((comp, compIndex) =>
+                        compIndex === index
+                          ? {
+                              ...comp,
+                              boardId,
+                              columnId: null, // Reset column when board changes
+                            }
+                          : comp,
+                      ),
+                    },
+                  }
+                : node,
+            ),
+          );
+        }}
+      />
+      {selectedBoardId && (
+        <Select
+          label="Select Column"
+          placeholder="Choose a column"
+          value={component.columnId}
+          data={columns}
+          onChange={(columnId) => {
+            setNodes((nodes) =>
+              nodes.map((node) =>
+                node.id === id
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        components: node.data.components.map(
+                          (comp, compIndex) =>
+                            compIndex === index
+                              ? {
+                                  ...comp,
+                                  columnId,
+                                }
+                              : comp,
+                        ),
+                      },
+                    }
+                  : node,
+              ),
+            );
+          }}
+        />
+      )}
+    </Stack>
+  );
+};

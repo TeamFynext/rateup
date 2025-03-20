@@ -40,6 +40,8 @@ type IssueTicket = {
   minOpinion?: number;
   reqOptions?: Array<string>;
   submissionTicket?: boolean;
+  selectedColumnId?: string;
+  selectedBoardId?: string;
 } | null;
 
 type TNC = {
@@ -765,6 +767,8 @@ declare global {
   type FlowTicket = {
     questionId: string;
     type: QuestionType2;
+    selectedColumnId?: string;
+    selectedBoardId?: string;
     condition: {
       minRating?: number;
       minOpinion?: number;

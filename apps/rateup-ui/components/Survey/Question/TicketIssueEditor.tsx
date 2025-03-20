@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
   Button,
   Group,
   Rating,
+  Select,
   SimpleGrid,
   Stack,
   Switch,
@@ -15,7 +16,9 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconInfoCircle, IconX } from "@tabler/icons-react";
 
+import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -50,6 +53,29 @@ const TicketIssueEditor = ({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
+  const { data: options, isPending } = useBoardsQueries();
+  const [selectedBoardId, setSelectedBoardId] = useState(
+    selectedQ?.ticketIssue?.selectedBoardId,
+  );
+
+  // Transform boards for Select component
+  const boards = useMemo(
+    () => options?.map((board) => ({ value: board.id, label: board.title })),
+    [options],
+  );
+
+  // Get columns for selected board
+  const columns = useMemo(() => {
+    const selectedBoard = options?.find(
+      (board) => board.id === selectedBoardId,
+    );
+    return selectedBoard
+      ? selectedBoard.ticketColumns.map((col) => ({
+          value: col.id,
+          label: col.title,
+        }))
+      : [];
+  }, [options, selectedBoardId]);
 
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
@@ -221,6 +247,7 @@ const TicketIssueEditor = ({
   };
 
   const { primaryColor } = useMantineTheme();
+  if (isPending) return <RateupLoader h={100} />;
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Title order={3}>Automated Ticket Creation</Title>
@@ -458,6 +485,43 @@ const TicketIssueEditor = ({
                     }
                   })()}
                 </Group>
+              </Stack>
+              <Stack gap="xs">
+                <Select
+                  label="Select Board"
+                  placeholder="Choose a board"
+                  value={selectedQ?.ticketIssue?.selectedBoardId}
+                  data={boards}
+                  onChange={(boardId) => {
+                    setSelectedBoardId(boardId);
+                    if (boardId)
+                      setSelectedQ({
+                        ...selectedQ,
+                        ticketIssue: {
+                          ...selectedQ.ticketIssue,
+                          selectedBoardId: boardId,
+                        },
+                      });
+                  }}
+                />
+                {selectedBoardId && (
+                  <Select
+                    label="Select Column"
+                    placeholder="Choose a column"
+                    value={selectedQ?.ticketIssue?.selectedColumnId}
+                    data={columns}
+                    onChange={(columnId) => {
+                      if (columnId)
+                        setSelectedQ({
+                          ...selectedQ,
+                          ticketIssue: {
+                            ...selectedQ.ticketIssue,
+                            selectedColumnId: columnId,
+                          },
+                        });
+                    }}
+                  />
+                )}
               </Stack>
             </>
           )}

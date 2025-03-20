@@ -2,13 +2,32 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+
 import { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 import {
+  Board,
+  createBoard,
+  createCard,
+  createColumn,
   createComment,
   createTicket,
+  deleteBoard,
+  deleteCard,
+  deleteColumn,
   deleteTicket,
+  fetchBoard,
+  fetchBoards,
+  fetchCardById,
   getTicket,
   getTickets,
+  moveCard,
+  moveColumnToBoard,
+  reorderCard,
+  reorderColumns,
+  updateBoard,
+  updateCard,
+  updateColumn,
   updateTicket,
   updateTicketStatus,
 } from "./tickets.api";
@@ -177,17 +196,11 @@ export const useCreateCommentMutation = (id) => {
   return useMutation({
     mutationFn: createComment,
     onSuccess: () => {
-      notifications.show({
-        id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Message Sent...!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
-      });
-      queryClient.invalidateQueries({ queryKey: ["waTickets"] });
-      queryClient.invalidateQueries({ queryKey: ["ticket", id] });
+      showSuccessToast(
+        "Comment created successfully!",
+        "create-comment-success",
+      );
+      queryClient.invalidateQueries({ queryKey: ["card", id] });
     },
     onError: (error: any) => {
       notifications.update({
@@ -202,3 +215,386 @@ export const useCreateCommentMutation = (id) => {
     },
   });
 };
+
+export function useBoardsQueries(teamId?: string) {
+  return useQuery({
+    queryKey: ["boards", teamId === "all" ? undefined : teamId],
+    queryFn: () => fetchBoards(teamId === "all" ? undefined : teamId),
+    enabled: true, // Always enable the query regardless of teamId
+  });
+}
+
+export function useBoardQueries(teamId?: string) {
+  const queryClient = useQueryClient();
+
+  const boardsQuery = useQuery({
+    queryKey: ["boards", teamId],
+    queryFn: () => fetchBoards(teamId),
+    enabled: !!teamId,
+  });
+
+  const createBoardMutation = useMutation({
+    mutationFn: createBoard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      showSuccessToast("Board created successfully!", "create-board-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to create board.", "create-board-error");
+    },
+  });
+
+  const updateBoardMutation = useMutation({
+    mutationFn: updateBoard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      showSuccessToast("Board updated successfully!", "update-board-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to update board.", "update-board-error");
+    },
+  });
+
+  const deleteBoardMutation = useMutation({
+    mutationFn: deleteBoard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      showSuccessToast("Board deleted successfully!", "delete-board-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to delete board.", "delete-board-error");
+    },
+  });
+
+  return {
+    boards: boardsQuery.data || [],
+    isLoading: boardsQuery.isLoading,
+    error: boardsQuery.error,
+    createBoard: createBoardMutation.mutate,
+    updateBoard: updateBoardMutation.mutate,
+    deleteBoard: deleteBoardMutation.mutate,
+  };
+}
+export const useUpdateCardMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateCard,
+    onSuccess: () => {
+      showSuccessToast("Ticket updated successfully!", "update-ticket-success");
+      queryClient.invalidateQueries({ queryKey: ["card"] });
+    },
+  });
+};
+
+export function useBoard(boardId: string) {
+  const queryClient = useQueryClient();
+
+  const boardQuery = useQuery({
+    queryKey: ["board", boardId],
+    queryFn: () => fetchBoard(boardId),
+    enabled: !!boardId,
+  });
+
+  const createColumnMutation = useMutation({
+    mutationFn: createColumn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Column created successfully!", "create-column-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to create column.", "create-column-error");
+    },
+  });
+
+  const updateColumnMutation = useMutation({
+    mutationFn: updateColumn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Column updated successfully!", "update-column-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to update column.", "update-column-error");
+    },
+  });
+
+  const deleteColumnMutation = useMutation({
+    mutationFn: deleteColumn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Column deleted successfully!", "delete-column-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to delete column.", "delete-column-error");
+    },
+  });
+
+  const moveColumnMutation = useMutation({
+    mutationFn: moveColumnToBoard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      showSuccessToast("Column moved successfully!", "move-column-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to move column.", "move-column-error");
+    },
+  });
+
+  const createCardMutation = useMutation({
+    mutationFn: createCard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Card created successfully!", "create-card-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to create card.", "create-card-error");
+    },
+  });
+
+  const updateCardMutation = useMutation({
+    mutationFn: updateCard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Card updated successfully!", "update-card-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to update card.", "update-card-error");
+    },
+  });
+
+  const deleteCardMutation = useMutation({
+    mutationFn: deleteCard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Card deleted successfully!", "delete-card-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to delete card.", "delete-card-error");
+    },
+  });
+
+  const moveCardMutation = useMutation({
+    mutationFn: moveCard,
+    // Add optimistic update
+    onMutate: async (params) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["board", boardId] });
+
+      // Snapshot the previous board state
+      const previousBoard = queryClient.getQueryData<Board>(["board", boardId]);
+
+      if (previousBoard) {
+        // Create a copy of the board to make optimistic updates
+        const optimisticBoard = JSON.parse(
+          JSON.stringify(previousBoard),
+        ) as Board;
+
+        // Find source and target columns
+        const sourceColumnIndex = optimisticBoard.ticketColumns.findIndex(
+          (col) => col.id === params.sourceColumnId,
+        );
+        const targetColumnIndex = optimisticBoard.ticketColumns.findIndex(
+          (col) => col.id === params.targetColumnId,
+        );
+
+        if (sourceColumnIndex >= 0 && targetColumnIndex >= 0) {
+          // Find the card to move
+
+          const cardIndex = optimisticBoard.ticketColumns[
+            sourceColumnIndex
+          ].ticketCards.findIndex((card) => card.id === params.cardId);
+
+          if (cardIndex >= 0) {
+            // Get the card
+            const card =
+              optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards[
+                cardIndex
+              ];
+
+            // Create an updated version with movement activity
+            const updatedCard = {
+              ...card,
+              activities: [
+                ...(card.ticketActivities || []),
+                {
+                  id: `temp-${Date.now()}`,
+                  type: "MOVED_CARD",
+                  user: "you",
+                  timestamp: new Date(),
+                  details: {
+                    columnName:
+                      optimisticBoard.ticketColumns[targetColumnIndex].title,
+                    sourceColumnName:
+                      optimisticBoard.ticketColumns[sourceColumnIndex].title,
+                  },
+                },
+              ],
+            };
+
+            // Remove from source
+            optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards.splice(
+              cardIndex,
+              1,
+            );
+
+            // Add to target
+            optimisticBoard.ticketColumns[targetColumnIndex].ticketCards.push(
+              updatedCard,
+            );
+
+            // Update the query cache with our optimistic board
+            queryClient.setQueryData(["board", boardId], optimisticBoard);
+          }
+        }
+      }
+
+      return { previousBoard };
+    },
+    // If the mutation fails, restore the previous board state
+    onError: (_, __, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
+        showErrorToast("Failed to move card.", "move-card-error");
+      }
+    },
+    // Always refetch after error or success
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Card moved successfully!", "move-card-success");
+    },
+  });
+
+  const reorderCardMutation = useMutation({
+    mutationFn: reorderCard,
+    // Update optimistic update for reordering
+    onMutate: async (params) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["board", boardId] });
+
+      // Snapshot the previous board state
+      const previousBoard = queryClient.getQueryData<Board>(["board", boardId]);
+
+      if (previousBoard) {
+        // Create a copy of the board to make optimistic updates
+        const optimisticBoard = JSON.parse(
+          JSON.stringify(previousBoard),
+        ) as Board;
+
+        // Find column
+        const columnIndex = optimisticBoard.ticketColumns.findIndex(
+          (col) => col.id === params.columnId,
+        );
+
+        if (columnIndex >= 0) {
+          const column = optimisticBoard.ticketColumns[columnIndex];
+          // Create a new cards array in the order specified by the params
+          const orderedCards = params.cards.map((cardOrder) => {
+            // Find the card in the original cards array
+            const card = column.ticketCards.find((c) => c.id === cardOrder.id);
+            return card!; // Using ! because we know the card exists
+          });
+
+          // Replace the column's cards with the ordered cards
+          column.ticketCards = orderedCards;
+
+          // Update the query cache with optimistic update
+          queryClient.setQueryData(["board", boardId], optimisticBoard);
+        }
+      }
+
+      return { previousBoard };
+    },
+    // If the mutation fails, restore the previous board state
+    onError: (_, __, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
+        showErrorToast("Failed to reorder cards.", "reorder-card-error");
+      }
+    },
+    // Always refetch after error or success
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast("Cards reordered successfully!", "reorder-card-success");
+    },
+  });
+
+  const reorderColumnsMutation = useMutation({
+    mutationFn: reorderColumns,
+    // Add optimistic update for reordering columns
+    onMutate: async (params) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["board", boardId] });
+
+      // Snapshot the previous board state
+      const previousBoard = queryClient.getQueryData<Board>(["board", boardId]);
+
+      if (previousBoard) {
+        // Create a copy of the board to make optimistic updates
+        const optimisticBoard = JSON.parse(
+          JSON.stringify(previousBoard),
+        ) as Board;
+
+        // Create a new columns array in the order specified by the params
+        const orderedColumns = params.columns.map((columnOrder) => {
+          // Find the column in the original columns array
+          const column = optimisticBoard.ticketColumns.find(
+            (c) => c.id === columnOrder.id,
+          );
+          return column!; // Using ! because we know the column exists
+        });
+
+        // Replace the board's columns with the ordered columns
+        optimisticBoard.ticketColumns = orderedColumns;
+
+        // Update the query cache with optimistic update
+        queryClient.setQueryData(["board", boardId], optimisticBoard);
+      }
+
+      return { previousBoard };
+    },
+    // If the mutation fails, restore the previous board state
+    onError: (_, __, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
+        showErrorToast("Failed to reorder columns.", "reorder-columns-error");
+      }
+    },
+    // Always refetch after error or success
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      showSuccessToast(
+        "Columns reordered successfully!",
+        "reorder-columns-success",
+      );
+    },
+  });
+
+  return {
+    board: boardQuery.data,
+    isLoading: boardQuery.isLoading,
+    error: boardQuery.error,
+    createColumn: createColumnMutation.mutate,
+    updateColumn: updateColumnMutation.mutate,
+    deleteColumn: deleteColumnMutation.mutate,
+    moveColumn: moveColumnMutation.mutate,
+    createCard: createCardMutation.mutate,
+    updateCard: updateCardMutation.mutate,
+    deleteCard: deleteCardMutation.mutate,
+    moveCard: moveCardMutation.mutate,
+    // Add loading state for move operation
+    isMoveCardLoading: moveCardMutation.isPending,
+    reorderCard: reorderCardMutation.mutate,
+    isReorderCardLoading: reorderCardMutation.isPending,
+    reorderColumns: reorderColumnsMutation.mutate,
+    isReorderColumnsLoading: reorderColumnsMutation.isPending,
+  };
+}
+
+// Add useCardById hook
+export function useCardById(cardId: string | undefined) {
+  return useQuery({
+    queryKey: ["card", cardId],
+    queryFn: () => fetchCardById(cardId as string),
+    enabled: !!cardId, // Only run the query if cardId is provided
+  });
+}
