@@ -2,19 +2,14 @@ import { FastifyInstance } from "fastify";
 import { $TicketRef } from "./ticket.schema";
 import {
   createCommentHandler,
-  createTicketHandler,
-  deleteSingleTicketHandler,
-  getAllTicketsByUserHandler,
-  getSingleTicketHandler,
-  updateStatusHandler,
-  updateTicketHandler,
+  deleteCommentHandler,
 } from "./ticket.controller";
 import { checkSession } from "../../utils/checkSession";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
-import { verifyTeamAccess } from "../team/team.auth";
-import { verifyTicketAccess } from "./ticket.auth";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
+import { columnRoutes } from "./ticketColumn/column.route";
+import { cardRoutes } from "./ticketCard/card.route";
+import { boardRoutes } from "./ticketBoard/board.route";
 
 export async function ticketRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -22,76 +17,19 @@ export async function ticketRoutes(server: FastifyInstance) {
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]),
   );
-
-  server.post(
-    "/create",
-    {
-      preHandler: [verifyTeamAccess, checkRoleHandler(["SUPER_ADMIN"])],
-      schema: {
-        body: $TicketRef("createTicketRequestSchema"),
-        response: {
-          201: $TicketRef("createTicketResponseSchema"),
-        },
-      },
-    },
-    createTicketHandler,
-  );
-
-  //get all tickets
-  server.get("/", getAllTicketsByUserHandler);
-
-  //get single ticket with associated comments
-  server.get(
-    "/:id",
-    {
-      preHandler: [verifyTicketAccess],
-      schema: {
-        params: $TicketRef("idParamsSchema"),
-      },
-    },
-    getSingleTicketHandler,
-  );
-
-  server.delete(
-    "/:id",
-    {
-      preHandler: [verifyTicketAccess, checkRoleHandler(["SUPER_ADMIN"])],
-      schema: {
-        params: $TicketRef("idParamsSchema"),
-      },
-    },
-    deleteSingleTicketHandler,
-  );
-
-  server.put(
-    "/:id",
-    {
-      preHandler: [verifyTicketAccess],
-      schema: {
-        params: $TicketRef("idParamsSchema"),
-        body: $TicketRef("updateTicketRequestSchema"),
-      },
-    },
-    updateTicketHandler,
-  );
-
-  //update ticket status
-  server.put(
-    "/:id/status",
-    {
-      preHandler: [verifyTicketAccess],
-      schema: {
-        params: $TicketRef("idParamsSchema"),
-        body: $TicketRef("updateStatusRequestSchema"),
-      },
-    },
-    updateStatusHandler,
-  );
-
+  server.register(boardRoutes, {
+    prefix: "boards",
+  });
+  server.register(columnRoutes, {
+    prefix: "columns",
+  });
+  server.register(cardRoutes, {
+    prefix: "cards",
+  });
   server.post(
     "/:id/comment",
     {
-      preHandler: [verifyTicketAccess],
+      // preHandler: [verifyTicketAccess],
 
       schema: {
         body: $TicketRef("createCommentRequestSchema"),
@@ -99,4 +37,5 @@ export async function ticketRoutes(server: FastifyInstance) {
     },
     createCommentHandler,
   );
+  server.delete("/:id/comment", deleteCommentHandler);
 }

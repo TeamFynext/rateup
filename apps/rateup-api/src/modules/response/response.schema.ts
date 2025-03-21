@@ -31,6 +31,7 @@ const responseCore = {
   encryptedResponses: z.string().optional(),
   shouldRaiseTicket: z.boolean().optional(),
   checkUniqueDevice: z.boolean().optional(),
+  selectedColumnId: z.string().optional(),
 };
 
 const createResponseInputSchema = z.object({
