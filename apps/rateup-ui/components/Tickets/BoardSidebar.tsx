@@ -15,9 +15,7 @@ import {
 } from "@mantine/core";
 import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 
-import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { TeamSelector } from "@/components/input/TeamSelector";
-import RateupLoader from "@/components/Loaders/RateupLoader";
 
 import { BoardInfo } from "./types";
 
@@ -41,24 +39,22 @@ export function BoardSidebar({
   boards = [],
 }: BoardSidebarProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
-  const { data: boardsData, isPending } = useBoardsQueries(selectedTeamId);
   const router = useRouter();
-  // Use provided boards prop if available, otherwise use data from query
-  const boardsToDisplay = boards.length > 0 ? boards : boardsData || [];
+  const boardsToDisplay = boards;
 
   // Group boards by teamId
   const boardsByTeam: Record<string, BoardInfo[]> = {};
   const teamIds: string[] = [];
 
   boardsToDisplay?.forEach((board) => {
-    if (!boardsByTeam[board.teamId]) {
-      boardsByTeam[board.teamId] = [];
-      teamIds.push(board.teamId);
-    }
-    boardsByTeam[board.teamId].push(board);
+    board.teamIds.forEach((teamId) => {
+      if (!boardsByTeam[teamId]) {
+        boardsByTeam[teamId] = [];
+        teamIds.push(teamId);
+      }
+      boardsByTeam[teamId].push(board);
+    });
   });
-
-  // Initialize selected team to the first team or empty string if no teams
 
   if (collapsed) {
     return (
@@ -88,8 +84,6 @@ export function BoardSidebar({
     selectedTeamId === "all"
       ? boardsToDisplay
       : boardsByTeam[selectedTeamId] || [];
-
-  if (isPending) return <RateupLoader h={"100%"} />;
 
   return (
     <Card

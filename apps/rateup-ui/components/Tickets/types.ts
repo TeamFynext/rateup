@@ -13,14 +13,18 @@ export interface User {
 export interface Board {
   id: string;
   title: string;
-  teamId: string;
   ticketColumns: Column[];
+  teams: Array<{
+    teamId: string;
+    createdAt?: string;
+    boardId?: string;
+  }>;
 }
 
 export interface BoardInfo {
   id: string;
   title: string;
-  teamId: string;
+  teamIds: Array<string>;
 }
 
 export interface Column {
@@ -37,7 +41,6 @@ export interface Card {
   description?: string;
   ticketId?: string;
   deadline?: Date | null;
-  assignedToId?: string | null;
   priority?: string | null;
   category?: string | null;
   status?: string | null;
@@ -45,47 +48,48 @@ export interface Card {
   createdAt?: string | Date;
   columnId?: string;
   ticketActivities?: Activity[];
-  ticketColumn?: {
-    ticketBoard?: {
-      team?: {
-        members?: Array<{
-          user: User;
-        }>;
-      };
-    };
-  };
   ticketComments?: Array<TicketComment>;
   surveyResponseId?: string;
-  surveyResponse: {
+  surveyResponse: surveyResponse;
+  assignees: Array<{
+    assigneeId: string;
+  }>;
+  waAutomatedReplyMessageId?: string;
+  waAutomatedReplyMessage?: WaAutomatedReplyMessage;
+}
+
+export interface surveyResponse {
+  id: string;
+  createdAt: string | Date;
+  surveyTeamMapId: string;
+  responses: Array<any>;
+  response: string | number;
+  questionId: string;
+  encryptedResponses: null | any;
+  language: string;
+  platform: string;
+  tag: string | null;
+  ip: null | string;
+  location: null | any;
+  deviceData: null | any;
+  contactId: string | null;
+  Contact: {
     id: string;
-    createdAt: string | Date;
-    surveyTeamMapId: string;
-    responses: Array<any>;
-    response: string | number;
-    questionId: string;
-    encryptedResponses: null | any;
-    language: string;
-    platform: string;
-    tag: string | null;
-    ip: null | string;
-    location: null | any;
-    deviceData: null | any;
-    contactId: string | null;
-    Contact: {
-      id: string;
-      name: string;
-      phone: string;
-    };
-    surveyTeamMap: {
-      survey: {
-        WaFlow: {
-          json: any;
-        };
+    name: string;
+    phone: string;
+  };
+  surveyTeamMap: {
+    survey: {
+      WaFlow: {
+        json: any;
       };
     };
   };
-  waAutomatedReplyMessageId?: string;
-  waAutomatedReplyMessage?: WaAutomatedReplyMessage;
+}
+export interface MemberData {
+  id: string;
+  name: string;
+  profilePhoto?: string;
 }
 export type WaAutomatedReplyMessage = {
   id: string;
