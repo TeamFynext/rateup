@@ -3,6 +3,7 @@ import {
   Board,
   Card,
   Column,
+  MemberData,
   TicketComment,
 } from "@/components/Tickets/types";
 import { TicketFormValues } from "@/pages/dashboard/tickets/[ticketId]";
@@ -93,10 +94,8 @@ export async function createComment(data) {
 export type { Board, Column, Card, Activity, TicketComment };
 
 // API functions
-export const fetchBoards = async (teamId?: string): Promise<Board[]> => {
-  const { data } = await axiosClient.get("/tickets/boards", {
-    params: { teamId },
-  });
+export const fetchBoards = async (): Promise<Board[]> => {
+  const { data } = await axiosClient.get("/tickets/boards");
   return data;
 };
 
@@ -107,7 +106,7 @@ export const fetchBoard = async (boardId: string): Promise<Board> => {
 
 export const createBoard = async (board: {
   title: string;
-  teamId: string;
+  teamIds: Array<string>;
 }): Promise<Board> => {
   const { data } = await axiosClient.post("/tickets/boards/create", board);
   return data;
@@ -116,7 +115,7 @@ export const createBoard = async (board: {
 export const updateBoard = async (board: {
   id: string;
   title?: string;
-  teamId?: string;
+  teamIds?: Array<string>;
 }): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;
@@ -225,4 +224,13 @@ export const fetchCardById = async (cardId: string): Promise<Card> => {
 
 export const deleteComment = async (commentId: string): Promise<void> => {
   await axiosClient.delete(`/tickets/${commentId}/comment`);
+};
+
+export const fetchCardTeamMemberById = async (
+  cardId: string,
+): Promise<Array<MemberData>> => {
+  const { data } = await axiosClient.get(
+    `/tickets/cards/${cardId}/team-members`,
+  );
+  return data;
 };

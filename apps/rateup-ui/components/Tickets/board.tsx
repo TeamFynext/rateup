@@ -340,7 +340,7 @@ export function Board({
                 onDelete={handleDeleteColumn}
                 onUpdate={handleUpdateColumn}
                 onMoveToBoard={handleMoveColumnToBoard}
-                availableBoards={availableBoards}
+                // availableBoards={availableBoards}
                 currentBoardId={data.id}
               />
             ))}
