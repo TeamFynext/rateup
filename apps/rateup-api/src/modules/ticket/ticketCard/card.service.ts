@@ -217,7 +217,13 @@ export async function updateCard(
 ) {
   const card = await prisma.ticketCard.update({
     where: { id },
-    data,
+    data: {
+      title: data.title,
+      description: data.description,
+      priority: data.priority || null,
+      deadline: data.deadline || null,
+      assignedToId: data.assignedToId || null,
+    },
   });
 
   // Log activity for card update
