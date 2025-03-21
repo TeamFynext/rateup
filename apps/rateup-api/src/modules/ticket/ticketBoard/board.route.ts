@@ -24,12 +24,9 @@ export async function boardRoutes(server: FastifyInstance) {
   server.post(
     "/create",
     {
-      preHandler: [verifyTeamAccess],
+      // preHandler: [verifyTeamAccess],
       schema: {
         body: $BoardRef("createBoardRequestSchema"),
-        response: {
-          201: $BoardRef("createBoardResponseSchema"),
-        },
       },
     },
     createBoardHandler,
