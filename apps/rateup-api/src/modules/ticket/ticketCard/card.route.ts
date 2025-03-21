@@ -9,6 +9,7 @@ import {
   moveCardHandler,
   getCardActivitiesHandler,
   reorderCardsHandler,
+  getSingleCardTeamMembersHandler,
 } from "./card.controller";
 import { checkSession } from "../../../utils/checkSession";
 import { verifyColumnAccess } from "../ticketColumn/column.auth";
@@ -29,9 +30,9 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       schema: {
         body: $CardRef("createCardRequestSchema"),
-        response: {
-          201: $CardRef("createCardResponseSchema"),
-        },
+        // response: {
+        //   201: $CardRef("createCardResponseSchema"),
+        // },
       },
     },
     createCardHandler,
@@ -59,6 +60,16 @@ export async function cardRoutes(server: FastifyInstance) {
       },
     },
     getSingleCardHandler,
+  );
+  server.get(
+    "/:id/team-members",
+    {
+      preHandler: [verifyCardAccess],
+      schema: {
+        params: $CardRef("idParamsSchema"),
+      },
+    },
+    getSingleCardTeamMembersHandler,
   );
 
   // Update card

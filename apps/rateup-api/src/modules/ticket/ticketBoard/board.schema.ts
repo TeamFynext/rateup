@@ -4,7 +4,7 @@ import { buildJsonSchemas } from "fastify-zod";
 // Base schema for board
 const boardCore = {
   title: z.string(),
-  teamId: z.string().uuid(),
+  teamIds: z.array(z.string().uuid()),
 };
 
 // Schema for creating a board
@@ -21,6 +21,7 @@ const createBoardResponseSchema = z.object({
 // Schema for updating a board
 const updateBoardRequestSchema = z.object({
   title: z.string().optional(),
+  teamIds: z.array(z.string().uuid()).optional(),
 });
 
 // Schema for id parameter in routes

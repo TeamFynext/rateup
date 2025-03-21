@@ -126,26 +126,9 @@ export async function getCardById(id: string) {
   return prisma.ticketCard.findUnique({
     where: { id },
     include: {
-      ticketColumn: {
+      assignees: {
         select: {
-          ticketBoard: {
-            select: {
-              team: {
-                select: {
-                  members: {
-                    select: {
-                      user: {
-                        select: {
-                          id: true,
-                          name: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
+          assigneeId: true,
         },
       },
       ticketActivities: {
@@ -209,6 +192,18 @@ export async function getCardById(id: string) {
     },
   });
 }
+export async function getCardTeamMembersById(id: string) {
+  const result = await prisma.$queryRaw<{ id: string; name: string }[]>`
+    SELECT DISTINCT u.id, u.name, u."profilePhoto"
+    FROM "User" u
+    INNER JOIN "TeamMember" tm ON u.id = tm."userId"
+    INNER JOIN "TicketBoardTeam" tbt ON tm."teamId" = tbt."teamId"
+    INNER JOIN "TicketColumn" tc ON tbt."boardId" = tc."ticketBoardId"
+    INNER JOIN "TicketCard" tc2 ON tc.id = tc2."ticketColumnId"
+    WHERE tc2.id = ${id}::uuid;
+  `;
+  return result;
+}
 
 export async function updateCard(
   id: string,
@@ -222,7 +217,13 @@ export async function updateCard(
       description: data.description,
       priority: data.priority || null,
       deadline: data.deadline || null,
-      assignedToId: data.assignedToId || null,
+      assignees: {
+        deleteMany: {},
+        createMany: {
+          skipDuplicates: true,
+          data: data.assignedToIds?.map((id) => ({ assigneeId: id })) || [],
+        },
+      },
     },
   });
 
