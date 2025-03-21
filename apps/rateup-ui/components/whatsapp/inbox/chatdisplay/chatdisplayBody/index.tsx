@@ -31,7 +31,6 @@ import {
 } from "../../../../../types/global";
 import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
-import WhatsAppInboxLoader from "../../loader";
 import { useMessageStore } from "../chatdisplayFooter";
 import WaInboxAudio from "./components/audio/indext";
 import WaInboxDocument from "./components/document";
@@ -45,6 +44,7 @@ import classes from "./styles.module.css";
 
 interface Props {
   data: WaGetMessagesBody[];
+  smallScreen?: boolean;
 }
 export default function WaInboxChatDisplayBody(props: Props) {
   const searchParams = useSearchParams();
@@ -141,7 +141,13 @@ export default function WaInboxChatDisplayBody(props: Props) {
 
   return (
     <div className={classes.wrapper}>
-      <div className={classes.inner} ref={scrollableRef}>
+      <div
+        className={classes.inner}
+        ref={scrollableRef}
+        style={{
+          ...(props.smallScreen ? { padding: 0, paddingLeft: 10 } : {}),
+        }}
+      >
         {props?.data && hasNextPage ? (
           <div ref={paginateTargetRef}></div>
         ) : (

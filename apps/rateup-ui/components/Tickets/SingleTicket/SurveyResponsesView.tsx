@@ -1,15 +1,14 @@
-import React, { useContext, useEffect } from "react";
+import React from "react";
 
-import { Group, Image, Paper, Rating, Stack, Text, Title } from "@mantine/core";
+import { Badge, Group, Image, Rating, Stack, Text, Title } from "@mantine/core";
 import dayjs from "dayjs";
+import parse from "html-react-parser";
 
 import useTranslations from "@/dictionaries/useTranslation";
 import { SmileyResponseMap } from "@/utils/whatsapp/enumMap";
 
-import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType as Q, QuestionType2 } from "../../../types/enums";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { OpinionScaleForm } from "../../Survey/TakeSurvey/TakeSurveyComponent/QuestionForms/OpinionScaleForm";
 import { mapSmileyIcon } from "../../Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";
 
@@ -28,34 +27,14 @@ const SurveyResponsesView = ({
 }) => {
   const { translations } = useTranslations();
   return (
-    <PaperLayout
-      hoveractive
-      maw={600}
-      miw={400}
-      p="md"
-      shadow="lg"
-      radius="lg"
-      mt="md"
-      m="xs"
-    >
+    <>
       <Group>
-        <Title order={5} style={{ maxWidth: "400px" }}>
-          {translations["Question"]} {no} :{" "}
-        </Title>
-        <Title order={5} style={{ maxWidth: "400px" }}>
-          {question?.title}
-        </Title>
+        <Badge variant="filled">{no}</Badge>
+        <Text size="sm" style={{ maxWidth: "400px" }}>
+          {parse(question?.title?.[language] || question?.title || "")}
+        </Text>
       </Group>
-      <Paper
-        style={{ background: "#F3F3F3" }}
-        mah={500}
-        maw={600}
-        miw={400}
-        mt="sm"
-        p="md"
-        shadow="0"
-        radius="lg"
-      >
+      <>
         <Stack ml="10px">
           {response ? (
             <Text>
@@ -244,8 +223,8 @@ const SurveyResponsesView = ({
             </Text>
           )}
         </Stack>
-      </Paper>
-    </PaperLayout>
+      </>
+    </>
   );
 };
 

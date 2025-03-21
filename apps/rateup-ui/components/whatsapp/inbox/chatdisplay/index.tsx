@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Flex, Stack } from "@mantine/core";
 import { motion } from "motion/react";
 
 import {
@@ -11,12 +10,7 @@ import {
 import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
-import { UserRole } from "@/utils/enums";
 
-import {
-  ContactsWithLastMessage,
-  WaGetMessagesBody,
-} from "../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import NothingFound from "../../../NothingFound/NothingFound";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
@@ -24,19 +18,18 @@ import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
 } from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
-import WaInboxChatDisplayPopoverMsg from "./chatdisplayPoveroverMsg/page";
 import classes from "./styles.module.css";
 
-export default function WaInboxChatDisplay() {
+export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
-  const { data, error } = useGetMessagesByContactId(
-    searchParams.get("contactId") as string,
-  );
   const {
     selectedContact: contact,
     opened,
     selectedTicket,
   } = useContactStore();
+  const { data, error } = useGetMessagesByContactId(
+    (searchParams.get("contactId") as string) ?? contact?.id,
+  );
   const messages =
     data?.pages
       .map((page) =>
@@ -87,7 +80,10 @@ export default function WaInboxChatDisplay() {
           className={classes.inner_animated}
           layout
         >
-          <WaInboxChatDisplayHeader contact={contact} />
+          <WaInboxChatDisplayHeader
+            contact={contact}
+            smallScreen={smallScreen}
+          />
           {/* <Flex gap={opened && "xs"} p={0}>
             <motion.div
               key={contact?.phone}
@@ -101,7 +97,7 @@ export default function WaInboxChatDisplay() {
               }}
             >
               <Stack h="78vh" gap={0} p={0}> */}
-          <WaInboxChatDisplayBody data={messages} />
+          <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
           {!assignedUsers?.length ? (
             <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
           ) : (
