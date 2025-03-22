@@ -135,7 +135,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       participantsContactIds: string[];
     }[]
   >([]);
-  const [dateRange, setDateRange] = useState([]);
 
   const contactIds = useMemo(
     () =>
@@ -160,21 +159,17 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     tags: filterTags,
     selectedLanguage: "",
     contactIds,
-    ranges: dateRange,
+    ranges: [
+      dayjs(ranges[0]?.startDate).toISOString(),
+      dayjs(ranges[0]?.endDate).toISOString(),
+    ],
   });
   const responses = responseData?.responses;
 
   useEffect(() => {
     if (ranges.length === 0) {
       setRange([initialDateRange]);
-      setDateRange([]);
-      return;
     }
-    if (ranges[0].startDate !== initialDateRange.startDate)
-      setDateRange([
-        dayjs(ranges[0]?.startDate).toISOString(),
-        dayjs(ranges[0]?.endDate).toISOString(),
-      ]);
   }, [ranges]);
 
   const hasContactQuestion =

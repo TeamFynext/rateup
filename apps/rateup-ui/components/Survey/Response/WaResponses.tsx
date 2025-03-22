@@ -139,7 +139,6 @@ const WaResponses = ({
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
   const [campaignFlowFilter, setCampaignFlowFilter] = useState([]);
-  const [dateRange, setDateRange] = useState([]);
   const contactIds = useMemo(
     () =>
       campaignFlowFilter.length
@@ -163,7 +162,10 @@ const WaResponses = ({
     tags: filterTags ? filterTags : "",
     selectedLanguage: "",
     contactIds,
-    ranges: dateRange,
+    ranges: [
+      dayjs(ranges[0]?.startDate).toISOString(),
+      dayjs(ranges[0]?.endDate).toISOString(),
+    ],
   });
   const hasContactQuestion = useMemo(
     () =>
@@ -187,14 +189,7 @@ const WaResponses = ({
   useEffect(() => {
     if (ranges.length === 0) {
       setRange([initialDateRange]);
-      setDateRange([]);
-      return;
     }
-    if (ranges[0].startDate !== initialDateRange.startDate)
-      setDateRange([
-        dayjs(ranges[0]?.startDate).toISOString(),
-        dayjs(ranges[0]?.endDate).toISOString(),
-      ]);
   }, [ranges]);
 
   if (Array.isArray(surveyId)) {
