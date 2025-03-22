@@ -1,7 +1,9 @@
 import {
   LDResponse,
+  QuestionType,
   RatingScale,
   SmileyResponse,
+  WaQuestions,
   YNResponse,
 } from "../types/enums";
 
@@ -22,3 +24,43 @@ export const RatingScaleMap = {
   4: RatingScale.Good,
   5: RatingScale.Excellent,
 };
+
+export const npsQuestionTypes = [
+  QuestionType.Rating,
+  QuestionType.Smiley,
+  QuestionType.LD,
+  QuestionType.YN,
+  QuestionType.Opinion,
+  QuestionType.CustomNPS,
+];
+export const npsQuestionTypes2 = [
+  WaQuestions.Rating,
+  WaQuestions.Smiley,
+  WaQuestions.LD,
+  WaQuestions.YN,
+  WaQuestions.Opinion,
+];
+export const barGraphQuestions = [
+  QuestionType.Rating,
+  QuestionType.Smiley,
+  QuestionType.LD,
+  QuestionType.YN,
+  QuestionType.Opinion,
+  QuestionType.CustomNPS,
+  QuestionType.MCQ,
+  QuestionType.MSQ,
+  QuestionType.MCQGrid,
+  QuestionType.DDMS,
+  QuestionType.DDSS,
+];
+
+export const barGraphQuestions2 = [
+  WaQuestions.Rating,
+  WaQuestions.Smiley,
+  WaQuestions.LD,
+  WaQuestions.YN,
+  WaQuestions.Opinion,
+  WaQuestions.RadioButtonsGroup,
+  WaQuestions.CheckboxGroup,
+  WaQuestions.ChipsSelector,
+];

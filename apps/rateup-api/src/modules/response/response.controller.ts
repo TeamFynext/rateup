@@ -16,6 +16,7 @@ import {
   exportContactResponseToContacts,
   generateResponse,
   getAllResponses,
+  getResponseAnalyticsForGraph,
   getResponseBySurveyById,
   getResponses,
   getResponseSummary,
@@ -380,6 +381,29 @@ export async function getSurveyResponseBySurveyIdHandler(
       request.params.surveyId,
       teamIds,
       request.query,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getResponseAnalyticsForGraphHandler(
+  request: FastifyRequest<{
+    Params: BySurveyIdParamsInput;
+    Querystring: { teamMapIds?: string; dateRange?: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { teamMapIds, dateRange } = request.query;
+    const surveyTeamMapIds = teamMapIds ? teamMapIds.split(",") : [];
+
+    const res = await getResponseAnalyticsForGraph(
+      request.params.surveyId,
+      surveyTeamMapIds,
+      dateRange,
     );
     reply.code(200).send(res);
   } catch (e) {
