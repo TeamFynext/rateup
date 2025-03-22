@@ -77,6 +77,7 @@ export interface surveyResponse {
     id: string;
     name: string;
     phone: string;
+    lastReceivedMessageTimeStamp: string;
   };
   surveyTeamMap: {
     survey: {
@@ -106,6 +107,7 @@ export type WaAutomatedReplyMessage = {
     id: string;
     name: string;
     phone: string;
+    lastReceivedMessageTimeStamp: string;
   };
 };
 
