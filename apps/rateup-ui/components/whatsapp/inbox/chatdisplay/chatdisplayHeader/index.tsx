@@ -154,36 +154,34 @@ export default function WaInboxChatDisplayHeader({
         {!smallScreen && <ContactEdit isMobile={isMobile} contact={contact} />}
       </Group>
       {!smallScreen && (
-        <>
-          <WaInboxCountdownTimer
-            timeStamp={contact?.lastReceivedMessageTimeStamp}
-          />
-          <Group gap={"lg"}>
-            <Group gap="xs">
-              <Tooltip label={"Assign"}>
-                <ActionIcon onClick={openAssign} variant="outline">
-                  <IconUserShare />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label={"Create Ticket"}>
+        <WaInboxCountdownTimer
+          timeStamp={contact?.lastReceivedMessageTimeStamp}
+        />
+      )}
+
+      <Group gap={"lg"}>
+        <Group gap="xs">
+          <Tooltip label={"Assign"}>
+            <ActionIcon onClick={openAssign} variant="outline">
+              <IconUserShare />
+            </ActionIcon>
+          </Tooltip>
+          {/* <Tooltip label={"Create Ticket"}>
                 <ActionIcon onClick={openCreateTicket}>
                   <IconTicket />
                 </ActionIcon>
-              </Tooltip>
-            </Group>
-            {contact?.waMessageAssignStatus !==
-              WaMessageAssignStatus.CLOSED && (
-              <RateupButtonPrimary
-                color="var(--grey-color-7)"
-                title="Close Chat"
-                radius={"md"}
-                size="xs"
-                onClick={handleCloseChat}
-              />
-            )}
-          </Group>
-        </>
-      )}
+              </Tooltip> */}
+        </Group>
+        {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
+          <RateupButtonPrimary
+            color="var(--grey-color-7)"
+            title="Close Chat"
+            radius={"md"}
+            size="xs"
+            onClick={handleCloseChat}
+          />
+        )}
+      </Group>
 
       <CreateTicketModal
         closeTicketModal={closeCreateTicket}

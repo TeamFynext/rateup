@@ -115,7 +115,7 @@ export default function CardDetailPage() {
   }
 
   return (
-    <Container size={"xl"} h={"100%"}>
+    <Container size={1800} h={"100%"}>
       <Grid h={"100%"} p={"xs"} display={"grid"}>
         <Grid.Col span={{ base: 12, md: 8 }}>
           <PaperLayout h={"100%"} p={"xs"} radius={"md"}>
