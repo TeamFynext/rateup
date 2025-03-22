@@ -162,6 +162,7 @@ export async function getCardById(id: string) {
               id: true,
               name: true,
               phone: true,
+              lastReceivedMessageTimeStamp: true,
             },
           },
           surveyTeamMap: {
@@ -200,6 +201,7 @@ export async function getCardById(id: string) {
         id: true,
         name: true,
         phone: true,
+        lastReceivedMessageTimeStamp: true,
       },
     });
     (ticketCard.waAutomatedReplyMessage as any).contact = contact;
