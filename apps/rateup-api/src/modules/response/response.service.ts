@@ -1903,7 +1903,7 @@ export async function getResponseAnalyticsForGraph(
     ? allResponse[0].surveyTeamMap.survey.questions.filter((q) =>
         barGraphQuestions.includes(q.type),
       )
-    : allResponse[0].surveyTeamMap.survey.WaFlow.json.screens.flatMap(
+    : (allResponse[0].surveyTeamMap.survey.WaFlow.json.screens.flatMap(
         (screen) =>
           screen.layout.children.filter(
             (child) =>
@@ -1911,7 +1911,7 @@ export async function getResponseAnalyticsForGraph(
                 (child as any).metaType as WaQuestions,
               ) && child.name,
           ),
-      );
+      ) as unknown as Question2[]);
   const npsQuestionIds = version
     ? questions
         .filter(
@@ -1947,7 +1947,7 @@ export async function getResponseAnalyticsForGraph(
     if (version) {
       const type = responses[0].type;
       const choices = (question as any)?.choices
-        ? Object.values((question as any).choices)[0]?.map((c) =>
+        ? (Object.values((question as any).choices)[0] as any[])?.map((c) =>
             typeof c.value === "object" ? c.value.title : c.value,
           )
         : getChoicesForNpsQuestions(type);
@@ -1963,7 +1963,7 @@ export async function getResponseAnalyticsForGraph(
       let choiceWiseCount;
       const subQuestions =
         type === QuestionType.MCQGrid
-          ? Object.values((question as any)?.features)?.[0]?.questions
+          ? Object.values((question as Question)?.features)?.[0]?.questions
           : [];
       if (type !== QuestionType.MCQGrid)
         choiceWiseCount = new Map(
@@ -2107,7 +2107,7 @@ export async function getResponseAnalyticsForGraph(
         };
       }
     } else {
-      const type = question.metaType;
+      const type = (question as Question2).metaType;
       const choices = question["data-source"];
       let choiceWiseCount = new Map(
         choices.map((choice) => [
@@ -2161,7 +2161,10 @@ export async function getResponseAnalyticsForGraph(
         if (barGraphQuestionIds.includes(questionId)) {
           const resp = Array.isArray[value] ? value : [value];
           resp.forEach((res) => {
-            const mapValue = choiceWiseCount.get(res);
+            const mapValue = choiceWiseCount.get(res) as {
+              count: number;
+              choice: string;
+            };
             choiceWiseCount.set(res, {
               ...mapValue,
               count: mapValue.count + 1,
